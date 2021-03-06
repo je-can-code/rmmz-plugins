@@ -59,7 +59,7 @@ Bugs
   - ✅ `square` shape strikes a square of a given range at the projectile collision. (recommended: ranged)
   - ✅ `frontsquare` shape strikes a square of a given range infront of the collision (recommended: melee)
   - ✅ `line` shape strikes as a straight line in the direction faced. (recommended: melee)
-  - ✅ `arc` shape strikes a diamond-esque area. (recommended: ranged)
+  - ✅ `arc` shape strikes a half-diamond-esque area. (recommended: ranged)
   - ✅ `wall` shape strikes a single line of a given range infront of the attacker. (recommended: melee)
   - ✅ `cross` shape strikes as a cross from collision. (recommended: ranged)
 - ⭕ can fire multiple skills per usage
@@ -126,8 +126,6 @@ Bugs
   - look to zelda or something for ideas of tools, like hookshot or boots.
 - Cooldown-affecting things:
   - gear that increases/reduces cooldown for attacks/skills/tools.
-- Movespeed-affecting things:
-  - gear that increases/reduces movespeed for the battler (player/actors only).
 - Drops:
   - potentially non-static locations
   - leverage AI to move away/towards player
