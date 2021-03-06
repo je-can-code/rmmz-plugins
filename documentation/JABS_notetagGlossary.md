@@ -1,4 +1,7 @@
-[[_TOC_]]
+# Glossary of JABS Tags
+Welcome to the tags glossary for all of JABS.
+
+There are a large number of tags available to build out your enemies, your skills, your players, and so on. We will list them all here, and go over each of them, what they are used for, how to use them, and where they can be leveraged.
 
 ---
 # Action Id
@@ -17,7 +20,6 @@ eventIdFromActionMap = a number that maps to the event id on the action map.
 <actionId: 4>
 - This skill will have the visual representation of event id 4 from the action map.
 ```
-![image.png](/.attachments/image-57d94622-ddcf-4c26-bbe8-07b984ad2a66.png)
 
 Applicable to:
 - Skills
