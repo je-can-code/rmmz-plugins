@@ -5,9 +5,10 @@
  * Welcome to JABS,
  * J's Action Battle System!
  * @author JE
- * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
+ * @url https://github.com/je-can-code/rmmz
  * @help
- * I'd recommend just peeking at the url attached to this plugin for details.
+ * It would be overwhelming to write everything here.
+ * Do visit the URL attached to this plugin for documentation.
  * 
  * @param BreakHead
  * @text --------------------------
