@@ -4,6 +4,10 @@ When it comes to building an ABS game, one of the most prominent elements is obv
 Let's get started!
 
 ---
+>If you need to go back to the documentation list, click here:<br/>
+[Go back to the documentation list.](../README.md)
+
+---
 Here is a shorthand reference list of all tags that are available for constructing your battlers on the map:
 ```html
 <e:15>        // the enemy id
@@ -83,7 +87,7 @@ This also prevents the battler from being "alertable" and ever engaging in comba
 
 Sometimes though, you may want an enemy that just has maybe one or two of those traits.
 - add the `<noHpBar>` trait if you want the hp gauge to be hidden on the battler (maybe for a boss?).
-- add the `<noIdle>` if you'd prefer the battlers not wander around while they are not engaged in combat (for stationary enemies, like plants maybe?)
+- add the `<noIdle>` trait if you'd prefer the battlers not wander around while they are not engaged in combat (for stationary enemies, like plants maybe?)
 - add the `<invincible>` trait if there is some particular reason you want the battler to be totally invincible (traps? conditionals?).
 
 Lastly, you may have noted in the screen snippet about tag formatting or in the list at the top that there is another tag I haven't mentioned: the custom movespeed modifier. This one is totally optional, but personally I've found that the rigidity of going from movespeed "4" to movespeed "3" or "5" is a dramatic difference. Sometimes enemies just need to be _a hair slower_, or _a hair faster_. This is where the custom movespeed tag comes into play! By adding `<ms:4.1>`, then the event that the battler is attached to will have a movespeed that is just a bit above the default "Normal" movespeed. If this tag exists, **the event page's movespeed will be entirely ignored**.
@@ -107,8 +111,14 @@ You'll notice that in addition to being boring old grass, you also have a regula
 > ouch you cut me
 
 Which you'll see translates to this effect:
+
 ![ouchyoucutme](./images/ouchyoucutme.gif)
+
+> NOTE: The enemy that triggered the event (and any other enemies defeated with the same attack) will persist on the map for the duration of the running event. This is intended, as the event must exist while it is running or the event processor will throw a tantrum.
 
 ---
 ## Final Notes:
-With all of these features, your imagination (and rpg maker mz) is the limit for what you can do with this! If you find yourself desiring features that make sense, feel free to either ping me about it and I'll see what I can do, or spin up a merge request against this repo and I'll review/consider it 💯.
+With all of these features, what you can do is only limited by your imagination (and RPG Maker MZ)! If you find yourself desiring features that make sense, feel free to either ping me about it and I'll see what I can do, or spin up a merge request against this repo and I'll review/consider it 💯.
+
+>If you need to go back to the documentation list, click here:<br/>
+[Go back to the documentation list.](../README.md)
