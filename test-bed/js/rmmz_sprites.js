@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_sprites.js v1.1.0
+// rmmz_sprites.js v1.2.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -1449,7 +1449,6 @@ Sprite_Animation.prototype.onBeforeRender = function(renderer) {
 };
 
 Sprite_Animation.prototype.onAfterRender = function(renderer) {
-    renderer.texture.contextChange();
     renderer.texture.reset();
     renderer.geometry.reset();
     renderer.state.reset();
@@ -2441,7 +2440,9 @@ Sprite_Gauge.prototype.setupLabelFont = function() {
 
 Sprite_Gauge.prototype.measureLabelWidth = function() {
     this.setupLabelFont();
-    return this.bitmap.measureTextWidth(this.label());
+    const labels = [TextManager.hpA, TextManager.mpA, TextManager.tpA];
+    const widths = labels.map(str => this.bitmap.measureTextWidth(str));
+    return Math.max(...widths);
 };
 
 Sprite_Gauge.prototype.labelOpacity = function() {
@@ -3332,7 +3333,7 @@ Spriteset_Base.prototype.removeAnimation = function(sprite) {
 };
 
 Spriteset_Base.prototype.removeAllAnimations = function() {
-    for (const sprite of this._animationSprites) {
+    for (const sprite of this._animationSprites.clone()) {
         this.removeAnimation(sprite);
     }
 };
@@ -3544,7 +3545,7 @@ Spriteset_Map.prototype.removeBalloon = function(sprite) {
 };
 
 Spriteset_Map.prototype.removeAllBalloons = function() {
-    for (const sprite of this._balloonSprites) {
+    for (const sprite of this._balloonSprites.clone()) {
         this.removeBalloon(sprite);
     }
 };

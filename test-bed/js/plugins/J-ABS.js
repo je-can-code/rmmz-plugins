@@ -3199,6 +3199,7 @@ Spriteset_Map.prototype.addLootSprites = function() {
     if (shouldAddLootSprite) {
       event.setLootNeedsAdding(false);
       const sprite = new Sprite_Character(event);
+      console.log(event, sprite);
       this._characterSprites.push(sprite);
       this._tilemap.addChild(sprite);
     }
@@ -3247,6 +3248,7 @@ Spriteset_Map.prototype.removeLootSprites = function() {
         const lootSprite = sprite._character;
         const needsRemoval = lootSprite.getLootNeedsRemoving();
         if (needsRemoval) {
+          console.log("deleted");
           sprite.deleteLootSprite();
           this._characterSprites.splice(index, 1);
           lootSprite.erase();
