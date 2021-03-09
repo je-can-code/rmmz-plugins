@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_core.js v1.1.0
+// rmmz_core.js v1.2.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -192,7 +192,7 @@ Utils.RPGMAKER_NAME = "MZ";
  * @type string
  * @constant
  */
-Utils.RPGMAKER_VERSION = "1.1.0";
+Utils.RPGMAKER_VERSION = "1.2.0";
 
 /**
  * Checks whether the current RPG Maker version is greater than or equal to
@@ -1036,6 +1036,7 @@ Graphics._createEffekseerContext = function() {
             this._effekseer = effekseer.createContext();
             if (this._effekseer) {
                 this._effekseer.init(this._app.renderer.gl);
+                this._effekseer.setRestorationOfStatesFlag(false);
             }
         } catch (e) {
             this._app = null;
@@ -1684,7 +1685,7 @@ Bitmap.prototype.measureTextWidth = function(text) {
     context.font = this._makeFontNameText();
     const width = context.measureText(text).width;
     context.restore();
-    return width;
+    return Math.ceil(width);
 };
 
 /**
@@ -3981,11 +3982,12 @@ Window.prototype._refreshBack = function() {
     const h = Math.max(0, this._height - m * 2);
     const sprite = this._backSprite;
     const tilingSprite = sprite.children[0];
+    // [Note] We use 95 instead of 96 here to avoid blurring edges.
     sprite.bitmap = this._windowskin;
-    sprite.setFrame(0, 0, 96, 96);
+    sprite.setFrame(0, 0, 95, 95);
     sprite.move(m, m);
-    sprite.scale.x = w / 96;
-    sprite.scale.y = h / 96;
+    sprite.scale.x = w / 95;
+    sprite.scale.y = h / 95;
     tilingSprite.bitmap = this._windowskin;
     tilingSprite.setFrame(0, 96, 96, 96);
     tilingSprite.move(0, 0, w, h);
@@ -5596,30 +5598,30 @@ Input.keyRepeatInterval = 6;
  * @type Object
  */
 Input.keyMapper = {
-    9: "tab",       // tab
-    13: "ok",       // enter
-    16: "shift",    // shift
-    17: "control",  // control
-    18: "control",  // alt
-    27: "escape",   // escape
-    32: "ok",       // space
-    33: "pageup",   // pageup
+    9: "tab", // tab
+    13: "ok", // enter
+    16: "shift", // shift
+    17: "control", // control
+    18: "control", // alt
+    27: "escape", // escape
+    32: "ok", // space
+    33: "pageup", // pageup
     34: "pagedown", // pagedown
-    37: "left",     // left arrow
-    38: "up",       // up arrow
-    39: "right",    // right arrow
-    40: "down",     // down arrow
-    45: "escape",   // insert
-    81: "pageup",   // Q
+    37: "left", // left arrow
+    38: "up", // up arrow
+    39: "right", // right arrow
+    40: "down", // down arrow
+    45: "escape", // insert
+    81: "pageup", // Q
     87: "pagedown", // W
-    88: "escape",   // X
-    90: "ok",       // Z
-    96: "escape",   // numpad 0
-    98: "down",     // numpad 2
-    100: "left",    // numpad 4
-    102: "right",   // numpad 6
-    104: "up",      // numpad 8
-    120: "debug"    // F9
+    88: "escape", // X
+    90: "ok", // Z
+    96: "escape", // numpad 0
+    98: "down", // numpad 2
+    100: "left", // numpad 4
+    102: "right", // numpad 6
+    104: "up", // numpad 8
+    120: "debug" // F9
 };
 
 /**
@@ -5628,16 +5630,16 @@ Input.keyMapper = {
  * @type Object
  */
 Input.gamepadMapper = {
-    0: "ok",        // A
-    1: "cancel",    // B
-    2: "shift",     // X
-    3: "menu",      // Y
-    4: "pageup",    // LB
-    5: "pagedown",  // RB
-    12: "up",       // D-pad up
-    13: "down",     // D-pad down
-    14: "left",     // D-pad left
-    15: "right"     // D-pad right
+    0: "ok", // A
+    1: "cancel", // B
+    2: "shift", // X
+    3: "menu", // Y
+    4: "pageup", // LB
+    5: "pagedown", // RB
+    12: "up", // D-pad up
+    13: "down", // D-pad down
+    14: "left", // D-pad left
+    15: "right" // D-pad right
 };
 
 /**

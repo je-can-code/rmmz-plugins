@@ -1302,6 +1302,10 @@ Game_Character.prototype.getActionSpriteProperties = function() {
   return this._j._actionSpriteProperties;
 };
 
+/**
+ * Gets whether or not this character is an action.
+ * @returns {boolean} True if this is an action, false otherwise.
+ */
 Game_Character.prototype.isAction = function() {
   const isAction = this.getMapActionData();
   return !!isAction;
@@ -2062,7 +2066,6 @@ Game_Map.prototype.refreshOneBattler = function(event) {
     // the next page is an enemy, create a new one and add to the list.
     if (!(newBattler === null)) {
       this._j._allBattlers.push(newBattler);
-      console.log(newBattler);
     // the next page is not an enemy, do nothing.
     } else { }
   }
@@ -3211,6 +3214,10 @@ Spriteset_Map.prototype.addLootSprites = function() {
 Spriteset_Map.prototype.removeActionSprites = function() {
   const events = $gameMap.events();
   events.forEach(event => {
+    // if they aren't an action, this function doesn't care.
+    const isAction = event.isAction();
+    if (!isAction) return;
+
     const actionEvent = event.getMapActionData();
     const shouldRemoveActionEvent = !!actionEvent && actionEvent.getNeedsRemoval()
     if (shouldRemoveActionEvent) {
@@ -3247,6 +3254,7 @@ Spriteset_Map.prototype.removeLootSprites = function() {
         const lootSprite = sprite._character;
         const needsRemoval = lootSprite.getLootNeedsRemoving();
         if (needsRemoval) {
+          console.log("deleted");
           sprite.deleteLootSprite();
           this._characterSprites.splice(index, 1);
           lootSprite.erase();
@@ -3281,6 +3289,20 @@ Sprite_Character.prototype.initMembers = function() {
 };
 
 /**
+ * If the "character" is actually a loot drop, don't identify it as empty for the purposes
+ * of drawing the loot icon on the map.
+ * @returns {boolean} True if the character should be drawn, false otherwise.
+ */
+J.ABS.Aliased.Sprite_Character.isEmptyCharacter = Sprite_Character.prototype.isEmptyCharacter;
+Sprite_Character.prototype.isEmptyCharacter = function() {
+  if (this.isLoot()) {
+    return false;
+  } else {
+    return J.ABS.Aliased.Sprite_Character.isEmptyCharacter.call(this);
+  }
+};
+
+/**
  * Hooks into the `Sprite_Character.setCharacter` and sets up the battler sprite.
  */
 J.ABS.Aliased.Sprite_Character.setCharacter = Sprite_Character.prototype.setCharacter;
@@ -3292,7 +3314,7 @@ Sprite_Character.prototype.setCharacter = function(character) {
   }
 
   if (this.isLoot()) {
-    this.setCharacterBitmap();
+    this.setupLootSprite();
   }
 };
 
@@ -3340,7 +3362,6 @@ Sprite_Character.prototype.setupMapSprite = function() {
  * Sets up this character's state overlay, to show things like poison or paralysis.
  */
 Sprite_Character.prototype.setupStateOverlay = function() {
-  // initializes the state overlay for tracking this battler's states.
   const battler = this.getBattler();
   if (battler) {
     this._stateOverlaySprite.setup(battler);
@@ -3352,7 +3373,6 @@ Sprite_Character.prototype.setupStateOverlay = function() {
  * Sets up this character's hp gauge, to show the hp bar as-needed.
  */
 Sprite_Character.prototype.setupHpGauge = function() {
-  // initializes a gauge for this battler to monitor their hp.
   const battler = this.getBattler();
   this._hpGauge = this.createSpriteGauge();
   if (battler) {
@@ -3375,7 +3395,6 @@ Sprite_Character.prototype.createSpriteGauge = function() {
  * Sets up this character's sprite for activities on the map.
  */
 Sprite_Character.prototype.setupLootSprite = function() {
-  // don't recreate it if it already exists!
   if (this._loot._img) return;
 
   this._character._through = true;
@@ -3396,6 +3415,9 @@ Sprite_Character.prototype.createLootSprite = function() {
   return lootSprite;
 };
 
+/**
+ * Deletes a loot sprite from the screen.
+ */
 Sprite_Character.prototype.deleteLootSprite = function() {
   if (this.children.length > 0) {
     this.children.splice(0, this.children.length);
