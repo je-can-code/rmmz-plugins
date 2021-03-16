@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc 
- * The base class for all J plugins.
+ * [v1.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
  * @help
