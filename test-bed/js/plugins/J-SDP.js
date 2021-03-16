@@ -12,6 +12,26 @@
  * @help
  * This should go below both J-Base (and J-ABS if that is being used, too).
  * 
+ * Step1:
+ * Add new SDPs to the Stat Distribution Panels section.
+ * 
+ * Step2:
+ * Unlock panels using plugin commands.
+ * 
+ * Step3:
+ * Assign enemies points with <sdpPoints:NUM>, where NUM is how many points an enemy is worth.
+ * 
+ * Step4:
+ * Defeat said enemies to gain points.
+ * 
+ * Step5:
+ * Access the SDP menu either by:
+ * - using the plugin command
+ * - using a script call: SceneManager.push(Scene_Sdp);
+ * 
+ * Step6:
+ * Level up your panels and profit.
+ * 
  * @param LineBreak1
  * @text --------------------------
  * @default ----------------------------------
