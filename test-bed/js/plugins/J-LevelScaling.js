@@ -91,7 +91,7 @@ Game_Action.prototype.makeDamageValue = function(target, critical) {
  */
 J.LevelScaling.Aliased.Game_Troop.expTotal = Game_Action.prototype.expTotal;
 Game_Troop.prototype.expTotal = function() {
-  if (J.Extensions.LevelScaling.Enabled) {
+  if (J.LevelScaling.Metadata.Enabled) {
     return this.getScaledExpResult();
   } else {
     return J.LevelScaling.Aliased.Game_Troop.expTotal.call(this);
