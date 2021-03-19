@@ -4,11 +4,18 @@
  * @plugindesc 
  * [v1.0 BASE] The base class for all J plugins.
  * @author JE
- * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
+ * @url https://github.com/je-can-code/rmmz
  * @help
- * # Start of Help
- * 
- * # End of Help
+ * ==============================================================================
+ * This is the base class that is required for basically ALL of J-* plugins.
+ * Please be sure this is above all other J-* plugins, and keep it up to date!
+ * ==============================================================================
+ * This contains little innate functionality on its own, but does keep within it
+ * all the various classes and objects that other plugins use but needed to be
+ * declared ahead of time.
+ * ==============================================================================
+ * Additionally, most of the note-reading and such takes place here as well.
+ * ==============================================================================
  */
 
 /**
@@ -25,10 +32,10 @@ J.Base = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.Base.Metadata = {
-/**
- * The version of this plugin.
- */
-Name: `J-Base`,
+  /**
+   * The name of this plugin.
+   */
+  Name: `J-Base`,
 };
 
 /**
@@ -36,11 +43,11 @@ Name: `J-Base`,
  */
 J.Base.PluginParameters = PluginManager.parameters(J.Base.Metadata.Name);
 J.Base.Metadata = {
-...J.Base.Metadata,
-/**
- * The version of this plugin.
- */
-Version: 1.00,
+  ...J.Base.Metadata,
+  /**
+   * The version of this plugin.
+   */
+  Version: 1.0,
 };
 
 /**
@@ -48,175 +55,179 @@ Version: 1.00,
  * various locations, like events on the map, or in a database enemy.
  */
 J.Base.Notetags = {
-// on skills in database.
-ActionId: "actionId",
-CastAnimation: "castAnimation",
-Combo: "combo",
-Cooldown: "cooldown",
-CounterParry: "counterParry",
-CounterGuard: "counterGuard",
-Duration: "duration",
-FreeCombo: "freeCombo",
-IgnoreParry: "ignoreParry",
-Guard: "guard",
-Parry: "parry",
-Knockback: "knockback",
-KnockbackResist: "knockbackResist",
-MoveType: "moveType",
-Piercing: "pierce",
-PoseSuffix: "poseSuffix",
-Projectile: "projectile",
-Proximity: "proximity",
-Range: "range",
-Retaliate: "retaliate",
-Shape: "shape",
-UniqueCooldown: "unique",
+  // on actors in database.
+  HitGrowth: "hitGrowth",
+  GuardGrowth: "guardGrowth",
+  KnockbackResist: "knockbackResist",
 
-// on items in database
-JaftingIngredient: "ingredient",
-JaftingTool: "tool",
-JaftingCategory: "category",
-JaftingOutput: "output",
-UseOnPickup: "useOnPickup",
+  // on skills in database.
+  ActionId: "actionId",
+  CastAnimation: "castAnimation",
+  Combo: "combo",
+  Cooldown: "cooldown",
+  CounterParry: "counterParry",
+  CounterGuard: "counterGuard",
+  Duration: "duration",
+  FreeCombo: "freeCombo",
+  IgnoreParry: "ignoreParry",
+  Guard: "guard",
+  Parry: "parry",
+  Knockback: "knockback",
+  MoveType: "moveType",
+  Piercing: "pierce",
+  PoseSuffix: "poseSuffix",
+  Projectile: "projectile",
+  Proximity: "proximity",
+  Range: "range",
+  Retaliate: "retaliate",
+  Shape: "shape",
+  UniqueCooldown: "unique",
 
-// on equipment in database.
-BonusHits: "bonusHits",
-SkillId: "skillId",
-SpeedBoost: "speedBoost",
+  // on items in database
+  JaftingIngredient: "ingredient",
+  JaftingTool: "tool",
+  JaftingCategory: "category",
+  JaftingOutput: "output",
+  UseOnPickup: "useOnPickup",
 
-// on enemies in database.
-Drops: "drops",
-EnemyLevel: "level",
-PrepareTime: "prepare",
-SdpPoints: "sdp",
+  // on equipment in database.
+  BonusHits: "bonusHits",
+  SkillId: "skillId",
+  SpeedBoost: "speedBoost",
 
-// on events on map.
-BattlerId: "e",
-AiCode: "ai",
-Sight: "s",
-Pursuit: "p",
-MoveSpeed: "ms",
-NoIdle: "noIdle",
-NoHpBar: "noHpBar",
-Inanimate: "inanimate",
-Invincible: "invincible", // also on skills
-AlertDuration: "ad",
-AlertSightBoost: "as",
-AlertPursuitBoost: "ap",
+  // on enemies in database.
+  Drops: "drops",
+  EnemyLevel: "level",
+  PrepareTime: "prepare",
+  SdpPoints: "sdp",
 
-// on states in database.
-Paralyzed: "paralyzed",
-Rooted: "rooted",
-Muted: "muted",
-Disabled: "disabled",
-HpFlat: "hpFlat",
-MpFlat: "mpFlat",
-TpFlat: "tpFlat",
-HpPerc: "hpPerc",
-MpPerc: "mpPerc",
-TpPerc: "tpPerc",
+  // on events on map.
+  BattlerId: "e",
+  AiCode: "ai",
+  Sight: "s",
+  Pursuit: "p",
+  MoveSpeed: "ms",
+  NoIdle: "noIdle",
+  NoHpBar: "noHpBar",
+  Inanimate: "inanimate",
+  Invincible: "invincible", // also on skills
+  AlertDuration: "ad",
+  AlertSightBoost: "as",
+  AlertPursuitBoost: "ap",
+
+  // on states in database.
+  Paralyzed: "paralyzed",
+  Rooted: "rooted",
+  Muted: "muted",
+  Disabled: "disabled",
+  HpFlat: "hpFlat",
+  MpFlat: "mpFlat",
+  TpFlat: "tpFlat",
+  HpPerc: "hpPerc",
+  MpPerc: "mpPerc",
+  TpPerc: "tpPerc",
 };
 
 /**
  * The various collision shapes an attack can be for JABS.
  */
 J.Base.Shapes = {
-/**
- * A rhombus (aka diamond) shaped hitbox.
- */
-Rhombus: "rhombus",
+  /**
+   * A rhombus (aka diamond) shaped hitbox.
+   */
+  Rhombus: "rhombus",
 
-/**
- * A square around the target hitbox.
- */
-Square: "square",
+  /**
+   * A square around the target hitbox.
+   */
+  Square: "square",
 
-/**
- *  A square in front of the target hitbox.
- */
-FrontSquare: "frontsquare",
+  /**
+   *  A square in front of the target hitbox.
+   */
+  FrontSquare: "frontsquare",
 
-/**
- * A line from the target hitbox.
- */
-Line: "line",
+  /**
+   * A line from the target hitbox.
+   */
+  Line: "line",
 
-/**
- * An arc shape hitbox in front of the action.
- */
-Arc: "arc",
+  /**
+   * An arc shape hitbox in front of the action.
+   */
+  Arc: "arc",
 
-/**
- * A wall infront of the target hitbox.
- */
-Wall: "wall",
+  /**
+   * A wall infront of the target hitbox.
+   */
+  Wall: "wall",
 
-/**
- * A cross from the target hitbox.
- */
-Cross: "cross"
+  /**
+   * A cross from the target hitbox.
+   */
+  Cross: "cross"
 };
 
 /**
  * The various number of projectiles available to create.
  */
 J.Base.Projectiles = {
-/**
- * The default; A single projectile per normal.
- */
-Single: 1,
+  /**
+   * The default; A single projectile per normal.
+   */
+  Single: 1,
 
-/**
- * Two projectiles side-by-side.
- */
-Double: 2,
+  /**
+   * Two projectiles side-by-side.
+   */
+  Double: 2,
 
-/**
- * Three projectiles, one infront and two adjacent diagonals.
- */
-Triple: 3,
+  /**
+   * Three projectiles, one infront and two adjacent diagonals.
+   */
+  Triple: 3,
 
-/**
- * Four projectiles, one in all of dir4.
- * Basic: (2, 4, 6, 8)
- */
-Quadra: 4,
+  /**
+   * Four projectiles, one in all of dir4.
+   * Basic: (2, 4, 6, 8)
+   */
+  Quadra: 4,
 
-/**
- * Eight projectiles, one in all of dir8. 
- * Basic: (2, 4, 6, 8)
- * Diagonal: (1, 3, 7, 9)
- */
-Octa: 8,
+  /**
+   * Eight projectiles, one in all of dir8. 
+   * Basic: (2, 4, 6, 8)
+   * Diagonal: (1, 3, 7, 9)
+   */
+  Octa: 8,
 };
 
 /**
  * The various item types that an item can be.
  */
 J.Base.ItemTypes = {
-/**
- * The type representing an item from the `$dataItems`.
- */
-Item: "i",
+  /**
+   * The type representing an item from the `$dataItems`.
+   */
+  Item: "i",
 
-/**
- * The type representing an item from the `$dataArmors`.
- */
-Weapon: "w",
+  /**
+   * The type representing an item from the `$dataArmors`.
+   */
+  Weapon: "w",
 
-/**
- * The type representing an item from the `$dataWeapons`.
- */
-Armor: "a",
+  /**
+   * The type representing an item from the `$dataWeapons`.
+   */
+  Armor: "a",
 };
 
 /**
  * A collection of all aliased methods for this plugin.
  */
 J.Base.Aliased = {
-DataManager: {},
-Game_Character: {},
-Window_Command: {},
+  DataManager: {},
+  Game_Character: {},
+  Window_Command: {},
 };
 
 //#region Helpers
@@ -224,73 +235,73 @@ Window_Command: {},
  * The helper functions used commonly throughout my plugins.
  */
 J.Base.Helpers = {
-/**
- * Generates a `uuid`- a universally unique identifier- for this battler.
- * @returns {string} The `uuid`.
- */
-generateUuid() {
-  const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    .replace(/[xy]/g, c => {
-      const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  return uuid;
-},
+  /**
+   * Generates a `uuid`- a universally unique identifier- for this battler.
+   * @returns {string} The `uuid`.
+   */
+  generateUuid() {
+    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
+      .replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    return uuid;
+  },
 
-/**
- * Imports the required `fs` import.
- */
-fs() { return require('fs'); },
+  /**
+   * Imports the required `fs` import.
+   */
+  fs() { return require('fs'); },
 
-/**
- * Confirms the existence of a given file.
- * @param {string} path The path of the file we're checking.
- * @returns {boolean} True if the file exists, false otherwise.
- */
-checkFile(path) {
-  const fs = J.Base.Helpers.fs();
-  const result = fs.existsSync(path);
-  return result;
-},
+  /**
+   * Confirms the existence of a given file.
+   * @param {string} path The path of the file we're checking.
+   * @returns {boolean} True if the file exists, false otherwise.
+   */
+  checkFile(path) {
+    const fs = J.Base.Helpers.fs();
+    const result = fs.existsSync(path);
+    return result;
+  },
 
-/**
- * Updates the value of a variable by a given amount.
- * 
- * NOTE: This assumes the variable contains only a number.
- * @param {number} variableId The id of the variable to modify.
- * @param {number} amount The amount to modify the variable by.
- */
-modVariable(variableId, amount) {
-  const oldValue = $gameVariables.value(variableId);
-  const newValue = oldValue + amount;
-  $gameVariables.setValue(variableId, newValue);
-},
+  /**
+   * Updates the value of a variable by a given amount.
+   * 
+   * NOTE: This assumes the variable contains only a number.
+   * @param {number} variableId The id of the variable to modify.
+   * @param {number} amount The amount to modify the variable by.
+   */
+  modVariable(variableId, amount) {
+    const oldValue = $gameVariables.value(variableId);
+    const newValue = oldValue + amount;
+    $gameVariables.setValue(variableId, newValue);
+  },
 
-/**
- * Provides a random integer within the range
- * @param {number} min The lower bound for random numbers (inclusive).
- * @param {number} max The upper bound for random numbers (exclusive).
- */
-getRandomNumber(min, max) {
-  return Math.floor(min + Math.random() * (max + 1 - min))
-},
+  /**
+   * Provides a random integer within the range
+   * @param {number} min The lower bound for random numbers (inclusive).
+   * @param {number} max The upper bound for random numbers (exclusive).
+   */
+  getRandomNumber(min, max) {
+    return Math.floor(min + Math.random() * (max + 1 - min))
+  },
 
-/**
- * Translates the id and type into a proper `RPG::Item`.
- * @param {number} id The id of the item in the database.
- * @param {string} type An abbreviation for the type of item this is.
- * @returns {object} The `RPG::Item` of the correct id and type.
- */
-translateItem(id, type) {
-switch (type) {
-  case "i":
-    return $dataItems[id];
-  case "w":
-    return $dataWeapons[id];
-  case "a":
-    return $dataArmors[id];
-  }
-},
+  /**
+   * Translates the id and type into a proper `RPG::Item`.
+   * @param {number} id The id of the item in the database.
+   * @param {string} type An abbreviation for the type of item this is.
+   * @returns {object} The `RPG::Item` of the correct id and type.
+   */
+  translateItem(id, type) {
+  switch (type) {
+    case "i":
+      return $dataItems[id];
+    case "w":
+      return $dataWeapons[id];
+    case "a":
+      return $dataArmors[id];
+    }
+  },
 };
 //#endregion Helpers
 //#endregion Introduction
@@ -453,13 +464,49 @@ switch (xParamId) {
 //#endregion TextManager
 //#endregion Static objects
 
-//#region Scene objects
-
-
-
-//#endregion Scene objects
-
 //#region Game objects
+//#region Game_Actor
+/**
+ * Gets how much bonus HIT this actor has based on level.
+ * @returns {number} The amount of growth in HIT for this actor.
+ */
+ Game_Actor.prototype.hitGrowth = function() {
+  let hitGrowthPerLevel = 0;
+  if (this._meta && this._meta[J.Base.Notetags.HitGrowth]) {
+    hitGrowthPerLevel = parseFloat(this._meta[J.Base.Notetags.HitGrowth]);
+  } else {
+    const structure = /<hitGrowth:[ ]?([\.\d]+)>/i;
+    this.actor().note.split(/[\r\n]+/).forEach(note => {
+      if (note.match(structure)) {
+        hitGrowthPerLevel = parseFloat(RegExp.$1);
+      }
+    });
+  }
+
+  return parseFloat(((hitGrowthPerLevel * this.level) / 100).toFixed(2));
+};
+
+/**
+ * Gets how much bonus GRD this actor has based on level.
+ * @returns {number} The amount of growth in GRD for this actor.
+ */
+Game_Actor.prototype.grdGrowth = function() {
+  let grdGrowthPerLevel = 0;
+  if (this._meta && this._meta[J.Base.Notetags.GuardGrowth]) {
+    grdGrowthPerLevel = parseFloat(this._meta[J.Base.Notetags.GuardGrowth]);
+  } else {
+    const structure = /<grdGrowth:[ ]?([\.\d]+)>/i;
+    this.actor().note.split(/[\r\n]+/).forEach(note => {
+      if (note.match(structure)) {
+        grdGrowthPerLevel = parseFloat(RegExp.$1);
+      }
+    });
+  }
+
+  return parseFloat(((grdGrowthPerLevel * this.level) / 100).toFixed(2));
+};
+//#endregion Game_Actor
+
 //#region Game_Character
 /**
  * Gets the `aiCode` for this character.
@@ -768,25 +815,25 @@ return inanimate;
  * @returns {number}
  */
 Object.defineProperty(Game_Enemy.prototype, "level", {
-get() {
-  let level = 0;
+  get() {
+    let level = 0;
 
-  const referenceData = $dataEnemies[this.enemyId()];
-  if (referenceData.meta && referenceData.meta[J.Base.Notetags.EnemyLevel]) {
-    level = parseInt(referenceData.meta[J.Base.Notetags.EnemyLevel]) || level;
-  } else {
-    const structure = /<level:[ ]?([0-9]*)>/i;
-    const notedata = referenceData.note.split(/[\r\n]+/);
-    notedata.forEach(note => {
-      if (note.match(structure)) {
-        level = RegExp.$1;
-      }
-    })
-  }
+    const referenceData = $dataEnemies[this.enemyId()];
+    if (referenceData.meta && referenceData.meta[J.Base.Notetags.EnemyLevel]) {
+      level = parseInt(referenceData.meta[J.Base.Notetags.EnemyLevel]) || level;
+    } else {
+      const structure = /<level:[ ]?([0-9]*)>/i;
+      const notedata = referenceData.note.split(/[\r\n]+/);
+      notedata.forEach(note => {
+        if (note.match(structure)) {
+          level = RegExp.$1;
+        }
+      })
+    }
 
-  return parseInt(level);
-},
-configurable: true,
+    return parseInt(level);
+  },
+  configurable: true,
 });
 
 /**
@@ -834,33 +881,33 @@ return dropList;
  * @returns {{kind, dataId, denominator}}
  */
 Game_Enemy.prototype.needsSdpDrop = function() {
-const referenceData = this.enemy();
-const structure = /<sdpPanel:[ ]?"(.*?)":(\d+):(\d+)>/i;
-const notedata = referenceData.note.split(/[\r\n]+/);
+  const referenceData = this.enemy();
+  const structure = /<sdpPanel:[ ]?"(.*?)":(\d+):(\d+)>/i;
+  const notedata = referenceData.note.split(/[\r\n]+/);
 
-// get the panel key from this enemy if it exists.
-let panelKey = "";
-notedata.forEach(note => {
-  if (note.match(structure)) {
-    panelKey = RegExp.$1;
-  }
-});
+  // get the panel key from this enemy if it exists.
+  let panelKey = "";
+  notedata.forEach(note => {
+    if (note.match(structure)) {
+      panelKey = RegExp.$1;
+    }
+  });
 
-// if we don't have a panel key, then give up.
-if (!panelKey) return null;
+  // if we don't have a panel key, then give up.
+  if (!panelKey) return null;
 
-// if a panel exists to be earned, but we already have it, then give up.
-const alreadyEarned = $gameSystem.getSdp(panelKey).isUnlocked();
-if (alreadyEarned) return null;
+  // if a panel exists to be earned, but we already have it, then give up.
+  const alreadyEarned = $gameSystem.getSdp(panelKey).isUnlocked();
+  if (alreadyEarned) return null;
 
-// create the new drop based on the SDP.
-const newSdp = {
-  kind: 1, // all SDP drops are assumed to be "items".
-  dataId: parseInt(RegExp.$2),
-  denominator: parseInt(RegExp.$3)
-};
+  // create the new drop based on the SDP.
+  const newSdp = {
+    kind: 1, // all SDP drops are assumed to be "items".
+    dataId: parseInt(RegExp.$2),
+    denominator: parseInt(RegExp.$3)
+  };
 
-return newSdp;
+  return newSdp;
 };
 
 /**
@@ -2474,6 +2521,22 @@ this.count = count;
 function StatDistributionPanel() { this.initialize(...arguments); }
 StatDistributionPanel.prototype = {};
 StatDistributionPanel.prototype.constructor = StatDistributionPanel;
+
+/**
+ * Initializes a single stat distribution panel.
+ * @param {string} name The name that displays in the menu for this panel.
+ * @param {string} key The unique identifier for this panel.
+ * @param {number} iconIndex The icon index that represents this panel.
+ * @param {boolean} unlocked Whether or not this panel is unlocked.
+ * @param {string} description The description for this panel.
+ * @param {number} maxRank The maximum rank this panel can reach.
+ * @param {number} baseCost The base component of the cost formula.
+ * @param {number} flatGrowthCost The flat component of the cost formula.
+ * @param {numbe} multGrowthCost The multiplier component of the cost formula.
+ * @param {string} topFlavorText The flavor text for this panel, if any.
+ * @param {PanelRankupReward[]} panelRewards All rewards associated with this panel.
+ * @param {PanelParameter[]} panelParameters All parameters this panel affects.
+ */
 StatDistributionPanel.prototype.initialize = function(
   name,
   key, 
@@ -2484,9 +2547,9 @@ StatDistributionPanel.prototype.initialize = function(
   baseCost,
   flatGrowthCost,
   multGrowthCost,
-  maxReward,
-  maxRewardDescription,
-  ...panelParameters) {
+  topFlavorText,
+  panelRewards,
+  panelParameters) {
     /**
     * Gets the friendly name for this SDP.
     * @type {string}
@@ -2542,19 +2605,19 @@ StatDistributionPanel.prototype.initialize = function(
     this.multGrowthCost = multGrowthCost;
 
     /**
-    * The effect of what happens when this panel is maxed out.
+    * The description that shows up underneath the name in the details window.
     * @type {string}
     */
-    this.maxReward = maxReward;
+    this.topFlavorText = topFlavorText;
 
     /**
-    * The description of the what happens when you max out this panel.
-    * @type {string}
-    */
-    this.maxRewardDescription = maxRewardDescription;
+     * The collection of all rewards this panel can grant by ranking it up.
+     * @type {PanelRankupReward[]}
+     */
+    this.panelRewards = panelRewards;
 
     /**
-    * Gets all parameters that this SDP affects.
+    * The collection of all parameters that this panel affects when ranking it up.
     * @returns {PanelParameter[]}
     */
     this.panelParameters = panelParameters;
@@ -2587,6 +2650,17 @@ StatDistributionPanel.prototype.getPanelParameterById = function(paramId) {
 };
 
 /**
+ * Gets the panel rewards attached to the provided `rank`.
+ * @param {number} rank The rank to check and see if there are any rewards for.
+ * @returns {PanelRankupReward[]}
+ */
+StatDistributionPanel.prototype.getPanelRewardsByRank = function(rank) {
+  const panelRewards = this.panelRewards;
+  const result = panelRewards.filter(reward => reward.rankRequired === rank);
+  return result;
+};
+
+/**
 * Gets whether or not this SDP is unlocked.
 * @returns {boolean} True if this SDP is unlocked, false otherwise.
 */
@@ -2609,6 +2683,35 @@ StatDistributionPanel.prototype.unlock = function() {
 };
 //#endregion StatDistributionPanel
 
+//#region PanelRankupReward
+/**
+* A class that represents a single reward for achieving a particular rank in a panel.
+*/
+function PanelRankupReward() { this.initialize(...arguments); }
+PanelRankupReward.prototype = {};
+PanelRankupReward.prototype.constructor = PanelRankupReward;
+
+/**
+ * Initializes a single rankup reward.
+ * @param {number} rankRequired The rank required.
+ * @param {string} effect The effect to execute.
+ */
+PanelRankupReward.prototype.initialize = function(rankRequired, effect) {
+  /**
+   * The rank required for this panel rankup reward to be executed.
+   * @type {number}
+   */
+  this.rankRequired = rankRequired;
+
+  /**
+   * The effect to be executed upon reaching the rank required.
+   * The effect is captured as javascript.
+   * @type {string}
+   */
+  this.effect = effect;
+};
+//#endregion PanelRankupReward
+
 //#region PanelParameter
 /**
 * A class that represents a single parameter and its growth for a SDP.
@@ -2618,7 +2721,7 @@ PanelParameter.prototype = {};
 PanelParameter.prototype.constructor = PanelParameter;
 
 /**
-* 
+* Initializes a single panel parameter.
 * @param {number} parameterId The parameter this class represents.
 * @param {number} perRank The amount per rank this parameter gives.
 * @param {boolean} isFlat True if it is flat growth, false if it is percent growth.
@@ -2652,6 +2755,10 @@ function PanelRanking() { this.initialize(...arguments); }
 PanelRanking.prototype = {};
 PanelRanking.prototype.constructor = PanelRanking;
 
+/**
+ * Initializes a single panel ranking for tracking on a given actor.
+ * @param {string} key The unique key for the panel to be tracked.
+ */
 PanelRanking.prototype.initialize = function(key) {
   /**
   * The key for this panel ranking.
@@ -2683,13 +2790,16 @@ PanelRanking.prototype.initMembers = function() {
 * and then max the panel out.
 */
 PanelRanking.prototype.rankUp = function() {
-  const maxRank = $gameSystem.getSdp(this.key).maxRank;
+  const panel = $gameSystem.getSdp(this.key);
+  const maxRank = panel.maxRank;
   if (this.currentRank < maxRank) {
     this.currentRank++;
+    this.performRepeatRankupEffects();
+    this.performCurrentRankupEffects();
   }
 
-  if (this.currentRank === maxRank && !this.isPanelMaxed()) {
-    this.performMaxEffect();
+  if (this.currentRank === maxRank) {
+    this.performMaxRankupEffects();
   }
 };
 
@@ -2702,26 +2812,45 @@ PanelRanking.prototype.isPanelMaxed = function() {
 };
 
 /**
-* Sets this panel to be maxed out.
-*/
-PanelRanking.prototype.maxPanel = function() {
-  this.maxed = true;
+ * Upon reaching a given rank of this panel, try to perform this `javascript` effect.
+ * @param {number} newRank The rank to inspect and execute effects for.
+ */
+PanelRanking.prototype.performRankupEffects = function(newRank) {
+  const a = $gameParty.leader();
+  const rewardEffects = $gameSystem
+    .getSdp(this.key)
+    .getPanelRewardsByRank(newRank);
+  if (rewardEffects.length > 0) {
+    rewardEffects.forEach(rewardEffect => {
+      try {
+        eval(rewardEffect.effect);
+      } catch (err) {
+        console.error(`An error occurred while trying to execute the rank-${this.currentRank} reward for panel: ${this.key}`);
+        console.error(err);
+      }
+    });
+  }
 };
 
 /**
-* Upon maxing the panel, try to perform this `javascript` effect.
-*/
-PanelRanking.prototype.performMaxEffect = function() {
-  const a = $gameParty.leader();
-  SoundManager.playMagicEvasion();
-  const rewardEffect = $gameSystem.getSdp(this.key).maxReward;
-  try {
-    eval(rewardEffect);
-    this.maxPanel();
-  } catch (err) {
-    console.error(`An error occurred while trying to execute the maxreward for panel: ${this.key}`);
-    console.error(err);
-  }
+ * Executes any rewards associated with the current rank (used after ranking up typically).
+ */
+PanelRanking.prototype.performCurrentRankupEffects = function() {
+  this.performRankupEffects(this.currentRank);
+};
+
+/**
+ * Executes any rewards that are defined as "repeat rankup effects", aka -1 rank.
+ */
+PanelRanking.prototype.performRepeatRankupEffects = function() {
+  this.performRankupEffects(-1);
+};
+
+/**
+ * Executes any rewards that are defined as "max rankup effects", aka 0 rank.
+ */
+PanelRanking.prototype.performMaxRankupEffects = function() {
+  this.performRankupEffects(0);
 };
 //#endregion PanelRanking
 //#endregion SDP classes
