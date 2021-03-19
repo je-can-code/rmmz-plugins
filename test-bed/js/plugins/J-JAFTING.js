@@ -4,9 +4,11 @@
  * @plugindesc 
  * [v1.0 JAFT] Enables a new jafting menu that allows item creation and refinement.
  * @author JE
- * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
+ * @url https://github.com/je-can-code/rmmz
  * @help
- * no help 4 u
+ * This is not officially released and thus has no/incomplete documentation.
+ * 
+ * If you really want to use it, just look at the plugin commands.
  * 
  * @command Call Jafting Menu
  * @text Access the Jafting Menu
@@ -110,9 +112,6 @@ J.JAFTING.Aliased = {
  */
 PluginManager.registerCommand(J.JAFTING.Metadata.Name, "Call Jafting Menu", () => {
   $gameSystem.startJafting();
-  if (J.ABS && J.ABS.Metadata.Enabled) {
-    $gameBattleMap.absPause = true;
-  }
 });
 
 /**
@@ -120,9 +119,6 @@ PluginManager.registerCommand(J.JAFTING.Metadata.Name, "Call Jafting Menu", () =
  */
 PluginManager.registerCommand(J.JAFTING.Metadata.Name, "Close Jafting Menu", () => {
   $gameSystem.endJafting();
-  if (J.ABS && J.ABS.Metadata.Enabled) {
-    $gameBattleMap.absPause = false;
-  }
 });
 
 /**
@@ -225,14 +221,16 @@ Game_Party.prototype.maxItems = function(item = null) {
 //#endregion Game_Party
 
 //#region Game_Player
+/**
+ * Extends the canMove function to ensure the player can't move around while
+ * in the JAFTING menu.
+ */
 J.JAFTING.Aliased.Game_Player.canMove = Game_Player.prototype.canMove;
 Game_Player.prototype.canMove = function() {
-  if (J.ABS) {
-    return J.JAFTING.Aliased.Game_Player.canMove.call(this);
-  }
-
   if ($gameSystem.isJafting()) {
     return false;
+  } else {
+    return J.JAFTING.Aliased.Game_Player.canMove.call(this);
   }
 };
 //#endregion Game_Player
@@ -802,10 +800,10 @@ Scene_Map.prototype.update = function() {
   J.JAFTING.Aliased.Scene_Map.update.call(this);
 
   if ($gameSystem.isRefreshRequested()) {
+    $gameSystem.setRefreshRequest(false);
     this._j._jaftingMenu._recipeListWindow.refresh();
     this._j._jaftingMenu._ingredientsRequiredWindow.refresh();
     this._j._jaftingMenu._categoryWindow.refresh();
-    $gameSystem.setRefreshRequest(false);
   }
 
   if ($gameSystem.isJafting()) {
