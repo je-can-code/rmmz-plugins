@@ -165,7 +165,7 @@ Game_Event.prototype.parseEventComments = function() {
   this.clearDescribeData();
   
   // don't try to do things with actions- they are volatile.
-  if (J.ABS && this.isAction()) return;
+  if (J.ABS && (this.isAction() || this.isLoot())) return;
 
   // don't try to parse events that aren't "present".
   if (this._pageIndex === -1 || this._pageIndex === -2) return;
