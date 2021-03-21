@@ -538,10 +538,6 @@ BattleManager.gainSdpPoints = function() {
   $gameParty.members().forEach(member => {
     member.modSdpPoints(sdpPoints);
   });
-  if (sdpPoints > 0) {
-      const text = `${sdpPoints} SDP points were earned!`;
-      $gameMessage.add("\\." + text);
-  }
 };
 //#endregion BattleManager
 
@@ -754,67 +750,65 @@ Game_Actor.prototype.sparam = function(sparamId) {
 //#endregion Game_Actor
 
 //#region Game_BattleMap
-if (J.ABS) {
 /**
  * Extends the basic rewards from defeating an enemy to also include SDP points.
  */
- J.SDP.Aliased.Game_BattleMap.gainBasicRewards = Game_BattleMap.prototype.gainBasicRewards;
-  Game_BattleMap.prototype.gainBasicRewards = function(enemy, actor) {
-    J.SDP.Aliased.Game_BattleMap.gainBasicRewards.call(this, enemy, actor);
-    let sdpPoints = enemy.sdpPoints();
-  
-    if (!sdpPoints) return;
-  
-    const actorSprite = actor.getCharacter();
-    const levelMultiplier = this.getRewardScalingMultiplier(enemy, actor);
-    sdpPoints = Math.ceil(sdpPoints * levelMultiplier);
-  
-    this.gainSdpReward(sdpPoints, actorSprite);
-    this.createSdpLog(sdpPoints, actor);
-  };
+J.SDP.Aliased.Game_BattleMap.gainBasicRewards = Game_BattleMap.prototype.gainBasicRewards;
+Game_BattleMap.prototype.gainBasicRewards = function(enemy, actor) {
+  J.SDP.Aliased.Game_BattleMap.gainBasicRewards.call(this, enemy, actor);
+  let sdpPoints = enemy.sdpPoints();
 
-  /**
-   * Gains SDP points from battle rewards.
-   * @param {number} sdpPoints The SDP points to gain.
-   * @param {Game_Character} actorSprite The sprite that visually represents the actor.
-   */
-  Game_BattleMap.prototype.gainSdpReward = function(sdpPoints, actorSprite) {
-    // don't do anything if the enemy didn't grant any sdp points.
-    if (!sdpPoints) return;
+  if (!sdpPoints) return;
 
-    $gameParty.members().forEach(member => member.modSdpPoints(sdpPoints));
-    const sdpPop = this.configureSdpPop(sdpPoints);
-    actorSprite.addTextPop(sdpPop);
-    actorSprite.setRequestTextPop();
-  };
+  const actorSprite = actor.getCharacter();
+  const levelMultiplier = this.getRewardScalingMultiplier(enemy, actor);
+  sdpPoints = Math.ceil(sdpPoints * levelMultiplier);
 
-  /**
-   * Creates the text pop of the SDP points gained.
-   * @param {number} exp The amount of experience gained.
-   */
-  Game_BattleMap.prototype.configureSdpPop = function(sdpPoints) {
-    const iconId = 306;
-    const textColor = 17;
-    const popup = new JABS_TextPop(
-      null,
-      iconId,
-      textColor,
-      null,
-      null,
-      "sdp",
-      sdpPoints);
-    return popup;
-  };
+  this.gainSdpReward(sdpPoints, actorSprite);
+  this.createSdpLog(sdpPoints, actor);
+};
 
-  Game_BattleMap.prototype.createSdpLog = function(sdpPoints, battler) {
-    if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+/**
+ * Gains SDP points from battle rewards.
+ * @param {number} sdpPoints The SDP points to gain.
+ * @param {Game_Character} actorSprite The sprite that visually represents the actor.
+ */
+Game_BattleMap.prototype.gainSdpReward = function(sdpPoints, actorSprite) {
+  // don't do anything if the enemy didn't grant any sdp points.
+  if (!sdpPoints) return;
 
-    const battlerData = battler.getReferenceData();
-    const sdpMessage = `${battlerData.name} earned ${sdpPoints} SDP points.`;
-    const sdpLog = new Map_TextLog(sdpMessage, -1);
-    $gameTextLog.addLog(sdpLog);
-  };
-}
+  $gameParty.members().forEach(member => member.modSdpPoints(sdpPoints));
+  const sdpPop = this.configureSdpPop(sdpPoints);
+  actorSprite.addTextPop(sdpPop);
+  actorSprite.setRequestTextPop();
+};
+
+/**
+ * Creates the text pop of the SDP points gained.
+ * @param {number} exp The amount of experience gained.
+ */
+Game_BattleMap.prototype.configureSdpPop = function(sdpPoints) {
+  const iconId = 306;
+  const textColor = 17;
+  const popup = new JABS_TextPop(
+    null,
+    iconId,
+    textColor,
+    null,
+    null,
+    "sdp",
+    sdpPoints);
+  return popup;
+};
+
+Game_BattleMap.prototype.createSdpLog = function(sdpPoints, battler) {
+  if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+
+  const battlerData = battler.getReferenceData();
+  const sdpMessage = `${battlerData.name} earned ${sdpPoints} SDP points.`;
+  const sdpLog = new Map_TextLog(sdpMessage, -1);
+  $gameTextLog.addLog(sdpLog);
+};
 //#endregion Game_BattleMap
 
 //#region Game_Switches
@@ -935,8 +929,7 @@ Game_System.prototype.getRankByActorAndKey = function(actorId, key) {
  */
 Game_Troop.prototype.sdpTotal = function() {
   const members = this.deadMembers();
-  let sdpPoints = 0;
-  members.forEach(enemy => sdpPoints += enemy.sdpPoints());
+  const sdpPoints = members.reduce((r, enemy) => r.concat(enemy.sdpPoints()), 0);
   return sdpPoints;
 };
 //#endregion Game_Troop
@@ -1245,23 +1238,21 @@ class Scene_SDP extends Scene_MenuBase {
 
 //#region Window objects
 //#region Window_AbsMenu
-if (J.ABS) {
-  /**
-   * Extends the make command list for the JABS quick menu to include SDP, if it meets the conditions.
-   */
-  J.SDP.Aliased.Window_AbsMenu.makeCommandList = Window_AbsMenu.prototype.makeCommandList;
-  Window_AbsMenu.prototype.makeCommandList = function() {
-    J.SDP.Aliased.Window_AbsMenu.makeCommandList.call(this);
-    // if the SDP switch is not ON, then this menu command is not present.
-    if (!$gameSwitches.value(J.SDP.Metadata.Switch)) return;
+/**
+ * Extends the make command list for the JABS quick menu to include SDP, if it meets the conditions.
+ */
+J.SDP.Aliased.Window_AbsMenu.makeCommandList = Window_AbsMenu.prototype.makeCommandList;
+Window_AbsMenu.prototype.makeCommandList = function() {
+  J.SDP.Aliased.Window_AbsMenu.makeCommandList.call(this);
+  // if the SDP switch is not ON, then this menu command is not present.
+  if (!$gameSwitches.value(J.SDP.Metadata.Switch)) return;
 
-    // The menu shouldn't be accessible if there are no panels to work with.
-    const enabled = $gameSystem.getUnlockedSdps().length;
+  // The menu shouldn't be accessible if there are no panels to work with.
+  const enabled = $gameSystem.getUnlockedSdps().length;
 
-    const sdpCommand = { name: "Distribute", symbol: "sdp-menu", enabled, ext: null, icon: J.SDP.Metadata.JabsMenuIcon };
-    this._list.splice(this._list.length-2, 0, sdpCommand);
-  };
-}
+  const sdpCommand = { name: "Distribute", symbol: "sdp-menu", enabled, ext: null, icon: J.SDP.Metadata.JabsMenuIcon };
+  this._list.splice(this._list.length-2, 0, sdpCommand);
+};
 //#endregion Window_AbsMenu
 
 //#region Window_MenuCommand
