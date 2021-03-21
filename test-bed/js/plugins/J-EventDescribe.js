@@ -162,6 +162,8 @@ Game_Event.prototype.setupPage = function() {
  * Parses the event comments to discern the describe data, if any.
  */
 Game_Event.prototype.parseEventComments = function() {
+  this.clearDescribeData();
+  
   // don't try to do things with actions- they are volatile.
   if (J.ABS && this.isAction()) return;
 
@@ -199,6 +201,15 @@ Game_Event.prototype.parseEventComments = function() {
     const describe = new Event_Describe(text, iconIndex, proximityText, proximityIcon);
     this._j._event._describe = describe;
   }
+};
+
+/**
+ * Clears all describe data associated with this event.
+ */
+Game_Event.prototype.clearDescribeData = function() {
+  this._j._event._describe = null;
+  this._j._event._playerNearbyText = null;
+  this._j._event._playerNearbyIcon = null;
 };
 
 /**
@@ -338,6 +349,19 @@ Sprite_Character.prototype.initMembers = function() {
   };
 
   J.Event.Aliased.Sprite_Character.initMembers.call(this);
+};
+
+/**
+ * If the "character" has describe data, don't make it invisible for the time being.
+ * @returns {boolean} True if the character should be drawn, false otherwise.
+ */
+J.Event.Aliased.Sprite_Character.isEmptyCharacter = Sprite_Character.prototype.isEmptyCharacter;
+Sprite_Character.prototype.isEmptyCharacter = function() {
+   if (this._character.hasDescribeData() && !this._character._erased) {
+     return false;
+   } else {
+     return J.Event.Aliased.Sprite_Character.isEmptyCharacter.call(this);
+   }
 };
 
 //#region setup describe sprites
