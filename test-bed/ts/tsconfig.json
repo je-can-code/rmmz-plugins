@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./js/fromTs/",
+    "outDir": "./js/plugins/",
     "allowJs": true,
     "target": "es5"
   },
