@@ -2,13 +2,11 @@
 /*:
  * @target MZ
  * @plugindesc 
- * A menu rewrite.
+ * [v1.0 JCMS] J's Custom Menu System- for menus that need more sprucing up.
  * @author JE
- * @url https://dev.azure.com/je-can-code/RPG%20Maker/_git/rmmz
+ * @url https://github.com/je-can-code/rmmz
  * @help
- * # Start of Help
- * 
- * # End of Help
+ * This is not officially released and thus has no/incomplete documentation.
  */
 
  /**
