@@ -2048,7 +2048,7 @@ Game_Interpreter.prototype.command201 = function(params) {
     this.setWaitMode("transfer");
     return true;
   } else {
-   return J.ABS.Aliased.Game_Interpreter.command201.call(this, params);
+    return J.ABS.Aliased.Game_Interpreter.command201.call(this, params);
   }
 };
 
@@ -2057,7 +2057,7 @@ Game_Interpreter.prototype.command201 = function(params) {
  * Removed the check for seeing if the player is in-battle, because the player
  * is technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command201 = Game_Interpreter.prototype.command201;
+J.ABS.Aliased.Game_Interpreter.command204 = Game_Interpreter.prototype.command204;
 Game_Interpreter.prototype.command204 = function(params) {
   if ($gameBattleMap.absEnabled) {
     if ($gameMap.isScrolling()) {
@@ -2072,7 +2072,7 @@ Game_Interpreter.prototype.command204 = function(params) {
 
     return true;
   } else {
-    return J.ABS.Aliased.Game_Interpreter.command201.call(this, params);
+    return J.ABS.Aliased.Game_Interpreter.command204.call(this, params);
   }
 };
 
