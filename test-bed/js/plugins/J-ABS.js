@@ -2179,6 +2179,9 @@ Game_Map.prototype.setup = function(mapId) {
  * Initializes all enemies and the battle map for JABS.
  */
 Game_Map.prototype.jabsInitialization = function() {
+  // don't do things if we aren't using JABS.
+  if (!$gameBattleMap.absEnabled) return;
+
   $gameBattleMap.initialize();
   this.refreshAllBattlers();
 };
@@ -2806,8 +2809,10 @@ Scene_Map.prototype.initialize = function() {
  */
 J.ABS.Aliased.Scene_Map.onMapLoaded = Scene_Map.prototype.onMapLoaded;
 Scene_Map.prototype.onMapLoaded = function() {
-  $gameBattleMap.initialize();
-  $gameBattleMap.initializePlayerBattler();
+  if ($gameBattleMap.absEnabled) {
+    $gameBattleMap.initialize();
+    $gameBattleMap.initializePlayerBattler();  
+  }
   J.ABS.Aliased.Scene_Map.onMapLoaded.call(this);
 };
 
@@ -2851,18 +2856,18 @@ Scene_Map.prototype.update = function() {
   J.ABS.Aliased.Scene_Map.update.call(this);
   this.handleJabsWindowsVisibility();
 
-  // if the ABS is disabled, then don't update it.
-  if (!$gameBattleMap.absEnabled) return;
-
-  // update the JABS engine!
-  JABS_AiManager.update();
-
   // handle the JABS menu.
   if ($gameBattleMap.requestAbsMenu) {
     this.manageAbsMenu();
   } else {
     this.hideAllJabsWindows();
   }
+
+  // if the ABS is disabled, then don't update it.
+  if (!$gameBattleMap.absEnabled) return;
+
+  // update the JABS engine!
+  JABS_AiManager.update();
 
   // handle rotation.
   if ($gameBattleMap.requestPartyRotation) {
@@ -3776,6 +3781,25 @@ Sprite_Character.prototype.update = function() {
 };
 
 /**
+ * Updates the battler's overlay for states (if applicable).
+ */
+Sprite_Character.prototype.updateStateOverlay = function() {
+  const mapBattler = this._character.getMapBattler();
+  if (mapBattler) {
+    if (this.canUpdate()) {
+      if (!this._stateOverlaySprite) {
+        this.setupMapSprite();
+      }
+
+      this._stateOverlaySprite.update();
+      this.showStateOverlay();
+    } else {
+      this.hideStateOverlay();
+    }
+  }
+};
+
+/**
  * Updates the all gauges associated with this battler
  */
 Sprite_Character.prototype.updateGauges = function() {
@@ -3841,6 +3865,24 @@ Sprite_Character.prototype.updateGauges = function() {
   }
 
   return true;
+};
+
+/**
+ * Shows the state overlay if it exists.
+ */
+Sprite_Character.prototype.showStateOverlay = function() {
+  if (this._stateOverlaySprite) {
+    this._stateOverlaySprite.opacity = 255;
+  }
+};
+
+/**
+ * Hides the state overlay if it exists.
+ */
+Sprite_Character.prototype.hideStateOverlay = function() {
+  if (this._stateOverlaySprite) {
+    this._stateOverlaySprite.opacity = 0;
+  }
 };
 
 /**
@@ -3944,13 +3986,6 @@ Sprite_Character.prototype.lootFloatUp = function(lootSprite) {
   this._loot._oy -= 0.3;
   lootSprite.y -= 0.3;
   if (this._loot._oy < -5) this._loot._swing = true;
-};
-
-/**
- * Updates the battler's overlay for states (if applicable).
- */
-Sprite_Character.prototype.updateStateOverlay = function() {
-  this._stateOverlaySprite.update();
 };
 
 /**
@@ -4662,7 +4697,8 @@ class Game_BattleMap {
    * @param {boolean} enabled Whether or not the ABS is enabled (default = true).
    */
   set absEnabled(enabled) {
-    return this._absEnabled = enabled;
+    this._absEnabled = enabled;
+    $gameMap.jabsInitialization();
   };
 
   /**
@@ -4694,15 +4730,7 @@ class Game_BattleMap {
    * @param {boolean} requested Whether or not we want to request the menu (default: true).
    */
   set requestAbsMenu(requested) {
-    return this._requestAbsMenu = requested;
-  };
-
-  /**
-   * Returns all current events being managed on this battle map.
-   * @returns {JABS_Action[]} The collection of `JABS_Action`s on this battle map.
-   */
-  get actionEvents() {
-    return this._actionEvents;
+    this._requestAbsMenu = requested;
   };
 
   /**
@@ -4986,6 +5014,14 @@ class Game_BattleMap {
     // don't swing all willy nilly while events are executing.
     if ($gameMap.isEventRunning() || $gameMessage.isBusy()) return;
 
+    // menu
+    if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape")) {
+      this.performMenuAction();
+    }
+
+    // don't allow for other inputs if the abs is disabled.
+    if (!this.absEnabled) return;
+
     // strafing can be done concurrently to other actions.
     if (Input.isPressed(J.ABS.Input.L2)) {
       this.performStrafe(true);
@@ -5095,11 +5131,6 @@ class Game_BattleMap {
     // tool action
     if (Input.isTriggered(J.ABS.Input.Y)) {
       this.performToolAction();
-    }
-
-    // menu
-    if (Input.isTriggered(J.ABS.Input.Start) || Input.isTriggered("escape")) {
-      this.performMenuAction();
     }
 
     // party rotation
