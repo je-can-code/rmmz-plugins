@@ -829,7 +829,7 @@ if (J.ABS) {
   };
   
   Game_BattleMap.prototype.createSdpLog = function(sdpPoints, battler) {
-    if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
   
     const battlerData = battler.getReferenceData();
     const sdpMessage = `${battlerData.name} earned ${sdpPoints} SDP points.`;

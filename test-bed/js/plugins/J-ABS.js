@@ -2885,7 +2885,9 @@ Scene_Map.prototype.update = function() {
  */
 Scene_Map.prototype.handlePartyRotation = function() {
   $gameBattleMap.requestPartyRotation = false;
-  this.refreshHud();
+  if (J.Hud && J.Hud.Metadata.Enabled) {
+    this.refreshHud();
+  }
 };
 
 /**
@@ -2893,13 +2895,13 @@ Scene_Map.prototype.handlePartyRotation = function() {
  */
 Scene_Map.prototype.handleJabsWindowsVisibility = function() {
   if ($gameBattleMap.absEnabled && !$gameMessage.isBusy()) {
-    this.toggleHud(true);
-    this.toggleLog(true);
-    this.toggleKeys(true);
+    if (J.Hud && J.Hud.Metadata.Enabled) this.toggleHud(true);
+    if (J.TextLog && J.TextLog.Metadata.Enabled) this.toggleLog(true);
+    if (J.ActionKeys && J.ActionKeys.Metadata.Enabled) this.toggleKeys(true);
   } else {
-    this.toggleHud(false);
-    this.toggleLog(false);
-    this.toggleKeys(false);
+    if (J.Hud && J.Hud.Metadata.Enabled) this.toggleHud(false);
+    if (J.TextLog && J.TextLog.Metadata.Enabled) this.toggleLog(false);
+    if (J.ActionKeys && J.ActionKeys.Metadata.Enabled) this.toggleKeys(false);
   }
 };
 
@@ -4779,7 +4781,7 @@ class Game_BattleMap {
    * for removal.
    */
   clearActionEvents() {
-    const actionEvents = this.actionEvents;
+    const actionEvents = this._actionEvents;
     const updatedActionEvents = actionEvents.filter(action => {
       return !action.getNeedsRemoval();
     });
@@ -5213,9 +5215,11 @@ class Game_BattleMap {
 
     // request the scene overlord to take notice and react accordingly (refresh hud etc).
     this.requestPartyRotation = true;
-    const battlerName = this.getPlayerMapBattler().battlerName();
-    const log = new Map_TextLog(`Party cycled to ${battlerName}.`, -1);
-    $gameTextLog.addLog(log);
+    if (J.TextLog && J.TextLog.Metadata.Enabled) {
+      const battlerName = this.getPlayerMapBattler().battlerName();
+      const log = new Map_TextLog(`Party cycled to ${battlerName}.`, -1);
+      $gameTextLog.addLog(log);
+    }
   };
 
   /**
@@ -5378,7 +5382,7 @@ class Game_BattleMap {
    * checking piercing information, and applying effects against the map.
    */
   updateActions() {
-    const actionEvents = this.actionEvents;
+    const actionEvents = this._actionEvents;
     actionEvents.forEach(action => {
       // if the duration of the action expires, remove it.
       action.countdownDuration();
@@ -6169,7 +6173,7 @@ class Game_BattleMap {
    */
   createAttackLog(action, skill, result, caster, target) {
     // if not enabled, skip this.
-    if (!J.TextLog.Metadata.Enabled) return;
+    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
 
     const skillName = skill.name;
     const casterName = caster.getReferenceData().name;
@@ -6711,7 +6715,7 @@ class Game_BattleMap {
    * @param {JABS_Battler} caster The ally gaining the experience and gold.
    */
   createRewardsLog(experience, gold, caster) {
-    if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
 
     if (experience != 0) {
       const casterData = caster.getReferenceData();
@@ -6749,7 +6753,7 @@ class Game_BattleMap {
    * @param {object} item The reference data for the item loot that was picked up.
    */
   createLootLog(item) {
-    if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
 
     // the player is always going to be the one collecting the loot- for now.
     const casterName = this.getPlayerMapBattler().getReferenceData().name;
@@ -6814,7 +6818,7 @@ class Game_BattleMap {
    * @param {JABS_Battler} player The player.
    */
   createLevelUpLog(player) {
-    if (!J.TextLog.Metadata.Enabled || !J.TextLog.Metadata.Active) return;
+    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
 
     const leaderData = player.getReferenceData();
     const leaderName = leaderData.name;
@@ -10211,7 +10215,7 @@ JABS_Battler.prototype.applyToolForAllOpponents = function(toolId) {
  */
 JABS_Battler.prototype.createToolLog = function(item) {
   // if not enabled, skip this.
-  if (!J.TextLog.Metadata.Active) return;
+  if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
 
   const battleMessage = `${this.getReferenceData().name} used the ${item.name}.`;
   const log = new Map_TextLog(battleMessage, -1);
