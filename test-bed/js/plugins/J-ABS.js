@@ -5195,16 +5195,16 @@ class Game_BattleMap {
    * Actually executes the party cycling and swaps to the next living member.
    */
   performPartyCycling() {
-    //const isNextAllyDead = $gameParty._actors.find(actorId => {
-    //  return !$gameActors.actor(actorId).isDead();
-    //});
+    const nextLivingAllyIndex = $gameParty._actors.findIndex((actorId, index) => {
+      if (index === 0) return false; // don't look at the current leader.
+      return !$gameActors.actor(actorId).isDead();
+    });
 
-    // if next member is dead, then don't rotate.
-    const isNextMemberDead = $gameActors.actor($gameParty._actors[1]).isDead();
-    if (isNextMemberDead) return;
+    // can't cycle if there are no living/valid members.
+    if (nextLivingAllyIndex === -1) return;
 
     // swap to the next party member in the sequence.
-    $gameParty._actors.push($gameParty._actors.shift());
+    $gameParty._actors = $gameParty._actors.concat($gameParty._actors.splice(0, nextLivingAllyIndex));
     $gamePlayer.refresh();
     $gamePlayer.requestAnimation(40, false);
 
@@ -5220,6 +5220,14 @@ class Game_BattleMap {
       const log = new Map_TextLog(`Party cycled to ${battlerName}.`, -1);
       $gameTextLog.addLog(log);
     }
+  };
+
+  shiftArray(theArray, times) {
+    // roll over when longer than length
+    times = times % theArray.length;
+    var newArray = theArray.slice(times);
+    newArray = newArray.concat(theArray.slice(0, times));
+    return newArray;
   };
 
   /**
