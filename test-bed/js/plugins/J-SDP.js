@@ -6,31 +6,38 @@
  * contain various stats.
  * @author JE
  * @url https://github.com/je-can-code/rmmz
- * @base J-Base
- * @orderAfter J-Base
+ * @base J-BASE
+ * @orderAfter J-BASE
  * @orderAfter J-ABS
  * @help
- * This should go below both J-Base (and J-ABS if that is being used, too).
+ * ============================================================================
+ * This plugin is a form of "stat distribution"- an alternative to the standard
+ * of leveling up to raise an actor's stats.
  * 
- * Step1:
- * Add new SDPs to the Stat Distribution Panels section.
+ * This system allows the player's party to unlock "stat distribution panels"
+ * (aka SDPs), by means of plugin command.
  * 
- * Step2:
- * Unlock panels using plugin commands.
+ * The scene to manage unlocked SDPs is accessible via the menu, the JABS
+ * quick menu, or via plugin command.
  * 
- * Step3:
- * Assign enemies points with <sdpPoints:NUM>, where NUM is how many points an enemy is worth.
+ * Each SDP has the following:
+ * - 1+ parameters (of the 27 available in RMMZ) with flat/percent growth.
+ * - A fixed rank max.
+ * - A relatively customizable formula to determine cost to rank up.
+ * - Customizable name/icon/description1/description2.
+ * - Rank up rewards for any/every/max rank, which can be most anything.
  * 
- * Step4:
- * Defeat said enemies to gain points.
+ * In order to rank up these SDPs, you'll need to use SDP points (surprise!).
+ * These are most commonly acquired from enemies through tags:
  * 
- * Step5:
- * Access the SDP menu either by:
- * - using the plugin command
- * - using a script call: SceneManager.push(Scene_Sdp);
+ * <sdp:POINTS>
+ * where POINTS is a number representing the amount of points earned.
  * 
- * Step6:
- * Level up your panels and profit.
+ * SDP points can also be acquired by using plugin commands. Typically, when
+ * an enemy is defeated, all members of the party will gain the SDP points, but
+ * when spending them, it is actor-specific due to panel ranks also being
+ * actor-specific (allowing specialization for the player if they want).
+ * ============================================================================
  * 
  * @param SDPconfigs
  * @text SDP SETUP
@@ -311,17 +318,21 @@
  * @default a.learnSkill(10);
  */
 
-if (J.Base.Metadata.Version < 1.00) {
-  let message = `In order to use JABS, `;
-  message += `you gotta have the "J-Base.js" enabled, `;
-  message += `placed above the SDP plugin, `;
-  message += `and at version 1.00 or higher.`;
-  throw Error(message);
-}
 /**
  * The core where all of my extensions live: in the `J` object.
  */
 var J = J || {};
+
+//#region version checks
+(() => {
+  // Check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '1.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (!hasBaseRequirement) {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//#endregion version check
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -519,7 +530,6 @@ PluginManager.registerCommand(J.SDP.Metadata.Name, "Modify party SDP points", ar
 //#endregion Introduction
 
 //#region Static objects
-
 //#region BattleManager
 /**
  * Extends the creation of the rewards object to include SDP points.
@@ -567,6 +577,33 @@ BattleManager.displaySdp = function() {
 };
 //#endregion BattleManager
 
+//#region DataManager
+/**
+ * Updates existing save files with the updated SDP plugin metadata.
+ */
+J.SDP.Aliased.DataManager.extractSaveContents = DataManager.extractSaveContents;
+DataManager.extractSaveContents = function(contents) {
+  const fromPluginSettingsSdp = $gameSystem._j._sdp;
+  const fromSaveFileSdp = contents.system._j._sdp;
+  fromSaveFileSdp._panels.forEach(savedSdp => {
+    const updatedSdp = fromPluginSettingsSdp._panels
+      .find(settingsSdp => settingsSdp.key === savedSdp.key);
+    // if the SDP no longer exists, don't do anything with it.
+    if (!updatedSdp) return;
+
+    // if it was unlocked before, it stays unlocked.
+    if (savedSdp.isUnlocked()) {
+      if (updatedSdp) {
+        updatedSdp.unlock();
+      }
+    }
+  });
+
+  // update the save file data with the modified plugin settings JAFTING data.
+  contents.system._j._sdp = fromPluginSettingsSdp;
+  J.SDP.Aliased.DataManager.extractSaveContents.call(this, contents);
+};
+//#endregion DataManager
 //#endregion Static objects
 
 //#region Game objects
@@ -750,12 +787,8 @@ Game_Actor.prototype.param = function(paramId) {
 J.SDP.Aliased.Game_Actor.xparam = Game_Actor.prototype.xparam;
 Game_Actor.prototype.xparam = function(xparamId) {
   const baseParam = J.SDP.Aliased.Game_Actor.xparam.call(this, xparamId);
-  let hitGrowth = 0;
-  if (xparamId === 0) { // HIT-only
-    hitGrowth = this.hitGrowth();
-  }
   const panelModifications = this.getSdpBonusForNonCoreParam(xparamId, baseParam, 8);
-  const result = baseParam + panelModifications + hitGrowth;
+  const result = baseParam + panelModifications;
   return result;
 };
 
@@ -765,12 +798,8 @@ Game_Actor.prototype.xparam = function(xparamId) {
 J.SDP.Aliased.Game_Actor.sparam = Game_Actor.prototype.sparam;
 Game_Actor.prototype.sparam = function(sparamId) {
   const baseParam = J.SDP.Aliased.Game_Actor.sparam.call(this, sparamId);
-  let grdGrowth = 0;
-  if (sparamId === 1) { // GRD-only
-    grdGrowth = this.grdGrowth();
-  }
   const panelModifications = this.getSdpBonusForNonCoreParam(sparamId, baseParam, 18);
-  const result = baseParam + panelModifications + grdGrowth;
+  const result = baseParam + panelModifications;
   return result;
 };
 //#endregion Game_Actor
@@ -829,7 +858,7 @@ if (J.ABS) {
   };
   
   Game_BattleMap.prototype.createSdpLog = function(sdpPoints, battler) {
-    if (!J.TextLog || !J.TextLog.Metadata.Enabled) return;
+    if (!J.LOG.Metadata.Enabled || !J.LOG.Metadata.Active) return;
   
     const battlerData = battler.getReferenceData();
     const sdpMessage = `${battlerData.name} earned ${sdpPoints} SDP points.`;
@@ -1564,15 +1593,24 @@ class Window_SDP_Details extends Window_Base {
     const rw = 200;
     const isPositive = perRank >= 0 ? '+' : '';
     const currentValue = parseFloat(value);
-    const potentialValue = isFlat
-      ? (currentValue + perRank)
+    let potentialValue = isFlat
+      ? (currentValue + perRank).toFixed(2)
       : (currentValue + (currentValue * (perRank / 100)));
+    potentialValue = Number(potentialValue);
+    if (!Number.isInteger(potentialValue)) {
+      potentialValue = potentialValue.toFixed(2);
+    }
     const modifier = isFlat
       ? perRank
       : (potentialValue - currentValue).toFixed(2);
-    const potentialColor = (currentValue > potentialValue && !smallerIsBetter)
-      ? ColorManager.deathColor() 
+    let potentialColor = (currentValue > potentialValue && !smallerIsBetter)
+      ? ColorManager.deathColor()
       : ColorManager.powerUpColor();
+
+    // if it is one of the parameters where smaller is better, then going up is bad.
+    if (currentValue < potentialValue && smallerIsBetter) {
+      potentialColor = ColorManager.deathColor();
+    }
 
     const isPercent = isFlat ? `` : `%`;
 
@@ -1596,9 +1634,10 @@ class Window_SDP_Details extends Window_Base {
   };
 
   /**
-   * Translates a parameter id into an object with its name, value, and iconIndex.
+   * Translates a parameter id into an object with its name, value, iconIndex, and whether or not
+   * a parameter being smaller is an improvement..
    * @param {number} paramId The id to translate.
-   * @returns {{name:string, value:number, iconIndex:number, smallerIsBetter:boolean}} An object containing the name, value, and iconIndex.
+   * @returns {{name:string, value:number, iconIndex:number, smallerIsBetter:boolean}}
    */
   translateParameter(paramId) {
     const actor = this.currentActor;

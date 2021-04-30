@@ -5,6 +5,8 @@
  * [v1.0 DESC] Enables "describing" the event with some text and/or an icon.
  * @author JE
  * @url https://github.com/je-can-code/rmmz
+ * @base J-BASE
+ * @orderAfter J-BASE
  * @help
  * ============================================================================
  * This plugin allows the functionality to have events with text and/or icons
@@ -48,37 +50,41 @@
  */
 var J = J || {};
 
+//#region version checks
+(() => {
+  // Check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '1.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (!hasBaseRequirement) {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//#endregion version check
+
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
-J.Event = {};
+J.DESCRIBE = {};
  
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.Event.Metadata = {
+J.DESCRIBE.Metadata = {
   /**
- * The name of this plugin.
- */
+   * The name of this plugin.
+   */
   Name: `J-EventDescribe`,
-};
- 
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.Event.PluginParameters = PluginManager.parameters(J.Event.Metadata.Name);
-J.Event.Metadata = {
-  ...J.Event.Metadata,
+
   /**
    * The version of this plugin.
    */
-  Version: 1.0,
+  Version: '1.0.0',
 };
 
 /**
  * The collection of all aliased classes for extending.
  */
-J.Event.Aliased = {
+J.DESCRIBE.Aliased = {
   Game_Character: {},
   Game_Event: {},
   Game_Player: {},
@@ -119,7 +125,7 @@ Game_Character.prototype.parseEventComments = function() {
 /**
  * Hooks into the initialization to add our members for containing event data.
  */
-J.Event.Aliased.Game_Event.initMembers = Game_Event.prototype.initMembers;
+J.DESCRIBE.Aliased.Game_Event.initMembers = Game_Event.prototype.initMembers;
 Game_Event.prototype.initMembers = function() {
   this._j = this._j || {};
 
@@ -146,24 +152,22 @@ Game_Event.prototype.initMembers = function() {
      */
     _playerNearbyIcon: null,
   };
-  J.Event.Aliased.Game_Event.initMembers.call(this);
+  J.DESCRIBE.Aliased.Game_Event.initMembers.call(this);
 };
 
 /**
  * Extends the page settings for events and adds on custom parameters to this event.
  */
-J.Event.Aliased.Game_Event.setupPage = Game_Event.prototype.setupPage;
+J.DESCRIBE.Aliased.Game_Event.setupPage = Game_Event.prototype.setupPage;
 Game_Event.prototype.setupPage = function() {
   this.parseEventComments();
-  J.Event.Aliased.Game_Event.setupPage.call(this);
+  J.DESCRIBE.Aliased.Game_Event.setupPage.call(this);
 };
 
 /**
  * Parses the event comments to discern the describe data, if any.
  */
 Game_Event.prototype.parseEventComments = function() {
-  this.clearDescribeData();
-  
   // don't try to do things with actions- they are volatile.
   if (J.ABS && (this.isAction() || this.isLoot())) return;
 
@@ -201,15 +205,6 @@ Game_Event.prototype.parseEventComments = function() {
     const describe = new Event_Describe(text, iconIndex, proximityText, proximityIcon);
     this._j._event._describe = describe;
   }
-};
-
-/**
- * Clears all describe data associated with this event.
- */
-Game_Event.prototype.clearDescribeData = function() {
-  this._j._event._describe = null;
-  this._j._event._playerNearbyText = null;
-  this._j._event._playerNearbyIcon = null;
 };
 
 /**
@@ -276,9 +271,9 @@ Game_Event.prototype.hasProximityDescribeData = function() {
 /**
  * Hooks into the update function for this event to update the describe data.
  */
-J.Event.Aliased.Game_Event.update = Game_Event.prototype.update;
+J.DESCRIBE.Aliased.Game_Event.update = Game_Event.prototype.update;
 Game_Event.prototype.update = function() {
-  J.Event.Aliased.Game_Event.update.call(this);
+  J.DESCRIBE.Aliased.Game_Event.update.call(this);
   if (this.hasProximityDescribeData()) {
     this.updateDescribeTextProximity();
     this.updateDescribeIconProximity();
@@ -326,12 +321,11 @@ Game_Event.prototype.distanceFromPlayer = function() {
 //#endregion Game objects
 
 //#region Sprite objects
-
 //#region Sprite_Character
 /**
  * Hooks into the initmembers function to add our properties.
  */
-J.Event.Aliased.Sprite_Character.initMembers = Sprite_Character.prototype.initMembers;
+J.DESCRIBE.Aliased.Sprite_Character.initMembers = Sprite_Character.prototype.initMembers;
 Sprite_Character.prototype.initMembers = function() {
   this._j = this._j || {};
 
@@ -348,19 +342,19 @@ Sprite_Character.prototype.initMembers = function() {
     },
   };
 
-  J.Event.Aliased.Sprite_Character.initMembers.call(this);
+  J.DESCRIBE.Aliased.Sprite_Character.initMembers.call(this);
 };
 
 /**
  * If the "character" has describe data, don't make it invisible for the time being.
  * @returns {boolean} True if the character should be drawn, false otherwise.
  */
-J.Event.Aliased.Sprite_Character.isEmptyCharacter = Sprite_Character.prototype.isEmptyCharacter;
+J.DESCRIBE.Aliased.Sprite_Character.isEmptyCharacter = Sprite_Character.prototype.isEmptyCharacter;
 Sprite_Character.prototype.isEmptyCharacter = function() {
    if (this._character.hasDescribeData() && !this._character._erased) {
      return false;
    } else {
-     return J.Event.Aliased.Sprite_Character.isEmptyCharacter.call(this);
+     return J.DESCRIBE.Aliased.Sprite_Character.isEmptyCharacter.call(this);
    }
 };
 
@@ -369,9 +363,9 @@ Sprite_Character.prototype.isEmptyCharacter = function() {
  * Hooks into the `Sprite_Character.setCharacter` and sets up the visual components
  * of the describe for this event..
  */
-J.Event.Aliased.Sprite_Character.setCharacterBitmap = Sprite_Character.prototype.setCharacterBitmap;
+J.DESCRIBE.Aliased.Sprite_Character.setCharacterBitmap = Sprite_Character.prototype.setCharacterBitmap;
 Sprite_Character.prototype.setCharacterBitmap = function() {
-  J.Event.Aliased.Sprite_Character.setCharacterBitmap.call(this);
+  J.DESCRIBE.Aliased.Sprite_Character.setCharacterBitmap.call(this);
   this._character.parseEventComments();
   if (this._character.hasDescribeData()) {
     this.setupDescribeSprites();
@@ -461,9 +455,9 @@ Sprite_Character.prototype.createDescribeIconSprite = function() {
 /**
  * Hooks into the update function to update our describe sprites.
  */
-J.Event.Aliased.Sprite_Character.update = Sprite_Character.prototype.update;
+J.DESCRIBE.Aliased.Sprite_Character.update = Sprite_Character.prototype.update;
 Sprite_Character.prototype.update = function() {
-  J.Event.Aliased.Sprite_Character.update.call(this);
+  J.DESCRIBE.Aliased.Sprite_Character.update.call(this);
   if (this._character.hasDescribeData()) {
     this.updateDescribe();
   }
@@ -570,14 +564,11 @@ Sprite_Character.prototype.fadeInDescribeIcon = function() {
 
   sprite.opacity += 17;
 };
-//#endregion describe sprites
-
+//#endregion update describe sprites
 //#endregion Sprite_Character
-
 //#endregion Sprite objects
 
 //#region Custom classes
-
 //#region Event_Describe
 /**
  * A single "describe" class which contains various data to describe this event on the map.
@@ -636,7 +627,6 @@ Event_Describe.prototype.proximityIconRange = function() {
   return this._proximityIcon;
 };
 //#endregion Event_Describe
-
 //#endregion Custom classes
 
 //ENDOFFILE
