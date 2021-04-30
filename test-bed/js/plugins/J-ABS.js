@@ -22,6 +22,14 @@
  * @param baseConfigs
  * @text BASE SETUP
  * 
+ * @param maxAiUpdateRange
+ * @parent baseConfigs
+ * @type number
+ * @min 10
+ * @text Max AI Update Range
+ * @desc CHANGE THIS VALUE WITH CAUTION. MAKING THIS TOO HIGH WILL CAUSE LAG IF THERE ARE LOTS(30+) OF ENEMIES IN RANGE.
+ * @default 15
+ * 
  * @param actionMapId
  * @parent baseConfigs
  * @type number
@@ -598,6 +606,9 @@ J.ABS.Metadata.Version = '3.0.0';
  * The actual `plugin parameters` extracted from RMMZ.
  */
 J.ABS.PluginParameters = PluginManager.parameters(J.ABS.Metadata.Name);
+
+// the most important configuration!
+J.ABS.Metadata.MaxAiUpdateRange = Number(J.ABS.PluginParameters['maxAiUpdateRange']) || 20;
 
 // defaults configurations.
 J.ABS.Metadata.DefaultActionMapId = Number(J.ABS.PluginParameters['actionMapId']);
@@ -8395,8 +8406,9 @@ class JABS_AiManager {
    * Define whether or not the player is engaged in combat with any of the current battlers.
    */
   static manageAi() {
-    //const battlers = $gameMap.getBattlers();
-    const battlers = $gameMap.getBattlersWithinRange($gameBattleMap.getPlayerMapBattler(), 20);
+    const battlers = $gameMap.getBattlersWithinRange(
+      $gameBattleMap.getPlayerMapBattler(),
+      J.ABS.Metadata.MaxAiUpdateRange);
     if (!battlers.length) return;
 
     // iterate over each battler available and process it's AI.
