@@ -326,6 +326,60 @@
  * @desc The boost to movement speed when dashing. You may need to toy with this a bit to get it right.
  * @default 1.25
  * 
+ * @param quickmenuConfigs
+ * @text QUICKMENU SETUP
+ * 
+ * @param equipCombatSkillsText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Combat Skills Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip combat skills" command.
+ * @default Equip Combat Skills
+ * 
+ * @param equipDodgeSkillsText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Dodge Skills Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip dodge skills" command.
+ * @default Equip Dodge Skills
+ * 
+ * @param equipToolsText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Tools Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip tools" command.
+ * @default Equip Tools
+ * 
+ * @param mainMenuText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Main MenuText
+ * @desc The text that shows up in the JABS quickmenu for the "main menu" command.
+ * @default Main Menu
+ * 
+ * @param cancelText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Cancel Text
+ * @desc The text that shows up in the JABS quickmenu for the "cancel" command.
+ * @default Cancel
+ * 
+ * @param clearSlotText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Clear Slot Text
+ * @desc The text that shows up in the JABS quickmenu for the "clear slot" command.
+ * @default Clear Slot...
+ * 
+ * @param unassignedText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text UnassignedText
+ * @desc The text that shows up in the JABS quickmenu for the "- unassigned -" command.
+ * @default - unassigned -
+ * 
+ * 
+ * 
  * 
  * @command Enable JABS
  * @text Enable JABS
@@ -596,6 +650,15 @@ J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistan
 J.ABS.Metadata.DisableTextPops = Boolean(J.ABS.PluginParameters['disableTextPops'] === "true");
 J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRubberbandAdjustment']);
 J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
+
+// quick menu commands configurations.
+J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
+J.ABS.Metadata.EquipDodgeSkillsText = J.ABS.PluginParameters['equipDodgeSkillsText'];
+J.ABS.Metadata.EquipToolsText = J.ABS.PluginParameters['equipToolsText'];
+J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
+J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
+J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
+J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
 
 /**
  * A collection of icons that represent the danger level of a given enemy relative to the player.
@@ -5428,11 +5491,12 @@ Sprite_Gauge.prototype.currentValue = function() {
    * Generates the command list for the JABS menu.
    */
   makeCommandList() {
-    this.addCommand("Equip Combat Skills", "skill-assign", true, null, 77);
-    this.addCommand("Equip Dodge Skills", "dodge-assign", true, null, 82);
-    this.addCommand("Equip Tools", "item-assign", true, null, 83);
-    this.addCommand("Main Menu", "main-menu", true, null, 189);
-    this.addCommand("Cancel", "cancel", true, null, 73);
+    // to adjust the icons, change the number that is the last parameter of these commands.
+    this.addCommand(J.ABS.Metadata.EquipCombatSkillsText, "skill-assign", true, null, 77);
+    this.addCommand(J.ABS.Metadata.EquipDodgeSkillsText, "dodge-assign", true, null, 82);
+    this.addCommand(J.ABS.Metadata.EquipToolsText, "item-assign", true, null, 83);
+    this.addCommand(J.ABS.Metadata.MainMenuText, "main-menu", true, null, 189);
+    this.addCommand(J.ABS.Metadata.CancelText, "cancel", true, null, 73);
   };
 
   /**
@@ -5520,6 +5584,7 @@ class Window_AbsMenuSelect extends Window_Command {
       const isDodgeSkillType = JABS_Battler.isDodgeSkillById(skill.id);
       const isGuardSkillType = JABS_Battler.isGuardSkillById(skill.id);
       let needsHiding = false;
+      // supports yanfly's skill core functionality and hides from the menu where applicable.
       if (skill.meta && skill.meta["Hide if learned Skill"]) {
         const nextSkillId = parseInt(skill.meta["Hide if learned Skill"]);
         needsHiding = actor.isLearnedSkill(nextSkillId);
@@ -5528,7 +5593,7 @@ class Window_AbsMenuSelect extends Window_Command {
       return !isDodgeSkillType && !isGuardSkillType && !needsHiding;
     });
 
-    this.addCommand("Clear Slot...", "skill", true, 0, 16);
+    this.addCommand(J.ABS.Metadata.ClearSlotText, "skill", true, 0, 16);
     skills.forEach(skill => {
       this.addCommand(skill.name, "skill", true, skill.id, skill.iconIndex);
     });
@@ -5544,7 +5609,7 @@ class Window_AbsMenuSelect extends Window_Command {
       return isItem && isUsable;
     });
 
-    this.addCommand("Clear Slot...", "tool", true, 0, 16);
+    this.addCommand(J.ABS.Metadata.ClearSlotText, "tool", true, 0, 16);
     items.forEach(item => {
       const name = `${item.name}: ${$gameParty.numItems(item)}`;
       this.addCommand(name, "tool", true, item.id, item.iconIndex);
@@ -5561,7 +5626,7 @@ class Window_AbsMenuSelect extends Window_Command {
       return skill.stypeId === 1;
     });
 
-    this.addCommand("Clear Slot...", "dodge", true, 0, 16);
+    this.addCommand(J.ABS.Metadata.ClearSlotText, "dodge", true, 0, 16);
     dodgeSkills.forEach(dodge => {
       this.addCommand(dodge.name, "dodge", true, dodge.id, dodge.iconIndex);
     });
@@ -5583,7 +5648,7 @@ class Window_AbsMenuSelect extends Window_Command {
 
     keys.forEach(key => {
       const skillSlot = equippedActions[key];
-      let name = `${key}: - unassigned -`;
+      let name = `${key}: ${J.ABS.Metadata.UnassignedText}`;
       let iconIndex = 0;
       if (skillSlot.id !== 0) {
         const equippedSkill = $dataSkills[skillSlot.id];
@@ -5605,7 +5670,7 @@ class Window_AbsMenuSelect extends Window_Command {
 
     keys.forEach(key => {
       const toolSlot = equippedActions[key];
-      let name = `${key}: - unassigned -`;
+      let name = `${key}: ${J.ABS.Metadata.UnassignedText}`;
       let iconIndex = 0;
       if (toolSlot.id !== 0) {
         const equippedTool = $dataItems[toolSlot.id];
@@ -5627,7 +5692,7 @@ class Window_AbsMenuSelect extends Window_Command {
 
     keys.forEach(key => {
       const dodgeSlot = equippedActions[key];
-      let name = `${key}: - unassigned -`;
+      let name = `${key}: ${J.ABS.Metadata.UnassignedText}`;
       let iconIndex = 0;
       if (dodgeSlot.id !== 0) {
         const equippedDodgeSkill = $dataSkills[dodgeSlot.id];
