@@ -1,0 +1,82 @@
+{
+  "name": "plugin-dev-utilities",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "author": "je-can-code",
+  "devDependencies": {
+    "@babel/eslint-parser": "^7.22.10",
+    "@babel/plugin-syntax-import-assertions": "^7.22.5",
+    "eslint-plugin-jsdoc": "^46.4.6",
+    "nodemon": "^3.0.1"
+  },
+  "dependencies": {
+    "async": "^3.2.4",
+    "glob": "^10.3.3"
+  },
+  "babel": {
+    "plugins": [
+      "@babel/plugin-syntax-import-assertions"
+    ]
+  },
+  "scripts": {
+    "init": "node ./src/build-tools/init.js",
+    "all": "node ./src/build-tools/build-all.js",
+
+    "once:ca-mods": "node ./src/build-tools/combine.js ./src/plugins/__ca-mods ./out/j J-CA-Mods.js",
+    "once:utils": "node ./src/build-tools/combine.js ./src/plugins/utils ./out/j J-SystemUtilities.js",
+    "once:base": "node ./src/build-tools/combine.js ./src/plugins/_base ./out/j J-Base.js",
+
+    "once:crit": "node ./src/build-tools/combine.js ./src/plugins/crit ./out/j J-CriticalFactors.js",
+    "once:diff": "node ./src/build-tools/combine.js ./src/plugins/diff ./out/j J-Difficulty.js",
+    "once:drops": "node ./src/build-tools/combine.js ./src/plugins/drops ./out/j J-DropsControl.js",
+    "once:elem": "node ./src/build-tools/combine.js ./src/plugins/elem ./out/j J-Elementalistics.js",
+    "once:escribe": "node ./src/build-tools/combine.js ./src/plugins/escribe ./out/j J-Escriptions.js",
+    "once:extend": "node ./src/build-tools/combine.js ./src/plugins/extend ./out/j J-SkillExtend.js",
+    "once:level": "node ./src/build-tools/combine.js ./src/plugins/level ./out/j J-LevelMaster.js",
+    "once:log": "node ./src/build-tools/combine.js ./src/plugins/log ./out/j J-Log.js",
+    "once:message": "node ./src/build-tools/combine.js ./src/plugins/message ./out/j J-MessageTextCodes.js",
+    "once:natural": "node ./src/build-tools/combine.js ./src/plugins/natural ./out/j J-NaturalGrowth.js",
+    "once:otib": "node ./src/build-tools/combine.js ./src/plugins/otib ./out/j J-OneTimeItemBoost.js",
+    "once:passive": "node ./src/build-tools/combine.js ./src/plugins/passive ./out/j J-Passive.js",
+    "once:popups": "node ./src/build-tools/combine.js ./src/plugins/popups ./out/j J-TextPops.js",
+    "once:prof": "node ./src/build-tools/combine.js ./src/plugins/prof ./out/j J-Proficiency.js",
+    "once:sdp": "node ./src/build-tools/combine.js ./src/plugins/sdp ./out/j J-SDP.js",
+    "once:time": "node ./src/build-tools/combine.js ./src/plugins/time ./out/j J-TIME.js",
+
+    "once:cms-equip": "node ./src/build-tools/combine.js ./src/plugins/cms/equip ./out/j/cms J-CMS-Equip.js",
+    "once:cms-main": "node ./src/build-tools/combine.js ./src/plugins/cms/main ./out/j/cms J-CMS-Main.js",
+    "once:cms-skill": "node ./src/build-tools/combine.js ./src/plugins/cms/skill ./out/j/cms J-CMS-Skill.js",
+    "once:cms-status": "node ./src/build-tools/combine.js ./src/plugins/cms/status ./out/j/cms J-CMS-Status.js",
+
+    "once:hud": "node ./src/build-tools/combine.js ./src/plugins/hud/core ./out/j/hud J-HUD.js",
+    "once:hud-input": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/input ./out/j/hud/ext J-HUD-InputFrame.js",
+    "once:hud-party": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/party ./out/j/hud/ext J-HUD-PartyFrame.js",
+    "once:hud-target": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/target ./out/j/hud/ext J-HUD-TargetFrame.js",
+    "once:hud-boss": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/boss ./out/j/hud/ext J-HUD-BossFrame.js",
+
+    "once:jafting": "node ./src/build-tools/combine.js ./src/plugins/jafting/core ./out/j/jafting J-JAFTING.js",
+    "once:jafting-refine": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/refine ./out/j/jafting/ext J-JAFTING-Refinement.js",
+
+    "once:jabs": "node ./src/build-tools/combine.js ./src/plugins/abs/core ./out/j/abs J-ABS.js",
+    "once:jabs-allyai": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/allyai ./out/j/abs/ext J-ABS-AllyAI.js",
+    "once:jabs-charge": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/charge ./out/j/abs/ext J-ABS-Charge.js",
+    "once:jabs-cycle": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/cycle ./out/j/abs/ext J-ABS-CycloneAdapter.js",
+    "once:jabs-danger": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/danger ./out/j/abs/ext J-ABS-DangerIndicator.js",
+    "once:jabs-diag": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/diag ./out/j/abs/ext J-ABS-Diagonals.js",
+    "once:jabs-input": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/input ./out/j/abs/ext J-ABS-InputManager.js",
+    "once:jabs-pixel": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/pixel ./out/j/abs/ext J-ABS-PixelMovement.js",
+    "once:jabs-speed": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/speed ./out/j/abs/ext J-ABS-Speed.js",
+    "once:jabs-timing": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/timing ./out/j/abs/ext J-ABS-Timing.js",
+    "once:jabs-tools": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/tools ./out/j/abs/ext J-ABS-Tools.js",
+    "once:jabs-star": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/star ./out/j/abs/ext J-ABS-Star.js",
+
+    "once:omni": "node ./src/build-tools/combine.js ./src/plugins/omni/core ./out/j/omni J-Omnipedia.js",
+    "once:omni-monster": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/monster ./out/j/omni/ext J-Omni-Monsters.js",
+    "once:omni-item": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/item ./out/j/omni/ext J-Omni-Itempedia.js",
+    "once:omni-weapon": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/weapon ./out/j/omni/ext J-Omni-Weaponpedia.js",
+    "once:omni-armor": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/armor ./out/j/omni/ext J-Omni-Armorpedia.js",
+
+    "once:regions": "node ./src/build-tools/combine.js ./src/plugins/regions/core ./out/j/regions J-RegionEffects.js",
+    "once:regions-states": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/states ./out/j/regions/ext J-Regions-States.js"
+  }
+}
