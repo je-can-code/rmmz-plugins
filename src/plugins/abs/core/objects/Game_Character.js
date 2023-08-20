@@ -29,6 +29,7 @@ Game_Character.prototype.initJabsMembers = function()
 
   // initialize the custom properties.
   this.initJabsActionMembers();
+  this.initJabsBattlerMembers();
   this.initJabsLootMembers();
 };
 
@@ -66,6 +67,24 @@ Game_Character.prototype.initJabsActionMembers = function()
    * @type {string|String.empty}
    */
   this._j._abs._action.battlerUuid = String.empty;
+};
+
+/**
+ * Initializes the battler sprite properties for this character.
+ */
+Game_Character.prototype.initJabsBattlerMembers = function()
+{
+  /**
+   * The block of all battler-related data associated with this character.
+   * This is not combat battler data, but map battler data.
+   */
+  this._j._abs._battler = {};
+
+  /**
+   * Whether or not this battler needs to be added to the map visually.
+   * @type {boolean}
+   */
+  this._j._abs._battler._needsAdding = false;
 };
 
 /**
@@ -255,6 +274,32 @@ Game_Character.prototype.getJabsBattler = function()
   // return the tracked battler.
   return JABS_AiManager.getBattlerByUuid(uuid);
 };
+
+/**
+ * Gets whether or not this character is a newly generated battler needing sprite additions.
+ * @returns {boolean}
+ */
+Game_Character.prototype.doesBattlerNeedAdding = function()
+{
+  return this._j._abs._battler._needsAdding;
+};
+
+/**
+ * Flags this character for needing a battler sprite created.
+ */
+Game_Character.prototype.flagBattlerForAdding = function()
+{
+  this._j._abs._battler._needsAdding = true;
+};
+
+/**
+ * Removes the flag for this character indicating their sprite is now added.
+ * (or no longer needed)
+ */
+Game_Character.prototype.removeFlagForAddingBattler = function()
+{
+  this._j._abs._battler._needsAdding = false;
+};
 //endregion JABS battler
 
 //region JABS loot
@@ -269,7 +314,7 @@ Game_Character.prototype.getJabsLoot = function()
 
 /**
  * Sets the loot data to the provided loot.
- * @param {RPG_EquipItem|RPG_Item} data The loot data to assign to this character/event.
+ * @param {JABS_LootDrop} data The loot data to assign to this character/event.
  */
 Game_Character.prototype.setJabsLoot = function(data)
 {
@@ -321,26 +366,12 @@ Game_Character.prototype.setLootNeedsRemoving = function(needsRemoving = true)
 //endregion JABS loot
 
 /**
- * Execute an animation of a provided id upon this character.
- * @param {number} animationId The animation id to execute on this character.
- * @param {boolean} parried Whether or not the animation being requested was parried.
+ * Execute an animation of a provided id upon this character or event.
+ * @param {number} animationId The animation id to execute on this character/event.
  */
-Game_Character.prototype.requestAnimation = function(animationId, parried = false)
+Game_Character.prototype.requestAnimation = function(animationId)
 {
-  // TODO: remove the parry logic out of this function.
-  // check if we parried.
-  if (parried)
-  {
-    // TODO: extract this.
-    const parryAnimationId = 122;
-
-    // request the animation on this character.
-    $gameTemp.requestAnimation([this], parryAnimationId);
-  }
-  else
-  {
-    $gameTemp.requestAnimation([this], animationId);
-  }
+  $gameTemp.requestAnimation([this], animationId);
 };
 
 /**

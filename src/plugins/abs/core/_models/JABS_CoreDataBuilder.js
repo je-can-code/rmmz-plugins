@@ -225,7 +225,7 @@ class JABS_CoreDataBuilder
 
   /**
    * Sets the AI of this core data.
-   * @param {string} battlerAi The AI of this battler.
+   * @param {JABS_EnemyAI} battlerAi The AI of this battler.
    * @returns {this} This builder for fluent-building.
    */
   setBattlerAi(battlerAi)

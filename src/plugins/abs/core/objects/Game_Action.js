@@ -274,7 +274,8 @@ Game_Action.prototype.processParry = function(jabsBattler)
 
   // TODO: pull the parry logic out of the requestanimation function.
   // play the parry animation.
-  jabsBattler.getCharacter().requestAnimation(0, true);
+  const parryAnimationId = 122;
+  jabsBattler.getCharacter().requestAnimation(parryAnimationId);
 
   // reset the player's guarding.
   jabsBattler.setParryWindow(0);

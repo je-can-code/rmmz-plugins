@@ -967,7 +967,7 @@ JABS_Battler.prototype.processParryTimer = function()
   // if parrying, update the parry timer.
   if (this.parrying())
   {
-    this.getCharacter().requestAnimation(131, false);
+    this.getCharacter().requestAnimation(131);
     this.countdownParryWindow();
   }
 };

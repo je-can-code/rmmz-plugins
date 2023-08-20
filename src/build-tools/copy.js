@@ -1,24 +1,26 @@
-import * as fs from 'fs/promises';
-import Logger from './logger.js';
+import Mirror from './mirror.js'
+import Logger from "./logger.js";
 
-async function main()
+// start for timings sake.
+const start = performance.now();
+
+// grab all the destinations.
+let destinations = process.argv.slice(2);
+
+// build it.
+const mirror = new Mirror();
+
+// make sure we have destinations to actually assign.
+if (destinations.length)
 {
-  Logger.log(`starting in cwd: ${process.cwd()}`);
+  // set all destinations for this mirror.
+  mirror.setDestinations(destinations);
 }
 
-/**
- * Gets the passed in args, or defaults.
- */
-function getArgs()
-{
-  const args = process.argv.slice(2);
+// use the default source setting to copy from.
 
-  const destination = args.at(0) ?? "../somewhere-else";
+// mirror the files!
+await mirror.mirrorToAllDestinations();
 
-  // TODO: build copy script for self to get these to local folder.
-  // TODO: upgrade copy script for generic re-use.
-
-  Logger.log(`source path: ${destination}`);
-
-  return [/* args TBD */];
-}
+const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
+Logger.logAnyway(`Mirror™ has completed copying in ${durationSeconds}s. 💯✅`);

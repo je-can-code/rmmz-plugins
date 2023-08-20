@@ -28,7 +28,7 @@ Game_Actor.prototype.performMapDamage = function()
 
   // always show an animation if taking damage.
   // TODO: add a tag for this when you need non-poison floors, ex: lava.
-  $gamePlayer.requestAnimation(59, false);
+  $gamePlayer.requestAnimation(59);
 };
 
 /**

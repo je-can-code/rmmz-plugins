@@ -20,6 +20,9 @@ Spriteset_Map.prototype.updateJabsSprites = function()
   // manage action sprites.
   this.handleActionSprites();
 
+  // manage battler sprites.
+  this.handleBattlerSprites();
+
   // manage loot sprites.
   this.handleLootSprites();
 
@@ -27,6 +30,7 @@ Spriteset_Map.prototype.updateJabsSprites = function()
   this.handleSpriteRefresh();
 };
 
+//region action sprites
 /**
  * Processes incoming requests to add/remove action sprites.
  */
@@ -44,39 +48,6 @@ Spriteset_Map.prototype.handleActionSprites = function()
   {
     // remove the old action sprites.
     this.removeActionSprites();
-  }
-};
-
-/**
- * Processes incoming requests to add/remove loot sprites.
- */
-Spriteset_Map.prototype.handleLootSprites = function()
-{
-  // check if we have incoming requests to add new loot sprites.
-  if ($jabsEngine.requestLootRendering)
-  {
-    // add the new loot sprites.
-    this.addLootSprites();
-  }
-
-  // check if we have incoming requests to remove old loot sprites.
-  if ($jabsEngine.requestClearLoot)
-  {
-    // remove the old loot sprites.
-    this.removeLootSprites();
-  }
-};
-
-/**
- * Processes incoming requests to add/remove loot sprites.
- */
-Spriteset_Map.prototype.handleSpriteRefresh = function()
-{
-  // check if we have incoming requests to do a sprite refresh.
-  if ($jabsEngine.requestSpriteRefresh)
-  {
-    // refresh all character sprites.
-    this.refreshAllCharacterSprites();
   }
 };
 
@@ -116,6 +87,114 @@ Spriteset_Map.prototype.addActionSprite = function(actionEvent)
 };
 
 /**
+ * Removes all expired action sprites from the map.
+ */
+Spriteset_Map.prototype.removeActionSprites = function()
+{
+  // grab all expired action events.
+  const events = $gameMap.expiredActionEvents();
+
+  // remove them.
+  events.forEach(this.removeActionSprite, this);
+};
+
+/**
+ * Processes a single action event and removes its corresponding sprite(s).
+ * @param {Game_Event} actionEvent The action event that requires removal.
+ */
+Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
+{
+  // get the sprite index for the action event.
+  const spriteIndex = this._characterSprites.findIndex(sprite =>
+  {
+    // if the character doesn't match the event, then keep looking.
+    if (sprite.character() !== actionEvent) return false;
+
+    // we found a match!
+    return true;
+  });
+
+  // confirm we did indeed find the sprite's index for removal.
+  if (spriteIndex !== -1)
+  {
+    // purge the sprite from tracking.
+    this._characterSprites.splice(spriteIndex, 1);
+  }
+
+  // the action event has been removed.
+  actionEvent.setActionSpriteNeedsRemoving(false);
+
+  // delete the now-removed sprite for this action.
+  $gameMap.clearExpiredJabsActionEvents();
+};
+//endregion action sprites
+
+//region generated battler sprites
+/**
+ * Processes incoming requests to add/remove generated battler sprites.
+ */
+Spriteset_Map.prototype.handleBattlerSprites = function()
+{
+  if ($jabsEngine.requestBattlerRendering)
+  {
+    this.addBattlerSprites();
+  }
+};
+
+/**
+ * Adds all needing-to-be-added generated battler sprites to the map and renders.
+ */
+Spriteset_Map.prototype.addBattlerSprites = function()
+{
+  // grab all the newly-added action events.
+  const newActionEvents = $gameMap.newBattlerEvents();
+
+  // scan each of them and add new action sprites as-needed.
+  newActionEvents.forEach(this.addBattlerSprite, this);
+
+  // acknowledge that battler sprites were added.
+  $jabsEngine.requestBattlerRendering = false;
+};
+
+/**
+ * Scans all events on the map and adds new generated battler sprites accordingly.
+ */
+Spriteset_Map.prototype.addBattlerSprite = function(battlerEvent)
+{
+  // generate the new sprite based on the action's character.
+  const sprite = new Sprite_Character(battlerEvent);
+
+  // add the sprite to tracking.
+  this._characterSprites.push(sprite);
+  this._tilemap.addChild(sprite);
+
+  // acknowledge that the sprite was added.
+  battlerEvent.removeFlagForAddingBattler();
+};
+//endregion generated battler sprites
+
+//region loot sprites
+/**
+ * Processes incoming requests to add/remove loot sprites.
+ */
+Spriteset_Map.prototype.handleLootSprites = function()
+{
+  // check if we have incoming requests to add new loot sprites.
+  if ($jabsEngine.requestLootRendering)
+  {
+    // add the new loot sprites.
+    this.addLootSprites();
+  }
+
+  // check if we have incoming requests to remove old loot sprites.
+  if ($jabsEngine.requestClearLoot)
+  {
+    // remove the old loot sprites.
+    this.removeLootSprites();
+  }
+};
+
+/**
  * Scans all events on the map and adds new loot sprites accordingly.
  */
 Spriteset_Map.prototype.addLootSprites = function()
@@ -145,51 +224,6 @@ Spriteset_Map.prototype.addLootSprite = function(lootEvent)
 
   // acknowledge that the sprite was added.
   lootEvent.setLootNeedsAdding(false);
-};
-
-/**
- * Removes all expired action sprites from the map.
- */
-Spriteset_Map.prototype.removeActionSprites = function()
-{
-  // grab all expired action events.
-  const events = $gameMap.expiredActionEvents();
-
-  // remove them.
-  events.forEach(this.removeActionSprite, this);
-
-  // acknowledge that expired action sprites were cleared.
-  $jabsEngine.requestClearMap = false;
-};
-
-/**
- * Processes a single action event and removes its corresponding sprite(s).
- * @param {Game_Event} actionEvent The action event that requires removal.
- */
-Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
-{
-  // get the sprite index for the action event.
-  const spriteIndex = this._characterSprites.findIndex(sprite =>
-  {
-    // if the character doesn't match the event, then keep looking.
-    if (sprite.character() !== actionEvent) return false;
-
-    // we found a match!
-    return true;
-  });
-
-  // confirm we did indeed find the sprite's index for removal.
-  if (spriteIndex !== -1)
-  {
-    // purge the sprite from tracking.
-    this._characterSprites.splice(spriteIndex, 1);
-  }
-
-  // flag the Game_Event for removal from Game_Map's tracking.
-  actionEvent.setActionSpriteNeedsRemoving();
-
-  // delete the now-removed sprite for this action.
-  $gameMap.clearExpiredJabsActionEvents();
 };
 
 /**
@@ -235,6 +269,21 @@ Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
   // delete the now-removed sprite for this action.
   $gameMap.clearExpiredLootEvents();
 };
+//endregion loot sprites
+
+//region event sprites
+/**
+ * Processes incoming requests to add/remove loot sprites.
+ */
+Spriteset_Map.prototype.handleSpriteRefresh = function()
+{
+  // check if we have incoming requests to do a sprite refresh.
+  if ($jabsEngine.requestSpriteRefresh)
+  {
+    // refresh all character sprites.
+    this.refreshAllCharacterSprites();
+  }
+};
 
 /**
  * Refreshes all character sprites on the map.
@@ -244,4 +293,5 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {
   $jabsEngine.requestSpriteRefresh = false;
 };
+//endregion event sprites
 //endregion Spriteset_Map

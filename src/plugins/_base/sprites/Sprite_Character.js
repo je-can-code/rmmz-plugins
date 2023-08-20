@@ -28,3 +28,24 @@ Sprite_Character.prototype.isErased = function()
   // return the erasure status.
   return character.isErased();
 };
+
+/**
+ * Gets whether or not the underlying {@link Game_Character} is a {@link JABS_Action}.
+ * If there is no underlying character, then it is still considered not a {@link JABS_Action}.
+ * @returns {boolean}
+ */
+Sprite_Character.prototype.isJabsAction = function()
+{
+  // grab the underlying character for this sprite.
+  const character = this.character();
+
+  // if we don't have a character, then it must certainly be erased.
+  if (!character)
+  {
+    console.warn('attempted to check erasure status on a non-existing character:', this);
+    return false;
+  }
+
+  // return the erasure status.
+  return character.isJabsAction();
+};

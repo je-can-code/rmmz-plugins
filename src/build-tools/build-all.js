@@ -24,14 +24,15 @@
  */
 
 import { exec } from 'child_process';
-import pkg from '../../package.json' assert { type: 'json' };
+import * as fs from 'fs/promises';
+const pkg = JSON.parse(await fs.readFile('./package.json', 'utf-8'));
 import Logger from './logger.js';
 
-// explicitly enable logging.
-Logger.enableLogging();
+// start for timings sake.
+const start = performance.now();
 
 // don't recursively build everything, or start generating a bunch of empty directories.
-const ignoredKeys = ["init", "all"];
+const ignoredKeys = ["plugin:", "copy:", "build:all", "hotfix"];
 
 // extract the scripts section of our package.json.
 const { scripts } = pkg;
@@ -42,8 +43,13 @@ const executions = [];
 // iterate over all the scripts from the "scripts" section of the package.json.
 for (const key in scripts)
 {
+  if (ignoredKeys.some(ignoredKey => key.startsWith(ignoredKey)))
+  {
+    Logger.log(`skipping: [${key}] because it starts with an ignored prefix.`)
+    continue;
+  }
   // ignore the special scripts.
-  if (ignoredKeys.includes(key)) continue;
+  // if (ignoredKeys.includes(key)) continue;
 
   // dictate the command.
   const command = `npm run ${key}`;
@@ -51,8 +57,21 @@ for (const key in scripts)
   // capture the execution as a promise for parallelization.
   const execution = new Promise(resolve =>
   {
+    const handleOutcome = (error, stdout, stderr) =>
+    {
+      if (error)
+      {
+        console.error(`exec error: ${error}`);
+        return;
+      }
+
+      resolve();
+    }
+
+    Logger.log(command);
+
     // kick off the command.
-    const process = exec(command, { stdio: "pipe" }, () => resolve());
+    const process = exec(command, handleOutcome);
 
     // track the output and log it.
     process.stdout.on('data', data => Logger.log(data));
@@ -64,4 +83,7 @@ for (const key in scripts)
 
 // wait for all the promises to finish.
 await Promise.all(executions);
-Logger.logAnyway(`Builder™ has completed building all plugins. 💯✅`);
+
+// capture the duration of this build-all execution in seconds.
+const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
+Logger.logAnyway(`Builder™ has completed building all plugins in ${durationSeconds}s. 💯✅`);

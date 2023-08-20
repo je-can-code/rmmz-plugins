@@ -276,8 +276,8 @@ Game_Event.prototype.parseEnemyComments = function()
 
   // build the core data.
   const battlerCoreData = new JABS_CoreDataBuilder(battlerId)
-    .setTeamId(teamId)
     .setBattlerAi(ai)
+    .setTeamId(teamId)
     .setSightRange(sightRange)
     .setAlertedSightBoost(alertedSightBoost)
     .setPursuitRange(pursuitRange)

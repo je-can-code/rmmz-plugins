@@ -102,6 +102,7 @@ J.ABS.Metadata.MaxAiUpdateRange = Number(J.ABS.PluginParameters['maxAiUpdateRang
 
 // defaults configurations.
 J.ABS.Metadata.DefaultActionMapId = Number(J.ABS.PluginParameters['actionMapId']);
+J.ABS.Metadata.DefaultEnemyMapId = Number(J.ABS.PluginParameters['enemyMapId']);
 J.ABS.Metadata.DefaultDodgeSkillTypeId = Number(J.ABS.PluginParameters['dodgeSkillTypeId']);
 J.ABS.Metadata.DefaultGuardSkillTypeId = Number(J.ABS.PluginParameters['guardSkillTypeId']);
 J.ABS.Metadata.DefaultWeaponSkillTypeId = Number(J.ABS.PluginParameters['weaponSkillTypeId']);
@@ -173,6 +174,12 @@ J.ABS.DefaultValues = {
    * @type {number}
    */
   ActionMap: J.ABS.Metadata.DefaultActionMapId,
+
+  /**
+   * The ID of the map that will contain the enemies for replication.
+   * @type {number}
+   */
+  EnemyMap: J.ABS.Metadata.DefaultEnemyMapId,
 
   /**
    * The default animation id for skills when it is set to "normal attack".
@@ -570,151 +577,4 @@ J.ABS.Aliased = {
   Sprite_Gauge: new Map(),
 };
 //endregion Plugin setup & configuration
-
-//region Plugin Command Registration
-/**
- * Plugin command for enabling JABS.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable JABS", () =>
-{
-  $jabsEngine.absEnabled = true;
-});
-
-/**
- * Plugin command for disabling JABS.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
-{
-  $jabsEngine.absEnabled = false;
-});
-
-/**
- * Plugin command for assigning and locking a skill to a designated slot.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
-{
-  // extract the values out of the various args.
-  const { actorId, skillId, itemId, slot, locked } = args;
-
-  // convert the text option to one of the available slots.
-  const skillSlotKey = J.ABS.Helpers.PluginManager.TranslateOptionToSlot(slot);
-
-  // determine the actor.
-  const actor = $gameActors.actor(parseInt(actorId));
-
-  // designate the default assigned id to be the skill id.
-  let assignedId = parseInt(skillId);
-
-  // check if we are assigning to the tool slot and have an item id available.
-  if (itemId !== 0 && skillSlotKey === JABS_Button.Tool)
-  {
-    // overwrite any possible skill id with the item id instead.
-    assignedId = parseInt(itemId);
-  }
-
-  // don't try to assign anything if we don't have an id to assign.
-  if (assignedId === 0) return;
-
-  // determine the locked state of the skill being assigned.
-  const isLocked = locked === 'true';
-
-  // assign the id to the slot.
-  actor.setEquippedSkill(skillSlotKey, assignedId, isLocked);
-});
-
-/**
- * Plugin command for unlocking a specific JABS skill slot.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock JABS Skill Slot", args =>
-{
-  const leader = $gameParty.leader();
-  if (!leader)
-  {
-    console.warn("There is no leader to manage skills for.");
-    return;
-  }
-
-  const { Slot } = args;
-  const translation = J.ABS.Helpers.PluginManager.TranslateOptionToSlot(Slot);
-  leader.unlockSlot(translation);
-});
-
-/**
- * Plugin command for unlocking all JABS skill slots.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock All JABS Skill Slots", () =>
-{
-  const leader = $gameParty.leader();
-  if (!leader)
-  {
-    console.warn("There is no leader to manage skills for.");
-    return;
-  }
-
-  leader.unlockAllSlots();
-});
-
-/**
- * Plugin command for cycling through party members forcefully.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Rotate Party Members", () =>
-{
-  JABS_InputAdapter.performPartyCycling(true);
-});
-
-/**
- * Plugin command for disabling the ability to rotate party members.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable Party Rotation", () =>
-{
-  $gameParty.disablePartyCycling();
-});
-
-/**
- * Plugin command for enabling the ability to rotate party members.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable Party Rotation", () =>
-{
-  $gameParty.enablePartyCycling();
-});
-
-/**
- * Plugin command for updating the JABS menu.
- */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
-{
-  $jabsEngine.requestJabsMenuRefresh = true;
-});
-
-/**
- * Registers a plugin command for dealing arbitrary damage to an enemy based
- * on the event id associated with the target.
- */
-// PluginManager.registerCommand(J.ABS.Metadata.Name, "HP Damage to Enemy", args =>
-// {
-//   // extract the event ids and damage from the plugin args.
-//   const { eventIds, dmg } = args;
-//
-//   // translate the damage.
-//   const damageToDeal = parseInt(dmg) * -1;
-//
-//   // translate the event ids.
-//   const targetEventIds = JSON.parse(eventIds);
-//
-//   // iterate over all parsed event ids.
-//   targetEventIds.forEach(eventId =>
-//   {
-//     // scan the map for the matching event id.
-//     const [targetEnemy] = $gameMap.findBattlerByEventId(eventId);
-//
-//     // check to see if we found one.
-//     if (targetEnemy)
-//     {
-//       // apply the damage directly to the target's hp.
-//       targetEnemy.getBattler().gainHp(damageToDeal);
-//     }
-//   });
-// });
-
-//endregion Plugin Command Registration
 //endregion Metadata
