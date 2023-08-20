@@ -24,7 +24,7 @@ class Logger
   /**
    * Logs some text to the window via string interpolation.
    * Will not log if logging is not enabled.
-   * @param {string} text The text to log.
+   * @param {string|string[]|number|number[]} text The text to log.
    */
   static log(text)
   {
@@ -37,7 +37,7 @@ class Logger
 
   /**
    * Logs some text to the window via string interpolation, period.
-   * @param {string} text The text to log.
+   * @param {string|string[]|number|number[]} text The text to log.
    */
   static logAnyway(text)
   {

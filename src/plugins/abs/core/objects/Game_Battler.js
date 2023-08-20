@@ -492,7 +492,7 @@ J.ABS.Aliased.Game_Battler.set('addState', Game_Battler.prototype.addState);
 Game_Battler.prototype.addState = function(stateId, attacker)
 {
   // if we're missing an attacker or the engine is disabled, perform as usual.
-  if (!attacker || !$jabsEngine._absEnabled)
+  if (!attacker || !$jabsEngine.absEnabled)
   {
     // perform original logic.
     J.ABS.Aliased.Game_Battler.get('addState').call(this, stateId);

@@ -33,7 +33,7 @@
  * 👊 Combiner™ has completed execution. 💯✅
  */
 
-import { glob } from 'glob';
+import { globSync } from 'glob';
 import { existsSync } from 'fs';
 import * as fs from 'fs/promises';
 import Logger from './logger.js';
@@ -62,6 +62,8 @@ async function main()
 
   // get the file paths for all js files to combine.
   const filePaths = getFilepaths(SRC_PATH, OUT_PATH);
+
+  filePaths.forEach(filepath => Logger.log(filepath));
 
   // the files to concat.
   const files = await getFiles(filePaths);
@@ -141,9 +143,18 @@ function getFilepaths(src, out)
     absolute: true
   };
 
-  const filePaths = glob.sync(`${src}/**/*.js`, options);
+  const filepaths = globSync(`${src}/**/*.js`, options);
 
-  return filePaths;
+  return filepaths.sort((a, b) =>
+  {
+    const left = a.toLowerCase()
+    const right = b.toLowerCase();
+    if (left < right) //sort string ascending
+      return -1;
+    if (left > right)
+      return 1;
+    return 0; //default return value (no sorting)
+  });
 }
 
 /**
@@ -157,7 +168,7 @@ async function getFiles(filePaths)
   const files = [];
 
   // iterate over all the file paths.
-  for await (const filePath of filePaths)
+  for (const filePath of filePaths)
   {
     // read the file.
     const file = await fs.readFile(filePath, 'utf-8');

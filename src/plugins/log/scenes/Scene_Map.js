@@ -28,13 +28,12 @@ Scene_Map.prototype.initialize = function()
 /**
  * Extends {@link #onMapLoaded}.
  * Creates the action log as well.
- * // TODO: can this be migrated to the {@link #createAllWindows} method like normal windows?
  */
-J.LOG.Aliased.Scene_Map.set('onMapLoaded', Scene_Map.prototype.onMapLoaded);
-Scene_Map.prototype.onMapLoaded = function()
+J.LOG.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWindows);
+Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.LOG.Aliased.Scene_Map.get('onMapLoaded').call(this);
+  J.LOG.Aliased.Scene_Map.get('createAllWindows').call(this);
 
   // create the log.
   this.createActionLogWindow();

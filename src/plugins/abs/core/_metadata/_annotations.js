@@ -46,8 +46,12 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 3.3.0
+ *    Added ability to generate enemies on the map dynamically.
+ *    Added ability to generate loot on the map dynamically.
+ *    Refactored away manual getter/setters of JABS_Engine.
  * - 3.2.2
- *    JABS quick menu how honors menu access via event control.
+ *    JABS quick menu now honors menu access via event control.
  *    Actor-based JABS parameter retrieval has been refactored.
  *    Enabled auto-counter for enemies.
  *    Fixed issue where states weren't reapplied properly.
@@ -1270,6 +1274,13 @@
  * @desc The default id of the map used for cloning action events off of.
  * @default 2
  *
+ * @param enemyMapId
+ * @parent baseConfigs
+ * @type number
+ * @text Enemy Map Id
+ * @desc The id of the map used for cloning enemy events off of.
+ * @default
+ *
  * @param dodgeSkillTypeId
  * @parent baseConfigs
  * @type number
@@ -1689,6 +1700,57 @@
  * @command Refresh JABS Menu
  * @text Refresh JABS Menu
  * @desc Refreshes the JABS menu in case there were any adjustments made to it.
+ *
+ * @command Spawn Enemy
+ * @text Spawn Enemy
+ * @desc Dynamically spawn an enemy onto the map from the enemy clone map.
+ * @arg x
+ * @type number
+ * @desc The x coordinate of where on the current map to spawn the enemy.
+ * @default 1
+ * @arg y
+ * @type number
+ * @desc The y coordinate of where on the current map to spawn the enemy.
+ * @default 1
+ * @arg enemyEventId
+ * @type number
+ * @desc The id of the event from the enemy clone map to spawn onto this map.
+ * @default 1
+ * @arg spawnAnimationId
+ * @type animation
+ * @desc The animation to execute upon the newly spawned enemy.
+ * By default, no animation will play.
+ * @default 0
+ *
+ * @command Spawn Loot
+ * @text Spawn Loot
+ * @desc Dynamically spawn some loot onto the map from the database.
+ * If multiple loot ids are defined, then multiple will be dropped.
+ * @arg x
+ * @type number
+ * @desc The x coordinate of where on the current map to spawn the loot.
+ * @default 1
+ * @arg y
+ * @type number
+ * @desc The y coordinate of where on the current map to spawn the loot.
+ * @default 1
+ * @arg lootItemIds
+ * @type item[]
+ * @desc The items to be dropped as loot.
+ * @default []
+ * @arg lootWeaponIds
+ * @type weapon[]
+ * @desc The weapons to be dropped as loot.
+ * @default []
+ * @arg lootArmorIds
+ * @type armor[]
+ * @desc The armors to be dropped as loot.
+ * @default []
+ * @arg spawnAnimationId
+ * @type animation
+ * @desc The animation to execute upon the newly spawned enemy.
+ * By default, no animation will play.
+ * @default 0
  */
 //=================================================================================================
 /*~struct~ElementalIconStruct:

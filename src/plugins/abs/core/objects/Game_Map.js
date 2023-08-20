@@ -302,6 +302,32 @@ Game_Map.prototype.getJabsLootDrops = function()
 };
 
 /**
+ * Gets all battler events that have yet to have a `Sprite_Character` generated for them.
+ * @returns {Game_Event[]} A list of all newly added battler events.
+ */
+Game_Map.prototype.newBattlerEvents = function()
+{
+  // the filter function for only retrieving newly-added battler events.
+  const filtering = event =>
+  {
+    // we only care about battler events.
+    if (event.isJabsLoot()) return false;
+
+    // we only care about battler events.
+    if (event.isJabsAction()) return false;
+
+    // we only care about loot that also needs adding.
+    if (event.doesBattlerNeedAdding()) return true;
+
+    // it must have already had a sprite created for this loot.
+    return false;
+  };
+
+  // return the new-loot-filtered event list.
+  return this.events().filter(filtering);
+};
+
+/**
  * Adds a provided event to the current map's event list.
  * @param {Game_Event} event The `Game_Event` to add to this map.
  */
@@ -347,9 +373,6 @@ Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
 
   // all removed events get erased.
   actionToRemove.erase();
-
-  // command the battle map to cleanup the jabs action.
-  actionToRemove.getJabsAction().cleanup();
 
   // and also to cleanup the current list of active jabs action events.
   $jabsEngine.clearActionEvents();

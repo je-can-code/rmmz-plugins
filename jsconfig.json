@@ -6,14 +6,12 @@
   },
   "exclude": [
     "**/node_modules/**",
-    "../plugins/*.js",
-    "../plugins/**/*.js"
+    "./project/**",
+    "./out/**"
   ],
   "include": [
-    "../defs/*.d.ts",
-    "../defs/**/*.d.ts",
-    "./j/**.js",
-    "./**/*.js",
-    "./*.js"
+    "./src/defs/*.d.ts",
+    "./src/defs/**/*.d.ts",
+    "./src/plugins/**/*.js"
   ]
 }

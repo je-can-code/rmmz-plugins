@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_windows.js v1.2.0
+// rmmz_windows.js v1.7.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ Window_Base.prototype.updatePadding = function() {
 };
 
 Window_Base.prototype.updateBackOpacity = function() {
-    this.backOpacity = 192;
+    this.backOpacity = $gameSystem.windowOpacity();
 };
 
 Window_Base.prototype.fittingHeight = function(numLines) {
@@ -291,12 +291,11 @@ Window_Base.prototype.convertEscapeCharacters = function(text) {
     /* eslint no-control-regex: 0 */
     text = text.replace(/\\/g, "\x1b");
     text = text.replace(/\x1b\x1b/g, "\\");
-    text = text.replace(/\x1bV\[(\d+)\]/gi, (_, p1) =>
-        $gameVariables.value(parseInt(p1))
-    );
-    text = text.replace(/\x1bV\[(\d+)\]/gi, (_, p1) =>
-        $gameVariables.value(parseInt(p1))
-    );
+    while (text.match(/\x1bV\[(\d+)\]/gi)) {
+        text = text.replace(/\x1bV\[(\d+)\]/gi, (_, p1) =>
+            $gameVariables.value(parseInt(p1))
+        );
+    }
     text = text.replace(/\x1bN\[(\d+)\]/gi, (_, p1) =>
         this.actorName(parseInt(p1))
     );
@@ -4316,6 +4315,7 @@ Window_ChoiceList.prototype.start = function() {
     this.placeCancelButton();
     this.createContents();
     this.refresh();
+    this.scrollTo(0, 0);
     this.selectDefault();
     this.open();
     this.activate();
@@ -4967,7 +4967,7 @@ Window_Message.prototype.updateMessage = function() {
             }
         }
         this.flushTextState(textState);
-        if (this.isEndOfText(textState) && !this.pause) {
+        if (this.isEndOfText(textState) && !this.isWaiting()) {
             this.onEndOfText();
         }
         return true;
@@ -4981,7 +4981,7 @@ Window_Message.prototype.shouldBreakHere = function(textState) {
         if (!this._showFast && !this._lineShowFast) {
             return true;
         }
-        if (this.pause || this._waitCount > 0) {
+        if (this.isWaiting()) {
             return true;
         }
     }
@@ -5162,6 +5162,10 @@ Window_Message.prototype.startPause = function() {
     this.pause = true;
 };
 
+Window_Message.prototype.isWaiting = function() {
+    return this.pause || this._waitCount > 0;
+};
+
 //-----------------------------------------------------------------------------
 // Window_ScrollText
 //
@@ -5181,7 +5185,11 @@ Window_ScrollText.prototype.initialize = function(rect) {
     this.hide();
     this._reservedRect = rect;
     this._text = "";
+    this._maxBitmapHeight = 2048;
     this._allTextHeight = 0;
+    this._blockHeight = 0;
+    this._blockIndex = 0;
+    this._scrollY = 0;
 };
 
 Window_ScrollText.prototype.update = function() {
@@ -5200,6 +5208,11 @@ Window_ScrollText.prototype.startMessage = function() {
     this._text = $gameMessage.allText();
     if (this._text) {
         this.updatePlacement();
+        this._allTextHeight = this.textSizeEx(this._text).height;
+        this._blockHeight = this._maxBitmapHeight - this.height;
+        this._blockIndex = 0;
+        this.origin.y = this._scrollY = -this.height;
+        this.createContents();
         this.refresh();
         this.show();
     } else {
@@ -5208,11 +5221,10 @@ Window_ScrollText.prototype.startMessage = function() {
 };
 
 Window_ScrollText.prototype.refresh = function() {
-    this._allTextHeight = this.textSizeEx(this._text).height;
-    this.createContents();
-    this.origin.y = -this.height;
     const rect = this.baseTextRect();
-    this.drawTextEx(this._text, rect.x, rect.y, rect.width);
+    const y = rect.y - this._scrollY + (this._scrollY % this._blockHeight);
+    this.contents.clear();
+    this.drawTextEx(this._text, rect.x, y, rect.width);
 };
 
 Window_ScrollText.prototype.updatePlacement = function() {
@@ -5221,13 +5233,24 @@ Window_ScrollText.prototype.updatePlacement = function() {
 };
 
 Window_ScrollText.prototype.contentsHeight = function() {
-    return Math.max(this._allTextHeight, 1);
+    if (this._allTextHeight > 0) {
+        return Math.min(this._allTextHeight, this._maxBitmapHeight);
+    } else {
+        return 0;
+    }
 };
 
 Window_ScrollText.prototype.updateMessage = function() {
-    this.origin.y += this.scrollSpeed();
-    if (this.origin.y >= this.contents.height) {
+    this._scrollY += this.scrollSpeed();
+    if (this._scrollY >= this._allTextHeight) {
         this.terminateMessage();
+    } else {
+        const blockIndex = Math.floor(this._scrollY / this._blockHeight);
+        if (blockIndex > this._blockIndex) {
+            this._blockIndex = blockIndex;
+            this.refresh();
+        }
+        this.origin.y = this._scrollY % this._blockHeight;
     }
 };
 

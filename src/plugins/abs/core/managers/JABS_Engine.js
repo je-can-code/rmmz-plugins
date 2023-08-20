@@ -23,194 +23,129 @@ class JABS_Engine
    */
   constructor()
   {
+    // initialize the engine.
     this.initialize();
 
-    JABS_Engine.initializeEnemyMap();
+    // check if we've yet to initialize the enemy map.
+    if (!JABS_Engine.#isEnemyMapInitialized())
+    {
+      // also initialize the enemy map if necessary.
+      JABS_Engine.initializeEnemyMap();
+    }
   }
+
+  //region static properties
+  /**
+   * Gets the collection of enemy clone events currently tracked.
+   * @returns {rm.types.Event[]}
+   */
+  static getEnemyCloneList()
+  {
+    return this.#enemyCloneList;
+  }
+
+  /**
+   * Sets the enemy clone collection to the given collection.
+   * @param {rm.types.Event[]} enemies The enemy events from the enemy clone map.
+   */
+  static setEnemyCloneList(enemies)
+  {
+    this.#enemyCloneList = enemies;
+  }
+
+  /**
+   * Determines if the enemy clone list has yet to be populated.
+   * @returns {boolean}
+   */
+  static #isEnemyMapInitialized()
+  {
+    return !!this.#enemyCloneList;
+  }
+
+  /**
+   * Initializes the enemy clone data from the configured map.
+   */
+  static initializeEnemyMap()
+  {
+    // determine the map that is configured for enemy clones.
+    const mapFilename = "Map%1.json".format(J.ABS.Metadata.DefaultEnemyMapId.padZero(3));
+
+    // fetch the data and update the data into the enemy clone tracker list.
+    fetch(`data/${mapFilename}`)
+      .then(data => data.json())
+      .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
+  }
+  //#endregion static properties
 
   //region properties
   /**
    * Retrieves whether or not the ABS is currently enabled.
    * @returns {boolean} True if enabled, false otherwise.
    */
-  get absEnabled()
-  {
-    return this._absEnabled;
-  }
-
-  /**
-   * Sets the ABS enabled switch to a new boolean value.
-   * @param {boolean} enabled Whether or not the ABS is enabled (default = true).
-   */
-  set absEnabled(enabled)
-  {
-    this._absEnabled = enabled;
-  }
+  absEnabled = true;
 
   /**
    * Retrieves whether or not the ABS is currently paused.
    * @returns {boolean} True if paused, false otherwise.
    */
-  get absPause()
-  {
-    return this._absPause;
-  }
-
-  /**
-   * Sets the ABS pause switch to a new boolean value.
-   * @param {boolean} paused Whether or not the ABS is paused (default = true).
-   */
-  set absPause(paused)
-  {
-    this._absPause = paused;
-  }
+  absPause = false;
 
   /**
    * Checks whether or not we have a need to request the JABS quick menu.
    * @returns {boolean} True if menu requested, false otherwise.
    */
-  get requestAbsMenu()
-  {
-    return this._requestAbsMenu;
-  }
-
-  /**
-   * Sets the current request for calling the ABS-specific menu.
-   * @param {boolean} requested Whether or not we want to request the menu (default: true).
-   */
-  set requestAbsMenu(requested)
-  {
-    this._requestAbsMenu = requested;
-  }
+  requestAbsMenu = false;
 
   /**
    * Gets whether or not there is a request to cycle through party members.
    * @returns {boolean}
    */
-  get requestPartyRotation()
-  {
-    return this._requestPartyRotation;
-  }
-
-  /**
-   * Sets the request for party rotation.
-   * @param {boolean} rotate True if we want to rotate party members, false otherwise.
-   */
-  set requestPartyRotation(rotate)
-  {
-    this._requestPartyRotation = rotate;
-  }
+  requestPartyRotation = false;
 
   /**
    * Gets whether or not there is a request to refresh the JABS menu.
    * The most common use case for this is adding new commands to the menu.
    * @returns {boolean}
    */
-  get requestJabsMenuRefresh()
-  {
-    return this._requestJabsMenuRefresh;
-  }
-
-  /**
-   * Sets the request for refreshing the JABS menu.
-   * @param {boolean} requested True if we want to refresh the JABS menu, false otherwise.
-   */
-  set requestJabsMenuRefresh(requested)
-  {
-    this._requestJabsMenuRefresh = requested;
-  }
+  requestJabsMenuRefresh = false;
 
   /**
    * Checks whether or not we have a need to request rendering for new actions.
    * @returns {boolean} True if needing to render actions, false otherwise.
    */
-  get requestActionRendering()
-  {
-    return this._requestActionRendering;
-  }
-
-  /**
-   * Issues a request to render actions on the map.
-   * @param {boolean} request Whether or not we want to render actions (default = true).
-   */
-  set requestActionRendering(request)
-  {
-    this._requestActionRendering = request;
-  }
+  requestActionRendering = false;
 
   /**
    * Checks whether or not we have a need to request rendering for new loot sprites.
    * @returns {boolean} True if needing to render loot, false otherwise.
    */
-  get requestLootRendering()
-  {
-    return this._requestLootRendering;
-  }
-
-  /**
-   * Issues a request to render loot onto the map.
-   * @param {boolean} request Whether or not we want to render actions (default = true).
-   */
-  set requestLootRendering(request)
-  {
-    this._requestLootRendering = request;
-  }
+  requestLootRendering = false;
 
   /**
    * Checks whether or not we have a need to request a clearing of the action sprites
    * on the current map.
    * @returns {boolean} True if clear map requested, false otherwise.
    */
-  get requestClearMap()
-  {
-    return this._requestClearMap;
-  }
-
-  /**
-   * Issues a request to clear the map of all stale actions.
-   * @param {boolean} request Whether or not we want to clear the battle map (default = true).
-   */
-  set requestClearMap(request)
-  {
-    this._requestClearMap = request;
-  }
+  requestClearMap = false;
 
   /**
    * Checks whether or not we have a need to request a clearing of the loot sprites
    * on the current map.
    * @returns {boolean} True if clear loot requested, false otherwise.
    */
-  get requestClearLoot()
-  {
-    return this._requestClearLoot;
-  }
-
-  /**
-   * Issues a request to clear the map of any collected loot.
-   * @param {boolean} request True if clear loot requested, false otherwise.
-   */
-  set requestClearLoot(request)
-  {
-    this._requestClearLoot = request;
-  }
+  requestClearLoot = false;
 
   /**
    * Checks whether or not we have a need to refresh all character sprites on the current map.
    * @returns {boolean} True if refresh is requested, false otherwise.
    */
-  get requestSpriteRefresh()
-  {
-    return this._requestSpriteRefresh;
-  }
+  requestSpriteRefresh = false;
 
   /**
-   * Issues a request to refresh all character sprites on the current map.
-   * @param {boolean} request True if we want to refresh all sprites, false otherwise.
+   * Whether or not there is a request issued for rendering newly generated battler sprites.
+   * @type {boolean}
    */
-  set requestSpriteRefresh(request)
-  {
-    this._requestSpriteRefresh = request;
-  }
+  requestBattlerRendering = false;
   //endregion properties
 
   /**
@@ -225,42 +160,6 @@ class JABS_Engine
     this._player1 = null;
 
     /**
-     * True if we want to review available events for rendering, false otherwise.
-     * @type {boolean}
-     */
-    this._requestActionRendering = false;
-
-    /**
-     * True if we want to review available loot for rendering, false otherwise.
-     * @type {boolean}
-     */
-    this._requestLootRendering = false;
-
-    /**
-     * True if we want to cycle through our party members, false otherwise.
-     * @type {boolean}
-     */
-    this._requestPartyRotation = false;
-
-    /**
-     * True if we want to empty the map of all action sprites, false otherwise.
-     * @type {boolean}
-     */
-    this._requestClearMap = false;
-
-    /**
-     * True if we want to empty the map of all stale loot sprites, false otherwise.
-     * @type {boolean}
-     */
-    this._requestClearLoot = false;
-
-    /**
-     * True if we want to refresh all sprites and their add-ons, false otherwise.
-     * @type {boolean}
-     */
-    this._requestSpriteRefresh = false;
-
-    /**
      * A collection to manage all `JABS_Action`s on this battle map.
      * @type {JABS_Action[]}
      */
@@ -273,38 +172,6 @@ class JABS_Engine
     this._activeActions = isMapTransfer
       ? Array.empty
       : this._activeActions ?? Array.empty;
-
-    /**
-     * True if we want to call the ABS-specific menu, false otherwise.
-     * @type {boolean}
-     */
-    this._requestAbsMenu = false;
-
-    /**
-     * True if we want to refresh the commands of the JABS menu, false otherwise.
-     * @type {boolean}
-     */
-    this._requestJabsMenuRefresh = false;
-
-    /**
-     * Whether or not this ABS is enabled.
-     * If disabled, button input and enemy AI will be disabled.
-     * Enemy battlers on the map will instead act like their
-     * regularly programmed events.
-     *
-     * This will most likely be used for when the dev enters a town and the
-     * populace is peaceful.
-     * @type {boolean}
-     */
-    this._absEnabled = true;
-
-    /**
-     * Whether or not this ABS is temporarily paused.
-     * If paused, all battlers on the map including the player will halt
-     * movement, though timers will still tick.
-     * @type {boolean}
-     */
-    this._absPause = false;
 
     /**
      * A collection of all ongoing states that are affecting battlers on the map.
@@ -376,7 +243,7 @@ class JABS_Engine
     const updatedActionEvents = actionEvents.filter(action => !action.getNeedsRemoval());
 
     // check if we have any events that are in need of removal.
-    if (actionEvents.length !== updatedActionEvents.length)
+    if (updatedActionEvents.length < actionEvents.length)
     {
       // request a refresh of the map.
       this.requestClearMap = true;
@@ -1674,7 +1541,6 @@ class JABS_Engine
   {
     // clone the loot data from the action map event id of 1.
     const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]);
-    console.log(lootEventData);
 
     lootEventData.x = x;
     lootEventData.y = y;
@@ -1701,36 +1567,38 @@ class JABS_Engine
     // add loot event to map.
     this.requestLootRendering = true;
     $gameMap.addEvent(lootEvent);
+
+    // return the event in case callers need it.
+    return lootEvent;
   }
 
-  //region adding an enemy to the map WIP
   /**
    * Generates an enemy and transplants it in the place of the corresponding index
    * of the eventId on the battle map.
+   * @param {number} x The x coordinate of where to place the enemy on the map.
+   * @param {number} y The y coordinate of where to place the enemy on the map.
+   * @param {number} enemyCloneEventId The eventId from the enemy clone map identifying the enemy to clone.
    */
-  addEnemyToMap(x, y, enemyId)
+  addEnemyToMap(x, y, enemyCloneEventId)
   {
-    // TODO: this is a work in progress, and not fully operational yet.
-    // TODO: enemies are not yet visible (though they do exist).
-    // TODO: updates to sprite_character required?
-
+    // check if we've initialized the enemy map, yet.
     if (!JABS_Engine.#isEnemyMapInitialized())
     {
+      // if not, then initialize the enemy map data and load it up for use.
       JABS_Engine.initializeEnemyMap();
     }
 
     // grab the enemy event data to clone from.
-    const originalEnemyData = JABS_Engine.getEnemyCloneList().at(enemyId);
+    const originalEnemyData = JABS_Engine.getEnemyCloneList().at(enemyCloneEventId);
 
+    // if there is no data, then we can't clone that id.
     if (!originalEnemyData)
     {
-      console.error(`The enemy id of [ ${enemyId} ] did not align with an event on the enemy clone map.`);
-
+      console.error(`The enemy id of [ ${enemyCloneEventId} ] did not align with an event on the enemy clone map.`);
       return;
     }
 
     // clone the enemy data from the enemy map.
-    /** @type {rm.types.Event} */
     const enemyData = JsonEx.makeDeepCopy(originalEnemyData);
 
     // assign our cloned event the original event's x and y coordinates.
@@ -1746,42 +1614,14 @@ class JABS_Engine
     // generate a new event based on this JABS enemy.
     const newEnemy = new Game_Event($gameMap.mapId(), normalizedIndex);
 
-    // TODO: update this, this is almost certainly broken logic after the delete update!
-    // directly assign the event index to the enemies.
-    //$gameMap._events[index] = newEnemy;
+    // add the enemy to the map and flag it for adding (visually).
     $gameMap.addEvent(newEnemy);
-    newEnemy.refresh();
-  }
+    newEnemy.flagBattlerForAdding();
+    this.requestBattlerRendering = true;
 
-  static getEnemyCloneList()
-  {
-    return this.#enemyCloneList;
+    // return the event in case callers need it.
+    return newEnemy;
   }
-
-  static setEnemyCloneList(map)
-  {
-    this.#enemyCloneList = map;
-  }
-
-  static #isEnemyMapInitialized()
-  {
-    return !!this.#enemyCloneList;
-  }
-
-  static refreshEnemyMap()
-  {
-    this.setEnemyMap(null);
-
-    this.initializeEnemyMap();
-  }
-
-  static initializeEnemyMap()
-  {
-    const result = fetch("data/Map110.json")
-      .then(data => data.json())
-      .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
-  }
-  //endregion adding an enemy to the map WIP
 
   /**
    * Applies an action against a designated target battler.
@@ -2012,7 +1852,8 @@ class JABS_Engine
     const result = target.getBattler().result();
 
     // if the skill should animate on the target, then animate as normal.
-    targetCharacter.requestAnimation(targetAnimationId, result.parried);
+    const animationId = result.parried ? 122 : targetAnimationId;
+    targetCharacter.requestAnimation(animationId);
 
     // if there is a self-animation id, apply that to yourself for every hit.
     if (action.hasSelfAnimationId())
