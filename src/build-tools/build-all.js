@@ -48,8 +48,6 @@ for (const key in scripts)
     Logger.log(`skipping: [${key}] because it starts with an ignored prefix.`)
     continue;
   }
-  // ignore the special scripts.
-  // if (ignoredKeys.includes(key)) continue;
 
   // dictate the command.
   const command = `npm run ${key}`;

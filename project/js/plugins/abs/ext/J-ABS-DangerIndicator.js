@@ -1,5 +1,3 @@
-/*  BUNDLED TIME: Sun Aug 20 2023 09:33:29 GMT-0700 (Pacific Daylight Time)  */
-
 //region Introduction
 /*:
  * @target MZ

@@ -339,6 +339,22 @@
  *    <jabsConfig:notInanimate>
  *
  * ============================================================================
+ * FIRST TIME SETUP, THE ENEMY MAP:
+ * While you can create enemies on the map as much as your heart desires, it
+ * is also possible to dynamically generate enemies on-the-fly with plugin
+ * commands or script commands in events. If you hope to make use of this, you
+ * will need to define an "enemy clone map", aka a map of premade enemy events
+ * that are exclusively used by the plugin/script commands for spawning
+ * enemies, as the commands in question refer to enemyEventIds that would be
+ * derived from the "enemy clone map".
+ *
+ * NOTE:
+ * If you have zero chance of using this functionality, JABS will operate
+ * completely fine as long as the map defined as "enemy clone map" in the
+ * plugin configuration does indeed exist- just know that the dynamic spawning
+ * will be broken unless that map gets implemented as it was intended.
+ *
+ * ============================================================================
  * SETTING UP THE ENEMIES IN THE DATABASE:
  * While you may wish that the enemies would just... work out of the box as
  * soon as you set them up on the map, there is a bit more to it than that! We
@@ -1039,6 +1055,12 @@
  * locking the player on the map or forcing the item into the player's
  * inventory via eventing.
  *
+ * ----------------------------------------------------------------------------
+ * DYNAMICALLY SPAWNING LOOT:
+ * In addition to configuring the loot, if you so desire, one can also use
+ * plugin/script commands to dynamically generate and spawn loot at a specified
+ * location on the map. See the plugin commands for input parameter details.
+ *
  * ============================================================================
  * SETTING UP STATES:
  * States are obviously an important part of any good RPG! So naturally, when
@@ -1061,6 +1083,7 @@
  * ----------------------------------------------------------------------------
  * ROOTED:
  * A state with the "rooted" tag will lock the battler's movement.
+ * This includes Dodge skills for the player and allies.
  *    <rooted>
  *
  * ----------------------------------------------------------------------------

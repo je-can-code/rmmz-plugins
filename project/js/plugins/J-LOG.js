@@ -1,5 +1,3 @@
-/*  BUNDLED TIME: Sun Aug 20 2023 09:33:28 GMT-0700 (Pacific Daylight Time)  */
-
 //region introduction
 /*:
  * @target MZ
@@ -844,7 +842,7 @@ Scene_Map.prototype.initialize = function()
 };
 
 /**
- * Extends {@link #onMapLoaded}.
+ * Extends {@link #createAllWindows}.
  * Creates the action log as well.
  */
 J.LOG.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWindows);

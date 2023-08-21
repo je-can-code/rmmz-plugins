@@ -1,5 +1,3 @@
-/*  BUNDLED TIME: Sun Aug 20 2023 09:33:28 GMT-0700 (Pacific Daylight Time)  */
-
 /* eslint-disable max-len */
 /*:
  * @target MZ
@@ -29570,6 +29568,27 @@ Sprite_Character.prototype.isJabsBattler = function()
 
   // return whether or not this has a battler attached to it.
   return !!this.character().hasJabsBattler();
+};
+
+/**
+ * Gets whether or not the underlying {@link Game_Character} is a {@link JABS_Action}.
+ * If there is no underlying character, then it is still considered not a {@link JABS_Action}.
+ * @returns {boolean}
+ */
+Sprite_Character.prototype.isJabsAction = function()
+{
+  // grab the underlying character for this sprite.
+  const character = this.character();
+
+  // if we don't have a character, then it must certainly be erased.
+  if (!character)
+  {
+    console.warn('attempted to check erasure status on a non-existing character:', this);
+    return false;
+  }
+
+  // return the erasure status.
+  return character.isJabsAction();
 };
 
 /**
