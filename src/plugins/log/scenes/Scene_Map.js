@@ -26,7 +26,7 @@ Scene_Map.prototype.initialize = function()
 };
 
 /**
- * Extends {@link #onMapLoaded}.
+ * Extends {@link #createAllWindows}.
  * Creates the action log as well.
  */
 J.LOG.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWindows);

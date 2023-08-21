@@ -39,7 +39,7 @@ import * as fs from 'fs/promises';
 import Logger from './logger.js';
 
 // whether or not to include a timestamp of when this was bundled up.
-const USE_BUNDLE_TIMESTAMP = true;
+const USE_BUNDLE_TIMESTAMP = false;
 
 // do the work.
 await main();
@@ -88,7 +88,6 @@ async function main()
   await fs.writeFile(filepathAndName, bundledJs, 'utf-8');
 
   Logger.log(`finished combining all files into 1.`);
-
   Logger.logAnyway(`Combiner™ has completed execution for ${OUT_FILENAME}. 💯✅`);
 }
 
