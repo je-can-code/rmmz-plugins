@@ -61,20 +61,20 @@ class LevelScaling
    * Determines the multiplier based on the target's and user's levels.
    *
    * This gives a multiplier in relation to the user.
-   * @param {number} targetLevel The level of the target.
    * @param {number} userLevel The level of the user, typically the actor.
+   * @param {number} targetLevel The level of the target.
    * @returns {number} A decimal representing the multiplier for the scaling.
    */
-  static multiplier(targetLevel, userLevel)
+  static multiplier(userLevel, targetLevel)
   {
     // if the scaling functionality is disabled, then just return 1x.
     if (!$gameSystem.isLevelScalingEnabled()) return this.#defaultScalingMultiplier;
 
     // if one of the inputs is invalid or just zero, then default to 1x.
-    if (!this.#isValid(targetLevel, userLevel)) return this.#defaultScalingMultiplier;
+    if (!this.#isValid(userLevel, targetLevel)) return this.#defaultScalingMultiplier;
 
     // determine the difference in level.
-    const levelDifference = this.determineLevelDifference(targetLevel, userLevel);
+    const levelDifference = userLevel - targetLevel;
 
     // return the calculated multiplier based on the given level difference.
     return this.calculate(levelDifference);
@@ -94,18 +94,6 @@ class LevelScaling
 
     // valid!
     return true;
-  }
-
-  /**
-   * Determine the difference in level between two battlers.
-   * @param {number} targetLevel The level of the target.
-   * @param {number} userLevel The level of the user.
-   * @returns {number} A decimal representing the multiplier for the scaling.
-   */
-  static determineLevelDifference(targetLevel, userLevel)
-  {
-    // determine the difference between the target and user in relation to the user.
-    return targetLevel - userLevel;
   }
 
   /**

@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Overwrites {@link #gainItem}.
+ * Overrides {@link #gainItem}.<br>
  * Replaces item gain and management with index-based management instead.
  * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
  * @param {number} amount The amount to modify the quantity by.
@@ -83,7 +83,7 @@ Game_Party.prototype.processItemGain = function(item, amount, includeEquip)
 Game_Party.prototype.processContainerlessItemGain = function(item, amount, includeEquip)
 {
   // do something.
-  console.warn(`an item was gained that is not flagged as a database object; ${item.name}.`);
+  console.warn(`an item was gained that is not flagged as a database object; ${item.name}.<br>`);
   console.error(item, amount, includeEquip);
 };
 

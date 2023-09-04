@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #onSetup}.
+ * Extends {@link #onSetup}.<br>
  * Also refreshes the passive states on this battler for the first time.
  * @param {number} actorId The battler's id.
  */
@@ -43,7 +43,7 @@ Game_Actor.prototype.getPassiveStateSources = function()
 };
 
 /**
- * Extends {@link #traitObjects}.
+ * Extends {@link #traitObjects}.<br>
  * When considering traits, also include the actor's and party's passive states.
  */
 J.PASSIVE.Aliased.Game_Actor.set('traitObjects', Game_Actor.prototype.traitObjects);
@@ -63,7 +63,7 @@ Game_Actor.prototype.traitObjects = function()
 };
 
 /**
- * Extends {@link #onLearnNewSkill}.
+ * Extends {@link #onLearnNewSkill}.<br>
  * Triggers a refresh of passive states when learning a new skill.
  */
 J.PASSIVE.Aliased.Game_Actor.set('onLearnNewSkill', Game_Actor.prototype.onLearnNewSkill);
@@ -77,7 +77,7 @@ Game_Actor.prototype.onLearnNewSkill = function(skillId)
 };
 
 /**
- * Extends {@link #onForgetSkill}.
+ * Extends {@link #onForgetSkill}.<br>
  * Triggers a refresh of passive states when forgetting a skill.
  */
 J.PASSIVE.Aliased.Game_Actor.set('onForgetSkill', Game_Actor.prototype.onForgetSkill);
@@ -91,7 +91,7 @@ Game_Actor.prototype.onForgetSkill = function(skillId)
 };
 
 /**
- * Extends {@link #onEquipChange}.
+ * Extends {@link #onEquipChange}.<br>
  * Triggers a refresh of passive states when equipment changes.
  */
 J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', Game_Actor.prototype.onEquipChange);
@@ -105,7 +105,7 @@ Game_Actor.prototype.onEquipChange = function()
 };
 
 /**
- * Extends {@link #onClassChange}.
+ * Extends {@link #onClassChange}.<br>
  * Triggers a refresh of passive states when the class changes.
  */
 J.PASSIVE.Aliased.Game_Actor.set('onClassChange', Game_Actor.prototype.onClassChange);
@@ -119,7 +119,7 @@ Game_Actor.prototype.onClassChange = function(classId, keepExp)
 };
 
 /**
- * Extends {@link #getNotesSources}.
+ * Extends {@link #getNotesSources}.<br>
  * Includes passive skill states from this actor and also the party.
  * @returns {RPG_BaseItem[]}
  */

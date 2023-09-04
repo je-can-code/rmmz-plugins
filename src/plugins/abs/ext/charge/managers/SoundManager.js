@@ -1,6 +1,6 @@
 //region SoundManager
 /**
- * Extends {@link SoundManager.preloadImportantSounds}.
+ * Extends {@link SoundManager.preloadImportantSounds}.<br>
  * Also preloads the charging-related sound effects.
  */
 J.ABS.EXT.CHARGE.Aliased.SoundManager.set('preloadImportantSounds', SoundManager.preloadImportantSounds);

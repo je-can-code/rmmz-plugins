@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_CharacterBase.initMembers}.
+ * Extends {@link Game_CharacterBase.initMembers}.<br>
  * Also initializes our new members.
  */
 J.ABS.EXT.TOOLS.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype.initMembers);

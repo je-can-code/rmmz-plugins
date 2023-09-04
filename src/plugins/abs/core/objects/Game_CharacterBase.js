@@ -1,6 +1,6 @@
 //region Game_CharacterBase
 /**
- * Extends the {@link Game_CharacterBase.initMembers}.
+ * Extends the {@link Game_CharacterBase.initMembers}.<br>
  * Allows custom move speeds and dashing.
  */
 J.ABS.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype.initMembers);
@@ -43,7 +43,7 @@ Game_CharacterBase.prototype.getRealMoveSpeed = function()
 };
 
 /**
- * Overwrites {@link Game_CharacterBase.realMoveSpeed}.
+ * Overrides {@link Game_CharacterBase.realMoveSpeed}.<br>
  * Replaces the value to return our custom real move speed instead, along with dash boosts.
  * @returns {number}
  */
@@ -99,7 +99,7 @@ Game_CharacterBase.prototype.dashSpeed = function()
 };
 
 /**
- * Extends {@link Game_CharacterBase.setMoveSpeed}.
+ * Extends {@link Game_CharacterBase.setMoveSpeed}.<br>
  * Also modifies custom move speeds.
  */
 J.ABS.Aliased.Game_CharacterBase.set('setMoveSpeed', Game_CharacterBase.prototype.setMoveSpeed);

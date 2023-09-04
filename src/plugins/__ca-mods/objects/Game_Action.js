@@ -1,6 +1,6 @@
 //region Game_Action
 /**
- * Implements {@link #getAntiNullElementIds}.
+ * Implements {@link #getAntiNullElementIds}.<br>
  * In CA, these elementIds define tools, which should be considered regardless.
  */
 Game_Action.prototype.getAntiNullElementIds = function()

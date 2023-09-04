@@ -13,7 +13,7 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
 };
 
 /**
- * Extends {@link #destroy}.
+ * Extends {@link #destroy}.<br>
  * Reloads the collision table in case the enemy was a part of the tileset.
  */
 J.ABS.EXT.CYCLE.Aliased.JABS_Battler.set('destroy', JABS_Battler.prototype.destroy);

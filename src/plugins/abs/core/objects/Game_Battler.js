@@ -1,6 +1,6 @@
 //region Game_Battler
 /**
- * Extends {@link Game_Battler.initMembers}.
+ * Extends {@link Game_Battler.initMembers}.<br>
  * Includes JABS parameter initialization.
  */
 J.ABS.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);

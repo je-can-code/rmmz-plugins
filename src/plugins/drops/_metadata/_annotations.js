@@ -30,7 +30,7 @@
  * that is provided via the tags. Having multiple of this party ability will
  * not further double the multiplier.
  * ============================================================================
- * PERCENTAGE DROPS
+ * PERCENTAGE DROPS:
  * Have you ever wanted an enemy to drop something say... 40% of the time, but
  * realized you can't put decimal numbers into the enemy drop "denominator"
  * field in the editor, or go dig up your probability section out of your math
@@ -42,29 +42,27 @@
  * in the database, it will be treated as "a 40/100 chance of acquiring the
  * loot, aka 40% chance".
  *
- * NOTE 1:
+ * NOTE ABOUT USING THIS PLUGIN:
  * By having this plugin enabled, you opt into the PERCENTAGE DROPS feature
- * and cannot disable it. It is required. Sorry.
+ * and cannot disable it. It is required, and probably the reason you're using
+ * this plugin anyway.
  *
- * NOTE 2:
+ * NOTE ABOUT TREASURE HUNTER GODLINESS:
  * If the percentage chance exceeds 100%, the drop item will always drop.
  * This sounds obvious, but remember this when looking at the TAG EXAMPLES.
  * ============================================================================
- * ADDITIONAL ITEMS
+ * ADDITIONAL ITEMS:
  * Have you ever wanted to drop more items than just three per enemy? Well now
  * you can with the proper tags applied to enemies in the database!
  *
- * NOTE 1:
+ * NOTE ABOUT NATIVE DROP INTERACTIONS:
  * This is additive in the sense that if you specify drop items using the
  * editor and also have one or more of these tags on an enemy, it will add
  * all of them together as potential drops, exceeding the limit of 3.
  *
- * NOTE 2:
+ * NOTE ABOUT DUPLICATE TAGS:
  * You can have more than one of the same item drop, at the same or different
  * rates and they will individually be processed.
- *
- * NOTE 3:
- * Drop multipliers apply to items dropped using ADDITIONAL DROP tags, too.
  *
  * TAG USAGE:
  * - Enemies only.
@@ -158,5 +156,15 @@
  *  <goldMultiplier:10>
  *  <goldMultiplier:100>
  * The party will now gain +175% gold from defeated enemies.
+ * ============================================================================
+ * CHANGELOG:
+ * - 2.0.0
+ *    Retroactively added this CHANGELOG.
+ *    Refactored various data retrieval methods from given battlers.
+ *    Fixed issue with mismapped level calculations.
+ *    Added more jsdocs and comments to explain better the logical flow.
+ *    Removed useless methods.
+ * - 1.0.0
+ *    The initial release.
  * ============================================================================
  */

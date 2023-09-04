@@ -24,6 +24,12 @@ class BuiltWindowCommand
   #rightText = String.empty;
 
   /**
+   * The text color index the right-aligned text will be rendered with.
+   * @type {number}
+   */
+  #rightColorIndex = 0;
+
+  /**
    * The symbol of this command.
    * This is normally invisible and used for connecting this command
    * to an event hook for logical processing.
@@ -71,6 +77,7 @@ class BuiltWindowCommand
     iconIndex = 0,
     colorIndex = 0,
     rightText = String.empty,
+    rightColorIndex = 0,
     lines = [],
     helpText = String.empty)
   {
@@ -81,6 +88,7 @@ class BuiltWindowCommand
     this.#iconIndex = iconIndex;
     this.#colorIndex = colorIndex;
     this.#rightText = rightText;
+    this.#rightColorIndex = rightColorIndex;
     this.#lines = lines;
     this.#helpText = helpText;
   }
@@ -111,6 +119,15 @@ class BuiltWindowCommand
   get rightText()
   {
     return this.#rightText;
+  }
+
+  /**
+   * Gets the right-aligned color index of this command, if one is available.
+   * @returns {number}
+   */
+  get rightColor()
+  {
+    return this.#rightColorIndex;
   }
 
   /**

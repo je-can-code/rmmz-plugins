@@ -1,153 +1,152 @@
-//region Game_TextLog
-/**
- * TODO: make static, rename to TextLogManager.
- * The manager that handles all logs in the `Window_TextLog`.
- */
-function Game_TextLog()
+//region MapLogManager
+class MapLogManager
 {
-  this.initialize(...arguments);
-}
-
-Game_TextLog.prototype = {};
-Game_TextLog.prototype.constructor = Game_TextLog;
-
-/**
- * Initializes this class.
- */
-Game_TextLog.prototype.initialize = function()
-{
-  this.initMembers();
-};
-
-/**
- * Initializes all properties for this class.
- */
-Game_TextLog.prototype.initMembers = function()
-{
+  //region properties
   /**
    * The logs currently being managed.
    * @type {Map_Log[]}
    */
-  this._logs = [];
+  #logs = [];
 
   /**
    * Whether or not we have an unattended log.
    * @type {boolean}
    */
-  this._hasNewLog = false;
+  #needsProcessing = false;
 
   /**
    * Whether or not the log window should be visible.
    * @type {boolean}
    */
-  this._isVisible = true;
-};
+  #visible = true;
+  //endregion properties
 
-/**
- * Gets whether or not we are tracking any logs.
- * @returns {boolean} True if we are, false otherwise.
- */
-Game_TextLog.prototype.hasLogs = function()
-{
-  return this._logs.length > 0;
-};
-
-/**
- * Gets whether or not we have an unattended log.
- * @returns {boolean} True if we have unattended logs, false otherwise.
- */
-Game_TextLog.prototype.hasNewLog = function()
-{
-  return this._hasNewLog;
-};
-
-/**
- * Sets whether or not we have an unattended log.
- * @param {boolean} hasNewLog True if we need to handle a new log, false otherwise.
- */
-Game_TextLog.prototype.setHasNewLog = function(hasNewLog = true)
-{
-  this._hasNewLog = hasNewLog;
-};
-
-/**
- * Untoggles the flag and acknowledges the newly received log.
- */
-Game_TextLog.prototype.acknowledgeNewLog = function()
-{
-  this._hasNewLog = false;
-};
-
-/**
- * Gets all currently pending logs.
- * @returns {Map_Log[]} All logs currently in queue.
- */
-Game_TextLog.prototype.getLogs = function()
-{
-  return this._logs;
-};
-
-/**
- * Adds a new text log to the window.
- * @param {Map_Log} log The log to add to the window.
- */
-Game_TextLog.prototype.addLog = function(log)
-{
-  // add a log to the collection.
-  this._logs.push(log);
-
-  // make sure we don't have too many logs to work with.
-  this.handleLogCount();
-
-  // alert any listeners that we have a new log.
-  this.setHasNewLog();
-};
-
-/**
- * Manages the logs in our local store to ensure we don't have too many.
- */
-Game_TextLog.prototype.handleLogCount = function()
-{
-  // check if we have too many logs.
-  while (this.hasTooManyLogs())
+  /**
+   * Gets all logs that are currently being tracked by this log manager.<br>
+   * The logs will be in reverse order from that of which they are displayed in the window.
+   * @returns {Map_Log[]}
+   */
+  getLogs()
   {
-    // remove from the front until we are within the threshold.
-    this._logs.shift();
+    return this.#logs;
+  };
+
+  /**
+   * Adds a new log to this log manager's log tracker.<br>
+   * If there are more than the maximum capacity of logs currently being tracked,
+   * this will also start dropping logs from the tail until the limit is reached.
+   * @param {Map_Log} log The new log to add.
+   */
+  addLog(log)
+  {
+    // add a log to the collection.
+    this.#logs.push(log);
+
+    // make sure we don't have too many logs to work with.
+    this.handleLogCount();
+
+    // alert any listeners that we have a new log.
+    this.flagForProcessing();
+  };
+
+  /**
+   * Maintains this log manager's the log tracker to stay under the max log count.
+   */
+  handleLogCount()
+  {
+    // check if we have too many logs.
+    while (this.hasTooManyLogs())
+    {
+      // remove from the front until we are within the threshold.
+      this.#logs.shift();
+    }
   }
-};
 
-/**
- * Determines whether or not we have too many logs in our local store.
- * @returns {boolean} True if we have too many, false otherwise.
- */
-Game_TextLog.prototype.hasTooManyLogs = function()
-{
-  return (this._logs.length > 100);
-};
+  /**
+   * Checks whether or not this log manager has more logs than it can retain in memory.
+   * @returns {boolean}
+   */
+  hasTooManyLogs()
+  {
+    return (this.#logs.length > this._maxLogCount());
+  }
 
-/**
- * Empties the currently pending logs.
- */
-Game_TextLog.prototype.clearLogs = function()
-{
-  this._logs.splice(0, this._logs.length);
-};
+  /**
+   * Returns the maximum count of logs that this log manager will retain in memory.
+   *
+   * NOTE: This is probably the only method that would ever require any overriding.
+   * @returns {number}
+   * @private
+   */
+  _maxLogCount()
+  {
+    return 100;
+  }
 
-/**
- * Gets whether or not the log window should be visible.
- * @returns {boolean}
- */
-Game_TextLog.prototype.isVisible = function()
-{
-  return this._isVisible;
-};
+  /**
+   * Checks whether or not this log manager is currently in need of processing.
+   */
+  needsProcessing()
+  {
+    return this.#needsProcessing;
+  }
 
-/**
- * Sets the log window's visibility.
- * @param {boolean} visible Whether or not the log window should be visible.
- */
-Game_TextLog.prototype.setLogVisibility = function(visible)
-{
-  this._isVisible = visible;
-};
-//endregion Game_TextLog
+  /**
+   * Indicates this log manager has logs needing processing.
+   */
+  flagForProcessing()
+  {
+    this.#needsProcessing = true;
+  }
+
+  /**
+   * Informs this log manager that logs have been processed.
+   */
+  acknowledgeProcessing()
+  {
+    this.#needsProcessing = false;
+  }
+
+  /**
+   * Clears all logs currently stored by this log manager.
+   */
+  clearLogs()
+  {
+    this.#logs.splice(0, this.#logs.length);
+  }
+
+  /**
+   * Returns if this log manager is currently visible.
+   * @returns {boolean}
+   */
+  isVisible()
+  {
+    return this.#visible;
+  }
+
+  /**
+   * Returns if this log manager is currently hidden.
+   * @returns {boolean}
+   */
+  isHidden()
+  {
+    return !this.#visible;
+  }
+
+  /**
+   * Hides this log manager.
+   */
+  hideMapLog()
+  {
+    this.#visible = false;
+  }
+
+  /**
+   * Reveals this log manager.
+   */
+  showMapLog()
+  {
+    this.#visible = true;
+  }
+}
+//endregion MapLogManager

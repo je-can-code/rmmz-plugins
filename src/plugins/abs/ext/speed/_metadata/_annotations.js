@@ -6,6 +6,7 @@
  * @author JE
  * @url https://github.com/je-can-code/ca
  * @base J-Base
+ * @base J-ABS
  * @orderAfter J-Base
  * @orderAfter J-ABS
  * @help

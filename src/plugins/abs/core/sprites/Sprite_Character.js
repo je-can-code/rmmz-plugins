@@ -162,8 +162,8 @@ Sprite_Character.prototype.isJabsBattler = function()
 };
 
 /**
- * Gets whether or not the underlying {@link Game_Character} is a {@link JABS_Action}.
- * If there is no underlying character, then it is still considered not a {@link JABS_Action}.
+ * Gets whether or not the underlying {@link Game_Character} is a {@link JABS_Action}.<br>
+ * If there is no underlying character, then it is still considered not a {@link JABS_Action}.<br>
  * @returns {boolean}
  */
 Sprite_Character.prototype.isJabsAction = function()

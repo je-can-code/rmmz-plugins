@@ -1,6 +1,6 @@
 //region Game_ActionResult
 /**
- * Extends {@link Game_ActionResult.initialize}.
+ * Extends {@link Game_ActionResult.initialize}.<br>
  * Initializes additional members.
  */
 J.ABS.Aliased.Game_ActionResult.set('initialize', Game_ActionResult.prototype.initialize);

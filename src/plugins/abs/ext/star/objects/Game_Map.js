@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_Map.update}.
+ * Extends {@link Game_Map.update}.<br>
  * Also update the flow of star battle.
  */
 J.ABS.EXT.STAR.Aliased.Game_Map.set('update', Game_Map.prototype.update);
@@ -130,7 +130,7 @@ Game_Map.prototype.generateStarEnemy = function(gameEnemy, index)
   // stop generating enemies if we reached the max count.
   if (index >= J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount) 
   {
-    console.warn(`Exceeded enemy count limit of ${J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount}.`);
+    console.warn(`Exceeded enemy count limit of ${J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount}.<br>`);
     return;
   }
 
@@ -162,7 +162,7 @@ Game_Map.prototype.generateStarEnemy = function(gameEnemy, index)
 
 //region phase 2 - inbattle
 /**
- * The second phase of star battle, {@link StarPhases.INBATTLE}.
+ * The second phase of star battle, {@link StarPhases.INBATTLE}.<br>
  * Handles the monitoring of victory conditions for battle, to switch to the
  * next star phase.
  */
@@ -170,7 +170,7 @@ Game_Map.prototype.starPhaseInBattle = function()
 {
   // check if there are enemies still alive on this map.
   const enemiesRemaining = $gameTroop.areEnemiesAlive();
-  console.log(`enemies remaining: ${enemiesRemaining}.`);
+  console.log(`enemies remaining: ${enemiesRemaining}.<br>`);
 
   // the only victory condition is to eliminate all enemies on the map.
   if (enemiesRemaining <= 0) 
@@ -202,7 +202,7 @@ Game_Map.prototype.onStarVictory = function()
 
 //region phase 3 - finished
 /**
- * The third phase of star battle, {@link StarPhases.CLEANUP}.
+ * The third phase of star battle, {@link StarPhases.CLEANUP}.<br>
  * This is typically the conclusion of battle, including replacing the character
  * and moving onto the next phase.
  */

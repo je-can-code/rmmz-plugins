@@ -2,7 +2,7 @@
 if (J.ABS)
 {
   /**
-   * Extends {@link #buildCommands}.
+   * Extends {@link #buildCommands}.<br>
    * Adds the sdp command at the end of the list.
    * @returns {BuiltWindowCommand[]}
    */

@@ -51,4 +51,41 @@ JABS_Battler.prototype.shouldAllyEngage = function(target, distance)
   // return the determination.
   return shouldEngage;
 };
+
+/**
+ * Gets all allies to this battler within a large range.
+ * (Not map-wide because that could result in unexpected behavior)
+ * @returns {JABS_Battler[]}
+ */
+JABS_Battler.prototype.getAllNearbyAllies = function()
+{
+  return JABS_AiManager.getAlliedBattlersWithinRange(this, JABS_Battler.allyRubberbandRange());
+};
+
+/**
+ * Gets the ally ai associated with this battler.
+ * @returns {JABS_AllyAI}
+ */
+JABS_Battler.prototype.getAllyAiMode = function()
+{
+  // enemies do not have ally ai.
+  if (this.isEnemy()) return null;
+
+  return this.getBattler().getAllyAI();
+};
+
+/**
+ * Applies the battle memory to the battler.
+ * Only applicable to allies (for now).
+ * @param {JABS_BattleMemory} newMemory The new memory to apply to this battler.
+ */
+JABS_Battler.prototype.applyBattleMemories = function(newMemory)
+{
+  // enemies do not (yet) track battle memories.
+  if (this.isEnemy()) return;
+
+  return this.getBattler()
+    .getAllyAI()
+    .applyMemory(newMemory);
+};
 //endregion JABS_Battler

@@ -24,7 +24,7 @@ var $gameEnemies = null;
 var $actionMap = null;
 
 /**
- * Extends {@link DataManager.createGameObjects}.
+ * Extends {@link DataManager.createGameObjects}.<br>
  * Includes creation of our global game objects.
  */
 J.ABS.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);

@@ -93,7 +93,7 @@ if (J.ABS)
     const sdpLog = new MapLogBuilder()
       .setupSdpAcquired(battler.battlerName(), sdpPoints)
       .build();
-    $gameTextLog.addLog(sdpLog);
+    $mapLogManager.addLog(sdpLog);
   };
 }
 //endregion JABS_Engine

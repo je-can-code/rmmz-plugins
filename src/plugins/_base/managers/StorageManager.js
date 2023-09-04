@@ -1,7 +1,8 @@
+//region StorageManager
 /**
  * Checks whether or not a file exists given the path with the file name.
- * @param pathWithFile
- * @returns {boolean}
+ * @param {string} pathWithFile The path including the filename and extension.
+ * @returns {boolean} True if the file is present, false otherwise.
  */
 StorageManager.fileExists = function(pathWithFile)
 {
@@ -11,3 +12,4 @@ StorageManager.fileExists = function(pathWithFile)
   // return whether or not a file exists at the given path.
   return fs.existsSync(pathWithFile);
 };
+//endregion StorageManager

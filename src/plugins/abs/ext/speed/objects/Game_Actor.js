@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #onBattlerDataChange}.
+ * Extends {@link #onBattlerDataChange}.<br>
  * Refreshes movement speed boosts when the battler's data changes.
  */
 J.ABS.EXT.SPEED.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);

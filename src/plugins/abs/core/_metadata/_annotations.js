@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.2.2 JABS] Enables combat to be carried out on the map.
+ * [v3.3.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/ca
  * @base J-Base
@@ -47,8 +47,8 @@
  *
  * CHANGELOG:
  * - 3.3.0
- *    Added ability to generate enemies on the map dynamically.
- *    Added ability to generate loot on the map dynamically.
+ *    Added plugin command to generate enemies on the map dynamically.
+ *    Added plugin command to generate loot on the map dynamically.
  *    Refactored away manual getter/setters of JABS_Engine.
  * - 3.2.2
  *    JABS quick menu now honors menu access via event control.

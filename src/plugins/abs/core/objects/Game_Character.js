@@ -158,7 +158,7 @@ Game_Character.prototype.getJabsActionNeedsRemoving = function()
 };
 
 /**
- * Gets the `uuid` of the underlying {@link JABS_Action}.
+ * Gets the `uuid` of the underlying {@link JABS_Action}.<br>
  * @return {string|String.empty} The uuid when there is an action, {@link String.empty} otherwise.
  */
 Game_Character.prototype.getJabsActionUuid = function()
@@ -375,7 +375,7 @@ Game_Character.prototype.requestAnimation = function(animationId)
 };
 
 /**
- * Extends {@link Game_Character.isMovementSucceeded}.
+ * Extends {@link Game_Character.isMovementSucceeded}.<br>
  * Includes handling for battlers being move-locked by JABS.
  * @returns {boolean}
  */

@@ -109,7 +109,7 @@ Game_Battler.prototype.state = function(stateId)
 };
 
 /**
- * Overwrites {@link #states}.
+ * Overrides {@link #states}.<br>
  * Returns all states from the view of this battler.
  * @returns {RPG_State[]}
  */
@@ -119,7 +119,7 @@ Game_Battler.prototype.states = function()
 };
 
 /**
- * Extends {@link #eraseState}.
+ * Extends {@link #eraseState}.<br>
  * Adds a hook for performing actions when a state is removed from the battler.
  */
 J.BASE.Aliased.Game_Battler.set('eraseState', Game_Battler.prototype.eraseState);
@@ -153,7 +153,7 @@ Game_Battler.prototype.onStateRemoval = function(stateId)
 };
 
 /**
- * Extends {@link #addNewState}.
+ * Extends {@link #addNewState}.<br>
  * Adds a hook for performing actions when a state is added on the battler.
  */
 J.BASE.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewState);

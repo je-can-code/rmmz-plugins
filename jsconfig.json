@@ -12,6 +12,7 @@
   "include": [
     "./src/defs/*.d.ts",
     "./src/defs/**/*.d.ts",
-    "./src/plugins/**/*.js"
+    "./src/plugins/**/*.js",
+    "./project/js/*.js"
   ]
 }

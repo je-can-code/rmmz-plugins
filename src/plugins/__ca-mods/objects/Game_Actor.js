@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #equipSlots}.
+ * Extends {@link #equipSlots}.<br>
  * Adds a duplicate of the 5th type (accessory).
  */
 J.CAMods.Aliased.Game_Actor.set("equipSlots", Game_Actor.prototype.equipSlots);
@@ -17,7 +17,7 @@ Game_Actor.prototype.equipSlots = function()
 };
 
 /**
- * Overwrites {@link #performMapDamage}.
+ * Overrides {@link #performMapDamage}.<br>
  * Forces the map damage flash to always happen because JABS is always in-battle.
  * Also shows an animation on the player when they take damage.
  */
@@ -32,7 +32,7 @@ Game_Actor.prototype.performMapDamage = function()
 };
 
 /**
- * Extends {@link #basicFloorDamage}.
+ * Extends {@link #basicFloorDamage}.<br>
  * Replaces logic if there is a $dataMap available with calculated damage instead.
  */
 J.CAMods.Aliased.Game_Actor.set("basicFloorDamage", Game_Actor.prototype.basicFloorDamage);

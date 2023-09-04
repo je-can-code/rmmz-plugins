@@ -273,7 +273,7 @@ class RPGManager
     if (tryParse)
     {
       // attempt the parsing.
-      val = val.map(J.BASE.Helpers.parseObject, J.BASE.Helpers);
+      val = val.map(JsonMapper.parseObject, JsonMapper);
     }
 
     // return the found value.
@@ -326,7 +326,7 @@ class RPGManager
     if (tryParse)
     {
       // attempt the parsing.
-      val = val.map(J.BASE.Helpers.parseObject, J.BASE.Helpers);
+      val = val.map(JsonMapper.parseObject, JsonMapper);
     }
 
     // return the found value.

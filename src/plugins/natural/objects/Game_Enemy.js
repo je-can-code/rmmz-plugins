@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link Game_Enemy.setup}.
+ * Extends {@link Game_Enemy.setup}.<br>
  * Includes parameter buff initialization.
  */
 J.NATURAL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -14,7 +14,7 @@ Game_Enemy.prototype.setup = function(enemyId, x, y)
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.
+ * Extends {@link #onBattlerDataChange}.<br>
  * Also refreshes all natural parameter buff values on the battler.
  */
 J.NATURAL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);

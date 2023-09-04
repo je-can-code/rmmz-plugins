@@ -1,6 +1,6 @@
 //region Game_Map
 /**
- * Overwrites {@link #checkPassage}.
+ * Overrides {@link #checkPassage}.<br>
  * Disables the ability to walk over tiles with the terrain ID of 1.
  * In practice, this prevents battlers from getting knocked into otherwise
  * unreachable locations, like what is supposed to be ceiling tiles.
@@ -53,7 +53,7 @@ Game_Map.prototype.checkPassage = function(x, y, bit)
 };
 
 /**
- * Extends {@link #setup}.
+ * Extends {@link #setup}.<br>
  * Upon map initialization, assigns a random integer between 1-100 to an arbitrary variable.
  * In CA, this value is used to determine the presence of "rare/named" monsters on the map.
  */

@@ -18,7 +18,7 @@ class JABS_ChargingTier
   maxDuration = 0;
 
   /**
-   * The tier number for this {@link JABS_ChargingTier}.
+   * The tier number for this {@link JABS_ChargingTier}.<br>
    * @type {number}
    */
   tier = 0;

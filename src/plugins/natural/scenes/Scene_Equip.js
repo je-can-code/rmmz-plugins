@@ -1,6 +1,6 @@
 //region Scene_Equip
 /**
- * Extends {@link #executeEquipChange}.
+ * Extends {@link #executeEquipChange}.<br>
  * Also refreshes all natural parameter data.
  */
 J.NATURAL.Aliased.Scene_Equip.set('executeEquipChange', Scene_Equip.prototype.executeEquipChange);

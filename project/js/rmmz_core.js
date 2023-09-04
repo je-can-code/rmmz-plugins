@@ -1741,7 +1741,7 @@ Bitmap.prototype._drawTextBody = function(text, tx, ty, maxWidth) {
 
 Bitmap.prototype._createCanvas = function(width, height) {
     this._canvas = document.createElement("canvas");
-    this._context = this._canvas.getContext("2d");
+    this._context = this._canvas.getContext("2d", { willReadFrequently: true });
     this._canvas.width = width;
     this._canvas.height = height;
     this._createBaseTexture(this._canvas);

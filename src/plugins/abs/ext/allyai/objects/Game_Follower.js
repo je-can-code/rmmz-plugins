@@ -22,7 +22,7 @@ Game_Follower.prototype.chaseCharacter = function(character)
 };
 
 /**
- * Determines whether or not this follower should be controlled by the {@link JABS_AiManager}.
+ * Determines whether or not this follower should be controlled by the {@link JABS_AiManager}.<br>
  * @returns {boolean} True if this follower should be controlled, false otherwise.
  */
 Game_Follower.prototype.canObeyJabsAi = function()
@@ -104,7 +104,7 @@ Game_Follower.prototype.shouldObeyJabsCombatAi = function()
 
 /**
  * Handles the flow of logic for the movement of this character while available
- * to do combat things according to the {@link JABS_AiManager}.
+ * to do combat things according to the {@link JABS_AiManager}.<br>
  * @param character
  */
 Game_Follower.prototype.handleJabsCombatAi = function(character)
@@ -169,7 +169,7 @@ Game_Follower.prototype.handleJabsCombatInactiveAi = function(character)
 };
 
 /**
- * Extends {@link Game_Follower.update}.
+ * Extends {@link Game_Follower.update}.<br>
  * If this follower should be controlled by JABS AI, then modify the way it updates.
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('update', Game_Follower.prototype.update);

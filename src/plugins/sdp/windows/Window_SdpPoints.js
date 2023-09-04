@@ -1,9 +1,8 @@
-//region Window_SDP_Points
+//region Window_SdpPoints
 /**
  * The SDP window containing the amount of SDP points a given actor has.
  */
-class Window_SDP_Points
-  extends Window_Base
+class Window_SdpPoints extends Window_Base
 {
   /**
    * @constructor
@@ -50,7 +49,7 @@ class Window_SDP_Points
   {
     const x = 200;
     const y = 2;
-    const iconIndex = J.SDP.Metadata.PointsIcon;
+    const iconIndex = J.SDP.Metadata.sdpIconIndex;
     this.drawIcon(iconIndex, x, y);
   }
 
@@ -95,4 +94,4 @@ class Window_SDP_Points
     this.refresh();
   }
 }
-//endregion Window_SDP_Points
+//endregion Window_SdpPoints

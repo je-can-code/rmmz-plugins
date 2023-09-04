@@ -1,6 +1,6 @@
 //region JABS_AI
 /**
- * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.
+ * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.<br>
  */
 class JABS_AI
 {

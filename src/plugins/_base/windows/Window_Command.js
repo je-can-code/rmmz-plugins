@@ -9,6 +9,15 @@ Window_Command.prototype.commandList = function()
 };
 
 /**
+ * Checks whether or not there are any commands in this list.
+ * @return {boolean}
+ */
+Window_Command.prototype.hasCommands = function()
+{
+  return this.commandList().length > 0;
+};
+
+/**
  * Get the unmodified line height, which should always be `36`.
  * @returns {36}
  */
@@ -33,7 +42,7 @@ Window_Command.prototype.preDrawItem = function(index)
 };
 
 /**
- * Overwrites {@link #drawItem}.
+ * Overrides {@link #drawItem}.<br>
  * Renders the text along with any additional data that is available to the command.
  */
 Window_Command.prototype.drawItem = function(index)
@@ -96,7 +105,10 @@ Window_Command.prototype.drawItem = function(index)
       // move the command name up a bit if we have subtext.
       rightTextY -= this.subtextLineHeight();
     }
-    
+
+    // execute the color change for right text.
+    this.processColorChange(this.commandRightColorIndex(index));
+
     // render the right-aligned text.
     this.drawText(rightText, rightTextX, rightTextY, textWidth, "right");
 
@@ -181,6 +193,19 @@ Window_Command.prototype.commandRightText = function(index)
 };
 
 /**
+ * Gets the right-aligned text color index for this command.
+ * @param {number} index The index to get the right-color-index for.
+ * @returns {number}
+ */
+Window_Command.prototype.commandRightColorIndex = function(index)
+{
+  const command = this.commandList().at(index);
+  const commandColor = this.commandList().at(index).rightColor;
+  const color = command.rightColor;
+  return color;
+};
+
+/**
  * Gets the help text for the command at the given index.
  * @param {number} index The index to get the help text for.
  * @returns {string}
@@ -196,7 +221,7 @@ Window_Command.prototype.commandHelpText = function(index)
  */
 Window_Command.prototype.currentHelpText = function()
 {
-  return this.commandList().at(this.index()).helpText ?? String.empty;
+  return this.commandHelpText(this.index()) ?? String.empty;
 };
 
 /**
@@ -254,7 +279,7 @@ Window_Command.prototype.commandColor = function(index)
 };
 
 /**
- * Overwrites {@link #addCommand}.
+ * Overrides {@link #addCommand}.<br>
  * Adds additional metadata to a command.
  * @param {string} name The visible name of this command.
  * @param {string} symbol The symbol for this command.

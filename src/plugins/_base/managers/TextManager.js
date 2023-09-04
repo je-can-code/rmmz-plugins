@@ -1,41 +1,5 @@
 //region TextManager
 /**
- * Gets the proper name for the points used by the SDP system.
- * @returns {string}
- */
-TextManager.sdpPoints = function()
-{
-  return "SDPs";
-};
-
-/**
- * Gets the proper name of "SDP Multiplier".
- * @returns {string}
- */
-TextManager.sdpMultiplier = function()
-{
-  return "SDP Multiplier";
-};
-
-/**
- * Gets the proper name of "proficiency bonus", which is quite long, really.
- * @returns {string}
- */
-TextManager.proficiencyBonus = function()
-{
-  return "Proficiency+";
-};
-
-/**
- * Gets the proper name of "move speed boost".
- * @returns {string}
- */
-TextManager.movespeed = function()
-{
-  return "Move Boost";
-};
-
-/**
  * Gets the proper name of "max tp".
  * @returns {string} The name of the parameter.
  */
@@ -100,6 +64,74 @@ TextManager.rewardDescription = function(paramId)
         "The rate of SDP accumulation from any source.",
         "Bigger rates yield fatter stacks of them sweet SDP points."
       ];
+  }
+};
+
+TextManager.longParamDescription = function(paramId)
+{
+  switch (paramId)
+  {
+    case  0:
+      return this.bparamDescription(paramId); // mhp
+    case  1:
+      return this.bparamDescription(paramId); // mmp
+    case  2:
+      return this.bparamDescription(paramId); // atk
+    case  3:
+      return this.bparamDescription(paramId); // def
+    case  4:
+      return this.bparamDescription(paramId); // mat
+    case  5:
+      return this.bparamDescription(paramId); // mdf
+    case  6:
+      return this.bparamDescription(paramId); // agi
+    case  7:
+      return this.bparamDescription(paramId); // luk
+    case  8:
+      return this.xparamDescription(paramId - 8); // hit
+    case  9:
+      return this.xparamDescription(paramId - 8); // eva (parry boost)
+    case 10:
+      return this.xparamDescription(paramId - 8); // cri
+    case 11:
+      return this.xparamDescription(paramId - 8); // cev
+    case 12:
+      return this.xparamDescription(paramId - 8); // mev (unused)
+    case 13:
+      return this.xparamDescription(paramId - 8); // mrf
+    case 14:
+      return this.xparamDescription(paramId - 8); // cnt (autocounter)
+    case 15:
+      return this.xparamDescription(paramId - 8); // hrg
+    case 16:
+      return this.xparamDescription(paramId - 8); // mrg
+    case 17:
+      return this.xparamDescription(paramId - 8); // trg
+    case 18:
+      return this.sparamDescription(paramId - 18); // trg (aggro)
+    case 19:
+      return this.sparamDescription(paramId - 18); // grd (parry)
+    case 20:
+      return this.sparamDescription(paramId - 18); // rec
+    case 21:
+      return this.sparamDescription(paramId - 18); // pha
+    case 22:
+      return this.sparamDescription(paramId - 18); // mcr (mp cost)
+    case 23:
+      return this.sparamDescription(paramId - 18); // tcr (tp cost)
+    case 24:
+      return this.sparamDescription(paramId - 18); // pdr
+    case 25:
+      return this.sparamDescription(paramId - 18); // mdr
+    case 26:
+      return this.sparamDescription(paramId - 18); // fdr
+    case 27:
+      return this.sparamDescription(paramId - 18); // exr
+    case 30:
+      return this.maxTp(); // max tp
+    default:
+      console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
+      return String.empty;
   }
 };
 
@@ -457,12 +489,6 @@ TextManager.longParam = function(paramId)
       return this.sparam(paramId - 18); // exr
     case 30:
       return this.maxTp(); // max tp
-    case 31:
-      return this.movespeed(); // move speed boost
-    case 32:
-      return this.proficiencyBonus(); // proficiency boost
-    case 33:
-      return this.sdpMultiplier(); // sdp multiplier
     default:
       console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
       return String.empty;

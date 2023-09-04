@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_Actor.onLearnNewSkill}.
+ * Extends {@link Game_Actor.onLearnNewSkill}.<br>
  * Wraps the function so that if a new skill is learned, it'll echo to the console.
  */
 J.UTILS.Aliased.Game_Actor.set('onLearnNewSkill', Game_Actor.prototype.onLearnNewSkill);
@@ -13,7 +13,7 @@ Game_Actor.prototype.onLearnNewSkill = function(skillId)
 };
 
 /**
- * Extends {@link Game_Actor.onForgetSkill}.
+ * Extends {@link Game_Actor.onForgetSkill}.<br>
  * Wraps the function so that if a skill is forgotten, it'll echo back to the console.
  */
 J.UTILS.Aliased.Game_Actor.set('onForgetSkill', Game_Actor.prototype.onForgetSkill);

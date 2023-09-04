@@ -1,5 +1,5 @@
 /**
- * Extends {@link #buildCommands}.
+ * Extends {@link #buildCommands}.<br>
  * Adds the monsterpedia command to the list of commands in the omnipedia.
  */
 J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.set('buildCommands', Window_OmnipediaList.prototype.buildCommands);
@@ -33,6 +33,9 @@ Window_OmnipediaList.prototype.buildCommands = function()
  */
 Window_OmnipediaList.prototype.canAddMonsterpediaCommand = function()
 {
+  // if the necessary switch isn't ON, don't render the command at all.
+  if (!$gameSwitches.value(J.OMNI.EXT.MONSTER.Metadata.EnabledSwitch)) return false;
+
   // add the command!
   return true;
 };

@@ -1,5 +1,5 @@
 /**
- * Extends {@link DataManager.setupNewGame}.
+ * Extends {@link DataManager.setupNewGame}.<br>
  * Includes difficulty setup for new games.
  */
 J.DIFFICULTY.Aliased.DataManager.set('setupNewGame', DataManager.setupNewGame);

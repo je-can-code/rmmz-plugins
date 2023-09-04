@@ -478,7 +478,7 @@ class JABS_EnemyAI extends JABS_AI
   }
 
   /**
-   * Overwrites {@link #aiComboChanceModifier}.
+   * Overrides {@link #aiComboChanceModifier}.<br>
    * Calculates the combo chance modifier based on the various AI traits that are
    * associated with this AI.
    * This is summed together with the {@link #baseComboChance} to determine whether or not

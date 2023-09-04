@@ -13,7 +13,7 @@ J.PASSIVE = {};
  */
 J.PASSIVE.Metadata = {};
 J.PASSIVE.Metadata.Name = `J-Passive`;
-J.PASSIVE.Metadata.Version = '1.1.0';
+J.PASSIVE.Metadata.Version = '2.0.0';
 
 /**
  * All regular expressions used by this plugin.

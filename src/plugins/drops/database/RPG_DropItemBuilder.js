@@ -61,7 +61,7 @@ class RPG_DropItemBuilder
 
   //region builders
   /**
-   * Sets the id aka `dataId` of this {@link RPG_DropItem}.
+   * Sets the id aka `dataId` of this {@link RPG_DropItem}.<br>
    * @param {number} id The database id of the item.
    * @returns {RPG_DropItemBuilder} This builder for fluent-chaining.
    */
@@ -72,7 +72,7 @@ class RPG_DropItemBuilder
   }
 
   /**
-   * Sets the typeId aka `kind` of this {@link RPG_DropItem}.
+   * Sets the typeId aka `kind` of this {@link RPG_DropItem}.<br>
    * @param {number} typeId The typeId of this loot.
    * @returns {RPG_DropItemBuilder} This builder for fluent-chaining.
    */

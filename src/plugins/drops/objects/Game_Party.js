@@ -1,13 +1,22 @@
 //region Game_Party
 /**
- * Gets the collective multiplier for gold drops for the entire party.
+ * Gets the collective sum multiplier for gold drops for the entire party.
  * @returns {number}
  */
 Game_Party.prototype.getGoldMultiplier = function()
 {
-  let goldMultiplier = 1;
+  // initialize a base multiplier.
+  const baseMultiplier = 1;
+
+  // determine the members for consideration.
   const membersToConsider = this.goldMultiplierMembers();
-  membersToConsider.forEach(actor => goldMultiplier += actor.getGoldMultiplier());
+
+  // calculate the total.
+  const goldMultiplier = membersToConsider.reduce(
+    (runningTotal, currentActor) => runningTotal + currentActor.getGoldMultiplier(),
+    baseMultiplier);
+
+  // return the result.
   return goldMultiplier;
 };
 
@@ -15,28 +24,50 @@ Game_Party.prototype.getGoldMultiplier = function()
  * Gets the selection of actors to consider when determining gold bonus multipliers.
  * @returns {Game_Actor[]}
  */
-Game_Party.prototype.goldMultiplierMembers = function()
+Game_Party.prototype.goldMultiplierMembers = function(strategy = DropsPartyStrategy.CombatPartyStyle)
 {
+  // default to no members considered.
   const membersToConsider = [];
-  membersToConsider.push(...$gameParty.battleMembers());
 
-  // if only the leader should influence drop bonuses (for ABS style).
-  // membersToConsider.push($gameParty.leader());
+  // pivot on the strategy.
+  switch (strategy)
+  {
+    // consider only the leader should influence drop bonuses (for ABS style).
+    case DropsPartyStrategy.AbsStyle:
+      membersToConsider.push($gameParty.leader());
+      break;
+    // consider the currently active members of the party.
+    case DropsPartyStrategy.CombatPartyStyle:
+      membersToConsider.push(...$gameParty.battleMembers());
+      break;
+    // consider all party members, including reserve (different preferences).
+    case DropsPartyStrategy.FullPartyStyle:
+      membersToConsider.push(...$gameParty.members());
+      break;
+  }
 
-  // or everyone including reserve members (different preferences).
-  // membersToConsider.push(...$gameParty.members());
+  // return all that were applicable.
   return membersToConsider;
 };
 
 /**
- * Gets the collective multiplier for loot drops for the entire party.
+ * Gets the collective sum multiplier for loot drops for the entire party.
  * @returns {number}
  */
-Game_Party.prototype.getDropMultiplier = function()
+Game_Party.prototype.getPartyDropMultiplier = function()
 {
-  let dropMultiplier = 0;
+  // initialize a base multiplier.
+  const baseMultiplier = 1;
+
+  // determine the members for consideration.
   const membersToConsider = this.dropMultiplierMembers();
-  membersToConsider.forEach(actor => dropMultiplier += actor.getDropMultiplier());
+
+  // calculate the total.
+  const dropMultiplier = membersToConsider.reduce(
+    (runningTotal, currentActor) => runningTotal + currentActor.getDropMultiplierBonus(),
+    baseMultiplier);
+
+  // return the result.
   return dropMultiplier;
 };
 
@@ -44,16 +75,29 @@ Game_Party.prototype.getDropMultiplier = function()
  * Gets the selection of actors to consider when determining bonus drop multipliers.
  * @returns {Game_Actor[]}
  */
-Game_Party.prototype.dropMultiplierMembers = function()
+Game_Party.prototype.dropMultiplierMembers = function(strategy = DropsPartyStrategy.CombatPartyStyle)
 {
+  // default to no members considered.
   const membersToConsider = [];
-  membersToConsider.push(...$gameParty.battleMembers());
 
-  // if only the leader should influence drop bonuses (for ABS style).
-  // membersToConsider.push($gameParty.leader());
+  // pivot on the strategy.
+  switch (strategy)
+  {
+    // consider only the leader should influence drop bonuses (for ABS style).
+    case DropsPartyStrategy.AbsStyle:
+      membersToConsider.push($gameParty.leader());
+      break;
+    // consider the currently active members of the party.
+    case DropsPartyStrategy.CombatPartyStyle:
+      membersToConsider.push(...$gameParty.battleMembers());
+      break;
+    // consider all party members, including reserve (different preferences).
+    case DropsPartyStrategy.FullPartyStyle:
+      membersToConsider.push(...$gameParty.members());
+      break;
+  }
 
-  // or everyone including reserve members (different preferences).
-  // membersToConsider.push(...$gameParty.members());
+  // return all that were applicable.
   return membersToConsider;
 };
 //endregion Game_Party

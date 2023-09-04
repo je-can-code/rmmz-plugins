@@ -1,6 +1,6 @@
 /**
  * Now you can retrieve the player's battler from the player.
- * This is synonymous with {@link Game_Party.leader}.
+ * This is synonymous with {@link Game_Party.leader}.<br>
  * @returns {Game_Actor|null}
  */
 Game_Player.prototype.battler = function()

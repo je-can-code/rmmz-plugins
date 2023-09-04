@@ -189,7 +189,7 @@ class Window_JaftingEquip
             {
               enabled = false;
               iconIndex = 90;
-              errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedRefineCount} ${projectedCount}/${primaryMaxRefineCount}.\n`;
+              errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedRefineCount} ${projectedCount}/${primaryMaxRefineCount}.<br>\n`;
             }
           }
 
@@ -203,7 +203,7 @@ class Window_JaftingEquip
           {
             enabled = false;
             iconIndex = 92
-            errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedTraitCount} ${projectedResultTraitCount}/${baseMaxTraitCount}.\n`;
+            errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedTraitCount} ${projectedResultTraitCount}/${baseMaxTraitCount}.<br>\n`;
           }
         }
 

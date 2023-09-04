@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_CharacterBase.initMembers}.
+ * Extends {@link Game_CharacterBase.initMembers}.<br>
  * Includes this plugin's extra properties as well.
  */
 J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype.initMembers);

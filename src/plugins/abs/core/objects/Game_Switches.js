@@ -1,6 +1,6 @@
 //region Game_Switches
 /**
- * Extends {@link #onChange}.
+ * Extends {@link #onChange}.<br>
  * Also refreshes the JABS menu when a switch is toggled.
  */
 J.ABS.Aliased.Game_Switches.set('onChange', Game_Switches.prototype.onChange);

@@ -1,6 +1,6 @@
 //region Game_BattlerBase
 /**
- * Extends {@link #recoverAll}.
+ * Extends {@link #recoverAll}.<br>
  * Using the event command for "Recover All" also restores all TP to the battler.
  */
 J.CAMods.Aliased.Game_BattlerBase.set('recoverAll', Game_BattlerBase.prototype.recoverAll);

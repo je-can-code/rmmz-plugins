@@ -1,6 +1,6 @@
 //region Game_Battler
 /**
- * Extends {@link Game_Battler.initMembers}.
+ * Extends {@link Game_Battler.initMembers}.<br>
  */
 J.ABS.EXT.SPEED.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
 Game_Battler.prototype.initMembers = function()

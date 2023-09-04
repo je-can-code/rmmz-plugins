@@ -337,7 +337,7 @@ class Window_MonsterpediaDetail extends Window_Base
   //endregion image caching
 
   /**
-   * Extends {@link #clearContent}.
+   * Extends {@link #clearContent}.<br>
    * Also hides all cached images.
    */
   clearContent()
@@ -353,7 +353,7 @@ class Window_MonsterpediaDetail extends Window_Base
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.
+   * Implements {@link Window_Base.drawContent}.<br>
    * Draws a header and some detail for the omnipedia list header.
    */
   drawContent()
@@ -1082,7 +1082,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const [ sdpKey, sdpDropChance, sdpItemId ] = sdpDropData;
 
     // grab the corresponding panel with this key.
-    const panel = $gameSystem.getSdpByKey(sdpKey);
+    const panel = $gameParty.getSdpByKey(sdpKey);
 
     // if there is no panel, then don't try to render it.
     if (!panel) return;

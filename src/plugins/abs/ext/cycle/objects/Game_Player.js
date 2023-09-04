@@ -14,7 +14,7 @@ Game_Player.prototype.shouldTriggerEvent = function(event, triggers, normal)
 };
 
 /**
- * Overwrites {@link #checkEventTriggerThere}.
+ * Overrides {@link #checkEventTriggerThere}.<br>
  * Rounds the x2,y2 coordinates down so that counter-checks work properly.
  * @param {[number, number, number]} triggers The type of event triggers that are being used.
  */

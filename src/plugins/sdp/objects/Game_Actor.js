@@ -1,6 +1,7 @@
 //region Game_Actor
 /**
- * Adds new properties to the actors that manage the SDP system.
+ * Extends {@link #initMembers}.<br>
+ * Also initializes the SDP members.
  */
 J.SDP.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
 Game_Actor.prototype.initMembers = function()
@@ -192,34 +193,16 @@ Game_Actor.prototype.sdpMultiplier = function()
   // get all the objects to scan for possible sdp multipliers.
   const objectsToCheck = this.getAllNotes();
 
-  // iterate over each of them and add the multiplier up.
-  objectsToCheck.forEach(obj => (multiplier += this.extractSdpMultiplier(obj)), this);
+  // get the vision multiplier from anything this battler has available.
+  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(
+    objectsToCheck,
+    J.ABS.RegExp.SdpMultiplier);
+
+  // get the sum of the base and bonus multipliers.
+  const sdpMultiplier = (multiplier + sdpMultiplierBonus);
 
   // return the factor form by now dividing by 100.
-  return (multiplier / 100);
-};
-
-/**
- * Gets all multipliers that this database object contains.
- * @param {RPG_BaseItem} referenceData The database data of the object.
- * @returns {number}
- */
-Game_Actor.prototype.extractSdpMultiplier = function(referenceData)
-{
-  if (!referenceData || !referenceData.note) return 0;
-
-  let sdpMultiplier = 0;
-  const structure = J.SDP.RegExp.SdpMultiplier;
-  const notedata = referenceData.note.split(/[\r\n]+/);
-  notedata.forEach(line =>
-  {
-    if (line.match(structure))
-    {
-      sdpMultiplier += parseInt(RegExp.$1);
-    }
-  });
-
-  return sdpMultiplier;
+  return (sdpMultiplier / 100);
 };
 
 /**
@@ -247,7 +230,7 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameSystem
+    const panelParameters = $gameParty
       .getSdpByKey(panelRanking.key)
       .getPanelParameterById(paramId);
     if (panelParameters.length)
@@ -288,7 +271,7 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameSystem
+    const panelParameters = $gameParty
       .getSdpByKey(panelRanking.key)
       .getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
     if (panelParameters.length)
@@ -355,7 +338,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 };
 
 /**
- * Extends {@link #maxTp}.
+ * Extends {@link #maxTp}.<br>
  * Includes bonuses from panels as well.
  * @returns {number}
  */
@@ -395,7 +378,7 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameSystem
+    const panelParameters = $gameParty
       .getSdpByKey(panelRanking.key)
       .getPanelParameterById(30); // TODO: generalize this whole thing.
 

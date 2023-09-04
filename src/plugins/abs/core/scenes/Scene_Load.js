@@ -1,6 +1,6 @@
 //region Scene_Load
 /**
- * Overwrites {@link Scene_Load.reloadMapIfUpdated}.
+ * Overrides {@link Scene_Load.reloadMapIfUpdated}.<br>
  * When loading, the map needs to be refreshed to load the enemies properly.
  */
 J.ABS.Aliased.Scene_Load.set('reloadMapIfUpdated', Scene_Load.prototype.reloadMapIfUpdated);

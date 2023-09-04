@@ -91,7 +91,7 @@ Window_Help.prototype.getSecondaryNewline = function()
 };
 
 /**
- * Overwrites {@link #refresh}.
+ * Overrides {@link #refresh}.<br>
  * Extracts the text rendering out into its own function, but this function
  * still does the same thing: clears and redraws the contents of the window.
  */

@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #initOmnipediaMembers}.
+ * Extends {@link #initOmnipediaMembers}.<br>
  * Includes monsterpedia members.
  */
 J.OMNI.EXT.MONSTER.Aliased.Game_Party.set('initOmnipediaMembers', Game_Party.prototype.initOmnipediaMembers);

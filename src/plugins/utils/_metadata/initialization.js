@@ -9,30 +9,9 @@ var J = J || {};
 J.UTILS = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The metadata associated with this plugin, such as name and version.
  */
-J.UTILS.Metadata = {
-  /**
-   * The name of this plugin.
-   */
-  Name: `J-SystemUtilities`,
-
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.0',
-};
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.UTILS.PluginParameters = PluginManager.parameters(J.UTILS.Metadata.Name);
-
-/**
- * Whether or not to use the "auto-newgame" feature.
- * @type {boolean}
- */
-J.UTILS.Metadata.AutoNewgame = J.UTILS.PluginParameters['autoNewgame'] === 'true';
+J.UTILS.Metadata = new J_UtilsPluginMetadata('J-SystemUtilities', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.

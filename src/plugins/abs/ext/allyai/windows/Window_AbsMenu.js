@@ -1,6 +1,6 @@
 //region Window_AbsMenu
 /**
- * Extends {@link #buildCommands}.
+ * Extends {@link #buildCommands}.<br>
  * Adds the ally ai management command at the end of the list.
  * @returns {BuiltWindowCommand[]}
  */

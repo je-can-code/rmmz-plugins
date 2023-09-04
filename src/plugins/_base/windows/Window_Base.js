@@ -1,6 +1,6 @@
 //region Window_Base
 /**
- * All alignments available for {@link Window_Base.prototype.drawText}.
+ * All alignments available for {@link Window_Base.prototype.drawText}.<br>
  */
 Window_Base.TextAlignments = {
   /**
@@ -93,7 +93,7 @@ Window_Base.prototype.drawContent = function()
 };
 
 /**
- * Extends {@link Window_Base.resetFontSettings}.
+ * Extends {@link Window_Base.resetFontSettings}.<br>
  * Also resets bold and italics.
  */
 J.BASE.Aliased.Window_Base.set('resetFontSettings', Window_Base.prototype.resetFontSettings);

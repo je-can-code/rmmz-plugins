@@ -41,7 +41,7 @@ Game_Enemy.prototype.makeDropItems = function()
   const itemsFound = [];
 
   // get the chance multiplier for loot dropping.
-  const multiplier = this.getDropMultiplier();
+  const multiplier = this.getDropMultiplierBonus();
 
   // iterate over all drops to see what we got.
   dropList.forEach(drop =>
@@ -56,7 +56,7 @@ Game_Enemy.prototype.makeDropItems = function()
     const treasureHunterSkip = rate >= 100;
 
     // roll the dice and see if we get some loot.
-    const foundLoot = (Math.random() * 100) < rate;
+    const foundLoot = this.didFindLoot();
     const item = this.itemObject(drop.kind, drop.dataId);
 
     // if we earned the loot...
@@ -69,6 +69,28 @@ Game_Enemy.prototype.makeDropItems = function()
 
   // return all earned loot!
   return itemsFound;
+};
+
+/**
+ * Determines whether or not loot was found based on the provided rate.
+ * This is not deterministic, and the same (non-100) rate
+ * @param {number} rate The 0-100 integer rate of which to find this loot.
+ * @returns {boolean} True if we found loot this time, false otherwise.
+ */
+Game_Enemy.prototype.didFindLoot = function(rate)
+{
+  // roll the dice and see if we won!
+  let chance = RPGManager.chanceIn100(rate);
+
+  // check if anyone in the party has the double-drop trait.
+  if ($gameParty.hasDropItemDouble())
+  {
+    // double the ratio!
+    chance *= 2;
+  }
+
+  // return the result.
+  return chance;
 };
 
 /**
@@ -141,13 +163,13 @@ Game_Enemy.prototype.dropSources = function()
  * Gets the multiplier against the RNG of an item dropping.
  * @returns {number}
  */
-Game_Enemy.prototype.getDropMultiplier = function()
+Game_Enemy.prototype.getDropMultiplierBonus = function()
 {
   // the base/default drop multiplier rate.
   let multiplier = this.getBaseDropRate();
 
   // get the party's bonus drop multiplier.
-  multiplier += $gameParty.getDropMultiplier();
+  multiplier += $gameParty.getPartyDropMultiplier();
 
   // if someone in the party has the "double drops" accessory, then double the rate.
   multiplier *= this.dropItemRate();

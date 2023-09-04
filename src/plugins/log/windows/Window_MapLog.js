@@ -69,25 +69,35 @@ class Window_MapLog extends Window_Command
   }
 
   //region overwrites
+  /**
+   * Extends {@link #isScrollEnabled}.<br>
+   * Also requires the this window to not be hidden for scrolling to be enabled.
+   * @returns {boolean}
+   * @extends
+   */
   isScrollEnabled()
   {
-    if (!$gameTextLog.isVisible()) return false;
+    if ($mapLogManager.isHidden()) return false;
 
-    return true;
+    return super.isScrollEnabled();
   }
 
   /**
-   * OVERWRITE Forces the arrows that appear in scrollable windows to not be visible.
+   * Overrides {@link #updateArrows}
+   * Forces the arrows that appear in scrollable windows to not be visible.
+   * @override
    */
   updateArrows()
   {
   }
 
   /**
-   * Extends the scroll functionality to also refresh the timer to prevent this window
-   * from going invisible while perusing the logs.
+   * Extends {@link #smoothScrollTo}.<br>
+   * Also refreshes the timer to prevent this window from going invisible
+   * while scrolling around through the logs.
    * @param {number} x The x coordinate to scroll to.
    * @param {number} y The y coordinate to scroll to.
+   * @extends
    */
   smoothScrollTo(x, y)
   {
@@ -99,8 +109,11 @@ class Window_MapLog extends Window_Command
   }
 
   /**
-   * OVERWRITE Make our rows narrow-er.
-   * @returns {number} The height of each row.
+   * Overrides {@link #itemHeight}.<br>
+   * Reduces the item height further to allow for more rows to be visible at once
+   * within a smaller window.
+   * @returns {number} The adjusted height of each row.
+   * @override
    */
   itemHeight()
   {
@@ -108,19 +121,21 @@ class Window_MapLog extends Window_Command
   }
 
   /**
-   * Overwrites {@link #drawBackgroundRect}.
+   * Overrides {@link #drawBackgroundRect}.<br>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.
+   * @override
    */
   drawBackgroundRect(_)
   {
   }
 
   /**
-   * Extends the `itemRectWithPadding()` function to move the rect a little
-   * to the left to look a bit cleaner.
+   * Extends {@link #itemRectWithPadding}.<br>
+   * Shifts the rect slightly to the left to give a cleaner look.
    * @param {number} index The index of the item in the window.
    * @returns {Rectangle}
+   * @override
    */
   itemRectWithPadding(index)
   {
@@ -130,10 +145,12 @@ class Window_MapLog extends Window_Command
   }
 
   /**
-   * OVERWRITE Reduces the size of the icons being drawn in the log window.
+   * Overrides {@link #drawIcon}.<br>
+   * Reduces the size of the icons being drawn in the log window.
    * @param {number} iconIndex The index of the icon to draw.
    * @param {number} x The x coordinate to draw the icon at.
    * @param {number} y The y coordinate to draw the icon at.
+   * @override
    */
   drawIcon(iconIndex, x, y)
   {
@@ -150,10 +167,14 @@ class Window_MapLog extends Window_Command
   }
 
   /**
-   * Extends the draw-icon processing for this window to slightly adjust how
-   * icons are drawn since we're also drawing em good and smol.
+   * Extends {@link #processDrawIcon}.<br>
+   * Accommodates the other icon-related adjustments by manually shifting the
+   * {@link textState} around before and after executing the super method execution.
+   *
+   * The goal of these shifts are to center the now-smaller icon inline with the text.
    * @param {number} iconIndex The index of the icon to draw.
    * @param {rm.types.TextState} textState The rolling state of the text being drawn.
+   * @extends
    */
   processDrawIcon(iconIndex, textState)
   {
@@ -210,7 +231,7 @@ class Window_MapLog extends Window_Command
       this.processNewLogs();
 
       // acknowledge the new logs.
-      $gameTextLog.acknowledgeNewLog();
+      $mapLogManager.acknowledgeProcessing();
     }
   }
 
@@ -221,7 +242,7 @@ class Window_MapLog extends Window_Command
   shouldUpdate()
   {
     // check if we have a new log.
-    return $gameTextLog.hasNewLog();
+    return $mapLogManager.needsProcessing();
   }
 
   /**
@@ -260,7 +281,7 @@ class Window_MapLog extends Window_Command
   drawLogs()
   {
     // iterate over each log.
-    $gameTextLog.getLogs().forEach((log, index) =>
+    $mapLogManager.getLogs().forEach((log, index) =>
     {
       // add the message as a "command" into the log window.
       this.addCommand(`\\FS[14]${log.message()}`, `log-${index}`, true, null, null, 0);
@@ -280,28 +301,36 @@ class Window_MapLog extends Window_Command
   updateVisibility()
   {
     // if the text log is flagged as hidden, then don't show it.
-    if (!$gameTextLog.isVisible() || $gameMessage.isBusy())
+    if ($mapLogManager.isHidden() || $gameMessage.isBusy())
     {
+      // hide the window.
       this.hideWindow();
+
+      // stop processing.
       return;
     }
 
     // decrement the timer.
     this.decrementInactivityTimer();
 
-    // if the timer is at or below 100, then
+    // first priority check is if the timer is at or below 1 second remaining.
     if (this.inactivityTimer <= 60)
     {
-      // fade the window accordingly.
-      this.fadeWindow();
+      // it is, so lets fade the window accordingly.
+      this.handleWindowFade();
     }
+
+    // second priority check, if the player is interfering with the window.
     else if (this.playerInterference())
     {
+      // drastically reduce visibility of the this log window while the player is overlapped.
       this.handlePlayerInterference();
     }
+    // otherwise, it must be regular visibility processing.
     else
     {
-      this.revertInterferenceOpacity(this.inactivityTimer);
+      // handle opacity based on the time remaining on the inactivity timer.
+      this.handleNonInterferenceOpacity(this.inactivityTimer);
     }
   }
 
@@ -330,12 +359,12 @@ class Window_MapLog extends Window_Command
   /**
    * Reverts the opacity changes associated with the player getting in the way.
    */
-  revertInterferenceOpacity(currentDuration)
+  handleNonInterferenceOpacity(currentDuration)
   {
-    const num = currentDuration;
+    // ensure the window is visible for the current duration.
     this.showWindow();
 
-    this.setInactivityTimer(num);
+    this.setInactivityTimer(currentDuration);
   }
 
   /**
@@ -359,8 +388,11 @@ class Window_MapLog extends Window_Command
   /**
    * Fades this window out based on the inactivity timer.
    */
-  fadeWindow()
+  handleWindowFade()
   {
+    // do nothing if we are where we want to be already.
+    if (this.isHidden()) return;
+
     // check if this is the "other" of every other frame.
     if (this.inactivityTimer % 2 === 0)
     {
@@ -373,6 +405,30 @@ class Window_MapLog extends Window_Command
       // and hide the window if it is.
       this.hideWindow();
     }
+  }
+
+  /**
+   * Determines whether or not this window is already hidden.
+   * @returns {boolean}
+   */
+  isHidden()
+  {
+    // check if we're currently invisible.
+    if (this.contentsOpacity !== 0)
+    {
+      // we must be invisible to be hidden.
+      return false;
+    }
+
+    // check if we're out of time.
+    if (this.inactivityTimer === 0)
+    {
+      // we must be out of time to be hidden.
+      return false;
+    }
+
+    // we're hidden!
+    return true;
   }
 
   /**
@@ -394,8 +450,8 @@ class Window_MapLog extends Window_Command
    */
   showWindow()
   {
-    // if the text log is flagged as hidden
-    if (!$gameTextLog.isVisible()) return;
+    // if the text log is flagged as hidden, then we shouldn't show it again.
+    if ($mapLogManager.isHidden()) return;
 
     // refresh the timer back to 5 seconds.
     this.setInactivityTimer(this.defaultInactivityDuration);

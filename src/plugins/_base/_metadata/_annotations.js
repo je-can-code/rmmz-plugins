@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.3 BASE] The base class for all J plugins.
+ * [v2.1.4 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/ca
  * @help
@@ -32,9 +32,12 @@
  * - adds an API for retrieving specific regex-based comments from an event.
  * - adds an API for getting all notes associated with given battlers.
  * - adds a few reusable sprites for convenience, like faces, icons, and text.
+ * - adds a parent class for subclassing to strongly type plugin metadata.
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.4
+ *    Added parent class for subclassing to strongly type plugin metadata.
  * - 2.1.3
  *    Added help text functionality for window commands.
  *    Added description text for all parameters.

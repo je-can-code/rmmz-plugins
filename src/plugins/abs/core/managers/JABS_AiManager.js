@@ -49,7 +49,7 @@ class JABS_AiManager
   }
 
   /**
-   * Finds a battler by its {@link Game_Event.eventId}.
+   * Finds a battler by its {@link Game_Event.eventId}.<br>
    * @param {number} eventId The event id to find a battler for.
    * @returns {JABS_Battler|undefined}
    */
@@ -225,7 +225,7 @@ class JABS_AiManager
    */
   static getActorBattlers()
   {
-    // filter on whether or not the battler is a {@link Game_Actor}.
+    // filter on whether or not the battler is a {@link Game_Actor}.<br>
     return this.getAllBattlers()
       .filter(battler => battler.isActor());
   }
@@ -236,7 +236,7 @@ class JABS_AiManager
    */
   static getEnemyBattlers()
   {
-    // filter on whether or not the battler is a {@link Game_Enemy}.
+    // filter on whether or not the battler is a {@link Game_Enemy}.<br>
     return this.getAllBattlers()
       .filter(battler => battler.isEnemy());
   }

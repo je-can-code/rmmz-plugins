@@ -1,6 +1,6 @@
 //region Game_Action
 /**
- * Overwrites {@link #subject}.
+ * Overrides {@link #subject}.<br>
  * On the map there is no context of a $gameTroop. This means that an
  * action must accommodate both enemy and actor alike. In order to handle
  * this, we check to see which id was set and respond accordingly.
@@ -32,7 +32,7 @@ Game_Action.prototype.subject = function()
 };
 
 /**
- * Overwrites {@link #setSubject}.
+ * Overrides {@link #setSubject}.<br>
  * On the map there is no context of a $gameTroop. This means that an
  * action must accommodate both enemy and actor alike. In order to handle
  * this, we check to see which id was set and respond accordingly.
@@ -60,7 +60,7 @@ Game_Action.prototype.setSubject = function(subject)
 
 //region action application
 /**
- * Overwrites {@link #apply}.
+ * Overrides {@link #apply}.<br>
  * Adjusts how a skill is applied to a target in the context of JABS.
  * While JABS is disabled, the normal application is used instead.
  */
@@ -159,7 +159,7 @@ Game_Action.prototype.isHitCritical = function(target)
 };
 
 /**
- * Overwrites {@link #itemHit}.
+ * Overrides {@link #itemHit}.<br>
  * This overwrite converts the success rate of a skill into the value
  * representing what percent of your hit is used in the hit chance formula.
  * @returns {number}
@@ -177,7 +177,7 @@ Game_Action.prototype.itemHit = function()
 };
 
 /**
- * Extends {@link #makeDamageValue}.
+ * Extends {@link #makeDamageValue}.<br>
  * Includes consideration of guard effects of the target.
  */
 J.ABS.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
@@ -427,7 +427,7 @@ Game_Action.prototype.applyPercentDamageReduction = function(baseDamage, jabsBat
 
 //region state-related effect application
 /**
- * Extends {@link #itemEffectAddState}.
+ * Extends {@link #itemEffectAddState}.<br>
  * Adds a conditional check to see if adding state-related effects is allowed
  * against the target.
  * @param {Game_Battler} target The target battler potentially being afflicted.
@@ -463,7 +463,7 @@ Game_Action.prototype.canItemEffectAddState = function(target, effect)
 };
 
 /**
- * Overwrites {@link #itemEffectAddAttackState}.
+ * Overrides {@link #itemEffectAddAttackState}.<br>
  * When a "Normal Attack" effect is used and a state is applied, then
  * all of the battler's attack states have an opportunity to be applied
  * based on all the various rates and calculations.
@@ -497,7 +497,7 @@ Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 };
 
 /**
- * Overwrites {@link #itemEffectAddNormalState}.
+ * Overrides {@link #itemEffectAddNormalState}.<br>
  * Updates the method to be more modifyable, and considers attackers
  * when applying states.
  *

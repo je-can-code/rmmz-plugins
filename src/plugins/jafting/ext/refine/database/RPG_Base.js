@@ -1,6 +1,6 @@
 J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._generate);
 /**
- * Extends {@link RPG_Base._generate}.
+ * Extends {@link RPG_Base._generate}.<br>
  *
  * Also mirrors additional JAFTING-related values to the new object.
  * @param {RPG_Base} overrides The overriding object.

@@ -11,7 +11,7 @@ class Window_DifficultyList extends Window_Command
   }
 
   /**
-   * Implements {@link #makeCommandList}.
+   * Implements {@link #makeCommandList}.<br>
    * Creates the command list of difficulties for this window.
    */
   makeCommandList()

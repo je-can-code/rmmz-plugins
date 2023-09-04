@@ -1,5 +1,5 @@
 /**
- * Extends {@link processMoveCommand}.
+ * Extends {@link processMoveCommand}.<br>
  * Ensures when move routes are being processed, that we adjust the x,y coordinates.
  * @param {rm.types.EventCommand} command The commands associated with this movement.
  */

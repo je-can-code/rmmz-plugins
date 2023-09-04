@@ -21,7 +21,7 @@ class OverlayManager
     // if we don't have a caster for some reason, don't process anything.
     if (!caster)
     {
-      console.warn(`no caster was provided to check skill extensions for skillId: ${skillId}.`);
+      console.warn(`no caster was provided to check skill extensions for skillId: ${skillId}.<br>`);
       return $dataSkills[skillId];
     }
 

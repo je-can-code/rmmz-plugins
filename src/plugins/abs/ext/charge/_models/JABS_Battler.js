@@ -1,6 +1,6 @@
 //region JABS_Battler
 /**
- * Extends {@link JABS_Battler.initBattleInfo}.
+ * Extends {@link JABS_Battler.initBattleInfo}.<br>
  * Also initializes the charge-related data.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('initBattleInfo', JABS_Battler.prototype.initBattleInfo);
@@ -532,7 +532,7 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
 };
 
 /**
- * Extends {@link JABS_Battler.update}.
+ * Extends {@link JABS_Battler.update}.<br>
  * Also updates charging as-needed.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update);
