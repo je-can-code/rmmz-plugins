@@ -1,6 +1,6 @@
 //region JABS_Battler
 /**
- * Extends {@link #getTargetFrameText}.
+ * Extends {@link #getTargetFrameText}.<br>
  * If no text was provided for the target, instead autogenerate some text based on their traits.
  * The "traits" are defined by arbitrary CA-specific elements, so this can't live in the
  * target frame plugin, or the monsterpedia plugin.

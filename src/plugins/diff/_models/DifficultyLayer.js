@@ -5,7 +5,7 @@
 class DifficultyLayer
 {
   /**
-   * Creates a new instance of {@link DifficultyLayer} from a {@link DifficultyMetadata}.
+   * Creates a new instance of {@link DifficultyLayer} from a {@link DifficultyMetadata}.<br>
    * @param {DifficultyMetadata} difficultyMetadata The metadata to build from.
    * @returns {DifficultyLayer} The new difficulty based on the metadata.
    */

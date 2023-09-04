@@ -7,7 +7,7 @@ Game_Character.repeatableMoveCommandCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 
 
 //region properties
 /**
- * Extends {@link Game_Character.initMembers}.
+ * Extends {@link Game_Character.initMembers}.<br>
  * Includes our cyclone movement repeat trackers.
  */
 J.ABS.EXT.CYCLE.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMembers);
@@ -102,7 +102,7 @@ Game_Character.prototype.modRepeatingMovementCount = function(amount = -1)
 //endregion properties
 
 /**
- * Overwrites {@link Game_Character.updateRoutineMove}.
+ * Overrides {@link Game_Character.updateRoutineMove}.<br>
  * Accommodates move routes for events to repeat their movements for as many steps as defined
  * in the plugin configuration for Cyclone-Movement.
  *

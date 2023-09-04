@@ -1,7 +1,7 @@
 //region DifficultyBattlerEffects
 /**
  * A collection of all applicable multipliers against core parameters
- * that are a part of a {@link DifficultyMetadata}.
+ * that are a part of a {@link DifficultyMetadata}.<br>
  */
 class DifficultyBattlerEffects
 {

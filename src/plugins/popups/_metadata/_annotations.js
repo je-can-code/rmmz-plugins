@@ -69,4 +69,10 @@
  * Or if you're in a plugin, the only real difference would be how the
  * character is retrieved, with the rest being the same.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    Removed extraneous event emitter that was being tested.
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
  */

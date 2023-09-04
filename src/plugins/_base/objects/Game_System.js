@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_System.initialize}.
+ * Extends {@link Game_System.initialize}.<br>
  * Initializes all members of this class and adds our custom members.
  */
 J.BASE.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
@@ -13,7 +13,7 @@ Game_System.prototype.initialize = function()
 };
 
 /**
- * A hook for initializing additional members in {@link Game_System}.
+ * A hook for initializing additional members in {@link Game_System}.<br>
  */
 Game_System.prototype.initMembers = function()
 {

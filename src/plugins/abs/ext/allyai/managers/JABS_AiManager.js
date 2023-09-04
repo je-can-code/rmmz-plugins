@@ -1,9 +1,9 @@
 //region JABS_AiManager
-J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.set('aiPhase0', JABS_AiManager.aiPhase0);
 /**
  * Extends `aiPhase0()` to accommodate the possibility of actors having an idle phase.
  * @param {JABS_Battler} battler The batter to decide for.
  */
+J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.set('aiPhase0', JABS_AiManager.aiPhase0);
 JABS_AiManager.aiPhase0 = function(battler)
 {
   // check if this is an enemy's ai being managed.
@@ -51,7 +51,7 @@ JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 };
 
 /**
- * Extends {@link #decideAiPhase2Action}.
+ * Extends {@link #decideAiPhase2Action}.<br>
  * Includes handling ally AI as well as enemy.
  * @param {JABS_Battler} battler The battler deciding the action.
  */

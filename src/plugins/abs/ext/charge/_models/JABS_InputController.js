@@ -87,7 +87,7 @@ JABS_InputController.prototype.isTimerCompleteBySlot = function(slot)
 
 //region mainhand
 /**
- * Extends {@link JABS_InputController.updateMainhandAction}.
+ * Extends {@link JABS_InputController.updateMainhandAction}.<br>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController
@@ -199,7 +199,7 @@ JABS_InputController.prototype.performMainhandChargeAlterAction = function()
 
 //region offhand
 /**
- * Extends {@link JABS_InputController.updateOffhandAction}.
+ * Extends {@link JABS_InputController.updateOffhandAction}.<br>
  * Handles charging capability to the offhand.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController
@@ -357,7 +357,7 @@ JABS_InputController.prototype.performCombatSkillChargeAlterAction = function(sl
 
 //region combat skill 1
 /**
- * Extends {@link JABS_InputController.updateCombatAction1}.
+ * Extends {@link JABS_InputController.updateCombatAction1}.<br>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController
@@ -425,7 +425,7 @@ JABS_InputController.prototype.canChargeCombatAction1 = function()
 
 //region combat skill 2
 /**
- * Extends {@link JABS_InputController.updateCombatAction2}.
+ * Extends {@link JABS_InputController.updateCombatAction2}.<br>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController
@@ -493,7 +493,7 @@ JABS_InputController.prototype.canChargeCombatAction2 = function()
 
 //region combat skill 3
 /**
- * Extends {@link JABS_InputController.updateCombatAction3}.
+ * Extends {@link JABS_InputController.updateCombatAction3}.<br>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController
@@ -561,7 +561,7 @@ JABS_InputController.prototype.canChargeCombatAction3 = function()
 
 //region combat skill 4
 /**
- * Extends {@link JABS_InputController.updateCombatAction4}.
+ * Extends {@link JABS_InputController.updateCombatAction4}.<br>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_InputController

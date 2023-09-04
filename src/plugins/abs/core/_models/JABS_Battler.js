@@ -4030,43 +4030,6 @@ JABS_Battler.prototype.setLastUsedSlot = function(slotKey)
 };
 
 /**
- * Gets all allies to this battler within a large range.
- * (Not map-wide because that could result in unexpected behavior)
- * @returns {JABS_Battler[]}
- */
-JABS_Battler.prototype.getAllNearbyAllies = function()
-{
-  return JABS_AiManager.getAlliedBattlersWithinRange(this, JABS_Battler.allyRubberbandRange());
-};
-
-/**
- * Gets the ally ai associated with this battler.
- * @returns {JABS_AllyAI}
- */
-JABS_Battler.prototype.getAllyAiMode = function()
-{
-  // enemies do not have ally ai.
-  if (this.isEnemy()) return null;
-
-  return this.getBattler().getAllyAI();
-};
-
-/**
- * Applies the battle memory to the battler.
- * Only applicable to allies (for now).
- * @param {JABS_BattleMemory} newMemory The new memory to apply to this battler.
- */
-JABS_Battler.prototype.applyBattleMemories = function(newMemory)
-{
-  // enemies do not (yet) track battle memories.
-  if (this.isEnemy()) return;
-
-  return this.getBattler()
-    .getAllyAI()
-    .applyMemory(newMemory);
-};
-
-/**
  * Gets the id of the battler associated with this battler
  * that has been assigned via the battler core data.
  * @returns {number}
@@ -4147,7 +4110,7 @@ JABS_Battler.prototype.getSkillIdsFromEnemy = function()
 };
 
 /**
- * Determine whether or not this skill is a valid skill for selection by the {@link JABS_AiManager}.
+ * Determine whether or not this skill is a valid skill for selection by the {@link JABS_AiManager}.<br>
  * @param {RPG_Skill} skill The skill being verified.
  * @returns {boolean} True if the skill is chooseable by the AI "at random", false otherwise.
  */
@@ -4866,7 +4829,7 @@ JABS_Battler.prototype.applyToolEffects = function(toolId, isLoot = false)
     const log = new MapLogBuilder()
       .setupUsedLastItem(item.id)
       .build();
-    $gameTextLog.addLog(log);
+    $mapLogManager.addLog(log);
   }
   else
   {
@@ -5022,7 +4985,7 @@ JABS_Battler.prototype.createToolLog = function(item)
   const log = new MapLogBuilder()
     .setupUsedItem(this.getReferenceData().name, item.id)
     .build();
-  $gameTextLog.addLog(log);
+  $mapLogManager.addLog(log);
 };
 
 /**
@@ -5541,7 +5504,7 @@ JABS_Battler.prototype.changeCharacterSprite = function(skill)
   const newCharacterSprite = `${baseSpriteName}${skill.jabsPoseSuffix}`;
 
   // stitch the file path together with the sprite url.
-  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
+  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.<br>png`;
 
   // check if the sprite exists.
   const spriteExists = StorageManager.fileExists(spritePath);

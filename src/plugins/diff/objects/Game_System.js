@@ -47,7 +47,7 @@ Game_System.prototype.initDifficultyMembers = function()
 };
 
 /**
- * Extends {@link #onAfterLoad}.
+ * Extends {@link #onAfterLoad}.<br>
  * Updates the list of all available difficulties from the latest plugin metadata.
  */
 J.DIFFICULTY.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);

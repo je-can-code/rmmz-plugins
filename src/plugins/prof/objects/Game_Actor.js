@@ -209,7 +209,7 @@ Game_Actor.prototype.executeJsRewards = function(conditional)
   }
   catch (error)
   {
-    console.error(`there was an error executing the reward for: ${c.key}.`);
+    console.error(`there was an error executing the reward for: ${c.key}.<br>`);
     console.log(error);
   }
 };
@@ -263,7 +263,7 @@ Game_Actor.prototype.addSkillProficiency = function(skillId, initialProficiency 
   const exists = this.skillProficiencyBySkillId(skillId);
   if (exists)
   {
-    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
+    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.<br>`);
     return exists;
   }
 

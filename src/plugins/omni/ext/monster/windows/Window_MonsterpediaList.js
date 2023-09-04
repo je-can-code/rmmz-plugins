@@ -14,7 +14,7 @@ class Window_MonsterpediaList extends Window_Command
   }
 
   /**
-   * Implements {@link #makeCommandList}.
+   * Implements {@link #makeCommandList}.<br>
    * Creates the command list of omnipedia entries available for this window.
    */
   makeCommandList()

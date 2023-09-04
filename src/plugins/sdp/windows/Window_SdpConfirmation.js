@@ -1,9 +1,8 @@
-//region Window_SDP_ConfirmUpgrade
+//region Window_SdpConfirmation
 /**
  * The window that prompts the user to confirm/cancel the upgrading of a chosen panel.
  */
-class Window_SDP_ConfirmUpgrade
-  extends Window_Command
+class Window_SdpConfirmation extends Window_Command
 {
   /**
    * @constructor
@@ -43,5 +42,4 @@ class Window_SDP_ConfirmUpgrade
     this.addCommand(`Cancel`, `panel-upgrade-cancel`, true, null, 90);
   }
 }
-//endregion Window_SDP_ConfirmUpgrade
-//endregion Window objects
+//endregion Window_SdpConfirmation

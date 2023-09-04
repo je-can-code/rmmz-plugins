@@ -1,6 +1,6 @@
 //region Game_Temp
 /**
- * Extends {@link Game_Temp.initialize}.
+ * Extends {@link Game_Temp.initialize}.<br>
  * Initializes all members of this class and adds our custom members.
  */
 J.BASE.Aliased.Game_Temp.set('initialize', Game_Temp.prototype.initialize);
@@ -14,7 +14,7 @@ Game_Temp.prototype.initialize = function()
 };
 
 /**
- * A hook for initializing temporary members in {@link Game_Temp}.
+ * A hook for initializing temporary members in {@link Game_Temp}.<br>
  */
 Game_Temp.prototype.initMembers = function()
 {

@@ -1,6 +1,6 @@
 //region Window_MenuCommand
 /**
- * Extends {@link #makeCommandList}.
+ * Extends {@link #makeCommandList}.<br>
  * Also adds the omnipedia command.
  */
 J.OMNI.Aliased.Window_MenuCommand.set('makeCommandList', Window_MenuCommand.prototype.makeCommandList);

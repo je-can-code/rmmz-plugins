@@ -1,7 +1,7 @@
 //region Scene_Map
 //region init
 /**
- * Extends {@link #initialize}.
+ * Extends {@link #initialize}.<br>
  * Also initializes all additional properties for JABS.
  */
 J.ABS.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initialize);
@@ -20,7 +20,7 @@ Scene_Map.prototype.initialize = function()
 };
 
 /**
- * Extends {@link #onMapLoaded}.
+ * Extends {@link #onMapLoaded}.<br>
  * Safety net for ensuring the player's battler is initialized with the map load.
  */
 J.ABS.Aliased.Scene_Map.set('onMapLoaded', Scene_Map.prototype.onMapLoaded);
@@ -1173,7 +1173,7 @@ Scene_Map.prototype.setJabsHelpText = function(text)
 
 //region update
 /**
- * Extends {@link #update}.
+ * Extends {@link #update}.<br>
  * Also updates JABS.
  */
 J.ABS.Aliased.Scene_Map.set('update', Scene_Map.prototype.update);
@@ -1282,7 +1282,7 @@ Scene_Map.prototype.manageAbsMenu = function()
 //endregion update
 
 /**
- * Extends {@link #callMenu}.
+ * Extends {@link #callMenu}.<br>
  * Disables the ability to directly call the menu by pressing the given key.
  */
 J.ABS.Aliased.Scene_Map.set('callMenu', Scene_Map.prototype.callMenu);

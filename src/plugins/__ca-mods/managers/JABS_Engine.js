@@ -40,7 +40,7 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 };
 
 /**
- * Extends {@link #handleDefeatedPlayer}.
+ * Extends {@link #handleDefeatedPlayer}.<br>
  * Also tracks player defeated count.
  */
 J.CAMods.Aliased.JABS_Engine.set('handleDefeatedPlayer', JABS_Engine.prototype.handleDefeatedPlayer);
@@ -54,7 +54,7 @@ JABS_Engine.prototype.handleDefeatedPlayer = function()
 };
 
 /**
- * Extends {@link #postExecuteSkillEffects}.
+ * Extends {@link #postExecuteSkillEffects}.<br>
  * Also tracks our combat data in variables.
  * @param {JABS_Action} action The action being executed.
  * @param {JABS_Battler} target The target to apply skill effects against.
@@ -166,7 +166,7 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
 };
 
 /**
- * Extends {@link #executeMapAction}.
+ * Extends {@link #executeMapAction}.<br>
  * Also tracks action execution data.
  * @param {JABS_Battler} caster The battler executing the action.
  * @param {JABS_Action} action The action being executed.

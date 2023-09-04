@@ -23,33 +23,6 @@ class IconManager
   }
 
   /**
-   * Gets the `iconIndex` for SDP Multiplier.
-   * @returns {number}
-   */
-  static sdpMultiplier()
-  {
-    return 2229;
-  }
-
-  /**
-   * Gets the `iconIndex` for proficiency boost.
-   * @returns {number}
-   */
-  static proficiencyBoost()
-  {
-    return 979;
-  }
-
-  /**
-   * Gets the `iconIndex` for move speed boost.
-   * @returns {number}
-   */
-  static movespeed()
-  {
-    return 978;
-  }
-
-  /**
    * Gets the `iconIndex` for max tp.
    * @returns {number} The `iconIndex`.
    */
@@ -243,12 +216,7 @@ class IconManager
         return this.sparam(paramId - 18); // exr
       case 30:
         return this.maxTp(); // mtp
-      case 31:
-        return this.movespeed(); // move
-      case 32:
-        return this.proficiencyBoost(); // prof
-      case 33:
-        return this.sdpMultiplier(); // sdp
+
       default:
         console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
         return 0;

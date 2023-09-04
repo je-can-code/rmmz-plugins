@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #initJabsMembers}.
+ * Extends {@link #initJabsMembers}.<br>
  * Includes additional actor-specific members.
  */
 J.ABS.Aliased.Game_Actor.set('initJabsMembers', Game_Actor.prototype.initJabsMembers);
@@ -56,7 +56,7 @@ Game_Actor.prototype.jabsRefresh = function()
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.
+ * Extends {@link #onBattlerDataChange}.<br>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
@@ -675,7 +675,7 @@ Game_Actor.prototype.jabsLevelUp = function()
 };
 
 /**
- * Extends {@link #onLevelDown}.
+ * Extends {@link #onLevelDown}.<br>
  * Also refresh sprites' danger indicator.
  */
 J.ABS.Aliased.Game_Actor.set('onLevelDown', Game_Actor.prototype.onLevelDown);

@@ -14,7 +14,7 @@ class Window_OmnipediaList extends Window_Command
   }
 
   /**
-   * Implements {@link #makeCommandList}.
+   * Implements {@link #makeCommandList}.<br>
    * Creates the command list of omnipedia entries available for this window.
    */
   makeCommandList()
@@ -60,7 +60,7 @@ class Window_OmnipediaList extends Window_Command
   }
 
   /**
-   * Overwrites {@link #itemHeight}.
+   * Overrides {@link #itemHeight}.<br>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

@@ -31,13 +31,13 @@ Game_Enemy.prototype.canDropSdp = function()
   if (!this.hasSdpDropData()) return false;
 
   // grab the panel for shorthand reference below.
-  const panel = $gameSystem.getSdpByKey(this.enemy().sdpDropKey);
+  const panel = $gameParty.getSdpByKey(this.enemy().sdpDropKey);
 
   // if the enemy has a panel that isn't defined, then don't drop it.
   if (!panel)
   {
     console.warn(`Panel of key ${this.enemy().sdpDropKey} is not defined, but was trying to be dropped.`);
-    console.warn(`Consider defining a panel with the key of ${this.enemy().sdpDropKey}.`);
+    console.warn(`Consider defining a panel with the key of ${this.enemy().sdpDropKey}.<br>`);
     return false;
   }
 

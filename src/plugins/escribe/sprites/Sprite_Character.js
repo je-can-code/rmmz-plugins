@@ -322,7 +322,7 @@ Sprite_Character.prototype.characterCanSeeIcon = function()
 };
 
 /**
- * Extends {@link Sprite_Character.isEmptyCharacter}.
+ * Extends {@link Sprite_Character.isEmptyCharacter}.<br>
  * If the character has describe data, don't make it invisible for the time being.
  * @returns {boolean} True if the character should be drawn, false otherwise.
  */
@@ -357,7 +357,7 @@ Sprite_Character.prototype.refreshCharacterEscription = function()
 
 //region setup describe sprites
 /**
- * Extends {@link Sprite_Character.setCharacterBitmap}.
+ * Extends {@link Sprite_Character.setCharacterBitmap}.<br>
  * Sets up the initial escription sprites and renders them as applicable.
  */
 J.ESCRIBE.Aliased.Sprite_Character.set('setCharacterBitmap', Sprite_Character.prototype.setCharacterBitmap);

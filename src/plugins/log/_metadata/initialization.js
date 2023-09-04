@@ -26,7 +26,7 @@ J.LOG = {};
  */
 J.LOG.Metadata = {};
 J.LOG.Metadata.Name = `J-Log`;
-J.LOG.Metadata.Version = `2.0.0`;
+J.LOG.Metadata.Version = `2.1.0`;
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -46,7 +46,7 @@ J.LOG.Aliased.Scene_Map = new Map();
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "showLog", () =>
 {
-  $gameTextLog.setLogVisibility(true);
+  $mapLogManager.showMapLog();
 });
 
 /**
@@ -54,7 +54,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "showLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLog", () =>
 {
-  $gameTextLog.setLogVisibility(false);
+  $mapLogManager.hideMapLog();
 });
 
 /**
@@ -66,6 +66,6 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "addLog", args =>
   const log = new MapLogBuilder()
     .setMessage(text)
     .build();
-  $gameTextLog.addLog(log);
+  $mapLogManager.addLog(log);
 });
 //endregion introduction

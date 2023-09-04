@@ -11,7 +11,7 @@ class Window_OmnipediaListHeader extends Window_Base
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.
+   * Implements {@link Window_Base.drawContent}.<br>
    * Draws a header and some detail for the omnipedia list header.
    */
   drawContent()

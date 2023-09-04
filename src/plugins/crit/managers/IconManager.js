@@ -1,6 +1,7 @@
 //region IconManager
 /**
- * Extend `.longParam()` to first search for our critical damage icon indices.
+ * Extend {@link #longParam}.<br>
+ * First checks if the paramId was a critical param before checking others.
  */
 J.CRIT.Aliased.IconManager.set('longParam', IconManager.longParam)
 IconManager.longParam = function(paramId)
@@ -17,9 +18,9 @@ IconManager.longParam = function(paramId)
 };
 
 /**
- * Gets the icon index for the critical damager parameters from "J-CriticalFactors".
+ * Gets the icon index for the critical damage parameters.
  * @param {number} paramId The id of the crit param to get an icon index for.
- * @returns {number} The icon index of the parameter.
+ * @returns {number}
  */
 IconManager.critParam = function(paramId)
 {

@@ -1,7 +1,7 @@
 //region Scene_Omnipedia
 //region root actions
 /**
- * Extends {@link #onRootPediaSelection}.
+ * Extends {@link #onRootPediaSelection}.<br>
  * When the monsterpedia is selected, open the monsterpedia.
  */
 J.OMNI.EXT.MONSTER.Aliased.Scene_Omnipedia.set('onRootPediaSelection', Scene_Omnipedia.prototype.onRootPediaSelection);

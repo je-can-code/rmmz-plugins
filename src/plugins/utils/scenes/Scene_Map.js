@@ -1,5 +1,5 @@
 /**
- * OVERWRITES {@link Scene_Map.onMapTouch}.
+ * Overrides {@link Scene_Map.onMapTouch}.<br>
  * Disables auto-movement when clicking a tile on the map.
  * Logs event data of clicked events.
  */

@@ -25,13 +25,12 @@
  *
  * ============================================================================
  * SYSTEM CHANGES:
- * - force devtools window to open on system boot
  * - variable assignment for tracking a wide variety of battle data points
- * - additional accessory for all actors (as accessory)
+ * - additional equip slot for all actors (as accessory)
  * - "recover all" recovers TP too
  * - prevent passage on tileset terrain id 1
  * - random variable assignment for "rare/named enemies" on map transfer
- * - removal of touch buttons from base and map scenes
+ * - removal of touch buttons from base/map/menu scenes
  *
  * ----------------------------------------------------------------------------
  * CA-UNIQUE CHANGES:

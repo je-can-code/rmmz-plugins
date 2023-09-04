@@ -1,8 +1,8 @@
-//region Window_SDP_List
+//region Window_SdpList
 /**
- * The SDP window containing the list of all earned SDPs.
+ * The SDP window containing the list of all unlocked panels.
  */
-class Window_SDP_List extends Window_Command
+class Window_SdpList extends Window_Command
 {
   /**
    * The currently selected actor. Used for comparing points to cost to see if
@@ -42,12 +42,11 @@ class Window_SDP_List extends Window_Command
   }
 
   /**
-   * Sets whether or not the panel list should filter out already-maxed panels.
-   * @param {boolean} useFilter True to filter out maxed panels, false otherwise.
+   * Toggles the "hide max panels" filter for this window.
    */
-  setNoMaxPanelsFilter(useFilter)
+  toggleNoMaxPanelsFilter()
   {
-    this.filterNoMaxedPanels = useFilter;
+    this.filterNoMaxedPanels = !this.filterNoMaxedPanels;
   }
 
   /**
@@ -63,7 +62,7 @@ class Window_SDP_List extends Window_Command
    */
   makeCommandList()
   {
-    const panels = $gameSystem.getUnlockedSdps();
+    const panels = $gameParty.getUnlockedSdps();
     const actor = this.currentActor;
     if (!panels.length || !actor) return;
 
@@ -132,4 +131,4 @@ class Window_SDP_List extends Window_Command
     return command;
   }
 }
-//endregion Window_SDP_List
+//endregion Window_SdpList

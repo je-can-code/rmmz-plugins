@@ -84,7 +84,7 @@ Game_Action.prototype.skillProficiency = function()
 if (J.ABS)
 {
   /**
-   * Extends {@link Game_Action.onParry}.
+   * Extends {@link Game_Action.onParry}.<br>
    * Also gains proficiency for the parry if possible.
    * @param {JABS_Battler} jabsBattler The battler that is parrying.
    */
@@ -99,7 +99,7 @@ if (J.ABS)
   };
 
   /**
-   * Extends {@link Game_Action.onGuard}.
+   * Extends {@link Game_Action.onGuard}.<br>
    * Also gains proficiency for the guard if possible.
    * @param {JABS_Battler} jabsBattler The battler that is guarding.
    */

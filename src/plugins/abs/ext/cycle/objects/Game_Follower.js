@@ -1,5 +1,5 @@
 /**
- * Overwrites {@link Game_Follower.chaseCharacter}.
+ * Overrides {@link Game_Follower.chaseCharacter}.<br>
  * Prevents the follower from chasing after the player while they are in combat.
  * @param {Game_Character} character The character this follower is following.
  */

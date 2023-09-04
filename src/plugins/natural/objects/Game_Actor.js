@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #setup}.
+ * Extends {@link #setup}.<br>
  * Includes parameter buff initialization.
  */
 J.NATURAL.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
@@ -14,7 +14,7 @@ Game_Actor.prototype.setup = function(actorId)
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.
+ * Extends {@link #onBattlerDataChange}.<br>
  * Also refreshes all natural parameter buff values on the battler.
  */
 J.NATURAL.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);

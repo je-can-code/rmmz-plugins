@@ -1,4 +1,7 @@
 //region Scene_SDP
+/**
+ * The scene for managing SDPs that the player has acquired.
+ */
 class Scene_SDP extends Scene_MenuBase
 {
   /**
@@ -9,19 +12,14 @@ class Scene_SDP extends Scene_MenuBase
     SceneManager.push(this);
   }
 
+  //region init
   constructor()
   {
+    // call super when having extended constructors.
     super();
-    this.initialize();
-  }
 
-  /**
-   * The entry point of this scene.
-   */
-  initialize()
-  {
-    super.initialize(this);
-    this.initMembers();
+    // jumpstart initialization on creation.
+    this.initialize();
   }
 
   /**
@@ -29,258 +27,718 @@ class Scene_SDP extends Scene_MenuBase
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
+    this._j ||= {};
+
     /**
-     * The object encapsulating all things related to this plugin.
+     * A grouping of all properties associated with the sdp system.
      */
-    this._j = {
-      /**
-       * The list of SDPs available.
-       * @type {Window_SDP_List}
-       */
-      _sdpListWindow: null,
+    this._j._sdp = {};
 
-      /**
-       * The details of a given SDP.
-       * @type {Window_SDP_Details}
-       */
-      _sdpDetailsWindow: null,
+    /**
+     * A grouping of all windows associated with this scene.
+     */
+    this._j._sdp._windows = {};
 
-      /**
-       * The help window of the current action.
-       * @type {Window_SDP_Help}
-       */
-      _sdpHelpWindow: null,
+    /**
+     * All panels that are unlocked by the party and available for ranking up.
+     * @type {Window_SdpList}
+     */
+    this._j._sdp._windows._sdpList = null;
 
-      /**
-       * The points window for how many SDP points are available.
-       * @type {Window_SDP_Points}
-       */
-      _sdpPointsWindow: null,
+    /**
+     * The list of parameters associated with the currently selected SDP.
+     * @type {Window_SdpParameterList}
+     */
+    this._j._sdp._windows._sdpParameterList = null;
 
-      /**
-       * The confirmation window to confirm an upgrade.
-       * @type {Window_SDP_ConfirmUpgrade}
-       */
-      _sdpConfirmationWindow: null,
+    /**
+     * The list of rewards associated with the currently selected SDP.
+     * @type {Window_SdpRewardList}
+     */
+    this._j._sdp._windows._sdpRewardList = null;
 
-      /**
-       * The latest index of the list window.
-       * @type {number}
-       */
-      _index: null,
+    /**
+     * The confirmation window that allows the user to confirm the rankup of a panel.
+     * @type {Window_SdpPoints}
+     */
+    this._j._sdp._windows._sdpConfirmation = null;
 
-      /**
-       * The data of the panel for the current index.
-       * @type {StatDistributionPanel}
-       */
-      _currentPanel: null,
+    /**
+     * The points window that displays the current menu actor's SDP points.
+     * @type {Window_SdpPoints}
+     */
+    this._j._sdp._windows._sdpPoints = null;
 
-      /**
-       * The actor that is currently selected.
-       * @type {Game_Actor}
-       */
-      _currentActor: null,
+    /**
+     * The help window that displays the description of the currently hovered SDP.
+     * @type {Window_SdpHelp}
+     */
+    this._j._sdp._windows._sdpHelp = null;
 
-      /**
-       * Whether or not this scene has been initialized.
-       * @type {boolean}
-       */
-      _initialized: false,
-    };
+    /**
+     * The rank data window that displays the varioud rank-related details for
+     * the currently hovered SDP.
+     * @type {Window_SdpRankData}
+     */
+    this._j._sdp._windows._sdpRankData = null;
   }
+  //endregion init
 
+  //region create
   /**
-   * Hooks into the create parent function to create all windows after the window
-   * layer has been established.
+   * Initialize all resources required for this scene.
    */
   create()
   {
+    // perform original logic.
     super.create();
+
+    // create the various display objects on the screen.
+    this.createDisplayObjects();
+  }
+
+  /**
+   * Creates the display objects for this scene.
+   */
+  createDisplayObjects()
+  {
+    // create all our windows.
     this.createAllWindows();
   }
 
   /**
-   * Runs once per frame to update all things in this scene.
-   */
-  update()
-  {
-    super.update();
-    this.updateIndex();
-    this.updateActor();
-  }
-
-  /**
-   * Updates the index to keep in sync with the window's currently-selected index.
-   */
-  updateIndex()
-  {
-    if (this._j._sdpListWindow._list.length === 0) return;
-
-    const currentIndex = this._j._index;
-    const newIndex = this._j._sdpListWindow.index();
-    if (currentIndex !== newIndex || currentIndex === null)
-    {
-      this._j._index = this._j._sdpListWindow.index();
-      this._j._currentPanel = this._j._sdpListWindow._list[this._j._index].ext;
-      this._j._sdpDetailsWindow.setPanel(this._j._currentPanel);
-      this._j._sdpHelpWindow.setText(`${this._j._currentPanel.description}`);
-    }
-  }
-
-  /**
-   * OVERWRITE Determines the current actor.
-   */
-  updateActor()
-  {
-    this._j._currentActor = $gameParty.menuActor();
-  }
-
-  /**
-   * OVERWRITE Removes the buttons on the map/screen.
+   * Overrides {@link #createButtons}.<br>
+   * Removes the rendering of buttons from this scene.
    */
   createButtons()
   {
   }
+  //endregion create
 
-  //region window creation
+  //region windows
   /**
    * Creates all windows associated with the SDP scene.
    */
   createAllWindows()
   {
-    this.createPointsWindow();
-    this.createHelpWindow();
-    this.createDetailsWindow();
-    this.createListWindow();
-    this.createConfirmationWindow();
+    // display data windows.
+    this.createSdpPointsWindow();
+    this.createSdpHelpWindow();
+    this.createSdpRankDataWindow();
+
+    // selectable data windows.
+    this.createSdpListWindow();
+    this.createSdpParameterListWindow();
+    this.createSdpRewardListWindow();
+
+    // this is last to ensure it shows up above other windows.
+    this.createSdpConfirmationWindow();
+
+    // the initial refresh to load all windows.
+    this.onPanelHoveredChange();
   }
 
+  //region sdp list window
   /**
    * Creates the list of SDPs available to the player.
    */
-  createListWindow()
+  createSdpListWindow()
   {
-    const width = 400;
-    const heightFit = (this._j._sdpPointsWindow.height + this._j._sdpHelpWindow.height) + 8;
-    const height = Graphics.height - heightFit;
-    const x = 0;
-    const y = this._j._sdpPointsWindow.height;
-    const rect = new Rectangle(x, y, width, height);
-    this._j._sdpListWindow = new Window_SDP_List(rect);
-    this._j._sdpListWindow.setHandler('cancel', this.popScene.bind(this));
-    this._j._sdpListWindow.setHandler('ok', this.onSelectPanel.bind(this));
-    this._j._sdpListWindow.setHandler('more', this.onFilterPanels.bind(this));
-    this._j._sdpListWindow.setHandler('pagedown', this.cycleMembers.bind(this, true));
-    this._j._sdpListWindow.setHandler('pageup', this.cycleMembers.bind(this, false));
-    this._j._sdpListWindow.setActor($gameParty.menuActor());
-    this.addWindow(this._j._sdpListWindow);
+    // create the window.
+    const window = this.buildSdpListWindow();
+
+    // update the tracker with the new window.
+    this.setSdpListWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
   }
 
   /**
-   * Creates the details window that describes a panel and what leveling it does.
+   * Sets up and defines the sdp listing window.
+   * @returns {Window_SdpList}
    */
-  createDetailsWindow()
+  buildSdpListWindow()
   {
-    const width = Graphics.boxWidth - 400;
-    const height = Graphics.boxHeight - 100;
-    const x = 400;
-    const y = 0;
-    const rect = new Rectangle(x, y, width, height);
-    this._j._sdpDetailsWindow = new Window_SDP_Details(rect);
-    this._j._sdpDetailsWindow.setActor($gameParty.menuActor());
-    this.addWindow(this._j._sdpDetailsWindow);
+    // define the rectangle of the window.
+    const rectangle = this.sdpListRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpList(rectangle);
+
+    // configure the window input handlers.
+    window.setHandler('cancel', this.popScene.bind(this));
+    window.setHandler('ok', this.onSelectPanel.bind(this));
+    window.setHandler('more', this.onFilterPanels.bind(this));
+    window.setHandler('pagedown', this.cycleMembers.bind(this, true));
+    window.setHandler('pageup', this.cycleMembers.bind(this, false));
+    window.onIndexChange = this.onPanelHoveredChange.bind(this);
+
+    // initialize with the current menu actor.
+    window.setActor($gameParty.menuActor());
+
+    // return the built and configured window.
+    return window;
   }
 
+  /**
+   * Gets the rectangle associated with the sdp list command window.
+   * @returns {Rectangle}
+   */
+  sdpListRectangle()
+  {
+    // grab the points rectangle for reference.
+    const pointsRectangle = this.sdpPointsRectangle();
+
+    // arbitrarily define the width.
+    const width = 400;
+
+    // determine the modifier of the height for fitting properly..
+    const heightFit = (pointsRectangle.height + this.sdpHelpRectangle().height) + 8;
+    const height = Graphics.height - heightFit;
+
+    // determine the x:y coordinates.
+    const x = 0;
+    const y = pointsRectangle.height;
+
+    // return the built rectangle.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the currently tracked sdp list window.
+   * @returns {Window_SdpList}
+   */
+  getSdpListWindow()
+  {
+    return this._j._sdp._windows._sdpList;
+  }
+
+  /**
+   * Set the currently tracked parameter list window to the given window.
+   * @param {Window_SdpList} listWindow The parameter list window to track.
+   */
+  setSdpListWindow(listWindow)
+  {
+    this._j._sdp._windows._sdpList = listWindow;
+  }
+  //endregion sdp list window
+
+  //region parameter list window
+  /**
+   * Creates the window for all parameters associated with the hovered SDP.
+   */
+  createSdpParameterListWindow()
+  {
+    // create the window.
+    const window = this.buildSdpParameterListWindow();
+
+    // update the tracker with the new window.
+    this.setSdpParameterListWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp parameter listing window.
+   * @returns {Window_SdpParameterList}
+   */
+  buildSdpParameterListWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpParameterListRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpParameterList(rectangle);
+
+    window.deselect();
+    window.deactivate();
+    window.setActor($gameParty.menuActor());
+
+    // return the built and configured omnipedia list window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the parameter list command window.
+   * @returns {Rectangle}
+   */
+  sdpParameterListRectangle()
+  {
+    // define the width of the list.
+    const width = 600;
+
+    // calculate the X for where the origin of the list window should be.
+    const x = this.sdpListRectangle().width;
+
+    // define the height of the list.
+    const height = Graphics.boxHeight - this.sdpHelpRectangle().height;
+
+    // calculate the Y for where the origin of the list window should be.
+    const y = 0;
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the currently tracked parameter list window.
+   * @returns {Window_SdpParameterList}
+   */
+  getSdpParameterListWindow()
+  {
+    return this._j._sdp._windows._sdpParameterList;
+  }
+
+  /**
+   * Set the currently tracked parameter list window to the given window.
+   * @param {Window_SdpParameterList} listWindow The parameter list window to track.
+   */
+  setSdpParameterListWindow(listWindow)
+  {
+    this._j._sdp._windows._sdpParameterList = listWindow;
+  }
+  //endregion parameter list window
+
+  //region reward list window
+  /**
+   * Creates the window for all rewards associated with the hovered SDP.
+   */
+  createSdpRewardListWindow()
+  {
+    // create the window.
+    const window = this.buildSdpRewardListWindow();
+
+    // update the tracker with the new window.
+    this.setSdpRewardListWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp reward listing window.
+   * @returns {Window_SdpParameterList}
+   */
+  buildSdpRewardListWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpRewardListRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpRewardList(rectangle);
+
+    window.deselect();
+    window.deactivate();
+
+    // return the built and configured omnipedia list window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the reward list command window.
+   * @returns {Rectangle}
+   */
+  sdpRewardListRectangle()
+  {
+    const sdpListRect = this.sdpListRectangle();
+    const parameterListRect = this.sdpParameterListRectangle();
+    const helpRect = this.sdpHelpRectangle();
+
+    // define the width of the list.
+    const width = Graphics.boxWidth - parameterListRect.width - sdpListRect.width;
+
+    // the rewards should render on the right side of the parameters.
+    const x = parameterListRect.x + parameterListRect.width;
+
+    // the shared modifier defining the height and y of this rectangle.
+    const ymod = 200;
+
+    // define the height of the list.
+    const height = Graphics.boxHeight - helpRect.height - ymod;
+
+    // calculate the Y for where the origin of the list window should be.
+    const y = ymod;
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the currently tracked reward list window.
+   * @returns {Window_SdpRewardList}
+   */
+  getSdpRewardListWindow()
+  {
+    return this._j._sdp._windows._sdpRewardList;
+  }
+
+  /**
+   * Set the currently tracked reward list window to the given window.
+   * @param {Window_SdpRewardList} listWindow The reward list window to track.
+   */
+  setSdpRewardListWindow(listWindow)
+  {
+    this._j._sdp._windows._sdpRewardList = listWindow;
+  }
+  //endregion reward list window
+
+  //region rank data window
+  /**
+   * Creates the rank data window that displays data related to the current
+   * menu actor's ranking in the hovered SDP..
+   */
+  createSdpRankDataWindow()
+  {
+    // create the window.
+    const window = this.buildSdpRankDataWindow();
+
+    // update the tracker with the new window.
+    this.setSdpRankDataWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp rank data window.
+   * @returns {Window_SdpRankData}
+   */
+  buildSdpRankDataWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpRankDataRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpRankData(rectangle);
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the rank data window.
+   * @returns {Rectangle}
+   */
+  sdpRankDataRectangle()
+  {
+    const parametersRect = this.sdpParameterListRectangle();
+
+    const width = Graphics.boxWidth - (parametersRect.x + parametersRect.width);
+    const height = Graphics.boxHeight - (this.sdpHelpRectangle().height + this.sdpRewardListRectangle().height);
+    const x = (parametersRect.x + parametersRect.width);
+    const y = 0;
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the currently tracked rank data window.
+   * @returns {Window_SdpRankData}
+   */
+  getSdpRankDataWindow()
+  {
+    return this._j._sdp._windows._sdpRankData;
+  }
+
+  /**
+   * Set the currently tracked rank data window to the given window.
+   * @param {Window_SdpRankData} rankDataWindow The rank data window to track.
+   */
+  setSdpRankDataWindow(rankDataWindow)
+  {
+    this._j._sdp._windows._sdpRankData = rankDataWindow;
+  }
+  //endregion rank data window
+
+  //region help window
   /**
    * Creates the help window that provides contextual details to the player about the panel.
    */
-  createHelpWindow()
+  createSdpHelpWindow()
+  {
+    // create the window.
+    const window = this.buildSdpHelpWindow();
+
+    // update the tracker with the new window.
+    this.setSdpHelpWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp listing window.
+   * @returns {Window_SdpHelp}
+   */
+  buildSdpHelpWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpHelpRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpHelp(rectangle);
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the sdp help window.
+   * @returns {Rectangle}
+   */
+  sdpHelpRectangle()
   {
     const width = Graphics.boxWidth;
     const height = 100;
     const x = 0;
     const y = Graphics.boxHeight - height;
-    const rect = new Rectangle(x, y, width, height);
-    this._j._sdpHelpWindow = new Window_SDP_Help(rect);
-    this.addWindow(this._j._sdpHelpWindow);
+    return new Rectangle(x, y, width, height);
   }
 
   /**
-   * Creates the points window that tracks how many SDP points the player has.
+   * Gets the currently tracked sdp help window.
+   * @returns {Window_SdpHelp}
    */
-  createPointsWindow()
+  getSdpHelpWindow()
   {
+    return this._j._sdp._windows._sdpHelp;
+  }
+
+  /**
+   * Set the currently tracked help window to the given window.
+   * @param {Window_SdpHelp} helpWindow The help window to track.
+   */
+  setSdpHelpWindow(helpWindow)
+  {
+    this._j._sdp._windows._sdpHelp = helpWindow;
+  }
+  // endregion help window
+
+  //region points window
+  /**
+   * Creates the points window for displaying how many points the current actor has.
+   */
+  createSdpPointsWindow()
+  {
+    // create the window.
+    const window = this.buildSdpPointsWindow();
+
+    // update the tracker with the new window.
+    this.setSdpPointsWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp points window.
+   * @returns {Window_SdpPoints}
+   */
+  buildSdpPointsWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpPointsRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpPoints(rectangle);
+
+    // also set the menu actor.
+    window.setActor($gameParty.menuActor());
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the sdp confirmation window.
+   * @returns {Rectangle}
+   */
+  sdpPointsRectangle()
+  {
+    // the sdp points window sits in the upper-right-most corner.
     const width = 400;
     const height = 60;
     const x = 0;
     const y = 0;
-    const rect = new Rectangle(x, y, width, height);
-    this._j._sdpPointsWindow = new Window_SDP_Points(rect);
-    this._j._sdpPointsWindow.setActor($gameParty.menuActor());
-    this.addWindow(this._j._sdpPointsWindow);
+    return new Rectangle(x, y, width, height);
   }
 
   /**
-   * Creates the list of SDPs available to the player.
+   * Gets the currently tracked sdp points window.
+   * @returns {Window_SdpPoints}
    */
-  createConfirmationWindow()
+  getSdpPointsWindow()
+  {
+    return this._j._sdp._windows._sdpPoints;
+  }
+
+  /**
+   * Set the currently tracked sdp points window to the given window.
+   * @param {Window_SdpPoints} pointsWindow The window to track.
+   */
+  setSdpPointsWindow(pointsWindow)
+  {
+    this._j._sdp._windows._sdpPoints = pointsWindow;
+  }
+  //endregion points window
+
+  //region confirmation window
+  /**
+   * Creates the confirmation window for confirming the rankup of an SDP.
+   */
+  createSdpConfirmationWindow()
+  {
+    // create the window.
+    const window = this.buildSdpConfirmationWindow();
+
+    // update the tracker with the new window.
+    this.setSdpConfirmationWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the sdp listing window.
+   * @returns {Window_SdpConfirmation}
+   */
+  buildSdpConfirmationWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.sdpConfirmationRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_SdpConfirmation(rectangle);
+
+    // configure the window input handlers.
+    window.setHandler('cancel', this.onUpgradeCancel.bind(this));
+    window.setHandler('ok', this.onUpgradeConfirm.bind(this));
+
+    // hide it by default.
+    window.hide();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the sdp confirmation window.
+   * @returns {Rectangle}
+   */
+  sdpConfirmationRectangle()
   {
     const width = 350;
     const height = 120;
     const x = (Graphics.boxWidth - width) / 2;
     const y = (Graphics.boxHeight - height) / 2;
-    const rect = new Rectangle(x, y, width, height);
-    this._j._sdpConfirmationWindow = new Window_SDP_ConfirmUpgrade(rect);
-    this._j._sdpConfirmationWindow.setHandler('cancel', this.onUpgradeCancel.bind(this));
-    this._j._sdpConfirmationWindow.setHandler('ok', this.onUpgradeConfirm.bind(this));
-    this._j._sdpConfirmationWindow.hide();
-    this.addWindow(this._j._sdpConfirmationWindow);
+    return new Rectangle(x, y, width, height);
   }
-  //endregion SDP window creation
 
   /**
-   * Refreshes all windows in this scene.
+   * Gets the currently tracked sdp confirmation window.
+   * @returns {Window_SdpConfirmation}
    */
-  refreshAllWindows()
+  getSdpConfirmationWindow()
   {
-    this._j._sdpListWindow.setActor(this._j._currentActor);
-    this._j._sdpDetailsWindow.setActor(this._j._currentActor);
-    this._j._sdpDetailsWindow.refresh();
-    this._j._sdpPointsWindow.setActor(this._j._currentActor);
-
-    this._j._sdpHelpWindow.refresh();
+    return this._j._sdp._windows._sdpConfirmation;
   }
 
+  /**
+   * Set the currently tracked sdp confirmation window to the given window.
+   * @param {Window_SdpConfirmation} confirmationWindow The window to track.
+   */
+  setSdpConfirmationWindow(confirmationWindow)
+  {
+    this._j._sdp._windows._sdpConfirmation = confirmationWindow;
+  }
+  //endregion confirmation window
+  //endregion windows
+
+  //region actions
   /**
    * When selecting a panel, bring up the confirmation window.
    */
   onSelectPanel()
   {
-    this._j._sdpConfirmationWindow.show();
-    this._j._sdpConfirmationWindow.open();
-    this._j._sdpConfirmationWindow.activate();
+    // grab the confirmation window.
+    const window = this.getSdpConfirmationWindow();
+
+    // enable interaction with it.
+    window.show();
+    window.open();
+    window.activate();
   }
 
+  /**
+   * Toggle the filtering out of already-maxed panels.
+   */
   onFilterPanels()
   {
-    const sdpListWindow = this._j._sdpListWindow;
-    const usingFilter = sdpListWindow.usingNoMaxPanelsFilter();
+    // grab the window with the list of sdps.
+    const sdpListWindow = this.getSdpListWindow();
 
-    if (usingFilter)
-    {
-      sdpListWindow.setNoMaxPanelsFilter(false);
-    }
-    else
-    {
-      sdpListWindow.setNoMaxPanelsFilter(true);
-    }
+    // toggle the filter.
+    sdpListWindow.toggleNoMaxPanelsFilter();
 
-    this.refreshAllWindows();
+    // trigger a refresh of windows.
+    this.onPanelHoveredChange();
 
-    if (sdpListWindow.index() > sdpListWindow.commandList().length)
+    // check if the index became out of bounds.
+    if (sdpListWindow.index() >= sdpListWindow.commandList().length)
     {
+      // correct the index to the last item.
       sdpListWindow.select(sdpListWindow.commandList().length - 1);
     }
+  }
+
+  /**
+   * Refreshes all windows in this scene on change of index in the list.
+   */
+  onPanelHoveredChange()
+  {
+    // validate panels are present before updating everything.
+    const hasPanels = this.getSdpListWindow().hasCommands();
+    if (!hasPanels) return;
+
+    // grab the current panel.
+    /** @type {StatDistributionPanel} */
+    const currentPanel = this.getSdpListWindow().currentExt();
+
+    // grab the current actor of the menu.
+    const currentActor = $gameParty.menuActor();
+
+    // update the actor associated with the sdp listing.
+    this.getSdpListWindow().setActor(currentActor);
+
+    // update the actor associated with the sdp point tracking.
+    this.getSdpPointsWindow().setActor(currentActor);
+
+    // update the parameter list with the latest panel parameters.
+    const parameterListWindow = this.getSdpParameterListWindow();
+    parameterListWindow.setActor(currentActor);
+    parameterListWindow.setParameters(currentPanel.panelParameters);
+    parameterListWindow.refresh();
+
+    // update the reward list with the latest panel rewards.
+    const rewardListWindow = this.getSdpRewardListWindow();
+    rewardListWindow.setRewards(currentPanel.panelRewards);
+    rewardListWindow.refresh();
+
+    // update the text in the help window to reflect the description of the panel.
+    this.getSdpHelpWindow().setText(currentPanel.description);
+
+    // update the cost data window.
+    const panelRanking = currentActor.getSdpByKey(currentPanel.key);
+    this.getSdpRankDataWindow().setRankData(
+      panelRanking.currentRank,
+      currentPanel.maxRank,
+      currentPanel.rankUpCost(panelRanking.currentRank),
+      currentActor.getSdpPoints());
+    this.getSdpRankDataWindow().refresh();
   }
 
   /**
@@ -289,12 +747,16 @@ class Scene_SDP extends Scene_MenuBase
    */
   cycleMembers(isForward = true)
   {
+    // cycle the menu actors either forward or backward.
     isForward
       ? $gameParty.makeMenuActorNext()
       : $gameParty.makeMenuActorPrevious();
-    this._j._currentActor = $gameParty.menuActor();
-    this.refreshAllWindows();
-    this._j._sdpListWindow.activate();
+
+    // refresh everything.
+    this.onPanelHoveredChange();
+
+    // re-activate the list window.
+    this.getSdpListWindow().activate();
   }
 
   /**
@@ -303,10 +765,10 @@ class Scene_SDP extends Scene_MenuBase
   onUpgradeConfirm()
   {
     // grab the panel we're working with.
-    const panel = this._j._currentPanel;
+    const panel = this.getSdpListWindow().currentExt();
 
     // grab the actor we're working with.
-    const actor = this._j._currentActor;
+    const actor = $gameParty.menuActor();
 
     // get the panel ranking from the actor.
     const panelRanking = actor.getSdpByKey(panel.key);
@@ -324,16 +786,13 @@ class Scene_SDP extends Scene_MenuBase
     actor.modAccumulatedSpentSdpPoints(panelRankupCost);
 
     // refresh all the windows after upgrading the panel.
-    this.refreshAllWindows();
-
-    // update the detail window to use the current actor.
-    this._j._sdpDetailsWindow.setActor(this._j._currentActor);
+    this.onPanelHoveredChange();
 
     // close the confirmation window.
-    this._j._sdpConfirmationWindow.close();
+    this.getSdpConfirmationWindow().close();
 
     // refocus back to the list window.
-    this._j._sdpListWindow.activate();
+    this.getSdpListWindow().activate();
   }
 
   /**
@@ -341,9 +800,16 @@ class Scene_SDP extends Scene_MenuBase
    */
   onUpgradeCancel()
   {
-    this._j._sdpConfirmationWindow.close();
-    this._j._sdpConfirmationWindow.hide();
-    this._j._sdpListWindow.activate();
+    // grab the confirmation window.
+    const window = this.getSdpConfirmationWindow();
+
+    // disable it from interaction.
+    window.close();
+    window.hide();
+
+    // re-activate the main list window.
+    this.getSdpListWindow().activate();
   }
+  //endregion actions
 }
 //endregion Scene_SDP

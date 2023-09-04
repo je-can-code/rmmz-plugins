@@ -1,6 +1,6 @@
 //region Window_MoreEquipData
 /**
- * Extends {@link #addJabsEquipmentData}.
+ * Extends {@link #addJabsEquipmentData}.<br>
  * Includes additional entries about passive states provided by the equipment.
  */
 J.PASSIVE.Aliased.Window_MoreEquipData.set('addJabsEquipmentData', Window_MoreEquipData.prototype.addJabsEquipmentData);

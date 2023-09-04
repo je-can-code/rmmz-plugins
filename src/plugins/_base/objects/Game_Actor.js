@@ -137,7 +137,7 @@ Game_Actor.prototype.getNotesSources = function()
 };
 
 /**
- * Extends {@link #setup}.
+ * Extends {@link #setup}.<br>
  * Adds a hook for performing actions when an actor is setup.
  */
 J.BASE.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
@@ -161,7 +161,7 @@ Game_Actor.prototype.onSetup = function(actorId)
 };
 
 /**
- * Extends {@link #learnSkill}.
+ * Extends {@link #learnSkill}.<br>
  * Adds a hook for performing actions when a new skill is learned.
  * If the skill is already known, it will not trigger any on-skill-learned effects.
  */
@@ -190,7 +190,7 @@ Game_Actor.prototype.onLearnNewSkill = function(skillId)
 };
 
 /**
- * Extends {@link #learnSkill}.
+ * Extends {@link #learnSkill}.<br>
  * Adds a hook for performing actions when a new skill is learned.
  * If the skill is already known, it will not trigger any on-skill-learned effects.
  */
@@ -219,7 +219,7 @@ Game_Actor.prototype.onForgetSkill = function(skillId)
 };
 
 /**
- * Extends {@link #die}.
+ * Extends {@link #die}.<br>
  * Adds a toggle of the death effects.
  */
 J.BASE.Aliased.Game_Actor.set('die', Game_Actor.prototype.die);
@@ -242,7 +242,7 @@ Game_Actor.prototype.onDeath = function()
 };
 
 /**
- * Extends {@link #revive}.
+ * Extends {@link #revive}.<br>
  * Handles on-revive effects at the actor-level.
  */
 J.BASE.Aliased.Game_Actor.set('revive', Game_Actor.prototype.revive);
@@ -293,7 +293,7 @@ Game_Actor.prototype.onClassChange = function(classId, keepExp)
 };
 
 /**
- * Extends {@link #changeEquip}.
+ * Extends {@link #changeEquip}.<br>
  * Adds a hook for performing actions when equipment on the actor has changed state.
  */
 J.BASE.Aliased.Game_Actor.set('changeEquip', Game_Actor.prototype.changeEquip);
@@ -317,7 +317,7 @@ Game_Actor.prototype.changeEquip = function(slotId, item)
 };
 
 /**
- * Extends {@link #discardEquip}.
+ * Extends {@link #discardEquip}.<br>
  * Adds a hook for performing actions when equipment on the actor has been discarded.
  */
 J.BASE.Aliased.Game_Actor.set('discardEquip', Game_Actor.prototype.discardEquip);
@@ -341,7 +341,7 @@ Game_Actor.prototype.discardEquip = function(item)
 };
 
 /**
- * Extends {@link #forceChangeEquip}.
+ * Extends {@link #forceChangeEquip}.<br>
  * Adds a hook for performing actions when equipment on the actor has been forcefully changed.
  */
 J.BASE.Aliased.Game_Actor.set('forceChangeEquip', Game_Actor.prototype.forceChangeEquip);
@@ -365,7 +365,7 @@ Game_Actor.prototype.forceChangeEquip = function(slotId, item)
 };
 
 /**
- * Extends {@link #releaseUnequippableItems}.
+ * Extends {@link #releaseUnequippableItems}.<br>
  * Adds a hook for performing actions when equipment on the actor has been released due to internal change.
  */
 J.BASE.Aliased.Game_Actor.set('releaseUnequippableItems', Game_Actor.prototype.releaseUnequippableItems);
@@ -443,7 +443,7 @@ Game_Actor.prototype.onLevelUp = function()
 };
 
 /**
- * Extends {@link #levelUp}.
+ * Extends {@link #levelUp}.<br>
  * Adds a hook for performing actions when an the actor levels up.
  */
 J.BASE.Aliased.Game_Actor.set('levelUp', Game_Actor.prototype.levelUp);
@@ -465,7 +465,7 @@ Game_Actor.prototype.onLevelDown = function()
 };
 
 /**
- * Extends {@link #levelDown}.
+ * Extends {@link #levelDown}.<br>
  * Adds a hook for performing actions when an the actor levels down.
  */
 J.BASE.Aliased.Game_Actor.set('levelDown', Game_Actor.prototype.levelDown);

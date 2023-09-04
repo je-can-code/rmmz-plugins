@@ -68,7 +68,7 @@ class Scene_Difficulty extends Scene_MenuBase
   }
 
   /**
-   * Extends {@link #start}.
+   * Extends {@link #start}.<br>
    * Handles the post-scene setup.
    */
   start()
@@ -87,7 +87,7 @@ class Scene_Difficulty extends Scene_MenuBase
   }
 
   /**
-   * Extends {@link #create}.
+   * Extends {@link #create}.<br>
    * Creates our scene's windows.
    */
   create()

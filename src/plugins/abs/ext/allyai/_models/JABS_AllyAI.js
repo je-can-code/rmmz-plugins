@@ -268,7 +268,7 @@ JABS_AllyAI.prototype.decideVariety = function(usableSkills, user, target)
   // filter all available skills down to what we recall as effective.
   if (memoriesOfTarget.length)
   {
-    tempAvailableSkills = this.filterMemoriesByEffectiveness(tempAvailableSkills);
+    tempAvailableSkills = this.filterMemoriesByEffectiveness(tempAvailableSkills, memoriesOfTarget);
   }
 
   // if no skill was effective, or there were no memories, just pick a random skill and call it good.
@@ -328,7 +328,7 @@ JABS_AllyAI.prototype.decideFullForce = function(usableSkills, user, target)
   if (memoriesOfTarget.length)
   {
     // filter the available skills by what was remembered to be effective.
-    tempAvailableSkills = this.filterMemoriesByEffectiveness(tempAvailableSkills);
+    tempAvailableSkills = this.filterMemoriesByEffectiveness(tempAvailableSkills, memoriesOfTarget);
   }
 
   // check if we have no known effective skills.
@@ -757,7 +757,7 @@ JABS_AllyAI.prototype.decideSupportBuffing = function(availableSkills, healer)
 //endregion support
 
 /**
- * Overwrites {@link #aiComboChanceModifier}.
+ * Overrides {@link #aiComboChanceModifier}.<br>
  * Adjusts the bonus combo chance modifier based on the selected ally AI mode.
  * @returns {number}
  */
@@ -809,7 +809,16 @@ JABS_AllyAI.prototype.applyMemory = function(newMemory)
  */
 JABS_AllyAI.prototype.getMemory = function(battlerId, skillId)
 {
-  return this.memory.find(mem => mem.battlerId === battlerId && mem.skillId === skillId);
+  return this.getMemories().find(mem => mem.battlerId === battlerId && mem.skillId === skillId);
+};
+
+/**
+ * Gets all memories currently saved by this ally.
+ * @returns {JABS_BattleMemory[]}
+ */
+JABS_AllyAI.prototype.getMemories = function()
+{
+  return this.memory;
 };
 
 /**
@@ -829,11 +838,19 @@ JABS_AllyAI.prototype.addMemory = function(newMemory)
 JABS_AllyAI.prototype.updateMemory = function(newMemory)
 {
   let memory = this.getMemory(newMemory.battlerId, newMemory.skillId);
-  memory = newMemory;
+  memory.effectiveness = newMemory.effectiveness;
+  memory.damageApplied = newMemory.damageApplied;
   this.memory.sort();
 };
 
-JABS_AllyAI.prototype.filterMemoriesByEffectiveness = function(usableSkills)
+/**
+ * Filters out all "ineffective" skills from a list of possible skills based on
+ * ones own memories.
+ * @param {number[]} usableSkills The collection of skillIds that are being filtered.
+ * @param {JABS_BattleMemory[]} memoriesOfTarget All currently stored memories this AI has for a given target.
+ * @returns {number[]} All "effective" skills after the filtering has taken place.
+ */
+JABS_AllyAI.prototype.filterMemoriesByEffectiveness = function(usableSkills, memoriesOfTarget)
 {
   // a filtering function for filtering out unknown or ineffective skill ids.
   const filtering = skillId =>
@@ -852,7 +869,7 @@ JABS_AllyAI.prototype.filterMemoriesByEffectiveness = function(usableSkills)
   };
 
   // return the filtered list of skills.
-  return usableSkills.filter(filtering);
+  return usableSkills.filter(filtering, this);
 };
 //endregion battle memory
 //endregion JABS_AllyAI

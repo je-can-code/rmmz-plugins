@@ -88,7 +88,7 @@ Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = nu
   if (!andParse) return val;
 
   // return the parsed result instead.
-  return J.BASE.Helpers.parseObject(val);
+  return JsonMapper.parseObject(val);
 };
 
 /**

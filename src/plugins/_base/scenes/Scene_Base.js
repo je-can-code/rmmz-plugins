@@ -1,5 +1,5 @@
 /**
- * Extends {@link #initialize}.
+ * Extends {@link #initialize}.<br>
  * Adds extension for initializing custom members for scenes.
  */
 J.BASE.Aliased.Scene_Base.set('initialize', Scene_Base.prototype.initialize);

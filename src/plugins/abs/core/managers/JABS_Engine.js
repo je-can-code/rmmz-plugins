@@ -404,7 +404,7 @@ class JABS_Engine
   /**
    * Updates all battlers registered as "players" to JABS.
    * "Players" are battlers that are always polling for actions rather
-   * than only as a part of {@link JABS_AiManager.aiPhase2}.
+   * than only as a part of {@link JABS_AiManager.aiPhase2}.<br>
    */
   updatePlayers()
   {
@@ -988,7 +988,7 @@ class JABS_Engine
     const log = new MapLogBuilder()
       .setupPartyCycle(player1.battlerName())
       .build();
-    $gameTextLog.addLog(log);
+    $mapLogManager.addLog(log);
   }
 
   /**
@@ -2200,10 +2200,6 @@ class JABS_Engine
   {
     // checks for retaliation from the target.
     this.checkRetaliate(action, target);
-
-    // apply the battle memories to the target.
-    const result = target.getBattler().result();
-    this.applyBattleMemories(result, action, target);
   }
 
   /**
@@ -2346,7 +2342,7 @@ class JABS_Engine
    * This will attempt to execute all counterguard/counterparry skill ids available
    * in the given slot.
    * @param {JABS_Battler} battler The battler doing the autocounter.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.
+   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
   doAutoCounter(battler, slot = JABS_Button.Offhand)
   {
@@ -2360,7 +2356,7 @@ class JABS_Engine
   /**
    * Executes any counterguard skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.
+   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
   doCounterGuard(battler, slot = JABS_Button.Offhand)
   {
@@ -2378,7 +2374,7 @@ class JABS_Engine
   /**
    * Executes any counterparry skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.
+   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
   doCounterParry(battler, slot = JABS_Button.Offhand)
   {
@@ -2434,30 +2430,6 @@ class JABS_Engine
         }
       })
     }
-  }
-
-  /**
-   * Applies a battle memory to the target.
-   * Only applicable to actors (for now).
-   * @param {Game_ActionResult} result The effective result of the action against the target.
-   * @param {JABS_Action} action The action executed against the target.
-   * @param {JABS_Battler} target The target the action was applied to.
-   */
-  applyBattleMemories(result, action, target)
-  {
-    // only applicable to allies.
-    if (target.isEnemy()) return;
-
-    // only works if the code is there to process.
-    if (!J.ABS.EXT.ALLYAI) return;
-
-    const newMemory = new JABS_BattleMemory(
-      target.getBattlerId(),
-      action.getBaseSkill().id,
-      action.getAction()
-        .calculateRawElementRate(target.getBattler()),
-      result.hpDamage);
-    target.applyBattleMemories(newMemory);
   }
 
   /**
@@ -2550,7 +2522,7 @@ class JABS_Engine
       const parryLog = new MapLogBuilder()
         .setupParry(targetName, casterName, skill.id, result.parried)
         .build();
-      $gameTextLog.addLog(parryLog);
+      $mapLogManager.addLog(parryLog);
       return;
     }
     // create evasion logs if it was evaded.
@@ -2559,7 +2531,7 @@ class JABS_Engine
       const dodgeLog = new MapLogBuilder()
         .setupDodge(targetName, casterName, skill.id)
         .build();
-      $gameTextLog.addLog(dodgeLog);
+      $mapLogManager.addLog(dodgeLog);
       return;
     }
     // create retaliation logs if it was a retaliation.
@@ -2568,7 +2540,7 @@ class JABS_Engine
       const retaliationLog = new MapLogBuilder()
         .setupRetaliation(casterName)
         .build();
-      $gameTextLog.addLog(retaliationLog);
+      $mapLogManager.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
     else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length)
@@ -2576,7 +2548,7 @@ class JABS_Engine
       const log = new MapLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
-      $gameTextLog.addLog(log);
+      $mapLogManager.addLog(log);
       return;
     }
     if (result.hpDamage)
@@ -2596,7 +2568,7 @@ class JABS_Engine
       const log = new MapLogBuilder()
         .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
         .build();
-      $gameTextLog.addLog(log);
+      $mapLogManager.addLog(log);
       // fall through in case there were states that were also applied, such as defeating the target.
     }
 
@@ -2611,7 +2583,7 @@ class JABS_Engine
           const log = new MapLogBuilder()
             .setupTargetDefeated(targetName)
             .build();
-          $gameTextLog.addLog(log);
+          $mapLogManager.addLog(log);
           return;
         }
 
@@ -2619,7 +2591,7 @@ class JABS_Engine
         const log = new MapLogBuilder()
           .setupStateAfflicted(targetName, stateId)
           .build();
-        $gameTextLog.addLog(log);
+        $mapLogManager.addLog(log);
       });
     }
   }
@@ -3347,7 +3319,7 @@ class JABS_Engine
     // check if we are using the level scaling functionality.
     if (J.LEVEL && J.LEVEL.Metadata.Enabled)
     {
-      // calculate the multiplier using scaling based on enemy and actor.
+      // calculate the reverse multiplier using scaling based on enemy and actor.
       // if the enemy is higher, then the rewards will be greater.
       // if the actor is higher, then the rewards will be lesser.
       multiplier = LevelScaling.multiplier(enemy.level, actor.getBattler().level);
@@ -3477,7 +3449,7 @@ class JABS_Engine
       const expLog = new MapLogBuilder()
         .setupExperienceGained(caster.getReferenceData().name, experience)
         .build();
-      $gameTextLog.addLog(expLog);
+      $mapLogManager.addLog(expLog);
     }
 
     if (gold !== 0)
@@ -3485,7 +3457,7 @@ class JABS_Engine
       const goldLog = new MapLogBuilder()
         .setupGoldFound(gold)
         .build();
-      $gameTextLog.addLog(goldLog);
+      $mapLogManager.addLog(goldLog);
     }
   }
 
@@ -3532,7 +3504,7 @@ class JABS_Engine
     const lootLog = new MapLogBuilder()
       .setupLootObtained(this.getPlayer1().getReferenceData().name, lootType, item.id)
       .build();
-    $gameTextLog.addLog(lootLog);
+    $mapLogManager.addLog(lootLog);
   }
 
   /**
@@ -3647,7 +3619,7 @@ class JABS_Engine
 
     const battler = jabsBattler.getBattler();
     const log = this.configureLevelUpLog(battler.name(), battler.level);
-    $gameTextLog.addLog(log);
+    $mapLogManager.addLog(log);
   }
 
   /**
@@ -3728,7 +3700,7 @@ class JABS_Engine
     if (!J.LOG) return;
 
     const log = this.configureSkillLearnLog(player.getReferenceData().name, skill.id);
-    $gameTextLog.addLog(log);
+    $mapLogManager.addLog(log);
   }
 
   /**

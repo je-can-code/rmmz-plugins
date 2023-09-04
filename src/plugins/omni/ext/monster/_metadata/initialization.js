@@ -56,6 +56,13 @@ J.OMNI.EXT.MONSTER.Metadata.Command.Symbol = "monster-pedia";
 J.OMNI.EXT.MONSTER.Metadata.Command.IconIndex = 14;
 
 /**
+ * The id of the switch that will represent whether or not the command
+ * should be visible in the Omnipedia menu.
+ * @type {number}
+ */
+J.OMNI.EXT.MONSTER.Metadata.EnabledSwitch = 103;
+
+/**
  * A collection of all aliased methods for this plugin.
  */
 J.OMNI.EXT.MONSTER.Aliased = {};

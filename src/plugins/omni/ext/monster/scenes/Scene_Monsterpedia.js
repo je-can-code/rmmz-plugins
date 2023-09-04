@@ -172,8 +172,8 @@ class Scene_Monsterpedia extends Scene_MenuBase
   }
 
   /**
-   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.
-   * Changes the filter to a different type from {@link PIXI.filters}.
+   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
+   * Changes the filter to a different type from {@link PIXI.filters}.<br>
    */
   createBackground()
   {

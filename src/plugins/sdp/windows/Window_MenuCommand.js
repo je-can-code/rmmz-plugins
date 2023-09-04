@@ -12,13 +12,13 @@ Window_MenuCommand.prototype.makeCommandList = function()
   if (!this.canAddSdpCommand()) return;
 
   // The menu shouldn't be accessible if there are no panels to work with.
-  const enabled = $gameSystem.getUnlockedSdps().length;
+  const enabled = $gameParty.getUnlockedSdpTrackings().length > 0;
 
   // build the command.
-  const command = new WindowCommandBuilder(J.SDP.Metadata.CommandName)
+  const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
     .setSymbol("sdp-menu")
     .setEnabled(enabled)
-    .setIconIndex(J.SDP.Metadata.JabsMenuIcon)
+    .setIconIndex(J.SDP.Metadata.commandIconIndex)
     .setColorIndex(1)
     .build();
 
@@ -46,10 +46,10 @@ Window_MenuCommand.prototype.makeCommandList = function()
 Window_MenuCommand.prototype.canAddSdpCommand = function()
 {
   // if the necessary switch isn't ON, don't render the command at all.
-  if (!$gameSwitches.value(J.SDP.Metadata.Switch)) return false;
+  if (!$gameSwitches.value(J.SDP.Metadata.menuSwitchId)) return false;
 
   // if we're using JABS but not allowing to show this command in both menus, then skip.
-  if (J.ABS && !J.SDP.Metadata.JabsShowBoth) return false;
+  if (J.ABS && !J.SDP.Metadata.jabsShowInBothMenus) return false;
 
   // render the command!
   return true;

@@ -1,6 +1,6 @@
 //region Window_EquipItem
 /**
- * Extends {@link #postEquipSetupActorClone}.
+ * Extends {@link #postEquipSetupActorClone}.<br>
  * Updates the buffs associated with the cloned actor so that it reflects in the
  * status window comparison.
  * @param {Game_Actor} actorClone The clone of the actor.

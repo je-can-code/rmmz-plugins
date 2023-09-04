@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #gainItem}.
+ * Extends {@link #gainItem}.<br>
  * Also refreshes the passive states for the party.
  * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
  * @param {number} amount The amount to modify the quantity by.

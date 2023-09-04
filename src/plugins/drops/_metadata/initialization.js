@@ -26,9 +26,10 @@ J.DROPS.Metadata = {
 /**
  * All regular expressions used by this plugin.
  */
-J.DROPS.RegExp = {
-  ExtraDrop: /<drops:[ ]?(\[(i|item|w|weapon|a|armor),[ ]?(\d+),[ ]?(\d+)])>/i,
-}
+J.DROPS.RegExp = {};
+J.DROPS.RegExp.ExtraDrop = /<drops:[ ]?(\[(i|item|w|weapon|a|armor),[ ]?(\d+),[ ]?(\d+)])>/i;
+J.DROPS.RegExp.DropMultiplier = /<dropMultiplier:[ ]?(-?\d+)>/i;
+J.DROPS.RegExp.GoldMultiplier = /<goldMultiplier:[ ]?(-?\d+)>/i;
 
 /**
  * The collection of all aliased classes for extending.

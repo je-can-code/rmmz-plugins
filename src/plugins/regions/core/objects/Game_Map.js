@@ -1,6 +1,6 @@
 //region Game_Map
 /**
- * Extends {@link #initialize}.
+ * Extends {@link #initialize}.<br>
  * Also initializes the region effects properties.
  */
 J.REGIONS.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
@@ -114,7 +114,7 @@ Game_Map.prototype.clearDenyEffectRegionIds = function()
 //endregion properties
 
 /**
- * Extends {@link #setup}.
+ * Extends {@link #setup}.<br>
  * Also initializes this map's allow/deny region ids.
  */
 J.REGIONS.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);
@@ -216,7 +216,7 @@ Game_Map.prototype.refreshDenyRegionEffects = function()
 };
 
 /**
- * Extends {@link #isPassable}.
+ * Extends {@link #isPassable}.<br>
  * Also considers region effects for passability.
  */
 J.REGIONS.Aliased.Game_Map.set('isPassable', Game_Map.prototype.isPassable);

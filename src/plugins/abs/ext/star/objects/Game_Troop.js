@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_Troop.initialize}.
+ * Extends {@link Game_Troop.initialize}.<br>
  * Initializes our additional members for STABS.
  */
 J.ABS.EXT.STAR.Aliased.Game_Troop.set('initialize', Game_Troop.prototype.initialize);

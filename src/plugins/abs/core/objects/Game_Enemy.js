@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link Game_Enemy.setup}.
+ * Extends {@link Game_Enemy.setup}.<br>
  * Includes JABS skill initialization.
  */
 J.ABS.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -34,7 +34,7 @@ Game_Enemy.prototype.jabsRefresh = function()
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.
+ * Extends {@link #onBattlerDataChange}.<br>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);

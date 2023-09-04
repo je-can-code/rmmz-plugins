@@ -1,6 +1,6 @@
 //region Scene_Map
 /**
- * Extends {@link #createJabsAbsMenuMainWindow}.
+ * Extends {@link #createJabsAbsMenuMainWindow}.<br>
  * Adds additional handling in the list for the omnipedia command.
  */
 J.OMNI.Aliased.Scene_Map.set('createJabsAbsMenuMainWindow', Scene_Map.prototype.createJabsAbsMenuMainWindow);

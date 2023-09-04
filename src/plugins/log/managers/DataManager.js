@@ -1,9 +1,9 @@
 //region DataManager
 /**
  * The global text logger.
- * @type {Game_TextLog}
+ * @type {MapLogManager}
  */
-var $gameTextLog = null;
+var $mapLogManager = null;
 
 /**
  * Hooks into `DataManager` to create the game objects.
@@ -15,6 +15,6 @@ DataManager.createGameObjects = function()
   J.LOG.Aliased.DataManager.get('createGameObjects').call(this);
 
   // generate a new instance of the text log.
-  $gameTextLog = new Game_TextLog();
+  $mapLogManager = new MapLogManager();
 };
 //endregion DataManager

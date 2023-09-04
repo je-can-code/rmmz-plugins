@@ -12,11 +12,18 @@ PanelRankupReward.prototype.constructor = PanelRankupReward;
 
 /**
  * Initializes a single rankup reward.
+ * @param {string} rewardName The name to display for this reward.
  * @param {number} rankRequired The rank required.
  * @param {string} effect The effect to execute.
  */
-PanelRankupReward.prototype.initialize = function(rankRequired, effect)
+PanelRankupReward.prototype.initialize = function(rewardName, rankRequired, effect)
 {
+  /**
+   * The name of this reward that shows up in the SDP scene.
+   * @type {string}
+   */
+  this.rewardName = rewardName;
+
   /**
    * The rank required for this panel rankup reward to be executed.
    * @type {number}

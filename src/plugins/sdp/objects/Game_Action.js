@@ -1,6 +1,6 @@
 //region Game_Action
 /**
- * Extends {@link #applyGlobal}.
+ * Extends {@link #applyGlobal}.<br>
  * Also handles any SDP effects such as unlocking.
  */
 J.SDP.Aliased.Game_Action.set('applyGlobal', Game_Action.prototype.applyGlobal);
@@ -57,6 +57,6 @@ Game_Action.prototype.applySdpUnlockEffect = function()
   const item = this.item();
 
   // unlock the SDP.
-  $gameSystem.unlockSdp(item.sdpKey);
+  $gameParty.unlockSdp(item.sdpKey);
 };
 //endregion Game_Action

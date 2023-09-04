@@ -34,7 +34,7 @@ RPG_BaseBattler.prototype.extractJabsTeamId = function()
 /**
  * The JABS prepare time for this battler.
  * This number represents how many frames must pass before this battler can
- * decide an action to perform when controlled by the {@link JABS_AiManager}.
+ * decide an action to perform when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsPrepareTime",
@@ -68,7 +68,7 @@ RPG_BaseBattler.prototype.extractJabsPrepareTime = function()
 /**
  * The JABS sight range for this battler.
  * This number represents how many tiles this battler can see before
- * engaging in combat when controlled by the {@link JABS_AiManager}.
+ * engaging in combat when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsSightRange",
@@ -102,7 +102,7 @@ RPG_BaseBattler.prototype.extractJabsSightRange = function()
 /**
  * The JABS pursuit range for this battler.
  * This number represents how many tiles this battler can see after
- * engaging in combat when controlled by the {@link JABS_AiManager}.
+ * engaging in combat when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsPursuitRange",
@@ -136,7 +136,7 @@ RPG_BaseBattler.prototype.extractJabsPursuitRange = function()
 /**
  * The JABS alert duration for this battler.
  * This number represents how many frames this battler will remain alerted
- * when controlled by the {@link JABS_AiManager}.
+ * when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertDuration",
@@ -170,7 +170,7 @@ RPG_BaseBattler.prototype.extractJabsAlertDuration = function()
 /**
  * The JABS alerted sight boost for this battler.
  * This number represents the sight bonus applied while this battler is alerted
- * outside of combat when controlled by the {@link JABS_AiManager}.
+ * outside of combat when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertedSightBoost",
@@ -204,7 +204,7 @@ RPG_BaseBattler.prototype.extractJabsAlertedSightBoost = function()
 /**
  * The JABS alerted pursuit boost for this battler.
  * This number represents the sight bonus applied while this battler is alerted
- * inside of combat when controlled by the {@link JABS_AiManager}.
+ * inside of combat when controlled by the {@link JABS_AiManager}.<br>
  *
  * It is important to note that enemies cannot be alerted during combat, but their
  * alert duration may spill over into the beginning of combat.
@@ -239,7 +239,7 @@ RPG_BaseBattler.prototype.extractJabsAlertedPursuitBoost = function()
 
 //region ai
 /**
- * The compiled {@link JABS_EnemyAI}.
+ * The compiled {@link JABS_EnemyAI}.<br>
  * This defines how this battler's AI will be controlled.
  * @type {JABS_EnemyAI}
  */

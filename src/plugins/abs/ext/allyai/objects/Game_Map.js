@@ -1,6 +1,6 @@
 //region Game_Map
 /**
- * Extends {@link Game_Map.parseBattlers}.
+ * Extends {@link Game_Map.parseBattlers}.<br>
  * Also parses ally battlers as well as events.
  * @returns {JABS_Battler[]}
  */

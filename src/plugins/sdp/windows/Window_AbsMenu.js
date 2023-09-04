@@ -2,7 +2,7 @@
 if (J.ABS)
 {
   /**
-   * Extends {@link #buildCommands}.
+   * Extends {@link #buildCommands}.<br>
    * Adds the sdp command at the end of the list.
    * @returns {BuiltWindowCommand[]}
    */
@@ -16,13 +16,13 @@ if (J.ABS)
     if (!this.canAddSdpCommand()) return originalCommands;
 
     // The menu shouldn't be accessible if there are no panels to work with?
-    const enabled = $gameSystem.getAllSdps().length > 0;
+    const enabled = $gameParty.getAllSdpTrackings().length > 0;
 
     // build the command.
-    const command = new WindowCommandBuilder(J.SDP.Metadata.CommandName)
+    const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
       .setSymbol("sdp-menu")
       .setEnabled(enabled)
-      .setIconIndex(J.SDP.Metadata.JabsMenuIcon)
+      .setIconIndex(J.SDP.Metadata.commandIconIndex)
       .setColorIndex(1)
       .setHelpText(this.sdpHelpText())
       .build();
@@ -41,7 +41,7 @@ if (J.ABS)
   Window_AbsMenu.prototype.canAddSdpCommand = function()
   {
     // if the necessary switch isn't ON, don't render the command at all.
-    if (!$gameSwitches.value(J.SDP.Metadata.Switch)) return false;
+    if (!$gameSwitches.value(J.SDP.Metadata.menuSwitchId)) return false;
 
     // render the command!
     return true;

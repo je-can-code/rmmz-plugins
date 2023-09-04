@@ -90,7 +90,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.2.2';
+J.ABS.Metadata.Version = '3.3.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -511,7 +511,7 @@ J.ABS.RegExp = {
   PrepareTime: /<prepare:[ ]?([0-9]*)>/i,
 
   // bonus concepts.
-  VisionMultiplier: /<visionMultiplier:[ ]?(-?[\d]+)>/i,
+  VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
 
   // alert-related.
   AlertDuration: /<alertDuration:[ ]?([0-9]*)>/i,

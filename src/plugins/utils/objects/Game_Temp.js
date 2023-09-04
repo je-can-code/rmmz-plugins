@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_Temp.prototype.initMembers}.
+ * Extends {@link Game_Temp.prototype.initMembers}.<br>
  * Intializes all additional members of this class.
  */
 J.UTILS.Aliased.Game_Temp.set('initMembers', Game_Temp.prototype.initMembers);

@@ -1,5 +1,5 @@
 /**
- * A builder class for constructing {@link BuiltWindowCommand}.
+ * A builder class for constructing {@link BuiltWindowCommand}.<br>
  */
 class WindowCommandBuilder
 {
@@ -22,6 +22,12 @@ class WindowCommandBuilder
    * @type {string}
    */
   #rightText = String.empty;
+
+  /**
+   * The text color index the right text of this command will be rendered with.
+   * @type {number}
+   */
+  #rightColorIndex = 0;
 
   /**
    * The symbol of this command.
@@ -88,6 +94,7 @@ class WindowCommandBuilder
       this.#iconIndex,
       this.#colorIndex,
       this.#rightText,
+      this.#rightColorIndex,
       this.#lines,
       this.#helpText
     );
@@ -148,6 +155,17 @@ class WindowCommandBuilder
   setRightText(rightText)
   {
     this.#rightText = rightText;
+    return this;
+  }
+
+  /**
+   * Sets the color index of the right-aligned text of this command.
+   * @param {number} rightColorIndex The color index for the right-text of this command.
+   * @returns {this} This builder for fluent-building.
+   */
+  setRightColorIndex(rightColorIndex)
+  {
+    this.#rightColorIndex = rightColorIndex;
     return this;
   }
 

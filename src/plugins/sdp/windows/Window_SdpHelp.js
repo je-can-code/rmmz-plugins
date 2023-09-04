@@ -1,9 +1,8 @@
-//region Window_SDP_Help
+//region Window_SdpHelp
 /**
  * The window that displays the help text associated with a panel.
  */
-class Window_SDP_Help
-  extends Window_Help
+class Window_SdpHelp extends Window_Help
 {
   /**
    * @constructor
@@ -15,4 +14,4 @@ class Window_SDP_Help
     this.initialize(rect);
   }
 }
-//endregion Window_SDP_Help
+//endregion Window_SdpHelp

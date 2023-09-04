@@ -1,6 +1,6 @@
 //region Game_Character
 /**
- * Extends {@link Game_Character.distancePerFrame}.
+ * Extends {@link Game_Character.distancePerFrame}.<br>
  * Enables modification of the character's movement speed on the map.
  * @return {number} The modified distance per frame to move.
  */

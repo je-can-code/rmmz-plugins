@@ -1,6 +1,6 @@
 //region Graphics
 /**
- * The horizontal padding between {@link Graphics.width} and {@link Graphics.boxWidth}.
+ * The horizontal padding between {@link Graphics.width} and {@link Graphics.boxWidth}.<br>
  * When combined with {@link Graphics.verticalPadding}, the origin x,y can be easily
  * determined.
  * @returns {number} Always positive.
@@ -14,7 +14,7 @@ Object.defineProperty(Graphics, "horizontalPadding",
   });
 
 /**
- * The vertical padding between {@link Graphics.height} and {@link Graphics.boxHeight}.
+ * The vertical padding between {@link Graphics.height} and {@link Graphics.boxHeight}.<br>
  * @returns {number} Always positive.
  */
 Object.defineProperty(Graphics, "verticalPadding",

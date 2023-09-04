@@ -36,6 +36,9 @@ J.ABS.EXT.SPEED.Aliased = {
   Game_Character: new Map(),
   Game_Battler: new Map(),
   Game_Enemy: new Map(),
+
+  TextManager: new Map(),
+  IconManager: new Map(),
 };
 
 /**

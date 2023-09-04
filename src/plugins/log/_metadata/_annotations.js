@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.1 LOG] A log window for viewing on the map.
+ * [v2.1.0 LOG] A log window for viewing on the map.
  * @author JE
  * @url https://github.com/je-can-code/ca
  * @base J-Base
@@ -32,7 +32,10 @@
  * The MZ editor will inform you where this plugin needs to be relative to the
  * other plugins (above/below/etc).
  *
+ * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Refactor the text log manager to use different syntax.
  * - 2.0.1
  *    Small refactor of creation method aliasing.
  * - 2.0.0

@@ -1,6 +1,6 @@
 //region Game_Unit
 /**
- * Overwrites {@link Game_Unit.inBattle}.
+ * Overrides {@link Game_Unit.inBattle}.<br>
  * If JABS is enabled, combat is always active.
  *
  * TODO: update this to be on a timer based on last hit target + any engaged enemies?

@@ -56,7 +56,7 @@ PanelRanking.prototype.initMembers = function()
  */
 PanelRanking.prototype.rankUp = function()
 {
-  const panel = $gameSystem.getSdpByKey(this.key);
+  const panel = $gameParty.getSdpByKey(this.key);
   const { maxRank } = panel;
   if (this.currentRank < maxRank)
   {
@@ -87,7 +87,7 @@ PanelRanking.prototype.isPanelMaxed = function()
 PanelRanking.prototype.performRankupEffects = function(newRank)
 {
   const a = $gameActors.actor(this.actorId);
-  const rewardEffects = $gameSystem
+  const rewardEffects = $gameParty
     .getSdpByKey(this.key)
     .getPanelRewardsByRank(newRank);
   if (rewardEffects.length > 0)
@@ -130,6 +130,7 @@ PanelRanking.prototype.performRepeatRankupEffects = function()
  */
 PanelRanking.prototype.performMaxRankupEffects = function()
 {
+  this.maxed = true;
   SoundManager.playRecovery();
   this.performRankupEffects(0);
 };
