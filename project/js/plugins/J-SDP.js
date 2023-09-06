@@ -733,10 +733,12 @@ PanelTracking.prototype.lock = function()
  * @url https://github.com/je-can-code/ca
  * @base J-Base
  * @base J-DropsControl
- * @orderAfter J-ABS
  * @orderAfter J-Base
- * @orderAfter J-CriticalFactors
+ * @orderAfter J-ABS
+ * @orderAfter J-ABS-Speed
  * @orderAfter J-DropsControl
+ * @orderAfter J-CriticalFactors
+ * @orderAfter J-Proficiency
  * @help
  * ============================================================================
  * OVERVIEW:
@@ -1961,7 +1963,7 @@ Game_Actor.prototype.sdpMultiplier = function()
   // get the vision multiplier from anything this battler has available.
   const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(
     objectsToCheck,
-    J.ABS.RegExp.SdpMultiplier);
+    J.SDP.RegExp.SdpMultiplier);
 
   // get the sum of the base and bonus multipliers.
   const sdpMultiplier = (multiplier + sdpMultiplierBonus);

@@ -183,7 +183,7 @@ JABS_Engine.prototype.addLootDropToMap = function(targetX, targetY, item)
   const modifiedTargetY = targetY + 1;
   
   // perform original logic.
-  J.CAMods.Aliased.JABS_Engine.get('addLootDropToMap').call(this, targetX, modifiedTargetY, item);
+  return J.CAMods.Aliased.JABS_Engine.get('addLootDropToMap').call(this, targetX, modifiedTargetY, item);
 };
 
 /**
