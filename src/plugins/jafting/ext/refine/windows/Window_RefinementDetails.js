@@ -1,9 +1,8 @@
-//region Window_JaftingRefinementOutput
+//region Window_RefinementDetails
 /**
  * The window containing the chosen equips for refinement and also the projected results.
  */
-class Window_JaftingRefinementOutput
-  extends Window_Base
+class Window_RefinementDetails extends Window_Base
 {
   /**
    * @constructor
@@ -171,18 +170,15 @@ class Window_JaftingRefinementOutput
   {
     const lh = this.lineHeight();
     const cw = 300;
-    switch (type)
-    {
-      case "base":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleBase}`, x + (cw * 0), lh * 0, 200);
-        break;
-      case "material":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleMaterial}`, x + (cw * 1), lh * 0, 200);
-        break;
-      case "output":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleOutput}`, x + (cw * 2), lh * 0, 200);
-        break;
-    }
+
+    const row1x = x + (cw * 0);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleBase}`, row1x, 0, 200);
+
+    const row2x = x + (cw * 1);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleMaterial}`, row2x, 0, 200);
+
+    const row3x = x + (cw * 2);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleOutput}`, row3x, 0, 200);
 
     if (type === "output")
     {
@@ -217,7 +213,7 @@ class Window_JaftingRefinementOutput
 
   /**
    * Draws all transferable traits on this piece of equipment.
-   * @param {RPG_Trait[]} traits A list of transferable traits.
+   * @param {JAFTING_Trait[]} traits A list of transferable traits.
    * @param {number} x The `x` coordinate to start drawing at.
    */
   drawEquipTraits(traits, x)
@@ -255,6 +251,5 @@ class Window_JaftingRefinementOutput
     // assign it for ease of retrieving from the scene.
     this.outputEquip = result;
   }
-
 }
-//endregion Window_JaftingRefinementOutput
+//endregion Window_RefinementDetails

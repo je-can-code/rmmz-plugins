@@ -328,14 +328,15 @@ declare class Window_Base extends Window {
      * layer at the specified x and y coordinate within the max width.
      * The text content can also be aligned with the align property.
      * The possible alignments are: "left", "center", "right".
-     * @param {(String | number)} text
+     * alignment defaults to "left".
+     * @param {(string | number)} text
      * @param {number} x
      * @param {number} y
      * @param {number} maxWidth
-     * @param {String} align
+     * @param {string=} align
      * @memberof Window_Base
      */
-    drawText(text: string | number, x: number, y: number, maxWidth: number, align: string): void;
+    drawText(text: string | number, x: number, y: number, maxWidth: number, align: string = "left"): void;
     /**
      * Calculates the width of a text String and
      * returns a number.

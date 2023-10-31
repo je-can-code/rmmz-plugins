@@ -32,7 +32,7 @@ class Logger
     if (this.#blocked) return;
 
     // log!
-    console.log(`🔊 ${text}`);
+    console.log(`🔉 ${text}`);
   }
 
   /**
@@ -41,7 +41,7 @@ class Logger
    */
   static logAnyway(text)
   {
-    console.log(`👊 ${text}`);
+    console.log(`✨ ${text}`);
   }
 }
 

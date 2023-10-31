@@ -35,13 +35,13 @@ Game_System.prototype.initJaftingMembers = function()
 
   /**
    * The collection of all jafting recipes extracted from the database.
-   * @type {JAFTING_Recipe[]}
+   * @type {CraftingRecipe[]}
    */
   this._j._jafting._recipes = J.JAFTING.Helpers.translateRecipes(J.JAFTING.PluginParameters['JAFTINGrecipes']);
 
   /**
    * The collection of all categories that are viewable within the JAFTING menu.
-   * @type {JAFTING_Category[]}
+   * @type {CraftingCategory[]}
    */
   this._j._jafting._categories = J.JAFTING.Helpers.translateCategories(J.JAFTING.PluginParameters['JAFTINGcategories']);
 
@@ -116,7 +116,7 @@ Game_System.prototype.isJafting = function()
 /**
  * Gets the category of crafting by key.
  * @param {string} key The unique identifier of a category of crafting.
- * @returns {JAFTING_Category|null}
+ * @returns {CraftingCategory|null}
  */
 Game_System.prototype.getCategoryByKey = function(key)
 {
@@ -214,7 +214,7 @@ Game_System.prototype.lockAllRecipes = function()
 
 /**
  * Gets all defined JAFTING recipes.
- * @returns {JAFTING_Recipe[]}
+ * @returns {CraftingRecipe[]}
  */
 Game_System.prototype.getAllRecipes = function()
 {
@@ -223,7 +223,7 @@ Game_System.prototype.getAllRecipes = function()
 
 /**
  * Gets a list of all categories that have been unlocked.
- * @returns {JAFTING_Category[]}
+ * @returns {CraftingCategory[]}
  */
 Game_System.prototype.getUnlockedCategories = function()
 {
@@ -251,7 +251,7 @@ Game_System.prototype.setRefreshRequest = function(requested = true)
 /**
  * For a recipe to be available for crafting/unlocked, the player must have
  * all outputs of a recipe unlocked.
- * @returns {JAFTING_Recipe[]}
+ * @returns {CraftingRecipe[]}
  */
 Game_System.prototype.getUnlockedRecipes = function()
 {
@@ -261,12 +261,12 @@ Game_System.prototype.getUnlockedRecipes = function()
 /**
  * Gets all unlocked recipes that are a part of a given category.
  * @param {string} categoryKey The category to get all unlocked recipes for.
- * @returns {JAFTING_Recipe[]}
+ * @returns {CraftingRecipe[]}
  */
 Game_System.prototype.getUnlockedRecipesByCategory = function(categoryKey)
 {
   const recipes = this.getUnlockedRecipes();
-  const unlocked = recipes.filter(recipe => recipe.categories.includes(categoryKey));
+  const unlocked = recipes.filter(recipe => recipe.categoryKeys.includes(categoryKey));
 
   return unlocked;
 };
@@ -275,7 +275,7 @@ Game_System.prototype.getUnlockedRecipesByCategory = function(categoryKey)
  * Gets all unlocked recipes that are a part of a given category that have
  * also been crafted at least once.
  * @param {string} categoryKey The category to get all unlocked recipes for.
- * @returns {JAFTING_Recipe[]}
+ * @returns {CraftingRecipe[]}
  */
 Game_System.prototype.getCraftedRecipesByCategory = function(categoryKey)
 {
@@ -309,7 +309,7 @@ Game_System.prototype.getCraftedRecipesCountByCategory = function(categoryKey)
 /**
  * Gets a specific recipe by its key.
  * @param {string} recipeKey The key of the recipe to find.
- * @returns {JAFTING_Recipe|null} The found recipe, or null if it wasn't found.
+ * @returns {CraftingRecipe|null} The found recipe, or null if it wasn't found.
  */
 Game_System.prototype.getRecipe = function(recipeKey)
 {

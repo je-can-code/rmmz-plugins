@@ -2,9 +2,9 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 EXTEND] Extends the capabilities of skills/actions.
+ * [v1.0.1 EXTEND] Extends the capabilities of skills/actions.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @help
  * ============================================================================
  * This plugin extends the functionality of skills. It features additional
@@ -173,5 +173,12 @@
  * multiple projectiles.
  * When using non-JABS, this applies when a skill is being executed against a
  * target. This happens regardless the outcome of the skill.
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    Fixed reference error when attempting to extend skills w/ on-hit effects.
+ *    Retroactively added this CHANGELOG.
+ * - 1.0.0
+ *    Initial release.
  * ============================================================================
  */

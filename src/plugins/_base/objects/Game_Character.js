@@ -36,6 +36,15 @@ Game_Character.prototype.isErased = function()
 };
 
 /**
+ * Determines whether or not this character is actually a vehicle.
+ * @return {boolean} True if this is a vehicle, false otherwise.
+ */
+Game_Character.prototype.isVehicle = function()
+{
+  return false;
+};
+
+/**
  * Gets the distance in tiles between this character and the player.
  * @returns {number} The distance.
  */

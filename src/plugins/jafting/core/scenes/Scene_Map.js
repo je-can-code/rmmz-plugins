@@ -7,7 +7,7 @@ Scene_Map.prototype.initialize = function()
 {
   J.JAFTING.Aliased.Scene_Map.initialize.call(this);
   this._j = this._j || {};
-  this.initJaftingMenu();
+  // this.initJaftingMenu();
 };
 
 /**
@@ -46,7 +46,7 @@ J.JAFTING.Aliased.Scene_Map.createAllWindows = Scene_Map.prototype.createAllWind
 Scene_Map.prototype.createAllWindows = function()
 {
   J.JAFTING.Aliased.Scene_Map.createAllWindows.call(this);
-  this.createJaftingMenu();
+  // this.createJaftingMenu();
 };
 
 /**
@@ -233,19 +233,19 @@ Scene_Map.prototype.update = function()
 {
   J.JAFTING.Aliased.Scene_Map.update.call(this);
 
-  if ($gameSystem.isRefreshRequested())
-  {
-    this.refreshJafting();
-  }
-
-  if ($gameSystem.isJafting())
-  {
-    this.manageJaftingMenu();
-  }
-  else
-  {
-    this.hideAllJaftingWindows();
-  }
+  // if ($gameSystem.isRefreshRequested())
+  // {
+  //   this.refreshJafting();
+  // }
+  //
+  // if ($gameSystem.isJafting())
+  // {
+  //   this.manageJaftingMenu();
+  // }
+  // else
+  // {
+  //   this.hideAllJaftingWindows();
+  // }
 };
 
 /**

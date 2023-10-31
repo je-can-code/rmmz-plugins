@@ -619,4 +619,32 @@ TextManager.isValidTypeId = function(id, types)
   // get the name!
   return true;
 }
+
+/**
+ * Translates a usable effect code into its textual name.
+ * @param {number} code The numeric code for the effect.
+ * @return {string}
+ */
+TextManager.usableEffectByCode = function(code)
+{
+  switch (code)
+  {
+    case 11: return "Recover Life";
+    case 12: return "Recover Magi";
+    case 13: return "Recover Tech";
+    case 21: return "Add State";
+    case 22: return "Remove State";
+    case 31: return "Add Buff";
+    case 32: return "Add Debuff";
+    case 33: return "Remove Buff";
+    case 34: return "Remove Debuff";
+    case 41: return "Special";
+    case 42: return "Core Stat Growth";
+    case 43: return "Learn Skill";
+    case 44: return "Execute Common Event";
+    default:
+      console.warn(`Unsupported code of [${code}] was provided.`);
+      return "UNKNOWN";
+  }
+};
 //endregion TextManager

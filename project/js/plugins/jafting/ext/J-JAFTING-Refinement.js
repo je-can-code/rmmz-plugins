@@ -2,9 +2,9 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 JAFT-REFINE] Extends JAFTING to include refinement.
+ * [v1.0.0 JAFT-Refine] An extension for JAFTING to enable equip refinement.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @base J-JAFTING
  * @orderAfter J-Base
@@ -237,17 +237,13 @@ J.JAFTING.EXT.REFINE.Messages = {
 /**
  * A helpful mapping of all the various RMMZ classes being extended.
  */
-J.JAFTING.EXT.REFINE.Aliased = {
-  DataManager: new Map(),
-
-  RPG_Base: new Map(),
-
-  Game_Item: new Map(),
-
-  Scene_Map: new Map(),
-
-  Window_JaftingModeMenu: {},
-};
+J.JAFTING.EXT.REFINE.Aliased = {};
+J.JAFTING.EXT.REFINE.Aliased.DataManager = new Map();
+J.JAFTING.EXT.REFINE.Aliased.RPG_Base = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Game_Item = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Scene_Map = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList = new Map();
 
 /**
  * All regular expressions used by this plugin.
@@ -1566,7 +1562,6 @@ JAFTING_Trait.prototype.convertToRmTrait = function()
 };
 //endregion JAFTING_Trait
 
-J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._generate);
 /**
  * Extends {@link RPG_Base._generate}.<br>
  *
@@ -1575,6 +1570,7 @@ J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._gener
  * @param {number} index The new index.
  * @returns {this}
  */
+J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._generate);
 RPG_Base.prototype._generate = function(overrides, index)
 {
   // perform original logic.
@@ -1800,11 +1796,6 @@ DataManager.makeSaveContents = function()
 
 /**
  * Extends the save content extraction to include extracting JAFTING data.
- *
- * NOTE: This is the first function encountered where I actually extend it _twice_.
- * As such, we accommodated that by numbering it.
- *
- * TODO: change this plugin to use EXT_REFINE so there is no collision.
  */
 J.JAFTING.EXT.REFINE.Aliased.DataManager.extractSaveContents2 = DataManager.extractSaveContents;
 DataManager.extractSaveContents = function(contents)
@@ -1840,605 +1831,834 @@ Game_Item.prototype.setObject = function(item)
 };
 //endregion Game_Item
 
-//region Scene_Map
-//region window initialization
+//region Scene_Jafting
 /**
- * Extends the initialization of the JAFTING menu to include the refinment windows.
+ * Extends {@link #onRootJaftingSelection}.<br>
+ * When JAFTING is selected, open the root JAFTING menu.
  */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.initJaftingMenu = Scene_Map.prototype.initJaftingMenu;
-Scene_Map.prototype.initJaftingMenu = function()
+J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting
+  .set('onRootJaftingSelection', Scene_Jafting.prototype.onRootJaftingSelection);
+Scene_Jafting.prototype.onRootJaftingSelection = function()
 {
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.initJaftingMenu.call(this);
+  // grab which JAFTING mode was selected.
+  const currentSelection = this.getRootJaftingKey();
 
-  // create empty refinement windows.
-  this._j._jaftingMenu._refinePrimaryEquipWindow = null;
-  this._j._jaftingMenu._refineSecondaryEquipWindow = null;
-  this._j._jaftingMenu._refineProjectedResultsWindow = null;
-  this._j._jaftingMenu._refineGuidingWindow = null;
-  this._j._jaftingMenu._refineConfirmationWindow = null;
-
-  // create empty slots for target and material equipment.
-  this._j._jaftingMenu._refinePrimarySlot = null;
-  this._j._jaftingMenu._refineSecondarySlot = null;
-  this._j._jaftingMenu._refineHoverForDetails = null;
-  this._j._jaftingMenu._refineProjectedOutput = null;
-};
-
-/**
- * Extends the creation of the JAFTING windows to include the refinement windows.
- */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.createJaftingMenu = Scene_Map.prototype.createJaftingMenu;
-Scene_Map.prototype.createJaftingMenu = function()
-{
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.createJaftingMenu.call(this);
-  this.createJaftingRefinementModeWindows();
-};
-
-/**
- * Creates the mode selection window used to determine which type of JAFTING
- * that the player will perform.
- */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.createJaftingModeWindow = Scene_Map.prototype.createJaftingModeWindow;
-Scene_Map.prototype.createJaftingModeWindow = function()
-{
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.createJaftingModeWindow.call(this);
-  this._j._jaftingMenu._modeWindow.setHandler('refine-mode', this.chooseJaftingRefineMode.bind(this));
-};
-
-/**
- * The actions to perform when selecting the "refinement" mode.
- * Opens up the equipment-only window for picking a base item to refine further.
- */
-Scene_Map.prototype.chooseJaftingRefineMode = function()
-{
-  this.setWindowFocus("refine-primary");
-  this.setGuidingWindowText(J.JAFTING.EXT.REFINE.Messages.ChooseRefinementBase);
-};
-
-/**
- * Initializes all the windows for use in refinement mode.
- */
-Scene_Map.prototype.createJaftingRefinementModeWindows = function()
-{
-  this.createJaftingRefinementPrimaryEquipWindow();
-  this.createJaftingRefinementSecondaryEquipWindow();
-  this.createJaftingRefinementProjectedResultsWindow();
-  this.createJaftingRefinementGuidingWindow();
-  this.createJaftingRefinementConfirmationWindow();
-};
-
-/**
- * Creates the "choose refinement target" window.
- */
-Scene_Map.prototype.createJaftingRefinementPrimaryEquipWindow = function()
-{
-  const w = 350;
-  const h = Graphics.height - this._j._jaftingMenu._helpWindow.height - 72;
-  const x = 0;
-  const y = this._j._jaftingMenu._helpWindow.height + 64;
-  const rect = new Rectangle(x, y, w, h);
-  const wind = new Window_JaftingEquip(rect);
-  wind.isPrimary = true;
-  wind.setHandler('cancel', this.closeJaftingWindow.bind(this, "refine-primary"));
-  wind.setHandler('refine-object', this.choosePrimaryEquip.bind(this));
-  this._j._jaftingMenu._refinePrimaryEquipWindow = wind;
-  this._j._jaftingMenu._refinePrimaryEquipWindow.close();
-  this._j._jaftingMenu._refinePrimaryEquipWindow.hide();
-  this.addWindow(this._j._jaftingMenu._refinePrimaryEquipWindow);
-};
-
-/**
- * Creates the "choose refinement materials" window.
- */
-Scene_Map.prototype.createJaftingRefinementSecondaryEquipWindow = function()
-{
-  const w = 350;
-  const h = Graphics.height - this._j._jaftingMenu._helpWindow.height - 72;
-  const x = 0;
-  const y = this._j._jaftingMenu._helpWindow.height + 64;
-  const rect = new Rectangle(x, y, w, h);
-  const wind = new Window_JaftingEquip(rect);
-  wind.setHandler('cancel', this.closeJaftingWindow.bind(this, "refine-secondary"));
-  wind.setHandler('refine-object', this.chooseSecondaryEquip.bind(this));
-  this._j._jaftingMenu._refineSecondaryEquipWindow = wind;
-  this._j._jaftingMenu._refineSecondaryEquipWindow.close();
-  this._j._jaftingMenu._refineSecondaryEquipWindow.hide();
-  this.addWindow(this._j._jaftingMenu._refineSecondaryEquipWindow);
-};
-
-/**
- * Creates the projected results window for the refinement process.
- */
-Scene_Map.prototype.createJaftingRefinementProjectedResultsWindow = function()
-{
-  const w = this._j._jaftingMenu._helpWindow.width - (this._j._jaftingMenu._refinePrimaryEquipWindow.width);
-  const h = Graphics.height - this._j._jaftingMenu._helpWindow.height - 8;
-  const x = this._j._jaftingMenu._recipeListWindow.width;
-  const y = this._j._jaftingMenu._helpWindow.height;
-  const rect = new Rectangle(x, y, w, h);
-  const wind = new Window_JaftingRefinementOutput(rect);
-  this._j._jaftingMenu._refineProjectedResultsWindow = wind;
-  this._j._jaftingMenu._refineProjectedResultsWindow.close();
-  this._j._jaftingMenu._refineProjectedResultsWindow.hide();
-  this.addWindow(this._j._jaftingMenu._refineProjectedResultsWindow);
-};
-
-/**
- * Creates a small window to show some text above the equipment select list.
- * Guides the player with text like "Choose Refinement Base".
- */
-Scene_Map.prototype.createJaftingRefinementGuidingWindow = function()
-{
-  const w = 350;
-  const h = 64;
-  const x = 0;
-  const y = this._j._jaftingMenu._helpWindow.height;
-  const rect = new Rectangle(x, y, w, h);
-  const wind = new Window_Help(rect);
-  this._j._jaftingMenu._refineGuidingWindow = wind;
-  this._j._jaftingMenu._refineGuidingWindow.close();
-  this._j._jaftingMenu._refineGuidingWindow.hide();
-  this.addWindow(this._j._jaftingMenu._refineGuidingWindow);
-};
-
-/**
- * Creates a window that acts as a safety net in case the player was mashing buttons.
- * Requires confirmation to execute a refinement and potentially losing an equip forever.
- */
-Scene_Map.prototype.createJaftingRefinementConfirmationWindow = function()
-{
-  const w = 350;
-  const h = 120;
-  const x = (Graphics.boxWidth - w) / 2;
-  const y = (Graphics.boxHeight - h) / 2;
-  const rect = new Rectangle(x, y, w, h);
-  this._j._jaftingMenu._refineConfirmationWindow = new Window_JaftingRefinementConfirmation(rect);
-  this._j._jaftingMenu._refineConfirmationWindow.setHandler('ok', this.onRefineConfirm.bind(this));
-  this._j._jaftingMenu._refineConfirmationWindow.setHandler('cancel', this.onRefineCancel.bind(this));
-  this._j._jaftingMenu._refineConfirmationWindow.hide();
-  this.addWindow(this._j._jaftingMenu._refineConfirmationWindow);
-};
-//endregion window initialization
-
-/**
- * When a refinement target is selected, perform this logic.
- */
-Scene_Map.prototype.choosePrimaryEquip = function()
-{
-  this.setPrimaryRefineSlot(this.getHoverForDetails().data);
-  this.setGuidingWindowText(J.JAFTING.EXT.REFINE.Messages.ChooseRefinementMaterial);
-  this.setWindowFocus("refine-secondary");
-};
-
-/**
- * When a refinement material is selected, perform this logic.
- */
-Scene_Map.prototype.chooseSecondaryEquip = function()
-{
-  this.setSecondaryRefineSlot(this.getHoverForDetails().data);
-  this.setWindowFocus("refine-confirm");
-};
-
-/**
- * When the player confirms they want to refine, then execute refinement!
- */
-Scene_Map.prototype.onRefineConfirm = function()
-{
-  this.executeRefinement();
-  this.closeJaftingWindow("refine-confirm-okay");
-};
-
-/**
- * If the player cancels the refinement, return back to the material selection.
- */
-Scene_Map.prototype.onRefineCancel = function()
-{
-  this.closeJaftingWindow("refine-confirm-cancel");
-};
-
-/**
- * Executes the refinement, including removing old equips, creating the new equip, and refreshing.
- */
-Scene_Map.prototype.executeRefinement = function()
-{
-  this.removeRefinementEquips();
-  this.generateRefinementOutput();
-  this.refreshJafting();
-};
-
-/**
- * Removes the two equips used to perform the refinement from the player's inventory.
- */
-Scene_Map.prototype.removeRefinementEquips = function()
-{
-  $gameParty.gainItem(this.getPrimaryRefineSlot(), -1);
-  $gameParty.gainItem(this.getSecondaryRefineSlot(), -1);
-};
-
-/**
- * Generates the equip and adds it to the player's inventory.
- */
-Scene_Map.prototype.generateRefinementOutput = function()
-{
-  $gameJAFTING.createRefinedOutput(this._j._jaftingMenu._refineProjectedResultsWindow.outputEquip);
-};
-
-/**
- * Gets the projected result of refinement.
- * @returns {RPG_EquipItem}
- */
-Scene_Map.prototype.getRefinementProjectedResult = function()
-{
-  return this._j._jaftingMenu._refineProjectedOutput;
-};
-
-/**
- * Sets the projected result of refinement to the designated equip.
- * @param {RPG_EquipItem} output The equip to set as the projected result.
- */
-Scene_Map.prototype.setRefinementProjectedResult = function(output)
-{
-  this._j._jaftingMenu._refineProjectedOutput = output;
-};
-
-/**
- * Gets the object that is "being hovered over" in the equip lists.
- * @returns {RPG_EquipItem}
- */
-Scene_Map.prototype.getHoverForDetails = function()
-{
-  return this._j._jaftingMenu._refineHoverForDetails;
-};
-
-/**
- * Sets the object that is "being hovered over" in the equip lists.
- * @param {RPG_EquipItem} equip The equip to set for viewing in the output window.
- */
-Scene_Map.prototype.setHoverForDetails = function(equip)
-{
-  this._j._jaftingMenu._refineHoverForDetails = equip;
-};
-
-/**
- * Sets the given equipment to the primary refinement slot.
- * @param {RPG_EquipItem} equip The equip to set the primary refinement slot to.
- */
-Scene_Map.prototype.setPrimaryRefineSlot = function(equip)
-{
-  this._j._jaftingMenu._refinePrimarySlot = equip;
-  this._j._jaftingMenu._refineProjectedResultsWindow.primaryEquip = equip;
-
-  // also assign the same thing to the secondary window to prevent using the same item twice.
-  this._j._jaftingMenu._refineSecondaryEquipWindow.baseSelection = equip;
-  this._j._jaftingMenu._refineSecondaryEquipWindow.refresh();
-};
-
-/**
- * Gets the equipment in the primary refinement slot.
- * @returns {RPG_EquipItem}
- */
-Scene_Map.prototype.getPrimaryRefineSlot = function()
-{
-  return this._j._jaftingMenu._refinePrimarySlot;
-};
-
-/**
- * Sets the given equipment to the secondary refinement slot.
- * @param {RPG_EquipItem} equip The equip to set the primary refinement slot to.
- */
-Scene_Map.prototype.setSecondaryRefineSlot = function(equip)
-{
-  this._j._jaftingMenu._refineSecondarySlot = equip;
-  this._j._jaftingMenu._refineProjectedResultsWindow.secondaryEquip = equip;
-};
-
-/**
- * Gets the equipment in the secondary refinement slot.
- * @returns {RPG_EquipItem}
- */
-Scene_Map.prototype.getSecondaryRefineSlot = function()
-{
-  return this._j._jaftingMenu._refineSecondarySlot;
-};
-
-/**
- * Sets the text in the refinement guiding window.
- * @param {string} text The text to display in the guiding window.
- */
-Scene_Map.prototype.setGuidingWindowText = function(text)
-{
-  this._j._jaftingMenu._refineGuidingWindow.setText(text);
-};
-
-/**
- * Refreshes all windows that could possibly require refreshing when requested.
- * As an example, if the player gains/loses an item, all windows will need refreshing
- * to reflect the change in quantity.
- */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.refreshJafting = Scene_Map.prototype.refreshJafting;
-Scene_Map.prototype.refreshJafting = function()
-{
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.refreshJafting.call(this);
-  this._j._jaftingMenu._refinePrimaryEquipWindow.refresh();
-  this._j._jaftingMenu._refineSecondaryEquipWindow.refresh();
-  this._j._jaftingMenu._refineProjectedResultsWindow.refresh();
-};
-
-/**
- * Extends the jafting window focus management to accommodate refinement mode.
- */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.manageJaftingMenu = Scene_Map.prototype.manageJaftingMenu;
-Scene_Map.prototype.manageJaftingMenu = function()
-{
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.manageJaftingMenu.call(this);
-
-  // extend for refinement focuses.
-  switch (this.getWindowFocus())
+  // check if the current selection is create.
+  if (currentSelection === Scene_JaftingRefine.KEY)
   {
-    case "refine-primary":
-      this.toggleJaftingModeWindow(false);
-      this.toggleJaftingRefinePrimaryWindow(true);
-      this.toggleJaftingRefineSecondaryWindow(false);
-      this.toggleJaftingRefineOutputWindow(true);
-      this.toggleJaftingRefineGuidingWindow(true);
-      this.determineRefinementHelpWindowText();
-      break;
-    case "refine-secondary":
-      this.toggleJaftingRefinePrimaryWindow(false);
-      this.toggleJaftingRefineSecondaryWindow(true);
-      this.toggleJaftingRefineOutputWindow(true);
-      this.determineRefinementHelpWindowText();
-      break;
-    case "refine-confirm":
-      this.toggleJaftingRefineConfirmationWindow(true);
-      break;
+    // execute the monsterpedia.
+    this.jaftingRefinementSelected();
   }
-};
-
-/**
- * Extends the jafting window closing-by-tag function to accommodate refinement mode.
- * @param {string} jaftingWindowToClose The type of window we're closing.
- */
-J.JAFTING.EXT.REFINE.Aliased.Scene_Map.closeJaftingWindow = Scene_Map.prototype.closeJaftingWindow;
-Scene_Map.prototype.closeJaftingWindow = function(jaftingWindowToClose)
-{
-  J.JAFTING.EXT.REFINE.Aliased.Scene_Map.closeJaftingWindow.call(this, jaftingWindowToClose);
-  switch (jaftingWindowToClose)
-  {
-    case "refine-primary":
-      this.setPrimaryRefineSlot(null);
-      this.setHoverForDetails(null);
-      this.toggleJaftingRefinePrimaryWindow(false);
-      this.toggleJaftingRefineOutputWindow(false);
-      this.toggleJaftingModeWindow(true);
-      this.setGuidingWindowText("");
-      this.toggleJaftingRefineGuidingWindow(false);
-      this.toggleJaftingRefineConfirmationWindow(false);
-      this.setWindowFocus("main");
-      break;
-    case "refine-secondary":
-      this.setSecondaryRefineSlot(null);
-      this.setHoverForDetails(null);
-      this.toggleJaftingRefineSecondaryWindow(false);
-      this.setGuidingWindowText(J.JAFTING.EXT.REFINE.Messages.ChooseRefinementBase);
-      this.toggleJaftingRefineConfirmationWindow(false);
-      this.setWindowFocus("refine-primary");
-      break;
-    case "refine-confirm-okay":
-      this.toggleJaftingRefineConfirmationWindow(false);
-      this.setPrimaryRefineSlot(null);
-      this.setSecondaryRefineSlot(null);
-      this.setHoverForDetails(null);
-      this.setGuidingWindowText(J.JAFTING.EXT.REFINE.Messages.ChooseRefinementBase);
-      this.setWindowFocus("refine-primary");
-      break;
-    case "refine-confirm-cancel":
-      this.toggleJaftingRefineConfirmationWindow(false);
-      this.setWindowFocus("refine-secondary");
-      break;
-  }
-};
-
-/**
- * Sets the text of the help window for the mode selection based on
- * the currently selected category.
- */
-Scene_Map.prototype.determineRefinementHelpWindowText = function()
-{
-  if (this._j._jaftingMenu._refinePrimaryEquipWindow.active)
-  {
-    this.drawRefinementPrimaryHelpWindowText()
-  }
-  else if (this._j._jaftingMenu._refineSecondaryEquipWindow.active)
-  {
-    this.drawRefinementSecondaryHelpWindowText();
-  }
-
-  // draws the help text based on the hovered item.
-  this.drawRefineHelpText();
-};
-
-/**
- * Handles the help window text during refinement when the target is being selected.
- */
-Scene_Map.prototype.drawRefinementPrimaryHelpWindowText = function()
-{
-  const index = this._j._jaftingMenu._refinePrimaryEquipWindow.index();
-  // don't update the text if the index matches! (prevents tons of unnecessary updates)
-  if (index === this._j._jaftingMenu._refinePrimaryEquipWindow.currentIndex) return;
-
-  this.setRefinementProjectedResult(null);
-
-  // sets the currently hovered over equipItem for the help and output windows.
-  const hoveredOver = this._j._jaftingMenu._refinePrimaryEquipWindow.currentExt();
-  if (!hoveredOver?.data) return;
-
-  this.setHoverForDetails(hoveredOver);
-  this._j._jaftingMenu._refinePrimaryEquipWindow.currentIndex = index;
-  this._j._jaftingMenu._refineProjectedResultsWindow.primaryEquip = hoveredOver.data;
-};
-
-/**
- * Handles the help window text during refinement when the material is being selected.
- */
-Scene_Map.prototype.drawRefinementSecondaryHelpWindowText = function()
-{
-  const index = this._j._jaftingMenu._refineSecondaryEquipWindow.index();
-  // don't update the text if the index matches! (prevents tons of unnecessary updates)
-  if (index === this._j._jaftingMenu._refineSecondaryEquipWindow.currentIndex) return;
-
-  // sets the currently hovered over equipItem for the help and output windows.
-  const hoveredOver = this._j._jaftingMenu._refineSecondaryEquipWindow.currentExt();
-  if (!hoveredOver?.data) return;
-
-  this.setHoverForDetails(hoveredOver);
-
-  this._j._jaftingMenu._refineSecondaryEquipWindow.currentIndex = index;
-  this._j._jaftingMenu._refineProjectedResultsWindow.secondaryEquip = hoveredOver.data;
-};
-
-/**
- * Draws the actual text into the top help window.
- */
-Scene_Map.prototype.drawRefineHelpText = function()
-{
-  const item = this.getHoverForDetails();
-  if (item && item.data)
-  {
-    if (item.data.jaftingNotRefinementBase && this._j._jaftingMenu._refinePrimaryEquipWindow.active)
-    {
-      this._j._jaftingMenu._helpWindow.setText(J.JAFTING.EXT.REFINE.Messages.CannotUseAsBase);
-    }
-    else if (item.data.jaftingNotRefinementMaterial && this._j._jaftingMenu._refineSecondaryEquipWindow.active)
-    {
-      this._j._jaftingMenu._helpWindow.setText(J.JAFTING.EXT.REFINE.Messages.CannotUseAsMaterial);
-    }
-    else if (item.error !== "")
-    {
-      this._j._jaftingMenu._helpWindow.setText(item.error);
-    }
-    else
-    {
-      this._j._jaftingMenu._helpWindow.setItem(item.data);
-    }
-  }
+  // the current selection is not create.
   else
   {
-    this._j._jaftingMenu._helpWindow.setText(J.JAFTING.EXT.REFINE.Messages.NoItemSelected);
+    // possibly activate other choices.
+    J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting.get('onRootJaftingSelection').call(this);
   }
 };
 
 /**
- * Toggles the visibility for the refinement target selection while JAFTING.
- * @param {boolean} visible Whether or not to show this window.
+ * Switch to the jafting creation scene when selected from the root jafting list.
  */
-Scene_Map.prototype.toggleJaftingRefinePrimaryWindow = function(visible)
+Scene_Jafting.prototype.jaftingRefinementSelected = function()
 {
-  if (visible)
+  // close the root jafting windows.
+  this.closeRootJaftingWindows();
+
+  // call the creation scene.
+  Scene_JaftingRefine.callScene();
+};
+//endregion Scene_Jafting
+
+//region Scene_JaftingRefine
+class Scene_JaftingRefine extends Scene_MenuBase
+{
+  /**
+   * Pushes this current scene onto the stack, forcing it into action.
+   */
+  static callScene()
   {
-    this._j._jaftingMenu._refinePrimaryEquipWindow.show();
-    this._j._jaftingMenu._refinePrimaryEquipWindow.open();
-    this._j._jaftingMenu._refinePrimaryEquipWindow.activate();
+    SceneManager.push(this);
   }
-  else
+
+  /**
+   * The symbol representing the command for this scene from other menus.
+   * @type {string}
+   */
+  static KEY = 'jafting-refine';
+
+  /**
+   * Constructor.
+   */
+  constructor()
   {
-    this._j._jaftingMenu._refinePrimaryEquipWindow.close();
-    this._j._jaftingMenu._refinePrimaryEquipWindow.hide();
-    this._j._jaftingMenu._refinePrimaryEquipWindow.deactivate();
-    this._j._jaftingMenu._refinePrimaryEquipWindow.forceSelect(0);
-    this._j._jaftingMenu._refinePrimaryEquipWindow.currentIndex = null;
+    // call super when having extended constructors.
+    super();
+
+    // jumpstart initialization on creation.
+    this.initialize();
   }
+
+  //region init
+  /**
+   * Initialize the window and all properties required by the scene.
+   */
+  initialize()
+  {
+    // perform original logic.
+    super.initialize();
+
+    // also initialize our scene properties.
+    this.initMembers();
+  }
+
+  /**
+   * Initialize all properties for our omnipedia.
+   */
+  initMembers()
+  {
+    // initialize the root-namespace definition members.
+    this.initCoreMembers();
+
+    // initialize the monsterpedia members.
+    this.initPrimaryMembers();
+  }
+
+  /**
+   * The core properties of this scene are the root namespace definitions for this plugin.
+   */
+  initCoreMembers()
+  {
+    /**
+     * The shared root namespace for all of J's plugin data.
+     */
+    this._j ||= {};
+
+    /**
+     * A grouping of all properties associated with the omnipedia.
+     */
+    this._j._crafting = {};
+  }
+
+  /**
+   * The primary properties of the scene are the initial properties associated with
+   * the main list containing all pedias unlocked by the player along with some subtext of
+   * what the pedia entails.
+   */
+  initPrimaryMembers()
+  {
+    /**
+     * A grouping of all properties associated with the jafting type of refinement.
+     * Refinement is a subcategory of the jafting system.
+     */
+    this._j._crafting._refine = {};
+
+    /**
+     * The window that shows the tertiary information about a refinable.
+     * @type {Window_RefinementDescription}
+     */
+    this._j._crafting._refine._refinementDescription = null;
+
+    /**
+     * The window that shows the list of equips that can be used as a base for refinement.
+     * @type {Window_RefinableList}
+     */
+    this._j._crafting._refine._baseRefinableList = null;
+
+    /**
+     * The window that shows the list of equips that can be used as fodder for refinement.
+     * @type {Window_RefinableList}
+     */
+    this._j._crafting._refine._consumedRefinableList = null;
+
+    /**
+     * The window that shows the details of the refinement given the selected entries.
+     * @type {Window_RefinementDetails}
+     */
+    this._j._crafting._refine._refinementDetails = null;
+
+    /**
+     * The window that shows the list of ingredients on the currently selected recipe.
+     * @type {Window_RecipeIngredientList}
+     */
+    this._j._crafting._refine._confirmationPrompt = null;
+
+
+    /**
+     * The window that shows the list of tools on the currently selected recipe.
+     * @type {Window_RecipeToolList}
+     */
+    this._j._crafting._refine._baseSelected = null;
+
+    /**
+     * The window that shows the list of outputs on the currently selected recipe.
+     * @type {Window_RecipeOutputList}
+     */
+    this._j._crafting._refine._consumedSelected = null;
+  }
+
+  getBaseSelected()
+  {
+    return this._j._crafting._refine._baseSelected;
+  }
+
+  setBaseSelected(equip)
+  {
+    this._j._crafting._refine._baseSelected = equip;
+  }
+
+  getConsumedSelected()
+  {
+    return this._j._crafting._refine._consumedSelected;
+  }
+
+  setConsumedSelected(equip)
+  {
+    this._j._crafting._refine._consumedSelected = equip;
+  }
+  //endregion init
+
+  //region create
+  /**
+   * Initialize all resources required for this scene.
+   */
+  create()
+  {
+    // perform original logic.
+    super.create();
+
+    // create the various display objects on the screen.
+    this.createDisplayObjects();
+  }
+
+  /**
+   * Creates the display objects for this scene.
+   */
+  createDisplayObjects()
+  {
+    // create all our windows.
+    this.createAllWindows();
+
+    // configure window relations and such now that they are all created.
+    this.configureAllWindows();
+  }
+
+  /**
+   * Creates all windows in this scene.
+   */
+  createAllWindows()
+  {
+    // create all the windows.
+    this.createRefinementDescriptionWindow();
+    this.createBaseRefinableListWindow();
+    this.createConsumableRefinableListWindow();
+    this.createRefinementDetailsWindow();
+    this.createRefinementConfirmationWindow();
+  }
+
+  /**
+   * Configures all windows.
+   */
+  configureAllWindows()
+  {
+    const listWindow = this.getBaseRefinableListWindow();
+
+    // also update with the currently selected item, if one exists.
+    this.getRefinementDescriptionWindow()
+      .setText(listWindow.currentHelpText() ?? String.empty);
+
+    listWindow.select(0);
+  }
+
+  /**
+   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
+   * Changes the filter to a different type from {@link PIXI.filters}.<br>
+   */
+  createBackground()
+  {
+    this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
+    this._backgroundSprite = new Sprite();
+    this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
+    this._backgroundSprite.filters = [this._backgroundFilter];
+    this.addChild(this._backgroundSprite);
+    //this.setBackgroundOpacity(220);
+  }
+
+  /**
+   * Overrides {@link #createButtons}.<br>
+   * Disables the creation of the buttons.
+   * @override
+   */
+  createButtons()
+  {
+  }
+  //endregion create
+
+  //region refinement description
+  /**
+   * Creates the RefinementDescription window.
+   */
+  createRefinementDescriptionWindow()
+  {
+    // create the window.
+    const window = this.buildRefinementDescriptionWindow();
+
+    // update the tracker with the new window.
+    this.setRefinementDescriptionWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  buildRefinementDescriptionWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getRefinementDescriptionRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_RefinementDescription(rectangle);
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   * @returns {Rectangle}
+   */
+  getRefinementDescriptionRectangle()
+  {
+    // grab the rect for the recipe list this should be next to.
+    const listWindow = this.getBaseRefinableListRectangle();
+
+    // the description should live at the right side of the list.
+    const x = listWindow.width + Graphics.horizontalPadding;
+
+    // the window's origin coordinates are the box window's origin as well.
+    const [ _, y ] = Graphics.boxOrigin;
+
+    // define the width of the window.
+    const width = Graphics.boxWidth - listWindow.width - Graphics.horizontalPadding;
+
+    // define the height of the window.
+    const height = 100;
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the RefinementDescription window being tracked.
+   */
+  getRefinementDescriptionWindow()
+  {
+    return this._j._crafting._refine._refinementDescription;
+  }
+
+  /**
+   * Sets the RefinementDescription window tracking.
+   */
+  setRefinementDescriptionWindow(someWindow)
+  {
+    this._j._crafting._refine._refinementDescription = someWindow;
+  }
+  //endregion refinement description
+
+  //region base refinable list
+  /**
+   * Creates the base RefinableList window.
+   */
+  createBaseRefinableListWindow()
+  {
+    // create the window.
+    const window = this.buildRefinableListWindow();
+
+    // update the tracker with the new window.
+    this.setBaseRefinableListWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  buildRefinableListWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getBaseRefinableListRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_RefinableList(rectangle);
+
+    // designate this refinable list window as the primary.
+    window.isPrimary = true;
+
+    // assign cancel functionality.
+    window.setHandler('cancel', this.onBaseRefinableListCancel.bind(this));
+
+    // assign on-select functionality.
+    window.setHandler('ok', this.onBaseRefinableListSelection.bind(this));
+
+    // overwrite the onIndexChange hook with our local hook.
+    window.onIndexChange = this.onBaseRefinableListIndexChange.bind(this);
+
+    // also put the window away.
+    // window.hide();
+    // window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   * @returns {Rectangle}
+   */
+  getBaseRefinableListRectangle()
+  {
+    // the window's origin coordinates are the box window's origin as well.
+    const [x, y] = Graphics.boxOrigin;
+
+    // define the width of the window.
+    const width = 350;
+
+    // define the height of the window.
+    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the RefinableList window being tracked.
+   */
+  getBaseRefinableListWindow()
+  {
+    return this._j._crafting._refine._baseRefinableList;
+  }
+
+  /**
+   * Sets the RefinableList window tracking.
+   */
+  setBaseRefinableListWindow(someWindow)
+  {
+    this._j._crafting._refine._baseRefinableList = someWindow;
+  }
+
+  selectBaseRefinableListWindow()
+  {
+    // grab the window.
+    const listWindow = this.getBaseRefinableListWindow();
+
+    // reveal the window.
+    listWindow.show();
+    listWindow.activate();
+
+    this.getRefinementDescriptionWindow()
+      .setText(listWindow.currentHelpText());
+  }
+
+  deselectBaseRefinableListWindow()
+  {
+    // grab the window.
+    const listWindow = this.getBaseRefinableListWindow();
+
+    // reveal the window.
+    listWindow.hide();
+    listWindow.deactivate();
+  }
+
+  onBaseRefinableListIndexChange()
+  {
+    const listWindow = this.getBaseRefinableListWindow();
+
+    const helpText = listWindow.currentHelpText();
+    this.getRefinementDescriptionWindow().setText(helpText ?? String.empty);
+
+    const baseRefinable = listWindow.currentExt();
+    this.getRefinementDetailsWindow().primaryEquip = baseRefinable.data;
+  }
+
+  onBaseRefinableListCancel()
+  {
+    // revert to the previous scene.
+    SceneManager.pop();
+  }
+
+  onBaseRefinableListSelection()
+  {
+    const baseRefinableListWindow = this.getBaseRefinableListWindow();
+
+    const baseRefinable = baseRefinableListWindow.currentExt().data;
+    this.setBaseSelected(baseRefinable);
+
+    this.deselectBaseRefinableListWindow();
+    this.selectConsumableRefinableListWindow();
+  }
+  //endregion base refinable list
+
+  //region consumable refinable list
+  /**
+   * Creates the consumable RefinableList window.
+   */
+  createConsumableRefinableListWindow()
+  {
+    // create the window.
+    const window = this.buildConsumableRefinableListWindow();
+
+    // update the tracker with the new window.
+    this.setConsumableRefinableListWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  buildConsumableRefinableListWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getConsumableRefinableListRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_RefinableList(rectangle);
+
+    // assign cancel functionality.
+    window.setHandler('cancel', this.onConsumableRefinableListCancel.bind(this));
+
+    // assign on-select functionality.
+    window.setHandler('ok', this.onConsumableRefinableListSelection.bind(this));
+
+    // overwrite the onIndexChange hook with our local hook.
+    window.onIndexChange = this.onConsumableRefinableListIndexChange.bind(this);
+
+    // also put the window away.
+    window.hide();
+    window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   * @returns {Rectangle}
+   */
+  getConsumableRefinableListRectangle()
+  {
+    // the window's origin coordinates are the box window's origin as well.
+    const [x, y] = Graphics.boxOrigin;
+
+    // define the width of the window.
+    const width = 350;
+
+    // define the height of the window.
+    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the consumable RefinableList window being tracked.
+   */
+  getConsumableRefinableListWindow()
+  {
+    return this._j._crafting._refine._consumedRefinableList;
+  }
+
+  /**
+   * Sets the consumable RefinableList window tracking.
+   */
+  setConsumableRefinableListWindow(someWindow)
+  {
+    this._j._crafting._refine._consumedRefinableList = someWindow;
+  }
+
+  selectConsumableRefinableListWindow()
+  {
+    // grab the window.
+    const listWindow = this.getConsumableRefinableListWindow();
+
+    // reveal the window.
+    listWindow.show();
+    listWindow.activate();
+
+    this.getRefinementDescriptionWindow()
+      .setText(listWindow.currentHelpText());
+  }
+
+  deselectConsumableRefinableListWindow()
+  {
+    // grab the window.
+    const listWindow = this.getConsumableRefinableListWindow();
+
+    // reveal the window.
+    listWindow.hide();
+    listWindow.deactivate();
+  }
+
+  onConsumableRefinableListIndexChange()
+  {
+    const listWindow = this.getConsumableRefinableListWindow();
+
+    const helpText = listWindow.currentHelpText();
+    this.getRefinementDescriptionWindow().setText(helpText ?? String.empty);
+
+    const consumedRefinable = listWindow.currentExt();
+    this.getRefinementDetailsWindow().secondaryEquip = consumedRefinable.data;
+  }
+
+  onConsumableRefinableListCancel()
+  {
+    this.deselectConsumableRefinableListWindow();
+
+    this.selectBaseRefinableListWindow();
+  }
+
+  onConsumableRefinableListSelection()
+  {
+    const listWindow = this.getConsumableRefinableListWindow();
+
+    const consumedRefinable = listWindow.currentExt().data;
+    this.setConsumedSelected(consumedRefinable);
+
+    //this.deselectConsumableRefinableListWindow();
+    this.selectRefinementConfirmationWindow();
+  }
+  //endregion consumable refinable list
+
+  //region refinement details
+  /**
+   * Creates the RefinementDetails window.
+   */
+  createRefinementDetailsWindow()
+  {
+    // create the window.
+    const window = this.buildRefinementDetailsWindow();
+
+    // update the tracker with the new window.
+    this.setRefinementDetailsWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  buildRefinementDetailsWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getRefinementDetailsRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_RefinementDetails(rectangle);
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   * @returns {Rectangle}
+   */
+  getRefinementDetailsRectangle()
+  {
+    const widthReduction = this.getBaseRefinableListRectangle().width + Graphics.horizontalPadding;
+    const x = 0 + widthReduction;
+
+    const heightReduction = (this.getRefinementDescriptionWindow().height + Graphics.verticalPadding);
+    const y = 0 + heightReduction;
+
+    // define the width of the window.
+    const width = Graphics.boxWidth - widthReduction;
+
+    // define the height of the window.
+    const height = Graphics.boxHeight - heightReduction;
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the RefinementDetails window being tracked.
+   */
+  getRefinementDetailsWindow()
+  {
+    return this._j._crafting._refine._refinementDetails;
+  }
+
+  /**
+   * Sets the RefinementDetails window tracking.
+   */
+  setRefinementDetailsWindow(someWindow)
+  {
+    this._j._crafting._refine._refinementDetails = someWindow;
+  }
+  //endregion refinement details
+
+  //region confirmation prompt
+  /**
+   * Creates the RefinementConfirmation window.
+   */
+  createRefinementConfirmationWindow()
+  {
+    // create the window.
+    const window = this.buildRefinementConfirmationWindow();
+
+    // update the tracker with the new window.
+    this.setRefinementConfirmationWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  buildRefinementConfirmationWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getRefinementConfirmationRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_RefinementConfirmation(rectangle);
+
+    // assign cancel functionality.
+    window.setHandler('cancel', this.onRefinementConfirmationCancel.bind(this));
+
+    // assign on-select functionality.
+    window.setHandler('ok', this.onRefinementConfirmationSelection.bind(this));
+
+    // also put the window away.
+    window.hide();
+    window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   * @returns {Rectangle}
+   */
+  getRefinementConfirmationRectangle()
+  {
+    // define the width of the window.
+    const width = 350;
+
+    // define the height of the window.
+    const height = 120;
+
+    // define the window's origin coordinates.
+    const x = (Graphics.boxWidth - width) / 2;
+    const y = (Graphics.boxHeight - height) / 2;
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the RefinementConfirmation window being tracked.
+   */
+  getRefinementConfirmationWindow()
+  {
+    return this._j._crafting._refine._confirmationPrompt;
+  }
+
+  selectRefinementConfirmationWindow()
+  {
+    // grab the window.
+    const listWindow = this.getRefinementConfirmationWindow();
+
+    // reveal the window.
+    listWindow.show();
+    listWindow.activate();
+  }
+
+  deselectRefinementConfirmationWindow()
+  {
+    // grab the window.
+    const listWindow = this.getRefinementConfirmationWindow();
+
+    // reveal the window.
+    listWindow.hide();
+    listWindow.deactivate();
+  }
+
+  /**
+   * Sets the RefinementConfirmation window tracking.
+   */
+  setRefinementConfirmationWindow(someWindow)
+  {
+    this._j._crafting._refine._confirmationPrompt = someWindow;
+  }
+
+  onRefinementConfirmationCancel()
+  {
+    this.deselectRefinementConfirmationWindow();
+    this.selectConsumableRefinableListWindow();
+  }
+
+  onRefinementConfirmationSelection()
+  {
+    // remove the materials being refined.
+    $gameParty.gainItem(this.getBaseSelected(), -1);
+    $gameParty.gainItem(this.getConsumedSelected(), -1);
+
+    // generate the output.
+    const output = this.getRefinementDetailsWindow().outputEquip;
+    $gameJAFTING.createRefinedOutput(output);
+
+    // reselect the original window.
+    this.deselectConsumableRefinableListWindow();
+    this.deselectRefinementConfirmationWindow();
+    this.selectBaseRefinableListWindow();
+
+    // clear the materials that were just used.
+    this.setBaseSelected(null);
+    this.setConsumedSelected(null);
+
+    // clear the existing data from the details window.
+    const detailsWindow = this.getRefinementDetailsWindow();
+    detailsWindow.primaryEquip = null;
+    detailsWindow.secondaryEquip = null;
+
+    this.getBaseRefinableListWindow().refresh();
+  }
+  //endregion confirmation prompt
+}
+//endregion
+
+//region Window_JaftingList
+/**
+ * Extends {@link #buildCommands}.<br>
+ * Includes the refinement command as well as the rest.
+ */
+J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.set('buildCommands', Window_JaftingList.prototype.buildCommands);
+Window_JaftingList.prototype.buildCommands = function()
+{
+  // get the original list of commands.
+  const commands = J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.get('buildCommands').call(this);
+
+  // add the creation command.
+  commands.push(this.buildRefinementCommand());
+
+  // return the compiled list.
+  return commands;
 };
 
 /**
- * Toggles the visibility for the refinement material selection while JAFTING.
- * @param {boolean} visible Whether or not to show this window.
+ * Builds the jafting refinement command for the main jafting types menu.
+ * @return {BuiltWindowCommand}
  */
-Scene_Map.prototype.toggleJaftingRefineSecondaryWindow = function(visible)
+Window_JaftingList.prototype.buildRefinementCommand = function()
 {
-  if (visible)
-  {
-    this._j._jaftingMenu._refineSecondaryEquipWindow.show();
-    this._j._jaftingMenu._refineSecondaryEquipWindow.open();
-    this._j._jaftingMenu._refineSecondaryEquipWindow.activate();
-  }
-  else
-  {
-    this._j._jaftingMenu._refineSecondaryEquipWindow.close();
-    this._j._jaftingMenu._refineSecondaryEquipWindow.hide();
-    this._j._jaftingMenu._refineSecondaryEquipWindow.deactivate();
-    this._j._jaftingMenu._refineSecondaryEquipWindow.forceSelect(0);
-    this._j._jaftingMenu._refineSecondaryEquipWindow.currentIndex = null;
-  }
+  return new WindowCommandBuilder("Refinement")
+    .setSymbol(Scene_JaftingRefine.KEY)
+    .addSubTextLine("Give your equipment a personal touch.")
+    .addSubTextLine("Modify your equips with trait transferrence and reach for godlihood!")
+    .setIconIndex(2565)
+    .build();
 };
-
-/**
- * Toggles the visibility for the refinement output window while JAFTING.
- * @param {boolean} visible Whether or not to show this window.
- */
-Scene_Map.prototype.toggleJaftingRefineOutputWindow = function(visible)
-{
-  if (visible)
-  {
-    this._j._jaftingMenu._refineProjectedResultsWindow.show();
-    this._j._jaftingMenu._refineProjectedResultsWindow.open();
-    this._j._jaftingMenu._refineProjectedResultsWindow.activate();
-  }
-  else
-  {
-    this._j._jaftingMenu._refineProjectedResultsWindow.close();
-    this._j._jaftingMenu._refineProjectedResultsWindow.hide();
-    this._j._jaftingMenu._refineProjectedResultsWindow.deactivate();
-  }
-};
-
-/**
- * Toggles the visibility for the refinement help window while JAFTING.
- * @param {boolean} visible Whether or not to show this window.
- */
-Scene_Map.prototype.toggleJaftingRefineGuidingWindow = function(visible)
-{
-  if (visible)
-  {
-    this._j._jaftingMenu._refineGuidingWindow.show();
-    this._j._jaftingMenu._refineGuidingWindow.open();
-    this._j._jaftingMenu._refineGuidingWindow.activate();
-  }
-  else
-  {
-    this._j._jaftingMenu._refineGuidingWindow.close();
-    this._j._jaftingMenu._refineGuidingWindow.hide();
-    this._j._jaftingMenu._refineGuidingWindow.deactivate();
-  }
-};
-
-/**
- * Toggles the visibility for the refinement confirmation window while JAFTING.
- * @param {boolean} visible Whether or not to show this window.
- */
-Scene_Map.prototype.toggleJaftingRefineConfirmationWindow = function(visible)
-{
-  if (visible)
-  {
-    this._j._jaftingMenu._refineConfirmationWindow.show();
-    this._j._jaftingMenu._refineConfirmationWindow.open();
-    this._j._jaftingMenu._refineConfirmationWindow.activate();
-  }
-  else
-  {
-    this._j._jaftingMenu._refineConfirmationWindow.close();
-    this._j._jaftingMenu._refineConfirmationWindow.hide();
-    this._j._jaftingMenu._refineConfirmationWindow.deactivate();
-  }
-};
-//endregion Scene_Map
+//endregion Window_JaftingList
 
 //region Window_JaftingEquip
 /**
  * A window that shows a list of all equipment.
  */
-class Window_JaftingEquip
-  extends Window_Command
+class Window_RefinableList extends Window_Command
 {
   /**
    * @constructor
@@ -2576,6 +2796,8 @@ class Window_JaftingEquip
       // don't render equipment that are totally unrefinable. That's a tease!
       if (equip.jaftingUnrefinable) return;
 
+      const equipCount = $gameParty.numItems(equip);
+
       const hasDuplicatePrimary = $gameParty.numItems(this.baseSelection) > 1;
       const isBaseSelection = equip === this.baseSelection;
       const canSelectBaseAgain = (isBaseSelection && hasDuplicatePrimary) || !isBaseSelection;
@@ -2682,43 +2904,29 @@ class Window_JaftingEquip
 
       const extData = {data: equip, error: errorText};
 
-      this.addCommand(equip.name, 'refine-object', enabled, extData, iconIndex);
+      const command = new WindowCommandBuilder(equip.name)
+        .setSymbol('refine-object')
+        .setEnabled(enabled)
+        .setExtensionData(extData)
+        .setIconIndex(iconIndex)
+        .setRightText(`x${equipCount}`)
+        .setHelpText(equip.description)
+        .build();
+
+      this.addBuiltCommand(command);
+
+      // this.addCommand(equip.name, 'refine-object', enabled, extData, iconIndex);
     });
   }
 }
 //endregion Window_JaftingEquip
-
-//region Window_JaftingModeMenu
-/**
- * Extends the mode command creation to include a new command for refinement.
- */
-J.JAFTING.EXT.REFINE.Aliased.Window_JaftingModeMenu.makeCommandList = Window_JaftingModeMenu.prototype.makeCommandList;
-Window_JaftingModeMenu.prototype.makeCommandList = function()
-{
-  J.JAFTING.EXT.REFINE.Aliased.Window_JaftingModeMenu.makeCommandList.call(this);
-  if ($gameJAFTING.isRefinementHidden()) return;
-
-  const hasEquipment = $gameParty.equipItems().length > 1; // need at least 2 items to refine.
-  const refineAllowed = $gameJAFTING.isRefinementEnabled();
-  const canRefine = hasEquipment && refineAllowed;
-  const refineCommand = {
-    name: J.JAFTING.EXT.REFINE.Messages.RefineCommandName,
-    symbol: `refine-mode`,
-    enabled: canRefine,
-    ext: null,
-    icon: 223
-  };
-  this._list.splice(1, 0, refineCommand);
-};
-//endregion Window_JaftingModeMenu
 
 //region Window_JaftingRefinementConfirmation
 /**
  * A window that gives the player a chance to confirm or cancel their
  * refinement before executing.
  */
-class Window_JaftingRefinementConfirmation
-  extends Window_Command
+class Window_RefinementConfirmation extends Window_Command
 {
   /**
    * @constructor
@@ -2741,12 +2949,21 @@ class Window_JaftingRefinementConfirmation
 }
 //endregion Window_JaftingRefinementConfirmation
 
-//region Window_JaftingRefinementOutput
+//region Window_RefinementDescription
+class Window_RefinementDescription extends Window_Help
+{
+  constructor(rect)
+  {
+    super(rect);
+  }
+}
+//endregion Window_RefinementDescription
+
+//region Window_RefinementDetails
 /**
  * The window containing the chosen equips for refinement and also the projected results.
  */
-class Window_JaftingRefinementOutput
-  extends Window_Base
+class Window_RefinementDetails extends Window_Base
 {
   /**
    * @constructor
@@ -2914,18 +3131,15 @@ class Window_JaftingRefinementOutput
   {
     const lh = this.lineHeight();
     const cw = 300;
-    switch (type)
-    {
-      case "base":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleBase}`, x + (cw * 0), lh * 0, 200);
-        break;
-      case "material":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleMaterial}`, x + (cw * 1), lh * 0, 200);
-        break;
-      case "output":
-        this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleOutput}`, x + (cw * 2), lh * 0, 200);
-        break;
-    }
+
+    const row1x = x + (cw * 0);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleBase}`, row1x, 0, 200);
+
+    const row2x = x + (cw * 1);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleMaterial}`, row2x, 0, 200);
+
+    const row3x = x + (cw * 2);
+    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleOutput}`, row3x, 0, 200);
 
     if (type === "output")
     {
@@ -2960,7 +3174,7 @@ class Window_JaftingRefinementOutput
 
   /**
    * Draws all transferable traits on this piece of equipment.
-   * @param {RPG_Trait[]} traits A list of transferable traits.
+   * @param {JAFTING_Trait[]} traits A list of transferable traits.
    * @param {number} x The `x` coordinate to start drawing at.
    */
   drawEquipTraits(traits, x)
@@ -2998,6 +3212,5 @@ class Window_JaftingRefinementOutput
     // assign it for ease of retrieving from the scene.
     this.outputEquip = result;
   }
-
 }
-//endregion Window_JaftingRefinementOutput
+//endregion Window_RefinementDetails

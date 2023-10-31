@@ -1,7 +1,6 @@
 //region SkillProficiency
 /**
- * A class representing a single trait on a piece of equipment that can be potentially
- * transferred by means of JAFTING's refinement mode.
+ * A data model for saving skill usage/proficiency for battlers.
  */
 function SkillProficiency()
 {

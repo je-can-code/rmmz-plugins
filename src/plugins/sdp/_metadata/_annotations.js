@@ -5,7 +5,7 @@
  * @plugindesc
  * [v2.0.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @base J-DropsControl
  * @orderAfter J-Base

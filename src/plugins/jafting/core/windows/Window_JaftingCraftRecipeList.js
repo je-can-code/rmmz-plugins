@@ -72,7 +72,7 @@ class Window_JaftingCraftRecipeList
 
   /**
    * Gets the details of the currently selected category.
-   * @returns {JAFTING_Category}
+   * @returns {CraftingCategory}
    */
   getRecipeDetails()
   {
@@ -107,7 +107,7 @@ class Window_JaftingCraftRecipeList
     {
       const canCraft = recipe.canCraft();
       const name = recipe.getRecipeName();
-      const iconIndex = recipe.getRecipeIconIndex();
+      const iconIndex = recipe.getRecipeIcon();
 
       // determine if enabled/disabled by ingredients+tools in inventory.
       this.addCommand(name, `chosen-recipe`, canCraft, recipe, iconIndex);

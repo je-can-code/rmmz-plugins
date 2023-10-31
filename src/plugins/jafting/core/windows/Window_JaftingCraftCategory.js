@@ -47,7 +47,7 @@ class Window_JaftingCraftCategory extends Window_Command
 
   /**
    * Gets the details of the currently selected category.
-   * @returns {JAFTING_Category}
+   * @returns {CraftingCategory}
    */
   getCategoryDetails()
   {

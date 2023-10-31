@@ -2,8 +2,7 @@
 /**
  * A window that shows a list of all equipment.
  */
-class Window_JaftingEquip
-  extends Window_Command
+class Window_RefinableList extends Window_Command
 {
   /**
    * @constructor
@@ -141,6 +140,8 @@ class Window_JaftingEquip
       // don't render equipment that are totally unrefinable. That's a tease!
       if (equip.jaftingUnrefinable) return;
 
+      const equipCount = $gameParty.numItems(equip);
+
       const hasDuplicatePrimary = $gameParty.numItems(this.baseSelection) > 1;
       const isBaseSelection = equip === this.baseSelection;
       const canSelectBaseAgain = (isBaseSelection && hasDuplicatePrimary) || !isBaseSelection;
@@ -247,7 +248,18 @@ class Window_JaftingEquip
 
       const extData = {data: equip, error: errorText};
 
-      this.addCommand(equip.name, 'refine-object', enabled, extData, iconIndex);
+      const command = new WindowCommandBuilder(equip.name)
+        .setSymbol('refine-object')
+        .setEnabled(enabled)
+        .setExtensionData(extData)
+        .setIconIndex(iconIndex)
+        .setRightText(`x${equipCount}`)
+        .setHelpText(equip.description)
+        .build();
+
+      this.addBuiltCommand(command);
+
+      // this.addCommand(equip.name, 'refine-object', enabled, extData, iconIndex);
     });
   }
 }

@@ -23,11 +23,6 @@ DataManager.makeSaveContents = function()
 
 /**
  * Extends the save content extraction to include extracting JAFTING data.
- *
- * NOTE: This is the first function encountered where I actually extend it _twice_.
- * As such, we accommodated that by numbering it.
- *
- * TODO: change this plugin to use EXT_REFINE so there is no collision.
  */
 J.JAFTING.EXT.REFINE.Aliased.DataManager.extractSaveContents2 = DataManager.extractSaveContents;
 DataManager.extractSaveContents = function(contents)
