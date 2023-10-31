@@ -128,17 +128,13 @@ J.JAFTING.EXT.REFINE.Messages = {
 /**
  * A helpful mapping of all the various RMMZ classes being extended.
  */
-J.JAFTING.EXT.REFINE.Aliased = {
-  DataManager: new Map(),
-
-  RPG_Base: new Map(),
-
-  Game_Item: new Map(),
-
-  Scene_Map: new Map(),
-
-  Window_JaftingModeMenu: {},
-};
+J.JAFTING.EXT.REFINE.Aliased = {};
+J.JAFTING.EXT.REFINE.Aliased.DataManager = new Map();
+J.JAFTING.EXT.REFINE.Aliased.RPG_Base = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Game_Item = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Scene_Map = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList = new Map();
 
 /**
  * All regular expressions used by this plugin.

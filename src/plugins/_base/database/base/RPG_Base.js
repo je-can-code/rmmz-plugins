@@ -35,6 +35,7 @@ class RPG_Base
 
   /**
    * The entry's name.
+   * @type {string}
    */
   name = String.empty;
 

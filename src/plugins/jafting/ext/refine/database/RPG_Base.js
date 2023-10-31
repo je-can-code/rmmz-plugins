@@ -1,4 +1,3 @@
-J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._generate);
 /**
  * Extends {@link RPG_Base._generate}.<br>
  *
@@ -7,6 +6,7 @@ J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._gener
  * @param {number} index The new index.
  * @returns {this}
  */
+J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._generate);
 RPG_Base.prototype._generate = function(overrides, index)
 {
   // perform original logic.

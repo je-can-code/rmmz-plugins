@@ -4,7 +4,7 @@
  * @plugindesc
  * [v1.0.0 JAFT] Enables the ability to craft items from recipes.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
  * @help

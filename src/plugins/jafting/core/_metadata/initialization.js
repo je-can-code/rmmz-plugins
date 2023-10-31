@@ -34,7 +34,7 @@ J.JAFTING.Helpers = {};
 /**
  * Translates the plugin settings from JSON to JAFTING recipes.
  * @param {JSON} rawRecipeBlobs The raw JSON data representing the recipes.
- * @returns {JAFTING_Recipe[]}
+ * @returns {CraftingRecipe[]}
  */
 J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
 {
@@ -62,17 +62,17 @@ J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
       const quantity = parseInt(parsedIngredient.num);
       if (itemId)
       {
-        const newItemIngredient = new JAFTING_Component(itemId, `i`, quantity, false);
+        const newItemIngredient = new CraftingComponent(itemId, `i`, quantity, false);
         parsedIngredients.push(newItemIngredient);
       }
       if (weaponId)
       {
-        const newWeaponIngredient = new JAFTING_Component(weaponId, `w`, quantity, false);
+        const newWeaponIngredient = new CraftingComponent(weaponId, `w`, quantity, false);
         parsedIngredients.push(newWeaponIngredient);
       }
       if (armorId)
       {
-        const newArmorIngredient = new JAFTING_Component(armorId, `a`, quantity, false);
+        const newArmorIngredient = new CraftingComponent(armorId, `a`, quantity, false);
         parsedIngredients.push(newArmorIngredient);
       }
     });
@@ -89,17 +89,17 @@ J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
       const quantity = parseInt(parsedTool.num);
       if (itemId)
       {
-        const newItemTool = new JAFTING_Component(itemId, `i`, quantity, false);
+        const newItemTool = new CraftingComponent(itemId, `i`, quantity, false);
         parsedTools.push(newItemTool);
       }
       if (weaponId)
       {
-        const newWeaponTool = new JAFTING_Component(weaponId, `w`, quantity, false);
+        const newWeaponTool = new CraftingComponent(weaponId, `w`, quantity, false);
         parsedTools.push(newWeaponTool);
       }
       if (armorId)
       {
-        const newArmorTool = new JAFTING_Component(armorId, `a`, quantity, false);
+        const newArmorTool = new CraftingComponent(armorId, `a`, quantity, false);
         parsedTools.push(newArmorTool);
       }
     });
@@ -116,17 +116,17 @@ J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
       const quantity = parseInt(parsedOutput.num);
       if (itemId)
       {
-        const newItemOutput = new JAFTING_Component(itemId, `i`, quantity, false);
+        const newItemOutput = new CraftingComponent(itemId, `i`, quantity, false);
         parsedOutputs.push(newItemOutput);
       }
       if (weaponId)
       {
-        const newWeaponOutput = new JAFTING_Component(weaponId, `w`, quantity, false);
+        const newWeaponOutput = new CraftingComponent(weaponId, `w`, quantity, false);
         parsedOutputs.push(newWeaponOutput);
       }
       if (armorId)
       {
-        const newArmorOutput = new JAFTING_Component(armorId, `a`, quantity, false);
+        const newArmorOutput = new CraftingComponent(armorId, `a`, quantity, false);
         parsedOutputs.push(newArmorOutput);
       }
     });
@@ -139,7 +139,7 @@ J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
     const parsedCategoryKeys = JSON.parse(parsedRecipeBlob.categoryKeys);
 
     // create and add JAFTING recipe.
-    const parsedRecipe = new JAFTING_Recipe(
+    const parsedRecipe = new CraftingRecipe(
       parsedRecipeBlob.name,
       parsedRecipeBlob.recipeKey,
       parsedDescription,
@@ -159,7 +159,7 @@ J.JAFTING.Helpers.translateRecipes = rawRecipeBlobs =>
 /**
  * Translates the plugin settings from JSON to JAFTING categories.
  * @param {string} rawCategoryBlobs The raw JSON data representing the categories.
- * @returns {JAFTING_Category[]}
+ * @returns {CraftingCategory[]}
  */
 J.JAFTING.Helpers.translateCategories = rawCategoryBlobs =>
 {
@@ -173,7 +173,7 @@ J.JAFTING.Helpers.translateCategories = rawCategoryBlobs =>
   parsedCategoryBlobs.forEach(categoryBlob =>
   {
     const parsedCategoryBlob = JSON.parse(categoryBlob);
-    const parsedCategory = new JAFTING_Category(
+    const parsedCategory = new CraftingCategory(
       parsedCategoryBlob.name,
       parsedCategoryBlob.key,
       parseInt(parsedCategoryBlob.iconIndex),
@@ -188,7 +188,7 @@ J.JAFTING.Helpers.translateCategories = rawCategoryBlobs =>
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.Metadata = {};
+J.JAFTING.Metadata = new J_CraftingPluginMetadata('J-JAFTING', '2.0.0');
 J.JAFTING.Metadata.Name = `J-JAFTING`;
 J.JAFTING.Metadata.Version = '2.0.0';
 

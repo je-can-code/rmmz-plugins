@@ -2,8 +2,7 @@
 /**
  * The window that displays all tools, ingredients, and output from a given recipe.
  */
-class Window_JaftingCraftRecipeDetails
-  extends Window_Base
+class Window_JaftingCraftRecipeDetails extends Window_Base
 {
   /**
    * @constructor
@@ -23,14 +22,14 @@ class Window_JaftingCraftRecipeDetails
   {
     /**
      * The recipe currently being displayed in this window.
-     * @type {JAFTING_Recipe}
+     * @type {CraftingRecipe}
      */
     this._currentRecipe = null;
   }
 
   /**
    * Gets the current recipe being displayed.
-   * @returns {JAFTING_Recipe}
+   * @returns {CraftingRecipe}
    */
   get currentRecipe()
   {
@@ -39,7 +38,7 @@ class Window_JaftingCraftRecipeDetails
 
   /**
    * Sets the current recipe to be this recipe.
-   * @param {JAFTING_Recipe} recipe The recipe to assign as the current.
+   * @param {CraftingRecipe} recipe The recipe to assign as the current.
    */
   set currentRecipe(recipe)
   {
@@ -169,7 +168,7 @@ class Window_JaftingCraftRecipeDetails
   drawRecipeOutput()
   {
     const recipe = this.currentRecipe;
-    const outputs = recipe.output;
+    const outputs = recipe.outputs;
     const lh = this.lineHeight();
     const ox = 430;
     this.drawTextEx(`\\C[1]Recipe Output\\C[0]`, ox, lh * 8, 300);

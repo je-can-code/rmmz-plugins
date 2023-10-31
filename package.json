@@ -63,6 +63,7 @@
     "build:hud-boss": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/boss ./out/hud/ext J-HUD-BossFrame.js",
 
     "build:jafting": "node ./src/build-tools/combine.js ./src/plugins/jafting/core ./out/jafting J-JAFTING.js",
+    "build:jafting-create": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/create ./out/jafting/ext J-JAFTING-Creation.js",
     "build:jafting-refine": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/refine ./out/jafting/ext J-JAFTING-Refinement.js",
 
     "build:jabs": "node ./src/build-tools/combine.js ./src/plugins/abs/core ./out/abs J-ABS.js",
