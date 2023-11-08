@@ -22,11 +22,12 @@ Window_JaftingList.prototype.buildCommands = function()
  */
 Window_JaftingList.prototype.buildRefinementCommand = function()
 {
-  return new WindowCommandBuilder("Refinement")
+  return new WindowCommandBuilder(J.JAFTING.EXT.REFINE.Metadata.commandName)
     .setSymbol(Scene_JaftingRefine.KEY)
+    .setEnabled($gameSwitches.value(J.JAFTING.EXT.REFINE.Metadata.menuSwitchId))
     .addSubTextLine("Give your equipment a personal touch.")
     .addSubTextLine("Modify your equips with trait transferrence and reach for godlihood!")
-    .setIconIndex(2565)
+    .setIconIndex(J.JAFTING.EXT.REFINE.Metadata.commandIconIndex)
     .build();
 };
 //endregion Window_JaftingList

@@ -3,14 +3,14 @@
  * Extends {@link #initialize}.<br>
  * Also initializes our jafting members.
  */
-J.JAFTING.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
+J.JAFTING.EXT.CREATE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.JAFTING.Aliased.Game_Party.get('initialize').call(this);
+  J.JAFTING.EXT.CREATE.Aliased.Game_Party.get('initialize').call(this);
 
-  // init sdp members.
-  this.initJaftingMembers();
+  // init the members.
+  this.initJaftingCreationMembers();
 
   // populate the trackings.
   this.populateJaftingTrackings();
@@ -19,7 +19,7 @@ Game_Party.prototype.initialize = function()
 /**
  * Initializes all members of the jafting system.
  */
-Game_Party.prototype.initJaftingMembers = function()
+Game_Party.prototype.initJaftingCreationMembers = function()
 {
   /**
    * The shared root namespace for all of J's plugin data.
@@ -292,34 +292,71 @@ Game_Party.prototype.unlockCategory = function(key)
   tracking.unlock();
 };
 
+/**
+ * Unlocks all implemented categories.
+ */
 Game_Party.prototype.unlockAllCategories = function()
 {
   this
     .getAllCategoryTrackings()
-    .forEach(tracking => tracking.unlock());
-};
-
-Game_Party.prototype.unlockAllRecipes = function()
-{
-  this
-    .getAllRecipeTrackings()
-    .filter(tracking => !tracking.key.startsWith('_'))
+    .filter(tracking => this.canGainEntry(tracking.key))
     .forEach(tracking => tracking.unlock());
 };
 
 /**
- * Extends `gainItem()` to also refresh the JAFTING windows on item quantity change.
- * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
- * @param {number} amount The amount to modify the quantity by.
- * @param {boolean} includeEquip Whether or not to include equipped items for equipment.
+ * Locks all implemented categories.
  */
-J.JAFTING.Aliased.Game_Party.set('gainItem', Game_Party.prototype.gainItem);
-Game_Party.prototype.gainItem = function(item, amount, includeEquip)
+Game_Party.prototype.lockAllCategories = function()
 {
-  // perform original logic.
-  J.JAFTING.Aliased.Game_Party.get('gainItem').call(this, item, amount, includeEquip);
+  this
+    .getAllCategoryTrackings()
+    .forEach(tracking => tracking.lock());
+};
 
-  // refresh the JAFTING windows on item quantity change.
-  $gameSystem.setRefreshRequest(true);
+/**
+ * Unlocks all implemented recipes.
+ */
+Game_Party.prototype.unlockAllRecipes = function()
+{
+  this
+    .getAllRecipeTrackings()
+    .filter(tracking => this.canGainEntry(tracking.key))
+    .forEach(tracking => tracking.unlock());
+};
+
+/**
+ * Locks all implemented recipes.
+ */
+Game_Party.prototype.lockAllRecipes = function()
+{
+  this
+    .getAllRecipeTrackings()
+    .forEach(tracking => tracking.lock());
+};
+
+/**
+ * Whether or not a named entry should be unlockable.
+ * @param {string} name The name of the entry.
+ * @return {boolean} True if the entry can be gained, false otherwise.
+ */
+Game_Party.prototype.canGainEntry = function(name)
+{
+  // skip entries that are null.
+  if (name == null) return false;
+
+  // skip entries with empty names.
+  if (name.trim().length === 0) return false;
+
+  // skip entries that start with an underscore (arbitrary).
+  if (name.startsWith('_')) return false;
+
+  // skip entries that start with a double equals (arbitrary).
+  if (name.startsWith('==')) return false;
+
+  // skip entries that are the "empty" name (arbitrary).
+  if (name.includes('-- empty --')) return false;
+
+  // we can gain it!
+  return true;
 };
 //endregion Game_Party

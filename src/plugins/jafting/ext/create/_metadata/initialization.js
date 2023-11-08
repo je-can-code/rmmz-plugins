@@ -23,6 +23,7 @@ J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata('J-JAFTING-Cr
  * A collection of all aliased methods for this plugin.
  */
 J.JAFTING.EXT.CREATE.Aliased = {};
+J.JAFTING.EXT.CREATE.Aliased.Game_Party = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
 

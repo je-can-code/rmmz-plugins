@@ -117,9 +117,34 @@ class Window_RefinementDetails extends Window_Base
     // if we don't have anything in the target slot, do not draw anything.
     if (!this.primaryEquip) return;
 
+    this.drawRefinementHeaders();
+
     this.drawRefinementTarget();
     this.drawRefinementMaterial();
     this.drawRefinementResult();
+  }
+
+  /**
+   * Draws all columns' titles.
+   */
+  drawRefinementHeaders()
+  {
+    const columnWidth = 350;
+    const ox = 0;
+
+    this.modFontSize(6);
+    this.toggleBold(true);
+
+    const baseX = ox + (columnWidth * 0);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, 200);
+
+    const consumableX = ox + (columnWidth * 1);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, 200);
+
+    const outputX = ox + (columnWidth * 2);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, 200);
+
+    this.resetFontSettings();
   }
 
   /**
@@ -150,12 +175,8 @@ class Window_RefinementDetails extends Window_Base
    */
   drawEquip(equip, x, type)
   {
-    if (type === "output")
-    {
-      console.log();
-    }
-    const parsedTraits = $gameJAFTING.parseTraits(equip);
-    const jaftingTraits = $gameJAFTING.combineBaseParameterTraits(parsedTraits);
+    const parsedTraits = JaftingManager.parseTraits(equip);
+    const jaftingTraits = JaftingManager.combineBaseParameterTraits(parsedTraits);
     this.drawEquipTitle(equip, x, type);
     this.drawEquipTraits(jaftingTraits, x);
   }
@@ -169,16 +190,6 @@ class Window_RefinementDetails extends Window_Base
   drawEquipTitle(equip, x, type)
   {
     const lh = this.lineHeight();
-    const cw = 300;
-
-    const row1x = x + (cw * 0);
-    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleBase}`, row1x, 0, 200);
-
-    const row2x = x + (cw * 1);
-    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleMaterial}`, row2x, 0, 200);
-
-    const row3x = x + (cw * 2);
-    this.drawTextEx(`\\PX[16]${J.JAFTING.EXT.REFINE.Messages.TitleOutput}`, row3x, 0, 200);
 
     if (type === "output")
     {
@@ -243,7 +254,7 @@ class Window_RefinementDetails extends Window_Base
     if (!this.primaryEquip || !this.secondaryEquip) return;
 
     // produce the potential result if confirmed.
-    const result = $gameJAFTING.determineRefinementOutput(this.primaryEquip, this.secondaryEquip);
+    const result = JaftingManager.determineRefinementOutput(this.primaryEquip, this.secondaryEquip);
 
     // render the projected merge results.
     this.drawEquip(result, 700, "output");

@@ -46,23 +46,6 @@ class Window_RefinableList extends Window_Command
   }
 
   /**
-   * Gets the current index that was last assigned of this window.
-   * @returns {number}
-   */
-  get currentIndex()
-  {
-    return this._currentIndex;
-  }
-
-  /**
-   * Sets the current index to a given value.
-   */
-  set currentIndex(index)
-  {
-    this._currentIndex = index;
-  }
-
-  /**
    * Gets whether or not this equip list window is the primary equip or not.
    * @returns {boolean}
    */
@@ -164,7 +147,7 @@ class Window_RefinableList extends Window_Command
       if (!this.isPrimary)
       {
         // and the equipment has no transferable traits, then disable it.
-        if (!$gameJAFTING.parseTraits(equip).length)
+        if (!JaftingManager.parseTraits(equip).length)
         {
           enabled = false;
           errorText += `${J.JAFTING.EXT.REFINE.Messages.NoTraitsOnMaterial}\n`;
@@ -197,8 +180,8 @@ class Window_RefinableList extends Window_Command
           // check the max traits of the base equip and compare with the projected result of this item.
           // if the count is greater than the max (if there is a max), then prevent this item from being used.
           const baseMaxTraitCount = this.baseSelection.jaftingMaxTraitCount;
-          const projectedResult = $gameJAFTING.determineRefinementOutput(this.baseSelection, equip);
-          const projectedResultTraitCount = $gameJAFTING.parseTraits(projectedResult).length;
+          const projectedResult = JaftingManager.determineRefinementOutput(this.baseSelection, equip);
+          const projectedResultTraitCount = JaftingManager.parseTraits(projectedResult).length;
           const overMaxTraitCount = baseMaxTraitCount > 0 && projectedResultTraitCount > baseMaxTraitCount;
           if (overMaxTraitCount)
           {
@@ -217,7 +200,7 @@ class Window_RefinableList extends Window_Command
           : equip.jaftingMaxRefineCount <= equip.jaftingRefinedCount;
         const equipHasMaxTraits = equip.jaftingMaxTraitCount === 0
           ? false // 0 max traits means you can have as many as you want.
-          : equip.jaftingMaxTraitCount <= $gameJAFTING.parseTraits(equip).length;
+          : equip.jaftingMaxTraitCount <= JaftingManager.parseTraits(equip).length;
         if (equipIsMaxRefined)
         {
           enabled = false;

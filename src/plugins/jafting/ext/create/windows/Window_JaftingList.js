@@ -22,11 +22,12 @@ Window_JaftingList.prototype.buildCommands = function()
  */
 Window_JaftingList.prototype.buildCreationCommand = function()
 {
-  return new WindowCommandBuilder("Crafting")
+  return new WindowCommandBuilder(J.JAFTING.EXT.CREATE.Metadata.commandName)
     .setSymbol(Scene_JaftingCreate.KEY)
+    .setEnabled($gameSwitches.value(J.JAFTING.EXT.CREATE.Metadata.menuSwitchId))
     .addSubTextLine("The crux of creation.")
     .addSubTextLine("Create items and equips from various categories of crafting- as your heart desires.")
-    .setIconIndex(2565)
+    .setIconIndex(J.JAFTING.EXT.CREATE.Metadata.commandIconIndex)
     .build();
 };
 //endregion Window_JaftingList

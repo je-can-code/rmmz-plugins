@@ -1,11 +1,101 @@
 //region plugin metadata
 /**
- * Metadata unique to the crafting system.<br>
+ * Plugin metadata for the creation JAFTING plugin.<br>
  * Such data includes things like recipes, categories, and connectivity
  * with the SDP system.
  */
 class J_CraftingCreatePluginMetadata extends PluginMetadata
 {
+  /**
+   * The path where the config for panels is located.
+   * @type {string}
+   */
+  static CONFIG_PATH = 'data/config.crafting.json';
+
+  /**
+   * Classifies the anonymous object from the parsed json into a proper set
+   * of recipes and categories.
+   * @param parsedJson
+   * @return {CraftingConfiguration} The blob with all data converted into proper classes.
+   */
+  static classify(parsedJson)
+  {
+    // classify the configuration data.
+    const recipes = this.parseRecipes(parsedJson.recipes);
+    const categories = this.parseCategories(parsedJson.categories);
+
+    // build the new crafting configuration.
+    const config = CraftingConfiguration.builder
+      .recipes(recipes)
+      .categories(categories)
+      .build();
+
+    // return what we made.
+    return config;
+  }
+
+  /**
+   * Converts the JSON-parsed blob into classified {@link CraftingRecipe}s.
+   * @param {any} parsedRecipesBlob The already-parsed JSON blob.
+   */
+  static parseRecipes(parsedRecipesBlob)
+  {
+    // a mapping function for classifying the components of the recipe.
+    const componentMapper = mappableComponent =>
+    {
+      const { count, id, type } = mappableComponent;
+      const newComponent = new CraftingComponent(count, id, type);
+      return newComponent;
+    };
+
+    // a mapping function for classifying the recipes of the configuration.
+    const recipeMapper = mappableRecipe =>
+    {
+      // parse all components from the recipe.
+      const parsedIngredients = mappableRecipe.ingredients.map(componentMapper, this);
+      const parsedTools = mappableRecipe.tools.map(componentMapper, this);
+      const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
+
+      // create the recipe.
+      const newJaftingRecipe = new CraftingRecipe(
+        mappableRecipe.name,
+        mappableRecipe.key,
+        mappableRecipe.categoryKeys,
+        mappableRecipe.iconIndex,
+        mappableRecipe.description,
+        mappableRecipe.unlockedByDefault,
+        mappableRecipe.maskedUntilCrafted,
+        parsedIngredients,
+        parsedTools,
+        parsedOutputs);
+
+      return newJaftingRecipe;
+    };
+
+    /** @type {CraftingRecipe[]} */
+    const jaftingRecipes = parsedRecipesBlob.map(recipeMapper, this);
+
+    // return what we made.
+    return jaftingRecipes;
+  }
+
+  static parseCategories(parsedCategoriesBlob)
+  {
+    // a maping function for classify the categories of the configuration.
+    const categoryMapper = mappableCategory =>
+    {
+      const { name, key, iconIndex, description, unlockedByDefault } = mappableCategory;
+      const newCategory = new CraftingCategory(name, key, iconIndex, description, unlockedByDefault);
+      return newCategory
+    };
+
+    // iterate over each category to classify the data.
+    const jaftingCategories = parsedCategoriesBlob.map(categoryMapper, this);
+
+    // return what we made.
+    return jaftingCategories;
+  }
+
   /**
    * Constructor.
    */
@@ -36,7 +126,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
   initializeConfiguration()
   {
     // parse the files as an actual list of objects from the JSON configuration.
-    const parsedJson = JSON.parse(StorageManager.fsReadFile(J_CraftingPluginMetadata.CONFIG_PATH));
+    const parsedJson = JSON.parse(StorageManager.fsReadFile(J_CraftingCreatePluginMetadata.CONFIG_PATH));
     if (parsedJson === null)
     {
       console.error('no crafting configuration was found in the /data directory of the project.');
@@ -45,7 +135,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     }
 
     // class-ify over each panel.
-    const classifiedCraftingConfig = J_CraftingPluginMetadata.classify(parsedJson);
+    const classifiedCraftingConfig = J_CraftingCreatePluginMetadata.classify(parsedJson);
 
     /**
      * The collection of all defined jafting recipes.
@@ -93,19 +183,19 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
      * in the menu.
      * @type {number}
      */
-    this.menuSwitchId = parseInt(this.parsedPluginParameters['menuSwitch']);
+    this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
 
     /**
      * The name used for the command when visible in a menu.
      * @type {string}
      */
-    this.commandName = this.parsedPluginParameters['menuCommandName'] ?? 'Creation';
+    this.commandName = this.parsedPluginParameters['menu-name'] ?? 'Creation';
 
     /**
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}
      */
-    this.commandIconIndex = parseInt(this.parsedPluginParameters['menuCommandIcon']);
+    this.commandIconIndex = parseInt(this.parsedPluginParameters['menu-icon']) ?? 0;
   }
 
   /**
