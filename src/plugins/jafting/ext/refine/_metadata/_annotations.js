@@ -6,25 +6,41 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
- * @base J-JAFTING
  * @orderAfter J-Base
  * @orderAfter J-JAFTING
  * @help
  * ============================================================================
- * [INTRODUCTION]:
+ * OVERVIEW
+ * This plugin enables the "refine" functionality of JAFTING.
+ * The "refine" functionality is basically a trait transferrence system with
+ * some guardrails in-place.
+ *
+ * Integrates with others of mine plugins:
+ * - J-Base; to be honest this is just required for all my plugins.
+ * - J-JAFTING; the core that this engine hooks into to enable upgrading.
+ *
+ * ============================================================================
+ * UPGRADING
+ * Ever want to upgrade your equips by sacrificing others in the name of
+ * ascending to godliness? Well now you can! By using a variety of tags placed
+ * deliberately on your equips throughout the database, you too can have a
+ * dynamic and powerful upgrading system for equipment.
+ *
+ * HOW DOES IT WORK?
  * This is an extension of the JAFTING plugin to enable the ability to "refine"
  * equipment. "Refinement" is defined as "transfering the traits of one item
  * onto another". It is also important to note that "transferable traits" are
  * defined as "all traits on an equip in the database that are below the
  * divider".
  *
+ * NOTE ABOUT THE DIVIDER
  * The "divider" is another trait: 'Collapse Effect'. It doesn't matter which
  * option you select in the dropdown for this (for now). Traits that are above
  * the "divider" are considered "passive" traits that cannot be transfered.
  *
+ * NOTE ABOUT TRAIT REMOVAL
  * This plugin does not handle trait removal, so do keep that in mind.
  *
- * [DESCRIPTION]:
  * This functionality's exclusive target is equipment. The most common use case
  * for this type of plugin is to repeatedly upgrade a weapon or armor of a
  * given type with new/improved traits, allowing the player to keep their
@@ -36,53 +52,95 @@
  * spread across various equipment, combined with the notetags below, this
  * extension on JAFTING can make for some interesting situations in-game (good
  * and bad).
+ * ============================================================================
+ * MENU MANAGEMENT
+ * In order to enable or disable menu access for this plugin, you can use the
+ * plugin parameter that identifies the switch and toggle that in-editor. The
+ * enabling of the menu option for refinement will match the state of the
+ * switch in the plugin parameters.
  *
- * [NOTE TAGS]:
+ * ============================================================================
+ * TAGS
  * Obviously, being able to willy nilly refine any equips with any equips could
  * be volatile for the RM dev being able to keep control on what the player
  * should be doing (such as refining a unique equipment onto another and there
  * by losing said unique equipment that could've been required for story!).
  *
- * As such, I've introduced a few tags that can be applied onto weapons/armor:
+ * TAG USAGE
+ * - Weapons
+ * - Armors
  *
- * <noRefine>
+ * ----------------------------------------------------------------------------
+ * DISABLE REFINEMENT
  * Placing this tag onto equipment renders it unavailable to be refined at all.
  * That means it simply won't show up in the refinement menu's equip lists.
  *
- * <notRefinementBase>
+ * TAG FORMAT
+ *  <noRefine>
+ *
+ * ----------------------------------------------------------------------------
+ * DISALLOW USING AS A "BASE"
  * Placing this tag onto equipment means it will be a disabled option when
  * selecting a base equip to refine. This most commonly would be used by
  * perhaps some kind of "fragile" types of equipment, or for equipment you
  * designed explicitly as a material.
  *
- * <notRefinementMaterial>
+ * TAG FORMAT
+ *  <notRefinementBase>
+ *
+ * ----------------------------------------------------------------------------
+ * DISALLOW USING AS A "MATERIAL"
  * Placing this tag onto equipment means it will be a disabled option when
  * selecting a material equip to refine onto the base. This most commonly would
  * be used for preventing the player from sacrificing an equipment that is
  * required for story purposes.
  *
- * <maxRefineCount:NUM>
+ * TAG FORMAT
+ *  <notRefinementMaterial>
+ *
+ * ----------------------------------------------------------------------------
+ * MAXIMUM REFINEMENT COUNT
  * Where NUM is a number that represents how many times this can be refined.
  * Placing this tag onto equipment means it can only be used as a base for
  * refinement NUM number of times.
  *
- * <maxRefinedTraits:NUM>
+ * TAG FORMAT
+ *  <maxRefineCount:NUM>
+ *
+ * TAG EXAMPLES
+ *  <maxRefinementCount:3>
+ * An equip with this can only be used as a "base" for refinement 3 times
+ * OR
+ * An equip can only achieve be fused to or beyond +3 once
+ * (whichever comes first)
+ *
+ * NOTE ABOUT LIMITS
+ * While the refinement count may be fixed, you can still refine equips beyond
+ * their limits by leveraging already-refined equipment as the material. The
+ * system will allow fusing something if there are still refinement counts
+ * available, even if the material has +8 when there is only 1 count left.
+ *
+ * ----------------------------------------------------------------------------
+ * MAXIMUM TRAITS PER EQUIP
  * Where NUM is a number that represents how many combined traits it can have.
  * Placing this tag onto equipment means it can only be used as a base as long
  * as the number of combined trait slots (see the screen while refining) is
  * lesser than or equal to NUM. This most commonly would be used to prevent
  * the player from adding an unreasonable number of traits onto an equip.
  *
- * [PLUGIN PARAMETERS]:
- * There are just a couple that will control the visibility of the actual
- * command that shows up for refinement in the JAFTING mode select window.
+ * TAG FORMAT
+ *  <maxRefinedTraits:NUM>
  *
- * I debated on putting all the various text bits that show up
- * throughout the menu here for translation, but instead I captured them all
- * and put them in the J.JAFTING.EXT.REFINE.Messages object. If you want to change the
- * text, feel free to edit that instead. Additionally, for the various traits
- * text, you can find that text hard-coded english starting at line 2164 by
- * trait code.
+ * TAG EXAMPLES
+ *  <maxRefinedTraits:3>
+ * An equip with this can only have a total of 3 unique traits.
+ *
+ * NOTE ABOUT LIMITS
+ * Attempting to fuse beyond the max will not be allowed, even if there are
+ * additional refinement counts available. However, traits will intelligently
+ * stack if they are the same, and powering up existing traits will still be
+ * allowed.
+ *
  * ============================================================================
  * CHANGELOG:
  *
@@ -90,19 +148,28 @@
  *    Initial release.
  * ============================================================================
  *
- * @command hideJaftingRefinement
- * @text Hide Refinement Option
- * @desc Removes the "refinement" option from the JAFTING mode selection window.
+ * @param parentConfig
+ * @text SETUP
  *
- * @command showJaftingRefinement
- * @text Show Refinement Option
- * @desc Adds the "refinement" option to the JAFTING mode selection window.
+ * @param menu-switch
+ * @parent parentConfig
+ * @type switch
+ * @text Menu Switch ID
+ * @desc When this switch is ON, then this command is visible in the menu.
+ * @default 106
  *
- * @command disableJaftingRefinement
- * @text Disable Refinement Option
- * @desc Disables the "refinement" option in the JAFTING mode selection window.
+ * @param menu-name
+ * @parent parentConfig
+ * @type string
+ * @text Menu Name
+ * @desc The name of the command used for JAFTING's Refinement.
+ * @default Refinement
  *
- * @command enableJaftingRefinement
- * @text Enable Refinement Option
- * @desc Enables the "refinement" option in the JAFTING mode selection window.
+ * @param menu-icon
+ * @parent parentConfig
+ * @type number
+ * @text Menu Icon
+ * @desc The icon of the command used for JAFTING's Refinement.
+ * @default 2565
+ *
  */

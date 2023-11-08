@@ -20,7 +20,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": false,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -52,7 +52,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -99,7 +99,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -146,7 +146,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -193,7 +193,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -257,7 +257,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -304,7 +304,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -346,7 +346,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [],
       "ingredients": [
@@ -392,7 +392,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -444,7 +444,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -486,7 +486,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -548,7 +548,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -642,7 +642,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -684,7 +684,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -736,7 +736,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -783,7 +783,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -819,13 +819,13 @@
     },
     {
       "name": "",
-      "key": "food_creamy-vanilla-bleucream",
+      "key": "food_vanilla-bleu-cone",
       "iconIndex": -1,
       "description": "",
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -867,7 +867,7 @@
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -923,13 +923,13 @@
     },
     {
       "name": "",
-      "key": "food_flame-kissed-lamia-ribs",
+      "key": "food_flame-kissed-rack",
       "iconIndex": -1,
       "description": "",
       "unlockedByDefault": false,
       "maskedUntilCrafted": true,
       "categoryKeys": [
-        "COOK_ERO"
+        "cook-meal"
       ],
       "tools": [
         {
@@ -3199,10 +3199,17 @@
   ],
   "categories": [
     {
-      "name": "Cooking",
-      "key": "COOK_ERO",
+      "name": "Chef de Cuisine",
+      "key": "cook-meal",
       "iconIndex": 2056,
-      "description": "A cooking style perfected by the Erocian region.\r\nThey are well-known for cooking up obscure monster parts into aromatic dishes.",
+      "description": "Cooking of the finest calibur, refined to the MAX.\r\nAdmittedly, the ingredients available in these parts make for some strange dishes.",
+      "unlockedByDefault": false
+    },
+    {
+      "name": "Bar's Tender",
+      "key": "cook-drink",
+      "iconIndex": 0,
+      "description": "One must understand that drinks can make or break the tension like a hot knife through butter.\r\nOr through a hot rum cocktail, or even a cold glass of chocolate malk.",
       "unlockedByDefault": false
     },
     {

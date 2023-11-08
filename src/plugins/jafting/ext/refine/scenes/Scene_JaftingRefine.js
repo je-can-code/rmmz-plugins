@@ -192,10 +192,13 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const listWindow = this.getBaseRefinableListWindow();
 
     // also update with the currently selected item, if one exists.
-    this.getRefinementDescriptionWindow()
-      .setText(listWindow.currentHelpText() ?? String.empty);
+    this.getRefinementDescriptionWindow().setText(listWindow.currentHelpText() ?? String.empty);
 
-    listWindow.select(0);
+    const selected = listWindow.currentExt();
+    this.setBaseSelected(selected.data);
+
+    const detailsWindow = this.getRefinementDetailsWindow();
+    detailsWindow.primaryEquip = selected?.data;
   }
 
   /**
@@ -328,10 +331,6 @@ class Scene_JaftingRefine extends Scene_MenuBase
     // overwrite the onIndexChange hook with our local hook.
     window.onIndexChange = this.onBaseRefinableListIndexChange.bind(this);
 
-    // also put the window away.
-    // window.hide();
-    // window.deactivate();
-
     // return the built and configured window.
     return window;
   }
@@ -349,7 +348,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const width = 350;
 
     // define the height of the window.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+    const height = Graphics.boxHeight - (Graphics.verticalPadding);
 
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
@@ -402,7 +401,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     this.getRefinementDescriptionWindow().setText(helpText ?? String.empty);
 
     const baseRefinable = listWindow.currentExt();
-    this.getRefinementDetailsWindow().primaryEquip = baseRefinable.data;
+    this.getRefinementDetailsWindow().primaryEquip = baseRefinable?.data;
   }
 
   onBaseRefinableListCancel()
@@ -477,7 +476,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const width = 350;
 
     // define the height of the window.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+    const height = Graphics.boxHeight - (Graphics.verticalPadding);
 
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
@@ -505,11 +504,18 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const listWindow = this.getConsumableRefinableListWindow();
 
     // reveal the window.
+    listWindow.baseSelection = this.getBaseSelected();
+    listWindow.refresh();
     listWindow.show();
     listWindow.activate();
 
+    const selected = listWindow.currentExt()?.data;
+    this.setConsumedSelected(selected);
+    this.getRefinementDetailsWindow().secondaryEquip = selected;
+
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText());
+
   }
 
   deselectConsumableRefinableListWindow()
@@ -726,8 +732,13 @@ class Scene_JaftingRefine extends Scene_MenuBase
     $gameParty.gainItem(this.getConsumedSelected(), -1);
 
     // generate the output.
-    const output = this.getRefinementDetailsWindow().outputEquip;
-    $gameJAFTING.createRefinedOutput(output);
+    const detailsWindow = this.getRefinementDetailsWindow();
+    const output = detailsWindow.outputEquip;
+    JaftingManager.createRefinedOutput(output);
+
+    // clear the existing data from the details window.
+    detailsWindow.primaryEquip = null;
+    detailsWindow.secondaryEquip = null;
 
     // reselect the original window.
     this.deselectConsumableRefinableListWindow();
@@ -738,12 +749,11 @@ class Scene_JaftingRefine extends Scene_MenuBase
     this.setBaseSelected(null);
     this.setConsumedSelected(null);
 
-    // clear the existing data from the details window.
-    const detailsWindow = this.getRefinementDetailsWindow();
-    detailsWindow.primaryEquip = null;
-    detailsWindow.secondaryEquip = null;
+    const listWindow = this.getBaseRefinableListWindow();
+    listWindow.refresh();
+    listWindow.select(0);
 
-    this.getBaseRefinableListWindow().refresh();
+    this.getConsumableRefinableListWindow().refresh();
   }
   //endregion confirmation prompt
 }
