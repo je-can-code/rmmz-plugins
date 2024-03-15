@@ -23,7 +23,7 @@ PluginManager.registerCommand(
     const {categoryKeys} = args;
 
     const parsedCategoryKeys = JSON.parse(categoryKeys);
-    parsedCategoryKeys.forEach($gameParty.unlockCategory, this);
+    parsedCategoryKeys.forEach($gameParty.unlockCategory, $gameParty);
   });
 
 /**
@@ -38,7 +38,7 @@ PluginManager.registerCommand(
     const {categoryKeys} = args;
 
     const parsedCategoryKeys = JSON.parse(categoryKeys);
-    parsedCategoryKeys.forEach($gameParty.lockCategory, this);
+    parsedCategoryKeys.forEach($gameParty.lockCategory, $gameParty);
   });
 
 /**
@@ -54,7 +54,7 @@ PluginManager.registerCommand(
   const {recipeKeys} = args;
 
   const parsedRecipeKeys = JSON.parse(recipeKeys);
-  parsedRecipeKeys.forEach($gameParty.unlockRecipe, this);
+  parsedRecipeKeys.forEach($gameParty.unlockRecipe, $gameParty);
 });
 
 /**
@@ -69,7 +69,7 @@ PluginManager.registerCommand(
     const {recipeKeys} = args;
 
     const parsedRecipeKeys = JSON.parse(recipeKeys);
-    parsedRecipeKeys.forEach($gameParty.lockRecipe, this);
+    parsedRecipeKeys.forEach($gameParty.lockRecipe, $gameParty);
   });
 
 /**
