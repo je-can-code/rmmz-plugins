@@ -336,6 +336,7 @@ Game_Party.prototype.lockAllRecipes = function()
 
 /**
  * Whether or not a named entry should be unlockable.
+ * This is mostly for skipping recipe names that are used as dividers in the list.
  * @param {string} name The name of the entry.
  * @return {boolean} True if the entry can be gained, false otherwise.
  */
@@ -358,5 +359,28 @@ Game_Party.prototype.canGainEntry = function(name)
 
   // we can gain it!
   return true;
+};
+
+/**
+ * Adds +1 proficiency to all recipe trackings, revealing them if they were previously masked.
+ * This is mostly for debugging purposes.
+ */
+Game_Party.prototype.revealAllKnownRecipes = function()
+{
+  this
+    .getAllRecipeTrackings()
+    .filter(tracking => this.canGainEntry(tracking.key))
+    .forEach(tracking => tracking.improveProficiency(1));
+};
+
+/**
+ * Completely unlocks all recipes and categories and reveals them if they would be otherwise masked.
+ * This is mostly for debugging purposes.
+ */
+Game_Party.prototype.unlockEverythingCompletely = function()
+{
+  this.unlockAllRecipes();
+  this.unlockAllCategories();
+  this.revealAllKnownRecipes();
 };
 //endregion Game_Party
