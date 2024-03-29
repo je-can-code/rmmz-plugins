@@ -4,7 +4,7 @@
  * @plugindesc
  * [v2.1.4 BASE] The base class for all J plugins.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @help
  * ============================================================================
  * OVERVIEW:
@@ -17,6 +17,29 @@
  * If you are not a dev, you can stop reading if you want (or read on to learn
  * more about the code underneath).
  * ============================================================================
+ * MAX ITEM QUANTITY:
+ * Have you ever wanted to define a max quantity for items/weapons/armors in
+ * the database? Like, not just 99? Well now you can! By applying the correct
+ * tags to the relevant entries in the database, you too can have various fixed
+ * and maximum item quantities.
+ *
+ * NOTE ABOUT FUNCTIONALITY PERMANENCE:
+ * This max quantity stuff will likely get shifted to its own plugin eventually.
+ *
+ * TAG USAGE:
+ * - Items
+ * - Weapons
+ * - Armors
+ *
+ * TAG FORMAT:
+ *  <max:VALUE>
+ *    Where VALUE represents the maximum quantity allowed for this item.
+ *
+ * TAG EXAMPLES:
+ *  <max:15>
+ * The maximum amount of the database entry decorated with this is 15.
+ * ============================================================================
+ *
  * DEV DETAILS:
  * I would encourage you peruse the added functions to the various classes.
  * Many helper functions that probably should've existed were added, and coding
@@ -38,6 +61,8 @@
  * CHANGELOG:
  * - 2.1.4
  *    Added parent class for subclassing to strongly type plugin metadata.
+ *    Added Game_Character#isVehicle function.
+ *    Added max item quantity functionality with tag.
  * - 2.1.3
  *    Added help text functionality for window commands.
  *    Added description text for all parameters.

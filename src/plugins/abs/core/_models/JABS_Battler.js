@@ -2724,7 +2724,7 @@ JABS_Battler.prototype.isFacingTarget = function(target)
  */
 JABS_Battler.prototype.isPlayer = function()
 {
-  return (this.getCharacter() instanceof Game_Player);
+  return this.getCharacter().isPlayer();
 };
 
 /**
@@ -2743,7 +2743,7 @@ JABS_Battler.prototype.isActor = function()
  */
 JABS_Battler.prototype.isFollower = function()
 {
-  return (this.getCharacter() instanceof Game_Follower);
+  return this.getCharacter().isFollower();
 };
 
 /**
@@ -2761,7 +2761,7 @@ JABS_Battler.prototype.isEnemy = function()
  */
 JABS_Battler.prototype.isEvent = function()
 {
-  return (this.getCharacter() instanceof Game_Event);
+  return this.getCharacter().isEvent();
 };
 
 /**

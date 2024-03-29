@@ -62,23 +62,12 @@ Game_Action.prototype.setSubject = function(subject)
 /**
  * Overrides {@link #apply}.<br>
  * Adjusts how a skill is applied to a target in the context of JABS.
- * While JABS is disabled, the normal application is used instead.
  */
 J.ABS.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
-  // check if JABS is enabled.
-  if ($jabsEngine.absEnabled)
-  {
-    // let JABS handle this.
-    this.applyJabsAction(target);
-  }
-  // JABS is not enabled.
-  else
-  {
-    // perform original logic.
-    J.ABS.Aliased.Game_Action.get('apply').call(this, target);
-  }
+  // let JABS handle this.
+  this.applyJabsAction(target);
 };
 
 /**
@@ -89,43 +78,79 @@ Game_Action.prototype.apply = function(target)
  */
 Game_Action.prototype.applyJabsAction = function(target)
 {
-  // all the normal stuff that happens with Game_Action.apply() logic.
-  const result = target.result();
-  this.subject().clearResult();
-  result.clear();
-  result.used = this.testApply(target);
-  result.evaded = this.isHitEvaded(target);
-  result.physical = this.isPhysical();
-  result.drain = this.isDrain();
+  // do the preliminary
+  this.preApplyAction(target);
 
   // validate we landed a hit.
-  if (result.isHit())
+  if (target.result().isHit())
   {
-    // check if there is a damage formula.
-    if (this.item().damage.type > 0)
-    {
-      // determine if its a critical hit.
-      result.critical = this.isHitCritical(target);
-
-      // calculate the damage.
-      const value = this.makeDamageValue(target, result.critical);
-
-      // actually apply the damage to the target.
-      this.executeDamage(target, value);
-    }
-
-    // add the subject who is applying the state as a parameter for tracking purposes.
-    this.item().effects.forEach(effect => this.applyItemEffect(target, effect));
-
-    // applies on-cast/on-hit effects, like gaining TP or producing on-cast states.
-    this.applyItemUserEffect(target);
-
     // applies common events that may be a part of a skill's effect.
-    this.applyGlobal();
+    this.executeJabsAction(target);
   }
 
   // also update the last target hit.
   this.updateLastTarget(target);
+};
+
+/**
+ * Handles the pre-apply effects, such as setting up the result with some
+ * additional information ahead of execution.
+ * @param {Game_Actor|Game_Enemy} target The target of this action.
+ */
+Game_Action.prototype.preApplyAction = function(target)
+{
+  // always clear the caster's result (???).
+  this.subject().clearResult();
+
+  const result = target.result();
+
+  // always clear the result first.
+  result.clear();
+
+  // record if the skill was actually used.
+  result.used = this.testApply(target);
+
+  // record if the hit was actually evaded.
+  result.evaded = this.isHitEvaded(target);
+
+  // record if the usable was a physical-type.
+  result.physical = this.isPhysical();
+
+  // record if the usable was a drain-type.
+  result.drain = this.isDrain();
+};
+
+/**
+ * Executes the action, including calculating the various numbers and applying
+ * the effects against the target.
+ * @param {Game_Actor|Game_Enemy} target The target of this action.
+ */
+Game_Action.prototype.executeJabsAction = function(target)
+{
+  // grab the result again.
+  const result = target.result();
+
+  // check if there is a damage formula.
+  if (this.item().damage.type > 0)
+  {
+    // determine if its a critical hit.
+    result.critical = this.isHitCritical(target);
+
+    // calculate the damage.
+    const value = this.makeDamageValue(target, result.critical);
+
+    // actually apply the damage to the target.
+    this.executeDamage(target, value);
+  }
+
+  // add the subject who is applying the state as a parameter for tracking purposes.
+  this.item().effects.forEach(effect => this.applyItemEffect(target, effect));
+
+  // applies on-cast/on-hit effects, like gaining TP or producing on-cast states.
+  this.applyItemUserEffect(target);
+
+  // applies common events that may be a part of a skill's effect.
+  this.applyGlobal();
 };
 
 /**

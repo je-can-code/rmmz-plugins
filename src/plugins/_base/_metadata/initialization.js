@@ -129,6 +129,7 @@ J.BASE.Traits = {
  * All regular expressions used by this plugin.
  */
 J.BASE.RegExp = {};
+J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
 
 /**
  * The definition of what a parsable comment in an event looks like.

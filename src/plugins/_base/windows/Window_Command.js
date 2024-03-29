@@ -63,7 +63,7 @@ Window_Command.prototype.drawItem = function(index)
   const subtexts = this.commandSubtext(index);
 
   // calculate the x of the command name.
-  const commandNameX = rectX + 4;
+  const commandNameX = rectX + 40;
 
   // initialize the y of the command name.
   let commandNameY = rectY;
@@ -79,6 +79,13 @@ Window_Command.prototype.drawItem = function(index)
 
     // move the command name up a bit if we have subtext.
     commandNameY -= this.subtextLineHeight();
+  }
+
+  const commandIcon = this.commandIcon(index);
+  if (commandIcon)
+  {
+    const iconY = rectY;
+    this.drawIcon(commandIcon, commandNameX - 36, iconY);
   }
 
   // render the command name.
@@ -157,7 +164,7 @@ Window_Command.prototype.buildCommandName = function(index)
   commandName = this.handleColor(commandName, index);
 
   // prepend the icon for the command if applicable.
-  commandName = this.handleIcon(commandName, index);
+  // commandName = this.handleIcon(commandName, index);
 
   // return what we have.
   return commandName;
@@ -278,6 +285,7 @@ Window_Command.prototype.commandColor = function(index)
   return this.commandList().at(index).color;
 };
 
+//region adding commands
 /**
  * Overrides {@link #addCommand}.<br>
  * Adds additional metadata to a command.
@@ -342,4 +350,5 @@ Window_Command.prototype.prependBuiltCommand = function(command)
 {
   this.commandList().unshift(command);
 };
+//endregion adding commands
 //endregion Window_Command
