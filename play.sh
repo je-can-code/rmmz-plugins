@@ -1,1 +1,1 @@
-../../utilities/nwjs-linux/nw ./project &>/dev/null &
+$NWJS_EXE ./project &>/dev/null &
