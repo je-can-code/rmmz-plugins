@@ -594,7 +594,7 @@ class Scene_Difficulty extends Scene_MenuBase
       // extract the data points from the window.
       const {
         exp, gold, sdp, drops, encounters
-      } = this.hoveredDifficulty();
+      } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.
       const bonusEffects = new DifficultyBonusEffects();
@@ -623,7 +623,7 @@ class Scene_Difficulty extends Scene_MenuBase
       // extract the data points from the window.
       const {
         exp, gold, sdp, drops, encounters
-      } = this.hoveredDifficulty();
+      } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.
       const bonusEffects = new DifficultyBonusEffects();

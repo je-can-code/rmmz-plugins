@@ -37,7 +37,7 @@ Game_System.prototype.initDifficultyMembers = function()
    * The max points available to allocate to difficulty layers.
    * @type {number}
    */
-  this._j._difficulty._layerPointMax = J.DIFFICULTY.Metadata.DefaultLayerPointMax;
+  this._j._difficulty._layerPointMax = J.DIFFICULTY.Metadata.initialPoints;
 
   /**
    * The current number of points allocated to difficulty layers.
