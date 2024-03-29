@@ -5,7 +5,7 @@ class J_SdpPluginMetadata extends PluginMetadata
    * The path where the config for panels is located.
    * @type {string}
    */
-  static SDP_PATH = 'data/config.sdp.json';
+  static CONFIG_PATH = 'data/config.sdp.json';
 
   /**
    * Converts the JSON-parsed blob into classified {@link StatDistributionPanel}s.
@@ -102,7 +102,7 @@ class J_SdpPluginMetadata extends PluginMetadata
   initializePanels()
   {
     // parse the files as an actual list of objects from the JSON configuration.
-    const parsedPanels = JSON.parse(StorageManager.fsReadFile(J_SdpPluginMetadata.SDP_PATH));
+    const parsedPanels = JSON.parse(StorageManager.fsReadFile(J_SdpPluginMetadata.CONFIG_PATH));
     if (parsedPanels === null)
     {
       console.error('no SDP configuration was found in the /data directory of the project.');
@@ -110,7 +110,7 @@ class J_SdpPluginMetadata extends PluginMetadata
       throw new Error('SDP plugin is being used, but no config file is present.');
     }
 
-    // class-ify over each panel.
+    // classify each panel.
     const classifiedPanels = J_SdpPluginMetadata.classifyPanels(parsedPanels);
 
     /**
@@ -128,7 +128,9 @@ class J_SdpPluginMetadata extends PluginMetadata
      */
     this.panelsMap = panelMap;
 
-    console.log(`${this.panels.length} SDPs loaded from file ${J_SdpPluginMetadata.SDP_PATH}.`);
+    console.log(`loaded:
+      - ${this.panels.length} panels
+      from file ${J_SdpPluginMetadata.CONFIG_PATH}.`);
   }
 
   initializeMetadata()

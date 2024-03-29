@@ -164,10 +164,10 @@ class StatDistributionPanel
   }
 
   calculateBonusByRank(
-  paramId,
-  currentRank,
-  baseParam = 0,
-  fractional = false)
+    paramId,
+    currentRank,
+    baseParam = 0,
+    fractional = false)
   {
     // determine all the applicable panel parameters.
     const panelParameters = this.panelParameters.filter(panelParameter => panelParameter.parameterId === paramId);

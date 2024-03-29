@@ -88,29 +88,30 @@ Game_Party.prototype.processContainerlessItemGain = function(item, amount, inclu
 };
 
 /**
- * Extends maximum quantity management.
+ * Extends {@link #maxItems}.<br>
+ * Adds more handling regarding maximum quantities for your inventory.
  */
 J.BASE.Aliased.Game_Party.set('maxItems', Game_Party.prototype.maxItems);
 Game_Party.prototype.maxItems = function(item = null)
 {
-  // if we weren't passed an item, then return the default.
-  if (!item) return this.defaultMaxItems();
+  // determine the default max for any item.
+  const defaultMax = this.defaultMaxItems();
 
-  // grab the original max quantity is for this item.
-  const baseMax = J.BASE.Aliased.Game_Party.get('maxItems').call(this, item);
+  // if we weren't passed a valid item, then return the default.
+  if (!item) return defaultMax;
 
-  // check to make sure we got a valid value.
-  if (!baseMax || isNaN(baseMax))
+  // grab the individual item's max quantity.
+  const maxForItem = item.getNumberFromNotesByRegex(J.BASE.RegExp.MaxItems, true);
+
+  // check to ensure that quantity is defined.
+  if (maxForItem !== null)
   {
-    // if there is a problem with someone elses' plugins, return our max.
-    return defaultMaxItems;
+    // we found the max for this item!
+    return maxForItem;
   }
-  // our value is valid.
-  else
-  {
-    // return the original max quantity for this item.
-    return baseMax;
-  }
+
+  // thats it, just return the default if there is none defined.
+  return defaultMax;
 };
 
 /**

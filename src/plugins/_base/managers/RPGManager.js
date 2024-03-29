@@ -244,7 +244,7 @@ class RPGManager
   static getArraysFromNotesByRegex(noteObject, structure, tryParse = true)
   {
     // get the note data from this skill.
-    const fromNote = noteObject.split(/[\r\n]+/);
+    const noteLines = noteObject.split(/[\r\n]+/);
 
     // initialize the value.
     let val = [];
@@ -253,13 +253,16 @@ class RPGManager
     let hasMatch = false;
 
     // iterate the note data array.
-    fromNote.forEach(note =>
+    noteLines.forEach(line =>
     {
       // check if this line matches the given regex structure.
-      if (note.match(structure))
+      if (line.match(structure))
       {
+        // extract the captured formula.
+        const [,result] = structure.exec(line);
+
         // parse the value out of the regex capture group.
-        val.push(RegExp.$1);
+        val.push(result);
 
         // flag that we found a match.
         hasMatch = true;
@@ -297,7 +300,7 @@ class RPGManager
   static getArrayFromNotesByRegex(noteObject, structure, tryParse = true)
   {
     // get the note data from this skill.
-    const fromNote = noteObject.split(/[\r\n]+/);
+    const noteLines = noteObject.split(/[\r\n]+/);
 
     // initialize the value.
     let val = null;
@@ -306,13 +309,16 @@ class RPGManager
     let hasMatch = false;
 
     // iterate the note data array.
-    fromNote.forEach(note =>
+    noteLines.forEach(line =>
     {
       // check if this line matches the given regex structure.
-      if (note.match(structure))
+      if (line.match(structure))
       {
+        // extract the captured formula.
+        const [,result] = structure.exec(line);
+
         // parse the value out of the regex capture group.
-        val = JSON.parse(RegExp.$1);
+        val = JSON.parse(result);
 
         // flag that we found a match.
         hasMatch = true;

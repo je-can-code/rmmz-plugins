@@ -112,7 +112,7 @@ class Mirror
     if (!fs.existsSync(`${targetPath}`))
     {
       // make sure the directory is created.
-      await fs.mkdir(targetPath, { recursive: true }, this.#handleFileError);
+      await fs.mkdir(targetPath, { force: true, recursive: true }, this.#handleFileError);
       Logger.logAnyway(`target directory created: ${targetPath}`);
     }
     else
@@ -128,7 +128,6 @@ class Mirror
   #handleFileError(error)
   {
     if (error) throw error;
-    Logger.log("successful errorful action!");
   }
 }
 

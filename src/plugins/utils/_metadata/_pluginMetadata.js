@@ -18,7 +18,6 @@ class J_UtilsPluginMetadata extends PluginMetadata
     // execute original logic.
     super.postInitialize();
 
-
     /**
      * Whether or not to use the "auto-newgame" feature.
      * @type {boolean}

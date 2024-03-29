@@ -4,7 +4,7 @@
  * @plugindesc
  * [v1.0.0 PROF] Enables skill prof and condition triggers.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @help
  * ============================================================================
  * This plugin enables the ability to have actors grow in prof when

@@ -3,7 +3,7 @@
  * @plugindesc
  * [v1.1.0 UTIL] Various system utilities.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @help
  * ============================================================================
@@ -55,7 +55,6 @@ class J_UtilsPluginMetadata extends PluginMetadata
   {
     // execute original logic.
     super.postInitialize();
-
 
     /**
      * Whether or not to use the "auto-newgame" feature.

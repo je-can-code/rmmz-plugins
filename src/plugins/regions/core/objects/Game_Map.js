@@ -123,7 +123,7 @@ Game_Map.prototype.setup = function(mapId)
   // perform original logic.
   J.REGIONS.Aliased.Game_Map.get('setup').call(this, mapId);
 
-  // update rare/named enemy variable.
+  // setup all region effects.
   this.setupRegionEffects();
 };
 
@@ -304,7 +304,7 @@ Game_Map.prototype.projectCoordinatesByDirection = function(x, y, d)
 {
   // accommodate cyclone movement if available.
   const increment = CycloneMovement
-    ? (1 / CycloneMovement.stepCount)
+    ? (1 / CycloneMovement?.stepCount ?? 1)
     : 1;
 
   // default the projected coordinates to the current.

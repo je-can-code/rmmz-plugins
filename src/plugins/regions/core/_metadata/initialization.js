@@ -10,6 +10,11 @@ var J = J || {};
 J.REGIONS = {};
 
 /**
+ * The parent namespace for all REGIONS extensions.
+ */
+J.REGIONS.EXT = {};
+
+/**
  * The `metadata` associated with this plugin; such as version.
  */
 J.REGIONS.Metadata = {};

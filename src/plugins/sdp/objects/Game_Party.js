@@ -36,7 +36,6 @@ Game_Party.prototype.initSdpMembers = function()
    * There should always be one for every panel imported from the
    * configuration.
    * @type {PanelTracking[]}
-   * @private
    */
   this._j._sdp._trackings = [];
 };
@@ -178,7 +177,7 @@ Game_Party.prototype.getAllSdpsAsMap = function()
  */
 Game_Party.prototype.getSdpByKey = function(key)
 {
-  return this.getAllSdpsAsMap().get(key)
+  return this.getAllSdpsAsMap().get(key);
 };
 
 /**

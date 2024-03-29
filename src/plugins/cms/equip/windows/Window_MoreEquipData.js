@@ -312,7 +312,7 @@ class Window_MoreEquipData extends Window_MoreData
     this.addCommand(maxRefineCommand, null, true, null, maxRefineIcon);
 
     const maxTraitIcon = IconManager.jaftingParameterIcon(IconManager.JAFTING_PARAMETER.MAX_TRAITS);
-    const currentTraitCount = $gameJAFTING.parseTraits(this.item).length;
+    const currentTraitCount = JaftingManager.parseTraits(this.item).length;
     let maxTraitCommand = `Transferable Traits: ${currentTraitCount}`;
     if (jaftingMaxTraitCount)
     {

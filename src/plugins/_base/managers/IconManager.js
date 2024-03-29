@@ -32,7 +32,15 @@ class IconManager
   }
 
   /**
-   * Gets the iconIndex for a given reward parameter.
+   * Gets the iconIndex for a given reward parameter.<br>
+   * Reward Param mapping:<br>
+   * <pre>
+   * - 0: experience
+   * - 1: gold/currency
+   * - 2: drops or drop rate
+   * - 3: encounters or encounter rate
+   * - 4: SDP
+   * </pre>
    * @param {number} paramId The param id to get the icon index for.
    * @returns {number}
    */

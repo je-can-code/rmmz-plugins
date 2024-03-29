@@ -310,6 +310,17 @@ JABS_SkillSlotManager.prototype.setSlot = function(key, skillId, locked)
  */
 JABS_SkillSlotManager.prototype.getSlotComboId = function(key)
 {
+  const jabsSkillSlot = this.getSkillSlotByKey(key);
+
+  if (!jabsSkillSlot)
+  {
+    console.warn(key);
+    console.warn(this);
+    // TODO: fix this; but until fixed, use skillId#1 in place of the error.
+
+    return 1;
+  }
+
   return this.getSkillSlotByKey(key)
     .getComboId();
 };

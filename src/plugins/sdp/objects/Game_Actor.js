@@ -196,7 +196,7 @@ Game_Actor.prototype.sdpMultiplier = function()
   // get the vision multiplier from anything this battler has available.
   const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(
     objectsToCheck,
-    J.ABS.RegExp.SdpMultiplier);
+    J.SDP.RegExp.SdpMultiplier);
 
   // get the sum of the base and bonus multipliers.
   const sdpMultiplier = (multiplier + sdpMultiplierBonus);

@@ -4,7 +4,7 @@
  * @plugindesc
  * [v3.3.0 JABS] Enables combat to be carried out on the map.
  * @author JE
- * @url https://github.com/je-can-code/ca
+ * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
  * @help
