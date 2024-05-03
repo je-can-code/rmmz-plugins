@@ -1,22 +1,22 @@
 //region Game_Actor
-if (J.NATURAL)
+/**
+ * Extend `.applyNaturalCustomGrowths()` to include our cdm/cdr growths.
+ */
+J.CRIT.Aliased.Game_Actor.set('applyNaturalCustomGrowths', Game_Actor.prototype.applyNaturalCustomGrowths);
+Game_Actor.prototype.applyNaturalCustomGrowths = function()
 {
-  /**
-   * Extend `.applyNaturalCustomGrowths()` to include our cdm/cdr growths.
-   */
-  J.NATURAL.Aliased.Game_Actor.set('applyNaturalCustomGrowths', Game_Actor.prototype.applyNaturalCustomGrowths);
-  Game_Actor.prototype.applyNaturalCustomGrowths = function()
-  {
-    // perform original logic.
-    J.NATURAL.Aliased.Game_Actor.get('applyNaturalCustomGrowths').call(this);
+  // perform original logic.
+  J.CRIT.Aliased.Game_Actor.get('applyNaturalCustomGrowths').call(this);
 
-    // do natural cdm growths.
-    this.applyNaturalCdmGrowths();
+  // short circuit if aren't using the system.
+  if (!J.NATURAL) return;
 
-    // do natural cdr growths.
-    this.applyNaturalCdrGrowths();
-  };
-}
+  // do natural cdm growths.
+  this.applyNaturalCdmGrowths();
+
+  // do natural cdr growths.
+  this.applyNaturalCdrGrowths();
+};
 
 /**
  * Extend `.longParam()` to first check for our crit params.
@@ -97,43 +97,43 @@ Game_Actor.prototype.getNaturalGrowthsRegexForCrit = function()
   ];
 };
 
-if (J.SDP)
+/**
+ * Gets all SDP bonuses for the given crit parameter id.
+ * @param {number} critParamId The id of the crit parameter.
+ * @param {number} baseParam The base value of the crit parameter in question.
+ * @returns {number}
+ */
+Game_Actor.prototype.critSdpBonuses = function(critParamId, baseParam)
 {
-  /**
-   * Gets all SDP bonuses for the given crit parameter id.
-   * @param {number} critParamId The id of the crit parameter.
-   * @param {number} baseParam The base value of the crit parameter in question.
-   * @returns {number}
-   */
-  Game_Actor.prototype.critSdpBonuses = function(critParamId, baseParam)
+  // short circuit if aren't using the system.
+  if (!J.SDP) return 0;
+
+  // grab all the rankings this actor has earned.
+  const panelRankings = this.getAllSdpRankings();
+
+  // short circuit if we have no rankings.
+  if (!panelRankings.length) return 0;
+
+  // crit params start at 28.
+  const actualCritParamId = 28 + critParamId;
+
+  // initialize the running value.
+  let val = 0;
+
+  // iterate over each of the earned rankings.
+  panelRankings.forEach(panelRanking =>
   {
-    // grab all the rankings this actor has earned.
-    const panelRankings = this.getAllSdpRankings();
+    // grab our panel by its key.
+    const panel = $gameParty.getSdpByKey(panelRanking.key);
 
-    // short circuit if we have no rankings.
-    if (!panelRankings.length) return 0;
+    // protect our players against changed keys mid-save file!
+    if (!panel) return;
 
-    // crit params start at 28.
-    const actualCritParamId = 28 + critParamId;
+    // add the calculated bonus.
+    val += panel.calculateBonusByRank(actualCritParamId, panelRanking.currentRank, baseParam, false);
+  });
 
-    // initialize the running value.
-    let val = 0;
-
-    // iterate over each of the earned rankings.
-    panelRankings.forEach(panelRanking =>
-    {
-      // grab our panel by its key.
-      const panel = $gameParty.getSdpByKey(panelRanking.key);
-
-      // protect our players against changed keys mid-save file!
-      if (!panel) return;
-
-      // add the calculated bonus.
-      val += panel.calculateBonusByRank(actualCritParamId, panelRanking.currentRank, baseParam, false);
-    });
-
-    // return the summed value.
-    return val;
-  };
-}
+  // return the summed value.
+  return val;
+};
 //endregion Game_Actor
