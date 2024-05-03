@@ -256,15 +256,6 @@ Game_Battler.prototype.cdmNaturalGrowths = function()
 };
 
 /**
- * Gets all SDP bonuses for cdm.
- * @returns {number}
- */
-Game_Battler.prototype.critSdpBonuses = function()
-{
-  return 0;
-};
-
-/**
  * Gets the base reduction for this battler's critical hits.
  * @returns {number}
  */

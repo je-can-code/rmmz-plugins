@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 CRIT] Manages critical damage multiplier/reduction of battlers.
+ * [v1.0.1 CRIT] Manages critical damage multiplier/reduction of battlers.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -167,5 +167,11 @@
  * multiplier per level.
  *
  * Please refer to the other plugin's documentation for more details.
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    Fixed issue where CDM and CDR were not being calculated for SDP bonuses.
+ * - 1.0.0
+ *    Initial release.
  * ============================================================================
  */
