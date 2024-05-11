@@ -30,10 +30,14 @@ class DifficultyManager
   static availableDifficulties()
   {
     // a filtering function for the list of difficulties to populate the list.
+    /** @param {DifficultyLayer} difficultyLayer */
     const filtering = difficultyLayer =>
     {
       // if the difficulty isn't visible, it isn't "available".
       if (difficultyLayer.isHidden()) return false;
+
+      // if a difficulty isn't unlocked, it isn't "available".
+      if (!difficultyLayer.isUnlocked()) return false;
 
       // this layer is available.
       return true;

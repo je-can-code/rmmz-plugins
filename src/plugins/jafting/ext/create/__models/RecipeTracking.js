@@ -1,4 +1,4 @@
-//region CraftRecipe_Tracking
+//region RecipeTracking
 /**
  * A data model representing the tracking of a single crafting recipe key.
  */
@@ -90,4 +90,4 @@ RecipeTracking.prototype.craftingProficiency = function()
 {
   return this.proficiency;
 };
-//endregion CraftRecipe_Tracking
+//endregion RecipeTracking
