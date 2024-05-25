@@ -339,7 +339,7 @@ Array.iterate = function(times, func, thisArg = undefined)
 J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
 {
   // the regexp for what to mask.
-  const structure = /[0-9A-Za-z\-()*!?'"=@,.]/ig;
+  const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/ig;
 
   // return the masked string content.
   return stringToMask.toString().replace(structure, maskingCharacter);

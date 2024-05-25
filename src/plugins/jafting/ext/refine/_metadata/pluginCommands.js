@@ -5,8 +5,8 @@
  */
 PluginManager.registerCommand(
   J.JAFTING.EXT.REFINE.Metadata.name,
-  "call-menu", () =>
-{
-  Scene_JaftingRefine.callScene();
-});
+  "call-menu", () => 
+  {
+    Scene_JaftingRefine.callScene();
+  });
 //endregion plugin commands

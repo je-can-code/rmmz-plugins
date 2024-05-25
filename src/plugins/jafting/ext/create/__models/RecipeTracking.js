@@ -2,9 +2,9 @@
 /**
  * A data model representing the tracking of a single crafting recipe key.
  */
-function RecipeTracking(key, unlocked, timesCrafted)
+function RecipeTracking(recipeKey, unlocked, timesCrafted)
 {
-  this.initialize(...arguments);
+  this.initialize(recipeKey, unlocked, timesCrafted);
 }
 
 RecipeTracking.prototype = {};
@@ -35,7 +35,7 @@ RecipeTracking.prototype.initialize = function(recipeKey, unlocked, timesCrafted
    * The number of times a recipe with this key has been crafted.
    * @type {number}
    */
-  this.proficiency = 0;
+  this.proficiency = timesCrafted;
 };
 
 /**

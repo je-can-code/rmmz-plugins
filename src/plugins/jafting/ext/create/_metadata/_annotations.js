@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 JAFT-Create] An extension for JAFTING to enable recipe creation.
+ * [v1.0.1 JAFT-Create] An extension for JAFTING to enable recipe creation.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -134,6 +134,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Recipes & Categories can now be updated for existing save files.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

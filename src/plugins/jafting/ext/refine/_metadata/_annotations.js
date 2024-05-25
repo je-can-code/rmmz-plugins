@@ -172,4 +172,9 @@
  * @desc The icon of the command used for JAFTING's Refinement.
  * @default 2565
  *
+ *
+ * @command call-menu
+ * @text Call the Refinement Menu
+ * @desc Calls the JAFTING Refinement scene.
+ *
  */

@@ -142,7 +142,7 @@ Game_Event.prototype.refresh = function()
 };
 
 /**
- * Replaces {@link Game_Event.refresh}.<br>
+ * Overrides {@link Game_Event.refresh}.<br>
  * Safely handles battler transformation and page index reassignment.
  *
  * Sometimes the page index reassignment can get out of hand and requires guardrails.

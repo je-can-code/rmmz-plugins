@@ -224,7 +224,7 @@ TextManager.xparamDescription = function(paramId)
     case 2:
       return [
         "A numeric value to one's chance of landing a critical hit.",
-        "This is directly reduced by a target's critical evasion."
+        "Critical hits will deal percent-increased damage."
       ];
 
     // CEV (Critical hit Evasion)
