@@ -430,8 +430,11 @@ class TextPopBuilder
         // set it to the hp damage color.
         this.setTextColorIndex(this.#textColors.hpDamage);
 
-        // add no y variance when working with hp damage.
-        this.setYVariance(0);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
       }
       // if negative, it must be healing.
       else
@@ -439,8 +442,11 @@ class TextPopBuilder
         // set it to the hp healing color.
         this.setTextColorIndex(this.#textColors.hpHealing);
 
-        // add some y variance when working with hp damage.
-        this.setYVariance(16);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
 
         // add a plus because we know its healing.
         this.setPrefix(`+`);
@@ -466,11 +472,14 @@ class TextPopBuilder
       // if positive, it must be damage.
       if (!this.#isHealing)
       {
-        // set it to the hp damage color.
+        // set it to the mp damage color.
         this.setTextColorIndex(this.#textColors.mpDamage);
 
-        // add some y variance when working with mp damage.
-        this.setYVariance(32);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
       }
       // if negative, it must be healing.
       else
@@ -478,8 +487,11 @@ class TextPopBuilder
         // set it to the mp healing color.
         this.setTextColorIndex(this.#textColors.mpHealing);
 
-        // add some y variance when working with mp healing.
-        this.setYVariance(48);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
 
         // add a plus because we know its healing.
         this.setPrefix(`+`);
@@ -508,8 +520,11 @@ class TextPopBuilder
         // set it to the tp damage color.
         this.setTextColorIndex(this.#textColors.tpDamage);
 
-        // add some y variance when working with tp damage.
-        this.setYVariance(64);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
       }
       // if negative, it must be healing.
       else
@@ -517,8 +532,11 @@ class TextPopBuilder
         // set it to the tp healing color.
         this.setTextColorIndex(this.#textColors.tpHealing);
 
-        // add some y variance when working with tp healing.
-        this.setYVariance(80);
+        // randomize the variance a bit.
+        const rngX = Math.randomInt(48);
+        const rngY = Math.randomInt(48);
+        this.setXVariance(rngX);
+        this.setYVariance(rngY);
 
         // add a plus because we know its healing.
         this.setPrefix(`+`);
@@ -618,10 +636,10 @@ class TextPopBuilder
     this.setTextColorIndex(1);
 
     // add some x variance when working with experience.
-    this.setXVariance(32);
+    this.setXVariance(y);
 
     // add some y variance when working with experience.
-    this.setYVariance(y);
+    this.setYVariance(0);
 
     // return the builder for fluent chaining.
     return this;
@@ -663,7 +681,7 @@ class TextPopBuilder
     this.setIconIndex(skillIconIndex);
 
     // add some x variance when working with experience.
-    this.setXVariance(64);
+    this.setYVariance(64);
 
     // return the builder for fluent chaining.
     return this;

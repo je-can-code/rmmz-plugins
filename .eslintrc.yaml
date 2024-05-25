@@ -2,6 +2,10 @@ parser: "@babel/eslint-parser"
 parserOptions:
   requireConfigFile: false
 
+ignorePatterns:
+  - "rmmz_*.js"                       # disables eslint for the rmmz base files- we don't mess with those.
+  - "*.d.ts"
+
 extends:
   - eslint:recommended
 rules:

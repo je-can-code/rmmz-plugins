@@ -435,7 +435,7 @@ Array.iterate = function(times, func, thisArg = undefined)
 J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
 {
   // the regexp for what to mask.
-  const structure = /[0-9A-Za-z\-()*!?'"=@,.]/ig;
+  const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/ig;
 
   // return the masked string content.
   return stringToMask.toString().replace(structure, maskingCharacter);
@@ -2952,7 +2952,7 @@ class RPG_Weapon extends RPG_EquipItem
 //endregion RPG_Weapon
 
 /**
- * The structure of the data points required to play a sound effect using the {@link SoundManager}.<br>
+ * The structure of the data points required to play a sound effect using the {@link SoundManager}.
  */
 class RPG_SoundEffect
 {
@@ -4955,7 +4955,7 @@ TextManager.xparamDescription = function(paramId)
     case 2:
       return [
         "A numeric value to one's chance of landing a critical hit.",
-        "This is directly reduced by a target's critical evasion."
+        "Critical hits will deal percent-increased damage."
       ];
 
     // CEV (Critical hit Evasion)

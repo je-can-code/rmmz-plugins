@@ -2494,26 +2494,34 @@ PluginManager.registerCommand(
   J.ABS.Metadata.Name,
   "Spawn Enemy",
   args =>
-{
-  // extract the eventId and coordinates from the plugin args.
-  const { x, y, enemyEventId, spawnAnimationId } = args;
-
-  // translate the args.
-  const parsedX = parseInt(x);
-  const parsedY = parseInt(y);
-  const parsedEnemyEventId = parseInt(enemyEventId);
-  const parsedAnimationId = parseInt(spawnAnimationId);
-
-  // spawn the enemy on the map.
-  const addedEnemy = $jabsEngine.addEnemyToMap(parsedX, parsedY, parsedEnemyEventId);
-
-  // check if there is a spawn animation.
-  if (parsedAnimationId)
   {
-    // execute the animation on the newly spawned enemy.
-    setTimeout(() => addedEnemy.requestAnimation(parsedAnimationId), 50);
-  }
-});
+  // extract the eventId and coordinates from the plugin args.
+    const { x, y, enemyEventId, spawnAnimationId } = args;
+
+    // translate the args.
+    const parsedX = parseInt(x);
+    const parsedY = parseInt(y);
+    const parsedEnemyEventId = parseInt(enemyEventId);
+    const parsedAnimationId = parseInt(spawnAnimationId);
+
+    // spawn the enemy on the map.
+    const addedEnemy = $jabsEngine.addEnemyToMap(parsedX, parsedY, parsedEnemyEventId);
+
+    // check if there is a spawn animation.
+    if (parsedAnimationId)
+    {
+      if (!addedEnemy)
+      {
+        console.error('enemy failed to be dynamically generated.');
+        console.warn(addedEnemy);
+        
+        return;
+      }
+
+      // execute the animation on the newly spawned enemy.
+      setTimeout(() => addedEnemy.requestAnimation(parsedAnimationId), 50);
+    }
+  });
 
 /**
  * Registers a plugin command for dynamically spawning loot onto the map.
@@ -3523,7 +3531,7 @@ JABS_Aggro.prototype.modAggro = function(modAggro, forced = false)
 
 //region JABS_AI
 /**
- * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.<br>
+ * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.
  */
 class JABS_AI
 {
@@ -9211,7 +9219,7 @@ JABS_Battler.prototype.changeCharacterSprite = function(skill)
   const newCharacterSprite = `${baseSpriteName}${skill.jabsPoseSuffix}`;
 
   // stitch the file path together with the sprite url.
-  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.<br>png`;
+  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
 
   // check if the sprite exists.
   const spriteExists = StorageManager.fileExists(spritePath);
@@ -13693,7 +13701,7 @@ RPG_BaseBattler.prototype.extractJabsTeamId = function()
 /**
  * The JABS prepare time for this battler.
  * This number represents how many frames must pass before this battler can
- * decide an action to perform when controlled by the {@link JABS_AiManager}.<br>
+ * decide an action to perform when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsPrepareTime",
@@ -13727,7 +13735,7 @@ RPG_BaseBattler.prototype.extractJabsPrepareTime = function()
 /**
  * The JABS sight range for this battler.
  * This number represents how many tiles this battler can see before
- * engaging in combat when controlled by the {@link JABS_AiManager}.<br>
+ * engaging in combat when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsSightRange",
@@ -13761,7 +13769,7 @@ RPG_BaseBattler.prototype.extractJabsSightRange = function()
 /**
  * The JABS pursuit range for this battler.
  * This number represents how many tiles this battler can see after
- * engaging in combat when controlled by the {@link JABS_AiManager}.<br>
+ * engaging in combat when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsPursuitRange",
@@ -17058,7 +17066,7 @@ class JABS_AiManager
   }
 
   /**
-   * Finds a battler by its {@link Game_Event.eventId}.<br>
+   * Finds a battler by its {@link Game_Event.eventId}.
    * @param {number} eventId The event id to find a battler for.
    * @returns {JABS_Battler|undefined}
    */
@@ -17234,7 +17242,7 @@ class JABS_AiManager
    */
   static getActorBattlers()
   {
-    // filter on whether or not the battler is a {@link Game_Actor}.<br>
+    // filter on whether or not the battler is a {@link Game_Actor}.
     return this.getAllBattlers()
       .filter(battler => battler.isActor());
   }
@@ -17245,7 +17253,7 @@ class JABS_AiManager
    */
   static getEnemyBattlers()
   {
-    // filter on whether or not the battler is a {@link Game_Enemy}.<br>
+    // filter on whether or not the battler is a {@link Game_Enemy}.
     return this.getAllBattlers()
       .filter(battler => battler.isEnemy());
   }
@@ -18867,7 +18875,7 @@ class JABS_Engine
   /**
    * Updates all battlers registered as "players" to JABS.
    * "Players" are battlers that are always polling for actions rather
-   * than only as a part of {@link JABS_AiManager.aiPhase2}.<br>
+   * than only as a part of {@link JABS_AiManager.aiPhase2}.
    */
   updatePlayers()
   {
@@ -21139,13 +21147,13 @@ class JABS_Engine
       case actionResult.mpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.mpDamage)
-          .isHpDamage();
+          .isMpDamage();
         break;
       // if the result is tp damage, treat it as such.
       case actionResult.tpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.tpDamage)
-          .isHpDamage();
+          .isTpDamage();
         break;
       // if for some reason its something else, they are probably immune.
       default:
@@ -21984,7 +21992,7 @@ class JABS_Engine
     itemDataList.forEach((itemData, index) =>
     {
       // generate a pop that moves based on index.
-      this.generatePopItem(itemData, character, 64+(index*24));
+      this.generatePopItem(itemData, character, 32+(index*24));
     }, this);
 
     // flag the character for processing pops.
@@ -25860,7 +25868,7 @@ Game_Event.prototype.refresh = function()
 };
 
 /**
- * Replaces {@link Game_Event.refresh}.<br>
+ * Overrides {@link Game_Event.refresh}.<br>
  * Safely handles battler transformation and page index reassignment.
  *
  * Sometimes the page index reassignment can get out of hand and requires guardrails.
@@ -27282,8 +27290,17 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const direction = player.direction();
   const x1 = player.x;
   const y1 = player.y;
-  const x2 = $gameMap.roundXWithDirection(x1, direction);
-  const y2 = $gameMap.roundYWithDirection(y1, direction);
+  let x2 = $gameMap.roundXWithDirection(x1, direction);
+  let y2 = $gameMap.roundYWithDirection(y1, direction);
+
+  // when using cyclone's movement plugin, rounding is necessary to accommodate interacting with events
+  // without actually executing your weapon attack.
+  if (J.ABS.EXT?.CYCLE)
+  {
+    x2 = Math.round($gameMap.roundXWithDirection(x1, direction));
+    y2 = Math.round($gameMap.roundYWithDirection(y1, direction));
+  }
+
   const triggers = [0, 1, 2];
 
   // look over events directly infront of the player.

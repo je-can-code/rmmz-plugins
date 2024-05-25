@@ -404,7 +404,7 @@ class JABS_Engine
   /**
    * Updates all battlers registered as "players" to JABS.
    * "Players" are battlers that are always polling for actions rather
-   * than only as a part of {@link JABS_AiManager.aiPhase2}.<br>
+   * than only as a part of {@link JABS_AiManager.aiPhase2}.
    */
   updatePlayers()
   {
@@ -2676,13 +2676,13 @@ class JABS_Engine
       case actionResult.mpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.mpDamage)
-          .isHpDamage();
+          .isMpDamage();
         break;
       // if the result is tp damage, treat it as such.
       case actionResult.tpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.tpDamage)
-          .isHpDamage();
+          .isTpDamage();
         break;
       // if for some reason its something else, they are probably immune.
       default:
@@ -3521,7 +3521,7 @@ class JABS_Engine
     itemDataList.forEach((itemData, index) =>
     {
       // generate a pop that moves based on index.
-      this.generatePopItem(itemData, character, 64+(index*24));
+      this.generatePopItem(itemData, character, 32+(index*24));
     }, this);
 
     // flag the character for processing pops.

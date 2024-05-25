@@ -5504,7 +5504,7 @@ JABS_Battler.prototype.changeCharacterSprite = function(skill)
   const newCharacterSprite = `${baseSpriteName}${skill.jabsPoseSuffix}`;
 
   // stitch the file path together with the sprite url.
-  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.<br>png`;
+  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
 
   // check if the sprite exists.
   const spriteExists = StorageManager.fileExists(spritePath);
