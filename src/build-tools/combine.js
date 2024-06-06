@@ -1,7 +1,7 @@
 /**
  * COMBINER
  *
- * OVERVIEW:
+ * OVERVIEW
  * This nodejs script is intended to be used to quickly combine all files from
  * a single given directory and its subdirectories into a single long file. This
  * can allow an RMMZ plugin dev to build out all the different functions and

@@ -121,7 +121,8 @@ J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList = new Map();
 J.JAFTING.EXT.REFINE.RegExp = {};
 J.JAFTING.EXT.REFINE.RegExp.NotRefinementBase = /<notRefinementBase>/i;
 J.JAFTING.EXT.REFINE.RegExp.NotRefinementMaterial = /<notRefinementMaterial>/i;
-J.JAFTING.EXT.REFINE.RegExp.Unrefinable = /<unrefinable>/i;
+J.JAFTING.EXT.REFINE.RegExp.Unrefinable = /<noRefine>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxRefineCount = /<maxRefineCount:[ ]?(\d+)>/i;
+J.JAFTING.EXT.REFINE.RegExp.MaxRefinedTraits = /<maxRefinedTraits:[ ]?(\d+)>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount = /<maxTraitCount:[ ]?(\d+)>/i;
 //endregion Introduction

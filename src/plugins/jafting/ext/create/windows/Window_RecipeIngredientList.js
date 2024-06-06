@@ -102,7 +102,7 @@ class Window_RecipeIngredientList extends Window_Command
 
       .setRightText(needQuantity)
       .setRightColorIndex(haveTextColor)
-      .setSubtextLines(subtexts)
+      .setTextLines(subtexts)
       .build();
   }
 

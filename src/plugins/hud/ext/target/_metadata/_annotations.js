@@ -13,7 +13,7 @@
  * @orderAfter J-HUD
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin is an extension of the J-HUD plugin, designed for JABS.
  * It generates a window on the map displaying a given target.
  *

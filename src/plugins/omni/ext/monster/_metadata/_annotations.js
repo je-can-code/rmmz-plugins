@@ -13,7 +13,7 @@
  * @base J-Omnipedia
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin extends the Omnipedia by adding a new entry: The Monsterpedia.
  *
  * Due to rendering a large amount of data, there are a number of other plugins

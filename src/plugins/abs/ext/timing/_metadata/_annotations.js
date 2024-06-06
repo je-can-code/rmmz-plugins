@@ -9,7 +9,7 @@
  * @orderAfter J-ABS
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables modifications for cast times and cooldowns for actions.
  *
  * Enables:

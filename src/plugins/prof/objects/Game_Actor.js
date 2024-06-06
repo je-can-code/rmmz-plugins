@@ -358,21 +358,8 @@ Game_Actor.prototype.checkProficiencyConditionals = function()
  */
 Game_Actor.prototype.bonusSkillProficiencyGains = function()
 {
-  const objectsToCheck = this.getAllNotes();
-  const structure = /<proficiencyBonus:[ ]?([0-9]*)>/i;
-  let bonusProficiency = 0;
-  objectsToCheck.forEach(obj =>
-  {
-    const notedata = obj.note.split(/[\r\n]+/);
-    notedata.forEach(line =>
-    {
-      if (line.match(structure))
-      {
-        bonusProficiency += parseInt(RegExp.$1);
-      }
-    });
-  });
-
-  return bonusProficiency;
+  return RPGManager.getSumFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.PROF.RegExp.ProficiencyBonus);
 };
 //endregion Game_Actor

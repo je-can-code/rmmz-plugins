@@ -6,7 +6,7 @@
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * These modifications of code are modifications against various components of
  * the core scripts. Additionally, plugins I've written are also modified here
  * in a way that I consider "not-mainstream enough" to be published as a part

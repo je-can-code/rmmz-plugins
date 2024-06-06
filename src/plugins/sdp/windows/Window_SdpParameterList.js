@@ -80,7 +80,9 @@ class Window_SdpParameterList extends Window_Command
     let paramValue = this.currentActor.longParam(parameterId);
     const isPercentParamValue = this.isPercentParameter(parameterId);
     const percentValue = isPercentParamValue ? '%' : String.empty;
-    if (!Game_BattlerBase.isBaseParam(parameterId))
+
+    // non-base parameters (and not max tp) get multiplied by 100.
+    if (!Game_BattlerBase.isBaseParam(parameterId) && parameterId !== 30)
     {
       paramValue *= 100;
     }
@@ -96,7 +98,7 @@ class Window_SdpParameterList extends Window_Command
     // construct the command.
     const command = new WindowCommandBuilder(commandName)
       .setSymbol(parameterId)
-      .addSubTextLines(paramDescription)
+      .addTextLines(paramDescription)
       .setIconIndex(paramIcon)
       .setColorIndex(colorIndex)
       .setRightText(modifierText)

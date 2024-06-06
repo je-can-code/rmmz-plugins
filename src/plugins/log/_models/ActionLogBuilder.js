@@ -2,7 +2,7 @@
 /**
  * A fluent-builder for the logger on the map.
  */
-class MapLogBuilder
+class ActionLogBuilder
 {
   /**
    * The current message that this log contains.
@@ -12,12 +12,12 @@ class MapLogBuilder
 
   /**
    * Builds the log based on the currently provided info.
-   * @returns {Map_Log} The built log.
+   * @returns {ActionLog} The built log.
    */
   build()
   {
     // instantiate the log.
-    const log = new Map_Log(this.#message);
+    const log = new ActionLog(this.#message);
 
     // clear this builder of its instance data.
     this.#clear();

@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v2.0.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -16,7 +16,7 @@
  * @orderAfter J-Proficiency
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin is a form of "stat distribution"- an alternative to the standard
  * of leveling up to raise an actor's stats.
  *
@@ -62,6 +62,28 @@
  *
  * If this configuration file is missing, the game will not run.
  *
+ * Additionally, due to the way RMMZ base code is designed, by loading external
+ * files for configuration like this, a project made with this plugin will
+ * simply crash when attempting to load in a web context with an error akin to:
+ *    "ReferenceError require is not defined"
+ * This error is a result of attempting to leverage nodejs's "require" loader
+ * to load the "fs" (file system) library to then load the plugin's config
+ * file. Normally a web deployed game will alternatively use "forage" instead
+ * to handle things that need to be read or saved, but because the config file
+ * is just that- a file sitting in the /data directory rather than loaded into
+ * forage storage- it becomes unaccessible.
+ * ----------------------------------------------------------------------------
+ * NOTE ABOUT PANEL NAMES:
+ * Generally speaking, you can name your chosen panels (described in the
+ * configuration file mentioned above) whatever you want- with a couple of
+ * exceptions for organizational purposes within the JMZ Data Editor.
+ *
+ * If a panel starts with any of the following characters:
+ * - "__" (double underscore)
+ * - "--" (double hyphen/dash)
+ * - "==" (double equals)
+ * Then the panel will not be included in the list that is parsed from the
+ * configuration file upon starting the game.
  * ============================================================================
  * SDP POINTS:
  * Ever want enemies to drop SDP Points? Well now they can! By applying the
@@ -117,7 +139,11 @@
  * will now gain 50% increased SDP points (80 - 30 = 50).
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.1
+ *    Added filter for skipping panels that start with particular characters.
+ *    Retroactively added note about breaking web deploys for this plugin.
  * - 2.0.0
+ *    THIS UPDATE BREAKS WEB DEPLOY FUNCTIONALITY FOR YOUR GAME.
  *    Major breaking changes related to plugin parameters.
  *    Updated to extend common plugin metadata patterns.
  *    Panel data is now strictly data.
@@ -126,7 +152,6 @@
  *    Panels being unlocked/locked are stored on the party.
  *    Updated SDP scene to display rewards.
  *    Updated SDP rewards to have names.
- *
  * - 1.3.0
  *    Added new tag for unlocking panels on use of item.
  * - 1.2.3

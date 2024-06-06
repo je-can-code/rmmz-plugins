@@ -18,6 +18,13 @@ class BuiltWindowCommand
   #lines = [];
 
   /**
+   * Whether or not the additional lines are actually subtext.<br/>
+   * Additional lines are classified as subtext by default.
+   * @type {boolean}
+   */
+  #isSubtext = true;
+
+  /**
    * The text that will be right-aligned for this command.
    * @type {string}
    */
@@ -67,6 +74,19 @@ class BuiltWindowCommand
    * @type {number}
    */
   #colorIndex = 0;
+
+  /**
+   * The filename of the face image associated with this log.
+   * @type {string|String.empty}
+   */
+  #faceName = String.empty;
+
+  /**
+   * The index of the face image associated with this log.
+   * @type {number}
+   */
+  #faceIndex = -1;
+
   //endregion properties
 
   constructor(
@@ -79,7 +99,10 @@ class BuiltWindowCommand
     rightText = String.empty,
     rightColorIndex = 0,
     lines = [],
-    helpText = String.empty)
+    helpText = String.empty,
+    isSubtext = true,
+    faceData = [String.empty, -1]
+  )
   {
     this.#name = name;
     this.#key = symbol;
@@ -91,6 +114,11 @@ class BuiltWindowCommand
     this.#rightColorIndex = rightColorIndex;
     this.#lines = lines;
     this.#helpText = helpText;
+    this.#isSubtext = isSubtext;
+
+    const [faceName, faceIndex] = faceData;
+    this.#faceName = faceName;
+    this.#faceIndex = faceIndex;
   }
 
   //region getters
@@ -109,7 +137,33 @@ class BuiltWindowCommand
    */
   get subText()
   {
+    // if this is a command without subtext, then the subtext should be empty.
+    if (!this.isSubtext) return [];
+
+    // the additional lines are subtext, just return them.
     return this.#lines;
+  }
+
+  /**
+   * Gets the extra lines that make up this multiline command.
+   * @returns {string[]}
+   */
+  get lines()
+  {
+    // if this is a command with subtext, then lines should be empty.
+    if (this.isSubtext) return [];
+
+    // the additional lines are part of a multiline command, just return them.
+    return this.#lines;
+  }
+
+  /**
+   * Gets whether or not this command's additional lines were actually subtext.
+   * @returns {boolean}
+   */
+  get isSubtext()
+  {
+    return this.#isSubtext;
   }
 
   /**
@@ -182,6 +236,11 @@ class BuiltWindowCommand
   get helpText()
   {
     return this.#helpText;
+  }
+
+  get faceData()
+  {
+    return [this.#faceName, this.#faceIndex];
   }
   //endregion getters
 }

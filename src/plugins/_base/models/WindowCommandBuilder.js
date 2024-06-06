@@ -18,6 +18,13 @@ class WindowCommandBuilder
   #lines = [];
 
   /**
+   * Whether or not the additional lines are actually subtext.<br/>
+   * Additional lines are classified as subtext by default.
+   * @type {boolean}
+   */
+  #isSubtext = true;
+
+  /**
    * The text that will be right-aligned for this command.
    * @type {string}
    */
@@ -67,6 +74,18 @@ class WindowCommandBuilder
    * @type {number}
    */
   #colorIndex = 0;
+
+  /**
+   * The filename of the face image associated with this log.
+   * @type {string|String.empty}
+   */
+  #faceName = String.empty;
+
+  /**
+   * The index of the face image associated with this log.
+   * @type {number}
+   */
+  #faceIndex = -1;
   //endregion properties
 
   /**
@@ -96,7 +115,9 @@ class WindowCommandBuilder
       this.#rightText,
       this.#rightColorIndex,
       this.#lines,
-      this.#helpText
+      this.#helpText,
+      this.#isSubtext,
+      [this.#faceName, this.#faceIndex]
     );
 
     // return the built command.
@@ -119,7 +140,7 @@ class WindowCommandBuilder
    * @param {string} line The line of subtext to add.
    * @returns {this} This builder for fluent-building.
    */
-  addSubTextLine(line)
+  addTextLine(line)
   {
     this.#lines.push(line);
     return this;
@@ -130,7 +151,7 @@ class WindowCommandBuilder
    * @param {string[]} lines The lines of subtext to add.
    * @returns {this} This builder for fluent-building.
    */
-  addSubTextLines(lines)
+  addTextLines(lines)
   {
     this.#lines.push(...lines);
     return this;
@@ -141,9 +162,29 @@ class WindowCommandBuilder
    * @param {string[]} lines The lines of subtext to set.
    * @returns {this} This builder for fluent-building.
    */
-  setSubtextLines(lines)
+  setTextLines(lines)
   {
     this.#lines = lines;
+    return this;
+  }
+
+  /**
+   * Sets this command to identify its additional lines as a multiline command rather than subtext.
+   * @returns {WindowCommandBuilder}
+   */
+  flagAsMultiline()
+  {
+    this.#isSubtext = false;
+    return this;
+  }
+
+  /**
+   * Sets this command to identify its additiona lines as subtext rather than a multiline command.
+   * @returns {WindowCommandBuilder}
+   */
+  flagAsSubText()
+  {
+    this.#isSubtext = true;
     return this;
   }
 
@@ -232,6 +273,28 @@ class WindowCommandBuilder
   setHelpText(helpText)
   {
     this.#helpText = helpText;
+    return this;
+  }
+
+  /**
+   * Sets the filename of the face associated with this command.
+   * @param {string} faceName The filename containing the face.
+   * @returns {this} This builder for fluent-building.
+   */
+  setFaceName(faceName)
+  {
+    this.#faceName = faceName;
+    return this;
+  }
+
+  /**
+   * Sets the index of the face on the face sheet associated with this command.
+   * @param {number} faceIndex The index on the face sheet aligning to the face.
+   * @returns {this} This builder for fluent-building.
+   */
+  setFaceIndex(faceIndex)
+  {
+    this.#faceIndex = faceIndex;
     return this;
   }
 }

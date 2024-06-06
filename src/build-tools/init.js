@@ -1,21 +1,27 @@
 /**
  * INITTER
  *
- * OVERVIEW:
+ * OVERVIEW
  * This nodejs script is intended to be used to quickly scaffold a group of
  * common directories using this opinionated way of dividing up RMMZ plugin
- * code logic.
+ * code logic. This also assumes it will be ran from the convenient npm package.json
+ * commands found in the root package.json of this plugins monolith project.
  *
  * USAGE:
  * To use this nodejs script, just run it with a single argument:
  *  1st arg = root path directory.
  *
  * SAMPLE INPUT:
- * $ node init.js ./j/abs/ext/charge
+ * $ node init.js abs/ext/charge
+ *
+ * OR
+ * RUNNING FROM THE PLUGIN-PROJECT-LEVEL
+ * $ npm run plugin:init
  *
  * SAMPLE OUTPUT:
- * 🔉 working directory: D:\dev\gaming\rmmz-plugins
- * ✨ copied [~\src\plugin-template] to [~\src\plugins\abs\ext\charge]
+ * 🔉 working directory: Z:\dev\gaming\rmmz-plugins
+ * ✨ target directory created: ./src/plugins/abs/ext/poses
+ * ✨ copied [Z:\dev\gaming\rmmz-plugins\src\plugin-template] to [Z:\dev\gaming\rmmz-plugins\src\plugins\abs\ext\poses]
  * ✨ Initter™ has completed execution. 💯✅
  */
 
@@ -34,6 +40,12 @@ class Initter
   static PLUGIN_TEMPLATE_PATH = './src/plugin-template';
 
   /**
+   * The base path where all the plugins live that will be prepended to the target plugin path.
+   * @type {string}
+   */
+  static DEFAULT_BASE_PLUGIN_PATH = './src/plugins';
+
+  /**
    * Scaffolds a new dev plugin directory at the given destination.
    * @return {Promise<void>}
    */
@@ -46,7 +58,7 @@ class Initter
     mirror.setSource(this.PLUGIN_TEMPLATE_PATH);
 
     // clone the template into the destination.
-    await mirror.mirrorToDestination(destinationPath);
+    await mirror.mirrorToDestination(`${this.DEFAULT_BASE_PLUGIN_PATH}/${destinationPath}`);
 
     Logger.logAnyway(`Initter™ has completed execution. 💯✅`);
   }

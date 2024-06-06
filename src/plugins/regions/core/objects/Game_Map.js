@@ -188,7 +188,7 @@ Game_Map.prototype.refreshAllowRegionEffects = function()
 {
   // grab the regions.
   const allowedRegions = RPGManager.getArrayFromNotesByRegex(
-    this.note(),
+    {note: this.note()},
     J.REGIONS.RegExp.AllowRegions)
 
   // stop processing if there was nothing found.
@@ -205,7 +205,7 @@ Game_Map.prototype.refreshDenyRegionEffects = function()
 {
   // grab the regions.
   const deniedRegions = RPGManager.getArrayFromNotesByRegex(
-    this.note(),
+    {note: this.note()},
     J.REGIONS.RegExp.DenyRegions)
 
   // stop processing if there was nothing found.

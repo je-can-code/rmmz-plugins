@@ -246,7 +246,7 @@ class Window_DifficultyEffects extends Window_Command
         .setIconIndex(paramIconIndex)
         .setRightText(`${paramSign}${paramValue-100}`)
         .setColorIndex(paramColorIndex)
-        .addSubTextLines(paramDescription)
+        .addTextLines(paramDescription)
         .build();
 
       // add the built command.
@@ -289,7 +289,7 @@ class Window_DifficultyEffects extends Window_Command
         .setIconIndex(paramIconIndex)
         .setRightText(`${paramSign}${paramValue-100}`)
         .setColorIndex(paramColorIndex)
-        .addSubTextLines(paramDescription)
+        .addTextLines(paramDescription)
         .build();
 
       // add the built command.
@@ -332,7 +332,7 @@ class Window_DifficultyEffects extends Window_Command
         .setIconIndex(paramIconIndex)
         .setRightText(`${paramSign}${paramValue-100}`)
         .setColorIndex(paramColorIndex)
-        .addSubTextLines(paramDescription)
+        .addTextLines(paramDescription)
         .build();
 
       // add the built command.
@@ -375,7 +375,7 @@ class Window_DifficultyEffects extends Window_Command
         .setIconIndex(paramIconIndex)
         .setRightText(`${paramSign}${paramValue-100}`)
         .setColorIndex(paramColorIndex)
-        .addSubTextLines(paramDescription)
+        .addTextLines(paramDescription)
         .build();
 
       // add the built command.
@@ -436,7 +436,7 @@ class Window_DifficultyEffects extends Window_Command
         .setIconIndex(paramIconIndex)
         .setRightText(`${paramSign}${paramValue-100}`)
         .setColorIndex(paramColorIndex)
-        .addSubTextLines(paramDescription)
+        .addTextLines(paramDescription)
         .build();
 
       // add the built command.
@@ -517,7 +517,7 @@ class Window_DifficultyEffects extends Window_Command
       .setIconIndex(paramIconIndex)
       .setRightText(`${paramSign}${paramValue-100}`)
       .setColorIndex(paramColorIndex)
-      .addSubTextLines(paramDescription)
+      .addTextLines(paramDescription)
       .build();
 
     // return the built command.
@@ -559,7 +559,7 @@ class Window_DifficultyEffects extends Window_Command
       .setIconIndex(paramIconIndex)
       .setRightText(`${paramSign}${paramValue-100}`)
       .setColorIndex(paramColorIndex)
-      .addSubTextLines(paramDescription)
+      .addTextLines(paramDescription)
       .build();
 
     // return the built command.
@@ -601,7 +601,7 @@ class Window_DifficultyEffects extends Window_Command
       .setIconIndex(paramIconIndex)
       .setRightText(`${paramSign}${paramValue-100}`)
       .setColorIndex(paramColorIndex)
-      .addSubTextLines(paramDescription)
+      .addTextLines(paramDescription)
       .build();
 
     // return the built command.

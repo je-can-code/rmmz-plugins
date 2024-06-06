@@ -8,7 +8,7 @@
  * @orderAfter J-Base
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables passage control via region ids while on the map.
  *
  * DETAILS:

@@ -74,6 +74,7 @@
     "build:jabs-diag": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/diag ./out/abs/ext J-ABS-Diagonals.js",
     "build:jabs-input": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/input ./out/abs/ext J-ABS-InputManager.js",
     "build:jabs-pixel": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/pixel ./out/abs/ext J-ABS-PixelMovement.js",
+    "build:jabs-poses": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/poses ./out/abs/ext J-ABS-Poses.js",
     "build:jabs-speed": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/speed ./out/abs/ext J-ABS-Speed.js",
     "build:jabs-timing": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/timing ./out/abs/ext J-ABS-Timing.js",
     "build:jabs-tools": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/tools ./out/abs/ext J-ABS-Tools.js",

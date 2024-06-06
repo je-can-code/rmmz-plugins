@@ -2,6 +2,18 @@
 class Window_SdpRankData extends Window_Base
 {
   /**
+   * The color index of the rarity of the panel selected.
+   * @type {number}
+   */
+  rarityColorIndex = 0;
+
+  /**
+   * The text describing the rarity of this panel.
+   * @type {string}
+   */
+  rarityText = String.empty;
+
+  /**
    * The current rank of the panel selected.
    * @type {number}
    */
@@ -36,8 +48,10 @@ class Window_SdpRankData extends Window_Base
   /**
    * Sets all the various data points for the window.
    */
-  setRankData(currentRank, maxRank, costToNext, sdpPoints)
+  setRankData(rarityColor, rarityText, currentRank, maxRank, costToNext, sdpPoints)
   {
+    this.rarityColorIndex = rarityColor;
+    this.rarityText = rarityText;
     this.currentRank = currentRank;
     this.maxRank = maxRank;
     this.costToNext = costToNext;
@@ -50,26 +64,82 @@ class Window_SdpRankData extends Window_Base
    */
   drawContent()
   {
-    // draw the current/max rank data.
-    this.drawRankDetails();
+    // draw the rarity information.
+    this.drawPanelRarity(0);
 
     // draw the cost-to-next-rank data, colorized.
-    this.drawCostDetails();
+    this.drawCostDetails(1);
+
+    // draw the current/max rank data.
+    this.drawRankDetails(2);
   }
 
-  drawRankDetails()
+  /**
+   * Draws the rarity information for this panel.
+   * @param {number} rowCount The row number this should be drawn on.
+   */
+  drawPanelRarity(rowCount)
   {
     // define some variables.
     const lh = this.lineHeight();
     const ox = 0;
+    const rowY = lh * rowCount;
+
+    const rarityColor = ColorManager.textColor(this.rarityColorIndex);
+    this.changeTextColor(rarityColor);
+    this.toggleBold();
+    this.toggleItalics();
+    this.modFontSize(16);
+    this.drawText(this.rarityText, ox, rowY, 200, "left");
+    this.resetFontSettings();
+  }
+
+  /**
+   * Draws the cost information of ranking this panel up.
+   * @param {number} rowCount The row number this should be drawn on.
+   */
+  drawCostDetails(rowCount)
+  {
+    // define some variables.
+    const lh = this.lineHeight();
+    const ox = 0;
+    const rowY = lh * rowCount;
+
+    // calculate the color (not-index) for the cost.
+    const costColor = this.#determineCostColor(this.costToNext);
+
+    // draw the cost to rank up this panel.
+    this.drawText(`Cost:`, ox, rowY, 200, "left");
+    if (costColor)
+    {
+      this.changeTextColor(costColor);
+      this.drawText(`${this.costToNext}`, ox + 100, rowY, 120, "left");
+      this.resetTextColor();
+    }
+    else
+    {
+      this.drawText(`---`, ox + 100, rowY, 80, "left");
+    }
+  }
+
+  /**
+   * Draws the current rank information for this panel.
+   * @param {number} rowCount The row number this should be drawn on.
+   */
+  drawRankDetails(rowCount)
+  {
+    // define some variables.
+    const lh = this.lineHeight();
+    const ox = 0;
+    const rowY = lh * rowCount;
 
     // draw the current and max rank, colorized.
-    this.drawText(`Rank:`, ox, lh * 1, 200, "left");
+    this.drawText(`Rank:`, ox, rowY, 200, "left");
     this.changeTextColor(this.#determinePanelRankColor(this.currentRank, this.maxRank));
-    this.drawText(`${this.currentRank}`, ox + 55, lh * 1, 50, "right");
+    this.drawText(`${this.currentRank}`, ox + 55, rowY, 50, "right");
     this.resetTextColor();
-    this.drawText(`/`, ox + 110, lh * 1, 30, "left");
-    this.drawText(`${this.maxRank}`, ox + 130, lh * 1, 50, "left");
+    this.drawText(`/`, ox + 110, rowY, 30, "left");
+    this.drawText(`${this.maxRank}`, ox + 130, rowY, 50, "left");
   }
 
   /**
@@ -91,32 +161,6 @@ class Window_SdpRankData extends Window_Base
 
     // who knows what situation this happens in, but return normal if we do.
     return ColorManager.normalColor();
-  }
-
-  /**
-   * Draws the cost information of ranking this panel up.
-   */
-  drawCostDetails()
-  {
-    // define some variables.
-    const lh = this.lineHeight();
-    const ox = 0;
-
-    // calculate the color (not-index) for the cost.
-    const costColor = this.#determineCostColor(this.costToNext);
-
-    // draw the cost to rank up this panel.
-    this.drawText(`Cost:`, ox, lh * 0, 200, "left");
-    if (costColor)
-    {
-      this.changeTextColor(costColor);
-      this.drawText(`${this.costToNext}`, ox + 100, lh * 0, 120, "left");
-      this.resetTextColor();
-    }
-    else
-    {
-      this.drawText(`---`, ox + 100, lh * 0, 80, "left");
-    }
   }
 
   /**

@@ -12,7 +12,7 @@
  * @orderAfter J-SDP
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables the ability to apply one to many "difficulty layers",
  * defined as a collection of parameter modifications and bonuses against both
  * actors and enemies alike.

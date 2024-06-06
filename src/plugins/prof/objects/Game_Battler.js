@@ -53,35 +53,10 @@ Game_Battler.prototype.bonusSkillProficiencyGains = function()
  */
 Game_Battler.prototype.canGiveProficiency = function()
 {
-  // get whether or not they are blocked from giving proficiency.
-  const canGiveProficiency = this.extractProficiencyGivingBlock();
-
-  // return the outcome.
-  return canGiveProficiency;
-};
-
-/**
- * Determines whether or not this battler can give proficiency gains.
- * @returns {number}
- */
-Game_Battler.prototype.extractProficiencyGivingBlock = function()
-{
-  const objectsToCheck = this.getAllNotes();
-  const structure = /<proficiencyGivingBlock>/i;
-  let canGiveProficiency = true;
-  objectsToCheck.forEach(obj =>
-  {
-    const notedata = obj.note.split(/[\r\n]+/);
-    notedata.forEach(line =>
-    {
-      if (line.match(structure))
-      {
-        canGiveProficiency = false;
-      }
-    });
-  });
-
-  return canGiveProficiency;
+  // return the inversion of whether or not we found any of the blocker tags.
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.PROF.RegExp.ProficiencyGivingBlock)
 };
 
 /**
@@ -90,34 +65,9 @@ Game_Battler.prototype.extractProficiencyGivingBlock = function()
  */
 Game_Battler.prototype.canGainProficiency = function()
 {
-  // get whether or not they are blocked from gaining proficiency.
-  const canGainProficiency = this.extractProficiencyGainingBlock();
-
-  // return the outcome.
-  return canGainProficiency;
-};
-
-/**
- * Determines whether or not this battler can gain proficiency.
- * @returns {number}
- */
-Game_Battler.prototype.extractProficiencyGainingBlock = function()
-{
-  const objectsToCheck = this.getAllNotes();
-  const structure = /<proficiencyGainingBlock>/i;
-  let canGainProficiency = true;
-  objectsToCheck.forEach(obj =>
-  {
-    const notedata = obj.note.split(/[\r\n]+/);
-    notedata.forEach(line =>
-    {
-      if (line.match(structure))
-      {
-        canGainProficiency = false;
-      }
-    });
-  });
-
-  return canGainProficiency;
+  // return the inversion of whether or not we found any of the blocker tags.
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.PROF.RegExp.ProficiencyGainingBlock)
 };
 //endregion Game_Battler

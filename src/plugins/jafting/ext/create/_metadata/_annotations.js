@@ -11,7 +11,7 @@
  * @orderAfter J-JAFTING
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables the "create" functionality of JAFTING.
  * The "create" functionality is a flexible but straight-forward adaptation of
  * a traditional crafting system.

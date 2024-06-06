@@ -1,8 +1,8 @@
-//region Map_Log
+//region ActionLog
 /**
  * A model representing a single log in the log window.
  */
-class Map_Log
+class ActionLog
 {
   /**
    * The message of this log.
@@ -39,4 +39,4 @@ class Map_Log
     return this.#message;
   }
 }
-//endregion Map_Log
+//endregion ActionLog
