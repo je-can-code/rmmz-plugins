@@ -23,6 +23,12 @@ Scene_Map.prototype.initialize = function()
    * @type {Window_MapLog}
    */
   this._j._log._actionLog = null;
+
+  /**
+   * The chat-centric log for the map.
+   * @type {Window_DiaLog}
+   */
+  this._j._log._diaLog = null;
 };
 
 /**
@@ -35,8 +41,11 @@ Scene_Map.prototype.createAllWindows = function()
   // perform original logic.
   J.LOG.Aliased.Scene_Map.get('createAllWindows').call(this);
 
-  // create the log.
+  // create the actions log.
   this.createActionLogWindow();
+
+  // create the chat log.
+  this.createDiaLogWindow();
 };
 
 //region action log
@@ -65,7 +74,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
   const rectangle = this.actionLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_MapLog(rectangle);
+  const window = new Window_MapLog(rectangle, $mapLogManager);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();
@@ -73,7 +82,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
 
   // return the built and configured window.
   return window;
-}
+};
 
 /**
  * Creates the rectangle representing the window for the action log.
@@ -107,7 +116,7 @@ Scene_Map.prototype.actionLogWindowRect = function()
 Scene_Map.prototype.getActionLogWindow = function()
 {
   return this._j._log._actionLog;
-}
+};
 
 /**
  * Set the currently tracked action log window to the given window.
@@ -116,6 +125,86 @@ Scene_Map.prototype.getActionLogWindow = function()
 Scene_Map.prototype.setActionLogWindow = function(window)
 {
   this._j._log._actionLog = window;
-}
+};
 //endregion action log
+
+//region dia log
+/**
+ * Creates the dia log window and adds it to tracking.
+ */
+Scene_Map.prototype.createDiaLogWindow = function()
+{
+  // create the window.
+  const window = this.buildDiaLogWindow();
+
+  // update the tracker with the new window.
+  this.setDiaLogWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the dia log window.
+ * @returns {Window_DiaLog}
+ */
+Scene_Map.prototype.buildDiaLogWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.diaLogWindowRect();
+
+  // create the window with the rectangle.
+  const window = new Window_DiaLog(rectangle, $diaLogManager);
+
+  // deselect/deactivate the window so we don't have it look interactable.
+  window.deselect();
+  window.deactivate();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Creates the rectangle representing the window for the dia log.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.diaLogWindowRect = function()
+{
+  // an arbitrary number of rows.
+  const rows = 3;
+
+  // define the width of the window.
+  const width = 700;
+
+  // define the height of the window.
+  const height = (Window_DiaLog.rowHeight * (rows)) + 24;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - width;
+
+  // define the origin y of the window.
+  const y = Graphics.verticalPadding;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, width, height);
+};
+
+/**
+ * Gets the currently tracked dia log window.
+ * @returns {Window_DiaLog}
+ */
+Scene_Map.prototype.getDiaLogWindow = function()
+{
+  return this._j._log._diaLog;
+};
+
+/**
+ * Set the currently tracked dia log window to the given window.
+ * @param {Window_DiaLog} window The window to track.
+ */
+Scene_Map.prototype.setDiaLogWindow = function(window)
+{
+  this._j._log._diaLog = window;
+};
+//endregion dia log
 //endregion Scene_Map

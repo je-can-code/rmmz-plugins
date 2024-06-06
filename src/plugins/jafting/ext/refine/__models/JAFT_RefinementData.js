@@ -16,8 +16,8 @@ class JAFTING_RefinementData
     this.refinedCount = 0;
     this.maxRefineCount = this.getMaxRefineCount();
     this.maxTraitCount = this.getMaxTraitCount();
-    this.notRefinementMaterial = this.isNotMaterial();
-    this.notRefinementBase = this.isNotBase();
+    this.notRefinementMaterial = this.isNotRefinableAsMaterial();
+    this.notRefinementBase = this.isNotRefinableAsBase();
     this.unrefinable = this.isNotRefinable();
   }
 
@@ -27,24 +27,11 @@ class JAFTING_RefinementData
    */
   getMaxRefineCount()
   {
-    let count = 0;
-    if (this._meta && this._meta[J.BASE.Notetags.MaxRefineCount])
-    {
-      count = parseInt(this._meta[J.BASE.Notetags.MaxRefineCount]) || count;
-    }
-    else
-    {
-      const structure = /<maxRefineCount:[ ]?(\d+)>/i;
-      this._notes.forEach(note =>
-      {
-        if (note.match(structure))
-        {
-          count = parseInt(RegExp.$1);
-        }
-      })
-    }
-
-    return count;
+    return RPGManager.getNumberFromNoteByRegex(
+      // because it expects actual database objects for inspection,
+      // hand-craft an object with a note property to be inspected.
+      { note: this._notes },
+      J.JAFTING.EXT.REFINE.MaxRefineCount);
   }
 
   /**
@@ -53,76 +40,37 @@ class JAFTING_RefinementData
    */
   getMaxTraitCount()
   {
-    let count = 0;
-    if (this._meta && this._meta[J.BASE.Notetags.MaxRefineTraits])
-    {
-      count = parseInt(this._meta[J.BASE.Notetags.MaxRefineTraits]) || count;
-    }
-    else
-    {
-      const structure = /<maxRefinedTraits:[ ]?(\d+)>/i;
-      this._notes.forEach(note =>
-      {
-        if (note.match(structure))
-        {
-          count = parseInt(RegExp.$1);
-        }
-      })
-    }
-
-    return count;
+    return RPGManager.getNumberFromNoteByRegex(
+      // because it expects actual database objects for inspection,
+      // hand-craft an object with a note property to be inspected.
+      { note: this._notes },
+      J.JAFTING.EXT.REFINE.MaxRefinedTraits);
   }
 
   /**
    * Gets whether or not this piece of equipment can be used in refinement as a material.
    * @returns {boolean}
    */
-  isNotMaterial()
+  isNotRefinableAsMaterial()
   {
-    let notMaterial = false;
-    if (this._meta && this._meta[J.BASE.Notetags.NotRefinementMaterial])
-    {
-      notMaterial = true;
-    }
-    else
-    {
-      const structure = /<notRefinementMaterial>/i;
-      this._notes.forEach(note =>
-      {
-        if (note.match(structure))
-        {
-          notMaterial = true;
-        }
-      })
-    }
-
-    return notMaterial;
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      // because it expects actual database objects for inspection,
+      // hand-craft an object with a note property to be inspected.
+      { note: this._notes },
+      J.JAFTING.EXT.REFINE.NotRefinementMaterial);
   }
 
   /**
    * Gets whether or not this piece of equipment can be used in refinement as a base.
    * @returns {boolean}
    */
-  isNotBase()
+  isNotRefinableAsBase()
   {
-    let notBase = false;
-    if (this._meta && this._meta[J.BASE.Notetags.NotRefinementBase])
-    {
-      notBase = true;
-    }
-    else
-    {
-      const structure = /<notRefinementBase>/i;
-      this._notes.forEach(note =>
-      {
-        if (note.match(structure))
-        {
-          notBase = true;
-        }
-      })
-    }
-
-    return notBase;
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      // because it expects actual database objects for inspection,
+      // hand-craft an object with a note property to be inspected.
+      { note: this._notes },
+      J.JAFTING.EXT.REFINE.NotRefinementBase);
   }
 
   /**
@@ -132,24 +80,11 @@ class JAFTING_RefinementData
    */
   isNotRefinable()
   {
-    let noRefine = false;
-    if (this._meta && this._meta[J.BASE.Notetags.NoRefinement])
-    {
-      noRefine = true;
-    }
-    else
-    {
-      const structure = /<noRefine>/i;
-      this._notes.forEach(note =>
-      {
-        if (note.match(structure))
-        {
-          noRefine = true;
-        }
-      })
-    }
-
-    return noRefine;
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      // because it expects actual database objects for inspection,
+      // hand-craft an object with a note property to be inspected.
+      { note: this._notes },
+      J.JAFTING.EXT.REFINE.Unrefinable);
   }
 }
 //endregion JAFT_RefinementData

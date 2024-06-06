@@ -14,8 +14,8 @@ Window_OmnipediaList.prototype.buildCommands = function()
     // build the monsterpedia command.
     const monsterpediaCommand = new WindowCommandBuilder(J.OMNI.EXT.MONSTER.Metadata.Command.Name)
       .setSymbol(J.OMNI.EXT.MONSTER.Metadata.Command.Symbol)
-      .addSubTextLine("Your standard fare in monsterologies across the universe.")
-      .addSubTextLine("It is adapted to the local monsterology of Erocia.")
+      .addTextLine("Your standard fare in monsterologies across the universe.")
+      .addTextLine("It is adapted to the local monsterology of Erocia.")
       .setIconIndex(J.OMNI.EXT.MONSTER.Metadata.Command.IconIndex)
       .build();
 

@@ -42,30 +42,16 @@ J.LOG.Aliased.DataManager = new Map();
 J.LOG.Aliased.Scene_Map = new Map();
 
 /**
- * Plugin command for enabling the text log and showing it.
+ * One of the log managers that are for {@link Scene_Map}.<br/>
+ * This manager handles the window that contains the combat and loot interactions.
+ * @type {MapLogManager}
  */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "showLog", () =>
-{
-  $mapLogManager.showMapLog();
-});
+var $mapLogManager = null;
 
 /**
- * Plugin command for disabling the text log and hiding it.
+ * One of the log managers that are for {@link Scene_Map}.<br/>
+ * This manager handles the window that contains the various chat messages.
+ * @type {MapLogManager}
  */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLog", () =>
-{
-  $mapLogManager.hideMapLog();
-});
-
-/**
- * Plugin command for adding an arbitrary log to the log window.
- */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "addLog", args =>
-{
-  const { text } = args;
-  const log = new MapLogBuilder()
-    .setMessage(text)
-    .build();
-  $mapLogManager.addLog(log);
-});
+var $diaLogManager = null;
 //endregion introduction

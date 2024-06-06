@@ -487,8 +487,8 @@ class JABS_EnemyAI extends JABS_AI
    */
   aiComboChanceModifier()
   {
-    // default the modifier to 0.
-    let comboChanceModifier = 0;
+    // default the modifier to 50%.
+    let comboChanceModifier = 50;
 
     // extract out this AI's traits.
     const { careful, executor, reckless, leader, follower, healer } = this;

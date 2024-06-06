@@ -81,6 +81,11 @@ J.PROF.Aliased =
     TextManager: new Map(),
   };
 
+J.PROF.RegExp = {};
+J.PROF.RegExp.ProficiencyBonus = /<proficiencyBonus:[ ]?(\d+)>/i;
+J.PROF.RegExp.ProficiencyGivingBlock = /<proficiencyGivingBlock>/i;
+J.PROF.RegExp.ProficiencyGainingBlock = /<proficiencyGainingBlock>/i;
+
 /**
  * Plugin command for modifying proficiency for one or more actors for one or more skills by a given amount.
  */

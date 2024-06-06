@@ -12,9 +12,14 @@
  * @orderAfter J-MessageTextCodes
  * @help
  * ============================================================================
- * This plugin enables the ability to add and view logs in a window while on
- * the map. By itself, this plugin only creates the log window and gives access
- * to a couple utilities to build logs and add them to the window.
+ * OVERVIEW
+ * This plugin enables logging functionality.
+ * It has two built in logging managers:
+ * - Action Log
+ * - DiaLog
+ *
+ * Each of the logging managers is responsible for different types of logging
+ * for the player to observe.
  *
  * This plugin was designed for JABS, but doesn't require it.
  * If added while using JABS, the log window will automatically register all
@@ -26,14 +31,76 @@
  *
  * Controller/keyboard support for the log window is not supported.
  *
- * This plugin has two dependencies that all must be present to work:
+ * Depends on other plugins of mine:
  * - J-Base (used for drawing the logs properly onto the window)
  * - J-MessageTextCodes (used for translating text codes in logging)
- * The MZ editor will inform you where this plugin needs to be relative to the
- * other plugins (above/below/etc).
+ *
+ * Integrates with others of mine plugins:
+ * - J-ABS; enables logging of the player/allies/enemies' actions.
+ * - J-SDP; enables logging of SDP
+ * ============================================================================
+ * THE ACTION LOG
+ * This log is designed for the player to view various interactions that happen
+ * through the course of playing the game. While this plugin doesn't require
+ * it, it was designed to be used with JABS.
+ *
+ * Things that get reported to the Action Log (with JABS):
+ * - a skill being used (player/allies/enemies)
+ * - a target being defeated (player/allies/enemies)
+ * - a skill being learned (player/allies/enemies)
+ * - a level up (player/allies)
+ * - a state being applied to oneself (player/allies/enemies)
+ * - a retaliation (player/allies/enemies)
+ * - a skill being parried (player/allies/enemies)
+ * - a skill being dodged (player/allies/enemies)
+ * - a skill not affecting a target (player/allies/enemies)
+ * - the act of party cycling (player)
+ * - an item being used (player)
+ *   - also if the last item in the player's possession was used
+ * - the experience gained (the leader, others gain it, but no logs are added)
+ * - the gold found ("the party found...")
+ * - the sdp points found (the leader, others gain it, but no logs are added)
+ *
+ * Without JABS, nothing is added by default and must be woven into wherever
+ * a developer wants it to show up since most usages and executions would
+ * happen in a non-Scene_Map context.
+ *
+ * This window is effectively just a Window_Command under the covers, which
+ * means it is nothing more special than your average Show Choices window or
+ * what have you. However, it is not accessible to the keyboard or controller,
+ * which means only a mouse may interact with it (due to the fact that it
+ * cannot be "selected").
+ *
+ * ============================================================================
+ * THE DIALOG
+ * This log is designed for the player to view messages that occur while things
+ * on the map are still executing. This portion of the plugin has nothing to do
+ * with JABS and is not influenced by it.
+ *
+ * To add messages to the DiaLog, you'll need to utilize a plugin command.
+ * In it, you will find the parameters are similar to that of a regular message
+ * window, except that it is smaller, and in the upper right corner. You can
+ * specify the message (max of three lines), and optionally a face image and
+ * index to accompany the message to enable chatter that doesn't interrupt the
+ * flow of gameplay.
+ *
+ * It is worth noting that the DiaLog window is an extended version of the
+ * Action Log window, and bears many of the same sorts of functionality,
+ * including the ability to scroll with the mouse and not control it with the
+ * keyboard/controller. It will automagically become invisible after lack of
+ * interaction.
+ *
+ * When setting up events that add to the DiaLog, it is encouraged to consider
+ * using parallel events that add the messages with Waits in between each
+ * message to give it a proper dialogue-like effect rather than dumping all the
+ * messages in at once, but not being able to see them because the player has
+ * to scroll up.
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Added DiaLog functionality, enabling passive chats to happen on the map.
+ *    Refactored around the various log-related classes.
  * - 2.1.0
  *    Refactor the text log manager to use different syntax.
  * - 2.0.1
@@ -50,20 +117,58 @@
  * @default 300
  *
  *
- * @command showLog
- * @text Show Log Window
- * @desc Turns the log window visible to allow logs to be displayed.
+ * @command showActionLog
+ * @text Show Action Log Window
+ * @desc Turns the action log window visible to allow logs to be displayed.
  *
- * @command hideLog
- * @text Hide Log Window
- * @desc Turns the log window invisible. Logs still get logged, but can't be seen.
+ * @command hideActionLog
+ * @text Hide Action Log Window
+ * @desc Turns the action log window invisible. Logs still get logged, but can't be seen.
  *
- * @command addLog
+ * @command showDiaLog
+ * @text Show DiaLog Window
+ * @desc Turns the adialog window visible to allow logs to be displayed.
+ *
+ * @command hideDiaLog
+ * @text Hide DiaLog Window
+ * @desc Turns the dialog window invisible. Logs still get logged, but can't be seen.
+ *
+ * @command addActionLog
  * @text Add Log
  * @desc Arbitrarily create a log for the log window. Respects text codes.
  * @arg text
  * @type string
  * @default One potion was found!
+ *
+ * @command clearActionLogs
+ * @text Clear Action Logs
+ * @desc Clears all the logs out of the action log.
+ *
+ * @command addDiaLog
+ * @text Add DiaLog
+ * @desc Adds a single DiaLog into the DiaLog Window. Respects text codes.
+ * @arg lines
+ * @type multiline_string
+ * @text Message
+ * @desc The message for the window; it should never be more than 3 lines.
+ * @default Hello World!
+ * @arg faceName
+ * @type file
+ * @text Face Filename
+ * @desc The filename for the face to use; use empty string for no face.
+ * @default
+ * @arg faceIndex
+ * @type number
+ * @text Face Index
+ * @desc The index of the face on the given face file; use -1 for no face.
+ * @min -1
+ * @max 7
+ * @default -1
+ *
+ * @command clearDiaLog
+ * @text Clear DiaLog
+ * @desc Clears all the logs out of the dialog log.
+ *
  */
 
 /**
@@ -110,39 +215,94 @@ J.LOG.Aliased.DataManager = new Map();
 J.LOG.Aliased.Scene_Map = new Map();
 
 /**
+ * One of the log managers that are for {@link Scene_Map}.<br/>
+ * This manager handles the window that contains the combat and loot interactions.
+ * @type {MapLogManager}
+ */
+var $mapLogManager = null;
+
+/**
+ * One of the log managers that are for {@link Scene_Map}.<br/>
+ * This manager handles the window that contains the various chat messages.
+ * @type {MapLogManager}
+ */
+var $diaLogManager = null;
+//endregion introduction
+
+//region plugin commands
+/**
  * Plugin command for enabling the text log and showing it.
  */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "showLog", () =>
+PluginManager.registerCommand(J.LOG.Metadata.Name, "showActionLog", () =>
 {
-  $mapLogManager.showMapLog();
+  $mapLogManager.showLog();
 });
 
 /**
  * Plugin command for disabling the text log and hiding it.
  */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLog", () =>
+PluginManager.registerCommand(J.LOG.Metadata.Name, "hideActionLog", () =>
 {
-  $mapLogManager.hideMapLog();
+  $mapLogManager.hideLog();
 });
 
 /**
- * Plugin command for adding an arbitrary log to the log window.
+ * Plugin command for adding an arbitrary log to the action log window.
  */
-PluginManager.registerCommand(J.LOG.Metadata.Name, "addLog", args =>
+PluginManager.registerCommand(J.LOG.Metadata.Name, "addActionLog", args =>
 {
   const { text } = args;
-  const log = new MapLogBuilder()
+  const log = new ActionLogBuilder()
     .setMessage(text)
     .build();
   $mapLogManager.addLog(log);
 });
-//endregion introduction
 
-//region Map_Log
+/**
+ * Plugin command for enabling the dialog and showing it.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "showDiaLog", () =>
+{
+  $mapLogManager.showLog();
+});
+
+/**
+ * Plugin command for disabling the dialog and hiding it.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
+{
+  $mapLogManager.hideLog();
+});
+
+/**
+ * Plugin command for adding an arbitrary log to the dialog window.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "addDiaLog", args =>
+{
+  const { lines, faceName, faceIndex } = args;
+  const actualLines = lines.split(/[\r\n]+/);
+  const log = new DiaLogBuilder()
+    .setLines(actualLines)
+    .setFaceName(faceName)
+    .setFaceIndex(faceIndex)
+    .build();
+  $diaLogManager.addLog(log);
+});
+
+/**
+ * Plugin command for adding an arbitrary log to the dialog window.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "clearDiaLog", () =>
+{
+  $diaLogManager.clearLogs();
+});
+//endregion plugin commands
+
+//region ActionLog
 /**
  * A model representing a single log in the log window.
  */
-class Map_Log
+class ActionLog
 {
   /**
    * The message of this log.
@@ -179,13 +339,13 @@ class Map_Log
     return this.#message;
   }
 }
-//endregion Map_Log
+//endregion ActionLog
 
 //region MapLogBuilder
 /**
  * A fluent-builder for the logger on the map.
  */
-class MapLogBuilder
+class ActionLogBuilder
 {
   /**
    * The current message that this log contains.
@@ -195,12 +355,12 @@ class MapLogBuilder
 
   /**
    * Builds the log based on the currently provided info.
-   * @returns {Map_Log} The built log.
+   * @returns {ActionLog} The built log.
    */
   build()
   {
     // instantiate the log.
-    const log = new Map_Log(this.#message);
+    const log = new ActionLog(this.#message);
 
     // clear this builder of its instance data.
     this.#clear();
@@ -642,13 +802,188 @@ class MapLogBuilder
 }
 //endregion MapLogBuilder
 
-//region DataManager
+//region DiaLog
 /**
- * The global text logger.
- * @type {MapLogManager}
+ * A single log message designed for the {@link Window_DiaLog} to display.
  */
-var $mapLogManager = null;
+class DiaLog
+{
+  /**
+   * The lines that make up the text for this log.
+   * @type {string[]}
+   */
+  #lines = [];
 
+  /**
+   * The filename of the face image associated with this log.
+   * @type {string|String.empty}
+   */
+  #faceName = String.empty;
+
+  /**
+   * The index of the face image associated with this log.
+   * @type {number}
+   */
+  #faceIndex = -1;
+
+  /**
+   * Constructor.<br/>
+   * All parameters have defaults.
+   * @param {string[]=} messageLines The lines that make up the message portion of this log.
+   * @param {string=} faceName The filename that contains the face for this log.
+   * @param {number=} faceIndex The index that maps to the face for this log.
+   */
+  constructor(messageLines = [], faceName = "", faceIndex = -1)
+  {
+    this.#setLines(messageLines);
+    this.#setFaceName(faceName);
+    this.#setFaceIndex(faceIndex);
+  }
+
+  /**
+   * Sets the lines that make up this message log.
+   * @param {string[]} lines The lines of the message.
+   */
+  #setLines(lines)
+  {
+    if (!Array.isArray(lines))
+    {
+      console.warn('Attempted to set the lines of a DiaLog with a non-array.');
+      console.warn(lines);
+    }
+
+    this.#lines = lines;
+  }
+
+  /**
+   * Gets the lines that make up this message log.
+   * @returns {string[]}
+   */
+  lines()
+  {
+    return this.#lines;
+  }
+
+  /**
+   * Sets the filename of the face image associated with this message.
+   * @param {string} faceName The filename of the face image for this message.
+   */
+  #setFaceName(faceName)
+  {
+    this.#faceName = faceName;
+  }
+
+  /**
+   * Gets the filename of the face associated with this message.
+   * @returns {string}
+   */
+  faceName()
+  {
+    return this.#faceName;
+  }
+
+  /**
+   * Sets the face index to the given index.
+   * @param {number} faceIndex The face index for this message.
+   */
+  #setFaceIndex(faceIndex)
+  {
+    this.#faceIndex = faceIndex;
+  }
+
+  /**
+   * Gets the face index associated with this message.
+   * @returns {number}
+   */
+  faceIndex()
+  {
+    return this.#faceIndex;
+  }
+}
+//endregion DiaLog
+
+//region DiaLogBuilder
+/**
+ * A builder class for constructing {@link DiaLog}s.
+ */
+class DiaLogBuilder
+{
+  /**
+   * The lines that make up the text for this log.
+   * @type {string[]}
+   */
+  #lines = [];
+
+  /**
+   * The filename of the face image associated with this log.
+   * @type {string|String.empty}
+   */
+  #faceName = String.empty;
+
+  /**
+   * The index of the face image associated with this log.
+   * @type {number}
+   */
+  #faceIndex = -1;
+
+  /**
+   * Builds the log in its current state.
+   * @returns {ActionLog}
+   */
+  build()
+  {
+    // build the log.
+    const log = new DiaLog(
+      // copy the lines over.
+      [...this.#lines],
+      // assign the face information.
+      this.#faceName,
+      this.#faceIndex);
+
+    // empty out the data from the builder.
+    this.clear();
+
+    // return what was built.
+    return log;
+  }
+
+  /**
+   * Clears the log data to a blank slate.
+   * @returns {DiaLogBuilder}
+   */
+  clear()
+  {
+    this.#lines = [];
+    return this;
+  }
+
+  addLine(line)
+  {
+    this.#lines.push(line);
+    return this;
+  }
+
+  setLines(lines)
+  {
+    this.#lines = lines;
+    return this;
+  }
+
+  setFaceName(faceName)
+  {
+    this.#faceName = faceName;
+    return this;
+  }
+
+  setFaceIndex(faceIndex)
+  {
+    this.#faceIndex = faceIndex;
+    return this;
+  }
+}
+//endregion DiaLogBuilder
+
+//region DataManager
 /**
  * Hooks into `DataManager` to create the game objects.
  */
@@ -658,8 +993,13 @@ DataManager.createGameObjects = function()
   // perform original logic.
   J.LOG.Aliased.DataManager.get('createGameObjects').call(this);
 
-  // generate a new instance of the text log.
+  // generate a new instance of the action log manager.
   $mapLogManager = new MapLogManager();
+  $mapLogManager.setMaxLogCount(30);
+
+  // generate a new instance of the dia log manager.
+  $diaLogManager = new MapLogManager();
+  $diaLogManager.setMaxLogCount(10);
 };
 //endregion DataManager
 
@@ -669,7 +1009,7 @@ class MapLogManager
   //region properties
   /**
    * The logs currently being managed.
-   * @type {Map_Log[]}
+   * @type {ActionLog[]|DiaLog[]}
    */
   #logs = [];
 
@@ -684,23 +1024,25 @@ class MapLogManager
    * @type {boolean}
    */
   #visible = true;
+
+  #maxLogCount = 100;
   //endregion properties
 
   /**
    * Gets all logs that are currently being tracked by this log manager.<br>
    * The logs will be in reverse order from that of which they are displayed in the window.
-   * @returns {Map_Log[]}
+   * @returns {ActionLog[]|DiaLog[]}
    */
   getLogs()
   {
     return this.#logs;
-  };
+  }
 
   /**
    * Adds a new log to this log manager's log tracker.<br>
    * If there are more than the maximum capacity of logs currently being tracked,
    * this will also start dropping logs from the tail until the limit is reached.
-   * @param {Map_Log} log The new log to add.
+   * @param {ActionLog} log The new log to add.
    */
   addLog(log)
   {
@@ -712,7 +1054,7 @@ class MapLogManager
 
     // alert any listeners that we have a new log.
     this.flagForProcessing();
-  };
+  }
 
   /**
    * Maintains this log manager's the log tracker to stay under the max log count.
@@ -733,7 +1075,7 @@ class MapLogManager
    */
   hasTooManyLogs()
   {
-    return (this.#logs.length > this._maxLogCount());
+    return (this.#logs.length > this.maxLogCount());
   }
 
   /**
@@ -743,9 +1085,18 @@ class MapLogManager
    * @returns {number}
    * @private
    */
-  _maxLogCount()
+  maxLogCount()
   {
-    return 100;
+    return this.#maxLogCount;
+  }
+
+  /**
+   * Sets the max log count to a given amount.
+   * @param newMaxLogCount
+   */
+  setMaxLogCount(newMaxLogCount)
+  {
+    this.#maxLogCount = newMaxLogCount;
   }
 
   /**
@@ -778,6 +1129,7 @@ class MapLogManager
   clearLogs()
   {
     this.#logs.splice(0, this.#logs.length);
+    this.flagForProcessing();
   }
 
   /**
@@ -801,7 +1153,7 @@ class MapLogManager
   /**
    * Hides this log manager.
    */
-  hideMapLog()
+  hideLog()
   {
     this.#visible = false;
   }
@@ -809,7 +1161,7 @@ class MapLogManager
   /**
    * Reveals this log manager.
    */
-  showMapLog()
+  showLog()
   {
     this.#visible = true;
   }
@@ -841,6 +1193,12 @@ Scene_Map.prototype.initialize = function()
    * @type {Window_MapLog}
    */
   this._j._log._actionLog = null;
+
+  /**
+   * The chat-centric log for the map.
+   * @type {Window_DiaLog}
+   */
+  this._j._log._diaLog = null;
 };
 
 /**
@@ -853,8 +1211,11 @@ Scene_Map.prototype.createAllWindows = function()
   // perform original logic.
   J.LOG.Aliased.Scene_Map.get('createAllWindows').call(this);
 
-  // create the log.
+  // create the actions log.
   this.createActionLogWindow();
+
+  // create the chat log.
+  this.createDiaLogWindow();
 };
 
 //region action log
@@ -883,7 +1244,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
   const rectangle = this.actionLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_MapLog(rectangle);
+  const window = new Window_MapLog(rectangle, $mapLogManager);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();
@@ -891,7 +1252,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
 
   // return the built and configured window.
   return window;
-}
+};
 
 /**
  * Creates the rectangle representing the window for the action log.
@@ -925,7 +1286,7 @@ Scene_Map.prototype.actionLogWindowRect = function()
 Scene_Map.prototype.getActionLogWindow = function()
 {
   return this._j._log._actionLog;
-}
+};
 
 /**
  * Set the currently tracked action log window to the given window.
@@ -934,10 +1295,94 @@ Scene_Map.prototype.getActionLogWindow = function()
 Scene_Map.prototype.setActionLogWindow = function(window)
 {
   this._j._log._actionLog = window;
-}
+};
 //endregion action log
+
+//region dia log
+/**
+ * Creates the dia log window and adds it to tracking.
+ */
+Scene_Map.prototype.createDiaLogWindow = function()
+{
+  // create the window.
+  const window = this.buildDiaLogWindow();
+
+  // update the tracker with the new window.
+  this.setDiaLogWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the dia log window.
+ * @returns {Window_DiaLog}
+ */
+Scene_Map.prototype.buildDiaLogWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.diaLogWindowRect();
+
+  // create the window with the rectangle.
+  const window = new Window_DiaLog(rectangle, $diaLogManager);
+
+  // deselect/deactivate the window so we don't have it look interactable.
+  window.deselect();
+  window.deactivate();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Creates the rectangle representing the window for the dia log.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.diaLogWindowRect = function()
+{
+  // an arbitrary number of rows.
+  const rows = 3;
+
+  // define the width of the window.
+  const width = 700;
+
+  // define the height of the window.
+  const height = (Window_DiaLog.rowHeight * (rows)) + 24;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - width;
+
+  // define the origin y of the window.
+  const y = Graphics.verticalPadding;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, width, height);
+};
+
+/**
+ * Gets the currently tracked dia log window.
+ * @returns {Window_DiaLog}
+ */
+Scene_Map.prototype.getDiaLogWindow = function()
+{
+  return this._j._log._diaLog;
+};
+
+/**
+ * Set the currently tracked dia log window to the given window.
+ * @param {Window_DiaLog} window The window to track.
+ */
+Scene_Map.prototype.setDiaLogWindow = function(window)
+{
+  this._j._log._diaLog = window;
+};
+//endregion dia log
 //endregion Scene_Map
 
+/* NOTE: the file is prefixed with an underscore explicitly because the build script I use concats files in order of
+  which they are found alphabetically in their folders. This class is being extended by the Window_DiaLog class, and
+  so it must be ordered to be found ahead of that.
+*/
 //region Window_MapLog
 /**
  * A window containing the logs.
@@ -964,12 +1409,22 @@ class Window_MapLog extends Window_Command
   defaultInactivityDuration = J.LOG.Metadata.InactivityTimerDuration;
 
   /**
+   * The underlying data source that logs are derived from.
+   * @type {MapLogManager}
+   */
+  logManager = null;
+
+  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
+   * @param {MapLogManager} logManager the manager that this window leverages to get logs from.
    */
-  constructor(rect)
+  constructor(rect, logManager)
   {
     super(rect);
+
+    // bind this log manager.
+    this.logManager = logManager;
   }
 
   /**
@@ -983,7 +1438,8 @@ class Window_MapLog extends Window_Command
   }
 
   /**
-   * OVERWRITE Initialize this class, but with our things, too.
+   * Extends {@link #initialize}.<br/>
+   * Initialize this class, but with our things, too.
    * @param {Rectangle} rect The rectangle representing the shape of this window.
    */
   initialize(rect)
@@ -1017,7 +1473,7 @@ class Window_MapLog extends Window_Command
    */
   isScrollEnabled()
   {
-    if ($mapLogManager.isHidden()) return false;
+    if (this.logManager.isHidden()) return false;
 
     return super.isScrollEnabled();
   }
@@ -1171,7 +1627,7 @@ class Window_MapLog extends Window_Command
       this.processNewLogs();
 
       // acknowledge the new logs.
-      $mapLogManager.acknowledgeProcessing();
+      this.logManager.acknowledgeProcessing();
     }
   }
 
@@ -1182,7 +1638,7 @@ class Window_MapLog extends Window_Command
   shouldUpdate()
   {
     // check if we have a new log.
-    return $mapLogManager.needsProcessing();
+    return this.logManager.needsProcessing();
   }
 
   /**
@@ -1220,8 +1676,11 @@ class Window_MapLog extends Window_Command
    */
   drawLogs()
   {
+    // do nothing if the log manager is not yet set.
+    if (!this.logManager) return;
+
     // iterate over each log.
-    $mapLogManager.getLogs().forEach((log, index) =>
+    this.logManager.getLogs().forEach((log, index) =>
     {
       // add the message as a "command" into the log window.
       this.addCommand(`\\FS[14]${log.message()}`, `log-${index}`, true, null, null, 0);
@@ -1241,7 +1700,7 @@ class Window_MapLog extends Window_Command
   updateVisibility()
   {
     // if the text log is flagged as hidden, then don't show it.
-    if ($mapLogManager.isHidden() || $gameMessage.isBusy())
+    if (this.logManager.isHidden() || $gameMessage.isBusy())
     {
       // hide the window.
       this.hideWindow();
@@ -1282,7 +1741,8 @@ class Window_MapLog extends Window_Command
   {
     const playerX = $gamePlayer.screenX();
     const playerY = $gamePlayer.screenY();
-    return (playerX < this.width) && (playerY > this.y);
+    const isInterfering = (playerX < this.width) && (playerY > this.y);
+    return isInterfering;
   }
 
   /**
@@ -1391,7 +1851,7 @@ class Window_MapLog extends Window_Command
   showWindow()
   {
     // if the text log is flagged as hidden, then we shouldn't show it again.
-    if ($mapLogManager.isHidden()) return;
+    if (this.logManager.isHidden()) return;
 
     // refresh the timer back to 5 seconds.
     this.setInactivityTimer(this.defaultInactivityDuration);
@@ -1402,3 +1862,111 @@ class Window_MapLog extends Window_Command
   //endregion update visibility
 }
 //endregion Window_MapLog
+
+//region Window_DiaLog
+class Window_DiaLog extends Window_MapLog
+{
+  /**
+   * The height of one row; 48.<br/>
+   * This is intended to be equivalent to three regular log lines.
+   * @type {number}
+   */
+  static rowHeight = 64;
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle that represents this window.
+   * @param {MapLogManager} logManager the manager that this window leverages to get logs from.
+   */
+  constructor(rect, logManager)
+  {
+    super(rect, logManager);
+  }
+
+  /**
+   * TODO: remove this override- it is for testing.
+   */
+  configure()
+  {
+    super.configure();
+
+    // make the window's background opacity transparent.
+    this.opacity = 0;
+  }
+
+  //region overwrites
+  drawFace(faceName, faceIndex, x, y, width, height)
+  {
+    // copy pasta of the original face drawing techniques.
+    const actualWidth = width || ImageManager.faceWidth;
+    const actualHeight = height || ImageManager.faceHeight;
+    const bitmap = ImageManager.loadFace(faceName);
+    const pw = ImageManager.faceWidth;
+    const ph = ImageManager.faceHeight;
+    const sw = Math.min(actualWidth, pw);
+    const sh = Math.min(actualHeight, ph);
+    const dx = Math.floor(x + Math.max(actualWidth - pw, 0) / 2);
+    const dy = Math.floor(y + Math.max(actualHeight - ph, 0) / 2);
+    const sx = Math.floor((faceIndex % 4) * pw + (pw - sw) / 2);
+    const sy = Math.floor(Math.floor(faceIndex / 4) * ph + (ph - sh) / 2);
+
+    // designate that the image should be rendered at a smaller w:h size.
+    const widthHeight = Window_DiaLog.rowHeight;
+    this.contents.blt(bitmap, sx, sy, sw, sh, dx, dy, widthHeight, widthHeight);
+  }
+
+  /**
+   * Overrides {@link #itemHeight}.<br>
+   * Reduces the item height further to allow for more rows to be visible at once
+   * within a smaller window.
+   * @returns {number} The adjusted height of each row.
+   * @override
+   */
+  itemHeight()
+  {
+    return Window_DiaLog.rowHeight;
+  }
+
+  drawBackgroundRect(rect)
+  {
+    Window_Selectable.prototype.drawBackgroundRect.call(this, rect);
+  }
+
+  /**
+   * Draws all items from the log tracker into our command window.
+   */
+  drawLogs()
+  {
+    // do nothing if the log manager is not yet set.
+    if (!this.logManager) return;
+
+    // build all the commands from the dia logs.
+    const commands = this.logManager.getLogs()
+      .map((log, index) =>
+      {
+        /** @type {DiaLog} */
+        const currentLog = log;
+        // build the new command.
+        // use the first line for the "main" line of the message.
+        return new WindowCommandBuilder(currentLog.lines().at(0))
+          .setSymbol(`log-${index}`)
+          .setEnabled(true)
+          // use everything after the first line for the rest of the message.
+          .setTextLines(currentLog.lines().slice(1))
+          .flagAsMultiline()
+          .setFaceName(currentLog.faceName())
+          .setFaceIndex(currentLog.faceIndex())
+          .build();
+      });
+
+    // add them to the list.
+    commands.forEach(this.addBuiltCommand, this);
+
+    // after drawing all the logs, scroll to the bottom.
+    this.smoothScrollDown(this.commandList().length);
+  }
+
+  //endregion overwrites
+}
+
+//endregion Window_DiaLog

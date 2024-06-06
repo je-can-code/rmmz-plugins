@@ -34,7 +34,8 @@ J.ABS.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
 Game_Actor.prototype.setup = function(actorId)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('setup').call(this, actorId);
+  J.ABS.Aliased.Game_Actor.get('setup')
+    .call(this, actorId);
 
   // setup all the JABS skill slots for the first time.
   this.initAbsSkills();
@@ -63,7 +64,8 @@ J.ABS.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattl
 Game_Actor.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('onBattlerDataChange').call(this);
+  J.ABS.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -76,7 +78,8 @@ Game_Actor.prototype.onBattlerDataChange = function()
 Game_Actor.prototype.initAbsSkills = function()
 {
   // setup the skill slots for the first time.
-  this.getSkillSlotManager().setupSlots(this);
+  this.getSkillSlotManager()
+    .setupSlots(this);
 
   // update them with data.
   this.refreshBasicAttackSkills();
@@ -114,7 +117,8 @@ Game_Actor.prototype.canRefreshBasicAttackSkills = function()
   if (!this.getSkillSlotManager()) return false;
 
   // don't refresh if setup hasn't been completed.
-  if (!this.getSkillSlotManager().isSetupComplete()) return false;
+  if (!this.getSkillSlotManager()
+    .isSetupComplete()) return false;
 
   // refresh!
   return true;
@@ -139,7 +143,7 @@ Game_Actor.prototype.updateMainhandSkill = function()
 Game_Actor.prototype.getMainhandSkill = function()
 {
   // grab the mainhand of the actor.
-  const [mainhand,] = this.equips();
+  const [ mainhand, ] = this.equips();
 
   // default the mainhand skill to 0.
   let mainhandSkill = 0;
@@ -187,7 +191,7 @@ Game_Actor.prototype.getOffhandSkill = function()
   }
 
   // grab the offhand of the actor.
-  const [,offhand] = this.equips();
+  const [ , offhand ] = this.equips();
 
   // default the offhand skill to 0.
   let offhandSkill = 0;
@@ -214,10 +218,10 @@ Game_Actor.prototype.offhandSkillOverride = function()
   let overrideSkillId = 0;
 
   // grab all states to start.
-  const objectsToCheck = [...this.states()];
+  const objectsToCheck = [ ...this.states() ];
 
   // grab the weapon of the actor.
-  const [weapon,] = this.equips();
+  const [ weapon, ] = this.equips();
 
   // check if we have a weapon.
   if (weapon)
@@ -249,7 +253,8 @@ Game_Actor.prototype.offhandSkillOverride = function()
 Game_Actor.prototype.removeInvalidSkills = function()
 {
   // grab all the slots this actor has.
-  const slots = this.getSkillSlotManager().getAllSlots();
+  const slots = this.getSkillSlotManager()
+    .getAllSlots();
 
   // iterate over each of them.
   slots.forEach(skillSlot =>
@@ -541,7 +546,8 @@ J.ABS.Aliased.Game_Actor.set('onRevive', Game_Actor.prototype.onRevive);
 Game_Actor.prototype.onRevive = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('onRevive').call(this);
+  J.ABS.Aliased.Game_Actor.get('onRevive')
+    .call(this);
 
   // stops this battler from being flagged as dead by JABS.
   this.stopDying();
@@ -570,7 +576,8 @@ Game_Actor.prototype.stopDying = function()
  */
 Game_Actor.prototype.getAllPrimarySkills = function()
 {
-  return this.getSkillSlotManager().getAllPrimarySlots();
+  return this.getSkillSlotManager()
+    .getAllPrimarySlots();
 };
 
 /**
@@ -579,7 +586,8 @@ Game_Actor.prototype.getAllPrimarySkills = function()
  */
 Game_Actor.prototype.getAllCombatSkillSlots = function()
 {
-  return this.getSkillSlotManager().getAllSecondarySlots();
+  return this.getSkillSlotManager()
+    .getAllSecondarySlots();
 };
 
 /**
@@ -588,7 +596,8 @@ Game_Actor.prototype.getAllCombatSkillSlots = function()
  */
 Game_Actor.prototype.getToolSkillSlot = function()
 {
-  return this.getSkillSlotManager().getToolSlot();
+  return this.getSkillSlotManager()
+    .getToolSlot();
 };
 
 /**
@@ -597,7 +606,8 @@ Game_Actor.prototype.getToolSkillSlot = function()
  */
 Game_Actor.prototype.getDodgeSkillSlot = function()
 {
-  return this.getSkillSlotManager().getDodgeSlot();
+  return this.getSkillSlotManager()
+    .getDodgeSlot();
 };
 
 /**
@@ -609,7 +619,8 @@ Game_Actor.prototype.getValidEquippedSkillSlots = function()
   // don't try to get slots if we are not setup yet.
   if (!this.getSkillSlotManager()) return [];
 
-  return this.getSkillSlotManager().getEquippedSlots();
+  return this.getSkillSlotManager()
+    .getEquippedSlots();
 };
 
 /**
@@ -656,7 +667,8 @@ J.ABS.Aliased.Game_Actor.set('onLevelUp', Game_Actor.prototype.onLevelUp);
 Game_Actor.prototype.onLevelUp = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('onLevelUp').call(this);
+  J.ABS.Aliased.Game_Actor.get('onLevelUp')
+    .call(this);
 
   // perform JABS-related things for leveling up.
   this.jabsLevelUp();
@@ -682,7 +694,8 @@ J.ABS.Aliased.Game_Actor.set('onLevelDown', Game_Actor.prototype.onLevelDown);
 Game_Actor.prototype.onLevelDown = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('onLevelDown').call(this);
+  J.ABS.Aliased.Game_Actor.get('onLevelDown')
+    .call(this);
 
   // perform JABS-related things for leveling down.
   this.jabsLevelDown();
@@ -710,7 +723,8 @@ J.ABS.Aliased.Game_Actor.set('onLearnNewSkill', Game_Actor.prototype.onLearnNewS
 Game_Actor.prototype.onLearnNewSkill = function(skillId)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Actor.get('onLearnNewSkill').call(this, skillId);
+  J.ABS.Aliased.Game_Actor.get('onLearnNewSkill')
+    .call(this, skillId);
 
   // perform JABS-related things for learning a new skill.
   this.jabsLearnNewSkill(skillId);
@@ -738,70 +752,81 @@ Game_Actor.prototype.jabsLearnNewSkill = function(skillId)
  */
 Game_Actor.prototype.jabsProcessLearnedSkill = function(skillId)
 {
-  // upgrade the skill if permissable.
-  this.upgradeSkillIfUpgraded(skillId);
+  // upgrade existing skills first if necessary.
+  this.autoUpgradeSkillIfRequired(skillId);
 
-  // autoassign skills if necessary.
-  this.autoAssignSkillsIfRequired(skillId);
+  // if not upgradeable, then just autoassign it if possible.
+  this.autoAssignSkillIfRequired(skillId);
 
   // do nothing if we don't have a slot manager to work with.
   if (!this.getSkillSlotManager()) return;
 
   // flag skills on the skillslot manager for refreshing.
-  this.getSkillSlotManager().flagAllSkillSlotsForRefresh();
+  this.getSkillSlotManager()
+    .flagAllSkillSlotsForRefresh();
 };
 
 /**
  * If a skill that was upgraded is equipped currently, upgrade it.
- * "Upgrading" a skill is defined as "has the yanfly tag for hiding if another
- * skill id happens to be learned", in which case it'll replace that slot.
+ * "Upgrading" in the context of JABS is tag-defined skill slot replacement.
  * @param {number} skillId The skill id to upgrade.
  */
-Game_Actor.prototype.upgradeSkillIfUpgraded = function(skillId)
+Game_Actor.prototype.autoUpgradeSkillIfRequired = function(skillId)
 {
   // grab all the upgradable skill slots.
   const upgradableSkillsSlots = this.getUpgradableSkillSlots();
 
-  //
-  if (!upgradableSkillsSlots)
-  {
-    return;
-  }
+  // if there are no upgradeable slots, then don't try to upgrade them.
+  if (!upgradableSkillsSlots || !upgradableSkillsSlots.length) return;
 
-  upgradableSkillsSlots.forEach(skillSlot =>
+  // a local function for upgrading the skill slot.
+  const upgrader = skillSlot =>
   {
-    const skillData = this.skill(skillSlot.id);
-    const upgradeSkillId = parseInt(skillData.meta["Hide if learned Skill"]);
-    if (upgradeSkillId === skillId)
-    {
-      this.setEquippedSkill(skillSlot.key, skillId);
-    }
-  }, this);
+    // identify the skill based on the current skillslot.
+    const canUpgrade = this.canUpgradeSkill(skillSlot, skillId);
+
+    // validate we can upgrade before proceeding.
+    if (!canUpgrade) return;
+
+    // it looks like we should upgrade the skill according to JABS.
+    this.setEquippedSkill(skillSlot.key, skillId);
+  };
+
+  // iterate over each of the skillslots to see if we should upgrade them.
+  upgradableSkillsSlots.forEach(upgrader, this);
 };
 
 /**
- * Gets whether or not there are notes that indicate skills should be autoassigned
- * when leveling up.
- * @returns {boolean}
+ * Determines whether or not this skill slot can be upgraded with this new skill.
+ * This applies even to battlers that are not under the auto assign control.
+ * @param {JABS_SkillSlot} skillSlot The target skill slot to potentially upgrade.
+ * @param {number} skillId The id of the skill learned to potentially auto-assign.
  */
-Game_Actor.prototype.autoAssignOnLevelup = function()
+Game_Actor.prototype.canUpgradeSkill = function(skillSlot, skillId)
 {
-  const objectsToCheck = this.getAllNotes();
-  const structure = /<autoAssignSkills>/i;
-  let autoAssign = false;
-  objectsToCheck.forEach(obj =>
-  {
-    const notedata = obj.note.split(/[\r\n]+/);
-    notedata.forEach(line =>
-    {
-      if (line.match(structure))
-      {
-        autoAssign = true;
-      }
-    });
-  });
+  // grab all the things that could have this tag.
+  const objectsToCheck = this.getActorNotes();
 
-  return autoAssign;
+  // if the actor is not allowed to auto upgrade skills, then do not.
+  const canAutoUpgrade = objectsToCheck
+    .some(object => object.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigAutoUpgradeSkills));
+  if (!canAutoUpgrade) return false;
+
+  // identify the skill based on the current skillslot.
+  const currentSkillData = this.skill(skillSlot.id);
+
+  // if auto-assignment is disallowed explicitly, then don't upgrade this slot.
+  const isSkillAutoUpgradeBlocked = currentSkillData
+    .getBooleanFromNotesByRegex(J.ABS.RegExp.NoSkillUpgrading);
+  if (isSkillAutoUpgradeBlocked) return false;
+
+  // if the current skillslot's skill isn't the one that should be upgraded, then don't upgrade.
+  const upgradeOverThisSkillId = this.skill(skillId)
+    .getNumberFromNotesByRegex(J.ABS.RegExp.UpgradeOverSkill);
+  if (skillSlot.id !== upgradeOverThisSkillId) return false;
+
+  // we should upgrade this skill with this new skillId!
+  return true;
 };
 
 /**
@@ -810,22 +835,69 @@ Game_Actor.prototype.autoAssignOnLevelup = function()
  * If all slots are full, no action is taken.
  * @param {number} skillId The skillId to auto-assign to a slot.
  */
-Game_Actor.prototype.autoAssignSkillsIfRequired = function(skillId)
+Game_Actor.prototype.autoAssignSkillIfRequired = function(skillId)
 {
-  // if we are not auto-assigning, then do not.
-  if (!this.autoAssignOnLevelup()) return;
+  // validate we should be autoassigning, and are allowed to.
+  if (!this.canAutoAssignSkillOnLevelup(skillId)) return;
 
-  // grab all the empty combat skill slots.
-  const emptySlots = this.getEmptySecondarySkills();
-
-  // if we have no additional empty slots, then do not auto-assign.
-  if (emptySlots.length === 0) return;
-
-  // extract the key of the empty slot to be assigned.
-  const { key } = emptySlots.at(0);
+  // grab the first slot that we'll be working with.
+  const firstEmptySlot = this.getEmptySecondarySkills().at(0);
 
   // assign the given skill to the slot.
-  this.setEquippedSkill(key, skillId);
+  this.setEquippedSkill(firstEmptySlot.key, skillId);
+};
+
+/**
+ * Gets whether or not there are notes that indicate skills should be autoassigned
+ * when leveling up.
+ * @param {number} skillId The skillId to auto-assign to a slot.
+ */
+Game_Actor.prototype.canAutoAssignSkillOnLevelup = function(skillId)
+{
+  // grab all the things that could have this tag.
+  const objectsToCheck = this.getActorNotes();
+
+  // if the actor is not allowed to auto assign skills, then do not.
+  const canAutoAssign = objectsToCheck
+    .some(object => object.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigAutoAssignSkills));
+  if (!canAutoAssign) return false;
+
+  // if we already have the skill equipped, don't equip it again.
+  const combatSkillSlots = this.getAllCombatSkillSlots();
+  const alreadyEquipped = combatSkillSlots.some(skillSlot => skillSlot.id === skillId);
+  if (alreadyEquipped) return false;
+
+  // if we have no additional empty slots, then do not auto-assign.
+  const emptySlots = this.getEmptySecondarySkills();
+  if (emptySlots.length === 0) return false;
+
+  // shorthand the data of this skill.
+  const skillData = this.skill(skillId);
+
+  // if the skill is preventing auto assignment, don't auto assign.
+  const isSkillAutoAssignBlocked = skillData.getBooleanFromNotesByRegex(J.ABS.RegExp.NoAutoAssign);
+  if (isSkillAutoAssignBlocked) return false;
+
+  // skills that are upgrade-only cannot be assigned to blank slots.
+  const onlyUpgradeable = skillData.getBooleanFromNotesByRegex(J.ABS.RegExp.UpgradeOnlySkill);
+  if (onlyUpgradeable) return false;
+
+  // if the skill type is blacklisted, don't allow auto assigning.
+  const blacklistedBySkillTypeId = objectsToCheck.some(object =>
+  {
+    // grab the blacklisted skills by the actor/class.
+    const skillTypeIds = object.getNumberArrayFromNotesByRegex(J.PASSIVE.RegExp.EquippedPassiveStateIds);
+
+    // if the skill's type was amongst the blacklisted types, don't auto assign it.
+    if (skillTypeIds.includes(skillData.stypeId)) return true;
+
+    // this can be autoassigned.
+    return false;
+  });
+  if (blacklistedBySkillTypeId) return false;
+
+  // we should try to auto assign this skill!
+  return true;
 };
 
 /**
@@ -834,7 +906,8 @@ Game_Actor.prototype.autoAssignSkillsIfRequired = function(skillId)
 Game_Actor.prototype.refreshAutoEquippedSkills = function()
 {
   // iterate over each of the skills and auto-assign/equip them where applicable.
-  this.skills().forEach(skill => this.jabsProcessLearnedSkill(skill.id), this);
+  this.skills()
+    .forEach(skill => this.jabsProcessLearnedSkill(skill.id), this);
 };
 //endregion learning
 
@@ -856,13 +929,13 @@ Game_Actor.prototype.getBonusHitsSources = function()
     this.states(),
 
     // the actor itself may contain bonus hits.
-    [this.databaseData()],
+    [ this.databaseData() ],
 
     // the equipment may contain bonus hits.
     this.equips(),
 
     // the class may contain bonus hits.
-    [this.currentClass()],
+    [ this.currentClass() ],
   ];
 };
 //endregion JABS bonus hits
@@ -878,7 +951,8 @@ Game_Actor.prototype.performMapDamage = function()
   if (!$jabsEngine.absEnabled)
   {
     // perform original logic.
-    J.ABS.Aliased.Game_Actor.get('performMapDamage').call(this);
+    J.ABS.Aliased.Game_Actor.get('performMapDamage')
+      .call(this);
   }
   // JABS is definitely enabled.
   else
@@ -909,7 +983,8 @@ Game_Actor.prototype.turnEndOnMap = function()
   if (!$jabsEngine.absEnabled) return;
 
   // do normal turn-end things while JABS is disabled.
-  J.ABS.Aliased.Game_Actor.get('turnEndOnMap').call(this);
+  J.ABS.Aliased.Game_Actor.get('turnEndOnMap')
+    .call(this);
 };
 //endregion map effects
 //endregion Game_Actor

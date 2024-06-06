@@ -775,7 +775,7 @@ Game_Battler.prototype.ignoreAllParry = function()
   // check if any of the note objects possibly could be granting ignore parry.
   const unparryable = RPGManager.checkForBooleanFromAllNotesByRegex(
     objectsToCheck,
-    J.ABS.RegExp.Unparryable) ?? false;
+    J.ABS.RegExp.Unparryable);
 
   // return what we found.
   return unparryable;

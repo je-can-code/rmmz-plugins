@@ -44,8 +44,8 @@ JABS_Battler.prototype.initialize = function(event, battler, battlerCoreData)
   this.initGeneralInfo();
   this.initBattleInfo();
   this.initIdleInfo();
-  this.initPoseInfo();
   this.initCooldowns();
+  this.initPoseInfo();
 };
 
 /**
@@ -478,37 +478,6 @@ JABS_Battler.prototype.initIdleInfo = function()
 };
 
 /**
- * Initializes the properties of this battler that are related to the character posing.
- */
-JABS_Battler.prototype.initPoseInfo = function()
-{
-  /**
-   * The number of frames to pose for.
-   * @type {number}
-   */
-  this._poseFrames = 0;
-
-  /**
-   * Whether or not this battler is currently posing.
-   * @type {boolean}
-   */
-  this._posing = false;
-
-  /**
-   * The name of the file that contains this battler's character sprite (without extension).
-   * @type {string}
-   */
-  this._baseSpriteImage = "";
-
-  /**
-   * The index of this battler's character sprite in the `_baseSpriteImage`.
-   * @type {number}
-   */
-  this._baseSpriteIndex = 0;
-  this.captureBaseSpriteInfo();
-};
-
-/**
  * Initializes the cooldowns for this battler.
  */
 JABS_Battler.prototype.initCooldowns = function()
@@ -750,7 +719,6 @@ JABS_Battler.prototype.update = function()
   // don't update map battlers if JABS is disabled.
   if (!$jabsEngine.absEnabled) return;
 
-  this.updatePoseEffects();
   this.updateCooldowns();
   this.updateTimers();
   this.updateEngagement();
@@ -806,114 +774,6 @@ JABS_Battler.prototype.canProcessQueuedActions = function()
   return true;
 };
 //endregion queued player actions
-
-//region update pose effects
-/**
- * Update all character sprite animations executing on this battler.
- */
-JABS_Battler.prototype.updatePoseEffects = function()
-{
-  // if we cannot update pose effects, then do not.
-  if (!this.canUpdatePoseEffects()) return;
-
-  // countdown the timer for posing.
-  this.countdownPoseTimer();
-
-  // manage the actual adjustments to the character's pose pattern.
-  this.handlePosePattern();
-};
-
-/**
- * Determines whether or not this battler can update its own pose effects.
- * @returns {boolean}
- */
-JABS_Battler.prototype.canUpdatePoseEffects = function()
-{
-  // we need to be currently animating in order to update animations.
-  if (!this.isPosing()) return false;
-
-  // update animations!
-  return true;
-};
-
-/**
- * Gets whether or not this battler is currently posing.
- * @returns {boolean}
- */
-JABS_Battler.prototype.isPosing = function()
-{
-  return this._posing;
-};
-
-/**
- * Counts down the pose animation frames and manages the pose pattern.
- */
-JABS_Battler.prototype.countdownPoseTimer = function()
-{
-  // if guarding, then do not countdown the pose frames.
-  if (this.guarding()) return;
-
-  // check if we are still posing.
-  if (this._poseFrames > 0)
-  {
-    // decrement the pose frames.
-    this._poseFrames--;
-  }
-};
-
-/**
- * Manages whether or not this battler is posing based on pose frames.
- */
-JABS_Battler.prototype.handlePosePattern = function()
-{
-  // check if we are still posing.
-  if (this._poseFrames > 0)
-  {
-    // manage the current pose pattern based on the animation frame count.
-    this.managePosePattern();
-  }
-  // we are done posing now.
-  else
-  {
-    // reset the pose back to default.
-    this.resetAnimation();
-  }
-};
-
-/**
- * Watches the current pose frames and adjusts the pose pattern accordingly.
- */
-JABS_Battler.prototype.managePosePattern = function()
-{
-  // if the battler has 4 or less frames left.
-  if (this._poseFrames < 4)
-  {
-    // set the pose pattern to 0, the left side.
-    this.setPosePattern(0);
-  }
-  // check fi the battler has more than 10 frames left.
-  else if (this._poseFrames > 10)
-  {
-    // set the pose pattern to 2, the right side.
-    this.setPosePattern(2);
-  }
-  // the battler is between 5-9 pose frames.
-  else
-  {
-    // set the pose pattern to 1, the middle.
-    this.setPosePattern(1);
-  }
-};
-
-/**
- * Sets this battler's underlying character's pose pattern.
- * @param {number} pattern The pattern to set for this character.
- */
-JABS_Battler.prototype.setPosePattern = function(pattern)
-{
-  this.getCharacter()._pattern = pattern;
-};
-//endregion update pose effects
 
 //region update cooldowns
 /**
@@ -1527,9 +1387,6 @@ JABS_Battler.prototype.tryDodgeSkill = function()
  */
 JABS_Battler.prototype.executeDodgeSkill = function(skill)
 {
-  // change over to the action pose for the skill.
-  this.performActionPose(skill);
-
   // trigger invincibility for dodging if applicable.
   this.setInvincible(skill.jabsInvincibleDodge);
 
@@ -2212,51 +2069,6 @@ JABS_Battler.prototype.canBattlerUseSkills = function()
   const muted = states.find(state => (state.jabsMuted || state.jabsParalyzed));
   return !muted;
 
-};
-
-/**
- * Initializes the sprite info for this battler.
- */
-JABS_Battler.prototype.captureBaseSpriteInfo = function()
-{
-  this.setBaseSpriteName(this.getCharacterSpriteName());
-  this.setBaseSpriteIndex(this.getCharacterSpriteIndex());
-};
-
-/**
- * Gets the name of this battler's current character sprite.
- * @returns {string}
- */
-JABS_Battler.prototype.getCharacterSpriteName = function()
-{
-  return this.getCharacter()._characterName;
-};
-
-/**
- * Gets the index of this battler's current character sprite.
- * @returns {number}
- */
-JABS_Battler.prototype.getCharacterSpriteIndex = function()
-{
-  return this.getCharacter()._characterIndex;
-};
-
-/**
- * Sets the name of this battler's original character sprite.
- * @param {string} name The name to set.
- */
-JABS_Battler.prototype.setBaseSpriteName = function(name)
-{
-  this._baseSpriteImage = name;
-};
-
-/**
- * Sets the index of this battler's original character sprite.
- * @param {number} index The index to set.
- */
-JABS_Battler.prototype.setBaseSpriteIndex = function(index)
-{
-  this._baseSpriteIndex = index;
 };
 //endregion update helpers
 
@@ -4574,6 +4386,7 @@ JABS_Battler.prototype.canActionConnect = function()
  * @param {JABS_Battler} target The potential candidate for hitting with this action.
  * @param {boolean} alreadyHitOne Whether or not this action has already hit a target.
  */
+// eslint-disable-next-line complexity
 JABS_Battler.prototype.isWithinScope = function(action, target, alreadyHitOne = false)
 {
   const user = action.getCaster();
@@ -4826,7 +4639,7 @@ JABS_Battler.prototype.applyToolEffects = function(toolId, isLoot = false)
     battler.getSkillSlotManager().clearSlot(JABS_Button.Tool);
 
     // build a lot for it.
-    const log = new MapLogBuilder()
+    const log = new ActionLogBuilder()
       .setupUsedLastItem(item.id)
       .build();
     $mapLogManager.addLog(log);
@@ -4982,7 +4795,7 @@ JABS_Battler.prototype.createToolLog = function(item)
   // if not enabled, skip this.
   if (!J.LOG) return;
 
-  const log = new MapLogBuilder()
+  const log = new ActionLogBuilder()
     .setupUsedItem(this.getReferenceData().name, item.id)
     .build();
   $mapLogManager.addLog(log);
@@ -5417,10 +5230,6 @@ JABS_Battler.prototype.startGuarding = function(skillSlot)
 
   // if the guarding skill has a parry window, apply those frames once.
   if (guardData.canParry()) this.setParryWindow(totalParryFrames);
-
-  // set the pose!
-  const skillId = this.getBattler().getEquippedSkillId(skillSlot);
-  this.performActionPose(this.getSkill(skillId));
 };
 
 /**
@@ -5464,112 +5273,6 @@ JABS_Battler.prototype.countdownParryWindow = function()
   }
 };
 //endregion guarding
-
-//region actionposes/animations
-/**
- * Executes an action pose.
- * Will silently fail if the asset is missing.
- * @param {RPG_Skill} skill The skill to pose for.
- */
-JABS_Battler.prototype.performActionPose = function(skill)
-{
-  // if we are still animating from a previous skill, prematurely end it.
-  if (this._posing)
-  {
-    this.endAnimation();
-  }
-
-  // if we have a pose suffix for this skill, then try to perform the pose.
-  if (skill.jabsPoseData)
-  {
-    this.changeCharacterSprite(skill);
-  }
-};
-
-/**
- * Executes the change of character sprite based on the action pose data
- * from within a skill's notes.
- * @param {RPG_Skill} skill The skill to pose for.
- */
-JABS_Battler.prototype.changeCharacterSprite = function(skill)
-{
-  // establish the base sprite data.
-  const baseSpriteName = this.getCharacterSpriteName();
-  this.captureBaseSpriteInfo();
-
-  // define the duration for this pose.
-  this.setAnimationCount(skill.jabsPoseDuration);
-
-  // determine the new action pose sprite name.
-  const newCharacterSprite = `${baseSpriteName}${skill.jabsPoseSuffix}`;
-
-  // stitch the file path together with the sprite url.
-  const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
-
-  // check if the sprite exists.
-  const spriteExists = StorageManager.fileExists(spritePath);
-
-  // only actually switch to the other character sprite if it exists.
-  if (spriteExists)
-  {
-    // load the character into cache.
-    ImageManager.loadCharacter(newCharacterSprite);
-
-    // actually set the character.
-    this.getCharacter().setImage(newCharacterSprite, skill.jabsPoseIndex);
-  }
-};
-
-/**
- * Forcefully ends the pose animation.
- */
-JABS_Battler.prototype.endAnimation = function()
-{
-  this.setAnimationCount(0);
-  this.resetAnimation();
-};
-
-/**
- * Sets the pose animation count to a given amount.
- * @param {number} count The number of frames to animate for.
- */
-JABS_Battler.prototype.setAnimationCount = function(count)
-{
-  this._poseFrames = count;
-  if (this._poseFrames > 0)
-  {
-    this._posing = true;
-  }
-
-  if (this._poseFrames <= 0)
-  {
-    this._posing = false;
-    this._poseFrames = 0;
-  }
-};
-
-/**
- * Resets the pose animation for this battler.
- */
-JABS_Battler.prototype.resetAnimation = function()
-{
-  if (!this._baseSpriteImage && !this._baseSpriteIndex) return;
-  if (this._posing)
-  {
-    this.endAnimation();
-  }
-
-  const originalImage = this._baseSpriteImage;
-  const originalIndex = this._baseSpriteIndex;
-  const currentImage = this.getCharacterSpriteName();
-  const currentIndex = this.getCharacterSpriteIndex();
-  const character = this.getCharacter();
-  if (originalImage !== currentImage || originalIndex !== currentIndex)
-  {
-    character.setImage(originalImage, originalIndex);
-  }
-};
-//endregion actionposes/animations
 
 //region utility helpers
 /**

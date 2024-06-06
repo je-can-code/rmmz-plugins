@@ -90,7 +90,7 @@ if (J.ABS)
   {
     if (!J.LOG) return;
 
-    const sdpLog = new MapLogBuilder()
+    const sdpLog = new ActionLogBuilder()
       .setupSdpAcquired(battler.battlerName(), sdpPoints)
       .build();
     $mapLogManager.addLog(sdpLog);

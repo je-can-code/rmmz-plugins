@@ -4,7 +4,7 @@ class MapLogManager
   //region properties
   /**
    * The logs currently being managed.
-   * @type {Map_Log[]}
+   * @type {ActionLog[]|DiaLog[]}
    */
   #logs = [];
 
@@ -19,23 +19,25 @@ class MapLogManager
    * @type {boolean}
    */
   #visible = true;
+
+  #maxLogCount = 100;
   //endregion properties
 
   /**
    * Gets all logs that are currently being tracked by this log manager.<br>
    * The logs will be in reverse order from that of which they are displayed in the window.
-   * @returns {Map_Log[]}
+   * @returns {ActionLog[]|DiaLog[]}
    */
   getLogs()
   {
     return this.#logs;
-  };
+  }
 
   /**
    * Adds a new log to this log manager's log tracker.<br>
    * If there are more than the maximum capacity of logs currently being tracked,
    * this will also start dropping logs from the tail until the limit is reached.
-   * @param {Map_Log} log The new log to add.
+   * @param {ActionLog} log The new log to add.
    */
   addLog(log)
   {
@@ -47,7 +49,7 @@ class MapLogManager
 
     // alert any listeners that we have a new log.
     this.flagForProcessing();
-  };
+  }
 
   /**
    * Maintains this log manager's the log tracker to stay under the max log count.
@@ -68,7 +70,7 @@ class MapLogManager
    */
   hasTooManyLogs()
   {
-    return (this.#logs.length > this._maxLogCount());
+    return (this.#logs.length > this.maxLogCount());
   }
 
   /**
@@ -78,9 +80,18 @@ class MapLogManager
    * @returns {number}
    * @private
    */
-  _maxLogCount()
+  maxLogCount()
   {
-    return 100;
+    return this.#maxLogCount;
+  }
+
+  /**
+   * Sets the max log count to a given amount.
+   * @param newMaxLogCount
+   */
+  setMaxLogCount(newMaxLogCount)
+  {
+    this.#maxLogCount = newMaxLogCount;
   }
 
   /**
@@ -113,6 +124,7 @@ class MapLogManager
   clearLogs()
   {
     this.#logs.splice(0, this.#logs.length);
+    this.flagForProcessing();
   }
 
   /**
@@ -136,7 +148,7 @@ class MapLogManager
   /**
    * Hides this log manager.
    */
-  hideMapLog()
+  hideLog()
   {
     this.#visible = false;
   }
@@ -144,7 +156,7 @@ class MapLogManager
   /**
    * Reveals this log manager.
    */
-  showMapLog()
+  showLog()
   {
     this.#visible = true;
   }

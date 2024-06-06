@@ -178,6 +178,6 @@ class JABS_AI
 
     // return the strongest found skill id.
     return strongestSkillId;
-  };
+  }
 }
 //endregion JABS_AI
