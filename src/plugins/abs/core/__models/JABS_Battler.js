@@ -4639,10 +4639,10 @@ JABS_Battler.prototype.applyToolEffects = function(toolId, isLoot = false)
     battler.getSkillSlotManager().clearSlot(JABS_Button.Tool);
 
     // build a lot for it.
-    const log = new ActionLogBuilder()
+    const lastUsedItemLog = new LootLogBuilder()
       .setupUsedLastItem(item.id)
       .build();
-    $mapLogManager.addLog(log);
+    $lootLogManager.addLog(lastUsedItemLog);
   }
   else
   {
@@ -4795,10 +4795,10 @@ JABS_Battler.prototype.createToolLog = function(item)
   // if not enabled, skip this.
   if (!J.LOG) return;
 
-  const log = new ActionLogBuilder()
-    .setupUsedItem(this.getReferenceData().name, item.id)
+  const toolUsedLog = new LootLogBuilder()
+    .setupUsedItem(item.id)
     .build();
-  $mapLogManager.addLog(log);
+  $lootLogManager.addLog(toolUsedLog);
 };
 
 /**

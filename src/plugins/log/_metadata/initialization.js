@@ -46,7 +46,7 @@ J.LOG.Aliased.Scene_Map = new Map();
  * This manager handles the window that contains the combat and loot interactions.
  * @type {MapLogManager}
  */
-var $mapLogManager = null;
+var $actionLogManager = null;
 
 /**
  * One of the log managers that are for {@link Scene_Map}.<br/>
@@ -54,4 +54,11 @@ var $mapLogManager = null;
  * @type {MapLogManager}
  */
 var $diaLogManager = null;
+
+/**
+ * One of the log managers that are for {@link Scene_Map}.<br/>
+ * This manager handles the window that contains the various loot messages.
+ * @type {MapLogManager}
+ */
+var $lootLogManager = null;
 //endregion introduction

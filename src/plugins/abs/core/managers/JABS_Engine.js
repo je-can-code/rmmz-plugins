@@ -985,10 +985,10 @@ class JABS_Engine
     const player1 = this.getPlayer1();
 
     // build and write the log.
-    const log = new ActionLogBuilder()
+    const partyCycleLog = new ActionLogBuilder()
       .setupPartyCycle(player1.battlerName())
       .build();
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(partyCycleLog);
   }
 
   /**
@@ -2539,7 +2539,7 @@ class JABS_Engine
       const parryLog = new ActionLogBuilder()
         .setupParry(targetName, casterName, skill.id, result.parried)
         .build();
-      $mapLogManager.addLog(parryLog);
+      $actionLogManager.addLog(parryLog);
       return;
     }
     // create evasion logs if it was evaded.
@@ -2548,7 +2548,7 @@ class JABS_Engine
       const dodgeLog = new ActionLogBuilder()
         .setupDodge(targetName, casterName, skill.id)
         .build();
-      $mapLogManager.addLog(dodgeLog);
+      $actionLogManager.addLog(dodgeLog);
       return;
     }
     // create retaliation logs if it was a retaliation.
@@ -2557,15 +2557,15 @@ class JABS_Engine
       const retaliationLog = new ActionLogBuilder()
         .setupRetaliation(casterName)
         .build();
-      $mapLogManager.addLog(retaliationLog);
+      $actionLogManager.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
     else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length)
     {
-      const log = new ActionLogBuilder()
+      const undamagedLog = new ActionLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
-      $mapLogManager.addLog(log);
+      $actionLogManager.addLog(undamagedLog);
       return;
     }
     if (result.hpDamage)
@@ -2582,10 +2582,10 @@ class JABS_Engine
         reducedAmount = `(${parseInt(damageReduction)})`;
       }
 
-      const log = new ActionLogBuilder()
+      const actionExecutedLog = new ActionLogBuilder()
         .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
         .build();
-      $mapLogManager.addLog(log);
+      $actionLogManager.addLog(actionExecutedLog);
       // fall through in case there were states that were also applied, such as defeating the target.
     }
 
@@ -2597,18 +2597,18 @@ class JABS_Engine
         // show a custom line when an enemy is defeated.
         if (stateId === target.getBattler().deathStateId())
         {
-          const log = new ActionLogBuilder()
+          const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
             .build();
-          $mapLogManager.addLog(log);
+          $actionLogManager.addLog(targetDefeatedLog);
           return;
         }
 
         // show all the rest of the non-death states.
-        const log = new ActionLogBuilder()
+        const stateAfflictedLog = new ActionLogBuilder()
           .setupStateAfflicted(targetName, stateId)
           .build();
-        $mapLogManager.addLog(log);
+        $actionLogManager.addLog(stateAfflictedLog);
       });
     }
   }
@@ -3466,15 +3466,15 @@ class JABS_Engine
       const expLog = new ActionLogBuilder()
         .setupExperienceGained(caster.getReferenceData().name, experience)
         .build();
-      $mapLogManager.addLog(expLog);
+      $actionLogManager.addLog(expLog);
     }
 
     if (gold !== 0)
     {
-      const goldLog = new ActionLogBuilder()
+      const goldLog = new LootLogBuilder()
         .setupGoldFound(gold)
         .build();
-      $mapLogManager.addLog(goldLog);
+      $lootLogManager.addLog(goldLog);
     }
   }
 
@@ -3518,10 +3518,10 @@ class JABS_Engine
     }
 
     // the player is always going to be the one collecting the loot- for now.
-    const lootLog = new ActionLogBuilder()
-      .setupLootObtained(this.getPlayer1().getReferenceData().name, lootType, item.id)
+    const lootLog = new LootLogBuilder()
+      .setupLootObtained(lootType, item.id)
       .build();
-    $mapLogManager.addLog(lootLog);
+    $lootLogManager.addLog(lootLog);
   }
 
   /**
@@ -3636,7 +3636,7 @@ class JABS_Engine
 
     const battler = jabsBattler.getBattler();
     const log = this.configureLevelUpLog(battler.name(), battler.level);
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(log);
   }
 
   /**
@@ -3717,7 +3717,7 @@ class JABS_Engine
     if (!J.LOG) return;
 
     const log = this.configureSkillLearnLog(player.getReferenceData().name, skill.id);
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(log);
   }
 
   /**

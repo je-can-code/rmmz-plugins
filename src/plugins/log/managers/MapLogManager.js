@@ -26,7 +26,7 @@ class MapLogManager
   /**
    * Gets all logs that are currently being tracked by this log manager.<br>
    * The logs will be in reverse order from that of which they are displayed in the window.
-   * @returns {ActionLog[]|DiaLog[]}
+   * @returns {ActionLog[]|DiaLog[]|LootLog[]}
    */
   getLogs()
   {

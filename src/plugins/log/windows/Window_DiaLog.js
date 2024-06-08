@@ -1,4 +1,8 @@
 //region Window_DiaLog
+/**
+ * An extension/modification of the base {@link Window_MapLog}.<br/>
+ * The {@link Window_DiaLog} is used for the chatter log.
+ */
 class Window_DiaLog extends Window_MapLog
 {
   /**
@@ -18,18 +22,11 @@ class Window_DiaLog extends Window_MapLog
     super(rect, logManager);
   }
 
-  /**
-   * TODO: remove this override- it is for testing.
-   */
-  configure()
-  {
-    super.configure();
-
-    // make the window's background opacity transparent.
-    this.opacity = 0;
-  }
-
   //region overwrites
+  /**
+   * Overrides {@link drawFace}.<br/>
+   * Blits the face image at a size fitted to each row instead of the full image size.
+   */
   drawFace(faceName, faceIndex, x, y, width, height)
   {
     // copy pasta of the original face drawing techniques.
@@ -62,18 +59,26 @@ class Window_DiaLog extends Window_MapLog
     return Window_DiaLog.rowHeight;
   }
 
+  /**
+   * Overrides {@link drawBackgroundRect}.<br/>
+   * Re-provides a background to each item in the log window to improve visibility.
+   * @param {Rectangle} rect The rectangle of the background image.
+   */
   drawBackgroundRect(rect)
   {
+    // perform real original logic.
     Window_Selectable.prototype.drawBackgroundRect.call(this, rect);
   }
+  //endregion overwrites
 
   /**
-   * Draws all items from the log tracker into our command window.
+   * Builds all commands for this dialog window.
+   * @returns {BuiltWindowCommand[]}
    */
-  drawLogs()
+  buildCommands()
   {
     // do nothing if the log manager is not yet set.
-    if (!this.logManager) return;
+    if (!this.logManager) return [];
 
     // build all the commands from the dia logs.
     const commands = this.logManager.getLogs()
@@ -94,14 +99,8 @@ class Window_DiaLog extends Window_MapLog
           .build();
       });
 
-    // add them to the list.
-    commands.forEach(this.addBuiltCommand, this);
-
-    // after drawing all the logs, scroll to the bottom.
-    this.smoothScrollDown(this.commandList().length);
+    // return the built commands.
+    return commands;
   }
-
-  //endregion overwrites
 }
-
 //endregion Window_DiaLog
