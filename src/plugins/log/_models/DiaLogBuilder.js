@@ -1,6 +1,6 @@
 //region DiaLogBuilder
 /**
- * A builder class for constructing {@link DiaLog}s.
+ * A fluent-builder for building chat-related logs for the {@link Window_DiaLog}.
  */
 class DiaLogBuilder
 {

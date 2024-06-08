@@ -328,14 +328,8 @@ Game_Action.prototype.onParry = function(jabsBattler)
  */
 Game_Action.prototype.calculateParryDamageReduction = function(jabsBattler, originalDamage)
 {
-  // assign the damage to a local variable because good coding practices.
-  let modifiedDamage = originalDamage;
-
-  // parry damage reduction is always 100%.
-  modifiedDamage = 0;
-
   // return the parry-modified damage.
-  return modifiedDamage;
+  return 0;
 };
 
 /**

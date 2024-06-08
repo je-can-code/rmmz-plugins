@@ -46,6 +46,9 @@ Scene_Map.prototype.createAllWindows = function()
 
   // create the chat log.
   this.createDiaLogWindow();
+
+  // create the loot log.
+  this.createLootLogWindow();
 };
 
 //region action log
@@ -74,7 +77,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
   const rectangle = this.actionLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_MapLog(rectangle, $mapLogManager);
+  const window = new Window_MapLog(rectangle, $actionLogManager);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();
@@ -207,4 +210,84 @@ Scene_Map.prototype.setDiaLogWindow = function(window)
   this._j._log._diaLog = window;
 };
 //endregion dia log
+
+//region loot log
+/**
+ * Creates the dia log window and adds it to tracking.
+ */
+Scene_Map.prototype.createLootLogWindow = function()
+{
+  // create the window.
+  const window = this.buildLootLogWindow();
+
+  // update the tracker with the new window.
+  this.setLootLogWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the loot log window.
+ * @returns {Window_LootLog}
+ */
+Scene_Map.prototype.buildLootLogWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.lootLogWindowRect();
+
+  // create the window with the rectangle.
+  const window = new Window_LootLog(rectangle, $lootLogManager);
+
+  // deselect/deactivate the window so we don't have it look interactable.
+  window.deselect();
+  window.deactivate();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Creates the rectangle representing the window for the loot log.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.lootLogWindowRect = function()
+{
+  // an arbitrary number of rows.
+  const rows = 12;
+
+  // define the width of the window.
+  const width = 350;
+
+  // define the height of the window.
+  const height = (Window_LootLog.rowHeight * (rows)) + 24;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - width;
+
+  // define the origin y of the window.
+  const y = (Graphics.boxHeight / 2) - (height / 2);
+
+  // return the built rectangle.
+  return new Rectangle(x, y, width, height);
+};
+
+/**
+ * Gets the currently tracked loot log window.
+ * @returns {Window_LootLog}
+ */
+Scene_Map.prototype.getLootLogWindow = function()
+{
+  return this._j._log._diaLog;
+};
+
+/**
+ * Set the currently tracked loot log window to the given window.
+ * @param {Window_LootLog} window The window to track.
+ */
+Scene_Map.prototype.setLootLogWindow = function(window)
+{
+  this._j._log._diaLog = window;
+};
+//endregion loot log
 //endregion Scene_Map

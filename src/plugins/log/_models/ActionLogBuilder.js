@@ -1,6 +1,6 @@
 //region MapLogBuilder
 /**
- * A fluent-builder for the logger on the map.
+ * A fluent-builder for building action-related logs for the {@link Window_MapLog}.
  */
 class ActionLogBuilder
 {
@@ -296,44 +296,6 @@ class ActionLogBuilder
   }
 
   /**
-   * Sets up a message based on the context of a battler using an item.
-   * @param {string} targetName The name of the battler being party cycled to.
-   * @param {number} itemId The id of the item we're using the last of.
-   * @returns {this} This builder, for fluent chaining.
-   */
-  setupUsedItem(targetName, itemId)
-  {
-    // the target's name, wrapped in a defender color.
-    const defender = this.#wrapName(targetName, 16);
-
-    // construct the message.
-    const message = `${defender} used the \\Item[${itemId}].`;
-
-    // assign the message to this log.
-    this.setMessage(message);
-
-    // return the builder for continuous building.
-    return this;
-  }
-
-  /**
-   * Sets up a message based on the context of using the last item/tool and unequipping it.
-   * @param {number} itemId The id of the item we're using the last of.
-   * @returns {this} This builder, for fluent chaining.
-   */
-  setupUsedLastItem(itemId)
-  {
-    // construct the message.
-    const message = `The last \\Item[${itemId}] was consumed and unequipped.`;
-
-    // assign the message to this log.
-    this.setMessage(message);
-
-    // return the builder for continuous building.
-    return this;
-  }
-
-  /**
    * Sets up a message based on teh context of a battler earning experience.
    * @param {string} targetName The name of the battler earning experience.
    * @param {number} expGained The amount of experience earned by the battler.
@@ -342,7 +304,7 @@ class ActionLogBuilder
   setupExperienceGained(targetName, expGained)
   {
     // wrap the amount in the appropriate color.
-    const exp = this.#translateReward("exp", expGained);
+    const exp = `\\C[6]${expGained}\\C[0]`;
 
     // the target's name, wrapped in a defender color.
     const defender = this.#wrapName(targetName, 16);
@@ -355,85 +317,6 @@ class ActionLogBuilder
 
     // return the builder for continuous building.
     return this;
-  }
-
-  /**
-   * Sets up a message based on the context of the party finding gold.
-   * @param {number} goldFound The amount of gold found by the party.
-   * @returns {this} This builder, for fluent chaining.
-   */
-  setupGoldFound(goldFound)
-  {
-    // wrap the amount in the appropriate color.
-    const gold = this.#translateReward("gold", goldFound);
-
-    // construct the message.
-    const message = `The party found \\*${gold}\\* gold.`;
-
-    // assign the message to this log.
-    this.setMessage(message);
-
-    // return the builder for continuous building.
-    return this;
-  }
-
-  #translateReward(rewardType, amount)
-  {
-    switch (rewardType)
-    {
-      case "exp":
-        return `\\C[6]${amount}\\C[0]`;
-      case "gold":
-        return `\\C[14]${amount}\\C[0]`;
-      default:
-        return amount;
-    }
-  }
-
-  /**
-   * Sets up a message based on the context of the player picking up loot.
-   * @param {string} targetName The name of the player.
-   * @param {"armor"|"weapon"|"item"} lootType One of "armor", "weapon", or "item".
-   * @param {number} lootId The id of the loot from the database.
-   * @returns {this} This builder, for fluent chaining.
-   */
-  setupLootObtained(targetName, lootType, lootId)
-  {
-    // the target's name, wrapped in a defender color.
-    const defender = this.#wrapName(targetName, 16);
-
-    // translate the loot based on type and id.
-    const loot = this.#translateLoot(lootType, lootId);
-
-    // construct the message.
-    const message = `${defender} obtained the \\*${loot}\\*.`;
-
-    // assign the message to this log.
-    this.setMessage(message);
-
-    // return the builder for continuous building.
-    return this;
-  }
-
-  /**
-   * Translates into the proper text code based on loot type and id.
-   * @param {"armor"|"weapon"|"item"} lootType One of "armor", "weapon", or "item".
-   * @param {number} lootId The id of the loot from the database.
-   * @returns {string} The compiled wrapped text code of the loot.
-   */
-  #translateLoot(lootType, lootId)
-  {
-    switch (lootType)
-    {
-      case "armor":
-        return `\\Armor[${lootId}]`;
-      case "weapon":
-        return `\\Weapon[${lootId}]`;
-      case "item":
-        return `\\Item[${lootId}]`;
-      default:
-        return String.empty;
-    }
   }
 
   /**

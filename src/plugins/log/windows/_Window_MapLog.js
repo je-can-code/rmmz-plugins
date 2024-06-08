@@ -2,9 +2,11 @@
   which they are found alphabetically in their folders. This class is being extended by the Window_DiaLog class, and
   so it must be ordered to be found ahead of that.
 */
+
 //region Window_MapLog
 /**
- * A window containing the logs.
+ * A base window that manages standard log management in a command window.<br/>
+ * The default {@link Window_MapLog} is used for the action log.
  */
 class Window_MapLog extends Window_Command
 {
@@ -119,8 +121,12 @@ class Window_MapLog extends Window_Command
     // perform original logic.
     super.smoothScrollTo(x, y);
 
-    // forces the window to show if scrolling through it.
-    this.showWindow();
+    // validate there are commands in this window, first.
+    if (this.hasCommands())
+    {
+      // forces the window to show if scrolling through it.
+      this.showWindow();
+    }
   }
 
   /**
@@ -205,6 +211,7 @@ class Window_MapLog extends Window_Command
     // because we didn't draw a full-sized icon, we move the textState.x back a bit.
     textState.x -= 16;
   }
+
   //endregion overwrites
 
   /**
@@ -287,27 +294,43 @@ class Window_MapLog extends Window_Command
    */
   makeCommandList()
   {
-    this.drawLogs();
+    // empty the current list.
+    this.clearCommandList();
+
+    // grab all the listings available.
+    const commands = this.buildCommands();
+
+    // add all the built commands into the list.
+    commands.forEach(this.addBuiltCommand, this);
+
+    // after drawing all the logs, scroll to the bottom.
+    this.smoothScrollDown(this.commandList().length);
   }
 
   /**
-   * Draws all items from the log tracker into our command window.
+   * Builds all commands for this action log window.
+   * @returns {BuiltWindowCommand[]}
    */
-  drawLogs()
+  buildCommands()
   {
     // do nothing if the log manager is not yet set.
-    if (!this.logManager) return;
+    if (!this.logManager) return [];
 
-    // iterate over each log.
-    this.logManager.getLogs().forEach((log, index) =>
-    {
-      // add the message as a "command" into the log window.
-      this.addCommand(`\\FS[14]${log.message()}`, `log-${index}`, true, null, null, 0);
-    });
+    // iterate over each log and build a command for them.
+    const commands = this.logManager.getLogs()
+      .map((log, index) =>
+      {
+        // add the message as a "command" into the log window.
+        return new WindowCommandBuilder(`\\FS[14]${log.message()}`)
+          .setSymbol(`log-${index}`)
+          .setEnabled(true)
+          .build();
+      });
 
-    // after drawing all the logs, scroll to the bottom.
-    this.smoothScrollDown(this._list.length);
+    // return the built commands.
+    return commands;
   }
+
   //endregion update logging
 
   //region update visibility
@@ -358,9 +381,17 @@ class Window_MapLog extends Window_Command
    */
   playerInterference()
   {
+    // identify where on the screen the player is.
     const playerX = $gamePlayer.screenX();
     const playerY = $gamePlayer.screenY();
-    const isInterfering = (playerX < this.width) && (playerY > this.y);
+
+    // check if the player is to the right of this window's origin X
+    // check if the player is below this window's origin Y.
+    const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
+    const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
+    const isInterfering = (xInterference) && (yInterference);
+
+    // return what we deduced.
     return isInterfering;
   }
 
@@ -478,6 +509,8 @@ class Window_MapLog extends Window_Command
     // refresh the opacity so the logs can be seen again.
     this.contentsOpacity = 255;
   }
+
   //endregion update visibility
 }
+
 //endregion Window_MapLog

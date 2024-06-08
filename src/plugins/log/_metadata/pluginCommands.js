@@ -4,7 +4,7 @@
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "showActionLog", () =>
 {
-  $mapLogManager.showLog();
+  $actionLogManager.showLog();
 });
 
 /**
@@ -12,7 +12,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "showActionLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "hideActionLog", () =>
 {
-  $mapLogManager.hideLog();
+  $actionLogManager.hideLog();
 });
 
 /**
@@ -21,10 +21,10 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideActionLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addActionLog", args =>
 {
   const { text } = args;
-  const log = new ActionLogBuilder()
+  const customLog = new ActionLogBuilder()
     .setMessage(text)
     .build();
-  $mapLogManager.addLog(log);
+  $actionLogManager.addLog(customLog);
 });
 
 /**
@@ -32,7 +32,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "addActionLog", args =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "showDiaLog", () =>
 {
-  $mapLogManager.showLog();
+  $actionLogManager.showLog();
 });
 
 /**
@@ -40,7 +40,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "showDiaLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
 {
-  $mapLogManager.hideLog();
+  $actionLogManager.hideLog();
 });
 
 /**
