@@ -10777,6 +10777,7 @@ class JABS_Timer
  * - 3.4.0
  *    Added functionality surrounding skill auto-assignment.
  *    Extracted "poses" functionality to an extension for future enhancements.
+ *    Added Scene_Map#forceCloseAbsMenu() to programmatically close the menu.
  * - 3.3.0
  *    Added plugin command to generate enemies on the map dynamically.
  *    Added plugin command to generate loot on the map dynamically.
@@ -29235,6 +29236,9 @@ Scene_Map.prototype.closeAbsMenu = function()
     .closeMenu();
 };
 
+/**
+ * Force closes the JABS quick menu entirely.
+ */
 Scene_Map.prototype.forceCloseAbsMenu = function()
 {
   this.closeAbsWindow(JABS_MenuType.Assign);
