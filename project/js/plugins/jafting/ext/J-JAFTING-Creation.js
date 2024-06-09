@@ -1590,7 +1590,6 @@ J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
  * All regular expressions used by this plugin.
  */
 J.JAFTING.EXT.CREATE.RegExp = {};
-J.JAFTING.EXT.CREATE.RegExp.Points = /<tag:[ ]?(\d+)>/i;
 //endregion initialization
 
 //region plugin commands
