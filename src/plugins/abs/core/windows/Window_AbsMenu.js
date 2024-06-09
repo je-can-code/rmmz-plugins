@@ -140,9 +140,10 @@ class Window_AbsMenu extends Window_Command
     if (!this.isClosed())
     {
       this.close();
-      $jabsEngine.absPause = false;
-      $jabsEngine.requestAbsMenu = false;
     }
+
+    $jabsEngine.absPause = false;
+    $jabsEngine.requestAbsMenu = false;
   }
 }
 //endregion Window_AbsMenu

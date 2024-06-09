@@ -22240,14 +22240,8 @@ Game_Action.prototype.onParry = function(jabsBattler)
  */
 Game_Action.prototype.calculateParryDamageReduction = function(jabsBattler, originalDamage)
 {
-  // assign the damage to a local variable because good coding practices.
-  let modifiedDamage = originalDamage;
-
-  // parry damage reduction is always 100%.
-  modifiedDamage = 0;
-
   // return the parry-modified damage.
-  return modifiedDamage;
+  return 0;
 };
 
 /**
@@ -27584,7 +27578,8 @@ J.ABS.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initialize);
 Scene_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Scene_Map.get('initialize').call(this);
+  J.ABS.Aliased.Scene_Map.get('initialize')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -27610,7 +27605,8 @@ Scene_Map.prototype.onMapLoaded = function()
   }
 
   // perform original logic.
-  J.ABS.Aliased.Scene_Map.get('onMapLoaded').call(this);
+  J.ABS.Aliased.Scene_Map.get('onMapLoaded')
+    .call(this);
 };
 
 /**
@@ -27767,7 +27763,7 @@ Scene_Map.prototype.setJabsMenuMainWindow = function(window)
 
 /**
  * Get the currently tracked JABS menu skill list window.
- * @returns {Window_DifficultyList}
+ * @returns {Window_AbsMenuSelect}
  */
 Scene_Map.prototype.getJabsSkillListWindow = function()
 {
@@ -27886,7 +27882,8 @@ Scene_Map.prototype.createAllWindows = function()
   this.createJabsAbsMenu();
 
   // perform original logic.
-  J.ABS.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.ABS.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 };
 
 /**
@@ -28473,7 +28470,8 @@ Scene_Map.prototype.onJabsMenuHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsCombatSkillListHoverChange = function()
@@ -28485,7 +28483,8 @@ Scene_Map.prototype.onJabsCombatSkillListHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsEquippedCombatSkillsHoverChange = function()
@@ -28497,7 +28496,8 @@ Scene_Map.prototype.onJabsEquippedCombatSkillsHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsToolListHoverChange = function()
@@ -28509,7 +28509,8 @@ Scene_Map.prototype.onJabsToolListHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsEquippedToolHoverChange = function()
@@ -28521,7 +28522,8 @@ Scene_Map.prototype.onJabsEquippedToolHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsDodgeSkillListHoverChange = function()
@@ -28533,7 +28535,8 @@ Scene_Map.prototype.onJabsDodgeSkillListHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 
 Scene_Map.prototype.onJabsEquippedDodgeSkillHoverChange = function()
@@ -28545,7 +28548,8 @@ Scene_Map.prototype.onJabsEquippedDodgeSkillHoverChange = function()
   const text = menu.currentHelpText();
 
   // update the help window with some text.
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 //endregion onHover
 
@@ -28567,13 +28571,17 @@ Scene_Map.prototype.commandSkill = function()
   this.setJabsMenuFocus(JABS_MenuType.Skill);
 
   // refresh the window.
-  this.getJabsSkillListWindow().refresh();
+  this.getJabsSkillListWindow()
+    .refresh();
 
   // show the related equipped window.
-  this.getJabsEquippedCombatSkillsWindow().refresh();
+  this.getJabsEquippedCombatSkillsWindow()
+    .refresh();
   this.showJabsEquippedCombatSkillsWindow();
-  this.getJabsEquippedCombatSkillsWindow().deselect();
-  this.getJabsEquippedCombatSkillsWindow().deactivate();
+  this.getJabsEquippedCombatSkillsWindow()
+    .deselect();
+  this.getJabsEquippedCombatSkillsWindow()
+    .deactivate();
 
   // show the window.
   this.showJabsSkillListWindow();
@@ -28591,13 +28599,17 @@ Scene_Map.prototype.commandItem = function()
   this.setJabsMenuFocus(JABS_MenuType.Tool);
 
   // refresh the window.
-  this.getJabsToolListWindow().refresh();
+  this.getJabsToolListWindow()
+    .refresh();
 
   // show the related equipped window.
-  this.getJabsEquippedToolWindow().refresh();
+  this.getJabsEquippedToolWindow()
+    .refresh();
   this.showJabsEquippedToolWindow();
-  this.getJabsEquippedToolWindow().deselect();
-  this.getJabsEquippedToolWindow().deactivate();
+  this.getJabsEquippedToolWindow()
+    .deselect();
+  this.getJabsEquippedToolWindow()
+    .deactivate();
 
   // show the window.
   this.showJabsToolListWindow();
@@ -28615,13 +28627,17 @@ Scene_Map.prototype.commandDodge = function()
   this.setJabsMenuFocus(JABS_MenuType.Dodge);
 
   // refresh the window.
-  this.getJabsDodgeSkillListWindow().refresh();
+  this.getJabsDodgeSkillListWindow()
+    .refresh();
 
   // show the related equipped window.
-  this.getJabsEquippedDodgeSkillWindow().refresh();
+  this.getJabsEquippedDodgeSkillWindow()
+    .refresh();
   this.showJabsEquippedDodgeSkillWindow();
-  this.getJabsEquippedDodgeSkillWindow().deselect();
-  this.getJabsEquippedDodgeSkillWindow().deactivate();
+  this.getJabsEquippedDodgeSkillWindow()
+    .deselect();
+  this.getJabsEquippedDodgeSkillWindow()
+    .deactivate();
 
   // show the window.
   this.showJabsDodgeSkillListWindow();
@@ -28705,18 +28721,24 @@ Scene_Map.prototype.commandAssign = function()
   {
     case JABS_MenuType.Skill:
       // update with combat skill information and the given slot.
-      equippedActionSlot = this.getJabsEquippedCombatSkillsWindow().currentExt();
-      nextActionSkill = this.getJabsSkillListWindow().currentExt();
+      equippedActionSlot = this.getJabsEquippedCombatSkillsWindow()
+        .currentExt();
+      nextActionSkill = this.getJabsSkillListWindow()
+        .currentExt();
       break;
     case JABS_MenuType.Tool:
       // update with tool information and the given slot.
-      equippedActionSlot = this.getJabsEquippedToolWindow().currentExt();
-      nextActionSkill = this.getJabsToolListWindow().currentExt();
+      equippedActionSlot = this.getJabsEquippedToolWindow()
+        .currentExt();
+      nextActionSkill = this.getJabsToolListWindow()
+        .currentExt();
       break;
     case JABS_MenuType.Dodge:
       // update with dodge skill information and the given slot.
-      equippedActionSlot = this.getJabsEquippedDodgeSkillWindow().currentExt();
-      nextActionSkill = this.getJabsDodgeSkillListWindow().currentExt();
+      equippedActionSlot = this.getJabsEquippedDodgeSkillWindow()
+        .currentExt();
+      nextActionSkill = this.getJabsDodgeSkillListWindow()
+        .currentExt();
       break;
   }
 
@@ -28734,7 +28756,8 @@ Scene_Map.prototype.commandAssign = function()
  */
 Scene_Map.prototype.setJabsHelpItem = function(item)
 {
-  this.getJabsMenuHelpWindow().setItem(item);
+  this.getJabsMenuHelpWindow()
+    .setItem(item);
 };
 
 /**
@@ -28743,7 +28766,8 @@ Scene_Map.prototype.setJabsHelpItem = function(item)
  */
 Scene_Map.prototype.setJabsHelpText = function(text)
 {
-  this.getJabsMenuHelpWindow().setText(text);
+  this.getJabsMenuHelpWindow()
+    .setText(text);
 };
 //endregion actions
 
@@ -28756,7 +28780,8 @@ J.ABS.Aliased.Scene_Map.set('update', Scene_Map.prototype.update);
 Scene_Map.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Scene_Map.get('update').call(this);
+  J.ABS.Aliased.Scene_Map.get('update')
+    .call(this);
 
   // update JABS.
   this.updateJabs();
@@ -28821,7 +28846,8 @@ Scene_Map.prototype.onPartyRotate = function()
 Scene_Map.prototype.refreshJabsMenu = function()
 {
   // refresh the main menu window.
-  this.getJabsMainListWindow().refresh();
+  this.getJabsMainListWindow()
+    .refresh();
 
   // acknowledge jabs menu refresh request.
   $jabsEngine.requestJabsMenuRefresh = false;
@@ -28868,7 +28894,8 @@ Scene_Map.prototype.callMenu = function()
   if ($jabsEngine.absEnabled) return;
 
   // perform original logic.
-  J.ABS.Aliased.Scene_Map.get('callMenu').call(this);
+  J.ABS.Aliased.Scene_Map.get('callMenu')
+    .call(this);
 };
 
 //region show/hide
@@ -29085,23 +29112,19 @@ Scene_Map.prototype.hideJabsEquippedDodgeSkillWindow = function()
  */
 Scene_Map.prototype.hideAllJabsWindows = function()
 {
-  // hide the help window.
-  this.getJabsMenuHelpWindow().hide();
+  this.hideJabsDodgeSkillListWindow();
+  this.hideJabsEquippedDodgeSkillWindow();
 
-  // hide the main window.
-  this.getJabsMainListWindow().hide();
+  this.hideJabsToolListWindow();
+  this.hideJabsEquippedToolWindow();
 
-  // hide the skill windows.
-  this.getJabsSkillListWindow().hide();
-  this.getJabsEquippedCombatSkillsWindow().hide();
+  this.hideJabsCombatSkillListWindow();
+  this.hideJabsEquippedCombatSkillsWindow();
 
-  // hide the tool windows.
-  this.getJabsToolListWindow().hide();
-  this.getJabsEquippedToolWindow().hide();
+  this.hideJabsMenuHelpWindow();
+  this.hideJabsMainWindow();
 
-  // hide the dodge windows.
-  this.getJabsDodgeSkillListWindow().hide();
-  this.getJabsEquippedDodgeSkillWindow().hide();
+  this.closeAbsMenu();
 };
 
 /**
@@ -29122,10 +29145,16 @@ Scene_Map.prototype.showJabsMenuWindow = function(window)
  */
 Scene_Map.prototype.hideJabsMenuWindow = function(window)
 {
+  // if its a selectable window, be sure to deselect it.
+  if (window instanceof Window_Selectable)
+  {
+    window.deselect();
+  }
+
   // negatively close it.
-  window.hide();
   window.close();
   window.deactivate();
+  window.hide();
 };
 //endregion show/hide
 
@@ -29177,19 +29206,22 @@ Scene_Map.prototype.redirectToParentAssignMenu = function()
       const equippedCombatSkillsWindow = this.getJabsEquippedCombatSkillsWindow();
       equippedCombatSkillsWindow.deselect();
       equippedCombatSkillsWindow.refresh();
-      this.getJabsSkillListWindow().activate();
+      this.getJabsSkillListWindow()
+        .activate();
       break;
     case JABS_MenuType.Tool:
       const equippedToolWindow = this.getJabsEquippedToolWindow();
       equippedToolWindow.deselect();
       equippedToolWindow.refresh();
-      this.getJabsToolListWindow().activate();
+      this.getJabsToolListWindow()
+        .activate();
       break;
     case JABS_MenuType.Dodge:
       const equippedDodgeSkillWindow = this.getJabsEquippedDodgeSkillWindow();
       equippedDodgeSkillWindow.deselect();
       equippedDodgeSkillWindow.refresh();
-      this.getJabsDodgeSkillListWindow().activate();
+      this.getJabsDodgeSkillListWindow()
+        .activate();
       break;
   }
 };
@@ -29199,7 +29231,20 @@ Scene_Map.prototype.redirectToParentAssignMenu = function()
  */
 Scene_Map.prototype.closeAbsMenu = function()
 {
-  this.getJabsMainListWindow().closeMenu();
+  this.getJabsMainListWindow()
+    .closeMenu();
+};
+
+Scene_Map.prototype.forceCloseAbsMenu = function()
+{
+  this.closeAbsWindow(JABS_MenuType.Assign);
+  this.closeAbsWindow(JABS_MenuType.Skill);
+  this.closeAbsWindow(JABS_MenuType.Tool);
+  this.closeAbsWindow(JABS_MenuType.Dodge);
+
+  this.setJabsMenuEquipType(String.empty);
+  this.closeAbsWindow(JABS_MenuType.Main);
+  this.setJabsMenuFocus(JABS_MenuType.Main);
 };
 //endregion Scene_Map
 
@@ -30617,9 +30662,10 @@ class Window_AbsMenu extends Window_Command
     if (!this.isClosed())
     {
       this.close();
-      $jabsEngine.absPause = false;
-      $jabsEngine.requestAbsMenu = false;
     }
+
+    $jabsEngine.absPause = false;
+    $jabsEngine.requestAbsMenu = false;
   }
 }
 //endregion Window_AbsMenu
