@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.0 LOG] A log window for viewing on the map.
+ * [v2.2.0 LOG] A log window for viewing on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -14,8 +14,9 @@
  * ============================================================================
  * OVERVIEW
  * This plugin enables logging functionality.
- * It has two built in logging managers:
+ * It has three built in logging managers:
  * - Action Log
+ * - Loot Log
  * - DiaLog
  *
  * Each of the logging managers is responsible for different types of logging
@@ -23,11 +24,10 @@
  *
  * This plugin was designed for JABS, but doesn't require it.
  * If added while using JABS, the log window will automatically register all
- * actions taken, damage/healing dealth, and various other details that one
- * might expect to find in this sort of window.
+ * actions taken, damage/healing dealth, loot and such picked up, and more.
  *
  * Additionally, the log window is a command window under the covers, so it
- * also supports scrolling via mouse or touch.
+ * also supports scrolling via mouse/touch.
  *
  * Controller/keyboard support for the log window is not supported.
  *
@@ -37,7 +37,7 @@
  *
  * Integrates with others of mine plugins:
  * - J-ABS; enables logging of the player/allies/enemies' actions.
- * - J-SDP; enables logging of SDP
+ * - J-SDP; enables logging of SDP gains.
  * ============================================================================
  * THE ACTION LOG
  * This log is designed for the player to view various interactions that happen
@@ -55,10 +55,7 @@
  * - a skill being dodged (player/allies/enemies)
  * - a skill not affecting a target (player/allies/enemies)
  * - the act of party cycling (player)
- * - an item being used (player)
- *   - also if the last item in the player's possession was used
  * - the experience gained (the leader, others gain it, but no logs are added)
- * - the gold found ("the party found...")
  * - the sdp points found (the leader, others gain it, but no logs are added)
  *
  * Without JABS, nothing is added by default and must be woven into wherever
@@ -70,6 +67,21 @@
  * what have you. However, it is not accessible to the keyboard or controller,
  * which means only a mouse may interact with it (due to the fact that it
  * cannot be "selected").
+ *
+ * ============================================================================
+ * THE LOOT LOG
+ * This log is designed for the player to exclusively messages related to items
+ * and their acquisition or loss.
+ *
+ * Things that get reported to the Loot Log (with JABS):
+ * - the gold found (on enemy defeat)
+ * - an item being used (player)
+ *   - also if the last item in the party's possession was used (player)
+ *
+ * Without JABS, nothing is added by default. It was a conscious decision not
+ * to integrate the loot log with the Game_Party#gainItem() function- so that
+ * other devs may have control over when it the logs are added, in case there
+ * were items that should be added silently.
  *
  * ============================================================================
  * THE DIALOG
@@ -100,6 +112,7 @@
  * CHANGELOG:
  * - 2.2.0
  *    Added DiaLog functionality, enabling passive chats to happen on the map.
+ *    Added Loot Log functionality, where loot-related logs now show up.
  *    Refactored around the various log-related classes.
  * - 2.1.0
  *    Refactor the text log manager to use different syntax.
@@ -125,14 +138,6 @@
  * @text Hide Action Log Window
  * @desc Turns the action log window invisible. Logs still get logged, but can't be seen.
  *
- * @command showDiaLog
- * @text Show DiaLog Window
- * @desc Turns the adialog window visible to allow logs to be displayed.
- *
- * @command hideDiaLog
- * @text Hide DiaLog Window
- * @desc Turns the dialog window invisible. Logs still get logged, but can't be seen.
- *
  * @command addActionLog
  * @text Add Log
  * @desc Arbitrarily create a log for the log window. Respects text codes.
@@ -140,9 +145,18 @@
  * @type string
  * @default One potion was found!
  *
- * @command clearActionLogs
+ * @command clearActionLog
  * @text Clear Action Logs
  * @desc Clears all the logs out of the action log.
+ *
+ *
+ * @command showDiaLog
+ * @text Show DiaLog Window
+ * @desc Turns the adialog window visible to allow logs to be displayed.
+ *
+ * @command hideDiaLog
+ * @text Hide DiaLog Window
+ * @desc Turns the dialog window invisible. Logs still get logged, but can't be seen.
  *
  * @command addDiaLog
  * @text Add DiaLog
@@ -168,6 +182,34 @@
  * @command clearDiaLog
  * @text Clear DiaLog
  * @desc Clears all the logs out of the dialog log.
+ *
+ *
+ * @command showLootLog
+ * @text Show Loot Log Window
+ * @desc Turns the action log window visible to allow logs to be displayed.
+ *
+ * @command hideLootLog
+ * @text Hide Loot Log Window
+ * @desc Turns the action log window invisible. Logs still get logged, but can't be seen.
+ *
+ * @command addLootLog
+ * @text Add Loot Log
+ * @desc Arbitrarily create a log for the log window. Respects text codes.
+ * @arg lootId
+ * @type number
+ * @default 1
+ * @arg lootType
+ * @type select
+ * @option Item
+ * @value item
+ * @option Weapon
+ * @value weapon
+ * @option Armor
+ * @value armor
+ *
+ * @command clearLootLog
+ * @text Clear Loot Logs
+ * @desc Clears all the logs out of the action log.
  *
  */
 
@@ -237,6 +279,7 @@ var $lootLogManager = null;
 //endregion introduction
 
 //region plugin commands
+//region action log
 /**
  * Plugin command for enabling the text log and showing it.
  */
@@ -259,18 +302,29 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideActionLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addActionLog", args =>
 {
   const { text } = args;
-  const customLog = new ActionLogBuilder()
+  const customActionLog = new ActionLogBuilder()
     .setMessage(text)
     .build();
-  $actionLogManager.addLog(customLog);
+  $actionLogManager.addLog(customActionLog);
 });
 
+/**
+ * Plugin command for adding an arbitrary log to the dialog window.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "clearActionLog", () =>
+{
+  $actionLogManager.clearLogs();
+});
+
+//endregion action log
+
+//region dia log
 /**
  * Plugin command for enabling the dialog and showing it.
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "showDiaLog", () =>
 {
-  $actionLogManager.showLog();
+  $diaLogManager.showLog();
 });
 
 /**
@@ -278,7 +332,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "showDiaLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
 {
-  $actionLogManager.hideLog();
+  $diaLogManager.hideLog();
 });
 
 /**
@@ -286,7 +340,11 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addDiaLog", args =>
 {
-  const { lines, faceName, faceIndex } = args;
+  const {
+    lines,
+    faceName,
+    faceIndex
+  } = args;
   const actualLines = lines.split(/[\r\n]+/);
   const log = new DiaLogBuilder()
     .setLines(actualLines)
@@ -303,6 +361,49 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "clearDiaLog", () =>
 {
   $diaLogManager.clearLogs();
 });
+//endregion dia log
+
+//region loot log
+/**
+ * Plugin command for enabling the loot log and showing it.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "showLootLog", () =>
+{
+  $lootLogManager.showLog();
+});
+
+/**
+ * Plugin command for disabling the loot log and hiding it.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLootLog", () =>
+{
+  $lootLogManager.hideLog();
+});
+
+/**
+ * Plugin command for adding an arbitrary log to the loot log window.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "addLootLog", args =>
+{
+  const {
+    lootId,
+    lootType
+  } = args;
+  const log = new LootLogBuilder()
+    .setupLootObtained(lootType, lootId)
+    .build();
+  $lootLogManager.addLog(log);
+});
+
+/**
+ * Plugin command for clearing the loot log window.
+ */
+PluginManager.registerCommand(J.LOG.Metadata.Name, "clearLootLog", () =>
+{
+  $lootLogManager.clearLogs();
+});
+//endregion loot log
+
 //endregion plugin commands
 
 //region ActionLog
