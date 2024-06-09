@@ -36,7 +36,8 @@ class OverlayManager
       const isExtensionSkill = (skill.metadata('skillExtend'));
       if (!isExtensionSkill) return false;
 
-      const skillsExtended = JSON.parse(skill.metadata('skillExtend')).map(parseInt);
+      const skillsExtended = JSON.parse(skill.metadata('skillExtend'))
+        .map(parseInt);
       return skillsExtended.includes(skillId);
     };
 
@@ -44,7 +45,7 @@ class OverlayManager
     const filteredSkills = caster
       .skills()
       .filter(skillExtendFilter);
-    const skillExtendSkills = [...filteredSkills];
+    const skillExtendSkills = [ ...filteredSkills ];
 
     // based on the number of skill extend skills we have...
     switch (skillExtendSkills.length)
@@ -577,7 +578,7 @@ class OverlayManager
     let overlayData = skillOverlay.jabsPiercingData;
 
     // check if the overlay data is just the default.
-    if (overlayData.equals([1, 0]))
+    if (overlayData.equals([ 1, 0 ]))
     {
       // replace the default with null so we get the proper kind of overwrite.
       overlayData = null;
@@ -763,6 +764,7 @@ class OverlayManager
     // return the overlayed base skill.
     return baseSkill;
   }
+
 //endregion overwrites
 }
 

@@ -11,7 +11,7 @@
  * @orderAfter J-ABS
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables the ability to have a single item or skill trigger
  * multiple damage formulas when applied/executed.
  *

@@ -32,7 +32,7 @@ class TextPopSpriteManager
     // check if there is an iconIndex present.
     if (popup.iconIndex > -1)
     {
-      // add the found icon to the sprite.
+      // add the found icon to the sprite
       sprite.addIcon(popup.iconIndex);
     }
 
@@ -74,7 +74,7 @@ class TextPopSpriteManager
       case Map_TextPop.Types.HpDamage:
       case Map_TextPop.Types.MpDamage:
       case Map_TextPop.Types.TpDamage:
-        return 60;
+        return 30;
       case Map_TextPop.Types.Experience:
       case Map_TextPop.Types.Gold:
       case Map_TextPop.Types.Sdp:

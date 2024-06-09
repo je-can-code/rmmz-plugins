@@ -59,15 +59,15 @@ Game_Event.prototype.canShowDangerIndicator = function(battlerId)
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const comment = command.parameters[0];
+    const [ comment ] = command.parameters;
 
     // if we are explicitly saying to hide it, then hide it.
-    if (/<noDangerIndicator>/i.test(comment))
+    if (J.ABS.EXT.DANGER.RegExp.NoIndicator.test(comment))
     {
       showDangerIndicator = false;
     }
     // if we explicitly saying to show it, then show it.
-    else if (/<showDangerIndicator>/i.test(comment))
+    else if (J.ABS.EXT.DANGER.RegExp.ShowIndicator.test(comment))
     {
       showDangerIndicator = true;
     }

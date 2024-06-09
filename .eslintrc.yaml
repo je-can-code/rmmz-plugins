@@ -2,6 +2,10 @@ parser: "@babel/eslint-parser"
 parserOptions:
   requireConfigFile: false
 
+ignorePatterns:
+  - "rmmz_*.js"                       # disables eslint for the rmmz base files- we don't mess with those.
+  - "*.d.ts"
+
 extends:
   - eslint:recommended
 rules:
@@ -10,7 +14,7 @@ rules:
   no-undef: off                       # most game objects are undefined.
   no-unused-vars:
   - warn
-  - { "varsIgnorePattern": "(?:(^[RPG|JABS|Window|Sprite|Scene|Game])|(Manager$))", "argsIgnorePattern": "^_$" }
+  - { "varsIgnorePattern": "(?:(^[RPG|JABS|Window|Sprite|Scene|Game])|(Manager$|Builder$))", "argsIgnorePattern": "^_$" }
   no-useless-call: off                # all aliasing is done with .call() for scoping this.
   no-prototype-builtins: off          # with prototypical inheritance, this is needed sometimes.
 

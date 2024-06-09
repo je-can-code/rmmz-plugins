@@ -18,6 +18,22 @@ Game_Enemy.prototype.databaseData = function()
 };
 
 /**
+ * Gets all notes associated with the enemy and its class.
+ * @returns {[RPG_Enemy]}
+ */
+Game_Enemy.prototype.getEnemyNotes = function()
+{
+  // grab reference to the enemy.
+  const enemy = this.enemy();
+
+  // return a collection of all things related to this enemy.
+  return [
+    // add the enemy itself to the source list.
+    enemy
+  ];
+};
+
+/**
  * Extends {@link #setup}.<br>
  * Adds a hook for performing actions when an enemy is setup.
  */

@@ -25,8 +25,8 @@ Window_JaftingList.prototype.buildCreationCommand = function()
   return new WindowCommandBuilder(J.JAFTING.EXT.CREATE.Metadata.commandName)
     .setSymbol(Scene_JaftingCreate.KEY)
     .setEnabled($gameSwitches.value(J.JAFTING.EXT.CREATE.Metadata.menuSwitchId))
-    .addSubTextLine("The crux of creation.")
-    .addSubTextLine("Create items and equips from various categories of crafting- as your heart desires.")
+    .addTextLine("The crux of creation.")
+    .addTextLine("Create items and equips from various categories of crafting- as your heart desires.")
     .setIconIndex(J.JAFTING.EXT.CREATE.Metadata.commandIconIndex)
     .build();
 };

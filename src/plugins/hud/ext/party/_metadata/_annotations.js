@@ -13,7 +13,7 @@
  * @orderAfter J-HUD
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin is an extension of the J-HUD system.
  *
  * This is the Party Frame, which displays the leader and allied members that

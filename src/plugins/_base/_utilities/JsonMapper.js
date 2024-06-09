@@ -1,18 +1,22 @@
 //region JsonMapper
-class JsonMapper {
+class JsonMapper
+{
   /**
    * Parses a object into whatever its given data type is.
    * @param {any} obj The unknown object to parse.
    * @returns {any|null}
    */
-  static parseObject(obj) {
+  static parseObject(obj)
+  {
     // do not attempt to parse if the input is null.
     if (obj === null || obj === undefined) return null;
 
     // check if the object to parse is a string.
-    if (typeof obj === "string") {
+    if (typeof obj === "string")
+    {
       // check if the string is an unparsed array.
-      if (obj.startsWith("[") && obj.endsWith("]")) {
+      if (obj.startsWith("[") && obj.endsWith("]"))
+      {
         // expose the stringified segments of the array.
         return this.parseArrayFromString(obj);
       }
@@ -22,7 +26,8 @@ class JsonMapper {
     }
 
     // check if the object to parse is a collection.
-    if (Array.isArray(obj)) {
+    if (Array.isArray(obj))
+    {
       // iterate over the array and parse each item.
       return obj.map(this.parseObject, this);
     }
@@ -39,7 +44,8 @@ class JsonMapper {
    * @param {string} strArr An string presumed to be an array.
    * @returns {any} The parsed exposed insides of the string array.
    */
-  static parseArrayFromString(strArr) {
+  static parseArrayFromString(strArr)
+  {
     // expose the stringified segments of the array.
     const exposedArray = strArr
       // peel off the outer brackets.
@@ -51,7 +57,8 @@ class JsonMapper {
     const innerArrayStartIndex = exposedArray.findIndex(element => element.startsWith("["));
 
     // check if we found an opening inner array bracket.
-    if (innerArrayStartIndex > -1) {
+    if (innerArrayStartIndex > -1)
+    {
       // grab the last closing inner array bracket.
       const outerArrayEndIndex = exposedArray.findLastIndex(element => element.endsWith("]"));
 
@@ -72,7 +79,7 @@ class JsonMapper {
 
     // with the content exposed, attempt to continue parsing.
     return this.parseObject(exposedArray);
-  };
+  }
 
   /**
    * Parses a metadata object from a string into possibly a boolean or number.
@@ -80,7 +87,8 @@ class JsonMapper {
    * @param {string} str The string object to parse.
    * @returns {boolean|number|string}
    */
-  static parseString(str) {
+  static parseString(str)
+  {
     // check if its actually boolean true.
     if (str.toLowerCase() === "true") return true;
     // check if its actually boolean false.

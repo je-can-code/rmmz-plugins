@@ -734,6 +734,8 @@ class Scene_SDP extends Scene_MenuBase
     // update the cost data window.
     const panelRanking = currentActor.getSdpByKey(currentPanel.key);
     this.getSdpRankDataWindow().setRankData(
+      currentPanel.getPanelRarityColorIndex(),
+      currentPanel.getPanelRarityText(),
       panelRanking.currentRank,
       currentPanel.maxRank,
       currentPanel.rankUpCost(panelRanking.currentRank),

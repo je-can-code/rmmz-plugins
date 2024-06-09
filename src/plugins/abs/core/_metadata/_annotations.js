@@ -2,14 +2,14 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.3.0 JABS] Enables combat to be carried out on the map.
+ * [v3.4.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin is JABS: J's Action Battle System.
  * Using this plugin will enable you to carry out combat directly on the map
  * in real-time, similar to popular game franchises like Zelda.
@@ -46,6 +46,10 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 3.4.0
+ *    Added functionality surrounding skill auto-assignment.
+ *    Extracted "poses" functionality to an extension for future enhancements.
+ *    Added Scene_Map#forceCloseAbsMenu() to programmatically close the menu.
  * - 3.3.0
  *    Added plugin command to generate enemies on the map dynamically.
  *    Added plugin command to generate loot on the map dynamically.
@@ -657,28 +661,6 @@
  * not being touchable.
  *
  * ----------------------------------------------------------------------------
- * POSE SUFFIX:
- * The "pose suffix" tag enables a sort of "animation" for battlers when
- * performing their skills. The engine will seek out a file that matches their
- * own character sprite's name along with the appended suffix in the tag and
- * if that matches a valid character set, it'll swap out the current set for
- * the "pose" for the defined amount of time and switch back after.
- *    <poseSuffix:[SUFFIX,INDEX,DURATION]>
- *  Where SUFFIX is the suffix of the filename you want to swap out for.
- *  Where INDEX is the index in the character file to become.
- *  Where DURATION is the amount of frames to remain in this pose.
- *
- * EXAMPLE:
- *    <poseSuffix:[-spell,0,25]>
- * As an example, if the character using the skill was a player with a
- * character sprite named "Actor1", the above tag would look for "Actor1-spell"
- * and swap to the 0th index (the upper left-most character) for 25 frames
- * (which is about a half second).
- *
- * WARNING:
- * This is not a highly tested feature of JABS and may not work as intended.
- *
- * ----------------------------------------------------------------------------
  * COMBOS:
  * This is a somewhat broad topic encompassing multiple tags, but "comboing"
  * can also be a feature of JABS if desired.
@@ -937,6 +919,92 @@
  * from whatever skills the player currently knows and also have been setup.
  * Using all the various tags you've learned about above (and below), those are
  * the skills that can be designated as "combat skills".
+ *
+ * ----------------------------------------------------------------------------
+ * AUTO ASSIGNMENT OF SKILLS:
+ * For convenience of the developer, there are a few additional tags that can
+ * automatically assign new skills to the combat slots upon learning. Skills
+ * that are auto assigned can only be assigned to the four combat skill slots,
+ * not the primary slots.
+ *
+ * AUTO ASSIGNMENT CONDITIONALS:
+ * The entire chain of checking whether or not a skill can be auto assigned
+ * upon learning looks like this:
+ * 1) the actor or class learning the skill has the "enable auto assign" tag.
+ * 2) the actor doesn't already have the skill equipped.
+ * 3) the actor does have empty slots to equip this skill to.
+ * 4) the learned skill itself is blocked from auto assignment.
+ * 5) the learned skill itself is not upgrade-only.
+ * 6) the learned skill is not among the blacklisted skill types.
+ * If all of the above are true, then the skill can be auto assigned.
+ *
+ * ENABLE AUTO ASSIGN:
+ * To enable the auto assignment of skills in any capacity, the actor or its
+ * class must have the appropriate tag:
+ *    <autoAssignSkills>
+ *
+ * BLOCK AUTO ASSIGNMENT PER SKILL TYPE:
+ * Sometimes there are particular families of skills that you don't want to
+ * ever be auto assigned, and when that is the case, you should use the
+ * blacklist skill type tag:
+ *    <noAutoAssignType:[TYPE_IDS...]>
+ * Where TYPE_IDS is a comma-delimited list of skill type ids found in your
+ * database that you don't want to ever be auto assigned.
+ *
+ * BLOCK AUTO ASSIGNMENT PER INDIVIDUAL SKILL:
+ * Sometimes blocking an entire category of skill is simply not feasible, in
+ * which case instead you can use the individual version of skill blocking by
+ * placing the appropriate tag on the designated skill that should never be
+ * automatically assigned.
+ *    <noAutoAssign>
+ *
+ * AUTO [ASSIGNMENT OF] SKILL UPGRADES:
+ * Auto upgrading skills builds ontop of the auto assignment functionality, but
+ * has its own set of tags that should be considered. The core concept behind a
+ * "skill upgrade", is that it replaces a skill that is already equipped to the
+ * actor's skill slots. With the flexible tags below, you can set up your game
+ * to do this as well.
+ *
+ * SKILL UPGRADE CONDITIONALS:
+ * 1) The actor or class upgrading the skill has the "enable auto upgrade" tag.
+ * 2) The learned skill has the "upgrade over skill" tag.
+ * 3) The learned skill isn't tagged with "no upgrade".
+ * If all the above are true, then the skill learned will replace the
+ * designated skill.
+ *
+ * UPGRADE OVER SKILL:
+ * To make a skill replace another currently-equipped skill, it should be
+ * tagged accordingly:
+ *    <upgradeOverSkill:NUM>
+ * Where NUM is the skill id this skill should replace.
+ * (NOTE: this doesn't unlearn the previous skill, only replaces it on the
+ * battler's equipped skill slot)
+ *
+ * Generally speaking, the upgrade functionality would probably end up getting
+ * used to do things like upgrading a skillslot from "Fire 1" to "Fire 2".
+ * However, it doesn't have to be used like that, and can absolutely be used
+ * to replace any skill regardless of semantics or context. "Fire 1" could be
+ * replaced with "Tsunami" or "Super Duper Cutter" if you desired.
+ *
+ * Additionally, if the target skill id that this skill should upgrade over,
+ * that doesn't mean the skill won't be auto assigned. It just means it will
+ * not replace any existing slots with this skill. To give creative liberty to
+ * the dev, the skill will still be auto assigned unless it has another tag to
+ * prevent it.
+ *
+ * UPGRADE ONLY SKILL:
+ * If the dev decides to place a firmer restriction on the availability of the
+ * player adjusting their own skill slots, then this tag can help by preventing
+ * a skill from be auto assigned if the battler also has the "enable auto
+ * assign" tag.
+ *    <onlyUpgrade>
+ *
+ * NO UPGRADING A SKILL:
+ * If for whatever reason, you the dev decide to utilize this, there is also
+ * a tag for preventing a skill from being upgradeable, even if a newly
+ * learned skill has the "upgrade over skill" tag that aligns with the skill
+ * tagged with this:
+ *    <noUpgrade>
  *
  * ============================================================================
  * AGGRO MANAGEMENT:

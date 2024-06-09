@@ -446,12 +446,17 @@ class RPG_Base
     // iterate over each valid line of the note.
     lines.forEach(line =>
     {
+      // grab the regex execution result for this note line.
+      const result = structure.exec(line);
+
+      // skip if we somehow encounter something amiss here.
+      if (result === null) return;
+
       // extract the captured formula.
-      // eslint-disable-next-line prefer-destructuring
-      const result = structure.exec(line)[1];
+      const [ /* skip first index */, numericResult ] = result;
 
       // regular parse it and add it to the running total.
-      val += parseFloat(result);
+      val += parseFloat(numericResult);
     });
 
     // return the
@@ -850,21 +855,21 @@ class RPG_Base
     const fromNote = this.notedata();
 
     // initialize the value.
-    const data = [];
+    const matchingLines = [];
 
     // iterate the note data array.
-    fromNote.forEach(note =>
+    fromNote.forEach(line =>
     {
       // check if this line matches the given regex structure.
-      if (note.match(structure))
+      if (line.match(structure))
       {
         // parse the value out of the regex capture group.
-        data.push(note);
+        matchingLines.push(line);
       }
     });
 
     // return the found value.
-    return data;
+    return matchingLines;
   }
   //endregion note
 }

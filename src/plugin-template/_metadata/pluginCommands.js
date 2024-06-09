@@ -6,7 +6,7 @@ PluginManager.registerCommand(
   J.__TEMPLATE__.Metadata.name,
   "do-the-thing",
   args =>
-{
-  console.log('did the thing.');
-});
+  {
+    console.log('did the thing.');
+  });
 //endregion plugin commands

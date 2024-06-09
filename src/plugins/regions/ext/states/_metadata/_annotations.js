@@ -12,7 +12,7 @@
  * @orderAfter J-ABS
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables the ability to attempt to autoapply states based on the
  * region that a given character is standing upon while on the map.
  *

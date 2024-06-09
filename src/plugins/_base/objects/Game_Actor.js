@@ -112,6 +112,25 @@ Game_Actor.prototype.isLeader = function()
 };
 
 /**
+ * Gets all notes associated with the actor and its class.
+ * @returns {[RPG_Actor,RPG_Class]}
+ */
+Game_Actor.prototype.getActorNotes = function()
+{
+  // grab reference to the actor.
+  const actor = this.actor();
+
+  // return a collection of all things related to this actor.
+  return [
+    // add the actor itself to the source list.
+    actor,
+
+    // add the actor's class to the source list.
+    this.class(actor.classId)
+  ];
+};
+
+/**
  * All sources this actor battler has available to it.
  * @returns {(RPG_Actor|RPG_State|RPG_Class|RPG_Skill|RPG_EquipItem)[]}
  */

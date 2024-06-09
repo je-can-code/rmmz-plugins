@@ -2,12 +2,12 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.4 BASE] The base class for all J plugins.
+ * [v2.2.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This is the base class that is required for basically ALL of J-* plugins.
  * Please be sure this is above all other J-* plugins, and keep it up to date!
  * ----------------------------------------------------------------------------
@@ -59,10 +59,12 @@
  *
  * ============================================================================
  * CHANGELOG:
- * - 2.1.4
+ * - 2.2.0
  *    Added parent class for subclassing to strongly type plugin metadata.
  *    Added Game_Character#isVehicle function.
  *    Added max item quantity functionality with tag.
+ *    Added note grouping methods specific to actors/enemies.
+ *    Added Window_Command updates to enable drawing faces as well.
  * - 2.1.3
  *    Added help text functionality for window commands.
  *    Added description text for all parameters.

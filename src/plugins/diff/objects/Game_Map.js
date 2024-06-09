@@ -13,7 +13,7 @@ Game_Map.prototype.encounterStep = function()
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
 
   // determine the multiplier for the bonus according to the difficulty.
-  const multiplier = appliedDifficulty.encounters / 100;
+  const multiplier = appliedDifficulty.rewards.encounters / 100;
 
   // return the rounded product of the multiplier and the original value.
   return Math.round(originalValue * multiplier);

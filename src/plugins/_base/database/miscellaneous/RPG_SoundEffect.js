@@ -1,5 +1,5 @@
 /**
- * The structure of the data points required to play a sound effect using the {@link SoundManager}.<br>
+ * The structure of the data points required to play a sound effect using the {@link SoundManager}.
  */
 class RPG_SoundEffect
 {

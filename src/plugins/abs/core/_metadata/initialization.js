@@ -415,7 +415,6 @@ J.ABS.RegExp = {
 
   // animation-related.
   SelfAnimationId: /<selfAnimationId:[ ]?(\d+)>/gi,
-  PoseSuffix: /<poseSuffix:[ ]?(\[[-_]?\w+,[ ]?\d+,[ ]?\d+])>/gi,
 
   // combo-related.
   ComboAction: /<combo:[ ]?(\[\d+,[ ]?\d+])>/gi,
@@ -424,8 +423,13 @@ J.ABS.RegExp = {
   FreeCombo: /<freeCombo>/gi,
 
   // learning-related
-  AutoAssign: /<autoAssignSkills>/gi,
-  AssignInPlaceOf: /<autoAssignOnLearning:(\d+)>/gi,
+  ConfigAutoAssignSkills: /<autoAssignSkills>/gi,
+  NoAutoAssign: /<noAutoAssign>/gi,
+  BlacklistAutoAssignSkillType: /<noAutoAssignType:[ ]?(\[[\d, ]+])>/gi,
+  ConfigAutoUpgradeSkills: /<autoUpgradeSkills>/gi,
+  UpgradeOverSkill: /<upgradeOverSkill:[ ]?(\d+)>/i,
+  NoSkillUpgrading: /<noUpgrade>/i,
+  UpgradeOnlySkill: /<onlyUpgrade>/i,
 
   // aggro-related.
   BonusAggro: /<aggro:[ ]?(-?\d+)>/gi,
@@ -503,18 +507,18 @@ J.ABS.RegExp = {
 
   //region ON BATTLERS
   // core concepts.
-  EnemyId: /<enemyId:[ ]?([0-9]*)>/i,
-  TeamId: /<teamId:[ ]?([0-9]*)>/g,
+  EnemyId: /<enemyId:[ ]?(\d+)>/i,
+  TeamId: /<teamId:[ ]?(\d+)>/g,
   Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   Pursuit: /<pursuit:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   MoveSpeed: /<moveSpeed:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
-  PrepareTime: /<prepare:[ ]?([0-9]*)>/i,
+  PrepareTime: /<prepare:[ ]?(\d+)>/i,
 
   // bonus concepts.
   VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
 
   // alert-related.
-  AlertDuration: /<alertDuration:[ ]?([0-9]*)>/i,
+  AlertDuration: /<alertDuration:[ ]?(\d+)>/i,
   AlertedSightBoost: /<alertedSightBoost:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   AlertedPursuitBoost: /<alertedPursuitBoost:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
 
