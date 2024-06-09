@@ -15,7 +15,7 @@
  * @orderAfter J-HUD-TargetFrame
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin is an extension of the J-HUD-TargetFrame plugin, designed for
  * JABS. It generates a window on the map displaying a single target at a much
  * bigger scale than the J-HUD-TargetFrame does.

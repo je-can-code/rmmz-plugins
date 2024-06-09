@@ -6,27 +6,22 @@
  */
 Game_Enemy.prototype.showDangerIndicator = function()
 {
-  let val = J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator;
+  // check if any of the things have this tag on it.
+  const hasNoIndicatorTag = RPGManager.checkForBooleanFromNoteByRegex(
+    this.enemy(),
+    J.ABS.EXT.DANGER.RegExp.NoIndicator);
 
-  const referenceData = this.enemy();
-  if (referenceData.meta && referenceData.meta[J.BASE.Notetags.NoDangerIndicator])
+  // check if we found the tag.
+  if (hasNoIndicatorTag)
   {
-    // if its in the metadata, then grab it from there.
-    val = false;
-  }
-  else
-  {
-    const structure = /<noDangerIndicator>/i;
-    const notedata = referenceData.note.split(/[\r\n]+/);
-    notedata.forEach(note =>
-    {
-      if (note.match(structure))
-      {
-        val = false;
-      }
-    });
+    // if the tag exists, don't show the indicator.
+    return false;
   }
 
-  return val;
+  // otherwise we use the default.
+  const defaultShowing = J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator;
+
+  // return the default.
+  return defaultShowing;
 };
 //endregion Game_Enemy

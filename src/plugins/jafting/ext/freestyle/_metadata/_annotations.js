@@ -9,7 +9,7 @@
  * @orderAfter J-Base
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin does some stuff that is probably pretty cool.
  *
  * Integrates with others of mine plugins:

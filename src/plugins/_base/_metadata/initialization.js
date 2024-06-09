@@ -13,7 +13,7 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '2.1.3';
+J.BASE.Metadata.Version = '2.2.0';
 
 /**
  * A collection of helpful mappings for `notes` that are placed in
@@ -339,7 +339,7 @@ Array.iterate = function(times, func, thisArg = undefined)
 J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
 {
   // the regexp for what to mask.
-  const structure = /[0-9A-Za-z\-()*!?'"=@,.]/ig;
+  const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/ig;
 
   // return the masked string content.
   return stringToMask.toString().replace(structure, maskingCharacter);

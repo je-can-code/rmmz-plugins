@@ -212,6 +212,40 @@ class StatDistributionPanel
     return val;
   }
 
+  /**
+   * Gets the rarity, aka the color index of the rarity of this panel.
+   * @returns {number}
+   */
+  getPanelRarityColorIndex()
+  {
+    return this.rarity;
+  }
+
+  /**
+   * Gets the text associated with the rarity of this panel.
+   * @returns {string}
+   */
+  getPanelRarityText()
+  {
+    switch(this.rarity)
+    {
+      case 0:
+        return "Common";
+      case 3:
+        return "Magical";
+      case 23:
+        return "Rare";
+      case 31:
+        return "Epic";
+      case 20:
+        return "Legendary";
+      case 25:
+        return "Godlike";
+      default:
+        return `unknown rarity: [ ${this.rarity} ]`;
+    }
+  }
+
   static Builder = class SDPBuilder
   {
     //region properties

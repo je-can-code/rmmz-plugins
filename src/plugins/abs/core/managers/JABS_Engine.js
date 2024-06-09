@@ -404,7 +404,7 @@ class JABS_Engine
   /**
    * Updates all battlers registered as "players" to JABS.
    * "Players" are battlers that are always polling for actions rather
-   * than only as a part of {@link JABS_AiManager.aiPhase2}.<br>
+   * than only as a part of {@link JABS_AiManager.aiPhase2}.
    */
   updatePlayers()
   {
@@ -985,10 +985,10 @@ class JABS_Engine
     const player1 = this.getPlayer1();
 
     // build and write the log.
-    const log = new MapLogBuilder()
+    const partyCycleLog = new ActionLogBuilder()
       .setupPartyCycle(player1.battlerName())
       .build();
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(partyCycleLog);
   }
 
   /**
@@ -1135,9 +1135,6 @@ class JABS_Engine
     // handle the possibility of "freecombo".
     this.handleActionCombo(caster, action);
 
-    // handle the pose for this action.
-    this.handleActionPose(caster, action);
-
     // handle the cast animation for this action.
     this.handleActionCastAnimation(caster, action);
 
@@ -1158,17 +1155,6 @@ class JABS_Engine
       // trigger the free combo effect for this action.
       this.checkComboSequence(caster, action)
     }
-  }
-
-  /**
-   * Handles the pose functionality behind this action.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
-   */
-  handleActionPose(caster, action)
-  {
-    // perform the action's corresponding pose.
-    caster.performActionPose(action.getBaseSkill());
   }
 
   /**
@@ -2109,7 +2095,7 @@ class JABS_Engine
     const bonusHit = parseFloat((casterBattler.hit * 0.1).toFixed(3));
 
     // calculate the hit rate (rng + bonus hit).
-    const hit = parseFloat((Math.random() + bonusHit).toFixed(3));
+    const calculatedHitRate = parseFloat((Math.random() + bonusHit).toFixed(3));
 
     // grab the amount of parry ignored.
     const parryIgnored = (action.getBaseSkill().jabsIgnoreParry ?? 0) / 100;
@@ -2118,12 +2104,32 @@ class JABS_Engine
     const targetGuardRate = (targetBattler.grd - 1) - parryIgnored;
 
     // truncate the parry rate to 3 places.
-    const parry = parseFloat((targetGuardRate).toFixed(3));
+    const parryRate = parseFloat((targetGuardRate).toFixed(3));
+
+    // set to true for debugging.
+    const useDebug = false;
+    if (useDebug)
+    {
+      console.log(`logs for ${caster.battlerName()} using ${action.getBaseSkill().name}.`);
+      console.log(`calculatedHitRate: [ ${calculatedHitRate} ].`);
+      console.log(`parryIgnored: [ ${parryIgnored} ].`);
+      console.log(`targetGuardRate: [ ${targetGuardRate} ].`);
+      console.log(`parryRate: [ ${parryRate} ].`);
+      const result = (calculatedHitRate < parryRate)
+        ? 'NO-PARRY'
+        : 'YES-PARRY';
+      console.log(`result: ${result}`);
+    }
 
     // return whether or not the hit was successful.
-    return hit < parry;
+    return calculatedHitRate < parryRate;
   }
 
+  /**
+   * Determines whether or not the target can actually parry the caster based on certain circumstances.
+   * @param {JABS_Battler} caster The one executing the skill against the target.
+   * @param {JABS_Battler} target The one being attacked by the caster.
+   */
   isParryPossible(caster, target)
   {
     // cannot parry if not facing target.
@@ -2131,7 +2137,7 @@ class JABS_Engine
     if (!isFacing) return false;
 
     // if the target battler has 0 GRD, they can't parry.
-    if (target.getBattler().grd === 0) return false;
+    if (target.getBattler().grd <= 0) return false;
 
 
     // if the attacker has a state that ignores all parry, then skip parrying.
@@ -2238,34 +2244,25 @@ class JABS_Engine
     // grab the action result.
     const actionResult = battler.getBattler().result();
 
-    // if auto-counter is available, then just do that.
-    this.handleAutoCounter(battler);
-
-    // check if we need to perform any sort of countering.
-    const needsCounterParry = actionResult.parried;
+    // for tracking to prevent both counterguarding AND counterparrying simultaneously.
+    let didCounterParry = false;
 
     // check if the action is parryable.
-    if (needsCounterParry)
+    if (actionResult.parried)
     {
       // handle the battler's parry reaction.
-      this.handleCounterParry(battler);
+      didCounterParry = this.handleCounterParry(battler);
     }
 
-    // NOTE: you cannot perform both a counterguard AND a counterparry- counterparry takes priority!
-    const needsCounterGuard = !needsCounterParry && battler.guarding() && battler.counterGuard().length;
+    // handle counter-guarding next.
+    const didCounterGuard = this.handleCounterGuard(didCounterParry, battler)
 
-    // if we should be counter-guarding.
-    if (needsCounterGuard)
+    // if we have autocounter, trigger those if we haven't already done the other.
+    if (!didCounterParry && !didCounterGuard)
     {
-      // execute the counterguard.
-      this.doCounterGuard(battler, JABS_Button.Offhand);
+      // TODO: is it unbalanced to auto-counter with every hit?
+      this.handleAutoCounter(battler);
     }
-
-    // TODO: is it unbalanced to auto-counter with every hit?
-    // if (actionResult.parried)
-    // {
-    //    this.handleAutoCounter(battler);
-    // }
 
     // grab all the retaliation skills for this battler.
     const retaliationSkills = battler.getBattler().retaliationSkills();
@@ -2291,10 +2288,13 @@ class JABS_Engine
   handleCounterParry(battler)
   {
     // validate the battler can parry.
-    if (!this.canBattlerParry(battler)) return;
+    if (!this.canBattlerParry(battler)) return false;
 
     // execute the counterparry.
     this.doCounterParry(battler, JABS_Button.Offhand);
+
+    // indicate we did a counterparry.
+    return true;
   }
 
   /**
@@ -2311,9 +2311,26 @@ class JABS_Engine
     return true;
   }
 
-  handleCounterGuard(battler)
+  handleCounterGuard(battler, alreadyCounterParried)
   {
+    // do nothing if the battler already counter-parried, no double-dipping!
+    if (alreadyCounterParried) return false;
 
+    // NOTE: you cannot perform both a counterguard AND a counterparry- counterparry takes priority!
+    const needsCounterGuard = battler.guarding() && battler.counterGuard().length;
+
+    // if we should be counter-guarding.
+    if (needsCounterGuard)
+    {
+      // execute the counterguard.
+      this.doCounterGuard(battler, JABS_Button.Offhand);
+
+      // indicate we did counterguard.
+      return true;
+    }
+
+    // we did not counterguard.
+    return false;
   }
 
   /**
@@ -2519,36 +2536,36 @@ class JABS_Engine
     // create parry logs if it was parried.
     if (result.parried)
     {
-      const parryLog = new MapLogBuilder()
+      const parryLog = new ActionLogBuilder()
         .setupParry(targetName, casterName, skill.id, result.parried)
         .build();
-      $mapLogManager.addLog(parryLog);
+      $actionLogManager.addLog(parryLog);
       return;
     }
     // create evasion logs if it was evaded.
     else if (result.evaded)
     {
-      const dodgeLog = new MapLogBuilder()
+      const dodgeLog = new ActionLogBuilder()
         .setupDodge(targetName, casterName, skill.id)
         .build();
-      $mapLogManager.addLog(dodgeLog);
+      $actionLogManager.addLog(dodgeLog);
       return;
     }
     // create retaliation logs if it was a retaliation.
     else if (action.isRetaliation())
     {
-      const retaliationLog = new MapLogBuilder()
+      const retaliationLog = new ActionLogBuilder()
         .setupRetaliation(casterName)
         .build();
-      $mapLogManager.addLog(retaliationLog);
+      $actionLogManager.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
     else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length)
     {
-      const log = new MapLogBuilder()
+      const undamagedLog = new ActionLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
-      $mapLogManager.addLog(log);
+      $actionLogManager.addLog(undamagedLog);
       return;
     }
     if (result.hpDamage)
@@ -2565,10 +2582,10 @@ class JABS_Engine
         reducedAmount = `(${parseInt(damageReduction)})`;
       }
 
-      const log = new MapLogBuilder()
+      const actionExecutedLog = new ActionLogBuilder()
         .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
         .build();
-      $mapLogManager.addLog(log);
+      $actionLogManager.addLog(actionExecutedLog);
       // fall through in case there were states that were also applied, such as defeating the target.
     }
 
@@ -2580,18 +2597,18 @@ class JABS_Engine
         // show a custom line when an enemy is defeated.
         if (stateId === target.getBattler().deathStateId())
         {
-          const log = new MapLogBuilder()
+          const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
             .build();
-          $mapLogManager.addLog(log);
+          $actionLogManager.addLog(targetDefeatedLog);
           return;
         }
 
         // show all the rest of the non-death states.
-        const log = new MapLogBuilder()
+        const stateAfflictedLog = new ActionLogBuilder()
           .setupStateAfflicted(targetName, stateId)
           .build();
-        $mapLogManager.addLog(log);
+        $actionLogManager.addLog(stateAfflictedLog);
       });
     }
   }
@@ -2676,13 +2693,13 @@ class JABS_Engine
       case actionResult.mpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.mpDamage)
-          .isHpDamage();
+          .isMpDamage();
         break;
       // if the result is tp damage, treat it as such.
       case actionResult.tpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.tpDamage)
-          .isHpDamage();
+          .isTpDamage();
         break;
       // if for some reason its something else, they are probably immune.
       default:
@@ -3446,18 +3463,18 @@ class JABS_Engine
 
     if (experience !== 0)
     {
-      const expLog = new MapLogBuilder()
+      const expLog = new ActionLogBuilder()
         .setupExperienceGained(caster.getReferenceData().name, experience)
         .build();
-      $mapLogManager.addLog(expLog);
+      $actionLogManager.addLog(expLog);
     }
 
     if (gold !== 0)
     {
-      const goldLog = new MapLogBuilder()
+      const goldLog = new LootLogBuilder()
         .setupGoldFound(gold)
         .build();
-      $mapLogManager.addLog(goldLog);
+      $lootLogManager.addLog(goldLog);
     }
   }
 
@@ -3501,10 +3518,10 @@ class JABS_Engine
     }
 
     // the player is always going to be the one collecting the loot- for now.
-    const lootLog = new MapLogBuilder()
-      .setupLootObtained(this.getPlayer1().getReferenceData().name, lootType, item.id)
+    const lootLog = new LootLogBuilder()
+      .setupLootObtained(lootType, item.id)
       .build();
-    $mapLogManager.addLog(lootLog);
+    $lootLogManager.addLog(lootLog);
   }
 
   /**
@@ -3521,7 +3538,7 @@ class JABS_Engine
     itemDataList.forEach((itemData, index) =>
     {
       // generate a pop that moves based on index.
-      this.generatePopItem(itemData, character, 64+(index*24));
+      this.generatePopItem(itemData, character, 32+(index*24));
     }, this);
 
     // flag the character for processing pops.
@@ -3619,18 +3636,18 @@ class JABS_Engine
 
     const battler = jabsBattler.getBattler();
     const log = this.configureLevelUpLog(battler.name(), battler.level);
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(log);
   }
 
   /**
    * Configures the log for the actor reaching a new level.
    * @param {string} targetName The name of the battler leveling up.
    * @param {number} newLevel The level being reached.
-   * @returns {Map_Log}
+   * @returns {ActionLog}
    */
   configureLevelUpLog(targetName, newLevel)
   {
-    return new MapLogBuilder()
+    return new ActionLogBuilder()
       .setupLevelUp(targetName, newLevel)
       .build();
   }
@@ -3700,18 +3717,18 @@ class JABS_Engine
     if (!J.LOG) return;
 
     const log = this.configureSkillLearnLog(player.getReferenceData().name, skill.id);
-    $mapLogManager.addLog(log);
+    $actionLogManager.addLog(log);
   }
 
   /**
    * Configures the log for the skill learned.
    * @param {string} targetName The name of the target learning the skill.
    * @param {number} learnedSkillId The id of the skill learned.
-   * @returns {Map_Log}
+   * @returns {ActionLog}
    */
   configureSkillLearnLog(targetName, learnedSkillId)
   {
-    return new MapLogBuilder()
+    return new ActionLogBuilder()
       .setupSkillLearn(targetName, learnedSkillId)
       .build();
   }

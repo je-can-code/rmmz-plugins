@@ -1,7 +1,7 @@
 /**
  * BUILDER
  *
- * OVERVIEW:
+ * OVERVIEW
  * This nodejs script is intended to be used to quickly execute ALL "once:" types
  * of builds present in ../ directory's package.json. This is designed to run them
  * in parallel

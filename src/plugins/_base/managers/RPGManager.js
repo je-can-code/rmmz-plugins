@@ -73,6 +73,323 @@ class RPGManager
   }
 
   /**
+   * Gets the last instance of a string matching the regex from the given database object.
+   * @param {RPG_BaseItem} databaseData The database object to inspect.
+   * @param {RegExp} structure The RegExp structure to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
+   * @returns {string|null} A string if "nullIfEmpty=false", null otherwise.
+   */
+  static getStringFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : String.empty;
+    }
+
+    // initialize the value.
+    let val = String.empty;
+
+    // get the note data from this skill.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // validate the notes to ensure there even are any.
+    if (lines.length === 0)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : String.empty;
+    }
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // grab the regex execution result for this note line.
+      const result = structure.exec(line);
+
+      // skip if we somehow encounter something amiss here.
+      if (result === null) return;
+
+      // extract the captured formula.
+      const [ /* skip first index */, stringResult] = result;
+
+      // set this to what we found.
+      val = stringResult;
+    });
+
+    // validate the actual findings to evaluate return values.
+    if (!val)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : String.empty;
+    }
+
+    // return the found value.
+    return val;
+  }
+
+  /**
+   * Gets the last instance of a string matching the regex from the given database object collection.
+   * @param {RPG_BaseItem[]} databaseDatas The database objects to inspect.
+   * @param {RegExp} structure The RegExp structure to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
+   * @returns {string|null} A string if "nullIfEmpty=false", null otherwise.
+   */
+  static getStringFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the value.
+    let val = String.empty;
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // capture what we found.
+      const found = this.getStringFromNoteByRegex(databaseData, structure, nullIfEmpty);
+
+      // validate we found something.
+      if (found)
+      {
+        // and update the value with that finding.
+        val = found;
+      }
+    }, this);
+
+    // validate the actual value that was found.
+    if (!val)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : String.empty;
+    }
+
+    // return what we found.
+    return val;
+  }
+
+  /**
+   * Gets the last numeric value based on the provided regex structure.
+   *
+   * This accepts a regex structure, assuming the capture group is an numeric value,
+   * and adds all values together from each line in the notes that match the provided
+   * regex structure.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default 0 as an indicator we didn't find
+   * anything from the notes of this skill.
+   *
+   * This can handle both integers and decimal numbers.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return 0 if not found, or null.
+   * @returns {number|null} The combined value added from the notes of this object, or zero/null.
+   */
+  static getNumberFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : 0;
+    }
+
+    // get the note data from this skill.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // if we have no matching notes, then short circuit.
+    if (!lines.length)
+    {
+      // return null or 0 depending on provided options.
+      return nullIfEmpty ? null : 0;
+    }
+
+    // initialize the value.
+    let val = 0;
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // grab the regex execution result for this note line.
+      const result = structure.exec(line);
+
+      // skip if we somehow encounter something amiss here.
+      if (result === null) return;
+
+      // extract the captured formula.
+      const [ /* skip first index */, numericResult ] = result;
+
+      // regular parse it and add it to the running total.
+      val = parseFloat(numericResult);
+    });
+
+    // return the
+    return val;
+  }
+
+  /**
+   * Gets the last numeric value based on the provided regex structure from a collection of database objects.
+   *
+   * This accepts a regex structure, assuming the capture group is an numeric value,
+   * and adds all values together from each line in the notes that match the provided
+   * regex structure.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default 0 as an indicator we didn't find
+   * anything from the notes of this skill.
+   *
+   * This can handle both integers and decimal numbers.
+   * @param {RPG_Base[]} databaseDatas The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return 0 if not found, or null.
+   * @returns {number|null} The combined value added from the notes of this object, or zero/null.
+   */
+  static getNumberFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the value.
+    let val = 0;
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // capture what we found.
+      const found = this.getNumberFromNoteByRegex(databaseData, structure, nullIfEmpty);
+
+      // validate we found something.
+      if (found)
+      {
+        // and update the value with that finding.
+        val = found;
+      }
+    }, this);
+
+    // validate the actual value that was found.
+    if (!val)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : String.empty;
+    }
+
+    // return what we found.
+    return val;
+  }
+
+  /**
+   * Gets all numbers found in arrays on the database object provided.
+   *
+   * This accepts a regex structure, assuming the capture group is an numeric value,
+   * and adds all values together from each line in the notes that match the provided
+   * regex structure.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default [] as an indicator we didn't find
+   * anything from the notes of this skill.
+   *
+   * This can handle both integers and decimal numbers.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {number[]|null}
+   */
+  static getNumbersFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // initialize the collection.
+    let vals = [];
+
+    // validate we have a database object to work with.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : vals;
+    }
+
+    // capture what we found.
+    const found = this.getArrayFromNotesByRegex(databaseData, structure, true);
+
+    // validate we found something.
+    if (found !== null)
+    {
+      // and update the value with that finding.
+      vals = found;
+    }
+
+    // validate the actual value that was found.
+    if (!vals.length)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : vals;
+    }
+
+    // filter out any possible nulls that we found.
+    const noNullVals = vals.filter(ArrayHelper.NoNulls, this);
+
+    // return what we found.
+    return noNullVals;
+  }
+
+  /**
+   * Gets all numbers found in arrays across the collection of database objects provided.
+   *
+   * This accepts a regex structure, assuming the capture group is an numeric value,
+   * and adds all values together from each line in the notes that match the provided
+   * regex structure.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default [] as an indicator we didn't find
+   * anything from the notes of this skill.
+   *
+   * This can handle both integers and decimal numbers.
+   * @param {RPG_Base[]} databaseDatas The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {number|null} The combined value added from the notes of this object, or zero/null.
+   */
+  static getNumbersFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the collection.
+    const vals = [];
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // capture what we found.
+      const found = this.getNumbersFromNoteByRegex(databaseData, structure, true);
+
+      // validate we found something.
+      if (found !== null)
+      {
+        // and update the value with that finding.
+        vals.push(...found);
+      }
+    }, this);
+
+    // validate the actual value that was found.
+    if (!vals.length)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : vals;
+    }
+
+    // return what we found.
+    return noNullVals;
+  }
+
+  /**
    * Gets the sum of all values from the notes of a collection of database objects.
    * @param {RPG_BaseItem[]} databaseDatas The collection of database objects.
    * @param {RegExp} structure The RegExp structure to find values for.
@@ -95,7 +412,7 @@ class RPGManager
     databaseDatas.forEach(databaseData =>
     {
       // add the value from all the notes of each database object.
-      val += databaseData.getNumberFromNotesByRegex(structure);
+      val += this.getNumberFromNoteByRegex(databaseData, structure);
     });
 
     // check if we turned up empty and are using the nullIfEmpty flag.
@@ -213,18 +530,121 @@ class RPGManager
   }
 
   /**
-   * Checks if any of the database datas containing notes matches the regex structure provided.
-   * @param {RPG_Base[]} databaseDatas The list of database objects to parse.
-   * @param {RegExp} structure The boolean regex structure to parse for.
-   * @returns {boolean|null} True if the regex was found, false otherwise.
+   * Gets whether or not there is a matching regex tag on this database entry.
+   *
+   * Do be aware of the fact that with this type of tag, we are checking only
+   * for existence, not the value. As such, it will be `true` if found, and `false` if
+   * not, which may not be accurate. Pass `true` to the `nullIfEmpty` to obtain a
+   * `null` instead of `false` when missing, or use a string regex pattern and add
+   * something like `<someKey:true>` or `<someKey:false>` for greater clarity.
+   *
+   * This accepts a regex structure, but does not leverage a capture group.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default `false` as an indicator we didn't find
+   * anything from the notes of this skill.
+   * @param {RPG_Base} databaseData The regular expression to filter notes by.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean} nullIfEmpty Whether or not to return `false` if not found, or null.
+   * @returns {boolean|null} The found value from the notes of this object, or empty/null.
    */
-  static checkForBooleanFromAllNotesByRegex(databaseDatas, structure)
+  static checkForBooleanFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
   {
-    // a predicate for checking if the regex existed on the given database data.
-    const regexMatchExists = databaseData => databaseData.getBooleanFromNotesByRegex(structure, true);
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : false;
+    }
 
-    // scan all the database datas.
-    return databaseDatas.some(regexMatchExists);
+    // get the note data from this skill.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // initialize the value.
+    let val = false;
+
+    // default to not having a match.
+    let hasMatch = false;
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // grab the regex execution result for this note line.
+      const hasStructure = structure.test(line);
+
+      // skip if we somehow encounter something amiss here.
+      if (hasStructure)
+      {
+        // parse the value out of the regex capture group.
+        val = true;
+
+        // flag that we found a match.
+        hasMatch = true;
+      }
+    });
+
+    // check if we didn't find a match, and we want null instead of empty.
+    if (!hasMatch && nullIfEmpty)
+    {
+      // return null.
+      return null;
+    }
+    // we want a "false" or the found value.
+    else
+    {
+      // return the found value.
+      return val;
+    }
+  }
+
+  /**
+   * Gets whether or not there is a matching regex tag from a collection of database objects.
+   *
+   * Do be aware of the fact that with this type of tag, we are checking only
+   * for existence, not the value. As such, it will be `true` if found, and `false` if
+   * not, which may not be accurate. Pass `true` to the `nullIfEmpty` to obtain a
+   * `null` instead of `false` when missing, or use a string regex pattern and add
+   * something like `<someKey:true>` or `<someKey:false>` for greater clarity.
+   *
+   * This accepts a regex structure, but does not leverage a capture group.
+   *
+   * If the optional flag `nullIfEmpty` receives true passed in, then the result of
+   * this will be `null` instead of the default `false` as an indicator we didn't find
+   * anything from the notes of this skill.
+   * @param {RPG_Base[]} databaseDatas The objects to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean} nullIfEmpty Whether or not to return `false` if not found, or null.
+   * @returns {boolean|null} The found value from the notes of this object, or empty/null.
+   */
+  static checkForBooleanFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // get all results from all objects that could have true/false/null values.
+    const results = databaseDatas.map(databaseData =>
+      this.checkForBooleanFromNoteByRegex(databaseData, structure, nullIfEmpty));
+
+    // filter away the non-values.
+    const onlyTrueRemains = results
+      .filter(result => result !== null)
+      .filter(result => result !== false);
+
+    // check if we have any truthy values remaining.
+    if (onlyTrueRemains.length === 0)
+    {
+      // check if we turned up empty and are using the nullIfEmpty flag.
+      if (nullIfEmpty)
+      {
+        // we are both, so return null.
+        return null;
+      }
+
+      // we didn't find it.
+      return false;
+    }
+
+    // by this point, we know we found at least one true.
+    return true;
   }
 
   /**
@@ -236,15 +656,15 @@ class RPGManager
    * If the optional flag `tryParse` is true, then it will attempt to parse out
    * the array of values as well, including translating strings to numbers/booleans
    * and keeping array structures all intact.
-   * @param {string} noteObject The contents of the note of a given object.
+   * @param {string} databaseObject The contents of the note of a given object.
    * @param {RegExp} structure The regular expression to filter notes by.
    * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @returns {any[][]|null} The array of arrays from the notes, or null.
    */
-  static getArraysFromNotesByRegex(noteObject, structure, tryParse = true)
+  static getArraysFromNotesByRegex(databaseObject, structure, tryParse = true)
   {
     // get the note data from this skill.
-    const noteLines = noteObject.split(/[\r\n]+/);
+    const noteLines = databaseObject.note.split(/[\r\n]+/);
 
     // initialize the value.
     let val = [];
@@ -259,7 +679,7 @@ class RPGManager
       if (line.match(structure))
       {
         // extract the captured formula.
-        const [,result] = structure.exec(line);
+        const [, result] = structure.exec(line);
 
         // parse the value out of the regex capture group.
         val.push(result);
@@ -292,15 +712,16 @@ class RPGManager
    * If the optional flag `tryParse` is true, then it will attempt to parse out
    * the array of values as well, including translating strings to numbers/booleans
    * and keeping array structures all intact.
-   * @param {string} noteObject The contents of the note of a given object.
+   * @param {string} databaseObject The contents of the note of a given object.
    * @param {RegExp} structure The regular expression to filter notes by.
    * @param {boolean} tryParse Whether or not to attempt to parse the found array.
+   * @param {boolean=} nullIfEmpty If this is true and nothing is found, null will be returned instead of empty array.
    * @returns {any[]|null} The array from the notes, or null.
    */
-  static getArrayFromNotesByRegex(noteObject, structure, tryParse = true)
+  static getArrayFromNotesByRegex(databaseObject, structure, tryParse = true, nullIfEmpty = false)
   {
     // get the note data from this skill.
-    const noteLines = noteObject.split(/[\r\n]+/);
+    const noteLines = databaseObject.note.split(/[\r\n]+/);
 
     // initialize the value.
     let val = null;
@@ -315,7 +736,7 @@ class RPGManager
       if (line.match(structure))
       {
         // extract the captured formula.
-        const [,result] = structure.exec(line);
+        const [, result] = structure.exec(line);
 
         // parse the value out of the regex capture group.
         val = JSON.parse(result);
@@ -326,7 +747,13 @@ class RPGManager
     });
 
     // if we didn't find a match, return null instead of attempting to parse.
-    if (!hasMatch) return null;
+    if (!hasMatch)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
 
     // check if we're going to attempt to parse it, too.
     if (tryParse)
@@ -339,4 +766,5 @@ class RPGManager
     return val;
   }
 }
+
 //endregion RPGManager

@@ -2,9 +2,11 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PROF] Enables skill prof and condition triggers.
+ * [v1.0.0 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
+ * @base J-Base
+ * @orderAfter J-Base
  * @help
  * ============================================================================
  * This plugin enables the ability to have actors grow in prof when

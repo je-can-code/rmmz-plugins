@@ -28,4 +28,10 @@ J.ELEM.Aliased = {
   Game_Actor: new Map(),
   Game_Enemy: new Map(),
 };
+
+J.ELEM.RegExp = {};
+J.ELEM.RegExp.AttackElementIds = /<attackElements:[ ]?(\[[\d, ]+])>/i;
+J.ELEM.RegExp.AbsorbElementIds = /<absorbElements:[ ]?(\[[\d, ]+])>/i;
+J.ELEM.RegExp.StrictElementIds = /<strictElements:[ ]?(\[[\d, ]+])>/i;
+J.ELEM.RegExp.BoostElement = /<boostElement:(\d+):(-?\+?[\d]+)>/i;
 //endregion Introduction

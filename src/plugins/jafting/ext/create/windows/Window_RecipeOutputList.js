@@ -101,7 +101,7 @@ class Window_RecipeOutputList extends Window_Command
       .setIconIndex(component.getIconIndex())
       .setHelpText(component.getName())
       .setRightText(`+${component.quantity()}`)
-      .addSubTextLine(subTextLine)
+      .addTextLine(subTextLine)
 
       // TODO: when i/w/a rarity is implemented, add it here.
       //.setColorIndex(rarityColorIndex)

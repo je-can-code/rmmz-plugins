@@ -67,6 +67,12 @@ TextManager.rewardDescription = function(paramId)
   }
 };
 
+/**
+ * Gets the double-line description for parameters by their long parameter id.
+ * @param {number} paramId The long parameter id.
+ * @returns {string[]}
+ */
+// eslint-disable-next-line complexity
 TextManager.longParamDescription = function(paramId)
 {
   switch (paramId)
@@ -75,6 +81,8 @@ TextManager.longParamDescription = function(paramId)
       return this.bparamDescription(paramId); // mhp
     case  1:
       return this.bparamDescription(paramId); // mmp
+    case 30:
+      return this.bparamDescription(paramId); // mtp
     case  2:
       return this.bparamDescription(paramId); // atk
     case  3:
@@ -127,8 +135,6 @@ TextManager.longParamDescription = function(paramId)
       return this.sparamDescription(paramId - 18); // fdr
     case 27:
       return this.sparamDescription(paramId - 18); // exr
-    case 30:
-      return this.maxTp(); // max tp
     default:
       console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
       return String.empty;
@@ -192,6 +198,11 @@ TextManager.bparamDescription = function(paramId)
         "The base stat that governs fortune and luck.",
         "The effects of this are wide and varied."
       ];
+    case 30:
+      return [
+        "The base resource that many weapon-based skills utilize.",
+        "Without this, techniques typically cannot be executed."
+      ];
   }
 };
 
@@ -224,7 +235,7 @@ TextManager.xparamDescription = function(paramId)
     case 2:
       return [
         "A numeric value to one's chance of landing a critical hit.",
-        "This is directly reduced by a target's critical evasion."
+        "Critical hits will deal percent-increased damage."
       ];
 
     // CEV (Critical hit Evasion)

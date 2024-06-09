@@ -1,6 +1,6 @@
 //region JABS_AI
 /**
- * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.<br>
+ * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.
  */
 class JABS_AI
 {
@@ -178,6 +178,6 @@ class JABS_AI
 
     // return the strongest found skill id.
     return strongestSkillId;
-  };
+  }
 }
 //endregion JABS_AI

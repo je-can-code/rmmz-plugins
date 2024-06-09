@@ -12,7 +12,7 @@
  * @orderAfter J-ABS
  * @help
  * ============================================================================
- * OVERVIEW:
+ * OVERVIEW
  * This plugin enables allies to leverage one of a selection of ally AI modes.
  *
  * This plugin requires JABS.

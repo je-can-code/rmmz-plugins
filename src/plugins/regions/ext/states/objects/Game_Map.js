@@ -163,7 +163,7 @@ Game_Map.prototype.refreshRegionStates = function()
 
   // grab the region data.
   const regionStatesData = RPGManager.getArraysFromNotesByRegex(
-    this.note(),
+    { note: this.note() },
     J.REGIONS.EXT.STATES.RegExp.RegionState,
     true);
 

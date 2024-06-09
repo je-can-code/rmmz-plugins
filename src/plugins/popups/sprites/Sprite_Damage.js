@@ -105,12 +105,13 @@ Sprite_Damage.prototype.setHealingFlag = function(isHealing)
  */
 Sprite_Damage.prototype.getXVariance = function()
 {
+  return this._j._popups._yVariance;
   // check if this is a healing popup.
-  return this.isHealing()
-    // if it is, return the Y variance instead.
-    ? (this._j._popups._yVariance - 48)
-    // otherwise, return the x variance as expected.
-    : this._j._popups._xVariance;
+  // return this.isHealing()
+  //   // if it is, return the Y variance instead.
+  //   ? (this._j._popups._yVariance - 48)
+  //   // otherwise, return the x variance as expected.
+  //   : this._j._popups._xVariance;
 };
 
 /**
@@ -128,12 +129,13 @@ Sprite_Damage.prototype.setXVariance = function(xVariance)
  */
 Sprite_Damage.prototype.getYVariance = function()
 {
+  return this._j._popups._xVariance;
   // check if this is a healing popup.
-  return this.isHealing()
-    // if it is, return the X variance instead.
-    ? this._j._popups._xVariance
-    // otherwise, return the y variance as expected.
-    : this._j._popups._yVariance;
+  // return this.isHealing()
+  //   // if it is, return the X variance instead.
+  //   ? this._j._popups._xVariance
+  //   // otherwise, return the y variance as expected.
+  //   : this._j._popups._yVariance;
 };
 
 /**
@@ -172,7 +174,7 @@ Sprite_Damage.prototype.setupMotionData = function(sprite)
   sprite.yf2 = 0;
   sprite.yf3 = 0;
   sprite.ex = false;
-  sprite.bounceMaxX = sprite.x + 60;
+  sprite.bounceMaxX = sprite.x + 260;
 };
 
 /**
@@ -300,20 +302,15 @@ Sprite_Damage.prototype.updateNonDamageSpriteMotion = function(sprite)
  */
 Sprite_Damage.prototype.updateDamageSpriteMotion = function(sprite)
 {
-  this.defaultDamageSpriteMotion(sprite);
-
-  return;
-
-
   // check if the damage sprite is a healing sprite.
-  // if (this.isHealing())
-  // {
-  //   this.flyawayDamageSpriteMotion(sprite);
-  // }
-  // else
-  // {
-  //   this.defaultDamageSpriteMotion(sprite);
-  // }
+  if (this.isHealing())
+  {
+    //this.flyawayDamageSpriteMotion(sprite);
+  }
+  else
+  {
+    //this.defaultDamageSpriteMotion(sprite);
+  }
 };
 
 /**
@@ -333,7 +330,7 @@ Sprite_Damage.prototype.defaultDamageSpriteMotion = function(sprite)
 
   if (sprite.x < sprite.bounceMaxX)
   {
-    sprite.x -= -0.7;
+    sprite.x -= -1.1;
   }
 
   sprite.y = Math.round(sprite.ry);

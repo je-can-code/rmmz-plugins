@@ -16,12 +16,20 @@ class J_SdpPluginMetadata extends PluginMetadata
   {
     const parsedPanels = [];
 
-    // build an SDP from each parsed item provided.
-    parsedBlob.forEach(parsedPanel =>
+    const foreacher = parsedPanel =>
     {
+      // validate the name is not one of the organizational names for the editor-only.
+      const panelName = parsedPanel.name;
+      if (panelName.startsWith("__")) return;
+      if (panelName.startsWith("==")) return;
+      if (panelName.startsWith("--")) return;
+
+      // destructure the details we care about.
+      const { panelParameters, panelRewards } = parsedPanel;
+
       // parse and assign all the various panel parameters.
       const parsedPanelParameters = [];
-      parsedPanel.panelParameters.forEach(paramBlob =>
+      panelParameters.forEach(paramBlob =>
       {
         const parsedParameter = paramBlob;
         const panelParameter = new PanelParameter({
@@ -35,10 +43,9 @@ class J_SdpPluginMetadata extends PluginMetadata
 
       // parse out all the panel rewards if there are any.
       const parsedPanelRewards = [];
-      const panelRewardsBlob = parsedPanel.panelRewards;
-      if (panelRewardsBlob)
+      if (panelRewards)
       {
-        panelRewardsBlob.forEach(reward =>
+        panelRewards.forEach(reward =>
         {
           const parsedReward = reward;
           const panelReward = new PanelRankupReward(
@@ -67,7 +74,10 @@ class J_SdpPluginMetadata extends PluginMetadata
         .build();
 
       parsedPanels.push(panel);
-    });
+    }
+
+    // build an SDP from each parsed item provided.
+    parsedBlob.forEach(foreacher, this);
 
     return parsedPanels;
   }

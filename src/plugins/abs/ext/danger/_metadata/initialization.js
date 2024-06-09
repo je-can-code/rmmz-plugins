@@ -123,4 +123,11 @@ J.ABS.EXT.DANGER.Aliased =
     Sprite_Character: new Map(),
     Spriteset_Map: new Map(),
   };
+
+/**
+ * All regular expressions used by this plugin.
+ */
+J.ABS.EXT.DANGER.RegExp = {};
+J.ABS.EXT.DANGER.RegExp.NoIndicator = /<noDangerIndicator>/i;
+J.ABS.EXT.DANGER.RegExp.ShowIndicator = /<showDangerIndicator>/i;
 //endregion Introduction
