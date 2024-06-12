@@ -101,6 +101,36 @@ class ActionLogBuilder
     return this;
   }
 
+  setupTerrainDamage(targetName, skillId, amount, reduction, isHealing, isCritical)
+  {
+    // the target's name, wrapped in a defender color.
+    const defender = this.#wrapName(targetName, 16);
+
+    // determine the type of execution this is, hurting or healing.
+    let hurtOrHeal;
+    if (isCritical)
+    {
+      hurtOrHeal = isHealing ? "critically healed" : "devastatingly damaged";
+    }
+    else
+    {
+      hurtOrHeal = isHealing ? "restored" : "struck";
+    }
+
+    // the text color index is based on whether or not its flagged as healing.
+    const color = isHealing ? 29 : 10;
+
+    // construct the message.
+    // eslint-disable-next-line max-len
+    const message = `${defender} was ${hurtOrHeal} by \\Skill[${skillId}] for \\C[${color}]${amount}\\C[0]${reduction}!`;
+
+    // assign the message to this log.
+    this.setMessage(message);
+
+    // return the builder for continuous building.
+    return this;
+  }
+
   /**
    * Sets up a message based on the context of a battler being defeated.
    * @param {string} targetName The name of the battler defeated.

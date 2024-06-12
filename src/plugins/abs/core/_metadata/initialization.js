@@ -214,6 +214,25 @@ J.ABS.DefaultValues = {
 };
 
 /**
+ * A collection of non-user-modifiable global values that are used throughout the JABS system.
+ * Each variable should be documented for absolute clarity.
+ */
+J.ABS.Globals = {};
+
+/**
+ * The cooldown key that will be used for the "global" cooldown of a battler.<br/>
+ * Battler cooldowns for both ally and enemy are bound to slots by their cooldown key.<br/>
+ * The cooldown key is normally a dynamic value, but every battler also has a "global" cooldown slot as well that
+ * is used when no other is defined. This "global" slot generally is not used to describe regular skills being used
+ * but instead to describe exceptional events that block other skills while it remains on cooldown*.
+ *
+ * * TODO: implement the global cooldown blocking other cooldowns.
+ * * TODO: alternatively, consider applying cooldowns against global to all slots on a battler.
+ * @type {"global"}
+ */
+J.ABS.Globals.GlobalCooldownKey = "global";
+
+/**
  * A collection of helpful mappings for emoji balloons
  * to their numeric ID.
  */

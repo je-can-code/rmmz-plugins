@@ -87,6 +87,7 @@
     "build:omni-armor": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/armor ./out/omni/ext J-Omni-Armorpedia.js",
 
     "build:regions": "node ./src/build-tools/combine.js ./src/plugins/regions/core ./out/regions J-RegionEffects.js",
-    "build:regions-states": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/states ./out/regions/ext J-Regions-States.js"
+    "build:regions-states": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/states ./out/regions/ext J-Regions-States.js",
+    "build:regions-skills": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/skills ./out/regions/ext J-Regions-Skills.js"
   }
 }
