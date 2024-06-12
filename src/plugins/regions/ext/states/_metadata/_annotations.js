@@ -10,6 +10,7 @@
  * @base J-RegionEffects
  * @orderAfter J-Base
  * @orderAfter J-ABS
+ * @orderAfter J-RegionEffects
  * @help
  * ============================================================================
  * OVERVIEW
@@ -65,11 +66,13 @@
  * - Map [Properties]
  *
  * TAG FORMAT:
- *  <regionAddState:[REGION_ID, STATE_ID, CHANCE, ANIMATION_ID]>
+ *  <regionAddState:[REGION_ID, STATE_ID, CHANCE?, ANIMATION_ID?]>
  * Where REGION_ID is the region that can apply the state.
  * Where STATE_ID is the state being applied by the region.
- * Where CHANCE is an 1-100 integer chance of applying the state.
- * Where ANIMATION_ID is the id of the animation to play upon application.
+ * Where CHANCE? is an 1-100 integer chance of applying the state.
+ *  (the CHANCE can be omitted and it will default to 100% application chance)
+ *  (if setting an animation id is desired, CHANCE cannot be omitted)
+ * Where ANIMATION_ID? is the id of the animation to play upon application.
  *  (the ANIMATION_ID can be omitted and it will default to no animation)
  *
  * TAG EXAMPLES:
@@ -87,6 +90,10 @@
  * chance.
  * A tile marked with the region id of 2 will apply state 4 at a 100% chance.
  * No animations will play upon application of any of these states.
+ *
+ *  <regionAddState:[12, 40]>
+ * A tile marked with region id of 12 will apply state of id 40 with 100%
+ * chance while the player  continues to stand upon it.
  *
  * ============================================================================
  * CHANGELOG:

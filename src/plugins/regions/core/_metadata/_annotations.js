@@ -16,6 +16,7 @@
  * control the following:
  * - force-restrict passage by region id(s).
  * - force-permit passage by region id(s).
+ *
  * ============================================================================
  * REGION PASSAGE:
  * Have you ever wanted a character on a particular map have the ability to
@@ -42,6 +43,13 @@
  * NOTE ABOUT OVERLAPPING IDS IN TAGS:
  * If you use the same region id in both tags on the same map, the deny will
  * take priority and prevent passage.
+ *
+ * NOTE ABOUT PLUGIN PARAMETERS:
+ * In addition to the per-map per-tag configuration, there is also a global
+ * array for both allow and deny in case you want to specify some regionIds
+ * that will always be either allow/deny. The regionIds that are identified as
+ * "global" are not given any special treatment, and are simply concatenated
+ * into any found tags on the maps.
  *
  * ============================================================================
  * CHANGELOG:
