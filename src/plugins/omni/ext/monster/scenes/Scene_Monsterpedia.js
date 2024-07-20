@@ -1,8 +1,20 @@
 /**
- * A scene containing access to all available and implemented pedia entries.
+ * A scene for interacting with the Monsterpedia.
  */
 class Scene_Monsterpedia extends Scene_MenuBase
 {
+  /**
+   * Constructor.
+   */
+  constructor()
+  {
+    // call super when having extended constructors.
+    super();
+
+    // jumpstart initialization on creation.
+    this.initialize();
+  }
+
   /**
    * Pushes this current scene onto the stack, forcing it into action.
    */
@@ -38,23 +50,11 @@ class Scene_Monsterpedia extends Scene_MenuBase
       allDrops.forEach(drop => observations.addKnownDrop(drop.kind, drop.dataId), this);
 
       // iterate over all standard elements in the context of CA.
-      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach(id => observations.addKnownElementalistic(id), this);
+      [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ].forEach(id => observations.addKnownElementalistic(id), this);
     };
 
     // iterate over every enemy.
     $dataEnemies.forEach(forEacher, this);
-  }
-
-  /**
-   * Constructor.
-   */
-  constructor()
-  {
-    // call super when having extended constructors.
-    super();
-
-    // jumpstart initialization on creation.
-    this.initialize();
   }
 
   //region init
@@ -129,6 +129,7 @@ class Scene_Monsterpedia extends Scene_MenuBase
      */
     this._j._omni._monster._pediaHelp = null;
   }
+
   //endregion init
 
   //region create
@@ -180,10 +181,11 @@ class Scene_Monsterpedia extends Scene_MenuBase
     this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
     this._backgroundSprite = new Sprite();
     this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [this._backgroundFilter];
+    this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
     //this.setBackgroundOpacity(220);
   }
+
   //endregion create
 
   //region windows
@@ -195,10 +197,10 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // create the window.
     const window = this.buildMonsterpediaListWindow();
-  
+
     // update the tracker with the new window.
     this.setMonsterpediaListWindow(window);
-  
+
     // add the window to the scene manager's tracking.
     this.addWindow(window);
   }
@@ -211,19 +213,19 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // define the rectangle of the window.
     const rectangle = this.monsterpediaListRectangle();
-  
+
     // create the window with the rectangle.
     const window = new Window_MonsterpediaList(rectangle);
-  
+
     // assign cancel functionality.
     window.setHandler('cancel', this.onCancelMonsterpedia.bind(this));
-  
+
     // assign on-select functionality.
     window.setHandler('ok', this.onMonsterpediaListSelection.bind(this));
-  
+
     // overwrite the onIndexChange hook with our local onMonsterpediaIndexChange hook.
     window.onIndexChange = this.onMonsterpediaIndexChange.bind(this);
-  
+
     // return the built and configured omnipedia list window.
     return window;
   }
@@ -235,14 +237,14 @@ class Scene_Monsterpedia extends Scene_MenuBase
   monsterpediaListRectangle()
   {
     // the list window's origin coordinates are the box window's origin as well.
-    const [x, y] = Graphics.boxOrigin;
-  
+    const [ x, y ] = Graphics.boxOrigin;
+
     // define the width of the list.
     const width = 400;
-  
+
     // define the height of the list.
     const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
-  
+
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
@@ -264,6 +266,7 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     this._j._omni._monster._pediaList = listWindow;
   }
+
   //endregion list window
 
   //region detail window
@@ -274,13 +277,13 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // create the window.
     const window = this.buildMonsterpediaDetailWindow();
-  
+
     // update the tracker with the new window.
     this.setMonsterpediaDetailWindow(window);
-  
+
     // populate all image sprites used in this window.
     window.populateImageCache();
-  
+
     // add the window to the scene manager's tracking.
     this.addWindow(window);
   }
@@ -293,10 +296,10 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // define the rectangle of the window.
     const rectangle = this.monsterpediaDetailRectangle();
-  
+
     // create the window with the rectangle.
     const window = new Window_MonsterpediaDetail(rectangle);
-  
+
     // return the built and configured omnipedia list window.
     return window;
   }
@@ -309,19 +312,19 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // grab the monsterpedia list window.
     const listWindow = this.getMonsterpediaListWindow();
-  
+
     // calculate the X for where the origin of the list window should be.
     const x = listWindow.x + listWindow.width;
-  
+
     // calculate the Y for where the origin of the list window should be.
     const y = Graphics.verticalPadding;
-  
+
     // define the width of the list.
     const width = Graphics.boxWidth - listWindow.width - (Graphics.horizontalPadding * 2);
-  
+
     // define the height of the list.
     const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
-  
+
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
@@ -369,6 +372,7 @@ class Scene_Monsterpedia extends Scene_MenuBase
     window.close();
     window.hide();
   }
+
   //endregion detail window
   //endregion windows
 
@@ -380,16 +384,16 @@ class Scene_Monsterpedia extends Scene_MenuBase
   {
     // grab the list window.
     const listWindow = this.getMonsterpediaListWindow();
-  
+
     // grab the detail window.
     const detailWindow = this.getMonsterpediaDetailWindow();
-  
+
     // grab the highlighted enemy's extra data, their observations.
     const highlightedEnemyObservations = listWindow.currentExt();
-  
+
     // sync the detail window with the currently-highlighted enemy.
     detailWindow.setObservations(highlightedEnemyObservations);
-  
+
     // refresh the window for the content update.
     detailWindow.refresh();
   }
@@ -400,9 +404,9 @@ class Scene_Monsterpedia extends Scene_MenuBase
   onMonsterpediaListSelection()
   {
     const listWindow = this.getMonsterpediaListWindow();
-  
+
     console.log(`monster selected index: [${listWindow.index()}].`);
-  
+
     listWindow.activate();
   }
 
@@ -414,5 +418,6 @@ class Scene_Monsterpedia extends Scene_MenuBase
     // revert to the previous scene.
     SceneManager.pop();
   }
+
   //endregion actions
 }
