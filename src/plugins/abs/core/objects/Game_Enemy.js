@@ -47,6 +47,33 @@ Game_Enemy.prototype.onBattlerDataChange = function()
   this.jabsRefresh();
 };
 
+/**
+ * A hook for performing actions when an actor learns a new skill.
+ * @param {number} skillId The skill id of the skill learned.
+ */
+Game_Enemy.prototype.onLearnNewSkill = function(skillId)
+{
+  // flag this battler for needing a data update.
+  this.onBattlerDataChange();
+};
+
+J.ABS.Aliased.Game_Enemy.set('learnSkill', Game_Enemy.prototype.learnSkill);
+Game_Enemy.prototype.learnSkill = function(skillId)
+{
+  // perform original logic.
+  const learnedSkill = J.ABS.Aliased.Game_Enemy.get('learnSkill').call(this, skillId);
+
+  // check if a new skill was learned.
+  if (learnedSkill)
+  {
+    // trigger on-skill-learning effects.
+    this.onLearnNewSkill(skillId);
+
+    // re-initialize the skill slots with the new skill.
+    this.initAbsSkills();
+  }
+};
+
 //region JABS basic attack skills
 /**
  * Gets the enemy's basic attack skill id.

@@ -27,7 +27,7 @@ Game_Map.prototype.initRegionStatesMembers = function()
   /**
    * The grouping of all properties related to region effects.
    */
-  this._j._regions = {};
+  this._j._regions ||= {};
 
   /**
    * The grouping of all properties related specifically to the region states extension.
@@ -37,7 +37,7 @@ Game_Map.prototype.initRegionStatesMembers = function()
   /**
    * A map keyed by regionId of all stateIds that are applied while the character is
    * on a tile marked by the keyed regionId.
-   * @type {Map<number,number[]>}
+   * @type {Map<number,RegionStateData[]>}
    */
   this._j._regions._states._map = new Map();
 };
@@ -52,36 +52,12 @@ Game_Map.prototype.getRegionStates = function()
 };
 
 /**
- * Overrides the current tracker with a new one.
- * @param {Map<number, RegionStateData[]>} regionStates The new tracker to set.
- */
-Game_Map.prototype.setRegionStates = function(regionStates)
-{
-  this._j._regions._states._map = regionStates;
-};
-
-/**
  * Gets all stateIds to be applied on characters standing on the given regionId.
  * @return {RegionStateData[]}
  */
 Game_Map.prototype.getRegionStatesByRegionId = function(regionId)
 {
   return this.getRegionStates().get(regionId) ?? Array.empty;
-};
-
-/**
- * Gets all region states that are at a designated point.
- * @param {number} x The x of the point.
- * @param {number} y The y of the point.
- * @return {RegionStateData[]} All found region states at the point.
- */
-Game_Map.prototype.getRegionStatesByPoint = function(x, y)
-{
-  // grab the current region id of the point.
-  const regionId = this.regionId(x, y);
-
-  // return all the region states by the given regionId at the point.
-  return this.getRegionStatesByRegionId(regionId);
 };
 
 /**
@@ -117,15 +93,15 @@ Game_Map.prototype.addRegionStateDataByRegionId = function(regionId, regionState
 
 /**
  * Extends {@link #setup}.<br>
- * Also initializes this map's allow/deny region ids.
+ * Also initializes this map's region-state data.
  */
 J.REGIONS.EXT.STATES.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);
 Game_Map.prototype.setup = function(mapId)
 {
   // perform original logic.
-  J.REGIONS.Aliased.Game_Map.get('setup').call(this, mapId);
+  J.REGIONS.EXT.STATES.Aliased.Game_Map.get('setup').call(this, mapId);
 
-  // update rare/named enemy variable.
+  // setup the region state data.
   this.setupRegionStates();
 };
 

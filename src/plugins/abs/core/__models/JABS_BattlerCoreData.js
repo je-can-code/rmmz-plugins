@@ -251,4 +251,13 @@ JABS_BattlerCoreData.prototype.isInanimate = function()
 {
   return this._isInanimate;
 };
+
+/**
+ * A factory for generating builders for creating {@link JABS_BattlerCoreData}s.
+ * @returns {JABS_BattlerCoreDataBuilder}
+ */
+JABS_BattlerCoreData.Builder = function()
+{
+  return new JABS_BattlerCoreDataBuilder();
+};
 //endregion JABS_BattlerCoreData

@@ -5,6 +5,12 @@
  */
 class JABS_Engine
 {
+  /**
+   * The events array of the enemy cloning map.
+   * @type {rm.types.Event[]|null}
+   */
+  static #enemyCloneList = null;
+
   // TODO: implement them as a map.
   /**
    * A cached collection of actions keyed by their uuids.
@@ -12,11 +18,67 @@ class JABS_Engine
    */
   cachedActions = new Map();
 
+  //region properties
   /**
-   * The events array of the enemy cloning map.
-   * @type {rm.types.Event[]|null}
+   * Retrieves whether or not the ABS is currently enabled.
+   * @returns {boolean} True if enabled, false otherwise.
    */
-  static #enemyCloneList = null;
+  absEnabled = true;
+  /**
+   * Retrieves whether or not the ABS is currently paused.
+   * @returns {boolean} True if paused, false otherwise.
+   */
+  absPause = false;
+  /**
+   * Checks whether or not we have a need to request the JABS quick menu.
+   * @returns {boolean} True if menu requested, false otherwise.
+   */
+  requestAbsMenu = false;
+  /**
+   * Gets whether or not there is a request to cycle through party members.
+   * @returns {boolean}
+   */
+  requestPartyRotation = false;
+  /**
+   * Gets whether or not there is a request to refresh the JABS menu.
+   * The most common use case for this is adding new commands to the menu.
+   * @returns {boolean}
+   */
+  requestJabsMenuRefresh = false;
+  /**
+   * Checks whether or not we have a need to request rendering for new actions.
+   * @returns {boolean} True if needing to render actions, false otherwise.
+   */
+  requestActionRendering = false;
+  /**
+   * Checks whether or not we have a need to request rendering for new loot sprites.
+   * @returns {boolean} True if needing to render loot, false otherwise.
+   */
+  requestLootRendering = false;
+
+  //#endregion static properties
+  /**
+   * Checks whether or not we have a need to request a clearing of the action sprites
+   * on the current map.
+   * @returns {boolean} True if clear map requested, false otherwise.
+   */
+  requestClearMap = false;
+  /**
+   * Checks whether or not we have a need to request a clearing of the loot sprites
+   * on the current map.
+   * @returns {boolean} True if clear loot requested, false otherwise.
+   */
+  requestClearLoot = false;
+  /**
+   * Checks whether or not we have a need to refresh all character sprites on the current map.
+   * @returns {boolean} True if refresh is requested, false otherwise.
+   */
+  requestSpriteRefresh = false;
+  /**
+   * Whether or not there is a request issued for rendering newly generated battler sprites.
+   * @type {boolean}
+   */
+  requestBattlerRendering = false;
 
   /**
    * @constructor
@@ -75,77 +137,7 @@ class JABS_Engine
       .then(data => data.json())
       .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
   }
-  //#endregion static properties
 
-  //region properties
-  /**
-   * Retrieves whether or not the ABS is currently enabled.
-   * @returns {boolean} True if enabled, false otherwise.
-   */
-  absEnabled = true;
-
-  /**
-   * Retrieves whether or not the ABS is currently paused.
-   * @returns {boolean} True if paused, false otherwise.
-   */
-  absPause = false;
-
-  /**
-   * Checks whether or not we have a need to request the JABS quick menu.
-   * @returns {boolean} True if menu requested, false otherwise.
-   */
-  requestAbsMenu = false;
-
-  /**
-   * Gets whether or not there is a request to cycle through party members.
-   * @returns {boolean}
-   */
-  requestPartyRotation = false;
-
-  /**
-   * Gets whether or not there is a request to refresh the JABS menu.
-   * The most common use case for this is adding new commands to the menu.
-   * @returns {boolean}
-   */
-  requestJabsMenuRefresh = false;
-
-  /**
-   * Checks whether or not we have a need to request rendering for new actions.
-   * @returns {boolean} True if needing to render actions, false otherwise.
-   */
-  requestActionRendering = false;
-
-  /**
-   * Checks whether or not we have a need to request rendering for new loot sprites.
-   * @returns {boolean} True if needing to render loot, false otherwise.
-   */
-  requestLootRendering = false;
-
-  /**
-   * Checks whether or not we have a need to request a clearing of the action sprites
-   * on the current map.
-   * @returns {boolean} True if clear map requested, false otherwise.
-   */
-  requestClearMap = false;
-
-  /**
-   * Checks whether or not we have a need to request a clearing of the loot sprites
-   * on the current map.
-   * @returns {boolean} True if clear loot requested, false otherwise.
-   */
-  requestClearLoot = false;
-
-  /**
-   * Checks whether or not we have a need to refresh all character sprites on the current map.
-   * @returns {boolean} True if refresh is requested, false otherwise.
-   */
-  requestSpriteRefresh = false;
-
-  /**
-   * Whether or not there is a request issued for rendering newly generated battler sprites.
-   * @type {boolean}
-   */
-  requestBattlerRendering = false;
   //endregion properties
 
   /**
@@ -277,7 +269,8 @@ class JABS_Engine
       // the caster was not an enemy.
 
       // grab the weapons of the caster.
-      const weapons = caster.getBattler().weapons();
+      const weapons = caster.getBattler()
+        .weapons();
 
       // check to make sure we have weapons.
       if (weapons.length > 0)
@@ -639,9 +632,11 @@ class JABS_Engine
     // grab the tracked state being updated.
     const oldJabsState = jabsStates.get(newJabsState.stateId);
 
+    // grab the database data of the state being updated.
+    const state = oldJabsState.battler.state(oldJabsState.stateId);
+
     // the type of update to perform on the state.
-    // TODO: get this from plugin params?
-    const updateType = JABS_State.reapplicationType.Extend;
+    const updateType = state.jabsStateReapplyType ?? J.ABS.Metadata.DefaultStateReapplyType;
 
     // handle the state tracker data update.
     this.handleJabsStateUpdate(updateType, oldJabsState, newJabsState);
@@ -666,8 +661,6 @@ class JABS_Engine
       case JABS_State.reapplicationType.Stack:
         this.stackJabsState(jabsState, newJabsState);
         break;
-      default:
-        break;
     }
   }
 
@@ -682,8 +675,23 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the database data of the state being refreshed.
+    const state = jabsState.battler.state(jabsState.stateId);
+
+    // calculate the amount to diminish from the refresh.
+    const diminishmentAmount = jabsState.timesRefreshed * state.jabsStateRefreshDiminish;
+
+    // calculate the refreshed amount.
+    const refreshAmount = newJabsState.duration - diminishmentAmount;
+
+    // safely capture the duration.
+    const actualDuration = Math.max(refreshAmount, 0);
+
+    // refresh the refresh reset counter since this state is being refreshed.
+    jabsState.refreshRefreshResetCounter(state.jabsStateRefreshReset);
+
     // refresh the duration of the existing state.
-    jabsState.refreshDuration(newJabsState.duration);
+    jabsState.refreshDuration(actualDuration);
   }
 
   /**
@@ -697,11 +705,20 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the database data of the state being extended.
+    const state = jabsState.battler.state(newJabsState.stateId);
+
+    // amount to extend the state.
+    const amountToExtend = state.jabsStateExtendAmount;
+
     // calculate the new duration.
-    const newDuration = jabsState.duration + newJabsState.duration;
+    const newDuration = jabsState.duration + amountToExtend;
+
+    // determine the capped extended duration.
+    const actualDuration = Math.min(newDuration, state.jabsStateExtendMax);
 
     // refresh the duration of the state.
-    jabsState.refreshDuration(newDuration);
+    jabsState.refreshDuration(actualDuration);
   }
 
   /**
@@ -715,9 +732,11 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the added stacks from the state if applicable.
+    const addedStackAmount = newJabsState.battler.state(newJabsState.stateId).jabsStateStacksApplied;
+
     // increment the stack of the state.
-    // TODO: get stack count bonus from new state data.
-    jabsState.incrementStacks();
+    jabsState.incrementStacks(addedStackAmount);
 
     // update the underlying base duration to the latest stack's duration.
     jabsState.setBaseDuration(newJabsState.duration);
@@ -758,6 +777,7 @@ class JABS_Engine
       jabsStates.forEach(jabsState => jabsState.update());
     });
   }
+
   //endregion state tracking
   //endregion update player
 
@@ -827,11 +847,13 @@ class JABS_Engine
     if (target.isDying()) return false;
 
     // do not re-handle defeated targets.
-    if (target.isEnemy() && target.getCharacter().isErased()) return false;
+    if (target.isEnemy() && target.getCharacter()
+      .isErased()) return false;
 
     // target is defeated!
     return true;
   }
+
   //endregion update ai battlers
 
   //region update input
@@ -934,7 +956,8 @@ class JABS_Engine
     $gameParty.swapLeaderWithFollower(nextAllyIndex);
 
     // also trigger an update against the new leader.
-    $gameParty.leader().onBattlerDataChange();
+    $gameParty.leader()
+      .onBattlerDataChange();
 
     // recreate the JABS player battler and set it to the player character.
     this.refreshPlayer1Data();
@@ -970,7 +993,8 @@ class JABS_Engine
     const player1 = this.getPlayer1();
 
     // perform the party cycle animation.
-    player1.getCharacter().requestAnimation(40);
+    player1.getCharacter()
+      .requestAnimation(40);
   }
 
   /**
@@ -1026,6 +1050,7 @@ class JABS_Engine
     // perform!
     return true;
   }
+
   //endregion update input
 
   //region update actions
@@ -1043,6 +1068,7 @@ class JABS_Engine
     // update each of the actions.
     actionEvents.forEach(action => action.update());
   }
+
   //endregion update actions
   //endregion update
 
@@ -1050,24 +1076,37 @@ class JABS_Engine
   //region action execution
   /**
    * Generates a new `JABS_Action` based on a skillId, and executes the skill.
-   * This overrides the need for costs or cooldowns, and is intended to be
-   * used from the map, within an event's custom move routes.
+   * This overrides the need for costs or cooldowns.<br/>
+   * This is intended to be used for programmatically forcing battlers to execute skills, and can be
+   * used from within an event's move route, or anywhere else you have a reference to a {@link JABS_Battler}.
    * @param {JABS_Battler} caster The battler executing the skill.
    * @param {number} skillId The skill to be executed.
    * @param {boolean=} isRetaliation Whether or not this skill is from a retaliation; defaults to false.
-   * @param {number=} x The target's `x` coordinate; defaults to null.
-   * @param {number=} y The target's `y` coordinate; defaults to null.
+   * @param {number=} targetX The target's `x` coordinate; defaults to null.
+   * @param {number=} targetY The target's `y` coordinate; defaults to null.
+   * @param {boolean=} isMapDamage Whether or not this skill is from an environmental hazard.
    */
-  forceMapAction(caster, skillId, isRetaliation = false, x = null, y = null)
+  forceMapAction(caster, skillId, isRetaliation = false, targetX = null, targetY = null, isMapDamage = false)
   {
+    // build options based on inputs.
+    const actionLocation = JABS_Location.Builder()
+      .setX(targetX)
+      .setY(targetY)
+      .build();
+    const actionOptions = JABS_ActionOptions.Builder()
+      .setIsRetaliation(isRetaliation)
+      .setLocation(actionLocation)
+      .setIsTerrainDamage(isMapDamage)
+      .build();
+
     // generate the forced actions based on the given skill id.
-    const actions = caster.createJabsActionFromSkill(skillId, isRetaliation);
+    const actions = caster.createJabsActionFromSkill(skillId, actionOptions);
 
     // if we cannot execute map actions, then do not.
     if (!this.canExecuteMapActions(caster, actions)) return;
 
     // iterate over each action and execute them as the caster.
-    actions.forEach(action => this.executeMapAction(caster, action, x, y));
+    actions.forEach(action => this.executeMapAction(caster, action, targetX, targetY));
   }
 
   /**
@@ -1106,8 +1145,8 @@ class JABS_Engine
 
   /**
    * Applies any on-execution effects to the caster based on the actions.
-   * @param caster
-   * @param primaryAction
+   * @param {JABS_Battler} caster The battler executing the skill.
+   * @param {JABS_Action} primaryAction The 0th index action.
    */
   applyOnExecutionEffects(caster, primaryAction)
   {
@@ -1169,7 +1208,8 @@ class JABS_Engine
     if (casterAnimation)
     {
       // execute the cast animation.
-      caster.getCharacter().requestAnimation(casterAnimation);
+      caster.getCharacter()
+        .requestAnimation(casterAnimation);
     }
   }
 
@@ -1270,28 +1310,44 @@ class JABS_Engine
     switch (direction)
     {
       case J.ABS.Directions.UP:
-        newDirection = clockwise ? 9 : 7;
+        newDirection = clockwise
+          ? 9
+          : 7;
         break;
       case J.ABS.Directions.RIGHT:
-        newDirection = clockwise ? 3 : 9;
+        newDirection = clockwise
+          ? 3
+          : 9;
         break;
       case J.ABS.Directions.LEFT:
-        newDirection = clockwise ? 7 : 1;
+        newDirection = clockwise
+          ? 7
+          : 1;
         break;
       case J.ABS.Directions.DOWN:
-        newDirection = clockwise ? 1 : 3;
+        newDirection = clockwise
+          ? 1
+          : 3;
         break;
       case J.ABS.Directions.LOWERLEFT:
-        newDirection = clockwise ? 4 : 2;
+        newDirection = clockwise
+          ? 4
+          : 2;
         break;
       case J.ABS.Directions.LOWERRIGHT:
-        newDirection = clockwise ? 2 : 6;
+        newDirection = clockwise
+          ? 2
+          : 6;
         break;
       case J.ABS.Directions.UPPERLEFT:
-        newDirection = clockwise ? 8 : 4;
+        newDirection = clockwise
+          ? 8
+          : 4;
         break;
       case J.ABS.Directions.UPPERRIGHT:
-        newDirection = clockwise ? 6 : 8;
+        newDirection = clockwise
+          ? 6
+          : 8;
         break;
       default:
         console.warn('non-dir8 provided, no rotation performed.');
@@ -1313,28 +1369,44 @@ class JABS_Engine
     switch (direction)
     {
       case J.ABS.Directions.UP:
-        newDirection = clockwise ? 6 : 4;
+        newDirection = clockwise
+          ? 6
+          : 4;
         break;
       case J.ABS.Directions.RIGHT:
-        newDirection = clockwise ? 2 : 8;
+        newDirection = clockwise
+          ? 2
+          : 8;
         break;
       case J.ABS.Directions.LEFT:
-        newDirection = clockwise ? 8 : 2;
+        newDirection = clockwise
+          ? 8
+          : 2;
         break;
       case J.ABS.Directions.DOWN:
-        newDirection = clockwise ? 4 : 6;
+        newDirection = clockwise
+          ? 4
+          : 6;
         break;
       case J.ABS.Directions.LOWERLEFT:
-        newDirection = clockwise ? 7 : 3;
+        newDirection = clockwise
+          ? 7
+          : 3;
         break;
       case J.ABS.Directions.LOWERRIGHT:
-        newDirection = clockwise ? 1 : 9;
+        newDirection = clockwise
+          ? 1
+          : 9;
         break;
       case J.ABS.Directions.UPPERLEFT:
-        newDirection = clockwise ? 9 : 1;
+        newDirection = clockwise
+          ? 9
+          : 1;
         break;
       case J.ABS.Directions.UPPERRIGHT:
-        newDirection = clockwise ? 3 : 7;
+        newDirection = clockwise
+          ? 3
+          : 7;
         break;
       default:
         console.warn('non-dir8 provided, no rotation performed.');
@@ -1441,7 +1513,8 @@ class JABS_Engine
     }
 
     // if the skill is not unique, then the cooldown applies to all slots it is equipped to.
-    const equippedSkills = caster.getBattler().getAllEquippedSkills();
+    const equippedSkills = caster.getBattler()
+      .getAllEquippedSkills();
     equippedSkills.forEach(skillSlot =>
     {
       if (skillSlot.id === skill.id)
@@ -1479,13 +1552,13 @@ class JABS_Engine
 
     // give it a name.
     const skillName = action.getBaseSkill().name;
-    const casterName = action.getCaster().battlerName();
+    const casterName = action.getCaster()
+      .battlerName();
     actionEventSprite.__actionName = `_${casterName}-${skillName}`;
 
     // on rare occasions, the timing of adding an action to the map coincides
     // with the removal of the caster which breaks the ordering of the events.
-    // the result will throw an error and break. This should catch that, and if
-    // not, then the try-catch will.
+    // the result will throw an error and break. This should catch that.
     if (!actionEventData || !actionEventData.pages.length)
     {
       console.error("that rare error occurred!");
@@ -1575,7 +1648,8 @@ class JABS_Engine
     }
 
     // grab the enemy event data to clone from.
-    const originalEnemyData = JABS_Engine.getEnemyCloneList().at(enemyCloneEventId);
+    const originalEnemyData = JABS_Engine.getEnemyCloneList()
+      .at(enemyCloneEventId);
 
     // if there is no data, then we can't clone that id.
     if (!originalEnemyData)
@@ -1647,7 +1721,8 @@ class JABS_Engine
     let isUnparryable = action.isUnparryable();
 
     // check if the target is a player and also dashing.
-    if (target.isPlayer() && target.getCharacter().isDashButtonPressed())
+    if (target.isPlayer() && target.getCharacter()
+      .isDashButtonPressed())
     {
       // dashing players cannot parry anything, making the action unparryable.
       isUnparryable = true;
@@ -1730,7 +1805,8 @@ class JABS_Engine
     if (attacker.isSameTeam(target.getTeam())) return;
 
     // grab the result on the target, from the action executed.
-    const result = target.getBattler().result();
+    const result = target.getBattler()
+      .result();
 
     // the default/base aggro.
     let aggro = J.ABS.Metadata.BaseAggro;
@@ -1774,22 +1850,26 @@ class JABS_Engine
     aggro *= action.aggroMultiplier();
 
     // apply any aggro amplification from states.
-    attacker.getBattler().states().forEach(state =>
-    {
-      if (state.jabsAggroOutAmp >= 0)
+    attacker.getBattler()
+      .states()
+      .forEach(state =>
       {
-        aggro *= state.jabsAggroOutAmp;
-      }
-    });
+        if (state.jabsAggroOutAmp >= 0)
+        {
+          aggro *= state.jabsAggroOutAmp;
+        }
+      });
 
     // apply any aggro reduction from states.
-    target.getBattler().states().forEach(state =>
-    {
-      if (state.jabsAggroInAmp >= 0)
+    target.getBattler()
+      .states()
+      .forEach(state =>
       {
-        aggro *= state.jabsAggroInAmp;
-      }
-    });
+        if (state.jabsAggroInAmp >= 0)
+        {
+          aggro *= state.jabsAggroInAmp;
+        }
+      });
 
     // apply the TGR multiplier from the attacker.
     aggro *= attacker.getBattler().tgr;
@@ -1813,7 +1893,8 @@ class JABS_Engine
   applyOnHitEffects(action, target)
   {
     // if the result isn't a hit or a parry, then we don't process on-hit effects.
-    const result = target.getBattler().result();
+    const result = target.getBattler()
+      .result();
     if (!result.isHit() && !result.parried) return;
 
     // it was a hit, so process the on-hit effects.
@@ -1835,10 +1916,13 @@ class JABS_Engine
     // get the animation id associated with this skill.
     const targetAnimationId = this.getAnimationId(skill, caster);
 
-    const result = target.getBattler().result();
+    const result = target.getBattler()
+      .result();
 
     // if the skill should animate on the target, then animate as normal.
-    const animationId = result.parried ? 122 : targetAnimationId;
+    const animationId = result.parried
+      ? 122
+      : targetAnimationId;
     targetCharacter.requestAnimation(animationId);
 
     // if there is a self-animation id, apply that to yourself for every hit.
@@ -1875,8 +1959,8 @@ class JABS_Engine
     if (targetSprite.isJumping()) return;
 
     // get the knockback resist for this target.
-    const targetReferenceData = target.getReferenceData();
-    const targetMeta = targetReferenceData.meta;
+    const targetBattlerDatabaseData = target.getBattlerDatabaseData();
+    const targetMeta = targetBattlerDatabaseData.meta;
     let knockbackResist = 1.00;
     if (targetMeta && targetMeta[J.ABS.Notetags.KnockbackResist])
     {
@@ -2001,7 +2085,8 @@ class JABS_Engine
     if (!skill.jabsComboAction) return false;
 
     // if the battler doesn't know the combo skill, we cannot combo.
-    if (!caster.getBattler().hasSkill(skill.jabsComboSkillId)) return false;
+    if (!caster.getBattler()
+      .hasSkill(skill.jabsComboSkillId)) return false;
 
     // execute combo actions!
     return true;
@@ -2141,7 +2226,8 @@ class JABS_Engine
 
 
     // if the attacker has a state that ignores all parry, then skip parrying.
-    if (caster.getBattler().ignoreAllParry()) return false;
+    if (caster.getBattler()
+      .ignoreAllParry()) return false;
 
     // parrying is possible!
     return true;
@@ -2219,7 +2305,8 @@ class JABS_Engine
     if (action.isRetaliation()) return;
 
     // do not retaliate against being targeted by battlers of the same team.
-    if (action.getCaster().isSameTeam(targetBattler.getTeam())) return;
+    if (action.getCaster()
+      .isSameTeam(targetBattler.getTeam())) return;
 
     // check if the target battler is an actor.
     if (targetBattler.isActor())
@@ -2242,7 +2329,8 @@ class JABS_Engine
   handleActorRetaliation(battler)
   {
     // grab the action result.
-    const actionResult = battler.getBattler().result();
+    const actionResult = battler.getBattler()
+      .result();
 
     // for tracking to prevent both counterguarding AND counterparrying simultaneously.
     let didCounterParry = false;
@@ -2265,7 +2353,8 @@ class JABS_Engine
     }
 
     // grab all the retaliation skills for this battler.
-    const retaliationSkills = battler.getBattler().retaliationSkills();
+    const retaliationSkills = battler.getBattler()
+      .retaliationSkills();
 
     // if there are any passive retaliation skills to perform...
     if (retaliationSkills.length)
@@ -2433,7 +2522,8 @@ class JABS_Engine
   handleEnemyRetaliation(enemy)
   {
     // assumes enemy battler is enemy.
-    const retaliationSkills = enemy.getBattler().retaliationSkills();
+    const retaliationSkills = enemy.getBattler()
+      .retaliationSkills();
 
     // if there are any passive retaliation skills to perform...
     if (retaliationSkills.length)
@@ -2500,11 +2590,13 @@ class JABS_Engine
     if (!J.POPUPS) return;
 
     // inanimate objects do not have skill usage pops.
-    if (action.getCaster().isInanimate()) return;
+    if (action.getCaster()
+      .isInanimate()) return;
 
     // gather shorthand variables for use.
     const skill = action.getBaseSkill();
-    const character = action.getCaster().getCharacter();
+    const character = action.getCaster()
+      .getCharacter();
 
     // generate the textpop.
     const skillUsagePop = this.configureSkillUsedPop(skill);
@@ -2526,12 +2618,13 @@ class JABS_Engine
     if (!J.LOG) return;
 
     // gather shorthand variables for use.
-    const result = target.getBattler().result();
+    const result = target.getBattler()
+      .result();
     const caster = action.getCaster();
     const skill = action.getBaseSkill();
 
-    const casterName = caster.getReferenceData().name;
-    const targetName = target.getReferenceData().name;
+    const casterName = caster.getBattlerDatabaseData().name;
+    const targetName = target.getBattlerDatabaseData().name;
 
     // create parry logs if it was parried.
     if (result.parried)
@@ -2574,7 +2667,10 @@ class JABS_Engine
       // get the base damage dealt and clean that up.
       let roundedDamage = Math.round(result.hpDamage);
       const isNotHeal = roundedDamage > 0;
-      roundedDamage = roundedDamage >= 0 ? roundedDamage : roundedDamage.toString().replace("-", "");
+      roundedDamage = roundedDamage >= 0
+        ? roundedDamage
+        : roundedDamage.toString()
+          .replace("-", "");
       const damageReduction = Math.round(result.reduced);
       let reducedAmount = "";
       if (damageReduction)
@@ -2582,10 +2678,22 @@ class JABS_Engine
         reducedAmount = `(${parseInt(damageReduction)})`;
       }
 
-      const actionExecutedLog = new ActionLogBuilder()
-        .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
-        .build();
-      $actionLogManager.addLog(actionExecutedLog);
+      // when its terrain damage slapping you, show the logs a bit differently.
+      if (action.isTerrainDamage())
+      {
+        const terrainAttackLog = new ActionLogBuilder()
+          .setupTerrainDamage(targetName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
+          .build();
+        $actionLogManager.addLog(terrainAttackLog);
+      }
+      else
+      {
+        const actionExecutedLog = new ActionLogBuilder()
+          .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
+          .build();
+        $actionLogManager.addLog(actionExecutedLog);
+      }
+
       // fall through in case there were states that were also applied, such as defeating the target.
     }
 
@@ -2595,7 +2703,8 @@ class JABS_Engine
       result.addedStates.forEach(stateId =>
       {
         // show a custom line when an enemy is defeated.
-        if (stateId === target.getBattler().deathStateId())
+        if (stateId === target.getBattler()
+          .deathStateId())
         {
           const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
@@ -2729,17 +2838,18 @@ class JABS_Engine
     // if not using the elemental icons, don't return one.
     if (!J.ABS.Metadata.UseElementalIcons) return 0;
 
-    let {elementId} = skill.damage;
+    let { elementId } = skill.damage;
 
     // if the battler is an actor and the action is based on the weapon's elements
     // probe the weapon's traits for its actual element.
     if (elementId === -1 && caster.isActor())
     {
-      const attackElements = caster.getBattler().attackElements();
+      const attackElements = caster.getBattler()
+        .attackElements();
       if (attackElements.length)
       {
         // we pick only the first element!
-        [elementId,] = attackElements;
+        [ elementId, ] = attackElements;
       }
       else
       {
@@ -2755,98 +2865,119 @@ class JABS_Engine
 
     const iconData = J.ABS.Metadata.ElementalIcons;
     const elementalIcon = iconData.find(data => data.element === elementId);
-    return elementalIcon ? elementalIcon.icon : 0;
+    return elementalIcon
+      ? elementalIcon.icon
+      : 0;
   }
+
   //endregion action execution
 
   //region collision
   /**
    * Checks this `JABS_Action` against all map battlers to determine collision.
    * If there is a collision, then a `Game_Action` is applied.
-   * @param {JABS_Action} action The `JABS_Action` to check against all battlers.
+   * @param {JABS_Action} jabsAction The `JABS_Action` to check against all battlers.
    * @returns {JABS_Battler[]} A collection of `JABS_Battler`s that this action hit.
    */
-  getCollisionTargets(action)
+  getCollisionTargets(jabsAction)
   {
-    if (action.getAction().isForUser())
+    // start by grabbing the action and running through priority of collision.
+    const gameAction = jabsAction.getAction();
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // self-targeting takes FIRST PRIORITY.
+    if (gameAction.isForUser())
     {
-      return [action.getCaster()];
+      return [ casterJabsBattler ];
     }
 
-    const actionSprite = action.getActionSprite();
-    const range = action.getRange();
-    const shape = action.getShape();
-    const casterJabsBattler = action.getCaster();
-
-    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
-    let hitOne = false;
-    const targetsHit = [];
-
+    // grab the allied target selected by the caster of this action.
     const allyTarget = casterJabsBattler.getAllyTarget();
-    if (allyTarget && action.getAction().isForOne())
+
+    // ally targeting takes SECOND PRIORITY.
+    if (allyTarget && gameAction.isForOne())
     {
-      if (allyTarget.canActionConnect() && allyTarget.isWithinScope(action, allyTarget, hitOne))
+      // validate the action can connect with the targeted ally.
+      if (allyTarget.canActionConnect() && allyTarget.isWithinScope(jabsAction, allyTarget, false))
       {
-        targetsHit.push(allyTarget);
-        return targetsHit;
+        // hit the ally only.
+        return [ allyTarget ];
       }
     }
 
-    battlers
-      .filter(battler =>
-      {
-        // this battler is untargetable.
-        if (!battler.canActionConnect()) return false;
+    // filter to only the battlers that can connect with this action.
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect()) return false;
 
-        // the action's scopes don't meet the criteria for this target.
-        // excludes the "single"-hitonce check.
-        if (!battler.isWithinScope(action, battler)) return false;
+      // the action's scopes don't meet the criteria for this target.
+      // excludes the "single"-hitonce check.
+      if (!battler.isWithinScope(jabsAction, battler)) return false;
 
-        // if the attacker is an enemy, do not consider inanimate targets.
-        if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
+      // if the attacker is an enemy, do not consider inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
 
-        // this battler is potentially hit-able.
-        return true;
-      })
-      .forEach(battler =>
-      {
+      // this battler is potentially hit-able.
+      return true;
+    };
+
+    // a few definitions used within collision processing.
+    const actionSprite = jabsAction.getActionSprite();
+    const range = jabsAction.getRange();
+    const shape = jabsAction.getShape();
+    const targetsHit = [];
+    let hitOne = false;
+
+    // actually process the collision.
+    const battlerCollisionProccessor = battler =>
+    {
       // this time, it is effectively checking for the single-scope.
-        if (!battler.isWithinScope(action, battler, hitOne)) return;
+      if (!battler.isWithinScope(jabsAction, battler, hitOne)) return;
 
-        // if the action is a direct-targeting action,
-        // then only check distance between the caster and target.
-        if (action.isDirectAction())
+      // if the action is a direct-targeting action,
+      // then only check distance between the caster and target.
+      if (jabsAction.isDirectAction())
+      {
+        if (gameAction.isForUser())
         {
-          if (action.getAction().isForUser())
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-            return;
-          }
-          const maxDistance = action.getProximity();
-          const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
-          if (distance <= maxDistance)
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-          }
-
-          // if the action is a standard projectile-based action,
-          // then check to see if this battler is now in range.
+          targetsHit.push(battler);
+          hitOne = true;
+          return;
         }
-        else
+
+        const maxDistance = jabsAction.getProximity();
+        const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
+        if (distance <= maxDistance)
         {
-          const sprite = battler.getCharacter();
-          const actionDirection = actionSprite.direction();
-          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
-          if (result)
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-          }
+          targetsHit.push(battler);
+          hitOne = true;
         }
-      });
+      }
+      // if the action is a standard projectile-based action,
+      // then check to see if this battler is now in range.
+      else
+      {
+        const sprite = battler.getCharacter();
+        const actionDirection = actionSprite.direction();
+        const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+        if (result)
+        {
+          targetsHit.push(battler);
+          hitOne = true;
+        }
+      }
+    };
 
+    // grab all the battlers that could possibly be hit.
+    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
+
+    // LAST PRIORITY is just regular "did I get hit" sort of stuff.
+    battlers
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battlerCollisionProccessor, this);
+
+    // return what we found.
     return targetsHit;
   }
 
@@ -2899,7 +3030,7 @@ class JABS_Engine
   {
     // calculate the distance between the target and action.
     const distance = $gameMap.distance(target.x, target.y, action.x, action.y);
-    
+
     // determine whether or not the target is within range of being hit.
     const inRange = distance <= range;
 
@@ -3190,6 +3321,7 @@ class JABS_Engine
     // return the result.
     return inRange;
   }
+
   //endregion collision
   //endregion functional
 
@@ -3464,7 +3596,7 @@ class JABS_Engine
     if (experience !== 0)
     {
       const expLog = new ActionLogBuilder()
-        .setupExperienceGained(caster.getReferenceData().name, experience)
+        .setupExperienceGained(caster.getBattlerDatabaseData().name, experience)
         .build();
       $actionLogManager.addLog(expLog);
     }
@@ -3489,7 +3621,8 @@ class JABS_Engine
     if (target.isActor()) return;
 
     // if we have no drops, don't bother.
-    const items = target.getBattler().makeDropItems();
+    const items = target.getBattler()
+      .makeDropItems();
     if (items.length === 0) return;
 
     items.forEach(item => this.addLootDropToMap(target.getX(), target.getY(), item));
@@ -3538,7 +3671,7 @@ class JABS_Engine
     itemDataList.forEach((itemData, index) =>
     {
       // generate a pop that moves based on index.
-      this.generatePopItem(itemData, character, 32+(index*24));
+      this.generatePopItem(itemData, character, 32 + (index * 24));
     }, this);
 
     // flag the character for processing pops.
@@ -3716,7 +3849,7 @@ class JABS_Engine
   {
     if (!J.LOG) return;
 
-    const log = this.configureSkillLearnLog(player.getReferenceData().name, skill.id);
+    const log = this.configureSkillLearnLog(player.getBattlerDatabaseData().name, skill.id);
     $actionLogManager.addLog(log);
   }
 
@@ -3735,4 +3868,5 @@ class JABS_Engine
 
 //endregion defeated target aftermath
 }
+
 //endregion JABS_Engine

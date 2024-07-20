@@ -154,8 +154,10 @@ class BossFrameManager
    */
   static getBossGameBattler()
   {
+    // if there is no boss, then there is no jabs battler.
     if (!this.boss) return null;
 
+    // grab the boss's underlying battler.
     return this.boss.battler;
   }
 
@@ -181,8 +183,10 @@ class BossFrameManager
    */
   static getBossHpPercent()
   {
+    // if there is no boss, then there is no hp.
     if (!this.boss) return 0;
 
+    // return the bosses hp as a percent integer.
     return this.getBossGameBattler().currentHpPercent100();
   }
 

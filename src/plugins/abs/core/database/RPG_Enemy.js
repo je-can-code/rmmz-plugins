@@ -546,7 +546,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowHpBar",
   {
     get: function()
     {
-      return this.getJabsConfigCanIdle();
+      return this.getJabsConfigShowHpBar();
     },
   });
 
@@ -554,16 +554,16 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowHpBar",
  * Checks whether or not this battler can idle.
  * @returns {boolean|null}
  */
-RPG_BaseBattler.prototype.getJabsConfigCanIdle = function()
+RPG_BaseBattler.prototype.getJabsConfigShowHpBar = function()
 {
-  return this.extractJabsConfigCanIdle();
+  return this.extractJabsConfigShowHpBar();
 };
 
 /**
  * Extracts the value from this battler's notes.
  * @returns {boolean|null}
  */
-RPG_BaseBattler.prototype.extractJabsConfigCanIdle = function()
+RPG_BaseBattler.prototype.extractJabsConfigShowHpBar = function()
 {
   return this.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigShowHpBar, true);
 };
@@ -579,7 +579,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoHpBar",
   {
     get: function()
     {
-      return this.getJabsConfigNoIdle();
+      return this.getJabsConfigNoHpBar();
     },
   });
 
@@ -587,16 +587,16 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoHpBar",
  * Checks whether or not this battler can idle.
  * @returns {boolean|null}
  */
-RPG_BaseBattler.prototype.getJabsConfigNoIdle = function()
+RPG_BaseBattler.prototype.getJabsConfigNoHpBar = function()
 {
-  return this.extractJabsConfigNoIdle();
+  return this.extractJabsConfigNoHpBar();
 };
 
 /**
  * Extracts the value from this battler's notes.
  * @returns {boolean|null}
  */
-RPG_BaseBattler.prototype.extractJabsConfigNoIdle = function()
+RPG_BaseBattler.prototype.extractJabsConfigNoHpBar = function()
 {
   return this.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigNoHpBar, true);
 };

@@ -293,6 +293,143 @@ RPG_State.prototype.extractJabsOffhandSkillId = function()
 };
 //endregion offhand skillId
 
+/**
+ * The state reapplication strategy for this state in the context of JABS.<br/>
+ * Will either return one of the {@link JABS_State.reapplicationType}, or null if none was found.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateReapplyType",
+  {
+    get: function()
+    {
+      const type = RPGManager.getStringFromNoteByRegex(
+        this,
+        J.ABS.RegExp.ReapplyType,
+        true);
+
+      switch (type)
+      {
+        case JABS_State.reapplicationType.Refresh:
+        case JABS_State.reapplicationType.Extend:
+        case JABS_State.reapplicationType.Stack:
+          return type;
+        default:
+          return null;
+      }
+    },
+  });
+
+/**
+ * The customized number of frames to reduce lesser the base duration when this state is reapplied.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Refresh}.<br/>
+ * Will either return the custom number of frames defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateRefreshDiminish",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.ReapplyRefreshDiminish,
+        true) ?? J.ABS.Metadata.DefaultStateRefreshDiminish;
+    },
+  });
+
+/**
+ * The customized number of frames until a state can be fully refreshed again without diminishing returns.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Refresh}.<br/>
+ * Will either return the custom number of frames defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateRefreshReset",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.ReapplyRefreshReset,
+        true) ?? J.ABS.Metadata.DefaultStateRefreshReset;
+    },
+  });
+
+/**
+ * The customized number of frames to extend the duration of this state when reapplied.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Extend}.<br/>
+ * Will either return the custom number of frames defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateExtendAmount",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.ReapplyExtendAmount,
+        true) ?? J.ABS.Metadata.DefaultStateExtendAmount;
+    },
+  });
+
+/**
+ * The maximum number of frames a state can have its duration extended when reapplied.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Extend}.<br/>
+ * Will either return the max number of frames defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateExtendMax",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.ReapplyExtendMax,
+        true);
+    },
+  });
+
+/**
+ * The max number of stacks a state can stack.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
+ * Will either return the custom number of stacks defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateStackMax",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.ReapplyStackMax,
+        true) ?? J.ABS.Metadata.DefaultStateStackMax;
+    },
+  });
+
+/**
+ * How many stacks of a state will be applied upon stacking.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
+ * Will either return the custom number of stacks defined on the state, or the default from configuration.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsStateStacksApplied",
+  {
+    get: function()
+    {
+      return RPGManager.getSumFromAllNotesByRegex(
+        [this],
+        J.ABS.RegExp.StateApplicationAmount,
+        true) ?? J.ABS.Metadata.DefaultStateApplicationCount;
+    },
+  });
+
+/**
+ * Whether or not all stacks of a state will be removed upon duration expiration.<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
+ * If no value is defined on the state, the default from configuration will be used.
+ */
+Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce",
+  {
+    get: function()
+    {
+      return RPGManager.checkForBooleanFromNoteByRegex(
+        this,
+        J.ABS.RegExp.LoseAllStacksAtOnce,
+        true) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
+    },
+  });
+
 //region slipHp
 //region flat
 /**
