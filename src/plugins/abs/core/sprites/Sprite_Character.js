@@ -542,7 +542,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     .setFontSize(10)
     .setAlignment(Sprite_BaseText.Alignments.Left)
     .setColor("#ffffff");
-  sprite.setText(battlerName);
+  sprite.setText(battlerName); // TODO: is this second assignment necessary???
 
   // relocate the sprite to a better position.
   sprite.move(-30, 8);

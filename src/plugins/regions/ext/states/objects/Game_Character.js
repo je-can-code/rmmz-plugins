@@ -7,7 +7,8 @@ J.REGIONS.EXT.STATES.Aliased.Game_Character.set('initMembers', Game_Character.pr
 Game_Character.prototype.initMembers = function()
 {
   // perform original logic.
-  J.REGIONS.EXT.STATES.Aliased.Game_Character.get('initMembers').call(this);
+  J.REGIONS.EXT.STATES.Aliased.Game_Character.get('initMembers')
+    .call(this);
 
   // initialize the additional members.
   this.initRegionStatesMembers();
@@ -57,7 +58,8 @@ J.REGIONS.EXT.STATES.Aliased.Game_Character.set('update', Game_Character.prototy
 Game_Character.prototype.update = function()
 {
   // perform original logic.
-  J.REGIONS.EXT.STATES.Aliased.Game_Character.get('update').call(this);
+  J.REGIONS.EXT.STATES.Aliased.Game_Character.get('update')
+    .call(this);
 
   // apply the various region states if applicable.
   this.handleRegionStates();
@@ -74,14 +76,8 @@ Game_Character.prototype.handleRegionStates = function()
   // grab the timer.
   const timer = this.getRegionStatesTimer();
 
-  try {
-    // first, update it.
-    timer.update();
-  } catch (ex) {
-    console.log(ex);
-    return;
-  }
-
+  // first, update it.
+  timer.update();
 
   // now check if the timer is complete.
   if (timer.isTimerComplete())
@@ -116,14 +112,14 @@ Game_Character.prototype.canHandleRegionStates = function()
 Game_Character.prototype.applyRegionStates = function()
 {
   // grab all the current region states by this regionId.
-  /** @type {RegionStateData[]} */
   const regionStateDatas = this.getRegionStatesByCurrentRegionId();
 
   // if there are no region states to apply, then they cannot handle region states.
-  if (regionStateDatas.length === 0) return false;
+  if (regionStateDatas.length === 0) return;
 
   // grab the battler associated with this character.
-  const battler =  this.getJabsBattler().getBattler();
+  const battler = this.getJabsBattler()
+    .getBattler();
 
   // iterate over each of the region states to apply it.
   regionStateDatas.forEach(regionStateData =>
@@ -138,7 +134,7 @@ Game_Character.prototype.applyRegionStates = function()
     if (!RPGManager.chanceIn100(calculatedChance)) return;
 
     // apply the state.
-    battler.addState(regionStateData.stateId);
+    battler.addState(stateId);
 
     // check if there is a valid animation to play.
     if (animationId > 0)

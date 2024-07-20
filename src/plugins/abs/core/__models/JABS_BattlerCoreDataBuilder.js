@@ -1,8 +1,8 @@
-//region JABS_CoreDataBuilder
+//region JABS_BattlerCoreDataBuilder
 /**
- * A builder class for constructing `JABS_BattlerCoreData`.
+ * A builder for creating {@link JABS_BattlerCoreData}s.
  */
-class JABS_CoreDataBuilder
+class JABS_BattlerCoreDataBuilder
 {
   //region properties
   /**
@@ -21,10 +21,10 @@ class JABS_CoreDataBuilder
 
   /**
    * The AI of this battler.
-   * @type {string}
+   * @type {JABS_AI}
    * @private
    */
-  #battlerAi = "11000000";
+  #battlerAi = new JABS_AI();
 
   /**
    * The sight range of this battler.
@@ -202,6 +202,20 @@ class JABS_CoreDataBuilder
   }
 
   /**
+   * Sets all properties based on the assumption that this is a dummy enemy.
+   * Only the defaults are used because this isn't a real enemy to engage on the map.
+   * @param {boolean} isFriendly Whether or not this is an allied dummy.
+   * @returns {this} This builder for fluent-building.
+   */
+  isDummy(isFriendly = false)
+  {
+    this.#teamId = isFriendly
+      ? JABS_Battler.allyTeamId()
+      : JABS_Battler.enemyTeamId();
+    return this;
+  }
+
+  /**
    * Sets the battler id of this core data.
    * @param {number} battlerId The id of the battler from the database.
    * @returns {this} This builder for fluent-building.
@@ -356,4 +370,4 @@ class JABS_CoreDataBuilder
   }
   //endregion setters
 }
-//endregion JABS_CoreDataBuilder
+//endregion JABS_BattlerCoreDataBuilder

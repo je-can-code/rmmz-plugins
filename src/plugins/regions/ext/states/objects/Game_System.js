@@ -1,6 +1,6 @@
 //region Game_System
 /**
- * Updates the list of all available proficiency conditionals from the latest plugin metadata.
+ * Updates the region states after loading a game.
  */
 J.REGIONS.EXT.STATES.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);
 Game_System.prototype.onAfterLoad = function()

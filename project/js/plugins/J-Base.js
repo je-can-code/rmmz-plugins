@@ -4481,7 +4481,7 @@ class RPGManager
    * @param {RPG_BaseItem} databaseData The database object to inspect.
    * @param {RegExp} structure The RegExp structure to find values for.
    * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
-   * @returns {string|null} A string if "nullIfEmpty=false", null otherwise.
+   * @returns {string|null} The string matching the structure, {@link String.empty} if not found, or null with the flag.
    */
   static getStringFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
   {
@@ -7671,7 +7671,7 @@ Game_CharacterBase.prototype.getDiagonalDirections = function(direction)
 
 //region Game_Enemies
 /**
- * A class that acts as a lazy dictionary for {@link Game_Enemy} data.
+ * A class that acts as a lazy dictionary for {@link Game_Enemy} data.<br/>
  * Do not use the enemies from this class as actual battlers!
  */
 class Game_Enemies
@@ -7751,7 +7751,8 @@ J.BASE.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
 Game_Enemy.prototype.setup = function(enemyId)
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Enemy.get('setup').call(this, enemyId);
+  J.BASE.Aliased.Game_Enemy.get('setup')
+    .call(this, enemyId);
 
   // execute the on-setup hook.
   this.onSetup(enemyId);
@@ -7775,7 +7776,8 @@ Game_Enemy.prototype.onSetup = function(enemyId)
 Game_Enemy.prototype.skills = function()
 {
   // grab the actions for the enemy.
-  const actions = this.enemy().actions
+  const actions = this.enemy()
+    .actions
     .map(action => this.skill(action.skillId), this);
 
   // grab any additional skills added via traits.
@@ -7796,7 +7798,35 @@ Game_Enemy.prototype.skills = function()
  */
 Game_Enemy.prototype.hasSkill = function(skillId)
 {
-  return this.skills().some(skill => skill.id === skillId);
+  return this.skills()
+    .some(skill => skill.id === skillId);
+};
+
+/**
+ * Forces this enemy to learn the skill of the given id.<br/>
+ * Will not learn the skill again if it is already learned.
+ * @param {number} skillId The skill id to learn.
+ * @returns {boolean} True if the enemy learned the new skill, false if it already knew it.
+ */
+Game_Enemy.prototype.learnSkill = function(skillId)
+{
+  // don't try to learn the skill if its already known.
+  if (this.hasSkill(skillId)) return false;
+
+  // build the new underlying action to be detected by the enemy.
+  const rpgEnemyAction = {
+    "conditionParam1": 0,
+    "conditionParam2": 0,
+    "conditionType": 0,
+    "rating": 5,
+    "skillId": skillId
+  };
+
+  // add the action to the enemy's list of known skills.
+  this.enemy().actions.push(rpgEnemyAction);
+
+  // indicate that a new skill was learned to any callers that might be interested.
+  return true;
 };
 
 /**
@@ -7807,7 +7837,8 @@ J.BASE.Aliased.Game_Enemy.set('die', Game_Enemy.prototype.die);
 Game_Enemy.prototype.die = function()
 {
   // perform original effects.
-  J.BASE.Aliased.Game_Enemy.get('die').call(this);
+  J.BASE.Aliased.Game_Enemy.get('die')
+    .call(this);
 
   // perform on-death effects.
   this.onDeath();

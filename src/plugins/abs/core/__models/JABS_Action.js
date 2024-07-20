@@ -16,43 +16,27 @@ class JABS_Action
   }
 
   /**
-   * @constructor
-   * @param {string} uuid This action's unique identifier.
-   * @param {RPG_Skill} baseSkill The skill retrieved from `$dataSkills[id]`.
-   * @param {number} teamId A shorthand for the team id this skill belongs to.
+   * Constructor.
    * @param {Game_Action} gameAction The underlying action associated with this `JABS_Action`.
    * @param {JABS_Battler} caster The `JABS_Battler` who created this `JABS_Action`.
    * @param {boolean} isRetaliation Whether or not this is a retaliation action.
    * @param {number} direction The direction this action will face initially.
-   * @param {string?} cooldownKey Whether or not this is a direct action.
+   * @param {string?} cooldownKey The cooldown key associated with this action.
+   * @param {boolean=} isTerrainDamage Whether or not the action is a result of terrain damage.
    */
-  constructor({uuid, baseSkill, teamId, gameAction, caster, isRetaliation, direction, cooldownKey})
+  constructor(gameAction, caster, isRetaliation, direction, cooldownKey, isTerrainDamage)
   {
     /**
-     * The unique identifier for this action.
-     *
-     * All actions that are bound to an event have this.
-     * @type {string}
+     * The `Game_Action` to bind to the `Game_Event` and `JABS_Battler`.
+     * @type {Game_Action}
      */
-    this._uuid = uuid;
+    this._gameAction = gameAction;
 
     /**
      * The base skill object, in case needed for something.
      * @type {RPG_Skill}
      */
     this._baseSkill = gameAction.item();
-
-    /**
-     * The team the owner of this skill is a part of.
-     * @type {number}
-     */
-    this._teamId = teamId;
-
-    /**
-     * The `Game_Action` to bind to the `Game_Event` and `JABS_Battler`.
-     * @type {Game_Action}
-     */
-    this._gameAction = gameAction;
 
     /**
      * The `JABS_Battler` that used created this `JABS_Action`.
@@ -76,7 +60,31 @@ class JABS_Action
      * The type of action this is. Used for mapping cooldowns to the appropriate slot on the caster.
      * @type {string}
      */
-    this._actionCooldownType = cooldownKey ?? "global";
+    this._actionCooldownType = cooldownKey ?? J.ABS.Globals.GlobalCooldownKey;
+
+    /**
+     * Whether or not this action is a result of terrain damage.
+     * @type {boolean}
+     */
+    this._isTerrainDamage = isTerrainDamage;
+
+    // init other non-arg-related members.
+    this.initMembers();
+  }
+
+  //region init
+  /**
+   * Initializes all properties on this class.
+   */
+  initMembers()
+  {
+    /**
+     * The unique identifier for this action.
+     *
+     * All actions that are bound to an event have this.
+     * @type {string}
+     */
+    this._uuid = J.BASE.Helpers.generateUuid();
 
     /**
      * Whether or not this action has collided with at least one target.
@@ -84,14 +92,6 @@ class JABS_Action
      */
     this._hitAtLeastOne = false;
 
-    this.initMembers();
-  }
-
-  /**
-   * Initializes all properties on this class.
-   */
-  initMembers()
-  {
     // initialize core functionality data.
     this.initVisuals();
 
@@ -204,6 +204,8 @@ class JABS_Action
     return pierceCount;
   }
 
+  //endregion init
+
   /**
    * Executes additional logic before this action is disposed.
    */
@@ -277,15 +279,6 @@ class JABS_Action
   }
 
   /**
-   * Gets the team id of the caster of this action.
-   * @returns {number} The team id of the caster of this `JABS_Action`.
-   */
-  getTeamId()
-  {
-    return this.getCaster().getTeam();
-  }
-
-  /**
    * The base game action this `JABS_Action` is based on.
    * @returns {Game_Action} The base game action for this action.
    */
@@ -344,6 +337,15 @@ class JABS_Action
   direction()
   {
     return this._facing || this.getActionSprite().direction();
+  }
+
+  /**
+   * Whether or not this action was a result of terrain damage.
+   * @returns {boolean}
+   */
+  isTerrainDamage()
+  {
+    return this._isTerrainDamage;
   }
 
   /**
@@ -852,5 +854,12 @@ class JABS_Action
   {
     return this._hitAtLeastOne;
   }
+
+  /**
+   * A factory that generates builders for creating {@link JABS_Action}s.
+   * @returns {JABS_ActionBuilder}
+   */
+  static Builder = () => new JABS_ActionBuilder();
 }
+
 //endregion JABS_Action

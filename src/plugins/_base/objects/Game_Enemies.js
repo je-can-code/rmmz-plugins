@@ -1,6 +1,6 @@
 //region Game_Enemies
 /**
- * A class that acts as a lazy dictionary for {@link Game_Enemy} data.
+ * A class that acts as a lazy dictionary for {@link Game_Enemy} data.<br/>
  * Do not use the enemies from this class as actual battlers!
  */
 class Game_Enemies

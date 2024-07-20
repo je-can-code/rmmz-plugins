@@ -7,7 +7,8 @@ J.REGIONS.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
 Game_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.REGIONS.Aliased.Game_Map.get('initialize').call(this);
+  J.REGIONS.Aliased.Game_Map.get('initialize')
+    .call(this);
 
   // initialize the region effects.
   this.initRegionEffectsMembers();
@@ -121,7 +122,8 @@ J.REGIONS.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);
 Game_Map.prototype.setup = function(mapId)
 {
   // perform original logic.
-  J.REGIONS.Aliased.Game_Map.get('setup').call(this, mapId);
+  J.REGIONS.Aliased.Game_Map.get('setup')
+    .call(this, mapId);
 
   // setup all region effects.
   this.setupRegionEffects();
@@ -188,7 +190,7 @@ Game_Map.prototype.refreshAllowRegionEffects = function()
 {
   // grab the regions.
   const allowedRegions = RPGManager.getArrayFromNotesByRegex(
-    {note: this.note()},
+    { note: this.note() },
     J.REGIONS.RegExp.AllowRegions)
 
   // stop processing if there was nothing found.
@@ -205,7 +207,7 @@ Game_Map.prototype.refreshDenyRegionEffects = function()
 {
   // grab the regions.
   const deniedRegions = RPGManager.getArrayFromNotesByRegex(
-    {note: this.note()},
+    { note: this.note() },
     J.REGIONS.RegExp.DenyRegions)
 
   // stop processing if there was nothing found.
@@ -243,7 +245,8 @@ Game_Map.prototype.isPassable = function(x, y, d)
   }
 
   // if we reached here, then perform original logic and return that value.
-  return J.REGIONS.Aliased.Game_Map.get('isPassable').call(this, x, y, d);
+  return J.REGIONS.Aliased.Game_Map.get('isPassable')
+    .call(this, x, y, d);
 };
 
 /**
@@ -321,7 +324,7 @@ Game_Map.prototype.projectCoordinatesByDirection = function(x, y, d)
       projectedX -= increment;
       break;
     case 6:
-      projectedX += increment*2; // not sure why only this requires 2x?
+      projectedX += increment * 2; // not sure why only this requires 2x?
       break;
     case 8:
       projectedY += increment;
@@ -329,6 +332,6 @@ Game_Map.prototype.projectCoordinatesByDirection = function(x, y, d)
   }
 
   // return the projected results.
-  return [projectedX, projectedY];
+  return [ projectedX, projectedY ];
 };
 //endregion Game_Map
