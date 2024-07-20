@@ -220,7 +220,8 @@ JABS_SkillSlot.prototype.getCooldown = function()
 JABS_SkillSlot.prototype.updateCooldown = function()
 {
   // update the cooldown.
-  this.getCooldown().update();
+  this.getCooldown()
+    .update();
 
   // handle the need to clear the combo id from this slot.
   this.handleComboReadiness();

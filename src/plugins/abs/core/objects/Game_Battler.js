@@ -7,7 +7,8 @@ J.ABS.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers
 Game_Battler.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('initMembers').call(this);
+  J.ABS.Aliased.Game_Battler.get('initMembers')
+    .call(this);
 
   // initialize our custom members.
   this.initJabsMembers();
@@ -274,7 +275,8 @@ Game_Battler.prototype.isInanimate = function()
  */
 Game_Battler.prototype.isAggroLocked = function()
 {
-  return this.states().some(state => state.jabsAggroLock ?? false);
+  return this.states()
+    .some(state => state.jabsAggroLock ?? false);
 };
 //endregion JABS battler properties
 
@@ -294,7 +296,8 @@ Game_Battler.prototype.getSkillSlotManager = function()
  */
 Game_Battler.prototype.getAllEquippedSkills = function()
 {
-  return this.getSkillSlotManager().getAllSlots();
+  return this.getSkillSlotManager()
+    .getAllSlots();
 };
 
 /**
@@ -304,7 +307,8 @@ Game_Battler.prototype.getAllEquippedSkills = function()
  */
 Game_Battler.prototype.findSlotForSkillId = function(skillIdToFind)
 {
-  return this.getSkillSlotManager().getSlotBySkillId(skillIdToFind);
+  return this.getSkillSlotManager()
+    .getSlotBySkillId(skillIdToFind);
 };
 
 /**
@@ -324,7 +328,8 @@ Game_Battler.prototype.getEquippedSkillId = function(slot)
  */
 Game_Battler.prototype.getSkillSlot = function(slot)
 {
-  return this.getSkillSlotManager().getSkillSlotByKey(slot);
+  return this.getSkillSlotManager()
+    .getSkillSlotByKey(slot);
 };
 
 /**
@@ -333,7 +338,8 @@ Game_Battler.prototype.getSkillSlot = function(slot)
  */
 Game_Battler.prototype.getEmptySecondarySkills = function()
 {
-  return this.getSkillSlotManager().getEmptySecondarySlots();
+  return this.getSkillSlotManager()
+    .getEmptySecondarySlots();
 };
 
 /**
@@ -360,7 +366,8 @@ Game_Battler.prototype.setEquippedSkill = function(slot, skillId, locked = false
     if (J.HUD && J.HUD.EXT.INPUT)
     {
       // flag the slot for refresh.
-      skillSlotManager.getSkillSlotByKey(slot).flagSkillSlotForRefresh();
+      skillSlotManager.getSkillSlotByKey(slot)
+        .flagSkillSlotForRefresh();
 
       // request an update to the input frame.
       $hudManager.requestRefreshInputFrame();
@@ -421,7 +428,8 @@ Game_Battler.prototype.unlockSlot = function(slot)
  */
 Game_Battler.prototype.unlockAllSlots = function()
 {
-  this.getSkillSlotManager().unlockAllSlots();
+  this.getSkillSlotManager()
+    .unlockAllSlots();
 };
 //endregion JABS skill slot management
 
@@ -482,6 +490,55 @@ Game_Battler.prototype.onTargetDefeatSkillIds = function()
 //endregion on-chance effects
 
 //region JABS state management
+J.ABS.Aliased.Game_Battler.set('states', Game_Battler.prototype.states);
+/**
+ * Overrides {@link #states}.<br/>
+ * Returns the proper states for all that are afflicted on this battler.<br/>
+ * Accommodates stacking.
+ * @returns {RPG_State[]}
+ */
+Game_Battler.prototype.states = function()
+{
+  // grab the original states as they were.
+  /** @type {RPG_State[]} */
+  const originalStates = J.ABS.Aliased.Game_Battler.get('states')
+    .call(this);
+
+  // grab all the states the user is currently afflicted with- as far as JABS is concerned.
+  const currentAfflictedStates = $jabsEngine.getJabsStatesByUuid(this.getUuid());
+
+  // prepare a collection of states that represent duplicates for the stacks.
+  const stackedStates = [];
+
+  // an iterating function for duplicating the number of states applied to a battler.
+  const forEacher = state =>
+  {
+    // grab the JABS tracker for the state.
+    const jabsState = currentAfflictedStates.get(state.id);
+
+    // the battler is not afflicted with this state, so nothing special should be done.
+    if (!jabsState) return;
+
+    // check the current number of stacks applied.
+    const appliedStacks = jabsState.stackCount;
+
+    if (appliedStacks < 2) return;
+
+    // we start the counter at 1 because there is already 1 copy of the state in the collection.
+    for (let counter = 1; counter < appliedStacks; counter++)
+    {
+      // add a clone of the stacked state.
+      stackedStates.push(state._clone());
+    }
+  };
+
+  // iterate over each of the original states and calculate which need stacks.
+  originalStates.forEach(forEacher, this);
+
+  // return the concatenated collection of stacked states.
+  return originalStates.concat(stackedStates);
+};
+
 /**
  * OVERWRITE Rewrites the handling for state application. The attacker is
  * now relevant to the state being applied.
@@ -495,31 +552,42 @@ Game_Battler.prototype.addState = function(stateId, attacker)
   if (!attacker || !$jabsEngine.absEnabled)
   {
     // perform original logic.
-    J.ABS.Aliased.Game_Battler.get('addState').call(this, stateId);
+    J.ABS.Aliased.Game_Battler.get('addState')
+      .call(this, stateId);
 
     // stop processing this state.
     return;
   }
 
-  // check if we can add the state to the battler.
-  if (this.isStateAddable(stateId))
+  // hand-off the state handling to JABS.
+  this.handleAddingJabsState(stateId, attacker);
+};
+
+/**
+ * Handles logic surrounding state application in regards to JABS.
+ * @param {number} stateId The state being applied.
+ * @param {Game_Actor|Game_Enemy|Game_Battler} attacker The assailant applying the state.
+ */
+Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker)
+{
+  // if the state isn't addable, then don't add it.
+  if (!this.isStateAddable(stateId)) return;
+
+  // see if we need to track this state for the first time.
+  if (!this.isStateAffected(stateId))
   {
-    // check to make sure we're not already afflicted with the state.
-    if (!this.isStateAffected(stateId))
-    {
-      // add the new state with the attacker data.
-      this.addNewState(stateId, attacker);
+    // add the new state with the attacker data.
+    this.addNewState(stateId, attacker);
 
-      // refresh this battler.
-      this.refresh();
-    }
-
-    // reset the state counts for the battler.
-    this.resetStateCounts(stateId, attacker);
-
-    // add the new state to the action result on this battler.
-    this._result.pushAddedState(stateId);
+    // refresh this battler.
+    this.refresh();
   }
+
+  // reset the state counts for the battler.
+  this.resetStateCounts(stateId, attacker);
+
+  // add the new state to the action result on this battler.
+  this._result.pushAddedState(stateId);
 };
 
 /**
@@ -531,7 +599,8 @@ J.ABS.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewState
 Game_Battler.prototype.addNewState = function(stateId, attacker)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('addNewState').call(this, stateId);
+  J.ABS.Aliased.Game_Battler.get('addNewState')
+    .call(this, stateId);
 
   // add the jabs state.
   this.addJabsState(stateId, attacker);
@@ -546,7 +615,8 @@ J.ABS.Aliased.Game_Battler.set('resetStateCounts', Game_Battler.prototype.resetS
 Game_Battler.prototype.resetStateCounts = function(stateId, attacker)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('resetStateCounts').call(this, stateId);
+  J.ABS.Aliased.Game_Battler.get('resetStateCounts')
+    .call(this, stateId);
 
   // add the state to the battler.
   this.addJabsState(stateId, attacker);
@@ -560,7 +630,8 @@ J.ABS.Aliased.Game_Battler.set('removeState', Game_Battler.prototype.removeState
 Game_Battler.prototype.removeState = function(stateId)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('removeState').call(this, stateId);
+  J.ABS.Aliased.Game_Battler.get('removeState')
+    .call(this, stateId);
 
   // query for the state to remove from the engine.
   const trackedState = $jabsEngine.getJabsStateByUuidAndStateId(this.getUuid(), stateId);
@@ -612,11 +683,17 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
     totalDuration = -1;
   }
 
-  // TODO: get this from the state?
-  const stacks = 1;
+  // grab the number of stacks to apply at once.
+  const stacks = state.jabsStateStacksApplied;
 
   // build the new state.
-  const jabsState = new JABS_State(this, stateId, iconIndex, totalDuration, stacks, assailant);
+  const jabsState = new JABS_State(
+    this,
+    stateId,
+    iconIndex,
+    totalDuration,
+    stacks,
+    assailant);
 
   // add the state to the engine's tracker.
   $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
@@ -699,7 +776,7 @@ Game_Battler.prototype.getBonusHitsSources = function()
 {
   return [
     this.states(),
-    [this.databaseData()],
+    [ this.databaseData() ],
   ];
 };
 

@@ -1606,6 +1606,89 @@
  * @decimals 2
  * @default 0.50
  *
+ * @param stateConfigs
+ * @text STATE DEFAULTS
+ *
+ * @param defaultStateReapplyType
+ * @parent stateConfigs
+ * @type select
+ * @text Reapply Type
+ * @desc The strategy used when applying a state on a battler already afflicted with the same state.
+ * @default refresh
+ * @option Refresh
+ * @value refresh
+ * @option Extend
+ * @value extend
+ * @option Stack
+ * @value stack
+ *
+ * @param refreshConfigs
+ * @parent stateConfigs
+ * @text "REFRESH" CONFIG
+ * @desc "Refresh" means that the state will have its duration reset to its original duration.
+ *
+ * @param extendConfigs
+ * @parent stateConfigs
+ * @text "EXTEND" CONFIG
+ * @desc "Extend" means that the state will have its duration increased by its original duration.
+ *
+ * @param stackConfigs
+ * @parent stateConfigs
+ * @text "STACK" CONFIG
+ * @desc "Stack" means that a state will gain an additional instance and be "refreshed".
+ *
+ * @param defaultStateRefreshDiminish
+ * @parent refreshConfigs
+ * @type number
+ * @text Refresh Diminishment
+ * @desc When a state is "refreshed", it will have this many frames less in duration added.
+ * @default 120
+ *
+ * @param defaultStateRefreshReset
+ * @parent refreshConfigs
+ * @type number
+ * @text Diminishment Reset
+ * @desc After this many frames, the diminishing returns on a state being "refreshed" will reset. (60 frames = 1 second)
+ * @default 900
+ *
+ *
+ * @param defaultStateExtendAmount
+ * @parent extendConfigs
+ * @type number
+ * @text Extend Amount
+ * @desc When a state is "extended", it will instead extend remaining duration by this many frames.
+ * @default 120
+ *
+ * @param defaultStateExtendMax
+ * @parent extendConfigs
+ * @type number
+ * @text Extend Amount
+ * @desc When a state is "extended", it will instead extend remaining duration by this many frames.
+ * @default 216000
+ *
+ *
+ * @param defaultStateStackMax
+ * @parent stackConfigs
+ * @type number
+ * @text Stack Cap
+ * @desc When a state "stacks", there is a limit of this many stacks.
+ * @default 5
+ *
+ * @param defaultStateApplicationCount
+ * @parent stackConfigs
+ * @type number
+ * @text Stacks per Application
+ * @desc When "stacking" a state, it will apply this many stacks by default.
+ * @default 1
+ *
+ * @param defaultStateLoseAllStacksAtOnce
+ * @parent stackConfigs
+ * @type boolean
+ * @text Lose All Stacks
+ * @desc If true, then all state "stacks" will be lost upon expiration. If false, then one will be lost and "refresh".
+ * @default false
+ *
+ *
  * @param miscConfigs
  * @text MISCELLANEOUS SETUP
  *

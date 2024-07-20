@@ -6,7 +6,8 @@ J.ABS.EXT.TIMING.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.
 Game_Battler.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.TIMING.Aliased.Game_Battler.get('initMembers').call(this);
+  J.ABS.EXT.TIMING.Aliased.Game_Battler.get('initMembers')
+    .call(this);
 
   // initialize the extra members.
   this.initActionUpgrades1();
@@ -267,14 +268,14 @@ Game_Battler.prototype.baseCastSpeed = function()
   const baseParam = 0;
 
   // sum together all the csp flat modifiers.
-  const baseFcd = RPGManager.getResultsFromAllNotesByRegex(
+  const baseCsp = RPGManager.getResultsFromAllNotesByRegex(
     objectsToCheck,
     J.ABS.EXT.TIMING.RegExp.BaseCastSpeed,
     baseParam,
     this);
 
   // return the sum of base flat csp found.
-  return baseFcd;
+  return baseCsp;
 };
 
 /**
@@ -312,7 +313,7 @@ Game_Battler.prototype.castSpeedRate = function()
   // grab the base parameter value.
   const baseParam = this.baseCastSpeed();
 
-  // grab the base parameter value.
+  // sum together all the csp rate modifiers.
   const cspRate = RPGManager.getResultsFromAllNotesByRegex(
     objectsToCheck,
     J.ABS.EXT.TIMING.RegExp.CastSpeedRate,
@@ -351,11 +352,11 @@ Game_Battler.prototype.applyCastSpeed = function(originalCastTime)
   // determine the true multiplicative value.
   const castTimeMultiplier = ((multModifier + 100) / 100);
 
-  // grab the minimum cooldown value.
-  const minimumCastTime = this.minimumCastTime();
-
   // perform calculation- minimum of 1 frame cooldown time.
   const calculatedCastTime = (originalCastTime * castTimeMultiplier) + baseCastTime;
+
+  // grab the minimum cooldown value.
+  const minimumCastTime = this.minimumCastTime();
 
   // the actual cast time considering the minimum.
   const actualCastTime = Math.max(calculatedCastTime, minimumCastTime);

@@ -10,17 +10,14 @@ class JABS_Engine
    * @type {rm.types.Event[]|null}
    */
   static #enemyCloneList = null;
-  /**
-   * The dummy enemy used by the engine for caster-less skill executions.
-   * @type {JABS_Battler}
-   */
-  static #dummyEnemy = null;
+
   // TODO: implement them as a map.
   /**
    * A cached collection of actions keyed by their uuids.
    * @type {JABS_Timer, JABS_Action}
    */
   cachedActions = new Map();
+
   //region properties
   /**
    * Retrieves whether or not the ABS is currently enabled.
@@ -139,34 +136,6 @@ class JABS_Engine
     fetch(`data/${mapFilename}`)
       .then(data => data.json())
       .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
-  }
-
-  /**
-   * Initializes a new {@link JABS_Battler} based on the given id.<br/>
-   * This dummy enemy is used for things like forced skill executions on
-   * the map needing an enemy to execute.
-   * @param {number} dummyEnemyId The id of the enemy in the database to represent the dummy.
-   * @param {boolean} isFriendly Whether or not this dummy is an allied dummy.
-   */
-  static setDummyEnemy(dummyEnemyId, isFriendly)
-  {
-    const coreData = JABS_BattlerCoreData.Builder()
-      .setBattlerId(dummyEnemyId)
-      .isDummy(isFriendly)
-      .build();
-    this.#dummyEnemy = new JABS_Battler(
-      $gamePlayer, // irrelevant.
-      $gameEnemies.enemy(dummyEnemyId),
-      coreData);
-  }
-
-  /**
-   * Gets the current dummy enemy.
-   * @returns {JABS_Battler}
-   */
-  static getDummyCaster()
-  {
-    return this.#dummyEnemy;
   }
 
   //endregion properties
@@ -663,9 +632,11 @@ class JABS_Engine
     // grab the tracked state being updated.
     const oldJabsState = jabsStates.get(newJabsState.stateId);
 
+    // grab the database data of the state being updated.
+    const state = oldJabsState.battler.state(oldJabsState.stateId);
+
     // the type of update to perform on the state.
-    // TODO: get this from plugin params?
-    const updateType = JABS_State.reapplicationType.Extend;
+    const updateType = state.jabsStateReapplyType ?? J.ABS.Metadata.DefaultStateReapplyType;
 
     // handle the state tracker data update.
     this.handleJabsStateUpdate(updateType, oldJabsState, newJabsState);
@@ -690,8 +661,6 @@ class JABS_Engine
       case JABS_State.reapplicationType.Stack:
         this.stackJabsState(jabsState, newJabsState);
         break;
-      default:
-        break;
     }
   }
 
@@ -706,8 +675,23 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the database data of the state being refreshed.
+    const state = jabsState.battler.state(jabsState.stateId);
+
+    // calculate the amount to diminish from the refresh.
+    const diminishmentAmount = jabsState.timesRefreshed * state.jabsStateRefreshDiminish;
+
+    // calculate the refreshed amount.
+    const refreshAmount = newJabsState.duration - diminishmentAmount;
+
+    // safely capture the duration.
+    const actualDuration = Math.max(refreshAmount, 0);
+
+    // refresh the refresh reset counter since this state is being refreshed.
+    jabsState.refreshRefreshResetCounter(state.jabsStateRefreshReset);
+
     // refresh the duration of the existing state.
-    jabsState.refreshDuration(newJabsState.duration);
+    jabsState.refreshDuration(actualDuration);
   }
 
   /**
@@ -721,11 +705,20 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the database data of the state being extended.
+    const state = jabsState.battler.state(newJabsState.stateId);
+
+    // amount to extend the state.
+    const amountToExtend = state.jabsStateExtendAmount;
+
     // calculate the new duration.
-    const newDuration = jabsState.duration + newJabsState.duration;
+    const newDuration = jabsState.duration + amountToExtend;
+
+    // determine the capped extended duration.
+    const actualDuration = Math.min(newDuration, state.jabsStateExtendMax);
 
     // refresh the duration of the state.
-    jabsState.refreshDuration(newDuration);
+    jabsState.refreshDuration(actualDuration);
   }
 
   /**
@@ -739,9 +732,11 @@ class JABS_Engine
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
 
+    // grab the added stacks from the state if applicable.
+    const addedStackAmount = newJabsState.battler.state(newJabsState.stateId).jabsStateStacksApplied;
+
     // increment the stack of the state.
-    // TODO: get stack count bonus from new state data.
-    jabsState.incrementStacks();
+    jabsState.incrementStacks(addedStackAmount);
 
     // update the underlying base duration to the latest stack's duration.
     jabsState.setBaseDuration(newJabsState.duration);
@@ -2881,93 +2876,108 @@ class JABS_Engine
   /**
    * Checks this `JABS_Action` against all map battlers to determine collision.
    * If there is a collision, then a `Game_Action` is applied.
-   * @param {JABS_Action} action The `JABS_Action` to check against all battlers.
+   * @param {JABS_Action} jabsAction The `JABS_Action` to check against all battlers.
    * @returns {JABS_Battler[]} A collection of `JABS_Battler`s that this action hit.
    */
-  getCollisionTargets(action)
+  getCollisionTargets(jabsAction)
   {
-    if (action.getAction()
-      .isForUser())
+    // start by grabbing the action and running through priority of collision.
+    const gameAction = jabsAction.getAction();
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // self-targeting takes FIRST PRIORITY.
+    if (gameAction.isForUser())
     {
-      return [ action.getCaster() ];
+      return [ casterJabsBattler ];
     }
 
-    const actionSprite = action.getActionSprite();
-    const range = action.getRange();
-    const shape = action.getShape();
-    const casterJabsBattler = action.getCaster();
-
-    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
-    let hitOne = false;
-    const targetsHit = [];
-
+    // grab the allied target selected by the caster of this action.
     const allyTarget = casterJabsBattler.getAllyTarget();
-    if (allyTarget && action.getAction()
-      .isForOne())
+
+    // ally targeting takes SECOND PRIORITY.
+    if (allyTarget && gameAction.isForOne())
     {
-      if (allyTarget.canActionConnect() && allyTarget.isWithinScope(action, allyTarget, hitOne))
+      // validate the action can connect with the targeted ally.
+      if (allyTarget.canActionConnect() && allyTarget.isWithinScope(jabsAction, allyTarget, false))
       {
-        targetsHit.push(allyTarget);
-        return targetsHit;
+        // hit the ally only.
+        return [ allyTarget ];
       }
     }
 
+    // filter to only the battlers that can connect with this action.
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect()) return false;
+
+      // the action's scopes don't meet the criteria for this target.
+      // excludes the "single"-hitonce check.
+      if (!battler.isWithinScope(jabsAction, battler)) return false;
+
+      // if the attacker is an enemy, do not consider inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
+
+      // this battler is potentially hit-able.
+      return true;
+    };
+
+    // a few definitions used within collision processing.
+    const actionSprite = jabsAction.getActionSprite();
+    const range = jabsAction.getRange();
+    const shape = jabsAction.getShape();
+    const targetsHit = [];
+    let hitOne = false;
+
+    // actually process the collision.
+    const battlerCollisionProccessor = battler =>
+    {
+      // this time, it is effectively checking for the single-scope.
+      if (!battler.isWithinScope(jabsAction, battler, hitOne)) return;
+
+      // if the action is a direct-targeting action,
+      // then only check distance between the caster and target.
+      if (jabsAction.isDirectAction())
+      {
+        if (gameAction.isForUser())
+        {
+          targetsHit.push(battler);
+          hitOne = true;
+          return;
+        }
+
+        const maxDistance = jabsAction.getProximity();
+        const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
+        if (distance <= maxDistance)
+        {
+          targetsHit.push(battler);
+          hitOne = true;
+        }
+      }
+      // if the action is a standard projectile-based action,
+      // then check to see if this battler is now in range.
+      else
+      {
+        const sprite = battler.getCharacter();
+        const actionDirection = actionSprite.direction();
+        const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+        if (result)
+        {
+          targetsHit.push(battler);
+          hitOne = true;
+        }
+      }
+    };
+
+    // grab all the battlers that could possibly be hit.
+    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
+
+    // LAST PRIORITY is just regular "did I get hit" sort of stuff.
     battlers
-      .filter(battler =>
-      {
-        // this battler is untargetable.
-        if (!battler.canActionConnect()) return false;
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battlerCollisionProccessor, this);
 
-        // the action's scopes don't meet the criteria for this target.
-        // excludes the "single"-hitonce check.
-        if (!battler.isWithinScope(action, battler)) return false;
-
-        // if the attacker is an enemy, do not consider inanimate targets.
-        if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
-
-        // this battler is potentially hit-able.
-        return true;
-      })
-      .forEach(battler =>
-      {
-        // this time, it is effectively checking for the single-scope.
-        if (!battler.isWithinScope(action, battler, hitOne)) return;
-
-        // if the action is a direct-targeting action,
-        // then only check distance between the caster and target.
-        if (action.isDirectAction())
-        {
-          if (action.getAction()
-            .isForUser())
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-            return;
-          }
-          const maxDistance = action.getProximity();
-          const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
-          if (distance <= maxDistance)
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-          }
-
-          // if the action is a standard projectile-based action,
-          // then check to see if this battler is now in range.
-        }
-        else
-        {
-          const sprite = battler.getCharacter();
-          const actionDirection = actionSprite.direction();
-          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
-          if (result)
-          {
-            targetsHit.push(battler);
-            hitOne = true;
-          }
-        }
-      });
-
+    // return what we found.
     return targetsHit;
   }
 

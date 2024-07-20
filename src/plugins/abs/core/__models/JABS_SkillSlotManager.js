@@ -94,7 +94,9 @@ JABS_SkillSlotManager.prototype.getAllSlots = function()
   return this._slots;
 };
 
-
+/**
+ * Initializes the slot collection to a new collection of slots.
+ */
 JABS_SkillSlotManager.prototype.initializeBattlerSlots = function()
 {
   // initialize the slots.
@@ -244,7 +246,8 @@ JABS_SkillSlotManager.prototype.getDodgeSlot = function()
  */
 JABS_SkillSlotManager.prototype.getEquippedSlots = function()
 {
-  return this.getAllSlots().filter(skillSlot => skillSlot.isUsable());
+  return this.getAllSlots()
+    .filter(skillSlot => skillSlot.isUsable());
 };
 
 /**
@@ -253,7 +256,8 @@ JABS_SkillSlotManager.prototype.getEquippedSlots = function()
  */
 JABS_SkillSlotManager.prototype.getEmptySecondarySlots = function()
 {
-  return this.getAllSecondarySlots().filter(skillSlot => skillSlot.isEmpty());
+  return this.getAllSecondarySlots()
+    .filter(skillSlot => skillSlot.isEmpty());
 };
 
 /**
@@ -390,7 +394,8 @@ JABS_SkillSlotManager.prototype.isAnyCooldownReadyForSlot = function(key)
  */
 JABS_SkillSlotManager.prototype.clearSlot = function(key)
 {
-  this.getSkillSlotByKey(key).clear();
+  this.getSkillSlotByKey(key)
+    .clear();
 };
 
 /**
@@ -398,6 +403,7 @@ JABS_SkillSlotManager.prototype.clearSlot = function(key)
  */
 JABS_SkillSlotManager.prototype.unlockAllSlots = function()
 {
-  this.getAllSlots().forEach(slot => slot.unlock());
+  this.getAllSlots()
+    .forEach(slot => slot.unlock());
 };
 //endregion JABS_SkillSlotManager

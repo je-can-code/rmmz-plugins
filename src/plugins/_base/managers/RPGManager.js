@@ -77,7 +77,7 @@ class RPGManager
    * @param {RPG_BaseItem} databaseData The database object to inspect.
    * @param {RegExp} structure The RegExp structure to find values for.
    * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
-   * @returns {string|null} A string if "nullIfEmpty=false", null otherwise.
+   * @returns {string|null} The string matching the structure, {@link String.empty} if not found, or null with the flag.
    */
   static getStringFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
   {
