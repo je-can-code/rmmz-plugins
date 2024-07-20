@@ -1,26 +1,26 @@
 /**
  * Extends {@link #buildCommands}.<br>
- * Adds the monsterpedia command to the list of commands in the omnipedia.
+ * Adds the questopedia command to the list of commands in the omnipedia.
  */
-J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.set('buildCommands', Window_OmnipediaList.prototype.buildCommands);
+J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.set('buildCommands', Window_OmnipediaList.prototype.buildCommands);
 Window_OmnipediaList.prototype.buildCommands = function()
 {
   // perform original logic.
-  const originalCommands = J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.get('buildCommands').call(this);
+  const originalCommands = J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.get('buildCommands').call(this);
 
   // check if the monsterpedia command should be added.
   if (this.canAddMonsterpediaCommand())
   {
     // build the monsterpedia command.
-    const monsterpediaCommand = new WindowCommandBuilder(J.OMNI.EXT.MONSTER.Metadata.Command.Name)
-      .setSymbol(J.OMNI.EXT.MONSTER.Metadata.Command.Symbol)
-      .addTextLine("Your standard fare in monsterologies across the universe.")
-      .addTextLine("It is adapted to the local monsterology of Erocia.")
-      .setIconIndex(J.OMNI.EXT.MONSTER.Metadata.Command.IconIndex)
+    const questopediaCommand = new WindowCommandBuilder(J.OMNI.EXT.QUEST.Metadata.Command.Name)
+      .setSymbol(J.OMNI.EXT.QUEST.Metadata.Command.Symbol)
+      .addTextLine("A fine binding full of pages that contain details of known quests.")
+      .addTextLine("It won't contain anything you don't actually know about.")
+      .setIconIndex(J.OMNI.EXT.QUEST.Metadata.Command.IconIndex)
       .build();
 
     // add the monsterpedia command to the running list.
-    originalCommands.push(monsterpediaCommand);
+    originalCommands.push(questopediaCommand);
   }
 
   // return all the commands.
@@ -34,7 +34,7 @@ Window_OmnipediaList.prototype.buildCommands = function()
 Window_OmnipediaList.prototype.canAddMonsterpediaCommand = function()
 {
   // if the necessary switch isn't ON, don't render the command at all.
-  if (!$gameSwitches.value(J.OMNI.EXT.MONSTER.Metadata.EnabledSwitch)) return false;
+  if (!$gameSwitches.value(J.OMNI.EXT.QUEST.Metadata.enabledSwitchId)) return false;
 
   // add the command!
   return true;
