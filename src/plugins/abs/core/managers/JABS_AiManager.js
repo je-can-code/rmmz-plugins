@@ -500,7 +500,7 @@ class JABS_AiManager
    */
   static convertFollowersToBattlers(followers)
   {
-    return $gamePlayer.followers().data()
+    return followers
       .map(this.convertFollowerToBattler, this)
       .filter(follower => !!follower);
   }
@@ -526,7 +526,7 @@ class JABS_AiManager
     const battler = follower.actor();
 
     // create a builder to step through for this battler.
-    const builder = new JABS_CoreDataBuilder(0);
+    const builder = JABS_BattlerCoreData.Builder();
 
     // set the battler.
     builder.setBattler(battler);

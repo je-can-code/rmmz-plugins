@@ -11,16 +11,19 @@ class JABS_State
   static reapplicationType = {
     /**
      * "Refresh" will refresh the duration of a state when reapplied.
+     * @type {"refresh"}
      */
     Refresh: "refresh",
 
     /**
      * "Extend" will add the remaining duration onto the new duration when reapplied.
+     * @type {"extend"}
      */
     Extend: "extend",
 
     /**
      * "Stack" will add an additional stack of the state when reapplied.
+     * @type {"stack"}
      */
     Stack: "stack",
   }
@@ -82,6 +85,20 @@ class JABS_State
    * @type {number}
    */
   stackCount = 0;
+
+  /**
+   * The number of times this state has been refreshed.<br/>
+   * This only matters when the reapplication type is {@link JABS_State.reapplicationType.Refresh}.
+   * @type {number}
+   */
+  timesRefreshed = 0;
+
+  /**
+   * The number of frames until
+   * @type {number}
+   */
+  #refreshResetCounter = 0;
+
   //endregion properties
 
   /**
@@ -135,6 +152,16 @@ class JABS_State
   }
 
   /**
+   * Whether or not this state has been refreshed recently enough that the refresh effects are diminished due to
+   * repetition of being reapplied over and over again in a short amount of time.
+   * @returns {boolean}
+   */
+  hasDiminishingRefresh()
+  {
+    return this.#refreshResetCounter > 0;
+  }
+
+  /**
    * Refresh the recently applied counter.
    */
   refreshRecentlyAppliedCounter()
@@ -144,39 +171,47 @@ class JABS_State
   }
 
   /**
+   * Refresh the refresh reset counter.
+   * @param {number=} newRefreshResetAmount The count to refresh the refresh reset counter to.
+   */
+  refreshRefreshResetCounter(newRefreshResetAmount = J.ABS.Metadata.DefaultStateRefreshReset)
+  {
+    this.#refreshResetCounter = newRefreshResetAmount
+  }
+
+  /**
    * The update loop for this tracked state.
    * Handles decrementing the counter and removing the state as applicable.
    */
   update()
   {
-    // countdown the recently applied timer for this state.
-    this.decrementRecentlyAppliedCounter();
-
-    // countdown if there is still time left to be counted down.
-    this.decrementCounter();
+    // handle all counters associated with the state.
+    this.handleCounters();
 
     // remove stacks as-needed.
     this.decrementStacks();
 
-    // check if we can and should remove this state from the battler.
-    if (this.canRemoveFromBattler() && this.shouldRemoveFromBattler())
-    {
-      // actually remove the state from the battler.
-      this.removeFromBattler();
-    }
+    // handle the removal if applicable.
+    this.handleExpiration();
+
+    // reset the refresh reset counter and times refreshed counter if necessary.
+    this.handleDiminishedRefresh();
   }
 
   /**
-   * Decrements the duration as-needed.
+   * Handle all the counters that countdown on this state, like the recently applied counter, the refresh reset counter,
+   * and the actual duration counter.
    */
-  decrementCounter()
+  handleCounters()
   {
-    // check if we still have time left on the clock.
-    if (this.duration > 0)
-    {
-      // decrement the timer.
-      this.duration--;
-    }
+    // countdown the recently applied timer for this state.
+    this.decrementRecentlyAppliedCounter();
+
+    // countdown the refresh reset timer for this state.
+    this.decrementRefreshResetCounter();
+
+    // countdown if there is still time left to be counted down.
+    this.decrementDuration();
   }
 
   /**
@@ -193,6 +228,32 @@ class JABS_State
   }
 
   /**
+   * Decrements the refresh reset counter as-needed.
+   */
+  decrementRefreshResetCounter()
+  {
+    // check if we still have any counter left.
+    if (this.#refreshResetCounter > 0)
+    {
+      // decrement it as-needed.
+      this.#refreshResetCounter--;
+    }
+  }
+
+  /**
+   * Decrements the duration as-needed.
+   */
+  decrementDuration()
+  {
+    // check if we still have time left on the clock.
+    if (this.duration > 0)
+    {
+      // decrement the timer.
+      this.duration--;
+    }
+  }
+
+  /**
    * Decrement the stack counter as-needed.
    */
   decrementStacks()
@@ -200,8 +261,13 @@ class JABS_State
     // check if we are at 0 duration and have stacks remaining.
     if (this.duration <= 0 && this.stackCount > 0 && !this.hasEternalDuration())
     {
-      // decrement the stack counter.
-      this.stackCount--;
+      // grab whether or not to lose all stacks at once.
+      const loseAllStacksAtOnce = this.source.state(this.stateId).jabsLoseAllStacksAtOnce;
+
+      // decrement the stack counter accordingly.
+      this.stackCount -= loseAllStacksAtOnce
+        ? this.stackCount
+        : 1;
 
       // check if we STILL have stacks remaining.
       if (this.stackCount > 0)
@@ -218,6 +284,9 @@ class JABS_State
    */
   refreshDuration(newDuration = this.#baseDuration)
   {
+    // don't refresh the state if the provided duration is actually 0.
+    if (newDuration <= 0) return;
+
     // refresh the duration.
     this.duration = newDuration;
 
@@ -225,7 +294,43 @@ class JABS_State
     this.expired = false;
 
     // flag this as recently applied.
-    this.#recentlyAppliedCounter = 6;
+    this.refreshRecentlyAppliedCounter();
+
+    // also reset the refresh reset counter.
+    this.refreshRefreshResetCounter();
+
+    // when new states are revived, they may be revived with zero stacks.
+    if (this.stackCount === 0)
+    {
+      // they should actually be revived with a single stack.
+      this.stackCount = 1;
+    }
+  }
+
+  /**
+   * Handles the removal of the state from the afflicted battler if applicable.
+   */
+  handleExpiration()
+  {
+    // check if we can and should remove this state from the battler.
+    if (this.canRemoveFromBattler() && this.shouldRemoveFromBattler())
+    {
+      // actually remove the state from the battler.
+      this.removeFromBattler();
+    }
+  }
+
+  /**
+   * Handle reset circumstances for the refresh reset counter and times refreshed counter.
+   */
+  handleDiminishedRefresh()
+  {
+    // check if we have refreshed repeatedly, but the reset counter reached zero.
+    if (this.timesRefreshed > 0 && this.#refreshResetCounter === 0)
+    {
+      // reset the number of times this state has been refreshed.
+      this.timesRefreshed = 0;
+    }
   }
 
   /**
@@ -235,8 +340,7 @@ class JABS_State
   incrementStacks(stackIncrease = 1)
   {
     // grab the max number of stacks for this state.
-    // TODO: get this from the state data.
-    const maxStacks = 5;
+    const maxStacks = this.battler.state(this.stateId).jabsStateStackMax;
 
     // check if we still have room to add more stacks.
     if (this.stackCount < maxStacks)
@@ -345,4 +449,5 @@ class JABS_State
     return (this.#recentlyAppliedCounter > 0);
   }
 }
+
 //endregion JABS_State

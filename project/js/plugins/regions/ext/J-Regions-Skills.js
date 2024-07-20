@@ -173,6 +173,43 @@ J.REGIONS.EXT.SKILLS.RegExp.RegionSkill = /<regionSkill:[ ]?(\[\d+, ?\d+, ?\d+, 
 
 //endregion plugin commands
 
+//region JABS_Engine
+
+/**
+ * The enemy used by the engine for map damage skill executions.
+ * @type {JABS_Battler}
+ */
+JABS_Engine.prototype.mapDamageBattler = null;
+
+/**
+ * The enemy used by the engine for map damage skill executions.
+ * @type {JABS_Battler}
+ */
+JABS_Engine.prototype.getMapDamageBattler = function()
+{
+  return this.mapDamageBattler;
+};
+
+/**
+ * Initializes a new {@link JABS_Battler} based on the given id.<br/>
+ * This dummy enemy is used for things like forced skill executions on
+ * the map needing an enemy to execute.
+ * @param {number} dummyEnemyId The id of the enemy in the database to represent the dummy.
+ * @param {boolean} isFriendly Whether or not this dummy is an allied dummy.
+ */
+JABS_Engine.prototype.setMapDamageBattler = function(dummyEnemyId, isFriendly)
+{
+  const coreData = JABS_BattlerCoreData.Builder()
+    .setBattlerId(dummyEnemyId)
+    .isDummy(isFriendly)
+    .build();
+  this.mapDamageBattler = new JABS_Battler(
+    $gamePlayer, // irrelevant, but should be some event/character on the current map.
+    $gameEnemies.enemy(dummyEnemyId),
+    coreData);
+};
+//endregion JABS_Engine
+
 //region Game_Character
 /**
  * Extends {@link #initMembers}.<br>
@@ -305,7 +342,7 @@ Game_Character.prototype.executeRegionSkills = function()
     if (!RPGManager.chanceIn100(chance)) return;
 
     // grab the current dummy for inspection.
-    const currentDummyCaster = JABS_Engine.getDummyCaster();
+    const currentDummyCaster = $jabsEngine.getMapDamageBattler();
 
     // validations for whether or not we need to update the dummy casting the skill.
     const correctCaster = currentDummyCaster?.getBattlerId() === casterId;
@@ -315,12 +352,12 @@ Game_Character.prototype.executeRegionSkills = function()
     if (!correctCaster || !correctTeam)
     {
       // we weren't using the right dummy, so update it.
-      JABS_Engine.setDummyEnemy(casterId, isFriendly);
+      $jabsEngine.setMapDamageBattler(casterId, isFriendly);
     }
 
     // execute the skill.
     $jabsEngine.forceMapAction(
-      JABS_Engine.getDummyCaster(),
+      $jabsEngine.getMapDamageBattler(),
       skillId,
       false,
       targetJabsBattler.getX(),

@@ -110,7 +110,7 @@ J.ABS.Metadata.DefaultToolCooldownTime = Number(J.ABS.PluginParameters['defaultT
 J.ABS.Metadata.DefaultAttackAnimationId = Number(J.ABS.PluginParameters['defaultAttackAnimationId']);
 J.ABS.Metadata.DefaultLootExpiration = Number(J.ABS.PluginParameters['defaultLootExpiration']);
 
-// enemy battler default configurations.
+// enemy battler default enemy setup configurations.
 J.ABS.Metadata.DefaultEnemyPrepareTime = Number(J.ABS.PluginParameters['defaultEnemyPrepareTime']);
 J.ABS.Metadata.DefaultEnemyAttackSkillId = Number(J.ABS.PluginParameters['defaultEnemyAttackSkillId']);
 J.ABS.Metadata.DefaultEnemySightRange = Number(J.ABS.PluginParameters['defaultEnemySightRange']);
@@ -142,6 +142,24 @@ J.ABS.Metadata.AggroDrain = Number(J.ABS.PluginParameters['aggroDrainMultiplier'
 J.ABS.Metadata.AggroParryFlatAmount = Number(J.ABS.PluginParameters['aggroParryFlatAmount']);
 J.ABS.Metadata.AggroParryUserGain = Number(J.ABS.PluginParameters['aggroParryUserGain']);
 J.ABS.Metadata.AggroPlayerReduction = Number(J.ABS.PluginParameters['aggroPlayerReduction']);
+
+// state configurations.
+J.ABS.Metadata.DefaultStateReapplyType =
+  J.ABS.PluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
+
+J.ABS.Metadata.DefaultStateRefreshDiminish =
+  Number(J.ABS.PluginParameters['defaultStateRefreshDiminish']) || 120;
+J.ABS.Metadata.DefaultStateRefreshReset =
+  Number(J.ABS.PluginParameters['defaultStateRefreshReset']) || 900;
+
+J.ABS.Metadata.DefaultStateExtendAmount = Number(J.ABS.PluginParameters['defaultStateExtendAmount']) || 180;
+J.ABS.Metadata.DefaultStateExtendMax = Number(J.ABS.PluginParameters['defaultStateExtendMax']) || 216000;
+
+J.ABS.Metadata.DefaultStateStackMax = Number(J.ABS.PluginParameters['defaultStateStackMax']) || 5;
+J.ABS.Metadata.DefaultStateApplicationCount =
+  Number(J.ABS.PluginParameters['defaultStateApplicationCount']) || 1;
+J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce =
+  (J.ABS.PluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
 
 // miscellaneous configurations.
 J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistance']);
@@ -495,6 +513,19 @@ J.ABS.RegExp = {
   //region ON STATES
   // definition-related.
   Negative: /<negative>/gi,
+
+  // function-related.
+  ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
+
+  ReapplyRefreshDiminish: /<stateRefreshDiminish:[ ]?(-?\d+)>/gi,
+  ReapplyRefreshReset: /<stateRefreshReset:[ ]?(\d+)>/gi,
+
+  ReapplyExtendAmount: /<stackExtendAmount:[ ]?(\d+)>/gi,
+  ReapplyExtendMax: /<stackExtendMax:[ ]?(\d+)>/gi,
+
+  ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
+  StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
+  LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
 
   // jabs core ailment functionalities.
   Paralyzed: /<paralyzed>/gi,
