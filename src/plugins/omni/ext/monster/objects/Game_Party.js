@@ -7,7 +7,8 @@ J.OMNI.EXT.MONSTER.Aliased.Game_Party.set('initOmnipediaMembers', Game_Party.pro
 Game_Party.prototype.initOmnipediaMembers = function()
 {
   // perform original logic.
-  J.OMNI.EXT.MONSTER.Aliased.Game_Party.get('initOmnipediaMembers').call(this);
+  J.OMNI.EXT.MONSTER.Aliased.Game_Party.get('initOmnipediaMembers')
+    .call(this);
 
   // initialize the monsterpedia.
   this.initMonsterpediaMembers();
@@ -43,15 +44,6 @@ Game_Party.prototype.initMonsterpediaMembers = function()
    * @type {Map<number, MonsterpediaObservations>}
    */
   this._j._omni._monsterpediaObservationsCache = new Map();
-};
-
-/**
- * Determines whether or not the omnipedia has been initialized.
- * @returns {boolean}
- */
-Game_Party.prototype.isOmnipediaInitialized = function()
-{
-  return !!this._j._omni;
 };
 
 /**
@@ -106,6 +98,31 @@ Game_Party.prototype.translateMonsterpediaCacheForSaving = function()
 };
 
 /**
+ * Updates the monsterpedia observations cache with the data from the saveables.
+ */
+Game_Party.prototype.translateMonsterpediaSaveablesToCache = function()
+{
+  // grab the observation collection that is saveable.
+  const saveableObservations = this.getSavedMonsterpediaObservations();
+
+  // grab the cache of observations we've been maintaining.
+  const cache = new Map();
+
+  // iterate over each saved item.
+  saveableObservations.forEach((observation, enemyId) =>
+  {
+    // if the observation is invalid, do not store it in the cache.
+    if (!observation) return;
+
+    // update the cache with the saveable.
+    cache.set(enemyId, observation);
+  }, this);
+
+  // update the cache with the latest saveable datas.
+  this.setMonsterpediaObservationsCache(cache);
+};
+
+/**
  * Synchronizes the monsterpedia cache into the saveable datas.
  */
 Game_Party.prototype.synchronizeMonsterpediaDataBeforeSave = function()
@@ -141,31 +158,6 @@ Game_Party.prototype.synchronizeMonsterpediaAfterLoad = function()
 
   // translate the cache into saveables.
   this.translateMonsterpediaCacheForSaving();
-};
-
-/**
- * Updates the monsterpedia observations cache with the data from the saveables.
- */
-Game_Party.prototype.translateMonsterpediaSaveablesToCache = function()
-{
-  // grab the observation collection that is saveable.
-  const saveableObservations = this.getSavedMonsterpediaObservations();
-
-  // grab the cache of observations we've been maintaining.
-  const cache = new Map();
-
-  // iterate over each saved item.
-  saveableObservations.forEach((observation, enemyId) =>
-  {
-    // if the observation is invalid, do not store it in the cache.
-    if (!observation) return;
-
-    // update the cache with the saveable.
-    cache.set(enemyId, observation);
-  }, this);
-
-  // update the cache with the latest saveable datas.
-  this.setMonsterpediaObservationsCache(cache);
 };
 
 /**
