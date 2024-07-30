@@ -82,6 +82,7 @@
 
     "build:omni": "node ./src/build-tools/combine.js ./src/plugins/omni/core ./out/omni J-Omnipedia.js",
     "build:omni-monster": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/monster ./out/omni/ext J-Omni-Monsters.js",
+    "build:omni-quest": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/quest ./out/omni/ext J-Omni-Questopedia.js",
     "build:omni-item": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/item ./out/omni/ext J-Omni-Itempedia.js",
     "build:omni-weapon": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/weapon ./out/omni/ext J-Omni-Weaponpedia.js",
     "build:omni-armor": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/armor ./out/omni/ext J-Omni-Armorpedia.js",
