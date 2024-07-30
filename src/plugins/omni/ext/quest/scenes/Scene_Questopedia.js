@@ -342,15 +342,15 @@ class Scene_Questopedia extends Scene_MenuBase
     const window = new Window_QuestopediaObjectives(rectangle);
 
     // assign cancel functionality.
-    window.setHandler('cancel', this.onCancelQuestopediaObjectives.bind(this));
+    // window.setHandler('cancel', this.onCancelQuestopediaObjectives.bind(this));
 
     // assign on-select functionality.
     // TODO: should the player even be able to "select" an objective?
-    window.setHandler('ok', this.onQuestopediaObjectiveSelection.bind(this));
+    // window.setHandler('ok', this.onQuestopediaObjectiveSelection.bind(this));
 
     // overwrite the onIndexChange hook with our local onQuestopediaObjectivesIndexChange hook.
     // TODO: is there even any logic required for perusing objectives?
-    window.onIndexChange = this.onQuestopediaObjectivesIndexChange.bind(this);
+    // window.onIndexChange = this.onQuestopediaObjectivesIndexChange.bind(this);
 
     // return the built and configured objectives window.
     return window;
@@ -395,6 +395,48 @@ class Scene_Questopedia extends Scene_MenuBase
 
   //endregion objectives window
   //endregion windows
+
+  /**
+   * Synchronize the detail window with the list window of the questopedia.
+   */
+  onQuestopediaIndexChange()
+  {
+    // grab the list window.
+    const listWindow = this.getQuestopediaListWindow();
+
+    // grab the detail window.
+    const detailWindow = this.getQuestopediaDetailWindow();
+
+    // grab the highlighted enemy's extra data, their observations.
+    const highlightedQuestEntry = listWindow.currentExt();
+
+    // sync the detail window with the currently-highlighted enemy.
+    //detailWindow.setObservations(highlightedQuestEntry);
+
+    // refresh the window for the content update.
+    detailWindow.refresh();
+  }
+
+  /**
+   * TODO: implement
+   */
+  onQuestopediaListSelection()
+  {
+    const listWindow = this.getQuestopediaListWindow();
+
+    console.log(`quest selected index: [${listWindow.index()}].`);
+
+    listWindow.activate();
+  }
+
+  /**
+   * Close the questopedia and return to the main omnipedia.
+   */
+  onCancelQuestopedia()
+  {
+    // revert to the previous scene.
+    SceneManager.pop();
+  }
 }
 
 //endregion Scene_Questopedia
