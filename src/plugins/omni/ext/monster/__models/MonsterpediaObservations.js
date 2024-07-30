@@ -84,7 +84,7 @@ MonsterpediaObservations.prototype.initMembers = function()
 
   /**
    * All drops observed to be lootable from this enemy.
-   * @type {[i|w|a, number][]}
+   * @type {['i'|'w'|'a', number][]}
    */
   this.knownDrops = [];
 
@@ -97,7 +97,7 @@ MonsterpediaObservations.prototype.initMembers = function()
 
 /**
  * Adds an observed drop to this monster's observations.
- * @param {i|w|a} dropType The type of loot drop observed.
+ * @param {'i'|'w'|'a'} dropType The type of loot drop observed.
  * @param {number} dropId The id of the drop.
  */
 MonsterpediaObservations.prototype.addKnownDrop = function(dropType, dropId)
@@ -107,7 +107,7 @@ MonsterpediaObservations.prototype.addKnownDrop = function(dropType, dropId)
 
 /**
  * Determines whether or not a given drop is known.
- * @param {i|w|a} dropType The type of drop this is.
+ * @param {'i'|'w'|'a'} dropType The type of drop this is.
  * @param {number} dropId The id of the drop.
  * @returns {boolean} True if the drop is known, false otherwise.
  */
