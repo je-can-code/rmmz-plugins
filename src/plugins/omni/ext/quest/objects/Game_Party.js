@@ -10,8 +10,11 @@ Game_Party.prototype.initOmnipediaMembers = function()
   J.OMNI.EXT.QUEST.Aliased.Game_Party.get('initOmnipediaMembers')
     .call(this);
 
-  // initialize the monsterpedia.
+  // initialize the questopedia.
   this.initQuestopediaMembers();
+
+  // populate the trackings for the first time.
+  this.populateQuestopediaTrackings();
 };
 
 //region questopedia
@@ -47,6 +50,74 @@ Game_Party.prototype.initQuestopediaMembers = function()
 };
 
 /**
+ * Initialize the trackables for the questopedia.
+ */
+Game_Party.prototype.populateQuestopediaTrackings = function()
+{
+  // convert all the metadata into trackables.
+  const trackedOmniquests = J.OMNI.EXT.QUEST.Metadata.quests.map(this.toTrackedOmniQuest, this);
+
+  // populate the cache so it gets updated upon saving.
+  trackedOmniquests.forEach(trackedOmniquest =>
+  {
+    this._j._omni._questopediaCache.set(trackedOmniquest.key, trackedOmniquest);
+  });
+};
+
+/**
+ * Maps an {@link OmniQuest} to a {@link TrackedOmniQuest}.
+ * @param {OmniQuest} omniquest The omniquest to map.
+ * @returns {TrackedOmniQuest}
+ */
+Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
+{
+  const objectivesMapper = omniObjective => new TrackedOmniObjective(
+    omniObjective.id,
+    omniquest.key,
+    omniObjective.fulfillmentData,
+    omniObjective.fulfillmentQuestKeys,
+    omniObjective.hiddenByDefault,
+    omniObjective.isOptional);
+
+  const trackedObjectives = omniquest.objectives.map(objectivesMapper, this);
+
+  return new TrackedOmniQuest(omniquest.key, omniquest.categoryKey, trackedObjectives);
+};
+
+/**
+ * Updates the tracking of {@link TrackedOmniQuest}s from the latest metadata- in case there have been updates since
+ * the game has been last loaded. This likely only happens during a game's development.
+ */
+Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
+{
+  // grab the current list of trackings by reference.
+  const trackings = this.getSavedQuestopediaEntries();
+
+  // iterate over all of the ones defined in the plugin metadata.
+  J.OMNI.EXT.QUEST.Metadata.quests.forEach(omniquest =>
+  {
+    // skip ones that we shouldn't be adding.
+    if (!this.canGainEntry(omniquest.key) || !this.canGainEntry(omniquest.name)) return;
+
+    // find one by the same key in the existing trackings.
+    const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
+
+    // check if we found a tracking.
+    if (!foundTracking)
+    {
+      console.log(`adding new quest; ${omniquest.key}`);
+
+      // we didn't find one, so create and add a new tracking.
+      const newTracking = this.toTrackedOmniQuest(omniquest);
+      trackings.push(newTracking);
+    }
+  });
+
+  // sort the quests by their key, in-place.
+  trackings.sort((a, b) => a.key - b.key);
+};
+
+/**
  * Gets all questopedia entries.
  * @returns {TrackedOmniQuest[]}
  */
@@ -77,7 +148,7 @@ Game_Party.prototype.setQuestopediaEntriesCache = function(cache)
 /**
  * Updates the saveable questopedia entries collection with the latest from the running cache of entries.
  */
-Game_Party.prototype.translateQuestopediaCacheForSaving = function()
+Game_Party.prototype.translateQuestopediaCacheToSaveables = function()
 {
   // grab the collection that is saveable.
   const savedQuestopediaEntries = this.getSavedQuestopediaEntries();
@@ -134,7 +205,7 @@ Game_Party.prototype.synchronizeQuestopediaDataBeforeSave = function()
   }
 
   // translate the cache into saveables.
-  this.translateQuestopediaCacheForSaving();
+  this.translateQuestopediaCacheToSaveables();
 
   // translate the saveables into cache.
   this.translateQuestopediaSaveablesToCache();
@@ -156,7 +227,9 @@ Game_Party.prototype.synchronizeQuestopediaAfterLoad = function()
   this.translateQuestopediaSaveablesToCache();
 
   // translate the cache into saveables.
-  this.translateQuestopediaCacheForSaving();
+  this.translateQuestopediaCacheToSaveables();
+
+  console.log('executed "synchronizeQuestopediaAfterLoad".');
 };
 
 /**
@@ -179,8 +252,40 @@ Game_Party.prototype.getQuestopediaEntryByKey = function(questKey)
  */
 Game_Party.prototype.getQuestopediaEntries = function()
 {
-  return Array.from(this.getQuestopediaEntriesCache().values());
+  return Array.from(this.getQuestopediaEntriesCache()
+    .values());
 };
+
+// TODO: relocate this to a more central location.
+if (!Game_Party.prototype.canGainEntry)
+{
+  /**
+   * Whether or not a named entry should be unlockable.
+   * This is mostly for skipping recipe names that are used as dividers in the list.
+   * @param {string} name The name of the entry.
+   * @return {boolean} True if the entry can be gained, false otherwise.
+   */
+  Game_Party.prototype.canGainEntry = function(name)
+  {
+    // skip entries that are null.
+    if (name === null) return false;
+
+    // skip entries with empty names.
+    if (name.trim().length === 0) return false;
+
+    // skip entries that start with an underscore (arbitrary).
+    if (name.startsWith('_')) return false;
+
+    // skip entries that start with a multiple equals (arbitrary).
+    if (name.startsWith('==')) return false;
+
+    // skip entries that are the "empty" name (arbitrary).
+    if (name.includes('-- empty --')) return false;
+
+    // we can gain it!
+    return true;
+  };
+}
 
 //endregion questopedia
 //endregion Game_Party

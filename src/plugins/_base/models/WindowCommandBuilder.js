@@ -179,7 +179,7 @@ class WindowCommandBuilder
   }
 
   /**
-   * Sets this command to identify its additiona lines as subtext rather than a multiline command.
+   * Sets this command to identify its additional lines as subtext rather than a multiline command.
    * @returns {WindowCommandBuilder}
    */
   flagAsSubText()

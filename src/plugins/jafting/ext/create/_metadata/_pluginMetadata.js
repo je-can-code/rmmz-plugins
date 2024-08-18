@@ -81,7 +81,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
 
   /**
    * Converts the JSON-parsed blob into classified {@link CraftingCategory}s.
-   * @param {any} parsedRecipesBlob The already-parsed JSON blob.
+   * @param {any} parsedCategoriesBlob The already-parsed JSON blob.
    */
   static parseCategories(parsedCategoriesBlob)
   {
@@ -174,7 +174,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     console.log(`loaded:
       - ${this.recipes.length} recipes
       - ${this.categories.length} categories
-      from file ${J_CraftingPluginMetadata.CONFIG_PATH}.`);
+      from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
   }
 
   /**

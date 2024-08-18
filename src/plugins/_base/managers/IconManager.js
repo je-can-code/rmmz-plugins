@@ -10,7 +10,7 @@ class IconManager
    */
   constructor()
   {
-    throw new Error("The IconManager is a static class.");
+    throw new Error("This is a static class.");
   }
 
   /**

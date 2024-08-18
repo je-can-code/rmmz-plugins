@@ -30,11 +30,7 @@ class Window_QuestopediaList extends Window_Command
    */
   buildCommands()
   {
-
-    // TODO: implement the tracking so that we can grab tracked quest data.
-
-
-    // grab all valid enemies.
+    // grab all possible quests.
     const questEntries = $gameParty.getQuestopediaEntries();
 
     // compile the list of commands.
@@ -51,11 +47,20 @@ class Window_QuestopediaList extends Window_Command
    */
   buildCommand(questopediaEntry)
   {
+    // quests that are yet to be known are in an unknown state.
+    const isKnown = questopediaEntry.state !== OmniQuest.States.Inactive;
+
+    // determine the name based on whether its known or not.
+    const questName = isKnown
+      ? questopediaEntry.name()
+      : J.BASE.Helpers.maskString(questopediaEntry.name())
+
     // build a command based on the enemy.
-    return new WindowCommandBuilder(questopediaEntry.name())
+    return new WindowCommandBuilder(questName)
       .setSymbol(questopediaEntry.key)
       .setExtensionData(questopediaEntry)
       .setIconIndex(this.determineQuestStateIcon(questopediaEntry))
+      .setEnabled(isKnown)
       .build();
   }
 
@@ -68,7 +73,7 @@ class Window_QuestopediaList extends Window_Command
     switch (questopediaEntry.state)
     {
       // TODO: parameterize this.
-      case OmniQuest.States.Unknown:
+      case OmniQuest.States.Inactive:
         return 93;
       case OmniQuest.States.Active:
         return 92;

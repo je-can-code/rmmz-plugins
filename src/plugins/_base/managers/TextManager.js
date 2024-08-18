@@ -437,6 +437,7 @@ TextManager.xparam = function(xParamId)
       return "TP Regen"; //J.Param.TRG_text;
   }
 };
+
 /**
  * Gets the `parameter name` based on the "long" parameter id.
  *

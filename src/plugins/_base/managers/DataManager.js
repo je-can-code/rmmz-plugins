@@ -1,8 +1,190 @@
+// noinspection SillyAssignmentJS
+
+/**
+ * This rule is being disabled so that my personal IDE will recognize the data types and allow for intellisense to
+ * actually work as-expected. The IDE gets confused due to the fact that these are globally defined as "var" and
+ * reassigned in multiple locations, the last checked being "null" or otherwise unknown (like from file loading).
+ */
+
 //region DataManager
 /**
  * The over-arching object containing all of my added parameters.
  */
 DataManager._j ||= {};
+
+/**
+ * A mapped collection of actors from the database.
+ * @type {RPG_Actor[]}
+ */
+$dataActors = $dataActors;
+
+/**
+ * A mapped collection of classes from the database.
+ * @type {RPG_Class[]}
+ */
+$dataClasses = $dataClasses;
+
+/**
+ * A mapped collection of skills from the database.
+ * @type {RPG_Skill[]}
+ */
+$dataSkills = $dataSkills;
+
+/**
+ * A mapped collection of items from the database.
+ * @type {RPG_Item[]}
+ */
+$dataItems = $dataItems;
+
+/**
+ * A mapped collection of weapons from the database.
+ * @type {RPG_Weapon[]}
+ */
+$dataWeapons = $dataWeapons;
+
+/**
+ * A mapped collection of armors from the database.
+ * @type {RPG_Armor[]}
+ */
+$dataArmors = $dataArmors;
+
+/**
+ * A mapped collection of enemies from the database.
+ * @type {RPG_Enemy[]}
+ */
+$dataEnemies = $dataEnemies;
+
+/**
+ * A mapped collection of troops from the database.
+ * @type {object[]} (this is not a type that has been declared)
+ */
+$dataTroops = $dataTroops;
+
+/**
+ * The mapped collection of states from the database.
+ * @type {RPG_State[]}
+ */
+$dataStates = $dataStates;
+
+/**
+ * The mapped collection of animations from the database.
+ * @type {object[]} (this is not a type that has been declared)
+ */
+$dataAnimations = $dataAnimations;
+
+/**
+ * The mapped collection of tilesets from the database.
+ * @type {object[]} (this is not a type that has been declared)
+ */
+$dataTilesets = $dataTilesets;
+
+/**
+ * The mapped collection of common events from the database.
+ * @type {object[]} (this is not a type that has been declared)
+ */
+$dataCommonEvents = $dataCommonEvents;
+
+/**
+ * The various data points written into the system tabs of the database.
+ * @type {object} (this is not a type that has been declared)
+ */
+$dataSystem = $dataSystem;
+
+/**
+ * (need to go look at this to understand what it is and map it)
+ * @type {object[]}
+ */
+$dataMapInfos = $dataMapInfos;
+
+/**
+ * The metadata from the database about the current map.
+ * @type {object} (this is not a type that has been declared)
+ */
+$dataMap = $dataMap;
+
+/**
+ * The temp data for this current play session that isn't saved.
+ * @type {Game_Temp}
+ */
+$gameTemp = $gameTemp;
+
+/**
+ * The current state of the system in this save file.
+ * @type {Game_System}
+ */
+$gameSystem = $gameSystem;
+
+/**
+ * The current state of the screen and manager thereof.
+ * @type {Game_Screen}
+ */
+$gameScreen = $gameScreen;
+
+/**
+ * The timer manager.
+ * @type {Game_Timer}
+ */
+$gameTimer = $gameTimer;
+
+/**
+ * The message manager.
+ * @type {Game_Message}
+ */
+$gameMessage = $gameMessage;
+
+/**
+ * The current state of all switches in this save file.
+ * @type {Game_Switches}
+ */
+$gameSwitches = $gameSwitches;
+
+/**
+ * The current state of all variables in this save file.
+ * @type {Game_Variables}
+ */
+$gameVariables = $gameVariables;
+
+/**
+ * The current state of all self-switches in this save file.
+ * @type {Game_SelfSwitches}
+ */
+$gameSelfSwitches = $gameSelfSwitches;
+
+/**
+ * The current state of all actors in this save file.
+ * @type {Game_Actors}
+ */
+$gameActors = $gameActors;
+
+/**
+ * The party manager- but for actors.
+ * @type {Game_Party}
+ */
+$gameParty = $gameParty;
+
+/**
+ * The party manager- but for enemies.
+ * @type {Game_Troop}
+ */
+$gameTroop = $gameTroop;
+
+/**
+ * The overarching map object that is rebuilt every map transition to manage the currently-running map.
+ * @type {Game_Map}
+ */
+$gameMap = $gameMap;
+
+/**
+ * The current state of the player-controlled {@link Game_Character} on the map.
+ * @type {Game_Player}
+ */
+$gamePlayer = $gamePlayer;
+
+/**
+ * An event purely for testing.
+ * @type {Game_Event}
+ */
+$testEvent = $testEvent;
 
 //region rewrite data
 /**

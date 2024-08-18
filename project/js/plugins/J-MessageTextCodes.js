@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 MESSAGE] Gives access to more text codes in windows.
+ * [v1.2.0 MESSAGE] Gives access to more message window functionality.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -43,11 +43,13 @@
  *  \armorType[ID]
  *  \skillType[ID]
  *
- *  From other plugins:
+ *  From mine other plugins:
  *  \sdp[SDP_KEY]
+ *  \quest[QUEST_KEY]
  *
  * Where ID is the id of the entry in the database.
  * Where SDP_KEY is the key of the panel.
+ * Where QUEST_KEY is the key of the quest.
  *
  * NEW TEXT CODES EXAMPLES:
  *  \Weapon[4]
@@ -78,9 +80,13 @@
  * NEW TEXT STYLES EXAMPLES:
  *  "so it is \*gilbert\*. We finally meet \_at last\_."
  * In the passage above, the word "gilbert" would be bolded.
- * In the passage above, the words "at least" would be italicized.
+ * In the passage above, the words "at last" would be italicized.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Embedded a modified version of HIME's choice conditionals into this.
+ *      Said plugin was added and modified and extended for other purposes.
+ *    Implemented questopedia text code format.
  * - 1.1.0
  *    Implemented element, the four "types" from database data.
  *    Added plugin dependency of J-Base.
@@ -89,12 +95,6 @@
  *    Initial release.
  *    Implemented style toggles for bold and italics.
  *    Implemented weapon/armor/item/state/skill/enemy names from database data.
- * ============================================================================
- * CHANGELOG:
- * - 1.1.0
- *    Added additional ways to modify text.
- * - 1.0.0
- *    The initial release.
  * ============================================================================
  */
 
@@ -113,14 +113,126 @@ J.MESSAGE = {};
  */
 J.MESSAGE.Metadata = {};
 J.MESSAGE.Metadata.Name = `J-MessageTextCodes`;
-J.MESSAGE.Metadata.Version = '1.1.0';
+J.MESSAGE.Metadata.Version = '1.2.0';
 
 /**
  * A collection of all base aliases.
  */
 J.MESSAGE.Aliased = {};
+J.MESSAGE.Aliased.Game_Interpreter = new Map();
+J.MESSAGE.Aliased.Game_Message = new Map();
 J.MESSAGE.Aliased.Window_Base = new Map();
+J.MESSAGE.Aliased.Window_ChoiceList = new Map();
+J.MESSAGE.Aliased.Window_ChoiceList = new Map();
 //endregion introduction
+
+//region Game_Interpreter
+/**
+ * Extends {@link setupChoices}.<br/>
+ * Backs up the original choices identified by the completed setup.
+ */
+J.MESSAGE.Aliased.Game_Interpreter.set('setupChoices', Game_Interpreter.prototype.setupChoices);
+Game_Interpreter.prototype.setupChoices = function(params)
+{
+  // perform original choice setup logic.
+  J.MESSAGE.Aliased.Game_Interpreter.get('setupChoices').call(this, params);
+
+  // also backup the original options.
+  $gameMessage.backupChoices();
+
+  // add a hook for evaluating visibility of choices.
+  this.evaluateChoicesForVisibility(params);
+};
+
+/**
+ * A hook for evaluating visibility of choices programmatically.
+ * @param {rm.types.EventCommand[]} params The choices parameters being setup.
+ */
+Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
+{
+};
+
+/**
+ * Sets a choice to be hidden- or not. The choiceIndex parameter is 0-based. Set the shouldHide parameter to true for a
+ * given choice to hide it.
+ * @param {number} choiceIndex The 1-based number of the choice.
+ * @param {boolean=} shouldHide Whether or not the choice should be hidden; defaults to true.
+ */
+Game_Interpreter.prototype.setChoiceHidden = function(choiceIndex, shouldHide = true)
+{
+  // hide it- or don't.
+  $gameMessage.hideChoice(choiceIndex, shouldHide);
+};
+//endregion Game_Interpreter
+
+//region Game_Message
+/**
+ * Extends {@link clear}.<br/>
+ * Also clears the custom choice data.
+ */
+J.MESSAGE.Aliased.Game_Message.set('clear', Game_Message.prototype.clear);
+Game_Message.prototype.clear = function()
+{
+  // perform original logic.
+  J.MESSAGE.Aliased.Game_Message.get('clear').call(this);
+
+  /**
+   * An object tracking key:value (index:boolean) pairs for whether or not an index of a choice is hidden.
+   * @type {Map<number, boolean>}
+   */
+  this._hiddenChoiceConditions = new Map();
+
+  /**
+   * A container for backing up the choice collection.
+   * @type {string[]}
+   */
+  this._oldChoices = [];
+};
+
+/**
+ * Clones the original choice data into a backup for later use.
+ */
+Game_Message.prototype.backupChoices = function()
+{
+  this._oldChoices = this._choices.clone();
+};
+
+/**
+ * Restores the cloned original choice data from backup.
+ */
+Game_Message.prototype.restoreChoices = function()
+{
+  this._choices = this._oldChoices.clone();
+};
+
+/* Returns whether the specified choice is hidden */
+/**
+ * Determines whether or not this choice is actually hidden.
+ * @param {number} choiceIndex The index of the option to check.
+ * @returns {boolean}
+ */
+Game_Message.prototype.isChoiceHidden = function(choiceIndex)
+{
+  if (this._hiddenChoiceConditions.has(choiceIndex))
+  {
+    return this._hiddenChoiceConditions.get(choiceIndex);
+  }
+
+  return false;
+  //return this._hiddenChoiceConditions[choiceIndex];
+};
+
+/**
+ * Sets a choice to be hidden or not.
+ * @param {number} choiceIndex The index of the option to set.
+ * @param {boolean} isHidden Whether or not this choice is hidden.
+ */
+Game_Message.prototype.hideChoice = function(choiceIndex, isHidden)
+{
+  this._hiddenChoiceConditions.set(choiceIndex, isHidden);
+  //this._hiddenChoiceConditions[choiceIndex] = isHidden;
+};
+//endregion Game_Message
 
 //region Window_Base
 //region more database text codes
@@ -167,8 +279,11 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // handle skill type string replacements.
   textToModify = this.translateSkillTypeTextCode(textToModify);
 
-  // handle sdp string replacements.
+  // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
+
+  // handle quest key replacements.
+  textToModify = this.translateQuestTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
   return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
@@ -422,6 +537,41 @@ Window_Base.prototype.translateSdpTextCode = function(text)
     return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;
   });
 };
+
+/**
+ * Translates the text code into the name and icon of the corresponding quest.
+ * @param {string} text The text that has a text code in it.
+ * @returns {string} The new text to parse.
+ */
+Window_Base.prototype.translateQuestTextCode = function(text)
+{
+  // if not using the Questopedia system, then don't try to process the text.
+  if (!J.OMNI?.EXT?.QUEST) return text;
+
+  return text.replace(/\\quest\[(.*)]/gi, (_, p1) =>
+  {
+    // determine the quest key.
+    const questKey = p1 ?? String.empty;
+
+    // if no key was provided, then do not parse the quest.
+    if (!questKey) return text;
+
+    // grab the quest by its key.
+    const quest = QuestManager.quest(questKey);
+
+    // if the quest doesn't exist, then do not parse the quest.
+    if (!quest) return text;
+
+    // grab the name of the quest.
+    const questName = quest.name();
+
+    // for quests, the icon displayed is the category icon instead.
+    const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;
+
+    // return the constructed replacement string.
+    return `\\I[${questIconIndex}]\\C[1]${questName}\\C[0]`;
+  });
+};
 //endregion more database text codes
 
 //region font style
@@ -557,3 +707,67 @@ Window_Base.prototype.modFontSizeForText = function(modifier, text)
 };
 //endregion font style
 //endregion Window_Base
+
+//region Window_ChoiceList
+/**
+ * Extends {@link makeCommandList}.<br/>
+ * Post-modifies the commands to remove "hidden" choices.
+ */
+J.MESSAGE.Aliased.Window_ChoiceList.set('makeCommandList', Window_ChoiceList.prototype.makeCommandList);
+Window_ChoiceList.prototype.makeCommandList = function()
+{
+  $gameMessage.restoreChoices();
+  this.clearChoiceMap();
+
+  // perform original logic.
+  J.MESSAGE.Aliased.Window_ChoiceList.get('makeCommandList').call(this);
+
+  let needsUpdate = false;
+
+  // iterate over all the choices in this list in reverse to avoid index issues.
+  for (var i = this._list.length; i > -1; i--)
+  {
+    // check if the choice is hidden by its index.
+    if ($gameMessage.isChoiceHidden(i))
+    {
+      // remove the hidden choice from this window.
+      this._list.splice(i, 1);
+
+      // remove the hidden choice from the message data.
+      $gameMessage._choices.splice(i, 1);
+
+      // flag for needing resizing at the end of the adjustments.
+      needsUpdate = true;
+    }
+    else
+    {
+      // Add this to our choice map.
+      this._choiceMap.unshift(i);
+    }
+  }
+
+  // If any there were changes to the choices.
+  if (needsUpdate === true)
+  {
+    // update this window's placement.
+    this.updatePlacement();
+  }
+};
+
+/* Stores the choice numbers at each index */
+Window_ChoiceList.prototype.clearChoiceMap = function()
+{
+  this._choiceMap = [];
+};
+
+/**
+ * Overwrites {@link callOkHandler}.<br/>
+ * Uses the index of our custom list instead of the original list.
+ */
+Window_ChoiceList.prototype.callOkHandler = function()
+{
+  $gameMessage.onChoice(this._choiceMap[this.index()]);
+  this._messageWindow.terminateMessage();
+  this.close();
+};
+//endregion Window_ChoiceList
