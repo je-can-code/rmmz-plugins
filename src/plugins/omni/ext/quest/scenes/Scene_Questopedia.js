@@ -341,6 +341,9 @@ class Scene_Questopedia extends Scene_MenuBase
     // create the window with the rectangle.
     const window = new Window_QuestopediaObjectives(rectangle);
 
+    window.deactivate();
+    window.deselect();
+
     // assign cancel functionality.
     // window.setHandler('cancel', this.onCancelQuestopediaObjectives.bind(this));
 
@@ -362,14 +365,20 @@ class Scene_Questopedia extends Scene_MenuBase
    */
   questopediaObjectivesRectangle()
   {
-    // the list window's origin coordinates are the box window's origin as well.
-    const [ x, y ] = Graphics.boxOrigin;
+    // grab the questopedia list window.
+    const listWindow = this.getQuestopediaListWindow();
+
+    // calculate the X for where the origin of the list window should be.
+    const x = listWindow.x + listWindow.width;
+
+    // calculate the Y for where the origin of the list window should be.
+    const y = (Graphics.boxHeight / 2);
 
     // define the width of the list.
-    const width = 400;
+    const width = Graphics.boxWidth - listWindow.width - (Graphics.horizontalPadding * 2);
 
     // define the height of the list.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+    const height = (Graphics.boxHeight / 2) - Graphics.verticalPadding;
 
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
@@ -407,14 +416,19 @@ class Scene_Questopedia extends Scene_MenuBase
     // grab the detail window.
     const detailWindow = this.getQuestopediaDetailWindow();
 
+    // grab the objectives window.
+    const objectivesWindow = this.getQuestopediaObjectivesWindow();
+
     // grab the highlighted enemy's extra data, their observations.
     const highlightedQuestEntry = listWindow.currentExt();
 
-    // sync the detail window with the currently-highlighted enemy.
-    //detailWindow.setObservations(highlightedQuestEntry);
-
-    // refresh the window for the content update.
+    // sync the detail window with the currently-highlighted quest.
+    detailWindow.setCurrentQuest(highlightedQuestEntry);
     detailWindow.refresh();
+
+    // sync the objectives window with the currently-highlighted quest.
+    objectivesWindow.setCurrentObjectives(highlightedQuestEntry.objectives);
+    objectivesWindow.refresh();
   }
 
   /**

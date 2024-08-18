@@ -43,8 +43,11 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // handle skill type string replacements.
   textToModify = this.translateSkillTypeTextCode(textToModify);
 
-  // handle sdp string replacements.
+  // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
+
+  // handle quest key replacements.
+  textToModify = this.translateQuestTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
   return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
@@ -296,6 +299,41 @@ Window_Base.prototype.translateSdpTextCode = function(text)
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;
+  });
+};
+
+/**
+ * Translates the text code into the name and icon of the corresponding quest.
+ * @param {string} text The text that has a text code in it.
+ * @returns {string} The new text to parse.
+ */
+Window_Base.prototype.translateQuestTextCode = function(text)
+{
+  // if not using the Questopedia system, then don't try to process the text.
+  if (!J.OMNI?.EXT?.QUEST) return text;
+
+  return text.replace(/\\quest\[(.*)]/gi, (_, p1) =>
+  {
+    // determine the quest key.
+    const questKey = p1 ?? String.empty;
+
+    // if no key was provided, then do not parse the quest.
+    if (!questKey) return text;
+
+    // grab the quest by its key.
+    const quest = QuestManager.quest(questKey);
+
+    // if the quest doesn't exist, then do not parse the quest.
+    if (!quest) return text;
+
+    // grab the name of the quest.
+    const questName = quest.name();
+
+    // for quests, the icon displayed is the category icon instead.
+    const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;
+
+    // return the constructed replacement string.
+    return `\\I[${questIconIndex}]\\C[1]${questName}\\C[0]`;
   });
 };
 //endregion more database text codes

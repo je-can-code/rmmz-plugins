@@ -296,7 +296,7 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
  *
  * This is used to more clearly show developer intent rather than just arbitrarily
  * adding empty double quotes all over the place.
- * @type {""}
+ * @type {string}
  */
 Object.defineProperty(String, "empty", { value: "", writable: false });
 

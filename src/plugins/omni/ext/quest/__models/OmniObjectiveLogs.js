@@ -1,6 +1,7 @@
 //region OmniObjectiveLogs
 /**
- * A class representing the data shape of the various log messages associated with the state of an objective.
+ * A class representing the data shape of the various log messages associated with the state of an objective. These will
+ * reflect in the quest log when reviewing the quest in question.
  */
 class OmniObjectiveLogs
 {

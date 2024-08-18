@@ -61,6 +61,7 @@ class OmniObjective
    *     Failed: 3
    *     Missed: 4
    * </pre>
+   * @type {number}
    */
   static States = {
     /**
@@ -119,6 +120,20 @@ class OmniObjective
   logs = null;
 
   /**
+   * The extraneous data points that align with the objective type to determine how it can be fulfilled. Typically, if
+   * this is populated, the {@link fulfillmentQuestKeys} will be empty.
+   * @type {number[]}
+   */
+  fulfillmentData = [];
+
+  /**
+   * The key or keys of the quest(s) to complete in order to fulfill this objective. Typically, if this is populated,
+   * the {@link fulfillmentData} will be empty.
+   * @type {string[]}
+   */
+  fulfillmentQuestKeys = [];
+
+  /**
    * Whether or not this objective is hidden by default.
    * @type {boolean}
    */
@@ -137,15 +152,19 @@ class OmniObjective
    * @param {number} type The common classification of this objective.
    * @param {string} description The contextural description of this objective.
    * @param {OmniObjectiveLogs} logs The log information associated with the different states of this objective.
+   * @param {number[]} fulfillmentData The extraneous data on how this objective is to be fulfilled.
+   * @param {string[]} fulfillmentQuestKeys The key or keys of the quest(s) to complete to fulfill this objective.
    * @param {boolean=} hiddenByDefault Whether or not this objective will be hidden upon activating the parent quest.
    * @param {boolean=} isOptional Whether or not this objective is optional for its parent quest.
    */
-  constructor(id, type, description, logs, hiddenByDefault = true, isOptional = false)
+  constructor(id, type, description, logs, fulfillmentData, fulfillmentQuestKeys, hiddenByDefault = true, isOptional = false)
   {
     this.id = id;
     this.type = type;
     this.description = description;
     this.logs = logs;
+    this.fulfillmentData = fulfillmentData;
+    this.fulfillmentQuestKeys = fulfillmentQuestKeys;
 
     this.hiddenByDefault = hiddenByDefault;
     this.isOptional = isOptional;
@@ -172,13 +191,13 @@ class OmniObjective
       case OmniObjective.Types.Indiscriminate:
         return templateDetails.at(0);
       case OmniObjective.Types.Destination:
-        return `Navigate to ${templateDetails.at(0)} at [${templateDetails.at(1)}x, ${templateDetails.at(2)}y].`;
+        return `Navigate to ${templateDetails.at(0)} at [${templateDetails.at(1)}, ${templateDetails.at(2)}].`;
       case OmniObjective.Types.Fetch:
         return `Acquire x${templateDetails.at(0)} of ${templateDetails.at(1)}.`;
       case OmniObjective.Types.Slay:
         return `Defeat ${templateDetails.at(0)}x of the enemy [${templateDetails.at(1)}].`;
       case OmniObjective.Types.Quest:
-        return `Complete the other quest: '${templateDetails.at(0)}'`;
+        return `Complete the other quest(s): ${templateDetails.at(0)}.`;
       default:
         return 'This objective is not defined.';
     }
