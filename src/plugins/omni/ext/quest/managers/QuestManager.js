@@ -36,6 +36,26 @@ class QuestManager
   }
 
   /**
+   * Gets all quest metadata as a map from the plugin's metadata.
+   * @returns {Map<string, OmniQuest>}
+   */
+  static questMetadatas()
+  {
+    return J.OMNI.EXT.QUEST.Metadata.questsMap;
+  }
+
+  /**
+   * Gets all quests that are currently being tracked.
+   * @returns {TrackedOmniQuest[]}
+   */
+  static trackedQuests()
+  {
+    const allQuests = $gameParty.getQuestopediaEntriesCache().values();
+    const questsArray = Array.from(allQuests);
+    return questsArray.filter(quest => quest.isTracked());
+  }
+
+  /**
    * Gets the quest category metadata by its given key.
    * @param {string} key The key of the category.
    * @returns {OmniCategory}
@@ -58,6 +78,18 @@ class QuestManager
   }
 
   /**
+   * Gets all quest category metadatas from the plugin's metadata.
+   * @param {boolean=} asMap Whether or not to fetch the categories as a map or an array; defaults to true- as a map.
+   * @returns {Map<string, OmniCategory>|OmniCategory[]}
+   */
+  static categories(asMap = true)
+  {
+    return asMap
+      ? J.OMNI.EXT.QUEST.Metadata.categoriesMap
+      : J.OMNI.EXT.QUEST.Metadata.categories;
+  }
+
+  /**
    * Gets the quest tag metadata by its given key.
    * @param {string} key The key of the tag.
    * @returns {OmniTag}
@@ -77,6 +109,18 @@ class QuestManager
 
     // return the tag.
     return tag;
+  }
+
+  /**
+   * Gets all quest tag metadatas from the plugin's metadata.
+   * @param {boolean=} asMap Whether or not to fetch the tags as a map or an array; defaults to true- as a map.
+   * @returns {Map<string, OmniTag>|OmniTag[]}
+   */
+  static tags(asMap = true)
+  {
+    return asMap
+      ? J.OMNI.EXT.QUEST.Metadata.tagsMap
+      : J.OMNI.EXT.QUEST.Metadata.tags;
   }
 
   /**
@@ -109,6 +153,20 @@ class QuestManager
   };
 
   /**
+   * Checks if a quest is active.
+   * @param {string} questKey The key of the quest to check for completion.
+   * @returns {boolean}
+   */
+  static isQuestActive(questKey)
+  {
+    // grab the quest.
+    const quest = this.quest(questKey);
+
+    // return if the quest is currently active.
+    return quest.state === OmniQuest.States.Active;
+  }
+
+  /**
    * Checks if a quest is completed.
    * @param {string} questKey The key of the quest to check for completion.
    * @returns {boolean}
@@ -119,7 +177,7 @@ class QuestManager
     const quest = this.quest(questKey);
 
     // return if the quest is already completed.
-    return quest.state === OmniObjective.States.Completed;
+    return quest.state === OmniQuest.States.Completed;
   }
 
   /**
@@ -152,5 +210,174 @@ class QuestManager
     // progress it.
     quest.progressObjectives();
   }
+
+  /**
+   * Gets all valid destination objectives currently available to be progressed.
+   * @returns {TrackedOmniObjective[]}
+   */
+  static getValidDestinationObjectives()
+  {
+    // grab all quests that are tracked.
+    const quests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+
+    const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
+    const destinationObjectives = [];
+
+    quests.forEach(quest =>
+    {
+      // do not evaluate the state if its not one of the ones that can be evaluated.
+      if (!evaluateableStates.includes(quest.state)) return;
+
+      // identify all the currently-active destination objectives on this quest.
+      const validObjectives = quest.objectives
+        .filter(objective =>
+        {
+          // validate the objective is the correct type.
+          if (!objective.isValid(OmniObjective.Types.Destination)) return false;
+
+          // validate the player is on the current objective's map.
+          if ($gameMap.mapId() !== objective.destinationData()
+            .at(0)) return false;
+
+          // this is an objective to check!
+          return true;
+        });
+
+      // if there are none, don't process them.
+      if (validObjectives.length === 0) return;
+
+      // add them to the running list.
+      destinationObjectives.push(...validObjectives);
+    });
+
+    return destinationObjectives;
+  }
+
+  /**
+   * Gets all valid fetch objectives currently available to be progressed.
+   * @returns {TrackedOmniObjective[]}
+   */
+  static getValidFetchObjectives()
+  {
+    // grab all quests that are tracked.
+    const quests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+
+    const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
+    const fetchObjectives = [];
+
+    quests.forEach(quest =>
+    {
+      // do not evaluate the state if its not one of the ones that can be evaluated.
+      if (!evaluateableStates.includes(quest.state)) return;
+
+      // identify all the currently-active destination objectives on this quest.
+      const validObjectives = quest.objectives
+        .filter(objective =>
+        {
+          // validate the objective is the correct type.
+          if (!objective.isValid(OmniObjective.Types.Fetch)) return false;
+
+          // this is an objective to check!
+          return true;
+        });
+
+      // if there are none, don't process them.
+      if (validObjectives.length === 0) return;
+
+      // add them to the running list.
+      fetchObjectives.push(...validObjectives);
+    });
+
+    return fetchObjectives;
+  }
+
+  /**
+   * Gets all valid slay objectives currently available to be progressed.
+   * @returns {TrackedOmniObjective[]}
+   */
+  static getValidSlayObjectives()
+  {
+    // grab all quests that are tracked.
+    const quests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+
+    const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
+    const slayObjectives = [];
+
+    quests.forEach(quest =>
+    {
+      // do not evaluate the state if its not one of the ones that can be evaluated.
+      if (!evaluateableStates.includes(quest.state)) return;
+
+      // identify all the currently-active slay objectives on this quest.
+      const validObjectives = quest.objectives
+        .filter(objective =>
+        {
+          // validate the objective is the correct type.
+          if (!objective.isValid(OmniObjective.Types.Slay)) return false;
+
+          // this is an objective to check!
+          return true;
+        });
+
+      // if there are none, don't process them.
+      if (validObjectives.length === 0) return;
+
+      // add them to the running list.
+      slayObjectives.push(...validObjectives);
+    });
+
+    return slayObjectives;
+  }
+
+  /**
+   * Gets all valid quest objectives currently available to be progressed.
+   * @returns {TrackedOmniObjective[]}
+   */
+  static getValidQuestCompletionObjectives()
+  {
+    // grab all quests that are tracked.
+    const quests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+
+    const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
+    const questCompletionObjectives = [];
+
+    quests.forEach(quest =>
+    {
+      // do not evaluate the state if its not one of the ones that can be evaluated.
+      if (!evaluateableStates.includes(quest.state)) return;
+
+      // identify all the currently-active destination objectives on this quest.
+      const validObjectives = quest.objectives
+        .filter(objective =>
+        {
+          // validate the objective is the correct type.
+          if (!objective.isValid(OmniObjective.Types.Quest)) return false;
+
+          // validate the objective isn't an empty collection of questkeys for some reason- that doesn't count.
+          if (objective.questCompletionData().length === 0)
+          {
+            console.warn(`quest of ${objective.questKey} has objective of id ${objective.id} set to "quest completion", but lacks 'fulfillmentQuestKeys'}.`);
+            return false;
+          }
+
+          // this is an objective to check!
+          return true;
+        });
+
+      // if there are none, don't process them.
+      if (validObjectives.length === 0) return;
+
+      // add them to the running list.
+      questCompletionObjectives.push(...validObjectives);
+    });
+
+    return questCompletionObjectives;
+  }
+
 }
+
 //endregion QuestManager

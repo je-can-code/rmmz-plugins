@@ -288,4 +288,66 @@ if (!Game_Party.prototype.canGainEntry)
 }
 
 //endregion questopedia
+
+//region evaluation
+/**
+ * Extends {@link processItemGain}.<br/>
+ * Also synchronizes the item count with any relevant quests.
+ * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
+ * @param {number} amount The amount to modify the quantity by.
+ * @param {boolean} includeEquip Whether or not to include equipped items for equipment.
+ */
+J.OMNI.EXT.QUEST.Aliased.Game_Party.set('processItemGain', Game_Party.prototype.processItemGain);
+Game_Party.prototype.processItemGain = function(item, amount, includeEquip)
+{
+  // perform original logic.
+  J.OMNI.EXT.QUEST.Aliased.Game_Party.get('processItemGain')
+    .call(this, item, amount, includeEquip);
+
+  // also evaluate the item being gained/lost for quest objectives.
+  this.processItemCheck(item);
+};
+
+/**
+ * Process an item being gained and update any relevant quest objectives.
+ * @param {RPG_Base} item The item being gained.
+ */
+Game_Party.prototype.processItemCheck = function(item)
+{
+  // grab all fetch objectives currently active.
+  const fetchObjectives = QuestManager.getValidFetchObjectives();
+
+  // if there are none, don't try to process this.
+  if (fetchObjectives.length === 0) return;
+
+  fetchObjectives
+    // filter out irrelevant items being gained.
+    .filter(objective =>
+    {
+      // validate the data sources match.
+      if (!objective.isFetchTarget(item)) return false;
+
+      // this objective can be updated!
+      return true;
+    })
+    // iterate over whats left to sync and update.
+    .forEach(objective =>
+    {
+      // synchronize the current with target quantities for this object.
+      objective.synchronizeFetchTargetItemQuantity();
+
+      if (objective.hasFetchedEnoughItems())
+      {
+        // grab the quest for reference.
+        const questToProgress = QuestManager.quest(objective.questKey);
+
+        // flag the quest objective as completed.
+        questToProgress.flagObjectiveAsCompleted(objective.id);
+
+        // progress the quest to active its next objective.
+        questToProgress.progressObjectives();
+      }
+    });
+};
+//endregion evaluation
 //endregion Game_Party

@@ -44,7 +44,7 @@ Game_Event.prototype.toQuestConditionals = function(commentCommandList)
 {
   // gather all quest comments from the comment commands of this event.
   const questCommentCommands = commentCommandList
-    .filter(this.filterCommentCommandsByQuestConditional, this);
+    .filter(this.filterCommentCommandsByEventQuestConditional, this);
 
   // if there are no quest conditionals available for parsing, don't bother.
   if (questCommentCommands.length === 0) return [];
@@ -126,7 +126,7 @@ Game_Event.prototype.toQuestConditional = function(commentCommand)
  * @param {rm.types.EventCommand} command The command being evaluated.
  * @returns {boolean}
  */
-Game_Event.prototype.filterCommentCommandsByQuestConditional = function(command)
+Game_Event.prototype.filterCommentCommandsByEventQuestConditional = function(command)
 {
   // identify the actual comment being evaluated.
   const [ comment, ] = command.parameters;
@@ -144,7 +144,7 @@ Game_Event.prototype.filterCommentCommandsByQuestConditional = function(command)
  * @param {rm.types.EventCommand} command The command being evaluated.
  * @returns {boolean}
  */
-Game_Event.prototype.filterCommentCommandsByChoiceConditional = function(command)
+Game_Event.prototype.filterCommentCommandsByChoiceQuestConditional = function(command)
 {
   // identify the actual comment being evaluated.
   const [ comment, ] = command.parameters;

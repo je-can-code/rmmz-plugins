@@ -85,5 +85,14 @@ class RPG_Skill extends RPG_UsableItem
     this.stypeId = skill.stypeId;
     this.tpCost = skill.tpCost;
   }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return true;
+  }
 }
 //endregion RPG_Skill

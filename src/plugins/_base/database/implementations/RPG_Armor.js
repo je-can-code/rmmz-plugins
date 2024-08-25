@@ -32,5 +32,14 @@ class RPG_Armor extends RPG_EquipItem
     // map the data.
     this.atypeId = armor.atypeId;
   }
+
+  /**
+   * Whether or not this database entry is an armor.
+   * @returns {boolean}
+   */
+  isArmor()
+  {
+    return true;
+  }
 }
 //endregion RPG_Armor

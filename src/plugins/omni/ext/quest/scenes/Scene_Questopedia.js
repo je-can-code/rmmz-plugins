@@ -79,6 +79,12 @@ class Scene_Questopedia extends Scene_MenuBase
     this._j._omni._quest = {};
 
     /**
+     * The window that shows the categories a quest can be associated with.
+     * @type {Window_QuestopediaCategories}
+     */
+    this._j._omni._quest._pediaCategories = null;
+
+    /**
      * The window that shows the list of known quests.
      * @type {Window_QuestopediaList}
      */
@@ -96,6 +102,7 @@ class Scene_Questopedia extends Scene_MenuBase
      */
     this._j._omni._quest._pediaObjectives = null;
   }
+
   //endregion init
 
   //region create
@@ -125,6 +132,9 @@ class Scene_Questopedia extends Scene_MenuBase
    */
   createAllWindows()
   {
+    // create the list of quest categories.
+    this.createQuestopediaCategoriesWindow();
+
     // create the list of quests that are known.
     this.createQuestopediaListWindow();
 
@@ -133,6 +143,10 @@ class Scene_Questopedia extends Scene_MenuBase
 
     // create the known list of unfinished and completed objectives of the selected quest.
     this.createQuestopediaObjectivesWindow();
+
+
+    const categoriesWindow = this.getQuestopediaCategoriesWindow();
+    categoriesWindow.onIndexChange();
 
     // grab the list window for refreshing.
     const listWindow = this.getQuestopediaListWindow();
@@ -153,12 +167,89 @@ class Scene_Questopedia extends Scene_MenuBase
     this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
   }
+
   //endregion create
 
   //region windows
+  //region categories window
+  /**
+   * Creates the quest categories window.
+   */
+  createQuestopediaCategoriesWindow()
+  {
+    // create the window.
+    const window = this.buildQuestopediaCategoriesWindow();
+
+    // update the tracker with the new window.
+    this.setQuestopediaCategoriesWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the questopedia categories window.
+   * @returns {Window_QuestopediaCategories}
+   */
+  buildQuestopediaCategoriesWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.questopediaCategoriesRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_QuestopediaCategories(rectangle);
+
+    // overwrite the onIndexChange hook with our local onQuestopediaIndexChange hook.
+    window.onIndexChange = this.onQuestopediaCategoryChange.bind(this);
+
+    window.deactivate();
+
+    // return the built and configured omnipedia list window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the questopedia list command window.
+   * @returns {Rectangle}
+   */
+  questopediaCategoriesRectangle()
+  {
+    // the list window's origin coordinates are the box window's origin as well.
+    const [ x, y ] = Graphics.boxOrigin;
+
+    // define the width of the categories.
+    const width = 500;
+
+    // define the height of the categories.
+    const height = (Graphics.boxHeight * 0.08) - (Graphics.verticalPadding * 2);
+
+    // build the rectangle to return.
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the currently tracked questopedia categories window.
+   * @returns {Window_QuestopediaCategories}
+   */
+  getQuestopediaCategoriesWindow()
+  {
+    return this._j._omni._quest._pediaCategories;
+  }
+
+  /**
+   * Set the currently tracked questopedia categories window to the given window.
+   * @param {Window_QuestopediaCategories} categoriesWindow The questopedia categories window to track.
+   */
+  setQuestopediaCategoriesWindow(categoriesWindow)
+  {
+    this._j._omni._quest._pediaCategories = categoriesWindow;
+  }
+
+  //endregion categories window
+
   //region list window
   /**
-   * Creates the list of monsters the player has perceived.
+   * Creates the list of quests the player can potentially complete.
    */
   createQuestopediaListWindow()
   {
@@ -193,6 +284,9 @@ class Scene_Questopedia extends Scene_MenuBase
     // overwrite the onIndexChange hook with our local onQuestopediaIndexChange hook.
     window.onIndexChange = this.onQuestopediaIndexChange.bind(this);
 
+    window.setHandler('pagedown', this.cycleQuestCategories.bind(this, true));
+    window.setHandler('pageup', this.cycleQuestCategories.bind(this, false));
+
     // return the built and configured omnipedia list window.
     return window;
   }
@@ -204,13 +298,19 @@ class Scene_Questopedia extends Scene_MenuBase
   questopediaListRectangle()
   {
     // the list window's origin coordinates are the box window's origin as well.
-    const [ x, y ] = Graphics.boxOrigin;
+    const categoriesRectangle = this.questopediaCategoriesRectangle();
+
+    // the list x coordinate is aligned with the categories window.
+    const x = categoriesRectangle.x;
+
+    // the list y coordinate is below the categories window.
+    const y = categoriesRectangle.height + Graphics.verticalPadding;
 
     // define the width of the list.
-    const width = 400;
+    const width = categoriesRectangle.width;
 
     // define the height of the list.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
+    const height = Graphics.boxHeight - Graphics.verticalPadding - y;
 
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
@@ -422,6 +522,15 @@ class Scene_Questopedia extends Scene_MenuBase
     // grab the highlighted enemy's extra data, their observations.
     const highlightedQuestEntry = listWindow.currentExt();
 
+    // check if there was no highlighted option.
+    if (!highlightedQuestEntry)
+    {
+      // empty the contents of the detail and objectives.
+      detailWindow.clearContent();
+      objectivesWindow.clearContent();
+      return;
+    }
+
     // sync the detail window with the currently-highlighted quest.
     detailWindow.setCurrentQuest(highlightedQuestEntry);
     detailWindow.refresh();
@@ -431,16 +540,96 @@ class Scene_Questopedia extends Scene_MenuBase
     objectivesWindow.refresh();
   }
 
+  onQuestopediaCategoryChange()
+  {
+    // grab the categories window.
+    const categoriesWindow = this.getQuestopediaCategoriesWindow();
+
+    // grab the list window.
+    const listWindow = this.getQuestopediaListWindow();
+
+    // update the list window with the new category.
+    listWindow.setCurrentCategoryKey(categoriesWindow.currentSymbol());
+
+    listWindow.refresh();
+
+    // trigger a potential questopedia index change.
+    this.onQuestopediaIndexChange();
+
+    console.log(`changed to category: ${categoriesWindow.currentSymbol()}`);
+  }
+
   /**
-   * TODO: implement
+   * Triggered when the player hits the OK button on a quest.<br/>
+   * This marks a quest as "tracked".
    */
   onQuestopediaListSelection()
   {
+    // grab the list window of quests.
     const listWindow = this.getQuestopediaListWindow();
 
-    console.log(`quest selected index: [${listWindow.index()}].`);
+    // check the currently highlighted quest.
+    const highlighted = listWindow.currentExt();
 
+    // validate we have a selection and its not an empty list.
+    if (highlighted)
+    {
+      // toggle whether or not this quest is tracked.
+      highlighted.toggleTracked();
+      console.log(`quest ${highlighted.key} is tracked: ${highlighted.isTracked()}`);
+    }
+
+    // refresh and reactivate the list.
+    listWindow.refresh();
     listWindow.activate();
+  }
+
+  /**
+   * Cycles forward or back through quest categories available.
+   * @param {boolean} isForward True if cycling up(right) through the index, false if cycling down(left).
+   */
+  cycleQuestCategories(isForward = true)
+  {
+    // do not cycle quest categories if there is only one.
+    if (QuestManager.categories().size <= 1) return;
+
+    // grab the categories window.
+    const categoriesWindow = this.getQuestopediaCategoriesWindow();
+    const currentIndex = categoriesWindow.index();
+
+    // cycle to the next.
+    if (isForward)
+    {
+      // check if we are at the end of the list.
+      if (categoriesWindow._list.length === currentIndex + 1)
+      {
+        categoriesWindow.select(0);
+      }
+      // this isn't the end of the list, so select the next entry.
+      else
+      {
+        categoriesWindow.select(currentIndex + 1);
+      }
+    }
+    // cycle to the previous.
+    else
+    {
+      // check if we are at the beginning of the list.
+      if (currentIndex === 0)
+      {
+        categoriesWindow.select(categoriesWindow._list.length - 1)
+      }
+      // this isn't the beginning of the list, so select the previous entry.
+      else
+      {
+        categoriesWindow.select(currentIndex - 1);
+      }
+    }
+
+    this.getQuestopediaListWindow()
+      .activate();
+
+    console.log(`old index: ${currentIndex}; new index: ${categoriesWindow.index()}.`);
   }
 
   /**

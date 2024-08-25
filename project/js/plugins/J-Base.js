@@ -1341,7 +1341,6 @@ class RPG_Base
     return new this.constructor(overrides, index);
   }
 
-
   /**
    * The unique key that is used to register this object against
    * its corresponding container when the party has one or more of these
@@ -2093,6 +2092,42 @@ class RPG_Base
     return matchingLines;
   }
   //endregion note
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a weapon.
+   * @returns {boolean}
+   */
+  isWeapon()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is an armor.
+   * @returns {boolean}
+   */
+  isArmor()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return false;
+  }
 }
 //endregion RPG_Base
 
@@ -2503,6 +2538,15 @@ class RPG_Armor extends RPG_EquipItem
     // map the data.
     this.atypeId = armor.atypeId;
   }
+
+  /**
+   * Whether or not this database entry is an armor.
+   * @returns {boolean}
+   */
+  isArmor()
+  {
+    return true;
+  }
 }
 //endregion RPG_Armor
 
@@ -2688,6 +2732,15 @@ class RPG_Item extends RPG_UsableItem
     this.itypeId = item.itypeId;
     this.price = item.price;
   }
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return true;
+  }
 }
 //endregion RPG_Item
 
@@ -2777,6 +2830,15 @@ class RPG_Skill extends RPG_UsableItem
     this.requiredWtypeId2 = skill.requiredWtypeId2;
     this.stypeId = skill.stypeId;
     this.tpCost = skill.tpCost;
+  }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return true;
   }
 }
 //endregion RPG_Skill
@@ -2990,6 +3052,15 @@ class RPG_Weapon extends RPG_EquipItem
     // map the data.
     this.animationId = weapon.animationId;
     this.wtypeId = weapon.wtypeId;
+  }
+
+  /**
+   * Whether or not this database entry is a weapon.
+   * @returns {boolean}
+   */
+  isWeapon()
+  {
+    return true;
   }
 }
 //endregion RPG_Weapon
@@ -8255,7 +8326,7 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
     return;
   }
 
-  // grab the container of items.
+  // grab the container of items.S
   const container = this.itemContainer(item);
 
   // check to make sure we have a container.

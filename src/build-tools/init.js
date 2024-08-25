@@ -16,7 +16,7 @@
  *
  * OR
  * RUNNING FROM THE PLUGIN-PROJECT-LEVEL
- * $ npm run plugin:init
+ * $ npm run plugin:init abs/ext/charge
  *
  * SAMPLE OUTPUT:
  * 🔉 working directory: Z:\dev\gaming\rmmz-plugins

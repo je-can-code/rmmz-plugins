@@ -46,5 +46,14 @@ class RPG_Item extends RPG_UsableItem
     this.itypeId = item.itypeId;
     this.price = item.price;
   }
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return true;
+  }
 }
 //endregion RPG_Item
