@@ -10,6 +10,7 @@ function TrackedOmniObjective(id, questKey, fulfillmentData, fulfillmentQuestKey
 TrackedOmniObjective.prototype = {};
 TrackedOmniObjective.prototype.constructor = TrackedOmniObjective;
 
+//region init
 /**
  * Initialize an objective tracker for an quest.
  * @param {number} id The id of this objective.
@@ -62,7 +63,7 @@ TrackedOmniObjective.prototype.initialize = function(id, questKey, fulfillmentDa
 TrackedOmniObjective.prototype.initializeFulfillmentData = function()
 {
   /**
-   * The indiscriminate detail for completing this obejctive.
+   * The indiscriminate detail for completing this objective.
    * @type {string}
    */
   this._indiscriminateTargetData = String.empty;
@@ -89,10 +90,22 @@ TrackedOmniObjective.prototype.initializeFulfillmentData = function()
   this._targetItemType = -1;
 
   /**
+   * The target item id that the player must acquire.
+   * @type {number}
+   */
+  this._targetItemId = -1;
+
+  /**
    * The target quantity to fetch of item of type {@link _targetItemType} in order to fulfill the objective.
    * @type {number}
    */
   this._targetItemFetchQuantity = -1;
+
+  /**
+   * The current quantity of the target item to fetch.
+   * @type {number}
+   */
+  this._currentItemFetchQuantity = 0;
 
   /**
    * The target enemyId of which the player must defeat {@link _targetEnemyAmount} quantity of in order to fulfill the
@@ -106,6 +119,12 @@ TrackedOmniObjective.prototype.initializeFulfillmentData = function()
    * @type {number}
    */
   this._targetEnemyAmount = 0;
+
+  /**
+   * The current quantity of the target enemy to slay.
+   * @type {number}
+   */
+  this._currentEnemyAmount = 0;
 
   /**
    * The target quest keys to complete in order to fulfill this objective.
@@ -126,8 +145,9 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(fulfillmentDat
   {
     // if the type is indiscriminate, then it is event-controlled and not automagical.
     case OmniObjective.Types.Indiscriminate:
-      this._indiscriminateTargetData = fulfillmentData.at(0);
+      this._indiscriminateTargetData = fulfillmentData.at(0) ?? "No indiscriminate objective instructions provided.";
       return;
+
     // if the fulfillment is of type 'destination', then fill in the data.
     case OmniObjective.Types.Destination:
       if (fulfillmentData.length !== 5)
@@ -144,28 +164,108 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(fulfillmentDat
       const point2 = [ fulfillmentData.at(3), fulfillmentData.at(4) ];
       this._targetCoordinateRange.push(point1, point2);
       break;
+
     // if the fulfillment is of type 'fetch', then fill in the data.
     case OmniObjective.Types.Fetch:
       this._targetItemType = fulfillmentData.at(0);
-      this._targetItemFetchQuantity = fulfillmentData.at(1);
+      this._targetItemId = fulfillmentData.at(1);
+      this._targetItemFetchQuantity = fulfillmentData.at(2);
       break;
+
     // if the fulfillment is of type 'slay', then fill in the data.
     case OmniObjective.Types.Slay:
       this._targetEnemyId = fulfillmentData.at(0);
       this._targetEnemyAmount = fulfillmentData.at(1);
       break;
+
     // if the fulfillment is of type 'quest', then fill in the data.
     case OmniObjective.Types.Quest:
       this._targetQuestKeys.push(...fulfillmentQuestKeys);
       break;
   }
 };
+//endregion init
 
+//region state check
+/**
+ * Returns whether or not this objective is {@link OmniObjective.States.Inactive}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isInactive = function()
+{
+  return this.state === OmniObjective.States.Inactive;
+};
+
+/**
+ * Returns whether or not this objective is {@link OmniObjective.States.Active}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isActive = function()
+{
+  return this.state === OmniObjective.States.Active;
+};
+
+/**
+ * Returns whether or not this objective is {@link OmniObjective.States.Completed}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isCompleted = function()
+{
+  return this.state === OmniObjective.States.Completed;
+};
+
+/**
+ * Returns whether or not this objective is {@link OmniObjective.States.Failed}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isFailed = function()
+{
+  return this.state === OmniObjective.States.Failed;
+};
+
+/**
+ * Returns whether or not this objective is {@link OmniObjective.States.Missed}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isMissed = function()
+{
+  return this.state === OmniObjective.States.Missed;
+};
+
+/**
+ * Returns whether or not this objective is hidden.<br/>
+ * Objectives that are NOT hidden will show up in the questopedia and can be completed to activate the owning quest.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isHidden = function()
+{
+  return this.hidden === true;
+};
+
+/**
+ * Determines whether or not this objective is valid in the sense that it can be updated and completed.
+ * @param {OmniObjective.Types} targetType One of the {@link OmniObjective.Types} to validate against.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isValid = function(targetType)
+{
+  // cannot execute on objectives that have already been finalized.
+  if (this.isCompleted() || this.isFailed() || this.isMissed()) return false;
+
+  // cannot execute on non-active objectives if they are hidden.
+  if (!this.isActive() && this.isHidden()) return false;
+
+  // make sure the types match.
+  return this.type() === targetType;
+};
+//endregion state check
+
+//region metadata
 /**
  * Gets the metadata for the quest that owns this objective.
  * @returns {OmniQuest}
  */
-TrackedOmniObjective.prototype.parentQuest = function()
+TrackedOmniObjective.prototype.parentQuestMetadata = function()
 {
   return J.OMNI.EXT.QUEST.Metadata.questsMap.get(this.questKey);
 };
@@ -176,7 +276,7 @@ TrackedOmniObjective.prototype.parentQuest = function()
  */
 TrackedOmniObjective.prototype.objectiveMetadata = function()
 {
-  return this.parentQuest()
+  return this.parentQuestMetadata()
     .objectives
     .at(this.id);
 };
@@ -190,6 +290,7 @@ TrackedOmniObjective.prototype.description = function()
   const { description } = this.objectiveMetadata();
   return description;
 };
+//endregion metadata
 
 /**
  * Gets the log represented by the current state of this objective.
@@ -228,27 +329,246 @@ TrackedOmniObjective.prototype.type = function()
  */
 TrackedOmniObjective.prototype.fulfillmentText = function()
 {
+  const enoughColor = 24; //ColorManager.powerUpColor();
+  const notEnoughColor = 25; //ColorManager.powerDownColor();
+
   switch (this.type())
   {
     case OmniObjective.Types.Indiscriminate:
       return OmniObjective.FulfillmentTemplate(this.type(), this._indiscriminateTargetData);
+
     case OmniObjective.Types.Destination:
       // TODO: validate this stringifies as intended.
       const point1 = `${this._targetCoordinateRange.at(0)}`;
       const point2 = `${this._targetCoordinateRange.at(1)}`;
       return OmniObjective.FulfillmentTemplate(this.type(), $gameMap.displayName(), point1, point2);
+
     case OmniObjective.Types.Fetch:
-      return OmniObjective.FulfillmentTemplate(this.type(), this._targetItemType, this._targetItemFetchQuantity);
+      const fetchColor = (this._currentItemFetchQuantity < this._targetItemFetchQuantity)
+        ? notEnoughColor
+        : enoughColor;
+
+      const targetItemText = `${this.fetchDataSourceTextPrefix()}[${this._targetItemId}]`;
+      const quantity = `\\C[${fetchColor}]${this._currentItemFetchQuantity} / ${this._targetItemFetchQuantity}\\C[0]`;
+      return OmniObjective.FulfillmentTemplate(this.type(), quantity, targetItemText);
+
     case OmniObjective.Types.Slay:
-      return OmniObjective.FulfillmentTemplate(this.type(), this._targetEnemyId, this._targetEnemyAmount);
+      const slayColor = (this._currentEnemyAmount < this._targetEnemyAmount)
+        ? notEnoughColor
+        : enoughColor;
+      const targetEnemyText = `\\C[${slayColor}]${this._currentEnemyAmount} / ${this._targetEnemyAmount}\\C[0]`;
+      const template = OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this._targetEnemyId);
+      return template;
+
     case OmniObjective.Types.Quest:
       const questNames = this._targetQuestKeys
-        .map(questKey => `'${J.OMNI.EXT.QUEST.Metadata.questsMap.get(questKey).name}'`);
+        .map(questKey => `'\\quest[${questKey}]'`);
       const questNamesWithCommas = questNames.join(', ');
       return OmniObjective.FulfillmentTemplate(this.type(), questNamesWithCommas);
   }
 };
 
-// TODO: implement methods for updating self.
+//region destination data
+/**
+ * Gets the destination data for this objective. The response shape will contain the mapId, and the coordinate range.
+ * <pre>
+ *     [ mapId, [[x1,y1], [x2,y2]] ]
+ * </pre>
+ * @returns {[number,[[number,number],[number,number]]]}
+ */
+TrackedOmniObjective.prototype.destinationData = function()
+{
+  return [
+    this._targetMapId,
+    this._targetCoordinateRange
+  ];
+};
+
+/**
+ * Checks if the player is presently standing within the rectangle derived from the coordinate range for this objective.
+ */
+TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
+{
+  // grab the coordinate range from this objective.
+  const range = this.destinationData().at(1);
+
+  // deconstruct the points from the coordinate range.
+  const [ x1, y1 ] = range.at(0);
+  const [ x2, y2 ] = range.at(1);
+
+  // identify the location of the player.
+  const playerX = $gamePlayer.x;
+  const playerY = $gamePlayer.y;
+
+  // check if the player within the coordinate range.
+  const isInCoordinateRange = playerX >= x1 && playerX <= x2 && playerY >= y1 && playerY <= y2;
+
+  // process the event hook.
+  this.onObjectiveUpdate();
+
+  // return our findings.
+  return isInCoordinateRange;
+};
+//endregion destination data
+
+//region fetch data
+/**
+ * The data points associated with fetch-related objectives.
+ * @returns {[number,number]}
+ */
+TrackedOmniObjective.prototype.fetchData = function()
+{
+  return [
+    this._targetItemId,
+    this._targetItemFetchQuantity
+  ];
+};
+
+/**
+ * Determines whether or not the given item is the target of this fetch objective.
+ * @param {RPG_Item|RPG_Weapon|RPG_Armor} entry
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isFetchTarget = function(entry)
+{
+  // identify the type of objective this is.
+  const objectiveType = this.type();
+
+  // if this isn't a fetch objective, then it'll never be a fetch target.
+  if (objectiveType !== OmniObjective.Types.Fetch) return false;
+
+  // validate the target item type aligns with the corresponding entry.
+  if (this._targetItemType === 0 && !entry.isItem()) return false;
+  if (this._targetItemType === 1 && !entry.isWeapon()) return false;
+  if (this._targetItemType === 2 && !entry.isArmor()) return false;
+
+  // check if the id matches the target item id.
+  return entry.id === this._targetItemId;
+};
+
+/**
+ * Gets the escape code for displaying text in a window based on the given target item type to fetch.
+ * @returns {string}
+ */
+TrackedOmniObjective.prototype.fetchDataSourceTextPrefix = function()
+{
+  switch (this._targetItemType)
+  {
+    case 0:
+      return `\\Item`;
+    case 1:
+      return `\\Weapon`;
+    case 2:
+      return `\\Armor`;
+    default:
+      throw new Error(`unknown target item type: ${this._targetItemType}`);
+  }
+};
+
+/**
+ * Returns the datasource of the fetch objective data.
+ * @returns {RPG_Item[]|RPG_Weapon[]|RPG_Armor[]}
+ */
+TrackedOmniObjective.prototype.fetchItemDataSource = function()
+{
+  switch (this._targetItemType)
+  {
+    case 0:
+      return $dataItems;
+    case 1:
+      return $dataWeapons;
+    case 2:
+      return $dataArmors;
+    default:
+      throw new Error(`unknown target item type: ${this._targetItemType}`);
+  }
+};
+
+/**
+ * Synchronizes the number of items the player has in their possession with this objective.
+ */
+TrackedOmniObjective.prototype.synchronizeFetchTargetItemQuantity = function()
+{
+  // determine the current amount of the item in possession.
+  const targetDataSource = this.fetchItemDataSource();
+  const targetItem = targetDataSource.at(this._targetItemId);
+  const targetItemQuantity = $gameParty.numItems(targetItem);
+
+  // align the tracked amount with the actual amount.
+  this._currentItemFetchQuantity = targetItemQuantity;
+
+  // process the event hook.
+  this.onObjectiveUpdate();
+};
+
+/**
+ * Checks whether or not the player has collected enough of the target fetched item. This always returns false for
+ * objectives that are not of type {@link OmniObjective.Types.Fetch}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.hasFetchedEnoughItems = function()
+{
+  // non-fetch objectives can never fetch enough items.
+  if (this.type() !== OmniObjective.Types.Fetch) return false;
+
+  // return the evaluation.
+  return this._currentItemFetchQuantity >= this._targetItemFetchQuantity;
+};
+//endregion fetch data
+
+//region slay data
+/**
+ * The data points associated with slay-related objectives.
+ * @returns {[number,number]}
+ */
+TrackedOmniObjective.prototype.slayData = function()
+{
+  return [
+    this._targetEnemyId,
+    this._targetEnemyAmount
+  ];
+};
+
+/**
+ * Increments the counter for how many of the required enemies the player has slain.
+ */
+TrackedOmniObjective.prototype.incrementSlayTargetEnemyAmount = function()
+{
+  // we increment by +1 in this land.
+  this._currentEnemyAmount++;
+
+  // process the event hook.
+  this.onObjectiveUpdate();
+};
+
+/**
+ * Checks whether or not the player has collected enough of the target fetched item. This always returns false for
+ * objectives that are not of type {@link OmniObjective.Types.Fetch}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.hasSlainEnoughEnemies = function()
+{
+  // non-fetch objectives can never fetch enough items.
+  if (this.type() !== OmniObjective.Types.Slay) return false;
+
+  // return the evaluation.
+  return this._currentEnemyAmount >= this._targetEnemyAmount;
+};
+//endregion slay data
+
+//region quest completion data
+TrackedOmniObjective.prototype.questCompletionData = function()
+{
+  return this._targetQuestKeys;
+};
+//endregion quest completion data
+
+/**
+ * An event hook for when objective progress is updated, like an enemy is slain for the objective or an item is
+ * acquired towards the fetch goal.
+ */
+TrackedOmniObjective.prototype.onObjectiveUpdate = function()
+{
+};
 
 //endregion TrackedOmniObjective

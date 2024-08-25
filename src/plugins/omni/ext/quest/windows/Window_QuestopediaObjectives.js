@@ -95,7 +95,7 @@ class Window_QuestopediaObjectives extends Window_Command
       .setSymbol(questObjective.id)
       .setExtensionData(questObjective)
       .setIconIndex(this.determineObjectiveStateIcon(questObjective))
-      .addTextLine(questObjective.log())
+      .addTextLine(questObjective.fulfillmentText() ?? String.empty)
       .flagAsMultiline()
       .build();
   }

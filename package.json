@@ -61,6 +61,7 @@
     "build:hud-party": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/party ./out/hud/ext J-HUD-PartyFrame.js",
     "build:hud-target": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/target ./out/hud/ext J-HUD-TargetFrame.js",
     "build:hud-boss": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/boss ./out/hud/ext J-HUD-BossFrame.js",
+    "build:hud-quest": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/quest ./out/hud/ext J-HUD-QuestFrame.js",
 
     "build:jafting": "node ./src/build-tools/combine.js ./src/plugins/jafting/core ./out/jafting J-JAFTING.js",
     "build:jafting-create": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/create ./out/jafting/ext J-JAFTING-Creation.js",

@@ -10,6 +10,9 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // capture the text in a local variable for good practices!
   let textToModify = text;
 
+  // handle quest key replacements.
+  textToModify = this.translateQuestTextCode(textToModify);
+
   // handle weapon string replacements.
   textToModify = this.translateWeaponTextCode(textToModify);
 
@@ -45,9 +48,6 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
 
   // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
-
-  // handle quest key replacements.
-  textToModify = this.translateQuestTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
   return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
@@ -312,7 +312,7 @@ Window_Base.prototype.translateQuestTextCode = function(text)
   // if not using the Questopedia system, then don't try to process the text.
   if (!J.OMNI?.EXT?.QUEST) return text;
 
-  return text.replace(/\\quest\[(.*)]/gi, (_, p1) =>
+  return text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) =>
   {
     // determine the quest key.
     const questKey = p1 ?? String.empty;
@@ -327,7 +327,11 @@ Window_Base.prototype.translateQuestTextCode = function(text)
     if (!quest) return text;
 
     // grab the name of the quest.
-    const questName = quest.name();
+    const questName = quest.name()
+    //   .replace(/[\\]{1}(.)/gi, originalText =>
+    // {
+    //   return `\\${originalText}`;
+    // });
 
     // for quests, the icon displayed is the category icon instead.
     const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;

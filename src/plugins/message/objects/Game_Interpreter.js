@@ -22,6 +22,103 @@ Game_Interpreter.prototype.setupChoices = function(params)
  */
 Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
 {
+  // also hide the unmet quest conditional choices.
+  this.hideSpecificChoiceBranches(params);
+};
+
+/**
+ * Hide all the choices that don't meet the criteria.
+ * @param {rm.types.EventCommand} params The event command parameters.
+ */
+Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
+{
+  // identify some event metadata.
+  const currentCommand = this.currentCommand();
+  const eventMetadata = $gameMap.event(this.eventId());
+  const currentPage = eventMetadata.page();
+
+  // 102 = start show choice
+  // 402 = one of the show choice options
+  // 404 = end show choice
+
+  // identify the start and end of the choice branches.
+  const startShowChoiceIndex = currentPage.list.findIndex(item => item === currentCommand);
+  const endShowChoiceIndex = currentPage.list
+    .findIndex((item, index) =>
+      (index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404));
+
+  // build an array of indexes that align with the options.
+  const showChoiceIndices = currentPage.list
+    .map((command, index) =>
+    {
+      if (index < startShowChoiceIndex || index > endShowChoiceIndex) return null;
+
+      if (currentCommand.indent !== command.indent) return null;
+
+      if (command.code === 402 || command.code === 404) return index;
+
+      return null;
+    })
+    .filter(choiceIndex => choiceIndex !== null);
+
+  // convert the indices into an array of arrays that represent the actual choice code embedded within the choices.
+  const choiceGroups = showChoiceIndices.reduce((runningCollection, choiceIndex, index) =>
+  {
+    if (showChoiceIndices.length < index) return;
+    const startIndex = choiceIndex;
+    const endIndex = showChoiceIndices.at(index + 1);
+
+    let counterIndex = startIndex;
+    const choiceGroup = [];
+    while (counterIndex < endIndex)
+    {
+      choiceGroup.push(counterIndex);
+      counterIndex++;
+    }
+
+    runningCollection.push(choiceGroup);
+
+    return runningCollection;
+  }, []);
+
+  // an array of booleans where the index aligns with a choice, true being hidden, false being visible.
+  const choiceGroupsHidden = choiceGroups.map(choiceGroup => choiceGroup.some(this.shouldHideChoiceBranch, this), this);
+
+  // hide the groups accordingly.
+  choiceGroupsHidden
+    .forEach((isGroupHidden, choiceIndex) => this.setChoiceHidden(choiceIndex, isGroupHidden), this);
+};
+
+/**
+ * Determines whether a choice group- as in, a branch in a "Show Choices" event command, should be hidden from view.
+ * If this value returns false, it will be displayed. If it returns true, the choice branch will be hidden.
+ * @param {number} subChoiceCommandIndex The index in the list of commands of an event that represents this branch.
+ * @returns {boolean}
+ */
+Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex)
+{
+  // grab some metadata about the event.
+  const eventMetadata = $gameMap.event(this.eventId());
+  const currentPage = eventMetadata.page();
+
+  // grab the event subcommand.
+  const subEventCommand = currentPage.list.at(subChoiceCommandIndex);
+
+  // ignore non-comment event commands.
+  if (!eventMetadata.filterInvalidEventCommand(subEventCommand)) return false;
+
+  // ignore non-relevant comment commands.
+  if (!eventMetadata.filterCommentCommandsForBasicConditionals(subEventCommand)) return false;
+
+  // build the conditional.
+  const conditional = eventMetadata.toBasicConditional(subEventCommand);
+
+  // if the condition is met, then we don't need to hide.
+  const met = conditional.isMet();
+  if (met) return false;
+
+  // the conditional isn't met, hide the group.
+  return true;
 };
 
 /**

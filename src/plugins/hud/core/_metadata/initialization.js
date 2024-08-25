@@ -52,7 +52,7 @@ J.HUD.Aliased = {
 /**
  * A global object for managing the hud.
  * @global
- * @type {Hud_Manager}
+ * @type {HudManager}
  */
 var $hudManager = null;
 

@@ -1,12 +1,13 @@
 //region plugin commands
 /**
- * Plugin command for doing the thing.
+ * Plugin command for completing a quest by its key.
  */
 PluginManager.registerCommand(
   J.OMNI.EXT.QUEST.Metadata.name,
-  "do-the-thing",
+  "complete-quest",
   args =>
   {
-    console.log('did the thing.');
+    const { questKey } = args;
+    QuestManager.quest(questKey).flagAsCompleted();
   });
 //endregion plugin commands

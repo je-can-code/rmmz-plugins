@@ -120,7 +120,6 @@ class RPG_Base
     return new this.constructor(overrides, index);
   }
 
-
   /**
    * The unique key that is used to register this object against
    * its corresponding container when the party has one or more of these
@@ -872,5 +871,41 @@ class RPG_Base
     return matchingLines;
   }
   //endregion note
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a weapon.
+   * @returns {boolean}
+   */
+  isWeapon()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is an armor.
+   * @returns {boolean}
+   */
+  isArmor()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return false;
+  }
 }
 //endregion RPG_Base

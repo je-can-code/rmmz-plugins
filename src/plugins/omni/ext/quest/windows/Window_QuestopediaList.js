@@ -2,12 +2,36 @@
 class Window_QuestopediaList extends Window_Command
 {
   /**
+   * The category that this list is being filtered by. When an empty string, no filter is applied.
+   * @type {string}
+   */
+  _currentCategoryKey = String.empty;
+
+  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
     super(rect);
+  }
+
+  /**
+   * Gets the current category key of quests being displayed in this list.
+   * @returns {string}
+   */
+  getCurrentCategoryKey()
+  {
+    return this._currentCategoryKey;
+  }
+
+  /**
+   * Sets the current category of quests to display in this list.
+   * @param {string} categoryKey The quest category key.
+   */
+  setCurrentCategoryKey(categoryKey)
+  {
+    this._currentCategoryKey = categoryKey;
   }
 
   /**
@@ -33,11 +57,36 @@ class Window_QuestopediaList extends Window_Command
     // grab all possible quests.
     const questEntries = $gameParty.getQuestopediaEntries();
 
+    // filter the quests by various criteria.
+    const filteredQuests = questEntries.filter(this._questFiltering, this);
+
+    // no quests to display.
+    if (filteredQuests.length === 0) return [];
+
     // compile the list of commands.
-    const commands = questEntries.map(this.buildCommand, this);
+    const commands = filteredQuests.map(this.buildCommand, this);
 
     // return the compiled list of commands.
     return commands;
+  }
+
+  /**
+   * Determines whether or not this quest should be shown in the current list.
+   * @param {TrackedOmniQuest} quest The quest in question.
+   * @returns {boolean}
+   */
+  _questFiltering(quest)
+  {
+    const currentCategory = this.getCurrentCategoryKey();
+
+    // if the current category is unset or empty, then no filtering is applied.
+    if (currentCategory === String.empty) return true;
+
+    // if the category key matches the current category, then this quest should be rendered.
+    if (quest.categoryKey === currentCategory) return true;
+
+    // this quest should not be rendered.
+    return false;
   }
 
   /**
@@ -55,11 +104,16 @@ class Window_QuestopediaList extends Window_Command
       ? questopediaEntry.name()
       : J.BASE.Helpers.maskString(questopediaEntry.name())
 
+    const trackedText = questopediaEntry.isTracked()
+      ? "🔍"
+      : String.empty;
+
     // build a command based on the enemy.
     return new WindowCommandBuilder(questName)
       .setSymbol(questopediaEntry.key)
       .setExtensionData(questopediaEntry)
       .setIconIndex(this.determineQuestStateIcon(questopediaEntry))
+      .setRightText(trackedText)
       .setEnabled(isKnown)
       .build();
   }

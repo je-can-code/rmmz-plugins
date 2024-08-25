@@ -12,7 +12,7 @@ DataManager.createGameObjects = function()
   if (!$hudManager)
   {
     // if somehow we're missing this global object, then re-add it.
-    $hudManager = new Hud_Manager();
+    $hudManager = new HudManager();
   }
 };
 

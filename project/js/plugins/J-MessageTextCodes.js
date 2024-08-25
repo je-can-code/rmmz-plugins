@@ -1,3 +1,65 @@
+//region BasicChoiceConditional
+/**
+ * A basic choice conditional that can be checked for choice validity based on current leader or switch state.
+ */
+class BasicChoiceConditional
+{
+  /**
+   * A static property containing the strings representing validation types supported.
+   * @type {{Leader: 'leader', Switch: 'switch'}}
+   */
+  static Types = {
+    Leader: 'leader',
+    Switch: 'switch'
+  }
+
+  /**
+   * The {@link BasicChoiceConditional.Types} that this conditional is.
+   * @type {BasicChoiceConditional.Types}
+   */
+  type = String.empty;
+
+  /**
+   * The id corresponding with the conditional being validated.
+   * @type {number}
+   */
+  id = 0;
+
+  /**
+   * @constructor
+   * @param {string} type The {@link BasicChoiceConditional.Types} that this conditional is.
+   * @param {number} id The id that corresponds with the designated {@link BasicChoiceConditional.Types}.
+   */
+  constructor(type, id)
+  {
+    this.type = type;
+    this.id = id;
+  }
+
+  /**
+   * Determines whether or not this {@link BasicChoiceConditional} is met.
+   * @returns {boolean}
+   */
+  isMet()
+  {
+    switch (this.type)
+    {
+      // validate the leader is in fact the correct leader.
+      case BasicChoiceConditional.Types.Leader:
+        const currentLeader = $gameParty.leader();
+        const hasCorrectLeader = (currentLeader && currentLeader.actorId() === this.id);
+        return hasCorrectLeader;
+
+      // validate the conditional switch is ON.
+      case BasicChoiceConditional.Types.Switch:
+        const hasCorrectSwitchState = $gameSwitches.value(this.id) === true;
+        return hasCorrectSwitchState;
+    }
+    return true;
+  }
+}
+//endregion BasicChoiceConditional
+
 //region Introduction
 /*:
  * @target MZ
@@ -124,7 +186,68 @@ J.MESSAGE.Aliased.Game_Message = new Map();
 J.MESSAGE.Aliased.Window_Base = new Map();
 J.MESSAGE.Aliased.Window_ChoiceList = new Map();
 J.MESSAGE.Aliased.Window_ChoiceList = new Map();
+
+J.MESSAGE.RegExp = {};
+J.MESSAGE.RegExp.LeaderChoiceConditional = /<leaderChoiceCondition:[ ]?(\d+)>/i;
+J.MESSAGE.RegExp.SwitchChoiceConditional = /<switchChoiceCondition:[ ]?(\d+)>/i;
 //endregion introduction
+
+//region Game_Event
+/**
+ * A filter function for only including comment event commands relevant to choice conditionals.
+ * @param {rm.types.EventCommand} command The command being evaluated.
+ * @returns {boolean}
+ */
+Game_Event.prototype.filterCommentCommandsForBasicConditionals = function(command)
+{
+  // identify the actual comment being evaluated.
+  const [ comment, ] = command.parameters;
+
+  // in case the command isn't even valid for comment-validation.
+  if (!comment) return false;
+
+  // extract the types of regex we will be considering.
+  const { LeaderChoiceConditional, SwitchChoiceConditional } = J.MESSAGE.RegExp;
+  return [ LeaderChoiceConditional, SwitchChoiceConditional ].some(regex => regex.test(comment));
+};
+
+/**
+ * Converts a known comment event command into a conditional for basic control.
+ * @param {rm.types.EventCommand} commentCommand The comment command to parse into a conditional.
+ * @returns {BasicChoiceConditional}
+ */
+Game_Event.prototype.toBasicConditional = function(commentCommand)
+{
+  // shorthand the comment into a variable.
+  const [ comment, ] = commentCommand.parameters;
+
+  let result = null;
+
+  let type = String.empty;
+
+  switch (true)
+  {
+    // check if the leader is in fact the desired leader.
+    case J.MESSAGE.RegExp.LeaderChoiceConditional.test(comment):
+      result = J.MESSAGE.RegExp.LeaderChoiceConditional.exec(comment);
+      type = BasicChoiceConditional.Types.Leader;
+      break;
+
+    // check if a particular switch is currently ON.
+    case J.MESSAGE.RegExp.SwitchChoiceConditional.test(comment):
+      result = J.MESSAGE.RegExp.SwitchChoiceConditional.exec(comment);
+      type = BasicChoiceConditional.Types.Switch;
+      break;
+  }
+
+  // parse the value out of the regex capture group.
+  const [ , val ] = result;
+  const parsedVal = JsonMapper.parseObject(val);
+
+  // derive the conditional from the designated regex.
+  return new BasicChoiceConditional(type, parsedVal);
+};
+//endregion Game_Event
 
 //region Game_Interpreter
 /**
@@ -150,6 +273,103 @@ Game_Interpreter.prototype.setupChoices = function(params)
  */
 Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
 {
+  // also hide the unmet quest conditional choices.
+  this.hideSpecificChoiceBranches(params);
+};
+
+/**
+ * Hide all the choices that don't meet the criteria.
+ * @param {rm.types.EventCommand} params The event command parameters.
+ */
+Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
+{
+  // identify some event metadata.
+  const currentCommand = this.currentCommand();
+  const eventMetadata = $gameMap.event(this.eventId());
+  const currentPage = eventMetadata.page();
+
+  // 102 = start show choice
+  // 402 = one of the show choice options
+  // 404 = end show choice
+
+  // identify the start and end of the choice branches.
+  const startShowChoiceIndex = currentPage.list.findIndex(item => item === currentCommand);
+  const endShowChoiceIndex = currentPage.list
+    .findIndex((item, index) =>
+      (index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404));
+
+  // build an array of indexes that align with the options.
+  const showChoiceIndices = currentPage.list
+    .map((command, index) =>
+    {
+      if (index < startShowChoiceIndex || index > endShowChoiceIndex) return null;
+
+      if (currentCommand.indent !== command.indent) return null;
+
+      if (command.code === 402 || command.code === 404) return index;
+
+      return null;
+    })
+    .filter(choiceIndex => choiceIndex !== null);
+
+  // convert the indices into an array of arrays that represent the actual choice code embedded within the choices.
+  const choiceGroups = showChoiceIndices.reduce((runningCollection, choiceIndex, index) =>
+  {
+    if (showChoiceIndices.length < index) return;
+    const startIndex = choiceIndex;
+    const endIndex = showChoiceIndices.at(index + 1);
+
+    let counterIndex = startIndex;
+    const choiceGroup = [];
+    while (counterIndex < endIndex)
+    {
+      choiceGroup.push(counterIndex);
+      counterIndex++;
+    }
+
+    runningCollection.push(choiceGroup);
+
+    return runningCollection;
+  }, []);
+
+  // an array of booleans where the index aligns with a choice, true being hidden, false being visible.
+  const choiceGroupsHidden = choiceGroups.map(choiceGroup => choiceGroup.some(this.shouldHideChoiceBranch, this), this);
+
+  // hide the groups accordingly.
+  choiceGroupsHidden
+    .forEach((isGroupHidden, choiceIndex) => this.setChoiceHidden(choiceIndex, isGroupHidden), this);
+};
+
+/**
+ * Determines whether a choice group- as in, a branch in a "Show Choices" event command, should be hidden from view.
+ * If this value returns false, it will be displayed. If it returns true, the choice branch will be hidden.
+ * @param {number} subChoiceCommandIndex The index in the list of commands of an event that represents this branch.
+ * @returns {boolean}
+ */
+Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex)
+{
+  // grab some metadata about the event.
+  const eventMetadata = $gameMap.event(this.eventId());
+  const currentPage = eventMetadata.page();
+
+  // grab the event subcommand.
+  const subEventCommand = currentPage.list.at(subChoiceCommandIndex);
+
+  // ignore non-comment event commands.
+  if (!eventMetadata.filterInvalidEventCommand(subEventCommand)) return false;
+
+  // ignore non-relevant comment commands.
+  if (!eventMetadata.filterCommentCommandsForBasicConditionals(subEventCommand)) return false;
+
+  // build the conditional.
+  const conditional = eventMetadata.toBasicConditional(subEventCommand);
+
+  // if the condition is met, then we don't need to hide.
+  const met = conditional.isMet();
+  if (met) return false;
+
+  // the conditional isn't met, hide the group.
+  return true;
 };
 
 /**
@@ -246,6 +466,9 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // capture the text in a local variable for good practices!
   let textToModify = text;
 
+  // handle quest key replacements.
+  textToModify = this.translateQuestTextCode(textToModify);
+
   // handle weapon string replacements.
   textToModify = this.translateWeaponTextCode(textToModify);
 
@@ -281,9 +504,6 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
 
   // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
-
-  // handle quest key replacements.
-  textToModify = this.translateQuestTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
   return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
@@ -548,7 +768,7 @@ Window_Base.prototype.translateQuestTextCode = function(text)
   // if not using the Questopedia system, then don't try to process the text.
   if (!J.OMNI?.EXT?.QUEST) return text;
 
-  return text.replace(/\\quest\[(.*)]/gi, (_, p1) =>
+  return text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) =>
   {
     // determine the quest key.
     const questKey = p1 ?? String.empty;
@@ -563,7 +783,11 @@ Window_Base.prototype.translateQuestTextCode = function(text)
     if (!quest) return text;
 
     // grab the name of the quest.
-    const questName = quest.name();
+    const questName = quest.name()
+    //   .replace(/[\\]{1}(.)/gi, originalText =>
+    // {
+    //   return `\\${originalText}`;
+    // });
 
     // for quests, the icon displayed is the category icon instead.
     const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;

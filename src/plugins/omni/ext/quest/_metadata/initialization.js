@@ -23,8 +23,10 @@ J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.
  * A collection of all aliased methods for this plugin.
  */
 J.OMNI.EXT.QUEST.Aliased = {};
+J.OMNI.EXT.QUEST.Aliased.Game_Enemy = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Event = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Interpreter = new Map();
+J.OMNI.EXT.QUEST.Aliased.Game_Map = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Party = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_System = new Map();
 J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia = new Map();

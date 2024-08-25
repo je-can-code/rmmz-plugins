@@ -7,6 +7,12 @@ function TrackedOmniQuest(key, categoryKey, objectives)
   this.initialize(key, categoryKey, objectives);
 }
 
+/**
+ * The quest category key that represents "main"- as in, "main story" quests.
+ * @type {string}
+ */
+TrackedOmniQuest.mainQuestCategoryKey = "main";
+
 TrackedOmniQuest.prototype = {};
 TrackedOmniQuest.prototype.constructor = TrackedOmniQuest;
 
@@ -40,6 +46,9 @@ TrackedOmniQuest.prototype.initialize = function(key, categoryKey, objectives)
   this.initMembers();
 };
 
+/**
+ * Initialize all members of this quest.
+ */
 TrackedOmniQuest.prototype.initMembers = function()
 {
   /**
@@ -47,6 +56,38 @@ TrackedOmniQuest.prototype.initMembers = function()
    * @type {number}
    */
   this.state = OmniQuest.States.Inactive;
+
+  /**
+   * Whether or not this quest is being tracked.
+   * @type {boolean}
+   */
+  this.tracked = false;
+};
+
+/**
+ * Determines whether or not this quest is a "main story" quest.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isMain = function()
+{
+  return this.categoryKey.toLowerCase() === TrackedOmniQuest.mainQuestCategoryKey;
+};
+
+/**
+ * Whether or not this quest is being tracked.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isTracked = function()
+{
+  return this.tracked;
+};
+
+/**
+ * Toggles whether or not the quest is being tracked.
+ */
+TrackedOmniQuest.prototype.toggleTracked = function()
+{
+  this.tracked = !this.tracked;
 };
 
 /**
@@ -83,9 +124,10 @@ TrackedOmniQuest.prototype.unknownHint = function()
  * are just read from the data file.
  * @returns {string[]}
  */
-TrackedOmniQuest.prototype.journal = function()
+TrackedOmniQuest.prototype.overview = function()
 {
-  // TODO: implement concatenation based on the objectives and their states.
+  const { overview } = this.questMetadata();
+  return overview;
 };
 
 /**
@@ -116,21 +158,7 @@ TrackedOmniQuest.prototype.immediateObjective = function()
  */
 TrackedOmniQuest.prototype.isObjectiveCompleted = function(objectiveId = null)
 {
-  // if no objectiveId is provided, then assume: immediate >> first.
-  const actualObjectiveId = this.getFallbackObjectiveId(objectiveId);
-
-  // get either the objective of the id provided, or the immediate objective.
-  const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
-
-  // validate we have an objective.
-  if (objective)
-  {
-    // return whether or not the objective is completed.
-    return objective.state === OmniObjective.States.Completed;
-  }
-
-  // if the objective doesn't exist, then it obviously isn't completed.
-  return false;
+  return this.isObjectiveInState(OmniObjective.States.Completed, objectiveId);
 };
 
 /**
@@ -227,6 +255,16 @@ TrackedOmniQuest.prototype.canBeUnlocked = function()
 };
 
 /**
+ * A "known" quest is one that is no longer undiscovered/inactive. This includes completed/failed/missed quests.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isKnown = function()
+{
+  return this.state !== OmniQuest.States.Inactive;
+};
+
+//region state management
+/**
  * Automatically progress the current objective to complete and active the next objective in the list. If no objectives
  * are active, then the next objective in the sequence will be activated. If there are no other objectives to activate,
  * then the quest will be completed.
@@ -257,12 +295,10 @@ TrackedOmniQuest.prototype.progressObjectives = function()
   }
 
   // identify the next objective in the quest.
-  const nextObjectiveId = (this.objectives
-    .find(objective => objective.state === OmniObjective.States.Inactive))
-    ?.id;
+  const nextObjectiveId = (this.objectives.find(objective => objective.state === OmniObjective.States.Inactive))?.id;
 
-  // check if there is a "next objective" to activate.
-  if (nextObjectiveId)
+  // check if there is a "next objective" to activate- but it could be "0" as the next objectiveId.
+  if (nextObjectiveId !== null && nextObjectiveId !== undefined)
   {
     this.changeTargetObjectiveState(nextObjectiveId, OmniObjective.States.Active);
   }
@@ -317,15 +353,15 @@ TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, ne
   // get either the objective of the id provided, or the immediate objective.
   const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
 
-  // validate we have an objective to flag as missed.
-  if (objective)
+  // validate we have an objective to flag that isn't already the given state.
+  if (objective && objective.state !== newState)
   {
-    // flag the objective as missed.
+    // flag the objective as the new state.
     objective.state = newState;
-  }
 
-  // refresh the state of the quest.
-  this.refreshState();
+    // refresh the state of the quest.
+    this.refreshState();
+  }
 };
 
 /**
@@ -402,8 +438,47 @@ TrackedOmniQuest.prototype.flagAsCompleted = function()
     }
   });
 
-  // refresh the state resulting in the quest becoming failed.
+  // refresh the state resulting in the quest becoming completed.
   this.refreshState();
+
+  // check if the change of state was to "completed".
+  if (this.state === OmniQuest.States.Completed)
+  {
+    // evaluate if the quest quest being completed checked any boxes.
+    this._processQuestCompletionQuestsCheck();
+  }
+};
+
+/**
+ * Evaluate all active quest completion objectives that reside applicable to this quest.
+ */
+TrackedOmniQuest.prototype._processQuestCompletionQuestsCheck = function()
+{
+  // grab all the valid objectives.
+  const activeQuestCompletionObjectives = QuestManager.getValidQuestCompletionObjectives();
+
+  // if there are none, don't try to process this.
+  if (activeQuestCompletionObjectives.length === 0) return;
+
+  // iterate over each of the destination objectives.
+  activeQuestCompletionObjectives.forEach(objective =>
+  {
+    // extract the coordinate range from the objective.
+    const targetQuestKeys = objective.questCompletionData();
+
+    // if the quest keys for the objective don't align, then don't worry about that quest.
+    if (!targetQuestKeys.includes(this.key)) return;
+
+    // grab the quest for reference.
+    const questToProgress = QuestManager.quest(objective.questKey);
+
+    // flag the quest objective as completed.
+    questToProgress.flagObjectiveAsCompleted(objective.id);
+
+    // progress the quest to active its next objective.
+    questToProgress.progressObjectives();
+  }, this);
+
 };
 
 /**
@@ -416,6 +491,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   if (anyFailed)
   {
     this.state = OmniQuest.States.Failed;
+    return;
   }
 
   // second handle the possibility that all the objectives are unknown, aka this is an unknown quest still.
@@ -431,16 +507,19 @@ TrackedOmniQuest.prototype.refreshState = function()
   if (someActive)
   {
     this.state = OmniObjective.States.Active;
+    return;
   }
 
   // fourth handle the possibility that the quest is completed because all objectives are complete, or missed.
   const enoughComplete = this.objectives
-    .every(objective =>
-      objective.state === OmniObjective.States.Completed || objective.state === OmniObjective.States.Missed);
+    .every(objective => objective.state === OmniObjective.States.Completed || objective.state === OmniObjective.States.Missed);
   if (enoughComplete)
   {
     this.state = OmniObjective.States.Completed;
+    return;
   }
+
+  console.warn(`reached the end of quest state refresh without changing anything for quest key: ${this.key}`);
 };
 
 /**
@@ -460,7 +539,6 @@ TrackedOmniQuest.prototype.setState = function(newState)
 
   this.state = newState;
 };
-
-// TODO: implement methods for updating objectives and such.
+//endregion state management
 
 //endregion TrackedOmniQuest
