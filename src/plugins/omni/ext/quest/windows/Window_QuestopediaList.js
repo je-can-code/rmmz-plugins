@@ -96,17 +96,24 @@ class Window_QuestopediaList extends Window_Command
    */
   buildCommand(questopediaEntry)
   {
-    // quests that are yet to be known are in an unknown state.
-    const isKnown = questopediaEntry.state !== OmniQuest.States.Inactive;
-
     // determine the name based on whether its known or not.
-    const questName = isKnown
+    const questName = questopediaEntry.isKnown()
       ? questopediaEntry.name()
-      : J.BASE.Helpers.maskString(questopediaEntry.name())
+      : J.BASE.Helpers.maskString(questopediaEntry.name());
 
+    // if the quest is being tracked already, add a little emoji to indicate such.
     const trackedText = questopediaEntry.isTracked()
       ? "🔍"
       : String.empty;
+
+    // check if the quest can actually be tracked in its current state.
+    const canBeTracked = questopediaEntry.canBeTracked();
+
+    // just-in-case cleanup of quests that can't be tracked any longer.
+    if (!canBeTracked && questopediaEntry.isTracked())
+    {
+      questopediaEntry.toggleTracked();
+    }
 
     // build a command based on the enemy.
     return new WindowCommandBuilder(questName)
@@ -114,7 +121,7 @@ class Window_QuestopediaList extends Window_Command
       .setExtensionData(questopediaEntry)
       .setIconIndex(this.determineQuestStateIcon(questopediaEntry))
       .setRightText(trackedText)
-      .setEnabled(isKnown)
+      .setEnabled(canBeTracked)
       .build();
   }
 

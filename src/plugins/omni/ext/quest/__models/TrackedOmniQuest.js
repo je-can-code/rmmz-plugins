@@ -59,6 +59,24 @@ TrackedOmniQuest.prototype.initMembers = function()
 };
 
 /**
+ * Determines whether or not this quest can be tracked.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.canBeTracked = function()
+{
+  // quests that are already handled cannot be further tracked.
+  const isFinalized = this.isFinalized();
+  if (isFinalized) return false;
+
+  // quests that are currently active can be tracked.
+  if (this.isActive()) return true;
+
+  // quests that are inactive, but have hidden objectives can be tracked.
+  const hasSecretObjectives = this.objectives.some(objective => !objective.isHidden());
+  return hasSecretObjectives;
+};
+
+/**
  * Whether or not this quest is being tracked.
  * @returns {boolean}
  */
@@ -228,11 +246,20 @@ TrackedOmniQuest.prototype.isInactive = function()
 };
 
 /**
+ * An {@link OmniQuest.States.Active} quest is one that has already been unlocked/discovered by the player.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isActive = function()
+{
+  return this.isInState(OmniQuest.States.Active);
+};
+
+/**
  * A {@link OmniQuest.States.Completed} quest is one that had all of its objectives completed with some possibly missed.
  * This is considered a finalized state.
  * @returns {boolean}
  */
-TrackedOmniQuest.prototype.isComplete = function()
+TrackedOmniQuest.prototype.isCompleted = function()
 {
   return this.isInState(OmniQuest.States.Completed);
 };
@@ -256,6 +283,21 @@ TrackedOmniQuest.prototype.isFailed = function()
 TrackedOmniQuest.prototype.isMissed = function()
 {
   return this.isInState(OmniQuest.States.Missed);
+};
+
+/**
+ * A "Finalized" quest is one that has been completed/failed/missed.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isFinalized = function()
+{
+  // completed/failed/missed are all forms of finalization.
+  if (this.isCompleted()) return true;
+  if (this.isFailed()) return true;
+  if (this.isMissed()) return true;
+
+  // active/inactive are not considered finalized.
+  return false;
 };
 
 /**
@@ -566,7 +608,7 @@ TrackedOmniQuest.prototype.flagAsCompleted = function()
   this.refreshState();
 
   // check if the change of state was to "completed".
-  if (this.isComplete())
+  if (this.isCompleted())
   {
     // evaluate if the quest quest being completed checked any boxes.
     this._processQuestCompletionQuestsCheck();

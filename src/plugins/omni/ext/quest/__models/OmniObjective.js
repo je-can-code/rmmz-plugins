@@ -20,28 +20,28 @@ class OmniObjective
      * as the player is concerned, and thus must be manually handled by the developer with events and/or plugin
      * commands.
      */
-    Indiscriminate: -1,
+    Indiscriminate: "Indiscriminate",
 
     /**
      * An objective that is of type "destination" means that to fulfill the objective, the player must arrive at a
      * particular mapId, usually within a set of coordinates on a given map. These types of quests will stop being
      * monitored once the objective has been achieved.
      */
-    Destination: 0,
+    Destination: "Destination",
 
     /**
      * An objective that is of type "fetch" means that to fulfill the objective, the player must acquire one or more of
      * a specified item/weapon/armor in their inventory at a given time. These types of quests are perpetually monitored
      * until the quest is turned in, so the objective can potentially go in and out of a "completed" state.
      */
-    Fetch: 1,
+    Fetch: "Fetch",
 
     /**
      * An objective that is of type "slay" means that to fulfill the objective, the player must defeat one or more of a
      * specified enemy after the objective has been made active. Once the enemy has been defeated X times, the objective
      * will be identified as completed and will cease being monitored.
      */
-    Slay: 2,
+    Slay: "Slay",
 
     /**
      * An objective that is of type "quest" means that to fulfill the objective, the player must fully complete another
@@ -49,7 +49,7 @@ class OmniObjective
      * quest is failed, this objective will be considered failed as well, usually resulting in the quest this objective
      * belonging to being considered failed.
      */
-    Quest: 3,
+    Quest: "Quest",
   }
 
   /**
@@ -94,6 +94,12 @@ class OmniObjective
     Missed: 4,
   }
 
+  static FetchTypes = {
+    Item: "Item",
+    Weapon: "Weapon",
+    Armor: "Armor",
+  }
+
   //region properties
   /**
    * The id of this objective. This is typically used to indicate order between objectives within a single quest.
@@ -121,18 +127,10 @@ class OmniObjective
   logs = null;
 
   /**
-   * The extraneous data points that align with the objective type to determine how it can be fulfilled. Typically, if
-   * this is populated, the {@link fulfillmentQuestKeys} will be empty.
-   * @type {number[]}
+   * The various data points that define how the objective can be fulfilled.
+   * @type {OmniFulfillmentData}
    */
-  fulfillmentData = [];
-
-  /**
-   * The key or keys of the quest(s) to complete in order to fulfill this objective. Typically, if this is populated,
-   * the {@link fulfillmentData} will be empty.
-   * @type {string[]}
-   */
-  fulfillmentQuestKeys = [];
+  fulfillment = null;
 
   /**
    * Whether or not this objective is hidden by default.
@@ -146,6 +144,7 @@ class OmniObjective
    * @type {boolean}
    */
   isOptional = false;
+
   //endregion properties
 
   /**
@@ -154,19 +153,24 @@ class OmniObjective
    * @param {number} type The common classification of this objective.
    * @param {string} description The contextural description of this objective.
    * @param {OmniObjectiveLogs} logs The log information associated with the different states of this objective.
-   * @param {number[]} fulfillmentData The extraneous data on how this objective is to be fulfilled.
-   * @param {string[]} fulfillmentQuestKeys The key or keys of the quest(s) to complete to fulfill this objective.
+   * @param {OmniFulfillmentData} fulfillment The fulfillment data for this objective.
    * @param {boolean=} hiddenByDefault Whether or not this objective will be hidden upon activating the parent quest.
    * @param {boolean=} isOptional Whether or not this objective is optional for its parent quest.
    */
-  constructor(id, type, description, logs, fulfillmentData, fulfillmentQuestKeys, hiddenByDefault = true, isOptional = false)
+  constructor(
+    id,
+    type,
+    description,
+    logs,
+    fulfillment,
+    hiddenByDefault = true,
+    isOptional = false)
   {
     this.id = id;
     this.type = type;
     this.description = description;
     this.logs = logs;
-    this.fulfillmentData = fulfillmentData;
-    this.fulfillmentQuestKeys = fulfillmentQuestKeys;
+    this.fulfillment = fulfillment;
 
     this.hiddenByDefault = hiddenByDefault;
     this.isOptional = isOptional;

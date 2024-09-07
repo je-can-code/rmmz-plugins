@@ -2,9 +2,9 @@
 /**
  * A class representing the tracking for a single objective of a quest.
  */
-function TrackedOmniObjective(id, questKey, fulfillmentData, fulfillmentQuestKeys, hidden, optional)
+function TrackedOmniObjective(questKey, id, omniFulfillmentData, hidden, optional)
 {
-  this.initialize(id, questKey, fulfillmentData, fulfillmentQuestKeys, hidden, optional);
+  this.initialize(questKey, id, omniFulfillmentData, hidden, optional);
 }
 
 TrackedOmniObjective.prototype = {};
@@ -15,24 +15,23 @@ TrackedOmniObjective.prototype.constructor = TrackedOmniObjective;
  * Initialize an objective tracker for an quest.
  * @param {number} id The id of this objective.
  * @param {string} questKey The key of the quest that owns this objective.
- * @param {number[]} fulfillmentData The extraneous data on how this objective is to be fulfilled.
- * @param {string[]} fulfillmentQuestKeys The key or keys of the quest(s) to complete to fulfill this objective.
+ * @param {OmniFulfillmentData} omniFulfillmentData The extraneous data on how this objective is to be fulfilled.
  * @param {boolean} hidden Whether or not this objective is hidden.
  * @param {boolean} optional Whether or not this objective is optional for its parent quest.
  */
-TrackedOmniObjective.prototype.initialize = function(id, questKey, fulfillmentData, fulfillmentQuestKeys, hidden, optional)
+TrackedOmniObjective.prototype.initialize = function(questKey, id, omniFulfillmentData, hidden, optional)
 {
-  /**
-   * The id of this objective. This is typically used to indicate order between objectives within a single quest.
-   * @type {number}
-   */
-  this.id = id;
-
   /**
    * The key of the quest that owns this objective. This is mostly used for metadata lookup.
    * @type {string}
    */
   this.questKey = questKey;
+
+  /**
+   * The id of this objective. This is typically used to indicate order between objectives within a single quest.
+   * @type {number}
+   */
+  this.id = id;
 
   /**
    * Whether or not this objective is currently hidden.
@@ -54,7 +53,7 @@ TrackedOmniObjective.prototype.initialize = function(id, questKey, fulfillmentDa
   this.state = OmniObjective.States.Inactive;
 
   this.initializeFulfillmentData();
-  this.populateFulfillmentData(fulfillmentData, fulfillmentQuestKeys);
+  this.populateFulfillmentData(omniFulfillmentData);
 };
 
 /**
@@ -135,52 +134,43 @@ TrackedOmniObjective.prototype.initializeFulfillmentData = function()
 
 /**
  * Populates the this objective's fulfillment requirements.
- * @param {number[]} fulfillmentData
- * @param fulfillmentQuestKeys
+ * @param {OmniFulfillmentData} omniFulfillmentData
  */
-TrackedOmniObjective.prototype.populateFulfillmentData = function(fulfillmentData, fulfillmentQuestKeys)
+TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmentData)
 {
   // pivot based on the type of objective this is from the metadata.
   switch (this.type())
   {
     // if the type is indiscriminate, then it is event-controlled and not automagical.
     case OmniObjective.Types.Indiscriminate:
-      this._indiscriminateTargetData = fulfillmentData.at(0) ?? "No indiscriminate objective instructions provided.";
+      this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint ?? "No indiscriminate objective instructions provided.";
       return;
 
     // if the fulfillment is of type 'destination', then fill in the data.
     case OmniObjective.Types.Destination:
-      if (fulfillmentData.length !== 5)
-      {
-        console.error("for objectives of type 'destination', there must be 5 numbers in the fulfillment data array.");
-        console.error(`instead, ${fulfillmentData.length} ${fulfillmentData.length === 1
-          ? 'was'
-          : 'were'} found.`);
-        throw new Error("Invalid number of fulfillmentData entries for objective type 'destination'.");
-      }
-
-      this._targetMapId = fulfillmentData.at(0);
-      const point1 = [ fulfillmentData.at(1), fulfillmentData.at(2) ];
-      const point2 = [ fulfillmentData.at(3), fulfillmentData.at(4) ];
+      const { mapId, x1, y1, x2, y2 } = omniFulfillmentData.destination;
+      this._targetMapId = mapId;
+      const point1 = [ x1, y1 ];
+      const point2 = [ x2, y2 ];
       this._targetCoordinateRange.push(point1, point2);
       break;
 
     // if the fulfillment is of type 'fetch', then fill in the data.
     case OmniObjective.Types.Fetch:
-      this._targetItemType = fulfillmentData.at(0);
-      this._targetItemId = fulfillmentData.at(1);
-      this._targetItemFetchQuantity = fulfillmentData.at(2);
+      this._targetItemType = omniFulfillmentData.fetch.type;
+      this._targetItemId = omniFulfillmentData.fetch.id;
+      this._targetItemFetchQuantity = omniFulfillmentData.fetch.amount;
       break;
 
     // if the fulfillment is of type 'slay', then fill in the data.
     case OmniObjective.Types.Slay:
-      this._targetEnemyId = fulfillmentData.at(0);
-      this._targetEnemyAmount = fulfillmentData.at(1);
+      this._targetEnemyId = omniFulfillmentData.slay.id;
+      this._targetEnemyAmount = omniFulfillmentData.slay.amount;
       break;
 
     // if the fulfillment is of type 'quest', then fill in the data.
     case OmniObjective.Types.Quest:
-      this._targetQuestKeys.push(...fulfillmentQuestKeys);
+      this._targetQuestKeys.push(omniFulfillmentData.quest.keys);
       break;
   }
 };
@@ -485,9 +475,7 @@ TrackedOmniObjective.prototype.setState = function(newState)
 TrackedOmniObjective.prototype.destinationData = function()
 {
   return [
-    this._targetMapId,
-    this._targetCoordinateRange
-  ];
+    this._targetMapId, this._targetCoordinateRange ];
 };
 
 /**
@@ -528,9 +516,7 @@ TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
 TrackedOmniObjective.prototype.fetchData = function()
 {
   return [
-    this._targetItemId,
-    this._targetItemFetchQuantity
-  ];
+    this._targetItemId, this._targetItemFetchQuantity ];
 };
 
 /**
@@ -563,11 +549,11 @@ TrackedOmniObjective.prototype.fetchDataSourceTextPrefix = function()
 {
   switch (this._targetItemType)
   {
-    case 0:
+    case OmniObjective.FetchTypes.Item:
       return `\\Item`;
-    case 1:
+    case OmniObjective.FetchTypes.Weapon:
       return `\\Weapon`;
-    case 2:
+    case OmniObjective.FetchTypes.Armor:
       return `\\Armor`;
     default:
       throw new Error(`unknown target item type: ${this._targetItemType}`);
@@ -582,11 +568,11 @@ TrackedOmniObjective.prototype.fetchItemDataSource = function()
 {
   switch (this._targetItemType)
   {
-    case 0:
+    case OmniObjective.FetchTypes.Item:
       return $dataItems;
-    case 1:
+    case OmniObjective.FetchTypes.Weapon:
       return $dataWeapons;
-    case 2:
+    case OmniObjective.FetchTypes.Armor:
       return $dataArmors;
     default:
       throw new Error(`unknown target item type: ${this._targetItemType}`);
@@ -633,9 +619,7 @@ TrackedOmniObjective.prototype.hasFetchedEnoughItems = function()
 TrackedOmniObjective.prototype.slayData = function()
 {
   return [
-    this._targetEnemyId,
-    this._targetEnemyAmount
-  ];
+    this._targetEnemyId, this._targetEnemyAmount ];
 };
 
 /**
@@ -681,7 +665,8 @@ TrackedOmniObjective.prototype.hasCompletedAllQuests = function()
 
   // validate all required quests have been completed.
   return requiredQuestKeys
-    .every(requiredQuestKey => QuestManager.quest(requiredQuestKey).isComplete())
+    .every(requiredQuestKey => QuestManager.quest(requiredQuestKey)
+      .isCompleted())
 };
 //endregion quest completion data
 

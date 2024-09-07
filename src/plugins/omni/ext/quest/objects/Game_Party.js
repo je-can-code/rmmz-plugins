@@ -72,10 +72,9 @@ Game_Party.prototype.populateQuestopediaTrackings = function()
 Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
 {
   const objectivesMapper = omniObjective => new TrackedOmniObjective(
-    omniObjective.id,
     omniquest.key,
-    omniObjective.fulfillmentData,
-    omniObjective.fulfillmentQuestKeys,
+    omniObjective.id,
+    omniObjective.fulfillment,
     omniObjective.hiddenByDefault,
     omniObjective.isOptional);
 
