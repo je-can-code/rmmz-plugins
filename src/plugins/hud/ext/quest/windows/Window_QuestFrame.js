@@ -1,6 +1,13 @@
 //region Window_QuestFrame
+/**
+ * A window containing the HUD data for the {@link QuestManager}'s tracked quests.
+ */
 class Window_QuestFrame extends Window_Base
 {
+  /**
+   * @constructor
+   * @param {Rectangle} rect The window size desired for this window.
+   */
   constructor(rect)
   {
     super(rect);
@@ -32,6 +39,9 @@ class Window_QuestFrame extends Window_Base
     this.opacity = 0;
   }
 
+  /**
+   * Draws the quests currently tracked in the window as an element of the HUD.
+   */
   drawContent()
   {
     // we default to the upper left most point of the window for origin.
@@ -41,62 +51,158 @@ class Window_QuestFrame extends Window_Base
     this.drawQuests(x, y);
   }
 
+  /**
+   * Renders all {@link TrackedOmniQuest}s the player currently has set as "tracked".
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
   drawQuests(x, y)
   {
     // grab the current quest.
     const quests = QuestManager.trackedQuests();
 
-    // if there are no quests, do not render them.
+    // if there are no tracked quests, do not render them.
     if (quests.length === 0) return;
 
+    // designate the lineheight once!
     const lh = this.lineHeight();
 
+    // initialize the line counter, shared throughout the rendering of this window.
     let lineCount = 0;
 
-    quests.forEach((quest, questIndex) =>
+    // render each quest with a global line count that keeps the Y in sync.
+    // TODO: consider using a reducer?
+    quests.forEach(quest =>
     {
-      const questNameY = lh * lineCount;
-      const questNameSized = this.modFontSizeForText(-4, quest.name());
-      const questName = this.boldenText(questNameSized);
-      const questNameWidth = this.textWidth(questName);
-      this.drawTextEx(questName, 0, questNameY, questNameWidth);
+      // the base y for this quest.
+      const questY = y;
+
+      // the base y for this quest.
+      const questNameY = questY + (lh * lineCount);
+
+      // render the quest name as the header of the quest frame for each quest.
+      // TODO: if necessary, make this return how many lines rendered?
+      this.drawQuestName(quest, x, questNameY);
+
+      // and count the line.
       lineCount++;
 
+      // grab all the active objectives.
       const drawableObjectives = quest.objectives.filter(objective => objective.isActive());
 
+      // check if we ended up with no active objectives.
       if (drawableObjectives.length === 0)
       {
-        const objectiveTextWidth = this.textWidth(objectiveText);
-        this.drawTextEx(objectiveText, 10, objectiveY, objectiveTextWidth);
+        // identify the specified line height for each successive quest .
+        const nonObjectiveY = questY + (lh * lineCount);
+
+        // render the non-objective.
+        // TODO: if necessary, make this return how many lines rendered?
+        this.drawNonObjective(quest, x, nonObjectiveY);
+
+        // and count the line.
+        lineCount++;
+
+        // don't process the objectives.
+        return;
       }
 
+      // iterate over each objective to render it.
       drawableObjectives
-        .forEach((objective, objectiveIndex) =>
+        .forEach(objective =>
         {
-          const objectiveY = lh * (objectiveIndex + lineCount);
-          const objectiveText = this.modFontSizeForText(-8, objective.fulfillmentText());
-          const objectiveTextWidth = this.textWidth(objectiveText);
-          this.drawTextEx(objectiveText, 10, objectiveY, objectiveTextWidth);
+          // identify the specified line height for each successive objective.
+          const objectiveY = questY + (lh * lineCount);
+
+          // render the objective.
+          // TODO: if necessary, make this return how many lines rendered?
+          this.drawObjective(objective, x, objectiveY);
+
+          // and count the line.
           lineCount++;
         });
     }, this);
   }
 
-  drawQuest(x, y)
+  /**
+   * Renders the name of the quest being tracked.
+   * @param {TrackedOmniQuest} quest The quest being tracked.
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
+  drawQuestName(quest, x, y)
   {
+    // if the quest isn't known, it should be masked.
+    const possiblyMaskedName = quest.isKnown()
+      ? quest.name()
+      : J.BASE.Helpers.maskString(quest.name());
 
+    // the quest name itself looks a bit better when its a bit smaller than the base size and bold.
+    const questNameSized = this.modFontSizeForText(-4, possiblyMaskedName);
+    const questName = this.boldenText(questNameSized);
+
+    // render the emboldened text of the quest name.
+    const questNameWidth = this.textWidth(questName);
+    this.drawTextEx(questName, x, y, questNameWidth);
   }
 
-  drawObjectives(x, y)
+  /**
+   * Renders in-place of objectives the appropriate "you're not currently on any active objective for this quest" text,
+   *
+   * This situation is kind of an exceptional situation for a player to likely want to track a quest for, and should be
+   * called out as a thing to discourage the player from keeping tracked.
+   * @param {TrackedOmniQuest} quest The quest to render for the non-objective situation.
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
+  drawNonObjective(quest, x, y)
   {
+    // determine the suspected reason for which there are no active objectives.
+    let noObjectivesText;
+    switch (true)
+    {
+      case quest.isComplete():
+        noObjectivesText = `✅ Quest is complete.`;
+        break;
+      case quest.isFailed():
+        noObjectivesText = `❌ Quest is failed.`;
+        break;
+      case quest.isMissed():
+        noObjectivesText = `❓ Quest is missed.`;
+        break;
+      default:
+        noObjectivesText = `⁉️🌫️ Quest is in a state with no known objectives active.`;
+        break;
+    }
 
+    // render the line and count it.
+    const nonObjectiveX = x + 10;
+    const objectiveTextWidth = this.textWidth(noObjectivesText);
+    this.drawTextEx(noObjectivesText, nonObjectiveX, y, objectiveTextWidth);
   }
 
-  drawObjective(x, y)
+  /**
+   * Renders the fulfillment text for the given objective.
+   * @param {TrackedOmniObjective} objective The objective to render.
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
+  drawObjective(objective, x, y)
   {
+    // the fulfillment text may be longer, so render it a bit smaller.
+    const objectiveText = this.modFontSizeForText(-8, objective.fulfillmentText());
 
+    // render the text a bit indented to the right.
+    const objectiveX = x + 10;
+    const objectiveTextWidth = this.textWidth(objectiveText);
+    this.drawTextEx(objectiveText, objectiveX, y, objectiveTextWidth);
   }
 
+  /**
+   * Overrides {@link lineHeight}.<br/>
+   * This window's default lineheight will be 10 less than the default.
+   * @returns {number}
+   */
   lineHeight()
   {
     return super.lineHeight() - 10;

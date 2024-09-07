@@ -188,6 +188,38 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(fulfillmentDat
 
 //region state check
 /**
+ * Returns whether or not this objective has moved beyond being {@link OmniObjective.States.Inactive}.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isKnown = function()
+{
+  // objectives that are inactive but NOT hidden are "known".
+  if (!this.hidden && this.isInactive()) return true;
+
+  // objectives that have been at least started or even finished count as "known".
+  if (!this.isInactive()) return true;
+
+  // the objective is unknown at this time.
+  return false;
+};
+
+/**
+ * Returns whether or not this objective has had some form of finalization from another state. This most commonly will
+ * be completed, failed, or missed.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isFinalized = function()
+{
+  // completed/failed/missed are all forms of finalization.
+  if (this.isCompleted()) return true;
+  if (this.isFailed()) return true;
+  if (this.isMissed()) return true;
+
+  // active/inactive are not considered finalized.
+  return false;
+};
+
+/**
  * Returns whether or not this objective is {@link OmniObjective.States.Inactive}.
  * @returns {boolean}
  */
@@ -258,6 +290,33 @@ TrackedOmniObjective.prototype.isValid = function(targetType)
   // make sure the types match.
   return this.type() === targetType;
 };
+
+/**
+ * Check if this objective is fulfilled- whatever type that it is.
+ * @returns {boolean}
+ */
+TrackedOmniObjective.prototype.isFulfilled = function()
+{
+  switch (this.type())
+  {
+    // indiscriminate quests can only be completed manually by the developer and can't programmatically be fulfilled.
+    case OmniObjective.Types.Indiscriminate:
+      return false;
+
+    case OmniObjective.Types.Destination:
+      return this.isPlayerWithinDestinationRange();
+
+    case OmniObjective.Types.Fetch:
+      this.synchronizeFetchTargetItemQuantity();
+      return this.hasFetchedEnoughItems();
+
+    case OmniObjective.Types.Slay:
+      return this.hasSlainEnoughEnemies();
+
+    case OmniObjective.Types.Quest:
+      return this.hasCompletedAllQuests();
+  }
+};
 //endregion state check
 
 //region metadata
@@ -298,18 +357,25 @@ TrackedOmniObjective.prototype.description = function()
  */
 TrackedOmniObjective.prototype.log = function()
 {
+  // deconstruct the logs out of the metadata.
+  const { inactive, active, completed, failed, missed } = this.objectiveMetadata().logs;
+
   switch (this.state)
   {
     case OmniObjective.States.Inactive:
-      return String.empty;
+      return inactive;
+
     case OmniObjective.States.Active:
-      return this.objectiveMetadata().logs.discovered;
+      return active;
+
     case OmniObjective.States.Completed:
-      return this.objectiveMetadata().logs.completed;
+      return completed;
+
     case OmniObjective.States.Failed:
-      return this.objectiveMetadata().logs.failed;
+      return failed;
+
     case OmniObjective.States.Missed:
-      return this.objectiveMetadata().logs.missed;
+      return missed;
   }
 };
 
@@ -368,6 +434,46 @@ TrackedOmniObjective.prototype.fulfillmentText = function()
   }
 };
 
+/**
+ * Gets the icon index derived from the state of this objective.
+ * @returns {number}
+ */
+TrackedOmniObjective.prototype.iconIndexByState = function()
+{
+  switch (this.state)
+  {
+    // TODO: parameterize this.
+    case OmniObjective.States.Inactive:
+      return 93;
+    case OmniObjective.States.Active:
+      return 92;
+    case OmniObjective.States.Completed:
+      return 91;
+    case OmniObjective.States.Failed:
+      return 90;
+    case OmniObjective.States.Missed:
+      return 95;
+  }
+};
+
+/**
+ * Changes the state of this objective to a new state and processes the {@link onObjectiveUpdate} hook. If the state
+ * does not actually change to something new, the hook will not trigger.
+ * @param {number} newState The new {@link OmniObjective.States} to set this state to.
+ */
+TrackedOmniObjective.prototype.setState = function(newState)
+{
+  // check if the state actually differed.
+  if (this.state !== newState)
+  {
+    // apply the changed state.
+    this.state = newState;
+
+    // notify a change happened with this objective.
+    this.onObjectiveUpdate();
+  }
+};
+
 //region destination data
 /**
  * Gets the destination data for this objective. The response shape will contain the mapId, and the coordinate range.
@@ -390,7 +496,10 @@ TrackedOmniObjective.prototype.destinationData = function()
 TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
 {
   // grab the coordinate range from this objective.
-  const range = this.destinationData().at(1);
+  const [ mapId, range ] = this.destinationData();
+
+  // validate the map is the correct map before assessing coordinates.
+  if ($gameMap.mapId() !== mapId) return false;
 
   // deconstruct the points from the coordinate range.
   const [ x1, y1 ] = range.at(0);
@@ -560,6 +669,19 @@ TrackedOmniObjective.prototype.hasSlainEnoughEnemies = function()
 TrackedOmniObjective.prototype.questCompletionData = function()
 {
   return this._targetQuestKeys;
+};
+
+TrackedOmniObjective.prototype.hasCompletedAllQuests = function()
+{
+  // grab all the quest keys for this objective.
+  const requiredQuestKeys = this.questCompletionData();
+
+  // if there are no keys, then technically there are no quests to complete for this quest complete objective.
+  if (requiredQuestKeys.length === 0) return true;
+
+  // validate all required quests have been completed.
+  return requiredQuestKeys
+    .every(requiredQuestKey => QuestManager.quest(requiredQuestKey).isComplete())
 };
 //endregion quest completion data
 
