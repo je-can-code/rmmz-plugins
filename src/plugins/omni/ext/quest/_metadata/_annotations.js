@@ -88,7 +88,9 @@
  * can! By constructing the correct JSON to match your heart's deepest desires
  * for quests, you too can do questopedic things!
  *
- * WIP: see rmmz-data-editor... eventually.
+ * TLDR;
+ * Use my "rmmz-data-editor" to actually construct the data, please don't try
+ * to hack this together manually by writing JSON.
  *
  * ============================================================================
  * CHANGELOG:
