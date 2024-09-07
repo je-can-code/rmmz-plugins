@@ -61,6 +61,7 @@ class OmniObjective
    *     Failed: 3
    *     Missed: 4
    * </pre>
+   * @type {{Active: number, Failed: number, Completed: number, Inactive: number, Missed: number}}
    */
   static States = {
     /**

@@ -94,7 +94,7 @@ class Window_QuestopediaObjectives extends Window_Command
     return new WindowCommandBuilder(text)
       .setSymbol(questObjective.id)
       .setExtensionData(questObjective)
-      .setIconIndex(this.determineObjectiveStateIcon(questObjective))
+      .setIconIndex(questObjective.iconIndexByState())
       .addTextLine(questObjective.fulfillmentText() ?? String.empty)
       .flagAsMultiline()
       .build();
@@ -108,28 +108,6 @@ class Window_QuestopediaObjectives extends Window_Command
       .addTextLine("No known objectives for this quest.")
       .flagAsSubText()
       .build();
-  }
-
-  /**
-   * Translates a quest objective's state into the icon.
-   * @param {TrackedOmniObjective} questObjective The quest objective data.
-   */
-  determineObjectiveStateIcon(questObjective)
-  {
-    switch (questObjective.state)
-    {
-      // TODO: parameterize this.
-      case OmniObjective.States.Inactive:
-        return 93;
-      case OmniObjective.States.Active:
-        return 92;
-      case OmniObjective.States.Completed:
-        return 91;
-      case OmniObjective.States.Failed:
-        return 90;
-      case OmniObjective.States.Missed:
-        return 95;
-    }
   }
 }
 

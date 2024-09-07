@@ -142,7 +142,7 @@ class Scene_Questopedia extends Scene_MenuBase
     this.createQuestopediaDescriptionWindow();
 
     // create the known list of unfinished and completed objectives of the selected quest.
-    this.createQuestopediaObjectivesWindow();
+    //this.createQuestopediaObjectivesWindow();
 
 
     const categoriesWindow = this.getQuestopediaCategoriesWindow();
@@ -517,7 +517,7 @@ class Scene_Questopedia extends Scene_MenuBase
     const detailWindow = this.getQuestopediaDetailWindow();
 
     // grab the objectives window.
-    const objectivesWindow = this.getQuestopediaObjectivesWindow();
+    // const objectivesWindow = this.getQuestopediaObjectivesWindow();
 
     // grab the highlighted enemy's extra data, their observations.
     const highlightedQuestEntry = listWindow.currentExt();
@@ -527,7 +527,7 @@ class Scene_Questopedia extends Scene_MenuBase
     {
       // empty the contents of the detail and objectives.
       detailWindow.clearContent();
-      objectivesWindow.clearContent();
+      //objectivesWindow.clearContent();
       return;
     }
 
@@ -536,8 +536,8 @@ class Scene_Questopedia extends Scene_MenuBase
     detailWindow.refresh();
 
     // sync the objectives window with the currently-highlighted quest.
-    objectivesWindow.setCurrentObjectives(highlightedQuestEntry.objectives);
-    objectivesWindow.refresh();
+    // objectivesWindow.setCurrentObjectives(highlightedQuestEntry.objectives);
+    // objectivesWindow.refresh();
   }
 
   onQuestopediaCategoryChange()

@@ -7,12 +7,6 @@ function TrackedOmniQuest(key, categoryKey, objectives)
   this.initialize(key, categoryKey, objectives);
 }
 
-/**
- * The quest category key that represents "main"- as in, "main story" quests.
- * @type {string}
- */
-TrackedOmniQuest.mainQuestCategoryKey = "main";
-
 TrackedOmniQuest.prototype = {};
 TrackedOmniQuest.prototype.constructor = TrackedOmniQuest;
 
@@ -65,15 +59,6 @@ TrackedOmniQuest.prototype.initMembers = function()
 };
 
 /**
- * Determines whether or not this quest is a "main story" quest.
- * @returns {boolean}
- */
-TrackedOmniQuest.prototype.isMain = function()
-{
-  return this.categoryKey.toLowerCase() === TrackedOmniQuest.mainQuestCategoryKey;
-};
-
-/**
  * Whether or not this quest is being tracked.
  * @returns {boolean}
  */
@@ -90,6 +75,7 @@ TrackedOmniQuest.prototype.toggleTracked = function()
   this.tracked = !this.tracked;
 };
 
+//region metadata
 /**
  * Gets the metadata for this {@link TrackedOmniQuest}.
  * @returns {OmniQuest}
@@ -107,6 +93,37 @@ TrackedOmniQuest.prototype.name = function()
 {
   const { name } = this.questMetadata();
   return name;
+};
+
+/**
+ * The recommended level for the quest- but its computed since its just read from the data file.
+ * @returns {number} The recommended level to complete the quest.
+ */
+TrackedOmniQuest.prototype.recommendedLevel = function()
+{
+  const { recommendedLevel } = this.questMetadata();
+  return recommendedLevel;
+};
+
+/**
+ * The tag keys on the quest- but its computed since its just read from the data file.
+ * @returns {string[]} The tag keys associated with the quest.
+ */
+TrackedOmniQuest.prototype.tagKeys = function()
+{
+  const { tagKeys } = this.questMetadata();
+  return tagKeys ?? [];
+};
+
+/**
+ * Gets the {@link OmniTag}s that correspond with the tag keys on the quest.
+ * @returns {OmniTag[]}
+ */
+TrackedOmniQuest.prototype.tags = function()
+{
+  const tags = this.tagKeys()
+    .map(tagKey => J.OMNI.EXT.QUEST.Metadata.tagsMap.get(tagKey));
+  return tags;
 };
 
 /**
@@ -129,27 +146,9 @@ TrackedOmniQuest.prototype.overview = function()
   const { overview } = this.questMetadata();
   return overview;
 };
+//endregion metadata
 
-/**
- * Gets all objectives currently tracked as {@link OmniObjective.States.Active}.
- * @returns {TrackedOmniObjective[]}
- */
-TrackedOmniQuest.prototype.activeObjectives = function()
-{
-  return this.objectives
-    .filter(objective => objective.state === OmniObjective.States.Active);
-};
-
-/**
- * Gets the first-most objective that is currently tracked as {@link OmniObjective.States.Active}.
- * @returns {TrackedOmniObjective}
- */
-TrackedOmniQuest.prototype.immediateObjective = function()
-{
-  return this.activeObjectives()
-    ?.at(0);
-};
-
+//region state check
 /**
  * Check if the target objective by its id is completed already. This falls back to the immediate, or the first if no
  * objective id was provided.
@@ -211,6 +210,67 @@ TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null
 };
 
 /**
+ * A "known" quest is one that is no longer undiscovered/inactive. This includes completed/failed/missed quests.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isKnown = function()
+{
+  return !this.isInactive();
+};
+
+/**
+ * An {@link OmniQuest.States.Inactive} quest is one that has yet to be unlocked/discovered by the player.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isInactive = function()
+{
+  return this.isInState(OmniQuest.States.Inactive);
+};
+
+/**
+ * A {@link OmniQuest.States.Completed} quest is one that had all of its objectives completed with some possibly missed.
+ * This is considered a finalized state.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isComplete = function()
+{
+  return this.isInState(OmniQuest.States.Completed);
+};
+
+/**
+ * A {@link OmniQuest.States.Failed} quest is one that had one or more of its objectives placed into a failed state.
+ * This is considered a finalized state.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isFailed = function()
+{
+  return this.isInState(OmniQuest.States.Failed);
+};
+
+/**
+ * A {@link OmniQuest.States.Missed} quest is one that had one or more of its objectives placed into a missed state, and
+ * none of the objectives marked as completed. This most likely will happen to a quest that may or may not have a
+ * non-hidden objective to the player but the objective was never completed resulting in the quest being missed.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isMissed = function()
+{
+  return this.isInState(OmniQuest.States.Missed);
+};
+
+/**
+ * Checks if the quest is in a particular {@link OmniQuest.States}.
+ * @param {number} targetState The {@link OmniQuest.States} to compare the current state against.
+ * @returns {boolean}
+ */
+TrackedOmniQuest.prototype.isInState = function(targetState)
+{
+  return this.state === targetState;
+};
+//endregion state check
+
+//region actions
+/**
  * Unlocks this quest and actives the target objective. If no objectiveId is provided, then the first objective will be
  * made {@link OmniObjective.States.Active}.
  * @param {number=} objectiveId The id of the objective to initialize as active; defaults to the immediate or first.
@@ -224,7 +284,7 @@ TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
     return;
   }
 
-  // active the target objective.
+  // active the target objective- though one likely won't be provided, activating the first objective in the quest.
   this.flagObjectiveAsActive(objectiveId);
 
   // refresh the state of the quest.
@@ -232,13 +292,16 @@ TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
 };
 
 /**
- * Resets this quest back to being completely unknown.
+ * Resets this quest back to being completely unknown.<br/>
+ * Note that objectives that are still not-hidden will be visible.
  */
 TrackedOmniQuest.prototype.reset = function()
 {
+  // revert the quest to unknown.
   this.state = OmniObjective.States.Unknown;
 
-  this.objectives.forEach(objective => objective.state = OmniObjective.States.Unknown);
+  // revert all the objectives to inactive.
+  this.objectives.forEach(objective => objective.state = OmniObjective.States.Inactive);
 };
 
 /**
@@ -248,22 +311,12 @@ TrackedOmniQuest.prototype.reset = function()
 TrackedOmniQuest.prototype.canBeUnlocked = function()
 {
   // only not-yet-unlocked quests can be unlocked.
-  if (this.state !== OmniQuest.States.Inactive) return false;
+  if (this.isKnown()) return false;
 
   // the quest can be unlocked.
   return true;
 };
 
-/**
- * A "known" quest is one that is no longer undiscovered/inactive. This includes completed/failed/missed quests.
- * @returns {boolean}
- */
-TrackedOmniQuest.prototype.isKnown = function()
-{
-  return this.state !== OmniQuest.States.Inactive;
-};
-
-//region state management
 /**
  * Automatically progress the current objective to complete and active the next objective in the list. If no objectives
  * are active, then the next objective in the sequence will be activated. If there are no other objectives to activate,
@@ -284,29 +337,96 @@ TrackedOmniQuest.prototype.progressObjectives = function()
   if (activeObjectives.length > 1)
   {
     // don't complete them, they must be completed individually!
+    console.warn(`multiple quest objectives are currently active and must be finalized manually by id.`);
     return;
   }
+
   // check if there is only one- this is probably the most common.
-  else if (activeObjectives.length === 1)
+  if (activeObjectives.length === 1)
   {
     // complete the objective.
     const objectiveId = activeObjectives.at(0).id;
     this.flagObjectiveAsCompleted(objectiveId);
   }
 
-  // identify the next objective in the quest.
-  const nextObjectiveId = (this.objectives.find(objective => objective.state === OmniObjective.States.Inactive))?.id;
+  // NOTE: at this point, we should have zero active objectives, so we should seek to activate the next one in sequence.
 
-  // check if there is a "next objective" to activate- but it could be "0" as the next objectiveId.
-  if (nextObjectiveId !== null && nextObjectiveId !== undefined)
+  // fast-forward through the quest objectives as-necessary.
+  this._fastForwardToNextObjective();
+};
+
+/**
+ * Fast-forwards to the next objective in the list and changes it from inactive to active. If the newly activated
+ * objective is completable immediately, complete it and keep taking one more inactive objective sequentially until we
+ * stop immediately completing them and leave the player with an active objective on the quest, or by running out of
+ * inactive objectives to activate translating to the quest being officially complete.
+ */
+TrackedOmniQuest.prototype._fastForwardToNextObjective = function()
+{
+  let needsNextObjective = false;
+  do
   {
-    this.changeTargetObjectiveState(nextObjectiveId, OmniObjective.States.Active);
+    // identify the sequentially-next inactive objective in the quest.
+    const nextObjective = this.objectives.find(objective => objective.state === OmniObjective.States.Inactive);
+
+    // validate there was a next objective.
+    if (nextObjective)
+    {
+      // check if the objective is fulfilled already.
+      if (nextObjective.isFulfilled())
+      {
+        // flag it as completed and cycle to the next one.
+        this.flagObjectiveAsCompleted(nextObjective.id);
+        needsNextObjective = true;
+      }
+      // the objective hasn't already been fulfilled, so lets activate it.
+      else
+      {
+        // flag it as active and stop looking for a next objective.
+        this.flagObjectiveAsActive(nextObjective.id);
+        needsNextObjective = false;
+      }
+    }
+    // we have no available next inactive objective.
+    else
+    {
+      // stop looping.
+      needsNextObjective = false;
+    }
   }
-  // then there were no more inactive objectives to active.
-  else
-  {
-    this.flagAsCompleted();
-  }
+    // keep taking one objective while we have them- one must be active!
+  while (needsNextObjective);
+
+  // check if there are any additional active objectives.
+  const hasAnymoreActiveObjectives = this.objectives.some(objective => objective.isActive());
+
+  // if there are still active objectives, then we are done processing for now.
+  if (hasAnymoreActiveObjectives) return;
+
+  // then there were no more inactive objectives to activate, nor are there any active objectives- quest complete!
+  this.flagAsCompleted();
+};
+//endregion actions
+
+//region state management
+/**
+ * Gets all objectives currently tracked as {@link OmniObjective.States.Active}.
+ * @returns {TrackedOmniObjective[]}
+ */
+TrackedOmniQuest.prototype.activeObjectives = function()
+{
+  return this.objectives
+    .filter(objective => objective.state === OmniObjective.States.Active);
+};
+
+/**
+ * Gets the first-most objective that is currently tracked as {@link OmniObjective.States.Active}.
+ * @returns {TrackedOmniObjective}
+ */
+TrackedOmniQuest.prototype.immediateObjective = function()
+{
+  return this.activeObjectives()
+    ?.at(0);
 };
 
 /**
@@ -343,7 +463,7 @@ TrackedOmniQuest.prototype.flagObjectiveAsMissed = function(objectiveId = null)
 /**
  * Change the target objective by its id to a new state.
  * @param {number} objectiveId
- * @param {OmniObjective.States} newState The new state to change the objective to.
+ * @param {number} newState The new {@link OmniObjective.States} to change the objective to.
  */
 TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, newState)
 {
@@ -357,7 +477,7 @@ TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, ne
   if (objective && objective.state !== newState)
   {
     // flag the objective as the new state.
-    objective.state = newState;
+    objective.setState(newState);
 
     // refresh the state of the quest.
     this.refreshState();
@@ -389,9 +509,11 @@ TrackedOmniQuest.prototype.flagAsMissed = function()
   // flag all the objectives as missed.
   this.objectives.forEach(objective =>
   {
-    if (objective.state === OmniObjective.States.Active || OmniObjective.States.Inactive)
+    // currently-active and yet-to-be active objectives are updated.
+    if (objective.isActive() || objective.isInactive())
     {
-      objective.state = OmniObjective.States.Missed;
+      // flag the objective as missed.
+      objective.setState(OmniObjective.States.Missed);
     }
   });
 
@@ -407,9 +529,11 @@ TrackedOmniQuest.prototype.flagAsFailed = function()
   // flag all the objectives as missed.
   this.objectives.forEach(objective =>
   {
-    if (objective.state === OmniObjective.States.Active || OmniObjective.States.Inactive)
+    // currently-active and yet-to-be active objectives are updated.
+    if (objective.isActive() || objective.isInactive())
     {
-      objective.state = OmniObjective.States.Failed;
+      // flag the objective as failed.
+      objective.setState(OmniObjective.States.Failed);
     }
   });
 
@@ -422,19 +546,19 @@ TrackedOmniQuest.prototype.flagAsFailed = function()
  */
 TrackedOmniQuest.prototype.flagAsCompleted = function()
 {
-  // flag all the objectives as missed.
+  // forcefully flag all the objectives as missed and at once.
   this.objectives.forEach(objective =>
   {
     // all remaining active objectives will be flagged as completed.
-    if (objective.state === OmniObjective.States.Active)
+    if (objective.isActive())
     {
-      objective.state = OmniObjective.States.Completed;
+      objective.setState(OmniObjective.States.Completed);
     }
 
     // all remaining inactive objectives will be flagged as missed- but this doesn't prevent a quest from completing.
-    if (objective.state === OmniObjective.States.Inactive)
+    if (objective.isInactive())
     {
-      objective.state = OmniObjective.States.Missed;
+      objective.setState(OmniObjective.States.Missed);
     }
   });
 
@@ -442,7 +566,7 @@ TrackedOmniQuest.prototype.flagAsCompleted = function()
   this.refreshState();
 
   // check if the change of state was to "completed".
-  if (this.state === OmniQuest.States.Completed)
+  if (this.isComplete())
   {
     // evaluate if the quest quest being completed checked any boxes.
     this._processQuestCompletionQuestsCheck();
@@ -487,7 +611,7 @@ TrackedOmniQuest.prototype._processQuestCompletionQuestsCheck = function()
 TrackedOmniQuest.prototype.refreshState = function()
 {
   // first handle the possibility that any of the objectives are failed- which fail the quest.
-  const anyFailed = this.objectives.some(objective => objective.state === OmniObjective.States.Failed);
+  const anyFailed = this.objectives.some(objective => objective.isFailed());
   if (anyFailed)
   {
     this.state = OmniQuest.States.Failed;
@@ -495,7 +619,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   }
 
   // second handle the possibility that all the objectives are unknown, aka this is an unknown quest still.
-  const allUnknown = this.objectives.every(objective => objective.state === OmniObjective.States.Inactive);
+  const allUnknown = this.objectives.every(objective => objective.isInactive());
   if (allUnknown)
   {
     this.state = OmniQuest.States.Inactive;
@@ -503,7 +627,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   }
 
   // third handle the possibility that the quest is ongoing because some objectives are still active.
-  const someActive = this.objectives.some(objective => objective.state === OmniObjective.States.Active);
+  const someActive = this.objectives.some(objective => objective.isActive());
   if (someActive)
   {
     this.state = OmniObjective.States.Active;
@@ -512,14 +636,14 @@ TrackedOmniQuest.prototype.refreshState = function()
 
   // fourth handle the possibility that the quest is completed because all objectives are complete, or missed.
   const enoughComplete = this.objectives
-    .every(objective => objective.state === OmniObjective.States.Completed || objective.state === OmniObjective.States.Missed);
+    .every(objective => objective.isCompleted() || objective.isMissed());
   if (enoughComplete)
   {
     this.state = OmniObjective.States.Completed;
     return;
   }
 
-  console.warn(`reached the end of quest state refresh without changing anything for quest key: ${this.key}`);
+  console.info(`refreshed state without changing state for quest key: ${this.key}`);
 };
 
 /**
