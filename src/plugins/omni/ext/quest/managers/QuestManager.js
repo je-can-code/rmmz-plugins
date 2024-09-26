@@ -50,9 +50,24 @@ class QuestManager
    */
   static trackedQuests()
   {
-    const allQuests = $gameParty.getQuestopediaEntriesCache().values();
-    const questsArray = Array.from(allQuests);
-    return questsArray.filter(quest => quest.isTracked());
+    const allQuests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+    return Array.from(allQuests)
+      .filter(quest => quest.isTracked());
+  }
+
+  /**
+   * Sets whether or not a quest is being tracked to the given state.
+   * @param {string} key The key of the quest to modify tracking for.
+   * @param {boolean} trackedState The tracking state for this quest.
+   */
+  static setQuestTrackingByKey(key, trackedState)
+  {
+    // grab the quest to modify tracking for.
+    const quest = this.quest(key);
+
+    // set the tracking state to the given state.
+    quest.toggleTracked(trackedState);
   }
 
   /**
@@ -140,7 +155,7 @@ class QuestManager
    * A script-friendly "if" conditional function that can be used in events to check if a particular objective on a
    * particular quest can be executed. If no objective id is provided, the fallback will be used (immediate >> first).
    * @param {string} questKey The key of the quest to check the objective of.
-   * @param {number?} objectiveId The objective id to interrogate.
+   * @param {?number} objectiveId The objective id to interrogate.
    * @returns {boolean}
    */
   static canDoObjective(questKey, objectiveId = null)
@@ -185,7 +200,7 @@ class QuestManager
    * particular quest is already completed. If no objective id is provided, the fallback will be used
    * (immediate >> first).
    * @param {string} questKey The key of the quest to check the objective of.
-   * @param {number?} objectiveId The objective id to interrogate.
+   * @param {?number} objectiveId The objective id to interrogate.
    * @returns {boolean}
    */
   static isObjectiveCompleted(questKey, objectiveId = null)
@@ -377,7 +392,6 @@ class QuestManager
 
     return questCompletionObjectives;
   }
-
 }
 
 //endregion QuestManager
