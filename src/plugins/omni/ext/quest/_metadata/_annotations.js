@@ -1,4 +1,4 @@
-//region annoations
+//region annotations
 /*:
  * @target MZ
  * @plugindesc
@@ -51,7 +51,7 @@
  *     - missed
  *
  * You can see that there is a lot of data, but this is what you need to know:
- * A Quest is comprised of a series of objectives.
+ * A Quest consists of a series of objectives.
  * Each objective should be identifiable as a single distinct task.
  * Each objective can be categorized into one of five categories of objective.
  *
@@ -66,7 +66,7 @@
  * The Quest data is derived from an external file rather than the plugin's
  * parameters. This file lives in the "/data" directory of your project, and
  * is called "config.quest.json". You can absolutely generate/modify this file
- * by hand, but you'll probably want to visit my github and swipe the
+ * by hand, but you'll probably want to visit my GitHub and swipe the
  * rmmz-data-editor project I've built that provides a convenient GUI for
  * generating and modifying quests in just about every way you could need.
  *
@@ -76,12 +76,12 @@
  * files for configuration like this, a project made with this plugin will
  * simply crash when attempting to load in a web context with an error akin to:
  *    "ReferenceError require is not defined"
- * This error is a result of attempting to leverage nodejs's "require" loader
+ * This error is a result of attempting to leverage nodejs' "require" loader
  * to load the "fs" (file system) library to then load the plugin's config
  * file. Normally a web deployed game will alternatively use "forage" instead
  * to handle things that need to be read or saved, but because the config file
  * is just that- a file sitting in the /data directory rather than loaded into
- * forage storage- it becomes unaccessible.
+ * forage storage- it becomes inaccessible.
  * ============================================================================
  * BUILDING A QUEST
  * Ever want to build and manage quests in your RPG Maker MZ game? Well now you
@@ -109,13 +109,49 @@
  * @default 101
  *
  *
- * @command do-the-thing
- * @text Add/Remove points
- * @desc Adds or removes a designated amount of points from all members of the current party.
- * @arg points
- * @type number
- * @min -99999999
- * @max 99999999
- * @desc The number of points to modify by. Negative will remove points. Cannot go below 0.
+ * @command unlock-quests
+ * @text Unlock Quest(s)
+ * @desc Unlocks a new quest for the player.
+ * @arg keys
+ * @type string[]
+ * @desc The unique keys for the quests that will be unlocked.
+ * 
+ * @command progress-quest
+ * @text Progress Quest
+ * @desc Progresses a given quest through by completing its current objective.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * 
+ * @command finalize-quest
+ * @text Finalize Quest
+ * @desc Flags a quest as a given finalized state.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * @arg state
+ * @text Finalized State
+ * @desc The state to finalize the quest as.
+ * @type select
+ * @option Completed
+ * @value 0
+ * @option Failed
+ * @value 1
+ * @option Missed
+ * @value 2
+ * 
+ * @command set-quest-tracking
+ * @text Set Quest Tracking
+ * @desc Sets whether or not a given quest is tracked.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * @arg trackingState
+ * @desc True if the quest should be tracked, false otherwise.
+ * @type boolean
+ * @default true
+ * @on Start Tracking Quest
+ * @off Stop Tracking Quest
+ * 
  */
 //endregion annotations

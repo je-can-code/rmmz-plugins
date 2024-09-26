@@ -64,16 +64,11 @@ TrackedOmniQuest.prototype.initMembers = function()
  */
 TrackedOmniQuest.prototype.canBeTracked = function()
 {
-  // quests that are already handled cannot be further tracked.
-  const isFinalized = this.isFinalized();
-  if (isFinalized) return false;
-
-  // quests that are currently active can be tracked.
+  // quests that are currently active can always be tracked.
   if (this.isActive()) return true;
 
   // quests that are inactive, but have hidden objectives can be tracked.
-  const hasSecretObjectives = this.objectives.some(objective => !objective.isHidden());
-  return hasSecretObjectives;
+  return this.objectives.some(objective => !objective.isHidden());
 };
 
 /**
@@ -87,9 +82,21 @@ TrackedOmniQuest.prototype.isTracked = function()
 
 /**
  * Toggles whether or not the quest is being tracked.
+ * @param {?boolean} forcedState If provided, then will force tracking to the designated boolean.
  */
-TrackedOmniQuest.prototype.toggleTracked = function()
+TrackedOmniQuest.prototype.toggleTracked = function(forcedState = null)
 {
+  // check if providing a forced value to track.
+  if (forcedState !== null)
+  {
+    // set the quest to the forced state.
+    this.tracked = forcedState;
+    
+    // stop processing.
+    return;
+  }
+  
+  // toggle the quest's tracking state.
   this.tracked = !this.tracked;
 };
 
@@ -139,9 +146,8 @@ TrackedOmniQuest.prototype.tagKeys = function()
  */
 TrackedOmniQuest.prototype.tags = function()
 {
-  const tags = this.tagKeys()
+  return this.tagKeys()
     .map(tagKey => J.OMNI.EXT.QUEST.Metadata.tagsMap.get(tagKey));
-  return tags;
 };
 
 /**
@@ -170,7 +176,7 @@ TrackedOmniQuest.prototype.overview = function()
 /**
  * Check if the target objective by its id is completed already. This falls back to the immediate, or the first if no
  * objective id was provided.
- * @param {number?} objectiveId The objective id to check for completion.
+ * @param {?number} objectiveId The objective id to check for completion.
  * @returns {boolean}
  */
 TrackedOmniQuest.prototype.isObjectiveCompleted = function(objectiveId = null)
@@ -181,7 +187,7 @@ TrackedOmniQuest.prototype.isObjectiveCompleted = function(objectiveId = null)
 /**
  * Check if an objective is the specified state.
  * @param {number} targetState The state from {@link OmniObjective.States} to check if the objective is in.
- * @param {number?} objectiveId The objective id to check the state of; falls back to immediate >> first.
+ * @param {?number} objectiveId The objective id to check the state of; falls back to immediate >> first.
  * @returns {boolean} True if the objective is in the specified state, false otherwise.
  */
 TrackedOmniQuest.prototype.isObjectiveInState = function(targetState, objectiveId = null)
@@ -206,7 +212,7 @@ TrackedOmniQuest.prototype.isObjectiveInState = function(targetState, objectiveI
 /**
  * Determines whether or not an objective is able to be executed. This does not consider the state of the quest itself,
  * only the objective. If no objective id is provided, then the fallback will be referred to.
- * @param {number?} objectiveId The id of the objective to interrogate.
+ * @param {?number} objectiveId The id of the objective to interrogate.
  * @returns {boolean}
  */
 TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null)
@@ -218,13 +224,7 @@ TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null
   const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
 
   // validate the objective in question is in the state of active, regardless of the quest.
-  if (objective?.state === OmniObjective.States.Active)
-  {
-    // flag the objective as missed.
-    return true;
-  }
-
-  return false;
+  return objective?.state === OmniObjective.States.Active;
 };
 
 /**
@@ -315,7 +315,7 @@ TrackedOmniQuest.prototype.isInState = function(targetState)
 /**
  * Unlocks this quest and actives the target objective. If no objectiveId is provided, then the first objective will be
  * made {@link OmniObjective.States.Active}.
- * @param {number=} objectiveId The id of the objective to initialize as active; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to initialize as active; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
 {
@@ -475,7 +475,7 @@ TrackedOmniQuest.prototype.immediateObjective = function()
  * Flags the given objective by its id as {@link OmniObjective.States.Active}. If no objectiveId is provided, then the
  * immediate objective will be flagged instead (that being the lowest-id active objective, if any), or the very first
  * objective will be flagged.
- * @param {number=} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsActive = function(objectiveId = null)
 {
@@ -484,7 +484,7 @@ TrackedOmniQuest.prototype.flagObjectiveAsActive = function(objectiveId = null)
 
 /**
  * Completes the objective matching the objectiveId.
- * @param {number} objectiveId The id of the objective to complete.
+ * @param {?number} objectiveId The id of the objective to complete.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsCompleted = function(objectiveId = null)
 {
@@ -495,7 +495,7 @@ TrackedOmniQuest.prototype.flagObjectiveAsCompleted = function(objectiveId = nul
  * Flags the given objective by its id as {@link OmniObjective.States.Missed}. If no objectiveId is provided, then the
  * immediate objective will be flagged instead (that being the lowest-id active objective, if any), or the very first
  * objective will be flagged.
- * @param {number=} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsMissed = function(objectiveId = null)
 {
@@ -530,7 +530,7 @@ TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, ne
  * Captures an objectiveId provided (if provided) and provides fallback options if there was no provided id. If there
  * is no id provided, then the immediate objective's id will be provided. If there is no immediate objective, then the
  * quest's first objective will be provided.
- * @param {number?} objectiveId The objective id to provide fallback options for.
+ * @param {?number} objectiveId The objective id to provide fallback options for.
  * @returns {number}
  */
 TrackedOmniQuest.prototype.getFallbackObjectiveId = function(objectiveId = null)

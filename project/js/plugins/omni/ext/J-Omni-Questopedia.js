@@ -1528,16 +1528,11 @@ TrackedOmniQuest.prototype.initMembers = function()
  */
 TrackedOmniQuest.prototype.canBeTracked = function()
 {
-  // quests that are already handled cannot be further tracked.
-  const isFinalized = this.isFinalized();
-  if (isFinalized) return false;
-
-  // quests that are currently active can be tracked.
+  // quests that are currently active can always be tracked.
   if (this.isActive()) return true;
 
   // quests that are inactive, but have hidden objectives can be tracked.
-  const hasSecretObjectives = this.objectives.some(objective => !objective.isHidden());
-  return hasSecretObjectives;
+  return this.objectives.some(objective => !objective.isHidden());
 };
 
 /**
@@ -1551,9 +1546,21 @@ TrackedOmniQuest.prototype.isTracked = function()
 
 /**
  * Toggles whether or not the quest is being tracked.
+ * @param {?boolean} forcedState If provided, then will force tracking to the designated boolean.
  */
-TrackedOmniQuest.prototype.toggleTracked = function()
+TrackedOmniQuest.prototype.toggleTracked = function(forcedState = null)
 {
+  // check if providing a forced value to track.
+  if (forcedState !== null)
+  {
+    // set the quest to the forced state.
+    this.tracked = forcedState;
+    
+    // stop processing.
+    return;
+  }
+  
+  // toggle the quest's tracking state.
   this.tracked = !this.tracked;
 };
 
@@ -1603,9 +1610,8 @@ TrackedOmniQuest.prototype.tagKeys = function()
  */
 TrackedOmniQuest.prototype.tags = function()
 {
-  const tags = this.tagKeys()
+  return this.tagKeys()
     .map(tagKey => J.OMNI.EXT.QUEST.Metadata.tagsMap.get(tagKey));
-  return tags;
 };
 
 /**
@@ -1634,7 +1640,7 @@ TrackedOmniQuest.prototype.overview = function()
 /**
  * Check if the target objective by its id is completed already. This falls back to the immediate, or the first if no
  * objective id was provided.
- * @param {number?} objectiveId The objective id to check for completion.
+ * @param {?number} objectiveId The objective id to check for completion.
  * @returns {boolean}
  */
 TrackedOmniQuest.prototype.isObjectiveCompleted = function(objectiveId = null)
@@ -1645,7 +1651,7 @@ TrackedOmniQuest.prototype.isObjectiveCompleted = function(objectiveId = null)
 /**
  * Check if an objective is the specified state.
  * @param {number} targetState The state from {@link OmniObjective.States} to check if the objective is in.
- * @param {number?} objectiveId The objective id to check the state of; falls back to immediate >> first.
+ * @param {?number} objectiveId The objective id to check the state of; falls back to immediate >> first.
  * @returns {boolean} True if the objective is in the specified state, false otherwise.
  */
 TrackedOmniQuest.prototype.isObjectiveInState = function(targetState, objectiveId = null)
@@ -1670,7 +1676,7 @@ TrackedOmniQuest.prototype.isObjectiveInState = function(targetState, objectiveI
 /**
  * Determines whether or not an objective is able to be executed. This does not consider the state of the quest itself,
  * only the objective. If no objective id is provided, then the fallback will be referred to.
- * @param {number?} objectiveId The id of the objective to interrogate.
+ * @param {?number} objectiveId The id of the objective to interrogate.
  * @returns {boolean}
  */
 TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null)
@@ -1682,13 +1688,7 @@ TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null
   const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
 
   // validate the objective in question is in the state of active, regardless of the quest.
-  if (objective?.state === OmniObjective.States.Active)
-  {
-    // flag the objective as missed.
-    return true;
-  }
-
-  return false;
+  return objective?.state === OmniObjective.States.Active;
 };
 
 /**
@@ -1779,7 +1779,7 @@ TrackedOmniQuest.prototype.isInState = function(targetState)
 /**
  * Unlocks this quest and actives the target objective. If no objectiveId is provided, then the first objective will be
  * made {@link OmniObjective.States.Active}.
- * @param {number=} objectiveId The id of the objective to initialize as active; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to initialize as active; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
 {
@@ -1939,7 +1939,7 @@ TrackedOmniQuest.prototype.immediateObjective = function()
  * Flags the given objective by its id as {@link OmniObjective.States.Active}. If no objectiveId is provided, then the
  * immediate objective will be flagged instead (that being the lowest-id active objective, if any), or the very first
  * objective will be flagged.
- * @param {number=} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsActive = function(objectiveId = null)
 {
@@ -1948,7 +1948,7 @@ TrackedOmniQuest.prototype.flagObjectiveAsActive = function(objectiveId = null)
 
 /**
  * Completes the objective matching the objectiveId.
- * @param {number} objectiveId The id of the objective to complete.
+ * @param {?number} objectiveId The id of the objective to complete.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsCompleted = function(objectiveId = null)
 {
@@ -1959,7 +1959,7 @@ TrackedOmniQuest.prototype.flagObjectiveAsCompleted = function(objectiveId = nul
  * Flags the given objective by its id as {@link OmniObjective.States.Missed}. If no objectiveId is provided, then the
  * immediate objective will be flagged instead (that being the lowest-id active objective, if any), or the very first
  * objective will be flagged.
- * @param {number=} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
+ * @param {?number} objectiveId The id of the objective to flag as missed; defaults to the immediate or first.
  */
 TrackedOmniQuest.prototype.flagObjectiveAsMissed = function(objectiveId = null)
 {
@@ -1994,7 +1994,7 @@ TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, ne
  * Captures an objectiveId provided (if provided) and provides fallback options if there was no provided id. If there
  * is no id provided, then the immediate objective's id will be provided. If there is no immediate objective, then the
  * quest's first objective will be provided.
- * @param {number?} objectiveId The objective id to provide fallback options for.
+ * @param {?number} objectiveId The objective id to provide fallback options for.
  * @returns {number}
  */
 TrackedOmniQuest.prototype.getFallbackObjectiveId = function(objectiveId = null)
@@ -2173,7 +2173,7 @@ TrackedOmniQuest.prototype.setState = function(newState)
 
 //endregion TrackedOmniQuest
 
-//region annoations
+//region annotations
 /*:
  * @target MZ
  * @plugindesc
@@ -2226,7 +2226,7 @@ TrackedOmniQuest.prototype.setState = function(newState)
  *     - missed
  *
  * You can see that there is a lot of data, but this is what you need to know:
- * A Quest is comprised of a series of objectives.
+ * A Quest consists of a series of objectives.
  * Each objective should be identifiable as a single distinct task.
  * Each objective can be categorized into one of five categories of objective.
  *
@@ -2241,7 +2241,7 @@ TrackedOmniQuest.prototype.setState = function(newState)
  * The Quest data is derived from an external file rather than the plugin's
  * parameters. This file lives in the "/data" directory of your project, and
  * is called "config.quest.json". You can absolutely generate/modify this file
- * by hand, but you'll probably want to visit my github and swipe the
+ * by hand, but you'll probably want to visit my GitHub and swipe the
  * rmmz-data-editor project I've built that provides a convenient GUI for
  * generating and modifying quests in just about every way you could need.
  *
@@ -2251,19 +2251,21 @@ TrackedOmniQuest.prototype.setState = function(newState)
  * files for configuration like this, a project made with this plugin will
  * simply crash when attempting to load in a web context with an error akin to:
  *    "ReferenceError require is not defined"
- * This error is a result of attempting to leverage nodejs's "require" loader
+ * This error is a result of attempting to leverage nodejs' "require" loader
  * to load the "fs" (file system) library to then load the plugin's config
  * file. Normally a web deployed game will alternatively use "forage" instead
  * to handle things that need to be read or saved, but because the config file
  * is just that- a file sitting in the /data directory rather than loaded into
- * forage storage- it becomes unaccessible.
+ * forage storage- it becomes inaccessible.
  * ============================================================================
  * BUILDING A QUEST
  * Ever want to build and manage quests in your RPG Maker MZ game? Well now you
  * can! By constructing the correct JSON to match your heart's deepest desires
  * for quests, you too can do questopedic things!
  *
- * WIP: see rmmz-data-editor... eventually.
+ * TLDR;
+ * Use my "rmmz-data-editor" to actually construct the data, please don't try
+ * to hack this together manually by writing JSON.
  *
  * ============================================================================
  * CHANGELOG:
@@ -2282,14 +2284,50 @@ TrackedOmniQuest.prototype.setState = function(newState)
  * @default 101
  *
  *
- * @command do-the-thing
- * @text Add/Remove points
- * @desc Adds or removes a designated amount of points from all members of the current party.
- * @arg points
- * @type number
- * @min -99999999
- * @max 99999999
- * @desc The number of points to modify by. Negative will remove points. Cannot go below 0.
+ * @command unlock-quests
+ * @text Unlock Quest(s)
+ * @desc Unlocks a new quest for the player.
+ * @arg keys
+ * @type string[]
+ * @desc The unique keys for the quests that will be unlocked.
+ * 
+ * @command progress-quest
+ * @text Progress Quest
+ * @desc Progresses a given quest through by completing its current objective.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * 
+ * @command finalize-quest
+ * @text Finalize Quest
+ * @desc Flags a quest as a given finalized state.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * @arg state
+ * @text Finalized State
+ * @desc The state to finalize the quest as.
+ * @type select
+ * @option Completed
+ * @value 0
+ * @option Failed
+ * @value 1
+ * @option Missed
+ * @value 2
+ * 
+ * @command set-quest-tracking
+ * @text Set Quest Tracking
+ * @desc Sets whether or not a given quest is tracked.
+ * @arg key
+ * @type string
+ * @desc The unique key for the quest to progress.
+ * @arg trackingState
+ * @desc True if the quest should be tracked, false otherwise.
+ * @type boolean
+ * @default true
+ * @on Start Tracking Quest
+ * @off Stop Tracking Quest
+ * 
  */
 //endregion annotations
 
@@ -2495,6 +2533,7 @@ J.OMNI.EXT.QUEST.Aliased.Game_Interpreter = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Map = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Party = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_System = new Map();
+J.OMNI.EXT.QUEST.Aliased.JABS_InputController = new Map();
 J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia = new Map();
 J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList = new Map();
 
@@ -2512,17 +2551,95 @@ J.OMNI.EXT.QUEST.RegExp.ChoiceQuestObjectiveForState = /<choiceQuestCondition:[ 
 
 //region plugin commands
 /**
- * Plugin command for completing a quest by its key.
+ * Plugin command for unlocking quests by their keys.
  */
 PluginManager.registerCommand(
   J.OMNI.EXT.QUEST.Metadata.name,
-  "complete-quest",
+  "unlock-quests",
   args =>
   {
-    const { questKey } = args;
-    QuestManager.quest(questKey).flagAsCompleted();
+    const { keys } = args;
+    const questKeys = JSON.parse(keys);
+    questKeys.forEach(questKey => QuestManager.unlockQuestByKey(questKey));
+  });
+
+/**
+ * Plugin command for progressing a quest of a given key.
+ */
+PluginManager.registerCommand(
+    J.OMNI.EXT.QUEST.Metadata.name,
+    "progress-quest",
+    args =>
+    {
+      const { key } = args;
+      QuestManager.progressQuest(key);
+    });
+
+/**
+ * Plugin command for finalizing a quest of a given key with the specified state .
+ */
+PluginManager.registerCommand(
+    J.OMNI.EXT.QUEST.Metadata.name,
+    "finalize-quest",
+    args =>
+    {
+      const { key, state } = args;
+      const quest = QuestManager.quest(key);
+      switch (state)
+      {
+        case 0:
+          quest.flagAsCompleted();
+          break;
+        case 1:
+          quest.flagAsFailed();
+          break;
+        case 2:
+          quest.flagAsMissed();
+          break;
+      }
+    });
+
+/**
+ * Plugin command for setting the tracking state of a quest by its key.
+ */
+PluginManager.registerCommand(
+  J.OMNI.EXT.QUEST.Metadata.name,
+  "set-quest-tracking",
+  args =>
+  {
+    const { key, trackingState } = args;
+    QuestManager.setQuestTrackingByKey(key, trackingState);
   });
 //endregion plugin commands
+
+//region JABS_InputAdapter
+// only setup this shortcut key if we're using JABS.
+if (J.ABS)
+{
+  /**
+   * Calls the questopedia directly on the map.
+   */
+  JABS_InputAdapter.performQuestopediaAction = function()
+  {
+    // if we cannot call the questopedia, then do not.
+    if (!this._canPerformQuestopediaAction()) return;
+
+    // call up the menu.
+    Scene_Questopedia.callScene();
+  };
+
+  /**
+   * Determines whether or not the player can pull up the questopedia menu.
+   * @returns {boolean}
+   * @private
+   */
+  JABS_InputAdapter._canPerformQuestopediaAction = function()
+  {
+    // TODO: check if questopedia is accessible.
+    return true;
+  };
+}
+//endregion JABS_InputAdapter
 
 //region QuestManager
 /**
@@ -2576,9 +2693,24 @@ class QuestManager
    */
   static trackedQuests()
   {
-    const allQuests = $gameParty.getQuestopediaEntriesCache().values();
-    const questsArray = Array.from(allQuests);
-    return questsArray.filter(quest => quest.isTracked());
+    const allQuests = $gameParty.getQuestopediaEntriesCache()
+      .values();
+    return Array.from(allQuests)
+      .filter(quest => quest.isTracked());
+  }
+
+  /**
+   * Sets whether or not a quest is being tracked to the given state.
+   * @param {string} key The key of the quest to modify tracking for.
+   * @param {boolean} trackedState The tracking state for this quest.
+   */
+  static setQuestTrackingByKey(key, trackedState)
+  {
+    // grab the quest to modify tracking for.
+    const quest = this.quest(key);
+
+    // set the tracking state to the given state.
+    quest.toggleTracked(trackedState);
   }
 
   /**
@@ -2666,7 +2798,7 @@ class QuestManager
    * A script-friendly "if" conditional function that can be used in events to check if a particular objective on a
    * particular quest can be executed. If no objective id is provided, the fallback will be used (immediate >> first).
    * @param {string} questKey The key of the quest to check the objective of.
-   * @param {number?} objectiveId The objective id to interrogate.
+   * @param {?number} objectiveId The objective id to interrogate.
    * @returns {boolean}
    */
   static canDoObjective(questKey, objectiveId = null)
@@ -2711,7 +2843,7 @@ class QuestManager
    * particular quest is already completed. If no objective id is provided, the fallback will be used
    * (immediate >> first).
    * @param {string} questKey The key of the quest to check the objective of.
-   * @param {number?} objectiveId The objective id to interrogate.
+   * @param {?number} objectiveId The objective id to interrogate.
    * @returns {boolean}
    */
   static isObjectiveCompleted(questKey, objectiveId = null)
@@ -2903,7 +3035,6 @@ class QuestManager
 
     return questCompletionObjectives;
   }
-
 }
 
 //endregion QuestManager
@@ -3688,6 +3819,60 @@ Game_System.prototype.onAfterLoad = function()
   $gameParty.updateTrackedOmniQuestsFromConfig();
 };
 //endregion Game_System
+
+//region JABS_InputController
+/**
+ * Extends {@link #update}.<br/>
+ * Also handles input detection for the questopedia shortcut key.
+ */
+J.OMNI.EXT.QUEST.Aliased.JABS_InputController.set('update', JABS_InputController.prototype.update);
+JABS_InputController.prototype.update = function()
+{
+  // perform original logic.
+  J.OMNI.EXT.QUEST.Aliased.JABS_InputController.get('update').call(this);
+  
+  // update input for the questopedia shortcut key.
+  this.updateQuestopediaAction();
+};
+
+/**
+ * Monitors and takes action based on player input regarding the questopedia shortcut key.
+ */
+JABS_InputController.prototype.updateQuestopediaAction = function()
+{
+  // check if the action's input requirements have been met.
+  if (this.isQuestopediaActionTriggered())
+  {
+    // execute the action.
+    this.performQuestopediaAction();
+  }
+  
+};
+
+/**
+ * Checks the inputs of the questopedia action.
+ * @returns {boolean}
+ */
+JABS_InputController.prototype.isQuestopediaActionTriggered = function()
+{
+  // this action requires the right stick button to be triggered.
+  if (Input.isTriggered(J.ABS.Input.R3))
+  {
+    return true;
+  }
+
+  // input was not triggered.
+  return false;
+}
+
+/**
+ * Executes the questopedia action.
+ */
+JABS_InputController.prototype.performQuestopediaAction = function()
+{
+  JABS_InputAdapter.performQuestopediaAction();
+}
+//endregion JABS_InputController
 
 //region Scene_Omnipedia
 //region root actions

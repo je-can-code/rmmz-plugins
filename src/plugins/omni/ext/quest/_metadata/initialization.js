@@ -29,6 +29,7 @@ J.OMNI.EXT.QUEST.Aliased.Game_Interpreter = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Map = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Party = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_System = new Map();
+J.OMNI.EXT.QUEST.Aliased.JABS_InputController = new Map();
 J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia = new Map();
 J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList = new Map();
 
