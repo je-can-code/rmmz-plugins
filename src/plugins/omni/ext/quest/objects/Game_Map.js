@@ -23,16 +23,27 @@ Game_Map.prototype.initQuestopediaMembers = function()
    */
   this._j ||= {};
 
+  /**
+   * A grouping of all properties associated with the omnipedia.
+   */
   this._j._omni ||= {};
 
+  /**
+   * A grouping of all properties associated with the questopedia portion of the omnipedia.
+   */
   this._j._omni._quest = {};
 
-  this._j._omni._quest._destinationTimer = new JABS_Timer(15);
+  /**
+   * The timer for tracking when to check the destination- prevents expensive repeated coordinate checking.
+   * @type {J_Timer}
+   * @private
+   */
+  this._j._omni._quest._destinationTimer = new J_Timer(15);
 };
 
 /**
- *
- * @returns {JABS_Timer}
+ * Gets the timer for checking the destination completion.
+ * @returns {J_Timer}
  */
 Game_Map.prototype.getDestinationTimer = function()
 {

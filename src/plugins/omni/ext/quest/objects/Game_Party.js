@@ -126,6 +126,15 @@ Game_Party.prototype.getSavedQuestopediaEntries = function()
 };
 
 /**
+ * Sets the questopedia entries to the given entries.
+ * @param {TrackedOmniQuest[]} entries The new collection of quests.
+ */
+Game_Party.prototype.setSavedQuestopediaEntries = function(entries)
+{
+  this._j._omni._questopediaSaveables = entries;
+};
+
+/**
  * Gets the cache of questopedia entries.
  * The cache is keyed by the quest key.
  * @returns {Map<string, TrackedOmniQuest>}
@@ -149,21 +158,14 @@ Game_Party.prototype.setQuestopediaEntriesCache = function(cache)
  */
 Game_Party.prototype.translateQuestopediaCacheToSaveables = function()
 {
-  // grab the collection that is saveable.
-  const savedQuestopediaEntries = this.getSavedQuestopediaEntries();
-
   // grab the cache we've been maintaining.
   const cache = this.getQuestopediaEntriesCache();
-
-  // an iterator function for building out the saveables.
-  const forEacher = (questopediaEntry, key) =>
-  {
-    // update the saveable observations with the cached data.
-    savedQuestopediaEntries[key] = questopediaEntry;
-  };
-
-  // iterate over each cached item.
-  cache.forEach(forEacher, this);
+  
+  // determine the updated entries.
+  const updatedQuestopediaEntries = Array.from(cache.values());
+  
+  // update the quests from the cache.
+  this.setSavedQuestopediaEntries(updatedQuestopediaEntries);
 };
 
 /**
@@ -180,9 +182,6 @@ Game_Party.prototype.translateQuestopediaSaveablesToCache = function()
   // iterate over each saved item.
   savedQuestopediaEntries.forEach(questopediaEntry =>
   {
-    // if the entry is invalid, do not store it in the cache.
-    if (!questopediaEntry) return;
-
     // update the cache with the saveable.
     cache.set(questopediaEntry.key, questopediaEntry);
   }, this);
