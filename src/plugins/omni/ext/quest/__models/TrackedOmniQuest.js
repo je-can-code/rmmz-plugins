@@ -77,7 +77,7 @@ TrackedOmniQuest.prototype.canBeTracked = function()
  */
 TrackedOmniQuest.prototype.isTracked = function()
 {
-  return this.tracked;
+  return this.tracked === true || this.tracked === "true";
 };
 
 /**

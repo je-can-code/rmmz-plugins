@@ -40,10 +40,100 @@ class Window_QuestFrame extends Window_Base
   }
 
   /**
+   * Extends {@link #update}.<br/>
+   * Manages visibility of the quest frame.
+   */
+  update()
+  {
+    // perform original logic.
+    super.update();
+
+    // check if we can show this hud.
+    if (!$hudManager.canShowHud())
+    {
+      // if we're not allowed to see the hud, then close it.
+      if (!this.isClosed())
+      {
+        this.close();
+      }
+      
+      // don't do anything else if the hud can't be shown.
+      return;
+    }
+    else
+    {
+      // otherwise, open the hud.
+      if (!this.isOpen())
+      {
+        this.open();
+        this.refresh();
+      }
+    }
+
+    // manage interference-based opacity.
+    this.updateVisibility();
+  }
+
+  /**
+   * Manages the visibility while the player is potentially interfering with it.
+   */
+  updateVisibility()
+  {
+    if (this.playerInterference())
+    {
+      // drastically reduce visibility of the this quest frame while the player is overlapped.
+      this.handlePlayerInterference();
+    }
+    // otherwise, it must be regular visibility processing.
+    else
+    {
+      // handle opacity based on the time remaining on the inactivity timer.
+      this.handleNonInterferenceOpacity();
+    }
+  }
+
+  /**
+   * Determines whether or not the player is in the way (or near it) of this window.
+   * @returns {boolean} True if the player is in the way, false otherwise.
+   */
+  playerInterference()
+  {
+    const playerX = $gamePlayer.screenX();
+    const playerY = $gamePlayer.screenY();
+
+    // the quest frame is in the upper left corner, thus the player only interferes
+    // when they are literally between 0 and the width/height of the window.
+    return (playerX < (this.width)) && (playerY < (this.height));
+  }
+
+  /**
+   * Manages opacity for the window while the player is interfering with the visibility.
+   */
+  handlePlayerInterference()
+  {
+    // if we are above 64, rapidly decrement by -15 until we get below 64.
+    if (this.contentsOpacity > 64) this.contentsOpacity -= 15;
+    // if we are below 64, increment by +1 until we get to 64.
+    else if (this.contentsOpacity < 64) this.contentsOpacity += 1;
+  }
+
+  /**
+   * Reverts the opacity changes associated with the player getting in the way.
+   */
+  handleNonInterferenceOpacity()
+  {
+    // refresh the opacity so the frame can be seen again.
+    this.contentsOpacity = 255;
+  }
+
+  /**
    * Draws the quests currently tracked in the window as an element of the HUD.
    */
   drawContent()
   {
+    // don't draw the hud if it can't be shown.
+    if (!$hudManager.canShowHud()) return;
+    
     // we default to the upper left most point of the window for origin.
     const [ x, y ] = [ 0, 0 ];
 
@@ -211,7 +301,6 @@ class Window_QuestFrame extends Window_Base
   {
     return super.lineHeight() - 10;
   }
-
 }
 
 //endregion Window_QuestFrame
