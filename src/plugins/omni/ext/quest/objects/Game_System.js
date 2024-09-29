@@ -23,7 +23,7 @@ Game_System.prototype.onAfterLoad = function()
   J.OMNI.EXT.QUEST.Aliased.Game_System.get('onAfterLoad').call(this);
 
   // update the quests.
-  $gameParty.synchronizeQuestopediaAfterLoad();
   $gameParty.updateTrackedOmniQuestsFromConfig();
+  $gameParty.synchronizeQuestopediaAfterLoad();
 };
 //endregion Game_System

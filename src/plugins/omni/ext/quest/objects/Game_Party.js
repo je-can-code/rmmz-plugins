@@ -101,15 +101,14 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     // find one by the same key in the existing trackings.
     const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
 
-    // check if we found a tracking.
-    if (!foundTracking)
-    {
-      console.log(`adding new quest; ${omniquest.key}`);
+    // don't do anything if it already exists.
+    if (foundTracking) return;
 
-      // we didn't find one, so create and add a new tracking.
-      const newTracking = this.toTrackedOmniQuest(omniquest);
-      trackings.push(newTracking);
-    }
+    console.log(`adding new quest; ${omniquest.key}`);
+
+    // we didn't find one, so create and add a new tracking.
+    const newTracking = this.toTrackedOmniQuest(omniquest);
+    trackings.push(newTracking);
   });
 
   // sort the quests by their key, in-place.

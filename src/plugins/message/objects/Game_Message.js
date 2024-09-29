@@ -52,7 +52,6 @@ Game_Message.prototype.isChoiceHidden = function(choiceIndex)
   }
 
   return false;
-  //return this._hiddenChoiceConditions[choiceIndex];
 };
 
 /**
@@ -63,6 +62,5 @@ Game_Message.prototype.isChoiceHidden = function(choiceIndex)
 Game_Message.prototype.hideChoice = function(choiceIndex, isHidden)
 {
   this._hiddenChoiceConditions.set(choiceIndex, isHidden);
-  //this._hiddenChoiceConditions[choiceIndex] = isHidden;
 };
 //endregion Game_Message
