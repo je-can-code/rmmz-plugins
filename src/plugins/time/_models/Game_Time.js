@@ -5,7 +5,8 @@
 function Game_Time()
 {
   this.initialize(...arguments)
-};
+}
+
 Game_Time.prototype = {};
 Game_Time.prototype.constructor = Game_Time;
 

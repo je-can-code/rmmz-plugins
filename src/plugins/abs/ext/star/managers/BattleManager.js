@@ -80,7 +80,7 @@ BattleManager.setWait = function(waitFrames)
   timer.reset();
 
   // set the new maximum.
-  timer.getMaxTime(waitFrames);
+  timer.setMaxTime(waitFrames);
 };
 
 /**

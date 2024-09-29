@@ -193,8 +193,8 @@ Window_Base.prototype.translateSkillTypeTextCode = function(text)
     // TODO: make a static "menu item" class out of this?
     // get the replacement data.
     const iconIndex = IconManager.skillType(skillTypeId);
-    const colorId = ColorManager.skillType(elementId);
-    const name = TextManager.skillType(elementId);
+    const colorId = ColorManager.skillType(skillTypeId);
+    const name = TextManager.skillType(skillTypeId);
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorId}]${name}\\C[0]`;
@@ -367,7 +367,7 @@ Window_Base.prototype.obtainEscapeCode = function(textState)
  */
 Window_Base.prototype.customEscapeCodes = function(textState)
 {
-  if (!textState) return;
+  if (!textState) return String.empty;
 
   const regExp = this.escapeCodes();
   const arr = regExp.exec(textState.text.slice(textState.index));
@@ -419,7 +419,7 @@ Window_Base.prototype.processEscapeCharacter = function(code, textState)
  * This does not apply to {@link Window_Base.prototype.drawTextEx}, but alternatively
  * you can interpolate `"\_"` before and after the text desired to be italics to
  * achieve the same effect.
- * @param {boolean} force Optional. If provided, will force one way or the other.
+ * @param {?boolean} force Optional. If provided, will force one way or the other.
  */
 Window_Base.prototype.toggleItalics = function(force = null)
 {
@@ -429,7 +429,7 @@ Window_Base.prototype.toggleItalics = function(force = null)
 /**
  * Wraps the given text with the message code for italics.
  * @param {string} text The text to italicize.
- * @returns {`\\_${text}\\_`} The italicized text.
+ * @returns {string} The italicized text like this: `\\_${text}\\_`
  */
 Window_Base.prototype.italicizeText = function(text)
 {
@@ -442,7 +442,7 @@ Window_Base.prototype.italicizeText = function(text)
  * This does not apply to {@link Window_Base.prototype.drawTextEx}, but alternatively
  * you can interpolate `"\*"` before and after the text desired to be bold to
  * achieve the same effect.
- * @param {boolean} force Optional. If provided, will force one way or the other.
+ * @param {?boolean} force Optional. If provided, will force one way or the other.
  */
 Window_Base.prototype.toggleBold = function(force = null)
 {
@@ -452,7 +452,7 @@ Window_Base.prototype.toggleBold = function(force = null)
 /**
  * Wraps the given text with the message code for bold.
  * @param {string} text The text to bolden.
- * @returns {`\\*${text}\\*`}
+ * @returns {string} The bolded text like this: `\\*${text}\\*`
  */
 Window_Base.prototype.boldenText = function(text)
 {
@@ -463,7 +463,7 @@ Window_Base.prototype.boldenText = function(text)
  * Wraps the given text with a font-size modifier shorthand.
  * @param {number} modifier The size modification.
  * @param {string} text The text to modify size for.
- * @returns {`\\FS[${number}]${string}\\FS[${number}]`}
+ * @returns {string} The fontsize modified text like this: `\\FS[${number}]${string}\\FS[${number}]`
  */
 Window_Base.prototype.modFontSizeForText = function(modifier, text)
 {
