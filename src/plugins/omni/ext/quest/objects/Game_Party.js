@@ -101,14 +101,31 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     // find one by the same key in the existing trackings.
     const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
 
-    // don't do anything if it already exists.
-    if (foundTracking) return;
-
-    console.log(`adding new quest; ${omniquest.key}`);
-
-    // we didn't find one, so create and add a new tracking.
     const newTracking = this.toTrackedOmniQuest(omniquest);
-    trackings.push(newTracking);
+    
+    // if the tracking already exists, it should be updated.
+    if (foundTracking)
+    {
+      console.log(`updating existing quest; ${omniquest.key}`);
+
+      // update the category.
+      foundTracking.categoryKey = omniquest.categoryKey;
+      
+      // if the objective length hasn't changed, then don't process anymore.
+      if (foundTracking.objectives.length <= omniquest.objectives.length) return;
+
+      // concat the new objectives onto the existing tracking.
+      const objectivesToAdd = newTracking.objectives.slice(foundTracking.objectives.length);
+      foundTracking.objectives.splice(foundTracking.objectives.length, 0, ...objectivesToAdd);
+    }
+    // if the tracking doesn't exist yet, it should be added.
+    else
+    {
+      console.log(`adding new quest; ${omniquest.key}`);
+
+      // we didn't find one, so create and add a new tracking.
+      trackings.push(newTracking);
+    }
   });
 
   // sort the quests by their key, in-place.
