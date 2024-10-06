@@ -48,8 +48,7 @@ class J_SdpPluginMetadata extends PluginMetadata
         panelRewards.forEach(reward =>
         {
           const parsedReward = reward;
-          const panelReward = new PanelRankupReward(
-            parsedReward.rewardName,
+          const panelReward = new PanelRankupReward(parsedReward.rewardName,
             parseInt(parsedReward.rankRequired),
             parsedReward.effect);
           parsedPanelRewards.push(panelReward);
@@ -187,4 +186,5 @@ class J_SdpPluginMetadata extends PluginMetadata
     this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === "true";
   }
 }
+
 //endregion plugin metadata

@@ -72,6 +72,7 @@ class Scene_Jafting extends Scene_MenuBase
      */
     this._j._crafting._listHeader = null;
   }
+
   //endregion init
 
   //region create
@@ -104,6 +105,7 @@ class Scene_Jafting extends Scene_MenuBase
     // create all root windows for the main listing.
     this.createJaftingRootWindows();
   }
+
   //endregion create
 
   //region windows
@@ -218,6 +220,7 @@ class Scene_Jafting extends Scene_MenuBase
     rootHeaderWindow.close();
     rootHeaderWindow.hide();
   }
+
   //endregion header window
 
   //region list window
@@ -332,8 +335,10 @@ class Scene_Jafting extends Scene_MenuBase
    */
   getRootJaftingKey()
   {
-    return this.getJaftingListWindow().currentSymbol();
+    return this.getJaftingListWindow()
+      .currentSymbol();
   }
+
   //endregion list window
 
   /**
@@ -359,6 +364,7 @@ class Scene_Jafting extends Scene_MenuBase
     // close the header window.
     this.closeRootHeaderWindow();
   }
+
   //endregion windows
 
   //region actions
@@ -371,7 +377,9 @@ class Scene_Jafting extends Scene_MenuBase
   {
     console.debug(`selected "${this.getRootJaftingKey()}" option.`);
   }
+
   //endregion root actions
   //endregion actions
 }
+
 //endregion Scene_Jafting

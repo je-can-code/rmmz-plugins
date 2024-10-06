@@ -52,6 +52,7 @@ class RPG_Skill extends RPG_UsableItem
    * @type {number}
    */
   tpCost = 0;
+
   //endregion properties
 
   /**
@@ -95,4 +96,5 @@ class RPG_Skill extends RPG_UsableItem
     return true;
   }
 }
+
 //endregion RPG_Skill

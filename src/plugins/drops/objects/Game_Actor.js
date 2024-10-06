@@ -12,9 +12,7 @@ Game_Actor.prototype.getDropMultiplierBonus = function()
   const objectsToCheck = this.getAllNotes();
 
   // get the multiplier from anything this battler has available.
-  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.DROPS.RegExp.DropMultiplier);
+  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.DropMultiplier);
 
   // calculate the multiplier factor.
   const factor = (multiplierBonus + baseMultiplier) / 100;
@@ -36,9 +34,7 @@ Game_Actor.prototype.getGoldMultiplier = function()
   const objectsToCheck = this.getAllNotes();
 
   // get the multiplier from anything this battler has available.
-  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.DROPS.RegExp.GoldMultiplier);
+  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.GoldMultiplier);
 
   // calculate the multiplier factor.
   const factor = (multiplierBonus + baseMultiplier) / 100;

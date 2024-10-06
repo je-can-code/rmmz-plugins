@@ -132,6 +132,7 @@ class RPG_Base
   {
     return this._index();
   }
+
   //endregion base
 
   //region meta
@@ -283,7 +284,7 @@ class RPG_Base
         // expose the stringified segments of the array.
         const exposedArray = obj
           // peel off the outer brackets.
-          .slice(1, obj.length-1)
+          .slice(1, obj.length - 1)
           // split string into an array by comma or space+comma.
           .split(/, |,/);
         return this.#parseObject(exposedArray);
@@ -323,6 +324,7 @@ class RPG_Base
     // it must just be a word or something.
     return str;
   }
+
   //endregion meta
 
   //region note
@@ -356,7 +358,7 @@ class RPG_Base
     // split the notes by new lines.
     const formattedNotes = this.note
       .split(/[\r\n]+/)
-    // filter out invalid note data.
+      // filter out invalid note data.
       .filter(this.invalidNoteFilter, this);
 
     // if we have no length left after filtering, then there is no note data.
@@ -436,7 +438,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value.
@@ -487,7 +491,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : [];
+      return nullIfEmpty
+        ? null
+        : [];
     }
 
     // initialize the value.
@@ -497,10 +503,11 @@ class RPG_Base
     lines.forEach(line =>
     {
       // extract the captured formula.
-      const [,result] = structure.exec(line);
+      const [ , result ] = structure.exec(line);
 
       // parse out the array of stringified numbers, and parse the strings.
-      const parsed = JSON.parse(result).map(parseFloat);
+      const parsed = JSON.parse(result)
+        .map(parseFloat);
 
       // destructure the array and add its bits to the running collection.
       val.push(...parsed);
@@ -537,7 +544,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value.
@@ -563,7 +572,8 @@ class RPG_Base
       const formula = structure.exec(line)[1];
 
       // evaluate the formula/value.
-      const result = eval(formula).toFixed(3);
+      const result = eval(formula)
+        .toFixed(3);
 
       // add it to the running total.
       val += parseFloat(result);
@@ -870,6 +880,7 @@ class RPG_Base
     // return the found value.
     return matchingLines;
   }
+
   //endregion note
 
   /**
@@ -908,4 +919,5 @@ class RPG_Base
     return false;
   }
 }
+
 //endregion RPG_Base

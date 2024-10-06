@@ -83,7 +83,8 @@ class Window_AbsMenuSelect extends Window_Command
     const actor = $gameParty.leader();
 
     // grab all of the leader's skills that are visible in this menu.
-    const skills = actor.skills().filter(JABS_Battler.isSkillVisibleInCombatMenu);
+    const skills = actor.skills()
+      .filter(JABS_Battler.isSkillVisibleInCombatMenu);
 
     // initialize our blank list of skills to view.
     const commands = Array.empty;
@@ -149,7 +150,8 @@ class Window_AbsMenuSelect extends Window_Command
 
       // tools only get an amount if they are consumable.
       const amount = tool.consumable
-        ? $gameParty.numItems(tool).padZero(3)
+        ? $gameParty.numItems(tool)
+          .padZero(3)
         : "♾";
 
       // build the command.
@@ -166,7 +168,8 @@ class Window_AbsMenuSelect extends Window_Command
     };
 
     // grab all the tools that are visiblie in this menu.
-    const tools = $gameParty.allItems().filter(JABS_Battler.isItemVisibleInToolMenu);
+    const tools = $gameParty.allItems()
+      .filter(JABS_Battler.isItemVisibleInToolMenu);
 
     // iterate over each of the tools and add them to the list.
     tools.forEach(forEacher, this);
@@ -230,7 +233,7 @@ class Window_AbsMenuSelect extends Window_Command
   {
     // grab the leader for reference data.
     const leader = $gameParty.leader();
-    
+
     // an iterator function for iterating over skill slots and rendering their data.
     /** @param {JABS_SkillSlot} skillSlot */
     const forEacher = skillSlot =>
@@ -277,14 +280,15 @@ class Window_AbsMenuSelect extends Window_Command
   makeEquippedToolList()
   {
     // grab the tool skillslot.
-    const toolSkillSlot = $gameParty.leader().getToolSkillSlot();
-    
+    const toolSkillSlot = $gameParty.leader()
+      .getToolSkillSlot();
+
     // initialize the command variables.
     let name = `${toolSkillSlot.key}: ${J.ABS.Metadata.UnassignedText}`;
     let iconIndex = 0;
     let description = String.empty;
     let amount = String.empty;
-    
+
     // check if the tool skillslot has anything in it.
     if (toolSkillSlot.isUsable())
     {
@@ -293,7 +297,8 @@ class Window_AbsMenuSelect extends Window_Command
 
       // tools only get an amount if they are consumable.
       amount = equippedTool.consumable
-        ? $gameParty.numItems(equippedTool).padZero(3)
+        ? $gameParty.numItems(equippedTool)
+          .padZero(3)
         : "♾";
 
       // update the command variables with the equipped tool data.
@@ -354,6 +359,8 @@ class Window_AbsMenuSelect extends Window_Command
     // add the built command.
     this.addBuiltCommand(command);
   }
+
   /* eslint-enable prefer-destructuring */
 }
+
 //endregion Window_AbsMenuSelect

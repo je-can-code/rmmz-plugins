@@ -247,6 +247,7 @@ class Window_TargetFrame extends Window_Base
     // return the created sprite.
     return sprite;
   }
+
   //endregion caching
 
   /**
@@ -404,16 +405,16 @@ class Window_TargetFrame extends Window_Base
     this.drawTargetName(x, y);
 
     // draw the level of the target.
-    this.drawTargetLevel(x+220, y);
+    this.drawTargetLevel(x + 220, y);
 
     // draw the extra data for the target.
-    this.drawTargetExtra(x, y+24);
+    this.drawTargetExtra(x, y + 24);
 
     // draw the relation of the target.
-    this.drawTargetIcon(x, y+48);
+    this.drawTargetIcon(x, y + 48);
 
     // draw the battler data of the target- if available.
-    this.drawTargetBattlerInfo(x+32, y);
+    this.drawTargetBattlerInfo(x + 32, y);
   }
 
   /**
@@ -479,7 +480,7 @@ class Window_TargetFrame extends Window_Base
     let name = `\\FS[24]${this.targetName()}`;
     if (J.MESSAGE)
     {
-      name = `\\*`+ name;
+      name = `\\*` + name;
     }
 
     this.drawTextEx(name, x, y, 200);
@@ -496,7 +497,7 @@ class Window_TargetFrame extends Window_Base
     if (!this.canDrawTargetLevel()) return;
 
     // get the level from the battler.
-    const {level} = this._j._battler;
+    const { level } = this._j._battler;
 
     // check to see if the enemy is leveled.
     if (level)
@@ -563,7 +564,7 @@ class Window_TargetFrame extends Window_Base
     if (!this.hasTargetIcon()) return;
 
     // draw the target's icon.
-    this.drawIcon(this.targetIcon(), x, y+4);
+    this.drawIcon(this.targetIcon(), x, y + 4);
   }
 
   /**
@@ -649,8 +650,8 @@ class Window_TargetFrame extends Window_Base
   {
     // draw all three of the primary gauges.
     this.drawTargetHpGauge(x, y);
-    this.drawTargetMpGauge(x, y+22);
-    this.drawTargetTpGauge(x-10, y+32);
+    this.drawTargetMpGauge(x, y + 22);
+    this.drawTargetTpGauge(x - 10, y + 32);
   }
 
   /**
@@ -719,4 +720,5 @@ class Window_TargetFrame extends Window_Base
     gauge.move(x, y);
   }
 }
+
 //endregion Window_TargetFrame

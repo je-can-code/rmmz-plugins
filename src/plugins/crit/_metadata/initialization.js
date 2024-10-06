@@ -24,33 +24,31 @@ J.CRIT = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.CRIT.Metadata =
-  {
-    /**
-     * The name of this plugin.
-     */
-    Name: `J-CriticalFactors`,
+J.CRIT.Metadata = {
+  /**
+   * The name of this plugin.
+   */
+  Name: `J-CriticalFactors`,
 
-    /**
-     * The version of this plugin.
-     */
-    Version: '1.0.0',
-  };
+  /**
+   * The version of this plugin.
+   */
+  Version: '1.0.0',
+};
 
 /**
  * A collection of all aliased methods for this plugin.
  */
-J.CRIT.Aliased =
-  {
-    Game_Action: new Map(),
-    Game_Actor: new Map(),
-    Game_Battler: new Map(),
-    Game_BattlerBase: new Map(),
-    Game_Enemy: new Map(),
-    IconManager: new Map(),
-    TextManager: new Map(),
-    Window_SDP_Details: new Map(),
-  };
+J.CRIT.Aliased = {
+  Game_Action: new Map(),
+  Game_Actor: new Map(),
+  Game_Battler: new Map(),
+  Game_BattlerBase: new Map(),
+  Game_Enemy: new Map(),
+  IconManager: new Map(),
+  TextManager: new Map(),
+  Window_SDP_Details: new Map(),
+};
 
 /**
  * All regular expressions used by this plugin.

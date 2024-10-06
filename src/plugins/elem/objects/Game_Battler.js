@@ -6,7 +6,8 @@
  */
 Game_Battler.prototype.isElementAbsorbed = function(elementId)
 {
-  return this.elementsAbsorbed().includes(elementId);
+  return this.elementsAbsorbed()
+    .includes(elementId);
 };
 
 /**
@@ -48,9 +49,7 @@ Game_Battler.prototype.elementsAbsorbed = function()
  */
 Game_Battler.prototype.extractAbsorbedElements = function(databaseObject)
 {
-  return RPGManager.getNumbersFromNoteByRegex(
-    databaseObject,
-    J.ELEM.RegExp.AbsorbElementIds);
+  return RPGManager.getNumbersFromNoteByRegex(databaseObject, J.ELEM.RegExp.AbsorbElementIds);
 };
 
 /**
@@ -73,9 +72,7 @@ Game_Battler.prototype.strictElements = function()
  */
 Game_Battler.prototype.extractStrictElements = function(databaseObject)
 {
-  return RPGManager.getNumbersFromNoteByRegex(
-    databaseObject,
-    J.ELEM.RegExp.StrictElementIds);
+  return RPGManager.getNumbersFromNoteByRegex(databaseObject, J.ELEM.RegExp.StrictElementIds);
 };
 
 /**
@@ -107,7 +104,7 @@ Game_Battler.prototype.extractElementRateBoosts = function(referenceData)
     {
       const id = parseInt(RegExp.$1);
       const boost = parseInt(RegExp.$2);
-      boostedElements.push([id, boost]);
+      boostedElements.push([ id, boost ]);
     }
   });
 

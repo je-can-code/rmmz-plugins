@@ -279,8 +279,7 @@ class Window_PartyFrame extends Window_Base
       Window_PartyFrame.gaugeTypes.HP,
       Window_PartyFrame.gaugeTypes.MP,
       Window_PartyFrame.gaugeTypes.TP,
-      Window_PartyFrame.gaugeTypes.XP
-    ];
+      Window_PartyFrame.gaugeTypes.XP ];
   }
 
   /**
@@ -952,12 +951,7 @@ class Window_PartyFrame extends Window_Base
     this.toggleBold();
     this.toggleItalics();
 
-    this.drawText(
-      `x${trackedState.stackCount}`,
-      ox ,
-      y - 30,
-      64,
-      Window_Base.TextAlignments.Left);
+    this.drawText(`x${trackedState.stackCount}`, ox, y - 30, 64, Window_Base.TextAlignments.Left);
 
     this.resetFontSettings()
   }

@@ -34,4 +34,5 @@ class J__TEMPLATE___PluginMetadata extends PluginMetadata
     this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
   }
 }
+
 //endregion plugin metadata

@@ -27,7 +27,8 @@ class Sprite_SkillName extends Sprite_BaseSkillSlot
    */
   needsSynchronization()
   {
-    return (this.hasSkillSlot() && this.skillSlot().needsVisualNameRefresh());
+    return (this.hasSkillSlot() && this.skillSlot()
+      .needsVisualNameRefresh());
   }
 
   /**
@@ -45,7 +46,9 @@ class Sprite_SkillName extends Sprite_BaseSkillSlot
     }
 
     // acknowledge the refresh.
-    this.skillSlot().acknowledgeNameRefresh();
+    this.skillSlot()
+      .acknowledgeNameRefresh();
   }
 }
+
 //endregion Sprite_SkillName

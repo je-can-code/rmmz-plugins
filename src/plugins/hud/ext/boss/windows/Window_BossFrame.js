@@ -123,6 +123,7 @@ class Window_BossFrame extends Window_TargetFrame
     // return the created sprite.
     return sprite;
   }
+
   //endregion caching
 
   handleInactivity()
@@ -206,7 +207,7 @@ class Window_BossFrame extends Window_TargetFrame
     let name = `\\FS[24]${this.targetName()}`;
     if (J.MESSAGE)
     {
-      name = `\\*`+ name;
+      name = `\\*` + name;
     }
 
     const textWidth = this.textWidth(name);
@@ -227,4 +228,5 @@ class Window_BossFrame extends Window_TargetFrame
     this.drawTargetHpGauge(x, y);
   }
 }
+
 //endregion Window_BossFrame

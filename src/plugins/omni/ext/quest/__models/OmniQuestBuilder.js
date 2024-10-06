@@ -15,8 +15,7 @@ class OmniQuestBuilder
 
   build()
   {
-    const omniquest = new OmniQuest(
-      this.#name,
+    const omniquest = new OmniQuest(this.#name,
       this.#key,
       this.#categoryKey,
       this.#tagKeys,

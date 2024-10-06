@@ -29,8 +29,6 @@ J.CMS_K.Metadata.Name = `J-CMS-Skill`;
 J.CMS_K.Metadata.Version = '1.0.0';
 
 J.CMS_K.Aliased = {
-  Scene_Skill: {},
-  Window_SkillList: {},
-  Window_EquipSlot: {},
+  Scene_Skill: {}, Window_SkillList: {}, Window_EquipSlot: {},
 };
 //endregion Introduction

@@ -14,4 +14,5 @@ class J_CraftingPluginMetadata extends PluginMetadata
     super(name, version);
   }
 }
+
 //endregion plugin metadata

@@ -6,9 +6,7 @@
 Game_Enemy.prototype.targetFrameText = function()
 {
   // return the extracted the target frame extra text from this enemy.
-  return RPGManager.getStringFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.TargetFrameText);
+  return RPGManager.getStringFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.TargetFrameText);
 };
 
 /**
@@ -19,9 +17,7 @@ Game_Enemy.prototype.targetFrameText = function()
 Game_Enemy.prototype.targetFrameIcon = function()
 {
   // extract the target icon from this enemy.
-  return RPGManager.getNumberFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.TargetFrameText);
+  return RPGManager.getNumberFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.TargetFrameText);
 };
 
 /**
@@ -32,9 +28,7 @@ Game_Enemy.prototype.targetFrameIcon = function()
 Game_Enemy.prototype.showTargetFrame = function()
 {
   // extract whether or not the target frame for this enemy is hidden.
-  return !RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.HideTargetFrame);
+  return !RPGManager.checkForBooleanFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.HideTargetFrame);
 };
 
 /**
@@ -45,9 +39,7 @@ Game_Enemy.prototype.showTargetFrame = function()
 Game_Enemy.prototype.showTargetHpBar = function()
 {
   // extract whether or not to show the target HP for this enemy.
-  return !RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.HideTargetHP);
+  return !RPGManager.checkForBooleanFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.HideTargetHP);
 };
 
 /**
@@ -58,9 +50,7 @@ Game_Enemy.prototype.showTargetHpBar = function()
 Game_Enemy.prototype.showTargetMpBar = function()
 {
   // extract whether or not to show the target MP for this enemy.
-  return !RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.HideTargetMP);
+  return !RPGManager.checkForBooleanFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.HideTargetMP);
 };
 
 /**
@@ -71,9 +61,7 @@ Game_Enemy.prototype.showTargetMpBar = function()
 Game_Enemy.prototype.showTargetTpBar = function()
 {
   // extract whether or not to show the target TP for this enemy.
-  return !RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.HideTargetTP);
+  return !RPGManager.checkForBooleanFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.HideTargetTP);
 };
 
 /**
@@ -84,8 +72,6 @@ Game_Enemy.prototype.showTargetTpBar = function()
 Game_Enemy.prototype.showTargetText = function()
 {
   // extract whether or not to show the target text from this enemy.
-  return !RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
-    J.HUD.EXT.TARGET.RegExp.HideTargetText);
+  return !RPGManager.checkForBooleanFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.HideTargetText);
 };
 //endregion Game_Enemy

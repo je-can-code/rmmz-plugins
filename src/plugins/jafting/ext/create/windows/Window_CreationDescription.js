@@ -6,4 +6,5 @@ class Window_CreationDescription extends Window_Help
     super(rect);
   }
 }
+
 //endregion Window_CreationDescription

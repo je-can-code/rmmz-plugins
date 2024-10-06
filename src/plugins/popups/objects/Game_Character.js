@@ -24,7 +24,8 @@ Game_Character.prototype.initMembers = function()
   this._j._textPopRequest = false;
 
   // run the rest of the original logic.
-  J.POPUPS.Aliased.Game_Character.get('initMembers').call(this);
+  J.POPUPS.Aliased.Game_Character.get('initMembers')
+    .call(this);
 };
 
 /**

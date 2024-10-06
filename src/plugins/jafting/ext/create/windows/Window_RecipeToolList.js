@@ -76,7 +76,9 @@ class Window_RecipeToolList extends Window_Command
     // determine how many we need vs have on-hand.
     const need = component.quantity();
     const have = component.getHandledQuantity();
-    const haveTextColor = (have >= need) ? 24 : 18;
+    const haveTextColor = (have >= need)
+      ? 24
+      : 18;
     const needQuantity = `x${need}`;
 
     const subtexts = [];
@@ -126,4 +128,5 @@ class Window_RecipeToolList extends Window_Command
   {
   }
 }
+
 //endregion Window_RecipeToolList

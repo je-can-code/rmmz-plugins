@@ -24,4 +24,5 @@ class Window_RefinementConfirmation extends Window_Command
     this.addCommand(`${J.JAFTING.EXT.REFINE.Messages.CancelRefinementCommandName}`, `cancel`, true, null, 90);
   }
 }
+
 //endregion Window_JaftingRefinementConfirmation

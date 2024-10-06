@@ -6,7 +6,8 @@ J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.set('buildCommands', Window_Omni
 Window_OmnipediaList.prototype.buildCommands = function()
 {
   // perform original logic.
-  const originalCommands = J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.get('buildCommands').call(this);
+  const originalCommands = J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.get('buildCommands')
+    .call(this);
 
   // check if the monsterpedia command should be added.
   if (this.canAddMonsterpediaCommand())

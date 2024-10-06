@@ -9,13 +9,15 @@ if (J.HUD && J.HUD.EXT.TARGET)
   JABS_Battler.prototype.getTargetFrameIcon = function()
   {
     // perform original logic to get the target frame icon.
-    const originalTargetFrameIcon = J.OMNI.EXT.MONSTER.Aliased.JABS_Battler.get('getTargetFrameIcon').call(this);
+    const originalTargetFrameIcon = J.OMNI.EXT.MONSTER.Aliased.JABS_Battler.get('getTargetFrameIcon')
+      .call(this);
 
     // if a target frame icon was provided, then just use that.
     if (originalTargetFrameIcon !== 0) return originalTargetFrameIcon;
 
     // if this isn't an enemy, then they don't get target frame icons.
-    const enemy = this.getBattler().enemy();
+    const enemy = this.getBattler()
+      .enemy();
 
     // check for a monster family icon instead.
     const monsterFamilyIconIndex = enemy.monsterFamilyIcon;

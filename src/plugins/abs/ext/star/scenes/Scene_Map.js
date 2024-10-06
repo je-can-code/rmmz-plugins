@@ -2,10 +2,10 @@
  * Overrides {@link Scene_Map.updateEncounter}.<br>
  * Disables base encounter scene management.
  */
-Scene_Map.prototype.updateEncounter = function() 
+Scene_Map.prototype.updateEncounter = function()
 {
   // checks to see if we can execute an encounter from this perspective.
-  if ($gamePlayer.executeEncounter()) 
+  if ($gamePlayer.executeEncounter())
   {
     // performs a visual fade out effect.
     this.startFadeOut();
@@ -16,10 +16,11 @@ Scene_Map.prototype.updateEncounter = function()
  * `updateEncounterEffect` handles the zoom/flashing battle transition.
  */
 J.ABS.EXT.STAR.Aliased.Scene_Map.set('update', Scene_Map.prototype.update);
-Scene_Map.prototype.update = function() 
+Scene_Map.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.EXT.STAR.Aliased.Scene_Map.get('update').call(this);
+  J.ABS.EXT.STAR.Aliased.Scene_Map.get('update')
+    .call(this);
 
   //? TODO: Modify encountereffect here.
 };

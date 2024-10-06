@@ -72,9 +72,7 @@ J.TIME.Metadata.YearsPerIncrement = Number(J.TIME.PluginParameters['yearsPerIncr
  * A collection of all aliased methods for this plugin.
  */
 J.TIME.Aliased = {
-  DataManager: {},
-  Scene_Base: {},
-  Scene_Map: {},
+  DataManager: {}, Scene_Base: {}, Scene_Map: {},
 };
 
 /**
@@ -98,15 +96,8 @@ PluginManager.registerCommand(J.TIME.Metadata.Name, "showMapTime", () =>
  */
 PluginManager.registerCommand(J.TIME.Metadata.Name, "setTime", args =>
 {
-  const {Second, Minute, Hour, Day, Month, Year} = args;
-  $gameTime.setTime(
-    parseInt(Second),
-    parseInt(Minute),
-    parseInt(Hour),
-    parseInt(Day),
-    parseInt(Month),
-    parseInt(Year)
-  );
+  const { Second, Minute, Hour, Day, Month, Year } = args;
+  $gameTime.setTime(parseInt(Second), parseInt(Minute), parseInt(Hour), parseInt(Day), parseInt(Month), parseInt(Year));
 });
 
 /**
@@ -114,7 +105,7 @@ PluginManager.registerCommand(J.TIME.Metadata.Name, "setTime", args =>
  */
 PluginManager.registerCommand(J.TIME.Metadata.Name, "fastForwardtime", args =>
 {
-  const {Second, Minute, Hour, Day, Month, Year} = args;
+  const { Second, Minute, Hour, Day, Month, Year } = args;
   $gameTime.addSeconds(parseInt(Second));
   $gameTime.addMinutes(parseInt(Minute));
   $gameTime.addHours(parseInt(Hour));
@@ -128,7 +119,7 @@ PluginManager.registerCommand(J.TIME.Metadata.Name, "fastForwardtime", args =>
  */
 PluginManager.registerCommand(J.TIME.Metadata.Name, "rewindTime", args =>
 {
-  const {Second, Minute, Hour, Day, Month, Year} = args;
+  const { Second, Minute, Hour, Day, Month, Year } = args;
   $gameTime.addSeconds(-parseInt(Second));
   $gameTime.addMinutes(-parseInt(Minute));
   $gameTime.addHours(-parseInt(Hour));
@@ -142,7 +133,7 @@ PluginManager.registerCommand(J.TIME.Metadata.Name, "rewindTime", args =>
  */
 PluginManager.registerCommand(J.TIME.Metadata.Name, "jumpToTimeOfDay", args =>
 {
-  const {TimeOfDay} = args;
+  const { TimeOfDay } = args;
   $gameTime.jumpToTimeOfDay(parseInt(TimeOfDay));
 });
 

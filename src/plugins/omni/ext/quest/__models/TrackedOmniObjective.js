@@ -151,13 +151,9 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
       const { mapId, x1, y1, x2, y2 } = omniFulfillmentData.destination;
       this._targetMapId = mapId;
       const point1 = [
-        x1,
-        y1
-      ];
+        x1, y1 ];
       const point2 = [
-        x2,
-        y2
-      ];
+        x2, y2 ];
       this._targetCoordinateRange.push(point1, point2);
       break;
 
@@ -480,9 +476,7 @@ TrackedOmniObjective.prototype.setState = function(newState)
 TrackedOmniObjective.prototype.destinationData = function()
 {
   return [
-    this._targetMapId,
-    this._targetCoordinateRange
-  ];
+    this._targetMapId, this._targetCoordinateRange ];
 };
 
 /**
@@ -523,9 +517,7 @@ TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
 TrackedOmniObjective.prototype.fetchData = function()
 {
   return [
-    this._targetItemId,
-    this._targetItemFetchQuantity
-  ];
+    this._targetItemId, this._targetItemFetchQuantity ];
 };
 
 /**
@@ -627,9 +619,7 @@ TrackedOmniObjective.prototype.hasFetchedEnoughItems = function()
 TrackedOmniObjective.prototype.slayData = function()
 {
   return [
-    this._targetEnemyId,
-    this._targetEnemyAmount
-  ];
+    this._targetEnemyId, this._targetEnemyAmount ];
 };
 
 /**
@@ -701,7 +691,7 @@ TrackedOmniObjective.prototype.handleObjectiveUpdateLog = function()
 {
   // the logs only happen if the objective is finalized somehow.
   if (!this.isFinalized()) return;
-  
+
   // start the message stating the quest is updated.
   const objectiveMessage = [ `\\C[1][${this.parentQuestMetadata().name}]\\C[0] updated.` ];
 

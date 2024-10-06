@@ -11,18 +11,17 @@ J.PROF = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.PROF.Metadata =
-  {
-    /**
-     * The version of this plugin.
-     */
-    Name: `J-Proficiency`,
+J.PROF.Metadata = {
+  /**
+   * The version of this plugin.
+   */
+  Name: `J-Proficiency`,
 
-    /**
-     * The version of this plugin.
-     */
-    Version: '1.0.0',
-  };
+  /**
+   * The version of this plugin.
+   */
+  Version: '1.0.0',
+};
 
 J.PROF.Helpers = new Map();
 J.PROF.Helpers.TranslateProficiencyRequirements = function(obj)
@@ -48,8 +47,7 @@ J.PROF.Helpers.TranslateProficiencyRequirements = function(obj)
     parsedRequirements.forEach(requirementBlob =>
     {
       const parsedRequirement = JSON.parse(requirementBlob);
-      const requirement = new ProficiencyRequirement(
-        parseInt(parsedRequirement.skillId),
+      const requirement = new ProficiencyRequirement(parseInt(parsedRequirement.skillId),
         parseInt(parsedRequirement.proficiency))
       requirements.push(requirement);
     });
@@ -69,17 +67,11 @@ J.PROF.PluginParameters = PluginManager.parameters(J.PROF.Metadata.Name);
 /**
  * The various aliases associated with this plugin.
  */
-J.PROF.Aliased =
-  {
-    Game_Actor: new Map(),
-    Game_Action: new Map(),
-    Game_Battler: new Map(),
-    Game_Enemy: new Map(),
-    Game_System: new Map(),
+J.PROF.Aliased = {
+  Game_Actor: new Map(), Game_Action: new Map(), Game_Battler: new Map(), Game_Enemy: new Map(), Game_System: new Map(),
 
-    IconManager: new Map(),
-    TextManager: new Map(),
-  };
+  IconManager: new Map(), TextManager: new Map(),
+};
 
 J.PROF.RegExp = {};
 J.PROF.RegExp.ProficiencyBonus = /<proficiencyBonus:[ ]?(\d+)>/i;
@@ -92,8 +84,10 @@ J.PROF.RegExp.ProficiencyGainingBlock = /<proficiencyGainingBlock>/i;
 PluginManager.registerCommand(J.PROF.Metadata.Name, "modifyActorSkillProficiency", args =>
 {
   const { actorIds, skillIds } = args;
-  const parsedActorIds = JSON.parse(actorIds).map(num => parseInt(num));
-  const parsedSkillIds = JSON.parse(skillIds).map(num => parseInt(num));
+  const parsedActorIds = JSON.parse(actorIds)
+    .map(num => parseInt(num));
+  const parsedSkillIds = JSON.parse(skillIds)
+    .map(num => parseInt(num));
   let { amount } = args;
   amount = parseInt(amount);
   parsedSkillIds.forEach(skillId =>
@@ -114,14 +108,16 @@ PluginManager.registerCommand(J.PROF.Metadata.Name, "modifyPartySkillProficiency
 {
   const { skillIds } = args;
   let { amount } = args;
-  const parsedSkillIds = JSON.parse(skillIds).map(num => parseInt(num));
+  const parsedSkillIds = JSON.parse(skillIds)
+    .map(num => parseInt(num));
   amount = parseInt(amount);
-  $gameParty.members().forEach(actor =>
-  {
-    parsedSkillIds.forEach(skillId =>
+  $gameParty.members()
+    .forEach(actor =>
     {
-      actor.increaseSkillProficiency(skillId, amount);
+      parsedSkillIds.forEach(skillId =>
+      {
+        actor.increaseSkillProficiency(skillId, amount);
+      });
     });
-  });
 });
 //endregion Introduction

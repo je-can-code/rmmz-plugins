@@ -203,7 +203,9 @@ J.BASE.Helpers.generateUuid = function()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
     .replace(/[xy]/g, c =>
     {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = Math.random() * 16 | 0, v = c === 'x'
+        ? r
+        : (r & 0x3 | 0x8);
       return v.toString(16);
     });
 };
@@ -217,7 +219,9 @@ J.BASE.Helpers.shortUuid = function()
   return 'xxx-xxx'
     .replace(/[xy]/g, c =>
     {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = Math.random() * 16 | 0, v = c === 'x'
+        ? r
+        : (r & 0x3 | 0x8);
       return v.toString(16);
     });
 };
@@ -283,11 +287,11 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
 {
   const stringifiedStructure = structure.toString();
   const openChar = '<';
-  const closeChar = asBoolean ? '>' : ':';
+  const closeChar = asBoolean
+    ? '>'
+    : ':';
   return stringifiedStructure
-    .substring(
-      stringifiedStructure.indexOf(openChar) + 1,
-      stringifiedStructure.indexOf(closeChar));
+    .substring(stringifiedStructure.indexOf(openChar) + 1, stringifiedStructure.indexOf(closeChar));
 };
 
 /**
@@ -308,15 +312,12 @@ Object.defineProperty(String, "empty", { value: "", writable: false });
  * adding empty hard brackets all over the place.
  * @type {[]}
  */
-Object.defineProperty(Array, "empty",
+Object.defineProperty(Array, "empty", {
+  enumerable: true, configurable: false, get: function()
   {
-    enumerable: true,
-    configurable: false,
-    get: function()
-    {
-      return Array.of();
-    },
-  });
+    return Array.of();
+  },
+});
 
 /**
  * Executes a given function a given number of `times`.
@@ -327,7 +328,7 @@ Object.defineProperty(Array, "empty",
  */
 Array.iterate = function(times, func, thisArg = undefined)
 {
-  [...Array(times)].forEach(func, thisArg);
+  [ ...Array(times) ].forEach(func, thisArg);
 };
 
 /**
@@ -342,7 +343,8 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
   const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/ig;
 
   // return the masked string content.
-  return stringToMask.toString().replace(structure, maskingCharacter);
+  return stringToMask.toString()
+    .replace(structure, maskingCharacter);
 };
 //endregion Helpers
 

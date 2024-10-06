@@ -61,7 +61,8 @@ J.CAMods.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);
 Game_Map.prototype.setup = function(mapId)
 {
   // perform original logic.
-  J.CAMods.Aliased.Game_Map.get('setup').call(this, mapId);
+  J.CAMods.Aliased.Game_Map.get('setup')
+    .call(this, mapId);
 
   // update rare/named enemy variable.
   $gameVariables.setValue(13, Math.randomInt(100) + 1);

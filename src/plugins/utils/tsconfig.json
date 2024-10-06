@@ -4,6 +4,6 @@
     "outFile": "output.js",
     "target": "ESNext",
     "sourceMap": false,
-    "allowJs": true,
+    "allowJs": true
   }
 }

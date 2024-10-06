@@ -7,7 +7,8 @@ J.PASSIVE.Aliased.Window_MoreEquipData.set('addJabsEquipmentData', Window_MoreEq
 Window_MoreEquipData.prototype.addJabsEquipmentData = function()
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Window_MoreEquipData.get('addJabsEquipmentData').call(this);
+  J.PASSIVE.Aliased.Window_MoreEquipData.get('addJabsEquipmentData')
+    .call(this);
 
   // also add the passive state data.
   this.addPassiveStateData();
@@ -26,7 +27,7 @@ Window_MoreEquipData.prototype.addPassiveStateData = function()
   const uniquePassiveIds = this.item.uniqueEquippedPassiveStateIds;
 
   // combine the two groups of ids.
-  const allIds = [...stackablePassiveIds, ...uniquePassiveIds].sort();
+  const allIds = [ ...stackablePassiveIds, ...uniquePassiveIds ].sort();
 
   // an iterator function for rendering a command based on the passive state id.
   const forEacher = passiveStateId =>

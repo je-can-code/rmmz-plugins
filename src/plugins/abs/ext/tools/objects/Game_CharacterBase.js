@@ -6,7 +6,8 @@ J.ABS.EXT.TOOLS.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase
 Game_CharacterBase.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.Game_CharacterBase.get('initMembers').call(this);
+  J.ABS.EXT.TOOLS.Aliased.Game_CharacterBase.get('initMembers')
+    .call(this);
 
   // initialize our class members.
   this.initToolsMembers();

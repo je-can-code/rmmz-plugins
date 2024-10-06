@@ -22,6 +22,7 @@ class RPG_DropItemBuilder
    * @type {number}
    */
   #chance = 0;
+
   //endregion properties
 
   /**
@@ -33,9 +34,7 @@ class RPG_DropItemBuilder
   {
     // create an anonymous object representing the drop data.
     const dropItem = {
-      kind: this.#type,
-      dataId: this.#id,
-      denominator: this.#chance,
+      kind: this.#type, dataId: this.#id, denominator: this.#chance,
     };
 
     // check to make sure the clear needs execution.
@@ -134,5 +133,6 @@ class RPG_DropItemBuilder
     this.setChance(percentChance);
     return this.build();
   }
+
   //endregion builders
 }

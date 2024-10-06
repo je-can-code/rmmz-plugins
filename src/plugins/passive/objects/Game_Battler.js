@@ -7,7 +7,8 @@ J.PASSIVE.Aliased.Game_BattlerBase.set('initMembers', Game_Battler.prototype.ini
 Game_Battler.prototype.initMembers = function()
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_BattlerBase.get('initMembers').call(this);
+  J.PASSIVE.Aliased.Game_BattlerBase.get('initMembers')
+    .call(this);
 
   // initialize the passive states properties.
   this.initPassiveStatesMembers();
@@ -51,7 +52,8 @@ Game_Battler.prototype.getPassiveStateIds = function()
  */
 Game_Battler.prototype.hasPassiveStateId = function(stateId)
 {
-  return this.getPassiveStateIds().includes(stateId);
+  return this.getPassiveStateIds()
+    .includes(stateId);
 };
 
 /**
@@ -82,7 +84,8 @@ Game_Battler.prototype.addPassiveStateId = function(stateId, allowDuplicates = t
 Game_Battler.prototype.canAddPassiveStateId = function(stateId, allowDuplicates)
 {
   // if we don't allow duplicates and already are have this stateId, then don't add it.
-  if (!allowDuplicates && this.getPassiveStateIds().includes(stateId)) return false;
+  if (!allowDuplicates && this.getPassiveStateIds()
+    .includes(stateId)) return false;
 
   // TODO: check for blacklisted ids as well.
 
@@ -96,7 +99,8 @@ Game_Battler.prototype.canAddPassiveStateId = function(stateId, allowDuplicates)
  */
 Game_Battler.prototype.getPassiveStates = function()
 {
-  return this.getPassiveStateIds().map(this.state, this);
+  return this.getPassiveStateIds()
+    .map(this.state, this);
 };
 
 /**
@@ -217,7 +221,7 @@ Game_Battler.prototype.getAllStackablePassiveStateIds = function()
         const stack = stackablePassiveStateIds.get(id);
 
         // increment the stack.
-        stackablePassiveStateIds.set(id, stack+1);
+        stackablePassiveStateIds.set(id, stack + 1);
       }
       // we aren't tracking this passive state id yet.
       else
@@ -250,8 +254,7 @@ Game_Battler.prototype.getPassiveStateSources = function()
     ...this.allStates(),
 
     // all skills available to this battler.
-    ...this.skills(),
-  ];
+    ...this.skills(), ];
 
   // return this collection of stuff.
   return battlerSources;
@@ -277,7 +280,8 @@ J.PASSIVE.Aliased.Game_Battler.set('allStates', Game_Battler.prototype.allStates
 Game_Battler.prototype.allStates = function()
 {
   // get all original states.
-  const states = J.PASSIVE.Aliased.Game_Battler.get('allStates').call(this);
+  const states = J.PASSIVE.Aliased.Game_Battler.get('allStates')
+    .call(this);
 
   // add in all passive skill states.
   states.push(...this.getPassiveStates());
@@ -297,7 +301,8 @@ Game_Battler.prototype.isStateAddable = function(stateId)
   if (this.isPassiveState(stateId)) return false;
 
   // otherwise, check as normal.
-  return J.PASSIVE.Aliased.Game_Battler.get('isStateAddable').call(this, stateId);
+  return J.PASSIVE.Aliased.Game_Battler.get('isStateAddable')
+    .call(this, stateId);
 };
 
 /**
@@ -309,7 +314,8 @@ J.PASSIVE.Aliased.Game_Battler.set('onStateAdded', Game_Battler.prototype.onStat
 Game_Battler.prototype.onStateAdded = function(stateId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Battler.get('onStateAdded').call(this, stateId);
+  J.PASSIVE.Aliased.Game_Battler.get('onStateAdded')
+    .call(this, stateId);
 
   // refresh our passive state list.
   this.refreshPassiveStates();
@@ -326,7 +332,8 @@ Game_Battler.prototype.removeState = function(stateId)
   if (this.isPassiveState(stateId)) return;
 
   // otherwise, remove as normal.
-  J.PASSIVE.Aliased.Game_Battler.get('removeState').call(this, stateId);
+  J.PASSIVE.Aliased.Game_Battler.get('removeState')
+    .call(this, stateId);
 };
 
 /**
@@ -338,7 +345,8 @@ J.PASSIVE.Aliased.Game_Battler.set('onStateRemoval', Game_Battler.prototype.onSt
 Game_Battler.prototype.onStateRemoval = function(stateId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Battler.get('onStateRemoval').call(this, stateId);
+  J.PASSIVE.Aliased.Game_Battler.get('onStateRemoval')
+    .call(this, stateId);
 
   // refresh our passive state list.
   this.refreshPassiveStates();

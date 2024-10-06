@@ -14,4 +14,5 @@ class Window_SdpHelp extends Window_Help
     this.initialize(rect);
   }
 }
+
 //endregion Window_SdpHelp

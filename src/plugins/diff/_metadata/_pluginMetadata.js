@@ -48,18 +48,16 @@ class J_DiffPluginMetadata extends PluginMetadata
     {
       // extract the data points from the blob.
       const {
-        key, name, description, iconIndex, cost,
-        actorEffects, enemyEffects, rewards,
-        enabled, unlocked, hidden
+        key, name, description, iconIndex, cost, actorEffects, enemyEffects, rewards, enabled, unlocked, hidden
       } = parsedDifficultyBlob;
 
       // an iterator function for updating all param collections for these battler effects.
       const battlerEffectsMapper = battlerEffects =>
       {
         // initialize the params to defaults.
-        const newBParams = [100, 100, 100, 100, 100, 100, 100, 100];
-        const newXParams = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
-        const newSParams = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+        const newBParams = [ 100, 100, 100, 100, 100, 100, 100, 100 ];
+        const newXParams = [ 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ];
+        const newSParams = [ 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ];
         const newCParams = [];
 
         // extract all the raw parameters.
@@ -196,4 +194,5 @@ class J_DiffPluginMetadata extends PluginMetadata
     J_DiffPluginMetadata.updateDefaultLayer(defaultLayer);
   }
 }
+
 //endregion plugin metadata

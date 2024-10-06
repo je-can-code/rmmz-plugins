@@ -65,6 +65,7 @@ class RPG_UsableItem extends RPG_BaseItem
    * @type {number}
    */
   tpGain = 0;
+
   //endregion properties
 
   /**
@@ -90,4 +91,5 @@ class RPG_UsableItem extends RPG_BaseItem
     this.tpGain = usableItem.tpGain;
   }
 }
+
 //endregion RPG_UsableItem

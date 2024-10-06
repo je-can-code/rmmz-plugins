@@ -9,8 +9,7 @@ class JaftingManager
    * A collection of categories of equipment that are refinable.
    */
   static RefinementTypes = {
-    Armor: "armor",
-    Weapon: "weapon",
+    Armor: "armor", Weapon: "weapon",
   }
 
   /**
@@ -30,7 +29,7 @@ class JaftingManager
   static parseTraits(equip)
   {
     // shallow copy of the traits (which is all we need- traits aren't layered).
-    const allTraits = [...equip.traits];
+    const allTraits = [ ...equip.traits ];
 
     // identify where the divider is.
     const divider = allTraits.findIndex(trait => trait.code === 63);
@@ -234,9 +233,9 @@ class JaftingManager
     let baseTraits = this.parseTraits(base);
     let materialTraits = this.parseTraits(material);
 
-    [baseTraits, materialTraits] = this.removeIncompatibleTraits(baseTraits, materialTraits);
+    [ baseTraits, materialTraits ] = this.removeIncompatibleTraits(baseTraits, materialTraits);
 
-    [baseTraits, materialTraits] = this.#overwriteAllOverwritableTraits(baseTraits, materialTraits);
+    [ baseTraits, materialTraits ] = this.#overwriteAllOverwritableTraits(baseTraits, materialTraits);
 
     // copy of primary equip that represents the projected result.
     const output = base._generate(base, base._index());
@@ -293,7 +292,7 @@ class JaftingManager
   static removeIncompatibleTraits(baseTraits, materialTraits)
   {
     // a list of traits that should be purged from the secondary list if found.
-    const noDuplicateTraitCodes = [14, 31, 41, 42, 43, 44, 51, 52, 53, 54, 55, 62, 64];
+    const noDuplicateTraitCodes = [ 14, 31, 41, 42, 43, 44, 51, 52, 53, 54, 55, 62, 64 ];
     baseTraits.forEach(jaftingTrait =>
     {
       if (noDuplicateTraitCodes.includes(jaftingTrait._code))
@@ -303,18 +302,18 @@ class JaftingManager
     });
 
     // handle lock/unlock skills types.
-    [baseTraits, materialTraits] = this.removeOppositeTrait(baseTraits, materialTraits, 41, 42);
+    [ baseTraits, materialTraits ] = this.removeOppositeTrait(baseTraits, materialTraits, 41, 42);
 
     // handle lock/unlock skills.
-    [baseTraits, materialTraits] = this.removeOppositeTrait(baseTraits, materialTraits, 43, 44);
+    [ baseTraits, materialTraits ] = this.removeOppositeTrait(baseTraits, materialTraits, 43, 44);
 
     // overwrite basic attack skill.
-    [baseTraits, materialTraits] = this.replaceTrait(baseTraits, materialTraits, 35);
+    [ baseTraits, materialTraits ] = this.replaceTrait(baseTraits, materialTraits, 35);
 
     // overwrite enable/disable of dual-wield (unique case!)
-    [baseTraits, materialTraits] = this.replaceTrait(baseTraits, materialTraits, 55);
+    [ baseTraits, materialTraits ] = this.replaceTrait(baseTraits, materialTraits, 55);
 
-    return [baseTraits, materialTraits];
+    return [ baseTraits, materialTraits ];
   }
 
   /**
@@ -411,7 +410,7 @@ class JaftingManager
     baseTraitList = baseTraitList.filter(trait => !!trait);
     materialTraitList = materialTraitList.filter(trait => !!trait);
 
-    return [baseTraitList, materialTraitList];
+    return [ baseTraitList, materialTraitList ];
   }
 
   /**
@@ -440,7 +439,7 @@ class JaftingManager
 
     // cleanup both our lists from any removed traits.
     baseTraitList = baseTraitList.filter(trait => !!trait);
-    return [baseTraitList, materialTraitList];
+    return [ baseTraitList, materialTraitList ];
   }
 
   /**
@@ -451,13 +450,13 @@ class JaftingManager
    */
   static #overwriteAllOverwritableTraits(baseTraits, materialTraits)
   {
-    const overwritableCodes = [11, 12, 13, 32, 33, 34, 61];
+    const overwritableCodes = [ 11, 12, 13, 32, 33, 34, 61 ];
     overwritableCodes.forEach(code =>
     {
-      [baseTraits, materialTraits] = this.#overwriteIfBetter(baseTraits, materialTraits, code);
+      [ baseTraits, materialTraits ] = this.#overwriteIfBetter(baseTraits, materialTraits, code);
     });
 
-    return [baseTraits, materialTraits];
+    return [ baseTraits, materialTraits ];
   }
 
   /**
@@ -478,9 +477,7 @@ class JaftingManager
       if (trait._code !== code) return false;
 
       // check if another version of the trait exists on the material.
-      const index = materialTraitList.findIndex(jaftingTrait =>
-        jaftingTrait._code === code &&
-        jaftingTrait._dataId === trait._dataId);
+      const index = materialTraitList.findIndex(jaftingTrait => jaftingTrait._code === code && jaftingTrait._dataId === trait._dataId);
       return index > -1;
     };
 
@@ -495,14 +492,14 @@ class JaftingManager
     });
 
     // if we have no matches to combine, then just return the lists untouched.
-    if (!sameIndices.length) return [baseTraitList, materialTraitList];
+    if (!sameIndices.length) return [ baseTraitList, materialTraitList ];
 
     // create copies for working with.
     let tempBaseList = JsonEx.makeDeepCopy(baseTraitList);
     let tempMaterialList = JsonEx.makeDeepCopy(materialTraitList);
 
-    const higherIsBetterCodes = [32, 33, 34, 61];
-    const lowerIsBetterCodes = [11, 12, 13];
+    const higherIsBetterCodes = [ 32, 33, 34, 61 ];
+    const lowerIsBetterCodes = [ 11, 12, 13 ];
 
     // iterate over all shared traits to analyze them further.
     sameIndices.forEach(i =>
@@ -548,7 +545,7 @@ class JaftingManager
       .filter(t => !!t)
       .map(t => new JAFTING_Trait(t._code, t._dataId, t._value));
 
-    return [tempBaseList, tempMaterialList];
+    return [ tempBaseList, tempMaterialList ];
   }
 
   /**
@@ -671,4 +668,5 @@ class JaftingManager
     }
   }
 }
+
 //endregion JaftingManager

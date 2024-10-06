@@ -7,7 +7,8 @@ J.ABS.EXT.TOOLS.Aliased.JABS_Engine.set('processOnHitEffects', JABS_Engine.proto
 JABS_Engine.prototype.processOnHitEffects = function(action, target)
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.JABS_Engine.get('processOnHitEffects').call(this, action, target);
+  J.ABS.EXT.TOOLS.Aliased.JABS_Engine.get('processOnHitEffects')
+    .call(this, action, target);
 
   // handle gapclose logic.
   this.handleGapClose(action, target);

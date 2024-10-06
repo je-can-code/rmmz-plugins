@@ -169,4 +169,5 @@ class JABS_LootDrop
     return this._lootObject.jabsUseOnPickup ?? false;
   }
 }
+
 //endregion JABS_LootDrop

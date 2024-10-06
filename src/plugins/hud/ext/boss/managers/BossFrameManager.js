@@ -25,6 +25,7 @@ class BossFrameManager
    * @type {boolean}
    */
   static #showBossRequest = false;
+
   //endregion properties
 
   /**
@@ -103,7 +104,8 @@ class BossFrameManager
     if (!this.boss) return 0;
 
     // return the bosses hp as a percent integer.
-    return this.getBossGameBattler().currentHpPercent100();
+    return this.getBossGameBattler()
+      .currentHpPercent100();
   }
 
   /**
@@ -117,7 +119,8 @@ class BossFrameManager
     if (!this.boss) return false;
 
     // determine if the boss is above the threshold.
-    const aboveThreshold = this.getBossGameBattler().currentHpPercent100() >= hpPercentThreshold;
+    const aboveThreshold = this.getBossGameBattler()
+      .currentHpPercent100() >= hpPercentThreshold;
 
     // return the result.
     return aboveThreshold;
@@ -134,7 +137,8 @@ class BossFrameManager
     if (!this.boss) return false;
 
     // determine if the boss is below the threshold.
-    const aboveThreshold = this.getBossGameBattler().currentHpPercent100() <= hpPercentThreshold;
+    const aboveThreshold = this.getBossGameBattler()
+      .currentHpPercent100() <= hpPercentThreshold;
 
     // return the result.
     return aboveThreshold;
@@ -152,7 +156,8 @@ class BossFrameManager
     if (!this.boss) return false;
 
     // check where the battler's currently is at.
-    const hpPercent = this.getBossGameBattler().currentHpPercent100();
+    const hpPercent = this.getBossGameBattler()
+      .currentHpPercent100();
 
     // determine if the boss is within the threshold.
     const withinThreshold = lowerRange <= hpPercent <= upperRange;
@@ -160,6 +165,7 @@ class BossFrameManager
     // return the result.
     return withinThreshold;
   }
+
   //endregion boss checking
 
   //region refresh
@@ -187,6 +193,7 @@ class BossFrameManager
   {
     this.#newBossRequest = false;
   }
+
   //endregion refresh
 
   //region hide
@@ -214,6 +221,7 @@ class BossFrameManager
   {
     this.#hideBossRequest = false;
   }
+
   //endregion hide
 
   //region show
@@ -241,6 +249,7 @@ class BossFrameManager
   {
     this.#showBossRequest = false;
   }
+
   //endregion show
 
   //region privates
@@ -260,7 +269,8 @@ class BossFrameManager
     }
 
     // grab the battler for the event.
-    const bossJabsBattler = $gameMap.event(eventId).getJabsBattler();
+    const bossJabsBattler = $gameMap.event(eventId)
+      .getJabsBattler();
 
     // grab the battler from the jabs battler.
     const bossBattler = bossJabsBattler.getBattler();
@@ -269,12 +279,7 @@ class BossFrameManager
     const framedTargetConfiguration = new FramedTargetConfiguration();
 
     // build the boss's framed target.
-    const framedTarget = new FramedTarget(
-      bossBattler.name(),
-      String.empty,
-      14,
-      bossBattler,
-      framedTargetConfiguration);
+    const framedTarget = new FramedTarget(bossBattler.name(), String.empty, 14, bossBattler, framedTargetConfiguration);
 
     // return the built target.
     return framedTarget;
@@ -291,11 +296,14 @@ class BossFrameManager
     if (!eventId) return false;
 
     // if the eventId is not a valid eventId, we cannot create from that.
-    if (!$gameMap.event(eventId).getJabsBattler()) return false;
+    if (!$gameMap.event(eventId)
+      .getJabsBattler()) return false;
 
     // create the boss!
     return true;
   }
+
   //endregion privates
 }
+
 //endregion BossFrameManager

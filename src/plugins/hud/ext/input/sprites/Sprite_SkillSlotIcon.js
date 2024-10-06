@@ -73,7 +73,8 @@ class Sprite_SkillSlotIcon extends Sprite_Icon
     if (!$gameParty.leader()) return this._j._iconIndex;
 
     // if we are leveraging skill extensions, then grab the appropriate skill.
-    const skill = this.skillSlot().data($gameParty.leader());
+    const skill = this.skillSlot()
+      .data($gameParty.leader());
 
     // if nothing was in the slot, then don't draw it.
     if (!skill) return 0;
@@ -113,7 +114,8 @@ class Sprite_SkillSlotIcon extends Sprite_Icon
    */
   needsSynchronization()
   {
-    return (this.hasSkillSlot() && this.skillSlot().needsVisualIconRefresh());
+    return (this.hasSkillSlot() && this.skillSlot()
+      .needsVisualIconRefresh());
   }
 
   /**
@@ -130,7 +132,8 @@ class Sprite_SkillSlotIcon extends Sprite_Icon
     }
 
     // acknowledge the refresh.
-    this.skillSlot().acknowledgeIconRefresh();
+    this.skillSlot()
+      .acknowledgeIconRefresh();
   }
 
   /**
@@ -151,4 +154,5 @@ class Sprite_SkillSlotIcon extends Sprite_Icon
     }
   }
 }
+
 //endregion Sprite_SkillIcon

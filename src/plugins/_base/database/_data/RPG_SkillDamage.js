@@ -34,6 +34,7 @@ class RPG_SkillDamage
    * @type {number}
    */
   variance = 0;
+
   //endregion properties
 
   /**
@@ -57,4 +58,5 @@ class RPG_SkillDamage
     }
   }
 }
+
 //endregion RPG_SkillDamage

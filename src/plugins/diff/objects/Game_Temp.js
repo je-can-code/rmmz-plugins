@@ -6,7 +6,8 @@ J.DIFFICULTY.Aliased.Game_Temp.set('initMembers', Game_Temp.prototype.initMember
 Game_Temp.prototype.initMembers = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.Game_Temp.get('initMembers').call(this);
+  J.DIFFICULTY.Aliased.Game_Temp.get('initMembers')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -258,12 +259,12 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
 
   // build the new applied difficulty layer.
   const newDifficulty = new DifficultyBuilder(appliedName, appliedKey)
-      .setDescription(appliedDescription)
-      .setCost(cost)
-      .setActorEffects(enabledActorEffects)
-      .setEnemyEffects(enabledEnemyEffects)
-      .setRewards(rewards)
-      .buildAsLayer();
+    .setDescription(appliedDescription)
+    .setCost(cost)
+    .setActorEffects(enabledActorEffects)
+    .setEnemyEffects(enabledEnemyEffects)
+    .setRewards(rewards)
+    .buildAsLayer();
 
   // return the compiled difficulty.
   return newDifficulty;

@@ -6,7 +6,8 @@ J.ABS.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Party.get('initialize').call(this);
+  J.ABS.Aliased.Game_Party.get('initialize')
+    .call(this);
 
   // initialize party data for JABS.
   this.initJabsPartyData();
@@ -71,7 +72,8 @@ Game_Party.prototype.leaderJabsBattler = function()
   if (!this.leader()) return undefined;
 
   // grab the leader's uuid.
-  const leaderUuid = this.leader().getUuid();
+  const leaderUuid = this.leader()
+    .getUuid();
 
   // return the leader's battler.
   return JABS_AiManager.getBattlerByUuid(leaderUuid);

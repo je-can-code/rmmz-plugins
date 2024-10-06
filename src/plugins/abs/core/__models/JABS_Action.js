@@ -198,7 +198,7 @@ class JABS_Action
     }
 
     // handle other bonus hits for basic attacks.
-    const isBasicAttack = [JABS_Button.Mainhand, JABS_Button.Offhand].includes(this.getCooldownType());
+    const isBasicAttack = [ JABS_Button.Mainhand, JABS_Button.Offhand ].includes(this.getCooldownType());
     pierceCount += this._caster.getAdditionalHits(this._baseSkill, isBasicAttack);
 
     return pierceCount;
@@ -255,7 +255,8 @@ class JABS_Action
    */
   performSelfAnimation()
   {
-    this.getActionSprite()?.requestAnimation(this.getSelfAnimationId());
+    this.getActionSprite()
+      ?.requestAnimation(this.getSelfAnimationId());
   }
 
   /**
@@ -336,7 +337,8 @@ class JABS_Action
    */
   direction()
   {
-    return this._facing || this.getActionSprite().direction();
+    return this._facing || this.getActionSprite()
+      .direction();
   }
 
   /**
@@ -726,6 +728,7 @@ class JABS_Action
   postUpdate()
   {
   }
+
   //endregion update
 
   /**

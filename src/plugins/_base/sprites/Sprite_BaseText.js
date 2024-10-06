@@ -9,9 +9,7 @@ class Sprite_BaseText extends Sprite
    * The available supported text alignments.
    */
   static Alignments = {
-    Left: "left",
-    Center: "center",
-    Right: "right",
+    Left: "left", Center: "center", Right: "right",
   };
 
   /**
@@ -294,10 +292,7 @@ class Sprite_BaseText extends Sprite
   isValidAlignment(alignment)
   {
     const validAlignments = [
-      Sprite_BaseText.Alignments.Left,
-      Sprite_BaseText.Alignments.Center,
-      Sprite_BaseText.Alignments.Right
-    ]
+      Sprite_BaseText.Alignments.Left, Sprite_BaseText.Alignments.Center, Sprite_BaseText.Alignments.Right ]
 
     return validAlignments.includes(alignment);
   }
@@ -418,13 +413,8 @@ class Sprite_BaseText extends Sprite
       : this.bitmapWidth();
 
     // draw the text with the current settings onto the bitmap.
-    this.bitmap.drawText(
-      this.text(),
-      0,
-      0,
-      width,
-      this.bitmapHeight(),
-      this.alignment());
+    this.bitmap.drawText(this.text(), 0, 0, width, this.bitmapHeight(), this.alignment());
   }
 }
+
 //endregion Sprite_BaseText

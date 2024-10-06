@@ -6,13 +6,12 @@
  * context of collision with targets.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsRadius",
+Object.defineProperty(RPG_Skill.prototype, "jabsRadius", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsRadius();
-    },
-  });
+    return this.getJabsRadius();
+  },
+});
 
 /**
  * Gets the JABS range for this skill.
@@ -37,13 +36,12 @@ RPG_Skill.prototype.extractJabsRadius = function()
  * A new property for retrieving the JABS proximity from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsProximity",
+Object.defineProperty(RPG_Skill.prototype, "jabsProximity", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsProximity();
-    },
-  });
+    return this.getJabsProximity();
+  },
+});
 
 /**
  * Gets the JABS proximity this skill.
@@ -68,13 +66,12 @@ RPG_Skill.prototype.extractJabsProximity = function()
  * A new property for retrieving the JABS actionId from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsActionId",
+Object.defineProperty(RPG_Skill.prototype, "jabsActionId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsActionId();
-    },
-  });
+    return this.getJabsActionId();
+  },
+});
 
 /**
  * Gets the JABS actionId this skill.
@@ -100,13 +97,12 @@ RPG_Skill.prototype.extractJabsActionId = function()
  * A new property for retrieving the JABS duration from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsDuration",
+Object.defineProperty(RPG_Skill.prototype, "jabsDuration", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsDuration();
-    },
-  });
+    return this.getJabsDuration();
+  },
+});
 
 /**
  * Gets the JABS duration this skill.
@@ -132,13 +128,12 @@ RPG_Skill.prototype.extractJabsDuration = function()
  * A new property for retrieving the JABS shape from this skill.
  * @type {string}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsShape",
+Object.defineProperty(RPG_Skill.prototype, "jabsShape", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsShape();
-    },
-  });
+    return this.getJabsShape();
+  },
+});
 
 /**
  * Gets the JABS shape this skill.
@@ -164,13 +159,12 @@ RPG_Skill.prototype.extractJabsShape = function()
  * A new property for retrieving the JABS knockback from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsKnockback",
+Object.defineProperty(RPG_Skill.prototype, "jabsKnockback", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsKnockback();
-    },
-  });
+    return this.getJabsKnockback();
+  },
+});
 
 /**
  * Gets the JABS knockback this skill.
@@ -196,13 +190,12 @@ RPG_Skill.prototype.extractJabsKnockback = function()
  * A new property for retrieving the JABS castAnimation id from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsCastAnimation",
+Object.defineProperty(RPG_Skill.prototype, "jabsCastAnimation", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsCastAnimation();
-    },
-  });
+    return this.getJabsCastAnimation();
+  },
+});
 
 /**
  * Gets the JABS castAnimation this skill.
@@ -228,13 +221,12 @@ RPG_Skill.prototype.extractJabsCastAnimation = function()
  * A new property for retrieving the JABS castTime from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsCastTime",
+Object.defineProperty(RPG_Skill.prototype, "jabsCastTime", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsCastTime();
-    },
-  });
+    return this.getJabsCastTime();
+  },
+});
 
 /**
  * Gets the JABS castTime this skill.
@@ -260,13 +252,12 @@ RPG_Skill.prototype.extractJabsCastTime = function()
  * A new property for retrieving the JABS direct from this skill.
  * @type {boolean}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsDirect",
+Object.defineProperty(RPG_Skill.prototype, "jabsDirect", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsDirect();
-    },
-  });
+    return this.getJabsDirect();
+  },
+});
 
 /**
  * Gets the JABS direct this skill.
@@ -292,13 +283,12 @@ RPG_Skill.prototype.extractJabsDirect = function()
  * A new property for retrieving the JABS bonusAggro from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsBonusAggro",
+Object.defineProperty(RPG_Skill.prototype, "jabsBonusAggro", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsBonusAggro();
-    },
-  });
+    return this.getJabsBonusAggro();
+  },
+});
 
 /**
  * Gets the JABS bonusAggro this skill.
@@ -324,13 +314,12 @@ RPG_Skill.prototype.extractJabsBonusAggro = function()
  * A new property for retrieving the JABS aggroMultiplier from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsAggroMultiplier",
+Object.defineProperty(RPG_Skill.prototype, "jabsAggroMultiplier", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAggroMultiplier();
-    },
-  });
+    return this.getJabsAggroMultiplier();
+  },
+});
 
 /**
  * Gets the JABS aggroMultiplier this skill.
@@ -357,13 +346,12 @@ RPG_Skill.prototype.extractJabsAggroMultiplier = function()
  * Will return null if there is no guard tag available on this
  * @type {JABS_GuardData}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGuardData",
+Object.defineProperty(RPG_Skill.prototype, "jabsGuardData", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsGuardData();
-    },
-  });
+    return this.getJabsGuardData();
+  },
+});
 
 /**
  * Gets the JABS guard this skill.
@@ -371,8 +359,7 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGuardData",
  */
 RPG_Skill.prototype.getJabsGuardData = function()
 {
-  return new JABS_GuardData(
-    this.id,
+  return new JABS_GuardData(this.id,
     this.jabsGuardFlat,
     this.jabsGuardPercent,
     this.jabsCounterGuard,
@@ -386,13 +373,12 @@ RPG_Skill.prototype.getJabsGuardData = function()
  * A new property for retrieving the JABS guard from this skill.
  * @type {[number, number]}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGuard",
+Object.defineProperty(RPG_Skill.prototype, "jabsGuard", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsGuard() ?? [0, 0];
-    },
-  });
+    return this.getJabsGuard() ?? [ 0, 0 ];
+  },
+});
 
 /**
  * The flat amount of damage reduced by this skill when guarding.
@@ -400,13 +386,12 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGuard",
  * If positive, this flat damage will instead be added on while guarding.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGuardFlat",
+Object.defineProperty(RPG_Skill.prototype, "jabsGuardFlat", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsGuard[0];
-    },
-  });
+    return this.jabsGuard[0];
+  },
+});
 
 /**
  * The percent amount of damage reduced by this skill when guarding.
@@ -414,13 +399,12 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGuardFlat",
  * If positive, this percent damage will instead be added on while guarding.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGuardPercent",
+Object.defineProperty(RPG_Skill.prototype, "jabsGuardPercent", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsGuard[1];
-    },
-  });
+    return this.jabsGuard[1];
+  },
+});
 
 /**
  * Gets the JABS guard this skill.
@@ -447,13 +431,12 @@ RPG_Skill.prototype.extractJabsGuard = function()
  * when first guarding.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsParry",
+Object.defineProperty(RPG_Skill.prototype, "jabsParry", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsParryFrames();
-    },
-  });
+    return this.getJabsParryFrames();
+  },
+});
 
 /**
  * Gets the JABS parry this skill.
@@ -480,13 +463,12 @@ RPG_Skill.prototype.extractJabsParryFrames = function()
  * executed in retaliation.
  * @type {number[]}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsCounterParry",
+Object.defineProperty(RPG_Skill.prototype, "jabsCounterParry", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsCounterParry();
-    },
-  });
+    return this.getJabsCounterParry();
+  },
+});
 
 /**
  * Gets the JABS counterParry this skill.
@@ -512,13 +494,12 @@ RPG_Skill.prototype.extractJabsCounterParry = function()
  * While guarding, this skill id will be automatically executed in retaliation.
  * @type {number[]}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsCounterGuard",
+Object.defineProperty(RPG_Skill.prototype, "jabsCounterGuard", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsCounterGuard();
-    },
-  });
+    return this.getJabsCounterGuard();
+  },
+});
 
 /**
  * Gets the JABS counterGuard this skill.
@@ -544,13 +525,12 @@ RPG_Skill.prototype.extractJabsCounterGuard = function()
  * A new property for retrieving the JABS projectile frames from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsProjectile",
+Object.defineProperty(RPG_Skill.prototype, "jabsProjectile", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsProjectile();
-    },
-  });
+    return this.getJabsProjectile();
+  },
+});
 
 /**
  * Gets the JABS projectile this skill.
@@ -576,13 +556,12 @@ RPG_Skill.prototype.extractJabsProjectile = function()
  * A new property for retrieving the JABS uniqueCooldown from this skill.
  * @type {boolean}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsUniqueCooldown",
+Object.defineProperty(RPG_Skill.prototype, "jabsUniqueCooldown", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsUniqueCooldown();
-    },
-  });
+    return this.getJabsUniqueCooldown();
+  },
+});
 
 /**
  * Gets the JABS uniqueCooldown this skill.
@@ -608,13 +587,12 @@ RPG_Skill.prototype.extractJabsUniqueCooldown = function()
  * The direction that this dodge skill will move.
  * @type {string}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsMoveType",
+Object.defineProperty(RPG_Skill.prototype, "jabsMoveType", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsMoveType();
-    },
-  });
+    return this.getJabsMoveType();
+  },
+});
 
 /**
  * Gets the JABS moveType this skill.
@@ -641,13 +619,12 @@ RPG_Skill.prototype.extractJabsMoveType = function()
  * skill's dodge movement.
  * @type {boolean}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsInvincibleDodge",
+Object.defineProperty(RPG_Skill.prototype, "jabsInvincibleDodge", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsInvincibileDodge();
-    },
-  });
+    return this.getJabsInvincibileDodge();
+  },
+});
 
 /**
  * Gets the dodge invincibility flag for this skill.
@@ -675,13 +652,12 @@ RPG_Skill.prototype.extractJabsInvincibleDodge = function()
  * the actual timing factor for combos.
  * @type {boolean|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsFreeCombo",
+Object.defineProperty(RPG_Skill.prototype, "jabsFreeCombo", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsFreeCombo();
-    },
-  });
+    return this.getJabsFreeCombo();
+  },
+});
 
 /**
  * Gets the JABS freeCombo this skill.
@@ -712,24 +688,22 @@ RPG_Skill.prototype.extractJabsFreeCombo = function()
  * Will be null if the combo tag is missing from the skill.
  * @type {[number, number]|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsComboAction",
+Object.defineProperty(RPG_Skill.prototype, "jabsComboAction", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsComboAction();
-    },
-  });
+    return this.getJabsComboAction();
+  },
+});
 
 /**
  * Whether or not this skill can be used to engage in a combo.
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsComboStarter",
+Object.defineProperty(RPG_Skill.prototype, "jabsComboStarter", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsComboStarter();
-    },
-  });
+    return this.getJabsComboStarter();
+  },
+});
 
 /**
  * Checks the skill's metadata for the presence of the combo starter.
@@ -744,13 +718,12 @@ RPG_Skill.prototype.getJabsComboStarter = function()
  * Whether or not this skill is a "skill extend" skill.
  * @returns {boolean} True if this is a "skill extend" skill, false otherwise.
  */
-Object.defineProperty(RPG_Skill.prototype, "isSkillExtender",
+Object.defineProperty(RPG_Skill.prototype, "isSkillExtender", {
+  get: function()
   {
-    get: function()
-    {
-      return !!this.getSkillExtender();
-    },
-  });
+    return !!this.getSkillExtender();
+  },
+});
 
 /**
  * Checks the skill's metadata for the presence of the JABS AI skill exclusion tag.
@@ -765,13 +738,12 @@ RPG_Skill.prototype.getSkillExtender = function()
  * Whether or not this skill can be chosen at all by the JABS AI.
  * Combo skills can still be executed as they are chosen by different means.
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsAiSkillExclusion",
+Object.defineProperty(RPG_Skill.prototype, "jabsAiSkillExclusion", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getAiSkillExclusion();
-    },
-  });
+    return this.getAiSkillExclusion();
+  },
+});
 
 /**
  * Checks the skill's metadata for the presence of the JABS AI skill exclusion tag.
@@ -787,25 +759,23 @@ RPG_Skill.prototype.getAiSkillExclusion = function()
  * by the caster.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsComboSkillId",
+Object.defineProperty(RPG_Skill.prototype, "jabsComboSkillId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsComboAction[0];
-    },
-  });
+    return this.jabsComboAction[0];
+  },
+});
 
 /**
  * The JABS combo delay in frames before the combo skill can be triggered.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsComboDelay",
+Object.defineProperty(RPG_Skill.prototype, "jabsComboDelay", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsComboAction[1];
-    },
-  });
+    return this.jabsComboAction[1];
+  },
+});
 
 /**
  * Gets the JABS combo this skill.
@@ -906,43 +876,40 @@ RPG_Skill.prototype.shouldRecurseForComboSkills = function(skill, lastSkillId)
  * Will be null if the piercing tag is missing from the skill.
  * @type {[number, number]|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsPiercingData",
+Object.defineProperty(RPG_Skill.prototype, "jabsPiercingData", {
+  get: function()
   {
-    get: function()
+    const piercingData = this.getJabsPiercingData();
+    if (!piercingData)
     {
-      const piercingData = this.getJabsPiercingData();
-      if (!piercingData)
-      {
-        return [1, 0];
-      }
+      return [ 1, 0 ];
+    }
 
-      return piercingData;
-    },
-  });
+    return piercingData;
+  },
+});
 
 /**
  * The number of times this skill can hit targets.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsPierceCount",
+Object.defineProperty(RPG_Skill.prototype, "jabsPierceCount", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsPiercingData.at(0);
-    },
-  });
+    return this.jabsPiercingData.at(0);
+  },
+});
 
 /**
  * The delay in frames between each pierce hit on targets.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsPierceDelay",
+Object.defineProperty(RPG_Skill.prototype, "jabsPierceDelay", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.max(this.jabsPiercingData.at(1), 5);
-    },
-  });
+    return Math.max(this.jabsPiercingData.at(1), 5);
+  },
+});
 
 /**
  * Gets the JABS percing data this skill.
@@ -969,13 +936,12 @@ RPG_Skill.prototype.extractJabsPiercingData = function()
  * A new property for retrieving the JABS castTime from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsKnockbackResist",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsKnockbackResist", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsKnockbackResist();
-    },
-  });
+    return this.getJabsKnockbackResist();
+  },
+});
 
 /**
  * Gets the JABS castTime this skill.
@@ -1001,13 +967,12 @@ RPG_BaseBattler.prototype.extractJabsKnockbackResist = function()
  * A new property for retrieving the JABS castTime from this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_BaseItem.prototype, "jabsKnockbackResist",
+Object.defineProperty(RPG_BaseItem.prototype, "jabsKnockbackResist", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsKnockbackResist();
-    },
-  });
+    return this.getJabsKnockbackResist();
+  },
+});
 
 /**
  * Gets the JABS castTime this skill.
@@ -1034,13 +999,12 @@ RPG_BaseItem.prototype.extractJabsKnockbackResist = function()
  * The amount of parry rating ignored by this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsIgnoreParry",
+Object.defineProperty(RPG_Skill.prototype, "jabsIgnoreParry", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsIgnoreParry();
-    },
-  });
+    return this.getJabsIgnoreParry();
+  },
+});
 
 /**
  * Gets the ignore parry amount for this skill.
@@ -1066,13 +1030,12 @@ RPG_Skill.prototype.extractJabsIgnoreParry = function()
  * Whether or not this skill is completely unparryable by the target.
  * @type {boolean}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsUnparryable",
+Object.defineProperty(RPG_Skill.prototype, "jabsUnparryable", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsUnparryable();
-    },
-  });
+    return this.getJabsUnparryable();
+  },
+});
 
 /**
  * Gets whether or not this skill is unparryable.
@@ -1099,13 +1062,12 @@ RPG_Skill.prototype.extractJabsUnparryable = function()
  * The animation id to play on oneself when executing this skill.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsSelfAnimationId",
+Object.defineProperty(RPG_Skill.prototype, "jabsSelfAnimationId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSelfAnimationId();
-    },
-  });
+    return this.getJabsSelfAnimationId();
+  },
+});
 
 /**
  * Gets the JABS self animation id.
@@ -1135,43 +1097,40 @@ RPG_Skill.prototype.extractJabsSelfAnimationId = function()
  * Will be null if the delay tag is missing from the skill.
  * @type {[number, boolean]|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsDelayData",
+Object.defineProperty(RPG_Skill.prototype, "jabsDelayData", {
+  get: function()
   {
-    get: function()
+    const delayData = this.getJabsDelayData();
+    if (!delayData)
     {
-      const delayData = this.getJabsDelayData();
-      if (!delayData)
-      {
-        return [0, false];
-      }
+      return [ 0, false ];
+    }
 
-      return delayData;
-    },
-  });
+    return delayData;
+  },
+});
 
 /**
  * The duration in frames before this skill's action will trigger.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsDelayDuration",
+Object.defineProperty(RPG_Skill.prototype, "jabsDelayDuration", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsDelayData[0];
-    },
-  });
+    return this.jabsDelayData[0];
+  },
+});
 
 /**
  * Whether or not the delay will be ignored if an enemy touches this skill's action.
  * @type {boolean|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsDelayTriggerByTouch",
+Object.defineProperty(RPG_Skill.prototype, "jabsDelayTriggerByTouch", {
+  get: function()
   {
-    get: function()
-    {
-      return this.jabsDelayData[1];
-    },
-  });
+    return this.jabsDelayData[1];
+  },
+});
 
 /**
  * Gets the JABS delay data for this skill.

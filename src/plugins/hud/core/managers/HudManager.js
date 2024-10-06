@@ -86,6 +86,7 @@ class HudManager
    * @private
    */
   #ready = false;
+
   //endregion properties
 
   /**
@@ -258,6 +259,7 @@ class HudManager
   {
     this.#setRequestRefreshImageCache(false);
   }
+
   //endregion refresh
 
   //region target frame
@@ -321,6 +323,7 @@ class HudManager
   {
     this.setNewTarget(null);
   }
+
   //endregion target frame
 
   //region input frame
@@ -348,6 +351,7 @@ class HudManager
   {
     this.#setRequestRefreshInputFrame(false);
   }
+
   //endregion input frame
 
   //region private functions
@@ -559,6 +563,8 @@ class HudManager
   {
     this.#requestHideHud = request;
   }
+
   //endregion private functions
 }
+
 //endregion Hud_Manager

@@ -29,7 +29,8 @@ Sprite_Character.prototype.initMembers = function()
    */
   this._j._popups._nonDamagePopSprites = [];
 
-  J.POPUPS.Aliased.Sprite_Character.get('initMembers').call(this);
+  J.POPUPS.Aliased.Sprite_Character.get('initMembers')
+    .call(this);
 };
 
 /**
@@ -91,7 +92,8 @@ J.POPUPS.Aliased.Sprite_Character.set('update', Sprite_Character.prototype.updat
 Sprite_Character.prototype.update = function()
 {
   // execute original update processing.
-  J.POPUPS.Aliased.Sprite_Character.get('update').call(this);
+  J.POPUPS.Aliased.Sprite_Character.get('update')
+    .call(this);
 
   // effectively a subscription for creating new text pops on this character.
   this.processIncomingTextPops();

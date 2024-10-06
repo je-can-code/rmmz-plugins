@@ -4,13 +4,12 @@
  * The skill id associated with this item or tool.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Item.prototype, "jabsSkillId",
+Object.defineProperty(RPG_Item.prototype, "jabsSkillId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSkillId();
-    },
-  });
+    return this.getJabsSkillId();
+  },
+});
 
 /**
  * Gets the JABS skill id for this item or tool.
@@ -36,13 +35,12 @@ RPG_Item.prototype.extractJabsSkillId = function()
  * Whether or not this item will be automatically executed upon being picked up.
  * @type {boolean|null}
  */
-Object.defineProperty(RPG_Item.prototype, "jabsUseOnPickup",
+Object.defineProperty(RPG_Item.prototype, "jabsUseOnPickup", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsUseOnPickup();
-    },
-  });
+    return this.getJabsUseOnPickup();
+  },
+});
 
 /**
  * Gets whether or not this item will be used on pickup.
@@ -68,13 +66,12 @@ RPG_Item.prototype.extractJabsUseOnPickup = function()
  * The expiration time in frames for this loot drop.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Item.prototype, "jabsExpiration",
+Object.defineProperty(RPG_Item.prototype, "jabsExpiration", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsExpirationFrames();
-    },
-  });
+    return this.getJabsExpirationFrames();
+  },
+});
 
 /**
  * Gets the expiration time in frames.

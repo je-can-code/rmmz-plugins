@@ -9,7 +9,7 @@ class RPG_Class extends RPG_Base
    * The four data points that comprise the EXP curve for this class.
    * @type {[number, number, number, number]}
    */
-  expParams = [0, 0, 0, 0];
+  expParams = [ 0, 0, 0, 0 ];
 
   /**
    * A collection of skill learning data points for this class.
@@ -23,13 +23,14 @@ class RPG_Class extends RPG_Base
    * in that order, but for all 100 of the base levels.
    * @type {[number, number, number, number, number, number, number, number]}
    */
-  params = [[1], [0], [0], [0], [0], [0], [0], [0]];
+  params = [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ];
 
   /**
    * A collection of traits this class has.
    * @type {RPG_Trait[]}
    */
   traits = [];
+
   //endregion properties
 
   /**
@@ -51,4 +52,5 @@ class RPG_Class extends RPG_Base
       .map(trait => new RPG_Trait(trait));
   }
 }
+
 //endregion RPG_Class

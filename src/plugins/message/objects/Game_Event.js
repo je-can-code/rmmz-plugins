@@ -14,17 +14,12 @@ Game_Event.prototype.filterCommentCommandsForBasicConditionals = function(comman
 
   // extract the types of regex we will be considering.
   const {
-    LeaderChoiceConditional,
-    NotLeaderChoiceConditional,
-    SwitchOnChoiceConditional,
-    SwitchOffChoiceConditional
+    LeaderChoiceConditional, NotLeaderChoiceConditional, SwitchOnChoiceConditional, SwitchOffChoiceConditional
   } = J.MESSAGE.RegExp;
 
   return [
-    LeaderChoiceConditional,
-    NotLeaderChoiceConditional,
-    SwitchOnChoiceConditional,
-    SwitchOffChoiceConditional ].some(regex => regex.test(comment));
+    LeaderChoiceConditional, NotLeaderChoiceConditional, SwitchOnChoiceConditional, SwitchOffChoiceConditional ].some(
+    regex => regex.test(comment));
 };
 
 /**

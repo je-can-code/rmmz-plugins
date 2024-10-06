@@ -41,29 +41,20 @@ TextManager.rewardDescription = function(paramId)
   {
     case 0:
       return [
-        "The resource required to accumulate to rise in level.",
-        "Levels give unseen advantages."
-      ];
+        "The resource required to accumulate to rise in level.", "Levels give unseen advantages." ];
     case 1:
       return [
-        "The primary currency of the universe.",
-        "Most vendors happily take this in exchange for goods."
-      ];
+        "The primary currency of the universe.", "Most vendors happily take this in exchange for goods." ];
     case 2:
       return [
-        "The rate at which enemies will drop loot.",
-        "Higher rates yield more frequent drops."
-      ];
+        "The rate at which enemies will drop loot.", "Higher rates yield more frequent drops." ];
     case 3:
       return [
         "The frequency of which the party will be engage in battles.",
-        "Lower rates result in less random encounters."
-      ];
+        "Lower rates result in less random encounters." ];
     case 4:
       return [
-        "The rate of SDP accumulation from any source.",
-        "Bigger rates yield fatter stacks of them sweet SDP points."
-      ];
+        "The rate of SDP accumulation from any source.", "Bigger rates yield fatter stacks of them sweet SDP points." ];
   }
 };
 
@@ -153,56 +144,40 @@ TextManager.bparamDescription = function(paramId)
     // MHP (Max Hit Points)
     case 0:
       return [
-        "The base resource that defines life and death.",
-        "Enemies and allies alike obey the rule of '0hp = dead'."
-      ];
+        "The base resource that defines life and death.", "Enemies and allies alike obey the rule of '0hp = dead'." ];
     // MMP (Max Magic Points)
     case 1:
       return [
-        "The base resource that most magic-based spells consume.",
-        "Without this, spells typically cannot be cast."
-      ];
+        "The base resource that most magic-based spells consume.", "Without this, spells typically cannot be cast." ];
     // ATK (ATtacK)
     case 2:
       return [
         "The base stat that influences physical damage.",
-        "Higher amounts of this yield higher physical damage output."
-      ];
+        "Higher amounts of this yield higher physical damage output." ];
     // DEF (DEFense)
     case 3:
       return [
-        "The base stat that reduces physical damage.",
-        "Higher amounts of this will reduce incoming physical damage."
-      ];
+        "The base stat that reduces physical damage.", "Higher amounts of this will reduce incoming physical damage." ];
     // MAT (Magic ATtack)
     case 4:
       return [
-        "The base stat that influences magical damage.",
-        "Higher amounts of this yield higher magical damage output."
-      ];
+        "The base stat that influences magical damage.", "Higher amounts of this yield higher magical damage output." ];
     // MDF (Magic DeFense)
     case 5:
       return [
-        "The base stat that reduces magical damage.",
-        "Higher amounts of this will reduce incoming magical damage."
-      ];
+        "The base stat that reduces magical damage.", "Higher amounts of this will reduce incoming magical damage." ];
     // AGI (AGIlity)
     case 6:
       return [
-        "The base stat that governs movement and agility.",
-        "The effects of this are unknown at higher levels."
-      ];
+        "The base stat that governs movement and agility.", "The effects of this are unknown at higher levels." ];
     // LUK (LUcK)
     case 7:
       return [
-        "The base stat that governs fortune and luck.",
-        "The effects of this are wide and varied."
-      ];
+        "The base stat that governs fortune and luck.", "The effects of this are wide and varied." ];
     case 30:
       return [
         "The base resource that many weapon-based skills utilize.",
-        "Without this, techniques typically cannot be executed."
-      ];
+        "Without this, techniques typically cannot be executed." ];
   }
 };
 
@@ -218,9 +193,7 @@ TextManager.xparamDescription = function(paramId)
     // HIT (HIT chance)
     case 0:
       return [
-        "The stat representing one's skill of accuracy.",
-        "Being more accurate will result in being parried less."
-      ];
+        "The stat representing one's skill of accuracy.", "Being more accurate will result in being parried less." ];
 
     // EVA (physical hit EVasion)
     case 1:
@@ -228,66 +201,54 @@ TextManager.xparamDescription = function(paramId)
         // "The stat representing skill in physically evading attacks.",  // original function.
         // "Having higher evasion is often seen as a form of tanking.",   // original function.
         "The stat governing one's uncanny ability to parry precisely.",
-        "An optional stat, but having more will make parrying easier."
-      ];
+        "An optional stat, but having more will make parrying easier." ];
 
     // CRI (CRItical hit chance)
     case 2:
       return [
         "A numeric value to one's chance of landing a critical hit.",
-        "Critical hits will deal percent-increased damage."
-      ];
+        "Critical hits will deal percent-increased damage." ];
 
     // CEV (Critical hit Evasion)
     case 3:
       return [
         "A numeric value to one's chance of evading a critical hit.",
-        "Enemy critical hit chance is directly reduced by this amount."
-      ];
+        "Enemy critical hit chance is directly reduced by this amount." ];
 
     // MEV (Magic attack EVasion)
     case 4:
       return [
         "A numeric value to one's chance of evading a magical hit.",
-        "Enemy magical hit chance is directly reduced by this amount."
-      ];
+        "Enemy magical hit chance is directly reduced by this amount." ];
 
     // MRF (Magic attack ReFlection)
     case 5:
       return [
         // "The chance of reflecting a magical hit back to its caster.",  // original function
         "The chance of reflecting a skill back to its caster.",
-        "Aside from it being reflected back, it is as if you casted it."
-      ];
+        "Aside from it being reflected back, it is as if you casted it." ];
 
     // CNT (CouNTer chance)
     case 6:
       return [
         // "The chance of responding with a basic attack when hit.",  // original function
         "The chance of auto-executing counter skills when struck.",
-        "Being un-reducable, 100 makes countering inevitable."
-      ];
+        "Being un-reducable, 100 makes countering inevitable." ];
 
     // HRG (Hp ReGeneration)
     case 7:
       return [
-        "The amount of Life restored over 5 seconds.",
-        "Recovery Rate amplifies this effect."
-      ];
+        "The amount of Life restored over 5 seconds.", "Recovery Rate amplifies this effect." ];
 
     // MRG (Mp ReGeneration)
     case 8:
       return [
-        "The amount of Magi rejuvenated over 5 seconds.",
-        "Recovery Rate amplifies this effect."
-      ];
+        "The amount of Magi rejuvenated over 5 seconds.", "Recovery Rate amplifies this effect." ];
 
     // TRG (Tp ReGeneration)
     case 9:
       return [
-        "The amount of Tech recovered over 5 seconds.",
-        "Recovery Rate amplifies this effect."
-      ];
+        "The amount of Tech recovered over 5 seconds.", "Recovery Rate amplifies this effect." ];
   }
 };
 
@@ -303,9 +264,7 @@ TextManager.sparamDescription = function(paramId)
     // TGR (TarGeting Rate)
     case 0:
       return [
-        "The percentage of aggro that will be applied.",
-        "Reduce for stealthing; increase for taunting."
-      ];
+        "The percentage of aggro that will be applied.", "Reduce for stealthing; increase for taunting." ];
 
     // GRD (GuaRD rate)
     case 1:
@@ -313,64 +272,55 @@ TextManager.sparamDescription = function(paramId)
         // "Improves the damage reduction when guarding.",  // original function.
         // "This stat speaks for itself.",                  // original function.
         "A numeric value representing the frequency of parrying.",
-        "More of this will result in auto-parrying faced foes."
-      ];
+        "More of this will result in auto-parrying faced foes." ];
 
     // REC (RECovery boost rate)
     case 2:
       return [
         "The percentage effectiveness of healing applied to oneself.",
-        "Higher amounts of this will make healing need less effort."
-      ];
+        "Higher amounts of this will make healing need less effort." ];
 
     // PHA (PHArmacology rate)
     case 3:
       return [
         "The percentage effectiveness of items applied to oneself.",
-        "Higher amounts of this will make items more potent."
-      ];
+        "Higher amounts of this will make items more potent." ];
 
     // MCR (Magic Cost Rate)
     case 4:
       return [
         "The percentage bonuses being applied to Magi costs.",
-        "Enemy magical hit chance is directly reduced by this amount."
-      ];
+        "Enemy magical hit chance is directly reduced by this amount." ];
 
     // TCR (Tech ChaRge rate)
     case 5:
       return [
         "The percentage bonuses being applied to Tech generation.",
-        "Taking and dealing damage in combat will earn more Tech."
-      ];
+        "Taking and dealing damage in combat will earn more Tech." ];
 
     // PDR (Physical Damage Rate)
     case 6:
       return [
         "The percentage bonuses being applied to physical damage.",
-        "-100 is immune while 100+ takes double+ physical damage."
-      ];
+        "-100 is immune while 100+ takes double+ physical damage." ];
 
     // MDR (Magic Damage Rate)
     case 7:
       return [
         "The percentage bonuses being applied to magical damage.",
-        "-100 is immune while 100+ takes double+ magical damage."
-      ];
+        "-100 is immune while 100+ takes double+ magical damage." ];
 
     // FDR (Floor Damage Rate)
     case 8:
       return [
         "The percentage bonuses being applied to floor damage.",
-        "-100 is immune while 100+ takes double+ floor damage."
-      ];
+        "-100 is immune while 100+ takes double+ floor damage." ];
 
     // EXR (EXperience Rate)
     case 9:
       return [
         "The percentage bonuses being applied to experience gain.",
-        "Higher amounts of this result in faster level growth."
-      ];
+        "Higher amounts of this result in faster level growth." ];
   }
 };
 
@@ -649,19 +599,32 @@ TextManager.usableEffectByCode = function(code)
 {
   switch (code)
   {
-    case 11: return "Recover Life";
-    case 12: return "Recover Magi";
-    case 13: return "Recover Tech";
-    case 21: return "Add State";
-    case 22: return "Remove State";
-    case 31: return "Add Buff";
-    case 32: return "Add Debuff";
-    case 33: return "Remove Buff";
-    case 34: return "Remove Debuff";
-    case 41: return "Special";
-    case 42: return "Core Stat Growth";
-    case 43: return "Learn Skill";
-    case 44: return "Execute Common Event";
+    case 11:
+      return "Recover Life";
+    case 12:
+      return "Recover Magi";
+    case 13:
+      return "Recover Tech";
+    case 21:
+      return "Add State";
+    case 22:
+      return "Remove State";
+    case 31:
+      return "Add Buff";
+    case 32:
+      return "Add Debuff";
+    case 33:
+      return "Remove Buff";
+    case 34:
+      return "Remove Debuff";
+    case 41:
+      return "Special";
+    case 42:
+      return "Core Stat Growth";
+    case 43:
+      return "Learn Skill";
+    case 44:
+      return "Execute Common Event";
     default:
       console.warn(`Unsupported code of [${code}] was provided.`);
       return "UNKNOWN";

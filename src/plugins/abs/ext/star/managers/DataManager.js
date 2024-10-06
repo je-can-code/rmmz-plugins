@@ -6,7 +6,8 @@ J.ABS.EXT.STAR.Aliased.DataManager.set('createGameObjects', DataManager.createGa
 DataManager.createGameObjects = function()
 {
   // perform original logic.
-  J.ABS.EXT.STAR.Aliased.DataManager.get('createGameObjects').call(this);
+  J.ABS.EXT.STAR.Aliased.DataManager.get('createGameObjects')
+    .call(this);
 
   // load the enemy master map into memory.
   DataManager.getEnemyMasterMap();
@@ -22,7 +23,7 @@ DataManager.getEnemyMasterMap = function()
   const mapId = J.ABS.EXT.STAR.DefaultValues.EnemyMap;
 
   // check to make sure the map id is valid.
-  if (mapId > 0) 
+  if (mapId > 0)
   {
     // generate the map file name.
     const filename = "Map%1.json".format(mapId.padZero(3));
@@ -31,7 +32,7 @@ DataManager.getEnemyMasterMap = function()
     this.loadEnemyMasterMap("$dataMap", filename);
   }
   // the map id wasn't correct!
-  else 
+  else
   {
     throw new Error("Missing enemy master map.");
   }
@@ -42,7 +43,7 @@ DataManager.getEnemyMasterMap = function()
  * @param {string} name The name of the file to retrieve.
  * @param {string} src The source.
  */
-DataManager.loadEnemyMasterMap = function(name, src) 
+DataManager.loadEnemyMasterMap = function(name, src)
 {
   // TODO: replace with native "fetch"?
   // the copy pasta logic for fetching a resource, specifically our enemy map.
@@ -62,9 +63,9 @@ DataManager.loadEnemyMasterMap = function(name, src)
  * @param {string} src The source.
  * @param {string} url The path of the file to retrieve.
  */
-DataManager.onEnemyMapGet = function(xhr, name, src, url) 
+DataManager.onEnemyMapGet = function(xhr, name, src, url)
 {
-  if (xhr.status < 400) 
+  if (xhr.status < 400)
   {
     // the enemy map data lives on the battle manager.
     BattleManager.enemyMap = JSON.parse(xhr.responseText);

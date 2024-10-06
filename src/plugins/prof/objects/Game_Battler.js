@@ -54,9 +54,7 @@ Game_Battler.prototype.bonusSkillProficiencyGains = function()
 Game_Battler.prototype.canGiveProficiency = function()
 {
   // return the inversion of whether or not we found any of the blocker tags.
-  return !RPGManager.checkForBooleanFromAllNotesByRegex(
-    this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyGivingBlock)
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyGivingBlock)
 };
 
 /**
@@ -66,8 +64,6 @@ Game_Battler.prototype.canGiveProficiency = function()
 Game_Battler.prototype.canGainProficiency = function()
 {
   // return the inversion of whether or not we found any of the blocker tags.
-  return !RPGManager.checkForBooleanFromAllNotesByRegex(
-    this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyGainingBlock)
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyGainingBlock)
 };
 //endregion Game_Battler

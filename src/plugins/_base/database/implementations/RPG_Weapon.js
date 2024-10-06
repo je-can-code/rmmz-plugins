@@ -23,6 +23,7 @@ class RPG_Weapon extends RPG_EquipItem
    * @type {2}
    */
   kind = 2;
+
   //endregion properties
 
   /**
@@ -49,4 +50,5 @@ class RPG_Weapon extends RPG_EquipItem
     return true;
   }
 }
+
 //endregion RPG_Weapon

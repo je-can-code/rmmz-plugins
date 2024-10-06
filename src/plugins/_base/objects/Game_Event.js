@@ -9,7 +9,8 @@ Game_Event.prototype.getValidCommentCommands = function()
   if (!this.canGetValidCommentCommands()) return Array.empty;
 
   // otherwise, return the filtered list.
-  return this.list().filter(this.filterInvalidEventCommand, this);
+  return this.list()
+    .filter(this.filterInvalidEventCommand, this);
 };
 
 /**
@@ -39,7 +40,7 @@ Game_Event.prototype.filterInvalidEventCommand = function(command)
   if (!this.matchesControlCode(command.code)) return false;
 
   // shorthand the comment into a variable.
-  const [comment,] = command.parameters;
+  const [ comment, ] = command.parameters;
 
   // consider this comment valid if it passes, skip it otherwise.
   return J.BASE.RegExp.ParsableComment.test(comment);
@@ -93,20 +94,21 @@ Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = nu
   let val = defaultValue;
 
   // iterate over all valid comments.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = structure.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = structure.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // extract the regex capture group.
-    [,val] = regexResult;
-  });
+      // extract the regex capture group.
+      [ , val ] = regexResult;
+    });
 
   // if we did not find anything, return the default.
   if (val === defaultValue) return val;
@@ -132,7 +134,7 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
   let val = defaultValue;
 
   // shorthand the comment into a variable.
-  const [comment,] = command.parameters;
+  const [ comment, ] = command.parameters;
 
   // check if the comment matches the regex.
   const regexResult = structure.exec(comment);
@@ -141,7 +143,7 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
   if (!regexResult) return;
 
   // extract the regex capture group.
-  [,val] = regexResult;
+  [ , val ] = regexResult;
 
   // if we did not find anything, return the default.
   if (val === defaultValue) return val;

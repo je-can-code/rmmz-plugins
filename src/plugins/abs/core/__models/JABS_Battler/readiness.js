@@ -56,8 +56,7 @@ JABS_Battler.prototype.getActionKeyData = function(key)
   if (!cooldown || !skillslot) return null;
 
   return {
-    cooldown,
-    skillslot
+    cooldown, skillslot
   }
 };
 

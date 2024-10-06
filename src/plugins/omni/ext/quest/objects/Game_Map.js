@@ -7,7 +7,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_Map.set('initialize', Game_Map.prototype.initializ
 Game_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize')
+    .call(this);
 
   // also initialize our members.
   this.initQuestopediaMembers();
@@ -58,7 +59,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_Map.set('update', Game_Map.prototype.update);
 Game_Map.prototype.update = function(sceneActive)
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('update').call(this, sceneActive);
+  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('update')
+    .call(this, sceneActive);
 
   // process the quest checking for reaching destinations.
   this.processDestinationCheck();

@@ -18,7 +18,9 @@ Scene_Skill.prototype.skillTypeWindowRect = function()
 {
   const ww = this.mainCommandWidth();
   const wh = this.calcWindowHeight(4, true);
-  const wx = this.isRightInputMode() ? Graphics.boxWidth - ww : 0;
+  const wx = this.isRightInputMode()
+    ? Graphics.boxWidth - ww
+    : 0;
   const wy = this.mainAreaTop();
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -35,7 +37,9 @@ Scene_Skill.prototype.skillDetailRect = function()
 {
   const ww = Graphics.boxWidth - this.mainCommandWidth();
   const wh = this.mainAreaHeight() - this._statusWindow.height
-  const wx = this.isRightInputMode() ? 0 : Graphics.boxWidth - ww;
+  const wx = this.isRightInputMode()
+    ? 0
+    : Graphics.boxWidth - ww;
   const wy = this.mainAreaTop() + this._statusWindow.height;
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -59,7 +63,9 @@ Scene_Skill.prototype.itemWindowRect = function()
 {
   const ww = this.mainCommandWidth();
   const wh = this.mainAreaHeight() - this._statusWindow.height;
-  const wx = this.isRightInputMode() ? Graphics.boxWidth - ww : 0;
+  const wx = this.isRightInputMode()
+    ? Graphics.boxWidth - ww
+    : 0;
   const wy = this._statusWindow.y + this._statusWindow.height;
   return new Rectangle(wx, wy, ww, wh);
 };

@@ -7,7 +7,8 @@ J.ABS.Aliased.Sprite_Gauge.set('currentValue', Sprite_Gauge.prototype.currentVal
 Sprite_Gauge.prototype.currentValue = function()
 {
   // perform original logic.
-  const base = J.ABS.Aliased.Sprite_Gauge.get('currentValue').call(this);
+  const base = J.ABS.Aliased.Sprite_Gauge.get('currentValue')
+    .call(this);
 
   // if we somehow ended up with NaN, then just let them deal with it.
   if (isNaN(base)) return base;

@@ -77,10 +77,7 @@ class Window_SdpPoints extends Window_Base
     // don't draw the points if the actor is unavailable.
     if (!this._actor) return;
 
-    this.drawFace(
-      this._actor.faceName(),
-      this._actor.faceIndex(),
-      0, 0,   // x,y
+    this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0,   // x,y
       128, 40);// w,h
   }
 
@@ -94,4 +91,5 @@ class Window_SdpPoints extends Window_Base
     this.refresh();
   }
 }
+
 //endregion Window_SdpPoints

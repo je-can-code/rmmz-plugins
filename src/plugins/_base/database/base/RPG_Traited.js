@@ -25,4 +25,5 @@ class RPG_Traited extends RPG_BaseItem
     this.traits = baseItem.traits.map(trait => new RPG_Trait(trait));
   }
 }
+
 //endregion RPG_Traited

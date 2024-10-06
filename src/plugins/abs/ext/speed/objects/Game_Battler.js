@@ -6,7 +6,8 @@ J.ABS.EXT.SPEED.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.i
 Game_Battler.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.SPEED.Aliased.Game_Battler.get('initMembers').call(this);
+  J.ABS.EXT.SPEED.Aliased.Game_Battler.get('initMembers')
+    .call(this);
 
   // initialize the extra members.
   this.initSpeedBoosts();

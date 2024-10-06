@@ -20,8 +20,7 @@ JABS_AllyAI.modes = {
    * When this mode is assigned, the battler will take no action.
    */
   DO_NOTHING: {
-    key: "do-nothing",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
+    key: "do-nothing", name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
   },
 
   /**
@@ -29,32 +28,28 @@ JABS_AllyAI.modes = {
    * If no skill is equipped in their main hand, they will do nothing.
    */
   BASIC_ATTACK: {
-    key: "basic-attack",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
+    key: "basic-attack", name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
   },
 
   /**
    * When this mode is assigned, the battler will intelligently decide from any skill they have equipped.
    */
   VARIETY: {
-    key: "variety",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
+    key: "variety", name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
   },
 
   /**
    * When this mode is assigned, the battler will use the biggest and strongest skills available.
    */
   FULL_FORCE: {
-    key: "full-force",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
+    key: "full-force", name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
   },
 
   /**
    * When this mode is assigned, the battler will prioritize supporting and healing allies.
    */
   SUPPORT: {
-    key: "support",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
+    key: "support", name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
   },
 };
 
@@ -134,7 +129,7 @@ JABS_AllyAI.prototype.changeMode = function(newMode)
  * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
  * @returns {number|null} The skill id chosen to use, or null if none were valid choices for this AI.
  */
-JABS_AllyAI.prototype.decideAction = function(user, target ,availableSkills)
+JABS_AllyAI.prototype.decideAction = function(user, target, availableSkills)
 {
   // filter out the unusable or invalid skills.
   const usableSkills = this.filterUncastableSkills(user, availableSkills);
@@ -193,11 +188,13 @@ JABS_AllyAI.prototype.decideBasicAttack = function(usableSkills, user)
 
   // determine which skill of the skills available is the mainhand skill.
   const mainBasicAttackSkillId = usableSkills
-    .find(id => user.getBattler().findSlotForSkillId(id).key === JABS_Button.Mainhand);
+    .find(id => user.getBattler()
+      .findSlotForSkillId(id).key === JABS_Button.Mainhand);
 
   // determine which skill of the skills available is the offhand skill.
   const offhandBasicAttackSkillId = usableSkills
-    .find(id => user.getBattler().findSlotForSkillId(id).key === JABS_Button.Offhand);
+    .find(id => user.getBattler()
+      .findSlotForSkillId(id).key === JABS_Button.Offhand);
 
   // if we have neither basic attack skills, then do not process.
   if (!mainBasicAttackSkillId && !offhandBasicAttackSkillId) return null;
@@ -254,7 +251,8 @@ JABS_AllyAI.prototype.decideVariety = function(usableSkills, user, target)
 
   // check if any nearby allies are "in danger".
   const nearbyAllies = user.getAllNearbyAllies();
-  const anyAlliesInDanger = nearbyAllies.some(battler => battler.getBattler().currentHpPercent() < 0.6);
+  const anyAlliesInDanger = nearbyAllies.some(battler => battler.getBattler()
+    .currentHpPercent() < 0.6);
 
   // if they are allies in danger, 50:50 chance to instead prioritize a support action.
   if (anyAlliesInDanger && Math.randomInt(2) === 0)
@@ -809,7 +807,8 @@ JABS_AllyAI.prototype.applyMemory = function(newMemory)
  */
 JABS_AllyAI.prototype.getMemory = function(battlerId, skillId)
 {
-  return this.getMemories().find(mem => mem.battlerId === battlerId && mem.skillId === skillId);
+  return this.getMemories()
+    .find(mem => mem.battlerId === battlerId && mem.skillId === skillId);
 };
 
 /**

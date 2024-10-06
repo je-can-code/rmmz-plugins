@@ -5,7 +5,8 @@ J.ABS.EXT.TOOLS.Aliased.JABS_Battler.set('initGeneralInfo', JABS_Battler.prototy
 JABS_Battler.prototype.initGeneralInfo = function()
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.JABS_Battler.get('initGeneralInfo').call(this);
+  J.ABS.EXT.TOOLS.Aliased.JABS_Battler.get('initGeneralInfo')
+    .call(this);
 
   /**
    * The counter for how long this battler is waiting.
@@ -17,7 +18,7 @@ JABS_Battler.prototype.initGeneralInfo = function()
    * The destination coordinates of where this battler is gap closing to.
    * @type {[number, number]}
    */
-  this._gapCloseDestination = [0, 0];
+  this._gapCloseDestination = [ 0, 0 ];
 };
 
 /**
@@ -70,7 +71,7 @@ JABS_Battler.prototype.setGapCloseDestination = function(destination)
 JABS_Battler.prototype.hasGapCloseDestination = function()
 {
   // destructure the gap close destination.
-  const [goalX, goalY] = this.gapCloseDestination();
+  const [ goalX, goalY ] = this.gapCloseDestination();
 
   // if the destination is 0:0, then we don't have a destination.
   if (goalX === 0 && goalY === 0) return false;
@@ -84,7 +85,7 @@ JABS_Battler.prototype.hasGapCloseDestination = function()
  */
 JABS_Battler.prototype.clearGapCloseDestination = function()
 {
-  this._gapCloseDestination = [0, 0];
+  this._gapCloseDestination = [ 0, 0 ];
 };
 
 /**
@@ -95,7 +96,8 @@ J.ABS.EXT.TOOLS.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update
 JABS_Battler.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.JABS_Battler.get('update').call(this);
+  J.ABS.EXT.TOOLS.Aliased.JABS_Battler.get('update')
+    .call(this);
 
   // also update gap closing.
   this.updateGapClosing();
@@ -179,7 +181,7 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   this.beginGapClosing();
 
   // set the gap close destination to wherever the target is at this moment.
-  this.setGapCloseDestination([target.getX(), target.getY()]);
+  this.setGapCloseDestination([ target.getX(), target.getY() ]);
 
   // extract the gap close details from the skill.
   let { jabsGapCloseMode, jabsGapClosePosition } = action.getBaseSkill();
@@ -188,7 +190,7 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;
 
   // determine the destination delta coordiantes.
-  const [x, y] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+  const [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
 
   // if the mode is not identified, then default to "jump".
   jabsGapCloseMode ??= J.ABS.EXT.TOOLS.GapCloseModes.Jump;
@@ -224,24 +226,24 @@ JABS_Battler.prototype.determineGapCloseCoordinates = function(target, position)
 {
   const targetCharacter = target.getCharacter();
 
-  const [x, y] = [this.getX(), this.getY()];
+  const [ x, y ] = [ this.getX(), this.getY() ];
   const goalX = targetCharacter.deltaXFrom(x);
   const goalY = targetCharacter.deltaYFrom(y);
 
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Behind)
   {
     // TODO: adjust goal x,y based on position w/ target.
-    return [goalX, goalY];
+    return [ goalX, goalY ];
   }
 
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Infront)
   {
     // TODO: adjust goal x,y based on position w/ target.
-    return [goalX, goalY];
+    return [ goalX, goalY ];
   }
 
   // position must be "same", so just return the target's coordinates.
-  return [goalX, goalY];
+  return [ goalX, goalY ];
 };
 
 /**
@@ -261,18 +263,19 @@ JABS_Battler.prototype.hasReachedGapCloseDestination = function()
   }
 
   // destructure the destination out.
-  const [goalX, goalY] = this.gapCloseDestination();
+  const [ goalX, goalY ] = this.gapCloseDestination();
 
   // check where we're currently at.
-  const [actualX, actualY] = [this.getX(), this.getY()];
+  const [ actualX, actualY ] = [ this.getX(), this.getY() ];
 
   // the amount of wiggle room for gap closing- perfect gap closing is not viable.
   const fuzzy = JABS_Battler.gapCloseWiggleRoom();
 
   // check if we are generally at the target destination.
-  const xOk = (actualX >= goalX-fuzzy) && (actualX <= goalX+fuzzy);
-  const yOk = (actualY >= goalY-fuzzy) && (actualY <= goalY+fuzzy);
-  const doneMoving = !(this.getCharacter().isMoving());
+  const xOk = (actualX >= goalX - fuzzy) && (actualX <= goalX + fuzzy);
+  const yOk = (actualY >= goalY - fuzzy) && (actualY <= goalY + fuzzy);
+  const doneMoving = !(this.getCharacter()
+    .isMoving());
 
   // if we have reached the destination, then we're done.
   if (xOk && yOk && doneMoving) return true;

@@ -118,4 +118,5 @@ class Window_RecipeList extends Window_Command
   {
   }
 }
+
 //endregion Window_RecipeList

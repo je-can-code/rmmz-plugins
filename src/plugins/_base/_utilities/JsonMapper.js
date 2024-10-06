@@ -71,10 +71,7 @@ class JsonMapper
       const innerArray = this.parseArrayFromString(slicedArrayString);
 
       // splice the inner array into the original array replacing all elements.
-      exposedArray.splice(
-        innerArrayStartIndex,
-        ((outerArrayEndIndex + 1) - innerArrayStartIndex),
-        innerArray);
+      exposedArray.splice(innerArrayStartIndex, ((outerArrayEndIndex + 1) - innerArrayStartIndex), innerArray);
     }
 
     // with the content exposed, attempt to continue parsing.
@@ -101,4 +98,5 @@ class JsonMapper
     return str;
   }
 }
+
 //endregion JsonMapper

@@ -13,10 +13,7 @@ SkillProficiency.prototype.constructor = SkillProficiency;
 /**
  * Initializes this class with the given parameters.
  */
-SkillProficiency.prototype.initialize = function(
-  skillId,
-  initialProficiency = 0
-)
+SkillProficiency.prototype.initialize = function(skillId, initialProficiency = 0)
 {
   /**
    * The skill id of the skill for this prof.

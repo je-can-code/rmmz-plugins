@@ -11,14 +11,16 @@ JABS_Battler.prototype.shouldEngage = function(target, distance)
   if (this.isEnemy())
   {
     // perform original logic.
-    return J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.get('shouldEngage').call(this, target, distance);
+    return J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.get('shouldEngage')
+      .call(this, target, distance);
   }
 
   // aggro allies against non-inanimate targets also follow standard behavior.
   if ($gameParty.isAggro() && !target.isInanimate())
   {
     // perform original logic.
-    return J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.get('shouldEngage').call(this, target, distance);
+    return J.ABS.EXT.ALLYAI.Aliased.JABS_Battler.get('shouldEngage')
+      .call(this, target, distance);
   }
 
   // determine if the ally should engage the foe.
@@ -43,7 +45,8 @@ JABS_Battler.prototype.shouldAllyEngage = function(target, distance)
   const isAlerted = this.isAlerted();
 
   // check if the player has a "last hit" target.
-  const playerHitSomething = $jabsEngine.getPlayer1().hasBattlerLastHit();
+  const playerHitSomething = $jabsEngine.getPlayer1()
+    .hasBattlerLastHit();
 
   // if we are alerted or the player is attacking something, lets fight.
   const shouldEngage = (isAlerted || playerHitSomething);
@@ -71,7 +74,8 @@ JABS_Battler.prototype.getAllyAiMode = function()
   // enemies do not have ally ai.
   if (this.isEnemy()) return null;
 
-  return this.getBattler().getAllyAI();
+  return this.getBattler()
+    .getAllyAI();
 };
 
 /**

@@ -133,7 +133,8 @@ JABS_BattlerCoreData.prototype.initialize = function({
  * This is effectively a hook for adding extra properties into this object.
  */
 JABS_BattlerCoreData.prototype.initMembers = function()
-{ };
+{
+};
 
 /**
  * Gets this battler's enemy id.

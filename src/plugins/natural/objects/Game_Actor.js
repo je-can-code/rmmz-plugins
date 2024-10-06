@@ -7,7 +7,8 @@ J.NATURAL.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
 Game_Actor.prototype.setup = function(actorId)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('setup').call(this, actorId);
+  J.NATURAL.Aliased.Game_Actor.get('setup')
+    .call(this, actorId);
 
   // initialize the parameter buffs on this battler.
   this.refreshAllParameterBuffs();
@@ -21,7 +22,8 @@ J.NATURAL.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onB
 Game_Actor.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('onBattlerDataChange').call(this);
+  J.NATURAL.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
 
   // refresh all our buffs, something could've changed.
   this.refreshAllParameterBuffs();
@@ -95,7 +97,8 @@ J.NATURAL.Aliased.Game_Actor.set('paramBase', Game_Actor.prototype.paramBase);
 Game_Actor.prototype.paramBase = function(paramId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+    .call(this, paramId);
 
   // determine the structure for this parameter.
   const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
@@ -118,7 +121,8 @@ Game_Actor.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+    .call(this, paramId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
@@ -175,7 +179,8 @@ J.NATURAL.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
@@ -198,7 +203,8 @@ Game_Actor.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+    .call(this, xparamId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getXparamNaturalBonuses(xparamId, structures, baseParam);
@@ -256,7 +262,8 @@ J.NATURAL.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
@@ -273,7 +280,8 @@ Game_Actor.prototype.sparam = function(sparamId)
 Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexBySpParamId(sparamId);
@@ -338,7 +346,8 @@ J.NATURAL.Aliased.Game_Actor.set('levelUp', Game_Actor.prototype.levelUp);
 Game_Actor.prototype.levelUp = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('levelUp').call(this);
+  J.NATURAL.Aliased.Game_Actor.get('levelUp')
+    .call(this);
 
   // applies all natural growths- permanent stat growths for this battler.
   this.applyNaturalGrowths();
@@ -363,7 +372,7 @@ Game_Actor.prototype.applyNaturalGrowths = function()
 Game_Actor.prototype.applyNaturalMaxTpGrowths = function()
 {
   // destructure out the plus and rate structures for growths.
-  const [,,growthPlusStructure, growthRateStructure] = this.getRegexForMaxTp();
+  const [ , , growthPlusStructure, growthRateStructure ] = this.getRegexForMaxTp();
 
   // grab the base max tp for value basing.
   const baseMaxTp = this.getBaseMaxTp();
@@ -393,10 +402,11 @@ Game_Actor.prototype.applyNaturalBparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexByBparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexByBparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -421,15 +431,24 @@ Game_Actor.prototype.getGrowthRegexByBparamId = function(paramId)
 {
   switch (paramId)
   {
-    case 0: return [J.NATURAL.RegExp.MaxLifeGrowthPlus, J.NATURAL.RegExp.MaxLifeGrowthRate];
-    case 1: return [J.NATURAL.RegExp.MaxMagiGrowthPlus, J.NATURAL.RegExp.MaxMagiGrowthRate];
-    case 2: return [J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.PowerGrowthRate];
-    case 3: return [J.NATURAL.RegExp.DefenseGrowthPlus, J.NATURAL.RegExp.DefenseGrowthRate];
-    case 4: return [J.NATURAL.RegExp.ForceGrowthPlus, J.NATURAL.RegExp.ForceGrowthRate];
-    case 5: return [J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp.ResistGrowthRate];
-    case 6: return [J.NATURAL.RegExp.SpeedGrowthPlus, J.NATURAL.RegExp.SpeedGrowthRate];
-    case 7: return [J.NATURAL.RegExp.LuckGrowthPlus, J.NATURAL.RegExp.LuckGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.MaxLifeGrowthPlus, J.NATURAL.RegExp.MaxLifeGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.MaxMagiGrowthPlus, J.NATURAL.RegExp.MaxMagiGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.PowerGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.DefenseGrowthPlus, J.NATURAL.RegExp.DefenseGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.ForceGrowthPlus, J.NATURAL.RegExp.ForceGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp.ResistGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.SpeedGrowthPlus, J.NATURAL.RegExp.SpeedGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LuckGrowthPlus, J.NATURAL.RegExp.LuckGrowthRate ];
+    default:
+      return null;
   }
 };
 
@@ -445,10 +464,11 @@ Game_Actor.prototype.applyNaturalXparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexByXparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexByXparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -473,17 +493,28 @@ Game_Actor.prototype.getGrowthRegexByXparamId = function(xparamId)
 {
   switch (xparamId)
   {
-    case 0: return [J.NATURAL.RegExp.HitGrowthPlus, J.NATURAL.RegExp.HitGrowthRate];
-    case 1: return [J.NATURAL.RegExp.EvadeGrowthPlus, J.NATURAL.RegExp.EvadeGrowthRate];
-    case 2: return [J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.RegExp.CritChanceGrowthRate];
-    case 3: return [J.NATURAL.RegExp.CritEvadeGrowthPlus, J.NATURAL.RegExp.CritEvadeGrowthRate];
-    case 4: return [J.NATURAL.RegExp.MagiEvadeGrowthPlus, J.NATURAL.RegExp.MagiEvadeGrowthRate];
-    case 5: return [J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.RegExp.MagiReflectGrowthRate];
-    case 6: return [J.NATURAL.RegExp.CounterGrowthPlus, J.NATURAL.RegExp.CounterGrowthRate];
-    case 7: return [J.NATURAL.RegExp.LifeRegenGrowthPlus, J.NATURAL.RegExp.LifeRegenGrowthRate];
-    case 8: return [J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.RegExp.MagiRegenGrowthRate];
-    case 9: return [J.NATURAL.RegExp.TechRegenGrowthPlus, J.NATURAL.RegExp.TechRegenGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.HitGrowthPlus, J.NATURAL.RegExp.HitGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.EvadeGrowthPlus, J.NATURAL.RegExp.EvadeGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.RegExp.CritChanceGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.CritEvadeGrowthPlus, J.NATURAL.RegExp.CritEvadeGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiEvadeGrowthPlus, J.NATURAL.RegExp.MagiEvadeGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.RegExp.MagiReflectGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.CounterGrowthPlus, J.NATURAL.RegExp.CounterGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LifeRegenGrowthPlus, J.NATURAL.RegExp.LifeRegenGrowthRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.RegExp.MagiRegenGrowthRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.TechRegenGrowthPlus, J.NATURAL.RegExp.TechRegenGrowthRate ];
+    default:
+      return null;
   }
 };
 
@@ -499,10 +530,11 @@ Game_Actor.prototype.applyNaturalSparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexBySparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexBySparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -527,17 +559,28 @@ Game_Actor.prototype.getGrowthRegexBySparamId = function(sparamId)
 {
   switch (sparamId)
   {
-    case 0: return [J.NATURAL.RegExp.AggroGrowthPlus, J.NATURAL.RegExp.AggroGrowthRate];
-    case 1: return [J.NATURAL.RegExp.ParryGrowthPlus, J.NATURAL.RegExp.ParryGrowthRate];
-    case 2: return [J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegExp.HealingGrowthRate];
-    case 3: return [J.NATURAL.RegExp.ItemFxGrowthPlus, J.NATURAL.RegExp.ItemFxGrowthRate];
-    case 4: return [J.NATURAL.RegExp.MagiCostRateGrowthPlus, J.NATURAL.RegExp.MagiCostRateGrowthRate];
-    case 5: return [J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.RegExp.TechCostRateGrowthRate];
-    case 6: return [J.NATURAL.RegExp.PhysDmgRateGrowthPlus, J.NATURAL.RegExp.PhysDmgRateGrowthRate];
-    case 7: return [J.NATURAL.RegExp.MagiDmgRateGrowthPlus, J.NATURAL.RegExp.MagiDmgRateGrowthRate];
-    case 8: return [J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.RegExp.FloorDmgRateGrowthRate];
-    case 9: return [J.NATURAL.RegExp.ExpGainRateGrowthPlus, J.NATURAL.RegExp.ExpGainRateGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.AggroGrowthPlus, J.NATURAL.RegExp.AggroGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.ParryGrowthPlus, J.NATURAL.RegExp.ParryGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegExp.HealingGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.ItemFxGrowthPlus, J.NATURAL.RegExp.ItemFxGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiCostRateGrowthPlus, J.NATURAL.RegExp.MagiCostRateGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.RegExp.TechCostRateGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.PhysDmgRateGrowthPlus, J.NATURAL.RegExp.PhysDmgRateGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.MagiDmgRateGrowthPlus, J.NATURAL.RegExp.MagiDmgRateGrowthRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.RegExp.FloorDmgRateGrowthRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.ExpGainRateGrowthPlus, J.NATURAL.RegExp.ExpGainRateGrowthRate ];
+    default:
+      return null;
   }
 };
 

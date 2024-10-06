@@ -6,6 +6,7 @@ function Map_TextPop()
 {
   this.initialize(...arguments);
 }
+
 Map_TextPop.prototype = {};
 Map_TextPop.prototype.constructor = Map_TextPop;
 
@@ -84,13 +85,7 @@ Map_TextPop.Types = {
  * Builds the text pop based on the given parameters.
  */
 Map_TextPop.prototype.initialize = function({
-  iconIndex,
-  textColorIndex,
-  popupType,
-  value,
-  critical,
-  coordinateVariance,
-  healing,
+  iconIndex, textColorIndex, popupType, value, critical, coordinateVariance, healing,
 })
 {
   /**

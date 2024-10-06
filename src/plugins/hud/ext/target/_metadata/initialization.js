@@ -44,46 +44,42 @@ J.HUD.EXT.TARGET.PluginParameters = PluginManager.parameters(J.HUD.EXT.TARGET.Me
 /**
  * Extend this plugin's metadata with additional configurable data points.
  */
-J.HUD.EXT.TARGET.Metadata =
-  {
-    // the previously defined metadata.
-    ...J.HUD.EXT.TARGET.Metadata,
+J.HUD.EXT.TARGET.Metadata = {
+  // the previously defined metadata.
+  ...J.HUD.EXT.TARGET.Metadata,
 
-    // our configurable data points.
-    TargetFrameX: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameX']),
-    TargetFrameY: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameY']),
-    TargetFrameWidth: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameWidth']),
-    TargetFrameHeight: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameHeight']),
-    BackgroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['backgroundGaugeImageX']),
-    BackgroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['backgroundGaugeImageY']),
-    MiddlegroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['middlegroundGaugeImageX']),
-    MiddlegroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['middlegroundGaugeImageY']),
-    ForegroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['foregroundGaugeImageX']),
-    ForegroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['foregroundGaugeImageY']),
-    BackgroundFilename: J.HUD.EXT.TARGET.PluginParameters['backgroundImageFilename'],
-    ForegroundFilename: J.HUD.EXT.TARGET.PluginParameters['foregroundImageFilename'],
-    EnableHP: J.HUD.EXT.TARGET.PluginParameters['enableHp'] === "true",
-    EnableMP: J.HUD.EXT.TARGET.PluginParameters['enableMp'] === "true",
-    EnableTP: J.HUD.EXT.TARGET.PluginParameters['enableTp'] === "true",
-    HpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeScaleX']),
-    HpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeScaleY']),
-    HpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeRotation']),
-    MpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeScaleX']),
-    MpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeScaleY']),
-    MpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeRotation']),
-    TpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeScaleX']),
-    TpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeScaleY']),
-    TpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeRotation']),
-  };
+  // our configurable data points.
+  TargetFrameX: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameX']),
+  TargetFrameY: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameY']),
+  TargetFrameWidth: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameWidth']),
+  TargetFrameHeight: Number(J.HUD.EXT.TARGET.PluginParameters['targetFrameHeight']),
+  BackgroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['backgroundGaugeImageX']),
+  BackgroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['backgroundGaugeImageY']),
+  MiddlegroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['middlegroundGaugeImageX']),
+  MiddlegroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['middlegroundGaugeImageY']),
+  ForegroundGaugeImageX: Number(J.HUD.EXT.TARGET.PluginParameters['foregroundGaugeImageX']),
+  ForegroundGaugeImageY: Number(J.HUD.EXT.TARGET.PluginParameters['foregroundGaugeImageY']),
+  BackgroundFilename: J.HUD.EXT.TARGET.PluginParameters['backgroundImageFilename'],
+  ForegroundFilename: J.HUD.EXT.TARGET.PluginParameters['foregroundImageFilename'],
+  EnableHP: J.HUD.EXT.TARGET.PluginParameters['enableHp'] === "true",
+  EnableMP: J.HUD.EXT.TARGET.PluginParameters['enableMp'] === "true",
+  EnableTP: J.HUD.EXT.TARGET.PluginParameters['enableTp'] === "true",
+  HpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeScaleX']),
+  HpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeScaleY']),
+  HpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['hpGaugeRotation']),
+  MpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeScaleX']),
+  MpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeScaleY']),
+  MpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['mpGaugeRotation']),
+  TpGaugeScaleX: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeScaleX']),
+  TpGaugeScaleY: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeScaleY']),
+  TpGaugeRotation: Number(J.HUD.EXT.TARGET.PluginParameters['tpGaugeRotation']),
+};
 
 /**
  * A collection of all aliased methods for this plugin.
  */
 J.HUD.EXT.TARGET.Aliased = {
-  Game_System: new Map(),
-  Hud_Manager: new Map(),
-  JABS_Battler: new Map(),
-  Scene_Map: new Map(),
+  Game_System: new Map(), Hud_Manager: new Map(), JABS_Battler: new Map(), Scene_Map: new Map(),
 };
 
 /**

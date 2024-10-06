@@ -7,8 +7,7 @@
 Game_Enemy.prototype.showDangerIndicator = function()
 {
   // check if any of the things have this tag on it.
-  const hasNoIndicatorTag = RPGManager.checkForBooleanFromNoteByRegex(
-    this.enemy(),
+  const hasNoIndicatorTag = RPGManager.checkForBooleanFromNoteByRegex(this.enemy(),
     J.ABS.EXT.DANGER.RegExp.NoIndicator);
 
   // check if we found the tag.

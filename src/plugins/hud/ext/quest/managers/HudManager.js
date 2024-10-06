@@ -6,7 +6,8 @@ J.HUD.EXT.QUEST.Aliased.HudManager.set('initMembers', HudManager.prototype.initM
 HudManager.prototype.initMembers = function()
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.HudManager.get('initMembers').call(this);
+  J.HUD.EXT.QUEST.Aliased.HudManager.get('initMembers')
+    .call(this);
 
   /**
    * The request state for the quest data of the HUD.

@@ -15,12 +15,12 @@ Game_Time.prototype.constructor = Game_Time;
  * A static representation of the tones for each time of day.
  */
 Game_Time.toneOfDay = {
-  Night: [-100, -100, -30, 100],
-  Dawn: [-30, -15, 15, 64],
-  Morning: [0, 0, 0, 0],
-  Afternoon: [10, 10, 10, 10],
-  Evening: [0, -30, -30, -30],
-  Twilight: [-68, -68, 0, 68],
+  Night: [ -100, -100, -30, 100 ],
+  Dawn: [ -30, -15, 15, 64 ],
+  Morning: [ 0, 0, 0, 0 ],
+  Afternoon: [ 10, 10, 10, 10 ],
+  Evening: [ 0, -30, -30, -30 ],
+  Twilight: [ -68, -68, 0, 68 ],
 };
 //endregion statics
 
@@ -411,7 +411,7 @@ Game_Time.prototype.translateHourToTone = function()
   const hours = J.TIME.Metadata.UseRealTime
     ? new Date().getHours()
     : this._hours;
-  let tone = [0, 0, 0, 0];
+  let tone = [ 0, 0, 0, 0 ];
   switch (hours)
   {
     case  0: // night
@@ -503,14 +503,18 @@ Game_Time.prototype.translateHourToTone = function()
  */
 Game_Time.prototype.toneBetweenTones = function(tone1, tone2, rate)
 {
-  const diff = (a, b) => a > b ? a - b : b - a;
+  const diff = (a, b) => a > b
+    ? a - b
+    : b - a;
   const newTone = [];
   tone1.forEach((color1, index) =>
   {
     const color2 = tone2[index];
     const diffToNext = diff(color1, color2);
     const partial = Math.round(diffToNext * rate);
-    const newRgbValue = color2 > color1 ? color1 + partial : color1 - partial;
+    const newRgbValue = color2 > color1
+      ? color1 + partial
+      : color1 - partial;
     newTone.push(newRgbValue);
   });
 
@@ -605,8 +609,7 @@ Game_Time.prototype.determineArtificialTime = function()
 {
   const timeOfDayId = this.timeOfDay(this._hours);
   const seasonOfYearId = this.seasonOfYear(this._months);
-  return new Time_Snapshot(
-    this._seconds,
+  return new Time_Snapshot(this._seconds,
     this._minutes,
     this._hours,
     this._days,
@@ -631,15 +634,7 @@ Game_Time.prototype.determineRealTime = function()
   const years = date.getFullYear();
   const timeOfDayId = this.timeOfDay(hours);
   const seasonOfYearId = this.seasonOfYear(months);
-  return new Time_Snapshot(
-    seconds,
-    minutes,
-    hours,
-    days,
-    months,
-    years,
-    timeOfDayId,
-    seasonOfYearId);
+  return new Time_Snapshot(seconds, minutes, hours, days, months, years, timeOfDayId, seasonOfYearId);
 };
 
 /**
@@ -683,10 +678,10 @@ Game_Time.prototype.startOfTimeOfDay = function(timeOfDayId)
  */
 Game_Time.prototype.seasonOfYear = function(months)
 {
-  const springMonths = [3, 4, 5];
-  const summerMonths = [6, 7, 8];
-  const autumnMonths = [9, 10, 11];
-  const winterMonths = [1, 2, 12];
+  const springMonths = [ 3, 4, 5 ];
+  const summerMonths = [ 6, 7, 8 ];
+  const autumnMonths = [ 9, 10, 11 ];
+  const winterMonths = [ 1, 2, 12 ];
   switch (true)
   {
     case (springMonths.includes(months)):

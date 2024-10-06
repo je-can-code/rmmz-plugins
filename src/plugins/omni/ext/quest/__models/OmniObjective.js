@@ -95,9 +95,7 @@ class OmniObjective
   }
 
   static FetchTypes = {
-    Item: "Item",
-    Weapon: "Weapon",
-    Armor: "Armor",
+    Item: "Item", Weapon: "Weapon", Armor: "Armor",
   }
 
   //region properties
@@ -157,14 +155,7 @@ class OmniObjective
    * @param {boolean=} hiddenByDefault Whether or not this objective will be hidden upon activating the parent quest.
    * @param {boolean=} isOptional Whether or not this objective is optional for its parent quest.
    */
-  constructor(
-    id,
-    type,
-    description,
-    logs,
-    fulfillment,
-    hiddenByDefault = true,
-    isOptional = false)
+  constructor(id, type, description, logs, fulfillment, hiddenByDefault = true, isOptional = false)
   {
     this.id = id;
     this.type = type;

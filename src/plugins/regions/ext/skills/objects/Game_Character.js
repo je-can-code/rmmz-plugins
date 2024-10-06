@@ -144,8 +144,7 @@ Game_Character.prototype.executeRegionSkills = function()
     }
 
     // execute the skill.
-    $jabsEngine.forceMapAction(
-      $jabsEngine.getMapDamageBattler(),
+    $jabsEngine.forceMapAction($jabsEngine.getMapDamageBattler(),
       skillId,
       false,
       targetJabsBattler.getX(),

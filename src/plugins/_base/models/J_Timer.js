@@ -73,7 +73,7 @@ J_Timer.prototype.initMembers = function()
  * Gets the key of this timer, if one was set.
  * @returns {string|String.empty}
  */
-J_Timer.prototype.getKey= function()
+J_Timer.prototype.getKey = function()
 {
   return this._key;
 }

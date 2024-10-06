@@ -46,6 +46,7 @@ class LevelScaling
    * @type {number}
    */
   static #lowerInvariance = J.LEVEL.Metadata.InvariantLowerRange;
+
   //endregion properties
 
   /**
@@ -110,8 +111,7 @@ class LevelScaling
     const growth = this.#growthMultiplier;
 
     // check if the difference is within our invariance range.
-    if (levelDifference <= this.#upperInvariance &&
-      levelDifference >= this.#lowerInvariance) return base;
+    if (levelDifference <= this.#upperInvariance && levelDifference >= this.#lowerInvariance) return base;
 
     // determine the level difference lesser the invariance range.
     const invariantDifference = levelDifference > 0
@@ -125,4 +125,5 @@ class LevelScaling
     return result.clamp(this.#minimumMultiplier, this.#maximumMultiplier);
   }
 }
+
 //endregion LevelScaling

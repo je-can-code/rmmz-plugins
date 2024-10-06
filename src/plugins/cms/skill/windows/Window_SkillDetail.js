@@ -277,10 +277,16 @@ class Window_SkillDetail extends Window_Base
         p = skillProficiency.proficiency;
       }
     }
-    const sign = [3, 4].includes(skill.damage.type) ? -1 : 1;
+    const sign = [ 3, 4 ].includes(skill.damage.type)
+      ? -1
+      : 1;
     const value = Math.round(Math.max(eval(skill.damage.formula), 0));
-    const potential = isNaN(value) ? 0 : value;
-    const color = sign > 0 ? 10 : 24;
+    const potential = isNaN(value)
+      ? 0
+      : value;
+    const color = sign > 0
+      ? 10
+      : 24;
     return new JCMS_ParameterKvp(`\\C[${color}]Raw Damage\\C[0]`, potential);
   }
 
@@ -389,7 +395,7 @@ class Window_SkillDetail extends Window_Base
         if (!skillRewardId)
         {
           console.warn(conditional);
-          console.log(skillRewardId,  "not a valid skill reward.");
+          console.log(skillRewardId, "not a valid skill reward.");
           return;
         }
 
@@ -399,7 +405,9 @@ class Window_SkillDetail extends Window_Base
 
         const actorKnowsSkill = actor.isLearnedSkill(skillRewardId);
         const extendedSkill = actor.skill(skillRewardId);
-        const learnedIcon = actorKnowsSkill ? 91 : 90;
+        const learnedIcon = actorKnowsSkill
+          ? 91
+          : 90;
         const name = `\\I[${learnedIcon}]\\Skill[${extendedSkill.id}]`;
         const value = `${requiredProficiency.proficiency}`;
         params.push(new JCMS_ParameterKvp(name, value));
@@ -425,7 +433,7 @@ class Window_SkillDetail extends Window_Base
   {
     const elementParams = [];
     elementParams.push(new JCMS_ParameterKvp(`\\C[17]Elemental Affiliations\\C[0]`));
-    const attackElements = [skill.damage.elementId];
+    const attackElements = [ skill.damage.elementId ];
     attackElements.push(...Game_Action.extractElementsFromAction(skill));
     attackElements.forEach(attackElement =>
     {
@@ -453,10 +461,10 @@ class Window_SkillDetail extends Window_Base
    */
   makeSkillTypeParam(skill)
   {
-    const support = [0];
-    const damage = [1, 2];
-    const healer = [3, 4];
-    const drain = [5, 6];
+    const support = [ 0 ];
+    const damage = [ 1, 2 ];
+    const healer = [ 3, 4 ];
+    const drain = [ 5, 6 ];
 
     let name = "";
     let color = ColorManager.normalColor();
@@ -518,4 +526,5 @@ class Window_SkillDetail extends Window_Base
     return new JCMS_ParameterKvp(tpName, tpCost, tpColor);
   }
 }
+
 //endregion Window_SkillDetail

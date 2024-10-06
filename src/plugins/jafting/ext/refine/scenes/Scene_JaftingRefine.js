@@ -144,6 +144,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   {
     this._j._crafting._refine._consumedSelected = equip;
   }
+
   //endregion init
 
   //region create
@@ -192,7 +193,8 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const listWindow = this.getBaseRefinableListWindow();
 
     // also update with the currently selected item, if one exists.
-    this.getRefinementDescriptionWindow().setText(listWindow.currentHelpText() ?? String.empty);
+    this.getRefinementDescriptionWindow()
+      .setText(listWindow.currentHelpText() ?? String.empty);
 
     const selected = listWindow.currentExt();
     this.setBaseSelected(selected.data);
@@ -210,7 +212,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
     this._backgroundSprite = new Sprite();
     this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [this._backgroundFilter];
+    this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
     //this.setBackgroundOpacity(220);
   }
@@ -223,6 +225,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   createButtons()
   {
   }
+
   //endregion create
 
   //region refinement description
@@ -293,6 +296,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   {
     this._j._crafting._refine._refinementDescription = someWindow;
   }
+
   //endregion refinement description
 
   //region base refinable list
@@ -342,7 +346,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   getBaseRefinableListRectangle()
   {
     // the window's origin coordinates are the box window's origin as well.
-    const [x, y] = Graphics.boxOrigin;
+    const [ x, y ] = Graphics.boxOrigin;
 
     // define the width of the window.
     const width = 350;
@@ -398,7 +402,8 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const listWindow = this.getBaseRefinableListWindow();
 
     const helpText = listWindow.currentHelpText();
-    this.getRefinementDescriptionWindow().setText(helpText ?? String.empty);
+    this.getRefinementDescriptionWindow()
+      .setText(helpText ?? String.empty);
 
     const baseRefinable = listWindow.currentExt();
     this.getRefinementDetailsWindow().primaryEquip = baseRefinable?.data;
@@ -420,6 +425,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     this.deselectBaseRefinableListWindow();
     this.selectConsumableRefinableListWindow();
   }
+
   //endregion base refinable list
 
   //region consumable refinable list
@@ -470,7 +476,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   getConsumableRefinableListRectangle()
   {
     // the window's origin coordinates are the box window's origin as well.
-    const [x, y] = Graphics.boxOrigin;
+    const [ x, y ] = Graphics.boxOrigin;
 
     // define the width of the window.
     const width = 350;
@@ -533,7 +539,8 @@ class Scene_JaftingRefine extends Scene_MenuBase
     const listWindow = this.getConsumableRefinableListWindow();
 
     const helpText = listWindow.currentHelpText();
-    this.getRefinementDescriptionWindow().setText(helpText ?? String.empty);
+    this.getRefinementDescriptionWindow()
+      .setText(helpText ?? String.empty);
 
     const consumedRefinable = listWindow.currentExt();
     this.getRefinementDetailsWindow().secondaryEquip = consumedRefinable.data;
@@ -556,6 +563,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
     //this.deselectConsumableRefinableListWindow();
     this.selectRefinementConfirmationWindow();
   }
+
   //endregion consumable refinable list
 
   //region refinement details
@@ -623,6 +631,7 @@ class Scene_JaftingRefine extends Scene_MenuBase
   {
     this._j._crafting._refine._refinementDetails = someWindow;
   }
+
   //endregion refinement details
 
   //region confirmation prompt
@@ -753,8 +762,11 @@ class Scene_JaftingRefine extends Scene_MenuBase
     listWindow.refresh();
     listWindow.select(0);
 
-    this.getConsumableRefinableListWindow().refresh();
+    this.getConsumableRefinableListWindow()
+      .refresh();
   }
+
   //endregion confirmation prompt
 }
+
 //endregion

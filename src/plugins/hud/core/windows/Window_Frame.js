@@ -42,7 +42,8 @@ class Window_Frame extends Window_Base
     /* eslint-disable max-len */
     /**
      * The cached collection of sprites.
-     * @type {Map<string, Sprite_Icon|Sprite_BaseText|Sprite_SkillCost|Sprite_CooldownGauge|Sprite_ActorValue|Sprite_MapGauge|Sprite_Gauge|Sprite_FlowingGauge|Sprite_Face|Sprite>}
+     * @type {Map<string,
+     *   Sprite_Icon|Sprite_BaseText|Sprite_SkillCost|Sprite_CooldownGauge|Sprite_ActorValue|Sprite_MapGauge|Sprite_Gauge|Sprite_FlowingGauge|Sprite_Face|Sprite>}
      */
     this._j._spriteCache = new Map();
     /* eslint-enable max-len */
@@ -89,6 +90,7 @@ class Window_Frame extends Window_Base
   {
     // fill with sprite creation methods.
   }
+
   //endregion caching
 
   /**
@@ -111,4 +113,5 @@ class Window_Frame extends Window_Base
     // fill with window frame logic.
   }
 }
+
 //endregion Window_Frame

@@ -41,4 +41,5 @@ class OmniTag
     this.iconIndex = iconIndex;
   }
 }
+
 //endregion OmniTag

@@ -100,7 +100,8 @@ J.BASE.Aliased.Window_Base.set('resetFontSettings', Window_Base.prototype.resetF
 Window_Base.prototype.resetFontSettings = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Window_Base.get('resetFontSettings').call(this);
+  J.BASE.Aliased.Window_Base.get('resetFontSettings')
+    .call(this);
 
   // also reset the italics/bold back to false.
   this.resetFontFormatting();

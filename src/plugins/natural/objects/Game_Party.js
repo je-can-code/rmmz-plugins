@@ -10,7 +10,8 @@ J.NATURAL.Aliased.Game_Party.set('gainItem', Game_Party.prototype.gainItem);
 Game_Party.prototype.gainItem = function(item, amount, includeEquip)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Party.get('gainItem').call(this, item, amount, includeEquip);
+  J.NATURAL.Aliased.Game_Party.get('gainItem')
+    .call(this, item, amount, includeEquip);
 
   // also refresh our parameter buffs.
   this.refreshAllParameterBuffsForAll();

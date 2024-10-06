@@ -71,8 +71,7 @@ Game_Party.prototype.populateQuestopediaTrackings = function()
  */
 Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
 {
-  const objectivesMapper = omniObjective => new TrackedOmniObjective(
-    omniquest.key,
+  const objectivesMapper = omniObjective => new TrackedOmniObjective(omniquest.key,
     omniObjective.id,
     omniObjective.fulfillment,
     omniObjective.hiddenByDefault,
@@ -102,7 +101,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
 
     const newTracking = this.toTrackedOmniQuest(omniquest);
-    
+
     // if the tracking already exists, it should be updated.
     if (foundTracking)
     {
@@ -110,7 +109,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
 
       // update the category.
       foundTracking.categoryKey = omniquest.categoryKey;
-      
+
       // if the objective length hasn't changed, then don't process anymore.
       if (foundTracking.objectives.length <= omniquest.objectives.length) return;
 
@@ -176,10 +175,10 @@ Game_Party.prototype.translateQuestopediaCacheToSaveables = function()
 {
   // grab the cache we've been maintaining.
   const cache = this.getQuestopediaEntriesCache();
-  
+
   // determine the updated entries.
   const updatedQuestopediaEntries = Array.from(cache.values());
-  
+
   // update the quests from the cache.
   this.setSavedQuestopediaEntries(updatedQuestopediaEntries);
 };

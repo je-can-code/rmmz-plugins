@@ -91,7 +91,8 @@ class Window_RecipeOutputList extends Window_Command
     let subTextLine = `(have: ${have})`;
 
     const possiblyMaskedOutput = this.needsMasking
-      ? component.getName().replace(/[A-Za-z\-!?',.]/ig, "?")
+      ? component.getName()
+        .replace(/[A-Za-z\-!?',.]/ig, "?")
       : component.getName();
 
     // build a command based on the component.
@@ -131,4 +132,5 @@ class Window_RecipeOutputList extends Window_Command
   {
   }
 }
+
 //endregion Window_RecipeOutputList

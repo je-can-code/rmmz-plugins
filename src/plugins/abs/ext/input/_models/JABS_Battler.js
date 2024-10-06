@@ -7,7 +7,8 @@ J.ABS.EXT.INPUT.Aliased.JABS_Battler.set('createPlayer', JABS_Battler.createPlay
 JABS_Battler.createPlayer = function()
 {
   // intercept return data from original logic.
-  const playerJabsBattler = J.ABS.EXT.INPUT.Aliased.JABS_Battler.get('createPlayer').call(this);
+  const playerJabsBattler = J.ABS.EXT.INPUT.Aliased.JABS_Battler.get('createPlayer')
+    .call(this);
 
   // assign newly players are created to controller 1.
   $jabsController1.battler = playerJabsBattler;

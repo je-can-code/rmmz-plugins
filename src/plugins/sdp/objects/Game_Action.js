@@ -7,7 +7,8 @@ J.SDP.Aliased.Game_Action.set('applyGlobal', Game_Action.prototype.applyGlobal);
 Game_Action.prototype.applyGlobal = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_Action.get('applyGlobal').call(this);
+  J.SDP.Aliased.Game_Action.get('applyGlobal')
+    .call(this);
 
   // apply the SDP effects if appropriate.
   this.handleSdpEffects();

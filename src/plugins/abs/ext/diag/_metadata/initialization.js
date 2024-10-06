@@ -1,5 +1,3 @@
-
-
 /**
  * The core where all of my extensions live: in the `J` object.
  */
@@ -47,8 +45,7 @@ J.ABS.EXT.DIAG.Metadata = {
  */
 J.ABS.EXT.DIAG.PluginParameters = PluginManager.parameters(J.ABS.EXT.DIAG.Metadata.Name);
 J.ABS.EXT.DIAG.Metadata = {
-  ...J.ABS.EXT.DIAG.Metadata,
-  /**
+  ...J.ABS.EXT.DIAG.Metadata, /**
    * The version of this plugin.
    */
   Version: '1.0.0',
@@ -58,11 +55,7 @@ J.ABS.EXT.DIAG.Metadata = {
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.DIAG.Aliased = {
-  Game_BattleMap: {},
-  Game_Character: {},
-  Game_Event: {},
-  Game_Map: {},
-  Game_Player: {},
+  Game_BattleMap: {}, Game_Character: {}, Game_Event: {}, Game_Map: {}, Game_Player: {},
 };
 //endregion plugin metadata
 //endregion Initialization

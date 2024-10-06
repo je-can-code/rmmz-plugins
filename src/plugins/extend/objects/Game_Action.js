@@ -11,7 +11,8 @@ Game_Action.prototype.setSkill = function(skillId)
   if (!this.subject())
   {
     // perform original logic.
-    J.EXTEND.Aliased.Game_Action.get('setSkill').call(this, skillId);
+    J.EXTEND.Aliased.Game_Action.get('setSkill')
+      .call(this, skillId);
 
     // stop processing.
     return;
@@ -35,7 +36,8 @@ Game_Action.prototype.setItemObject = function(itemObject)
   if (!this.subject())
   {
     // perform original logic.
-    J.EXTEND.Aliased.Game_Action.get('setItemObject').call(this, itemObject);
+    J.EXTEND.Aliased.Game_Action.get('setItemObject')
+      .call(this, itemObject);
 
     // stop processing.
     return;
@@ -53,7 +55,8 @@ J.EXTEND.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
   // perform original logic.
-  J.EXTEND.Aliased.Game_Action.get('apply').call(this, target);
+  J.EXTEND.Aliased.Game_Action.get('apply')
+    .call(this, target);
 
   // apply our on-hit self-states if we have any.
   this.applyOnHitSelfStates();
@@ -78,9 +81,7 @@ Game_Action.prototype.onHitSelfStates = function()
   const sources = this.selfStateSources();
 
   // get all "skill chances" aka "chance to inflict a state" on oneself.
-  const stateChances = RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    sources,
-    J.EXTEND.RegExp.OnHitSelfState);
+  const stateChances = RPGManager.getOnChanceEffectsFromDatabaseObjects(sources, J.EXTEND.RegExp.OnHitSelfState);
 
   // return what we found.
   return stateChances;
@@ -94,7 +95,8 @@ J.EXTEND.Aliased.Game_Action.set('applyItemUserEffect', Game_Action.prototype.ap
 Game_Action.prototype.applyItemUserEffect = function(target)
 {
   // perform original logic.
-  J.EXTEND.Aliased.Game_Action.get('applyItemUserEffect').call(this, target);
+  J.EXTEND.Aliased.Game_Action.get('applyItemUserEffect')
+    .call(this, target);
 
   // apply our on-cast self-states if we have any.
   this.applyOnCastSelfStates();
@@ -119,9 +121,7 @@ Game_Action.prototype.onCastSelfStates = function()
   const sources = this.selfStateSources();
 
   // get all "skill chances" aka "chance to inflict a state" on oneself.
-  const stateChances = RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    sources,
-    J.EXTEND.RegExp.OnCastSelfState);
+  const stateChances = RPGManager.getOnChanceEffectsFromDatabaseObjects(sources, J.EXTEND.RegExp.OnCastSelfState);
 
   // return what we found.
   return stateChances;
@@ -139,8 +139,8 @@ Game_Action.prototype.selfStateSources = function()
     this.item(),
 
     // the caster's states also apply as a source.
-    ...this.subject().allStates(),
-  ];
+    ...this.subject()
+      .allStates(), ];
 
   // return what we found.
   return sources;

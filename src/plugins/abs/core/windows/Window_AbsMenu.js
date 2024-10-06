@@ -69,11 +69,7 @@ class Window_AbsMenu extends Window_Command
 
     // return the built commands.
     return [
-      mainMenuCommand,
-      combatSkillsCommand,
-      dodgeSkillCommand,
-      toolCommand,
-    ];
+      mainMenuCommand, combatSkillsCommand, dodgeSkillCommand, toolCommand, ];
   }
 
   /**
@@ -84,8 +80,7 @@ class Window_AbsMenu extends Window_Command
   {
     const description = [
       "The unabbreviated main menu with access to player status, descriptions, etc.",
-      "This is colloquially referred to as the 'The Main Menu™' by protagonists all across the universe."
-    ];
+      "This is colloquially referred to as the 'The Main Menu™' by protagonists all across the universe." ];
 
     return description.join("\n");
   }
@@ -98,8 +93,7 @@ class Window_AbsMenu extends Window_Command
   {
     const description = [
       "The `Combat Skills` are more powerful variants of your basic attacks that may require resources to execute.",
-      "Typical things like sword techs and magic spells will show up here."
-    ];
+      "Typical things like sword techs and magic spells will show up here." ];
 
     return description.join("\n");
   }
@@ -112,8 +106,7 @@ class Window_AbsMenu extends Window_Command
   {
     const description = [
       "The `Dodge Skills` are ones that grant some form of mobility.",
-      "It is encouraged to use these liberally to maneuver around the field, in and out of combat."
-    ];
+      "It is encouraged to use these liberally to maneuver around the field, in and out of combat." ];
 
     return description.join("\n");
   }
@@ -126,8 +119,7 @@ class Window_AbsMenu extends Window_Command
   {
     const description = [
       "Your tool list, where you can find any and all equippable items.",
-      "Not all items will show up in the list- only ones usable in combat somehow will be available."
-    ];
+      "Not all items will show up in the list- only ones usable in combat somehow will be available." ];
 
     return description.join("\n");
   }
@@ -146,4 +138,5 @@ class Window_AbsMenu extends Window_Command
     $jabsEngine.requestAbsMenu = false;
   }
 }
+
 //endregion Window_AbsMenu

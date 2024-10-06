@@ -263,4 +263,5 @@ class Window_RefinementDetails extends Window_Base
     this.outputEquip = result;
   }
 }
+
 //endregion Window_RefinementDetails

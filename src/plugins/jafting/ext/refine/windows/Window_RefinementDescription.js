@@ -6,4 +6,5 @@ class Window_RefinementDescription extends Window_Help
     super(rect);
   }
 }
+
 //endregion Window_RefinementDescription

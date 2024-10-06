@@ -79,7 +79,7 @@ class Sprite_Icon extends Sprite
     this.unReady();
 
     // setup a promise for when the bitmap loads.
-    const bitmapPromise = ImageManager.loadBitmapPromise(`IconSet`,`img/system/`)
+    const bitmapPromise = ImageManager.loadBitmapPromise(`IconSet`, `img/system/`)
       .then(bitmap => this.setIconsetBitmap(bitmap))
       .catch(() =>
       {
@@ -87,8 +87,8 @@ class Sprite_Icon extends Sprite
       });
 
     // upon promise delivery, execute the rendering.
-    Promise.all([bitmapPromise])
-    // execute on-ready logic, such as setting the icon index of this sprite to render.
+    Promise.all([ bitmapPromise ])
+      // execute on-ready logic, such as setting the icon index of this sprite to render.
       .then(() => this.onReady(iconIndex))
   }
 
@@ -230,4 +230,5 @@ class Sprite_Icon extends Sprite
     this.setFrame(x, y, iconWidth, iconHeight);
   }
 }
+
 //endregion Sprite_Icon

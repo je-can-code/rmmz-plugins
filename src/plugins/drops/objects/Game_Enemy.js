@@ -8,7 +8,8 @@ J.DROPS.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
 Game_Enemy.prototype.gold = function()
 {
   const baseGoldRate = this.getBaseGoldRate();
-  const baseGold = (J.DROPS.Aliased.Game_Enemy.get("gold").call(this) * baseGoldRate);
+  const baseGold = (J.DROPS.Aliased.Game_Enemy.get("gold")
+    .call(this) * baseGoldRate);
   const multiplier = $gameParty.getGoldMultiplier();
   return Math.round(baseGold * multiplier);
 };
@@ -119,10 +120,11 @@ Game_Enemy.prototype.didFindLoot = function(rate)
 Game_Enemy.prototype.getDropItems = function()
 {
   // validate the original drop items from the enemy in the database.
-  const databaseDropItems = this.enemy().originalDropItems();
+  const databaseDropItems = this.enemy()
+    .originalDropItems();
 
   // initialize the drops to be the enemy's own valid drop items from the database.
-  const allDropItems = [...databaseDropItems];
+  const allDropItems = [ ...databaseDropItems ];
 
   // grab any extra drops available.
   const extraDropItems = this.extraDrops();

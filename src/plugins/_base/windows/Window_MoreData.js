@@ -186,4 +186,5 @@ class Window_MoreData extends Window_Command
     }
   }
 }
+
 //endregion Window_MoreData

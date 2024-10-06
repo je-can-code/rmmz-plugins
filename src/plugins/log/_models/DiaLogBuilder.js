@@ -29,12 +29,9 @@ class DiaLogBuilder
   build()
   {
     // build the log.
-    const log = new DiaLog(
-      // copy the lines over.
-      [...this.#lines],
-      // assign the face information.
-      this.#faceName,
-      this.#faceIndex);
+    const log = new DiaLog(// copy the lines over.
+      [ ...this.#lines ], // assign the face information.
+      this.#faceName, this.#faceIndex);
 
     // empty out the data from the builder.
     this.clear();
@@ -99,4 +96,5 @@ class DiaLogBuilder
     return this;
   }
 }
+
 //endregion DiaLogBuilder

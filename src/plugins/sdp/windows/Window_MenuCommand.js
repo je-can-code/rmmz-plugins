@@ -6,7 +6,8 @@ J.SDP.Aliased.Window_MenuCommand.set('makeCommandList', Window_MenuCommand.proto
 Window_MenuCommand.prototype.makeCommandList = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Window_MenuCommand.get('makeCommandList').call(this);
+  J.SDP.Aliased.Window_MenuCommand.get('makeCommandList')
+    .call(this);
 
   // if we cannot add the command, then do not.
   if (!this.canAddSdpCommand()) return;

@@ -143,7 +143,7 @@ class StatusParameter
     if (finalPrettyValue.endsWith(".0"))
     {
       // strip em off.
-      finalPrettyValue = finalPrettyValue.slice(0, finalPrettyValue.length-2);
+      finalPrettyValue = finalPrettyValue.slice(0, finalPrettyValue.length - 2);
     }
 
     // the long param ids that should be decorated with a % symbol.
@@ -162,8 +162,7 @@ class StatusParameter
 
     // the long param ids that should be decorated with a regen rate per second.
     const needsRegenRate = [
-      15, 16, 17
-    ];
+      15, 16, 17 ];
 
     // check if our long param id is in this group.
     if (needsRegenRate.includes(this.longParamId))
@@ -186,4 +185,5 @@ class StatusParameter
     return finalPrettyValue;
   }
 }
+
 //endregion StatusParameter

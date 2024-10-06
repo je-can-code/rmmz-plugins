@@ -4,13 +4,12 @@
  * The number of SDP points this enemy will yield upon defeat.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Enemy.prototype, "sdpPoints",
+Object.defineProperty(RPG_Enemy.prototype, "sdpPoints", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getSdpPoints();
-    },
-  });
+    return this.getSdpPoints();
+  },
+});
 
 /**
  * Gets the expiration time in frames.
@@ -43,49 +42,45 @@ RPG_Enemy.prototype.extractSdpPoints = function()
  * The second index is the numeric id of the item associated with the panel.
  * @type {[string, number, number]|null}
  */
-Object.defineProperty(RPG_Enemy.prototype, "sdpDropData",
+Object.defineProperty(RPG_Enemy.prototype, "sdpDropData", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getSdpDropData() ?? [String.empty, 0, 0];
-    },
-  });
+    return this.getSdpDropData() ?? [ String.empty, 0, 0 ];
+  },
+});
 
 /**
  * Gets the key of the panel being dropped.
  * @type {string}
  */
-Object.defineProperty(RPG_Enemy.prototype, "sdpDropKey",
+Object.defineProperty(RPG_Enemy.prototype, "sdpDropKey", {
+  get: function()
   {
-    get: function()
-    {
-      return this.sdpDropData[0];
-    },
-  });
+    return this.sdpDropData[0];
+  },
+});
 
 /**
  * Gets the drop rate for this panel.
  * @type {number}
  */
-Object.defineProperty(RPG_Enemy.prototype, "sdpDropChance",
+Object.defineProperty(RPG_Enemy.prototype, "sdpDropChance", {
+  get: function()
   {
-    get: function()
-    {
-      return this.sdpDropData[1];
-    },
-  });
+    return this.sdpDropData[1];
+  },
+});
 
 /**
  * Gets the id of the item associated with this panel, if any.
  * @type {number}
  */
-Object.defineProperty(RPG_Enemy.prototype, "sdpDropItemId",
+Object.defineProperty(RPG_Enemy.prototype, "sdpDropItemId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.sdpDropData[2] ?? 0;
-    },
-  });
+    return this.sdpDropData[2] ?? 0;
+  },
+});
 
 /**
  * Gets the SDP data for this enemy.
