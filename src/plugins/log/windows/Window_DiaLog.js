@@ -6,8 +6,8 @@
 class Window_DiaLog extends Window_MapLog
 {
   /**
-   * The height of one row; 48.<br/>
-   * This is intended to be equivalent to three regular log lines.
+   * The height of one row; 64.<br/>
+   * This is intended to be equivalent to four regular log lines.
    * @type {number}
    */
   static rowHeight = 64;
@@ -59,16 +59,6 @@ class Window_DiaLog extends Window_MapLog
     return Window_DiaLog.rowHeight;
   }
 
-  /**
-   * Overrides {@link drawBackgroundRect}.<br/>
-   * Re-provides a background to each item in the log window to improve visibility.
-   * @param {Rectangle} rect The rectangle of the background image.
-   */
-  drawBackgroundRect(rect)
-  {
-    // perform real original logic.
-    Window_Selectable.prototype.drawBackgroundRect.call(this, rect);
-  }
   //endregion overwrites
 
   /**
@@ -81,26 +71,32 @@ class Window_DiaLog extends Window_MapLog
     if (!this.logManager) return [];
 
     // build all the commands from the dia logs.
-    const commands = this.logManager.getLogs()
+    // return the built commands.
+    return this.logManager.getLogs()
       .map((log, index) =>
       {
         /** @type {DiaLog} */
         const currentLog = log;
-        // build the new command.
+
         // use the first line for the "main" line of the message.
-        return new WindowCommandBuilder(currentLog.lines().at(0))
+        const commandName = currentLog.lines()
+          .at(0);
+
+        // use everything after the first line for the rest of the message.
+        const dialogLines = currentLog.lines()
+          .slice(1);
+
+        // build the new "command".
+        return new WindowCommandBuilder(commandName)
           .setSymbol(`log-${index}`)
           .setEnabled(true)
-          // use everything after the first line for the rest of the message.
-          .setTextLines(currentLog.lines().slice(1))
+          .setTextLines(dialogLines)
           .flagAsMultiline()
           .setFaceName(currentLog.faceName())
           .setFaceIndex(currentLog.faceIndex())
           .build();
       });
-
-    // return the built commands.
-    return commands;
   }
 }
+
 //endregion Window_DiaLog

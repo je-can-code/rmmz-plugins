@@ -317,7 +317,8 @@ class Window_MapLog extends Window_Command
     if (!this.logManager) return [];
 
     // iterate over each log and build a command for them.
-    const commands = this.logManager.getLogs()
+    // return the built commands.
+    return this.logManager.getLogs()
       .map((log, index) =>
       {
         // add the message as a "command" into the log window.
@@ -326,9 +327,6 @@ class Window_MapLog extends Window_Command
           .setEnabled(true)
           .build();
       });
-
-    // return the built commands.
-    return commands;
   }
 
   //endregion update logging
@@ -389,10 +387,9 @@ class Window_MapLog extends Window_Command
     // check if the player is below this window's origin Y.
     const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
     const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
-    const isInterfering = (xInterference) && (yInterference);
-
+    
     // return what we deduced.
-    return isInterfering;
+    return (xInterference) && (yInterference);
   }
 
   /**
@@ -447,7 +444,7 @@ class Window_MapLog extends Window_Command
     if (this.inactivityTimer % 2 === 0)
     {
       // reduce opacity if it is.
-      this.contentsOpacity -= 12;
+      this.fadeContentsOpacityTick();
     }
     // otherwise, check if the timer is simply 0.
     else if (this.inactivityTimer === 0)
@@ -455,6 +452,12 @@ class Window_MapLog extends Window_Command
       // and hide the window if it is.
       this.hideWindow();
     }
+  }
+  
+  fadeContentsOpacityTick()
+  {
+    // reduce opacity if it is.
+    this.contentsOpacity -= 12;
   }
 
   /**

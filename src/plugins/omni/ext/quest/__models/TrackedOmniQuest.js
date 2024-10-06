@@ -91,11 +91,11 @@ TrackedOmniQuest.prototype.toggleTracked = function(forcedState = null)
   {
     // set the quest to the forced state.
     this.tracked = forcedState;
-    
+
     // stop processing.
     return;
   }
-  
+
   // toggle the quest's tracking state.
   this.tracked = !this.tracked;
 };
@@ -339,8 +339,8 @@ TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
  */
 TrackedOmniQuest.prototype.reset = function()
 {
-  // revert the quest to unknown.
-  this.state = OmniObjective.States.Unknown;
+  // revert the quest to inactive.
+  this.setState(OmniQuest.States.Inactive);
 
   // revert all the objectives to inactive.
   this.objectives.forEach(objective => objective.state = OmniObjective.States.Inactive);
@@ -607,12 +607,8 @@ TrackedOmniQuest.prototype.flagAsCompleted = function()
   // refresh the state resulting in the quest becoming completed.
   this.refreshState();
 
-  // check if the change of state was to "completed".
-  if (this.isCompleted())
-  {
-    // evaluate if the quest quest being completed checked any boxes.
-    this._processQuestCompletionQuestsCheck();
-  }
+  // evaluate if the quest quest being completed checked any boxes.
+  this._processQuestCompletionQuestsCheck();
 };
 
 /**
@@ -656,7 +652,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   const anyFailed = this.objectives.some(objective => objective.isFailed());
   if (anyFailed)
   {
-    this.state = OmniQuest.States.Failed;
+    this.setState(OmniObjective.States.Failed);
     return;
   }
 
@@ -664,7 +660,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   const allUnknown = this.objectives.every(objective => objective.isInactive());
   if (allUnknown)
   {
-    this.state = OmniQuest.States.Inactive;
+    this.setState(OmniObjective.States.Inactive);
     return;
   }
 
@@ -672,7 +668,7 @@ TrackedOmniQuest.prototype.refreshState = function()
   const someActive = this.objectives.some(objective => objective.isActive());
   if (someActive)
   {
-    this.state = OmniObjective.States.Active;
+    this.setState(OmniObjective.States.Active);
     return;
   }
 
@@ -681,7 +677,7 @@ TrackedOmniQuest.prototype.refreshState = function()
     .every(objective => objective.isCompleted() || objective.isMissed());
   if (enoughComplete)
   {
-    this.state = OmniObjective.States.Completed;
+    this.setState(OmniObjective.States.Completed);
     return;
   }
 
@@ -689,9 +685,10 @@ TrackedOmniQuest.prototype.refreshState = function()
 };
 
 /**
- * Sets the state of the quest to a designated state regardless of objectives' status. It is normally recommended to use
- * {@link #refreshState} if desiring to change state so that the objectives determine the quest state when managing the
- * state programmatically.
+ * Sets the state of the quest to a designated state regardless of objectives' status.<br/>
+ * It is normally recommended to use {@link #refreshState} if desiring to change state so that the objectives determine
+ * the quest state when managing the state programmatically. Unexpected behavior may occur if this is executed from
+ * outside of state refresh.
  * @param {number} newState The new state to set this quest to.
  */
 TrackedOmniQuest.prototype.setState = function(newState)
@@ -700,10 +697,71 @@ TrackedOmniQuest.prototype.setState = function(newState)
   if (newState < 0 || newState > 4)
   {
     console.error(`Attempted to set invalid state for this quest: ${newState}.`);
-    throw new Error('Invalid quest state provided for manual setting of state.');
+    throw new Error('Invalid quest state provided for setting of state.');
   }
 
+  // if it is already the given state, don't try to set it again.
+  if (this.state === newState) return;
+
+  // update the state.
   this.state = newState;
+
+  // trigger on-state-change effects.
+  this.onQuestStateChange();
+};
+
+/**
+ * The hook for when the state of the quest changes.
+ */
+TrackedOmniQuest.prototype.onQuestStateChange = function()
+{
+  // check if we have the dialog manager.
+  if ($diaLogManager)
+  {
+    // handle logging.
+    this.handleQuestUpdateLog();
+  }
+};
+
+/**
+ * Generate a dialog indicating the quest state has been updated.
+ */
+TrackedOmniQuest.prototype.handleQuestUpdateLog = function()
+{
+  // don't log if we are resetting a quest.
+  if (this.state === OmniQuest.States.Inactive) return;
+
+  // start the message stating the quest is updated.
+  const questUpdatedLines = [ `\\C[1][${this.name()}]\\C[0]` ];
+
+  // determine by state.
+  switch (this.state)
+  {
+    case OmniQuest.States.Active:
+      questUpdatedLines.push('Quest unlocked.');
+      break;
+    case OmniQuest.States.Completed:
+      questUpdatedLines.push('Quest completed.');
+      break;
+    case OmniQuest.States.Failed:
+      questUpdatedLines.push('Quest failed.');
+      break;
+    case OmniQuest.States.Missed:
+      questUpdatedLines.push('Quest missed.');
+      break;
+    default:
+      // if somehow we got here without a known finalization, ignore.
+      console.warn(`unexpected state change for logging: ${this.state}`);
+      return;
+  }
+
+  // construct the message.
+  const log = new DiaLogBuilder()
+    .setLines(questUpdatedLines)
+    .build();
+
+  // display the log.
+  $diaLogManager.addLog(log);
 };
 //endregion state management
 

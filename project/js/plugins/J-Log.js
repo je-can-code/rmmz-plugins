@@ -948,7 +948,7 @@ class DiaLogBuilder
   #faceIndex = -1;
 
   /**
-   * Builds the log in its current state.
+   * Builds the log in its current state and clears it.
    * @returns {ActionLog}
    */
   build()
@@ -975,27 +975,49 @@ class DiaLogBuilder
   clear()
   {
     this.#lines = [];
+    this.#faceIndex = -1;
+    this.#faceName = String.empty;
     return this;
   }
 
+  /**
+   * Adds a line to this dialog builder.
+   * @param {string} line The line to add.
+   * @returns {this}
+   */
   addLine(line)
   {
     this.#lines.push(line);
     return this;
   }
 
+  /**
+   * Sets the lines for this dialog builder.
+   * @param {string[]} lines The lines to set.
+   * @returns {this} This builder for fluent chaining.
+   */
   setLines(lines)
   {
     this.#lines = lines;
     return this;
   }
 
+  /**
+   * Sets the filename (without the extension) for the face image of this dialog builder.
+   * @param {string} faceName The filename.
+   * @returns {this}
+   */
   setFaceName(faceName)
   {
     this.#faceName = faceName;
     return this;
   }
 
+  /**
+   * Sets the index for which face to use in the face sheet.
+   * @param {number} faceIndex The index of the face.
+   * @returns {this}
+   */
   setFaceIndex(faceIndex)
   {
     this.#faceIndex = faceIndex;
@@ -1953,7 +1975,8 @@ class Window_MapLog extends Window_Command
     if (!this.logManager) return [];
 
     // iterate over each log and build a command for them.
-    const commands = this.logManager.getLogs()
+    // return the built commands.
+    return this.logManager.getLogs()
       .map((log, index) =>
       {
         // add the message as a "command" into the log window.
@@ -1962,9 +1985,6 @@ class Window_MapLog extends Window_Command
           .setEnabled(true)
           .build();
       });
-
-    // return the built commands.
-    return commands;
   }
 
   //endregion update logging
@@ -2025,10 +2045,9 @@ class Window_MapLog extends Window_Command
     // check if the player is below this window's origin Y.
     const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
     const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
-    const isInterfering = (xInterference) && (yInterference);
-
+    
     // return what we deduced.
-    return isInterfering;
+    return (xInterference) && (yInterference);
   }
 
   /**
@@ -2083,7 +2102,7 @@ class Window_MapLog extends Window_Command
     if (this.inactivityTimer % 2 === 0)
     {
       // reduce opacity if it is.
-      this.contentsOpacity -= 12;
+      this.fadeContentsOpacityTick();
     }
     // otherwise, check if the timer is simply 0.
     else if (this.inactivityTimer === 0)
@@ -2091,6 +2110,12 @@ class Window_MapLog extends Window_Command
       // and hide the window if it is.
       this.hideWindow();
     }
+  }
+  
+  fadeContentsOpacityTick()
+  {
+    // reduce opacity if it is.
+    this.contentsOpacity -= 12;
   }
 
   /**
@@ -2159,8 +2184,8 @@ class Window_MapLog extends Window_Command
 class Window_DiaLog extends Window_MapLog
 {
   /**
-   * The height of one row; 48.<br/>
-   * This is intended to be equivalent to three regular log lines.
+   * The height of one row; 64.<br/>
+   * This is intended to be equivalent to four regular log lines.
    * @type {number}
    */
   static rowHeight = 64;
@@ -2212,16 +2237,6 @@ class Window_DiaLog extends Window_MapLog
     return Window_DiaLog.rowHeight;
   }
 
-  /**
-   * Overrides {@link drawBackgroundRect}.<br/>
-   * Re-provides a background to each item in the log window to improve visibility.
-   * @param {Rectangle} rect The rectangle of the background image.
-   */
-  drawBackgroundRect(rect)
-  {
-    // perform real original logic.
-    Window_Selectable.prototype.drawBackgroundRect.call(this, rect);
-  }
   //endregion overwrites
 
   /**
@@ -2234,28 +2249,34 @@ class Window_DiaLog extends Window_MapLog
     if (!this.logManager) return [];
 
     // build all the commands from the dia logs.
-    const commands = this.logManager.getLogs()
+    // return the built commands.
+    return this.logManager.getLogs()
       .map((log, index) =>
       {
         /** @type {DiaLog} */
         const currentLog = log;
-        // build the new command.
+
         // use the first line for the "main" line of the message.
-        return new WindowCommandBuilder(currentLog.lines().at(0))
+        const commandName = currentLog.lines()
+          .at(0);
+
+        // use everything after the first line for the rest of the message.
+        const dialogLines = currentLog.lines()
+          .slice(1);
+
+        // build the new "command".
+        return new WindowCommandBuilder(commandName)
           .setSymbol(`log-${index}`)
           .setEnabled(true)
-          // use everything after the first line for the rest of the message.
-          .setTextLines(currentLog.lines().slice(1))
+          .setTextLines(dialogLines)
           .flagAsMultiline()
           .setFaceName(currentLog.faceName())
           .setFaceIndex(currentLog.faceIndex())
           .build();
       });
-
-    // return the built commands.
-    return commands;
   }
 }
+
 //endregion Window_DiaLog
 
 //region Window_LootLog

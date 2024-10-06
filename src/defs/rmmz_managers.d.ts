@@ -386,7 +386,11 @@ declare class ImageManager
    */
   static throwLoadError(bitmap: Bitmap): void;
 
-  static loadFace(filename: string, hue?: number): Bitmap;
+  /**
+   * Loads the face into a bitmap.
+   * @param filename
+   */
+  static loadFace(filename: string): Bitmap;
 
   /**
    * Loads a Bitmap object from the 'img/parallaxes/' folder

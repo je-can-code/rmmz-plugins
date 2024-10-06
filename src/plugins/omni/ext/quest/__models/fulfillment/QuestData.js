@@ -4,6 +4,10 @@
  */
 class QuestData
 {
+  /**
+   * The quest keys that must be completed to consider the objective complete.
+   * @type {string[]}
+   */
   keys = [];
 }
 
