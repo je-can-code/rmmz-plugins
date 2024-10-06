@@ -2,7 +2,8 @@
 J.PROF.Aliased.Game_Enemy.set("initMembers", Game_Enemy.prototype.initMembers);
 Game_Enemy.prototype.initMembers = function()
 {
-  J.PROF.Aliased.Game_Enemy.get("initMembers").call(this);
+  J.PROF.Aliased.Game_Enemy.get("initMembers")
+    .call(this);
 
   /**
    * The J object where all my additional properties live.

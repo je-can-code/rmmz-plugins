@@ -31,7 +31,8 @@ J.ABS.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects
 DataManager.createGameObjects = function()
 {
   // perform original logic.
-  J.ABS.Aliased.DataManager.get('createGameObjects').call(this);
+  J.ABS.Aliased.DataManager.get('createGameObjects')
+    .call(this);
 
   // update the skill master map to have data.
   DataManager.getSkillMasterMap();

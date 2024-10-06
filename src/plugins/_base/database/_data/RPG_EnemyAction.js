@@ -34,6 +34,7 @@ class RPG_EnemyAction
    * @type {number}
    */
   skillId = 1;
+
   //endregion properties
 
   /**
@@ -50,4 +51,5 @@ class RPG_EnemyAction
     this.skillId = enemyAction.skillId;
   }
 }
+
 //endregion RPG_EnemyAction

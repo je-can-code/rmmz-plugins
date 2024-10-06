@@ -6,6 +6,7 @@ function PanelParameter()
 {
   this.initialize(...arguments);
 }
+
 PanelParameter.prototype = {};
 PanelParameter.prototype.constructor = PanelParameter;
 
@@ -17,10 +18,8 @@ PanelParameter.prototype.constructor = PanelParameter;
  * @param {boolean} isCore True if this is a core parameter, false otherwise.
  */
 PanelParameter.prototype.initialize = function({
-  parameterId,
-  perRank,
-  isFlat = false,
-  isCore = false,})
+  parameterId, perRank, isFlat = false, isCore = false,
+})
 {
   /**
    * The id of the parameter this class represents.

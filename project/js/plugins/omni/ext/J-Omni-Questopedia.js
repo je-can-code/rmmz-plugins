@@ -10,6 +10,7 @@ class DestinationData
   x2 = -1;
   y2 = -1;
 }
+
 //endregion DestinationData
 
 //region FetchData
@@ -60,6 +61,7 @@ class SlayData
   id = -1;
   amount = 0;
 }
+
 //endregion SlayData
 
 //region OmniCategory
@@ -99,6 +101,7 @@ class OmniCategory
     this.iconIndex = iconIndex;
   }
 }
+
 //endregion OmniCategory
 
 //region OmniConfiguration
@@ -294,9 +297,7 @@ class OmniObjective
   }
 
   static FetchTypes = {
-    Item: "Item",
-    Weapon: "Weapon",
-    Armor: "Armor",
+    Item: "Item", Weapon: "Weapon", Armor: "Armor",
   }
 
   //region properties
@@ -356,14 +357,7 @@ class OmniObjective
    * @param {boolean=} hiddenByDefault Whether or not this objective will be hidden upon activating the parent quest.
    * @param {boolean=} isOptional Whether or not this objective is optional for its parent quest.
    */
-  constructor(
-    id,
-    type,
-    description,
-    logs,
-    fulfillment,
-    hiddenByDefault = true,
-    isOptional = false)
+  constructor(id, type, description, logs, fulfillment, hiddenByDefault = true, isOptional = false)
   {
     this.id = id;
     this.type = type;
@@ -472,6 +466,7 @@ class OmniObjectiveLogs
     this.missed = missed;
   }
 }
+
 //endregion OmniObjectiveLogs
 
 //region OmniQuest
@@ -492,9 +487,9 @@ class OmniQuest
    */
   static States = {
     /**
-     * When a quest is in the "inactive" state, it means it has yet to be discovered by the player so it will not show up
-     * in the questopedia by its name or reveal any objectives, but instead reveal only a general "this is where this
-     * quest can be found/unlocked", if anything at all.
+     * When a quest is in the "inactive" state, it means it has yet to be discovered by the player so it will not show
+     * up in the questopedia by its name or reveal any objectives, but instead reveal only a general "this is where
+     * this quest can be found/unlocked", if anything at all.
      */
     Inactive: 0,
 
@@ -647,8 +642,7 @@ class OmniQuestBuilder
 
   build()
   {
-    const omniquest = new OmniQuest(
-      this.#name,
+    const omniquest = new OmniQuest(this.#name,
       this.#key,
       this.#categoryKey,
       this.#tagKeys,
@@ -737,6 +731,7 @@ class OmniConditional
     this.state = state;
   }
 }
+
 //endregion OmniConditional
 
 //region OmniTag
@@ -782,6 +777,7 @@ class OmniTag
     this.iconIndex = iconIndex;
   }
 }
+
 //endregion OmniTag
 
 //region TrackedOmniObjective
@@ -937,13 +933,9 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
       const { mapId, x1, y1, x2, y2 } = omniFulfillmentData.destination;
       this._targetMapId = mapId;
       const point1 = [
-        x1,
-        y1
-      ];
+        x1, y1 ];
       const point2 = [
-        x2,
-        y2
-      ];
+        x2, y2 ];
       this._targetCoordinateRange.push(point1, point2);
       break;
 
@@ -1266,9 +1258,7 @@ TrackedOmniObjective.prototype.setState = function(newState)
 TrackedOmniObjective.prototype.destinationData = function()
 {
   return [
-    this._targetMapId,
-    this._targetCoordinateRange
-  ];
+    this._targetMapId, this._targetCoordinateRange ];
 };
 
 /**
@@ -1309,9 +1299,7 @@ TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
 TrackedOmniObjective.prototype.fetchData = function()
 {
   return [
-    this._targetItemId,
-    this._targetItemFetchQuantity
-  ];
+    this._targetItemId, this._targetItemFetchQuantity ];
 };
 
 /**
@@ -1413,9 +1401,7 @@ TrackedOmniObjective.prototype.hasFetchedEnoughItems = function()
 TrackedOmniObjective.prototype.slayData = function()
 {
   return [
-    this._targetEnemyId,
-    this._targetEnemyAmount
-  ];
+    this._targetEnemyId, this._targetEnemyAmount ];
 };
 
 /**
@@ -1487,7 +1473,7 @@ TrackedOmniObjective.prototype.handleObjectiveUpdateLog = function()
 {
   // the logs only happen if the objective is finalized somehow.
   if (!this.isFinalized()) return;
-  
+
   // start the message stating the quest is updated.
   const objectiveMessage = [ `\\C[1][${this.parentQuestMetadata().name}]\\C[0] updated.` ];
 
@@ -2616,6 +2602,7 @@ class J_QUEST_PluginMetadata extends PluginMetadata
     };
   }
 }
+
 //endregion plugin metadata
 
 //region initialization
@@ -2669,63 +2656,51 @@ J.OMNI.EXT.QUEST.RegExp.ChoiceQuestObjectiveForState = /<choiceQuestCondition:[ 
 /**
  * Plugin command for unlocking quests by their keys.
  */
-PluginManager.registerCommand(
-  J.OMNI.EXT.QUEST.Metadata.name,
-  "unlock-quests",
-  args =>
-  {
-    const { keys } = args;
-    const questKeys = JSON.parse(keys);
-    questKeys.forEach(questKey => QuestManager.unlockQuestByKey(questKey));
-  });
+PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "unlock-quests", args =>
+{
+  const { keys } = args;
+  const questKeys = JSON.parse(keys);
+  questKeys.forEach(questKey => QuestManager.unlockQuestByKey(questKey));
+});
 
 /**
  * Plugin command for progressing a quest of a given key.
  */
-PluginManager.registerCommand(
-    J.OMNI.EXT.QUEST.Metadata.name,
-    "progress-quest",
-    args =>
-    {
-      const { key } = args;
-      QuestManager.progressQuest(key);
-    });
+PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "progress-quest", args =>
+{
+  const { key } = args;
+  QuestManager.progressQuest(key);
+});
 
 /**
  * Plugin command for finalizing a quest of a given key with the specified state .
  */
-PluginManager.registerCommand(
-    J.OMNI.EXT.QUEST.Metadata.name,
-    "finalize-quest",
-    args =>
-    {
-      const { key, state } = args;
-      const quest = QuestManager.quest(key);
-      switch (state)
-      {
-        case 0:
-          quest.flagAsCompleted();
-          break;
-        case 1:
-          quest.flagAsFailed();
-          break;
-        case 2:
-          quest.flagAsMissed();
-          break;
-      }
-    });
+PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "finalize-quest", args =>
+{
+  const { key, state } = args;
+  const quest = QuestManager.quest(key);
+  switch (state)
+  {
+    case 0:
+      quest.flagAsCompleted();
+      break;
+    case 1:
+      quest.flagAsFailed();
+      break;
+    case 2:
+      quest.flagAsMissed();
+      break;
+  }
+});
 
 /**
  * Plugin command for setting the tracking state of a quest by its key.
  */
-PluginManager.registerCommand(
-  J.OMNI.EXT.QUEST.Metadata.name,
-  "set-quest-tracking",
-  args =>
-  {
-    const { key, trackingState } = args;
-    QuestManager.setQuestTrackingByKey(key, trackingState);
-  });
+PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "set-quest-tracking", args =>
+{
+  const { key, trackingState } = args;
+  QuestManager.setQuestTrackingByKey(key, trackingState);
+});
 //endregion plugin commands
 
 //region JABS_InputAdapter
@@ -3158,13 +3133,14 @@ class QuestManager
 //region Game_Enemy
 /**
  * Extends {@link onDeath}.<br/>
- *
+ * Also processes quest checks for slain enemies.
  */
 J.OMNI.EXT.QUEST.Aliased.Game_Enemy.set('onDeath', Game_Enemy.prototype.onDeath);
 Game_Enemy.prototype.onDeath = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Enemy.get('onDeath').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_Enemy.get('onDeath')
+    .call(this);
 
   // process the quest checking for slaying enemies.
   this.processSlayQuestsCheck();
@@ -3401,8 +3377,7 @@ Game_Event.prototype.questConditionalMet = function(questConditional)
  * @param {number} subChoiceCommandIndex The index in the list of commands of an event that represents this branch.
  * @returns {boolean}
  */
-J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set(
-  'shouldHideChoiceBranch',
+J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set('shouldHideChoiceBranch',
   Game_Interpreter.prototype.shouldHideChoiceBranch);
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex)
 {
@@ -3447,7 +3422,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_Map.set('initialize', Game_Map.prototype.initializ
 Game_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize')
+    .call(this);
 
   // also initialize our members.
   this.initQuestopediaMembers();
@@ -3498,7 +3474,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_Map.set('update', Game_Map.prototype.update);
 Game_Map.prototype.update = function(sceneActive)
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('update').call(this, sceneActive);
+  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('update')
+    .call(this, sceneActive);
 
   // process the quest checking for reaching destinations.
   this.processDestinationCheck();
@@ -3637,8 +3614,7 @@ Game_Party.prototype.populateQuestopediaTrackings = function()
  */
 Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
 {
-  const objectivesMapper = omniObjective => new TrackedOmniObjective(
-    omniquest.key,
+  const objectivesMapper = omniObjective => new TrackedOmniObjective(omniquest.key,
     omniObjective.id,
     omniObjective.fulfillment,
     omniObjective.hiddenByDefault,
@@ -3668,7 +3644,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
 
     const newTracking = this.toTrackedOmniQuest(omniquest);
-    
+
     // if the tracking already exists, it should be updated.
     if (foundTracking)
     {
@@ -3676,7 +3652,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
 
       // update the category.
       foundTracking.categoryKey = omniquest.categoryKey;
-      
+
       // if the objective length hasn't changed, then don't process anymore.
       if (foundTracking.objectives.length <= omniquest.objectives.length) return;
 
@@ -3742,10 +3718,10 @@ Game_Party.prototype.translateQuestopediaCacheToSaveables = function()
 {
   // grab the cache we've been maintaining.
   const cache = this.getQuestopediaEntriesCache();
-  
+
   // determine the updated entries.
   const updatedQuestopediaEntries = Array.from(cache.values());
-  
+
   // update the quests from the cache.
   this.setSavedQuestopediaEntries(updatedQuestopediaEntries);
 };
@@ -3940,7 +3916,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_System.set('onBeforeSave', Game_System.prototype.o
 Game_System.prototype.onBeforeSave = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_System.get('onBeforeSave').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_System.get('onBeforeSave')
+    .call(this);
 
   // update the cache into saveable data.
   $gameParty.synchronizeQuestopediaDataBeforeSave();
@@ -3954,7 +3931,8 @@ J.OMNI.EXT.QUEST.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.on
 Game_System.prototype.onAfterLoad = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_System.get('onAfterLoad').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
 
   // update the quests.
   $gameParty.updateTrackedOmniQuestsFromConfig();
@@ -3971,8 +3949,9 @@ J.OMNI.EXT.QUEST.Aliased.JABS_InputController.set('update', JABS_InputController
 JABS_InputController.prototype.update = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.JABS_InputController.get('update').call(this);
-  
+  J.OMNI.EXT.QUEST.Aliased.JABS_InputController.get('update')
+    .call(this);
+
   // update input for the questopedia shortcut key.
   this.updateQuestopediaAction();
 };
@@ -3988,7 +3967,7 @@ JABS_InputController.prototype.updateQuestopediaAction = function()
     // execute the action.
     this.performQuestopediaAction();
   }
-  
+
 };
 
 /**
@@ -4038,7 +4017,8 @@ Scene_Omnipedia.prototype.onRootPediaSelection = function()
   else
   {
     // possibly activate other choices.
-    J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia.get('onRootPediaSelection').call(this);
+    J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia.get('onRootPediaSelection')
+      .call(this);
   }
 }
 
@@ -4710,7 +4690,8 @@ J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.set('buildCommands', Window_Omnipe
 Window_OmnipediaList.prototype.buildCommands = function()
 {
   // perform original logic.
-  const originalCommands = J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.get('buildCommands').call(this);
+  const originalCommands = J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.get('buildCommands')
+    .call(this);
 
   // check if the monsterpedia command should be added.
   if (this.canAddMonsterpediaCommand())

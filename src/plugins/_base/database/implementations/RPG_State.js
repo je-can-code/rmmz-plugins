@@ -131,6 +131,7 @@ class RPG_State extends RPG_Traited
    * @type {number}
    */
   stepsToRemove = 100;
+
   //endregion properties
 
   /**
@@ -165,4 +166,5 @@ class RPG_State extends RPG_Traited
     this.stepsToRemove = state.stepsToRemove;
   }
 }
+
 //endregion RPG_State

@@ -7,7 +7,8 @@ J.SDP.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_Party.get('initialize').call(this);
+  J.SDP.Aliased.Game_Party.get('initialize')
+    .call(this);
 
   // init sdp members.
   this.initSdpMembers();
@@ -64,7 +65,8 @@ Game_Party.prototype.getAllSdpTrackings = function()
  */
 Game_Party.prototype.getUnlockedSdpTrackings = function()
 {
-  return this.getAllSdpTrackings().filter(panel => panel.isUnlocked());
+  return this.getAllSdpTrackings()
+    .filter(panel => panel.isUnlocked());
 };
 
 /**
@@ -88,17 +90,18 @@ Game_Party.prototype.getUnlockedSdps = function()
   const unlockedSdps = [];
 
   // iterate over each of the unlocked trackings.
-  this.getUnlockedSdpTrackings().forEach(tracking =>
-  {
-    // grab the panel associated with the key.
-    const panel = this.getSdpByKey(tracking.key);
+  this.getUnlockedSdpTrackings()
+    .forEach(tracking =>
+    {
+      // grab the panel associated with the key.
+      const panel = this.getSdpByKey(tracking.key);
 
-    // skip unfound keys if we have those somehow.
-    if (!panel) return;
+      // skip unfound keys if we have those somehow.
+      if (!panel) return;
 
-    // add the panel to the list.
-    unlockedSdps.push(panel);
-  }, this);
+      // add the panel to the list.
+      unlockedSdps.push(panel);
+    }, this);
 
   // return what we found.
   return unlockedSdps;
@@ -129,7 +132,8 @@ Game_Party.prototype.unlockSdp = function(key)
 Game_Party.prototype.unlockAllSdps = function()
 {
   // unlock the panel.
-  this.getAllSdpTrackings().forEach(tracking => tracking.unlock());
+  this.getAllSdpTrackings()
+    .forEach(tracking => tracking.unlock());
 };
 
 /**
@@ -177,7 +181,8 @@ Game_Party.prototype.getAllSdpsAsMap = function()
  */
 Game_Party.prototype.getSdpByKey = function(key)
 {
-  return this.getAllSdpsAsMap().get(key);
+  return this.getAllSdpsAsMap()
+    .get(key);
 };
 
 /**

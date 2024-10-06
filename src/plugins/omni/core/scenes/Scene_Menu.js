@@ -6,7 +6,8 @@ J.OMNI.Aliased.Scene_Menu.set('createCommandWindow', Scene_Menu.prototype.create
 Scene_Menu.prototype.createCommandWindow = function()
 {
   // perform original logic.
-  J.OMNI.Aliased.Scene_Menu.get('createCommandWindow').call(this);
+  J.OMNI.Aliased.Scene_Menu.get('createCommandWindow')
+    .call(this);
 
   // add an additional handler for the new menu.
   this._commandWindow.setHandler(J.OMNI.Metadata.Command.Symbol, this.commandOmnipedia.bind(this));

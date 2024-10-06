@@ -30,4 +30,5 @@ class J_RegionStatesPluginMetadata extends PluginMetadata
     this.delayBetweenApplications = this.parsedPluginParameters['application-delay'] ?? 15;
   }
 }
+
 //endregion plugin metadata

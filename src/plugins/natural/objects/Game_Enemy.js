@@ -7,7 +7,8 @@ J.NATURAL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
 Game_Enemy.prototype.setup = function(enemyId, x, y)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('setup').call(this, enemyId, x, y);
+  J.NATURAL.Aliased.Game_Enemy.get('setup')
+    .call(this, enemyId, x, y);
 
   // initialize the parameter buffs on this battler.
   this.refreshAllParameterBuffs();
@@ -21,7 +22,8 @@ J.NATURAL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onB
 Game_Enemy.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange').call(this);
+  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
 
   // refresh all our buffs, something could've changed.
   this.refreshAllParameterBuffs();
@@ -57,7 +59,8 @@ J.NATURAL.Aliased.Game_Enemy.set('paramBase', Game_Enemy.prototype.paramBase);
 Game_Enemy.prototype.paramBase = function(paramId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // determine the structure for this parameter.
   const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
@@ -80,7 +83,8 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
@@ -114,7 +118,8 @@ J.NATURAL.Aliased.Game_Enemy.set('xparam', Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
@@ -131,7 +136,8 @@ Game_Enemy.prototype.xparam = function(xparamId)
 Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexByExParamId(xparamId);
@@ -171,7 +177,8 @@ J.NATURAL.Aliased.Game_Enemy.set('sparam', Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
@@ -188,7 +195,8 @@ Game_Enemy.prototype.sparam = function(sparamId)
 Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexBySpParamId(sparamId);

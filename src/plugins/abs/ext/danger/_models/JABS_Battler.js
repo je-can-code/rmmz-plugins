@@ -16,7 +16,8 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
     : battlerCoreData.showDangerIndicator();
 
   // perform original logic.
-  J.ABS.EXT.DANGER.Aliased.JABS_Battler.get('initCoreData').call(this, battlerCoreData);
+  J.ABS.EXT.DANGER.Aliased.JABS_Battler.get('initCoreData')
+    .call(this, battlerCoreData);
 };
 /**
  * Gets whether or not this battler should show its danger indicator.

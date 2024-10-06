@@ -29,8 +29,6 @@ J.CMS_E.Metadata.Name = `J-CMS-Equip`;
 J.CMS_E.Metadata.Version = '1.0.0';
 
 J.CMS_E.Aliased = {
-  Scene_Equip: {},
-  Window_EquipItem: {},
-  Window_EquipSlot: {},
+  Scene_Equip: {}, Window_EquipItem: {}, Window_EquipSlot: {},
 };
 //endregion Introduction

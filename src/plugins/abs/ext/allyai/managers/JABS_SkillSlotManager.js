@@ -6,7 +6,7 @@
 JABS_SkillSlotManager.prototype.getEquippedAllySlots = function()
 {
   // define the invalid skill slots that allies shouldn't use skills from.
-  const invalidAllySlots = [JABS_Button.Tool, JABS_Button.Dodge];
+  const invalidAllySlots = [ JABS_Button.Tool, JABS_Button.Dodge ];
 
   // return the filtered list of slots with skills that aren't invalid.
   return this.getEquippedSlots()

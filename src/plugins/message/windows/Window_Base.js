@@ -50,7 +50,8 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   textToModify = this.translateSdpTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
-  return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
+  return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters')
+    .call(this, textToModify);
 };
 
 /**
@@ -279,7 +280,7 @@ Window_Base.prototype.translateSdpTextCode = function(text)
 {
   // if not using the SDP system, then don't try to process the text.
   if (!J.SDP) return text;
-  
+
   return text.replace(/\\sdp\[(.*)]/gi, (_, p1) =>
   {
     // determine the sdp key.
@@ -349,7 +350,8 @@ Window_Base.prototype.translateQuestTextCode = function(text)
 J.MESSAGE.Aliased.Window_Base.set('obtainEscapeCode', Window_Base.prototype.obtainEscapeCode);
 Window_Base.prototype.obtainEscapeCode = function(textState)
 {
-  const originalEscape = J.MESSAGE.Aliased.Window_Base.get('obtainEscapeCode').call(this, textState);
+  const originalEscape = J.MESSAGE.Aliased.Window_Base.get('obtainEscapeCode')
+    .call(this, textState);
   if (!originalEscape)
   {
     return this.customEscapeCodes(textState);
@@ -401,7 +403,8 @@ Window_Base.prototype.escapeCodes = function()
 J.MESSAGE.Aliased.Window_Base.set('processEscapeCharacter', Window_Base.prototype.processEscapeCharacter);
 Window_Base.prototype.processEscapeCharacter = function(code, textState)
 {
-  J.MESSAGE.Aliased.Window_Base.get('processEscapeCharacter').call(this, code, textState);
+  J.MESSAGE.Aliased.Window_Base.get('processEscapeCharacter')
+    .call(this, code, textState);
   switch (code)
   {
     case "_":

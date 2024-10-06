@@ -63,9 +63,7 @@ JABS_Battler.prototype.isWithinScope = function(action, target, alreadyHitOne = 
 
   // action is from one of the target's allies.
   // inanimate battlers cannot be targeted by their allies with direct skills.
-  if (actionIsSameTeam &&
-    (scopeAlly || scopeAllAllies || scopeEverything) &&
-    !(action.isDirectAction() && target.isInanimate()))
+  if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything) && !(action.isDirectAction() && target.isInanimate()))
   {
     return true;
   }
@@ -99,10 +97,8 @@ JABS_Battler.prototype.createJabsActionFromSkill = function(skillId, actionOptio
 
   // calculate the projectile count and directions.
   const projectileCount = skill.jabsProjectile ?? 1;
-  const projectileDirections = $jabsEngine.determineActionDirections(
-    this.getCharacter()
-      .direction(),
-    projectileCount);
+  const projectileDirections = $jabsEngine.determineActionDirections(this.getCharacter()
+    .direction(), projectileCount);
 
   // calculate how many actions will be generated to accommodate the directions.
   const actions = this.convertProjectileDirectionsToActions(projectileDirections, action, actionOptions);

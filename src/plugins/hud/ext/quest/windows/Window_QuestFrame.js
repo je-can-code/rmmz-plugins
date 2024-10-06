@@ -56,7 +56,7 @@ class Window_QuestFrame extends Window_Base
       {
         this.close();
       }
-      
+
       // don't do anything else if the hud can't be shown.
       return;
     }
@@ -133,7 +133,7 @@ class Window_QuestFrame extends Window_Base
   {
     // don't draw the hud if it can't be shown.
     if (!$hudManager.canShowHud()) return;
-    
+
     // we default to the upper left most point of the window for origin.
     const [ x, y ] = [ 0, 0 ];
 

@@ -7,12 +7,12 @@ J.SDP.Aliased.BattleManager.set('makeRewards', BattleManager.makeRewards);
 BattleManager.makeRewards = function()
 {
   // perform original logic.
-  J.SDP.Aliased.BattleManager.get('makeRewards').call(this);
+  J.SDP.Aliased.BattleManager.get('makeRewards')
+    .call(this);
 
   // extend the rewards to include SDP points.
   this._rewards = {
-    ...this._rewards,
-    sdp: $gameTroop.sdpTotal(),
+    ...this._rewards, sdp: $gameTroop.sdpTotal(),
   };
 };
 
@@ -24,7 +24,8 @@ J.SDP.Aliased.BattleManager.set('gainRewards', BattleManager.gainRewards);
 BattleManager.gainRewards = function()
 {
   // perform original logic.
-  J.SDP.Aliased.BattleManager.get('gainRewards').call(this);
+  J.SDP.Aliased.BattleManager.get('gainRewards')
+    .call(this);
 
   // also gain the SDP rewards.
   this.gainSdpPoints();
@@ -54,7 +55,8 @@ BattleManager.displayRewards = function()
   this.displaySdp();
 
   // perform original logic.
-  J.SDP.Aliased.BattleManager.get('displayRewards').call(this);
+  J.SDP.Aliased.BattleManager.get('displayRewards')
+    .call(this);
 };
 
 /**

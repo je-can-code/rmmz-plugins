@@ -179,7 +179,8 @@ Game_Party.prototype.allItemsQuantified = function()
  */
 Game_Party.prototype.recoverAllMembers = function()
 {
-  this.members().forEach(member => member.recoverAll());
+  this.members()
+    .forEach(member => member.recoverAll());
 };
 
 Game_Party.prototype.maxBattleMembers = function()

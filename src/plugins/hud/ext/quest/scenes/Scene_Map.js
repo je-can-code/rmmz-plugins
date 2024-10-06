@@ -7,7 +7,8 @@ J.HUD.EXT.QUEST.Aliased.Scene_Map.set('initHudMembers', Scene_Map.prototype.init
 Scene_Map.prototype.initHudMembers = function()
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('initHudMembers').call(this);
+  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('initHudMembers')
+    .call(this);
 
   /**
    * A grouping of all properties that belong to quest extension of the HUD.
@@ -29,7 +30,8 @@ J.HUD.EXT.QUEST.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.cr
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the target frame.
   this.createQuestFrameWindow();
@@ -116,13 +118,15 @@ J.HUD.EXT.QUEST.Aliased.Scene_Map.set('updateHudFrames', Scene_Map.prototype.upd
 Scene_Map.prototype.updateHudFrames = function()
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('updateHudFrames').call(this);
+  J.HUD.EXT.QUEST.Aliased.Scene_Map.get('updateHudFrames')
+    .call(this);
 
   // check if we need to refresh quest data.
   if ($hudManager.needsQuestRefresh())
   {
     // refresh the quest frame.
-    this.getQuestFrameWindow().refresh();
+    this.getQuestFrameWindow()
+      .refresh();
 
     // acknowledge the refresh.
     $hudManager.acknowledgeQuestRefresh();

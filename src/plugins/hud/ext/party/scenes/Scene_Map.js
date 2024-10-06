@@ -6,7 +6,8 @@ J.HUD.EXT.PARTY.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initiali
 Scene_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('initialize').call(this);
+  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('initialize')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -27,7 +28,8 @@ J.HUD.EXT.PARTY.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.cr
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the hud.
   this.createPartyFrameWindow();
@@ -91,7 +93,8 @@ J.HUD.EXT.PARTY.Aliased.Scene_Map.set('refreshHud', Scene_Map.prototype.refreshH
 Scene_Map.prototype.refreshHud = function()
 {
   // perform original logic.
-  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('refreshHud').call(this);
+  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('refreshHud')
+    .call(this);
 
   // refresh the party frame.
   this._j._partyFrame.refresh();
@@ -104,7 +107,8 @@ J.HUD.EXT.PARTY.Aliased.Scene_Map.set('updateHudFrames', Scene_Map.prototype.upd
 Scene_Map.prototype.updateHudFrames = function()
 {
   // perform original logic.
-  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('updateHudFrames').call(this);
+  J.HUD.EXT.PARTY.Aliased.Scene_Map.get('updateHudFrames')
+    .call(this);
 
   // manages hud refreshes.
   this.handleRefreshPartyFrame();

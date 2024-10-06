@@ -493,12 +493,9 @@ class IconManager
   /**
    * A tag for correlating a JABS parameter to an icon.
    */
-  static JABS_PARAMETER =
-    {
-      BONUS_HITS: "bonus-hits",
-      ATTACK_SKILL: "attack-skill",
-      SPEED_BOOST: "speed-boost",
-    };
+  static JABS_PARAMETER = {
+    BONUS_HITS: "bonus-hits", ATTACK_SKILL: "attack-skill", SPEED_BOOST: "speed-boost",
+  };
 
   /**
    * Gets the JABS-related icon based on parameter type.
@@ -521,15 +518,14 @@ class IconManager
   /**
    * A tag for correlating a JAFTING parameter to an icon.
    */
-  static JAFTING_PARAMETER =
-    {
-      MAX_REFINE: "max-refine-count",
-      MAX_TRAITS: "max-trait-count",
-      NOT_BASE: "not-refinement-base",
-      NOT_MATERIAL: "not-refinement-material",
-      TIMES_REFINED: "refined-count",
-      UNREFINABLE: "unrefinable"
-    };
+  static JAFTING_PARAMETER = {
+    MAX_REFINE: "max-refine-count",
+    MAX_TRAITS: "max-trait-count",
+    NOT_BASE: "not-refinement-base",
+    NOT_MATERIAL: "not-refinement-material",
+    TIMES_REFINED: "refined-count",
+    UNREFINABLE: "unrefinable"
+  };
 
   /**
    * Gets the JAFTING-related icon based on parameter type.
@@ -573,4 +569,5 @@ class IconManager
     }
   }
 }
+
 //endregion IconManager

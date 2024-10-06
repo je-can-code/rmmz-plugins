@@ -86,6 +86,7 @@ class WindowCommandBuilder
    * @type {number}
    */
   #faceIndex = -1;
+
   //endregion properties
 
   /**
@@ -105,8 +106,7 @@ class WindowCommandBuilder
   build()
   {
     // construct the command.
-    const command = new BuiltWindowCommand(
-      this.#name,
+    const command = new BuiltWindowCommand(this.#name,
       this.#key,
       this.#enabled,
       this.#extensionData,
@@ -117,8 +117,7 @@ class WindowCommandBuilder
       this.#lines,
       this.#helpText,
       this.#isSubtext,
-      [this.#faceName, this.#faceIndex]
-    );
+      [ this.#faceName, this.#faceIndex ]);
 
     // return the built command.
     return command;

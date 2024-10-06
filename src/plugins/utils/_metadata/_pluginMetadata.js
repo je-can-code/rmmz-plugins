@@ -31,4 +31,5 @@ class J_UtilsPluginMetadata extends PluginMetadata
     this.autoloadDevtools = this.parsedPluginParameters['autoload-devtools'] === 'true';
   }
 }
+
 //endregion plugin metadata

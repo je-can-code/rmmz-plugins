@@ -6,7 +6,8 @@ J.LEVEL.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
 Game_System.prototype.initialize = function()
 {
   // perform original logic.
-  J.LEVEL.Aliased.Game_System.get('initialize').call(this);
+  J.LEVEL.Aliased.Game_System.get('initialize')
+    .call(this);
 
   /**
    * The overarching _j object, where all my stateful plugin data is stored.

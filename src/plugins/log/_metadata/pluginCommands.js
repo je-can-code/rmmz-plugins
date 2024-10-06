@@ -61,9 +61,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addDiaLog", args =>
 {
   const {
-    lines,
-    faceName,
-    faceIndex
+    lines, faceName, faceIndex
   } = args;
   const actualLines = lines.split(/[\r\n]+/);
   const log = new DiaLogBuilder()
@@ -106,8 +104,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLootLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addLootLog", args =>
 {
   const {
-    lootId,
-    lootType
+    lootId, lootType
   } = args;
   const log = new LootLogBuilder()
     .setupLootObtained(lootType, lootId)

@@ -1,4 +1,3 @@
-
 /**
  * Gets the text from this help window.
  * @returns {string}
@@ -95,7 +94,7 @@ Window_Help.prototype.getSecondaryNewline = function()
  * Extracts the text rendering out into its own function, but this function
  * still does the same thing: clears and redraws the contents of the window.
  */
-Window_Help.prototype.refresh = function() 
+Window_Help.prototype.refresh = function()
 {
   // clear the contents of the window.
   this.contents.clear();

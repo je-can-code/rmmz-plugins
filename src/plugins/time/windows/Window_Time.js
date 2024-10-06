@@ -2,8 +2,7 @@
 /**
  * A window class for displaying the time.
  */
-class Window_Time
-  extends Window_Base
+class Window_Time extends Window_Base
 {
   /**
    * @constructor
@@ -82,9 +81,15 @@ class Window_Time
    */
   drawContent()
   {
-    const colon1 = this._alternating ? ":" : " ";
-    const colon2 = this._alternating ? " " : ":";
-    const ampm = this.time.hours > 11 ? "PM" : "AM";
+    const colon1 = this._alternating
+      ? ":"
+      : " ";
+    const colon2 = this._alternating
+      ? " "
+      : ":";
+    const ampm = this.time.hours > 11
+      ? "PM"
+      : "AM";
     const lh = this.lineHeight();
 
     const seconds = this.time.seconds.padZero(2);
@@ -105,4 +110,5 @@ class Window_Time
     this.drawTextEx(`${years}/${months}/${days}`, 0, lh * 3, 200);
   };
 }
+
 //endregion Window_Time

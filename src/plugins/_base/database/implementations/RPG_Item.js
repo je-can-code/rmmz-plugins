@@ -29,6 +29,7 @@ class RPG_Item extends RPG_UsableItem
    * @type {1}
    */
   kind = 1;
+
   //endregion properties
 
   /**
@@ -56,4 +57,5 @@ class RPG_Item extends RPG_UsableItem
     return true;
   }
 }
+
 //endregion RPG_Item

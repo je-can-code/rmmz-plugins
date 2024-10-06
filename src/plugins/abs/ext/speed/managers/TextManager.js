@@ -12,7 +12,8 @@ TextManager.longParam = function(paramId)
       return this.movespeed(); // move speed boost
     default:
       // perform original logic.
-      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParam').call(this, paramId);
+      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParam')
+        .call(this, paramId);
   }
 };
 
@@ -38,7 +39,8 @@ TextManager.longParamDescription = function(paramId)
       return this.moveSpeedDescription(); // move speed boost
     default:
       // perform original logic.
-      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParamDescription').call(this, paramId);
+      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParamDescription')
+        .call(this, paramId);
   }
 };
 
@@ -50,7 +52,6 @@ TextManager.moveSpeedDescription = function()
 {
   return [
     "The percentage modifier against this character's base movespeed.",
-    "Higher amounts of this result in faster walk and run speeds."
-  ];
+    "Higher amounts of this result in faster walk and run speeds." ];
 };
 //endregion TextManager

@@ -185,4 +185,5 @@ class Window_SdpRankData extends Window_Base
     }
   }
 }
+
 //endregion Window_SdpRankData

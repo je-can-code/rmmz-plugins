@@ -7,7 +7,8 @@ J.HUD.EXT.BOSS.Aliased.Scene_Map.set('initHudMembers', Scene_Map.prototype.initH
 Scene_Map.prototype.initHudMembers = function()
 {
   // perform original logic.
-  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('initHudMembers').call(this);
+  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('initHudMembers')
+    .call(this);
 
   /**
    * A grouping of all properties that belong to the boss frame
@@ -31,7 +32,8 @@ J.HUD.EXT.BOSS.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.cre
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the boss frame.
   this.createBossFrameWindow();
@@ -118,7 +120,8 @@ J.HUD.EXT.BOSS.Aliased.Scene_Map.set('updateHudFrames', Scene_Map.prototype.upda
 Scene_Map.prototype.updateHudFrames = function()
 {
   // perform original logic.
-  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('updateHudFrames').call(this);
+  J.HUD.EXT.BOSS.Aliased.Scene_Map.get('updateHudFrames')
+    .call(this);
 
   // manages boss frame assignments.
   this.handleAssignBoss();
@@ -139,7 +142,8 @@ Scene_Map.prototype.handleAssignBoss = function()
   const newBoss = BossFrameManager.getBossFrame();
 
   // set the target frame's target to this new target.
-  this.getBossFrameWindow().setTarget(newBoss);
+  this.getBossFrameWindow()
+    .setTarget(newBoss);
 
   // let the boss manager know we've done the deed.
   BossFrameManager.acknowledgeBossFrameRefresh();
@@ -158,7 +162,8 @@ Scene_Map.prototype.handleHideBossFrame = function()
   if (!BossFrameManager.needsBossFrameHiding()) return;
 
   // request the boss frame to be hidden.
-  this.getBossFrameWindow().requestHideBossFrame();
+  this.getBossFrameWindow()
+    .requestHideBossFrame();
 
   // let the manager know we've done the deed.
   BossFrameManager.acknowledgeBossFrameHidden();
@@ -170,7 +175,8 @@ Scene_Map.prototype.handleShowBossFrame = function()
   if (!BossFrameManager.needsBossFrameShowing()) return;
 
   // request the boss frame to be shown.
-  this.getBossFrameWindow().requestShowBossFrame();
+  this.getBossFrameWindow()
+    .requestShowBossFrame();
 
   // let the manager know we've done the deed.
   BossFrameManager.acknowledgeBossFrameHidden();

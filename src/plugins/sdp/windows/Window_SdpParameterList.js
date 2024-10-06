@@ -72,14 +72,18 @@ class Window_SdpParameterList extends Window_Command
     const { parameterId, isCore } = panelParameter;
 
     // determine the item color.
-    const colorIndex = isCore ? 14 : 0;
+    const colorIndex = isCore
+      ? 14
+      : 0;
 
     // determine the parameter data to display.
     const paramName = TextManager.longParam(parameterId);
     const paramIcon = IconManager.longParam(parameterId);
     let paramValue = this.currentActor.longParam(parameterId);
     const isPercentParamValue = this.isPercentParameter(parameterId);
-    const percentValue = isPercentParamValue ? '%' : String.empty;
+    const percentValue = isPercentParamValue
+      ? '%'
+      : String.empty;
 
     // non-base parameters (and not max tp) get multiplied by 100.
     if (!Game_BattlerBase.isBaseParam(parameterId) && parameterId !== 30)
@@ -183,8 +187,12 @@ class Window_SdpParameterList extends Window_Command
     // a small helper function for building the modifier's text.
     const buildModifierText = (modifier, isFlat) =>
     {
-      const isPercent = isFlat ? `` : `%`;
-      const isPositive = modifier >= 0 ? '+' : String.empty;
+      const isPercent = isFlat
+        ? ``
+        : `%`;
+      const isPositive = modifier >= 0
+        ? '+'
+        : String.empty;
       return `(${isPositive}${modifier}${isPercent})`;
     };
 
@@ -289,4 +297,5 @@ class Window_SdpParameterList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_SdpParameterList

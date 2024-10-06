@@ -5,7 +5,8 @@
 J.PROF.Aliased.Game_Action.set("apply", Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
-  J.PROF.Aliased.Game_Action.get("apply").call(this, target);
+  J.PROF.Aliased.Game_Action.get("apply")
+    .call(this, target);
 
   const result = target.result();
 
@@ -29,7 +30,8 @@ Game_Action.prototype.canIncreaseProficiency = function(target)
   if (!isSkill) return false;
 
   // only gain proficiency if we hit the target.
-  const isHit = target.result().isHit();
+  const isHit = target.result()
+    .isHit();
   if (!isHit) return false;
 
   // only gain proficiency if the target allows it.
@@ -37,7 +39,8 @@ Game_Action.prototype.canIncreaseProficiency = function(target)
   if (!canGiveProficiency) return false;
 
   // only gain proficiency if the attacker allows it.
-  const canGainProficiency = this.subject().canGainProficiency();
+  const canGainProficiency = this.subject()
+    .canGainProficiency();
   if (!canGainProficiency) return false;
 
   // if we made it this far, then we can gain proficiency!
@@ -70,7 +73,8 @@ Game_Action.prototype.skillProficiency = function()
   if (this.isSkill() && this.subject())
   {
     const skill = this.item();
-    const skillProficiency = this.subject().skillProficiencyBySkillId(skill.id);
+    const skillProficiency = this.subject()
+      .skillProficiencyBySkillId(skill.id);
     if (skillProficiency)
     {
       return skillProficiency.proficiency;
@@ -92,7 +96,8 @@ if (J.ABS)
   Game_Action.prototype.onParry = function(jabsBattler)
   {
     // perform original logic.
-    J.PROF.Aliased.Game_Action.get('onParry').call(this, jabsBattler);
+    J.PROF.Aliased.Game_Action.get('onParry')
+      .call(this, jabsBattler);
 
     // gain some proficiency from guarding.
     this.gainProficiencyFromGuarding(jabsBattler);
@@ -107,7 +112,8 @@ if (J.ABS)
   Game_Action.prototype.onGuard = function(jabsBattler)
   {
     // perform original logic.
-    J.PROF.Aliased.Game_Action.get('onGuard').call(this, jabsBattler);
+    J.PROF.Aliased.Game_Action.get('onGuard')
+      .call(this, jabsBattler);
 
     // gain some proficiency from guarding.
     this.gainProficiencyFromGuarding(jabsBattler);
@@ -126,7 +132,8 @@ if (J.ABS)
     const skillId = jabsBattler.getGuardSkillId();
 
     // gain some proficiency for the parry skill.
-    jabsBattler.getBattler().increaseSkillProficiency(skillId, 1);
+    jabsBattler.getBattler()
+      .increaseSkillProficiency(skillId, 1);
   };
 
   /**
@@ -137,7 +144,8 @@ if (J.ABS)
   Game_Action.prototype.canGainProficiencyFromGuarding = function(jabsBattler)
   {
     // determine whether or not this battler can gain proficiency.
-    const canGainProficiency = jabsBattler.getBattler().canGainProficiency();
+    const canGainProficiency = jabsBattler.getBattler()
+      .canGainProficiency();
 
     // if the battler is blocked from gaining proficiency don't gain proficiency.
     if (!canGainProficiency) return false;

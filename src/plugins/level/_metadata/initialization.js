@@ -50,11 +50,7 @@ J.LEVEL.Metadata.EnemyBalanceVariable = Number(J.LEVEL.PluginParameters['variabl
  * All aliased methods for this plugin.
  */
 J.LEVEL.Aliased = {
-  Game_Actor: new Map(),
-  Game_Battler: new Map(),
-  Game_Action: new Map(),
-  Game_System: new Map(),
-  Game_Troop: new Map(),
+  Game_Actor: new Map(), Game_Battler: new Map(), Game_Action: new Map(), Game_System: new Map(), Game_Troop: new Map(),
 };
 
 /**

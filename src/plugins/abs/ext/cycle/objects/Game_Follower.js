@@ -17,7 +17,8 @@ Game_Follower.prototype.chaseCharacter = function(character)
   }
 
   // perform original logic.
-  J.ABS.EXT.CYCLE.Aliased.Game_Follower.get('chaseCharacter').call(this, character);
+  J.ABS.EXT.CYCLE.Aliased.Game_Follower.get('chaseCharacter')
+    .call(this, character);
 };
 
 /**

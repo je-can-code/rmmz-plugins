@@ -4,13 +4,12 @@
  * The passive state ids that this item possesses.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "passiveStateIds",
+Object.defineProperty(RPG_BaseBattler.prototype, "passiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractPassiveStateIds();
-    },
-  });
+    return this.extractPassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.
@@ -27,13 +26,12 @@ RPG_BaseBattler.prototype.extractPassiveStateIds = function()
  * The passive state ids that this item possesses.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "uniquePassiveStateIds",
+Object.defineProperty(RPG_BaseBattler.prototype, "uniquePassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractUniquePassiveStateIds();
-    },
-  });
+    return this.extractUniquePassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.
@@ -50,13 +48,12 @@ RPG_BaseBattler.prototype.extractUniquePassiveStateIds = function()
  * The battler itself cannot be equipped, thus it cannot have equipped passive states.
  * @type {Array.empty}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "equippedPassiveStateIds",
+Object.defineProperty(RPG_BaseBattler.prototype, "equippedPassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return Array.empty;
-    },
-  });
+    return Array.empty;
+  },
+});
 //endregion equipped passive state ids
 
 //region unique equipped passive state ids
@@ -64,12 +61,11 @@ Object.defineProperty(RPG_BaseBattler.prototype, "equippedPassiveStateIds",
  * The battler itself cannot be equipped, thus it cannot have equipped passive states.
  * @type {Array.empty}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "uniqueEquippedPassiveStateIds",
+Object.defineProperty(RPG_BaseBattler.prototype, "uniqueEquippedPassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return Array.empty;
-    },
-  });
+    return Array.empty;
+  },
+});
 //endregion unique equipped passive state ids
 //endregion RPG_BaseBattler

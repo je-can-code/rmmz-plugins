@@ -7,4 +7,5 @@ class SlayData
   id = -1;
   amount = 0;
 }
+
 //endregion SlayData

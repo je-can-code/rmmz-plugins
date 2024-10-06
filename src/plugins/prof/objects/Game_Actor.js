@@ -6,7 +6,8 @@ J.PROF.Aliased.Game_Actor.set("initMembers", Game_Actor.prototype.initMembers);
 Game_Actor.prototype.initMembers = function()
 {
   // perform original logic.
-  J.PROF.Aliased.Game_Actor.get("initMembers").call(this);
+  J.PROF.Aliased.Game_Actor.get("initMembers")
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -45,7 +46,8 @@ J.PROF.Aliased.Game_Actor.set("setup", Game_Actor.prototype.setup);
 Game_Actor.prototype.setup = function(actorId)
 {
   // perform original logic.
-  J.PROF.Aliased.Game_Actor.get("setup").call(this, actorId);
+  J.PROF.Aliased.Game_Actor.get("setup")
+    .call(this, actorId);
 
   // update own proficiency conditionals.
   this.updateOwnConditionals();
@@ -125,7 +127,8 @@ Game_Actor.prototype.addUnlockedConditional = function(conditional)
 Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
 {
   const filtering = (conditional) => conditional.requirements.some(requirement => requirement.skillId === skillId);
-  return this.proficiencyConditionals().filter(filtering);
+  return this.proficiencyConditionals()
+    .filter(filtering);
 };
 
 /**
@@ -135,7 +138,8 @@ Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
  */
 Game_Actor.prototype.isConditionalLocked = function(key)
 {
-  return this.unlockedConditionals().includes(key);
+  return this.unlockedConditionals()
+    .includes(key);
 };
 
 /**
@@ -144,8 +148,10 @@ Game_Actor.prototype.isConditionalLocked = function(key)
  */
 Game_Actor.prototype.lockedConditionals = function()
 {
-  const filtering = (conditional) => !this.unlockedConditionals().includes(conditional.key);
-  return this.proficiencyConditionals().filter(filtering);
+  const filtering = (conditional) => !this.unlockedConditionals()
+    .includes(conditional.key);
+  return this.proficiencyConditionals()
+    .filter(filtering);
 };
 
 /**
@@ -154,7 +160,8 @@ Game_Actor.prototype.lockedConditionals = function()
  */
 Game_Actor.prototype.unlockConditional = function(key)
 {
-  if (this.unlockedConditionals().includes(key))
+  if (this.unlockedConditionals()
+    .includes(key))
   {
     console.warn(`Attempted to unlock conditional: [${key}], but it was already unlocked.`);
     return;
@@ -284,7 +291,8 @@ J.PROF.Aliased.Game_Actor.set("onLearnNewSkill", Game_Actor.prototype.onLearnNew
 Game_Actor.prototype.onLearnNewSkill = function(skillId)
 {
   // perform original logic.
-  J.PROF.Aliased.Game_Actor.get("onLearnNewSkill").call(this, skillId);
+  J.PROF.Aliased.Game_Actor.get("onLearnNewSkill")
+    .call(this, skillId);
 
   // add the skill proficiency.
   this.addSkillProficiency(skillId);
@@ -358,8 +366,6 @@ Game_Actor.prototype.checkProficiencyConditionals = function()
  */
 Game_Actor.prototype.bonusSkillProficiencyGains = function()
 {
-  return RPGManager.getSumFromAllNotesByRegex(
-    this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyBonus);
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyBonus);
 };
 //endregion Game_Actor

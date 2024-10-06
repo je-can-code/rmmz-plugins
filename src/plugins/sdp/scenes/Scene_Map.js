@@ -6,7 +6,8 @@ J.SDP.Aliased.Scene_Map.set('createJabsAbsMenuMainWindow', Scene_Map.prototype.c
 Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Scene_Map.get('createJabsAbsMenuMainWindow').call(this);
+  J.SDP.Aliased.Scene_Map.get('createJabsAbsMenuMainWindow')
+    .call(this);
 
   // grab the list window.
   const mainMenuWindow = this.getJabsMainListWindow();

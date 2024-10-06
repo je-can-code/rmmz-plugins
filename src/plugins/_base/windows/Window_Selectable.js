@@ -45,7 +45,9 @@ Window_Selectable.prototype.isMoreEnabled = function()
  */
 Window_Selectable.prototype.isMoreTriggered = function()
 {
-  return this._canRepeat ? Input.isRepeated("shift") : Input.isTriggered("shift");
+  return this._canRepeat
+    ? Input.isRepeated("shift")
+    : Input.isTriggered("shift");
 };
 
 /**

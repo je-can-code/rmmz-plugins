@@ -12,4 +12,5 @@ class OmniConditional
     this.state = state;
   }
 }
+
 //endregion OmniConditional

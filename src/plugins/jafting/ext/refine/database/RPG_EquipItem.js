@@ -11,13 +11,12 @@ RPG_EquipItem.prototype.jaftingRefinedCount ||= 0;
  * Whether or not this equip is blocked from being used as a base for refinement.
  * @type {boolean}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementBase",
+Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementBase", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJaftingNotRefinementBase();
-    },
-  });
+    return this.getJaftingNotRefinementBase();
+  },
+});
 
 /**
  * Gets whether or not this equip is blocked from being used as a base for refinement.
@@ -43,13 +42,12 @@ RPG_EquipItem.prototype.extractJaftingNotRefinementBase = function()
  * Whether or not this equip is blocked from being used as a material for refinement.
  * @type {boolean}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementMaterial",
+Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementMaterial", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJaftingNotRefinementBase();
-    },
-  });
+    return this.getJaftingNotRefinementBase();
+  },
+});
 
 /**
  * Gets whether or not this equip is blocked from being used as a material for refinement.
@@ -77,13 +75,12 @@ RPG_EquipItem.prototype.extractJaftingNotRefinementMaterial = function()
  * existing on the same equip.
  * @type {boolean}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jaftingUnrefinable",
+Object.defineProperty(RPG_EquipItem.prototype, "jaftingUnrefinable", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJaftingUnrefinable();
-    },
-  });
+    return this.getJaftingUnrefinable();
+  },
+});
 
 /**
  * Gets whether or not this equip is blocked from being used as a material for refinement.
@@ -128,13 +125,12 @@ RPG_EquipItem.prototype.extractJaftingUnrefinable = function()
  * The maximum number of times this equip can be refined.
  * @type {number}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxRefineCount",
+Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxRefineCount", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJaftingMaxRefineCount();
-    },
-  });
+    return this.getJaftingMaxRefineCount();
+  },
+});
 
 /**
  * Gets how many times this equip can be refined.
@@ -160,13 +156,12 @@ RPG_EquipItem.prototype.extractJaftingMaxRefineCount = function()
  * This is defined as the number of traits that come after the divider.
  * @type {number}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxTraitCount",
+Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxTraitCount", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJaftingMaxTraitCount();
-    },
-  });
+    return this.getJaftingMaxTraitCount();
+  },
+});
 
 /**
  * Gets how many traits this equip can have from refinement.

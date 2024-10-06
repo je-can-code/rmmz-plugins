@@ -51,4 +51,5 @@ class FramedTarget
     this.configuration = configuration;
   }
 }
+
 //endregion FramedTarget

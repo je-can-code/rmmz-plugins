@@ -21,6 +21,7 @@ class MapLogManager
   #visible = true;
 
   #maxLogCount = 100;
+
   //endregion properties
 
   /**
@@ -161,4 +162,5 @@ class MapLogManager
     this.#visible = true;
   }
 }
+
 //endregion MapLogManager

@@ -33,7 +33,8 @@ Game_Event.prototype.initMembers = function()
   this._j._abs._castedDirection = 0;
 
   // perform original logic.
-  J.ABS.Aliased.Game_Event.get('initMembers').call(this);
+  J.ABS.Aliased.Game_Event.get('initMembers')
+    .call(this);
 };
 
 /**
@@ -93,7 +94,8 @@ Game_Event.prototype.event = function()
   }
 
   // return the underlying event data.
-  return J.ABS.Aliased.Game_Event.get('event').call(this);
+  return J.ABS.Aliased.Game_Event.get('event')
+    .call(this);
 };
 
 /**
@@ -106,7 +108,8 @@ Game_Event.prototype.findProperPageIndex = function()
   try
   {
     // check original logic to see if we can return this.
-    const test = J.ABS.Aliased.Game_Event.get('findProperPageIndex').call(this);
+    const test = J.ABS.Aliased.Game_Event.get('findProperPageIndex')
+      .call(this);
 
     // validate the index is indeed a proper event page index.
     if (Number.isInteger(test)) return test;
@@ -137,7 +140,8 @@ Game_Event.prototype.refresh = function()
   else
   {
     // perform original logic.
-    J.ABS.Aliased.Game_Event.get('refresh').call(this);
+    J.ABS.Aliased.Game_Event.get('refresh')
+      .call(this);
   }
 };
 
@@ -183,7 +187,8 @@ Game_Event.prototype.page = function()
   if (this.event())
   {
     // perform original logic.
-    return J.ABS.Aliased.Game_Event.get('page').call(this);
+    return J.ABS.Aliased.Game_Event.get('page')
+      .call(this);
   }
 
   console.log($dataMap.events);
@@ -216,7 +221,8 @@ J.ABS.Aliased.Game_Event.set('setupPageSettings', Game_Event.prototype.setupPage
 Game_Event.prototype.setupPageSettings = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Event.get('setupPageSettings').call(this);
+  J.ABS.Aliased.Game_Event.get('setupPageSettings')
+    .call(this);
 
   // parse the comments on the event to potentially transform it into a battler.
   this.parseEnemyComments();
@@ -315,7 +321,7 @@ Game_Event.prototype.canParseEnemyComments = function()
   const hasBattlerId = commentCommandList.some(command =>
   {
     // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+    const [ comment, ] = command.parameters;
 
     // check to make sure this is at least an enemy of some kind.
     return J.ABS.RegExp.EnemyId.test(comment);
@@ -339,20 +345,21 @@ Game_Event.prototype.getBattlerIdOverrides = function()
   let battlerId = 0;
 
   // check all the valid event commands to see what our battler id is.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.EnemyId.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.EnemyId.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    battlerId = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      battlerId = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return battlerId;
@@ -368,20 +375,21 @@ Game_Event.prototype.getTeamIdOverrides = function()
   let teamId = 1;
 
   // check all the valid event commands to see if we have an override for team.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.TeamId.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.TeamId.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    teamId = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      teamId = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return teamId;
@@ -402,53 +410,54 @@ Game_Event.prototype.getBattlerAiOverrides = function()
   let leader = false;
 
   // check all the valid event commands to see if we have any ai traits.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "careful" ai trait.
-    if (J.ABS.RegExp.AiTraitCareful.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      careful = true;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if this battler has the "executor" ai trait.
-    if (J.ABS.RegExp.AiTraitExecutor.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      executor = true;
-    }
+      // check if this battler has the "careful" ai trait.
+      if (J.ABS.RegExp.AiTraitCareful.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        careful = true;
+      }
 
-    // check if this battler has the "reckless" ai trait.
-    if (J.ABS.RegExp.AiTraitReckless.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      reckless = true;
-    }
+      // check if this battler has the "executor" ai trait.
+      if (J.ABS.RegExp.AiTraitExecutor.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        executor = true;
+      }
 
-    // check if this battler has the "healer" ai trait.
-    if (J.ABS.RegExp.AiTraitHealer.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      healer = true;
-    }
+      // check if this battler has the "reckless" ai trait.
+      if (J.ABS.RegExp.AiTraitReckless.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        reckless = true;
+      }
 
-    // check if this battler has the "follower" ai trait.
-    if (J.ABS.RegExp.AiTraitFollower.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      follower = true;
-    }
+      // check if this battler has the "healer" ai trait.
+      if (J.ABS.RegExp.AiTraitHealer.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        healer = true;
+      }
 
-    // check if this battler has the "leader" ai trait.
-    if (J.ABS.RegExp.AiTraitLeader.test(comment))
-    {
-      // if the value is present, then it must be
-      leader = true;
-    }
-  });
+      // check if this battler has the "follower" ai trait.
+      if (J.ABS.RegExp.AiTraitFollower.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        follower = true;
+      }
+
+      // check if this battler has the "leader" ai trait.
+      if (J.ABS.RegExp.AiTraitLeader.test(comment))
+      {
+        // if the value is present, then it must be
+        leader = true;
+      }
+    });
 
   // return the overridden battler ai.
   return new JABS_EnemyAI(careful, executor, reckless, healer, follower, leader);
@@ -464,20 +473,21 @@ Game_Event.prototype.getSightRangeOverrides = function()
   let sightRange = null;
 
   // check all the valid event commands to see if we have an override for sight.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.Sight.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.Sight.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    sightRange = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      sightRange = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return sightRange;
@@ -493,20 +503,21 @@ Game_Event.prototype.getAlertedSightBoostOverrides = function()
   let alertedSightBoost = null;
 
   // check all the valid event commands to see if we have an override for this.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.AlertedSightBoost.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.AlertedSightBoost.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    alertedSightBoost = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      alertedSightBoost = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return alertedSightBoost;
@@ -522,20 +533,21 @@ Game_Event.prototype.getPursuitRangeOverrides = function()
   let pursuitRange = null;
 
   // check all the valid event commands to see if we have an override for this.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.Pursuit.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.Pursuit.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    pursuitRange = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      pursuitRange = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return pursuitRange;
@@ -551,20 +563,21 @@ Game_Event.prototype.getAlertedPursuitBoostOverrides = function()
   let alertedPursuitBoost = null;
 
   // check all the valid event commands to see if we have an override for this.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.AlertedPursuitBoost.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.AlertedPursuitBoost.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    alertedPursuitBoost = parseFloat(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      alertedPursuitBoost = parseFloat(regexResult[1]);
+    });
 
   // return what we found.
   return alertedPursuitBoost;
@@ -580,20 +593,21 @@ Game_Event.prototype.getAlertDurationOverrides = function()
   let alertDuration = null;
 
   // check all the valid event commands to see if we have an override for this.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if the comment matches the regex.
-    const regexResult = J.ABS.RegExp.AlertDuration.exec(comment);
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.AlertDuration.exec(comment);
 
-    // if the comment didn't match, then don't try to parse it.
-    if (!regexResult) return;
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
 
-    // parse the value out of the regex capture group.
-    alertDuration = parseInt(regexResult[1]);
-  });
+      // parse the value out of the regex capture group.
+      alertDuration = parseInt(regexResult[1]);
+    });
 
   // return what we found.
   return alertDuration;
@@ -609,26 +623,27 @@ Game_Event.prototype.getCanIdleOverrides = function()
   let canIdle = null;
 
   // check all the valid event commands to see if we have any config options.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "noIdle" config option.
-    if (J.ABS.RegExp.ConfigNoIdle.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      canIdle = false;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if this battler has the "noIdle" config option.
+      if (J.ABS.RegExp.ConfigNoIdle.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        canIdle = false;
+      }
 
 
-    // check if this battler has the "canIdle" config option.
-    if (J.ABS.RegExp.ConfigCanIdle.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      canIdle = true;
-    }
-  });
+      // check if this battler has the "canIdle" config option.
+      if (J.ABS.RegExp.ConfigCanIdle.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        canIdle = true;
+      }
+    });
 
   // return the truth.
   return canIdle;
@@ -644,25 +659,26 @@ Game_Event.prototype.getShowHpBarOverrides = function()
   let showHpBar = null;
 
   // check all the valid event commands to see if we have any config options.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "noHpBar" config option.
-    if (J.ABS.RegExp.ConfigNoHpBar.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      showHpBar = false;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if this battler has the "showHpBar" config option.
-    if (J.ABS.RegExp.ConfigShowHpBar.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      showHpBar = true;
-    }
-  });
+      // check if this battler has the "noHpBar" config option.
+      if (J.ABS.RegExp.ConfigNoHpBar.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        showHpBar = false;
+      }
+
+      // check if this battler has the "showHpBar" config option.
+      if (J.ABS.RegExp.ConfigShowHpBar.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        showHpBar = true;
+      }
+    });
 
   // return the truth.
   return showHpBar;
@@ -678,25 +694,26 @@ Game_Event.prototype.getInanimateOverrides = function()
   let inanimate = null;
 
   // check all the valid event commands to see if we have any config options.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "notInanimate" config option.
-    if (J.ABS.RegExp.ConfigNotInanimate.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      inanimate = false;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if this battler has the "inanimate" config option.
-    if (J.ABS.RegExp.ConfigInanimate.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      inanimate = true;
-    }
-  });
+      // check if this battler has the "notInanimate" config option.
+      if (J.ABS.RegExp.ConfigNotInanimate.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        inanimate = false;
+      }
+
+      // check if this battler has the "inanimate" config option.
+      if (J.ABS.RegExp.ConfigInanimate.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        inanimate = true;
+      }
+    });
 
   // return the truth.
   return inanimate;
@@ -712,25 +729,26 @@ Game_Event.prototype.getInvincibleOverrides = function()
   let isInvincible = null;
 
   // check all the valid event commands to see if we have any ai traits.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "invincible" config option.
-    if (J.ABS.RegExp.ConfigInvincible.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      isInvincible = true;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if this battler has the "notInvincible" config option.
-    if (J.ABS.RegExp.ConfigNotInvincible.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      isInvincible = false;
-    }
-  });
+      // check if this battler has the "invincible" config option.
+      if (J.ABS.RegExp.ConfigInvincible.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        isInvincible = true;
+      }
+
+      // check if this battler has the "notInvincible" config option.
+      if (J.ABS.RegExp.ConfigNotInvincible.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        isInvincible = false;
+      }
+    });
 
   // return the truth.
   return isInvincible;
@@ -746,25 +764,26 @@ Game_Event.prototype.getShowBattlerNameOverrides = function()
   let showBattlerName = null;
 
   // check all the valid event commands to see if we have any ai traits.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if this battler has the "notInvincible" config option.
-    if (J.ABS.RegExp.ConfigNoName.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // parse the value out of the regex capture group.
-      showBattlerName = false;
-    }
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
 
-    // check if this battler has the "invincible" config option.
-    if (J.ABS.RegExp.ConfigShowName.test(comment))
-    {
-      // parse the value out of the regex capture group.
-      showBattlerName = true;
-    }
-  });
+      // check if this battler has the "notInvincible" config option.
+      if (J.ABS.RegExp.ConfigNoName.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        showBattlerName = false;
+      }
+
+      // check if this battler has the "invincible" config option.
+      if (J.ABS.RegExp.ConfigShowName.test(comment))
+      {
+        // parse the value out of the regex capture group.
+        showBattlerName = true;
+      }
+    });
 
   // return the truth.
   return showBattlerName;
@@ -795,7 +814,7 @@ Game_Event.prototype.applyCustomMoveSpeed = function()
   commentCommandList.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
+    const [ comment, ] = command.parameters;
 
     // check if the comment matches the regex.
     const regexResult = J.ABS.RegExp.MoveSpeed.exec(comment);

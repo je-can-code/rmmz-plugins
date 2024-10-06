@@ -341,9 +341,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideDiaLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addDiaLog", args =>
 {
   const {
-    lines,
-    faceName,
-    faceIndex
+    lines, faceName, faceIndex
   } = args;
   const actualLines = lines.split(/[\r\n]+/);
   const log = new DiaLogBuilder()
@@ -386,8 +384,7 @@ PluginManager.registerCommand(J.LOG.Metadata.Name, "hideLootLog", () =>
 PluginManager.registerCommand(J.LOG.Metadata.Name, "addLootLog", args =>
 {
   const {
-    lootId,
-    lootType
+    lootId, lootType
   } = args;
   const log = new LootLogBuilder()
     .setupLootObtained(lootType, lootId)
@@ -447,6 +444,7 @@ class ActionLog
     return this.#message;
   }
 }
+
 //endregion ActionLog
 
 //region MapLogBuilder
@@ -531,15 +529,21 @@ class ActionLogBuilder
     let hurtOrHeal;
     if (isCritical)
     {
-      hurtOrHeal = isHealing ? "critically healed" : "landed a critical";
+      hurtOrHeal = isHealing
+        ? "critically healed"
+        : "landed a critical";
     }
     else
     {
-      hurtOrHeal = isHealing ? "healed" : "hit";
+      hurtOrHeal = isHealing
+        ? "healed"
+        : "hit";
     }
 
     // the text color index is based on whether or not its flagged as healing.
-    const color = isHealing ? 29 : 10;
+    const color = isHealing
+      ? 29
+      : 10;
 
     // construct the message.
     // eslint-disable-next-line max-len
@@ -561,15 +565,21 @@ class ActionLogBuilder
     let hurtOrHeal;
     if (isCritical)
     {
-      hurtOrHeal = isHealing ? "critically healed" : "devastatingly damaged";
+      hurtOrHeal = isHealing
+        ? "critically healed"
+        : "devastatingly damaged";
     }
     else
     {
-      hurtOrHeal = isHealing ? "restored" : "struck";
+      hurtOrHeal = isHealing
+        ? "restored"
+        : "struck";
     }
 
     // the text color index is based on whether or not its flagged as healing.
-    const color = isHealing ? 29 : 10;
+    const color = isHealing
+      ? 29
+      : 10;
 
     // construct the message.
     // eslint-disable-next-line max-len
@@ -699,8 +709,12 @@ class ActionLogBuilder
     const defender = this.#wrapName(targetName, 16);
 
     // construct the message.
-    const prefix = isPreciseParry ? "precise-" : "";
-    const suffix = isPreciseParry ? " with finesse!" : ".";
+    const prefix = isPreciseParry
+      ? "precise-"
+      : "";
+    const suffix = isPreciseParry
+      ? " with finesse!"
+      : ".";
     const message = `${defender} ${prefix}parried ${casterName}'s \\Skill[${skillId}]${suffix}`;
 
     // assign the message to this log.
@@ -821,6 +835,7 @@ class ActionLogBuilder
     return this;
   }
 }
+
 //endregion MapLogBuilder
 
 //region DiaLog
@@ -921,6 +936,7 @@ class DiaLog
     return this.#faceIndex;
   }
 }
+
 //endregion DiaLog
 
 //region DiaLogBuilder
@@ -954,12 +970,9 @@ class DiaLogBuilder
   build()
   {
     // build the log.
-    const log = new DiaLog(
-      // copy the lines over.
-      [...this.#lines],
-      // assign the face information.
-      this.#faceName,
-      this.#faceIndex);
+    const log = new DiaLog(// copy the lines over.
+      [ ...this.#lines ], // assign the face information.
+      this.#faceName, this.#faceIndex);
 
     // empty out the data from the builder.
     this.clear();
@@ -1024,6 +1037,7 @@ class DiaLogBuilder
     return this;
   }
 }
+
 //endregion DiaLogBuilder
 
 //region LootLogBuilder
@@ -1181,7 +1195,8 @@ J.LOG.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects
 DataManager.createGameObjects = function()
 {
   // perform original logic.
-  J.LOG.Aliased.DataManager.get('createGameObjects').call(this);
+  J.LOG.Aliased.DataManager.get('createGameObjects')
+    .call(this);
 
   // generate a new instance of the action log manager.
   $actionLogManager = new MapLogManager();
@@ -1220,6 +1235,7 @@ class MapLogManager
   #visible = true;
 
   #maxLogCount = 100;
+
   //endregion properties
 
   /**
@@ -1360,6 +1376,7 @@ class MapLogManager
     this.#visible = true;
   }
 }
+
 //endregion MapLogManager
 
 //region Scene_Map
@@ -1370,7 +1387,8 @@ J.LOG.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initialize);
 Scene_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.LOG.Aliased.Scene_Map.get('initialize').call(this);
+  J.LOG.Aliased.Scene_Map.get('initialize')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -1403,7 +1421,8 @@ J.LOG.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWin
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.LOG.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.LOG.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the actions log.
   this.createActionLogWindow();
@@ -2045,7 +2064,7 @@ class Window_MapLog extends Window_Command
     // check if the player is below this window's origin Y.
     const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
     const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
-    
+
     // return what we deduced.
     return (xInterference) && (yInterference);
   }
@@ -2111,7 +2130,7 @@ class Window_MapLog extends Window_Command
       this.hideWindow();
     }
   }
-  
+
   fadeContentsOpacityTick()
   {
     // reduce opacity if it is.

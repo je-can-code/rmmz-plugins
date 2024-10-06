@@ -7,7 +7,8 @@ J.ABS.EXT.CHARGE.Aliased.SoundManager.set('preloadImportantSounds', SoundManager
 SoundManager.preloadImportantSounds = function()
 {
   // perform original logic.
-  J.ABS.EXT.CHARGE.Aliased.SoundManager.get('preloadImportantSounds').call(this);
+  J.ABS.EXT.CHARGE.Aliased.SoundManager.get('preloadImportantSounds')
+    .call(this);
 
   // load our charging sounds.
   this.loadJabsChargingSounds();

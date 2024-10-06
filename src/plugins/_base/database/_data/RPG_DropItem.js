@@ -35,16 +35,20 @@ class RPG_DropItem
     switch (letter.toLowerCase())
     {
       // "i" for "item".
-      case ('i'||'item'): return this.Types.Item;
+      case ('i' || 'item'):
+        return this.Types.Item;
 
       // "w" for "weapon".
-      case ('w'||'weapon'): return this.Types.Weapon;
+      case ('w' || 'weapon'):
+        return this.Types.Weapon;
 
       // "a" for "armor".
-      case ('a'||'armor'): return this.Types.Armor;
+      case ('a' || 'armor'):
+        return this.Types.Armor;
 
       // don't use this with invalid item types.
-      default: throw new Error(`invalid item type letter provided: [${letter}].`);
+      default:
+        throw new Error(`invalid item type letter provided: [${letter}].`);
     }
   }
 
@@ -59,16 +63,20 @@ class RPG_DropItem
     switch (number)
     {
       // "1" for "item".
-      case 1: return 'i';
+      case 1:
+        return 'i';
 
       // "2" for "weapon".
-      case 2: return 'w';
+      case 2:
+        return 'w';
 
       // "3" for "armor".
-      case 3: return 'a';
+      case 3:
+        return 'a';
 
       // don't use this with invalid item types.
-      default: throw new Error(`invalid item type number provided: [${number}].`);
+      default:
+        throw new Error(`invalid item type number provided: [${number}].`);
     }
   }
 
@@ -91,6 +99,7 @@ class RPG_DropItem
    * @type {number}
    */
   kind = 0;
+
   //endregion properties
 
   /**
@@ -105,4 +114,5 @@ class RPG_DropItem
     this.kind = kind;
   }
 }
+
 //endregion RPG_DropItem

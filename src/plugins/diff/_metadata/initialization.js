@@ -38,11 +38,7 @@ J.DIFFICULTY.PluginParameters = PluginManager.parameters(J.DIFFICULTY.Metadata.n
 J.DIFFICULTY.Aliased = {
   DataManager: new Map(),
 
-  Game_Actor: new Map(),
-  Game_Enemy: new Map(),
-  Game_Map: new Map(),
-  Game_System: new Map(),
-  Game_Temp: new Map(),
+  Game_Actor: new Map(), Game_Enemy: new Map(), Game_Map: new Map(), Game_System: new Map(), Game_Temp: new Map(),
 
   Scene_Map: new Map(),
 };

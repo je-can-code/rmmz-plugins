@@ -105,4 +105,5 @@ class J_PosesPluginMetadata extends PluginMetadata
   //     .build();
   // }
 }
+
 //endregion plugin metadata

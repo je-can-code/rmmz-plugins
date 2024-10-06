@@ -163,9 +163,7 @@ Game_Battler.prototype.getVisionModifier = function()
   const baseVisionRate = 100;
 
   // get the vision multiplier from anything this battler has available.
-  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.ABS.RegExp.VisionMultiplier);
+  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.VisionMultiplier);
 
   // calculate the multiplier.
   const totalVisionMultiplier = baseVisionRate + visionMultiplier;
@@ -444,9 +442,7 @@ Game_Battler.prototype.retaliationSkills = function()
   const objectsToCheck = this.getAllNotes();
 
   // get all retaliation skills from the notes.
-  const retaliations = RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    objectsToCheck,
-    J.ABS.RegExp.Retaliate);
+  const retaliations = RPGManager.getOnChanceEffectsFromDatabaseObjects(objectsToCheck, J.ABS.RegExp.Retaliate);
 
   // return what was found.
   return retaliations;
@@ -462,9 +458,7 @@ Game_Battler.prototype.onOwnDefeatSkillIds = function()
   const objectsToCheck = this.getAllNotes();
 
   // get all on-own-defeat skills from the notes.
-  const onOwnDeaths = RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    objectsToCheck,
-    J.ABS.RegExp.OnOwnDefeat);
+  const onOwnDeaths = RPGManager.getOnChanceEffectsFromDatabaseObjects(objectsToCheck, J.ABS.RegExp.OnOwnDefeat);
 
   // return what was found.
   return onOwnDeaths;
@@ -480,9 +474,7 @@ Game_Battler.prototype.onTargetDefeatSkillIds = function()
   const objectsToCheck = this.getAllNotes();
 
   // get all on-target-defeat skills from the notes.
-  const onTargetKills = RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    objectsToCheck,
-    J.ABS.RegExp.onTargetDefeat);
+  const onTargetKills = RPGManager.getOnChanceEffectsFromDatabaseObjects(objectsToCheck, J.ABS.RegExp.onTargetDefeat);
 
   // return what was found.
   return onTargetKills;
@@ -687,13 +679,7 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
   const stacks = state.jabsStateStacksApplied;
 
   // build the new state.
-  const jabsState = new JABS_State(
-    this,
-    stateId,
-    iconIndex,
-    totalDuration,
-    stacks,
-    assailant);
+  const jabsState = new JABS_State(this, stateId, iconIndex, totalDuration, stacks, assailant);
 
   // add the state to the engine's tracker.
   $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
@@ -711,21 +697,16 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
   const objectsToCheck = this.getAllNotes();
 
   // sum together all the state duration boost flat modifiers.
-  const flat = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.ABS.RegExp.StateDurationFlatPlus);
+  const flat = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.StateDurationFlatPlus);
 
   // calculate the flat duration boost.
-  const percent = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.ABS.RegExp.StateDurationPercentPlus);
+  const percent = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.StateDurationPercentPlus);
 
   // calculate the percent duration boost.
   const percentBoost = Math.round(baseDuration * (percent / 100));
 
   // calculate the formulai duration boost.
-  const formulaiBoost = RPGManager.getResultsFromAllNotesByRegex(
-    objectsToCheck,
+  const formulaiBoost = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
     J.ABS.RegExp.StateDurationFormulaPlus,
     baseDuration,
     this);
@@ -775,9 +756,7 @@ Game_Battler.prototype.refreshBonusHits = function()
 Game_Battler.prototype.getBonusHitsSources = function()
 {
   return [
-    this.states(),
-    [ this.databaseData() ],
-  ];
+    this.states(), [ this.databaseData() ], ];
 };
 
 /**
@@ -850,9 +829,7 @@ Game_Battler.prototype.ignoreAllParry = function()
   const objectsToCheck = this.getAllNotes();
 
   // check if any of the note objects possibly could be granting ignore parry.
-  const unparryable = RPGManager.checkForBooleanFromAllNotesByRegex(
-    objectsToCheck,
-    J.ABS.RegExp.Unparryable);
+  const unparryable = RPGManager.checkForBooleanFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.Unparryable);
 
   // return what we found.
   return unparryable;

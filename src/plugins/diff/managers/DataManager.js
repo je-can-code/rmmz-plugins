@@ -6,7 +6,8 @@ J.DIFFICULTY.Aliased.DataManager.set('setupNewGame', DataManager.setupNewGame);
 DataManager.setupNewGame = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.DataManager.get('setupNewGame').call(this);
+  J.DIFFICULTY.Aliased.DataManager.get('setupNewGame')
+    .call(this);
 
   // setup the difficulty layers in the temp data.
   $gameTemp.setupDifficultySystem();

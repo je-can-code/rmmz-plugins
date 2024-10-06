@@ -11,7 +11,8 @@ IconManager.longParam = function(paramId)
     case 33:
       return this.sdpMultiplier(); // sdp
     default:
-      return J.SDP.Aliased.IconManager.get('longParam').call(this, paramId);
+      return J.SDP.Aliased.IconManager.get('longParam')
+        .call(this, paramId);
   }
 };
 

@@ -102,7 +102,7 @@ MonsterpediaObservations.prototype.initMembers = function()
  */
 MonsterpediaObservations.prototype.addKnownDrop = function(dropType, dropId)
 {
-  this.knownDrops.push([dropType, dropId]);
+  this.knownDrops.push([ dropType, dropId ]);
 };
 
 /**
@@ -117,7 +117,7 @@ MonsterpediaObservations.prototype.isDropKnown = function(dropType, dropId)
   const finder = drop =>
   {
     // deconstruct the drop data.
-    const [type, id] = drop;
+    const [ type, id ] = drop;
 
     // if we have this entry in the list of known drops, then the drop is known.
     if (type === dropType && id === dropId) return true;

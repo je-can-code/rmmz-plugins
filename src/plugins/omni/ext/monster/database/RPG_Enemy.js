@@ -3,13 +3,12 @@
  * Whether or not this enemy should be hidden from the monsterpedia.
  * @type {boolean} True if the enemy should be hidden, false otherwise.
  */
-Object.defineProperty(RPG_Enemy.prototype, "hideFromMonsterpedia",
+Object.defineProperty(RPG_Enemy.prototype, "hideFromMonsterpedia", {
+  get: function()
   {
-    get: function()
-    {
-      return this.shouldHideFromMonsterpedia();
-    },
-  });
+    return this.shouldHideFromMonsterpedia();
+  },
+});
 
 /**
  * Determines whether or not this enemy should be hidden from the monsterpedia.
@@ -24,13 +23,12 @@ RPG_Enemy.prototype.shouldHideFromMonsterpedia = function()
  * The icon index of the monster family this enemy belongs to.
  * @type {number}
  */
-Object.defineProperty(RPG_Enemy.prototype, "monsterFamilyIcon",
+Object.defineProperty(RPG_Enemy.prototype, "monsterFamilyIcon", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getMonsterFamilyIconIndex();
-    },
-  });
+    return this.getMonsterFamilyIconIndex();
+  },
+});
 
 /**
  * Gets the icon index representing the monster family of this enemy.
@@ -45,13 +43,12 @@ RPG_Enemy.prototype.getMonsterFamilyIconIndex = function()
  * The description of the enemy for the monsterpedia.
  * @type {string[]}
  */
-Object.defineProperty(RPG_Enemy.prototype, "monsterpediaDescription",
+Object.defineProperty(RPG_Enemy.prototype, "monsterpediaDescription", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getMonsterpediaDescription();
-    },
-  });
+    return this.getMonsterpediaDescription();
+  },
+});
 
 /**
  * Gets the description of this enemy for the monsterpedia.

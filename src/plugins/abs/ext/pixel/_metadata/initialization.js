@@ -42,10 +42,7 @@ J.ABS.EXT.PIXEL.PluginParameters = PluginManager.parameters(J.ABS.EXT.PIXEL.Meta
 /**
  * A collection of all aliased methods for this plugin.
  */
-J.ABS.EXT.PIXEL.Aliased =
-  {
-    Game_Character: new Map(),
-    Game_CharacterBase: new Map(),
-    Game_Player: new Map(),
-  };
+J.ABS.EXT.PIXEL.Aliased = {
+  Game_Character: new Map(), Game_CharacterBase: new Map(), Game_Player: new Map(),
+};
 //endregion metadata

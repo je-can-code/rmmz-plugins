@@ -103,4 +103,5 @@ class JABS_ActionOptions
    */
   static Builder = () => new JABS_ActionOptionsBuilder();
 }
+
 //endregion JABS_ActionOptions

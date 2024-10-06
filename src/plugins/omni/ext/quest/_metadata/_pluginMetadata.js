@@ -167,4 +167,5 @@ class J_QUEST_PluginMetadata extends PluginMetadata
     };
   }
 }
+
 //endregion plugin metadata

@@ -96,4 +96,5 @@ class DiaLog
     return this.#faceIndex;
   }
 }
+
 //endregion DiaLog

@@ -17,11 +17,7 @@ J.UTILS.Metadata = new J_UtilsPluginMetadata('J-SystemUtilities', '1.0.1');
  * A collection of all aliased methods for this plugin.
  */
 J.UTILS.Aliased = {
-  Game_Actor: new Map(),
-  Game_Temp: new Map(),
-  Scene_Base: new Map(),
-  Scene_Boot: new Map(),
-  Scene_Map: new Map(),
+  Game_Actor: new Map(), Game_Temp: new Map(), Scene_Base: new Map(), Scene_Boot: new Map(), Scene_Map: new Map(),
 };
 
 /**
@@ -38,5 +34,8 @@ J.UTILS.Helpers = {};
  * @param {any} o The object to check.
  * @returns {number} Chances are if this returns a number you're fine, otherwise it'll hang.
  */
-J.UTILS.Helpers.depth = (o) =>
-  Object (o) === o ? 1 + Math.max(-1, ...Object.values(o).map(J.UTILS.Helpers.depth)) : 0;
+J.UTILS.Helpers.depth = (o) => Object(o) === o
+  ? 1 + Math.max(-1,
+  ...Object.values(o)
+    .map(J.UTILS.Helpers.depth))
+  : 0;

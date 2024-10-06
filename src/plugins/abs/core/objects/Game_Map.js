@@ -6,7 +6,8 @@ J.ABS.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);
 Game_Map.prototype.setup = function(mapId)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Map.get('setup').call(this, mapId);
+  J.ABS.Aliased.Game_Map.get('setup')
+    .call(this, mapId);
 
   // initialize all JABS-related data.
   this.initJabsEngine();
@@ -95,7 +96,8 @@ J.ABS.Aliased.Game_Map.set('update', Game_Map.prototype.update);
 Game_Map.prototype.update = function(sceneActive)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Map.get('update').call(this, sceneActive);
+  J.ABS.Aliased.Game_Map.get('update')
+    .call(this, sceneActive);
 
   // update JABS-related things.
   this.updateJabs();
@@ -127,7 +129,8 @@ Game_Map.prototype.newActionEvents = function()
   };
 
   // return the new-action-filtered event list.
-  return this.actionEvents().filter(filtering);
+  return this.actionEvents()
+    .filter(filtering);
 };
 
 /**
@@ -147,7 +150,8 @@ Game_Map.prototype.expiredActionEvents = function()
   };
 
   // return the expired-action-filtered event list.
-  return this.actionEvents().filter(filtering);
+  return this.actionEvents()
+    .filter(filtering);
 };
 
 /**
@@ -192,7 +196,8 @@ Game_Map.prototype.actionEvents = function()
   };
 
   // return the action-filtered event list.
-  return this.events().filter(filtering);
+  return this.events()
+    .filter(filtering);
 };
 
 /**
@@ -212,7 +217,8 @@ Game_Map.prototype.newLootEvents = function()
   };
 
   // return the new-loot-filtered event list.
-  return this.lootEvents().filter(filtering);
+  return this.lootEvents()
+    .filter(filtering);
 };
 
 /**
@@ -232,7 +238,8 @@ Game_Map.prototype.expiredLootEvents = function()
   };
 
   // return the expired-loot-filtered event list.
-  return this.lootEvents().filter(filtering);
+  return this.lootEvents()
+    .filter(filtering);
 };
 
 /**
@@ -276,7 +283,8 @@ Game_Map.prototype.lootEvents = function()
   };
 
   // return the loot-filtered event list.
-  return this.events().filter(filtering);
+  return this.events()
+    .filter(filtering);
 };
 
 /**
@@ -324,7 +332,8 @@ Game_Map.prototype.newBattlerEvents = function()
   };
 
   // return the new-loot-filtered event list.
-  return this.events().filter(filtering);
+  return this.events()
+    .filter(filtering);
 };
 
 /**
@@ -471,7 +480,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     y2 = Math.round($gameMap.roundYWithDirection(y1, direction));
   }
 
-  const triggers = [0, 1, 2];
+  const triggers = [ 0, 1, 2 ];
 
   // look over events directly infront of the player.
   for (const event of this.eventsXy(x2, y2))

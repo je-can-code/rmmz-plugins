@@ -7,9 +7,9 @@ Game_Battler.prototype.getPowerLevel = function()
   let powerLevel = 0;
   let counter = 2;
   // skip HP/MP
-  const bparams = [2, 3, 4, 5, 6, 7];
-  const xparams = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
-  const sparams = [18, 19, 20, 21, 22, 23, 24, 25];
+  const bparams = [ 2, 3, 4, 5, 6, 7 ];
+  const xparams = [ 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 ];
+  const sparams = [ 18, 19, 20, 21, 22, 23, 24, 25 ];
   while (counter < 28)
   {
     if (bparams.includes(counter))
@@ -46,7 +46,8 @@ Game_Battler.prototype.getPowerLevel = function()
 Game_Battler.prototype.getDangerIndicatorIcon = function()
 {
   // if the sprite belongs to the player, then don't do it.
-  const player = $jabsEngine.getPlayer1().getBattler();
+  const player = $jabsEngine.getPlayer1()
+    .getBattler();
   if (player === this) return -1;
 
   // get the corresponding power levels.

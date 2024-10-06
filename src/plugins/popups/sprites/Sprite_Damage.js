@@ -5,7 +5,8 @@
 J.POPUPS.Aliased.Sprite_Damage.set('initialize', Sprite_Damage.prototype.initialize);
 Sprite_Damage.prototype.initialize = function()
 {
-  J.POPUPS.Aliased.Sprite_Damage.get('initialize').call(this);
+  J.POPUPS.Aliased.Sprite_Damage.get('initialize')
+    .call(this);
   this.initMembers();
 };
 
@@ -153,7 +154,8 @@ Sprite_Damage.prototype.setYVariance = function(yVariance)
 J.POPUPS.Aliased.Sprite_Damage.set('createChildSprite', Sprite_Damage.prototype.createChildSprite);
 Sprite_Damage.prototype.createChildSprite = function(width, height)
 {
-  const sprite = J.POPUPS.Aliased.Sprite_Damage.get('createChildSprite').call(this, width, height);
+  const sprite = J.POPUPS.Aliased.Sprite_Damage.get('createChildSprite')
+    .call(this, width, height);
   this.setupMotionData(sprite);
   return sprite;
 };
@@ -389,7 +391,8 @@ Sprite_Damage.prototype.damageColor = function()
 J.POPUPS.Aliased.Sprite_Damage.set('setupCriticalEffect', Sprite_Damage.prototype.setupCriticalEffect);
 Sprite_Damage.prototype.setupCriticalEffect = function()
 {
-  J.POPUPS.Aliased.Sprite_Damage.get('setupCriticalEffect').call(this);
+  J.POPUPS.Aliased.Sprite_Damage.get('setupCriticalEffect')
+    .call(this);
 
   // confirm this is indeed a critical popup.
   this._j._popups._isCritical = true;

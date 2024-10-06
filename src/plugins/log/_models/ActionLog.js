@@ -39,4 +39,5 @@ class ActionLog
     return this.#message;
   }
 }
+
 //endregion ActionLog

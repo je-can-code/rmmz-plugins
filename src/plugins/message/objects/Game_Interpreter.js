@@ -7,7 +7,8 @@ J.MESSAGE.Aliased.Game_Interpreter.set('setupChoices', Game_Interpreter.prototyp
 Game_Interpreter.prototype.setupChoices = function(params)
 {
   // perform original choice setup logic.
-  J.MESSAGE.Aliased.Game_Interpreter.get('setupChoices').call(this, params);
+  J.MESSAGE.Aliased.Game_Interpreter.get('setupChoices')
+    .call(this, params);
 
   // also backup the original options.
   $gameMessage.backupChoices();
@@ -44,8 +45,9 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
   // identify the start and end of the choice branches.
   const startShowChoiceIndex = currentPage.list.findIndex(item => item === currentCommand);
   const endShowChoiceIndex = currentPage.list
-    .findIndex((item, index) =>
-      (index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404));
+    .findIndex((
+      item,
+      index) => (index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404));
 
   // build an array of indexes that align with the options.
   const showChoiceIndices = currentPage.list

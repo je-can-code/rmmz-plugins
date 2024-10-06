@@ -3,7 +3,7 @@
  * This is explicitly in regards to move route commands.
  * @type {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]}
  */
-Game_Character.repeatableMoveCommandCodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+Game_Character.repeatableMoveCommandCodes = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ];
 
 //region properties
 /**
@@ -14,7 +14,8 @@ J.ABS.EXT.CYCLE.Aliased.Game_Character.set('initMembers', Game_Character.prototy
 Game_Character.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.CYCLE.Aliased.Game_Character.get('initMembers').call(this);
+  J.ABS.EXT.CYCLE.Aliased.Game_Character.get('initMembers')
+    .call(this);
 
   // initialize our adapter members.
   this.initCycloneAdapterMembers();
@@ -115,7 +116,8 @@ Game_Character.prototype.updateRoutineMove = function()
   if (this.isJabsAction())
   {
     // perform original logic.
-    J.ABS.EXT.CYCLE.Aliased.Game_Character.get('updateRoutineMove').call(this);
+    J.ABS.EXT.CYCLE.Aliased.Game_Character.get('updateRoutineMove')
+      .call(this);
 
     // stop processing.
     return;

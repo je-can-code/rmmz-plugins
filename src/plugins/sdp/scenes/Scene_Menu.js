@@ -6,7 +6,8 @@ J.SDP.Aliased.Scene_Menu.set('createCommandWindow', Scene_Menu.prototype.createC
 Scene_Menu.prototype.createCommandWindow = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Scene_Menu.get('createCommandWindow').call(this);
+  J.SDP.Aliased.Scene_Menu.get('createCommandWindow')
+    .call(this);
 
   // add an additional handler for the new menu.
   this._commandWindow.setHandler("sdp-menu", this.commandSdp.bind(this));

@@ -7,7 +7,8 @@ J.JAFTING.EXT.REFINE.Aliased.Game_System.set('onAfterLoad', Game_System.prototyp
 Game_System.prototype.onAfterLoad = function()
 {
   // perform original logic.
-  J.JAFTING.EXT.REFINE.Aliased.Game_System.get('onAfterLoad').call(this);
+  J.JAFTING.EXT.REFINE.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
 
   // update the weapons & armor.
   $gameParty.refreshDatabaseWeapons();

@@ -11,7 +11,8 @@ IconManager.longParam = function(paramId)
     case 31:
       return this.movespeed(); // move
     default:
-      return J.ABS.EXT.SPEED.Aliased.IconManager.get('longParam').call(this, paramId);
+      return J.ABS.EXT.SPEED.Aliased.IconManager.get('longParam')
+        .call(this, paramId);
   }
 };
 

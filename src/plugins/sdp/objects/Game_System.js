@@ -7,7 +7,8 @@ J.SDP.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
 Game_System.prototype.initialize = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_System.get('initialize').call(this);
+  J.SDP.Aliased.Game_System.get('initialize')
+    .call(this);
 
   // initializes members for this plugin.
   this.initSdpMembers();

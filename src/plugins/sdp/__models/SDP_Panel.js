@@ -4,8 +4,7 @@
  */
 class StatDistributionPanel
 {
-  constructor(
-    name,
+  constructor(name,
     key,
     iconIndex,
     rarity,
@@ -144,7 +143,8 @@ class StatDistributionPanel
    */
   isUnlocked()
   {
-    return $gameParty.getSdpTrackingByKey(this.key).isUnlocked();
+    return $gameParty.getSdpTrackingByKey(this.key)
+      .isUnlocked();
   }
 
   /**
@@ -163,11 +163,7 @@ class StatDistributionPanel
     $gameParty.lockSdp(this.key);
   }
 
-  calculateBonusByRank(
-    paramId,
-    currentRank,
-    baseParam = 0,
-    fractional = false)
+  calculateBonusByRank(paramId, currentRank, baseParam = 0, fractional = false)
   {
     // determine all the applicable panel parameters.
     const panelParameters = this.panelParameters.filter(panelParameter => panelParameter.parameterId === paramId);
@@ -227,7 +223,7 @@ class StatDistributionPanel
    */
   getPanelRarityText()
   {
-    switch(this.rarity)
+    switch (this.rarity)
     {
       case 0:
         return "Common";
@@ -262,6 +258,7 @@ class StatDistributionPanel
     static #multGrowth = 1.0;
     static #parameters = [];
     static #rewards = [];
+
     //endregion properties
 
     /**
@@ -271,8 +268,7 @@ class StatDistributionPanel
     static build()
     {
       // build the panel based off current parameters.
-      const sdp = new StatDistributionPanel(
-        this.#name,
+      const sdp = new StatDistributionPanel(this.#name,
         this.#key,
         this.#iconIndex,
         this.#rarity,
@@ -388,7 +384,9 @@ class StatDistributionPanel
       this.#rewards = rewards;
       return this;
     }
+
     //endregion setters
   }
 }
+
 //endregion SDP_Panel

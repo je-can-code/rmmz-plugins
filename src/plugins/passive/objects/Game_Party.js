@@ -7,7 +7,8 @@ J.PASSIVE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Party.get('initialize').call(this);
+  J.PASSIVE.Aliased.Game_Party.get('initialize')
+    .call(this);
 
   // initialize our members as well.
   this.initPassiveItemStates();
@@ -193,7 +194,7 @@ Game_Party.prototype.getAllStackablePassiveStateIds = function()
         const stack = stackablePassiveStateIds.get(id);
 
         // increment the stack.
-        stackablePassiveStateIds.set(id, stack+1);
+        stackablePassiveStateIds.set(id, stack + 1);
       }
       // we aren't tracking this passive state id yet.
       else
@@ -219,7 +220,8 @@ J.PASSIVE.Aliased.Game_Party.set('gainItem', Game_Party.prototype.gainItem);
 Game_Party.prototype.gainItem = function(item, amount, includeEquip)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Party.get('gainItem').call(this, item, amount, includeEquip);
+  J.PASSIVE.Aliased.Game_Party.get('gainItem')
+    .call(this, item, amount, includeEquip);
 
   // also refresh our passive states tracker.
   this.refreshPassiveStates();

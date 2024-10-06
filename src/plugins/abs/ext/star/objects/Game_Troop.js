@@ -3,19 +3,20 @@
  * Initializes our additional members for STABS.
  */
 J.ABS.EXT.STAR.Aliased.Game_Troop.set('initialize', Game_Troop.prototype.initialize);
-Game_Troop.prototype.initialize = function() 
+Game_Troop.prototype.initialize = function()
 {
   // perform original logic.
-  J.ABS.EXT.STAR.Aliased.Game_Troop.get('initialize').call(this);
+  J.ABS.EXT.STAR.Aliased.Game_Troop.get('initialize')
+    .call(this);
 
   // initialize the STABS members.
   this.initMembers();
 };
 
 /**
-* Initializes additional properties for this class.
-*/
-Game_Troop.prototype.initMembers = function() 
+ * Initializes additional properties for this class.
+ */
+Game_Troop.prototype.initMembers = function()
 {
   /**
    * The J object where all my additional properties live.
@@ -46,7 +47,7 @@ Game_Troop.prototype.getRemainingEnemyCount = function()
 /**
  * Updates the current number of living enemies on this map.
  */
-Game_Troop.prototype.updateRemainingEnemyCount = function() 
+Game_Troop.prototype.updateRemainingEnemyCount = function()
 {
   // update the remaining enemy count.
   this._remainingEnemyCount = JABS_AiManager.getOpposingBattlers($jabsEngine.getPlayer1()).length;
@@ -55,7 +56,7 @@ Game_Troop.prototype.updateRemainingEnemyCount = function()
 /**
  * Gets whether or there are still enemies alive on this map.
  */
-Game_Troop.prototype.areEnemiesAlive = function() 
+Game_Troop.prototype.areEnemiesAlive = function()
 {
   return this.getRemainingEnemyCount() > 0;
 };

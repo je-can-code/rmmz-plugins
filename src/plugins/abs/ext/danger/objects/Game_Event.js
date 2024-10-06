@@ -18,7 +18,8 @@ Game_Event.prototype.initializeCoreData = function(battlerCoreData)
   }
 
   // perform original logic, potentially with the modified core data.
-  J.ABS.EXT.DANGER.Aliased.Game_Event.get('initializeCoreData').call(this, localBattlerCoreData);
+  J.ABS.EXT.DANGER.Aliased.Game_Event.get('initializeCoreData')
+    .call(this, localBattlerCoreData);
 };
 
 /**
@@ -47,7 +48,8 @@ Game_Event.prototype.canShowDangerIndicator = function(battlerId)
   //TODO: add equipment that can hide/show the danger indicator?
 
   // start with the default of whether or not to show the danger indicator.
-  let showDangerIndicator = $gameEnemies.enemy(battlerId).showDangerIndicator();
+  let showDangerIndicator = $gameEnemies.enemy(battlerId)
+    .showDangerIndicator();
 
   // get the list of valid event commands that are comments.
   const commentCommands = this.getValidCommentCommands();

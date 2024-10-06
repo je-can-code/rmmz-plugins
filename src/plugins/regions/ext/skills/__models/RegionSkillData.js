@@ -47,4 +47,5 @@ class RegionSkillData
     this.isFriendly = isFriendly;
   }
 }
+
 //endregion RegionSkillData

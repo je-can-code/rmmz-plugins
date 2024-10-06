@@ -5,13 +5,12 @@
  * Paralysis is the same as being rooted & muted & disarmed simultaneously.
  * @type {boolean}
  */
-Object.defineProperty(RPG_State.prototype, "jabsParalyzed",
+Object.defineProperty(RPG_State.prototype, "jabsParalyzed", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsParalyzed();
-    },
-  });
+    return this.getJabsParalyzed();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS paralysis state.
@@ -38,13 +37,12 @@ RPG_State.prototype.extractJabsParalyzed = function()
  * Rooted battlers are unable to move on the map.
  * @type {boolean}
  */
-Object.defineProperty(RPG_State.prototype, "jabsRooted",
+Object.defineProperty(RPG_State.prototype, "jabsRooted", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsRooted();
-    },
-  });
+    return this.getJabsRooted();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS rooted state.
@@ -71,13 +69,12 @@ RPG_State.prototype.extractJabsRooted = function()
  * Muted battlers are unable to use their combat skills.
  * @type {boolean}
  */
-Object.defineProperty(RPG_State.prototype, "jabsMuted",
+Object.defineProperty(RPG_State.prototype, "jabsMuted", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsMuted();
-    },
-  });
+    return this.getJabsMuted();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS muted state.
@@ -104,13 +101,12 @@ RPG_State.prototype.extractJabsMuted = function()
  * Disarmed battlers are unable to use their basic attacks.
  * @type {boolean}
  */
-Object.defineProperty(RPG_State.prototype, "jabsDisarmed",
+Object.defineProperty(RPG_State.prototype, "jabsDisarmed", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsDisarmed();
-    },
-  });
+    return this.getJabsDisarmed();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS disarmed state.
@@ -138,13 +134,12 @@ RPG_State.prototype.extractJabsDisarmed = function()
  * to Healing will attempt to remove "negative" states if possible.
  * @type {boolean}
  */
-Object.defineProperty(RPG_State.prototype, "jabsNegative",
+Object.defineProperty(RPG_State.prototype, "jabsNegative", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsNegative();
-    },
-  });
+    return this.getJabsNegative();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS negative state.
@@ -170,13 +165,12 @@ RPG_State.prototype.extractJabsNegative = function()
  * Multiply incoming aggro by this amount.
  * @type {number|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsAggroInAmp",
+Object.defineProperty(RPG_State.prototype, "jabsAggroInAmp", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAggroInAmp();
-    },
-  });
+    return this.getJabsAggroInAmp();
+  },
+});
 
 /**
  * Gets the incoming aggro amplifier.
@@ -202,13 +196,12 @@ RPG_State.prototype.extractJabsAggroInAmp = function()
  * Multiply outgoing aggro by this amount.
  * @type {number|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsAggroOutAmp",
+Object.defineProperty(RPG_State.prototype, "jabsAggroOutAmp", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAggroOutAmp();
-    },
-  });
+    return this.getJabsAggroOutAmp();
+  },
+});
 
 /**
  * Gets the outgoing aggro amplifier.
@@ -235,13 +228,12 @@ RPG_State.prototype.extractJabsAggroOutAmp = function()
  * can neither gain nor lose aggro for the duration of the state.
  * @type {boolean|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsAggroLock",
+Object.defineProperty(RPG_State.prototype, "jabsAggroLock", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAggroLock();
-    },
-  });
+    return this.getJabsAggroLock();
+  },
+});
 
 /**
  * Gets whether or not this is a JABS aggro-locking state.
@@ -267,13 +259,12 @@ RPG_State.prototype.extractJabsAggroLock = function()
  * The offhand skill id override from this state.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsOffhandSkillId",
+Object.defineProperty(RPG_State.prototype, "jabsOffhandSkillId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsOffhandSkillId();
-    },
-  });
+    return this.getJabsOffhandSkillId();
+  },
+});
 
 /**
  * Gets the JABS offhand skill id override for this state.
@@ -297,138 +288,118 @@ RPG_State.prototype.extractJabsOffhandSkillId = function()
  * The state reapplication strategy for this state in the context of JABS.<br/>
  * Will either return one of the {@link JABS_State.reapplicationType}, or null if none was found.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateReapplyType",
+Object.defineProperty(RPG_State.prototype, "jabsStateReapplyType", {
+  get: function()
   {
-    get: function()
-    {
-      const type = RPGManager.getStringFromNoteByRegex(
-        this,
-        J.ABS.RegExp.ReapplyType,
-        true);
+    const type = RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.ReapplyType, true);
 
-      switch (type)
-      {
-        case JABS_State.reapplicationType.Refresh:
-        case JABS_State.reapplicationType.Extend:
-        case JABS_State.reapplicationType.Stack:
-          return type;
-        default:
-          return null;
-      }
-    },
-  });
+    switch (type)
+    {
+      case JABS_State.reapplicationType.Refresh:
+      case JABS_State.reapplicationType.Extend:
+      case JABS_State.reapplicationType.Stack:
+        return type;
+      default:
+        return null;
+    }
+  },
+});
 
 /**
  * The customized number of frames to reduce lesser the base duration when this state is reapplied.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Refresh}.<br/>
  * Will either return the custom number of frames defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateRefreshDiminish",
+Object.defineProperty(RPG_State.prototype, "jabsStateRefreshDiminish", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.ReapplyRefreshDiminish,
-        true) ?? J.ABS.Metadata.DefaultStateRefreshDiminish;
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ],
+      J.ABS.RegExp.ReapplyRefreshDiminish,
+      true) ?? J.ABS.Metadata.DefaultStateRefreshDiminish;
+  },
+});
 
 /**
  * The customized number of frames until a state can be fully refreshed again without diminishing returns.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Refresh}.<br/>
  * Will either return the custom number of frames defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateRefreshReset",
+Object.defineProperty(RPG_State.prototype, "jabsStateRefreshReset", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.ReapplyRefreshReset,
-        true) ?? J.ABS.Metadata.DefaultStateRefreshReset;
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ],
+      J.ABS.RegExp.ReapplyRefreshReset,
+      true) ?? J.ABS.Metadata.DefaultStateRefreshReset;
+  },
+});
 
 /**
  * The customized number of frames to extend the duration of this state when reapplied.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Extend}.<br/>
  * Will either return the custom number of frames defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateExtendAmount",
+Object.defineProperty(RPG_State.prototype, "jabsStateExtendAmount", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.ReapplyExtendAmount,
-        true) ?? J.ABS.Metadata.DefaultStateExtendAmount;
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ],
+      J.ABS.RegExp.ReapplyExtendAmount,
+      true) ?? J.ABS.Metadata.DefaultStateExtendAmount;
+  },
+});
 
 /**
  * The maximum number of frames a state can have its duration extended when reapplied.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Extend}.<br/>
  * Will either return the max number of frames defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateExtendMax",
+Object.defineProperty(RPG_State.prototype, "jabsStateExtendMax", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.ReapplyExtendMax,
-        true);
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ], J.ABS.RegExp.ReapplyExtendMax, true);
+  },
+});
 
 /**
  * The max number of stacks a state can stack.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
  * Will either return the custom number of stacks defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateStackMax",
+Object.defineProperty(RPG_State.prototype, "jabsStateStackMax", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.ReapplyStackMax,
-        true) ?? J.ABS.Metadata.DefaultStateStackMax;
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ],
+      J.ABS.RegExp.ReapplyStackMax,
+      true) ?? J.ABS.Metadata.DefaultStateStackMax;
+  },
+});
 
 /**
  * How many stacks of a state will be applied upon stacking.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
  * Will either return the custom number of stacks defined on the state, or the default from configuration.
  */
-Object.defineProperty(RPG_State.prototype, "jabsStateStacksApplied",
+Object.defineProperty(RPG_State.prototype, "jabsStateStacksApplied", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.getSumFromAllNotesByRegex(
-        [this],
-        J.ABS.RegExp.StateApplicationAmount,
-        true) ?? J.ABS.Metadata.DefaultStateApplicationCount;
-    },
-  });
+    return RPGManager.getSumFromAllNotesByRegex([ this ],
+      J.ABS.RegExp.StateApplicationAmount,
+      true) ?? J.ABS.Metadata.DefaultStateApplicationCount;
+  },
+});
 
 /**
  * Whether or not all stacks of a state will be removed upon duration expiration.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
  * If no value is defined on the state, the default from configuration will be used.
  */
-Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce",
+Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce", {
+  get: function()
   {
-    get: function()
-    {
-      return RPGManager.checkForBooleanFromNoteByRegex(
-        this,
-        J.ABS.RegExp.LoseAllStacksAtOnce,
-        true) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
-    },
-  });
+    return RPGManager.checkForBooleanFromNoteByRegex(this,
+      J.ABS.RegExp.LoseAllStacksAtOnce,
+      true) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
+  },
+});
 
 //region slipHp
 //region flat
@@ -436,37 +407,34 @@ Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce",
  * The flat slip hp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipHpFlatPer5();
-    },
-  });
+    return this.getJabsSlipHpFlatPer5();
+  },
+});
 
 /**
  * The flat slip hp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipHpFlatPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipHpFlatPerFive / 5);
+  },
+});
 
 /**
  * The flat slip hp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpFlatPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipHpFlatPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipHpFlatPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 flat slip hp amount for this state.
@@ -492,37 +460,34 @@ RPG_State.prototype.extractJabsSlipHpFlatPer5 = function()
  * The percent slip hp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipHpPercentPer5();
-    },
-  });
+    return this.getJabsSlipHpPercentPer5();
+  },
+});
 
 /**
  * The percent slip hp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipHpPercentPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipHpPercentPerFive / 5);
+  },
+});
 
 /**
  * The percent slip hp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpPercentPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipHpPercentPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipHpPercentPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 percent slip hp amount for this state.
@@ -550,13 +515,12 @@ RPG_State.prototype.extractJabsSlipHpPercentPer5 = function()
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipHpFormulaPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipHpFormulaPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipHpFormulaPer5();
-    },
-  });
+    return this.getJabsSlipHpFormulaPer5();
+  },
+});
 
 /**
  * Gets the per5 formula slip hp amount for this state.
@@ -584,37 +548,34 @@ RPG_State.prototype.extractJabsSlipHpFormulaPer5 = function()
  * The flat slip mp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipMpFlatPer5();
-    },
-  });
+    return this.getJabsSlipMpFlatPer5();
+  },
+});
 
 /**
  * The flat slip mp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipMpFlatPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipMpFlatPerFive / 5);
+  },
+});
 
 /**
  * The flat slip mp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpFlatPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipMpFlatPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipMpFlatPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 flat slip mp amount for this state.
@@ -640,37 +601,34 @@ RPG_State.prototype.extractJabsSlipMpFlatPer5 = function()
  * The percent slip mp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipMpPercentPer5();
-    },
-  });
+    return this.getJabsSlipMpPercentPer5();
+  },
+});
 
 /**
  * The percent slip mp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipMpPercentPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipMpPercentPerFive / 5);
+  },
+});
 
 /**
  * The percent slip mp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpPercentPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipMpPercentPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipMpPercentPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 percent slip mp amount for this state.
@@ -698,13 +656,12 @@ RPG_State.prototype.extractJabsSlipMpPercentPer5 = function()
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipMpFormulaPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipMpFormulaPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipMpFormulaPer5();
-    },
-  });
+    return this.getJabsSlipMpFormulaPer5();
+  },
+});
 
 /**
  * Gets the per5 formula slip mp amount for this state.
@@ -732,37 +689,34 @@ RPG_State.prototype.extractJabsSlipMpFormulaPer5 = function()
  * The flat slip tp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipTpFlatPer5();
-    },
-  });
+    return this.getJabsSlipTpFlatPer5();
+  },
+});
 
 /**
  * The flat slip tp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipTpFlatPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipTpFlatPerFive / 5);
+  },
+});
 
 /**
  * The flat slip tp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpFlatPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipTpFlatPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipTpFlatPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 flat slip tp amount for this state.
@@ -788,37 +742,34 @@ RPG_State.prototype.extractJabsSlipTpFlatPer5 = function()
  * The percent slip tp amount- per 5 seconds.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipTpPercentPer5();
-    },
-  });
+    return this.getJabsSlipTpPercentPer5();
+  },
+});
 
 /**
  * The percent slip tp amount- per second.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerSecond",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerSecond", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipTpPercentPerFive / 5);
-    },
-  });
+    return Math.ceil(this.jabsSlipTpPercentPerFive / 5);
+  },
+});
 
 /**
  * The percent slip tp amount- per tick, aka 1/4 second (15 frames).
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerTick",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerTick", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.ceil(this.jabsSlipTpPercentPerFive / 20);
-    },
-  });
+    return Math.ceil(this.jabsSlipTpPercentPerFive / 20);
+  },
+});
 
 /**
  * Gets the per5 percent slip tp amount for this state.
@@ -846,13 +797,12 @@ RPG_State.prototype.extractJabsSlipTpPercentPer5 = function()
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, "jabsSlipTpFormulaPerFive",
+Object.defineProperty(RPG_State.prototype, "jabsSlipTpFormulaPerFive", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSlipTpFormulaPer5();
-    },
-  });
+    return this.getJabsSlipTpFormulaPer5();
+  },
+});
 
 /**
  * Gets the per5 formula slip tp amount for this state.

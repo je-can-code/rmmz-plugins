@@ -57,8 +57,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
       const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
 
       // create the recipe.
-      const newJaftingRecipe = new CraftingRecipe(
-        mappableRecipe.name,
+      const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name,
         mappableRecipe.key,
         mappableRecipe.categoryKeys,
         mappableRecipe.iconIndex,
@@ -266,4 +265,5 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
       .build();
   }
 }
+
 //endregion plugin metadata

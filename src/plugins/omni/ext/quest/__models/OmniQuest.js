@@ -16,9 +16,9 @@ class OmniQuest
    */
   static States = {
     /**
-     * When a quest is in the "inactive" state, it means it has yet to be discovered by the player so it will not show up
-     * in the questopedia by its name or reveal any objectives, but instead reveal only a general "this is where this
-     * quest can be found/unlocked", if anything at all.
+     * When a quest is in the "inactive" state, it means it has yet to be discovered by the player so it will not show
+     * up in the questopedia by its name or reveal any objectives, but instead reveal only a general "this is where
+     * this quest can be found/unlocked", if anything at all.
      */
     Inactive: 0,
 

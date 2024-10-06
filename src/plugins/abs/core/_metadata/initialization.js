@@ -79,7 +79,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
   {
     const kvp = JSON.parse(el);
     const { elementId, iconIndex } = kvp;
-    return {element: parseInt(elementId), icon: parseInt(iconIndex)};
+    return { element: parseInt(elementId), icon: parseInt(iconIndex) };
   });
 };
 //endregion helpers
@@ -126,8 +126,7 @@ J.ABS.Metadata.DefaultEnemyIsInanimate = Boolean(J.ABS.PluginParameters['default
 
 // custom data configurations.
 J.ABS.Metadata.UseElementalIcons = J.ABS.PluginParameters['useElementalIcons'] === "true";
-J.ABS.Metadata.ElementalIcons =
-  J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['elementalIconData']);
+J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['elementalIconData']);
 
 // action decided configurations.
 J.ABS.Metadata.AttackDecidedAnimationId = Number(J.ABS.PluginParameters['attackDecidedAnimationId']);
@@ -144,22 +143,17 @@ J.ABS.Metadata.AggroParryUserGain = Number(J.ABS.PluginParameters['aggroParryUse
 J.ABS.Metadata.AggroPlayerReduction = Number(J.ABS.PluginParameters['aggroPlayerReduction']);
 
 // state configurations.
-J.ABS.Metadata.DefaultStateReapplyType =
-  J.ABS.PluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
+J.ABS.Metadata.DefaultStateReapplyType = J.ABS.PluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
 
-J.ABS.Metadata.DefaultStateRefreshDiminish =
-  Number(J.ABS.PluginParameters['defaultStateRefreshDiminish']) || 120;
-J.ABS.Metadata.DefaultStateRefreshReset =
-  Number(J.ABS.PluginParameters['defaultStateRefreshReset']) || 900;
+J.ABS.Metadata.DefaultStateRefreshDiminish = Number(J.ABS.PluginParameters['defaultStateRefreshDiminish']) || 120;
+J.ABS.Metadata.DefaultStateRefreshReset = Number(J.ABS.PluginParameters['defaultStateRefreshReset']) || 900;
 
 J.ABS.Metadata.DefaultStateExtendAmount = Number(J.ABS.PluginParameters['defaultStateExtendAmount']) || 180;
 J.ABS.Metadata.DefaultStateExtendMax = Number(J.ABS.PluginParameters['defaultStateExtendMax']) || 216000;
 
 J.ABS.Metadata.DefaultStateStackMax = Number(J.ABS.PluginParameters['defaultStateStackMax']) || 5;
-J.ABS.Metadata.DefaultStateApplicationCount =
-  Number(J.ABS.PluginParameters['defaultStateApplicationCount']) || 1;
-J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce =
-  (J.ABS.PluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
+J.ABS.Metadata.DefaultStateApplicationCount = Number(J.ABS.PluginParameters['defaultStateApplicationCount']) || 1;
+J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce = (J.ABS.PluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
 
 // miscellaneous configurations.
 J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistance']);
@@ -417,11 +411,8 @@ J.ABS.Shapes = {
  */
 J.ABS.Notetags = {
   // battler-related (goes in database on enemy/actor).
-  KnockbackResist: "knockbackResist",
-  MoveType: {
-    Forward: "forward",
-    Backward: "backward",
-    Directional: "directional",
+  KnockbackResist: "knockbackResist", MoveType: {
+    Forward: "forward", Backward: "backward", Directional: "directional",
   }
 };
 
@@ -490,8 +481,7 @@ J.ABS.RegExp = {
   // counter-related (on-chance-effect template)
   Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  //endregion ON SKILLS
+  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi, //endregion ON SKILLS
 
   //region ON EQUIPS
   // skill-related.
@@ -502,13 +492,11 @@ J.ABS.RegExp = {
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
 
   // parry-related.
-  IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
-  //endregion ON EQUIPS
+  IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi, //endregion ON EQUIPS
 
   //region ON ITEMS
   UseOnPickup: /<useOnPickup>/gi,
-  Expires: /<expires:[ ]?(\d+)>/gi,
-  //endregion ON ITEMS
+  Expires: /<expires:[ ]?(\d+)>/gi, //endregion ON ITEMS
 
   //region ON STATES
   // definition-related.
@@ -552,8 +540,7 @@ J.ABS.RegExp = {
   // state duration-related.
   StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
   StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
-  StateDurationFormulaPlus: /<stateDurationForm:\[([+\-*/ ().\w]+)]>/gi,
-  //endregion ON STATES
+  StateDurationFormulaPlus: /<stateDurationForm:\[([+\-*/ ().\w]+)]>/gi, //endregion ON STATES
 
   //region ON BATTLERS
   // core concepts.
@@ -590,12 +577,10 @@ J.ABS.RegExp = {
   ConfigInvincible: /<jabsConfig:[ ]?invincible>/i,
   ConfigNotInvincible: /<jabsConfig:[ ]?notInvincible>/i,
   ConfigNoName: /<jabsConfig:[ ]?noName>/i,
-  ConfigShowName: /<jabsConfig:[ ]?showName>/i,
-  //endregion ON BATTLERS
+  ConfigShowName: /<jabsConfig:[ ]?showName>/i, //endregion ON BATTLERS
 
   //region ON ACTORS/CLASSES
-  ConfigNoSwitch: /<noSwitch>/i,
-  //endregion ON ACTORS/CLASSES
+  ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
 };
 
 /**

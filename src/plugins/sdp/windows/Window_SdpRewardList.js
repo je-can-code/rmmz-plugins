@@ -69,7 +69,6 @@ class Window_SdpRewardList extends Window_Command
       }
 
 
-
       // identify the right-aligned current and bonus amounts.
       let parameterData = `Rank: ${rankText}`;
 
@@ -87,4 +86,5 @@ class Window_SdpRewardList extends Window_Command
     return commands;
   }
 }
+
 //endregion Window_SdpRewardList

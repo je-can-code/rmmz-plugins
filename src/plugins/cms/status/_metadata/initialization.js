@@ -29,9 +29,6 @@ J.CMS_S.Metadata.Name = `J-CMS-Status`;
 J.CMS_S.Metadata.Version = '1.0.0';
 
 J.CMS_S.Aliased = {
-  Scene_Status: {},
-  Window_Status: {},
-  Window_StatusParams: {},
-  Window_StatusEquip: {},
+  Scene_Status: {}, Window_Status: {}, Window_StatusParams: {}, Window_StatusEquip: {},
 };
 //endregion Introduction

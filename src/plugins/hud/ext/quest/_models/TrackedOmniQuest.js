@@ -7,7 +7,8 @@ J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.set('refreshState', TrackedOmniQuest.pr
 TrackedOmniQuest.prototype.refreshState = function()
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.get('refreshState').call(this);
+  J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.get('refreshState')
+    .call(this);
 
   // also refresh the quest HUD with a progression of objectives.
   $hudManager.requestQuestRefresh();
@@ -22,7 +23,8 @@ J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.set('unlock', TrackedOmniQuest.prototyp
 TrackedOmniQuest.prototype.unlock = function(objectiveId = null)
 {
   // perform original logic.
-  J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.get('unlock').call(this, objectiveId);
+  J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest.get('unlock')
+    .call(this, objectiveId);
 
   // check if we have any tracked quests.
   const hasNoTrackedQuests = QuestManager.trackedQuests().length === 0;

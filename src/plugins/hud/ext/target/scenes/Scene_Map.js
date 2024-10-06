@@ -7,7 +7,8 @@ J.HUD.EXT.TARGET.Aliased.Scene_Map.set('initHudMembers', Scene_Map.prototype.ini
 Scene_Map.prototype.initHudMembers = function()
 {
   // perform original logic.
-  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('initHudMembers').call(this);
+  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('initHudMembers')
+    .call(this);
 
   /**
    * A grouping of all properties that belong to target extension
@@ -38,7 +39,8 @@ J.HUD.EXT.TARGET.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.c
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the target frame.
   this.createTargetFrameWindow();
@@ -125,7 +127,8 @@ J.HUD.EXT.TARGET.Aliased.Scene_Map.set('updateHudFrames', Scene_Map.prototype.up
 Scene_Map.prototype.updateHudFrames = function()
 {
   // perform original logic.
-  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('updateHudFrames').call(this);
+  J.HUD.EXT.TARGET.Aliased.Scene_Map.get('updateHudFrames')
+    .call(this);
 
   // manages target frame assignments.
   this.handleAssignTarget();
@@ -143,7 +146,8 @@ Scene_Map.prototype.handleAssignTarget = function()
   const newTarget = $hudManager.getNewTarget();
 
   // set the target frame's target to this new target.
-  this.getTargetFrameWindow().setTarget(newTarget);
+  this.getTargetFrameWindow()
+    .setTarget(newTarget);
 
   // let the hud manager know we've done the deed.
   $hudManager.acknowledgeAssignedTarget();

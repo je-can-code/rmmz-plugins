@@ -163,7 +163,8 @@ class JABS_InputAdapter
     if (!this.#canPerformToolAction(jabsBattler)) return;
 
     // grab the tool id currently equipped.
-    const toolId = jabsBattler.getBattler().getEquippedSkillId(JABS_Button.Tool);
+    const toolId = jabsBattler.getBattler()
+      .getEquippedSkillId(JABS_Button.Tool);
 
     // perform tool effects!
     jabsBattler.applyToolEffects(toolId);
@@ -180,7 +181,8 @@ class JABS_InputAdapter
     if (!jabsBattler.isSkillTypeCooldownReady(JABS_Button.Tool)) return false;
 
     // if there is no tool equipped, then do not perform.
-    if (!jabsBattler.getBattler().getEquippedSkillId(JABS_Button.Tool)) return false;
+    if (!jabsBattler.getBattler()
+      .getEquippedSkillId(JABS_Button.Tool)) return false;
 
     // perform!
     return true;
@@ -249,7 +251,9 @@ class JABS_InputAdapter
     if (!jabsBattler.canBattlerUseSkills()) return false;
 
     // if the slot is empty, then do not perform.
-    if (jabsBattler.getBattler().getSkillSlot(slot).isEmpty()) return false;
+    if (jabsBattler.getBattler()
+      .getSkillSlot(slot)
+      .isEmpty()) return false;
 
     // if the offhand action isn't ready, then do not perform.
     if (!jabsBattler.isSkillTypeCooldownReady(slot)) return false;
@@ -276,7 +280,8 @@ class JABS_InputAdapter
     if (!this.#canPerformStrafe(jabsBattler)) return;
 
     // perform the strafe.
-    jabsBattler.getCharacter().setDirectionFix(strafing);
+    jabsBattler.getCharacter()
+      .setDirectionFix(strafing);
   }
 
   /**
@@ -401,4 +406,5 @@ class JABS_InputAdapter
     return true;
   }
 }
+
 //endregion JABS_InputAdapter

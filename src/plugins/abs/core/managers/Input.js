@@ -92,7 +92,7 @@ Input.keyMapper = {
   81: J.ABS.Input.SkillTrigger, // q
   17: J.ABS.Input.StrafeTrigger,// ctrl
   69: J.ABS.Input.GuardTrigger, // e
-  9:  J.ABS.Input.MobilitySkill,// tab (overwrite)
+  9: J.ABS.Input.MobilitySkill,// tab (overwrite)
 
   // quickmenu button.
   13: J.ABS.Input.Quickmenu,    // enter (overwrite)

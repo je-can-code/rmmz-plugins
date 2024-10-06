@@ -51,4 +51,5 @@ class J_CraftingRefinePluginMetadata extends PluginMetadata
     this.commandIconIndex = parseInt(this.parsedPluginParameters['menu-icon']) ?? 0;
   }
 }
+
 //endregion plugin metadata

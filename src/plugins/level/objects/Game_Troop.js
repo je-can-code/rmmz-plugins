@@ -16,7 +16,8 @@ Game_Troop.prototype.expTotal = function()
   else
   {
     // return the default logic instead.
-    return J.LEVEL.Aliased.Game_Troop.get('expTotal').call(this);
+    return J.LEVEL.Aliased.Game_Troop.get('expTotal')
+      .call(this);
   }
 };
 

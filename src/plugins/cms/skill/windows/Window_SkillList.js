@@ -6,7 +6,7 @@ J.CMS_K.Aliased.Window_SkillList.initialize = Window_SkillList.prototype.initial
 Window_SkillList.prototype.initialize = function(rect)
 {
   J.CMS_K.Aliased.Window_SkillList.initialize.call(this, rect);
-  
+
   /**
    * The detail window for the skill.
    *  @type {Window_SkillDetail}

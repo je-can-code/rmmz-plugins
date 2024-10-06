@@ -35,4 +35,5 @@ class Game_Enemies
     return enemy;
   }
 }
+
 //endregion Game_Enemies

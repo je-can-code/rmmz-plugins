@@ -130,4 +130,5 @@ class JABS_LocationBuilder
     }
   }
 }
+
 //endregion JABS_LocationBuilder

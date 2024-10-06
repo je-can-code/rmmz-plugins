@@ -7,7 +7,8 @@ J.OMNI.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.OMNI.Aliased.Game_Party.get('initialize').call(this);
+  J.OMNI.Aliased.Game_Party.get('initialize')
+    .call(this);
 
   // initialize all omnipedia-related members.
   this.initOmnipediaMembers();

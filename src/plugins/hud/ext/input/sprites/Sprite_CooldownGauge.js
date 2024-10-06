@@ -176,6 +176,7 @@ class Sprite_CooldownGauge extends Sprite
 
     return parsedRate;
   }
+
   //endregion properties
 
   /**
@@ -328,11 +329,10 @@ class Sprite_CooldownGauge extends Sprite
     this.bitmap.fillRect(x, y, w, h, this.gaugeBackColor());
 
     // calculate the bordered x,y coordinates.
-    const [borderedX, borderedY] = [x + 1, y + 1];
+    const [ borderedX, borderedY ] = [ x + 1, y + 1 ];
 
     // render the filled portion of the gauge onto the bitmap.
-    this.bitmap.gradientFillRect(
-      borderedX,            // the x including borders.
+    this.bitmap.gradientFillRect(borderedX,            // the x including borders.
       borderedY,            // the y including borders.
       fillW,                // the width to fill.
       fillH,                // the hieght to fill.

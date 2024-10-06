@@ -6,7 +6,8 @@ J.EXTEND.Aliased.Game_Item.set('initialize', Game_Item.prototype.initialize);
 Game_Item.prototype.initialize = function(item)
 {
   // perform original logic.
-  J.EXTEND.Aliased.Game_Item.get('initialize').call(this, item);
+  J.EXTEND.Aliased.Game_Item.get('initialize')
+    .call(this, item);
 
   /**
    * The underlying object associated with this item.
@@ -38,7 +39,8 @@ J.EXTEND.Aliased.Game_Item.set('setObject', Game_Item.prototype.setObject);
 Game_Item.prototype.setObject = function(obj)
 {
   // perform original logic.
-  J.EXTEND.Aliased.Game_Item.get('setObject').call(this, obj);
+  J.EXTEND.Aliased.Game_Item.get('setObject')
+    .call(this, obj);
 
   // check to make sure we have something to work with.
   if (!obj) return;
@@ -72,6 +74,7 @@ Game_Item.prototype.object = function()
     return this._item;
   }
 
-  return J.EXTEND.Aliased.Game_Item.get('object').call(this);
+  return J.EXTEND.Aliased.Game_Item.get('object')
+    .call(this);
 };
 //endregion Game_Item

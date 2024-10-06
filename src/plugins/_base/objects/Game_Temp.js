@@ -7,7 +7,8 @@ J.BASE.Aliased.Game_Temp.set('initialize', Game_Temp.prototype.initialize);
 Game_Temp.prototype.initialize = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Temp.get('initialize').call(this);
+  J.BASE.Aliased.Game_Temp.get('initialize')
+    .call(this);
 
   // initialize our class members.
   this.initMembers();

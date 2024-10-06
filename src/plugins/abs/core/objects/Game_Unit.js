@@ -10,6 +10,7 @@ Game_Unit.prototype.inBattle = function()
 {
   return $jabsEngine.absEnabled
     ? true
-    : J.ABS.Aliased.Game_Unit.get('inBattle').call(this);
+    : J.ABS.Aliased.Game_Unit.get('inBattle')
+      .call(this);
 }
 //endregion Game_Unit

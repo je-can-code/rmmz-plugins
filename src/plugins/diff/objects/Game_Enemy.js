@@ -8,7 +8,8 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("param", Game_Enemy.prototype.param);
 Game_Enemy.prototype.param = function(paramId)
 {
   // grab the original value.
-  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("param").call(this, paramId);
+  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("param")
+    .call(this, paramId);
 
   // grab the currently applied difficulty.
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -29,7 +30,8 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("sparam", Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // grab the original value.
-  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sparam").call(this, sparamId);
+  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sparam")
+    .call(this, sparamId);
 
   // grab the currently applied difficulty.
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -50,7 +52,8 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("xparam", Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // grab the original value.
-  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("xparam").call(this, xparamId);
+  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("xparam")
+    .call(this, xparamId);
 
   // grab the currently applied difficulty.
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -70,7 +73,8 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("exp", Game_Enemy.prototype.exp);
 Game_Enemy.prototype.exp = function()
 {
   // grab the original value.
-  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("exp").call(this);
+  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("exp")
+    .call(this);
 
   // grab the currently applied difficulty.
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -90,7 +94,8 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
 Game_Enemy.prototype.gold = function()
 {
   // grab the original value.
-  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("gold").call(this);
+  const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("gold")
+    .call(this);
 
   // grab the currently applied difficulty.
   const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -114,7 +119,8 @@ if (J.DROPS)
   Game_Enemy.prototype.getBaseDropRate = function()
   {
     // grab the original value.
-    const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("getBaseDropRate").call(this);
+    const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("getBaseDropRate")
+      .call(this);
 
     // grab the currently applied difficulty.
     const appliedDifficulty = $gameTemp.getAppliedDifficulty();
@@ -138,7 +144,8 @@ if (J.SDP)
   Game_Enemy.prototype.sdpPoints = function()
   {
     // grab the original value.
-    const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sdpPoints").call(this);
+    const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sdpPoints")
+      .call(this);
 
     // grab the currently applied difficulty.
     const appliedDifficulty = $gameTemp.getAppliedDifficulty();

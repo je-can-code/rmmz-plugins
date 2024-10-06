@@ -28,8 +28,7 @@ JABS_Engine.prototype.setMapDamageBattler = function(dummyEnemyId, isFriendly)
     .setBattlerId(dummyEnemyId)
     .isDummy(isFriendly)
     .build();
-  this.mapDamageBattler = new JABS_Battler(
-    $gamePlayer, // irrelevant, but should be some event/character on the current map.
+  this.mapDamageBattler = new JABS_Battler($gamePlayer, // irrelevant, but should be some event/character on the current map.
     $gameEnemies.enemy(dummyEnemyId),
     coreData);
 };

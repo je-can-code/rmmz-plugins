@@ -17,6 +17,7 @@ class RPG_Armor extends RPG_EquipItem
    * @type {3}
    */
   kind = 3;
+
   //endregion properties
 
   /**
@@ -42,4 +43,5 @@ class RPG_Armor extends RPG_EquipItem
     return true;
   }
 }
+
 //endregion RPG_Armor

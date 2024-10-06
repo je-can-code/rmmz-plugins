@@ -34,6 +34,7 @@ class CraftingCategory
    * True this crafting category is unlocked by default, false otherwise.
    */
   unlockedByDefault = false;
+
   //endregion properties
 
   /**
@@ -74,4 +75,5 @@ class CraftingCategory
       .some(unlockedRecipe => unlockedRecipe.categoryKeys.includes(this.key), this);
   }
 }
+
 //endregion CraftingCategory

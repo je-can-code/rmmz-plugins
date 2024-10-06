@@ -8,7 +8,8 @@ J.HUD.Aliased.Scene_Map.set('initMembers', Scene_Map.prototype.initMembers);
 Scene_Map.prototype.initMembers = function()
 {
   // perform original logic.
-  J.HUD.Aliased.Scene_Map.get('initMembers').call(this);
+  J.HUD.Aliased.Scene_Map.get('initMembers')
+    .call(this);
 
   // also initialize the HUD members.
   this.initHudMembers();
@@ -39,7 +40,8 @@ J.HUD.Aliased.Scene_Map.set('update', Scene_Map.prototype.update);
 Scene_Map.prototype.update = function()
 {
   // perform original logic.
-  J.HUD.Aliased.Scene_Map.get('update').call(this);
+  J.HUD.Aliased.Scene_Map.get('update')
+    .call(this);
 
   // keep our HUD up to date.
   this.updateHudFrames();
@@ -62,7 +64,8 @@ J.HUD.Aliased.Scene_Map.set('onPartyRotate', Scene_Map.prototype.onPartyRotate);
 Scene_Map.prototype.onPartyRotate = function()
 {
   // perform original logic.
-  J.HUD.Aliased.Scene_Map.get('onPartyRotate').call(this);
+  J.HUD.Aliased.Scene_Map.get('onPartyRotate')
+    .call(this);
 
   // also refresh the HUD when the party is rotated for JABS.
   this.refreshHud();

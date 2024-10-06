@@ -8,10 +8,7 @@ class BasicChoiceConditional
    * A static property containing the strings representing validation types supported.
    */
   static Types = {
-    Leader: 'leader',
-    NotLeader: 'not-leader',
-    SwitchOn: 'switch-on',
-    SwitchOff: 'switch-off',
+    Leader: 'leader', NotLeader: 'not-leader', SwitchOn: 'switch-on', SwitchOff: 'switch-off',
   }
 
   /**
@@ -47,11 +44,13 @@ class BasicChoiceConditional
     {
       // validate the leader is in fact the correct leader.
       case BasicChoiceConditional.Types.Leader:
-        return ($gameParty.leader() && $gameParty.leader()?.actorId() === this.id);
+        return ($gameParty.leader() && $gameParty.leader()
+          ?.actorId() === this.id);
 
       // validate the leader is in fact the not the specified leader.
       case BasicChoiceConditional.Types.NotLeader:
-        return ($gameParty.leader() && $gameParty.leader()?.actorId() !== this.id);
+        return ($gameParty.leader() && $gameParty.leader()
+          ?.actorId() !== this.id);
 
       // validate the conditional switch is ON.
       case BasicChoiceConditional.Types.SwitchOn:
@@ -64,4 +63,5 @@ class BasicChoiceConditional
     return true;
   }
 }
+
 //endregion BasicChoiceConditional

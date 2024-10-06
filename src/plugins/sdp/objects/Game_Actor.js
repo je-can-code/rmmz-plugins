@@ -7,7 +7,8 @@ J.SDP.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
 Game_Actor.prototype.initMembers = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_Actor.get('initMembers').call(this);
+  J.SDP.Aliased.Game_Actor.get('initMembers')
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -194,9 +195,7 @@ Game_Actor.prototype.sdpMultiplier = function()
   const objectsToCheck = this.getAllNotes();
 
   // get the vision multiplier from anything this battler has available.
-  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.SDP.RegExp.SdpMultiplier);
+  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
 
   // get the sum of the base and bonus multipliers.
   const sdpMultiplier = (multiplier + sdpMultiplierBonus);
@@ -211,7 +210,8 @@ Game_Actor.prototype.sdpMultiplier = function()
  */
 Game_Actor.prototype.rankUpPanel = function(panelKey)
 {
-  this.getSdpByKey(panelKey).rankUp();
+  this.getSdpByKey(panelKey)
+    .rankUp();
 };
 
 /**
@@ -302,7 +302,8 @@ J.SDP.Aliased.Game_Actor.set("param", Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("param").call(this, paramId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("param")
+    .call(this, paramId);
 
   const panelModifications = this.getSdpBonusForCoreParam(paramId, baseParam);
   const result = baseParam + panelModifications;
@@ -316,7 +317,8 @@ J.SDP.Aliased.Game_Actor.set("xparam", Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("xparam").call(this, xparamId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("xparam")
+    .call(this, xparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(xparamId, baseParam, 8);
   const result = baseParam + panelModifications;
@@ -330,7 +332,8 @@ J.SDP.Aliased.Game_Actor.set("sparam", Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("sparam").call(this, sparamId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("sparam")
+    .call(this, sparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(sparamId, baseParam, 18);
   const result = baseParam + panelModifications;
@@ -346,7 +349,8 @@ J.SDP.Aliased.Game_Actor.set("maxTp", Game_Actor.prototype.maxTp);
 Game_Actor.prototype.maxTp = function()
 {
   // perform original logic.
-  const baseMaxTp = J.SDP.Aliased.Game_Actor.get("maxTp").call(this);
+  const baseMaxTp = J.SDP.Aliased.Game_Actor.get("maxTp")
+    .call(this);
 
   // calculate the bonus max tp from the panels.
   const bonusMaxTpFromSdp = this.maxTpSdpBonuses(baseMaxTp);

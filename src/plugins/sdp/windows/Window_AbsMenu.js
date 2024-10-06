@@ -10,7 +10,8 @@ if (J.ABS)
   Window_AbsMenu.prototype.buildCommands = function()
   {
     // perform original logic to get the base commands.
-    const originalCommands = J.SDP.Aliased.Window_AbsMenu.get('buildCommands').call(this);
+    const originalCommands = J.SDP.Aliased.Window_AbsMenu.get('buildCommands')
+      .call(this);
 
     // if the SDP switch is not ON, then this menu command is not present.
     if (!this.canAddSdpCommand()) return originalCommands;
@@ -55,8 +56,7 @@ if (J.ABS)
   {
     const description = [
       "The ever-growing list of stat distribution panels, aka your junction system.",
-      "Junction points can be spent here to modify your stats- permanently."
-    ];
+      "Junction points can be spent here to modify your stats- permanently." ];
 
     return description.join("\n");
   };

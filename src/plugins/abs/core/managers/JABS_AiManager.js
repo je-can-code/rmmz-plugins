@@ -57,7 +57,8 @@ class JABS_AiManager
   {
     // find the battler with the matching event id.
     return this.getAllBattlers()
-      .find(battler => battler.getCharacter().eventId() === eventId);
+      .find(battler => battler.getCharacter()
+        .eventId() === eventId);
   }
 
   /**
@@ -174,17 +175,13 @@ class JABS_AiManager
   static getClosestOpposingBattler(selectedBattler)
   {
     // grab all opposing battlers within the selected battlers sight.
-    const battlers = this.getOpposingBattlersWithinRange(
-      selectedBattler,
-      selectedBattler.getSightRadius());
+    const battlers = this.getOpposingBattlersWithinRange(selectedBattler, selectedBattler.getSightRadius());
 
     // if we have no visible opposing battlers, then there is no closest.
     if (!battlers.length) return null;
 
     // sort the closest battler out.
-    const [closestBattler,] = this.#sortBattlersByDistanceFromBattlerAscending(
-      battlers,
-      selectedBattler);
+    const [ closestBattler, ] = this.#sortBattlersByDistanceFromBattlerAscending(battlers, selectedBattler);
 
     // return the closest we found.
     return closestBattler;
@@ -251,7 +248,7 @@ class JABS_AiManager
   static #filterBattlersByOpposingTeam(battlers, selectedBattler)
   {
     // a filter function for determining whether or not the battler is of the opposing team.
-    const filtering = battler => 
+    const filtering = battler =>
     {
       // neutral battlers are never an opposition.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
@@ -277,7 +274,7 @@ class JABS_AiManager
   static #filterBattlersByAlliedTeam(battlers, selectedBattler)
   {
     // a filter function for determining whether or not the battler is of the same team.
-    const filtering = battler => 
+    const filtering = battler =>
     {
       // neutral battlers are never an ally.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
@@ -303,7 +300,7 @@ class JABS_AiManager
   static #filterBattlersByRangeFromBattler(battlers, originBattler, maxRange)
   {
     // a filter function for removing battlers outside of a given range.
-    const filtering = battler => 
+    const filtering = battler =>
     {
       // grab the distance from the origin battler to the given battler.
       const distance = originBattler.distanceToDesignatedTarget(battler);
@@ -328,7 +325,7 @@ class JABS_AiManager
   static #sortBattlersByDistanceFromBattlerAscending(battlers, originBattler)
   {
     // a compare function for comparing the distance between two battlers.
-    const comparing = (battlerA, battlerB) => 
+    const comparing = (battlerA, battlerB) =>
     {
       const distanceA = originBattler.distanceToDesignatedTarget(battlerA);
       const distanceB = originBattler.distanceToDesignatedTarget(battlerB);
@@ -338,6 +335,7 @@ class JABS_AiManager
     // return the battlers sorted by distance from closest to farthest.
     return battlers.sort(comparing);
   }
+
   //endregion get battlers
 
   //region manage battlers
@@ -449,16 +447,10 @@ class JABS_AiManager
     }
 
     // create the underlying battler associated with the event.
-    const battler = new Game_Enemy(
-      event.getBattlerId(),
-      null,
-      null);
+    const battler = new Game_Enemy(event.getBattlerId(), null, null);
 
     // create the battler with the new data.
-    const jabsBattler = new JABS_Battler(
-      event,
-      battler,
-      event.getBattlerCoreData());
+    const jabsBattler = new JABS_Battler(event, battler, event.getBattlerCoreData());
 
     // update the battler with the latest uuid.
     event.setJabsBattlerUuid(jabsBattler.getUuid());
@@ -564,6 +556,7 @@ class JABS_AiManager
     // convert it!
     return true;
   }
+
   //endregion manage battlers
 
   //region update loop
@@ -604,8 +597,7 @@ class JABS_AiManager
   static manageAi()
   {
     // grab all available battlers within a fixed range.
-    const battlers = this.getAllBattlersWithinRangeSortedByDistance(
-      $jabsEngine.getPlayer1(),
+    const battlers = this.getAllBattlersWithinRangeSortedByDistance($jabsEngine.getPlayer1(),
       J.ABS.Metadata.MaxAiUpdateRange);
 
     // if we have no battlers, then do not process AI.
@@ -693,6 +685,7 @@ class JABS_AiManager
       this.aiPhase0(battler);
     }
   }
+
   //endregion update loop
 
   //region Phase 0 - Idle Phase
@@ -709,7 +702,8 @@ class JABS_AiManager
     const isIdle = battler.isIdle();
 
     // check if the battler is currently not in-motion.
-    if (battler.getCharacter().isStopping())
+    if (battler.getCharacter()
+      .isStopping())
     {
       // check if the battler is alerted.
       if (battler.isAlerted())
@@ -740,7 +734,7 @@ class JABS_AiManager
   static seekForAlerter(battler)
   {
     // grab the x:y coordinates that we last "heard" the one triggering the alert from.
-    const [alertX, alertY] = battler.getAlertedCoordinates();
+    const [ alertX, alertY ] = battler.getAlertedCoordinates();
 
     // attempt to move intelligently towards those coordiantes.
     battler.smartMoveTowardCoordinates(alertX, alertY);
@@ -833,6 +827,7 @@ class JABS_AiManager
     // to move or not to move?
     return shouldMove;
   }
+
   //endregion Phase 0 - Idle Phase
 
   //region Phase 1 - Pre-Action Movement Phase
@@ -897,7 +892,8 @@ class JABS_AiManager
   static canDecidePhase1Movement(battler)
   {
     // check if the battler is currently moving.
-    if (battler.getCharacter().isMoving()) return false;
+    if (battler.getCharacter()
+      .isMoving()) return false;
 
     // check if the battler is unable to move.
     if (!battler.canBattlerMove()) return false;
@@ -982,6 +978,7 @@ class JABS_AiManager
         break;
     }
   }
+
   //endregion Phase 1 - Pre-Action Movement Phase
 
   //region Phase 2 - Execute Action Phase
@@ -1059,7 +1056,8 @@ class JABS_AiManager
     if (battler.isInPosition()) return false;
 
     // if the battler is moving, then they can't do repositioning things.
-    if (battler.getCharacter().isMoving()) return false;
+    if (battler.getCharacter()
+      .isMoving()) return false;
 
     // if we can't even move, we aren't able to reposition.
     if (!battler.canBattlerMove()) return false;
@@ -1126,10 +1124,7 @@ class JABS_AiManager
     // use the battler's AI to decide the action.
     const decidedSkillId = battler
       .getAiMode()
-      .decideAction(
-        battler,
-        battler.getTarget(),
-        battler.getSkillIdsFromEnemy());
+      .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
 
     // validate the skill chosen.
     if (!this.isSkillIdValid(decidedSkillId))
@@ -1203,7 +1198,7 @@ class JABS_AiManager
     actions.forEach(action => action.setCooldownType(cooldownKey));
 
     // destructure the "primary" action out.
-    const [action,] = actions;
+    const [ action, ] = actions;
 
     // perform the execution animation.
     this.performExecutionAnimation(battler, action);
@@ -1331,7 +1326,7 @@ class JABS_AiManager
   static needsToMoveCloser(battler)
   {
     // grab the action.
-    const [action,] = battler.getDecidedAction();
+    const [ action, ] = battler.getDecidedAction();
 
     // check if the action is self-targeting; we can cast these wherever.
     if (action.isForSelf()) return false;
@@ -1367,6 +1362,7 @@ class JABS_AiManager
       battler.smartMoveTowardTarget();
     }
   }
+
   //endregion Phase 2 - Execute Action Phase
 
   //region Phase 3 - Post-Action Cooldown Phase
@@ -1450,4 +1446,5 @@ class JABS_AiManager
 
   //endregion Phase 3 - Post-Action Cooldown Phase
 }
+
 //endregion JABS_AiManager

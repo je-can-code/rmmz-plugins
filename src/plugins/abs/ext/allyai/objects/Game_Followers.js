@@ -7,7 +7,8 @@ J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('show', Game_Followers.prototype.sho
 Game_Followers.prototype.show = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Followers.get('show').call(this);
+  J.ABS.EXT.ALLYAI.Aliased.Game_Followers.get('show')
+    .call(this);
 
   // update all allies when choosing "show" as an event command.
   $gameMap.updateAllies();
@@ -24,7 +25,8 @@ J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('hide', Game_Followers.prototype.hid
 Game_Followers.prototype.hide = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Followers.get('hide').call(this);
+  J.ABS.EXT.ALLYAI.Aliased.Game_Followers.get('hide')
+    .call(this);
 
   // update all allies when choosing "hide" as an event command.
   $gameMap.updateAllies();

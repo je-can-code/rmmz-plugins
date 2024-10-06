@@ -5,13 +5,12 @@
  * This is typically found on weapons and offhand armors.
  * @type {number|null}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsSkillId",
+Object.defineProperty(RPG_EquipItem.prototype, "jabsSkillId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSkillId();
-    },
-  });
+    return this.getJabsSkillId();
+  },
+});
 
 /**
  * Gets the JABS skill id for this equip.
@@ -37,13 +36,12 @@ RPG_EquipItem.prototype.extractJabsSkillId = function()
  * The offhand skill id override from this equip.
  * @type {number}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsOffhandSkillId",
+Object.defineProperty(RPG_EquipItem.prototype, "jabsOffhandSkillId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsOffhandSkillId();
-    },
-  });
+    return this.getJabsOffhandSkillId();
+  },
+});
 
 /**
  * Gets the JABS offhand skill id override for this equip.
@@ -64,20 +62,18 @@ RPG_EquipItem.prototype.extractJabsOffhandSkillId = function()
 //endregion offhand skillId
 
 
-
 //region useOnPickup
 /**
  * Normally defines whether or not an item will be automatically used
  * upon being picked up, however, equipment cannot be "used".
  * @type {false}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsUseOnPickup",
+Object.defineProperty(RPG_EquipItem.prototype, "jabsUseOnPickup", {
+  get: function()
   {
-    get: function()
-    {
-      return false;
-    },
-  });
+    return false;
+  },
+});
 //endregion useOnPickup
 
 //region expiration
@@ -85,13 +81,12 @@ Object.defineProperty(RPG_EquipItem.prototype, "jabsUseOnPickup",
  * The expiration time in frames for this equip drop.
  * @type {number|null}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsExpiration",
+Object.defineProperty(RPG_EquipItem.prototype, "jabsExpiration", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsExpirationFrames();
-    },
-  });
+    return this.getJabsExpirationFrames();
+  },
+});
 
 /**
  * Gets the expiration time in frames.

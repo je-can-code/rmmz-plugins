@@ -7,7 +7,8 @@ J.JAFTING.EXT.CREATE.Aliased.Game_System.set('onAfterLoad', Game_System.prototyp
 Game_System.prototype.onAfterLoad = function()
 {
   // perform original logic.
-  J.JAFTING.EXT.CREATE.Aliased.Game_System.get('onAfterLoad').call(this);
+  J.JAFTING.EXT.CREATE.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
 
   // update the recipes & categories.
   $gameParty.updateRecipesFromConfig();

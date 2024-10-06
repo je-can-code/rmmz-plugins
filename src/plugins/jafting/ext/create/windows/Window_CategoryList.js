@@ -73,4 +73,5 @@ class Window_CategoryList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_CategoryList

@@ -6,7 +6,8 @@ J.LEVEL.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDam
 Game_Action.prototype.makeDamageValue = function(target, critical)
 {
   // get the base damage that would've been done.
-  const baseDamage = J.LEVEL.Aliased.Game_Action.get('makeDamageValue').call(this, target, critical);
+  const baseDamage = J.LEVEL.Aliased.Game_Action.get('makeDamageValue')
+    .call(this, target, critical);
 
   // get the multiplier based on target and user levels.
   const multiplier = LevelScaling.multiplier(this.subject().level, target.level);

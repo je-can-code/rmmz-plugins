@@ -6,7 +6,8 @@ J.PROF.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
 Game_System.prototype.initialize = function()
 {
   // perform original logic.
-  J.PROF.Aliased.Game_System.get('initialize').call(this);
+  J.PROF.Aliased.Game_System.get('initialize')
+    .call(this);
 
   // initializes members for this plugin.
   this.initProficiencyMembers();
@@ -39,7 +40,8 @@ J.PROF.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad)
 Game_System.prototype.onAfterLoad = function()
 {
   // perform original logic.
-  J.PROF.Aliased.Game_System.get('onAfterLoad').call(this);
+  J.PROF.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
 
   // update from the latest plugin metadata.
   this.updateProficienciesFromPluginMetadata();

@@ -35,4 +35,5 @@ class OmniCategory
     this.iconIndex = iconIndex;
   }
 }
+
 //endregion OmniCategory

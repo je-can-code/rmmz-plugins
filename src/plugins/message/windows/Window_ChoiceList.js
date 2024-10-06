@@ -10,7 +10,8 @@ Window_ChoiceList.prototype.makeCommandList = function()
   this.clearChoiceMap();
 
   // perform original logic.
-  J.MESSAGE.Aliased.Window_ChoiceList.get('makeCommandList').call(this);
+  J.MESSAGE.Aliased.Window_ChoiceList.get('makeCommandList')
+    .call(this);
 
   let needsUpdate = false;
 

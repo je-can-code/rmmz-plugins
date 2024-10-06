@@ -69,4 +69,5 @@ class SDP_Rarity
     }
   }
 }
+
 //endregion SDP_Rarity

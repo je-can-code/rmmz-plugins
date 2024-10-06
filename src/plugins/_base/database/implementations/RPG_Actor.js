@@ -30,7 +30,7 @@ class RPG_Actor extends RPG_BaseBattler
    * of the actors from the database.
    * @type {number[]}
    */
-  equips = [0, 0, 0, 0, 0];
+  equips = [ 0, 0, 0, 0, 0 ];
 
   /**
    * The index of the face sprite of this battler on
@@ -69,6 +69,7 @@ class RPG_Actor extends RPG_BaseBattler
    * @type {string}
    */
   profile = String.empty;
+
   //endregion properties
 
   /**
@@ -104,4 +105,5 @@ class RPG_Actor extends RPG_BaseBattler
     this.profile = actor.profile;
   }
 }
+
 //endregion RPG_Actor

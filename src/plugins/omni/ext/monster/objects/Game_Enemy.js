@@ -17,7 +17,8 @@ J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('onDeath', Game_Enemy.prototype.onDeat
 Game_Enemy.prototype.onDeath = function()
 {
   // perform original logic.
-  J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('onDeath').call(this);
+  J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('onDeath')
+    .call(this);
 
   // increment the counter for how many times we've defeated this enemy.
   this.updateMonsterpediaObservation();
@@ -116,7 +117,8 @@ J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('makeDropItems', Game_Enemy.prototype.
 Game_Enemy.prototype.makeDropItems = function()
 {
   // perform original logic to retrieve original drops.
-  const drops = J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('makeDropItems').call(this);
+  const drops = J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('makeDropItems')
+    .call(this);
 
   // validate we have drops.
   if (drops.length)

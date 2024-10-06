@@ -37,4 +37,5 @@ class J_RegionSkillsPluginMetadata extends PluginMetadata
     this.delayBetweenExecutions = this.parsedPluginParameters['execution-delay'] ?? 60;
   }
 }
+
 //endregion plugin metadata

@@ -387,7 +387,7 @@ class Window_MapLog extends Window_Command
     // check if the player is below this window's origin Y.
     const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
     const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
-    
+
     // return what we deduced.
     return (xInterference) && (yInterference);
   }
@@ -453,7 +453,7 @@ class Window_MapLog extends Window_Command
       this.hideWindow();
     }
   }
-  
+
   fadeContentsOpacityTick()
   {
     // reduce opacity if it is.

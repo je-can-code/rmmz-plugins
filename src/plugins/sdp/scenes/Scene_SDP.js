@@ -85,6 +85,7 @@ class Scene_SDP extends Scene_MenuBase
      */
     this._j._sdp._windows._sdpRankData = null;
   }
+
   //endregion init
 
   //region create
@@ -116,6 +117,7 @@ class Scene_SDP extends Scene_MenuBase
   createButtons()
   {
   }
+
   //endregion create
 
   //region windows
@@ -225,6 +227,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpList = listWindow;
   }
+
   //endregion sdp list window
 
   //region parameter list window
@@ -302,6 +305,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpParameterList = listWindow;
   }
+
   //endregion parameter list window
 
   //region reward list window
@@ -385,6 +389,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpRewardList = listWindow;
   }
+
   //endregion reward list window
 
   //region rank data window
@@ -452,6 +457,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpRankData = rankDataWindow;
   }
+
   //endregion rank data window
 
   //region help window
@@ -516,6 +522,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpHelp = helpWindow;
   }
+
   // endregion help window
 
   //region points window
@@ -584,6 +591,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpPoints = pointsWindow;
   }
+
   //endregion points window
 
   //region confirmation window
@@ -655,6 +663,7 @@ class Scene_SDP extends Scene_MenuBase
   {
     this._j._sdp._windows._sdpConfirmation = confirmationWindow;
   }
+
   //endregion confirmation window
   //endregion windows
 
@@ -701,21 +710,25 @@ class Scene_SDP extends Scene_MenuBase
   onPanelHoveredChange()
   {
     // validate panels are present before updating everything.
-    const hasPanels = this.getSdpListWindow().hasCommands();
+    const hasPanels = this.getSdpListWindow()
+      .hasCommands();
     if (!hasPanels) return;
 
     // grab the current panel.
     /** @type {StatDistributionPanel} */
-    const currentPanel = this.getSdpListWindow().currentExt();
+    const currentPanel = this.getSdpListWindow()
+      .currentExt();
 
     // grab the current actor of the menu.
     const currentActor = $gameParty.menuActor();
 
     // update the actor associated with the sdp listing.
-    this.getSdpListWindow().setActor(currentActor);
+    this.getSdpListWindow()
+      .setActor(currentActor);
 
     // update the actor associated with the sdp point tracking.
-    this.getSdpPointsWindow().setActor(currentActor);
+    this.getSdpPointsWindow()
+      .setActor(currentActor);
 
     // update the parameter list with the latest panel parameters.
     const parameterListWindow = this.getSdpParameterListWindow();
@@ -729,18 +742,20 @@ class Scene_SDP extends Scene_MenuBase
     rewardListWindow.refresh();
 
     // update the text in the help window to reflect the description of the panel.
-    this.getSdpHelpWindow().setText(currentPanel.description);
+    this.getSdpHelpWindow()
+      .setText(currentPanel.description);
 
     // update the cost data window.
     const panelRanking = currentActor.getSdpByKey(currentPanel.key);
-    this.getSdpRankDataWindow().setRankData(
-      currentPanel.getPanelRarityColorIndex(),
-      currentPanel.getPanelRarityText(),
-      panelRanking.currentRank,
-      currentPanel.maxRank,
-      currentPanel.rankUpCost(panelRanking.currentRank),
-      currentActor.getSdpPoints());
-    this.getSdpRankDataWindow().refresh();
+    this.getSdpRankDataWindow()
+      .setRankData(currentPanel.getPanelRarityColorIndex(),
+        currentPanel.getPanelRarityText(),
+        panelRanking.currentRank,
+        currentPanel.maxRank,
+        currentPanel.rankUpCost(panelRanking.currentRank),
+        currentActor.getSdpPoints());
+    this.getSdpRankDataWindow()
+      .refresh();
   }
 
   /**
@@ -758,7 +773,8 @@ class Scene_SDP extends Scene_MenuBase
     this.onPanelHoveredChange();
 
     // re-activate the list window.
-    this.getSdpListWindow().activate();
+    this.getSdpListWindow()
+      .activate();
   }
 
   /**
@@ -767,7 +783,8 @@ class Scene_SDP extends Scene_MenuBase
   onUpgradeConfirm()
   {
     // grab the panel we're working with.
-    const panel = this.getSdpListWindow().currentExt();
+    const panel = this.getSdpListWindow()
+      .currentExt();
 
     // grab the actor we're working with.
     const actor = $gameParty.menuActor();
@@ -791,10 +808,12 @@ class Scene_SDP extends Scene_MenuBase
     this.onPanelHoveredChange();
 
     // close the confirmation window.
-    this.getSdpConfirmationWindow().close();
+    this.getSdpConfirmationWindow()
+      .close();
 
     // refocus back to the list window.
-    this.getSdpListWindow().activate();
+    this.getSdpListWindow()
+      .activate();
   }
 
   /**
@@ -810,8 +829,11 @@ class Scene_SDP extends Scene_MenuBase
     window.hide();
 
     // re-activate the main list window.
-    this.getSdpListWindow().activate();
+    this.getSdpListWindow()
+      .activate();
   }
+
   //endregion actions
 }
+
 //endregion Scene_SDP

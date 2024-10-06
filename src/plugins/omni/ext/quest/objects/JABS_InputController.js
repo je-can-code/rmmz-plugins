@@ -7,8 +7,9 @@ J.OMNI.EXT.QUEST.Aliased.JABS_InputController.set('update', JABS_InputController
 JABS_InputController.prototype.update = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.JABS_InputController.get('update').call(this);
-  
+  J.OMNI.EXT.QUEST.Aliased.JABS_InputController.get('update')
+    .call(this);
+
   // update input for the questopedia shortcut key.
   this.updateQuestopediaAction();
 };
@@ -24,7 +25,7 @@ JABS_InputController.prototype.updateQuestopediaAction = function()
     // execute the action.
     this.performQuestopediaAction();
   }
-  
+
 };
 
 /**

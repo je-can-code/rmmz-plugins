@@ -6,7 +6,8 @@ J.ABS.EXT.DANGER.Aliased.JABS_BattlerCoreData.set('initMembers', JABS_BattlerCor
 JABS_BattlerCoreData.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.DANGER.Aliased.JABS_BattlerCoreData.get('initMembers').call(this);
+  J.ABS.EXT.DANGER.Aliased.JABS_BattlerCoreData.get('initMembers')
+    .call(this);
 
   /**
    * Whether or not this battler's danger indicator will be visible.

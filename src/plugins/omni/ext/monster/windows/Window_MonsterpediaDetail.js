@@ -30,6 +30,7 @@ class Window_MonsterpediaDetail extends Window_Base
    * @type {Map<number, Sprite_Icon>}
    */
   #exParameterIconCache = new Map();
+
   //endregion properties
 
   /**
@@ -144,7 +145,8 @@ class Window_MonsterpediaDetail extends Window_Base
   populateBaseParameterIconSpriteCache()
   {
     // define the parameter ids that qualify as b-params.
-    const bparamIds = Game_BattlerBase.knownBaseParameterIds().concat(30);
+    const bparamIds = Game_BattlerBase.knownBaseParameterIds()
+      .concat(30);
 
     // an iterator function for creating base parameter icon sprites.
     const forEacher = (_, bParamId) => this.getOrCreateBaseParameterIconSprite(bParamId);
@@ -334,6 +336,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // return the created sprite.
     return sprite;
   }
+
   //endregion image caching
 
   /**
@@ -365,7 +368,7 @@ class Window_MonsterpediaDetail extends Window_Base
     if (!observations) return;
 
     // define the origin x,y coordinates.
-    const [x, y] = [0, 0];
+    const [ x, y ] = [ 0, 0 ];
 
     // shorthand the lineHeight.
     const lh = this.lineHeight();
@@ -584,14 +587,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const { level, } = gameEnemy;
 
     // draw the level parameter.
-    this.drawEnemyParameter(
-      x,
-      y,
-      IconManager.level(),
-      TextManager.level,
-      level,
-      !knowsParameters,
-      4);
+    this.drawEnemyParameter(x, y, IconManager.level(), TextManager.level, level, !knowsParameters, 4);
   }
 
   /**
@@ -626,39 +622,19 @@ class Window_MonsterpediaDetail extends Window_Base
 
     // draw the max hp parameter.
     const maxHpName = maxRemover(TextManager.param(0));
-    this.drawEnemyParameter(
-      x,
-      y,
-      IconManager.param(0),
-      maxHpName,
-      mhp,
-      !knowsParameters);
+    this.drawEnemyParameter(x, y, IconManager.param(0), maxHpName, mhp, !knowsParameters);
 
     // draw the max mp parameter.
     const maxMpName = maxRemover(TextManager.param(1));
     const maxMpXPlus = 12;
     const maxMpYPlus = lh * 1;
-    this.drawEnemyParameter(
-      x + maxMpXPlus,
-      y + maxMpYPlus,
-      IconManager.param(1),
-      maxMpName,
-      mmp,
-      !knowsParameters,
-      6);
+    this.drawEnemyParameter(x + maxMpXPlus, y + maxMpYPlus, IconManager.param(1), maxMpName, mmp, !knowsParameters, 6);
 
     // draw the max tp parameter.
     const maxTpName = maxRemover(TextManager.maxTp());
     const maxTpXPlus = 24;
     const maxTpYPlus = lh * 2;
-    this.drawEnemyParameter(
-      x + maxTpXPlus,
-      y + maxTpYPlus,
-      IconManager.maxTp(),
-      maxTpName,
-      mtp,
-      !knowsParameters,
-      6);
+    this.drawEnemyParameter(x + maxTpXPlus, y + maxTpYPlus, IconManager.maxTp(), maxTpName, mtp, !knowsParameters, 6);
   }
 
   /**
@@ -685,10 +661,7 @@ class Window_MonsterpediaDetail extends Window_Base
 
     // extract the parameters to draw from this enemy.
     const {
-      atk, def, pdr,
-      mat, mdf, mdr,
-      agi, hit, cnt,
-      luk, cri, cev,
+      atk, def, pdr, mat, mdf, mdr, agi, hit, cnt, luk, cri, cev,
     } = gameEnemy;
 
     // the modifier for where the left column begins.
@@ -696,20 +669,12 @@ class Window_MonsterpediaDetail extends Window_Base
 
     // draw the attack parameter.
     const atkXPlus = leftColumnX;
-    this.drawEnemyParameter(
-      x + atkXPlus,
-      y,
-      IconManager.param(2),
-      TextManager.param(2),
-      atk,
-      !knowsParameters,
-      4);
+    this.drawEnemyParameter(x + atkXPlus, y, IconManager.param(2), TextManager.param(2), atk, !knowsParameters, 4);
 
     // draw the endurance parameter.
     const defXPlus = leftColumnX + 8;
     const defYPlus = lh * 1;
-    this.drawEnemyParameter(
-      x + defXPlus,
+    this.drawEnemyParameter(x + defXPlus,
       y + defYPlus,
       IconManager.param(3),
       TextManager.param(3),
@@ -721,8 +686,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const pdrXPlus = leftColumnX + 8;
     const pdrYPlus = lh * 2;
     const pdrValue = (pdr * 100) - 100;
-    this.drawEnemyParameter(
-      x + pdrXPlus,
+    this.drawEnemyParameter(x + pdrXPlus,
       y + pdrYPlus,
       IconManager.sparam(6),
       TextManager.sparam(6),
@@ -733,8 +697,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // draw the force parameter.
     const matXPlus = leftColumnX;
     const matYPlus = lh * 3;
-    this.drawEnemyParameter(
-      x + matXPlus,
+    this.drawEnemyParameter(x + matXPlus,
       y + matYPlus,
       IconManager.param(4),
       TextManager.param(4),
@@ -745,8 +708,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // draw the resist parameter.
     const mdfXPlus = leftColumnX + 8;
     const mdfYPlus = lh * 4;
-    this.drawEnemyParameter(
-      x + mdfXPlus,
+    this.drawEnemyParameter(x + mdfXPlus,
       y + mdfYPlus,
       IconManager.param(5),
       TextManager.param(5),
@@ -758,8 +720,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const mdrXPlus = leftColumnX + 8;
     const mdrYPlus = lh * 5;
     const mdrValue = (mdr * 100) - 100;
-    this.drawEnemyParameter(
-      x + mdrXPlus,
+    this.drawEnemyParameter(x + mdrXPlus,
       y + mdrYPlus,
       IconManager.sparam(7),
       TextManager.sparam(7),
@@ -770,8 +731,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // draw the speed parameter.
     const agiXPlus = leftColumnX;
     const agiYPlus = lh * 6;
-    this.drawEnemyParameter(
-      x + agiXPlus,
+    this.drawEnemyParameter(x + agiXPlus,
       y + agiYPlus,
       IconManager.param(6),
       TextManager.param(6),
@@ -783,8 +743,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const hitXPlus = leftColumnX + 8;
     const hitYPlus = lh * 7;
     const hitValue = (hit * 100);
-    this.drawEnemyParameter(
-      x + hitXPlus,
+    this.drawEnemyParameter(x + hitXPlus,
       y + hitYPlus,
       IconManager.xparam(0),
       TextManager.xparam(0),
@@ -796,8 +755,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const cntXPlus = leftColumnX + 8;
     const cntYPlus = lh * 8;
     const cntValue = (cnt * 100);
-    this.drawEnemyParameter(
-      x + cntXPlus,
+    this.drawEnemyParameter(x + cntXPlus,
       y + cntYPlus,
       IconManager.xparam(6),
       TextManager.xparam(6),
@@ -808,8 +766,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // draw the b-param parameter.
     const lukXPlus = leftColumnX;
     const lukYPlus = lh * 9;
-    this.drawEnemyParameter(
-      x + lukXPlus,
+    this.drawEnemyParameter(x + lukXPlus,
       y + lukYPlus,
       IconManager.param(7),
       TextManager.param(7),
@@ -821,8 +778,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const criXPlus = leftColumnX + 8;
     const criYPlus = lh * 10;
     const criValue = (cri * 100);
-    this.drawEnemyParameter(
-      x + criXPlus,
+    this.drawEnemyParameter(x + criXPlus,
       y + criYPlus,
       IconManager.xparam(2),
       TextManager.xparam(2),
@@ -834,8 +790,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const cevXPlus = leftColumnX + 8;
     const cevYPlus = lh * 11;
     const cevValue = (cev * 100);
-    this.drawEnemyParameter(
-      x + cevXPlus,
+    this.drawEnemyParameter(x + cevXPlus,
       y + cevYPlus,
       IconManager.xparam(3),
       TextManager.xparam(3),
@@ -857,15 +812,7 @@ class Window_MonsterpediaDetail extends Window_Base
    * @param {number=} padZeroCount The number of zeroes to pad a masked parameter value with.
    * @param {number=} spacePlus Additional space to add between the name and value of this parameter.
    */
-  drawEnemyParameter(
-    x,
-    y,
-    iconIndex,
-    parameterName,
-    parameterValue,
-    maskValue = false,
-    padZeroCount = 8,
-    spacePlus = 0)
+  drawEnemyParameter(x, y, iconIndex, parameterName, parameterValue, maskValue = false, padZeroCount = 8, spacePlus = 0)
   {
     // determine the padding for prefixing with an icon.
     const iconWidthPadding = iconIndex === 0
@@ -933,7 +880,7 @@ class Window_MonsterpediaDetail extends Window_Base
     this.changeTextColor(ColorManager.textColor(8))
     const charWidth = this.textWidth(value.charAt(0));
     const totalCharWidth = value.length * charWidth;
-    [...value].forEach((char, index) =>
+    [ ...value ].forEach((char, index) =>
     {
       if (char !== "0")
       {
@@ -1004,42 +951,21 @@ class Window_MonsterpediaDetail extends Window_Base
     const expIcon = IconManager.rewardParam(0);
     const expName = TextManager.rewardParam(0);
     const expValue = gameEnemy.exp();
-    this.drawEnemyParameter(
-      x,
-      y,
-      expIcon,
-      expName,
-      expValue,
-      !knowsParameters,
-      0);
+    this.drawEnemyParameter(x, y, expIcon, expName, expValue, !knowsParameters, 0);
 
     // draw the gold data.
     const goldIcon = IconManager.rewardParam(1);
     const goldName = TextManager.rewardParam(1);
     const goldValue = gameEnemy.gold();
     const goldYPlus = lh * 1;
-    this.drawEnemyParameter(
-      x,
-      y + goldYPlus,
-      goldIcon,
-      goldName,
-      goldValue,
-      !knowsParameters,
-      0);
+    this.drawEnemyParameter(x, y + goldYPlus, goldIcon, goldName, goldValue, !knowsParameters, 0);
 
     // draw the SDP data.
     const sdpIcon = IconManager.rewardParam(4);
     const sdpName = TextManager.rewardParam(4);
     const sdpValue = gameEnemy.sdpPoints();
     const sdpYPlus = lh * 2;
-    this.drawEnemyParameter(
-      x,
-      y + sdpYPlus,
-      sdpIcon,
-      sdpName,
-      sdpValue,
-      !knowsParameters,
-      0);
+    this.drawEnemyParameter(x, y + sdpYPlus, sdpIcon, sdpName, sdpValue, !knowsParameters, 0);
   }
 
   /**
@@ -1106,15 +1032,7 @@ class Window_MonsterpediaDetail extends Window_Base
       : J.BASE.Helpers.maskString(name);
 
     // render the parameter.
-    this.drawEnemyParameter(
-      x,
-      y,
-      iconIndex,
-      panelName,
-      dropText,
-      false,
-      0,
-      20);
+    this.drawEnemyParameter(x, y, iconIndex, panelName, dropText, false, 0, 20);
   }
 
   /**
@@ -1176,9 +1094,7 @@ class Window_MonsterpediaDetail extends Window_Base
 
       // extract the data out of the drop with more accurate naming.
       const {
-        dataId: dropId,
-        denominator: dropChance,
-        kind: dropType
+        dataId: dropId, denominator: dropChance, kind: dropType
       } = drop;
 
       // determine if we know this drop.
@@ -1196,14 +1112,7 @@ class Window_MonsterpediaDetail extends Window_Base
 
       // draw the loot drop.
       const dropYPlus = (index - numberSkipped) * lh;
-      this.drawEnemyParameter(
-        x,
-        y + dropYPlus,
-        dropIcon,
-        dropName,
-        `${dropChance}%`,
-        false,
-        4);
+      this.drawEnemyParameter(x, y + dropYPlus, dropIcon, dropName, `${dropChance}%`, false, 4);
     };
 
     // draw all the drops.
@@ -1223,19 +1132,22 @@ class Window_MonsterpediaDetail extends Window_Base
     // skippable items don't show up in this list.
     if (drop.kind === RPG_DropItem.Types.Item)
     {
-      return this.skippableItemIds().includes(drop.dataId);
+      return this.skippableItemIds()
+        .includes(drop.dataId);
     }
 
     // skippable weapons don't show up in this list.
     if (drop.kind === RPG_DropItem.Types.Weapon)
     {
-      return this.skippableWeaponIds().includes(drop.dataId);
+      return this.skippableWeaponIds()
+        .includes(drop.dataId);
     }
 
     // skippable armors don't show up in this list.
     if (drop.kind === RPG_DropItem.Types.Armor)
     {
-      return this.skippableArmorIds().includes(drop.dataId);
+      return this.skippableArmorIds()
+        .includes(drop.dataId);
     }
 
     return true;
@@ -1247,7 +1159,7 @@ class Window_MonsterpediaDetail extends Window_Base
    */
   skippableItemIds()
   {
-    return [2, 3, 4, 8, 9];
+    return [ 2, 3, 4, 8, 9 ];
   }
 
   /**
@@ -1342,7 +1254,7 @@ class Window_MonsterpediaDetail extends Window_Base
     // reduce the font size for the description text.
     this.modFontSize(-4);
 
-    const validElementIds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const validElementIds = [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
 
     validElementIds.forEach((elementId, index) =>
     {
@@ -1385,14 +1297,7 @@ class Window_MonsterpediaDetail extends Window_Base
       }
 
       const elementYPlus = lh * index;
-      this.drawEnemyParameter(
-        x,
-        y + elementYPlus,
-        elementIcon,
-        elementName,
-        elementRate,
-        false,
-        4);
+      this.drawEnemyParameter(x, y + elementYPlus, elementIcon, elementName, elementRate, false, 4);
     });
   }
 

@@ -8,7 +8,8 @@ J.CRIT.Aliased.Game_Action.set('initialize', Game_Action.prototype.initialize);
 Game_Action.prototype.initialize = function(subject, forcing)
 {
   // perform original logic.
-  J.CRIT.Aliased.Game_Action.get('initialize').call(this, subject, forcing);
+  J.CRIT.Aliased.Game_Action.get('initialize')
+    .call(this, subject, forcing);
 
   /**
    * The target of this action.
@@ -49,7 +50,8 @@ Game_Action.prototype.apply = function(target)
   this.setTargetBattler(target);
 
   // perform whatever the base action application is to the target.
-  J.CRIT.Aliased.Game_Action.get('apply').call(this, target);
+  J.CRIT.Aliased.Game_Action.get('apply')
+    .call(this, target);
 };
 
 /**

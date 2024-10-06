@@ -14,9 +14,9 @@ class RPG_Trait
    */
   static fromValues(code, dataId, value)
   {
-    return new RPG_Trait({code, dataId, value});
+    return new RPG_Trait({ code, dataId, value });
   }
-  
+
   /**
    * The code that designates what kind of trait this is.
    * @type {number}
@@ -116,7 +116,9 @@ class RPG_Trait
       case 54:
         return `${$dataSystem.equipTypes[this.dataId]}`;
       case 55:
-        return `${this.dataId ? "Enable" : "Disable"}`;
+        return `${this.dataId
+          ? "Enable"
+          : "Disable"}`;
 
       // sixth tab.
       case 61:
@@ -144,26 +146,38 @@ class RPG_Trait
       // first tab.
       case 11:
         const calculatedElementalRate = Math.round(100 - (this.value * 100));
-        return `${calculatedElementalRate > 0 ? "-" : "+"}${calculatedElementalRate}%`;
+        return `${calculatedElementalRate > 0
+          ? "-"
+          : "+"}${calculatedElementalRate}%`;
       case 12:
         const calculatedDebuffRate = Math.round((this.value * 100) - 100);
-        return `${calculatedDebuffRate > 0 ? "+" : "-"}${calculatedDebuffRate}%`;
+        return `${calculatedDebuffRate > 0
+          ? "+"
+          : "-"}${calculatedDebuffRate}%`;
       case 13:
         const calculatedStateRate = Math.round(100 - (this.value * 100));
-        return `${calculatedStateRate > 0 ? "+" : "-"}${calculatedStateRate}%`;
+        return `${calculatedStateRate > 0
+          ? "+"
+          : "-"}${calculatedStateRate}%`;
       case 14:
         return $dataStates[this.dataId].name;
 
       // second tab.
       case 21:
         const calculatedBParam = Math.round((this.value * 100) - 100);
-        return `${calculatedBParam >= 0 ? "+" : ""}${calculatedBParam}%`;
+        return `${calculatedBParam >= 0
+          ? "+"
+          : ""}${calculatedBParam}%`;
       case 22:
         const calculatedXParam = Math.round((this.value * 100));
-        return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}%`;
+        return `${calculatedXParam >= 0
+          ? "+"
+          : ""}${calculatedXParam}%`;
       case 23:
         const calculatedSParam = Math.round((this.value * 100) - 100);
-        return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}%`;
+        return `${calculatedSParam >= 0
+          ? "+"
+          : ""}${calculatedSParam}%`;
 
       // third tab.
       case 31:
@@ -171,9 +185,13 @@ class RPG_Trait
       case 32:
         return `${(this.value * 100)}%`;
       case 33:
-        return `${this.value > 0 ? "+" : "-"}${this.value}`;
+        return `${this.value > 0
+          ? "+"
+          : "-"}${this.value}`;
       case 34:
-        return `${this.value > 0 ? "+" : "-"}${this.value}`;
+        return `${this.value > 0
+          ? "+"
+          : "-"}${this.value}`;
       case 35:
         return `${$dataSkills[this.value].name}`;
 
@@ -247,4 +265,5 @@ class RPG_Trait
     }
   }
 }
+
 //endregion RPG_Trait

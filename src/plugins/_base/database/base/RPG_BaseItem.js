@@ -33,4 +33,5 @@ class RPG_BaseItem extends RPG_Base
     this.iconIndex = baseItem.iconIndex;
   }
 }
+
 //endregion RPG_BaseItem

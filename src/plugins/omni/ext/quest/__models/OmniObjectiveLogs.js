@@ -53,4 +53,5 @@ class OmniObjectiveLogs
     this.missed = missed;
   }
 }
+
 //endregion OmniObjectiveLogs

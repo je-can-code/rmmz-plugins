@@ -69,4 +69,5 @@ class Window_OmnipediaList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_OmnipediaList

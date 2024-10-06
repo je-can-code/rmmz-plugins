@@ -1289,8 +1289,7 @@ class JABS_Engine
         directions.push(this.rotate180degrees(facing));
         break;
       case 8:
-        directions.push(
-          1, 3, 7, 9,   // diagonal
+        directions.push(1, 3, 7, 9,   // diagonal
           2, 4, 6, 8);  // cardinal
         break;
     }
@@ -1540,9 +1539,7 @@ class JABS_Engine
     actionEventData.lootIndex = 0;
 
     // create the event by hand with this new data
-    const actionEventSprite = new Game_Event(
-      J.ABS.DefaultValues.ActionMap,
-      newIndex);
+    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, newIndex);
 
     const { x: actionX, y: actionY } = actionEventData;
     actionEventSprite._realX = actionX;
@@ -2954,7 +2951,7 @@ class JABS_Engine
           hitOne = true;
         }
       }
-      // if the action is a standard projectile-based action,
+        // if the action is a standard projectile-based action,
       // then check to see if this battler is now in range.
       else
       {

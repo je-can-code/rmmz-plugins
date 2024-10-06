@@ -34,4 +34,5 @@ class RPG_BaseBattler extends RPG_Base
       .map(trait => new RPG_Trait(trait));
   }
 }
+
 //endregion RPG_BaseBattler

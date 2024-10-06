@@ -117,4 +117,5 @@ class Window_MonsterpediaList extends Window_Command
       .build();
   }
 }
+
 //endregion Window_MonsterpediaList

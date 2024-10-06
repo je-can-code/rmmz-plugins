@@ -41,7 +41,8 @@ class RPG_Enemy extends RPG_BaseBattler
    * in that order.
    * @type {[number, number, number, number, number, number, number, number]}
    */
-  params = [1, 0, 0, 0, 0, 0, 0, 0];
+  params = [ 1, 0, 0, 0, 0, 0, 0, 0 ];
+
   //endregion properties
 
   /**
@@ -75,4 +76,5 @@ class RPG_Enemy extends RPG_BaseBattler
     this.params = enemy.params;
   }
 }
+
 //endregion RPG_Enemy

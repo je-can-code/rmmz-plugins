@@ -5,8 +5,7 @@
  * @param {number} subChoiceCommandIndex The index in the list of commands of an event that represents this branch.
  * @returns {boolean}
  */
-J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set(
-  'shouldHideChoiceBranch',
+J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set('shouldHideChoiceBranch',
   Game_Interpreter.prototype.shouldHideChoiceBranch);
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex)
 {

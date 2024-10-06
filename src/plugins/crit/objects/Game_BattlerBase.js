@@ -1,36 +1,30 @@
 //region Game_BattlerBase
 // add our new critical-related parameters to all battlers.
-Object.defineProperties(
-  Game_BattlerBase.prototype,
-  {
-    /**
-     * The battler's critical damage multiplier.
-     * Critical hits are multiplied by this amount to determine the total critical hit damage.
-     * @type {number}
-     */
-    cdm:
-      {
-        get: function()
-        {
-          return this.criticalDamageMultiplier();
-        },
-        configurable: true
-      },
+Object.defineProperties(Game_BattlerBase.prototype, {
+  /**
+   * The battler's critical damage multiplier.
+   * Critical hits are multiplied by this amount to determine the total critical hit damage.
+   * @type {number}
+   */
+  cdm: {
+    get: function()
+    {
+      return this.criticalDamageMultiplier();
+    }, configurable: true
+  },
 
-    /**
-     * The battler's critical damage reduction.
-     * Critical hit damage is reduced by this percent before being applied.
-     * @type {number}
-     */
-    cdr:
-      {
-        get: function()
-        {
-          return this.criticalDamageReduction();
-        },
-        configurable: true
-      },
-  });
+  /**
+   * The battler's critical damage reduction.
+   * Critical hit damage is reduced by this percent before being applied.
+   * @type {number}
+   */
+  cdr: {
+    get: function()
+    {
+      return this.criticalDamageReduction();
+    }, configurable: true
+  },
+});
 
 /**
  * The base critical damage multiplier.

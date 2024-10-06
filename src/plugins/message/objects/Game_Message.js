@@ -7,7 +7,8 @@ J.MESSAGE.Aliased.Game_Message.set('clear', Game_Message.prototype.clear);
 Game_Message.prototype.clear = function()
 {
   // perform original logic.
-  J.MESSAGE.Aliased.Game_Message.get('clear').call(this);
+  J.MESSAGE.Aliased.Game_Message.get('clear')
+    .call(this);
 
   /**
    * An object tracking key:value (index:boolean) pairs for whether or not an index of a choice is hidden.

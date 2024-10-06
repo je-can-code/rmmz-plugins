@@ -46,7 +46,7 @@ class Window_DifficultyPoints extends Window_Base
   drawContent()
   {
     // define the origin x,y coordinates.
-    const [x, y] = [0, 0];
+    const [ x, y ] = [ 0, 0 ];
 
     // shorthand the lineHeight.
     const lh = this.lineHeight();

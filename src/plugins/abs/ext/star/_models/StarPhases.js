@@ -2,7 +2,7 @@
  * A collection of {@link StarPhase}s that represent the flow of a star battle.
  * @type {StarPhases}
  */
- BattleManager.starPhases = new StarPhases();
+BattleManager.starPhases = new StarPhases();
 
 /**
  * A constellation of phases in the stars of battle.

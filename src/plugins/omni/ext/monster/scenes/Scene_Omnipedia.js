@@ -20,7 +20,8 @@ Scene_Omnipedia.prototype.onRootPediaSelection = function()
   else
   {
     // possibly activate other choices.
-    J.OMNI.EXT.MONSTER.Aliased.Scene_Omnipedia.get('onRootPediaSelection').call(this);
+    J.OMNI.EXT.MONSTER.Aliased.Scene_Omnipedia.get('onRootPediaSelection')
+      .call(this);
   }
 }
 

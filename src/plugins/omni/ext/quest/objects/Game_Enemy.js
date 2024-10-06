@@ -1,13 +1,14 @@
 //region Game_Enemy
 /**
  * Extends {@link onDeath}.<br/>
- *
+ * Also processes quest checks for slain enemies.
  */
 J.OMNI.EXT.QUEST.Aliased.Game_Enemy.set('onDeath', Game_Enemy.prototype.onDeath);
 Game_Enemy.prototype.onDeath = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Enemy.get('onDeath').call(this);
+  J.OMNI.EXT.QUEST.Aliased.Game_Enemy.get('onDeath')
+    .call(this);
 
   // process the quest checking for slaying enemies.
   this.processSlayQuestsCheck();

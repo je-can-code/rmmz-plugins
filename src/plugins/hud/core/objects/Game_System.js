@@ -6,11 +6,11 @@ J.HUD.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
 Game_System.prototype.initialize = function()
 {
   // perform original logic.
-  J.HUD.Aliased.Game_System.get('initialize').call(this);
+  J.HUD.Aliased.Game_System.get('initialize')
+    .call(this);
   this._j ||= {};
   this._j._hud ||= {
-    _hudVisible: true,
-    _alliesVisible: true,
+    _hudVisible: true, _alliesVisible: true,
   };
 };
 

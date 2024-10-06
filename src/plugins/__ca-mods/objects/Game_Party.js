@@ -42,7 +42,8 @@ Game_Party.prototype.elementalJabsBattlers = function()
   const filtering = jabsBattler =>
   {
     // grab the actor's id of this jabs battler.
-    const actorId = jabsBattler.getBattler().actorId();
+    const actorId = jabsBattler.getBattler()
+      .actorId();
 
     // identify if the actor id is among the known elemental actor id list.
     const isElementalActor = Game_Party.ELEMENTAL_ALLY_ACTOR_IDS.contains(actorId);
