@@ -150,8 +150,14 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
     case OmniObjective.Types.Destination:
       const { mapId, x1, y1, x2, y2 } = omniFulfillmentData.destination;
       this._targetMapId = mapId;
-      const point1 = [ x1, y1 ];
-      const point2 = [ x2, y2 ];
+      const point1 = [
+        x1,
+        y1
+      ];
+      const point2 = [
+        x2,
+        y2
+      ];
       this._targetCoordinateRange.push(point1, point2);
       break;
 
@@ -170,7 +176,7 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
 
     // if the fulfillment is of type 'quest', then fill in the data.
     case OmniObjective.Types.Quest:
-      this._targetQuestKeys.push(omniFulfillmentData.quest.keys);
+      this._targetQuestKeys.push(...omniFulfillmentData.quest.keys);
       break;
   }
 };
@@ -370,8 +376,8 @@ TrackedOmniObjective.prototype.log = function()
 };
 
 /**
- * Gets the type of objective this is to determine how it must be fulfilled.
- * @returns {OmniObjective.Types}
+ * Gets the {@link OmniObjective.Types} of objective this is to determine how it must be fulfilled.
+ * @returns {number}
  */
 TrackedOmniObjective.prototype.type = function()
 {
@@ -413,8 +419,7 @@ TrackedOmniObjective.prototype.fulfillmentText = function()
         ? notEnoughColor
         : enoughColor;
       const targetEnemyText = `\\C[${slayColor}]${this._currentEnemyAmount} / ${this._targetEnemyAmount}\\C[0]`;
-      const template = OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this._targetEnemyId);
-      return template;
+      return OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this._targetEnemyId);
 
     case OmniObjective.Types.Quest:
       const questNames = this._targetQuestKeys
@@ -475,7 +480,9 @@ TrackedOmniObjective.prototype.setState = function(newState)
 TrackedOmniObjective.prototype.destinationData = function()
 {
   return [
-    this._targetMapId, this._targetCoordinateRange ];
+    this._targetMapId,
+    this._targetCoordinateRange
+  ];
 };
 
 /**
@@ -516,7 +523,9 @@ TrackedOmniObjective.prototype.isPlayerWithinDestinationRange = function()
 TrackedOmniObjective.prototype.fetchData = function()
 {
   return [
-    this._targetItemId, this._targetItemFetchQuantity ];
+    this._targetItemId,
+    this._targetItemFetchQuantity
+  ];
 };
 
 /**
@@ -587,10 +596,9 @@ TrackedOmniObjective.prototype.synchronizeFetchTargetItemQuantity = function()
   // determine the current amount of the item in possession.
   const targetDataSource = this.fetchItemDataSource();
   const targetItem = targetDataSource.at(this._targetItemId);
-  const targetItemQuantity = $gameParty.numItems(targetItem);
 
   // align the tracked amount with the actual amount.
-  this._currentItemFetchQuantity = targetItemQuantity;
+  this._currentItemFetchQuantity = $gameParty.numItems(targetItem);
 
   // process the event hook.
   this.onObjectiveUpdate();
@@ -619,7 +627,9 @@ TrackedOmniObjective.prototype.hasFetchedEnoughItems = function()
 TrackedOmniObjective.prototype.slayData = function()
 {
   return [
-    this._targetEnemyId, this._targetEnemyAmount ];
+    this._targetEnemyId,
+    this._targetEnemyAmount
+  ];
 };
 
 /**
@@ -676,6 +686,50 @@ TrackedOmniObjective.prototype.hasCompletedAllQuests = function()
  */
 TrackedOmniObjective.prototype.onObjectiveUpdate = function()
 {
+  // check if we have the dialog manager.
+  if ($diaLogManager)
+  {
+    // handle logging.
+    this.handleObjectiveUpdateLog();
+  }
+};
+
+/**
+ * Generate a dialog indicating the quest objectives have been updated.
+ */
+TrackedOmniObjective.prototype.handleObjectiveUpdateLog = function()
+{
+  // the logs only happen if the objective is finalized somehow.
+  if (!this.isFinalized()) return;
+  
+  // start the message stating the quest is updated.
+  const objectiveMessage = [ `\\C[1][${this.parentQuestMetadata().name}]\\C[0] updated.` ];
+
+  // determine by state.
+  switch (this.state)
+  {
+    case OmniObjective.States.Completed:
+      objectiveMessage.push('Objective completed.');
+      break;
+    case OmniObjective.States.Failed:
+      objectiveMessage.push('Objective failed.');
+      break;
+    case OmniObjective.States.Missed:
+      objectiveMessage.push('Objective missed.');
+      break;
+    default:
+      // if somehow we got here without a known finalization, throw.
+      throw new Error('Unknown finalization state for objective update message.');
+  }
+
+  // construct the message.
+  const log = new DiaLogBuilder()
+    .setLines(objectiveMessage)
+    .build();
+
+  // display the log.
+  $diaLogManager.addLog(log);
+
 };
 
 //endregion TrackedOmniObjective
