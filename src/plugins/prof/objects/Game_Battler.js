@@ -11,11 +11,11 @@ Game_Battler.prototype.skillProficiencies = function()
 /**
  * Gets the prof of one particular skill for this battler.
  * @param {number} skillId The id of the skill to get proficiency for.
- * @returns {number}
+ * @returns {SkillProficiency|null}
  */
 Game_Battler.prototype.skillProficiencyBySkillId = function(skillId)
 {
-  return 0;
+  return null;
 };
 
 /**

@@ -111,11 +111,28 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
       foundTracking.categoryKey = omniquest.categoryKey;
 
       // if the objective length hasn't changed, then don't process anymore.
-      if (foundTracking.objectives.length <= omniquest.objectives.length) return;
+      if (omniquest.objectives.length > foundTracking.objectives.length)
+      {
+        // concat the new objectives onto the existing tracking.
+        const objectivesToAdd = newTracking.objectives.slice(foundTracking.objectives.length);
+        foundTracking.objectives.splice(foundTracking.objectives.length, 0, ...objectivesToAdd);
+      }
+      
+      foundTracking.objectives.forEach((objective, index) =>
+      {
+        // if the new objectives don't go as far as they previously did, don't process it.
+        if (!omniquest.objectives.at(index)) return;
 
-      // concat the new objectives onto the existing tracking.
-      const objectivesToAdd = newTracking.objectives.slice(foundTracking.objectives.length);
-      foundTracking.objectives.splice(foundTracking.objectives.length, 0, ...objectivesToAdd);
+        // update the fulfillment data for the obejctive.
+        objective.populateFulfillmentData(omniquest.objectives.at(index)?.fulfillment);
+
+        // grab the new objective from the tracking for comparison.
+        const newObjective = newTracking.objectives.at(index);
+        
+        // update the old objective with the new data points.
+        objective.hidden = newObjective.hidden;
+        objective.optional = newObjective.optional;
+      })
     }
     // if the tracking doesn't exist yet, it should be added.
     else

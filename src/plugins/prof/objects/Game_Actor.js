@@ -233,13 +233,13 @@ Game_Actor.prototype.skillProficiencyBySkillId = function(skillId)
 {
   return this
     .skillProficiencies()
-    .find(prof => prof.skillId === skillId);
+    .find(skillProficiency => skillProficiency.skillId === skillId);
 };
 
 /**
  * A safe means of attempting to retrieve a skill proficiency. If the proficiency
- * does not exist, then it will be created.
- * @param skillId
+ * does not exist, then it will be created with the default of zero starting proficiency.
+ * @param {number} skillId The skill id to identify the proficiency for.
  * @returns {SkillProficiency}
  */
 Game_Actor.prototype.tryGetSkillProficiencyBySkillId = function(skillId)
@@ -305,59 +305,60 @@ Game_Actor.prototype.onLearnNewSkill = function(skillId)
  */
 Game_Actor.prototype.increaseSkillProficiency = function(skillId, amount = 1)
 {
-  let proficiency = this.skillProficiencyBySkillId(skillId);
+  // get or create anew the skill proficiency associated with the skill id.
+  const proficiency = this.tryGetSkillProficiencyBySkillId(skillId);
 
-  // if the proficiency doesn't exist, create it first.
-  if (!proficiency)
-  {
-    proficiency = this.addSkillProficiency(skillId);
-  }
-
+  // improve the proficiency of the skill.
   proficiency.improve(amount);
-  this.checkProficiencyConditionals();
+  
+  // re-evaluate all conditionals to see if this resulted in unlocking any.
+  this.evaluateProficiencyConditionals();
 };
 
 /**
  * Check all proficiency conditionals to see if any of them are now met.
  */
-Game_Actor.prototype.checkProficiencyConditionals = function()
+Game_Actor.prototype.evaluateProficiencyConditionals = function()
 {
+  // grab all the currently-locked proficiency conditionals for this actor.
   const lockedConditionals = this.lockedConditionals();
 
   // if we don't have any locked conditionals, then don't process.
-  if (!lockedConditionals.length)
-  {
-    return;
-  }
+  if (!lockedConditionals.length) return;
 
   // check each locked conditional to see if we can unlock it.
-  lockedConditionals.forEach(conditional =>
+  lockedConditionals.forEach(this.evaluateProficiencyConditional, this);
+};
+
+/**
+ * Checks the conditional to see if requirements are met to unlock it.
+ * @param {ProficiencyConditional} conditional The conditional being evaluated.
+ */
+Game_Actor.prototype.evaluateProficiencyConditional = function(conditional)
+{
+  // TODO: does this work as a one-liner to skip the crap below?
+  const allRequirementsMet = conditional.requirements.every(this.isRequirementMet, this);
+
+  // check if the requirements are all met for unlocking.
+  if (allRequirementsMet)
   {
-    // check all requirements to see if we met them all.
-    const requirementCount = conditional.requirements.length;
-    let requirementsMet = 0;
-    for (const requirement of conditional.requirements)
-    {
-      const currentProficiency = this.skillProficiencyBySkillId(requirement.skillId);
-      if (!currentProficiency)
-      {
-        break;
-      }
+    this.unlockConditional(conditional.key);
+    this.executeConditionalReward(conditional);
+  }
+};
 
-      // check if the proficiency for the skill has reached or exceeded the conditional.
-      if (currentProficiency.proficiency >= requirement.proficiency)
-      {
-        requirementsMet++;
-      }
-    }
+/**
+ * Validates whether or not a proficiency requirement is met.
+ * @param {ProficiencyRequirement} requirement The requirement being evaluated.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isRequirementMet = function(requirement)
+{
+  // compute the current accumulated proficiency for the requirement based on this actor.
+  const accumulatedProficiency = requirement.totalProficiency(this);
 
-    // check if the requirement count equals the requirements now met.
-    if (requirementsMet === requirementCount)
-    {
-      this.unlockConditional(conditional.key);
-      this.executeConditionalReward(conditional);
-    }
-  });
+  // check if the proficiency for the skill has reached or exceeded the conditional.
+  return accumulatedProficiency >= requirement.proficiency;
 };
 
 /**

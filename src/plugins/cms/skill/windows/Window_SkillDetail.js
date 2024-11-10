@@ -299,8 +299,7 @@ class Window_SkillDetail extends Window_Base
   makeHitsParam(skill, actor)
   {
     const value = (skill.repeats - 1) + skill.jabsPierceCount;
-    const param = new JCMS_ParameterKvp('Max Possible Hits', `x${value}`, ColorManager.textColor(0));
-    return param;
+    return new JCMS_ParameterKvp('Max Possible Hits', `x${value}`, ColorManager.textColor(0));
   }
 
   /**
@@ -361,13 +360,17 @@ class Window_SkillDetail extends Window_Base
    * Makes a parameter that displays this actor's proficiency with this skill.
    * @param {Game_Actor} actor The actor.
    * @param {RPG_Skill} skill The skill.
-   * @returns {JCMS_ParameterKvp}
+   * @returns {JCMS_ParameterKvp[]}
    */
   makeSkillProficiency(actor, skill)
   {
     const proficiencyParams = [];
     const skillProficiency = actor.tryGetSkillProficiencyBySkillId(skill.id);
-    proficiencyParams.push(new JCMS_ParameterKvp(`\\C[21]Proficiency:\\C[0]`, skillProficiency.proficiency));
+
+    const proficiencyKey = '\\C[21]Proficiency:\\C[0]';
+    const proficiencyValue = `${skillProficiency.proficiency}`;
+    const proficiencyParam = new JCMS_ParameterKvp(proficiencyKey, proficiencyValue);
+    proficiencyParams.push(proficiencyParam);
     proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill));
     proficiencyParams.push(this.makeDividerParam());
 
@@ -400,7 +403,7 @@ class Window_SkillDetail extends Window_Base
         }
 
         // get the current/required proficiency level for the reward.
-        const requiredProficiency = conditional.requirements
+        const proficiencyRequirement = conditional.requirements
           .find(requirement => requirement.skillId === skill.id);
 
         const actorKnowsSkill = actor.isLearnedSkill(skillRewardId);
@@ -409,7 +412,9 @@ class Window_SkillDetail extends Window_Base
           ? 91
           : 90;
         const name = `\\I[${learnedIcon}]\\Skill[${extendedSkill.id}]`;
-        const value = `${requiredProficiency.proficiency}`;
+        const currentProficiency = proficiencyRequirement.totalProficiency(actor);
+        const requiredProficiency = proficiencyRequirement.proficiency;
+        const value = `${currentProficiency} / ${requiredProficiency}`;
         params.push(new JCMS_ParameterKvp(name, value));
       });
     });

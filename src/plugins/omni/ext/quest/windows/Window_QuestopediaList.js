@@ -63,11 +63,8 @@ class Window_QuestopediaList extends Window_Command
     // no quests to display.
     if (filteredQuests.length === 0) return [];
 
-    // compile the list of commands.
-    const commands = filteredQuests.map(this.buildCommand, this);
-
     // return the compiled list of commands.
-    return commands;
+    return filteredQuests.map(this.buildCommand, this);
   }
 
   /**
@@ -77,6 +74,7 @@ class Window_QuestopediaList extends Window_Command
    */
   _questFiltering(quest)
   {
+    // grab the current category being viewed.
     const currentCategory = this.getCurrentCategoryKey();
 
     // if the current category is unset or empty, then no filtering is applied.

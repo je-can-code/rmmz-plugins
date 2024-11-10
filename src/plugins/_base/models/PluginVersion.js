@@ -30,7 +30,7 @@ class PluginVersion
     // the string should be three whole integer parts.
     const semverParts = version
       .split('.')
-      .map(parseInt);
+      .map(part => parseInt(part));
 
     // the order is as below:
     const [ major, minor, patch ] = semverParts;

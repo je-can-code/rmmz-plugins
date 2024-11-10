@@ -178,7 +178,21 @@ class QuestManager
     const quest = this.quest(questKey);
 
     // return if the quest is currently active.
-    return quest.state === OmniQuest.States.Active;
+    return quest.isActive();
+  }
+
+  /**
+   * Checks if a quest is unlocked (aka not inactive).
+   * @param {string} questKey The key of the quest to check for completion.
+   * @returns {boolean}
+   */
+  static isQuestUnlocked(questKey)
+  {
+    // grab the quest.
+    const quest = this.quest(questKey);
+
+    // return if the quest is currently in any state aside from inactive.
+    return !quest.isInactive();
   }
 
   /**
