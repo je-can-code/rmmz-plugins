@@ -29,11 +29,8 @@ class Window_QuestopediaCategories extends Window_HorzCommand
     // grab all possible categories.
     const questCategories = QuestManager.categories(false);
 
-    // compile the list of commands.
-    const commands = questCategories.map(this.buildCommand, this);
-
     // return the compiled list of commands.
-    return commands;
+    return questCategories.map(this.buildCommand, this);
   }
 
   /**

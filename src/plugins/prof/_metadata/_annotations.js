@@ -170,8 +170,8 @@
 /*~struct~ProficiencyRequirementStruct:
  * @param skillId
  * @type skill
- * @text Skill
- * @desc The skill to base this requirement on.
+ * @text Primary Skill Id
+ * @desc The skill to base this requirement on- if the player has no proficiency in this, they cannot unlock this.
  * @default 1
  *
  * @param proficiency
@@ -179,4 +179,10 @@
  * @text Proficiency Required
  * @desc The prof required in the designated skill to fulfill this requirement.
  * @default 100
+ * 
+ * @param secondarySkillIds
+ * @type skill[]
+ * @text Secondary Skill Ids
+ * @desc The secondary skills that will count towards this proficiency as well as the primary.
+ * @default []
  */

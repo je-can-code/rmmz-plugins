@@ -625,12 +625,9 @@ TrackedOmniQuest.prototype._processQuestCompletionQuestsCheck = function()
   // iterate over each of the destination objectives.
   activeQuestCompletionObjectives.forEach(objective =>
   {
-    // extract the coordinate range from the objective.
-    const targetQuestKeys = objective.questCompletionData();
-
-    // if the quest keys for the objective don't align, then don't worry about that quest.
-    if (!targetQuestKeys.includes(this.key)) return;
-
+    // check if all quests have been completed for the target objective after this quest.
+    if (!objective.hasCompletedAllQuests()) return;
+    
     // grab the quest for reference.
     const questToProgress = QuestManager.quest(objective.questKey);
 

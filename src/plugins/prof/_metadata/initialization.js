@@ -47,8 +47,12 @@ J.PROF.Helpers.TranslateProficiencyRequirements = function(obj)
     parsedRequirements.forEach(requirementBlob =>
     {
       const parsedRequirement = JSON.parse(requirementBlob);
-      const requirement = new ProficiencyRequirement(parseInt(parsedRequirement.skillId),
-        parseInt(parsedRequirement.proficiency))
+      const secondarySkillIds = JSON.parse(parsedRequirement.secondarySkillIds)
+        .map(id => parseInt(id));
+      const requirement = new ProficiencyRequirement(
+        parseInt(parsedRequirement.skillId),
+        parseInt(parsedRequirement.proficiency),
+        secondarySkillIds);
       requirements.push(requirement);
     });
 
@@ -68,9 +72,14 @@ J.PROF.PluginParameters = PluginManager.parameters(J.PROF.Metadata.Name);
  * The various aliases associated with this plugin.
  */
 J.PROF.Aliased = {
-  Game_Actor: new Map(), Game_Action: new Map(), Game_Battler: new Map(), Game_Enemy: new Map(), Game_System: new Map(),
+  Game_Actor: new Map(),
+  Game_Action: new Map(),
+  Game_Battler: new Map(),
+  Game_Enemy: new Map(),
+  Game_System: new Map(),
 
-  IconManager: new Map(), TextManager: new Map(),
+  IconManager: new Map(),
+  TextManager: new Map(),
 };
 
 J.PROF.RegExp = {};
@@ -83,7 +92,10 @@ J.PROF.RegExp.ProficiencyGainingBlock = /<proficiencyGainingBlock>/i;
  */
 PluginManager.registerCommand(J.PROF.Metadata.Name, "modifyActorSkillProficiency", args =>
 {
-  const { actorIds, skillIds } = args;
+  const {
+    actorIds,
+    skillIds
+  } = args;
   const parsedActorIds = JSON.parse(actorIds)
     .map(num => parseInt(num));
   const parsedSkillIds = JSON.parse(skillIds)

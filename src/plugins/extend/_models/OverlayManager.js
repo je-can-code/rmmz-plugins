@@ -37,7 +37,7 @@ class OverlayManager
       if (!isExtensionSkill) return false;
 
       const skillsExtended = JSON.parse(skill.metadata('skillExtend'))
-        .map(parseInt);
+        .map(id => parseInt(id));
       return skillsExtended.includes(skillId);
     };
 

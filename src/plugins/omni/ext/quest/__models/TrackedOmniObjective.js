@@ -143,7 +143,8 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
   {
     // if the type is indiscriminate, then it is event-controlled and not automagical.
     case OmniObjective.Types.Indiscriminate:
-      this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint ?? "No indiscriminate objective instructions provided.";
+      this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint 
+        ?? "No indiscriminate objective instructions provided.";
       return;
 
     // if the fulfillment is of type 'destination', then fill in the data.
@@ -154,7 +155,7 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
         x1, y1 ];
       const point2 = [
         x2, y2 ];
-      this._targetCoordinateRange.push(point1, point2);
+      this._targetCoordinateRange = [ point1, point2 ];
       break;
 
     // if the fulfillment is of type 'fetch', then fill in the data.
@@ -172,7 +173,7 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
 
     // if the fulfillment is of type 'quest', then fill in the data.
     case OmniObjective.Types.Quest:
-      this._targetQuestKeys.push(...omniFulfillmentData.quest.keys);
+      this._targetQuestKeys = [ ...omniFulfillmentData.quest.keys ];
       break;
   }
 };
