@@ -33,7 +33,7 @@ J.CRIT.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '1.0.0',
+  Version: '1.0.2',
 };
 
 /**
@@ -54,11 +54,16 @@ J.CRIT.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.CRIT.RegExp = {
+  // this-skill only.
+  ThisCritDamageChance: /<thisCritChance:\[([+\-*/ ().\w]+)]>/gi,
+  ThisCritDamageMultiplier: /<thisCritMultiplier:\[([+\-*/ ().\w]+)]>/gi,
+  ThisCritsAlways: /<thisCritsAlways>/gi,
+
   // base functionality.
-  CritDamageReductionBase: /<critReductionBase:[ ]?(\d+)>/gi,
-  CritDamageReduction: /<critReduction:[ ]?(\d+)>/gi,
-  CritDamageMultiplierBase: /<critMultiplierBase:[ ]?(\d+)>/gi,
-  CritDamageMultiplier: /<critMultiplier:[ ]?(\d+)>/gi,
+  CritDamageReductionBase: /<critReductionBase: ?(\d+)>/gi,
+  CritDamageReduction: /<critReduction: ?(\d+)>/gi,
+  CritDamageMultiplierBase: /<critMultiplierBase: ?(\d+)>/gi,
+  CritDamageMultiplier: /<critMultiplier: ?(\d+)>/gi,
 
   // for natural growths compatability.
   CritDamageReductionBuffPlus: /<cdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 CRIT] Manages critical damage multiplier/reduction of battlers.
+ * [v1.0.2 CRIT] Manages critical damage multiplier/reduction of battlers.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -26,6 +26,40 @@
  * default, and is parameterized for your convenience- because lets face it:
  * triple damage for a crit is an awful lot for the default.
  *
+ * ============================================================================
+ * THIS ACTION CRITICAL MODIFIERS:
+ * Have you ever wanted to modify the current action's critical chance and/or
+ * modifier? Well now you can! By applying the appropriate tag to the database
+ * objects in question, you can control the critical chance and critical
+ * damage modifiers for a specific skill's execution!
+ * 
+ * NOTE:
+ * This stacks additively with other crit effects.
+ * 
+ * NOTE:
+ * The effects of these tags do not apply to skills that cannot crit, so be
+ * sure to make certain the critical dropdown is set to "YES" in the damage
+ * formula box for the given skill. 
+ * 
+ * TAG USAGE:
+ * - Items
+ * - Skills
+ * 
+ * TAG FORMAT:
+ *  <thisCritChance:[FORMULA]>
+ *  <thisCritDamageMultiplier:[FORMULA]>
+ *  <thisCritsAlways>
+ * 
+ * TAG EXAMPLES:
+ *  <thisCritChance:[25]>
+ * Increases the critical chance of this particular skill by 25%.
+ * 
+ *  <thisCritDamageMultiplier:[10 + a.agi]>
+ * Increases the critical damage multiplier by 10% plus the battler's agility.
+ * 
+ *  <thisCritsAlways>
+ * The skill or item with this tag will ALWAYS crit.
+ * 
  * ============================================================================
  * CRITICAL DAMAGE MULTIPLIER:
  * Have you ever wanted to have any amount of control over critical damage?

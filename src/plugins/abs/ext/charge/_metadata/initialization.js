@@ -15,7 +15,7 @@ J.ABS.EXT.CHARGE.Metadata = {
   /**
    * The name of this plugin.
    */
-  Name: `J-ABS-ActionCharging`,
+  Name: `J-ABS-Charge`,
 
   /**
    * The version of this plugin.
@@ -40,20 +40,39 @@ J.ABS.EXT.CHARGE.Metadata = {
    * 0 will yield no default animation.
    * @type {number}
    */
-  DefaultChargingAnimationId: Number(J.ABS.EXT.CHARGE.PluginParameters['defaultChargingAnimId']),
+  DefaultChargingAnimationId: parseInt(J.ABS.EXT.CHARGE.PluginParameters['defaultChargingAnimId']),
 
   /**
    * The default tier complete animation id.
    * 0 will yield no default animation.
    * @type {number}
    */
-  DefaultTierCompleteAnimationId: Number(J.ABS.EXT.CHARGE.PluginParameters['defaultTierCompleteAnimId']),
+  DefaultTierCompleteAnimationId: parseInt(J.ABS.EXT.CHARGE.PluginParameters['defaultTierCompleteAnimId']),
+
+  /**
+   * The default fully charged animation id.
+   * 0 will yield no default animation.
+   * @type {number}
+   */
+  DefaultFullyChargedAnimationId: parseInt(J.ABS.EXT.CHARGE.PluginParameters['defaultFullyChargedAnimId']),
+
+  /**
+   * The sound effect to play when the a charging tier has completed.
+   * @type {RPG_SoundEffect}
+   */
+  TierCompleteSE: J.ABS.EXT.CHARGE.PluginParameters['tierCompleteSE'],
+
+  /**
+   * The sound effect to play when the final charge tier has completed charging.
+   * @type {RPG_SoundEffect}
+   */
+  ChargeReadySE: J.ABS.EXT.CHARGE.PluginParameters['chargeReadySE'],
 
   /**
    * Whether or not to use the charging tier complete sound effect.
    * @type {boolean}
    */
-  UseTierCompleteSE: J.ABS.EXT.CHARGE.PluginParameters['useTierCompleteSE'] === "true",
+  UseTierCompleteSE: J.ABS.EXT.CHARGE.PluginParameters['useDefaultChargingSE'] === "true",
 
   /**
    * Whether or not to use the charging tier complete sound effect when there is an animation present.

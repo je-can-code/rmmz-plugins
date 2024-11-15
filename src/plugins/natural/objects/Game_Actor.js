@@ -207,10 +207,7 @@ Game_Actor.prototype.xparamNaturalBonuses = function(xparamId)
     .call(this, xparamId);
 
   // destructure into the plus and rate regexp structures.
-  const paramNaturalBonuses = this.getXparamNaturalBonuses(xparamId, structures, baseParam);
-
-  // return result.
-  return (paramNaturalBonuses);
+  return this.getXparamNaturalBonuses(xparamId, baseParam);
 };
 
 /**
@@ -290,7 +287,7 @@ Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, structures, baseParam);
+  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, baseParam);
 
   // return result.
   return (sparamNaturalBonuses);
@@ -300,14 +297,13 @@ Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
  * Gets all natural growths for this sp-parameter.
  * Actors have buffs and growths.
  * @param {number} sparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Actor.prototype.getSparamNaturalBonuses = function(sparamId, structures, baseParam)
+Game_Actor.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateSpParamBuff(baseParam, sparamId);
+  const paramBuff = this.calculateSpParamBuff(sparamId, baseParam);
 
   // determine permanent growth for this param.
   const paramGrowth = (this.getSparamGrowth(sparamId, baseParam) / 100);
