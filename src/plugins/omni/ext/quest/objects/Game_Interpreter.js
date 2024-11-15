@@ -18,22 +18,24 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
 
   // grab some metadata about the event.
   const eventMetadata = $gameMap.event(this.eventId());
-  const currentPage = eventMetadata.page();
+  const currentPageCommands = !!eventMetadata
+    ? eventMetadata.page().list
+    : $dataCommonEvents.at(this._commonEventId).list;
 
   // grab the event subcommand.
-  const subEventCommand = currentPage.list.at(subChoiceCommandIndex);
+  const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);
 
   // ignore non-comment event commands.
-  if (!eventMetadata.filterInvalidEventCommand(subEventCommand)) return false;
+  if (!Game_Event.filterInvalidEventCommand(subEventCommand)) return false;
 
   // ignore non-quest comment commands.
-  if (!eventMetadata.filterCommentCommandsByChoiceQuestConditional(subEventCommand)) return false;
+  if (!Game_Event.filterCommentCommandsByChoiceQuestConditional(subEventCommand)) return false;
 
   // convert the known-quest-command to a conditional.
   const conditional = eventMetadata.toQuestConditional(subEventCommand);
 
   // if the condition is met, then we don't need to hide.
-  const met = eventMetadata.questConditionalMet(conditional);
+  const met = Game_Event.questConditionalMet(conditional);
   if (met) return false;
 
   // the conditional isn't met, hide the group.

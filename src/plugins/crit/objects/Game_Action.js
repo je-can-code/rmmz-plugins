@@ -55,7 +55,8 @@ Game_Action.prototype.apply = function(target)
 };
 
 /**
- * OVERWRITE Replaces the way critical damage is calculated by
+ * Overrides {@link #applyCritical}.<br/>
+ * Replaces the way critical damage is calculated by
  * adding multiplier and reduction modifiers for actors and enemies alike.
  * @param {number} baseDamage The base damage before crit modification.
  * @returns {number} The critically modified damage.
@@ -68,11 +69,8 @@ Game_Action.prototype.applyCritical = function(baseDamage)
   // reduce the above bonus critical damage by any reductions on the target.
   const reducedCriticalBonusDamage = this.applyCriticalDamageReduction(criticalBonusDamage);
 
-  // add the remaining bonus critical
-  const criticalDamage = baseDamage + reducedCriticalBonusDamage;
-
   // return the total damage including critical modifiers.
-  return criticalDamage;
+  return baseDamage + reducedCriticalBonusDamage;
 };
 
 /**
@@ -91,11 +89,11 @@ Game_Action.prototype.applyCriticalDamageMultiplier = function(baseDamage)
   // get the attacker's bonus crit multiplier.
   critMultiplier += attacker.cdm;
 
-  // calculate the bonus damage.
-  const criticalDamage = (baseDamage * critMultiplier);
+  // add the action's specific multiplier if any exists.
+  critMultiplier += this.ownCriticalDamageMultiplier();
 
   // return the calculated amount of critical bonus damage to add onto the base.
-  return criticalDamage;
+  return (baseDamage * critMultiplier);
 };
 
 /**
@@ -117,10 +115,61 @@ Game_Action.prototype.applyCriticalDamageReduction = function(criticalDamage)
   // this cannot reduce the crit bonus damage below 0.
   const criticalReductionRate = Math.max(baseCriticalReductionRate, 0);
 
-  // the newly modified amount of damage after reduction.
-  const modifiedCriticalDamage = criticalDamage * criticalReductionRate;
-
   // return the calculated amount of remaining critical damage after reductions.
-  return modifiedCriticalDamage;
+  return criticalDamage * criticalReductionRate;
+};
+
+/**
+ * Overrides {@link #itemCri}.<br/>
+ * Includes the addition of potential action-based crit rate boosts.
+ * @param {Game_Battler} target The target being struck with the critical.
+ * @returns {number} The calculated critical chance of this action.
+ */
+Game_Action.prototype.itemCri = function(target)
+{
+  // if this action can't crit, then do not process it as a critical hit.
+  if (!this.item().damage.critical) return 0;
+  
+  // check if its a guaranteed crit- if so, return an unrealistically high number over 1.
+  if (this.isGuaranteedCrit()) return 9999;
+  
+  // grab the attacker's crit chance.
+  let critChance = this.subject().cri;
+
+  // add any bonus crit from the action.
+  critChance += this.ownCriticalChanceBonus();
+
+  // calculate the crit chance against the target's crit evasion.
+  critChance -= target.cev;
+  
+  // normalize the crit to 0 just in case it drops below.
+  return Math.max(critChance, 0);
+};
+
+/**
+ * Calculates this action's own bonus to crit damage multipliers.
+ * @returns {number}
+ */
+Game_Action.prototype.ownCriticalDamageMultiplier = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex([ this.item() ], J.CRIT.RegExp.ThisCritDamageMultiplier) / 100;
+};
+
+/**
+ * Checks if this action is a guaranteed critical hit.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isGuaranteedCrit = function()
+{
+  return RPGManager.checkForBooleanFromNoteByRegex(this.item(), J.CRIT.RegExp.ThisCritsAlways);
+};
+
+/**
+ * Calculates this action's own bonus to crit chance.
+ * @returns {number}
+ */
+Game_Action.prototype.ownCriticalChanceBonus = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex([ this.item() ], J.CRIT.RegExp.ThisCritDamageChance) / 100;
 };
 //endregion Game_Action

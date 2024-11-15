@@ -521,6 +521,14 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
       sortedTiers.splice(index, 0, filler);
     }
   }
+  
+  // check if the final tier is missing a charge complete animation, and that we have a default to provide.
+  if (sortedTiers.at(-1).chargeTierCompleteAnimationId === 0 &&
+    J.ABS.EXT.CHARGE.Metadata.DefaultFullyChargedAnimationId)
+  {
+    // apply the default fully charged animation.
+    sortedTiers.at(-1).chargeTierCompleteAnimationId = J.ABS.EXT.CHARGE.Metadata.DefaultFullyChargedAnimationId;
+  }
 
   // return our normalized and sorted tiers.
   return sortedTiers;

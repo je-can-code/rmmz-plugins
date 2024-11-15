@@ -4,7 +4,7 @@
  * @param {rm.types.EventCommand} command The command being evaluated.
  * @returns {boolean}
  */
-Game_Event.prototype.filterCommentCommandsForBasicConditionals = function(command)
+Game_Event.filterCommentCommandsForBasicConditionals = function(command)
 {
   // identify the actual comment being evaluated.
   const [ comment, ] = command.parameters;
@@ -27,7 +27,7 @@ Game_Event.prototype.filterCommentCommandsForBasicConditionals = function(comman
  * @param {rm.types.EventCommand} commentCommand The comment command to parse into a conditional.
  * @returns {BasicChoiceConditional}
  */
-Game_Event.prototype.toBasicConditional = function(commentCommand)
+Game_Event.toBasicConditional = function(commentCommand)
 {
   // shorthand the comment into a variable.
   const [ comment, ] = commentCommand.parameters;
