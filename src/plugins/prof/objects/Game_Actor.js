@@ -26,47 +26,12 @@ Game_Actor.prototype.initMembers = function()
   this._j._proficiency._proficiencies ||= [];
 
   /**
-   * A grouping of all conditionals that apply to this actor.
-   * @type {ProficiencyConditional[]}
-   */
-  this._j._proficiency._ownConditionals = [];
-
-  /**
    * All conditionals that have been unlocked by this actor.
    * @type {string[]}
    */
   this._j._proficiency._unlockedConditionals ||= [];
-};
 
-/**
- * Extends the setup of an actor to include setting up all the skill
- * proficiency conditionals for this actor.
- */
-J.PROF.Aliased.Game_Actor.set("setup", Game_Actor.prototype.setup);
-Game_Actor.prototype.setup = function(actorId)
-{
-  // perform original logic.
-  J.PROF.Aliased.Game_Actor.get("setup")
-    .call(this, actorId);
-
-  // update own proficiency conditionals.
-  this.updateOwnConditionals();
-};
-
-/**
- * Updates this actor's own conditionals with the latest ones from the plugin metadata.
- */
-Game_Actor.prototype.updateOwnConditionals = function()
-{
-  // grab the latest conditionals.
-  const conditionals = $gameSystem.proficiencyConditionals();
-
-  // if we have no conditionals, then do not update.
-  if (!conditionals || !conditionals.length) return;
-
-  // update with conditionals applicable to this actor.
-  this._j._proficiency._ownConditionals = conditionals
-    .filter(conditional => conditional.actorIds.includes(this.actorId()));
+  this._j._proficiency._bonusSkillProficiencyGains = 0;
 };
 
 /**
@@ -97,7 +62,7 @@ Game_Actor.prototype.addNewSkillProficiency = function(skillProficiency)
  */
 Game_Actor.prototype.proficiencyConditionals = function()
 {
-  return this._j._proficiency._ownConditionals;
+  return J.PROF.Metadata.actorConditionalsMap.get(this.actorId());
 };
 
 /**
@@ -110,8 +75,8 @@ Game_Actor.prototype.unlockedConditionals = function()
 };
 
 /**
- * Adds the newly unlocked conditional to this actor.
- * @param {ProficiencyConditional} conditional The newly unlocked conditional.
+ * Registers a conditional as unlocked by its key.
+ * @param {string} conditional The key of the conditional to unlock.
  */
 Game_Actor.prototype.addUnlockedConditional = function(conditional)
 {
@@ -119,16 +84,14 @@ Game_Actor.prototype.addUnlockedConditional = function(conditional)
 };
 
 /**
- * Gets all of this actor's skill proficiency conditionals
- * that include a requirement of the provided skillId.
+ * Gets all of this actor's skill proficiency conditionals that include a requirement of the provided skillId.
  * @param {number} skillId The skill id to find conditionals for.
  * @returns {ProficiencyConditional[]}
  */
 Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
 {
-  const filtering = (conditional) => conditional.requirements.some(requirement => requirement.skillId === skillId);
   return this.proficiencyConditionals()
-    .filter(filtering);
+    .filter(conditional => conditional.requirements.some(requirement => requirement.skillId === skillId));
 };
 
 /**
@@ -136,7 +99,7 @@ Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
  * @param key {string} The key of the conditional.
  * @returns {boolean}
  */
-Game_Actor.prototype.isConditionalLocked = function(key)
+Game_Actor.prototype.isConditionalUnlocked = function(key)
 {
   return this.unlockedConditionals()
     .includes(key);
@@ -148,10 +111,8 @@ Game_Actor.prototype.isConditionalLocked = function(key)
  */
 Game_Actor.prototype.lockedConditionals = function()
 {
-  const filtering = (conditional) => !this.unlockedConditionals()
-    .includes(conditional.key);
   return this.proficiencyConditionals()
-    .filter(filtering);
+    .filter(conditional => this.isConditionalUnlocked(conditional.key) === false);
 };
 
 /**
@@ -160,8 +121,7 @@ Game_Actor.prototype.lockedConditionals = function()
  */
 Game_Actor.prototype.unlockConditional = function(key)
 {
-  if (this.unlockedConditionals()
-    .includes(key))
+  if (this.isConditionalUnlocked(key))
   {
     console.warn(`Attempted to unlock conditional: [${key}], but it was already unlocked.`);
     return;
@@ -270,7 +230,7 @@ Game_Actor.prototype.addSkillProficiency = function(skillId, initialProficiency 
   const exists = this.skillProficiencyBySkillId(skillId);
   if (exists)
   {
-    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.<br>`);
+    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
     return exists;
   }
 
@@ -310,7 +270,7 @@ Game_Actor.prototype.increaseSkillProficiency = function(skillId, amount = 1)
 
   // improve the proficiency of the skill.
   proficiency.improve(amount);
-  
+
   // re-evaluate all conditionals to see if this resulted in unlocking any.
   this.evaluateProficiencyConditionals();
 };
@@ -336,7 +296,6 @@ Game_Actor.prototype.evaluateProficiencyConditionals = function()
  */
 Game_Actor.prototype.evaluateProficiencyConditional = function(conditional)
 {
-  // TODO: does this work as a one-liner to skip the crap below?
   const allRequirementsMet = conditional.requirements.every(this.isRequirementMet, this);
 
   // check if the requirements are all met for unlocking.
@@ -362,11 +321,43 @@ Game_Actor.prototype.isRequirementMet = function(requirement)
 };
 
 /**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Also updates bonus skill proficiency gains.
+ */
+J.PROF.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
+Game_Actor.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.PROF.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
+
+  // update the skill gains as well.
+  this.updateBonusSkillProficiencyGains();
+};
+
+/**
+ * Updates the skill proficiency gains for this actor.
+ */
+Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
+{
+  // TEMPORARY FIX FOR UPDATING SAVES IN PROGRESS.
+  if (this._j._proficiency._bonusSkillProficiencyGains === undefined
+    || this._j._proficiency._bonusSkillProficiencyGains === null)
+  {
+    this._j._proficiency._bonusSkillProficiencyGains = 0;
+  }
+
+  this._j._proficiency._bonusSkillProficiencyGains = RPGManager.getSumFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.PROF.RegExp.ProficiencyBonus)
+};
+
+/**
  * Calculates total amount of bonus proficiency gain when gaining skill proficiency.
  * @returns {number}
  */
 Game_Actor.prototype.bonusSkillProficiencyGains = function()
 {
-  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyBonus);
+  return this._j._proficiency._bonusSkillProficiencyGains;
 };
 //endregion Game_Actor

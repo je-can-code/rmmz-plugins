@@ -21,12 +21,11 @@
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
 
+    "hotfix": "npm run build:all && npm run copy:to-all",
+
     "copy:to-test": "node ./src/build-tools/copy.js",
     "copy:to-ca": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j",
     "copy:to-all": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j ./project/js/plugins",
-
-    "hotfix": "npm run build:all && npm run copy:to-test",
-    "hotfix:all": "npm run build:all && npm run copy:to-all",
 
     "build:all": "node ./src/build-tools/build-all.js",
 

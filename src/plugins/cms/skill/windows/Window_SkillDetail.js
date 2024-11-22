@@ -2,7 +2,8 @@
 /**
  * A window responsible for showing various datapoints of a skill.
  */
-class Window_SkillDetail extends Window_Base
+class Window_SkillDetail
+  extends Window_Base
 {
   constructor(rect)
   {
@@ -391,7 +392,6 @@ class Window_SkillDetail extends Window_Base
     {
       // if there are no rewards, then don't even draw the "related" section.
       if (!conditional.skillRewards.length) return;
-
 
       conditional.skillRewards.forEach(skillRewardId =>
       {
