@@ -1,5 +1,6 @@
 //region Window_IngredientList
-class Window_RecipeIngredientList extends Window_Command
+class Window_RecipeIngredientList
+  extends Window_Command
 {
   /**
    * Constructor.

@@ -627,7 +627,7 @@ TrackedOmniQuest.prototype._processQuestCompletionQuestsCheck = function()
   {
     // check if all quests have been completed for the target objective after this quest.
     if (!objective.hasCompletedAllQuests()) return;
-    
+
     // grab the quest for reference.
     const questToProgress = QuestManager.quest(objective.questKey);
 

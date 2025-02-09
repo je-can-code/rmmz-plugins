@@ -17,12 +17,6 @@ class OmniTag
   name = String.empty;
 
   /**
-   * The description of the tag.
-   * @type {string}
-   */
-  description = String.empty;
-
-  /**
    * The icon index for the tag.
    * @type {number}
    */

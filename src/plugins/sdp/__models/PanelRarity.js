@@ -1,5 +1,5 @@
-//region SDP_Rarity
-class SDP_Rarity
+//region PanelRarity
+class PanelRarity
 {
   /**
    * Common SDPs that bring few pros and many cons.
@@ -70,4 +70,4 @@ class SDP_Rarity
   }
 }
 
-//endregion SDP_Rarity
+//endregion PanelRarity

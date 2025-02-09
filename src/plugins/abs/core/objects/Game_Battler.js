@@ -657,7 +657,11 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
   const state = assailant.state(stateId);
 
   // extract the base duration and icon index.
-  const { removeByWalking, stepsToRemove: baseDuration, iconIndex } = state;
+  const {
+    removeByWalking,
+    stepsToRemove: baseDuration,
+    iconIndex
+  } = state;
 
   // calculate the total duration of the state.
   let totalDuration = baseDuration;
@@ -706,7 +710,8 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
   const percentBoost = Math.round(baseDuration * (percent / 100));
 
   // calculate the formulai duration boost.
-  const formulaiBoost = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
+  const formulaiBoost = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
     J.ABS.RegExp.StateDurationFormulaPlus,
     baseDuration,
     this);

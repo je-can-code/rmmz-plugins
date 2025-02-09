@@ -109,7 +109,11 @@ Window_Help.prototype.refresh = function()
 Window_Help.prototype.renderText = function()
 {
   // grab the rectangle coordinates to draw the text in.
-  const { x, y, width } = this.baseTextRect();
+  const {
+    x,
+    y,
+    width
+  } = this.baseTextRect();
 
   // draw the actual text.
   this.drawTextEx(this._text, x, y, width);

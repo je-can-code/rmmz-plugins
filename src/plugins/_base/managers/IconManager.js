@@ -494,7 +494,9 @@ class IconManager
    * A tag for correlating a JABS parameter to an icon.
    */
   static JABS_PARAMETER = {
-    BONUS_HITS: "bonus-hits", ATTACK_SKILL: "attack-skill", SPEED_BOOST: "speed-boost",
+    BONUS_HITS: "bonus-hits",
+    ATTACK_SKILL: "attack-skill",
+    SPEED_BOOST: "speed-boost",
   };
 
   /**

@@ -19,9 +19,10 @@ ImageManager.loadBitmapPromise = function(filename, directory)
     bitmap.addLoadListener(thisBitmap =>
     {
       // if everything is clear, resolve with the loaded bitmap.
-      if (thisBitmap.isReady()) resolve(thisBitmap);
-
-      // if there were problems, then reject.
+      if (thisBitmap.isReady())
+      {
+        resolve(thisBitmap);
+      }// if there were problems, then reject.
       else if (thisBitmap.isError()) reject();
     });
   });

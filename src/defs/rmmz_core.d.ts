@@ -298,7 +298,16 @@ declare class Bitmap
    * @param {number} [dw=sw] The width to draw the image in the destination
    * @param {number} [dh=sh] The height to draw the image in the destination
    */
-  blt(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw?: number, dh?: number): void;
+  blt(
+    source: Bitmap,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw?: number,
+    dh?: number): void;
 
   /**
    * Returns pixel color at the specified point.
@@ -370,7 +379,14 @@ declare class Bitmap
    * @param {String} color2 The end color of the gradation
    * @param {Boolean} vertical Whether it draws a vertical gradient
    */
-  gradientFillRect(x: number, y: number, width: number, height: number, color1: string, color2: string, vertical?: boolean): void;
+  gradientFillRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    color1: string,
+    color2: string,
+    vertical?: boolean): void;
 
   /**
    * Draw the filled circle.
@@ -458,7 +474,16 @@ declare class Bitmap
    * @param {number} [dw=sw] The width to draw the image in the destination
    * @param {number} [dh=sh] The height to draw the image in the destination
    */
-  bltImage(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw?: number, dh?: number): void;
+  bltImage(
+    source: Bitmap,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw?: number,
+    dh?: number): void;
 
   /**
    * Loads a image file and returns a new bitmap object.
@@ -1232,7 +1257,8 @@ declare class String
   padStart(length: number, fillStr?: string = ' '): string;
 }
 
-declare class Rectangle extends PIXI.Rectangle
+declare class Rectangle
+  extends PIXI.Rectangle
 {
   /**
    * The rectangle class.
@@ -1254,7 +1280,8 @@ declare class Rectangle extends PIXI.Rectangle
   static emptyRectangle: Rectangle;
 }
 
-declare class ScreenSprite extends PIXI.Sprite
+declare class ScreenSprite
+  extends PIXI.Sprite
 {
   /**
    * The sprite which covers the entire game screen.
@@ -1297,7 +1324,8 @@ declare class ScreenSprite extends PIXI.Sprite
   setColor(r?: number, g?: number, b?: number): void;
 }
 
-declare class Tilemap extends PIXI.Container
+declare class Tilemap
+  extends PIXI.Container
 {
   /**
    * [read-only] The array of children of the sprite.
@@ -1506,7 +1534,8 @@ declare class Tilemap extends PIXI.Container
   static isWaterfallTypeAutotile(tileId: number): boolean;
 }
 
-declare class ShaderTilemap extends Tilemap
+declare class ShaderTilemap
+  extends Tilemap
 {
   protected constructor();
 
@@ -1541,7 +1570,8 @@ declare class ShaderTilemap extends Tilemap
   refreshTileset(): void;
 }
 
-declare class Sprite extends PIXI.Sprite
+declare class Sprite
+  extends PIXI.Sprite
 {
   /**
    * The core object that gets rendered to the screen.
@@ -1697,7 +1727,8 @@ declare class Sprite extends PIXI.Sprite
   static _counter: number;
 }
 
-declare class Stage extends PIXI.Container
+declare class Stage
+  extends PIXI.Container
 {
   /**
    * The root object of the display tree.
@@ -1745,7 +1776,8 @@ declare class Stage extends PIXI.Container
   removeChildAt(index: number): PIXI.DisplayObject;
 }
 
-declare class TilingSprite extends PIXI.TilingSprite
+declare class TilingSprite
+  extends PIXI.TilingSprite
 {
   /**
    * The sprite object for a tiling image.
@@ -1844,7 +1876,8 @@ declare class TilingSprite extends PIXI.TilingSprite
   generateTilingTexture(arg: boolean): void;
 }
 
-declare class ToneFilter extends PIXI.filters.ColorMatrixFilter
+declare class ToneFilter
+  extends PIXI.filters.ColorMatrixFilter
 {
   /**
    * The color matrix filter for WebGL.
@@ -1882,7 +1915,8 @@ declare class ToneFilter extends PIXI.filters.ColorMatrixFilter
   adjustTone(r?: number, g?: number, b?: number): void;
 }
 
-declare class ToneSprite extends PIXI.Container
+declare class ToneSprite
+  extends PIXI.Container
 {
   /**
    * The sprite which changes the screen color in 2D canvas mode.
@@ -2157,7 +2191,8 @@ declare class Utils
   static encodeURI(str: string): string;
 }
 
-declare class Weather extends PIXI.Container
+declare class Weather
+  extends PIXI.Container
 {
   /**
    * The weather effect which displays rain, storm, or snow.
@@ -2197,7 +2232,8 @@ declare class Weather extends PIXI.Container
   update(): void;
 }
 
-declare class WindowLayer extends PIXI.Container
+declare class WindowLayer
+  extends PIXI.Container
 {
   /**
    * The layer which contains game windows.
@@ -2285,7 +2321,8 @@ declare class WindowLayer extends PIXI.Container
   _renderWebGL(renderer: PIXI.Renderer): void;
 }
 
-declare class Window extends PIXI.Container
+declare class Window
+  extends PIXI.Container
 {
   /**
    * The visibility of the sprite.

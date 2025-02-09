@@ -2,7 +2,8 @@
 /**
  * A window containing the list of all crafting categories.
  */
-class Window_CategoryList extends Window_Command
+class Window_CategoryList
+  extends Window_Command
 {
   /**
    * Constructor.

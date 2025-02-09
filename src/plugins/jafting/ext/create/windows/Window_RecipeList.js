@@ -2,7 +2,8 @@
 /**
  * A window containing the list of all crafting recipes.
  */
-class Window_RecipeList extends Window_Command
+class Window_RecipeList
+  extends Window_Command
 {
   /**
    * The currently selected category on the category list window.

@@ -39,7 +39,8 @@ class JABS_ActionOptionsBuilder
       .build();
 
     // compile a new action.
-    const newJabsActionOptions = new JABS_ActionOptions(this.#isRetaliation,
+    const newJabsActionOptions = new JABS_ActionOptions(
+      this.#isRetaliation,
       this.#cooldownKey,
       JABS_Location.Clone(locationToClone),
       this.#isTerrainDamage);

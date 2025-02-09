@@ -129,10 +129,10 @@ Game_Action.prototype.itemCri = function(target)
 {
   // if this action can't crit, then do not process it as a critical hit.
   if (!this.item().damage.critical) return 0;
-  
+
   // check if its a guaranteed crit- if so, return an unrealistically high number over 1.
   if (this.isGuaranteedCrit()) return 9999;
-  
+
   // grab the attacker's crit chance.
   let critChance = this.subject().cri;
 
@@ -141,7 +141,7 @@ Game_Action.prototype.itemCri = function(target)
 
   // calculate the crit chance against the target's crit evasion.
   critChance -= target.cev;
-  
+
   // normalize the crit to 0 just in case it drops below.
   return Math.max(critChance, 0);
 };

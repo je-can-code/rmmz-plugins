@@ -5,14 +5,19 @@
 class CraftingComponent
 {
   static Types = {
-    Item: 'i', Weapon: 'w', Armor: 'a', Gold: 'g', SDP: 's',
+    Item: 'i',
+    Weapon: 'w',
+    Armor: 'a',
+    Gold: 'g',
+    SDP: 's',
   }
 
   static Typed = {
     Gold: () => CraftingComponent.builder
       .id(0)
       .type(CraftingComponent.Types.Gold)
-      .build(), SDP: () => CraftingComponent.builder
+      .build(),
+    SDP: () => CraftingComponent.builder
       .id(0)
       .type(CraftingComponent.Types.SDP)
       .build(),
@@ -270,8 +275,11 @@ class CraftingComponent
     if (J.JAFTING.EXT.CREATE.Metadata.usingSdp())
     {
       // its SDP, so use the leader's points.
-      if (this.isSdp()) return $gameParty.leader()
-        .getSdpPoints();
+      if (this.isSdp())
+      {
+        return $gameParty.leader()
+          .getSdpPoints();
+      }
     }
 
     console.warn('an unsupported component type was presented for quantity.', this);

@@ -2,7 +2,8 @@
 /**
  * The difficulty scene for managing the current difficulty.
  */
-class Scene_Difficulty extends Scene_MenuBase
+class Scene_Difficulty
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -461,7 +462,10 @@ class Scene_Difficulty extends Scene_MenuBase
   difficultyActorEffectsRectangle()
   {
     // grab the width and x of the effects for calculating x of the actor effects.
-    const { x: enemyEffectsX, width: effectsEffectsWidth } = this.getDifficultyEnemyEffectsWindow();
+    const {
+      x: enemyEffectsX,
+      width: effectsEffectsWidth
+    } = this.getDifficultyEnemyEffectsWindow();
 
     // grab the height from the help window.
     const { height: helpHeight } = this.getHelpWindow();
@@ -579,7 +583,10 @@ class Scene_Difficulty extends Scene_MenuBase
     if (!hoveredDifficulty) return;
 
     // extract the data points from the window.
-    const { actorEffects, enemyEffects } = hoveredDifficulty;
+    const {
+      actorEffects,
+      enemyEffects
+    } = hoveredDifficulty;
 
     // update the actor effects.
     this.updateActorEffectsWindow(actorEffects);
@@ -598,7 +605,11 @@ class Scene_Difficulty extends Scene_MenuBase
     {
       // extract the data points from the window.
       const {
-        exp, gold, sdp, drops, encounters
+        exp,
+        gold,
+        sdp,
+        drops,
+        encounters
       } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.
@@ -624,7 +635,11 @@ class Scene_Difficulty extends Scene_MenuBase
     {
       // extract the data points from the window.
       const {
-        exp, gold, sdp, drops, encounters
+        exp,
+        gold,
+        sdp,
+        drops,
+        encounters
       } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.

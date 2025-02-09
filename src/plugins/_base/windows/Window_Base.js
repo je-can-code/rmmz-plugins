@@ -200,7 +200,12 @@ Window_Base.prototype.drawBackgroundRect = function(rect)
   const color2 = ColorManager.itemBackColor2();
 
   // extract the data from the rectangle.
-  const { x, y, width, height } = rect;
+  const {
+    x,
+    y,
+    width,
+    height
+  } = rect;
 
   // render the background.
   this.contentsBack.gradientFillRect(x, y, width, height, color1, color2, true);

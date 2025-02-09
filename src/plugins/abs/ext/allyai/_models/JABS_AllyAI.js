@@ -20,7 +20,8 @@ JABS_AllyAI.modes = {
    * When this mode is assigned, the battler will take no action.
    */
   DO_NOTHING: {
-    key: "do-nothing", name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
+    key: "do-nothing",
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
   },
 
   /**
@@ -28,28 +29,32 @@ JABS_AllyAI.modes = {
    * If no skill is equipped in their main hand, they will do nothing.
    */
   BASIC_ATTACK: {
-    key: "basic-attack", name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
+    key: "basic-attack",
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
   },
 
   /**
    * When this mode is assigned, the battler will intelligently decide from any skill they have equipped.
    */
   VARIETY: {
-    key: "variety", name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
+    key: "variety",
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
   },
 
   /**
    * When this mode is assigned, the battler will use the biggest and strongest skills available.
    */
   FULL_FORCE: {
-    key: "full-force", name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
+    key: "full-force",
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
   },
 
   /**
    * When this mode is assigned, the battler will prioritize supporting and healing allies.
    */
   SUPPORT: {
-    key: "support", name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
+    key: "support",
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
   },
 };
 

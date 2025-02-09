@@ -8,7 +8,10 @@ class BasicChoiceConditional
    * A static property containing the strings representing validation types supported.
    */
   static Types = {
-    Leader: 'leader', NotLeader: 'not-leader', SwitchOn: 'switch-on', SwitchOff: 'switch-off',
+    Leader: 'leader',
+    NotLeader: 'not-leader',
+    SwitchOn: 'switch-on',
+    SwitchOff: 'switch-off',
   }
 
   /**

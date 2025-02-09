@@ -141,7 +141,10 @@ Sprite_Character.prototype.canUpdateDangerIndicator = function()
 
   // if we aren't allowed to show the indicator, then it shouldn't update.
   if (!this._character.getJabsBattler()
-    .showDangerIndicator()) return false;
+    .showDangerIndicator())
+  {
+    return false;
+  }
 
   // we should update!
   return true;

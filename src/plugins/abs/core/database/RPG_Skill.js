@@ -156,33 +156,15 @@ RPG_Skill.prototype.extractJabsShape = function()
 
 //region knockback
 /**
- * A new property for retrieving the JABS knockback from this skill.
- * @type {number}
+ * Gets the JABS knockback this skill.
+ * @type {number|null}
  */
 Object.defineProperty(RPG_Skill.prototype, "jabsKnockback", {
   get: function()
   {
-    return this.getJabsKnockback();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Knockback, true);
   },
 });
-
-/**
- * Gets the JABS knockback this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsKnockback = function()
-{
-  return this.extractJabsKnockback();
-};
-
-/**
- * Extracts the JABS knockback for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsKnockback = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Knockback, true);
-};
 //endregion knockback
 
 //region castAnimation
@@ -359,7 +341,8 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGuardData", {
  */
 RPG_Skill.prototype.getJabsGuardData = function()
 {
-  return new JABS_GuardData(this.id,
+  return new JABS_GuardData(
+    this.id,
     this.jabsGuardFlat,
     this.jabsGuardPercent,
     this.jabsCounterGuard,
@@ -376,7 +359,7 @@ RPG_Skill.prototype.getJabsGuardData = function()
 Object.defineProperty(RPG_Skill.prototype, "jabsGuard", {
   get: function()
   {
-    return this.getJabsGuard() ?? [ 0, 0 ];
+    return this.getJabsGuard();
   },
 });
 
@@ -930,73 +913,9 @@ RPG_Skill.prototype.extractJabsPiercingData = function()
 };
 //endregion piercing
 
-//region knockbackResist
-//region RPG_BaseBattler
-/**
- * A new property for retrieving the JABS castTime from this skill.
- * @type {number}
- */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsKnockbackResist", {
-  get: function()
-  {
-    return this.getJabsKnockbackResist();
-  },
-});
-
-/**
- * Gets the JABS castTime this skill.
- * @returns {number|null}
- */
-RPG_BaseBattler.prototype.getJabsKnockbackResist = function()
-{
-  return this.extractJabsKnockbackResist();
-};
-
-/**
- * Extracts the JABS castTime for this skill from its notes.
- * @returns {number|null}
- */
-RPG_BaseBattler.prototype.extractJabsKnockbackResist = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.KnockbackResist, true);
-};
-//endregion RPG_BaseBattler
-
-//region RPG_BaseItem
-/**
- * A new property for retrieving the JABS castTime from this skill.
- * @type {number}
- */
-Object.defineProperty(RPG_BaseItem.prototype, "jabsKnockbackResist", {
-  get: function()
-  {
-    return this.getJabsKnockbackResist();
-  },
-});
-
-/**
- * Gets the JABS castTime this skill.
- * @returns {number|null}
- */
-RPG_BaseItem.prototype.getJabsKnockbackResist = function()
-{
-  return this.extractJabsKnockbackResist();
-};
-
-/**
- * Extracts the JABS castTime for this skill from its notes.
- * @returns {number|null}
- */
-RPG_BaseItem.prototype.extractJabsKnockbackResist = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.KnockbackResist, true);
-};
-//endregion RPG_BaseItem
-//endregion knockbackResist
-
 //region ignoreParry
 /**
- * The amount of parry rating ignored by this skill.
+ * The percent of parry rating ignored by this skill.
  * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, "jabsIgnoreParry", {

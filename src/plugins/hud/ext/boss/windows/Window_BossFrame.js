@@ -1,5 +1,6 @@
 //region Window_BossFrame
-class Window_BossFrame extends Window_TargetFrame
+class Window_BossFrame
+  extends Window_TargetFrame
 {
   constructor(rect)
   {

@@ -79,7 +79,10 @@ J.HUD.EXT.TARGET.Metadata = {
  * A collection of all aliased methods for this plugin.
  */
 J.HUD.EXT.TARGET.Aliased = {
-  Game_System: new Map(), Hud_Manager: new Map(), JABS_Battler: new Map(), Scene_Map: new Map(),
+  Game_System: new Map(),
+  Hud_Manager: new Map(),
+  JABS_Battler: new Map(),
+  Scene_Map: new Map(),
 };
 
 /**

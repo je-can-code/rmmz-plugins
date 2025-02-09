@@ -1,5 +1,6 @@
 //region Window_DifficultyEffects
-class Window_DifficultyEffects extends Window_Command
+class Window_DifficultyEffects
+  extends Window_Command
 {
   /**
    * The difficulty being hovered over from the list.
@@ -32,14 +33,17 @@ class Window_DifficultyEffects extends Window_Command
    * The types of comparison that are valid when comparing parameter values.
    */
   static ComparisonTypes = {
-    SAME: "same", EASIER: "easier", HARDER: "harder",
+    SAME: "same",
+    EASIER: "easier",
+    HARDER: "harder",
   };
 
   /**
    * The types of effects that can be listed in this window.
    */
   static EffectsTypes = {
-    ACTOR: "actor", ENEMY: "enemy",
+    ACTOR: "actor",
+    ENEMY: "enemy",
   };
 
   /**
@@ -141,7 +145,11 @@ class Window_DifficultyEffects extends Window_Command
     if (!effectsList) return;
 
     // extract the data out of the hovered difficulty.
-    const { bparams, xparams, sparams } = effectsList;
+    const {
+      bparams,
+      xparams,
+      sparams
+    } = effectsList;
 
     // initialize our command collection for enemies.
     const battlerEffectsCommands = Array.empty;

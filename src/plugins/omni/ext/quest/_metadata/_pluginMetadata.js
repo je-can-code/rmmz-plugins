@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_QUEST_PluginMetadata extends PluginMetadata
+class J_QUEST_PluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for quests is located.

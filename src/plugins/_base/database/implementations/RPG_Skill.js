@@ -2,7 +2,8 @@
 /**
  * An class representing a single skill from the database.
  */
-class RPG_Skill extends RPG_UsableItem
+class RPG_Skill
+  extends RPG_UsableItem
 {
   //region properties
   /**

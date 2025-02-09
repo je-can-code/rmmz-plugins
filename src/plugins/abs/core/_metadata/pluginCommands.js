@@ -21,7 +21,13 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
 {
   // extract the values out of the various args.
-  const { actorId, skillId, itemId, slot, locked } = args;
+  const {
+    actorId,
+    skillId,
+    itemId,
+    slot,
+    locked
+  } = args;
 
   // convert the text option to one of the available slots.
   const skillSlotKey = J.ABS.Helpers.PluginManager.TranslateOptionToSlot(slot);
@@ -120,7 +126,12 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Enemy", args =>
 {
   // extract the eventId and coordinates from the plugin args.
-  const { x, y, enemyEventId, spawnAnimationId } = args;
+  const {
+    x,
+    y,
+    enemyEventId,
+    spawnAnimationId
+  } = args;
 
   // translate the args.
   const parsedX = parseInt(x);
@@ -153,7 +164,14 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Enemy", args =>
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Loot", args =>
 {
   // extract the eventId and coordinates from the plugin args.
-  const { x, y, lootItemIds, lootWeaponIds, lootArmorIds, spawnAnimationId } = args;
+  const {
+    x,
+    y,
+    lootItemIds,
+    lootWeaponIds,
+    lootArmorIds,
+    spawnAnimationId
+  } = args;
 
   // translate the args.
   const parsedX = parseInt(x);

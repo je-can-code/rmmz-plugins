@@ -443,6 +443,22 @@ class J_ProficiencyPluginMetadata
      * @type {Map<number, ProficiencyConditional[]>}
      */
     this.actorConditionalsMap = new Map();
+    // TODO: fix this!
+    [1, 2, 3, 4, 5, 6].forEach(actorId =>
+    {
+      this.actorConditionalsMap.set(actorId, Array.empty);
+    });
+
+
+    this.conditionals.forEach(conditional =>
+    {
+      conditional.actorIds.forEach(actorId =>
+      {
+        const data = this.actorConditionalsMap.get(actorId);
+        data.push(conditional);
+        this.actorConditionalsMap.set(actorId, data);
+      });
+    })
 
     console.log(`loaded:
       - ${this.conditionals.length} proficiency conditionals
@@ -1351,5 +1367,4 @@ Game_System.prototype.updateProficienciesFromPluginMetadata = function()
       const actorConditionals = J.PROF.Metadata.conditionals.filter(condition => condition.actorIds.includes(actorId));
       J.PROF.Metadata.actorConditionalsMap.set(actorId, actorConditionals);
     });
-
 };

@@ -5,7 +5,8 @@
  * @param {number} subChoiceCommandIndex The index in the list of commands of an event that represents this branch.
  * @returns {boolean}
  */
-J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set('shouldHideChoiceBranch',
+J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set(
+  'shouldHideChoiceBranch',
   Game_Interpreter.prototype.shouldHideChoiceBranch);
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex)
 {
@@ -32,7 +33,7 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
   if (!Game_Event.filterCommentCommandsByChoiceQuestConditional(subEventCommand)) return false;
 
   // convert the known-quest-command to a conditional.
-  const conditional = eventMetadata.toQuestConditional(subEventCommand);
+  const conditional = Game_Event.toQuestConditional(subEventCommand);
 
   // if the condition is met, then we don't need to hide.
   const met = Game_Event.questConditionalMet(conditional);

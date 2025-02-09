@@ -3,7 +3,8 @@
  * Extends {@link onQuestopediaListSelection}.<br/>
  * Triggers a HUD update request when something is selected in the list of quests.
  */
-J.HUD.EXT.QUEST.Aliased.Scene_Questopedia.set('onQuestopediaListSelection',
+J.HUD.EXT.QUEST.Aliased.Scene_Questopedia.set(
+  'onQuestopediaListSelection',
   Scene_Questopedia.prototype.onQuestopediaListSelection);
 Scene_Questopedia.prototype.onQuestopediaListSelection = function()
 {

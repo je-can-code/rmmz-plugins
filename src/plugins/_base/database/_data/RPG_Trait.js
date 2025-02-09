@@ -14,7 +14,11 @@ class RPG_Trait
    */
   static fromValues(code, dataId, value)
   {
-    return new RPG_Trait({ code, dataId, value });
+    return new RPG_Trait({
+      code,
+      dataId,
+      value
+    });
   }
 
   /**

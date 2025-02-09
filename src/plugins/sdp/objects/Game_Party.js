@@ -51,6 +51,44 @@ Game_Party.prototype.populateSdpTrackings = function()
 };
 
 /**
+ * Updates the {@link PanelTracking}s with any new ones found from the metadata.
+ */
+Game_Party.prototype.updateSdpTrackingsFromConfig = function()
+{
+  // grab the current list of trackings by reference.
+  const trackings = this.getAllSdpTrackings();
+
+  J.SDP.Metadata.panels.forEach(panel =>
+  {
+    // skip ones that we shouldn't be adding.
+    if (!this.canGainEntry(panel.name)) return;
+
+    // find one by the same key in the existing trackings.
+    const foundTracking = trackings.find(tracking => tracking.key === panel.key);
+
+    // check if we found a tracking that has had its default unlock status changed.
+    if (foundTracking && !foundTracking.unlocked && panel.unlockedByDefault)
+    {
+      // unlock it.
+      panel.unlock();
+      return;
+    }
+
+    // check if we actually didn't find any panel by that key.
+    if (!foundTracking)
+    {
+      // add it anew.
+      const newTracking = new PanelTracking(panel.key, panel.unlockedByDefault);
+      trackings.push(newTracking);
+      console.log(`adding new sdp: ${newTracking.key}`);
+    }
+  });
+
+  // sort them.
+  trackings.sort((a, b) => a.key - b.key);
+};
+
+/**
  * Gets all SDP trackings.
  * @return {PanelTracking[]}
  */
@@ -113,9 +151,8 @@ Game_Party.prototype.getUnlockedSdps = function()
  */
 Game_Party.prototype.unlockSdp = function(key)
 {
-  const panelTracking = this.getSdpTrackingByKey(key);
-
-  if (!panelTracking)
+  // validate the panel exists before unlocking.
+  if (J.SDP.Metadata.panelsMap.has(key) === false)
   {
     // stop processing.
     console.error(`The SDP key of ${key} was not found in the list of panels to unlock.`);
@@ -123,7 +160,8 @@ Game_Party.prototype.unlockSdp = function(key)
   }
 
   // unlock the panel.
-  panelTracking.unlock();
+  this.allMembers()
+    .forEach(member => member.unlockSdpByKey(key));
 };
 
 /**
@@ -133,7 +171,17 @@ Game_Party.prototype.unlockAllSdps = function()
 {
   // unlock the panel.
   this.getAllSdpTrackings()
-    .forEach(tracking => tracking.unlock());
+    .forEach(tracking => this.unlockSdp(tracking.key));
+};
+
+Game_Party.prototype.translatePartySdpsToActorSdps = function()
+{
+  const unlockedSdps = this.getUnlockedSdps();
+  this.allMembers()
+    .forEach(member =>
+    {
+      unlockedSdps.forEach(tracking => member.unlockSdpByKey(tracking.key));
+    });
 };
 
 /**
@@ -211,5 +259,14 @@ Game_Party.prototype.getSdpRankByActorAndKey = function(actorId, key)
   {
     return 0;
   }
+};
+
+Game_Party.prototype.normalizeSdpRankings = function()
+{
+  this.allMembers()
+    .forEach(member =>
+    {
+      member._j._sdp._ranks.forEach(ranking => ranking.normalizeRank())
+    });
 };
 //endregion Game_Party

@@ -106,7 +106,11 @@ class RPG_DropItem
    * Constructor.
    * @param {rm.types.EnemyDropItem} enemyDropItem The drop item to parse.
    */
-  constructor({ dataId, denominator, kind })
+  constructor({
+                dataId,
+                denominator,
+                kind
+              })
   {
     // map the enemy drop to this object.
     this.dataId = dataId;

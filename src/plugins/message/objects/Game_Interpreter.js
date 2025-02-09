@@ -46,7 +46,8 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
 
   // identify the start and end of the choice branches.
   const startShowChoiceIndex = currentPageCommands.findIndex(item => item === currentCommand);
-  const endShowChoiceIndex = currentPageCommands.findIndex((item,
+  const endShowChoiceIndex = currentPageCommands.findIndex((
+    item,
     index) => (index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404));
 
   // build an array of indexes that align with the options.

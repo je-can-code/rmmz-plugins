@@ -18,34 +18,34 @@ class LevelScaling
    * @type {number}
    * @private
    */
-  static #minimumMultiplier = J.LEVEL.Metadata.MinimumMultiplier;
+  static #minimumMultiplier = J.LEVEL.Metadata.minimumMultiplier;
 
   /**
    * The maximum amount the multiplier can be.
    * If after calculation it is higher, it will be lowered to this amount.
    * @type {number}
    */
-  static #maximumMultiplier = J.LEVEL.Metadata.MaximumMultiplier;
+  static #maximumMultiplier = J.LEVEL.Metadata.maximumMultiplier;
 
   /**
    * The amount of growth per level of difference in the scaling multiplier.
    * @type {number}
    */
-  static #growthMultiplier = J.LEVEL.Metadata.GrowthMultiplier;
+  static #growthMultiplier = J.LEVEL.Metadata.growthMultiplier;
 
   /**
    * The upper threshold of invariance, effective the dead zone for ignoring
    * level differences when they are not high enough.
    * @type {number}
    */
-  static #upperInvariance = J.LEVEL.Metadata.InvariantUpperRange;
+  static #upperInvariance = J.LEVEL.Metadata.invariantUpperRange;
 
   /**
    * The lower threshold of invariance, effective the dead zone for ignoring
    * level differences when they are not low enough.
    * @type {number}
    */
-  static #lowerInvariance = J.LEVEL.Metadata.InvariantLowerRange;
+  static #lowerInvariance = J.LEVEL.Metadata.invariantLowerRange;
 
   //endregion properties
 

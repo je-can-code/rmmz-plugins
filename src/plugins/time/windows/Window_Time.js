@@ -2,7 +2,8 @@
 /**
  * A window class for displaying the time.
  */
-class Window_Time extends Window_Base
+class Window_Time
+  extends Window_Base
 {
   /**
    * @constructor
@@ -10,15 +11,24 @@ class Window_Time extends Window_Base
    */
   constructor(rect)
   {
+    // perform original logic.
     super(rect);
+
+    // set the opacity of the window as 100% transparent.
     this.opacity = 0;
+
+    // identify the background for this window.
     this.generateBackground();
+
+    // initialize all members for this window.
     this.initMembers();
+
+    // initialize the window with a refresh.
+    this.refresh();
   };
 
   /**
-   * Replaces the background of the time window with what will look like a standard
-   * "dimmed" window gradient.
+   * Renders the background of the time window with what will look like a standard "dimmed" window gradient.
    */
   generateBackground()
   {
@@ -37,34 +47,64 @@ class Window_Time extends Window_Base
    */
   initMembers()
   {
+    /**
+     * The TIME rendered by this window.
+     * @type {Time_Snapshot}
+     */
     this.time = null;
-    this._frames = 0;
+
+    /**
+     * The boolean managing the alternating colon for this window.
+     * @type {boolean}
+     */
     this._alternating = false;
-    this.refresh();
   };
+
+  /**
+   * Toggles the alternating colon boolean.
+   */
+  toggleAlternating()
+  {
+    this._alternating = !this._alternating;
+  }
 
   /**
    * Updates the frames and refreshes the window's contents once every half second.
    */
   update()
   {
+    // perform original logic.
     super.update();
 
-    // don't actually update rendering the time if time isn't active.
-    if (!$gameTime.isActive() || $gameTime.isBlocked()) return;
-
-    this._frames++;
-    if (this._frames % $gameTime.getTickSpeed() === 0)
+    // check if the TIME window can be updated.
+    if (this.canUpdate())
     {
-      this.refresh();
-    }
+      // toggle the colons!
+      this.toggleAlternating();
 
-    if (this._frames % 60 === 0)
-    {
-      this._alternating = !this._alternating;
+      // process window refresh.
       this.refresh();
+
+      // acknowledge the TIME update.
+      $gameTime.acknowledgeHudUpdate();
     }
   };
+
+  /**
+   * Determine if the window can be updated.
+   * @returns {boolean}
+   */
+  canUpdate()
+  {
+    // cannot process TIME update if it is inactive or blocked.
+    if (!$gameTime.isActive() || $gameTime.isBlocked()) return false;
+
+    // cannot process TIME update if time hasn't ticked.
+    if ($gameTime.needsHudUpdate() === false) return false;
+
+    // TIME should be processed.
+    return true;
+  }
 
   /**
    * Refreshes the window by clearing it and redrawing everything.
@@ -72,12 +112,21 @@ class Window_Time extends Window_Base
   refresh()
   {
     this.time = $gameTime.currentTime();
-    this.contents.clear();
-    this.drawContent();
+    this.redrawContent();
   };
 
   /**
-   * Draws the contents of the window.
+   * Clears and redraws the contents of the window.
+   */
+  redrawContent()
+  {
+    this.contents.clear();
+    this.drawContent();
+  }
+
+  /**
+   * Implements {@link #drawContent}.<br/>
+   * Renders the TIME into the window.
    */
   drawContent()
   {

@@ -290,13 +290,17 @@ Window_Base.prototype.translateSdpTextCode = function(text)
     if (!sdpKey) return text;
 
     // grab the panel by its key.
-    const sdp = $gameParty.getSdpByKey(sdpKey);
+    const sdp = J.SDP.Metadata.panelsMap.get(sdpKey);
 
     // if the panel doesn't exist, then do not parse the panel.
     if (!sdp) return text;
 
     // extract the necessary data from the SDP.
-    const { name, rarity: colorIndex, iconIndex } = sdp;
+    const {
+      name,
+      rarity: colorIndex,
+      iconIndex
+    } = sdp;
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;

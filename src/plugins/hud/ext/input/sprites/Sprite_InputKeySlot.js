@@ -2,7 +2,8 @@
 /**
  * A single sprite that owns the drawing and management of a single input key slot.
  */
-class Sprite_InputKeySlot extends Sprite
+class Sprite_InputKeySlot
+  extends Sprite
 {
   /**
    * Extend initialization of the sprite to assign a skill slot for tracking.
@@ -128,7 +129,10 @@ class Sprite_InputKeySlot extends Sprite
 
     // if it is an item, then the base skill id is the only id.
     if (this.skillSlot()
-      .isItem()) return skillId;
+      .isItem())
+    {
+      return skillId;
+    }
 
     // grab the cooldown data for this skill.
     const cooldownData = this.cooldownData();

@@ -118,7 +118,10 @@ Game_Actor.prototype.canRefreshBasicAttackSkills = function()
 
   // don't refresh if setup hasn't been completed.
   if (!this.getSkillSlotManager()
-    .isSetupComplete()) return false;
+    .isSetupComplete())
+  {
+    return false;
+  }
 
   // refresh!
   return true;

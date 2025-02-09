@@ -44,6 +44,8 @@ Game_Followers.prototype.jumpAll = function()
   // don't make all the followers jump if the player isn't jumping.
   if (!$gamePlayer.isJumping()) return;
 
+  const playerBattler = $gamePlayer.getJabsBattler();
+
   // iterate over each follower to make them jump as-needed.
   for (const follower of this._data)
   {
@@ -53,8 +55,8 @@ Game_Followers.prototype.jumpAll = function()
     // grab the follower's battler.
     const battler = follower.getJabsBattler();
 
-    // don't jump if engaged.
-    if (battler.isEngaged()) return;
+    // only jump if the battler isn't engaged, and there is no event running.
+    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
 
     // determine coordinates to jump to.
     const sx = $gamePlayer.deltaXFrom(follower.x);
@@ -75,6 +77,15 @@ Game_Followers.prototype.setDirectionFixAll = function(isFixed)
   {
     // skip followers that don't exist.
     if (!follower) return;
+
+    // grab the follower's battler.
+    const battler = follower.getJabsBattler();
+
+    // if the follower doesn't have a battler, then don't check anything.
+    if (!battler) return;
+
+    // only lock direction if the battler isn't engaged, and there is no event running.
+    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
 
     // set their direction to be whatever the player's is.
     follower.setDirection(isFixed);

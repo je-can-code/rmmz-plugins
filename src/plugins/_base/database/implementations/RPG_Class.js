@@ -2,7 +2,8 @@
 /**
  * A class representing a RPG-relevant class from the database.
  */
-class RPG_Class extends RPG_Base
+class RPG_Class
+  extends RPG_Base
 {
   //region properties
   /**
@@ -21,7 +22,7 @@ class RPG_Class extends RPG_Base
    * A multi-dimensional array of the core parameters that all battlers have:
    * MHP, MMP, ATK, DEF, MAT, MDF, SPD, LUK,
    * in that order, but for all 100 of the base levels.
-   * @type {[number, number, number, number, number, number, number, number]}
+   * @type {[number[], number[], number[], number[], number[], number[], number[], number[]]}
    */
   params = [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ];
 

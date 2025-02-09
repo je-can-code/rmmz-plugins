@@ -1,5 +1,6 @@
 //region Window_QuestopediaList
-class Window_QuestopediaList extends Window_Command
+class Window_QuestopediaList
+  extends Window_Command
 {
   /**
    * The category that this list is being filtered by. When an empty string, no filter is applied.

@@ -17,7 +17,7 @@ var $jabsEngine = null;
 var $gameEnemies = null;
 
 /**
- * The global reference for the `$dataMap` data object that contains all the replicable `JABS_Action`s.
+ * The global reference for the `$dataMap` data object that contains all the replicable JABS actions.
  * @type {Map}
  * @global
  */

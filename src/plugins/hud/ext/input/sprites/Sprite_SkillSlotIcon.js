@@ -2,7 +2,8 @@
 /**
  * A sprite that displays the icon represented by the assigned skill slot.
  */
-class Sprite_SkillSlotIcon extends Sprite_Icon
+class Sprite_SkillSlotIcon
+  extends Sprite_Icon
 {
   /**
    * Initializes this sprite with the designated icon.

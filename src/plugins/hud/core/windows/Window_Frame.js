@@ -2,7 +2,8 @@
 /**
  * A base class with some common sprite-cache-management features.
  */
-class Window_Frame extends Window_Base
+class Window_Frame
+  extends Window_Base
 {
   /**
    * Constructor.

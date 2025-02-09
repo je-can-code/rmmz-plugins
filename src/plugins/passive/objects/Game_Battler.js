@@ -85,7 +85,10 @@ Game_Battler.prototype.canAddPassiveStateId = function(stateId, allowDuplicates)
 {
   // if we don't allow duplicates and already are have this stateId, then don't add it.
   if (!allowDuplicates && this.getPassiveStateIds()
-    .includes(stateId)) return false;
+    .includes(stateId))
+  {
+    return false;
+  }
 
   // TODO: check for blacklisted ids as well.
 

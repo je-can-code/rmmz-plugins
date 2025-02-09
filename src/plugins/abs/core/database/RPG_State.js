@@ -313,7 +313,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateReapplyType", {
 Object.defineProperty(RPG_State.prototype, "jabsStateRefreshDiminish", {
   get: function()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this ],
+    return RPGManager.getSumFromAllNotesByRegex(
+      [ this ],
       J.ABS.RegExp.ReapplyRefreshDiminish,
       true) ?? J.ABS.Metadata.DefaultStateRefreshDiminish;
   },
@@ -327,7 +328,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateRefreshDiminish", {
 Object.defineProperty(RPG_State.prototype, "jabsStateRefreshReset", {
   get: function()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this ],
+    return RPGManager.getSumFromAllNotesByRegex(
+      [ this ],
       J.ABS.RegExp.ReapplyRefreshReset,
       true) ?? J.ABS.Metadata.DefaultStateRefreshReset;
   },
@@ -341,7 +343,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateRefreshReset", {
 Object.defineProperty(RPG_State.prototype, "jabsStateExtendAmount", {
   get: function()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this ],
+    return RPGManager.getSumFromAllNotesByRegex(
+      [ this ],
       J.ABS.RegExp.ReapplyExtendAmount,
       true) ?? J.ABS.Metadata.DefaultStateExtendAmount;
   },
@@ -367,7 +370,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateExtendMax", {
 Object.defineProperty(RPG_State.prototype, "jabsStateStackMax", {
   get: function()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this ],
+    return RPGManager.getSumFromAllNotesByRegex(
+      [ this ],
       J.ABS.RegExp.ReapplyStackMax,
       true) ?? J.ABS.Metadata.DefaultStateStackMax;
   },
@@ -381,7 +385,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateStackMax", {
 Object.defineProperty(RPG_State.prototype, "jabsStateStacksApplied", {
   get: function()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this ],
+    return RPGManager.getSumFromAllNotesByRegex(
+      [ this ],
       J.ABS.RegExp.StateApplicationAmount,
       true) ?? J.ABS.Metadata.DefaultStateApplicationCount;
   },
@@ -395,7 +400,8 @@ Object.defineProperty(RPG_State.prototype, "jabsStateStacksApplied", {
 Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce", {
   get: function()
   {
-    return RPGManager.checkForBooleanFromNoteByRegex(this,
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      this,
       J.ABS.RegExp.LoseAllStacksAtOnce,
       true) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
   },

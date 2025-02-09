@@ -299,7 +299,9 @@ declare class Game_BattlerBase
    * }
    * Access using number/integer
    */
-  _stateTurns: { [key: string]: any };
+  _stateTurns: {
+    [key: string]: any
+  };
   _buffs: number[];
   _buffTurns: number[];
   /**
@@ -1280,7 +1282,8 @@ declare class Game_BattlerBase
   static ICON_DEBUFF_START: number;
 }
 
-declare class Game_Battler extends Game_BattlerBase
+declare class Game_Battler
+  extends Game_BattlerBase
 {
   protected constructor();
 
@@ -1914,7 +1917,8 @@ declare class Game_Battler extends Game_BattlerBase
   performCollapse(): void;
 }
 
-declare class Game_Actor extends Game_Battler
+declare class Game_Actor
+  extends Game_Battler
 {
   constructor(actorId: number);
 
@@ -3203,7 +3207,8 @@ declare class Game_CharacterBase
   endBalloon(): void;
 }
 
-declare class Game_Character extends Game_CharacterBase
+declare class Game_Character
+  extends Game_CharacterBase
 {
   protected constructor();
 
@@ -3463,7 +3468,8 @@ declare class Game_Character extends Game_CharacterBase
   static ROUTE_SCRIPT: number;
 }
 
-declare class Game_Enemy extends Game_Battler
+declare class Game_Enemy
+  extends Game_Battler
 {
   /**
    * Initializes a new enemy battler.
@@ -3640,7 +3646,8 @@ declare class Game_Enemy extends Game_Battler
   selectAllActions(actionList: RPG_EnemyAction[]): void;
 }
 
-declare class Game_Event extends Game_Character
+declare class Game_Event
+  extends Game_Character
 {
   constructor(mapId: number, eventId: number);
 
@@ -3846,7 +3853,8 @@ declare class Game_Event extends Game_Character
   forceMoveRoute(moveRoute: rm.types.MoveRoute): void;
 }
 
-declare class Game_Follower extends Game_Character
+declare class Game_Follower
+  extends Game_Character
 {
   constructor(memberIndex: number);
 
@@ -5882,7 +5890,8 @@ declare class Game_Unit
   substituteBattler(): Game_Battler;
 }
 
-declare class Game_Party extends Game_Unit
+declare class Game_Party
+  extends Game_Unit
 {
   protected constructor();
 
@@ -5891,22 +5900,32 @@ declare class Game_Party extends Game_Unit
   _lastItem: Game_Item;
   _menuActorId: number;
   _targetActorId: number;
-  _actors: Game_Actor[];
+
+  /**
+   * The order of the ids of the actors in the party.
+   */
+  _actors: number[];
   /**
    * Data structure.
    * [ItemId:Int] : Int
    */
-  _items: { [key: string]: any };
+  _items: {
+    [key: string]: any
+  };
   /**
    * Data structure.
    * [weaponId:Int] : Int
    */
-  _weapons: { [key: string]: any };
+  _weapons: {
+    [key: string]: any
+  };
   /**
    * Data structure.
    * [armorId:Int] : Int
    */
-  _armors: { [key: string]: any };
+  _armors: {
+    [key: string]: any
+  };
 
   /**
    * Returns all party members.
@@ -5915,6 +5934,13 @@ declare class Game_Party extends Game_Unit
    * @memberof Game_Party
    */
   members(): Game_Actor[];
+
+  /**
+   * Returns all members, in or out of the party.
+   * @returns {Game_Actor[]}
+   * @memberOf Game_Party
+   */
+  allMembers(): Game_Actor[];
 
   /**
    * Returns the living party members.
@@ -6036,7 +6062,9 @@ declare class Game_Party extends Game_Unit
    */
   allItems(): RPG_BaseItem[];
 
-  itemContainer(item: RPG_BaseItem): { ItemId: number };
+  itemContainer(item: RPG_BaseItem): {
+    ItemId: number
+  };
 
   /**
    * Sets up the starting party members.
@@ -6462,9 +6490,25 @@ declare class Game_Picture
 
   initRotation(): void;
 
-  show(name: string, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number): void;
+  show(
+    name: string,
+    origin: number,
+    x: number,
+    y: number,
+    scaleX: number,
+    scaleY: number,
+    opacity: number,
+    blendMode: number): void;
 
-  move(origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number, duration: number): void;
+  move(
+    origin: number,
+    x: number,
+    y: number,
+    scaleX: number,
+    scaleY: number,
+    opacity: number,
+    blendMode: number,
+    duration: number): void;
 
   rotate(speed: number): void;
 
@@ -6506,7 +6550,8 @@ declare class Game_Picture
   updateRotation(): void;
 }
 
-declare class Game_Player extends Game_Character
+declare class Game_Player
+  extends Game_Character
 {
   protected constructor();
 
@@ -7158,9 +7203,27 @@ declare class Game_Screen
 
   startFlashForDamage(): void;
 
-  showPicture(pictureId: number, name: string, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number): void;
+  showPicture(
+    pictureId: number,
+    name: string,
+    origin: number,
+    x: number,
+    y: number,
+    scaleX: number,
+    scaleY: number,
+    opacity: number,
+    blendMode: number): void;
 
-  movePicture(pictureId: number, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number, duration: number): void;
+  movePicture(
+    pictureId: number,
+    origin: number,
+    x: number,
+    y: number,
+    scaleX: number,
+    scaleY: number,
+    opacity: number,
+    blendMode: number,
+    duration: number): void;
 
   rotatePicture(pictureId: number, speed: number): void;
 
@@ -7182,7 +7245,9 @@ declare class Game_SelfSwitches
   /**
    * {key: Array<Any>}
    */
-  _data: { [key: string]: any };
+  _data: {
+    [key: string]: any
+  };
 
   initialize(): void;
 
@@ -7518,7 +7583,8 @@ declare class Game_System
   windowPadding(): number;
 }
 
-declare class Game_Temp extends Game_Unit
+declare class Game_Temp
+  extends Game_Unit
 {
   constructor();
 
@@ -7718,7 +7784,9 @@ declare class Game_Timer
   onExpire(): void;
 }
 
-declare class Game_Troop {}
+declare class Game_Troop
+{
+}
 
 /**
  * The game object class for game variables.
@@ -7743,7 +7811,8 @@ declare class Game_Variables
 /**
  * The game object class for a vehicle.
  */
-declare class Game_Vehicle extends Game_Character
+declare class Game_Vehicle
+  extends Game_Character
 {
   constructor(type: string);
 

@@ -4,7 +4,8 @@
  */
 class StatDistributionPanel
 {
-  constructor(name,
+  constructor(
+    name,
     key,
     iconIndex,
     rarity,
@@ -178,7 +179,10 @@ class StatDistributionPanel
     panelParameters.forEach(panelParameter =>
     {
       // grab the per-rank bonus on this panel.
-      const { perRank, isFlat } = panelParameter;
+      const {
+        perRank,
+        isFlat
+      } = panelParameter;
 
       // check if the panel should use the percent or flat formula.
       if (!isFlat)
@@ -268,7 +272,8 @@ class StatDistributionPanel
     static build()
     {
       // build the panel based off current parameters.
-      const sdp = new StatDistributionPanel(this.#name,
+      const sdp = new StatDistributionPanel(
+        this.#name,
         this.#key,
         this.#iconIndex,
         this.#rarity,

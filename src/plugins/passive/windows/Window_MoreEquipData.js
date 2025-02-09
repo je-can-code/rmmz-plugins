@@ -34,7 +34,10 @@ Window_MoreEquipData.prototype.addPassiveStateData = function()
   {
     // extract the data from the state.
     const state = this.actor.state(passiveStateId);
-    const { name, iconIndex } = state;
+    const {
+      name,
+      iconIndex
+    } = state;
 
     // define the name of the command.
     const commandName = `Passive: ${name}`;

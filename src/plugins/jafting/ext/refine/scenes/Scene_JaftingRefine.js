@@ -1,5 +1,6 @@
 //region Scene_JaftingRefine
-class Scene_JaftingRefine extends Scene_MenuBase
+class Scene_JaftingRefine
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.

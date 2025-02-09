@@ -1,5 +1,6 @@
 //region Window_SdpParameterList
-class Window_SdpParameterList extends Window_Command
+class Window_SdpParameterList
+  extends Window_Command
 {
   /**
    * The current parameters on the panel being hovered over.
@@ -69,7 +70,10 @@ class Window_SdpParameterList extends Window_Command
   #buildPanelParameterCommand(panelParameter)
   {
     // extract a couple parameter data points for building the display information.
-    const { parameterId, isCore } = panelParameter;
+    const {
+      parameterId,
+      isCore
+    } = panelParameter;
 
     // determine the item color.
     const colorIndex = isCore
@@ -94,7 +98,10 @@ class Window_SdpParameterList extends Window_Command
     const paramDescription = TextManager.longParamDescription(parameterId);
 
     // determine the modifier data to display.
-    const { modifierColorIndex, modifierText } = this.#determineModifierData(panelParameter);
+    const {
+      modifierColorIndex,
+      modifierText
+    } = this.#determineModifierData(panelParameter);
 
     // build the command name.
     const commandName = `${paramName} ( ${Math.trunc(paramValue)}${percentValue} )`;
@@ -197,7 +204,12 @@ class Window_SdpParameterList extends Window_Command
     };
 
     // deconstruct the info we need from the panel parameter.
-    const { parameterId: paramId, perRank: modifier, isFlat, isCore } = panelParameter;
+    const {
+      parameterId: paramId,
+      perRank: modifier,
+      isFlat,
+      isCore
+    } = panelParameter;
 
     // determine the current value of the parameter.
     const paramValue = this.currentActor.longParam(paramId);
@@ -212,7 +224,10 @@ class Window_SdpParameterList extends Window_Command
     const modifierText = buildModifierText(modifier, isFlat);
 
     // return our values.
-    return { modifierColorIndex, modifierText };
+    return {
+      modifierColorIndex,
+      modifierText
+    };
   }
 
   /**

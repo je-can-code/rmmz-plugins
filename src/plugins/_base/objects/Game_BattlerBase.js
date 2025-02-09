@@ -90,6 +90,7 @@ Object.defineProperty(Game_BattlerBase.prototype, "mtp", {
   get: function()
   {
     return this.maxTp();
-  }, configurable: true
+  },
+  configurable: true
 });
 //endregion Game_BattlerBase

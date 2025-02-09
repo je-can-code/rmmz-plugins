@@ -119,7 +119,7 @@ Game_Character.prototype.initJabsLootMembers = function()
 
 //region JABS action
 /**
- * If the event has a `JABS_Action` associated with it, return that.
+ * If the event has a JABS action associated with it, return that.
  * @returns {JABS_Action}
  */
 Game_Character.prototype.getJabsAction = function()
@@ -128,7 +128,7 @@ Game_Character.prototype.getJabsAction = function()
 };
 
 /**
- * Binds a `JABS_Action` to this character.
+ * Binds a JABS action to this character.
  * @param {JABS_Action} action The action to assign to this character.
  */
 Game_Character.prototype.setJabsAction = function(action)
@@ -146,7 +146,7 @@ Game_Character.prototype.isJabsAction = function()
 };
 
 /**
- * Gets whether or not the underlying `JABS_Action` requires removal from the map.
+ * Gets whether or not the underlying JABS action requires removal from the map.
  * @returns {boolean} True if removal is required, false otherwise.
  */
 Game_Character.prototype.getJabsActionNeedsRemoving = function()

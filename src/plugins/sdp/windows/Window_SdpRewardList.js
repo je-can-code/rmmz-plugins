@@ -1,5 +1,6 @@
 //region Window_SdpRewardList
-class Window_SdpRewardList extends Window_Command
+class Window_SdpRewardList
+  extends Window_Command
 {
   /**
    * The list of rewards for the currently-selected panel.
@@ -47,7 +48,10 @@ class Window_SdpRewardList extends Window_Command
 
     this.panelRewards.forEach(panelReward =>
     {
-      const { rewardName, rankRequired } = panelReward;
+      const {
+        rewardName,
+        rankRequired
+      } = panelReward;
 
       // determine the icon for the reward..
       let rankText = String.empty;

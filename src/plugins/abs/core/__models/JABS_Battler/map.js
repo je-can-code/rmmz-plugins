@@ -79,10 +79,10 @@ JABS_Battler.prototype.isWithinScope = function(action, target, alreadyHitOne = 
 };
 
 /**
- * Creates a new collection of `JABS_Action`s from a skill id.
- * @param {number} skillId The id of the skill to create the `JABS_Action`s from.
+ * Creates a new collection of JABS actions from a skill id.
+ * @param {number} skillId The id of the skill to create the JABS actions from.
  * @param {JABS_ActionOptions=} actionOptions The options associated with this action.
- * @returns {JABS_Action[]} The `JABS_Action`s based on the skill id provided.
+ * @returns {JABS_Action[]} The JABS actions based on the skill id provided.
  */
 JABS_Battler.prototype.createJabsActionFromSkill = function(skillId, actionOptions = JABS_ActionOptions.Default())
 {
@@ -129,7 +129,7 @@ JABS_Battler.prototype.convertProjectileDirectionsToActions = function(projectil
 /**
  * Constructs the attack data from this battler's skill slot.
  * @param {string} cooldownKey The cooldown key.
- * @returns {JABS_Action[]} The constructed `JABS_Action`s.
+ * @returns {JABS_Action[]} The constructed JABS actions.
  */
 JABS_Battler.prototype.getAttackData = function(cooldownKey)
 {
@@ -265,7 +265,10 @@ JABS_Battler.prototype.applyToolEffects = function(toolId, isLoot = false)
   this.createToolLog(item);
 
   // extract the cooldown and skill id from the item.
-  const { jabsCooldown: itemCooldown, jabsSkillId: itemSkillId } = item;
+  const {
+    jabsCooldown: itemCooldown,
+    jabsSkillId: itemSkillId
+  } = item;
 
   // it was an item with a skill attached.
   if (itemSkillId)

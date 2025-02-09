@@ -50,6 +50,7 @@ J.ESCRIBE.RegExp = {
  * The collection of all aliased classes for extending.
  */
 J.ESCRIBE.Aliased = {
-  Game_Event: new Map(), Sprite_Character: new Map(),
+  Game_Event: new Map(),
+  Sprite_Character: new Map(),
 };
 //endregion Introduction

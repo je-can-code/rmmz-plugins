@@ -9,7 +9,8 @@ class JaftingManager
    * A collection of categories of equipment that are refinable.
    */
   static RefinementTypes = {
-    Armor: "armor", Weapon: "weapon",
+    Armor: "armor",
+    Weapon: "weapon",
   }
 
   /**

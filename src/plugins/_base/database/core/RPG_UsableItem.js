@@ -3,7 +3,8 @@
  * A class representing the base properties for any usable item or skill
  * from the database.
  */
-class RPG_UsableItem extends RPG_BaseItem
+class RPG_UsableItem
+  extends RPG_BaseItem
 {
   //region properties
   /**

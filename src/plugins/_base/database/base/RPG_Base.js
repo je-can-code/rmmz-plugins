@@ -314,8 +314,10 @@ class RPG_Base
   #parseString(str)
   {
     // check if its actually boolean true.
-    if (str.toLowerCase() === "true") return true;
-    // check if its actually boolean false.
+    if (str.toLowerCase() === "true")
+    {
+      return true;
+    }// check if its actually boolean false.
     else if (str.toLowerCase() === "false") return false;
 
     // check if its actually a number.
@@ -405,12 +407,6 @@ class RPG_Base
     // cleanup any duplicate newlines.
     this.note = this.note.replace(/\n\n/gmi, '\n');
     this.note = this.note.replace(/\r\r/gmi, '\r');
-
-    // cleanup any leading newlines.
-    if (this.note.startsWith('\r') || this.note.startsWith('\n'))
-    {
-      this.note = this.note.slice(2);
-    }
   }
 
   /**

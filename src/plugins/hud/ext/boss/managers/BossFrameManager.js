@@ -297,7 +297,10 @@ class BossFrameManager
 
     // if the eventId is not a valid eventId, we cannot create from that.
     if (!$gameMap.event(eventId)
-      .getJabsBattler()) return false;
+      .getJabsBattler())
+    {
+      return false;
+    }
 
     // create the boss!
     return true;

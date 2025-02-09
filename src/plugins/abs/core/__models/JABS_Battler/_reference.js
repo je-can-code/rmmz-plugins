@@ -1472,7 +1472,12 @@ JABS_Battler.prototype.getSkillIdsFromEnemy = function()
 JABS_Battler.prototype.aiSkillFilter = function(skill)
 {
   // extract the combo data points.
-  const { jabsComboAction, jabsComboStarter, jabsAiSkillExclusion, isSkillExtender } = skill;
+  const {
+    jabsComboAction,
+    jabsComboStarter,
+    jabsAiSkillExclusion,
+    isSkillExtender
+  } = skill;
 
   // this skill is explicitly excluded from the skill pool.
   if (jabsAiSkillExclusion) return false;

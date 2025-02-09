@@ -282,7 +282,10 @@ Game_CharacterBase.prototype.recordPixelPosition = function()
   else if (!last || deltaDistance > 0.1)
   {
     // TODO: use the Point class?
-    const point = { x: this.x, y: this.y }; //new Point(this.x, this.y);
+    const point = {
+      x: this.x,
+      y: this.y
+    }; //new Point(this.x, this.y);
 
     // add the point to the tracking.
     this.addPositionalRecord(point);

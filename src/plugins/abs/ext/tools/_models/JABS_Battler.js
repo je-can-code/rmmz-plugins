@@ -169,7 +169,7 @@ JABS_Battler.prototype.isGapClosable = function()
 
 /**
  * Executes a gap close to the target based on the provided action.
- * @param {JABS_Action} action The `JABS_Action` containing the action data.
+ * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
  */
 JABS_Battler.prototype.gapCloseToTarget = function(action, target)
@@ -184,7 +184,10 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   this.setGapCloseDestination([ target.getX(), target.getY() ]);
 
   // extract the gap close details from the skill.
-  let { jabsGapCloseMode, jabsGapClosePosition } = action.getBaseSkill();
+  let {
+    jabsGapCloseMode,
+    jabsGapClosePosition
+  } = action.getBaseSkill();
 
   // if the position is not identified, then default to "same".
   jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;

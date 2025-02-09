@@ -148,7 +148,10 @@ Sprite_Character.prototype.getBattler = function()
       .getBattler();
   }
   // otherwise, this must be a regular sprite for an event.
-  else return null;
+  else
+  {
+    return null;
+  }
 };
 
 /**
@@ -475,7 +478,10 @@ Sprite_Character.prototype.canUpdateHpGauge = function()
 
   // if we aren't allowed to show the gauge, then it shouldn't update.
   if (!this._character.getJabsBattler()
-    .showHpBar()) return false;
+    .showHpBar())
+  {
+    return false;
+  }
 
   // we should update!
   return true;
@@ -607,7 +613,10 @@ Sprite_Character.prototype.canUpdateBattlerName = function()
 
   // if we aren't allowed to show the battler name, then it shouldn't update.
   if (!this._character.getJabsBattler()
-    .showBattlerName()) return false;
+    .showBattlerName())
+  {
+    return false;
+  }
 
   // we should update!
   return true;

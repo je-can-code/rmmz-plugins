@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_DiffPluginMetadata extends PluginMetadata
+class J_DiffPluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -48,7 +49,17 @@ class J_DiffPluginMetadata extends PluginMetadata
     {
       // extract the data points from the blob.
       const {
-        key, name, description, iconIndex, cost, actorEffects, enemyEffects, rewards, enabled, unlocked, hidden
+        key,
+        name,
+        description,
+        iconIndex,
+        cost,
+        actorEffects,
+        enemyEffects,
+        rewards,
+        enabled,
+        unlocked,
+        hidden
       } = parsedDifficultyBlob;
 
       // an iterator function for updating all param collections for these battler effects.
@@ -61,7 +72,12 @@ class J_DiffPluginMetadata extends PluginMetadata
         const newCParams = [];
 
         // extract all the raw parameters.
-        const { bparams, xparams, sparams, cparams } = battlerEffects;
+        const {
+          bparams,
+          xparams,
+          sparams,
+          cparams
+        } = battlerEffects;
 
         // update the bparams for the effects.
         bparams.forEach((paramRate, paramId) => newBParams[paramId] = paramRate);

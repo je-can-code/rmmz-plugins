@@ -114,7 +114,10 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
   const forEacher = mode =>
   {
     // extract some data from this ally AI mode.
-    const { key, name } = mode;
+    const {
+      key,
+      name
+    } = mode;
 
     // check if the currently selected ally AI mode is this command.
     const isEquipped = currentAi.getMode() === key;

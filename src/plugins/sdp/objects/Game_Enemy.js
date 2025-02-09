@@ -32,7 +32,7 @@ Game_Enemy.prototype.canDropSdp = function()
   if (!this.hasSdpDropData()) return false;
 
   // grab the panel for shorthand reference below.
-  const panel = $gameParty.getSdpByKey(this.enemy().sdpDropKey);
+  const panel = J.SDP.Metadata.panelsMap.get(this.enemy().sdpDropKey);
 
   // if the enemy has a panel that isn't defined, then don't drop it.
   if (!panel)

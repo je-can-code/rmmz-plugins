@@ -1,5 +1,6 @@
 //region Window_OmnipediaListHeader
-class Window_JaftingListHeader extends Window_Base
+class Window_JaftingListHeader
+  extends Window_Base
 {
   /**
    * Constructor.

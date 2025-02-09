@@ -12,7 +12,8 @@ BattleManager.makeRewards = function()
 
   // extend the rewards to include SDP points.
   this._rewards = {
-    ...this._rewards, sdp: $gameTroop.sdpTotal(),
+    ...this._rewards,
+    sdp: $gameTroop.sdpTotal(),
   };
 };
 

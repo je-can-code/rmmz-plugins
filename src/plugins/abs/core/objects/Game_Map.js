@@ -180,8 +180,8 @@ Game_Map.prototype.actionEventsFromDataMapByUuid = function(uuid)
 };
 
 /**
- * Gets all events that have a `JABS_Action` associated with them on the current map.
- * @returns {Game_Event[]} A list of events that have a `JABS_Action`.
+ * Gets all events that have a JABS action associated with them on the current map.
+ * @returns {Game_Event[]} A list of events that have a JABS action.
  */
 Game_Map.prototype.actionEvents = function()
 {
@@ -369,7 +369,7 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
 };
 
 /**
- * Handles the removal of events with an underlying `JABS_Action` from the map.
+ * Handles the removal of events with an underlying JABS action from the map.
  * @param {Game_Event} actionToRemove The `Game_Event` to remove from this map.
  */
 Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)

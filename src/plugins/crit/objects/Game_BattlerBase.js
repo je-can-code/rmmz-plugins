@@ -10,7 +10,8 @@ Object.defineProperties(Game_BattlerBase.prototype, {
     get: function()
     {
       return this.criticalDamageMultiplier();
-    }, configurable: true
+    },
+    configurable: true
   },
 
   /**
@@ -22,7 +23,8 @@ Object.defineProperties(Game_BattlerBase.prototype, {
     get: function()
     {
       return this.criticalDamageReduction();
-    }, configurable: true
+    },
+    configurable: true
   },
 });
 

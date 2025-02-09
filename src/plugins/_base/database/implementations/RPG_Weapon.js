@@ -2,7 +2,8 @@
 /**
  * A class representing a single weapon from the database.
  */
-class RPG_Weapon extends RPG_EquipItem
+class RPG_Weapon
+  extends RPG_EquipItem
 {
   //region properties
   /**

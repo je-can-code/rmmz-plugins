@@ -1,4 +1,5 @@
-class Window_QuestopediaDescription extends Window_Base
+class Window_QuestopediaDescription
+  extends Window_Base
 {
   /**
    * The current selected quest in the quest list window.

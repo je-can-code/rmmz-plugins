@@ -1,5 +1,6 @@
 //region Window_QuestopediaObjectives
-class Window_QuestopediaObjectives extends Window_Command
+class Window_QuestopediaObjectives
+  extends Window_Command
 {
   _currentObjectives = [];
 

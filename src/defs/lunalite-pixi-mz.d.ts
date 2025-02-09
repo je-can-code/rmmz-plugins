@@ -67,11 +67,11 @@ declare namespace rm.types
 {
   export const enum DamageColorType
   {
-    HP_DAMAGE  = 0,
+    HP_DAMAGE = 0,
     HP_RECOVER = 1,
-    MP_DAMAGE  = 2,
+    MP_DAMAGE = 2,
     MP_RECOVER = 3,
-    DEFAULT    = 4,
+    DEFAULT = 4,
   }
 }
 
@@ -108,7 +108,9 @@ declare namespace rm.types
      * parameters["TextSpeed"]
      * ```
      */
-    parameters: { [key: string]: any };
+    parameters: {
+      [key: string]: any
+    };
     /**
      * Plugin Status On/Off
      */
@@ -790,23 +792,23 @@ declare namespace rm.types
 {
   export const enum MotionType
   {
-    WALK     = "walk",
-    WAIT     = "wait",
-    CHANT    = "chant",
-    GUARD    = "guard",
-    DAMAGE   = "damage",
-    EVADE    = "evade",
-    THRUST   = "thrust",
-    MISSLE   = "missle",
-    SKILL    = "SKILL",
-    SPELL    = "spell",
-    ITEM     = "item",
-    ESCAPE   = "escape",
-    VICTORY  = "victory",
-    DYING    = "dying",
+    WALK = "walk",
+    WAIT = "wait",
+    CHANT = "chant",
+    GUARD = "guard",
+    DAMAGE = "damage",
+    EVADE = "evade",
+    THRUST = "thrust",
+    MISSLE = "missle",
+    SKILL = "SKILL",
+    SPELL = "spell",
+    ITEM = "item",
+    ESCAPE = "escape",
+    VICTORY = "victory",
+    DYING = "dying",
     ABNORMAL = "abnormal",
-    SLEEP    = "sleep",
-    DEAD     = "dead",
+    SLEEP = "sleep",
+    DEAD = "dead",
   }
 }
 
@@ -1136,7 +1138,7 @@ declare namespace rm.types
     X8SLOWER = 1,
     X4SLOWER = 2,
     X2SLOWER = 3,
-    NORMAL   = 4,
+    NORMAL = 4,
     X2FASTER = 5,
     X4FASTER = 6,
   }
@@ -1146,10 +1148,10 @@ declare namespace rm.types
 {
   export const enum MoveFrequency
   {
-    LOWEST  = 1,
-    LOWER   = 2,
-    NORMAL  = 3,
-    HIGHER  = 4,
+    LOWEST = 1,
+    LOWER = 2,
+    NORMAL = 3,
+    HIGHER = 4,
     HIGHEST = 5,
   }
 }
@@ -1171,9 +1173,9 @@ declare namespace rm.types
 {
   export const enum CharacterPriority
   {
-    BELOW_CHARACTERS   = 0,
+    BELOW_CHARACTERS = 0,
     SAME_AS_CHARACTERS = 1,
-    ABOVE_CHARACTERS   = 2,
+    ABOVE_CHARACTERS = 2,
   }
 }
 
@@ -1182,15 +1184,15 @@ declare namespace rm.types
   export const enum BalloonId
   {
     EXCLAMATION = 0,
-    QUESTION    = 1,
-    MUSIC_NOTE  = 2,
-    HEART       = 3,
-    ANGER       = 4,
-    SWEAT       = 5,
-    COBWEB      = 6,
-    SILENCE     = 7,
-    LIGHT_BULB  = 8,
-    ZZZ         = 9,
+    QUESTION = 1,
+    MUSIC_NOTE = 2,
+    HEART = 3,
+    ANGER = 4,
+    SWEAT = 5,
+    COBWEB = 6,
+    SILENCE = 7,
+    LIGHT_BULB = 8,
+    ZZZ = 9,
   }
 }
 
@@ -1380,10 +1382,10 @@ declare namespace rm.types
 {
   export const enum MoveType
   {
-    FIXED    = 0,
-    RANDOM   = 1,
+    FIXED = 0,
+    RANDOM = 1,
     APPROACH = 2,
-    CUSTOM   = 3,
+    CUSTOM = 3,
   }
 }
 
@@ -2014,9 +2016,9 @@ declare namespace rm.types
 {
   export const enum GaugeType
   {
-    HP   = "hp",
-    MP   = "mp",
-    TP   = "tp",
+    HP = "hp",
+    MP = "mp",
+    TP = "tp",
     TIME = "time",
   }
 }
@@ -2125,7 +2127,9 @@ interface Terms
   /**
    * The messages.
    */
-  messages: { [key: string]: string };
+  messages: {
+    [key: string]: string
+  };
 }
 
 interface TestBattler
@@ -2179,13 +2183,16 @@ interface MetaData
   /**
    * The Meta.
    */
-  meta: { [key: string]: any };
+  meta: {
+    [key: string]: any
+  };
 }
 
 /**
  * The data class for maps.
  */
-interface Map extends MetaData
+interface Map
+  extends MetaData
 {
   /**
    * The map's display name.

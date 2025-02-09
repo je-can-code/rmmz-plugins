@@ -84,16 +84,16 @@ Window_SkillList.prototype.includes = function(skill)
 {
   // if there is no skill, then it shouldn't be included.
   if (!skill) return false;
-  
+
   // check if the skill matches the selected type.
   const matchesSkillTypeId = skill.stypeId === this._stypeId;
-  
+
   // if there is no actor, then we only factor in the skill itself.
   if (!this._actor) return matchesSkillTypeId;
-  
+
   // check if the actor's equipped weapon matches the skill type.
   const matchesWeaponTypeId = this._actor.isSkillWtypeOk(skill);
-  
+
   // return whether or not both skill and weapon types match.
   return (matchesSkillTypeId && matchesWeaponTypeId);
 };

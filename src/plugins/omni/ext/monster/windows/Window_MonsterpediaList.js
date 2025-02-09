@@ -2,7 +2,8 @@
 /**
  * A window containing the list of all enemies perceived for the monsterpedia.
  */
-class Window_MonsterpediaList extends Window_Command
+class Window_MonsterpediaList
+  extends Window_Command
 {
   /**
    * Constructor.
@@ -84,7 +85,10 @@ class Window_MonsterpediaList extends Window_Command
   buildCommand(enemy)
   {
     // deconstruct data points out for building the list.
-    const { id, name } = enemy;
+    const {
+      id,
+      name
+    } = enemy;
 
     // grab the observations associated with this enemy id.
     const observations = $gameParty.getOrCreateMonsterpediaObservationsById(id);

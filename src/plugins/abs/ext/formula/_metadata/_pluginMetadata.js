@@ -1,5 +1,6 @@
 //region plugin metadata
-class JFORMULA_PluginMetadata extends PluginMetadata
+class JFORMULA_PluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.

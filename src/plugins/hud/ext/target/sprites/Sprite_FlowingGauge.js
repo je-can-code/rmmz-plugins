@@ -4,11 +4,14 @@
  * A gauge that acts like a regular `Sprite_Gauge` that is instead based
  * on images and also "flows".
  */
-class Sprite_FlowingGauge extends Sprite
+class Sprite_FlowingGauge
+  extends Sprite
 {
   //region properties
   static Types = {
-    HP: "hp", MP: "mp", TP: "tp",
+    HP: "hp",
+    MP: "mp",
+    TP: "tp",
   };
 
   /**

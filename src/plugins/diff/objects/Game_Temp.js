@@ -152,7 +152,10 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   const enabledEnemyEffects = new DifficultyBattlerEffects();
 
   // destructure the direct values out.
-  let { cost, rewards } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
+  let {
+    cost,
+    rewards
+  } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
 
   // iterate over each difficulty layer and apply it multiplicatively to the running amounts.
   enabledDifficulties.forEach(layer =>
@@ -161,7 +164,10 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     cost += layer.cost;
 
     // extract the effects data.
-    const { actorEffects, enemyEffects } = layer;
+    const {
+      actorEffects,
+      enemyEffects
+    } = layer;
 
     // iterate over each of the b-params.
     actorEffects.bparams.forEach((bparam, bIndex) =>
@@ -255,7 +261,11 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   }, this);
 
   // deconstruct the static descriptors of the applied difficulty layer.
-  const { appliedKey, appliedName, appliedDescription } = DifficultyLayer;
+  const {
+    appliedKey,
+    appliedName,
+    appliedDescription
+  } = DifficultyLayer;
 
   // build the new applied difficulty layer.
   const newDifficulty = new DifficultyBuilder(appliedName, appliedKey)

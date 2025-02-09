@@ -301,7 +301,8 @@ class OverlayManager
    */
   static invincibleDodge(baseSkill, skillOverlay)
   {
-    return this._overwriteAsBoolean(baseSkill,
+    return this._overwriteAsBoolean(
+      baseSkill,
       skillOverlay,
       J.ABS.RegExp.InvincibleDodge,
       skillOverlay.jabsInvincibleDodge);
@@ -326,7 +327,8 @@ class OverlayManager
    */
   static uniqueCooldown(baseSkill, skillOverlay)
   {
-    return this._overwriteAsBoolean(baseSkill,
+    return this._overwriteAsBoolean(
+      baseSkill,
       skillOverlay,
       J.ABS.RegExp.UniqueCooldown,
       skillOverlay.jabsUniqueCooldown);
@@ -406,7 +408,8 @@ class OverlayManager
    */
   static aggroMultiplier(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(baseSkill,
+    return this._overwriteAsKvp(
+      baseSkill,
       skillOverlay,
       J.ABS.RegExp.AggroMultiplier,
       skillOverlay.jabsAggroMultiplier);

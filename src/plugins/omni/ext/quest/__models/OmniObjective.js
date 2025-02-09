@@ -95,7 +95,9 @@ class OmniObjective
   }
 
   static FetchTypes = {
-    Item: "Item", Weapon: "Weapon", Armor: "Armor",
+    Item: 0,
+    Weapon: 1,
+    Armor: 2,
   }
 
   //region properties

@@ -16,7 +16,6 @@ Game_Event.prototype.meetsConditions = function(page)
   if (!metOtherPageConditions) return false;
 
   // grab the list of valid comments.
-  //const commentCommandList = this.getValidCommentCommands();
   const commentCommandList = Game_Event.getValidCommentCommandsFromPage(page);
 
   // there aren't any comments on this event at all.
@@ -132,7 +131,11 @@ Game_Event.filterCommentCommandsByEventQuestConditional = function(command)
   if (!comment) return false;
 
   // extract the types of regex we will be considering.
-  const { EventQuest, EventQuestObjective, EventQuestObjectiveForState } = J.OMNI.EXT.QUEST.RegExp;
+  const {
+    EventQuest,
+    EventQuestObjective,
+    EventQuestObjectiveForState
+  } = J.OMNI.EXT.QUEST.RegExp;
   return [ EventQuest, EventQuestObjective, EventQuestObjectiveForState, ].some(regex => regex.test(comment));
 };
 
@@ -150,7 +153,11 @@ Game_Event.filterCommentCommandsByChoiceQuestConditional = function(command)
   if (!comment) return false;
 
   // extract the types of regex we will be considering.
-  const { ChoiceQuest, ChoiceQuestObjective, ChoiceQuestObjectiveForState } = J.OMNI.EXT.QUEST.RegExp;
+  const {
+    ChoiceQuest,
+    ChoiceQuestObjective,
+    ChoiceQuestObjectiveForState
+  } = J.OMNI.EXT.QUEST.RegExp;
   return [ ChoiceQuest, ChoiceQuestObjective, ChoiceQuestObjectiveForState, ].some(regex => regex.test(comment));
 };
 
