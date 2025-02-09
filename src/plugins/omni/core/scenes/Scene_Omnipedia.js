@@ -2,7 +2,8 @@
 /**
  * A scene containing access to all available and implemented pedia entries.
  */
-class Scene_Omnipedia extends Scene_MenuBase
+class Scene_Omnipedia
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.

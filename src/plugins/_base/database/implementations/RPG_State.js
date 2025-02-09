@@ -2,7 +2,8 @@
 /**
  * An class representing a single state from the database.
  */
-class RPG_State extends RPG_Traited
+class RPG_State
+  extends RPG_Traited
 {
   //region properties
   /**

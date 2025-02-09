@@ -62,4 +62,5 @@ class ProficiencyRequirement
       }, primaryProficiency);
   };
 }
+
 //endregion proficiencyRequirement

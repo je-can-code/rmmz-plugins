@@ -3,7 +3,8 @@
  * A window that gives the player a chance to confirm or cancel their
  * refinement before executing.
  */
-class Window_RefinementConfirmation extends Window_Command
+class Window_RefinementConfirmation
+  extends Window_Command
 {
   /**
    * @constructor

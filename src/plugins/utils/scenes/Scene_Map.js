@@ -53,7 +53,10 @@ Scene_Map.prototype.logClickedAnyAllies = function(x, y)
 {
   // if we aren't showing followers, don't try to log their data.
   if (!$gamePlayer.followers()
-    .isVisible()) return;
+    .isVisible())
+  {
+    return;
+  }
 
   // iterate over the followers.
   $gamePlayer.followers()

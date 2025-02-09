@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_UtilsPluginMetadata extends PluginMetadata
+class J_UtilsPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.

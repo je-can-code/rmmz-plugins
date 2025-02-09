@@ -2,7 +2,8 @@
 /**
  * The window that prompts the user to confirm/cancel the upgrading of a chosen panel.
  */
-class Window_SdpConfirmation extends Window_Command
+class Window_SdpConfirmation
+  extends Window_Command
 {
   /**
    * @constructor

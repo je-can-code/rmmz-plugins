@@ -25,6 +25,7 @@
 
 import { exec } from 'child_process';
 import * as fs from 'fs/promises';
+
 const pkg = JSON.parse(await fs.readFile('./package.json', 'utf-8'));
 import Logger from './logger.js';
 
@@ -32,7 +33,7 @@ import Logger from './logger.js';
 const start = performance.now();
 
 // don't recursively build everything, or start generating a bunch of empty directories.
-const ignoredKeys = ["plugin:", "copy:", "build:all", "hotfix"];
+const ignoredKeys = [ "plugin:", "copy:", "build:all", "hotfix" ];
 
 // extract the scripts section of our package.json.
 const { scripts } = pkg;

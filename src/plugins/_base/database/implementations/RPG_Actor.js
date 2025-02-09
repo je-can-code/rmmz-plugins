@@ -2,7 +2,8 @@
 /**
  * A class representing a single actor battler's data from the database.
  */
-class RPG_Actor extends RPG_BaseBattler
+class RPG_Actor
+  extends RPG_BaseBattler
 {
   //region properties
   /**

@@ -143,13 +143,19 @@ TrackedOmniObjective.prototype.populateFulfillmentData = function(omniFulfillmen
   {
     // if the type is indiscriminate, then it is event-controlled and not automagical.
     case OmniObjective.Types.Indiscriminate:
-      this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint 
+      this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint
         ?? "No indiscriminate objective instructions provided.";
       return;
 
     // if the fulfillment is of type 'destination', then fill in the data.
     case OmniObjective.Types.Destination:
-      const { mapId, x1, y1, x2, y2 } = omniFulfillmentData.destination;
+      const {
+        mapId,
+        x1,
+        y1,
+        x2,
+        y2
+      } = omniFulfillmentData.destination;
       this._targetMapId = mapId;
       const point1 = [
         x1, y1 ];
@@ -351,7 +357,13 @@ TrackedOmniObjective.prototype.description = function()
 TrackedOmniObjective.prototype.log = function()
 {
   // deconstruct the logs out of the metadata.
-  const { inactive, active, completed, failed, missed } = this.objectiveMetadata().logs;
+  const {
+    inactive,
+    active,
+    completed,
+    failed,
+    missed
+  } = this.objectiveMetadata().logs;
 
   switch (this.state)
   {

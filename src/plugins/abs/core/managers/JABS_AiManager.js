@@ -95,7 +95,10 @@ class JABS_AiManager
       if (battler.isActor()) return false;
 
       // grab the ai of the nearby battler.
-      const { follower, leader } = battler.getAiMode();
+      const {
+        follower,
+        leader
+      } = battler.getAiMode();
 
       // check if they can become a follower to the designated leader.
       const canLead = !battler.hasLeader() || (leaderBattler.getUuid() === battler.getLeader());
@@ -597,7 +600,8 @@ class JABS_AiManager
   static manageAi()
   {
     // grab all available battlers within a fixed range.
-    const battlers = this.getAllBattlersWithinRangeSortedByDistance($jabsEngine.getPlayer1(),
+    const battlers = this.getAllBattlersWithinRangeSortedByDistance(
+      $jabsEngine.getPlayer1(),
       J.ABS.Metadata.MaxAiUpdateRange);
 
     // if we have no battlers, then do not process AI.
@@ -893,7 +897,10 @@ class JABS_AiManager
   {
     // check if the battler is currently moving.
     if (battler.getCharacter()
-      .isMoving()) return false;
+      .isMoving())
+    {
+      return false;
+    }
 
     // check if the battler is unable to move.
     if (!battler.canBattlerMove()) return false;
@@ -1057,7 +1064,10 @@ class JABS_AiManager
 
     // if the battler is moving, then they can't do repositioning things.
     if (battler.getCharacter()
-      .isMoving()) return false;
+      .isMoving())
+    {
+      return false;
+    }
 
     // if we can't even move, we aren't able to reposition.
     if (!battler.canBattlerMove()) return false;

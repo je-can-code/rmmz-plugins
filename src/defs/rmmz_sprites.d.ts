@@ -11,9 +11,13 @@ import {
 } from "./rmmz_objects";
 import { Bitmap, ScreenSprite, ShaderTilemap, Sprite, Tilemap, ToneFilter, ToneSprite, Weather } from "./rmmz_core";
 
-declare class Sprite_Base {}
+declare class Sprite_Base
+{
+}
 
-declare class Sprite_Battler {}
+declare class Sprite_Battler
+{
+}
 
 /**
  * -----------------------------------------------------------------------------
@@ -21,7 +25,8 @@ declare class Sprite_Battler {}
  *
  * The sprite for displaying an actor.
  */
-declare class Sprite_Actor extends Sprite_Battler
+declare class Sprite_Actor
+  extends Sprite_Battler
 {
   /**
    * Creates an instance of Sprite_Actor; can be passed
@@ -205,7 +210,8 @@ declare class Sprite_Actor extends Sprite_Battler
  *
  * The sprite for displaying an animation.
  */
-declare class Sprite_Animation extends Sprite
+declare class Sprite_Animation
+  extends Sprite
 {
   protected constructor();
 
@@ -214,7 +220,9 @@ declare class Sprite_Animation extends Sprite
    * key: Animation
    * };
    */
-  _checker1: { [key: string]: any };
+  _checker1: {
+    [key: string]: any
+  };
   _target: Sprite_Base;
   _animation: rm.types.Animation;
   _mirror: boolean;
@@ -376,7 +384,9 @@ declare class Sprite_Animation extends Sprite
    * key: Animation
    * };
    */
-  static _checker2: { [key: string]: any };
+  static _checker2: {
+    [key: string]: any
+  };
 }
 
 /**
@@ -385,7 +395,8 @@ declare class Sprite_Animation extends Sprite
  *
  * The sprite for displaying a balloon icon.
  */
-declare class Sprite_Balloon extends Sprite_Base
+declare class Sprite_Balloon
+  extends Sprite_Base
 {
   protected constructor();
 
@@ -451,7 +462,8 @@ declare class Sprite_Balloon extends Sprite_Base
  *
  * The sprite for displaying a button.
  */
-declare class Sprite_Button extends Sprite
+declare class Sprite_Button
+  extends Sprite
 {
   protected constructor();
 
@@ -554,7 +566,8 @@ declare class Sprite_Button extends Sprite
  *
  * The sprite for displaying a character.
  */
-declare class Sprite_Character extends Sprite_Base
+declare class Sprite_Character
+  extends Sprite_Base
 {
   /**
    * Creates an instance of Sprite_Character.
@@ -748,7 +761,8 @@ declare class Sprite_Character extends Sprite_Base
  *
  * The sprite for displaying a popup damage.
  */
-declare class Sprite_Damage extends Sprite
+declare class Sprite_Damage
+  extends Sprite
 {
   protected constructor();
 
@@ -830,7 +844,8 @@ declare class Sprite_Damage extends Sprite
  *
  * The sprite for displaying the destination place of the touch input.
  */
-declare class Sprite_Destination extends Sprite
+declare class Sprite_Destination
+  extends Sprite
 {
   protected constructor();
 
@@ -864,7 +879,8 @@ declare class Sprite_Destination extends Sprite
  *
  * The sprite for displaying an enemy.
  */
-declare class Sprite_Enemy extends Sprite_Battler
+declare class Sprite_Enemy
+  extends Sprite_Battler
 {
   constructor(battler: Game_Enemy);
 
@@ -1056,7 +1072,8 @@ declare class Sprite_Picture
  *
  * The sprite for displaying state icons.
  */
-declare class Sprite_StateIcon extends Sprite
+declare class Sprite_StateIcon
+  extends Sprite
 {
   protected constructor();
 
@@ -1104,7 +1121,8 @@ declare class Sprite_StateIcon extends Sprite
  *
  * The sprite for displaying an overlay image for a state.
  */
-declare class Sprite_StateOverlay extends Sprite_Base
+declare class Sprite_StateOverlay
+  extends Sprite_Base
 {
   protected constructor();
 
@@ -1152,7 +1170,8 @@ declare class Sprite_StateOverlay extends Sprite_Base
  *
  * The sprite for displaying the timer.
  */
-declare class Sprite_Timer extends Sprite
+declare class Sprite_Timer
+  extends Sprite
 {
   protected constructor();
 
@@ -1208,7 +1227,8 @@ declare class Sprite_Timer extends Sprite
  *
  * The sprite for displaying a weapon image for attacking.
  */
-declare class Sprite_Weapon extends Sprite_Base
+declare class Sprite_Weapon
+  extends Sprite_Base
 {
   protected constructor();
 
@@ -1263,7 +1283,8 @@ declare class Sprite_Weapon extends Sprite_Base
  *
  * The superdeclare class of Spriteset_Map and Spriteset_Battle.
  */
-declare class Spriteset_Base extends Sprite
+declare class Spriteset_Base
+  extends Sprite
 {
   protected constructor();
 
@@ -1377,7 +1398,8 @@ declare class Spriteset_Base extends Sprite
  *
  * The set of sprites on the battle screen.
  */
-declare class Spriteset_Battle extends Spriteset_Base
+declare class Spriteset_Battle
+  extends Spriteset_Base
 {
   protected constructor();
 
@@ -1604,7 +1626,8 @@ declare class Spriteset_Battle extends Spriteset_Base
  *
  * The set of sprites on the map screen.
  */
-declare class Spriteset_Map extends Spriteset_Base
+declare class Spriteset_Map
+  extends Spriteset_Base
 {
   protected constructor();
 

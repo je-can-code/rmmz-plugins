@@ -1,5 +1,6 @@
 //region plugin metadata
-class J__TEMPLATE___PluginMetadata extends PluginMetadata
+class J__TEMPLATE___PluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.

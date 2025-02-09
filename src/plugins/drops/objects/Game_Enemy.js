@@ -96,7 +96,7 @@ Game_Enemy.prototype.canFindLoot = function(item)
  */
 Game_Enemy.prototype.didFindLoot = function(rate)
 {
-  // locally assign the percent chance to find something..
+  // locally assign the percent chance to find something.
   let chance = rate;
 
   // check if anyone in the party has the double-drop trait.
@@ -119,12 +119,12 @@ Game_Enemy.prototype.didFindLoot = function(rate)
  */
 Game_Enemy.prototype.getDropItems = function()
 {
-  // validate the original drop items from the enemy in the database.
-  const databaseDropItems = this.enemy()
+  // validate the drop items from the enemy- from the database and additionally parsed drops.
+  const baseDropItems = this.enemy()
     .originalDropItems();
 
   // initialize the drops to be the enemy's own valid drop items from the database.
-  const allDropItems = [ ...databaseDropItems ];
+  const allDropItems = [ ...baseDropItems ];
 
   // grab any extra drops available.
   const extraDropItems = this.extraDrops();
@@ -170,11 +170,8 @@ Game_Enemy.prototype.extraDrops = function()
  */
 Game_Enemy.prototype.dropSources = function()
 {
-  // initialize our sources tracking.
+  // initialize our sources tracking- by default there are no extra sources beyond oneself.
   const sources = [];
-
-  // add the enemy's own self to the list of sources.
-  sources.push(this.enemy());
 
   // return what we found.
   return sources;

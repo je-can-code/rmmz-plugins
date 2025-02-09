@@ -367,7 +367,10 @@ JABS_Battler.prototype.canDodgeMove = function()
 {
   // if the character is currently moving, don't dodge move.
   if (this.getCharacter()
-    .isMoving()) return false;
+    .isMoving())
+  {
+    return false;
+  }
 
   // if the battler cannot move, don't dodge move.
   if (!this.canBattlerMove()) return false;
@@ -415,7 +418,10 @@ JABS_Battler.prototype.shouldEndDodge = function()
 {
   // if we are out of dodge steps and we're done moving, end the dodge.
   if (this.getDodgeSteps() <= 0 && !this.getCharacter()
-    .isMoving()) return true;
+    .isMoving())
+  {
+    return true;
+  }
 
   // KEEP DODGING.
   return false;
@@ -451,7 +457,10 @@ JABS_Battler.prototype.updateDeathHandling = function()
 
   // if the event is erased officially, ignore it.
   if (this.getCharacter()
-    .isErased()) return;
+    .isErased())
+  {
+    return;
+  }
 
   // if we are dying, self-destruct.
   if (this.isDying() && !$gameMap.isEventRunning())

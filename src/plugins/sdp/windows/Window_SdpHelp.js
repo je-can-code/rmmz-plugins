@@ -2,7 +2,8 @@
 /**
  * The window that displays the help text associated with a panel.
  */
-class Window_SdpHelp extends Window_Help
+class Window_SdpHelp
+  extends Window_Help
 {
   /**
    * @constructor

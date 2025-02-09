@@ -2,7 +2,8 @@
 /**
  * A class representing a single armor from the database.
  */
-class RPG_Armor extends RPG_EquipItem
+class RPG_Armor
+  extends RPG_EquipItem
 {
   //region properties
   /**

@@ -2,7 +2,8 @@
 /**
  * The scene for managing SDPs that the player has acquired.
  */
-class Scene_SDP extends Scene_MenuBase
+class Scene_SDP
+  extends Scene_MenuBase
 {
   /**
    * Calls this scene.
@@ -748,7 +749,8 @@ class Scene_SDP extends Scene_MenuBase
     // update the cost data window.
     const panelRanking = currentActor.getSdpByKey(currentPanel.key);
     this.getSdpRankDataWindow()
-      .setRankData(currentPanel.getPanelRarityColorIndex(),
+      .setRankData(
+        currentPanel.getPanelRarityColorIndex(),
         currentPanel.getPanelRarityText(),
         panelRanking.currentRank,
         currentPanel.maxRank,

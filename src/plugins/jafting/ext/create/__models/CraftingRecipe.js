@@ -68,7 +68,8 @@ class CraftingRecipe
 
   //endregion
 
-  constructor(name,
+  constructor(
+    name,
     key,
     categoryKeys,
     iconIndex,

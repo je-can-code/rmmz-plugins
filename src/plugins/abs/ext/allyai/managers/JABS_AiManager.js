@@ -46,7 +46,10 @@ JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 
   // if we are in active motion, do not idle.
   if (!allyBattler.getCharacter()
-    .isStopping()) return false;
+    .isStopping())
+  {
+    return false;
+  }
 
   // perform!
   return true;

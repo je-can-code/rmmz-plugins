@@ -2,7 +2,8 @@
 /**
  * A sprite that represents a skill slot's assigned skill's name.
  */
-class Sprite_SkillName extends Sprite_BaseSkillSlot
+class Sprite_SkillName
+  extends Sprite_BaseSkillSlot
 {
   /**
    * Extends the `update()` to also synchronize the text to

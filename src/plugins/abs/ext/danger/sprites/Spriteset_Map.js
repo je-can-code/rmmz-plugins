@@ -2,7 +2,8 @@
 /**
  * Extends `refreshAllCharacterSprites()` to also refresh danger indicators.
  */
-J.ABS.EXT.DANGER.Aliased.Spriteset_Map.set('refreshAllCharacterSprites',
+J.ABS.EXT.DANGER.Aliased.Spriteset_Map.set(
+  'refreshAllCharacterSprites',
   Spriteset_Map.prototype.refreshAllCharacterSprites);
 Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {

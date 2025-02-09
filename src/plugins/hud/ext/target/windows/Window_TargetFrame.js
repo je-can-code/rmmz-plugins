@@ -2,7 +2,8 @@
 /**
  * A window that displays a target and their relevant information.
  */
-class Window_TargetFrame extends Window_Base
+class Window_TargetFrame
+  extends Window_Base
 {
   /**
    * The maximum possible duration in frames.

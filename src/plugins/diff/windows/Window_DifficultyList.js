@@ -1,5 +1,6 @@
 //region Window_DifficultyList
-class Window_DifficultyList extends Window_Command
+class Window_DifficultyList
+  extends Window_Command
 {
   /**
    * @constructor
@@ -37,7 +38,8 @@ class Window_DifficultyList extends Window_Command
     const appliedDifficulty = $gameTemp.getAppliedDifficulty();
 
     // slide the applied difficulty command above all others.
-    this.prependCommand(`\\I[${appliedDifficulty.iconIndex}]${appliedDifficulty.name}`,
+    this.prependCommand(
+      `\\I[${appliedDifficulty.iconIndex}]${appliedDifficulty.name}`,
       appliedDifficulty.key,
       false,// enabled
       appliedDifficulty,
@@ -86,7 +88,8 @@ class Window_DifficultyList extends Window_Command
     const enabled = (difficulty.isUnlocked() && enoughLayerPoints);
 
     // render the command with the given details.
-    this.addCommand(difficultyName,           // drawEx(name)
+    this.addCommand(
+      difficultyName,           // drawEx(name)
       difficulty.key,           // symbol
       enabled,                  // enabled/disabled command
       difficulty,               // extra data

@@ -182,7 +182,10 @@ class JABS_InputAdapter
 
     // if there is no tool equipped, then do not perform.
     if (!jabsBattler.getBattler()
-      .getEquippedSkillId(JABS_Button.Tool)) return false;
+      .getEquippedSkillId(JABS_Button.Tool))
+    {
+      return false;
+    }
 
     // perform!
     return true;
@@ -253,7 +256,10 @@ class JABS_InputAdapter
     // if the slot is empty, then do not perform.
     if (jabsBattler.getBattler()
       .getSkillSlot(slot)
-      .isEmpty()) return false;
+      .isEmpty())
+    {
+      return false;
+    }
 
     // if the offhand action isn't ready, then do not perform.
     if (!jabsBattler.isSkillTypeCooldownReady(slot)) return false;

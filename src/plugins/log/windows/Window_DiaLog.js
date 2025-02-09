@@ -3,7 +3,8 @@
  * An extension/modification of the base {@link Window_MapLog}.<br/>
  * The {@link Window_DiaLog} is used for the chatter log.
  */
-class Window_DiaLog extends Window_MapLog
+class Window_DiaLog
+  extends Window_MapLog
 {
   /**
    * The height of one row; 64.<br/>

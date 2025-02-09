@@ -1,6 +1,6 @@
 //region JABS_Engine
 /**
- * This class is the engine that manages JABS and how `JABS_Action`s interact
+ * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
  */
 class JABS_Engine
@@ -152,7 +152,7 @@ class JABS_Engine
     this._player1 = null;
 
     /**
-     * A collection to manage all `JABS_Action`s on this battle map.
+     * A collection to manage all JABS actions on this battle map.
      * @type {JABS_Action[]}
      */
     this._actionEvents = [];
@@ -189,9 +189,9 @@ class JABS_Engine
   }
 
   /**
-   * Adds a new `JABS_Action` to this battle map for tracking.
+   * Adds a new JABS action to this battle map for tracking.
    * The additional metadata is optional, omitted when executing direct actions.
-   * @param {JABS_Action} actionEvent The `JABS_Action` to add.
+   * @param {JABS_Action} actionEvent The JABS action to add.
    * @param {rm.types.Event} actionEventData The event metadata, if anything.
    */
   addActionEvent(actionEvent, actionEventData)
@@ -223,7 +223,7 @@ class JABS_Engine
   }
 
   /**
-   * Clears all currently managed `JABS_Action`s on this battle map that are marked
+   * Clears all currently managed JABS actions on this battle map that are marked
    * for removal.
    */
   clearActionEvents()
@@ -374,7 +374,7 @@ class JABS_Engine
   //region update
   /**
    * Updates all the battlers on the current map.
-   * Also, this includes managing player input and updating active `JABS_Action`s.
+   * Also, this includes managing player input and updating active JABS actions.
    */
   update()
   {
@@ -848,7 +848,10 @@ class JABS_Engine
 
     // do not re-handle defeated targets.
     if (target.isEnemy() && target.getCharacter()
-      .isErased()) return false;
+      .isErased())
+    {
+      return false;
+    }
 
     // target is defeated!
     return true;
@@ -949,11 +952,31 @@ class JABS_Engine
    */
   handlePartyCycleMemberChanges()
   {
-    // determine which battler in the party is the next living battler.
-    const nextAllyIndex = $gameParty._actors.findIndex(this.canCycleToAlly);
+    for (let partyIndex = 0; partyIndex < $gameParty._actors.length; partyIndex++)
+    {
+      // and swap them to the end.
+      $gameParty._actors.push($gameParty._actors.shift());
 
-    // swap to the next party member in the sequence.
-    $gameParty.swapLeaderWithFollower(nextAllyIndex);
+      // you can't cycle to yourself.
+      if (partyIndex === 0) continue;
+
+      // identify the newly swapped actorId.
+      const currentActorId = $gameParty._actors[0];
+
+      // grab the actor we are attempting to cycle to.
+      const actor = $gameActors.actor(currentActorId);
+
+      // don't switch to a dead member.
+      if (actor.isDead()) continue;
+
+      // don't switch with a member that is locked.
+      if (actor.switchLocked()) continue;
+
+      // we can stop cycling!
+      break;
+    }
+
+    $gamePlayer.refresh();
 
     // also trigger an update against the new leader.
     $gameParty.leader()
@@ -1075,7 +1098,7 @@ class JABS_Engine
   //region functional
   //region action execution
   /**
-   * Generates a new `JABS_Action` based on a skillId, and executes the skill.
+   * Generates a new JABS action based on a skillId, and executes the skill.
    * This overrides the need for costs or cooldowns.<br/>
    * This is intended to be used for programmatically forcing battlers to execute skills, and can be
    * used from within an event's move route, or anywhere else you have a reference to a {@link JABS_Battler}.
@@ -1161,11 +1184,11 @@ class JABS_Engine
   }
 
   /**
-   * Executes the provided `JABS_Action`.
+   * Executes the provided JABS action.
    * It generates a copy of an event from the "ActionMap" and fires it off
    * based on it's move route.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    * @param {number?} targetX The target's `x` coordinate, if applicable.
    * @param {number?} targetY The target's `y` coordinate, if applicable.
    */
@@ -1183,8 +1206,8 @@ class JABS_Engine
 
   /**
    * Handles the combo functionality behind this action.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    */
   handleActionCombo(caster, action)
   {
@@ -1198,8 +1221,8 @@ class JABS_Engine
 
   /**
    * Handles the cast animation functionality behind this action.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    */
   handleActionCastAnimation(caster, action)
   {
@@ -1215,8 +1238,8 @@ class JABS_Engine
 
   /**
    * Handles adding this action to the map if applicable.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    * @param {number|null} x The target's `x` coordinate, if applicable.
    * @param {number|null} y The target's `y` coordinate, if applicable.
    */
@@ -1239,8 +1262,8 @@ class JABS_Engine
 
   /**
    * It generates a copy of an event from the "ActionMap".
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    * @param {number|null} x The target's `x` coordinate, if applicable.
    * @param {number|null} y The target's `y` coordinate, if applicable.
    * @returns {rm.types.Event}
@@ -1289,7 +1312,8 @@ class JABS_Engine
         directions.push(this.rotate180degrees(facing));
         break;
       case 8:
-        directions.push(1, 3, 7, 9,   // diagonal
+        directions.push(
+          1, 3, 7, 9,   // diagonal
           2, 4, 6, 8);  // cardinal
         break;
     }
@@ -1483,8 +1507,8 @@ class JABS_Engine
 
   /**
    * Applies the cooldowns to the battler.
-   * @param {JABS_Battler} caster The `JABS_Battler` executing the `JABS_Action`.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
    */
   applyCooldownCounters(caster, action)
   {
@@ -1494,7 +1518,7 @@ class JABS_Engine
   /**
    * Applies cooldowns in regards to the player for the casted action.
    * @param {JABS_Battler} caster The player.
-   * @param {JABS_Action} action The `JABS_Action` to execute.
+   * @param {JABS_Action} action The JABS action to execute.
    */
   applyPlayerCooldowns(caster, action)
   {
@@ -1524,7 +1548,7 @@ class JABS_Engine
   }
 
   /**
-   * Creates a new `JABS_Action` and adds it to the map and tracking.
+   * Creates a new JABS action and adds it to the map and tracking.
    * @param {rm.types.Event} actionEventData An object representing the data of a `Game_Event`.
    * @param {JABS_Action} action An object representing the data of a `Game_Event`.
    */
@@ -1541,7 +1565,10 @@ class JABS_Engine
     // create the event by hand with this new data
     const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, newIndex);
 
-    const { x: actionX, y: actionY } = actionEventData;
+    const {
+      x: actionX,
+      y: actionY
+    } = actionEventData;
     actionEventSprite._realX = actionX;
     actionEventSprite._realY = actionY;
     actionEventSprite._x = actionX;
@@ -1563,7 +1590,10 @@ class JABS_Engine
     }
 
     const pageIndex = actionEventSprite.findProperPageIndex();
-    const { characterIndex, characterName } = actionEventData.pages[pageIndex].image;
+    const {
+      characterIndex,
+      characterName
+    } = actionEventData.pages[pageIndex].image;
 
     actionEventSprite.setActionSpriteNeedsAdding();
     actionEventSprite._eventId = actionEventData.id;
@@ -1685,7 +1715,7 @@ class JABS_Engine
    *
    * This is the orchestration method that manages the execution of an action against
    * a given target.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   applyPrimaryBattleEffects(action, target)
@@ -1711,6 +1741,15 @@ class JABS_Engine
    */
   executeSkillEffects(action, target)
   {
+    // grab the battler of the target.
+    const targetBattler = target.getBattler();
+
+    // grab the result.
+    const result = targetBattler.result();
+
+    // first thing's first, clear the action from any historical action data.
+    result.clear();
+
     // handle any pre-execution effects.
     this.preExecuteSkillEffects(action, target);
 
@@ -1725,21 +1764,25 @@ class JABS_Engine
       isUnparryable = true;
     }
 
+    // check if this is for healing.
+    if (action.isHealing())
+    {
+      // targets cannot parry healing-exclusive abilities.
+      isUnparryable = true;
+    }
+
     // check whether or not this action was parried.
     const caster = action.getCaster();
-    const isParried = isUnparryable
-      ? false // parry is cancelled.
-      : this.checkParry(caster, target, action);
 
-    // grab the battler of the target.
-    const targetBattler = target.getBattler();
+    let willParry = false;
+    if (isUnparryable === false)
+    {
+      willParry = this.checkParry(caster, target, action);
+    }
 
     // check if the action is parryable and was parried.
-    if (isParried)
+    if (willParry)
     {
-      // grab the result.
-      const result = targetBattler.result();
-
       // when an action is parried, it gets completely undone.
       result.clear();
 
@@ -1755,6 +1798,8 @@ class JABS_Engine
 
       // flag that the action was guarded.
       result.guarded = true;
+
+
     }
 
     // apply the action to the target.
@@ -1766,10 +1811,10 @@ class JABS_Engine
   }
 
   /**
-   * Execute any pre-execution effects.
-   * This occurs before the actual skill is applied against the target battler to get the
-   * `Game_ActionResult` that is then used throughout the function.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * Execute any pre-execution effects.<br>
+   * This occurs before the actual skill is applied against the target battler to get the `Game_ActionResult` that is
+   * then used throughout execution.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   preExecuteSkillEffects(action, target)
@@ -1790,7 +1835,7 @@ class JABS_Engine
 
   /**
    * Applies all aggro effects against the target.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   applyAggroEffects(action, target)
@@ -1884,7 +1929,7 @@ class JABS_Engine
 
   /**
    * Applies on-hit effects against the target.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   applyOnHitEffects(action, target)
@@ -1900,7 +1945,7 @@ class JABS_Engine
 
   /**
    * Processes the various on-hit effects against the target.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   processOnHitEffects(action, target)
@@ -1951,25 +1996,20 @@ class JABS_Engine
    */
   checkKnockback(action, target)
   {
-    // don't knockback if already being knocked back.
-    const targetSprite = target.getCharacter();
-    if (targetSprite.isJumping()) return;
+    // if we can't be knocked back, don't process.
+    if (!this.canBeKnockedBack(action, target)) return;
 
-    // get the knockback resist for this target.
-    const targetBattlerDatabaseData = target.getBattlerDatabaseData();
-    const targetMeta = targetBattlerDatabaseData.meta;
-    let knockbackResist = 1.00;
-    if (targetMeta && targetMeta[J.ABS.Notetags.KnockbackResist])
-    {
-      const metaResist = parseInt(targetMeta[J.ABS.Notetags.KnockbackResist]);
-      knockbackResist = (100 - metaResist) / 100;
-    }
+    // you cannot be knocked back by healing-exclusive actions.
+    if (action.isHealing()) return;
+
+    // determine the current knockback resist of the target.
+    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(
+      target.getBattler()
+        .getAllNotes(),
+      J.ABS.RegExp.KnockbackResist);
 
     // don't even knock them up or around at all, they are immune to knockback.
-    if (knockbackResist <= 0)
-    {
-      return;
-    }
+    if (targetKnockbackResist >= 100) return;
 
     // get the knockback value from the skill if applicable.
     let knockback = action.getKnockback();
@@ -1978,7 +2018,9 @@ class JABS_Engine
     if (knockback === null) return;
 
     // multiply the knockback by the resist.
-    knockback *= knockbackResist;
+    knockback *= (targetKnockbackResist / 100);
+
+    const targetSprite = target.getCharacter();
 
     // check if the knockback is 0, or the action is direct.
     if (knockback === 0 || action.isDirectAction())
@@ -2052,6 +2094,26 @@ class JABS_Engine
     targetSprite.jump(realX - targetSprite.x, realY - targetSprite.y);
   }
 
+  canBeKnockedBack(action, target)
+  {
+    // don't knockback if already being knocked back.
+    if (target.getCharacter()
+      .isJumping())
+    {
+      return false;
+    }
+
+    // don't knockback if the attack was parried with finesse.
+    if (target.getBattler()
+      .result().parried)
+    {
+      return false;
+    }
+
+    // being knocked back is possible.
+    return true;
+  }
+
   /**
    * Determines if there is a combo action that should succeed this skill.
    * @param {JABS_Battler} caster The battler that casted this skill.
@@ -2083,7 +2145,10 @@ class JABS_Engine
 
     // if the battler doesn't know the combo skill, we cannot combo.
     if (!caster.getBattler()
-      .hasSkill(skill.jabsComboSkillId)) return false;
+      .hasSkill(skill.jabsComboSkillId))
+    {
+      return false;
+    }
 
     // execute combo actions!
     return true;
@@ -2098,7 +2163,10 @@ class JABS_Engine
   updateComboSequence(caster, action)
   {
     // extract the combo data out of the skill.
-    const { jabsComboSkillId, jabsComboDelay } = action.getBaseSkill();
+    const {
+      jabsComboSkillId,
+      jabsComboDelay
+    } = action.getBaseSkill();
 
     // determine which slot to apply cooldowns to.
     const cooldownKey = action.getCooldownType();
@@ -2136,75 +2204,85 @@ class JABS_Engine
     const targetBattler = target.getBattler();
     const casterBattler = caster.getBattler();
 
-    /* eslint-disable */
-    /*
+    // grab the amount of parry ignored.
+    const parryIgnoredFactor = (100 - (action.getBaseSkill().jabsIgnoreParry ?? 0)) / 100;
+
+    // TODO: lift these to some kind of manager for global re-use.
+    const hundredX = value => parseFloat((value * 100).toFixed(3));
+    const tenPercent = value => parseFloat((value * 0.1).toFixed(3));
+
     // WIP formula!
     // defender's stat calculation of grd, bonuses from agi/luk.
-    const baseGrd = parseFloat(((targetBattler.grd - 1) * 100).toFixed(3));
-    const bonusGrdFromAgi = parseFloat((targetBattler.agi * 0.1).toFixed(3));
-    const bonusGrdFromLuk = parseFloat((targetBattler.luk * 0.1).toFixed(3));
-    const defenderGrd = baseGrd + bonusGrdFromAgi + bonusGrdFromLuk;
+    const baseGrd = hundredX(targetBattler.grd - 1);
+    const bonusGrdFromAgi = tenPercent(targetBattler.agi);
+    const bonusGrdFromLuk = tenPercent(targetBattler.luk);
+    const defenderGrd = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
 
     // attacker's stat calculation of hit, bonuses from agi/luk.
-    const baseHit = parseFloat((casterBattler.hit * 100).toFixed(3));
-    const bonusHitFromAgi = parseFloat((casterBattler.agi * 0.1).toFixed(3));
-    const bonusHitFromLuk = parseFloat((casterBattler.luk * 0.1).toFixed(3));
+    const defaultHit = 50; // this flat amount is necessary to not be ridiculously parryful early game.
+    const baseHit = hundredX(casterBattler.hit) + defaultHit;
+    const bonusHitFromAgi = tenPercent(casterBattler.agi);
+    const bonusHitFromLuk = tenPercent(casterBattler.luk);
     const attackerHit = baseHit + bonusHitFromAgi + bonusHitFromLuk;
 
     // determine the difference and apply the multiplier if applicable.
     let difference = attackerHit - defenderGrd;
-    if (J.LEVEL && J.LEVEL.Metadata.Enabled) {
+    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    {
       const multiplier = LevelScaling.multiplier(targetBattler.level, casterBattler.level);
       difference *= multiplier;
     }
 
-    // the hit is too great, there is no chance of being parried.
-    if (difference > 100) {
-      return false;
-    // the grd is too great, there is no chance of landing a hit.
-    } else if (difference < 0) {
-      return true;
-    }
+    const rng = Math.randomInt(100) + 1;
 
-    const rng = parseInt(Math.randomInt(100) + 1);
-    console.log(`attacker: ${attackerHit}, defender: ${defenderGrd}, rng: ${rng}, diff: ${difference}, parried: ${rng > difference}`);
-    return rng > difference;
-    // console.log(`attacker:${casterBattler.name()} bonus:${bonusHit} + hit:${hit-bonusHit} < grd:${parryRate} ?${hit < parryRate}`);
-    */
-    /* eslint-enable */
-
-    // apply the hit bonus to hit (10% of actual hit).
-    const bonusHit = parseFloat((casterBattler.hit * 0.1).toFixed(3));
-
-    // calculate the hit rate (rng + bonus hit).
-    const calculatedHitRate = parseFloat((Math.random() + bonusHit).toFixed(3));
-
-    // grab the amount of parry ignored.
-    const parryIgnored = (action.getBaseSkill().jabsIgnoreParry ?? 0) / 100;
-
-    // calculate the target's parry rate.
-    const targetGuardRate = (targetBattler.grd - 1) - parryIgnored;
-
-    // truncate the parry rate to 3 places.
-    const parryRate = parseFloat((targetGuardRate).toFixed(3));
-
-    // set to true for debugging.
-    const useDebug = false;
-    if (useDebug)
+    const debug = false;
+    if (debug === true)
     {
-      console.log(`logs for ${caster.battlerName()} using ${action.getBaseSkill().name}.`);
-      console.log(`calculatedHitRate: [ ${calculatedHitRate} ].`);
-      console.log(`parryIgnored: [ ${parryIgnored} ].`);
-      console.log(`targetGuardRate: [ ${targetGuardRate} ].`);
-      console.log(`parryRate: [ ${parryRate} ].`);
-      const result = (calculatedHitRate < parryRate)
-        ? 'NO-PARRY'
-        : 'YES-PARRY';
-      console.log(`result: ${result}`);
+      console.log(`[${casterBattler.name()}] hit: ${attackerHit}, grd: ${defenderGrd}, rng: ${rng}, diff: ${difference}, parried: ${rng > difference}`);
     }
 
-    // return whether or not the hit was successful.
-    return calculatedHitRate < parryRate;
+    // the hit is too great, there is no chance of being parried.
+    if (difference > 100)
+    {
+      return false;
+    }// the grd is too great, there is no chance of landing a hit.
+    else if (difference <= 0) return true;
+
+    return rng > difference;
+
+    // OLD FORMULA
+    // apply the hit bonus to hit (10% of actual hit).
+    // const bonusHit = parseFloat((casterBattler.hit * 0.1).toFixed(3));
+    //
+    // // calculate the hit rate (rng + bonus hit).
+    // const calculatedHitRate = parseFloat((Math.random() + bonusHit).toFixed(3));
+    //
+    // // calculate the target's parry rate.
+    // const targetGuardRate = (targetBattler.grd - 1) - parryIgnoredFactor;
+    //
+    // // truncate the parry rate to 3 places.
+    // const parryRate = parseFloat((targetGuardRate).toFixed(3));
+    //
+    // // encapsulated local function for hit parry rate calculation.
+    // const result = (hit, parry) => (hit < parry);
+    //
+    // // set to true for debugging.
+    // const useDebug = true;
+    // if (useDebug)
+    // {
+    //   console.log(`logs for ${caster.battlerName()} using ${action.getBaseSkill().name}.`);
+    //   console.log(`calculatedHitRate: [ ${calculatedHitRate} ].`);
+    //   console.log(`parryIgnored: [ ${parryIgnoredFactor} ].`);
+    //   console.log(`targetGuardRate: [ ${targetGuardRate} ].`);
+    //   console.log(`parryRate: [ ${parryRate} ].`);
+    //   const outcome = result(calculatedHitRate, parryRate)
+    //     ? 'YES-PARRY'
+    //     : 'NO-PARRY';
+    //   console.log(`result: ${outcome}`);
+    // }
+    //
+    // // return whether or not the hit was successful.
+    // return result(calculatedHitRate, parryRate);
   }
 
   /**
@@ -2221,10 +2299,12 @@ class JABS_Engine
     // if the target battler has 0 GRD, they can't parry.
     if (target.getBattler().grd <= 0) return false;
 
-
     // if the attacker has a state that ignores all parry, then skip parrying.
     if (caster.getBattler()
-      .ignoreAllParry()) return false;
+      .ignoreAllParry())
+    {
+      return false;
+    }
 
     // parrying is possible!
     return true;
@@ -2282,7 +2362,7 @@ class JABS_Engine
 
   /**
    * Applies all effects to the target that occur after the skill execution is complete.
-   * @param {JABS_Action} action The `JABS_Action` containing the action data.
+   * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
   continuedPrimaryBattleEffects(action, target)
@@ -2303,7 +2383,10 @@ class JABS_Engine
 
     // do not retaliate against being targeted by battlers of the same team.
     if (action.getCaster()
-      .isSameTeam(targetBattler.getTeam())) return;
+      .isSameTeam(targetBattler.getTeam()))
+    {
+      return;
+    }
 
     // check if the target battler is an actor.
     if (targetBattler.isActor())
@@ -2332,15 +2415,15 @@ class JABS_Engine
     // for tracking to prevent both counterguarding AND counterparrying simultaneously.
     let didCounterParry = false;
 
-    // check if the action is parryable.
-    if (actionResult.parried)
+    // check if the action was parried and the battler isn't guarding.
+    if (actionResult.parried || battler.parrying())
     {
       // handle the battler's parry reaction.
       didCounterParry = this.handleCounterParry(battler);
     }
 
     // handle counter-guarding next.
-    const didCounterGuard = this.handleCounterGuard(didCounterParry, battler)
+    const didCounterGuard = this.handleCounterGuard(battler, didCounterParry)
 
     // if we have autocounter, trigger those if we haven't already done the other.
     if (!didCounterParry && !didCounterGuard)
@@ -2588,7 +2671,10 @@ class JABS_Engine
 
     // inanimate objects do not have skill usage pops.
     if (action.getCaster()
-      .isInanimate()) return;
+      .isInanimate())
+    {
+      return;
+    }
 
     // gather shorthand variables for use.
     const skill = action.getBaseSkill();
@@ -2627,7 +2713,7 @@ class JABS_Engine
     if (result.parried)
     {
       const parryLog = new ActionLogBuilder()
-        .setupParry(targetName, casterName, skill.id, result.parried)
+        .setupParry(targetName, casterName, skill.id, target.parrying())
         .build();
       $actionLogManager.addLog(parryLog);
       return;
@@ -2871,9 +2957,9 @@ class JABS_Engine
 
   //region collision
   /**
-   * Checks this `JABS_Action` against all map battlers to determine collision.
+   * Checks this JABS action against all map battlers to determine collision.
    * If there is a collision, then a `Game_Action` is applied.
-   * @param {JABS_Action} jabsAction The `JABS_Action` to check against all battlers.
+   * @param {JABS_Action} jabsAction The JABS action to check against all battlers.
    * @returns {JABS_Battler[]} A collection of `JABS_Battler`s that this action hit.
    */
   getCollisionTargets(jabsAction)
@@ -3463,7 +3549,7 @@ class JABS_Engine
     let multiplier = 1.0;
 
     // check if we are using the level scaling functionality.
-    if (J.LEVEL && J.LEVEL.Metadata.Enabled)
+    if (J.LEVEL && J.LEVEL.Metadata.enabled)
     {
       // calculate the reverse multiplier using scaling based on enemy and actor.
       // if the enemy is higher, then the rewards will be greater.

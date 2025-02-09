@@ -194,6 +194,30 @@ Game_Follower.prototype.update = function()
   this.updateAllyAi();
 };
 
+J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('setDirectionFix', Game_Follower.prototype.setDirectionFix);
+Game_Follower.prototype.setDirectionFix = function(isDirectionFixed)
+{
+  // grab the follower's battler.
+  const battler = this.getJabsBattler();
+
+  if (!battler)
+  {
+    // perform original logic if we are not.
+    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('setDirectionFix')
+      .call(this, isDirectionFixed);
+
+    // do no further processing.
+    return;
+  }
+
+  // only lock direction if the battler isn't engaged, and there is no event running.
+  if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
+
+  // perform original logic if we are not.
+  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('setDirectionFix')
+    .call(this, isDirectionFixed);
+};
+
 /**
  * A slightly modified update for followers controlled by JABS AI.
  */

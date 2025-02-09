@@ -267,7 +267,10 @@ class QuestManager
 
           // validate the player is on the current objective's map.
           if ($gameMap.mapId() !== objective.destinationData()
-            .at(0)) return false;
+            .at(0))
+          {
+            return false;
+          }
 
           // this is an objective to check!
           return true;

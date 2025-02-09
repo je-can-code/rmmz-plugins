@@ -202,7 +202,7 @@ class RPGManager
     }
 
     // get the note data from this skill.
-    const lines = databaseData.note.split(/[\r\n]+/);
+    const lines = databaseData.note?.split(/[\r\n]+/) ?? [];
 
     // if we have no matching notes, then short circuit.
     if (!lines.length)
@@ -214,7 +214,7 @@ class RPGManager
     }
 
     // initialize the value.
-    let val = 0;
+    let val = null;
 
     // iterate over each valid line of the note.
     lines.forEach(line =>
@@ -232,7 +232,15 @@ class RPGManager
       val = parseFloat(numericResult);
     });
 
-    // return the
+    if (val === null)
+    {
+      // return null or 0 depending on provided options.
+      return nullIfEmpty
+        ? null
+        : 0;
+    }
+
+    // return the value.
     return val;
   }
 
@@ -622,7 +630,8 @@ class RPGManager
   static checkForBooleanFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
   {
     // get all results from all objects that could have true/false/null values.
-    const results = databaseDatas.map(databaseData => this.checkForBooleanFromNoteByRegex(databaseData,
+    const results = databaseDatas.map(databaseData => this.checkForBooleanFromNoteByRegex(
+      databaseData,
       structure,
       nullIfEmpty));
 
@@ -658,7 +667,7 @@ class RPGManager
    * If the optional flag `tryParse` is true, then it will attempt to parse out
    * the array of values as well, including translating strings to numbers/booleans
    * and keeping array structures all intact.
-   * @param {string} databaseObject The contents of the note of a given object.
+   * @param {RPG_Base} databaseObject The database object to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
    * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @returns {any[][]|null} The array of arrays from the notes, or null.

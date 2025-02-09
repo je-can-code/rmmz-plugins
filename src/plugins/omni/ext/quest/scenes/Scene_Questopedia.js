@@ -2,7 +2,8 @@
 /**
  * A scene for interacting with the Questopedia.
  */
-class Scene_Questopedia extends Scene_MenuBase
+class Scene_Questopedia
+  extends Scene_MenuBase
 {
   /**
    * Constructor.

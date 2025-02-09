@@ -2,7 +2,8 @@
 /**
  * A window that is reused to draw all the subwindows of the JABS menu.
  */
-class Window_AbsMenuSelect extends Window_Command
+class Window_AbsMenuSelect
+  extends Window_Command
 {
   /* eslint-disable prefer-destructuring */
   static SelectionTypes = {
@@ -103,7 +104,12 @@ class Window_AbsMenuSelect extends Window_Command
     const forEacher = skill =>
     {
       // destruct the data out of the database data.
-      const { name, id, iconIndex, description } = skill;
+      const {
+        name,
+        id,
+        iconIndex,
+        description
+      } = skill;
 
       // build the command.
       const skillCommand = new WindowCommandBuilder(name)
@@ -146,7 +152,12 @@ class Window_AbsMenuSelect extends Window_Command
     const forEacher = tool =>
     {
       // destruct the data out of the database data.
-      const { name, id, iconIndex, description } = tool;
+      const {
+        name,
+        id,
+        iconIndex,
+        description
+      } = tool;
 
       // tools only get an amount if they are consumable.
       const amount = tool.consumable
@@ -205,7 +216,12 @@ class Window_AbsMenuSelect extends Window_Command
     const forEacher = dodgeSkill =>
     {
       // destruct the data out of the database data.
-      const { name, id, iconIndex, description } = dodgeSkill;
+      const {
+        name,
+        id,
+        iconIndex,
+        description
+      } = dodgeSkill;
 
       // build the command.
       const dodgeCommand = new WindowCommandBuilder(name)

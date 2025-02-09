@@ -2,7 +2,8 @@
 /**
  * A window displaying the list of pedias available.
  */
-class Window_OmnipediaList extends Window_Command
+class Window_OmnipediaList
+  extends Window_Command
 {
   /**
    * Constructor.

@@ -2,7 +2,8 @@
 /**
  * A window designed to display "more" data associated with the equipment.
  */
-class Window_MoreEquipData extends Window_MoreData
+class Window_MoreEquipData
+  extends Window_MoreData
 {
   constructor(rect)
   {
@@ -194,7 +195,10 @@ class Window_MoreEquipData extends Window_MoreData
     }
 
     // determine the actual skill.
-    const { name, iconIndex } = skill;
+    const {
+      name,
+      iconIndex
+    } = skill;
 
     // define the command name.
     const attackSkillCommand = `${baseAttackSkillCommand}: \\C[2]${name}\\C[0]`;

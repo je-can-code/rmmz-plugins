@@ -78,8 +78,14 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
   return arr.map(el =>
   {
     const kvp = JSON.parse(el);
-    const { elementId, iconIndex } = kvp;
-    return { element: parseInt(elementId), icon: parseInt(iconIndex) };
+    const {
+      elementId,
+      iconIndex
+    } = kvp;
+    return {
+      element: parseInt(elementId),
+      icon: parseInt(iconIndex)
+    };
   });
 };
 //endregion helpers
@@ -90,7 +96,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.3.0';
+J.ABS.Metadata.Version = '3.4.1';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -410,9 +416,10 @@ J.ABS.Shapes = {
  * various locations, like events on the map, or in a database enemy.
  */
 J.ABS.Notetags = {
-  // battler-related (goes in database on enemy/actor).
-  KnockbackResist: "knockbackResist", MoveType: {
-    Forward: "forward", Backward: "backward", Directional: "directional",
+  MoveType: {
+    Forward: "forward",
+    Backward: "backward",
+    Directional: "directional",
   }
 };
 

@@ -2,13 +2,17 @@
 /**
  * A sprite that represents a skill slot's assigned skill's mp cost.
  */
-class Sprite_SkillCost extends Sprite_BaseSkillSlot
+class Sprite_SkillCost
+  extends Sprite_BaseSkillSlot
 {
   /**
    * The supported types of skill costs for this sprite.
    */
   static Types = {
-    HP: "hp", MP: "mp", TP: "tp", Item: "item"
+    HP: "hp",
+    MP: "mp",
+    TP: "tp",
+    Item: "item"
   };
 
   /**

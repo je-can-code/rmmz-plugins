@@ -7,7 +7,7 @@
 Game_Battler.prototype.extractExtraDrops = function(referenceData)
 {
   // get the drops found on this enemy.
-  const moreDrops = referenceData.getArraysFromNotesByRegex(J.DROPS.RegExp.ExtraDrop, true) ?? [];
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true) ?? [];
 
   // a mapping function to build proper drop items from the arrays.
   const mapper = drop =>

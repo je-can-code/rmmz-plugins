@@ -3,13 +3,16 @@
  * A sprite that displays some text.
  * This acts as a base class for a number of other text-based sprites.
  */
-class Sprite_BaseText extends Sprite
+class Sprite_BaseText
+  extends Sprite
 {
   /**
    * The available supported text alignments.
    */
   static Alignments = {
-    Left: "left", Center: "center", Right: "right",
+    Left: "left",
+    Center: "center",
+    Right: "right",
   };
 
   /**

@@ -60,7 +60,9 @@ Game_Temp.prototype.getAllArmorNames = function()
     if (armor.name.startsWith('===')) return;
 
     return {
-      key: armor._key(), name: armor.name, description: armor.description
+      key: armor._key(),
+      name: armor.name,
+      description: armor.description
     };
   }
 

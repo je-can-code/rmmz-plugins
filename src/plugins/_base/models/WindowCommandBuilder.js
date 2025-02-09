@@ -106,7 +106,8 @@ class WindowCommandBuilder
   build()
   {
     // construct the command.
-    const command = new BuiltWindowCommand(this.#name,
+    const command = new BuiltWindowCommand(
+      this.#name,
       this.#key,
       this.#enabled,
       this.#extensionData,

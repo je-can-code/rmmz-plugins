@@ -330,7 +330,7 @@ RPG_Enemy.prototype.getMonsterpediaDescription = function()
 //region JABS_Engine
 /**
  * Processes the various on-hit effects against the target.
- * @param {JABS_Action} action The `JABS_Action` containing the action data.
+ * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
  */
 J.OMNI.EXT.MONSTER.Aliased.JABS_Engine.set('processOnHitEffects', JABS_Engine.prototype.processOnHitEffects);
@@ -2298,7 +2298,7 @@ class Window_MonsterpediaDetail extends Window_Base
     const [ sdpKey, sdpDropChance, sdpItemId ] = sdpDropData;
 
     // grab the corresponding panel with this key.
-    const panel = $gameParty.getSdpByKey(sdpKey);
+    const panel = J.SDP.Metadata.panelsMap.get(sdpKey);
 
     // if there is no panel, then don't try to render it.
     if (!panel) return;

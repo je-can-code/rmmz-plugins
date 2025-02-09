@@ -42,7 +42,8 @@ Object.defineProperty(JAFTING_Trait.prototype, "nameAndValue", {
   get()
   {
     return `${this.name} ${this.value}`;
-  }, configurable: true,
+  },
+  configurable: true,
 });
 
 /**
@@ -121,7 +122,8 @@ Object.defineProperty(JAFTING_Trait.prototype, "name", {
       default:
         return "All traits were implemented,";
     }
-  }, configurable: true,
+  },
+  configurable: true,
 });
 
 /**
@@ -219,7 +221,8 @@ Object.defineProperty(JAFTING_Trait.prototype, "value", {
       default:
         return "is this a custom trait?";
     }
-  }, configurable: true,
+  },
+  configurable: true,
 });
 
 /**

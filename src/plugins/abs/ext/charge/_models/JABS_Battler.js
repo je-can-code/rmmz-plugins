@@ -328,7 +328,10 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
 
   // cannot charge slots with skills you do not know.
   if (!this.getBattler()
-    .hasSkill(skillSlot.id)) return false;
+    .hasSkill(skillSlot.id))
+  {
+    return false;
+  }
 
   // we can charge this slot!
   return true;
@@ -461,7 +464,8 @@ JABS_Battler.prototype.getChargingTiers = function(slot)
       chargeTier, maxDuration, chargeSkillId, whileChargingAnimationId, chargeTierCompleteAnimationId, ] = tierData;
 
     // return a compiled charging tier; note default animationId.
-    return new JABS_ChargingTier(chargeTier,
+    return new JABS_ChargingTier(
+      chargeTier,
       maxDuration,
       chargeSkillId,
       whileChargingAnimationId ?? 0,
@@ -521,7 +525,7 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
       sortedTiers.splice(index, 0, filler);
     }
   }
-  
+
   // check if the final tier is missing a charge complete animation, and that we have a default to provide.
   if (sortedTiers.at(-1).chargeTierCompleteAnimationId === 0 &&
     J.ABS.EXT.CHARGE.Metadata.DefaultFullyChargedAnimationId)

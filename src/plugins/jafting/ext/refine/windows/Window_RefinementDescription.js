@@ -1,5 +1,6 @@
 //region Window_RefinementDescription
-class Window_RefinementDescription extends Window_Help
+class Window_RefinementDescription
+  extends Window_Help
 {
   constructor(rect)
   {

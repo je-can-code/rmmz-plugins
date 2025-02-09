@@ -106,8 +106,9 @@ Game_Action.prototype.preApplyAction = function(target)
 
   const result = target.result();
 
-  // always clear the result first.
-  result.clear();
+  // NOTE: the action is already cleared as a part of the "executeSkillEffects" function.
+  //  in the base RMMZ code, this happens as a part of the "apply" function, though.
+  // result.clear();
 
   // record if the skill was actually used.
   result.used = this.testApply(target);
@@ -539,7 +540,10 @@ Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 {
   // extract the data points.
-  const { value1: chance, dataId: stateId } = effect;
+  const {
+    value1: chance,
+    dataId: stateId
+  } = effect;
 
   // handle the application of the state- if applicable.
   this.handleApplyState(target, stateId, chance, false);

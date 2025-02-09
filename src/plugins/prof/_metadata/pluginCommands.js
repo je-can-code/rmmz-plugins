@@ -5,7 +5,8 @@
 PluginManager.registerCommand(J.PROF.Metadata.Name, "modifyActorSkillProficiency", args =>
 {
   const {
-    actorIds, skillIds
+    actorIds,
+    skillIds
   } = args;
 
   const parsedActorIds = JSON.parse(actorIds)

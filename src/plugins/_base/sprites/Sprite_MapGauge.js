@@ -9,7 +9,8 @@ function Sprite_MapGauge()
 
 Sprite_MapGauge.prototype = Object.create(Sprite_Gauge.prototype);
 Sprite_MapGauge.prototype.constructor = Sprite_MapGauge;
-Sprite_MapGauge.prototype.initialize = function(bitmapWidth = 96,
+Sprite_MapGauge.prototype.initialize = function(
+  bitmapWidth = 96,
   bitmapHeight = 24,
   gaugeHeight = 6,
   label = String.empty,

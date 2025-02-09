@@ -3,7 +3,8 @@
  * An extension/modification of the base {@link Window_MapLog}.<br/>
  * The {@link Window_DiaLog} is used for the chatter log.
  */
-class Window_LootLog extends Window_MapLog
+class Window_LootLog
+  extends Window_MapLog
 {
   /**
    * Constructor.

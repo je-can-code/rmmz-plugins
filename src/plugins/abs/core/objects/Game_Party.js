@@ -78,17 +78,4 @@ Game_Party.prototype.leaderJabsBattler = function()
   // return the leader's battler.
   return JABS_AiManager.getBattlerByUuid(leaderUuid);
 };
-
-/**
- * Swap the leader with one of its followers by index and refreshes the player.
- * @param {number} newIndex The index of the follower to swap with.
- */
-Game_Party.prototype.swapLeaderWithFollower = function(newIndex)
-{
-  // swap to the next party member in the sequence.
-  this._actors = this._actors.concat(this._actors.splice(0, newIndex));
-
-  // update the player with the change in party member order.
-  $gamePlayer.refresh();
-};
 //endregion Game_Party

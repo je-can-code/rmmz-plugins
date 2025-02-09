@@ -1,20 +1,29 @@
 //region Scene_Map
 /**
- * Extends `Scene_Map.initialize()` to also initialize the TIME window.
+ * Extends {@link Scene_Map#initialize}.<br/>
+ * Also initializes the TIME window.
  */
-J.TIME.Aliased.Scene_Map.initialize = Scene_Map.prototype.initialize;
+J.TIME.Aliased.Scene_Map.set("initialize", Scene_Map.prototype.initialize);
 Scene_Map.prototype.initialize = function()
 {
-  J.TIME.Aliased.Scene_Map.initialize.call(this);
-  this._j = this._j || {};
-  this.initTimeWindow();
+  // perform original logic.
+  J.TIME.Aliased.Scene_Map.get("initialize")
+    .call(this);
+
+  // init the TIME window.
+  this.initTimeMembers();
 };
 
 /**
- * Initializes the property containing the TIME window.
+ * Initializes all members related to the TIME system.
  */
-Scene_Map.prototype.initTimeWindow = function()
+Scene_Map.prototype.initTimeMembers = function()
 {
+  /**
+   * The shared root namespace for all of J's plugin data.
+   */
+  this._j ||= {};
+
   /**
    * The window that displays the current time, real or artificial.
    * @type {Window_Time}
@@ -23,43 +32,122 @@ Scene_Map.prototype.initTimeWindow = function()
 };
 
 /**
- * Extends `Scene_Map.createAllWindows()` to also create the TIME window.
+ * Extends {@link Scene_Map#createAllWindows}.<br/>
+ * Also creates the TIME window.
  */
-J.TIME.Aliased.Scene_Map.createAllWindows = Scene_Map.prototype.createAllWindows;
+J.TIME.Aliased.Scene_Map.set("createAllWindows", Scene_Map.prototype.createAllWindows);
 Scene_Map.prototype.createAllWindows = function()
 {
-  J.TIME.Aliased.Scene_Map.createAllWindows.call(this);
+  // perform original logic.
+  J.TIME.Aliased.Scene_Map.get("createAllWindows")
+    .call(this);
+
+  // also create the TIME window.
   this.createTimeWindow();
 };
 
+//region TIME window
 /**
  * Creates the TIME window.
  */
 Scene_Map.prototype.createTimeWindow = function()
 {
-  const w = 200;
-  const h = 180;
-  const x = J.TIME.Metadata.TimeWindowX;
-  const y = J.TIME.Metadata.TimeWindowY;
-  const rect = new Rectangle(x, y, w, h);
-  const wind = new Window_Time(rect);
-  this._j._timeWindow = wind;
-  this.addWindow(this._j._timeWindow);
+  // create the window.
+  const window = this.buildTimeWindow();
+
+  // update the tracker with the new window.
+  this.setTimeWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
 };
 
 /**
- * Extends the `Scene_Map.update()` to also update the TIME window.
+ * Sets up and defines the TIME window.
+ * @returns {Window_Time}
  */
-J.TIME.Aliased.Scene_Map.update = Scene_Map.prototype.update;
+Scene_Map.prototype.buildTimeWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.timeWindowRect();
+
+  // create the window with the rectangle.
+  const window = new Window_Time(rectangle);
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Creates the rectangle representing the window for TIME.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.timeWindowRect = function()
+{
+  // defined the width of the window.
+  const width = 200;
+
+  // define the height of the window.
+  const height = 180;
+
+  // the x and y are defined by the plugin parameters.
+  const x = J.TIME.Metadata.TimeWindowX;
+  const y = J.TIME.Metadata.TimeWindowY;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, width, height);
+};
+
+/**
+ * Gets the currently tracked TIME window.
+ * @returns {Window_Time}
+ */
+Scene_Map.prototype.getTimeWindow = function()
+{
+  return this._j._timeWindow;
+};
+
+/**
+ * Sets the currently tracked TIME window to the given window.
+ * @param window
+ */
+Scene_Map.prototype.setTimeWindow = function(window)
+{
+  this._j._timeWindow = window;
+};
+//endregion TIME window
+
+/**
+ * Extends {@link Scene_Map#update}.<br/>
+ * Also updates the TIME window.
+ */
+J.TIME.Aliased.Scene_Map.set("update", Scene_Map.prototype.update);
 Scene_Map.prototype.update = function()
 {
-  J.TIME.Aliased.Scene_Map.update.call(this);
+  // perform original logic.
+  J.TIME.Aliased.Scene_Map.get("update")
+    .call(this);
 
-  if (this._j._timeWindow)
-  {
-    this._j._timeWindow.update();
-    this.manageTimeVisibility();
-  }
+  // also update the TIME window.
+  this.updateTimeWindow();
+};
+
+/**
+ * Handles the updating of the TIME window.
+ */
+Scene_Map.prototype.updateTimeWindow = function()
+{
+  // grab the TIME window.
+  const timeWindow = this.getTimeWindow();
+
+  // if for some reason, there is no TIME window, then don't try to update it.
+  if (timeWindow === null) return;
+
+  // update TIME.
+  timeWindow.update();
+
+  // handle visibility.
+  this.manageTimeVisibility();
 };
 
 /**
@@ -67,48 +155,63 @@ Scene_Map.prototype.update = function()
  */
 Scene_Map.prototype.manageTimeVisibility = function()
 {
+  // grab the TIME window.
+  const timeWindow = this.getTimeWindow();
+
+  // check if the map window should be visible.
   if ($gameTime.isMapWindowVisible())
   {
-    this._j._timeWindow.show();
-    this._j._timeWindow.open();
+    // show the window.
+    timeWindow.show();
+    timeWindow.open();
   }
+  // it shouldn't be visible.
   else
   {
-    this._j._timeWindow.close();
-    this._j._timeWindow.hide();
+    // hide the window.
+    timeWindow.close();
+    timeWindow.hide();
   }
 };
 
 /**
- * Extends the `Scene_Map.onMapLoaded()` function to handle blocking/unblocking by tag.
+ * Extends {@link Scene_Map#onMapLoaded}.<br/>
+ * Also handles blocking/unblocking the flow of TIME based on the presence of tags.
  */
-J.TIME.Aliased.Scene_Map.onMapLoaded = Scene_Map.prototype.onMapLoaded;
+J.TIME.Aliased.Scene_Map.set("onMapLoaded", Scene_Map.prototype.onMapLoaded);
 Scene_Map.prototype.onMapLoaded = function()
 {
+  // inspect if this map was loaded as a result of a map transfer.
   if (this._transfer)
   {
-    this.blockIfTagged();
+    // handle the blockage of TIME as-needed.
+    this.handleTimeBlock();
+
+    // flag the system for needing a tone change (potentially) upon map transfer.
+    $gameTime.setNeedsToneChange(true);
   }
 
-  J.TIME.Aliased.Scene_Map.onMapLoaded.call(this);
+  // perform original logic.
+  J.TIME.Aliased.Scene_Map.get("onMapLoaded")
+    .call(this);
 };
 
 /**
  * Blocks the flow of time if the target map is tagged with the specified tag.
  */
-Scene_Map.prototype.blockIfTagged = function()
+Scene_Map.prototype.handleTimeBlock = function()
 {
+  // check if TIME should be blocked.
+  // TODO: update this to use notes instead of meta.
   if ($dataMap.meta && $dataMap.meta['timeBlock'])
   {
+    // block it.
     $gameTime.block();
   }
+  // it shouldn't be blocked.
   else
   {
-    if ($gameTime.isBlocked())
-    {
-      // console.log('Time is no longer blocked.');
-    }
-
+    // unblock it.
     $gameTime.unblock();
   }
 };

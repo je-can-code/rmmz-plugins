@@ -107,7 +107,7 @@ function getArgs()
   Logger.log(`output path: ${OUT_PATH}`);
   Logger.log(`output filename: ${OUT_FILENAME}`);
 
-  return [SRC_PATH, OUT_PATH, OUT_FILENAME];
+  return [ SRC_PATH, OUT_PATH, OUT_FILENAME ];
 }
 
 /**
@@ -138,7 +138,7 @@ async function validateOutputDir(output_path)
 function getFilepaths(src, out)
 {
   const options = {
-    ignore: ["node_modules/**/*", out],
+    ignore: [ "node_modules/**/*", out ],
     absolute: true
   };
 
@@ -149,9 +149,13 @@ function getFilepaths(src, out)
     const left = a.toLowerCase()
     const right = b.toLowerCase();
     if (left < right) //sort string ascending
+    {
       return -1;
+    }
     if (left > right)
+    {
       return 1;
+    }
     return 0; //default return value (no sorting)
   });
 }

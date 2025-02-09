@@ -2,7 +2,8 @@
 /**
  * A class representing a single item entry from the database.
  */
-class RPG_Item extends RPG_UsableItem
+class RPG_Item
+  extends RPG_UsableItem
 {
   //region properties
   /**

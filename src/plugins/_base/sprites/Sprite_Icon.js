@@ -6,7 +6,8 @@
  * but can be modified manually to different iconsets bitmaps and/or
  * different icon widths and heights.
  */
-class Sprite_Icon extends Sprite
+class Sprite_Icon
+  extends Sprite
 {
   /**
    * Initializes this sprite with the designated icon.

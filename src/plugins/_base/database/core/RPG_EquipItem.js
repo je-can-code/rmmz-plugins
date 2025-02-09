@@ -3,7 +3,8 @@
  * A base class representing containing common properties found in both
  * weapons and armors.
  */
-class RPG_EquipItem extends RPG_Traited
+class RPG_EquipItem
+  extends RPG_Traited
 {
   //region properties
   /**

@@ -3,7 +3,8 @@
  * The main JABS menu window called from the map.
  * This window contains mostly combat-setup options relating to JABS.
  */
-class Window_AbsMenu extends Window_Command
+class Window_AbsMenu
+  extends Window_Command
 {
   /**
    * Constructor.

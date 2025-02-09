@@ -16,7 +16,8 @@ Window_SkillType.prototype.makeCommandList = function()
   if (!currentActor) return;
 
   /** @type {number[]} */
-  const skillTypeIds = currentActor.addedSkillTypes().filter((x, i, self) => self.indexOf(x) === i);
+  const skillTypeIds = currentActor.addedSkillTypes()
+    .filter((x, i, self) => self.indexOf(x) === i);
 
   skillTypeIds.forEach(skillTypeId =>
   {

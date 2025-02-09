@@ -34,7 +34,12 @@ Scene_Base.prototype.isVolumeToggling = function()
  */
 Scene_Base.prototype.toggleVolume = function()
 {
-  const { bgmVolume, bgsVolume, meVolume, seVolume } = ConfigManager;
+  const {
+    bgmVolume,
+    bgsVolume,
+    meVolume,
+    seVolume
+  } = ConfigManager;
   const isMuted = !bgmVolume || !bgsVolume || !meVolume || !seVolume;
   if (isMuted)
   {

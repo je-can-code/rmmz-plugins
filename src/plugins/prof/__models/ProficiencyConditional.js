@@ -52,4 +52,5 @@ class ProficiencyConditional
     this.jsRewards = jsRewards;
   }
 }
+
 //endregion ProficiencyConditional

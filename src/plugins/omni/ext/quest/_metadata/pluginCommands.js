@@ -23,7 +23,10 @@ PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "progress-quest", 
  */
 PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "finalize-quest", args =>
 {
-  const { key, state } = args;
+  const {
+    key,
+    state
+  } = args;
   const quest = QuestManager.quest(key);
   switch (state)
   {
@@ -44,7 +47,10 @@ PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "finalize-quest", 
  */
 PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "set-quest-tracking", args =>
 {
-  const { key, trackingState } = args;
+  const {
+    key,
+    trackingState
+  } = args;
   QuestManager.setQuestTrackingByKey(key, trackingState);
 });
 //endregion plugin commands

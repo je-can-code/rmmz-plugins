@@ -4,7 +4,8 @@
  * Such data includes things like recipes, categories, and connectivity
  * with the SDP system.
  */
-class J_CraftingCreatePluginMetadata extends PluginMetadata
+class J_CraftingCreatePluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -43,7 +44,11 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     // a mapping function for classifying the components of the recipe.
     const componentMapper = mappableComponent =>
     {
-      const { count, id, type } = mappableComponent;
+      const {
+        count,
+        id,
+        type
+      } = mappableComponent;
       const newComponent = new CraftingComponent(count, id, type);
       return newComponent;
     };
@@ -57,7 +62,8 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
       const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
 
       // create the recipe.
-      const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name,
+      const newJaftingRecipe = new CraftingRecipe(
+        mappableRecipe.name,
         mappableRecipe.key,
         mappableRecipe.categoryKeys,
         mappableRecipe.iconIndex,
@@ -87,7 +93,13 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     // a maping function for classify the categories of the configuration.
     const categoryMapper = mappableCategory =>
     {
-      const { name, key, iconIndex, description, unlockedByDefault } = mappableCategory;
+      const {
+        name,
+        key,
+        iconIndex,
+        description,
+        unlockedByDefault
+      } = mappableCategory;
       const newCategory = new CraftingCategory(name, key, iconIndex, description, unlockedByDefault);
       return newCategory
     };

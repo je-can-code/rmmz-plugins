@@ -5,7 +5,7 @@
 class JABS_Action
 {
   /**
-   * The minimum duration a `JABS_Action` must exist visually before cleaning it up.
+   * The minimum duration a JABS action must exist visually before cleaning it up.
    *
    * All actions should exist visually for at least 8 frames.
    * @returns {8} The minimum number of frames, 8.
@@ -17,8 +17,8 @@ class JABS_Action
 
   /**
    * Constructor.
-   * @param {Game_Action} gameAction The underlying action associated with this `JABS_Action`.
-   * @param {JABS_Battler} caster The `JABS_Battler` who created this `JABS_Action`.
+   * @param {Game_Action} gameAction The underlying action associated with this JABS action.
+   * @param {JABS_Battler} caster The `JABS_Battler` who created this JABS action.
    * @param {boolean} isRetaliation Whether or not this is a retaliation action.
    * @param {number} direction The direction this action will face initially.
    * @param {string?} cooldownKey The cooldown key associated with this action.
@@ -39,7 +39,7 @@ class JABS_Action
     this._baseSkill = gameAction.item();
 
     /**
-     * The `JABS_Battler` that used created this `JABS_Action`.
+     * The `JABS_Battler` that used created this JABS action.
      * @type {JABS_Battler}
      */
     this._caster = caster;
@@ -108,7 +108,7 @@ class JABS_Action
   initVisuals()
   {
     /**
-     * The `Game_Event` this `JABS_Action` is bound to. Represents the visual aspect on the map.
+     * The `Game_Event` this JABS action is bound to. Represents the visual aspect on the map.
      * @type {Game_Event}
      */
     this._actionSprite = null;
@@ -271,8 +271,8 @@ class JABS_Action
   }
 
   /**
-   * Gets the base skill this `JABS_Action` is based on.
-   * @returns {RPG_Skill} The base skill of this `JABS_Action`.
+   * Gets the base skill this JABS action is based on.
+   * @returns {RPG_Skill} The base skill of this JABS action.
    */
   getBaseSkill()
   {
@@ -280,7 +280,7 @@ class JABS_Action
   }
 
   /**
-   * The base game action this `JABS_Action` is based on.
+   * The base game action this JABS action is based on.
    * @returns {Game_Action} The base game action for this action.
    */
   getAction()
@@ -289,8 +289,8 @@ class JABS_Action
   }
 
   /**
-   * Gets the `JABS_Battler` that created this `JABS_Action`.
-   * @returns {JABS_Battler} The caster of this `JABS_Action`.
+   * Gets the `JABS_Battler` that created this JABS action.
+   * @returns {JABS_Battler} The caster of this JABS action.
    */
   getCaster()
   {
@@ -320,6 +320,15 @@ class JABS_Action
   isUnparryable()
   {
     return !!this.getBaseSkill().jabsUnparryable;
+  }
+
+  isHealing()
+  {
+    const damageType = this.getBaseSkill().damage.type;
+    return [
+      3, // HP recover
+      4, // MP recover
+    ].includes(damageType);
   }
 
   /**
@@ -387,8 +396,8 @@ class JABS_Action
   }
 
   /**
-   * Increments the duration for this `JABS_Action`. If the duration drops
-   * to or below 0, then it will also flag this `JABS_Action` for removal.
+   * Increments the duration for this JABS action. If the duration drops
+   * to or below 0, then it will also flag this JABS action for removal.
    */
   countdownDuration()
   {
@@ -411,7 +420,7 @@ class JABS_Action
   }
 
   /**
-   * Gets whether or not this `JABS_Action` needs removing.
+   * Gets whether or not this JABS action needs removing.
    * @returns {boolean} Whether or not this action needs removing.
    */
   getNeedsRemoval()
@@ -420,8 +429,8 @@ class JABS_Action
   }
 
   /**
-   * Sets whether or not this `JABS_Action` needs removing.
-   * @param {boolean} remove Whether or not to remove this `JABS_Action`.
+   * Sets whether or not this JABS action needs removing.
+   * @param {boolean} remove Whether or not to remove this JABS action.
    */
   setNeedsRemoval(remove = true)
   {
@@ -429,7 +438,7 @@ class JABS_Action
   }
 
   /**
-   * Gets the `Game_Event` this `JABS_Action` is bound to.
+   * Gets the `Game_Event` this JABS action is bound to.
    * The `Game_Event` represents the visual aspect of this action.
    * @returns {Game_Event}
    */
@@ -439,8 +448,8 @@ class JABS_Action
   }
 
   /**
-   * Binds this `JABS_Action` to a provided `Game_Event`.
-   * @param {Game_Event} actionSprite The `Game_Event` to bind to this `JABS_Action`.
+   * Binds this JABS action to a provided `Game_Event`.
+   * @param {Game_Event} actionSprite The `Game_Event` to bind to this JABS action.
    */
   setActionSprite(actionSprite)
   {
@@ -751,7 +760,7 @@ class JABS_Action
 
   /**
    * Gets the cooldown time for this skill.
-   * @returns {number} The cooldown frames of this `JABS_Action`.
+   * @returns {number} The cooldown frames of this JABS action.
    */
   getCooldown()
   {
@@ -759,7 +768,7 @@ class JABS_Action
   }
 
   /**
-   * Gets the range of which this `JABS_Action` will reach.
+   * Gets the range of which this JABS action will reach.
    * @returns {number} The range of this action.
    */
   getRange()
@@ -777,7 +786,7 @@ class JABS_Action
   }
 
   /**
-   * Gets the proximity to the target in order to use this `JABS_Action`.
+   * Gets the proximity to the target in order to use this JABS action.
    * @returns {number} The proximity required for this action.
    */
   getProximity()
@@ -803,7 +812,7 @@ class JABS_Action
   }
 
   /**
-   * Gets the shape of the hitbox for this `JABS_Action`.
+   * Gets the shape of the hitbox for this JABS action.
    * @returns {string} The designated shape of the action.
    */
   getShape()
@@ -821,7 +830,7 @@ class JABS_Action
   }
 
   /**
-   * Gets the event id associated with this `JABS_Action` from the action map.
+   * Gets the event id associated with this JABS action from the action map.
    * This MUST have a numeric return value, and thus will default to eventId 1
    * on the action map if none is present.
    * @returns {number}

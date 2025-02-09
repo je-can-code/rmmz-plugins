@@ -141,7 +141,10 @@ Game_Enemy.prototype.observeDrop = function(drop)
   const observations = this.getMonsterPediaObservations();
 
   // extract the drop data.
-  const { kind: dropType, id: dropId } = drop;
+  const {
+    kind: dropType,
+    id: dropId
+  } = drop;
 
   // don't process the drop if its already known.
   if (observations.isDropKnown(dropType, dropId)) return;

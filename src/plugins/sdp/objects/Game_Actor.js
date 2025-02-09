@@ -55,11 +55,8 @@ Game_Actor.prototype.getOrCreateSdpRankByKey = function(key)
   // grab all the rankings this actor has.
   const rankings = this.getAllSdpRankings();
 
-  // a find function for grabbing the appropriate sdp ranking by its key.
-  const finding = panelRank => panelRank.key === key;
-
   // find the sdp ranking.
-  const existingRanking = rankings.find(finding);
+  const existingRanking = rankings.find(panelRank => panelRank.key === key);
 
   // check if we already have the ranking.
   if (existingRanking)
@@ -95,6 +92,29 @@ Game_Actor.prototype.getSdpByKey = function(key)
 Game_Actor.prototype.getAllSdpRankings = function()
 {
   return this._j._sdp._ranks;
+};
+
+/**
+ * Gets all unlocked panels for this actor.
+ * @returns {PanelRanking[]}
+ */
+Game_Actor.prototype.getAllUnlockedSdps = function()
+{
+  return this.getAllSdpRankings()
+    .filter(panelRanking => panelRanking.isUnlocked());
+};
+
+/**
+ * Unlocks a panel by its key.
+ * @param {string} key The key of the panel to unlock.
+ */
+Game_Actor.prototype.unlockSdpByKey = function(key)
+{
+  // grab the panel ranking by its key.
+  const panelRanking = this.getSdpByKey(key);
+
+  // unlock the ranking.
+  panelRanking.unlock();
 };
 
 /**
@@ -393,7 +413,10 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
       panelParameters.forEach(panelParameter =>
       {
         // extract the relevant details.
-        const { perRank, isFlat } = panelParameter;
+        const {
+          perRank,
+          isFlat
+        } = panelParameter;
         const { currentRank } = panelRanking;
 
         // check if the panel parameter growth is flat.

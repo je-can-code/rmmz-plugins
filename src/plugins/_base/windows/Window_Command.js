@@ -52,7 +52,9 @@ Window_Command.prototype.drawItem = function(index)
 
   // grab the rectangle for the line item.
   const {
-    x: rectX, y: rectY, width: rectWidth
+    x: rectX,
+    y: rectY,
+    width: rectWidth
   } = this.itemLineRect(index);
 
   // build the command name.
@@ -104,7 +106,8 @@ Window_Command.prototype.drawItem = function(index)
   if (hasFaceData)
   {
     const faceY = rectY;
-    this.drawFace(faceName.substring(faceName.lastIndexOf('/') + 1),
+    this.drawFace(
+      faceName.substring(faceName.lastIndexOf('/') + 1),
       faceIndex,
       commandNameX - 36,
       faceY - 12,
@@ -379,7 +382,12 @@ Window_Command.prototype.addCommand = function(name, symbol, enabled = true, ext
 {
   this.commandList()
     .push({
-      name, symbol, enabled, ext, icon, color
+      name,
+      symbol,
+      enabled,
+      ext,
+      icon,
+      color
     });
 };
 
@@ -408,7 +416,12 @@ Window_Command.prototype.prependCommand = function(name, symbol, enabled = true,
 {
   this.commandList()
     .unshift({
-      name, symbol, enabled, ext, icon, color
+      name,
+      symbol,
+      enabled,
+      ext,
+      icon,
+      color
     });
 };
 

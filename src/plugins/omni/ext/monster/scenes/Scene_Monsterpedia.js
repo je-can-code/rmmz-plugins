@@ -1,7 +1,8 @@
 /**
  * A scene for interacting with the Monsterpedia.
  */
-class Scene_Monsterpedia extends Scene_MenuBase
+class Scene_Monsterpedia
+  extends Scene_MenuBase
 {
   /**
    * Constructor.

@@ -131,7 +131,8 @@ Game_Battler.prototype.baseCriticalMultiplier = function()
   const objectsToCheck = this.getAllNotes();
 
   // sum together all the base CDM tags.
-  const baseCriticalMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck,
+  const baseCriticalMultiplier = RPGManager.getSumFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageMultiplierBase);
 
   // calculate the factor for the CDM.
@@ -211,13 +212,15 @@ Game_Battler.prototype.cdmNaturalBuffs = function()
   const baseParam = this.baseCriticalMultiplier();
 
   // sum together all the cdm buff pluses across the notes.
-  const cdmBuffPlus = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
+  const cdmBuffPlus = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageMultiplierBuffPlus,
     baseParam,
     this);
 
   // sum together all the cdm buff rates across the notes.
-  const cdmBuffRate = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
+  const cdmBuffRate = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageMultiplierBuffRate,
     baseParam,
     this);
@@ -261,7 +264,8 @@ Game_Battler.prototype.baseCriticalReduction = function()
   const objectsToCheck = this.getAllNotes();
 
   // sum together all the base CDR tags.
-  const baseCriticalReduction = RPGManager.getSumFromAllNotesByRegex(objectsToCheck,
+  const baseCriticalReduction = RPGManager.getSumFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageReductionBase);
 
   // calculate the factor for the CDR.
@@ -341,13 +345,15 @@ Game_Battler.prototype.cdrNaturalBuffs = function()
   const baseParam = this.baseCriticalReduction();
 
   // sum together all the cdm buff pluses across the notes.
-  const cdrBuffPlus = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
+  const cdrBuffPlus = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageReductionBuffPlus,
     baseParam,
     this);
 
   // sum together all the cdm buff rates across the notes.
-  const cdrBuffRate = RPGManager.getResultsFromAllNotesByRegex(objectsToCheck,
+  const cdrBuffRate = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
     J.CRIT.RegExp.CritDamageReductionBuffRate,
     baseParam,
     this);

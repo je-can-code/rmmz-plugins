@@ -1,7 +1,8 @@
 /**
  * A window containing the difficulty points information.
  */
-class Window_DifficultyPoints extends Window_Base
+class Window_DifficultyPoints
+  extends Window_Base
 {
   /**
    * The difficulty layer that the cursor is currently hovering over.

@@ -47,6 +47,29 @@ PanelRanking.prototype.initMembers = function()
    * @type {boolean}
    */
   this.maxed = false;
+
+  /**
+   *
+   * @type {boolean}
+   */
+  this._isUnlocked = false;
+};
+
+/**
+ * Determines whether or not the associated panel is unlocked.
+ * @returns {boolean}
+ */
+PanelRanking.prototype.isUnlocked = function()
+{
+  return this._isUnlocked;
+};
+
+/**
+ * Flags the associated panel as "unlocked".
+ */
+PanelRanking.prototype.unlock = function()
+{
+  this._isUnlocked = true;
 };
 
 /**
@@ -56,7 +79,7 @@ PanelRanking.prototype.initMembers = function()
  */
 PanelRanking.prototype.rankUp = function()
 {
-  const panel = $gameParty.getSdpByKey(this.key);
+  const panel = J.SDP.Metadata.panelsMap.get(this.key);
   const { maxRank } = panel;
   if (this.currentRank < maxRank)
   {
@@ -68,6 +91,16 @@ PanelRanking.prototype.rankUp = function()
   if (this.currentRank === maxRank)
   {
     this.performMaxRankupEffects();
+  }
+};
+
+PanelRanking.prototype.normalizeRank = function()
+{
+  const panel = J.SDP.Metadata.panelsMap.get(this.key);
+  const { maxRank } = panel;
+  if (this.currentRank > maxRank)
+  {
+    this.currentRank = maxRank;
   }
 };
 
@@ -86,27 +119,32 @@ PanelRanking.prototype.isPanelMaxed = function()
  */
 PanelRanking.prototype.performRankupEffects = function(newRank)
 {
-  const a = $gameActors.actor(this.actorId);
-  const rewardEffects = $gameParty
-    .getSdpByKey(this.key)
+  // identify the rewards.
+  const rewardEffects = J.SDP.Metadata.panelsMap.get(this.key)
     .getPanelRewardsByRank(newRank);
-  if (rewardEffects.length > 0)
+
+  // if there are no rewards, then stop processing.
+  if (rewardEffects.length === 0) return;
+
+  // establish that "a" is the actor performing the rank up.
+  const a = $gameActors.actor(this.actorId);
+
+  // iterate over each of the rewards and execute them.
+  rewardEffects.forEach(rewardEffect =>
   {
-    rewardEffects.forEach(rewardEffect =>
+    // these are raw javascript rewards, so execute them as safely as we can lol.
+    try
     {
-      try
-      {
-        eval(rewardEffect.effect);
-      }
-      catch (err)
-      {
-        console.error(`
+      eval(rewardEffect.effect);
+    }
+    catch (err)
+    {
+      console.error(`
         An error occurred while trying to execute the rank-${this.currentRank} 
         reward for panel: ${this.key}`);
-        console.error(err);
-      }
-    });
-  }
+      console.error(err);
+    }
+  });
 };
 
 /**

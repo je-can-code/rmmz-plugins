@@ -2,7 +2,8 @@
 /**
  * A window displaying the list of jafting types available.
  */
-class Window_JaftingList extends Window_Command
+class Window_JaftingList
+  extends Window_Command
 {
   /**
    * Constructor.

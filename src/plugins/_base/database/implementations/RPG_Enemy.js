@@ -2,7 +2,8 @@
 /**
  * A class representing a single enemy battler's data from the database.
  */
-class RPG_Enemy extends RPG_BaseBattler
+class RPG_Enemy
+  extends RPG_BaseBattler
 {
   //region properties
   /**

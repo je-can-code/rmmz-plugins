@@ -1,5 +1,6 @@
 //region Scene_JaftingCreate
-class Scene_JaftingCreate extends Scene_MenuBase
+class Scene_JaftingCreate
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -559,7 +560,11 @@ class Scene_JaftingCreate extends Scene_MenuBase
     // shorthand the currently-selected recipe.
     /** @type {CraftingRecipe} */
     const currentRecipe = recipeListWindow.currentExt();
-    const { ingredients, tools, outputs } = currentRecipe;
+    const {
+      ingredients,
+      tools,
+      outputs
+    } = currentRecipe;
 
     // set the help text to the recipe's description, which is the help text.
     this.getCreationDescriptionWindow()

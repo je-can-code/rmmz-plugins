@@ -1,5 +1,6 @@
 //region Window_RecipeDetails
-class Window_RecipeDetails extends Window_Base
+class Window_RecipeDetails
+  extends Window_Base
 {
   /**
    * The currently selected recipe being detailed.

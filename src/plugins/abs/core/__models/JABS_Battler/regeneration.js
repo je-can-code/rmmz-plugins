@@ -23,7 +23,10 @@ JABS_Battler.prototype.canUpdateRG = function()
 
   // if its ready but
   if (this.getBattler()
-    .isDead()) return false;
+    .isDead())
+  {
+    return false;
+  }
 
   return true;
 };
@@ -103,31 +106,77 @@ JABS_Battler.prototype.performRegeneration = function()
  */
 JABS_Battler.prototype.processNaturalRegens = function()
 {
-  this.processNaturalHpRegen();
-  this.processNaturalMpRegen();
-  this.processNaturalTpRegen();
+  // check if this battler's natural regen should be reduced.
+  const isReduced = this.isNaturalRegenReduced();
+
+  // process the natural hp/mp regens, possibly reduced.
+  this.processNaturalHpRegen(isReduced);
+  this.processNaturalMpRegen(isReduced);
+
+  // natural TP regen is never reduced.
+  this.processNaturalTpRegen(isReduced);
+};
+
+/**
+ * Checks if the natural regeneration should be reduced for this battler.
+ * @returns {boolean}
+ */
+JABS_Battler.prototype.isNaturalRegenReduced = function()
+{
+  // enemies are not impacted by reduced natural regen.
+  if (this.isEnemy()) return false;
+
+  // in-combat players will have a "last battler hit" tracked. Once that fades, they aren't in combat.
+  // TODO: may need to add a "i was last hit in the last 10 seconds" tracker.
+  if (this.isPlayer() && this.getBattlerLastHit() !== null) return true;
+
+  // in-combat allies will be actors that are presently engaged.
+  if (this.isActor() && this.isEngaged()) return true;
+
+  // no reason to reduce natural regen.
+  return false;
+};
+
+/**
+ * Calculate the per5seconds regeneration rate and reduce it if applicable. By default, this should be roughly 5% of
+ * the base100 regeneration value, and 20% of that value if reduced.
+ * @param {number} baseValue The base regeneration value.
+ * @param {boolean} isReduced Whether or not this regeneration value should be reduced.
+ * @returns {number}
+ */
+JABS_Battler.prototype.calculatedRegen = function(baseValue, isReduced = false)
+{
+  // calculate the amount regenerated four times per second.
+  let calculatedValue = (baseValue * 100) * 0.05;
+  if (isReduced)
+  {
+    // only 20% of your natural HP regen is available while reduced.
+    calculatedValue *= 0.20;
+  }
+
+  // fix the value to two decimal places.
+  return parseFloat(calculatedValue.toFixed(2)) ?? 0;
 };
 
 /**
  * Processes the natural HRG for this battler.
  */
-JABS_Battler.prototype.processNaturalHpRegen = function()
+JABS_Battler.prototype.processNaturalHpRegen = function(isReduced)
 {
   // shorthand the battler.
   const battler = this.getBattler();
-
-  // TODO: modify to reduce effectiveness of healing while in combat.
-  // TODO: if engaged, reduce regen???
-  var test = this.isEngaged();
 
   // check if we need to regenerate.
   if (battler.hp < battler.mhp)
   {
     // extract the regens rates.
-    const { hrg, rec } = battler;
+    const {
+      hrg,
+      rec
+    } = battler;
 
     // calculate the bonus.
-    const naturalHp5 = ((hrg * 100) * 0.05) * rec;
+    const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec;
 
     // execute the gain.
     battler.gainHp(naturalHp5);
@@ -137,7 +186,7 @@ JABS_Battler.prototype.processNaturalHpRegen = function()
 /**
  * Processes the natural MRG for this battler.
  */
-JABS_Battler.prototype.processNaturalMpRegen = function()
+JABS_Battler.prototype.processNaturalMpRegen = function(isReduced)
 {
   // shorthand the battler.
   const battler = this.getBattler();
@@ -146,10 +195,13 @@ JABS_Battler.prototype.processNaturalMpRegen = function()
   if (battler.mp < battler.mmp)
   {
     // extract the regens rates.
-    const { mrg, rec } = battler;
+    const {
+      mrg,
+      rec
+    } = battler;
 
     // calculate the bonus.
-    const naturalMp5 = ((mrg * 100) * 0.05) * rec;
+    const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec;
 
     // execute the gain.
     battler.gainMp(naturalMp5);
@@ -159,7 +211,7 @@ JABS_Battler.prototype.processNaturalMpRegen = function()
 /**
  * Processes the natural TRG for this battler.
  */
-JABS_Battler.prototype.processNaturalTpRegen = function()
+JABS_Battler.prototype.processNaturalTpRegen = function(isReduced)
 {
   // shorthand the battler.
   const battler = this.getBattler();
@@ -168,10 +220,13 @@ JABS_Battler.prototype.processNaturalTpRegen = function()
   if (battler.tp < battler.maxTp())
   {
     // extract the regens rates.
-    const { trg, rec } = battler;
+    const {
+      trg,
+      rec
+    } = battler;
 
     // calculate the bonus.
-    const naturalTp5 = ((trg * 100) * 0.05) * rec;
+    const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec;
 
     // execute the gain.
     battler.gainTp(naturalTp5);

@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_HUD_Quest_PluginMetadata extends PluginMetadata
+class J_HUD_Quest_PluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.

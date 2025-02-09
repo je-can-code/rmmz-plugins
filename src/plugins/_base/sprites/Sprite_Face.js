@@ -24,7 +24,8 @@ Sprite_Face.prototype.initialize = function(faceName, faceIndex)
 Sprite_Face.prototype.initMembers = function(faceName, faceIndex)
 {
   this._j = {
-    _faceName: faceName, _faceIndex: faceIndex,
+    _faceName: faceName,
+    _faceIndex: faceIndex,
   };
 };
 

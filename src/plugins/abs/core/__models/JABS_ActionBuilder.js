@@ -47,7 +47,8 @@ class JABS_ActionBuilder
    */
   build()
   {
-    const mapAction = new JABS_Action(this.#gameAction,
+    const mapAction = new JABS_Action(
+      this.#gameAction,
       this.#caster,
       this.#isRetaliation,
       this.#initialDirection,

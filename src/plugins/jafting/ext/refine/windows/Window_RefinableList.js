@@ -2,7 +2,8 @@
 /**
  * A window that shows a list of all equipment.
  */
-class Window_RefinableList extends Window_Command
+class Window_RefinableList
+  extends Window_Command
 {
   /**
    * @constructor
@@ -229,7 +230,10 @@ class Window_RefinableList extends Window_Command
         iconIndex = 91;
       }
 
-      const extData = { data: equip, error: errorText };
+      const extData = {
+        data: equip,
+        error: errorText
+      };
 
       const command = new WindowCommandBuilder(equip.name)
         .setSymbol('refine-object')

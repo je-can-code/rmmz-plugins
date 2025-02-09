@@ -10,7 +10,8 @@ Game_System.prototype.initialize = function()
     .call(this);
   this._j ||= {};
   this._j._hud ||= {
-    _hudVisible: true, _alliesVisible: true,
+    _hudVisible: true,
+    _alliesVisible: true,
   };
 };
 

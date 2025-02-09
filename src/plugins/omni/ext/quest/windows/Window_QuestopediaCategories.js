@@ -1,5 +1,6 @@
 //region Window_QuestopediaCategories
-class Window_QuestopediaCategories extends Window_HorzCommand
+class Window_QuestopediaCategories
+  extends Window_HorzCommand
 {
   constructor(rect)
   {

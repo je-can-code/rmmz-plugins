@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_SdpPluginMetadata extends PluginMetadata
+class J_SdpPluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -25,7 +26,10 @@ class J_SdpPluginMetadata extends PluginMetadata
       if (panelName.startsWith("--")) return;
 
       // destructure the details we care about.
-      const { panelParameters, panelRewards } = parsedPanel;
+      const {
+        panelParameters,
+        panelRewards
+      } = parsedPanel;
 
       // parse and assign all the various panel parameters.
       const parsedPanelParameters = [];
@@ -48,7 +52,8 @@ class J_SdpPluginMetadata extends PluginMetadata
         panelRewards.forEach(reward =>
         {
           const parsedReward = reward;
-          const panelReward = new PanelRankupReward(parsedReward.rewardName,
+          const panelReward = new PanelRankupReward(
+            parsedReward.rewardName,
             parseInt(parsedReward.rankRequired),
             parsedReward.effect);
           parsedPanelRewards.push(panelReward);
@@ -120,7 +125,7 @@ class J_SdpPluginMetadata extends PluginMetadata
     }
 
     // classify each panel.
-    const classifiedPanels = J_SdpPluginMetadata.classifyPanels(parsedPanels);
+    const classifiedPanels = J_SdpPluginMetadata.classifyPanels(parsedPanels.sdps);
 
     /**
      * The collection of all defined SDPs.

@@ -68,7 +68,8 @@ class Initter
 Logger.enableLogging();
 
 // get the path provided by the user to clone the template into.
-const destinationPath = process.argv.slice(2).at(0);
+const destinationPath = process.argv.slice(2)
+  .at(0);
 
 // do the needful.
 await Initter.init(destinationPath);

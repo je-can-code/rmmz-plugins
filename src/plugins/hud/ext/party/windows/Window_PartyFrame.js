@@ -2,7 +2,8 @@
 /**
  * A window containing the HUD data for the {@link Game_Party}.
  */
-class Window_PartyFrame extends Window_Base
+class Window_PartyFrame
+  extends Window_Base
 {
   /**
    * The static collection of gauge types supported.
@@ -711,8 +712,10 @@ class Window_PartyFrame extends Window_Base
     this._hudSprites.forEach((sprite, _) =>
     {
       // if we are above 64, rapidly decrement by -15 until we get below 64.
-      if (sprite.opacity > 64) sprite.opacity -= 15;
-      // if we are below 64, increment by +1 until we get to 64.
+      if (sprite.opacity > 64)
+      {
+        sprite.opacity -= 15;
+      }// if we are below 64, increment by +1 until we get to 64.
       else if (sprite.opacity < 64) sprite.opacity += 1;
     });
   }
@@ -725,8 +728,10 @@ class Window_PartyFrame extends Window_Base
     this._hudSprites.forEach((sprite, _) =>
     {
       // if we are below 255, rapidly increment by +15 until we get to 255.
-      if (sprite.opacity < 255) sprite.opacity += 15;
-      // if we are above 255, set to 255.
+      if (sprite.opacity < 255)
+      {
+        sprite.opacity += 15;
+      }// if we are above 255, set to 255.
       else if (sprite.opacity > 255) sprite.opacity = 255;
     });
   }

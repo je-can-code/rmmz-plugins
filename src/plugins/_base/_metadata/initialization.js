@@ -140,6 +140,7 @@ J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
  *    <someKeyWithArrayAndSingleNumberValue:[123]>
  *    <someKeyWithArrayAndManyNumberValues:[123,456]>
  *    <someKeyWithStringValue:someValue>
+ *    <someKeyWithRangeValue:startRange-endRange>
  *  </pre>
  * @type {RegExp}
  */
@@ -302,7 +303,13 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
  * adding empty double quotes all over the place.
  * @type {string}
  */
-Object.defineProperty(String, "empty", { value: "", writable: false });
+Object.defineProperty(
+  String,
+  "empty",
+  {
+    value: "",
+    writable: false
+  });
 
 /**
  * Extends the global javascript {@link Array} object.
@@ -313,7 +320,9 @@ Object.defineProperty(String, "empty", { value: "", writable: false });
  * @type {[]}
  */
 Object.defineProperty(Array, "empty", {
-  enumerable: true, configurable: false, get: function()
+  enumerable: true,
+  configurable: false,
+  get: function()
   {
     return Array.of();
   },
@@ -329,6 +338,40 @@ Object.defineProperty(Array, "empty", {
 Array.iterate = function(times, func, thisArg = undefined)
 {
   [ ...Array(times) ].forEach(func, thisArg);
+};
+
+/**
+ * Adds a given number of days based on this date.
+ * @param {number} days The number of days to add to a date.
+ * @returns {Date} The updated date with the designated days.
+ */
+Date.prototype.addDays = function(days)
+{
+  var result = new Date(this.valueOf());
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+/**
+ * Adds a given number of hours based on this date.
+ * @param {number} hours The number of hours to add to a date.
+ * @returns {Date} The updated date with the designated hours.
+ */
+Date.prototype.addHours = function(hours)
+{
+  this.setTime(this.getTime() + (hours * 60 * 60 * 1000));
+  return this;
+};
+
+/**
+ * Adds a given number of minutes based on this date.
+ * @param {number} minutes The number of minutes to add to a date.
+ * @returns {Date} The updated date with the designated minutes.
+ */
+Date.prototype.addMinutes = function(minutes)
+{
+  this.setTime(this.getTime() + (minutes * 60 * 1000));
+  return this;
 };
 
 /**

@@ -104,7 +104,11 @@ Game_Enemy.prototype.learnSkill = function(skillId)
 
   // build the new underlying action to be detected by the enemy.
   const rpgEnemyAction = {
-    "conditionParam1": 0, "conditionParam2": 0, "conditionType": 0, "rating": 5, "skillId": skillId
+    "conditionParam1": 0,
+    "conditionParam2": 0,
+    "conditionType": 0,
+    "rating": 5,
+    "skillId": skillId
   };
 
   // add the action to the enemy's list of known skills.

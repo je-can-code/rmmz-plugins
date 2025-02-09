@@ -2,7 +2,8 @@
 /**
  * A window containing the HUD data for the {@link QuestManager}'s tracked quests.
  */
-class Window_QuestFrame extends Window_Base
+class Window_QuestFrame
+  extends Window_Base
 {
   /**
    * @constructor
@@ -112,8 +113,10 @@ class Window_QuestFrame extends Window_Base
   handlePlayerInterference()
   {
     // if we are above 64, rapidly decrement by -15 until we get below 64.
-    if (this.contentsOpacity > 64) this.contentsOpacity -= 15;
-    // if we are below 64, increment by +1 until we get to 64.
+    if (this.contentsOpacity > 64)
+    {
+      this.contentsOpacity -= 15;
+    }// if we are below 64, increment by +1 until we get to 64.
     else if (this.contentsOpacity < 64) this.contentsOpacity += 1;
   }
 

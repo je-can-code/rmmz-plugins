@@ -18,7 +18,8 @@ JABS_Engine.prototype.prePartyCycling = function()
  * Overrides {@link JABS_Engine.handlePartyCycleMemberChanges}.<br>
  * Jumps all followers to the player upon party cycling.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set('handlePartyCycleMemberChanges',
+J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set(
+  'handlePartyCycleMemberChanges',
   JABS_Engine.prototype.handlePartyCycleMemberChanges);
 JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
 {
@@ -44,7 +45,8 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
  * Extends {@link JABS_Engine.continuedPrimaryBattleEffects}.<br>
  * Also applies battle memories as-necessary.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set('continuedPrimaryBattleEffects',
+J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set(
+  'continuedPrimaryBattleEffects',
   JABS_Engine.prototype.continuedPrimaryBattleEffects);
 JABS_Engine.prototype.continuedPrimaryBattleEffects = function(action, target)
 {
@@ -70,7 +72,8 @@ JABS_Engine.prototype.applyBattleMemories = function(result, action, target)
   if (this.canApplyBattleMemories(target)) return;
 
   // generate the new battle memory of the action and its result for the target.
-  const newMemory = new JABS_BattleMemory(target.getBattlerId(),
+  const newMemory = new JABS_BattleMemory(
+    target.getBattlerId(),
     action.getBaseSkill().id,
     action.getAction()
       .calculateRawElementRate(target.getBattler()),

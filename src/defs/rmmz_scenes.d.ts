@@ -11,7 +11,8 @@ import { Sprite, Stage, WindowLayer } from "./rmmz_core";
 import { Sprite_Button } from "./rmmz_sprites";
 import { Game_Actor } from "./rmmz_objects";
 
-declare class Scene_Base extends Stage
+declare class Scene_Base
+  extends Stage
 {
   constructor();
 
@@ -167,7 +168,8 @@ declare class Scene_Base extends Stage
   slowFadeSpeed(): number;
 }
 
-declare class Scene_Message extends Scene_Base
+declare class Scene_Message
+  extends Scene_Base
 {
   protected constructor();
 
@@ -207,7 +209,8 @@ declare class Scene_Message extends Scene_Base
 /**
  * Scene class of the battle screen.
  */
-declare class Scene_Battle extends Scene_Message
+declare class Scene_Battle
+  extends Scene_Message
 {
   protected constructor();
 
@@ -508,7 +511,8 @@ declare class Scene_Battle extends Scene_Message
   endCommandSelection(): void;
 }
 
-declare class Scene_Boot extends Scene_Base
+declare class Scene_Boot
+  extends Scene_Base
 {
   protected constructor();
 
@@ -559,7 +563,8 @@ declare class Scene_Boot extends Scene_Base
 /**
  * The super class of all menu-type scenes
  */
-declare class Scene_MenuBase extends Scene_Base
+declare class Scene_MenuBase
+  extends Scene_Base
 {
   protected constructor();
 
@@ -652,7 +657,8 @@ declare class Scene_MenuBase extends Scene_Base
 /**
  * Scene class of the debug menu screen.
  */
-declare class Scene_Debug extends Scene_MenuBase
+declare class Scene_Debug
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -701,7 +707,8 @@ declare class Scene_Debug extends Scene_MenuBase
 /**
  * Scene class of the equipment screen.
  */
-declare class Scene_Equip extends Scene_MenuBase
+declare class Scene_Equip
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -780,7 +787,8 @@ declare class Scene_Equip extends Scene_MenuBase
 /**
  *  Super class of Scene_Save and Scene_Load
  */
-declare class Scene_File extends Scene_MenuBase
+declare class Scene_File
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -825,7 +833,8 @@ declare class Scene_File extends Scene_MenuBase
 /**
  * Scene class of the game end screen.
  */
-declare class Scene_GameEnd extends Scene_MenuBase
+declare class Scene_GameEnd
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -858,7 +867,8 @@ declare class Scene_GameEnd extends Scene_MenuBase
 /**
  * Scene class of the game over screen.
  */
-declare class Scene_Gameover extends Scene_Base
+declare class Scene_Gameover
+  extends Scene_Base
 {
   protected constructor();
 
@@ -893,7 +903,8 @@ declare class Scene_Gameover extends Scene_Base
  * Super class of all public function item(skill, items, etc) screen scenes.
  * Super class of Scene_Item & Scene_Skill.
  */
-declare class Scene_ItemBase extends Scene_Base
+declare class Scene_ItemBase
+  extends Scene_Base
 {
   protected constructor();
 
@@ -1002,7 +1013,8 @@ declare class Scene_ItemBase extends Scene_Base
  * @class Scene_Item
  * @extends {Scene_ItemBase}
  */
-declare class Scene_Item extends Scene_ItemBase
+declare class Scene_Item
+  extends Scene_ItemBase
 {
   protected constructor();
 
@@ -1056,7 +1068,8 @@ declare class Scene_Item extends Scene_ItemBase
 /**
  * The scene class of the load game screen.
  */
-declare class Scene_Load extends Scene_File
+declare class Scene_Load
+  extends Scene_File
 {
   protected constructor();
 
@@ -1092,7 +1105,8 @@ declare class Scene_Load extends Scene_File
 /**
  * The scene class for the map screen.
  */
-declare class Scene_Map extends Scene_Base
+declare class Scene_Map
+  extends Scene_Base
 {
   protected constructor();
 
@@ -1367,7 +1381,8 @@ declare class Scene_Map extends Scene_Base
 /**
  * The menu scene in your RPGMakerMV game.
  */
-declare class Scene_Menu extends Scene_MenuBase
+declare class Scene_Menu
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -1441,7 +1456,8 @@ declare class Scene_Menu extends Scene_MenuBase
 /**
  * Scene class of the name input screen.
  */
-declare class Scene_Name extends Scene_MenuBase
+declare class Scene_Name
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -1484,7 +1500,8 @@ declare class Scene_Name extends Scene_MenuBase
 /**
  * Scene class of the options screen.
  */
-declare class Scene_Options extends Scene_MenuBase
+declare class Scene_Options
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -1500,7 +1517,8 @@ declare class Scene_Options extends Scene_MenuBase
 /**
  * Save game screen scene for RPGMakerMV.
  */
-declare class Scene_Save extends Scene_File
+declare class Scene_Save
+  extends Scene_File
 {
   protected constructor();
 
@@ -1546,7 +1564,8 @@ declare class Scene_Save extends Scene_File
   onSaveFailure(): void;
 }
 
-declare class Scene_Shop extends Scene_MenuBase
+declare class Scene_Shop
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -1737,7 +1756,8 @@ declare class Scene_Shop extends Scene_MenuBase
 /**
  * The scene class of the skill screen.
  */
-declare class Scene_Skill extends Scene_ItemBase
+declare class Scene_Skill
+  extends Scene_ItemBase
 {
   protected constructor();
 
@@ -1806,7 +1826,8 @@ declare class Scene_Skill extends Scene_ItemBase
 /**
  * Scene class of the status screen in RPGMakerMV.
  */
-declare class Scene_Status extends Scene_MenuBase
+declare class Scene_Status
+  extends Scene_MenuBase
 {
   protected constructor();
 
@@ -1843,7 +1864,8 @@ declare class Scene_Status extends Scene_MenuBase
   onActorChange(): void;
 }
 
-declare class Scene_Title extends Scene_Base
+declare class Scene_Title
+  extends Scene_Base
 {
   protected constructor();
 

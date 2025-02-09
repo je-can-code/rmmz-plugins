@@ -1,5 +1,6 @@
 //region Window_RecipeOutputList
-class Window_RecipeOutputList extends Window_Command
+class Window_RecipeOutputList
+  extends Window_Command
 {
   /**
    * True if the text of this list should be masked, false otherwise.

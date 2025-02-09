@@ -71,7 +71,8 @@ Game_Party.prototype.populateQuestopediaTrackings = function()
  */
 Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
 {
-  const objectivesMapper = omniObjective => new TrackedOmniObjective(omniquest.key,
+  const objectivesMapper = omniObjective => new TrackedOmniObjective(
+    omniquest.key,
     omniObjective.id,
     omniObjective.fulfillment,
     omniObjective.hiddenByDefault,
@@ -115,7 +116,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
         const objectivesToAdd = newTracking.objectives.slice(foundTracking.objectives.length);
         foundTracking.objectives.splice(foundTracking.objectives.length, 0, ...objectivesToAdd);
       }
-      
+
       foundTracking.objectives.forEach((objective, index) =>
       {
         // if the new objectives don't go as far as they previously did, don't process it.
@@ -126,7 +127,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
 
         // grab the new objective from the tracking for comparison.
         const newObjective = newTracking.objectives.at(index);
-        
+
         // update the old objective with the new data points.
         objective.hidden = newObjective.hidden;
         objective.optional = newObjective.optional;
