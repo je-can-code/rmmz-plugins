@@ -1,4 +1,4 @@
-//region SDP_Parameter
+//region PanelParameter
 /**
  * A class that represents a single parameter and its growth for a SDP.
  */
@@ -17,9 +17,7 @@ PanelParameter.prototype.constructor = PanelParameter;
  * @param {boolean} isFlat True if it is flat growth, false if it is percent growth.
  * @param {boolean} isCore True if this is a core parameter, false otherwise.
  */
-PanelParameter.prototype.initialize = function({
-  parameterId, perRank, isFlat = false, isCore = false,
-})
+PanelParameter.prototype.initialize = function(parameterId, perRank, isFlat = true, isCore = false)
 {
   /**
    * The id of the parameter this class represents.
@@ -46,9 +44,9 @@ PanelParameter.prototype.initialize = function({
    */
   this.isCore = isCore;
 };
-//endregion SDP_Parameter
+//endregion PanelParameter
 
-//region SDP_Ranking
+//region PanelRanking
 /**
  * A class for tracking an actor's ranking in a particular panel.
  */
@@ -222,9 +220,9 @@ PanelRanking.prototype.performMaxRankupEffects = function()
   SoundManager.playRecovery();
   this.performRankupEffects(0);
 };
-//endregion SDP_Ranking
+//endregion PanelRanking
 
-//region SDP_RankupReward
+//region PanelRankupReward
 /**
  * A class that represents a single reward for achieving a particular rank in a panel.
  */
@@ -263,7 +261,7 @@ PanelRankupReward.prototype.initialize = function(rewardName, rankRequired, effe
    */
   this.effect = effect;
 };
-//endregion SDP_RankupReward
+//endregion PanelRankupReward
 
 //region PanelRarity
 class PanelRarity
@@ -339,7 +337,7 @@ class PanelRarity
 
 //endregion PanelRarity
 
-//region SDP_RankupReward
+//region PanelTracking
 /**
  * A class that represents a single tracking of a panel being unlocked.
  */
@@ -398,15 +396,16 @@ PanelTracking.prototype.lock = function()
 {
   this.unlocked = false;
 };
-//endregion SDP_RankupReward
+//endregion PanelTracking
 
-//region SDP_Panel
+//region StatDistributionPanel
 /**
  * The class that governs the details of a single SDP.
  */
 class StatDistributionPanel
 {
-  constructor(name,
+  constructor(
+    name,
     key,
     iconIndex,
     rarity,
@@ -580,7 +579,10 @@ class StatDistributionPanel
     panelParameters.forEach(panelParameter =>
     {
       // grab the per-rank bonus on this panel.
-      const { perRank, isFlat } = panelParameter;
+      const {
+        perRank,
+        isFlat
+      } = panelParameter;
 
       // check if the panel should use the percent or flat formula.
       if (!isFlat)
@@ -670,7 +672,8 @@ class StatDistributionPanel
     static build()
     {
       // build the panel based off current parameters.
-      const sdp = new StatDistributionPanel(this.#name,
+      const sdp = new StatDistributionPanel(
+        this.#name,
         this.#key,
         this.#iconIndex,
         this.#rarity,
@@ -791,7 +794,7 @@ class StatDistributionPanel
   }
 }
 
-//endregion SDP_Panel
+//endregion StatDistributionPanel
 
 //region Introduction
 /* eslint-disable */
@@ -1056,7 +1059,8 @@ class StatDistributionPanel
 /* eslint-enable */
 
 //region plugin metadata
-class J_SdpPluginMetadata extends PluginMetadata
+class J_SdpPluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -1082,19 +1086,21 @@ class J_SdpPluginMetadata extends PluginMetadata
       if (panelName.startsWith("--")) return;
 
       // destructure the details we care about.
-      const { panelParameters, panelRewards } = parsedPanel;
+      const {
+        panelParameters,
+        panelRewards
+      } = parsedPanel;
 
       // parse and assign all the various panel parameters.
       const parsedPanelParameters = [];
       panelParameters.forEach(paramBlob =>
       {
         const parsedParameter = paramBlob;
-        const panelParameter = new PanelParameter({
-          parameterId: parseInt(parsedParameter.parameterId),
-          perRank: parseFloat(parsedParameter.perRank),
-          isFlat: parsedParameter.isFlat,
-          isCore: parsedParameter.isCore,
-        });
+        const panelParameter = new PanelParameter(
+          parseInt(parsedParameter.parameterId),
+          parseFloat(parsedParameter.perRank),
+          parsedParameter.isFlat,
+          parsedParameter.isCore);
         parsedPanelParameters.push(panelParameter);
       });
 
@@ -1105,7 +1111,8 @@ class J_SdpPluginMetadata extends PluginMetadata
         panelRewards.forEach(reward =>
         {
           const parsedReward = reward;
-          const panelReward = new PanelRankupReward(parsedReward.rewardName,
+          const panelReward = new PanelRankupReward(
+            parsedReward.rewardName,
             parseInt(parsedReward.rankRequired),
             parsedReward.effect);
           parsedPanelRewards.push(panelReward);
@@ -1343,7 +1350,10 @@ PluginManager.registerCommand(J.SDP.Metadata.name, "Lock SDP", args =>
  */
 PluginManager.registerCommand(J.SDP.Metadata.name, "Modify SDP points", args =>
 {
-  const { actorId, sdpPoints } = args;
+  const {
+    actorId,
+    sdpPoints
+  } = args;
   const parsedActorId = parseInt(actorId);
   const parsedSdpPoints = parseInt(sdpPoints);
   $gameActors
@@ -1543,7 +1553,8 @@ BattleManager.makeRewards = function()
 
   // extend the rewards to include SDP points.
   this._rewards = {
-    ...this._rewards, sdp: $gameTroop.sdpTotal(),
+    ...this._rewards,
+    sdp: $gameTroop.sdpTotal(),
   };
 };
 
@@ -2622,10 +2633,11 @@ Game_Party.prototype.unlockAllSdps = function()
 Game_Party.prototype.translatePartySdpsToActorSdps = function()
 {
   const unlockedSdps = this.getUnlockedSdps();
-  this.allMembers().forEach(member =>
-  {
-    unlockedSdps.forEach(tracking => member.unlockSdpByKey(tracking.key));
-  });
+  this.allMembers()
+    .forEach(member =>
+    {
+      unlockedSdps.forEach(tracking => member.unlockSdpByKey(tracking.key));
+    });
 };
 
 /**
@@ -2868,7 +2880,8 @@ Scene_Menu.prototype.commandSdp = function()
 /**
  * The scene for managing SDPs that the player has acquired.
  */
-class Scene_SDP extends Scene_MenuBase
+class Scene_SDP
+  extends Scene_MenuBase
 {
   /**
    * Calls this scene.
@@ -3614,7 +3627,8 @@ class Scene_SDP extends Scene_MenuBase
     // update the cost data window.
     const panelRanking = currentActor.getSdpByKey(currentPanel.key);
     this.getSdpRankDataWindow()
-      .setRankData(currentPanel.getPanelRarityColorIndex(),
+      .setRankData(
+        currentPanel.getPanelRarityColorIndex(),
         currentPanel.getPanelRarityText(),
         panelRanking.currentRank,
         currentPanel.maxRank,
@@ -3832,7 +3846,8 @@ Window_MenuCommand.prototype.canAddSdpCommand = function()
 /**
  * The window that prompts the user to confirm/cancel the upgrading of a chosen panel.
  */
-class Window_SdpConfirmation extends Window_Command
+class Window_SdpConfirmation
+  extends Window_Command
 {
   /**
    * @constructor
@@ -3879,7 +3894,8 @@ class Window_SdpConfirmation extends Window_Command
 /**
  * The window that displays the help text associated with a panel.
  */
-class Window_SdpHelp extends Window_Help
+class Window_SdpHelp
+  extends Window_Help
 {
   /**
    * @constructor
@@ -4054,7 +4070,8 @@ class Window_SdpList
 //endregion Window_SdpList
 
 //region Window_SdpParameterList
-class Window_SdpParameterList extends Window_Command
+class Window_SdpParameterList
+  extends Window_Command
 {
   /**
    * The current parameters on the panel being hovered over.
@@ -4124,7 +4141,10 @@ class Window_SdpParameterList extends Window_Command
   #buildPanelParameterCommand(panelParameter)
   {
     // extract a couple parameter data points for building the display information.
-    const { parameterId, isCore } = panelParameter;
+    const {
+      parameterId,
+      isCore
+    } = panelParameter;
 
     // determine the item color.
     const colorIndex = isCore
@@ -4149,7 +4169,10 @@ class Window_SdpParameterList extends Window_Command
     const paramDescription = TextManager.longParamDescription(parameterId);
 
     // determine the modifier data to display.
-    const { modifierColorIndex, modifierText } = this.#determineModifierData(panelParameter);
+    const {
+      modifierColorIndex,
+      modifierText
+    } = this.#determineModifierData(panelParameter);
 
     // build the command name.
     const commandName = `${paramName} ( ${Math.trunc(paramValue)}${percentValue} )`;
@@ -4252,7 +4275,12 @@ class Window_SdpParameterList extends Window_Command
     };
 
     // deconstruct the info we need from the panel parameter.
-    const { parameterId: paramId, perRank: modifier, isFlat, isCore } = panelParameter;
+    const {
+      parameterId: paramId,
+      perRank: modifier,
+      isFlat,
+      isCore
+    } = panelParameter;
 
     // determine the current value of the parameter.
     const paramValue = this.currentActor.longParam(paramId);
@@ -4267,7 +4295,10 @@ class Window_SdpParameterList extends Window_Command
     const modifierText = buildModifierText(modifier, isFlat);
 
     // return our values.
-    return { modifierColorIndex, modifierText };
+    return {
+      modifierColorIndex,
+      modifierText
+    };
   }
 
   /**
@@ -4359,7 +4390,8 @@ class Window_SdpParameterList extends Window_Command
 /**
  * The SDP window containing the amount of SDP points a given actor has.
  */
-class Window_SdpPoints extends Window_Base
+class Window_SdpPoints
+  extends Window_Base
 {
   /**
    * @constructor
@@ -4434,7 +4466,8 @@ class Window_SdpPoints extends Window_Base
     // don't draw the points if the actor is unavailable.
     if (!this._actor) return;
 
-    this.drawFace(this._actor.faceName(), this._actor.faceIndex(), 0, 0,   // x,y
+    this.drawFace(
+      this._actor.faceName(), this._actor.faceIndex(), 0, 0,   // x,y
       128, 40);// w,h
   }
 
@@ -4452,7 +4485,8 @@ class Window_SdpPoints extends Window_Base
 //endregion Window_SdpPoints
 
 //region Window_SdpRankData
-class Window_SdpRankData extends Window_Base
+class Window_SdpRankData
+  extends Window_Base
 {
   /**
    * The color index of the rarity of the panel selected.
@@ -4642,7 +4676,8 @@ class Window_SdpRankData extends Window_Base
 //endregion Window_SdpRankData
 
 //region Window_SdpRewardList
-class Window_SdpRewardList extends Window_Command
+class Window_SdpRewardList
+  extends Window_Command
 {
   /**
    * The list of rewards for the currently-selected panel.
@@ -4690,7 +4725,10 @@ class Window_SdpRewardList extends Window_Command
 
     this.panelRewards.forEach(panelReward =>
     {
-      const { rewardName, rankRequired } = panelReward;
+      const {
+        rewardName,
+        rankRequired
+      } = panelReward;
 
       // determine the icon for the reward..
       let rankText = String.empty;

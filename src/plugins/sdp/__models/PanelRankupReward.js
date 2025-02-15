@@ -1,4 +1,4 @@
-//region SDP_RankupReward
+//region PanelRankupReward
 /**
  * A class that represents a single reward for achieving a particular rank in a panel.
  */
@@ -37,4 +37,4 @@ PanelRankupReward.prototype.initialize = function(rewardName, rankRequired, effe
    */
   this.effect = effect;
 };
-//endregion SDP_RankupReward
+//endregion PanelRankupReward

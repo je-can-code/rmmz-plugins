@@ -1,4 +1,4 @@
-//region SDP_Parameter
+//region PanelParameter
 /**
  * A class that represents a single parameter and its growth for a SDP.
  */
@@ -17,12 +17,7 @@ PanelParameter.prototype.constructor = PanelParameter;
  * @param {boolean} isFlat True if it is flat growth, false if it is percent growth.
  * @param {boolean} isCore True if this is a core parameter, false otherwise.
  */
-PanelParameter.prototype.initialize = function({
-                                                 parameterId,
-                                                 perRank,
-                                                 isFlat = false,
-                                                 isCore = false,
-                                               })
+PanelParameter.prototype.initialize = function(parameterId, perRank, isFlat = true, isCore = false)
 {
   /**
    * The id of the parameter this class represents.
@@ -49,4 +44,4 @@ PanelParameter.prototype.initialize = function({
    */
   this.isCore = isCore;
 };
-//endregion SDP_Parameter
+//endregion PanelParameter
