@@ -1,4 +1,4 @@
-//region SDP_Panel
+//region StatDistributionPanel
 /**
  * The class that governs the details of a single SDP.
  */
@@ -394,4 +394,4 @@ class StatDistributionPanel
   }
 }
 
-//endregion SDP_Panel
+//endregion StatDistributionPanel

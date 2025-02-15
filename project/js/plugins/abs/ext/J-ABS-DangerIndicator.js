@@ -373,7 +373,8 @@ Game_Battler.prototype.getDangerIndicatorIcon = function()
 Game_Enemy.prototype.showDangerIndicator = function()
 {
   // check if any of the things have this tag on it.
-  const hasNoIndicatorTag = RPGManager.checkForBooleanFromNoteByRegex(this.enemy(),
+  const hasNoIndicatorTag = RPGManager.checkForBooleanFromNoteByRegex(
+    this.enemy(),
     J.ABS.EXT.DANGER.RegExp.NoIndicator);
 
   // check if we found the tag.
@@ -616,7 +617,10 @@ Sprite_Character.prototype.canUpdateDangerIndicator = function()
 
   // if we aren't allowed to show the indicator, then it shouldn't update.
   if (!this._character.getJabsBattler()
-    .showDangerIndicator()) return false;
+    .showDangerIndicator())
+  {
+    return false;
+  }
 
   // we should update!
   return true;
@@ -652,7 +656,8 @@ Sprite_Character.prototype.hideDangerIndicator = function()
 /**
  * Extends `refreshAllCharacterSprites()` to also refresh danger indicators.
  */
-J.ABS.EXT.DANGER.Aliased.Spriteset_Map.set('refreshAllCharacterSprites',
+J.ABS.EXT.DANGER.Aliased.Spriteset_Map.set(
+  'refreshAllCharacterSprites',
   Spriteset_Map.prototype.refreshAllCharacterSprites);
 Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {

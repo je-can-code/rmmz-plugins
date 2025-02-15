@@ -36,12 +36,11 @@ class J_SdpPluginMetadata
       panelParameters.forEach(paramBlob =>
       {
         const parsedParameter = paramBlob;
-        const panelParameter = new PanelParameter({
-          parameterId: parseInt(parsedParameter.parameterId),
-          perRank: parseFloat(parsedParameter.perRank),
-          isFlat: parsedParameter.isFlat,
-          isCore: parsedParameter.isCore,
-        });
+        const panelParameter = new PanelParameter(
+          parseInt(parsedParameter.parameterId),
+          parseFloat(parsedParameter.perRank),
+          parsedParameter.isFlat,
+          parsedParameter.isCore);
         parsedPanelParameters.push(panelParameter);
       });
 

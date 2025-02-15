@@ -1,4 +1,4 @@
-//region SDP_RankupReward
+//region PanelTracking
 /**
  * A class that represents a single tracking of a panel being unlocked.
  */
@@ -57,4 +57,4 @@ PanelTracking.prototype.lock = function()
 {
   this.unlocked = false;
 };
-//endregion SDP_RankupReward
+//endregion PanelTracking
