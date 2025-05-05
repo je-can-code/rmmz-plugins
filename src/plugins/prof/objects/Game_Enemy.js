@@ -2,7 +2,8 @@
 J.PROF.Aliased.Game_Enemy.set("initMembers", Game_Enemy.prototype.initMembers);
 Game_Enemy.prototype.initMembers = function()
 {
-  J.PROF.Aliased.Game_Enemy.get("initMembers").call(this);
+  J.PROF.Aliased.Game_Enemy.get("initMembers")
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -48,7 +49,7 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
   const exists = this.skillProficiencyBySkillId(skillId);
   if (exists)
   {
-    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.<br>`);
+    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
     return exists;
   }
 
@@ -56,6 +57,29 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
   this._j._profs.push(proficiency);
   this._j._profs.sort();
   return proficiency;
+};
+
+/**
+ * A safe means of attempting to retrieve a skill proficiency. If the proficiency
+ * does not exist, then it will be created with the default of zero starting proficiency.
+ * @param {number} skillId The skill id to identify the proficiency for.
+ * @returns {SkillProficiency}
+ */
+Game_Enemy.prototype.tryGetSkillProficiencyBySkillId = function(skillId)
+{
+  // look up the proficiency; this could be undefined
+  // if we didn't learn it directly via .learnSkill() somehow.
+  const exists = this.skillProficiencyBySkillId(skillId);
+  if (exists)
+  {
+    // if we did find it, then return it.
+    return exists;
+  }
+  else
+  {
+    // if we didn't find the proficiency, just add it.
+    return this.addSkillProficiency(skillId);
+  }
 };
 
 /**

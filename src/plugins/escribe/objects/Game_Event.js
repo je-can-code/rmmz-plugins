@@ -7,7 +7,8 @@ J.ESCRIBE.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers
 Game_Event.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ESCRIBE.Aliased.Game_Event.get('initMembers').call(this);
+  J.ESCRIBE.Aliased.Game_Event.get('initMembers')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -155,7 +156,8 @@ J.ESCRIBE.Aliased.Game_Event.set('setupPage', Game_Event.prototype.setupPage);
 Game_Event.prototype.setupPage = function()
 {
   // perform original logic.
-  J.ESCRIBE.Aliased.Game_Event.get('setupPage').call(this);
+  J.ESCRIBE.Aliased.Game_Event.get('setupPage')
+    .call(this);
 
   // refresh the escription data for this event page.
   this.refreshEscription();
@@ -281,7 +283,8 @@ J.ESCRIBE.Aliased.Game_Event.set('update', Game_Event.prototype.update);
 Game_Event.prototype.update = function()
 {
   // perform original logic.
-  J.ESCRIBE.Aliased.Game_Event.get('update').call(this);
+  J.ESCRIBE.Aliased.Game_Event.get('update')
+    .call(this);
 
   if (this.eventId() === 3)
   {

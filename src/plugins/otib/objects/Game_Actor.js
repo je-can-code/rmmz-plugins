@@ -6,7 +6,8 @@ J.OTIB.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
 Game_Actor.prototype.initMembers = function()
 {
   // perform original logic.
-  J.OTIB.Aliased.Game_Actor.get('initMembers').call(this);
+  J.OTIB.Aliased.Game_Actor.get('initMembers')
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -36,7 +37,8 @@ Game_Actor.prototype.getAllOtibs = function()
  */
 Game_Actor.prototype.getOtibById = function(itemId)
 {
-  return this.getAllOtibs().find(otib => otib.itemId === itemId);
+  return this.getAllOtibs()
+    .find(otib => otib.itemId === itemId);
 };
 
 /**
@@ -65,7 +67,8 @@ Game_Actor.prototype.unlockOtib = function(itemId)
   if (this.isOtibUnlocked(itemId)) return;
 
   // get the boost and unlock it.
-  this.getOtibById(itemId).unlock();
+  this.getOtibById(itemId)
+    .unlock();
 };
 
 /**
@@ -197,7 +200,8 @@ J.OTIB.Aliased.Game_Actor.set('param', Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // perform original logic.
-  const baseParam = J.OTIB.Aliased.Game_Actor.get('param').call(this, paramId);
+  const baseParam = J.OTIB.Aliased.Game_Actor.get('param')
+    .call(this, paramId);
 
   // grab the modifications of this parameter.
   const otibModifications = this.getOtibBonusForCoreParam(paramId, baseParam);
@@ -216,7 +220,8 @@ J.OTIB.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // perform original logic.
-  const baseParam = J.OTIB.Aliased.Game_Actor.get('xparam').call(this, xparamId);
+  const baseParam = J.OTIB.Aliased.Game_Actor.get('xparam')
+    .call(this, xparamId);
 
   // grab the modifications of this parameter.
   const otibModifications = this.getOtibBonusForNonCoreParam(xparamId, baseParam, 8);
@@ -235,7 +240,8 @@ J.OTIB.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // perform original logic.
-  const baseParam = J.OTIB.Aliased.Game_Actor.get('sparam').call(this, sparamId);
+  const baseParam = J.OTIB.Aliased.Game_Actor.get('sparam')
+    .call(this, sparamId);
 
   // grab the modifications of this parameter.
   const otibModifications = this.getOtibBonusForNonCoreParam(sparamId, baseParam, 18);
@@ -254,7 +260,8 @@ J.OTIB.Aliased.Game_Actor.set('maxTp', Game_Actor.prototype.maxTp);
 Game_Actor.prototype.maxTp = function()
 {
   // perform original logic.
-  const baseMaxTp = J.OTIB.Aliased.Game_Actor.get('maxTp').call(this);
+  const baseMaxTp = J.OTIB.Aliased.Game_Actor.get('maxTp')
+    .call(this);
 
   // grab the modifications of this parameter.
   const otibModifications = this.getOtibBonusForMaxTp();

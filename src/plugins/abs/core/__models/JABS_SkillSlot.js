@@ -351,11 +351,7 @@ JABS_SkillSlot.prototype.isSkill = function()
 JABS_SkillSlot.prototype.isPrimarySlot = function()
 {
   const slots = [
-    JABS_Button.Mainhand,
-    JABS_Button.Offhand,
-    JABS_Button.Tool,
-    JABS_Button.Dodge
-  ];
+    JABS_Button.Mainhand, JABS_Button.Offhand, JABS_Button.Tool, JABS_Button.Dodge ];
 
   return slots.includes(this.key);
 };
@@ -368,11 +364,7 @@ JABS_SkillSlot.prototype.isPrimarySlot = function()
 JABS_SkillSlot.prototype.isSecondarySlot = function()
 {
   const slots = [
-    JABS_Button.CombatSkill1,
-    JABS_Button.CombatSkill2,
-    JABS_Button.CombatSkill3,
-    JABS_Button.CombatSkill4,
-  ];
+    JABS_Button.CombatSkill1, JABS_Button.CombatSkill2, JABS_Button.CombatSkill3, JABS_Button.CombatSkill4, ];
 
   return slots.includes(this.key);
 };
@@ -425,9 +417,7 @@ JABS_SkillSlot.prototype.setLock = function(locked)
 JABS_SkillSlot.prototype.canBeLocked = function()
 {
   const lockproofSlots = [
-    JABS_Button.Mainhand,
-    JABS_Button.Offhand
-  ];
+    JABS_Button.Mainhand, JABS_Button.Offhand ];
 
   return !lockproofSlots.includes(this.key);
 };
@@ -541,8 +531,7 @@ JABS_SkillSlot.prototype.autoclear = function()
 JABS_SkillSlot.prototype.canBeAutocleared = function()
 {
   const noAutoclearSlots = [
-    JABS_Button.Tool
-  ];
+    JABS_Button.Tool ];
 
   return !noAutoclearSlots.includes(this.key);
 };

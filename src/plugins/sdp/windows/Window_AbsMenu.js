@@ -10,18 +10,16 @@ if (J.ABS)
   Window_AbsMenu.prototype.buildCommands = function()
   {
     // perform original logic to get the base commands.
-    const originalCommands = J.SDP.Aliased.Window_AbsMenu.get('buildCommands').call(this);
+    const originalCommands = J.SDP.Aliased.Window_AbsMenu.get('buildCommands')
+      .call(this);
 
     // if the SDP switch is not ON, then this menu command is not present.
     if (!this.canAddSdpCommand()) return originalCommands;
 
-    // The menu shouldn't be accessible if there are no panels to work with?
-    const enabled = $gameParty.getAllSdpTrackings().length > 0;
-
     // build the command.
     const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
       .setSymbol("sdp-menu")
-      .setEnabled(enabled)
+      .setEnabled($gameParty.hasAnyUnlockedSdps())
       .setIconIndex(J.SDP.Metadata.commandIconIndex)
       .setColorIndex(1)
       .setHelpText(this.sdpHelpText())
@@ -55,8 +53,7 @@ if (J.ABS)
   {
     const description = [
       "The ever-growing list of stat distribution panels, aka your junction system.",
-      "Junction points can be spent here to modify your stats- permanently."
-    ];
+      "Junction points can be spent here to modify your stats- permanently." ];
 
     return description.join("\n");
   };

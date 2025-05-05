@@ -1,5 +1,6 @@
 //region Window_RecipeDetails
-class Window_RecipeDetails extends Window_Base
+class Window_RecipeDetails
+  extends Window_Base
 {
   /**
    * The currently selected recipe being detailed.
@@ -42,7 +43,7 @@ class Window_RecipeDetails extends Window_Base
     if (!this.#canDrawContent()) return;
 
     // define the origin x,y coordinates.
-    const [x, y] = [0, 0];
+    const [ x, y ] = [ 0, 0 ];
 
     // render the ingredients header text.
     const ingredientsX = x;
@@ -96,10 +97,10 @@ class Window_RecipeDetails extends Window_Base
     this.modFontSize(-12);
     this.toggleItalics();
     const subtext = 'Materials consumed when crafting this recipe.';
-    this.drawText(subtext, x, y+20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
+    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
     this.toggleItalics();
 
-    this.drawHorizontalLine(x, y+50, 300, 3);
+    this.drawHorizontalLine(x, y + 50, 300, 3);
   }
 
   /**
@@ -120,9 +121,9 @@ class Window_RecipeDetails extends Window_Base
     this.modFontSize(-12);
     this.toggleItalics();
     const subtext = "Materials required to craft this recipe.";
-    this.drawText(subtext, x, y+20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
+    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
 
-    this.drawHorizontalLine(x, y+50, 300, 3);
+    this.drawHorizontalLine(x, y + 50, 300, 3);
   }
 
   /**
@@ -143,9 +144,9 @@ class Window_RecipeDetails extends Window_Base
     this.modFontSize(-12);
     this.toggleItalics();
     const subtext = "Materials generated when the recipe is crafted.";
-    this.drawText(subtext, x, y+20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
+    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
 
-    this.drawHorizontalLine(x, y+50, 300, 3);
+    this.drawHorizontalLine(x, y + 50, 300, 3);
   }
 
   drawPrimaryOutput(x, y)
@@ -194,7 +195,8 @@ class Window_RecipeDetails extends Window_Base
     const lh = this.lineHeight() - 4;
 
     // grab the underlying item we're working with.
-    const output = this.#currentRecipe.outputs.at(0).getItem();
+    const output = this.#currentRecipe.outputs.at(0)
+      .getItem();
 
     const lifeY = y + (lh * 1);
     this.drawLifeMessage(output, x, lifeY);
@@ -385,9 +387,8 @@ class Window_RecipeDetails extends Window_Base
 
     // find the first revival effect.
     const revivalEffect = output.effects
-      .find(effect =>
-        effect.code === Game_Action.EFFECT_REMOVE_STATE &&
-        effect.dataId === $gameParty.leader().deathStateId());
+      .find(effect => effect.code === Game_Action.EFFECT_REMOVE_STATE && effect.dataId === $gameParty.leader()
+        .deathStateId());
 
     this.drawIcon($dataStates.at(1).iconIndex, x, y);
 
@@ -411,10 +412,9 @@ class Window_RecipeDetails extends Window_Base
 
     // grab all the food-specific state effects.
     const foodStateEffects = output.effects
-      .filter(effect =>
-        // it has to add one of OUR states.
-        effect.code === Game_Action.EFFECT_ADD_STATE &&
-        this.#foodStateIds().includes(effect.dataId));
+      .filter(effect => // it has to add one of OUR states.
+        effect.code === Game_Action.EFFECT_ADD_STATE && this.#foodStateIds()
+          .includes(effect.dataId));
 
     // shorthand the line height.
     const lh = this.lineHeight() - 4;
@@ -443,8 +443,9 @@ class Window_RecipeDetails extends Window_Base
 
   #foodStateIds()
   {
-    return [82, 83, 84, 85, 86, 87, 88];
+    return [ 82, 83, 84, 85, 86, 87, 88 ];
   }
+
   //endregion item output
 
   //region weapon/armor output
@@ -454,7 +455,8 @@ class Window_RecipeDetails extends Window_Base
     const lh = this.lineHeight() - 4;
 
     // grab the underlying weapon we're working with.
-    const output = this.#currentRecipe.outputs.at(0).getItem();
+    const output = this.#currentRecipe.outputs.at(0)
+      .getItem();
 
     const coreParamsY = y + (lh * 1);
     this.drawCoreParams(output, x, coreParamsY);
@@ -476,51 +478,67 @@ class Window_RecipeDetails extends Window_Base
 
     // draw mhp
     const mhpY = y;
-    const mhp = this.needsMasking ? '??' : output.params.at(0);
+    const mhp = this.needsMasking
+      ? '??'
+      : output.params.at(0);
     this.drawIcon(IconManager.param(0), leftX, mhpY);
-    this.drawText(mhp, leftX+40, mhpY);
+    this.drawText(mhp, leftX + 40, mhpY);
 
     // draw mmp
     const mmpY = y + (lh * 1);
-    const mmp = this.needsMasking ? '??' : output.params.at(1);
+    const mmp = this.needsMasking
+      ? '??'
+      : output.params.at(1);
     this.drawIcon(IconManager.param(1), leftX, mmpY);
-    this.drawText(mmp, leftX+40, mmpY);
+    this.drawText(mmp, leftX + 40, mmpY);
 
     // draw atk
     const atkY = y + (lh * 2);
-    const atk = this.needsMasking ? '??' : output.params.at(2);
+    const atk = this.needsMasking
+      ? '??'
+      : output.params.at(2);
     this.drawIcon(IconManager.param(2), leftX, atkY);
-    this.drawText(atk, leftX+40, atkY);
+    this.drawText(atk, leftX + 40, atkY);
 
     // draw def
     const defY = y + (lh * 3);
-    const def = this.needsMasking ? '??' : output.params.at(3);
+    const def = this.needsMasking
+      ? '??'
+      : output.params.at(3);
     this.drawIcon(IconManager.param(3), leftX, defY);
-    this.drawText(def, leftX+40, defY);
+    this.drawText(def, leftX + 40, defY);
 
     // draw agi
     const agiY = y;
-    const agi = this.needsMasking ? '??' : output.params.at(6);
+    const agi = this.needsMasking
+      ? '??'
+      : output.params.at(6);
     this.drawIcon(IconManager.param(6), rightX, agiY);
-    this.drawText(agi, rightX+40, agiY);
+    this.drawText(agi, rightX + 40, agiY);
 
     // draw def
     const lukY = y + (lh * 1);
-    const luk = this.needsMasking ? '??' : output.params.at(7);
+    const luk = this.needsMasking
+      ? '??'
+      : output.params.at(7);
     this.drawIcon(IconManager.param(7), rightX, lukY);
-    this.drawText(luk, rightX+40, lukY);
+    this.drawText(luk, rightX + 40, lukY);
 
     // draw mat
     const matY = y + (lh * 2);
-    const mat = this.needsMasking ? '??' : output.params.at(4);
+    const mat = this.needsMasking
+      ? '??'
+      : output.params.at(4);
     this.drawIcon(IconManager.param(4), rightX, matY);
-    this.drawText(mat, rightX+40, matY);
+    this.drawText(mat, rightX + 40, matY);
 
     // draw mdf
     const mdfY = y + (lh * 3);
-    const mdf = this.needsMasking ? '??' : output.params.at(5);
+    const mdf = this.needsMasking
+      ? '??'
+      : output.params.at(5);
     this.drawIcon(IconManager.param(5), rightX, mdfY);
-    this.drawText(mdf, rightX+40, mdfY);
+    this.drawText(mdf, rightX + 40, mdfY);
   }
 
   drawTraits(output, x, y)
@@ -545,6 +563,7 @@ class Window_RecipeDetails extends Window_Base
 
     output.traits.forEach(forEacher, this);
   }
+
   //endregion weapon/armor output
 
   //region resource output
@@ -554,7 +573,8 @@ class Window_RecipeDetails extends Window_Base
     const lh = this.lineHeight() - 4;
 
     // grab the underlying resource we're working with.
-    const output = this.#currentRecipe.outputs.at(0).getItem();
+    const output = this.#currentRecipe.outputs.at(0)
+      .getItem();
 
     // render the text.
     this.drawText('Resource:', x, y + (lh * 1), 150);
@@ -571,7 +591,8 @@ class Window_RecipeDetails extends Window_Base
     const lh = this.lineHeight() - 4;
 
     // grab the underlying resource we're working with.
-    const output = this.#currentRecipe.outputs.at(0).getItem();
+    const output = this.#currentRecipe.outputs.at(0)
+      .getItem();
 
     // render the text.
     this.drawText('Resource:', x, y + (lh * 1), 150);
@@ -581,6 +602,8 @@ class Window_RecipeDetails extends Window_Base
     this.drawText('SDP', x, resourceY, 150);
     this.drawText(output.quantity(), x, resourceY, 150, Window_Base.TextAlignments.Right);
   }
+
   //endregion resource output
 }
+
 //endregion Window_RecipeDetails

@@ -6,7 +6,8 @@ J.LOG.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initialize);
 Scene_Map.prototype.initialize = function()
 {
   // perform original logic.
-  J.LOG.Aliased.Scene_Map.get('initialize').call(this);
+  J.LOG.Aliased.Scene_Map.get('initialize')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -39,7 +40,8 @@ J.LOG.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWin
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.LOG.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.LOG.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the actions log.
   this.createActionLogWindow();

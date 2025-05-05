@@ -5,7 +5,7 @@
  */
 Game_CharacterBase.prototype.isDiagonalDirection = function(direction)
 {
-  return [1, 3, 7, 9].contains(direction);
+  return [ 1, 3, 7, 9 ].contains(direction);
 };
 
 /**
@@ -15,7 +15,7 @@ Game_CharacterBase.prototype.isDiagonalDirection = function(direction)
  */
 Game_CharacterBase.prototype.isStraightDirection = function(direction)
 {
-  return [2, 4, 6, 8].contains(direction);
+  return [ 2, 4, 6, 8 ].contains(direction);
 };
 
 /**
@@ -27,12 +27,12 @@ Game_CharacterBase.prototype.getDiagonalDirections = function(direction)
   switch (direction)
   {
     case 1:
-      return [4, 2];
+      return [ 4, 2 ];
     case 3:
-      return [6, 2];
+      return [ 6, 2 ];
     case 7:
-      return [4, 8];
+      return [ 4, 8 ];
     case 9:
-      return [6, 8];
+      return [ 6, 8 ];
   }
 };

@@ -2,7 +2,8 @@
 /**
  * The SDP window containing the amount of SDP points a given actor has.
  */
-class Window_SdpPoints extends Window_Base
+class Window_SdpPoints
+  extends Window_Base
 {
   /**
    * @constructor
@@ -78,9 +79,7 @@ class Window_SdpPoints extends Window_Base
     if (!this._actor) return;
 
     this.drawFace(
-      this._actor.faceName(),
-      this._actor.faceIndex(),
-      0, 0,   // x,y
+      this._actor.faceName(), this._actor.faceIndex(), 0, 0,   // x,y
       128, 40);// w,h
   }
 
@@ -94,4 +93,5 @@ class Window_SdpPoints extends Window_Base
     this.refresh();
   }
 }
+
 //endregion Window_SdpPoints

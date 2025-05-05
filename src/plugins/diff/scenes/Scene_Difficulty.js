@@ -2,7 +2,8 @@
 /**
  * The difficulty scene for managing the current difficulty.
  */
-class Scene_Difficulty extends Scene_MenuBase
+class Scene_Difficulty
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -185,6 +186,7 @@ class Scene_Difficulty extends Scene_MenuBase
   {
     this._j._difficulty._pointsWindow = pointsWindow;
   }
+
   //endregion points window
 
   //region help window
@@ -250,6 +252,7 @@ class Scene_Difficulty extends Scene_MenuBase
   {
     this._j._difficultyHelpWindow = helpWindow;
   }
+
   //endregion help window
 
   //region list window
@@ -335,6 +338,7 @@ class Scene_Difficulty extends Scene_MenuBase
   {
     this._j._difficulty._listWindow = difficultyListWindow;
   }
+
   //endregion list window
 
   //region enemy effects window
@@ -415,6 +419,7 @@ class Scene_Difficulty extends Scene_MenuBase
   {
     this._j._difficulty._enemyEffects = window;
   }
+
   //endregion enemy effects window
 
   //region actor effects window
@@ -457,7 +462,10 @@ class Scene_Difficulty extends Scene_MenuBase
   difficultyActorEffectsRectangle()
   {
     // grab the width and x of the effects for calculating x of the actor effects.
-    const { x: enemyEffectsX, width: effectsEffectsWidth } = this.getDifficultyEnemyEffectsWindow();
+    const {
+      x: enemyEffectsX,
+      width: effectsEffectsWidth
+    } = this.getDifficultyEnemyEffectsWindow();
 
     // grab the height from the help window.
     const { height: helpHeight } = this.getHelpWindow();
@@ -497,6 +505,7 @@ class Scene_Difficulty extends Scene_MenuBase
   {
     this._j._difficulty._actorEffects = window;
   }
+
   //endregion actor effects window
   //endregion create windows
 
@@ -574,7 +583,10 @@ class Scene_Difficulty extends Scene_MenuBase
     if (!hoveredDifficulty) return;
 
     // extract the data points from the window.
-    const { actorEffects, enemyEffects } = hoveredDifficulty;
+    const {
+      actorEffects,
+      enemyEffects
+    } = hoveredDifficulty;
 
     // update the actor effects.
     this.updateActorEffectsWindow(actorEffects);
@@ -593,7 +605,11 @@ class Scene_Difficulty extends Scene_MenuBase
     {
       // extract the data points from the window.
       const {
-        exp, gold, sdp, drops, encounters
+        exp,
+        gold,
+        sdp,
+        drops,
+        encounters
       } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.
@@ -605,10 +621,7 @@ class Scene_Difficulty extends Scene_MenuBase
       bonusEffects.encounters = encounters;
 
       // update the effects list in the window.
-      actorEffectsWindow.updateEffects(
-        newActorEffects,
-        bonusEffects,
-        Window_DifficultyEffects.EffectsTypes.ACTOR);
+      actorEffectsWindow.updateEffects(newActorEffects, bonusEffects, Window_DifficultyEffects.EffectsTypes.ACTOR);
     }
   }
 
@@ -622,7 +635,11 @@ class Scene_Difficulty extends Scene_MenuBase
     {
       // extract the data points from the window.
       const {
-        exp, gold, sdp, drops, encounters
+        exp,
+        gold,
+        sdp,
+        drops,
+        encounters
       } = this.hoveredDifficulty().rewards;
 
       // build the bonus effects.
@@ -634,12 +651,10 @@ class Scene_Difficulty extends Scene_MenuBase
       bonusEffects.encounters = encounters;
 
       // update the effects list in the window.
-      enemyEffectsWindow.updateEffects(
-        newEnemyEffects,
-        bonusEffects,
-        Window_DifficultyEffects.EffectsTypes.ENEMY);
+      enemyEffectsWindow.updateEffects(newEnemyEffects, bonusEffects, Window_DifficultyEffects.EffectsTypes.ENEMY);
     }
   }
+
   //endregion on-hover
 
   //region on-select
@@ -727,6 +742,7 @@ class Scene_Difficulty extends Scene_MenuBase
     // modify the layer points by the difficulty layer's cost.
     $gameSystem.modLayerPoints(difficulty.cost);
   }
+
   //endregion on-select
 
   /**
@@ -745,4 +761,5 @@ class Scene_Difficulty extends Scene_MenuBase
     pointsWindow.refresh();
   }
 }
+
 //endregion Scene_Difficulty

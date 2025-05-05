@@ -22,6 +22,7 @@ class RPG_DropItemBuilder
    * @type {number}
    */
   #chance = 0;
+
   //endregion properties
 
   /**
@@ -134,5 +135,6 @@ class RPG_DropItemBuilder
     this.setChance(percentChance);
     return this.build();
   }
+
   //endregion builders
 }

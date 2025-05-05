@@ -37,7 +37,7 @@ class OverlayManager
       if (!isExtensionSkill) return false;
 
       const skillsExtended = JSON.parse(skill.metadata('skillExtend'))
-        .map(parseInt);
+        .map(id => parseInt(id));
       return skillsExtended.includes(skillId);
     };
 
@@ -192,8 +192,7 @@ class OverlayManager
 
     // combine the meta together.
     baseSkill.meta = {
-      ...baseSkill.meta,
-      ...skillOverlay.meta,
+      ...baseSkill.meta, ...skillOverlay.meta,
     }
 
     // append the notes.
@@ -212,8 +211,7 @@ class OverlayManager
     }
 
     // if they aren't the same, and aren't 100 (default), then add them.
-    if (baseSkill.successRate !== skillOverlay.successRate ||
-      skillOverlay.successRate !== 100)
+    if (baseSkill.successRate !== skillOverlay.successRate || skillOverlay.successRate !== 100)
     {
       baseSkill.successRate += skillOverlay.successRate;
     }
@@ -261,8 +259,7 @@ class OverlayManager
     }
 
     // overwrite the animation if not 0 (default) and it changed.
-    if (baseSkill.animationId !== 0 &&
-      baseSkill.animationId !== skillOverlay.animationId)
+    if (baseSkill.animationId !== 0 && baseSkill.animationId !== skillOverlay.animationId)
     {
       baseSkill.animationId = skillOverlay.animationId;
     }
@@ -319,11 +316,7 @@ class OverlayManager
    */
   static moveType(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.MoveType,
-      skillOverlay.jabsMoveType);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.MoveType, skillOverlay.jabsMoveType);
   }
 
   /**
@@ -349,11 +342,7 @@ class OverlayManager
    */
   static projectile(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Projectile,
-      skillOverlay.jabsProjectile);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Projectile, skillOverlay.jabsProjectile);
   }
 
   /**
@@ -364,11 +353,7 @@ class OverlayManager
    */
   static parry(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Parry,
-      skillOverlay.jabsParry);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Parry, skillOverlay.jabsParry);
   }
 
   /**
@@ -379,11 +364,7 @@ class OverlayManager
    */
   static counterParry(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.CounterParry,
-      skillOverlay.jabsCounterParry);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.CounterParry, skillOverlay.jabsCounterParry);
   }
 
   /**
@@ -394,11 +375,7 @@ class OverlayManager
    */
   static guard(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Guard,
-      skillOverlay.jabsGuard);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Guard, skillOverlay.jabsGuard);
   }
 
   /**
@@ -409,11 +386,7 @@ class OverlayManager
    */
   static counterGuard(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.CounterGuard,
-      skillOverlay.jabsCounterGuard);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.CounterGuard, skillOverlay.jabsCounterGuard);
   }
 
   /**
@@ -424,11 +397,7 @@ class OverlayManager
    */
   static bonusHits(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.BonusHits,
-      skillOverlay.jabsBonusHits);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.BonusHits, skillOverlay.jabsBonusHits);
   }
 
   /**
@@ -454,11 +423,7 @@ class OverlayManager
    */
   static bonusAggro(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.BonusAggro,
-      skillOverlay.jabsBonusAggro);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.BonusAggro, skillOverlay.jabsBonusAggro);
   }
 
   /**
@@ -469,11 +434,7 @@ class OverlayManager
    */
   static direct(baseSkill, skillOverlay)
   {
-    return this._overwriteAsBoolean(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Direct,
-      skillOverlay.jabsDirect);
+    return this._overwriteAsBoolean(baseSkill, skillOverlay, J.ABS.RegExp.Direct, skillOverlay.jabsDirect);
   }
 
   /**
@@ -484,11 +445,7 @@ class OverlayManager
    */
   static combo(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.ComboAction,
-      skillOverlay.jabsComboAction);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.ComboAction, skillOverlay.jabsComboAction);
   }
 
   /**
@@ -499,11 +456,7 @@ class OverlayManager
    */
   static freeCombo(baseSkill, skillOverlay)
   {
-    return this._overwriteAsBoolean(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.FreeCombo,
-      skillOverlay.jabsFreeCombo);
+    return this._overwriteAsBoolean(baseSkill, skillOverlay, J.ABS.RegExp.FreeCombo, skillOverlay.jabsFreeCombo);
   }
 
   /**
@@ -514,11 +467,7 @@ class OverlayManager
    */
   static castTime(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.CastTime,
-      skillOverlay.jabsCastTime);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.CastTime, skillOverlay.jabsCastTime);
   }
 
   /**
@@ -529,11 +478,7 @@ class OverlayManager
    */
   static castAnimation(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.CastAnimation,
-      skillOverlay.jabsCastAnimation);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.CastAnimation, skillOverlay.jabsCastAnimation);
   }
 
   /**
@@ -544,11 +489,7 @@ class OverlayManager
    */
   static poseSuffix(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.PoseSuffix,
-      skillOverlay.jabsPoseData);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.PoseSuffix, skillOverlay.jabsPoseData);
   }
 
   /**
@@ -559,11 +500,7 @@ class OverlayManager
    */
   static knockback(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Knockback,
-      skillOverlay.jabsKnockback);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Knockback, skillOverlay.jabsKnockback);
   }
 
   /**
@@ -585,11 +522,7 @@ class OverlayManager
     }
 
     // overwrite the value with the new one.
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.PiercingData,
-      overlayData);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.PiercingData, overlayData);
   }
 
   /**
@@ -600,11 +533,7 @@ class OverlayManager
    */
   static shape(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Shape,
-      skillOverlay.jabsShape);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Shape, skillOverlay.jabsShape);
   }
 
   /**
@@ -615,11 +544,7 @@ class OverlayManager
    */
   static duration(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Duration,
-      skillOverlay.jabsDuration);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Duration, skillOverlay.jabsDuration);
   }
 
   /**
@@ -630,11 +555,7 @@ class OverlayManager
    */
   static actionId(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.ActionId,
-      skillOverlay.jabsActionId);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.ActionId, skillOverlay.jabsActionId);
   }
 
   /**
@@ -645,11 +566,7 @@ class OverlayManager
    */
   static proximity(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Proximity,
-      skillOverlay.jabsProximity);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Proximity, skillOverlay.jabsProximity);
   }
 
   /**
@@ -660,11 +577,7 @@ class OverlayManager
    */
   static range(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Range,
-      skillOverlay.jabsRadius);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Range, skillOverlay.jabsRadius);
   }
 
   /**
@@ -675,11 +588,7 @@ class OverlayManager
    */
   static cooldown(baseSkill, skillOverlay)
   {
-    return this._overwriteAsKvp(
-      baseSkill,
-      skillOverlay,
-      J.ABS.RegExp.Cooldown,
-      skillOverlay.jabsCooldown);
+    return this._overwriteAsKvp(baseSkill, skillOverlay, J.ABS.RegExp.Cooldown, skillOverlay.jabsCooldown);
   }
 
   /**

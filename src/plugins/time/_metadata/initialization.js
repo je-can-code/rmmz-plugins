@@ -3,19 +3,6 @@
  */
 var J = J || {};
 
-//region version checks
-(() =>
-{
-  // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '1.0.0';
-  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
-  {
-    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
-  }
-})();
-//endregion version check
-
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -47,10 +34,10 @@ J.TIME.Metadata.HoursVariable = Number(J.TIME.PluginParameters['hoursVariable'])
 J.TIME.Metadata.DaysVariable = Number(J.TIME.PluginParameters['daysVariable']);
 J.TIME.Metadata.MonthsVariable = Number(J.TIME.PluginParameters['monthsVariable']);
 J.TIME.Metadata.YearsVariable = Number(J.TIME.PluginParameters['yearsVariable']);
-J.TIME.Metadata.TimeOfDayIdVariable = Number(J.TIME.PluginParameters['yearsVariable']);
-J.TIME.Metadata.TimeOfDayNameVariable = Number(J.TIME.PluginParameters['yearsVariable']);
-J.TIME.Metadata.SeasonOfYearIdVariable = Number(J.TIME.PluginParameters['yearsVariable']);
-J.TIME.Metadata.SeasonOfYearNameVariable = Number(J.TIME.PluginParameters['yearsVariable']);
+J.TIME.Metadata.TimeOfDayIdVariable = Number(J.TIME.PluginParameters['timeOfDayIdVariable']);
+J.TIME.Metadata.TimeOfDayNameVariable = Number(J.TIME.PluginParameters['timeOfDayNameVariable']);
+J.TIME.Metadata.SeasonOfYearIdVariable = Number(J.TIME.PluginParameters['seasonOfYearIdVariable']);
+J.TIME.Metadata.SeasonOfYearNameVariable = Number(J.TIME.PluginParameters['seasonOfYearNameVariable']);
 
 J.TIME.Metadata.FramesPerTick = Number(J.TIME.PluginParameters['framesPerTick']);
 
@@ -73,111 +60,56 @@ J.TIME.Metadata.YearsPerIncrement = Number(J.TIME.PluginParameters['yearsPerIncr
  */
 J.TIME.Aliased = {
   DataManager: {},
+
+  Game_Event: new Map(),
+  Game_Interpreter: new Map(),
+
+  JABS_InputController: new Map(),
+
   Scene_Base: {},
-  Scene_Map: {},
+  Scene_Map: new Map(),
+
+  Window_Base: new Map(),
 };
 
 /**
- * Plugin command for hiding the TIME window on the map.
+ * A collection of all regular expressions for this plugin.
  */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "hideMapTime", () =>
-{
-  $gameTime.hideMapWindow();
-});
+J.TIME.RegExp = {};
+J.TIME.RegExp.MinutePage = /<minutePage:[ ]?(\d+),? ?( )?>/i;
+J.TIME.RegExp.HourPage = /<hourPage:[ ]?(\d+)>/i;
+J.TIME.RegExp.DayPage = /<dayPage:[ ]?(\d+)>/i;
+J.TIME.RegExp.MonthPage = /<monthPage:[ ]?(\d+)>/i;
+J.TIME.RegExp.YearPage = /<yearPage:[ ]?(\d+)>/i;
+J.TIME.RegExp.TimeOfDayPage = /<timeOfDayPage:[ ]?([0-5]|night|dawn|morning|afternoon|evening|twilight)>/i;
+J.TIME.RegExp.SeasonOfYearPage = /<seasonOfYearPage:[ ]?([0-3]|spring|summer|autumn|winter)>/i;
 
-/**
- * Plugin command for showing the TIME window on the map.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "showMapTime", () =>
-{
-  $gameTime.showMapWindow();
-});
+J.TIME.RegExp.MinuteRangePage = /<minuteRangePage:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.HourRangePage = /<hourRangePage:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.DayRangePage = /<dayRangePage:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.MonthRangePage = /<monthRangePage:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.YearRangePage = /<yearRangePage:[ ]?(\d+)-(\d+)>/i;
 
-/**
- * Plugin command for setting the time to a new point in time.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "setTime", args =>
-{
-  const {Second, Minute, Hour, Day, Month, Year} = args;
-  $gameTime.setTime(
-    parseInt(Second),
-    parseInt(Minute),
-    parseInt(Hour),
-    parseInt(Day),
-    parseInt(Month),
-    parseInt(Year)
-  );
-});
+J.TIME.RegExp.TimeRangePage = /<timeRangePage:[ ]?(\d{1,2}):(\d{1,2})-(\d{1,2}):(\d{1,2})>/i;
+J.TIME.RegExp.FullDateRangePage = /<fullDateRangePage:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])-(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])>/i
 
-/**
- * Plugin command for fast-forwarding time by a designated amount.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "fastForwardtime", args =>
-{
-  const {Second, Minute, Hour, Day, Month, Year} = args;
-  $gameTime.addSeconds(parseInt(Second));
-  $gameTime.addMinutes(parseInt(Minute));
-  $gameTime.addHours(parseInt(Hour));
-  $gameTime.addDays(parseInt(Day));
-  $gameTime.addMonths(parseInt(Month));
-  $gameTime.addYears(parseInt(Year));
-});
 
-/**
- * Plugin command for rewinding time by a designated amount.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "rewindTime", args =>
-{
-  const {Second, Minute, Hour, Day, Month, Year} = args;
-  $gameTime.addSeconds(-parseInt(Second));
-  $gameTime.addMinutes(-parseInt(Minute));
-  $gameTime.addHours(-parseInt(Hour));
-  $gameTime.addDays(-parseInt(Day));
-  $gameTime.addMonths(-parseInt(Month));
-  $gameTime.addYears(-parseInt(Year));
-});
+J.TIME.RegExp.MinuteChoice = /<minuteChoice:[ ]?(\d+)>/i;
+J.TIME.RegExp.HourChoice = /<hourChoice:[ ]?(\d+)>/i;
+J.TIME.RegExp.DayChoice = /<dayChoice:[ ]?(\d+)>/i;
+J.TIME.RegExp.MonthChoice = /<monthChoice:[ ]?(\d+)>/i;
+J.TIME.RegExp.YearChoice = /<yearChoice:[ ]?(\d+)>/i;
+J.TIME.RegExp.TimeOfDayChoice = /<timeOfDayChoice:[ ]?([0-5]|night|dawn|morning|afternoon|evening|twilight)>/i;
+J.TIME.RegExp.SeasonOfYearChoice = /<seasonOfYearChoice:[ ]?([0-3]|spring|summer|autumn|winter)>/i;
 
-/**
- * Plugin command for jumping to the next instance of a particular time of day.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "jumpToTimeOfDay", args =>
-{
-  const {TimeOfDay} = args;
-  $gameTime.jumpToTimeOfDay(parseInt(TimeOfDay));
-});
+J.TIME.RegExp.MinuteRangeChoice = /<minuteRangeChoice:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.HourRangeChoice = /<hourRangeChoice:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.DayRangeChoice = /<dayRangeChoice:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.MonthRangeChoice = /<monthRangeChoice:[ ]?(\d+)-(\d+)>/i;
+J.TIME.RegExp.YearRangeChoice = /<yearRangeChoice:[ ]?(\d+)-(\d+)>/i;
 
-/**
- * Plugin command for stopping artificial TIME.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "stopTime", () =>
-{
-  $gameTime.deactivate();
-});
-
-/**
- * Plugin command for resuming artificial TIME.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "startTime", () =>
-{
-  $gameTime.activate();
-});
-
-/**
- * Plugin command for allowing the TIME system to control the screen tone.
- * Does nothing if the plugin parameters are set to disable tone changing.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "unlockTone", () =>
-{
-  $gameTime.unlockTone();
-});
-
-/**
- * Plugin command for locking the TIME system from controlling screen tone.
- */
-PluginManager.registerCommand(J.TIME.Metadata.Name, "lockTone", () =>
-{
-  $gameTime.lockTone();
-});
+J.TIME.RegExp.TimeRangeChoice = /<timeRangeChoice:[ ]?(\d{1,2}):(\d{1,2})-(\d{1,2}):(\d{1,2})>/i;
+J.TIME.RegExp.FullDateRangeChoice = /<fullDateRangeChoice:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])-(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])>/i
 
 /**
  * A global object for storing data related to TIME.

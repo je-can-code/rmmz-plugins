@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_RegionSkillsPluginMetadata extends PluginMetadata
+class J_RegionSkillsPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -37,4 +38,5 @@ class J_RegionSkillsPluginMetadata extends PluginMetadata
     this.delayBetweenExecutions = this.parsedPluginParameters['execution-delay'] ?? 60;
   }
 }
+
 //endregion plugin metadata

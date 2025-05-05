@@ -1,4 +1,3 @@
-
 /**
  * Gets the text from this help window.
  * @returns {string}
@@ -95,7 +94,7 @@ Window_Help.prototype.getSecondaryNewline = function()
  * Extracts the text rendering out into its own function, but this function
  * still does the same thing: clears and redraws the contents of the window.
  */
-Window_Help.prototype.refresh = function() 
+Window_Help.prototype.refresh = function()
 {
   // clear the contents of the window.
   this.contents.clear();
@@ -110,7 +109,11 @@ Window_Help.prototype.refresh = function()
 Window_Help.prototype.renderText = function()
 {
   // grab the rectangle coordinates to draw the text in.
-  const { x, y, width } = this.baseTextRect();
+  const {
+    x,
+    y,
+    width
+  } = this.baseTextRect();
 
   // draw the actual text.
   this.drawTextEx(this._text, x, y, width);

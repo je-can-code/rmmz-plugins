@@ -3,7 +3,8 @@
  * A class representing the base properties for any usable item or skill
  * from the database.
  */
-class RPG_UsableItem extends RPG_BaseItem
+class RPG_UsableItem
+  extends RPG_BaseItem
 {
   //region properties
   /**
@@ -65,6 +66,7 @@ class RPG_UsableItem extends RPG_BaseItem
    * @type {number}
    */
   tpGain = 0;
+
   //endregion properties
 
   /**
@@ -90,4 +92,5 @@ class RPG_UsableItem extends RPG_BaseItem
     this.tpGain = usableItem.tpGain;
   }
 }
+
 //endregion RPG_UsableItem

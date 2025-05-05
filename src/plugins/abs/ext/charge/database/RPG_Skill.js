@@ -3,13 +3,12 @@
  * The charge tier data associated with a skill.
  * @type {[number, number, number, number][]|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsChargeData",
+Object.defineProperty(RPG_Skill.prototype, "jabsChargeData", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsChargeData();
-    },
-  });
+    return this.getJabsChargeData();
+  },
+});
 
 /**
  * Gets the charge tier data from this skill.

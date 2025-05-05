@@ -1,13 +1,15 @@
 /**
  * A single phase in the stars battle.
  */
-class StarPhase {
+class StarPhase
+{
   /**
    * Constructor.
    * @param {string} name The name of the phase.
    * @param {number} key The number of this phase.
    */
-  constructor(name, key) {
+  constructor(name, key)
+  {
     this.name = name;
     this.key = key;
   }

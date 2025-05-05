@@ -8,7 +8,8 @@ J.PASSIVE.Aliased.Game_Enemy.set('onSetup', Game_Enemy.prototype.onSetup);
 Game_Enemy.prototype.onSetup = function(enemyId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Enemy.get('onSetup').call(this, enemyId);
+  J.PASSIVE.Aliased.Game_Enemy.get('onSetup')
+    .call(this, enemyId);
 
   // refresh all passive states on this battler.
   this.refreshPassiveStates();
@@ -22,7 +23,8 @@ J.PASSIVE.Aliased.Game_Enemy.set('traitObjects', Game_Enemy.prototype.traitObjec
 Game_Enemy.prototype.traitObjects = function()
 {
   // perform original logic.
-  const originalObjects = J.PASSIVE.Aliased.Game_Enemy.get('traitObjects').call(this);
+  const originalObjects = J.PASSIVE.Aliased.Game_Enemy.get('traitObjects')
+    .call(this);
 
   // add our own passive states.
   originalObjects.push(...this.getPassiveStates());
@@ -40,13 +42,13 @@ J.PASSIVE.Aliased.Game_Enemy.set('getNotesSources', Game_Enemy.prototype.getNote
 Game_Enemy.prototype.getNotesSources = function()
 {
   // perform original logic to get notes.
-  const originalSources = J.PASSIVE.Aliased.Game_Enemy.get('getNotesSources').call(this);
+  const originalSources = J.PASSIVE.Aliased.Game_Enemy.get('getNotesSources')
+    .call(this);
 
   // newly defined sources for passives.
   const passiveSources = [
     // then add all those currently applied passive skill states, too.
-    ...this.getPassiveStates(),
-  ];
+    ...this.getPassiveStates(), ];
 
   // combine the sources.
   const combinedSources = originalSources.concat(passiveSources);

@@ -101,8 +101,7 @@ class BuiltWindowCommand
     lines = [],
     helpText = String.empty,
     isSubtext = true,
-    faceData = [String.empty, -1]
-  )
+    faceData = [ String.empty, -1 ])
   {
     this.#name = name;
     this.#key = symbol;
@@ -116,7 +115,7 @@ class BuiltWindowCommand
     this.#helpText = helpText;
     this.#isSubtext = isSubtext;
 
-    const [faceName, faceIndex] = faceData;
+    const [ faceName, faceIndex ] = faceData;
     this.#faceName = faceName;
     this.#faceIndex = faceIndex;
   }
@@ -240,7 +239,8 @@ class BuiltWindowCommand
 
   get faceData()
   {
-    return [this.#faceName, this.#faceIndex];
+    return [ this.#faceName, this.#faceIndex ];
   }
+
   //endregion getters
 }

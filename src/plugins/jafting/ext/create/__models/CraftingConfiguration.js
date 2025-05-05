@@ -67,9 +67,7 @@ class CraftingConfiguration
      */
     build()
     {
-      const newConfig = new CraftingConfiguration(
-        this.#recipes,
-        this.#categories);
+      const newConfig = new CraftingConfiguration(this.#recipes, this.#categories);
 
       this.#clear();
 
@@ -108,4 +106,5 @@ class CraftingConfiguration
     }
   }
 }
+
 //endregion

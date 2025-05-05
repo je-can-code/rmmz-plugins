@@ -15,7 +15,7 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
     return;
   }
 
-  // grab the container of items.
+  // grab the container of items.S
   const container = this.itemContainer(item);
 
   // check to make sure we have a container.
@@ -179,7 +179,8 @@ Game_Party.prototype.allItemsQuantified = function()
  */
 Game_Party.prototype.recoverAllMembers = function()
 {
-  this.members().forEach(member => member.recoverAll());
+  this.members()
+    .forEach(member => member.recoverAll());
 };
 
 Game_Party.prototype.maxBattleMembers = function()

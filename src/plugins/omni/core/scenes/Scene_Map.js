@@ -7,7 +7,8 @@ J.OMNI.Aliased.Scene_Map.set('createJabsAbsMenuMainWindow', Scene_Map.prototype.
 Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
 {
   // perform original logic.
-  J.OMNI.Aliased.Scene_Map.get('createJabsAbsMenuMainWindow').call(this);
+  J.OMNI.Aliased.Scene_Map.get('createJabsAbsMenuMainWindow')
+    .call(this);
 
   // grab the list window.
   const mainMenuWindow = this.getJabsMainListWindow();

@@ -10,7 +10,8 @@ J.JAFTING.EXT.REFINE.Aliased.RPG_Base.set('_generate', RPG_Base.prototype._gener
 RPG_Base.prototype._generate = function(overrides, index)
 {
   // perform original logic.
-  const original = J.JAFTING.EXT.REFINE.Aliased.RPG_Base.get('_generate').call(this, overrides, index);
+  const original = J.JAFTING.EXT.REFINE.Aliased.RPG_Base.get('_generate')
+    .call(this, overrides, index);
 
   // update the refined count to the latest.
   original.jaftingRefinedCount = overrides.jaftingRefinedCount;

@@ -118,7 +118,10 @@ Game_Actor.prototype.canRefreshBasicAttackSkills = function()
 
   // don't refresh if setup hasn't been completed.
   if (!this.getSkillSlotManager()
-    .isSetupComplete()) return false;
+    .isSetupComplete())
+  {
+    return false;
+  }
 
   // refresh!
   return true;
@@ -339,9 +342,7 @@ Game_Actor.prototype.sightRange = function()
   const defaultValue = Game_Battler.prototype.sightRange.call(this);
 
   // grab the value appropriately from this actor.
-  const actualValue = this.getJabsParameter(
-    J.ABS.RegExp.Sight,
-    defaultValue);
+  const actualValue = this.getJabsParameter(J.ABS.RegExp.Sight, defaultValue);
 
   // return the value.
   return actualValue;
@@ -357,9 +358,7 @@ Game_Actor.prototype.alertedSightBoost = function()
   const defaultValue = Game_Battler.prototype.alertedSightBoost.call(this);
 
   // grab the value appropriately from this actor.
-  const actualValue = this.getJabsParameter(
-    J.ABS.RegExp.AlertedSightBoost,
-    defaultValue);
+  const actualValue = this.getJabsParameter(J.ABS.RegExp.AlertedSightBoost, defaultValue);
 
   // return the value.
   return actualValue;
@@ -375,9 +374,7 @@ Game_Actor.prototype.pursuitRange = function()
   const defaultValue = Game_Battler.prototype.pursuitRange.call(this);
 
   // grab the value appropriately from this actor.
-  const actualValue = this.getJabsParameter(
-    J.ABS.RegExp.Pursuit,
-    defaultValue);
+  const actualValue = this.getJabsParameter(J.ABS.RegExp.Pursuit, defaultValue);
 
   // return the value.
   return actualValue;
@@ -393,9 +390,7 @@ Game_Actor.prototype.alertedPursuitBoost = function()
   const defaultValue = Game_Battler.prototype.alertedPursuitBoost.call(this);
 
   // grab the value appropriately from this actor.
-  const actualValue = this.getJabsParameter(
-    J.ABS.RegExp.AlertedPursuitBoost,
-    defaultValue);
+  const actualValue = this.getJabsParameter(J.ABS.RegExp.AlertedPursuitBoost, defaultValue);
 
   // return the value.
   return actualValue;
@@ -411,9 +406,7 @@ Game_Actor.prototype.alertDuration = function()
   const defaultValue = Game_Battler.prototype.alertDuration.call(this);
 
   // grab the value appropriately from this actor.
-  const actualValue = this.getJabsParameter(
-    J.ABS.RegExp.AlertDuration,
-    defaultValue);
+  const actualValue = this.getJabsParameter(J.ABS.RegExp.AlertDuration, defaultValue);
 
   // return the value.
   return actualValue;
@@ -841,7 +834,8 @@ Game_Actor.prototype.autoAssignSkillIfRequired = function(skillId)
   if (!this.canAutoAssignSkillOnLevelup(skillId)) return;
 
   // grab the first slot that we'll be working with.
-  const firstEmptySlot = this.getEmptySecondarySkills().at(0);
+  const firstEmptySlot = this.getEmptySecondarySkills()
+    .at(0);
 
   // assign the given skill to the slot.
   this.setEquippedSkill(firstEmptySlot.key, skillId);
@@ -935,8 +929,7 @@ Game_Actor.prototype.getBonusHitsSources = function()
     this.equips(),
 
     // the class may contain bonus hits.
-    [ this.currentClass() ],
-  ];
+    [ this.currentClass() ], ];
 };
 //endregion JABS bonus hits
 

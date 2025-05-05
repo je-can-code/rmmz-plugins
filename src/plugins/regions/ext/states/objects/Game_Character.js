@@ -125,7 +125,11 @@ Game_Character.prototype.applyRegionStates = function()
   regionStateDatas.forEach(regionStateData =>
   {
     // deconstruct the region state data.
-    const { stateId, chance, animationId } = regionStateData;
+    const {
+      stateId,
+      chance,
+      animationId
+    } = regionStateData;
 
     // get the calculated rate for the state being applied.
     const calculatedChance = battler.stateRate(stateId) * chance;

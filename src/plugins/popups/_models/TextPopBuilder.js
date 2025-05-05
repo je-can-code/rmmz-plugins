@@ -86,6 +86,7 @@ class TextPopBuilder
    * @private
    */
   #yVariance = 0;
+
   //endregion properties
 
   /**
@@ -165,7 +166,7 @@ class TextPopBuilder
    */
   #makeCoordinateVariance()
   {
-    return [this.#xVariance, this.#yVariance];
+    return [ this.#xVariance, this.#yVariance ];
   }
 
   //region setters
@@ -344,6 +345,7 @@ class TextPopBuilder
     this.setYVariance(yVariance);
     return this;
   }
+
   //endregion setters
 
   //region presets
@@ -712,6 +714,8 @@ class TextPopBuilder
     // return the builder for fluent chaining.
     return this;
   }
+
   //endregion presents
 }
+
 //endregion TextPopBuilder

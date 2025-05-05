@@ -6,7 +6,9 @@
  * Consider reviewing nodejs documentation about the {@link EventEmitter} class
  * for usage instructions.
  */
-class J_EventEmitter extends PIXI.utils.EventEmitter
+class J_EventEmitter
+  extends PIXI.utils.EventEmitter
 {
 }
+
 //endregion J_EventEmitter

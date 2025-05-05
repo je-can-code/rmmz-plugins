@@ -80,7 +80,8 @@ Sprite_Character.prototype.initMembers = function()
   this._j._loot._oy = 0;
 
   // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get('initMembers').call(this);
+  J.ABS.Aliased.Sprite_Character.get('initMembers')
+    .call(this);
 };
 
 //region setup & reference
@@ -91,7 +92,8 @@ J.ABS.Aliased.Sprite_Character.set('update', Sprite_Character.prototype.update);
 Sprite_Character.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get('update').call(this);
+  J.ABS.Aliased.Sprite_Character.get('update')
+    .call(this);
 
   // only update the jabs battler components if they have been initialized.
   if (this.isJabsBattlerReady())
@@ -142,10 +144,14 @@ Sprite_Character.prototype.getBattler = function()
   if (this.isJabsBattler())
   {
     // grab the battler associated with this sprite.
-    return this._character.getJabsBattler().getBattler();
+    return this._character.getJabsBattler()
+      .getBattler();
   }
   // otherwise, this must be a regular sprite for an event.
-  else return null;
+  else
+  {
+    return null;
+  }
 };
 
 /**
@@ -158,7 +164,8 @@ Sprite_Character.prototype.isJabsBattler = function()
   if (!this.character() || this.character() instanceof Game_Vehicle) return false;
 
   // return whether or not this has a battler attached to it.
-  return !!this.character().hasJabsBattler();
+  return !!this.character()
+    .hasJabsBattler();
 };
 
 /**
@@ -222,7 +229,8 @@ Sprite_Character.prototype.isEmptyCharacter = function()
     // intercept for the case of loot, as it actually is a character to be updated!
     ? false
     // otherwise, perform original logic.
-    : J.ABS.Aliased.Sprite_Character.get('isEmptyCharacter').call(this)
+    : J.ABS.Aliased.Sprite_Character.get('isEmptyCharacter')
+      .call(this)
 };
 
 /**
@@ -233,7 +241,8 @@ J.ABS.Aliased.Sprite_Character.set('setCharacter', Sprite_Character.prototype.se
 Sprite_Character.prototype.setCharacter = function(character)
 {
   // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get('setCharacter').call(this, character);
+  J.ABS.Aliased.Sprite_Character.get('setCharacter')
+    .call(this, character);
 
   // if the sprite changed, the JABS-related data probably changed, too.
   this.setupJabsSprite();
@@ -246,7 +255,8 @@ J.ABS.Aliased.Sprite_Character.set('setCharacterBitmap', Sprite_Character.protot
 Sprite_Character.prototype.setCharacterBitmap = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get('setCharacterBitmap').call(this);
+  J.ABS.Aliased.Sprite_Character.get('setCharacterBitmap')
+    .call(this);
 
   // if the sprite changed, the JABS-related data probably changed, too.
   this.setupJabsSprite();
@@ -413,9 +423,7 @@ Sprite_Character.prototype.setupHpGauge = function()
 
 
   // locate the gauge below the character.
-  this._j._hpGauge.move(
-    -(this._j._hpGauge.bitmapWidth() / 1.5),
-    -12);
+  this._j._hpGauge.move(-(this._j._hpGauge.bitmapWidth() / 1.5), -12);
 };
 
 /**
@@ -469,7 +477,11 @@ Sprite_Character.prototype.canUpdateHpGauge = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the gauge, then it shouldn't update.
-  if (!this._character.getJabsBattler().showHpBar()) return false;
+  if (!this._character.getJabsBattler()
+    .showHpBar())
+  {
+    return false;
+  }
 
   // we should update!
   return true;
@@ -600,7 +612,11 @@ Sprite_Character.prototype.canUpdateBattlerName = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the battler name, then it shouldn't update.
-  if (!this._character.getJabsBattler().showBattlerName()) return false;
+  if (!this._character.getJabsBattler()
+    .showBattlerName())
+  {
+    return false;
+  }
 
   // we should update!
   return true;
@@ -743,7 +759,8 @@ Sprite_Character.prototype.getLootExpired = function()
 Sprite_Character.prototype.performLootDurationCountdown = function()
 {
   // execute a countdown on behalf of the loot.
-  this.getLootData().countdownDuration();
+  this.getLootData()
+    .countdownDuration();
 };
 
 /**

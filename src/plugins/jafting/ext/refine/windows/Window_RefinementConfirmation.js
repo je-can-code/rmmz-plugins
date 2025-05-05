@@ -3,7 +3,8 @@
  * A window that gives the player a chance to confirm or cancel their
  * refinement before executing.
  */
-class Window_RefinementConfirmation extends Window_Command
+class Window_RefinementConfirmation
+  extends Window_Command
 {
   /**
    * @constructor
@@ -24,4 +25,5 @@ class Window_RefinementConfirmation extends Window_Command
     this.addCommand(`${J.JAFTING.EXT.REFINE.Messages.CancelRefinementCommandName}`, `cancel`, true, null, 90);
   }
 }
+
 //endregion Window_JaftingRefinementConfirmation

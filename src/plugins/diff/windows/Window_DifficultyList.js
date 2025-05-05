@@ -1,5 +1,6 @@
 //region Window_DifficultyList
-class Window_DifficultyList extends Window_Command
+class Window_DifficultyList
+  extends Window_Command
 {
   /**
    * @constructor
@@ -111,4 +112,5 @@ class Window_DifficultyList extends Window_Command
   {
   }
 }
+
 //endregion Window_DifficultyList

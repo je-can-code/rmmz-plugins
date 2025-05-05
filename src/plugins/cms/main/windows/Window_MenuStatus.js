@@ -1,4 +1,4 @@
-Window_MenuStatus.prototype.numVisibleRows = function() 
+Window_MenuStatus.prototype.numVisibleRows = function()
 {
   return 6;
 };

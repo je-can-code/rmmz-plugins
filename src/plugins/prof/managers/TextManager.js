@@ -13,7 +13,8 @@ TextManager.longParam = function(paramId)
       return this.proficiencyBonus(); // proficiency boost
     default:
       // perform original logic.
-      return J.PROF.Aliased.TextManager.get('longParam').call(this, paramId);
+      return J.PROF.Aliased.TextManager.get('longParam')
+        .call(this, paramId);
   }
 };
 
@@ -40,7 +41,8 @@ TextManager.longParamDescription = function(paramId)
       return this.proficiencyDescription(); // proficiency boost
     default:
       // perform original logic.
-      return J.PROF.Aliased.TextManager.get('longParamDescription').call(this, paramId);
+      return J.PROF.Aliased.TextManager.get('longParamDescription')
+        .call(this, paramId);
   }
 };
 
@@ -52,7 +54,6 @@ TextManager.proficiencyDescription = function()
 {
   return [
     "The numeric bonus of proficiency gained when gaining proficiency.",
-    "Higher amounts of this means achieving proficiency mastery faster."
-  ];
+    "Higher amounts of this means achieving proficiency mastery faster." ];
 };
 //endregion TextManager

@@ -13,7 +13,8 @@ IconManager.longParam = function(paramId)
     case 29:
       return this.critParam(1);   // cdr
     default:
-      return J.CRIT.Aliased.IconManager.get('longParam').call(this, paramId);
+      return J.CRIT.Aliased.IconManager.get('longParam')
+        .call(this, paramId);
   }
 };
 

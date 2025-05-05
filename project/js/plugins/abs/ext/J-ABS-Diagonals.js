@@ -57,8 +57,6 @@
  * ============================================================================
  */
 
-
-
 /**
  * The core where all of my extensions live: in the `J` object.
  */
@@ -394,12 +392,15 @@ Game_Event.prototype.homeIntoTarget = function()
 {
   if (this.isJabsAction())
   {
-    const target = this.getJabsAction().getCaster().getTarget();
+    const target = this.getJabsAction()
+      .getCaster()
+      .getTarget();
     this.homeIntoTargetBattler(target);
   }
   else if (this.isJabsBattler())
   {
-    const target = this.getJabsBattler().getTarget();
+    const target = this.getJabsBattler()
+      .getTarget();
     this.homeIntoTargetBattler(target);
   }
   else
@@ -417,12 +418,15 @@ Game_Event.prototype.homeIntoLastHit = function()
 {
   if (this.isJabsAction())
   {
-    const lastHit = this.getJabsAction().getCaster().getBattlerLastHit();
+    const lastHit = this.getJabsAction()
+      .getCaster()
+      .getBattlerLastHit();
     this.homeIntoLastHitBattler(lastHit);
   }
   else if (this.isJabsBattler())
   {
-    const lastHit = this.getJabsBattler().getBattlerLastHit();
+    const lastHit = this.getJabsBattler()
+      .getBattlerLastHit();
     this.homeIntoLastHitBattler(lastHit);
   }
   else
@@ -471,7 +475,7 @@ Game_Event.prototype.homeIntoLastHitBattler = function(lastHit)
  */
 Game_Event.prototype.homeIntoBattler = function(battler)
 {
-  const [x, y] = [battler.getX(), battler.getY()];
+  const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
   const nextDir = CycloneMovement
     ? this.findDirectionTo(x, y)
@@ -498,12 +502,15 @@ Game_Event.prototype.seekTarget = function()
 {
   if (this.isJabsAction())
   {
-    const target = this.getJabsAction().getCaster().getTarget();
+    const target = this.getJabsAction()
+      .getCaster()
+      .getTarget();
     this.seekTargetBattler(target);
   }
   else if (this.isJabsBattler())
   {
-    const target = this.getJabsBattler().getTarget();
+    const target = this.getJabsBattler()
+      .getTarget();
     this.seekTargetBattler(target);
   }
   else
@@ -521,12 +528,15 @@ Game_Event.prototype.seekLastHit = function()
 {
   if (this.isJabsAction())
   {
-    const lastHit = this.getJabsAction().getCaster().getBattlerLastHit();
+    const lastHit = this.getJabsAction()
+      .getCaster()
+      .getBattlerLastHit();
     this.seekLastHitBattler(lastHit);
   }
   else if (this.isJabsBattler())
   {
-    const lastHit = this.getJabsBattler().getBattlerLastHit();
+    const lastHit = this.getJabsBattler()
+      .getBattlerLastHit();
     this.seekLastHitBattler(lastHit);
   }
   else
@@ -577,7 +587,7 @@ Game_Event.prototype.seekTargetBattler = function(target)
 Game_Event.prototype.seekBattler = function(battler)
 {
   const currDir = this.getCustomDirection();
-  const [x, y] = [battler.getX(), battler.getY()];
+  const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
   const finalDir = CycloneMovement
     ? this.findDirectionTo(x, y)
@@ -602,28 +612,28 @@ Game_Event.prototype.gradualRotateToDirection = function(currentDirection, final
   switch (currentDirection)
   {
     case 1:
-      needLeft = [2, 3, 6];
+      needLeft = [ 2, 3, 6 ];
       break;
     case 2:
-      needLeft = [3, 6, 9];
+      needLeft = [ 3, 6, 9 ];
       break;
     case 3:
-      needLeft = [6, 9, 8];
+      needLeft = [ 6, 9, 8 ];
       break;
     case 4:
-      needLeft = [1, 2, 3];
+      needLeft = [ 1, 2, 3 ];
       break;
     case 6:
-      needLeft = [9, 8, 7];
+      needLeft = [ 9, 8, 7 ];
       break;
     case 7:
-      needLeft = [4, 1, 2];
+      needLeft = [ 4, 1, 2 ];
       break;
     case 8:
-      needLeft = [7, 4, 1];
+      needLeft = [ 7, 4, 1 ];
       break;
     case 9:
-      needLeft = [8, 7, 4];
+      needLeft = [ 8, 7, 4 ];
       break;
   }
 

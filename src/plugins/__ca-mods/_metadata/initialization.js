@@ -54,5 +54,6 @@ J.CAMods.Aliased.Game_Actor = new Map();
 J.CAMods.Aliased.Game_BattlerBase = new Map();
 J.CAMods.Aliased.Game_Enemy = new Map();
 J.CAMods.Aliased.Game_Map = new Map();
+J.CAMods.Aliased.Game_Party = new Map();
 J.CAMods.Aliased.Scene_Boot = new Map();
 //endregion initialization

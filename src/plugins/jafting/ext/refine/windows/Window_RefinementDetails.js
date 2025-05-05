@@ -2,7 +2,8 @@
 /**
  * The window containing the chosen equips for refinement and also the projected results.
  */
-class Window_RefinementDetails extends Window_Base
+class Window_RefinementDetails
+  extends Window_Base
 {
   /**
    * @constructor
@@ -263,4 +264,5 @@ class Window_RefinementDetails extends Window_Base
     this.outputEquip = result;
   }
 }
+
 //endregion Window_RefinementDetails

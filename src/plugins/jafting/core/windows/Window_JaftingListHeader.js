@@ -1,5 +1,6 @@
 //region Window_OmnipediaListHeader
-class Window_JaftingListHeader extends Window_Base
+class Window_JaftingListHeader
+  extends Window_Base
 {
   /**
    * Constructor.
@@ -17,7 +18,7 @@ class Window_JaftingListHeader extends Window_Base
   drawContent()
   {
     // define the origin x,y coordinates.
-    const [x, y] = [0, 0];
+    const [ x, y ] = [ 0, 0 ];
 
     // shorthand the lineHeight.
     const lh = this.lineHeight();
@@ -79,4 +80,5 @@ class Window_JaftingListHeader extends Window_Base
     this.resetFontSettings();
   }
 }
+
 //endregion Window_OmnipediaListHeader

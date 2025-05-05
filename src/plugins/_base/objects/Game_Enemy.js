@@ -29,8 +29,7 @@ Game_Enemy.prototype.getEnemyNotes = function()
   // return a collection of all things related to this enemy.
   return [
     // add the enemy itself to the source list.
-    enemy
-  ];
+    enemy ];
 };
 
 /**
@@ -113,7 +112,9 @@ Game_Enemy.prototype.learnSkill = function(skillId)
   };
 
   // add the action to the enemy's list of known skills.
-  this.enemy().actions.push(rpgEnemyAction);
+  this.enemy()
+    .actions
+    .push(rpgEnemyAction);
 
   // indicate that a new skill was learned to any callers that might be interested.
   return true;

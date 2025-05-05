@@ -8,18 +8,19 @@ Game_Event.prototype.isGapClosable = function()
   let gapCloseTarget = false;
 
   // check all the valid event commands to see if this target is gap closable.
-  this.getValidCommentCommands().forEach(command =>
-  {
-    // shorthand the comment into a variable.
-    const [comment,] = command.parameters;
-
-    // check if it is a gap closable target.
-    if (J.ABS.EXT.TOOLS.RegExp.GapCloseTarget.test(comment))
+  this.getValidCommentCommands()
+    .forEach(command =>
     {
-      // flag it as such.
-      gapCloseTarget = true;
-    }
-  });
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if it is a gap closable target.
+      if (J.ABS.EXT.TOOLS.RegExp.GapCloseTarget.test(comment))
+      {
+        // flag it as such.
+        gapCloseTarget = true;
+      }
+    });
 
   // return what we found.
   return gapCloseTarget;

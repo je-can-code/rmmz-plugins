@@ -38,21 +38,19 @@ J.ABS.EXT.INPUT.PluginParameters = PluginManager.parameters(J.ABS.EXT.INPUT.Meta
 /**
  * Extend this plugin's metadata with additional configurable data points.
  */
-J.ABS.EXT.INPUT.Metadata =
-  {
-    // the previously defined metadata.
-    ...J.ABS.EXT.INPUT.Metadata,
-  };
+J.ABS.EXT.INPUT.Metadata = {
+  // the previously defined metadata.
+  ...J.ABS.EXT.INPUT.Metadata,
+};
 
 /**
  * A collection of all aliased methods for this plugin.
  */
-J.ABS.EXT.INPUT.Aliased =
-  {
-    DataManager: new Map(),
-    JABS_Engine: new Map(),
-    JABS_Battler: new Map(),
-  };
+J.ABS.EXT.INPUT.Aliased = {
+  DataManager: new Map(),
+  JABS_Engine: new Map(),
+  JABS_Battler: new Map(),
+};
 //endregion metadata
 
 /**

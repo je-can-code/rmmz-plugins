@@ -7,7 +7,8 @@ J.ABS.EXT.SPEED.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototy
 Game_Enemy.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.ABS.EXT.SPEED.Aliased.Game_Enemy.get('onBattlerDataChange').call(this);
+  J.ABS.EXT.SPEED.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
 
   // update JABS-related things.
   this.refreshSpeedBoosts();

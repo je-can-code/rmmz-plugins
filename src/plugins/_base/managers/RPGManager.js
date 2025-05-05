@@ -115,7 +115,7 @@ class RPGManager
       if (result === null) return;
 
       // extract the captured formula.
-      const [ /* skip first index */, stringResult] = result;
+      const [ /* skip first index */, stringResult ] = result;
 
       // set this to what we found.
       val = stringResult;
@@ -202,17 +202,19 @@ class RPGManager
     }
 
     // get the note data from this skill.
-    const lines = databaseData.note.split(/[\r\n]+/);
+    const lines = databaseData.note?.split(/[\r\n]+/) ?? [];
 
     // if we have no matching notes, then short circuit.
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value.
-    let val = 0;
+    let val = null;
 
     // iterate over each valid line of the note.
     lines.forEach(line =>
@@ -230,7 +232,15 @@ class RPGManager
       val = parseFloat(numericResult);
     });
 
-    // return the
+    if (val === null)
+    {
+      // return null or 0 depending on provided options.
+      return nullIfEmpty
+        ? null
+        : 0;
+    }
+
+    // return the value.
     return val;
   }
 
@@ -402,7 +412,9 @@ class RPGManager
     if (!databaseDatas.length)
     {
       // short circuit with null if we are using the flag, or 0 otherwise.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value to 0.
@@ -435,18 +447,15 @@ class RPGManager
    * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
    * @returns {number|null} The calculated result from all formula summed together.
    */
-  static getResultsFromAllNotesByRegex(
-    databaseDatas,
-    structure,
-    baseParam = 0,
-    context = null,
-    nullIfEmpty = false)
+  static getResultsFromAllNotesByRegex(databaseDatas, structure, baseParam = 0, context = null, nullIfEmpty = false)
   {
     // check to make sure we have a collection to work with.
     if (!databaseDatas.length)
     {
       // short circuit with null if we are using the flag, or 0 otherwise.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value to 0.
@@ -516,7 +525,7 @@ class RPGManager
     const mapper = data =>
     {
       // extract the data points from the array found.
-      const [skillId, chance] = data;
+      const [ skillId, chance ] = data;
 
       // return the built on-chance effect with the given data.
       return new JABS_OnChanceEffect(skillId, chance ?? 100, key);
@@ -621,8 +630,10 @@ class RPGManager
   static checkForBooleanFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
   {
     // get all results from all objects that could have true/false/null values.
-    const results = databaseDatas.map(databaseData =>
-      this.checkForBooleanFromNoteByRegex(databaseData, structure, nullIfEmpty));
+    const results = databaseDatas.map(databaseData => this.checkForBooleanFromNoteByRegex(
+      databaseData,
+      structure,
+      nullIfEmpty));
 
     // filter away the non-values.
     const onlyTrueRemains = results
@@ -656,7 +667,7 @@ class RPGManager
    * If the optional flag `tryParse` is true, then it will attempt to parse out
    * the array of values as well, including translating strings to numbers/booleans
    * and keeping array structures all intact.
-   * @param {string} databaseObject The contents of the note of a given object.
+   * @param {RPG_Base} databaseObject The database object to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
    * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @returns {any[][]|null} The array of arrays from the notes, or null.
@@ -679,7 +690,7 @@ class RPGManager
       if (line.match(structure))
       {
         // extract the captured formula.
-        const [, result] = structure.exec(line);
+        const [ , result ] = structure.exec(line);
 
         // parse the value out of the regex capture group.
         val.push(result);
@@ -736,7 +747,7 @@ class RPGManager
       if (line.match(structure))
       {
         // extract the captured formula.
-        const [, result] = structure.exec(line);
+        const [ , result ] = structure.exec(line);
 
         // parse the value out of the regex capture group.
         val = JSON.parse(result);

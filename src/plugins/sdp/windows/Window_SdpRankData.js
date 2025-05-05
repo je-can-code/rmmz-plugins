@@ -1,5 +1,6 @@
 //region Window_SdpRankData
-class Window_SdpRankData extends Window_Base
+class Window_SdpRankData
+  extends Window_Base
 {
   /**
    * The color index of the rarity of the panel selected.
@@ -185,4 +186,5 @@ class Window_SdpRankData extends Window_Base
     }
   }
 }
+
 //endregion Window_SdpRankData

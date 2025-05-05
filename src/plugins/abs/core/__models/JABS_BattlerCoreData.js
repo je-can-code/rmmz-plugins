@@ -28,20 +28,20 @@ JABS_BattlerCoreData.prototype.constructor = JABS_BattlerCoreData;
  * @param {boolean} isInanimate Whether or not this battler is inanimate.
  */
 JABS_BattlerCoreData.prototype.initialize = function({
-  battlerId,
-  teamId,
-  battlerAI,
-  sightRange,
-  alertedSightBoost,
-  pursuitRange,
-  alertedPursuitBoost,
-  alertDuration,
-  canIdle,
-  showHpBar,
-  showBattlerName,
-  isInvincible,
-  isInanimate
-})
+                                                       battlerId,
+                                                       teamId,
+                                                       battlerAI,
+                                                       sightRange,
+                                                       alertedSightBoost,
+                                                       pursuitRange,
+                                                       alertedPursuitBoost,
+                                                       alertDuration,
+                                                       canIdle,
+                                                       showHpBar,
+                                                       showBattlerName,
+                                                       isInvincible,
+                                                       isInanimate
+                                                     })
 {
   /**
    * The id of the enemy that this battler represents.
@@ -133,7 +133,8 @@ JABS_BattlerCoreData.prototype.initialize = function({
  * This is effectively a hook for adding extra properties into this object.
  */
 JABS_BattlerCoreData.prototype.initMembers = function()
-{ };
+{
+};
 
 /**
  * Gets this battler's enemy id.

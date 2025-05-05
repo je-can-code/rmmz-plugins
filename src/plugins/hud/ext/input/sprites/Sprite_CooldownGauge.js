@@ -2,7 +2,8 @@
  * A simple calculated gauge representing the current cooldown of an action.
  * While the skill is ready, this gauge is invisible.
  */
-class Sprite_CooldownGauge extends Sprite
+class Sprite_CooldownGauge
+  extends Sprite
 {
   constructor(cooldownData)
   {
@@ -176,6 +177,7 @@ class Sprite_CooldownGauge extends Sprite
 
     return parsedRate;
   }
+
   //endregion properties
 
   /**
@@ -328,7 +330,7 @@ class Sprite_CooldownGauge extends Sprite
     this.bitmap.fillRect(x, y, w, h, this.gaugeBackColor());
 
     // calculate the bordered x,y coordinates.
-    const [borderedX, borderedY] = [x + 1, y + 1];
+    const [ borderedX, borderedY ] = [ x + 1, y + 1 ];
 
     // render the filled portion of the gauge onto the bitmap.
     this.bitmap.gradientFillRect(

@@ -2,7 +2,8 @@
 /**
  * A class representing a single item entry from the database.
  */
-class RPG_Item extends RPG_UsableItem
+class RPG_Item
+  extends RPG_UsableItem
 {
   //region properties
   /**
@@ -29,6 +30,7 @@ class RPG_Item extends RPG_UsableItem
    * @type {1}
    */
   kind = 1;
+
   //endregion properties
 
   /**
@@ -46,5 +48,15 @@ class RPG_Item extends RPG_UsableItem
     this.itypeId = item.itypeId;
     this.price = item.price;
   }
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return true;
+  }
 }
+
 //endregion RPG_Item

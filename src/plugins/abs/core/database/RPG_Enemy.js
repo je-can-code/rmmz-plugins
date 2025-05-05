@@ -4,13 +4,12 @@
  * This number is the id of the team that this battler will belong to.
  * @type {number}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsTeamId",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsTeamId", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsTeamId();
-    },
-  });
+    return this.getJabsTeamId();
+  },
+});
 
 /**
  * Gets the JABS team id for this battler.
@@ -37,13 +36,12 @@ RPG_BaseBattler.prototype.extractJabsTeamId = function()
  * decide an action to perform when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsPrepareTime",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsPrepareTime", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsPrepareTime();
-    },
-  });
+    return this.getJabsPrepareTime();
+  },
+});
 
 /**
  * Gets the JABS prepare time for this battler.
@@ -71,13 +69,12 @@ RPG_BaseBattler.prototype.extractJabsPrepareTime = function()
  * engaging in combat when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsSightRange",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsSightRange", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSightRange();
-    },
-  });
+    return this.getJabsSightRange();
+  },
+});
 
 /**
  * Gets the JABS sight range for this battler.
@@ -105,13 +102,12 @@ RPG_BaseBattler.prototype.extractJabsSightRange = function()
  * engaging in combat when controlled by the {@link JABS_AiManager}.
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsPursuitRange",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsPursuitRange", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsPursuitRange();
-    },
-  });
+    return this.getJabsPursuitRange();
+  },
+});
 
 /**
  * Gets the JABS pursuit range for this battler.
@@ -139,13 +135,12 @@ RPG_BaseBattler.prototype.extractJabsPursuitRange = function()
  * when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertDuration",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertDuration", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAlertDuration();
-    },
-  });
+    return this.getJabsAlertDuration();
+  },
+});
 
 /**
  * Gets the JABS alert duration for this battler.
@@ -173,13 +168,12 @@ RPG_BaseBattler.prototype.extractJabsAlertDuration = function()
  * outside of combat when controlled by the {@link JABS_AiManager}.<br>
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertedSightBoost",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertedSightBoost", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAlertedSightBoost();
-    },
-  });
+    return this.getJabsAlertedSightBoost();
+  },
+});
 
 /**
  * Gets the JABS alerted sight boost for this battler.
@@ -210,13 +204,12 @@ RPG_BaseBattler.prototype.extractJabsAlertedSightBoost = function()
  * alert duration may spill over into the beginning of combat.
  * @returns {number|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertedPursuitBoost",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAlertedPursuitBoost", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAlertedPursuitBoost();
-    },
-  });
+    return this.getJabsAlertedPursuitBoost();
+  },
+});
 
 /**
  * Gets the JABS alerted pursuit boost for this battler.
@@ -243,13 +236,12 @@ RPG_BaseBattler.prototype.extractJabsAlertedPursuitBoost = function()
  * This defines how this battler's AI will be controlled.
  * @type {JABS_EnemyAI}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsBattlerAi",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsBattlerAi", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsBattlerAi();
-    },
-  });
+    return this.getJabsBattlerAi();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of careful.
@@ -275,13 +267,12 @@ RPG_BaseBattler.prototype.getJabsBattlerAi = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitCareful",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitCareful", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitCareful();
-    },
-  });
+    return this.getJabsAiTraitCareful();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of careful.
@@ -308,13 +299,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitCareful = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitExecutor",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitExecutor", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitExecutor();
-    },
-  });
+    return this.getJabsAiTraitExecutor();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of executor.
@@ -341,13 +331,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitExecutor = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitReckless",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitReckless", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitReckless();
-    },
-  });
+    return this.getJabsAiTraitReckless();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of reckless.
@@ -374,13 +363,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitReckless = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitHealer",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitHealer", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitHealer();
-    },
-  });
+    return this.getJabsAiTraitHealer();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of healer.
@@ -407,13 +395,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitHealer = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitFollower",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitFollower", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitFollower();
-    },
-  });
+    return this.getJabsAiTraitFollower();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of follower.
@@ -440,13 +427,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitFollower = function()
  * This boolean decides whether or not this battler has this AI trait.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitLeader",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsAiTraitLeader", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsAiTraitLeader();
-    },
-  });
+    return this.getJabsAiTraitLeader();
+  },
+});
 
 /**
  * Checks whether or not this battler has the JABS AI trait of leader.
@@ -476,13 +462,12 @@ RPG_BaseBattler.prototype.extractJabsAiTraitLeader = function()
  * This boolean decides whether or not this battler can idle while not engaged in combat.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigCanIdle",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigCanIdle", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigCanIdle();
-    },
-  });
+    return this.getJabsConfigCanIdle();
+  },
+});
 
 /**
  * Checks whether or not this battler can idle.
@@ -509,13 +494,12 @@ RPG_BaseBattler.prototype.extractJabsConfigCanIdle = function()
  * This boolean decides whether or not this battler can idle while not engaged in combat.
  * @type {boolean}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoIdle",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoIdle", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigNoIdle();
-    },
-  });
+    return this.getJabsConfigNoIdle();
+  },
+});
 
 /**
  * Checks whether or not this battler can idle.
@@ -542,13 +526,12 @@ RPG_BaseBattler.prototype.extractJabsConfigNoIdle = function()
  * This boolean decides whether or not this battler will reveal its hp bar under its sprite.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowHpBar",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowHpBar", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigShowHpBar();
-    },
-  });
+    return this.getJabsConfigShowHpBar();
+  },
+});
 
 /**
  * Checks whether or not this battler can idle.
@@ -575,13 +558,12 @@ RPG_BaseBattler.prototype.extractJabsConfigShowHpBar = function()
  * This boolean decides whether or not this battler will hide its hp bar under its sprite.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoHpBar",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoHpBar", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigNoHpBar();
-    },
-  });
+    return this.getJabsConfigNoHpBar();
+  },
+});
 
 /**
  * Checks whether or not this battler can idle.
@@ -608,13 +590,12 @@ RPG_BaseBattler.prototype.extractJabsConfigNoHpBar = function()
  * This boolean decides whether or not this battler will reveal its name under its sprite.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowName",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigShowName", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigShowName();
-    },
-  });
+    return this.getJabsConfigShowName();
+  },
+});
 
 /**
  * Checks whether or not this battler's name is visible.
@@ -641,13 +622,12 @@ RPG_BaseBattler.prototype.extractJabsConfigShowName = function()
  * This boolean decides whether or not this battler will hide its name under its sprite.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoName",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNoName", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigNoName();
-    },
-  });
+    return this.getJabsConfigNoName();
+  },
+});
 
 /**
  * Checks whether or not this battler can idle.
@@ -674,13 +654,12 @@ RPG_BaseBattler.prototype.extractJabsConfigNoName = function()
  * This boolean decides whether or not actions can collide with this battler.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigInvincible",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigInvincible", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigInvincible();
-    },
-  });
+    return this.getJabsConfigInvincible();
+  },
+});
 
 /**
  * Checks whether or not this battler is invincible.
@@ -707,13 +686,12 @@ RPG_BaseBattler.prototype.extractJabsConfigInvincible = function()
  * This boolean decides whether or not actions cannot collide with this battler.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNotInvincible",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNotInvincible", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigNotInvincible();
-    },
-  });
+    return this.getJabsConfigNotInvincible();
+  },
+});
 
 /**
  * Checks whether or not this battler isn't invincible.
@@ -740,13 +718,12 @@ RPG_BaseBattler.prototype.extractJabsConfigNotInvincible = function()
  * This boolean decides whether or not to enable being inanimate
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigInanimate",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigInanimate", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigInanimate();
-    },
-  });
+    return this.getJabsConfigInanimate();
+  },
+});
 
 /**
  * Checks whether or not this battler is inanimate.
@@ -773,13 +750,12 @@ RPG_BaseBattler.prototype.extractJabsConfigInanimate = function()
  * This boolean decides whether or not to disable being inanimate.
  * @returns {boolean|null}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNotInanimate",
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsConfigNotInanimate", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsConfigNotInanimate();
-    },
-  });
+    return this.getJabsConfigNotInanimate();
+  },
+});
 
 /**
  * Checks whether or not this battler isn't inanimate.

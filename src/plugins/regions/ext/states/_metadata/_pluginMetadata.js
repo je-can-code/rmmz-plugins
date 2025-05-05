@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_RegionStatesPluginMetadata extends PluginMetadata
+class J_RegionStatesPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -30,4 +31,5 @@ class J_RegionStatesPluginMetadata extends PluginMetadata
     this.delayBetweenApplications = this.parsedPluginParameters['application-delay'] ?? 15;
   }
 }
+
 //endregion plugin metadata

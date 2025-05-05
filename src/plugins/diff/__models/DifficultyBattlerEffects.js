@@ -34,21 +34,21 @@ class DifficultyBattlerEffects
    * The array aligns percent multipliers against the matching index's parameters.
    * @type {[number, number, number, number, number, number, number, number]}
    */
-  bparams = [100, 100, 100, 100, 100, 100, 100, 100];
+  bparams = [ 100, 100, 100, 100, 100, 100, 100, 100 ];
 
   /**
    * The secondary/s-parameter multipliers.
    * The array aligns percent multipliers against the matching index's parameters.
    * @type {[number, number, number, number, number, number, number, number, number, number]}
    */
-  sparams = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+  sparams = [ 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ];
 
   /**
    * The extraneous/x-parameter multipliers.
    * The array aligns percent multipliers against the matching index's parameters.
    * @type {[number, number, number, number, number, number, number, number, number, number]}
    */
-  xparams = [100, 100, 100, 100, 100, 100, 100, 100, 100, 100];
+  xparams = [ 100, 100, 100, 100, 100, 100, 100, 100, 100, 100 ];
 
   /**
    * The custom/c-parameter multipliers.
@@ -58,4 +58,5 @@ class DifficultyBattlerEffects
   cparams = [];
   //endregion params
 }
+
 //endregion DifficultyBattlerEffects

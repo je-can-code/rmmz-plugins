@@ -35,7 +35,8 @@ class JABS_ActionOptionsBuilder
   build()
   {
     // use an empty location if none was provided.
-    const locationToClone = this.#sourceLocation ?? JABS_Location.Builder().build();
+    const locationToClone = this.#sourceLocation ?? JABS_Location.Builder()
+      .build();
 
     // compile a new action.
     const newJabsActionOptions = new JABS_ActionOptions(
@@ -106,4 +107,5 @@ class JABS_ActionOptionsBuilder
     return this;
   }
 }
+
 //endregion JABS_ActionOptionsBuilder

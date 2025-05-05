@@ -10,6 +10,9 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // capture the text in a local variable for good practices!
   let textToModify = text;
 
+  // handle quest key replacements.
+  textToModify = this.translateQuestTextCode(textToModify);
+
   // handle weapon string replacements.
   textToModify = this.translateWeaponTextCode(textToModify);
 
@@ -43,11 +46,12 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // handle skill type string replacements.
   textToModify = this.translateSkillTypeTextCode(textToModify);
 
-  // handle sdp string replacements.
+  // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
-  return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters').call(this, textToModify);
+  return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters')
+    .call(this, textToModify);
 };
 
 /**
@@ -190,8 +194,8 @@ Window_Base.prototype.translateSkillTypeTextCode = function(text)
     // TODO: make a static "menu item" class out of this?
     // get the replacement data.
     const iconIndex = IconManager.skillType(skillTypeId);
-    const colorId = ColorManager.skillType(elementId);
-    const name = TextManager.skillType(elementId);
+    const colorId = ColorManager.skillType(skillTypeId);
+    const name = TextManager.skillType(skillTypeId);
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorId}]${name}\\C[0]`;
@@ -276,7 +280,7 @@ Window_Base.prototype.translateSdpTextCode = function(text)
 {
   // if not using the SDP system, then don't try to process the text.
   if (!J.SDP) return text;
-  
+
   return text.replace(/\\sdp\[(.*)]/gi, (_, p1) =>
   {
     // determine the sdp key.
@@ -286,16 +290,59 @@ Window_Base.prototype.translateSdpTextCode = function(text)
     if (!sdpKey) return text;
 
     // grab the panel by its key.
-    const sdp = $gameParty.getSdpByKey(sdpKey);
+    const sdp = J.SDP.Metadata.panelsMap.get(sdpKey);
 
     // if the panel doesn't exist, then do not parse the panel.
     if (!sdp) return text;
 
     // extract the necessary data from the SDP.
-    const { name, rarity: colorIndex, iconIndex } = sdp;
+    const {
+      name,
+      rarity: colorIndex,
+      iconIndex
+    } = sdp;
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;
+  });
+};
+
+/**
+ * Translates the text code into the name and icon of the corresponding quest.
+ * @param {string} text The text that has a text code in it.
+ * @returns {string} The new text to parse.
+ */
+Window_Base.prototype.translateQuestTextCode = function(text)
+{
+  // if not using the Questopedia system, then don't try to process the text.
+  if (!J.OMNI?.EXT?.QUEST) return text;
+
+  return text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) =>
+  {
+    // determine the quest key.
+    const questKey = p1 ?? String.empty;
+
+    // if no key was provided, then do not parse the quest.
+    if (!questKey) return text;
+
+    // grab the quest by its key.
+    const quest = QuestManager.quest(questKey);
+
+    // if the quest doesn't exist, then do not parse the quest.
+    if (!quest) return text;
+
+    // grab the name of the quest.
+    const questName = quest.name()
+    //   .replace(/[\\]{1}(.)/gi, originalText =>
+    // {
+    //   return `\\${originalText}`;
+    // });
+
+    // for quests, the icon displayed is the category icon instead.
+    const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;
+
+    // return the constructed replacement string.
+    return `\\I[${questIconIndex}]\\C[1]${questName}\\C[0]`;
   });
 };
 //endregion more database text codes
@@ -307,7 +354,8 @@ Window_Base.prototype.translateSdpTextCode = function(text)
 J.MESSAGE.Aliased.Window_Base.set('obtainEscapeCode', Window_Base.prototype.obtainEscapeCode);
 Window_Base.prototype.obtainEscapeCode = function(textState)
 {
-  const originalEscape = J.MESSAGE.Aliased.Window_Base.get('obtainEscapeCode').call(this, textState);
+  const originalEscape = J.MESSAGE.Aliased.Window_Base.get('obtainEscapeCode')
+    .call(this, textState);
   if (!originalEscape)
   {
     return this.customEscapeCodes(textState);
@@ -325,7 +373,7 @@ Window_Base.prototype.obtainEscapeCode = function(textState)
  */
 Window_Base.prototype.customEscapeCodes = function(textState)
 {
-  if (!textState) return;
+  if (!textState) return String.empty;
 
   const regExp = this.escapeCodes();
   const arr = regExp.exec(textState.text.slice(textState.index));
@@ -359,7 +407,8 @@ Window_Base.prototype.escapeCodes = function()
 J.MESSAGE.Aliased.Window_Base.set('processEscapeCharacter', Window_Base.prototype.processEscapeCharacter);
 Window_Base.prototype.processEscapeCharacter = function(code, textState)
 {
-  J.MESSAGE.Aliased.Window_Base.get('processEscapeCharacter').call(this, code, textState);
+  J.MESSAGE.Aliased.Window_Base.get('processEscapeCharacter')
+    .call(this, code, textState);
   switch (code)
   {
     case "_":
@@ -377,7 +426,7 @@ Window_Base.prototype.processEscapeCharacter = function(code, textState)
  * This does not apply to {@link Window_Base.prototype.drawTextEx}, but alternatively
  * you can interpolate `"\_"` before and after the text desired to be italics to
  * achieve the same effect.
- * @param {boolean} force Optional. If provided, will force one way or the other.
+ * @param {?boolean} force Optional. If provided, will force one way or the other.
  */
 Window_Base.prototype.toggleItalics = function(force = null)
 {
@@ -387,7 +436,7 @@ Window_Base.prototype.toggleItalics = function(force = null)
 /**
  * Wraps the given text with the message code for italics.
  * @param {string} text The text to italicize.
- * @returns {`\\_${text}\\_`} The italicized text.
+ * @returns {string} The italicized text like this: `\\_${text}\\_`
  */
 Window_Base.prototype.italicizeText = function(text)
 {
@@ -400,7 +449,7 @@ Window_Base.prototype.italicizeText = function(text)
  * This does not apply to {@link Window_Base.prototype.drawTextEx}, but alternatively
  * you can interpolate `"\*"` before and after the text desired to be bold to
  * achieve the same effect.
- * @param {boolean} force Optional. If provided, will force one way or the other.
+ * @param {?boolean} force Optional. If provided, will force one way or the other.
  */
 Window_Base.prototype.toggleBold = function(force = null)
 {
@@ -410,7 +459,7 @@ Window_Base.prototype.toggleBold = function(force = null)
 /**
  * Wraps the given text with the message code for bold.
  * @param {string} text The text to bolden.
- * @returns {`\\*${text}\\*`}
+ * @returns {string} The bolded text like this: `\\*${text}\\*`
  */
 Window_Base.prototype.boldenText = function(text)
 {
@@ -421,7 +470,7 @@ Window_Base.prototype.boldenText = function(text)
  * Wraps the given text with a font-size modifier shorthand.
  * @param {number} modifier The size modification.
  * @param {string} text The text to modify size for.
- * @returns {`\\FS[${number}]${string}\\FS[${number}]`}
+ * @returns {string} The fontsize modified text like this: `\\FS[${number}]${string}\\FS[${number}]`
  */
 Window_Base.prototype.modFontSizeForText = function(modifier, text)
 {

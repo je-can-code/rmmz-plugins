@@ -1,13 +1,14 @@
 /**
  * Processes the various on-hit effects against the target.
- * @param {JABS_Action} action The `JABS_Action` containing the action data.
+ * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
  */
 J.ABS.EXT.TOOLS.Aliased.JABS_Engine.set('processOnHitEffects', JABS_Engine.prototype.processOnHitEffects)
 JABS_Engine.prototype.processOnHitEffects = function(action, target)
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.JABS_Engine.get('processOnHitEffects').call(this, action, target);
+  J.ABS.EXT.TOOLS.Aliased.JABS_Engine.get('processOnHitEffects')
+    .call(this, action, target);
 
   // handle gapclose logic.
   this.handleGapClose(action, target);
@@ -27,7 +28,7 @@ JABS_Engine.prototype.handleGapClose = function(action, target)
 
 /**
  * Determine whether or not the target can be gap closed to.
- * @param {JABS_Action} action The `JABS_Action` containing the action data.
+ * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
  * @returns {boolean} True if the target can be gap closed to, false otherwise.
  */

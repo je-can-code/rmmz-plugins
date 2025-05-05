@@ -6,7 +6,8 @@ J.HUD.EXT.INPUT.Aliased.Scene_Map.set('initHudMembers', Scene_Map.prototype.init
 Scene_Map.prototype.initHudMembers = function()
 {
   // perform original logic.
-  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('initHudMembers').call(this);
+  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('initHudMembers')
+    .call(this);
 
   /**
    * The input frame window on the map.
@@ -22,7 +23,8 @@ J.HUD.EXT.INPUT.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.cr
 Scene_Map.prototype.createAllWindows = function()
 {
   // perform original logic.
-  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('createAllWindows').call(this);
+  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('createAllWindows')
+    .call(this);
 
   // create the target frame.
   this.createInputFrameWindow();
@@ -118,7 +120,8 @@ J.HUD.EXT.INPUT.Aliased.Scene_Map.set('updateHudFrames', Scene_Map.prototype.upd
 Scene_Map.prototype.updateHudFrames = function()
 {
   // perform original logic.
-  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('updateHudFrames').call(this);
+  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('updateHudFrames')
+    .call(this);
 
   // manages hud refreshes.
   this.handleInputFrameUpdate();
@@ -145,7 +148,8 @@ Scene_Map.prototype.handleRefreshInputFrame = function()
   if ($hudManager.hasRequestRefreshInputFrame())
   {
     // refresh the input frame.
-    this.getInputFrameWindow().refresh();
+    this.getInputFrameWindow()
+      .refresh();
 
     // let the hud manager know we've done the deed.
     $hudManager.acknowledgeRefreshInputFrame();
@@ -181,7 +185,8 @@ J.HUD.EXT.INPUT.Aliased.Scene_Map.set('refreshHud', Scene_Map.prototype.refreshH
 Scene_Map.prototype.refreshHud = function()
 {
   // perform original logic.
-  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('refreshHud').call(this);
+  J.HUD.EXT.INPUT.Aliased.Scene_Map.get('refreshHud')
+    .call(this);
 
   // grab the window.
   const inputFrameWindow = this.getInputFrameWindow();

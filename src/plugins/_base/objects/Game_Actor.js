@@ -126,8 +126,7 @@ Game_Actor.prototype.getActorNotes = function()
     actor,
 
     // add the actor's class to the source list.
-    this.class(actor.classId)
-  ];
+    this.class(actor.classId) ];
 };
 
 /**
@@ -145,8 +144,7 @@ Game_Actor.prototype.getNotesSources = function()
     this.currentClass(),
 
     // add all of the actor's valid equips to the source list.
-    ...this.equippedEquips(),
-  ];
+    ...this.equippedEquips(), ];
 
   // combine the two source lists.
   const combinedNoteSources = baseNoteSources.concat(actorUniqueNoteSources);
@@ -163,7 +161,8 @@ J.BASE.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
 Game_Actor.prototype.setup = function(actorId)
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('setup').call(this, actorId);
+  J.BASE.Aliased.Game_Actor.get('setup')
+    .call(this, actorId);
 
   // execute the on-setup hook.
   this.onSetup(actorId);
@@ -195,7 +194,8 @@ Game_Actor.prototype.learnSkill = function(skillId)
   }
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('learnSkill').call(this, skillId);
+  J.BASE.Aliased.Game_Actor.get('learnSkill')
+    .call(this, skillId);
 };
 
 /**
@@ -224,7 +224,8 @@ Game_Actor.prototype.forgetSkill = function(skillId)
   }
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('forgetSkill').call(this, skillId);
+  J.BASE.Aliased.Game_Actor.get('forgetSkill')
+    .call(this, skillId);
 };
 
 /**
@@ -245,7 +246,8 @@ J.BASE.Aliased.Game_Actor.set('die', Game_Actor.prototype.die);
 Game_Actor.prototype.die = function()
 {
   // perform original effects.
-  J.BASE.Aliased.Game_Actor.get('die').call(this);
+  J.BASE.Aliased.Game_Actor.get('die')
+    .call(this);
 
   // perform on-death effects.
   this.onDeath();
@@ -268,7 +270,8 @@ J.BASE.Aliased.Game_Actor.set('revive', Game_Actor.prototype.revive);
 Game_Actor.prototype.revive = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('revive').call(this);
+  J.BASE.Aliased.Game_Actor.get('revive')
+    .call(this);
 
   // perform on-revive effects.
   this.onRevive();
@@ -296,7 +299,8 @@ J.BASE.Aliased.Game_Actor.set('changeClass', Game_Actor.prototype.changeClass);
 Game_Actor.prototype.changeClass = function(classId, keepExp)
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('changeClass').call(this, classId, keepExp);
+  J.BASE.Aliased.Game_Actor.get('changeClass')
+    .call(this, classId, keepExp);
 
   // perform on-class-change effects.
   this.onClassChange(classId, keepExp);
@@ -322,7 +326,8 @@ Game_Actor.prototype.changeEquip = function(slotId, item)
   const oldEquips = JsonEx.makeDeepCopy(this._equips);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('changeEquip').call(this, slotId, item);
+  J.BASE.Aliased.Game_Actor.get('changeEquip')
+    .call(this, slotId, item);
 
   // determine if the equips array changed from what it was before original logic.
   const isChanged = !oldEquips.equals(this._equips);
@@ -346,7 +351,8 @@ Game_Actor.prototype.discardEquip = function(item)
   const oldEquips = JsonEx.makeDeepCopy(this._equips);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('discardEquip').call(this, item);
+  J.BASE.Aliased.Game_Actor.get('discardEquip')
+    .call(this, item);
 
   // determine if the equips array changed from what it was before original logic.
   const isChanged = !oldEquips.equals(this._equips);
@@ -370,7 +376,8 @@ Game_Actor.prototype.forceChangeEquip = function(slotId, item)
   const oldEquips = JsonEx.makeDeepCopy(this._equips);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('forceChangeEquip').call(this, slotId, item);
+  J.BASE.Aliased.Game_Actor.get('forceChangeEquip')
+    .call(this, slotId, item);
 
   // determine if the equips array changed from what it was before original logic.
   const isChanged = !oldEquips.equals(this._equips);
@@ -394,7 +401,8 @@ Game_Actor.prototype.releaseUnequippableItems = function(forcing)
   const oldEquips = JsonEx.makeDeepCopy(this._equips);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('releaseUnequippableItems').call(this, forcing);
+  J.BASE.Aliased.Game_Actor.get('releaseUnequippableItems')
+    .call(this, forcing);
 
   // determine if the equips array changed from what it was before original logic.
   const isChanged = this.haveEquipsChanged(oldEquips);
@@ -450,7 +458,8 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
  */
 Game_Actor.prototype.equippedEquips = function()
 {
-  return this.equips().filter(equip => !!equip);
+  return this.equips()
+    .filter(equip => !!equip);
 };
 
 /**
@@ -469,7 +478,8 @@ J.BASE.Aliased.Game_Actor.set('levelUp', Game_Actor.prototype.levelUp);
 Game_Actor.prototype.levelUp = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('levelUp').call(this);
+  J.BASE.Aliased.Game_Actor.get('levelUp')
+    .call(this);
 
   // triggers the on-level-up hook.
   this.onLevelUp();
@@ -491,7 +501,8 @@ J.BASE.Aliased.Game_Actor.set('levelDown', Game_Actor.prototype.levelDown);
 Game_Actor.prototype.levelDown = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Actor.get('levelDown').call(this);
+  J.BASE.Aliased.Game_Actor.get('levelDown')
+    .call(this);
 
   // triggers the on-level-down hook.
   this.onLevelDown();

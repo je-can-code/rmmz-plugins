@@ -4,7 +4,8 @@ import { Game_Action, Game_Actor, Game_Battler, Game_Enemy } from "./rmmz_object
 import { Rectangle, Window } from "./rmmz_core";
 import { Spriteset_Battle } from "./rmmz_sprites";
 
-declare class Window_Base extends Window
+declare class Window_Base
+  extends Window
 {
   constructor(rect: Rectangle);
 
@@ -413,7 +414,10 @@ declare class Window_Base extends Window
    * @param text
    * @returns {width:number, height:number}
    */
-  textSizeEx(text: string): { height: number, width: number };
+  textSizeEx(text: string): {
+    height: number,
+    width: number
+  };
 
   /**
    * Processes all the text in the window, then
@@ -699,7 +703,14 @@ declare class Window_Base extends Window
    * @param {String} color2
    * @memberof Window_Base
    */
-  drawCurrentAndMax(current: number, max: number, x: number, y: number, width: number, color1: string, color2: string): void;
+  drawCurrentAndMax(
+    current: number,
+    max: number,
+    x: number,
+    y: number,
+    width: number,
+    color1: string,
+    color2: string): void;
 
   /**
    * Draws the actor hp at the specified x and y coordinates within
@@ -923,7 +934,8 @@ declare class Window_Base extends Window
   maxFontSizeInLine(line: string): number;
 }
 
-declare class Window_Scrollable extends Window_Base
+declare class Window_Scrollable
+  extends Window_Base
 {
   /**
    * Constructor for Window_Scrollable
@@ -1077,7 +1089,8 @@ declare class Window_Scrollable extends Window_Base
   paint(): void;
 }
 
-declare class Window_Selectable extends Window_Scrollable
+declare class Window_Selectable
+  extends Window_Scrollable
 {
   constructor(rect: Rectangle);
 
@@ -1463,7 +1476,8 @@ declare class Window_Selectable extends Window_Scrollable
   refresh(): void;
 }
 
-declare class Window_Command extends Window_Selectable
+declare class Window_Command
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -1636,7 +1650,8 @@ declare class Window_Command extends Window_Selectable
  * The window for selecting an actor's action on the battle screen.
  * @class Window_ActorCommand
  */
-declare class Window_ActorCommand extends Window_Command
+declare class Window_ActorCommand
+  extends Window_Command
 {
   constructor();
 
@@ -1679,7 +1694,8 @@ declare class Window_ActorCommand extends Window_Command
   selectLast(): void;
 }
 
-declare class Window_StatusBase extends Window_Selectable
+declare class Window_StatusBase
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -1822,7 +1838,8 @@ declare class Window_StatusBase extends Window_Selectable
  * The window for displaying the status of party members on the battle screen.
  * @class Window_BattleStatus
  */
-declare class Window_BattleStatus extends Window_StatusBase
+declare class Window_BattleStatus
+  extends Window_StatusBase
 {
   constructor(rect: Rectangle);
 
@@ -1836,7 +1853,8 @@ declare class Window_BattleStatus extends Window_StatusBase
  * The window for selecting a target actor on the battle screen.
  * @class Window_BattleActor
  */
-declare class Window_BattleActor extends Window_BattleStatus
+declare class Window_BattleActor
+  extends Window_BattleStatus
 {
   constructor(rect: Rectangle);
 
@@ -1866,7 +1884,8 @@ declare class Window_BattleActor extends Window_BattleStatus
  * The window for selecting a target enemy on the battle screen.
  * @class Window_BattleEnemy
  */
-declare class Window_BattleEnemy extends Window_Selectable
+declare class Window_BattleEnemy
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -1921,7 +1940,8 @@ declare class Window_BattleEnemy extends Window_Selectable
   select(index: number): void;
 }
 
-declare class Window_ItemList extends Window_Selectable
+declare class Window_ItemList
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -1955,7 +1975,8 @@ declare class Window_ItemList extends Window_Selectable
  * The window for selecting an item to use on the battle screen.
  * @class Window_BattleItem
  */
-declare class Window_BattleItem extends Window_ItemList
+declare class Window_BattleItem
+  extends Window_ItemList
 {
   constructor(rect: Rectangle);
 
@@ -1972,7 +1993,8 @@ declare class Window_BattleItem extends Window_ItemList
  * handled as a window for convenience.
  * @class Window_BattleLog
  */
-declare class Window_BattleLog extends Window_Base
+declare class Window_BattleLog
+  extends Window_Base
 {
   constructor(rect: Rectangle);
 
@@ -2146,7 +2168,8 @@ declare class Window_BattleLog extends Window_Base
  * The window for selecting a skill on the skill screen.
  * @class Window_SkillList
  */
-declare class Window_SkillList extends Window_Selectable
+declare class Window_SkillList
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -2230,7 +2253,8 @@ declare class Window_SkillList extends Window_Selectable
  * The window for selecting a skill to use on the battle screen.
  * @class Window_BattleSkill
  */
-declare class Window_BattleSkill extends Window_SkillList
+declare class Window_BattleSkill
+  extends Window_SkillList
 {
   constructor(rect: Rectangle);
 
@@ -2244,7 +2268,8 @@ declare class Window_BattleSkill extends Window_SkillList
  * The window used for the event command [Show Choices].
  * @class Window_ChoiceList
  */
-declare class Window_ChoiceList extends Window_Command
+declare class Window_ChoiceList
+  extends Window_Command
 {
   constructor();
 
@@ -2280,7 +2305,8 @@ declare class Window_ChoiceList extends Window_Command
  * The window for displaying switches and variables on the debug screen.
  * @class Window_DebugEdit
  */
-declare class Window_DebugEdit extends Window_Selectable
+declare class Window_DebugEdit
+  extends Window_Selectable
 {
   constructor(x: number, y: number, width: number);
 
@@ -2306,7 +2332,8 @@ declare class Window_DebugEdit extends Window_Selectable
  * The window for selecting a block of switches/variables on the debug screen.
  * @class Window_DebugRange
  */
-declare class Window_DebugRange extends Window_Selectable
+declare class Window_DebugRange
+  extends Window_Selectable
 {
   constructor(x: number, y: number);
 
@@ -2321,12 +2348,14 @@ declare class Window_DebugRange extends Window_Selectable
   setEditWindow(editWindow: Window_DebugEdit): void;
 }
 
-declare class Window_HorzCommand extends Window_Command
+declare class Window_HorzCommand
+  extends Window_Command
 {
   constructor(x: number, y: number);
 }
 
-declare class Window_EquipCommand extends Window_HorzCommand
+declare class Window_EquipCommand
+  extends Window_HorzCommand
 {
   protected constructor();
 }
@@ -2360,7 +2389,8 @@ declare class Window_EquipItem
  * The window for selecting an equipment slot on the equipment screen.
  * @class Window_EquipSlot
  */
-declare class Window_EquipSlot extends Window_Selectable
+declare class Window_EquipSlot
+  extends Window_Selectable
 {
   constructor(x: number, y: number, width: number, height: number);
 
@@ -2417,7 +2447,8 @@ declare class Window_EquipSlot extends Window_Selectable
   setItemWindow(itemWindow: Window_EquipItem): void;
 }
 
-declare class Window_EquipStatus extends Window_Base
+declare class Window_EquipStatus
+  extends Window_Base
 {
   protected constructor();
 }
@@ -2429,7 +2460,8 @@ declare class Window_EquipStatus extends Window_Base
  * The window used for the event command [Select Item].
  * @class Window_EventItem
  */
-declare class Window_EventItem extends Window_ItemList
+declare class Window_EventItem
+  extends Window_ItemList
 {
   constructor(messageWindow: Window_Message);
 
@@ -2474,14 +2506,16 @@ declare class Window_EventItem extends Window_ItemList
  * The window for selecting "Go to Title" on the game end screen.
  * @class Window_GameEnd
  */
-declare class Window_GameEnd extends Window_Base
+declare class Window_GameEnd
+  extends Window_Base
 {
   constructor();
 
   updatePlacement(): void;
 }
 
-declare class Window_Gold extends Window_Base
+declare class Window_Gold
+  extends Window_Base
 {
   constructor(x: number, y: number);
 
@@ -2502,7 +2536,8 @@ declare class Window_Gold extends Window_Base
   currencyUnit(): string;
 }
 
-declare class Window_Help extends Window_Base
+declare class Window_Help
+  extends Window_Base
 {
   constructor(rect: Rectangle);
 
@@ -2525,7 +2560,8 @@ declare class Window_Help extends Window_Base
   setItem(item: RPG_BaseItem): void;
 }
 
-declare class Window_ItemCategory extends Window_HorzCommand
+declare class Window_ItemCategory
+  extends Window_HorzCommand
 {
   protected constructor();
 }
@@ -2537,7 +2573,8 @@ declare class Window_ItemCategory extends Window_HorzCommand
  * The window for displaying the map name on the map screen.
  * @class Window_MapName
  */
-declare class Window_MapName extends Window_Base
+declare class Window_MapName
+  extends Window_Base
 {
   constructor();
 
@@ -2588,7 +2625,8 @@ declare class Window_MapName extends Window_Base
  * @class Window_MenuStatus
  * @extends {Window_Selectable}
  */
-declare class Window_MenuStatus extends Window_Selectable
+declare class Window_MenuStatus
+  extends Window_Selectable
 {
   /**
    * Creates an instance of Window_MenuStatus.
@@ -2669,7 +2707,8 @@ declare class Window_MenuStatus extends Window_Selectable
   setPendingIndex(index: number): void;
 }
 
-declare class Window_MenuActor extends Window_MenuStatus
+declare class Window_MenuActor
+  extends Window_MenuStatus
 {
   constructor();
 
@@ -2678,7 +2717,8 @@ declare class Window_MenuActor extends Window_MenuStatus
   selectForItem(item: RPG_BaseItem): void;
 }
 
-declare class Window_MenuCommand extends Window_Command
+declare class Window_MenuCommand
+  extends Window_Command
 {
   constructor(x: number, y: number);
 
@@ -2757,7 +2797,8 @@ declare class Window_MenuCommand extends Window_Command
   static _lastCommandSymbol: any;
 }
 
-declare class Window_Message extends Window_Base
+declare class Window_Message
+  extends Window_Base
 {
   protected constructor();
 
@@ -2959,7 +3000,8 @@ declare class Window_Message extends Window_Base
  * The window for displaying a speaker name above
  * the message window.
  */
-declare class Window_NameBox extends Window_Base
+declare class Window_NameBox
+  extends Window_Base
 {
   protected constructor();
 
@@ -3123,7 +3165,8 @@ declare class Window_NameEdit
  * The window for selecting text characters on the name input screen.
  * @class Window_NameInputt
  */
-declare class Window_NameInput extends Window_Selectable
+declare class Window_NameInput
+  extends Window_Selectable
 {
   constructor(editWindow: Window_NameEdit);
 
@@ -3165,7 +3208,8 @@ declare class Window_NameInput extends Window_Selectable
   static JAPAN3: string[];
 }
 
-declare class Window_NumberInput extends Window_Selectable
+declare class Window_NumberInput
+  extends Window_Selectable
 {
   constructor(messageWindow: Window_Message);
 
@@ -3230,7 +3274,8 @@ declare class Window_NumberInput extends Window_Selectable
   onButtonOk(): void;
 }
 
-declare class Window_Options extends Window_Command
+declare class Window_Options
+  extends Window_Command
 {
   constructor();
 
@@ -3266,14 +3311,16 @@ declare class Window_Options extends Window_Command
  * The window for selecting whether to fight or escape on the battle screen.
  * @class Window_PartyCommand
  */
-declare class Window_PartyCommand extends Window_Command
+declare class Window_PartyCommand
+  extends Window_Command
 {
   constructor();
 
   setup(): void;
 }
 
-declare class Window_SavefileList extends Window_Selectable
+declare class Window_SavefileList
+  extends Window_Selectable
 {
   constructor(rect: Rectangle);
 
@@ -3339,7 +3386,8 @@ declare class Window_SavefileList extends Window_Selectable
  * is handled as a window for convenience.
  * @class Window_ScrollText
  */
-declare class Window_ScrollText extends Window_Base
+declare class Window_ScrollText
+  extends Window_Base
 {
   constructor(rect: Rectangle);
 
@@ -3389,7 +3437,8 @@ declare class Window_ScrollText extends Window_Base
  * The window for selecting an item to buy on the shop screen.
  * @class Window_ShopBuy
  */
-declare class Window_ShopBuy extends Window_Selectable
+declare class Window_ShopBuy
+  extends Window_Selectable
 {
   /**
    * Creates an instance of Window_ShopBuy.
@@ -3456,7 +3505,8 @@ declare class Window_ShopBuy extends Window_Selectable
  * The window for selecting buy/sell on the shop screen.
  * @class Window_ShopCommand
  */
-declare class Window_ShopCommand extends Window_HorzCommand
+declare class Window_ShopCommand
+  extends Window_HorzCommand
 {
   protected constructor();
 
@@ -3480,7 +3530,8 @@ declare class Window_ShopCommand extends Window_HorzCommand
  * screen.
  * @class Window_ShopNumber
  */
-declare class Window_ShopNumber extends Window_Selectable
+declare class Window_ShopNumber
+  extends Window_Selectable
 {
   /**
    * Creates an instance of Window_ShopNumber.
@@ -3625,7 +3676,8 @@ declare class Window_ShopNumber extends Window_Selectable
  * The window for selecting an item to sell on the shop screen.
  * @class Window_ShopSell
  */
-declare class Window_ShopSell extends Window_ItemList
+declare class Window_ShopSell
+  extends Window_ItemList
 {
   constructor(x: number, y: number, width: number, height: number);
 
@@ -3647,7 +3699,8 @@ declare class Window_ShopSell extends Window_ItemList
  * equipment on the shop screen.
  * @class Window_ShopStatus
  */
-declare class Window_ShopStatus extends Window_Base
+declare class Window_ShopStatus
+  extends Window_Base
 {
   /**
    * Creates an instance of Window_ShopStatus.
@@ -3764,7 +3817,8 @@ declare class Window_ShopStatus extends Window_Base
  * The window for displaying the skill user's status on the skill screen.
  * @class Window_SkillStatus
  */
-declare class Window_SkillStatus extends Window_Base
+declare class Window_SkillStatus
+  extends Window_Base
 {
   /**
    * Creates an instance of Window_SkillStatus.
@@ -3799,7 +3853,8 @@ declare class Window_SkillStatus extends Window_Base
  * The window for selecting a skill type on the skill screen.
  * @class Window_SkillType
  */
-declare class Window_SkillType extends Window_Command
+declare class Window_SkillType
+  extends Window_Command
 {
   /**
    * Creates an instance of Window_SkillType.
@@ -3833,7 +3888,8 @@ declare class Window_SkillType extends Window_Command
   selectLast(): void;
 }
 
-declare class Window_Status extends Window_StatusBase
+declare class Window_Status
+  extends Window_StatusBase
 {
   constructor(rect: Rectangle);
 
@@ -3917,7 +3973,8 @@ declare class Window_Status extends Window_StatusBase
  * The window for selecting New Game/Continue on the title screen.
  * @class Window_TitleCommand
  */
-declare class Window_TitleCommand extends Window_Command
+declare class Window_TitleCommand
+  extends Window_Command
 {
   protected constructor();
 

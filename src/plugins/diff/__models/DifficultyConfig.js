@@ -50,6 +50,7 @@ class DifficultyConfig
    * @type {boolean}
    */
   hidden = false;
+
   //endregion access
 
   /**
@@ -67,4 +68,5 @@ class DifficultyConfig
     this.hidden = hidden;
   }
 }
+
 //endregion DifficultyConfig

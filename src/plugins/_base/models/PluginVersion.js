@@ -30,7 +30,7 @@ class PluginVersion
     // the string should be three whole integer parts.
     const semverParts = version
       .split('.')
-      .map(parseInt);
+      .map(part => parseInt(part));
 
     // the order is as below:
     const [ major, minor, patch ] = semverParts;
@@ -47,7 +47,7 @@ class PluginVersion
    */
   version()
   {
-    return [this.major, this.minor, this.patch].join('.');
+    return [ this.major, this.minor, this.patch ].join('.');
   }
 
   /**
@@ -92,6 +92,7 @@ class PluginVersion
     #major = 0;
     #minor = 0;
     #patch = 0;
+
     //endregion parameters
 
     /**
@@ -102,7 +103,7 @@ class PluginVersion
     build()
     {
       // group all the parts in the correct order.
-      const semverParts = [this.#major, this.#minor, this.#patch];
+      const semverParts = [ this.#major, this.#minor, this.#patch ];
 
       // join the semver parts into a string as the 3 parts.
       const semver = semverParts.join('.');
@@ -165,4 +166,5 @@ class PluginVersion
     }
   }
 }
+
 //endregion PluginVersion

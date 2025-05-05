@@ -18,5 +18,6 @@ Game_Character.prototype.processMoveCommand = function(command)
   }
 
   // perform the original logic.
-  J.ABS.EXT.PIXEL.Aliased.Game_Character.get('processMoveCommand').call(this, command);
+  J.ABS.EXT.PIXEL.Aliased.Game_Character.get('processMoveCommand')
+    .call(this, command);
 };

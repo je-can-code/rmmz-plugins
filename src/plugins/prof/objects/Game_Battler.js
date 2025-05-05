@@ -11,11 +11,11 @@ Game_Battler.prototype.skillProficiencies = function()
 /**
  * Gets the prof of one particular skill for this battler.
  * @param {number} skillId The id of the skill to get proficiency for.
- * @returns {number}
+ * @returns {SkillProficiency|null}
  */
 Game_Battler.prototype.skillProficiencyBySkillId = function(skillId)
 {
-  return 0;
+  return null;
 };
 
 /**
@@ -54,9 +54,7 @@ Game_Battler.prototype.bonusSkillProficiencyGains = function()
 Game_Battler.prototype.canGiveProficiency = function()
 {
   // return the inversion of whether or not we found any of the blocker tags.
-  return !RPGManager.checkForBooleanFromAllNotesByRegex(
-    this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyGivingBlock)
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyGivingBlock)
 };
 
 /**
@@ -66,8 +64,6 @@ Game_Battler.prototype.canGiveProficiency = function()
 Game_Battler.prototype.canGainProficiency = function()
 {
   // return the inversion of whether or not we found any of the blocker tags.
-  return !RPGManager.checkForBooleanFromAllNotesByRegex(
-    this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyGainingBlock)
+  return !RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyGainingBlock)
 };
 //endregion Game_Battler

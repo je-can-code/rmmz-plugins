@@ -10,7 +10,8 @@ if (J.ABS)
   Window_AbsMenu.prototype.buildCommands = function()
   {
     // perform original logic to get the base commands.
-    const originalCommands = J.OMNI.Aliased.Window_AbsMenu.get('buildCommands').call(this);
+    const originalCommands = J.OMNI.Aliased.Window_AbsMenu.get('buildCommands')
+      .call(this);
 
     // if the switch is not ON, then this command is not present.
     if (!this.canAddOmnipediaCommand()) return originalCommands;
@@ -51,8 +52,7 @@ if (J.ABS)
   {
     const description = [
       "An encyclopedia-like system full of data-driven entries.",
-      "It can contain many sub-categories, such as the Monsterpedia."
-    ];
+      "It can contain many sub-categories, such as the Monsterpedia." ];
 
     return description.join("\n");
   };

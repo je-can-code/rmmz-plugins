@@ -2,7 +2,7 @@
 /**
  * The fluent-builder for easily creating new difficulties.
  */
-class DifficultyBuilder 
+class DifficultyBuilder
 {
   #name = String.empty;
   #key = String.empty;
@@ -24,7 +24,7 @@ class DifficultyBuilder
    * @param {string} name The name of this difficulty.
    * @param {string} key The unique key of this difficulty.
    */
-  constructor(name, key) 
+  constructor(name, key)
   {
     this.setName(name);
     this.setKey(key);
@@ -89,37 +89,37 @@ class DifficultyBuilder
     return difficulty;
   }
 
-  setName(name) 
+  setName(name)
   {
     this.#name = name;
     return this;
   }
 
-  setKey(key) 
+  setKey(key)
   {
     this.#key = key;
     return this;
   }
 
-  setDescription(description) 
+  setDescription(description)
   {
     this.#description = description;
     return this;
   }
 
-  setIconIndex(iconIndex) 
+  setIconIndex(iconIndex)
   {
     this.#iconIndex = iconIndex;
     return this;
   }
 
-  setCost(cost) 
+  setCost(cost)
   {
     this.#cost = cost;
     return this;
   }
 
-  setActorEffects(effects) 
+  setActorEffects(effects)
   {
     this.#actorEffects = effects;
     return this;
@@ -155,4 +155,5 @@ class DifficultyBuilder
     return this;
   }
 }
+
 //endregion DifficultyBuilder

@@ -4,13 +4,12 @@
  * A new property for retrieving the JABS bonusHits from this traited item.
  * @type {number}
  */
-Object.defineProperty(RPG_Traited.prototype, "jabsBonusHits",
+Object.defineProperty(RPG_Traited.prototype, "jabsBonusHits", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsBonusHits();
-    },
-  });
+    return this.getJabsBonusHits();
+  },
+});
 
 /**
  * Gets the JABS bonus hits of this traited item.

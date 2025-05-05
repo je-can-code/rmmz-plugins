@@ -44,7 +44,8 @@ class DifficultyManager
     };
 
     // return the filtered collection of difficulties.
-    return this.allDifficulties().filter(filtering);
+    return this.allDifficulties()
+      .filter(filtering);
   }
 
   /**
@@ -198,4 +199,5 @@ class DifficultyManager
     }
   }
 }
+
 //endregion DifficultyManager

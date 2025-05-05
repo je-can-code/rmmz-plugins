@@ -48,6 +48,7 @@ class JABS_ChargingTier
    * @type {number}
    */
   chargeTierCompleteAnimationId = 0;
+
   //endregion properties
 
   /**
@@ -108,4 +109,5 @@ class JABS_ChargingTier
   {
   }
 }
+
 //endregion JABS_ChargingTier

@@ -6,7 +6,8 @@ J.ABS.EXT.TOOLS.Aliased.Game_System.set('initMembers', Game_System.prototype.ini
 Game_System.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.TOOLS.Aliased.Game_System.get('initMembers').call(this);
+  J.ABS.EXT.TOOLS.Aliased.Game_System.get('initMembers')
+    .call(this);
 
   // initialize our class members.
   this.initToolsMembers();

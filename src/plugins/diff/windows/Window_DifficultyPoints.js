@@ -1,7 +1,8 @@
 /**
  * A window containing the difficulty points information.
  */
-class Window_DifficultyPoints extends Window_Base
+class Window_DifficultyPoints
+  extends Window_Base
 {
   /**
    * The difficulty layer that the cursor is currently hovering over.
@@ -46,7 +47,7 @@ class Window_DifficultyPoints extends Window_Base
   drawContent()
   {
     // define the origin x,y coordinates.
-    const [x, y] = [0, 0];
+    const [ x, y ] = [ 0, 0 ];
 
     // shorthand the lineHeight.
     const lh = this.lineHeight();

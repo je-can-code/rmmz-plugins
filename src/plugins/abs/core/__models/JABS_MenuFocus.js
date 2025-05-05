@@ -48,4 +48,5 @@ class JABS_MenuType
    */
   static Assign = "assign"
 }
+
 //endregion JABS_MenuType

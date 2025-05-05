@@ -8,7 +8,8 @@ J.ABS.EXT.ALLYAI.Aliased.Game_Map.set('parseBattlers', Game_Map.prototype.parseB
 Game_Map.prototype.parseBattlers = function()
 {
   // perform original logic.
-  const originalParsedBattlers = J.ABS.EXT.ALLYAI.Aliased.Game_Map.get('parseBattlers').call(this);
+  const originalParsedBattlers = J.ABS.EXT.ALLYAI.Aliased.Game_Map.get('parseBattlers')
+    .call(this);
 
   // also parse ally battlers.
   const parsedAllyBattlers = this.parseAllyBattlers();
@@ -27,7 +28,8 @@ Game_Map.prototype.parseBattlers = function()
 Game_Map.prototype.parseAllyBattlers = function()
 {
   return JABS_AiManager
-    .convertFollowersToBattlers($gamePlayer.followers().data());
+    .convertFollowersToBattlers($gamePlayer.followers()
+      .data());
 };
 
 /**

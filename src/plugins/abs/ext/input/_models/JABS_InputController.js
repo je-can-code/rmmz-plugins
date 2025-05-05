@@ -114,6 +114,7 @@ class JABS_InputController
     // update!
     return true;
   }
+
   //endregion update
 
   //region menu action
@@ -154,6 +155,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performMenuAction();
   }
+
   //endregion menu action
 
   //region party cycle
@@ -194,6 +196,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performPartyCycling(false);
   }
+
   //endregion party cycle
 
   //region mainhand
@@ -240,6 +243,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performMainhandAction(this.battler);
   }
+
   //endregion mainhand
 
   //region offhand
@@ -286,6 +290,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performOffhandAction(this.battler);
   }
+
   //endregion offhand
 
   //region tool
@@ -332,6 +337,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performToolAction($jabsEngine.getPlayer1());
   }
+
   //endregion tool
 
   //region dodge
@@ -372,6 +378,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performDodgeAction($jabsEngine.getPlayer1());
   }
+
   //endregion dodge
 
   //region combat actions
@@ -398,9 +405,7 @@ class JABS_InputController
    */
   performCombatAction(slot)
   {
-    JABS_InputAdapter.performCombatAction(
-      slot,
-      $jabsEngine.getPlayer1());
+    JABS_InputAdapter.performCombatAction(slot, $jabsEngine.getPlayer1());
   }
 
   //region combat action 1
@@ -440,6 +445,7 @@ class JABS_InputController
     // A was never triggered while L1 was held down.
     return false;
   }
+
   //endregion combat action 1
 
   //region combat action 2
@@ -479,6 +485,7 @@ class JABS_InputController
     // B was never triggered while L1 was held down.
     return false;
   }
+
   //endregion combat action 2
 
   //region combat action 3
@@ -518,6 +525,7 @@ class JABS_InputController
     // X was never triggered while L1 was held down.
     return false;
   }
+
   //endregion combat action 3
 
   //region combat action 4
@@ -557,6 +565,7 @@ class JABS_InputController
     // Y was never triggered while L1 was held down.
     return false;
   }
+
   //endregion combat action 4
   //endregion combat actions
 
@@ -612,6 +621,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performStrafe(false, this.battler);
   }
+
   //endregion strafe
 
   //region rotate
@@ -666,6 +676,7 @@ class JABS_InputController
   {
     JABS_InputAdapter.performRotate(false, $jabsEngine.getPlayer1());
   }
+
   //endregion strafe
 
   //region guard
@@ -720,6 +731,8 @@ class JABS_InputController
   {
     JABS_InputAdapter.performGuard(false, $jabsEngine.getPlayer1());
   }
+
   //endregion guard
 }
+
 //endregion JABS_InputController

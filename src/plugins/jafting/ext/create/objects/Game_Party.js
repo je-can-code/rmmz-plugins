@@ -90,6 +90,9 @@ Game_Party.prototype.updateRecipesFromConfig = function()
   });
 };
 
+/**
+ * Refreshes all the category trackings from the plugin metadata.
+ */
 Game_Party.prototype.updateCategoriesFromConfig = function()
 {
   // grab the current list of trackings by reference.
@@ -453,7 +456,7 @@ Game_Party.prototype.canGainEntry = function(name)
   if (name.startsWith('_')) return false;
 
   // skip entries that start with a multiple equals (arbitrary).
-  if (name.startsWith('==') || name.startsWith('===')) return false;
+  if (name.startsWith('==')) return false;
 
   // skip entries that are the "empty" name (arbitrary).
   if (name.includes('-- empty --')) return false;

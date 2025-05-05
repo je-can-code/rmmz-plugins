@@ -3,7 +3,8 @@
  * A base class representing containing common properties found in both
  * weapons and armors.
  */
-class RPG_EquipItem extends RPG_Traited
+class RPG_EquipItem
+  extends RPG_Traited
 {
   //region properties
   /**
@@ -19,13 +20,14 @@ class RPG_EquipItem extends RPG_Traited
    * in that order.
    * @type {[number, number, number, number, number, number, number, number]}
    */
-  params = [1, 0, 0, 0, 0, 0, 0, 0];
+  params = [ 1, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The price of this equip.
    * @type {number}
    */
   price = 0;
+
   //endregion properties
 
   /**
@@ -63,4 +65,5 @@ class RPG_EquipItem extends RPG_Traited
     return this.etypeId > 1;
   }
 }
+
 //endregion RPG_EquipItem

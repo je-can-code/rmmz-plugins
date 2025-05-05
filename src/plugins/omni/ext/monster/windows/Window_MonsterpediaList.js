@@ -2,7 +2,8 @@
 /**
  * A window containing the list of all enemies perceived for the monsterpedia.
  */
-class Window_MonsterpediaList extends Window_Command
+class Window_MonsterpediaList
+  extends Window_Command
 {
   /**
    * Constructor.
@@ -15,7 +16,7 @@ class Window_MonsterpediaList extends Window_Command
 
   /**
    * Implements {@link #makeCommandList}.<br>
-   * Creates the command list of omnipedia entries available for this window.
+   * Creates the command list of all observable monsters in this window.
    */
   makeCommandList()
   {
@@ -28,7 +29,7 @@ class Window_MonsterpediaList extends Window_Command
 
   /**
    * Builds all commands for this command window.
-   * Adds all omnipedia commands to the list that are available.
+   * Adds all monsters to the list that can possibly be observed.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
@@ -84,7 +85,10 @@ class Window_MonsterpediaList extends Window_Command
   buildCommand(enemy)
   {
     // deconstruct data points out for building the list.
-    const { id, name } = enemy;
+    const {
+      id,
+      name
+    } = enemy;
 
     // grab the observations associated with this enemy id.
     const observations = $gameParty.getOrCreateMonsterpediaObservationsById(id);
@@ -117,4 +121,5 @@ class Window_MonsterpediaList extends Window_Command
       .build();
   }
 }
+
 //endregion Window_MonsterpediaList

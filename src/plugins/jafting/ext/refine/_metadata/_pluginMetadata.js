@@ -3,7 +3,8 @@
  * Plugin metadata for the refinement JAFTING plugin.<br>
  * Because this plugin has little to be configured, it is pretty light.
  */
-class J_CraftingRefinePluginMetadata extends PluginMetadata
+class J_CraftingRefinePluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -51,4 +52,5 @@ class J_CraftingRefinePluginMetadata extends PluginMetadata
     this.commandIconIndex = parseInt(this.parsedPluginParameters['menu-icon']) ?? 0;
   }
 }
+
 //endregion plugin metadata

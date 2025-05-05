@@ -12,9 +12,9 @@ Game_Party.prototype.getGoldMultiplier = function()
   const membersToConsider = this.goldMultiplierMembers();
 
   // calculate the total.
-  const goldMultiplier = membersToConsider.reduce(
-    (runningTotal, currentActor) => runningTotal + currentActor.getGoldMultiplier(),
-    baseMultiplier);
+  const goldMultiplier = membersToConsider.reduce((
+    runningTotal,
+    currentActor) => runningTotal + currentActor.getGoldMultiplier(), baseMultiplier);
 
   // return the result.
   return goldMultiplier;
@@ -63,9 +63,9 @@ Game_Party.prototype.getPartyDropMultiplier = function()
   const membersToConsider = this.dropMultiplierMembers();
 
   // calculate the total.
-  const dropMultiplier = membersToConsider.reduce(
-    (runningTotal, currentActor) => runningTotal + currentActor.getDropMultiplierBonus(),
-    baseMultiplier);
+  const dropMultiplier = membersToConsider.reduce((
+    runningTotal,
+    currentActor) => runningTotal + currentActor.getDropMultiplierBonus(), baseMultiplier);
 
   // return the result.
   return dropMultiplier;

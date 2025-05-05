@@ -5,35 +5,32 @@
  * determined.
  * @returns {number} Always positive.
  */
-Object.defineProperty(Graphics, "horizontalPadding",
+Object.defineProperty(Graphics, "horizontalPadding", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.abs(this.width - this.boxWidth);
-    }
-  });
+    return Math.abs(this.width - this.boxWidth);
+  }
+});
 
 /**
  * The vertical padding between {@link Graphics.height} and {@link Graphics.boxHeight}.<br>
  * @returns {number} Always positive.
  */
-Object.defineProperty(Graphics, "verticalPadding",
+Object.defineProperty(Graphics, "verticalPadding", {
+  get: function()
   {
-    get: function()
-    {
-      return Math.abs(this.height - this.boxHeight);
-    }
-  });
+    return Math.abs(this.height - this.boxHeight);
+  }
+});
 
 /**
  * The origin x and y coordinates of the "box" width and height values.
  * @returns {[number, number]} A destructurable array of the box's ox and oy coordinates.
  */
-Object.defineProperty(Graphics, "boxOrigin",
+Object.defineProperty(Graphics, "boxOrigin", {
+  get: function()
   {
-    get: function()
-    {
-      return [this.horizontalPadding, this.verticalPadding];
-    }
-  });
+    return [ this.horizontalPadding, this.verticalPadding ];
+  }
+});
 //endregion Graphics

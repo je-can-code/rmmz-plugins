@@ -120,7 +120,6 @@ class RPG_Base
     return new this.constructor(overrides, index);
   }
 
-
   /**
    * The unique key that is used to register this object against
    * its corresponding container when the party has one or more of these
@@ -133,6 +132,7 @@ class RPG_Base
   {
     return this._index();
   }
+
   //endregion base
 
   //region meta
@@ -284,7 +284,7 @@ class RPG_Base
         // expose the stringified segments of the array.
         const exposedArray = obj
           // peel off the outer brackets.
-          .slice(1, obj.length-1)
+          .slice(1, obj.length - 1)
           // split string into an array by comma or space+comma.
           .split(/, |,/);
         return this.#parseObject(exposedArray);
@@ -314,8 +314,10 @@ class RPG_Base
   #parseString(str)
   {
     // check if its actually boolean true.
-    if (str.toLowerCase() === "true") return true;
-    // check if its actually boolean false.
+    if (str.toLowerCase() === "true")
+    {
+      return true;
+    }// check if its actually boolean false.
     else if (str.toLowerCase() === "false") return false;
 
     // check if its actually a number.
@@ -324,6 +326,7 @@ class RPG_Base
     // it must just be a word or something.
     return str;
   }
+
   //endregion meta
 
   //region note
@@ -357,7 +360,7 @@ class RPG_Base
     // split the notes by new lines.
     const formattedNotes = this.note
       .split(/[\r\n]+/)
-    // filter out invalid note data.
+      // filter out invalid note data.
       .filter(this.invalidNoteFilter, this);
 
     // if we have no length left after filtering, then there is no note data.
@@ -404,12 +407,6 @@ class RPG_Base
     // cleanup any duplicate newlines.
     this.note = this.note.replace(/\n\n/gmi, '\n');
     this.note = this.note.replace(/\r\r/gmi, '\r');
-
-    // cleanup any leading newlines.
-    if (this.note.startsWith('\r') || this.note.startsWith('\n'))
-    {
-      this.note = this.note.slice(2);
-    }
   }
 
   /**
@@ -437,7 +434,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value.
@@ -488,7 +487,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : [];
+      return nullIfEmpty
+        ? null
+        : [];
     }
 
     // initialize the value.
@@ -498,10 +499,11 @@ class RPG_Base
     lines.forEach(line =>
     {
       // extract the captured formula.
-      const [,result] = structure.exec(line);
+      const [ , result ] = structure.exec(line);
 
       // parse out the array of stringified numbers, and parse the strings.
-      const parsed = JSON.parse(result).map(parseFloat);
+      const parsed = JSON.parse(result)
+        .map(parseFloat);
 
       // destructure the array and add its bits to the running collection.
       val.push(...parsed);
@@ -538,7 +540,9 @@ class RPG_Base
     if (!lines.length)
     {
       // return null or 0 depending on provided options.
-      return nullIfEmpty ? null : 0;
+      return nullIfEmpty
+        ? null
+        : 0;
     }
 
     // initialize the value.
@@ -564,7 +568,8 @@ class RPG_Base
       const formula = structure.exec(line)[1];
 
       // evaluate the formula/value.
-      const result = eval(formula).toFixed(3);
+      const result = eval(formula)
+        .toFixed(3);
 
       // add it to the running total.
       val += parseFloat(result);
@@ -871,6 +876,44 @@ class RPG_Base
     // return the found value.
     return matchingLines;
   }
+
   //endregion note
+
+  /**
+   * Whether or not this database entry is an item.
+   * @returns {boolean}
+   */
+  isItem()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a weapon.
+   * @returns {boolean}
+   */
+  isWeapon()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is an armor.
+   * @returns {boolean}
+   */
+  isArmor()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return false;
+  }
 }
+
 //endregion RPG_Base

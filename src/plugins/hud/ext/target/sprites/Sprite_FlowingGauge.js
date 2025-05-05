@@ -4,15 +4,15 @@
  * A gauge that acts like a regular `Sprite_Gauge` that is instead based
  * on images and also "flows".
  */
-class Sprite_FlowingGauge extends Sprite
+class Sprite_FlowingGauge
+  extends Sprite
 {
   //region properties
-  static Types =
-    {
-      HP: "hp",
-      MP: "mp",
-      TP: "tp",
-    };
+  static Types = {
+    HP: "hp",
+    MP: "mp",
+    TP: "tp",
+  };
 
   /**
    * The bitmap for the background sprite.
@@ -83,6 +83,7 @@ class Sprite_FlowingGauge extends Sprite
    * @type {boolean}
    */
   _isReady = false;
+
   //endregion properties
 
   /**
@@ -131,7 +132,7 @@ class Sprite_FlowingGauge extends Sprite
 
     // when both back and foreground are done loading, let this gauge know we're ready.
     Promise
-      .all([backgroundPromise, foregroundPromise])
+      .all([ backgroundPromise, foregroundPromise ])
       .then(() => this.onReady());
   }
 
@@ -597,7 +598,7 @@ class Sprite_FlowingGauge extends Sprite
   upTone()
   {
     // [red, green, blue, grey].
-    return [0,255,0,128];
+    return [ 0, 255, 0, 128 ];
   }
 
   /**
@@ -607,7 +608,7 @@ class Sprite_FlowingGauge extends Sprite
   downTone()
   {
     // [red, green, blue, grey].
-    return [255,0,0,0];
+    return [ 255, 0, 0, 0 ];
   }
 
   /**
@@ -617,7 +618,7 @@ class Sprite_FlowingGauge extends Sprite
   greyTone()
   {
     // [red, green, blue, grey].
-    return [0, 0, 0, 255];
+    return [ 0, 0, 0, 255 ];
   }
 
   /**
@@ -717,4 +718,5 @@ class Sprite_FlowingGauge extends Sprite
     return Math.floor(this._gaugeBitmap.height / 2);
   }
 }
+
 //endregion Sprite_FlowingGauge

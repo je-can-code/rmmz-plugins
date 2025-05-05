@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_UtilsPluginMetadata extends PluginMetadata
+class J_UtilsPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -31,4 +32,5 @@ class J_UtilsPluginMetadata extends PluginMetadata
     this.autoloadDevtools = this.parsedPluginParameters['autoload-devtools'] === 'true';
   }
 }
+
 //endregion plugin metadata

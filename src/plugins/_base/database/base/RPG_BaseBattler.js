@@ -3,7 +3,8 @@
  * A class representing the groundwork for what all battlers
  * database data look like.
  */
-class RPG_BaseBattler extends RPG_Base
+class RPG_BaseBattler
+  extends RPG_Base
 {
   /**
    * The name of the battler while in battle.
@@ -34,4 +35,5 @@ class RPG_BaseBattler extends RPG_Base
       .map(trait => new RPG_Trait(trait));
   }
 }
+
 //endregion RPG_BaseBattler

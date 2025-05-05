@@ -6,7 +6,8 @@ J.ABS.EXT.STAR.Aliased.Game_Map.set('update', Game_Map.prototype.update);
 Game_Map.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.EXT.STAR.Aliased.Game_Map.get('update').call(this);
+  J.ABS.EXT.STAR.Aliased.Game_Map.get('update')
+    .call(this);
 
   // update the flow of star battle.
   this.updateStarBattle();
@@ -84,11 +85,11 @@ Game_Map.prototype.updateStarBattlePhases = function()
  * The "prepare" star phase.
  * The transition to the battlemap and generation of the troop onto the field.
  */
-Game_Map.prototype.starPhasePrepare = function() 
+Game_Map.prototype.starPhasePrepare = function()
 {
   // initialize the battle map id.
   let battleMapId = null;
-  if ($dataMap.meta && $dataMap.meta["battleMap"]) 
+  if ($dataMap.meta && $dataMap.meta["battleMap"])
   {
     // grab the map id from this map's metadata.
     battleMapId = $dataMap.meta["battleMap"];
@@ -107,13 +108,14 @@ Game_Map.prototype.starPhasePrepare = function()
 /**
  * Handles the post-transfer setup for star battle.
  */
-Game_Map.prototype.postTransferEnemyParsing = function() 
+Game_Map.prototype.postTransferEnemyParsing = function()
 {
   // post-transfer only happens once during the PREPARING phase.
   if (BattleManager.getStarPhase() !== StarPhases.PREPARING) return;
 
   // iterate over each of the members of the troop and convert them to a JABS battler.
-  $gameTroop.members().forEach(this.generateStarEnemy);
+  $gameTroop.members()
+    .forEach(this.generateStarEnemy);
 
   // engage in the stars of battle!
   BattleManager.setStarPhase(StarPhases.INBATTLE);
@@ -125,10 +127,10 @@ Game_Map.prototype.postTransferEnemyParsing = function()
  * @param {Game_Enemy} gameEnemy The enemy battler from the troop.
  * @param {number} index The index of the enemy battler in the troop.
  */
-Game_Map.prototype.generateStarEnemy = function(gameEnemy, index) 
+Game_Map.prototype.generateStarEnemy = function(gameEnemy, index)
 {
   // stop generating enemies if we reached the max count.
-  if (index >= J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount) 
+  if (index >= J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount)
   {
     console.warn(`Exceeded enemy count limit of ${J.ABS.EXT.STAR.DefaultValues.MaxEnemyCount}.`);
     return;
@@ -166,14 +168,14 @@ Game_Map.prototype.generateStarEnemy = function(gameEnemy, index)
  * Handles the monitoring of victory conditions for battle, to switch to the
  * next star phase.
  */
-Game_Map.prototype.starPhaseInBattle = function() 
+Game_Map.prototype.starPhaseInBattle = function()
 {
   // check if there are enemies still alive on this map.
   const enemiesRemaining = $gameTroop.areEnemiesAlive();
   console.log(`enemies remaining: ${enemiesRemaining}.`);
 
   // the only victory condition is to eliminate all enemies on the map.
-  if (enemiesRemaining <= 0) 
+  if (enemiesRemaining <= 0)
   {
     // we have achieved victory!
     this.onStarVictory();
@@ -206,7 +208,7 @@ Game_Map.prototype.onStarVictory = function()
  * This is typically the conclusion of battle, including replacing the character
  * and moving onto the next phase.
  */
-Game_Map.prototype.starPhaseFinished = function() 
+Game_Map.prototype.starPhaseFinished = function()
 {
   // return the player to their origin.
   this.returnPlayerToOrigin();
@@ -224,7 +226,7 @@ Game_Map.prototype.starPhaseFinished = function()
 /**
  * Returns the player from whence they came.
  */
-Game_Map.prototype.returnPlayerToOrigin = function() 
+Game_Map.prototype.returnPlayerToOrigin = function()
 {
   $gamePlayer.reserveOriginTransfer();
 };

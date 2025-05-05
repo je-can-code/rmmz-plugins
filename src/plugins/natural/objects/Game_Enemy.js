@@ -7,7 +7,8 @@ J.NATURAL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
 Game_Enemy.prototype.setup = function(enemyId, x, y)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('setup').call(this, enemyId, x, y);
+  J.NATURAL.Aliased.Game_Enemy.get('setup')
+    .call(this, enemyId, x, y);
 
   // initialize the parameter buffs on this battler.
   this.refreshAllParameterBuffs();
@@ -21,7 +22,8 @@ J.NATURAL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onB
 Game_Enemy.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange').call(this);
+  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
 
   // refresh all our buffs, something could've changed.
   this.refreshAllParameterBuffs();
@@ -57,7 +59,8 @@ J.NATURAL.Aliased.Game_Enemy.set('paramBase', Game_Enemy.prototype.paramBase);
 Game_Enemy.prototype.paramBase = function(paramId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // determine the structure for this parameter.
   const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
@@ -80,7 +83,8 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
@@ -99,10 +103,7 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
 Game_Enemy.prototype.getParamBaseNaturalBonuses = function(paramId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateBParamBuff(paramId, baseParam);
-
-  // return result.
-  return paramBuff;
+  return this.calculateBParamBuff(paramId, baseParam);
 };
 //endregion b params
 
@@ -114,7 +115,8 @@ J.NATURAL.Aliased.Game_Enemy.set('xparam', Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
@@ -131,7 +133,8 @@ Game_Enemy.prototype.xparam = function(xparamId)
 Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexByExParamId(xparamId);
@@ -140,26 +143,19 @@ Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const paramNaturalBonuses = this.getXparamNaturalBonuses(xparamId, structures, baseParam);
-
-  // return result.
-  return paramNaturalBonuses;
+  return this.getXparamNaturalBonuses(xparamId, baseParam);
 };
 
 /**
  * Gets all natural growths for this ex-parameter.
  * @param {number} xparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Enemy.prototype.getXparamNaturalBonuses = function(xparamId, structures, baseParam)
+Game_Enemy.prototype.getXparamNaturalBonuses = function(xparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateExParamBuff(baseParam, xparamId);
-
-  // return result.
-  return paramBuff;
+  return this.calculateExParamBuff(xparamId, baseParam);
 };
 //endregion ex params
 
@@ -171,7 +167,8 @@ J.NATURAL.Aliased.Game_Enemy.set('sparam', Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
@@ -188,7 +185,8 @@ Game_Enemy.prototype.sparam = function(sparamId)
 Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexBySpParamId(sparamId);
@@ -197,27 +195,20 @@ Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, structures, baseParam);
-
-  // return result.
-  return sparamNaturalBonuses;
+  return this.getSparamNaturalBonuses(sparamId, baseParam);
 };
 
 /**
  * Gets all natural growths for this sp-parameter.
  * Enemies only have buffs.
  * @param {number} sparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, structures, baseParam)
+Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateSpParamBuff(baseParam, sparamId);
-
-  // return result.
-  return paramBuff;
+  return this.calculateSpParamBuff(sparamId, baseParam);
 };
 //endregion sp params
 //endregion Game_Enemy

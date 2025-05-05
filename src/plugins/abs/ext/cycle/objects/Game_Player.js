@@ -10,7 +10,8 @@ Game_Player.prototype.shouldTriggerEvent = function(event, triggers, normal)
   if (event.isJabsBattler()) return false;
 
   // perform original logic.
-  return J.ABS.EXT.CYCLE.Aliased.Game_Player.get('shouldTriggerEvent').call(this, event, triggers, normal);
+  return J.ABS.EXT.CYCLE.Aliased.Game_Player.get('shouldTriggerEvent')
+    .call(this, event, triggers, normal);
 };
 
 /**

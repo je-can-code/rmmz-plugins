@@ -3,7 +3,8 @@
  * A sprite that represents a skill slot.
  * This is a base class for other things that need data from a skill slot.
  */
-class Sprite_BaseSkillSlot extends Sprite_BaseText
+class Sprite_BaseSkillSlot
+  extends Sprite_BaseText
 {
   /**
    * Extend initialization of the sprite to assign a skill slot for tracking.
@@ -68,7 +69,8 @@ class Sprite_BaseSkillSlot extends Sprite_BaseText
    */
   isItem()
   {
-    return this.skillSlot().isItem();
+    return this.skillSlot()
+      .isItem();
   }
 
   /**
@@ -128,7 +130,8 @@ class Sprite_BaseSkillSlot extends Sprite_BaseText
     if (!cooldownData) return null;
 
     // grab the skill itself, either extended or not.
-    return this.skillSlot().data(this.targetBattler(), this.skillId());
+    return this.skillSlot()
+      .data(this.targetBattler(), this.skillId());
   }
 
   /**
@@ -142,7 +145,11 @@ class Sprite_BaseSkillSlot extends Sprite_BaseText
     const skillId = this.skillSlot().id;
 
     // if it is an item, then the base skill id is the only id.
-    if (this.skillSlot().isItem()) return skillId;
+    if (this.skillSlot()
+      .isItem())
+    {
+      return skillId;
+    }
 
     // grab the cooldown data for this skill.
     const cooldownData = this.cooldownData();
@@ -176,4 +183,5 @@ class Sprite_BaseSkillSlot extends Sprite_BaseText
     return skill.name;
   }
 }
+
 //endregion Sprite_BaseSkillSlot

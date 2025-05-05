@@ -2,15 +2,16 @@
 /**
  * A window displaying available skills and button inputs.
  */
-class Window_InputFrame extends Window_Frame
+class Window_InputFrame
+  extends Window_Frame
 {
   /**
    * Constructor.
    * @param {Rectangle} rect The shape of this window.
    */
-  constructor(rect) 
+  constructor(rect)
   {
-    super(rect); 
+    super(rect);
   }
 
   /**
@@ -91,7 +92,8 @@ class Window_InputFrame extends Window_Frame
    */
   makeInputKeySlotSpriteKey(skillSlot, inputType)
   {
-    return `inputkey-${$gameParty.leader().actorId()}-${inputType}`;
+    return `inputkey-${$gameParty.leader()
+      .actorId()}-${inputType}`;
   }
 
   /**
@@ -113,9 +115,7 @@ class Window_InputFrame extends Window_Frame
     }
 
     // create a new sprite.
-    const sprite = new Sprite_InputKeySlot(
-      skillSlot,
-      $jabsEngine.getPlayer1());
+    const sprite = new Sprite_InputKeySlot(skillSlot, $jabsEngine.getPlayer1());
 
     // cache the sprite.
     this._j._spriteCache.set(key, sprite);
@@ -129,6 +129,7 @@ class Window_InputFrame extends Window_Frame
     // return the created sprite.
     return sprite;
   }
+
   //endregion caching
 
   /**
@@ -226,7 +227,7 @@ class Window_InputFrame extends Window_Frame
   {
     const playerX = $gamePlayer.screenX();
     const playerY = $gamePlayer.screenY();
-    return (playerX < this.width+100) && (playerY < this.height+100);
+    return (playerX < this.width + 100) && (playerY < this.height + 100);
   }
 
   /**
@@ -237,8 +238,10 @@ class Window_InputFrame extends Window_Frame
     this._j._spriteCache.forEach((sprite, _) =>
     {
       // if we are above 64, rapidly decrement by -15 until we get below 64.
-      if (sprite.opacity > 64) sprite.opacity -= 15;
-      // if we are below 64, increment by +1 until we get to 64.
+      if (sprite.opacity > 64)
+      {
+        sprite.opacity -= 15;
+      }// if we are below 64, increment by +1 until we get to 64.
       else if (sprite.opacity < 64) sprite.opacity += 1;
     });
   }
@@ -251,11 +254,14 @@ class Window_InputFrame extends Window_Frame
     this._j._spriteCache.forEach((sprite, _) =>
     {
       // if we are below 255, rapidly increment by +15 until we get to 255.
-      if (sprite.opacity < 255) sprite.opacity += 15;
-      // if we are above 255, set to 255.
+      if (sprite.opacity < 255)
+      {
+        sprite.opacity += 15;
+      }// if we are above 255, set to 255.
       else if (sprite.opacity > 255) sprite.opacity = 255;
     });
   }
+
   //endregion visibility
 
   /**
@@ -337,7 +343,7 @@ class Window_InputFrame extends Window_Frame
     this.drawGamepadPrimaryInputKeys(x, y);
 
     // draw the secondary section of our input.
-    this.drawGamepadSecondaryInputKeys(x+250, y);
+    this.drawGamepadSecondaryInputKeys(x + 250, y);
   }
 
   /**
@@ -354,7 +360,7 @@ class Window_InputFrame extends Window_Frame
     this.drawKeyboardPrimaryInputKeys(x, y);
 
     // draw the secondary section of our input.
-    const keyboardSecondaryX = x + (ikw*4) + 24;
+    const keyboardSecondaryX = x + (ikw * 4) + 24;
     this.drawKeyboardSecondaryInputKeys(keyboardSecondaryX, y);
   }
 
@@ -372,10 +378,10 @@ class Window_InputFrame extends Window_Frame
     const baseY = y + 8;
 
     // draw the four basic core functions of JABS.
-    this.drawInputKey(JABS_Button.Mainhand, baseX+ikw*0, baseY+32);
-    this.drawInputKey(JABS_Button.Offhand, baseX+(ikw*1), baseY+32);
-    this.drawInputKey(JABS_Button.Dodge, baseX+(ikw*2), baseY+64);
-    this.drawInputKey(JABS_Button.Tool, baseX+(ikw*2), baseY);
+    this.drawInputKey(JABS_Button.Mainhand, baseX + ikw * 0, baseY + 32);
+    this.drawInputKey(JABS_Button.Offhand, baseX + (ikw * 1), baseY + 32);
+    this.drawInputKey(JABS_Button.Dodge, baseX + (ikw * 2), baseY + 64);
+    this.drawInputKey(JABS_Button.Tool, baseX + (ikw * 2), baseY);
   }
 
   /**
@@ -392,10 +398,10 @@ class Window_InputFrame extends Window_Frame
     const baseY = y + 8;
 
     // draw the combat skills equipped for JABS.
-    this.drawInputKey(JABS_Button.CombatSkill3, baseX+ikw*0, baseY+32);
-    this.drawInputKey(JABS_Button.CombatSkill4, baseX+(ikw*1), baseY);
-    this.drawInputKey(JABS_Button.CombatSkill1, baseX+(ikw*1), baseY+64);
-    this.drawInputKey(JABS_Button.CombatSkill2, baseX+(ikw*2), baseY+32);
+    this.drawInputKey(JABS_Button.CombatSkill3, baseX + ikw * 0, baseY + 32);
+    this.drawInputKey(JABS_Button.CombatSkill4, baseX + (ikw * 1), baseY);
+    this.drawInputKey(JABS_Button.CombatSkill1, baseX + (ikw * 1), baseY + 64);
+    this.drawInputKey(JABS_Button.CombatSkill2, baseX + (ikw * 2), baseY + 32);
   }
 
   drawKeyboardPrimaryInputKeys(x, y)
@@ -406,10 +412,10 @@ class Window_InputFrame extends Window_Frame
     const baseY = y + 8;
 
     // draw the four basic core functions of JABS.
-    this.drawInputKey(JABS_Button.Mainhand, baseX + ikw*0, baseY);
-    this.drawInputKey(JABS_Button.Offhand, baseX + ikw*1, baseY);
-    this.drawInputKey(JABS_Button.Dodge, baseX + ikw*2, baseY);
-    this.drawInputKey(JABS_Button.Tool, baseX + ikw*3, baseY);
+    this.drawInputKey(JABS_Button.Mainhand, baseX + ikw * 0, baseY);
+    this.drawInputKey(JABS_Button.Offhand, baseX + ikw * 1, baseY);
+    this.drawInputKey(JABS_Button.Dodge, baseX + ikw * 2, baseY);
+    this.drawInputKey(JABS_Button.Tool, baseX + ikw * 3, baseY);
   }
 
   drawKeyboardSecondaryInputKeys(x, y)
@@ -420,10 +426,10 @@ class Window_InputFrame extends Window_Frame
     const baseY = y + 8;
 
     // draw the combat skills equipped for JABS.
-    this.drawInputKey(JABS_Button.CombatSkill1, baseX + ikw*0, baseY);
-    this.drawInputKey(JABS_Button.CombatSkill2, baseX + ikw*1, baseY);
-    this.drawInputKey(JABS_Button.CombatSkill3, baseX + ikw*2, baseY);
-    this.drawInputKey(JABS_Button.CombatSkill4, baseX + ikw*3, baseY);
+    this.drawInputKey(JABS_Button.CombatSkill1, baseX + ikw * 0, baseY);
+    this.drawInputKey(JABS_Button.CombatSkill2, baseX + ikw * 1, baseY);
+    this.drawInputKey(JABS_Button.CombatSkill3, baseX + ikw * 2, baseY);
+    this.drawInputKey(JABS_Button.CombatSkill4, baseX + ikw * 3, baseY);
   }
 
   /**
@@ -444,7 +450,7 @@ class Window_InputFrame extends Window_Frame
     if (!actionKeyData) return;
 
     // extract the input key's data.
-    const skillSlot =  actionKeyData.skillslot;
+    const skillSlot = actionKeyData.skillslot;
 
     // draw the input key slot's sprite.
     this.drawInputKeySlotSprite(skillSlot, inputType, x, y);
@@ -467,11 +473,12 @@ class Window_InputFrame extends Window_Frame
       const height = this.inputKeyHeight();
       const c1 = ColorManager.itemBackColor1();
       const c2 = ColorManager.itemBackColor2();
-      this.contents.gradientFillRect(x-10, y+20, width, height, c1, c2, true);
+      this.contents.gradientFillRect(x - 10, y + 20, width, height, c1, c2, true);
     }
 
     sprite.show();
-    sprite.move(x+6, y+20);
+    sprite.move(x + 6, y + 20);
   }
 }
+
 //endregion Window_InputFrame

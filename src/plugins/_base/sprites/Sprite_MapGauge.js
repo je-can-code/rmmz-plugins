@@ -15,8 +15,7 @@ Sprite_MapGauge.prototype.initialize = function(
   gaugeHeight = 6,
   label = String.empty,
   value = null,
-  iconIndex = -1
-)
+  iconIndex = -1)
 {
   this._duration = 0;
   this._gauge = {};
@@ -114,13 +113,7 @@ Sprite_MapGauge.prototype.drawLabel = function()
     const x = 32;
     const y = 0;
     this.bitmap.fontSize = 12;
-    this.bitmap.drawText(
-      this._gauge._label,
-      x,
-      y,
-      this.bitmapWidth(),
-      this.bitmapHeight(),
-      "left");
+    this.bitmap.drawText(this._gauge._label, x, y, this.bitmapWidth(), this.bitmapHeight(), "left");
   }
 };
 

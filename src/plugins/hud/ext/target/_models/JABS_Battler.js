@@ -17,7 +17,8 @@ JABS_Battler.prototype.setBattlerLastHit = function(battlerLastHit)
   }
 
   // perform original logic.
-  J.HUD.EXT.TARGET.Aliased.JABS_Battler.get('setBattlerLastHit').call(this, battlerLastHit);
+  J.HUD.EXT.TARGET.Aliased.JABS_Battler.get('setBattlerLastHit')
+    .call(this, battlerLastHit);
 };
 
 /**
@@ -46,7 +47,11 @@ JABS_Battler.prototype.canUpdateTargetFrame = function(potentialTarget)
   }
 
   // don't re-update the last hit if they haven't changed.
-  if (this.getTarget().getUuid() === potentialTarget.getUuid()) return false;
+  if (this.getTarget()
+    .getUuid() === potentialTarget.getUuid())
+  {
+    return false;
+  }
 
   // time to update target frame!
   return true;
@@ -90,16 +95,22 @@ JABS_Battler.prototype.canShowTargetFrame = function()
   if (!this.isEnemy()) return false;
 
   // if there isn't an event or character remaining, don't bother.
-  if (!this.getCharacter() || this.getCharacter().isErased()) return false;
+  if (!this.getCharacter() || this.getCharacter()
+    .isErased())
+  {
+    return false;
+  }
 
   // check the event to see if we can show the target frame.
-  const hiddenByEvent = !this.getCharacter().canShowTargetFrame();
+  const hiddenByEvent = !this.getCharacter()
+    .canShowTargetFrame();
 
   // if the event prevents showing the target frame, then don't show it.
   if (hiddenByEvent) return false;
 
   // check the enemy to see if the enemy in the database prevents showing.
-  const hiddenByDatabase = !this.getBattler().showTargetFrame();
+  const hiddenByDatabase = !this.getBattler()
+    .showTargetFrame();
 
   // if one or the other are indicating not to show, then don't.
   if (hiddenByDatabase) return false;
@@ -130,12 +141,7 @@ JABS_Battler.prototype.buildFramedTargetConfiguration = function()
   const showTpGauge = this.canShowTargetTp();
 
   // return the built configuration.
-  return new FramedTargetConfiguration(
-    showName,
-    showText,
-    showHpGauge,
-    showMpGauge,
-    showTpGauge);
+  return new FramedTargetConfiguration(showName, showText, showHpGauge, showMpGauge, showTpGauge);
 };
 
 /**
@@ -151,10 +157,18 @@ JABS_Battler.prototype.canShowTargetHp = function()
   if (!this.isEnemy()) return false;
 
   // if the event says don't show it, then don't show it.
-  if (!this.getCharacter().showTargetHpBar()) return false;
+  if (!this.getCharacter()
+    .showTargetHpBar())
+  {
+    return false;
+  }
 
   // if the enemy in the database says don't show it, then don't show it.
-  if (!this.getBattler().showTargetHpBar()) return false;
+  if (!this.getBattler()
+    .showTargetHpBar())
+  {
+    return false;
+  }
 
   // show what the defaults are.
   return true;
@@ -173,13 +187,25 @@ JABS_Battler.prototype.canShowTargetMp = function()
   if (!this.isEnemy()) return false;
 
   // if the event says don't show it, then don't show it.
-  if (!this.getCharacter().showTargetMpBar()) return false;
+  if (!this.getCharacter()
+    .showTargetMpBar())
+  {
+    return false;
+  }
 
   // if the enemy in the database says don't show it, then don't show it.
-  if (!this.getBattler().showTargetMpBar()) return false;
+  if (!this.getBattler()
+    .showTargetMpBar())
+  {
+    return false;
+  }
 
   // TODO: should we hide the bar if the max value is 0?
-  if (this.getBattler().param(1) === 0) return false;
+  if (this.getBattler()
+    .param(1) === 0)
+  {
+    return false;
+  }
 
   // show what the defaults are.
   return true;
@@ -198,13 +224,25 @@ JABS_Battler.prototype.canShowTargetTp = function()
   if (!this.isEnemy()) return false;
 
   // if the event says don't show it, then don't show it.
-  if (!this.getCharacter().showTargetTpBar()) return false;
+  if (!this.getCharacter()
+    .showTargetTpBar())
+  {
+    return false;
+  }
 
   // if the enemy in the database says don't show it, then don't show it.
-  if (!this.getBattler().showTargetTpBar()) return false;
+  if (!this.getBattler()
+    .showTargetTpBar())
+  {
+    return false;
+  }
 
   // TODO: should we hide the bar if the max value is 0?
-  if (this.getBattler().maxTp() === 0 || this.isInanimate()) return false;
+  if (this.getBattler()
+    .maxTp() === 0 || this.isInanimate())
+  {
+    return false;
+  }
 
   // show what the defaults are.
   return true;
@@ -220,10 +258,18 @@ JABS_Battler.prototype.canShowTargetText = function()
   if (!this.isEnemy()) return false;
 
   // if the event says don't show it, then don't show it.
-  if (!this.getCharacter().showTargetText()) return false;
+  if (!this.getCharacter()
+    .showTargetText())
+  {
+    return false;
+  }
 
   // if the enemy in the database says don't show it, then don't show it.
-  if (!this.getBattler().showTargetText()) return false;
+  if (!this.getBattler()
+    .showTargetText())
+  {
+    return false;
+  }
 
   // show it.
   return true;
@@ -239,13 +285,15 @@ JABS_Battler.prototype.getTargetFrameText = function()
   if (!this.isEnemy()) return String.empty;
 
   // extract the text from the event.
-  let targetFrameText = this.getCharacter().getTargetFrameText();
+  let targetFrameText = this.getCharacter()
+    .getTargetFrameText();
 
   // if there wasn't any on the event, check the enemy.
   if (!targetFrameText)
   {
     // extract the icon index from the enemy.
-    targetFrameText = this.getBattler().targetFrameText();
+    targetFrameText = this.getBattler()
+      .targetFrameText();
   }
 
   // and return it.
@@ -262,13 +310,15 @@ JABS_Battler.prototype.getTargetFrameIcon = function()
   if (!this.isEnemy()) return 0;
 
   // extract the icon index from the event.
-  let targetFrameIcon = this.getCharacter().getTargetFrameIcon();
+  let targetFrameIcon = this.getCharacter()
+    .getTargetFrameIcon();
 
   // if there wasn't one on the event, check the enemy.
   if (!targetFrameIcon)
   {
     // extract the icon index from the enemy.
-    targetFrameIcon = this.getBattler().targetFrameIcon();
+    targetFrameIcon = this.getBattler()
+      .targetFrameIcon();
   }
 
   // and return it.

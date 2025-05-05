@@ -7,7 +7,8 @@ J.OMNI.Aliased.Window_MenuCommand.set('makeCommandList', Window_MenuCommand.prot
 Window_MenuCommand.prototype.makeCommandList = function()
 {
   // perform original logic.
-  J.OMNI.Aliased.Window_MenuCommand.get('makeCommandList').call(this);
+  J.OMNI.Aliased.Window_MenuCommand.get('makeCommandList')
+    .call(this);
 
   // if we cannot add the command, then do not.
   if (!this.canAddOmnipediaCommand()) return;

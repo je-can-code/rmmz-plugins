@@ -4,13 +4,12 @@
  * The passive state ids that this item possesses.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseItem.prototype, "passiveStateIds",
+Object.defineProperty(RPG_BaseItem.prototype, "passiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractPassiveStateIds();
-    },
-  });
+    return this.extractPassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.
@@ -27,13 +26,12 @@ RPG_BaseItem.prototype.extractPassiveStateIds = function()
  * The non-duplicative passive state ids that this item possesses.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseItem.prototype, "uniquePassiveStateIds",
+Object.defineProperty(RPG_BaseItem.prototype, "uniquePassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractUniquePassiveStateIds();
-    },
-  });
+    return this.extractUniquePassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.
@@ -50,13 +48,12 @@ RPG_BaseItem.prototype.extractUniquePassiveStateIds = function()
  * The passive state ids that this equipment will apply while this equip is equipped.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseItem.prototype, "equippedPassiveStateIds",
+Object.defineProperty(RPG_BaseItem.prototype, "equippedPassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractEquippedPassiveStateIds();
-    },
-  });
+    return this.extractEquippedPassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.
@@ -74,13 +71,12 @@ RPG_BaseItem.prototype.extractEquippedPassiveStateIds = function()
  * while this equip is equipped.
  * @type {number[]}
  */
-Object.defineProperty(RPG_BaseItem.prototype, "uniqueEquippedPassiveStateIds",
+Object.defineProperty(RPG_BaseItem.prototype, "uniqueEquippedPassiveStateIds", {
+  get: function()
   {
-    get: function()
-    {
-      return this.extractUniqueEquippedPassiveStateIds();
-    },
-  });
+    return this.extractUniqueEquippedPassiveStateIds();
+  },
+});
 
 /**
  * Extracts the value from the notes.

@@ -82,7 +82,8 @@ Game_Action.prototype.applyJabsAction = function(target)
   this.preApplyAction(target);
 
   // validate we landed a hit.
-  if (target.result().isHit())
+  if (target.result()
+    .isHit())
   {
     // applies common events that may be a part of a skill's effect.
     this.executeJabsAction(target);
@@ -100,12 +101,14 @@ Game_Action.prototype.applyJabsAction = function(target)
 Game_Action.prototype.preApplyAction = function(target)
 {
   // always clear the caster's result (???).
-  this.subject().clearResult();
+  this.subject()
+    .clearResult();
 
   const result = target.result();
 
-  // always clear the result first.
-  result.clear();
+  // NOTE: the action is already cleared as a part of the "executeSkillEffects" function.
+  //  in the base RMMZ code, this happens as a part of the "apply" function, though.
+  // result.clear();
 
   // record if the skill was actually used.
   result.used = this.testApply(target);
@@ -144,7 +147,9 @@ Game_Action.prototype.executeJabsAction = function(target)
   }
 
   // add the subject who is applying the state as a parameter for tracking purposes.
-  this.item().effects.forEach(effect => this.applyItemEffect(target, effect));
+  this.item()
+    .effects
+    .forEach(effect => this.applyItemEffect(target, effect));
 
   // applies on-cast/on-hit effects, like gaining TP or producing on-cast states.
   this.applyItemUserEffect(target);
@@ -209,7 +214,8 @@ J.ABS.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamag
 Game_Action.prototype.makeDamageValue = function(target, critical)
 {
   // perform original logic.
-  let base = J.ABS.Aliased.Game_Action.get('makeDamageValue').call(this, target, critical);
+  let base = J.ABS.Aliased.Game_Action.get('makeDamageValue')
+    .call(this, target, critical);
 
   // validate we have a target.
   if (this.canHandleGuardEffects(target))
@@ -300,7 +306,8 @@ Game_Action.prototype.processParry = function(jabsBattler)
   // TODO: pull the parry logic out of the requestanimation function.
   // play the parry animation.
   const parryAnimationId = 122;
-  jabsBattler.getCharacter().requestAnimation(parryAnimationId);
+  jabsBattler.getCharacter()
+    .requestAnimation(parryAnimationId);
 
   // reset the player's guarding.
   jabsBattler.setParryWindow(0);
@@ -317,7 +324,8 @@ Game_Action.prototype.onParry = function(jabsBattler)
   const guardSkillTp = this.getTpFromGuardSkill(jabsBattler) * 10;
 
   // gain 10x of the tp from the guard skill when parrying.
-  jabsBattler.getBattler().gainTp(guardSkillTp);
+  jabsBattler.getBattler()
+    .gainTp(guardSkillTp);
 };
 
 /**
@@ -353,7 +361,8 @@ Game_Action.prototype.onGuard = function(jabsBattler)
   const guardSkillTp = this.getTpFromGuardSkill(jabsBattler);
 
   // gain 100% of the tp from the guard skill when guarding.
-  jabsBattler.getBattler().gainTp(guardSkillTp);
+  jabsBattler.getBattler()
+    .gainTp(guardSkillTp);
 };
 
 /**
@@ -407,7 +416,8 @@ Game_Action.prototype.applyFlatDamageReduction = function(base, jabsBattler)
   const reduction = parseFloat(jabsBattler.flatGuardReduction());
 
   // grab the action result for updating.
-  const result = jabsBattler.getBattler().result();
+  const result = jabsBattler.getBattler()
+    .result();
 
   // take note of the flat amount reduced in the action result.
   result.reduced += reduction;
@@ -431,7 +441,8 @@ Game_Action.prototype.applyPercentDamageReduction = function(baseDamage, jabsBat
   const reduction = parseFloat(baseDamage - ((100 + jabsBattler.percGuardReduction()) / 100) * baseDamage);
 
   // grab the action result for updating.
-  const actionResult = jabsBattler.getBattler().result();
+  const actionResult = jabsBattler.getBattler()
+    .result();
 
   // take note of the percent amount reduced in the action result.
   actionResult.reduced -= reduction;
@@ -459,7 +470,8 @@ Game_Action.prototype.itemEffectAddState = function(target, effect)
   if (!this.canItemEffectAddState(target, effect)) return;
 
   // if the precise-parry-state-prevention wasn't successful, apply as usual.
-  J.ABS.Aliased.Game_Action.get('itemEffectAddState').call(this, target, effect);
+  J.ABS.Aliased.Game_Action.get('itemEffectAddState')
+    .call(this, target, effect);
 };
 
 /**
@@ -496,7 +508,8 @@ Game_Action.prototype.canItemEffectAddState = function(target, effect)
 Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 {
   // grab all the attacker's state ids.
-  const attackerStateIds = this.subject().attackStates();
+  const attackerStateIds = this.subject()
+    .attackStates();
 
   // if there are no attacker state ids, then don't process anything.
   if (!attackerStateIds.length) return;
@@ -527,7 +540,10 @@ Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 {
   // extract the data points.
-  const { value1: chance, dataId: stateId } = effect;
+  const {
+    value1: chance,
+    dataId: stateId
+  } = effect;
 
   // handle the application of the state- if applicable.
   this.handleApplyState(target, stateId, chance, false);
@@ -567,7 +583,8 @@ Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, u
   if (useAttackerStateRate)
   {
     // apply the chance of success for this particular state from the attacker.
-    applicationModifier *= this.subject().attackStatesRate(stateId);
+    applicationModifier *= this.subject()
+      .attackStatesRate(stateId);
   }
 
   // determine whether or not we should apply target resistances for this action.

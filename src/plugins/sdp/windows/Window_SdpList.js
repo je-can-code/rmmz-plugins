@@ -2,7 +2,8 @@
 /**
  * The SDP window containing the list of all unlocked panels.
  */
-class Window_SdpList extends Window_Command
+class Window_SdpList
+  extends Window_Command
 {
   /**
    * The currently selected actor. Used for comparing points to cost to see if
@@ -62,22 +63,38 @@ class Window_SdpList extends Window_Command
    */
   makeCommandList()
   {
-    const panels = $gameParty.getUnlockedSdps();
+    // grab the actor.
     const actor = this.currentActor;
-    if (!panels.length || !actor) return;
 
-    // add all panels to the list.
-    panels.forEach(panel =>
-    {
-      // construct the SDP command.
-      const command = this.makeCommand(panel);
+    // don't render the list of there is no actor.
+    if (!actor) return;
 
-      // if the command is invalid, do not add it.
-      if (!command) return;
+    // grab all the panelRankings the actor has unlocked.
+    const panelRankings = actor.getAllUnlockedSdps();
 
-      // add the command.
-      this.addBuiltCommand(command);
-    }, this);
+    // check if there even are any panels unlocked.
+    if (panelRankings.length === 0) return;
+
+    // iterate over each of the unlocked rankings to render the panel in the list.
+    const commands = panelRankings
+      .map(panelRanking =>
+      {
+        // grab the actual panel for its data.
+        const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+
+        // construct the SDP command.
+        const command = this.makeCommand(panel);
+
+        // if the command is invalid, do not add it.
+        if (!command) return null;
+
+        // add the command.
+        return command;
+      }, this)
+      .filter(command => command !== null)
+      .sort((a, b) => a.ext.key.localeCompare(b.ext.key));
+
+    commands.forEach(this.addBuiltCommand, this);
   }
 
   /**
@@ -89,7 +106,13 @@ class Window_SdpList extends Window_Command
   {
     const actor = this.currentActor;
     const points = actor.getSdpPoints();
-    const { name, key, iconIndex, rarity: colorIndex, maxRank } = panel;
+    const {
+      name,
+      key,
+      iconIndex,
+      rarity: colorIndex,
+      maxRank
+    } = panel;
 
     // get the ranking for a given panel by its key.
     const panelRanking = actor.getSdpByKey(key);
@@ -98,7 +121,7 @@ class Window_SdpList extends Window_Command
     const { currentRank } = panelRanking;
 
     // check if we're at max rank already.
-    const isMaxRank = maxRank === currentRank;
+    const isMaxRank = maxRank <= currentRank;
 
     // check if the panel is max rank AND we're using the no max panels filter.
     if (isMaxRank && this.usingNoMaxPanelsFilter())
@@ -131,4 +154,5 @@ class Window_SdpList extends Window_Command
     return command;
   }
 }
+
 //endregion Window_SdpList

@@ -9,7 +9,8 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
   if (!J.NATURAL) return;
 
   // perform original logic.
-  J.CRIT.Aliased.Game_Battler.get("initNaturalGrowthParameters").call(this);
+  J.CRIT.Aliased.Game_Battler.get("initNaturalGrowthParameters")
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -173,9 +174,7 @@ Game_Battler.prototype.getCriticalDamageMultiplier = function()
   const objectsToCheck = this.getAllNotes();
 
   // sum together all cdm values across the notes.
-  const cdmBonuses = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritDamageMultiplier);
+  const cdmBonuses = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.CRIT.RegExp.CritDamageMultiplier);
 
   // return the sum of all bonuses.
   return cdmBonuses;
@@ -308,9 +307,7 @@ Game_Battler.prototype.getCriticalDamageReduction = function()
   const objectsToCheck = this.getAllNotes();
 
   // sum together all cdm values across the notes.
-  const cdrBonuses = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.CRIT.RegExp.CritDamageReduction);
+  const cdrBonuses = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.CRIT.RegExp.CritDamageReduction);
 
   // return the sum of all bonuses.
   return cdrBonuses;

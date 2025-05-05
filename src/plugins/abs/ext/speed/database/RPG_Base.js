@@ -3,13 +3,12 @@
  * The movement speed modifier from this from database object.
  * @type {number|null}
  */
-Object.defineProperty(RPG_Base.prototype, "jabsSpeedBoost",
+Object.defineProperty(RPG_Base.prototype, "jabsSpeedBoost", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsSpeedBoost();
-    },
-  });
+    return this.getJabsSpeedBoost();
+  },
+});
 
 /**
  * Gets the movement speed modifier from this database object.

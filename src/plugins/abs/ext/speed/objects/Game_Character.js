@@ -8,7 +8,8 @@ J.ABS.EXT.SPEED.Aliased.Game_Character.set('distancePerFrame', Game_Character.pr
 Game_Character.prototype.distancePerFrame = function()
 {
   // determine base distance per frame.
-  const base = J.ABS.EXT.SPEED.Aliased.Game_Character.get('distancePerFrame').call(this);
+  const base = J.ABS.EXT.SPEED.Aliased.Game_Character.get('distancePerFrame')
+    .call(this);
 
   // calculate the speed boost bonus based on the base.
   const bonus = this.calculateSpeedBoostBonus(base);
@@ -37,7 +38,8 @@ Game_Character.prototype.calculateSpeedBoostBonus = function(baseMoveSpeed)
   if (!battler) return 0;
 
   // get the current speed boosts associated with the battler.
-  const scale = battler.getBattler().getWalkSpeedBoosts();
+  const scale = battler.getBattler()
+    .getWalkSpeedBoosts();
 
   // if we have no boosts, then don't process.
   if (scale === 0) return 0;

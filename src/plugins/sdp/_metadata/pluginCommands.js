@@ -32,7 +32,10 @@ PluginManager.registerCommand(J.SDP.Metadata.name, "Lock SDP", args =>
  */
 PluginManager.registerCommand(J.SDP.Metadata.name, "Modify SDP points", args =>
 {
-  const { actorId, sdpPoints } = args;
+  const {
+    actorId,
+    sdpPoints
+  } = args;
   const parsedActorId = parseInt(actorId);
   const parsedSdpPoints = parseInt(sdpPoints);
   $gameActors

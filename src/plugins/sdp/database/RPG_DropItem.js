@@ -3,13 +3,12 @@
  * The SDP key of this item.
  * @type {string}
  */
-Object.defineProperty(RPG_DropItem.prototype, "sdpKey",
+Object.defineProperty(RPG_DropItem.prototype, "sdpKey", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getSdpKey();
-    },
-  });
+    return this.getSdpKey();
+  },
+});
 
 /**
  * Gets the SDP key of this item.

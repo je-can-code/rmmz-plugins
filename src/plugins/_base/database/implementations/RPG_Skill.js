@@ -2,7 +2,8 @@
 /**
  * An class representing a single skill from the database.
  */
-class RPG_Skill extends RPG_UsableItem
+class RPG_Skill
+  extends RPG_UsableItem
 {
   //region properties
   /**
@@ -52,6 +53,7 @@ class RPG_Skill extends RPG_UsableItem
    * @type {number}
    */
   tpCost = 0;
+
   //endregion properties
 
   /**
@@ -85,5 +87,15 @@ class RPG_Skill extends RPG_UsableItem
     this.stypeId = skill.stypeId;
     this.tpCost = skill.tpCost;
   }
+
+  /**
+   * Whether or not this database entry is a skill.
+   * @returns {boolean}
+   */
+  isSkill()
+  {
+    return true;
+  }
 }
+
 //endregion RPG_Skill

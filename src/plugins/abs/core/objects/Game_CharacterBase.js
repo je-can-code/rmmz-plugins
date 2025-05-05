@@ -7,7 +7,8 @@ J.ABS.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype
 Game_CharacterBase.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_CharacterBase.get('initMembers').call(this);
+  J.ABS.Aliased.Game_CharacterBase.get('initMembers')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -106,7 +107,8 @@ J.ABS.Aliased.Game_CharacterBase.set('setMoveSpeed', Game_CharacterBase.prototyp
 Game_CharacterBase.prototype.setMoveSpeed = function(moveSpeed)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_CharacterBase.get('setMoveSpeed').call(this, moveSpeed);
+  J.ABS.Aliased.Game_CharacterBase.get('setMoveSpeed')
+    .call(this, moveSpeed);
 
   // set the underlying real move speed to this.
   this._j._abs._realMoveSpeed = moveSpeed;
@@ -136,6 +138,7 @@ Game_CharacterBase.prototype.setDodgeModifier = function(dodgeMoveSpeed)
 Game_CharacterBase.prototype.isDodging = function()
 {
   // TODO: update to accommodate the designated player if applicable.
-  return $jabsEngine.getPlayer1().isDodging();
+  return $jabsEngine.getPlayer1()
+    .isDodging();
 };
 //endregion Game_CharacterBase

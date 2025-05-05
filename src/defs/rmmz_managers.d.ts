@@ -360,13 +360,17 @@ declare class ImageManager
    * A cache used for storing images.
    * @type {Map<string, any>}
    */
-  static _cache: { [key: string]: any };
+  static _cache: {
+    [key: string]: any
+  };
 
   /**
    * A cache used for storing important things.
    * @type {Map<string, any>}
    */
-  static _system: { [key: string]: any };
+  static _system: {
+    [key: string]: any
+  };
 
   /**
    * An empty bitmap.
@@ -386,7 +390,11 @@ declare class ImageManager
    */
   static throwLoadError(bitmap: Bitmap): void;
 
-  static loadFace(filename: string, hue?: number): Bitmap;
+  /**
+   * Loads the face into a bitmap.
+   * @param filename
+   */
+  static loadFace(filename: string): Bitmap;
 
   /**
    * Loads a Bitmap object from the 'img/parallaxes/' folder
@@ -885,7 +893,10 @@ declare class AudioManager
 
   static createBuffer(): HTML5Audio;
 
-  static updateBufferParameters(buffer: rm.types.AudioParameters, configVolume: number, audio: rm.types.AudioParameters): void;
+  static updateBufferParameters(
+    buffer: rm.types.AudioParameters,
+    configVolume: number,
+    audio: rm.types.AudioParameters): void;
 
   static audioFileExt(): string;
 
@@ -1213,7 +1224,9 @@ declare class EffectManager
 {
   protected constructor();
 
-  static _cache: { [key: string]: any };
+  static _cache: {
+    [key: string]: any
+  };
   static _errorUrls: any[];
 
   /**

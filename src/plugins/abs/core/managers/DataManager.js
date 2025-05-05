@@ -17,7 +17,7 @@ var $jabsEngine = null;
 var $gameEnemies = null;
 
 /**
- * The global reference for the `$dataMap` data object that contains all the replicable `JABS_Action`s.
+ * The global reference for the `$dataMap` data object that contains all the replicable JABS actions.
  * @type {Map}
  * @global
  */
@@ -31,7 +31,8 @@ J.ABS.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects
 DataManager.createGameObjects = function()
 {
   // perform original logic.
-  J.ABS.Aliased.DataManager.get('createGameObjects').call(this);
+  J.ABS.Aliased.DataManager.get('createGameObjects')
+    .call(this);
 
   // update the skill master map to have data.
   DataManager.getSkillMasterMap();

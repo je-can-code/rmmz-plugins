@@ -11,7 +11,8 @@ IconManager.longParam = function(paramId)
     case 32:
       return this.proficiencyBoost(); // prof
     default:
-      return J.PROF.Aliased.IconManager.get('longParam').call(this, paramId);
+      return J.PROF.Aliased.IconManager.get('longParam')
+        .call(this, paramId);
   }
 };
 

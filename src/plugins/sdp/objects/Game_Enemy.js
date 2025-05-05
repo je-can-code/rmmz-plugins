@@ -8,7 +8,8 @@ J.SDP.Aliased.Game_Enemy.set("extraDrops", Game_Enemy.prototype.extraDrops);
 Game_Enemy.prototype.extraDrops = function()
 {
   // get the original drop list.
-  const dropList = J.SDP.Aliased.Game_Enemy.get("extraDrops").call(this);
+  const dropList = J.SDP.Aliased.Game_Enemy.get("extraDrops")
+    .call(this);
 
   // if we cannot drop the SDP for some reason, then return the unmodified drop list.
   if (!this.canDropSdp()) return dropList;
@@ -31,7 +32,7 @@ Game_Enemy.prototype.canDropSdp = function()
   if (!this.hasSdpDropData()) return false;
 
   // grab the panel for shorthand reference below.
-  const panel = $gameParty.getSdpByKey(this.enemy().sdpDropKey);
+  const panel = J.SDP.Metadata.panelsMap.get(this.enemy().sdpDropKey);
 
   // if the enemy has a panel that isn't defined, then don't drop it.
   if (!panel)
@@ -42,7 +43,7 @@ Game_Enemy.prototype.canDropSdp = function()
   }
 
   // if we have already unlocked the droppable panel, then don't drop it.
-  if (panel.isUnlocked()) return false;
+  if ($gameParty.isSdpUnlocked(panel.key)) return false;
 
   // drop the panel!
   return true;
@@ -55,7 +56,7 @@ Game_Enemy.prototype.canDropSdp = function()
 Game_Enemy.prototype.makeSdpDrop = function()
 {
   // grab all the data points to build the SDP drop.
-  const [key, chance, itemId] = this.getSdpDropData();
+  const [ key, chance, itemId ] = this.getSdpDropData();
 
   // if debug is enabled, panels should always drop.
   const debugChance = $gameSystem.shouldForceDropSdp()

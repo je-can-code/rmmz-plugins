@@ -34,6 +34,7 @@
  *
  * ----------------------------------------------------------------------------
  * CA-UNIQUE CHANGES:
+ * - forces the previous leader to be in the second party slot after cycling.
  * - loot drop x,y adjustment unique to CA
  * - anti-null elementIds hard-coded
  * - mini floor-damage system built with tags (TODO: replace with plugin?)

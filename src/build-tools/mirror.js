@@ -18,7 +18,7 @@ class Mirror
    * The destinations currently designated to this mirroring utility.
    * @type {[]}
    */
-  #destinations = ["./project/js/plugins"];
+  #destinations = [ "./project/js/plugins" ];
 
   /**
    * Gets the destinations that have been assigned to this mirror.
@@ -55,6 +55,7 @@ class Mirror
   {
     this.#source = source;
   }
+
   //#endregion properties
 
   /**
@@ -112,7 +113,12 @@ class Mirror
     if (!fs.existsSync(`${targetPath}`))
     {
       // make sure the directory is created.
-      await fs.mkdir(targetPath, { force: true, recursive: true }, this.#handleFileError);
+      await fs.mkdir(targetPath,
+        {
+          force: true,
+          recursive: true
+        },
+        this.#handleFileError);
       Logger.logAnyway(`target directory created: ${targetPath}`);
     }
     else

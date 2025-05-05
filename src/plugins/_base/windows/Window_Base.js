@@ -100,7 +100,8 @@ J.BASE.Aliased.Window_Base.set('resetFontSettings', Window_Base.prototype.resetF
 Window_Base.prototype.resetFontSettings = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Window_Base.get('resetFontSettings').call(this);
+  J.BASE.Aliased.Window_Base.get('resetFontSettings')
+    .call(this);
 
   // also reset the italics/bold back to false.
   this.resetFontFormatting();
@@ -199,7 +200,12 @@ Window_Base.prototype.drawBackgroundRect = function(rect)
   const color2 = ColorManager.itemBackColor2();
 
   // extract the data from the rectangle.
-  const { x, y, width, height } = rect;
+  const {
+    x,
+    y,
+    width,
+    height
+  } = rect;
 
   // render the background.
   this.contentsBack.gradientFillRect(x, y, width, height, color1, color2, true);

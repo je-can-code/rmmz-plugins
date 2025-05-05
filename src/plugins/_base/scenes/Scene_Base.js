@@ -6,7 +6,8 @@ J.BASE.Aliased.Scene_Base.set('initialize', Scene_Base.prototype.initialize);
 Scene_Base.prototype.initialize = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Scene_Base.get('initialize').call(this);
+  J.BASE.Aliased.Scene_Base.get('initialize')
+    .call(this);
 
   // also add custom members to this class.
   this.initMembers();

@@ -11,7 +11,8 @@ Game_Follower.prototype.chaseCharacter = function(character)
   if (!this.canObeyJabsAi())
   {
     // perform original logic.
-    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter').call(this, character);
+    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
+      .call(this, character);
 
     // stop processing.
     return;
@@ -65,7 +66,8 @@ Game_Follower.prototype.obeyJabsAi = function(character)
 Game_Follower.prototype.shouldObeyJabsDeadAi = function()
 {
   // Are we dead?
-  const isDead = this.getJabsBattler().isDead();
+  const isDead = this.getJabsBattler()
+    .isDead();
 
   // return the diagnostic.
   return isDead;
@@ -86,7 +88,8 @@ Game_Follower.prototype.handleJabsDeadAi = function(character)
 {
   // TODO: handle logic for repeating whilst dead.
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter').call(this, character);
+  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
+    .call(this, character);
 };
 
 /**
@@ -165,7 +168,8 @@ Game_Follower.prototype.handleJabsCombatActiveAi = function(character)
 Game_Follower.prototype.handleJabsCombatInactiveAi = function(character)
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter').call(this, character);
+  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
+    .call(this, character);
 };
 
 /**
@@ -179,7 +183,8 @@ Game_Follower.prototype.update = function()
   if (!this.canObeyJabsAi())
   {
     // perform original logic if we are not.
-    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update').call(this);
+    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update')
+      .call(this);
 
     // stop processing.
     return;
@@ -189,6 +194,30 @@ Game_Follower.prototype.update = function()
   this.updateAllyAi();
 };
 
+J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('setDirectionFix', Game_Follower.prototype.setDirectionFix);
+Game_Follower.prototype.setDirectionFix = function(isDirectionFixed)
+{
+  // grab the follower's battler.
+  const battler = this.getJabsBattler();
+
+  if (!battler)
+  {
+    // perform original logic if we are not.
+    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('setDirectionFix')
+      .call(this, isDirectionFixed);
+
+    // do no further processing.
+    return;
+  }
+
+  // only lock direction if the battler isn't engaged, and there is no event running.
+  if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
+
+  // perform original logic if we are not.
+  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('setDirectionFix')
+    .call(this, isDirectionFixed);
+};
+
 /**
  * A slightly modified update for followers controlled by JABS AI.
  */
@@ -196,7 +225,8 @@ Game_Follower.prototype.updateAllyAi = function()
 {
   // TODO: rewrite this entirely.
   // perform superclass logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update').call(this);
+  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update')
+    .call(this);
   //Game_Character.prototype.update.call(this);
 
   // update the various parameters accordingly for followers.

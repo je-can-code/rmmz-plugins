@@ -6,7 +6,8 @@ J.UTILS.Aliased.Game_Actor.set('onLearnNewSkill', Game_Actor.prototype.onLearnNe
 Game_Actor.prototype.onLearnNewSkill = function(skillId)
 {
   // perform original logic.
-  J.UTILS.Aliased.Game_Actor.get('onLearnNewSkill').call(this, skillId);
+  J.UTILS.Aliased.Game_Actor.get('onLearnNewSkill')
+    .call(this, skillId);
 
   // instead of responding with undefined to the console, return the name of the skill.
   return `[${skillId}] {${this.skill(skillId).name}} was learned.`;
@@ -20,7 +21,8 @@ J.UTILS.Aliased.Game_Actor.set('onForgetSkill', Game_Actor.prototype.onForgetSki
 Game_Actor.prototype.onForgetSkill = function(skillId)
 {
   // perform original logic.
-  J.UTILS.Aliased.Game_Actor.get('onForgetSkill').call(this, skillId);
+  J.UTILS.Aliased.Game_Actor.get('onForgetSkill')
+    .call(this, skillId);
 
   // instead of responding with undefined to the console, return the name of the skill.
   return `[${skillId}] {${this.skill(skillId).name}} was not learned.`;

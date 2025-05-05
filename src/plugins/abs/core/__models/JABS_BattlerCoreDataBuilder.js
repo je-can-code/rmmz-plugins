@@ -80,7 +80,9 @@ class JABS_BattlerCoreDataBuilder
    * @type {boolean}
    * @private
    */
-  #showDangerIndicator = J.ABS.EXT.DANGER ? J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator : false;
+  #showDangerIndicator = J.ABS.EXT.DANGER
+    ? J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator
+    : false;
 
   /**
    * Whether or not this battler's name is visible.
@@ -102,6 +104,7 @@ class JABS_BattlerCoreDataBuilder
    * @private
    */
   #isInanimate = J.ABS.Metadata.DefaultEnemyIsInanimate;
+
   //endregion properties
 
   /**
@@ -368,6 +371,8 @@ class JABS_BattlerCoreDataBuilder
     this.#isInanimate = isInanimate;
     return this;
   }
+
   //endregion setters
 }
+
 //endregion JABS_BattlerCoreDataBuilder

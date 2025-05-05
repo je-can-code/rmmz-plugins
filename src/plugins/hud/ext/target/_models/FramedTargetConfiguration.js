@@ -56,4 +56,5 @@ class FramedTargetConfiguration
     this.showTp = showTp;
   }
 }
+
 //endregion FramedTargetConfiguration

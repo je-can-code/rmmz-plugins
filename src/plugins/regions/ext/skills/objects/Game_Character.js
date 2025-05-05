@@ -124,7 +124,12 @@ Game_Character.prototype.executeRegionSkills = function()
   regionSkillDatas.forEach(regionSkillData =>
   {
     // deconstruct the region skill data.
-    const { skillId, chance, casterId, isFriendly } = regionSkillData;
+    const {
+      skillId,
+      chance,
+      casterId,
+      isFriendly
+    } = regionSkillData;
 
     // roll the dice and see if we should even execute it.
     if (!RPGManager.chanceIn100(chance)) return;

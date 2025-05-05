@@ -140,6 +140,7 @@ J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
  *    <someKeyWithArrayAndSingleNumberValue:[123]>
  *    <someKeyWithArrayAndManyNumberValues:[123,456]>
  *    <someKeyWithStringValue:someValue>
+ *    <someKeyWithRangeValue:startRange-endRange>
  *  </pre>
  * @type {RegExp}
  */
@@ -157,6 +158,7 @@ J.BASE.Aliased = {
   Game_Enemy: new Map(),
   Game_Party: new Map(),
   Game_Temp: new Map(),
+  Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
   SoundManager: new Map(),
@@ -203,7 +205,9 @@ J.BASE.Helpers.generateUuid = function()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
     .replace(/[xy]/g, c =>
     {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = Math.random() * 16 | 0, v = c === 'x'
+        ? r
+        : (r & 0x3 | 0x8);
       return v.toString(16);
     });
 };
@@ -217,7 +221,9 @@ J.BASE.Helpers.shortUuid = function()
   return 'xxx-xxx'
     .replace(/[xy]/g, c =>
     {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      const r = Math.random() * 16 | 0, v = c === 'x'
+        ? r
+        : (r & 0x3 | 0x8);
       return v.toString(16);
     });
 };
@@ -283,11 +289,11 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
 {
   const stringifiedStructure = structure.toString();
   const openChar = '<';
-  const closeChar = asBoolean ? '>' : ':';
+  const closeChar = asBoolean
+    ? '>'
+    : ':';
   return stringifiedStructure
-    .substring(
-      stringifiedStructure.indexOf(openChar) + 1,
-      stringifiedStructure.indexOf(closeChar));
+    .substring(stringifiedStructure.indexOf(openChar) + 1, stringifiedStructure.indexOf(closeChar));
 };
 
 /**
@@ -296,9 +302,15 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
  *
  * This is used to more clearly show developer intent rather than just arbitrarily
  * adding empty double quotes all over the place.
- * @type {""}
+ * @type {string}
  */
-Object.defineProperty(String, "empty", { value: "", writable: false });
+Object.defineProperty(
+  String,
+  "empty",
+  {
+    value: "",
+    writable: false
+  });
 
 /**
  * Extends the global javascript {@link Array} object.
@@ -308,15 +320,14 @@ Object.defineProperty(String, "empty", { value: "", writable: false });
  * adding empty hard brackets all over the place.
  * @type {[]}
  */
-Object.defineProperty(Array, "empty",
+Object.defineProperty(Array, "empty", {
+  enumerable: true,
+  configurable: false,
+  get: function()
   {
-    enumerable: true,
-    configurable: false,
-    get: function()
-    {
-      return Array.of();
-    },
-  });
+    return Array.of();
+  },
+});
 
 /**
  * Executes a given function a given number of `times`.
@@ -327,7 +338,41 @@ Object.defineProperty(Array, "empty",
  */
 Array.iterate = function(times, func, thisArg = undefined)
 {
-  [...Array(times)].forEach(func, thisArg);
+  [ ...Array(times) ].forEach(func, thisArg);
+};
+
+/**
+ * Adds a given number of days based on this date.
+ * @param {number} days The number of days to add to a date.
+ * @returns {Date} The updated date with the designated days.
+ */
+Date.prototype.addDays = function(days)
+{
+  var result = new Date(this.valueOf());
+  result.setDate(result.getDate() + days);
+  return result;
+};
+
+/**
+ * Adds a given number of hours based on this date.
+ * @param {number} hours The number of hours to add to a date.
+ * @returns {Date} The updated date with the designated hours.
+ */
+Date.prototype.addHours = function(hours)
+{
+  this.setTime(this.getTime() + (hours * 60 * 60 * 1000));
+  return this;
+};
+
+/**
+ * Adds a given number of minutes based on this date.
+ * @param {number} minutes The number of minutes to add to a date.
+ * @returns {Date} The updated date with the designated minutes.
+ */
+Date.prototype.addMinutes = function(minutes)
+{
+  this.setTime(this.getTime() + (minutes * 60 * 1000));
+  return this;
 };
 
 /**
@@ -342,7 +387,8 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
   const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/ig;
 
   // return the masked string content.
-  return stringToMask.toString().replace(structure, maskingCharacter);
+  return stringToMask.toString()
+    .replace(structure, maskingCharacter);
 };
 //endregion Helpers
 

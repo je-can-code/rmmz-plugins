@@ -23,16 +23,16 @@ class DifficultyLayer
 
     // combat modifiers.
     difficultyLayer.actorEffects = new DifficultyBattlerEffects();
-    difficultyLayer.actorEffects.bparams = [...difficultyMetadata.actorEffects.bparams];
-    difficultyLayer.actorEffects.sparams = [...difficultyMetadata.actorEffects.sparams];
-    difficultyLayer.actorEffects.xparams = [...difficultyMetadata.actorEffects.xparams];
-    difficultyLayer.actorEffects.cparams = [...difficultyMetadata.actorEffects.cparams];
+    difficultyLayer.actorEffects.bparams = [ ...difficultyMetadata.actorEffects.bparams ];
+    difficultyLayer.actorEffects.sparams = [ ...difficultyMetadata.actorEffects.sparams ];
+    difficultyLayer.actorEffects.xparams = [ ...difficultyMetadata.actorEffects.xparams ];
+    difficultyLayer.actorEffects.cparams = [ ...difficultyMetadata.actorEffects.cparams ];
 
     difficultyLayer.enemyEffects = new DifficultyBattlerEffects();
-    difficultyLayer.enemyEffects.bparams = [...difficultyMetadata.enemyEffects.bparams];
-    difficultyLayer.enemyEffects.sparams = [...difficultyMetadata.enemyEffects.sparams];
-    difficultyLayer.enemyEffects.xparams = [...difficultyMetadata.enemyEffects.xparams];
-    difficultyLayer.enemyEffects.cparams = [...difficultyMetadata.enemyEffects.cparams];
+    difficultyLayer.enemyEffects.bparams = [ ...difficultyMetadata.enemyEffects.bparams ];
+    difficultyLayer.enemyEffects.sparams = [ ...difficultyMetadata.enemyEffects.sparams ];
+    difficultyLayer.enemyEffects.xparams = [ ...difficultyMetadata.enemyEffects.xparams ];
+    difficultyLayer.enemyEffects.cparams = [ ...difficultyMetadata.enemyEffects.cparams ];
 
     // reward modifiers.
     difficultyLayer.rewards = new DifficultyBonusEffects();
@@ -64,16 +64,16 @@ class DifficultyLayer
 
     // combat modifiers.
     difficultyLayer.actorEffects = new DifficultyBattlerEffects();
-    difficultyLayer.actorEffects.bparams = [...layer.actorEffects.bparams];
-    difficultyLayer.actorEffects.sparams = [...layer.actorEffects.sparams];
-    difficultyLayer.actorEffects.xparams = [...layer.actorEffects.xparams];
-    difficultyLayer.actorEffects.cparams = [...layer.actorEffects.cparams];
+    difficultyLayer.actorEffects.bparams = [ ...layer.actorEffects.bparams ];
+    difficultyLayer.actorEffects.sparams = [ ...layer.actorEffects.sparams ];
+    difficultyLayer.actorEffects.xparams = [ ...layer.actorEffects.xparams ];
+    difficultyLayer.actorEffects.cparams = [ ...layer.actorEffects.cparams ];
 
     difficultyLayer.enemyEffects = new DifficultyBattlerEffects();
-    difficultyLayer.enemyEffects.bparams = [...layer.enemyEffects.bparams];
-    difficultyLayer.enemyEffects.sparams = [...layer.enemyEffects.sparams];
-    difficultyLayer.enemyEffects.xparams = [...layer.enemyEffects.xparams];
-    difficultyLayer.enemyEffects.cparams = [...layer.enemyEffects.cparams];
+    difficultyLayer.enemyEffects.bparams = [ ...layer.enemyEffects.bparams ];
+    difficultyLayer.enemyEffects.sparams = [ ...layer.enemyEffects.sparams ];
+    difficultyLayer.enemyEffects.xparams = [ ...layer.enemyEffects.xparams ];
+    difficultyLayer.enemyEffects.cparams = [ ...layer.enemyEffects.cparams ];
 
     // reward modifiers.
     difficultyLayer.rewards = new DifficultyBonusEffects();
@@ -86,6 +86,7 @@ class DifficultyLayer
     // return our translated metadata.
     return difficultyLayer;
   }
+
   //#endregion mapping
 
   /**
@@ -307,6 +308,8 @@ class DifficultyLayer
     // disable it.
     config.enabled = false;
   }
+
   //endregion access
 }
+
 //endregion DifficultyLayer

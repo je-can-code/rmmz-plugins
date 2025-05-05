@@ -378,14 +378,7 @@ Window_Command.prototype.commandFaceData = function(index)
  * @param {number=} icon The icon index for this command; defaults to 0.
  * @param {number=} color The color index for this command; defaults to 0.
  */
-Window_Command.prototype.addCommand = function(
-  name,
-  symbol,
-  enabled = true,
-  ext = null,
-  icon = 0,
-  color = 0,
-)
+Window_Command.prototype.addCommand = function(name, symbol, enabled = true, ext = null, icon = 0, color = 0,)
 {
   this.commandList()
     .push({
@@ -419,14 +412,7 @@ Window_Command.prototype.addBuiltCommand = function(command)
  * @param {number=} icon The icon index for this command; defaults to 0.
  * @param {number=} color The color index for this command; defaults to 0.
  */
-Window_Command.prototype.prependCommand = function(
-  name,
-  symbol,
-  enabled = true,
-  ext = null,
-  icon = 0,
-  color = 0,
-)
+Window_Command.prototype.prependCommand = function(name, symbol, enabled = true, ext = null, icon = 0, color = 0,)
 {
   this.commandList()
     .unshift({

@@ -6,19 +6,16 @@
  * This is the same as `battler.lvl`.
  * @returns {number}
  */
-Object.defineProperty(
-  Game_Battler.prototype,
-  "level",
+Object.defineProperty(Game_Battler.prototype, "level", {
+  get()
   {
-    get()
-    {
-      // get the level from this battler.
-      return this.getLevel();
-    },
+    // get the level from this battler.
+    return this.getLevel();
+  },
 
-    // sure, lets make this level property configurable.
-    configurable: true,
-  });
+  // sure, lets make this level property configurable.
+  configurable: true,
+});
 
 /**
  * Generates the "lvl" property for all battlers, along with
@@ -27,19 +24,16 @@ Object.defineProperty(
  * This is the same as `battler.level`.
  * @returns {number}
  */
-Object.defineProperty(
-  Game_Battler.prototype,
-  "lvl",
+Object.defineProperty(Game_Battler.prototype, "lvl", {
+  get()
   {
-    get()
-    {
-      // get the level from this battler.
-      return this.getLevel();
-    },
+    // get the level from this battler.
+    return this.getLevel();
+  },
 
-    // sure, lets make this level property configurable.
-    configurable: true,
-  });
+  // sure, lets make this level property configurable.
+  configurable: true,
+});
 
 /**
  * Gets the level for this battler.
