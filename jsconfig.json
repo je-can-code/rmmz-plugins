@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "target":"ESNext",
     "module": "nodenext",
     "checkJs": true

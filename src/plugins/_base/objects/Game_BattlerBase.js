@@ -5,7 +5,7 @@
  */
 Game_BattlerBase.knownBaseParameterIds = function()
 {
-  return [0, 1, 2, 3, 4, 5, 6, 7];
+  return [ 0, 1, 2, 3, 4, 5, 6, 7 ];
 };
 
 /**
@@ -14,7 +14,7 @@ Game_BattlerBase.knownBaseParameterIds = function()
  */
 Game_BattlerBase.knownExParameterIds = function()
 {
-  return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  return [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
 };
 
 /**
@@ -23,7 +23,7 @@ Game_BattlerBase.knownExParameterIds = function()
  */
 Game_BattlerBase.knownSpParameterIds = function()
 {
-  return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  return [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
 };
 
 /**
@@ -33,7 +33,8 @@ Game_BattlerBase.knownSpParameterIds = function()
  */
 Game_BattlerBase.isBaseParam = function(longParameterId)
 {
-  return this.knownBaseParameterIds().includes(longParameterId);
+  return this.knownBaseParameterIds()
+    .includes(longParameterId);
 };
 
 /**
@@ -43,7 +44,8 @@ Game_BattlerBase.isBaseParam = function(longParameterId)
  */
 Game_BattlerBase.isExParam = function(longParameterId)
 {
-  return this.knownExParameterIds().includes(longParameterId - 8);
+  return this.knownExParameterIds()
+    .includes(longParameterId - 8);
 };
 
 /**
@@ -53,7 +55,8 @@ Game_BattlerBase.isExParam = function(longParameterId)
  */
 Game_BattlerBase.isSpParam = function(longParameterId)
 {
-  return this.knownSpParameterIds().includes(longParameterId - 18);
+  return this.knownSpParameterIds()
+    .includes(longParameterId - 18);
 };
 
 /**
@@ -64,7 +67,7 @@ Game_BattlerBase.isSpParam = function(longParameterId)
  */
 Game_BattlerBase.isRegenParamId = function(paramId)
 {
-  const regenParamIds = [7, 8, 9];
+  const regenParamIds = [ 7, 8, 9 ];
   return regenParamIds.includes(paramId);
 };
 
@@ -76,19 +79,18 @@ Game_BattlerBase.isRegenParamId = function(paramId)
  */
 Game_BattlerBase.isRegenLongParamId = function(longParamId)
 {
-  const regenParamIds = [7, 8, 9];
+  const regenParamIds = [ 7, 8, 9 ];
   return regenParamIds.includes(longParamId - 8);
 };
 
 /**
  * Gets the maximum tp/tech for this battler.
  */
-Object.defineProperty(Game_BattlerBase.prototype, "mtp",
+Object.defineProperty(Game_BattlerBase.prototype, "mtp", {
+  get: function()
   {
-    get: function() 
-    {
-      return this.maxTp();
-    },
-    configurable: true
-  });
+    return this.maxTp();
+  },
+  configurable: true
+});
 //endregion Game_BattlerBase

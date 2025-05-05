@@ -5,6 +5,6 @@
  */
 Game_Action.prototype.getAntiNullElementIds = function()
 {
-  return [25, 26, 27, 28];
+  return [ 25, 26, 27, 28 ];
 };
 //endregion Game_Action

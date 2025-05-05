@@ -2,7 +2,8 @@
 /**
  * A window displaying the list of jafting types available.
  */
-class Window_JaftingList extends Window_Command
+class Window_JaftingList
+  extends Window_Command
 {
   /**
    * Constructor.
@@ -62,4 +63,5 @@ class Window_JaftingList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_OmnipediaList

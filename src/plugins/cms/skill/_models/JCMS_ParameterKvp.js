@@ -53,4 +53,5 @@ class JCMS_ParameterKvp
     return this._colorId;
   }
 }
+
 //endregion JCMS_ParameterKvp

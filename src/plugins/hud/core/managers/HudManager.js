@@ -3,7 +3,7 @@
  * A manager class for the hud.
  * Use this class to issue requests to show/hide the hud.
  */
-class Hud_Manager
+class HudManager
 {
   //region properties
   /**
@@ -86,6 +86,7 @@ class Hud_Manager
    * @private
    */
   #ready = false;
+
   //endregion properties
 
   /**
@@ -96,12 +97,18 @@ class Hud_Manager
     // if we're already setup, then don't do it again.
     if (this.#isReady()) return;
 
+    this.initMembers();
+
     // configure the hud based on what we remember from settings.
     this.#setHudVisible($gameSystem.getHudVisible() ?? true);
     this.#setShowAllies($gameSystem.getHudAlliesVisible() ?? true);
 
     // flag this as ready for processing.
     this.#setReady(true);
+  }
+
+  initMembers()
+  {
   }
 
   /**
@@ -252,6 +259,7 @@ class Hud_Manager
   {
     this.#setRequestRefreshImageCache(false);
   }
+
   //endregion refresh
 
   //region target frame
@@ -315,6 +323,7 @@ class Hud_Manager
   {
     this.setNewTarget(null);
   }
+
   //endregion target frame
 
   //region input frame
@@ -342,6 +351,7 @@ class Hud_Manager
   {
     this.#setRequestRefreshInputFrame(false);
   }
+
   //endregion input frame
 
   //region private functions
@@ -553,6 +563,8 @@ class Hud_Manager
   {
     this.#requestHideHud = request;
   }
+
   //endregion private functions
 }
+
 //endregion Hud_Manager

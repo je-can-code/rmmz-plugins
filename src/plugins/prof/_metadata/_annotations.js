@@ -2,18 +2,68 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PROF] Enables skill proficiency tracking.
+ * [v2.0.0 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
+ * @orderAfter J-ABS
  * @help
  * ============================================================================
- * This plugin enables the ability to have actors grow in prof when
- * using skills. Additionally, triggers can now be configured to execute
+ * OVERVIEW
+ * This plugin enables the ability to have actors grow in prof when using
+ * skills. Additionally, triggers can now be configured to execute
  * against these new proficiencies (and other things).
+ *
+ * Integrates with others of mine plugins:
+ * - J-ABS; actions performed in JABS will accrue proficiency.
+ * - J-Elem; enables damage formula integration for proficiency.
+ * ----------------------------------------------------------------------------
+ * DETAILS
+ * This plugin tracks all skill usage for all battlers (actors and enemies,
+ * though with enemies it is much less meaningful since they are short-lived).
+ * By defining "proficiency conditionals", you can enable actors to unlock new
+ * skills or gain other javascript-based rewards by using their skills.
+ *
+ * WHEN USING J-ELEMENTALISTICS
+ * Additionally, a new parameter is exposed in the "damage formula" for "p"
+ * which represents the attacker's proficiency in the skill being used. For
+ * example, consider the following formula:
+ *
+ *  ((a.atk * 4) + p) - (b.def * 2)
+ *
+ * We would now translate that as:
+ * 4X attacker ATK + attacker's proficiency in this skill
+ * minus
+ * 2X defender DEF
+ *
+ * Which gives this skill the ability to scale the more the attacker uses this
+ * skill. Be aware there is no practical upper limit on proficiency, so if the
+ * game is intended to go on for a long while, such scaling could be difficult
+ * to balance in the long run. Use it in damage formulas wisely!
+ * ----------------------------------------------------------------------------
+ * !              IMPORTANT NOTE ABOUT CONFIGURATION DATA                     !
+ * The configuration data for this plugin is derived from an external file
+ * rather than the plugin's parameters. This file lives in the "/data"
+ * directory of your project, and is called "config.proficiency.json". You can
+ * absolutely generate/modify this file by hand, but you'll probably want to
+ * visit my github and swipe the jmz-data-editor project I've built that
+ * provides a convenient GUI for generating and modifying the configuration.
+ *
+ * If this configuration file is missing, the game will not run.
+ *
+ * Additionally, due to the way RMMZ base code is designed, by loading external
+ * files for configuration like this, a project made with this plugin will
+ * simply crash when attempting to load in a web context with an error akin to:
+ *    "ReferenceError require is not defined"
+ * This error is a result of attempting to leverage nodejs's "require" loader
+ * to load the "fs" (file system) library to then load the plugin's config
+ * file. Normally a web deployed game will alternatively use "forage" instead
+ * to handle things that need to be read or saved, but because the config file
+ * is just that- a file sitting in the /data directory rather than loaded into
+ * forage storage- it becomes unaccessible.
  * ============================================================================
- * PROFICIENCY BONUSES:
+ * PROFICIENCY BONUSES
  * Have you ever wanted a battler to be able to gain some bonus proficiency by
  * means of something from the database? Well now you can! By applying the
  * appropriate tag to the various database locations, you too can have your
@@ -41,7 +91,7 @@
  *  <proficiencyBonus:50>
  * The attacker now gains +50 bonus proficiency for any skill used.
  * ============================================================================
- * PROFICIENCY BLOCKING:
+ * PROFICIENCY BLOCKING
  * Have you ever wanted a battler to NOT be able to gain proficiency? Well now
  * you can! By applying the appropriate tags to the various database locations,
  * you too can block any battler from giving or gaining proficiency!
@@ -95,7 +145,16 @@
  * - You cannot reduce a skill's proficiency in a skill below 0.
  * - Increasing the proficiency can trigger rewards for the skill.
  * - Decreasing the proficiency will NOT undo rewards gained.
- *
+ * ============================================================================
+ * CHANGELOG:
+ * - 2.0.0
+ *    THIS UPDATE BREAKS WEB DEPLOY FUNCTIONALITY FOR YOUR GAME.
+ *    Updated to extend common plugin metadata patterns.
+ *    Loads configuration data from external file.
+ *    Proficiency conditional data is no longer saved to the actor.
+ *    Retroactively added this changelog.
+ * - 1.0.0
+ *    The initial release.
  * ============================================================================
  * @param conditionals
  * @type struct<ProficiencyConditionalStruct>[]
@@ -135,48 +194,4 @@
  * @min -999999
  * @max 999999
  *
- */
-/*~struct~ProficiencyConditionalStruct:
- * @param key
- * @type string
- * @text Key
- * @desc The conditional unique key so no actor can achieve the same conditional twice!
- * @default 1H-SWD_COMBO-3
- *
- * @param actorIds
- * @type actor[]
- * @text Actors
- * @desc The actors of which this proficiency conditional applies to.
- * @default []
- *
- * @param requirements
- * @type struct<ProficiencyRequirementStruct>[]
- * @text Requirements
- * @desc A set of requirements required to fulfill this condition.
- * @default []
- *
- * @param skillRewards
- * @type skill[]
- * @text Skill Rewards
- * @desc All skills chosen here will be learned for fulfilling this condition. Stacks with JS rewards.
- * @default [1]
- *
- * @param jsRewards
- * @type multiline_string
- * @text JS Rewards
- * @desc Use Javascript to define the reward for fulfilling this condition. Stacks with skill rewards.
- * @default a.learnSkill(5);
- */
-/*~struct~ProficiencyRequirementStruct:
- * @param skillId
- * @type skill
- * @text Skill
- * @desc The skill to base this requirement on.
- * @default 1
- *
- * @param proficiency
- * @type number
- * @text Proficiency Required
- * @desc The prof required in the designated skill to fulfill this requirement.
- * @default 100
  */

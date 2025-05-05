@@ -6,7 +6,8 @@ J.DIFFICULTY.Aliased.Game_Temp.set('initMembers', Game_Temp.prototype.initMember
 Game_Temp.prototype.initMembers = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.Game_Temp.get('initMembers').call(this);
+  J.DIFFICULTY.Aliased.Game_Temp.get('initMembers')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.
@@ -151,7 +152,10 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   const enabledEnemyEffects = new DifficultyBattlerEffects();
 
   // destructure the direct values out.
-  let { cost, rewards } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
+  let {
+    cost,
+    rewards
+  } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
 
   // iterate over each difficulty layer and apply it multiplicatively to the running amounts.
   enabledDifficulties.forEach(layer =>
@@ -160,7 +164,10 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
     cost += layer.cost;
 
     // extract the effects data.
-    const { actorEffects, enemyEffects } = layer;
+    const {
+      actorEffects,
+      enemyEffects
+    } = layer;
 
     // iterate over each of the b-params.
     actorEffects.bparams.forEach((bparam, bIndex) =>
@@ -254,16 +261,20 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   }, this);
 
   // deconstruct the static descriptors of the applied difficulty layer.
-  const { appliedKey, appliedName, appliedDescription } = DifficultyLayer;
+  const {
+    appliedKey,
+    appliedName,
+    appliedDescription
+  } = DifficultyLayer;
 
   // build the new applied difficulty layer.
   const newDifficulty = new DifficultyBuilder(appliedName, appliedKey)
-      .setDescription(appliedDescription)
-      .setCost(cost)
-      .setActorEffects(enabledActorEffects)
-      .setEnemyEffects(enabledEnemyEffects)
-      .setRewards(rewards)
-      .buildAsLayer();
+    .setDescription(appliedDescription)
+    .setCost(cost)
+    .setActorEffects(enabledActorEffects)
+    .setEnemyEffects(enabledEnemyEffects)
+    .setRewards(rewards)
+    .buildAsLayer();
 
   // return the compiled difficulty.
   return newDifficulty;

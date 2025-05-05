@@ -11,9 +11,7 @@ WindowLayer.prototype.render = function(renderer)
     return;
   }
 
-  const graphics = new PIXI.Graphics()
-    , {gl} = renderer
-    , children = this.children.clone();
+  const graphics = new PIXI.Graphics(), { gl } = renderer, children = this.children.clone();
 
   // noinspection JSUnresolvedFunction
   renderer.framebuffer.forceStencil();

@@ -13,13 +13,7 @@ class JABS_GuardData
    * @param {number[]} counterParryIds The skill ids to counter with when precise-parrying, if any.
    * @param {number} parryDuration The duration of which a precise-parry is available, if any.
    */
-  constructor(
-    skillId,
-    flatGuardReduction,
-    percGuardReduction,
-    counterGuardIds,
-    counterParryIds,
-    parryDuration)
+  constructor(skillId, flatGuardReduction, percGuardReduction, counterGuardIds, counterParryIds, parryDuration)
   {
     /**
      * The skill this guard data is associated with.
@@ -86,4 +80,5 @@ class JABS_GuardData
     return !!(this.counterGuardIds.length || this.counterParryIds.length);
   }
 }
+
 //endregion JABS_GuardData

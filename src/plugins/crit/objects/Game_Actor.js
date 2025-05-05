@@ -6,7 +6,8 @@ J.CRIT.Aliased.Game_Actor.set('applyNaturalCustomGrowths', Game_Actor.prototype.
 Game_Actor.prototype.applyNaturalCustomGrowths = function()
 {
   // perform original logic.
-  J.CRIT.Aliased.Game_Actor.get('applyNaturalCustomGrowths').call(this);
+  J.CRIT.Aliased.Game_Actor.get('applyNaturalCustomGrowths')
+    .call(this);
 
   // short circuit if aren't using the system.
   if (!J.NATURAL) return;
@@ -31,7 +32,8 @@ Game_Actor.prototype.longParam = function(longParamId)
     case 29:
       return this.cdr;
     default:
-      return J.CRIT.Aliased.Game_Actor.get('longParam').call(this, longParamId);
+      return J.CRIT.Aliased.Game_Actor.get('longParam')
+        .call(this, longParamId);
   }
 };
 
@@ -41,7 +43,7 @@ Game_Actor.prototype.longParam = function(longParamId)
 Game_Actor.prototype.applyNaturalCdmGrowths = function()
 {
   // destructure out the plus and rate structures for growths.
-  const [,,growthPlusStructure, growthRateStructure] = this.getNaturalGrowthsRegexForCrit();
+  const [ , , growthPlusStructure, growthRateStructure ] = this.getNaturalGrowthsRegexForCrit();
 
   // grab the base CDM for value basing.
   const baseCdm = this.baseCriticalMultiplier();
@@ -65,7 +67,7 @@ Game_Actor.prototype.applyNaturalCdmGrowths = function()
 Game_Actor.prototype.applyNaturalCdrGrowths = function()
 {
   // destructure out the plus and rate structures for growths.
-  const [growthPlusStructure, growthRateStructure,,] = this.getNaturalGrowthsRegexForCrit();
+  const [ growthPlusStructure, growthRateStructure, , ] = this.getNaturalGrowthsRegexForCrit();
 
   // grab the base CDR for value basing.
   const baseCdr = this.baseCriticalReduction();
@@ -93,8 +95,7 @@ Game_Actor.prototype.getNaturalGrowthsRegexForCrit = function()
     J.CRIT.RegExp.CritDamageReductionGrowthPlus,
     J.CRIT.RegExp.CritDamageReductionGrowthRate,
     J.CRIT.RegExp.CritDamageMultiplierGrowthPlus,
-    J.CRIT.RegExp.CritDamageMultiplierGrowthRate,
-  ];
+    J.CRIT.RegExp.CritDamageMultiplierGrowthRate, ];
 };
 
 /**
@@ -124,7 +125,7 @@ Game_Actor.prototype.critSdpBonuses = function(critParamId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // grab our panel by its key.
-    const panel = $gameParty.getSdpByKey(panelRanking.key);
+    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
 
     // protect our players against changed keys mid-save file!
     if (!panel) return;

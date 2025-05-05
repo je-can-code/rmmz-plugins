@@ -131,4 +131,5 @@ class JABS_OnChanceEffect
     return success;
   }
 }
+
 //endregion JABS_OnChanceEffect

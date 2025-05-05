@@ -7,7 +7,8 @@ J.ABS.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
 Game_Enemy.prototype.setup = function(enemyId, x, y)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Enemy.get('setup').call(this, enemyId, x, y);
+  J.ABS.Aliased.Game_Enemy.get('setup')
+    .call(this, enemyId, x, y);
 
   // initialize the combat skills for the battler.
   this.initAbsSkills();
@@ -21,7 +22,8 @@ Game_Enemy.prototype.setup = function(enemyId, x, y)
  */
 Game_Enemy.prototype.initAbsSkills = function()
 {
-  this.getSkillSlotManager().setupSlots(this);
+  this.getSkillSlotManager()
+    .setupSlots(this);
 };
 
 /**
@@ -41,7 +43,8 @@ J.ABS.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattl
 Game_Enemy.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Enemy.get('onBattlerDataChange').call(this);
+  J.ABS.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -61,7 +64,8 @@ J.ABS.Aliased.Game_Enemy.set('learnSkill', Game_Enemy.prototype.learnSkill);
 Game_Enemy.prototype.learnSkill = function(skillId)
 {
   // perform original logic.
-  const learnedSkill = J.ABS.Aliased.Game_Enemy.get('learnSkill').call(this, skillId);
+  const learnedSkill = J.ABS.Aliased.Game_Enemy.get('learnSkill')
+    .call(this, skillId);
 
   // check if a new skill was learned.
   if (learnedSkill)
@@ -85,7 +89,8 @@ J.ABS.Aliased.Game_Enemy.set('basicAttackSkillId', Game_Enemy.prototype.basicAtt
 Game_Enemy.prototype.basicAttackSkillId = function()
 {
   // check our enemy to see if we found a custom basic attack skill id.
-  const basicAttackSkillId = J.ABS.Aliased.Game_Enemy.get('basicAttackSkillId').call(this);
+  const basicAttackSkillId = J.ABS.Aliased.Game_Enemy.get('basicAttackSkillId')
+    .call(this);
 
   // if we didn't find one, return the default instead.
   return basicAttackSkillId ?? J.ABS.Metadata.DefaultEnemyAttackSkillId;
@@ -423,8 +428,7 @@ Game_Enemy.prototype.getBonusHitsSources = function()
     this.states(),
 
     // the enemy itself may contain bonus hits.
-    [this.databaseData()],
-  ];
+    [ this.databaseData() ], ];
 };
 //endregion JABS bonus hits
 //endregion Game_Enemy

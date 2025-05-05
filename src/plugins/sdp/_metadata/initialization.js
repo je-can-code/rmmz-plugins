@@ -54,7 +54,7 @@ J.SDP.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.SDP.RegExp = {
-  SdpPoints: /<sdpPoints:[ ]?([0-9]*)>/i,
+  SdpPoints: /<sdpPoints:[ ]?-?([0-9]+)>/i,
   SdpMultiplier: /<sdpMultiplier:[ ]?([-.\d]+)>/i,
   SdpDropData: /<sdpDropData:[ ]?(\[[-\w]+,[ ]?\d+(:?,[ ]?\d+)?])>/i,
   SdpUnlockKey: /<sdpUnlock:(.+)>/i,

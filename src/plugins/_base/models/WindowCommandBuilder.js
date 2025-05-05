@@ -86,6 +86,7 @@ class WindowCommandBuilder
    * @type {number}
    */
   #faceIndex = -1;
+
   //endregion properties
 
   /**
@@ -117,8 +118,7 @@ class WindowCommandBuilder
       this.#lines,
       this.#helpText,
       this.#isSubtext,
-      [this.#faceName, this.#faceIndex]
-    );
+      [ this.#faceName, this.#faceIndex ]);
 
     // return the built command.
     return command;
@@ -179,7 +179,7 @@ class WindowCommandBuilder
   }
 
   /**
-   * Sets this command to identify its additiona lines as subtext rather than a multiline command.
+   * Sets this command to identify its additional lines as subtext rather than a multiline command.
    * @returns {WindowCommandBuilder}
    */
   flagAsSubText()

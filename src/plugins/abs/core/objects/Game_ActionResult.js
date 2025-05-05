@@ -25,7 +25,8 @@ Game_ActionResult.prototype.initialize = function()
   this.reduced = 0;
 
   // perform original logic.
-  J.ABS.Aliased.Game_ActionResult.get('initialize').call(this);
+  J.ABS.Aliased.Game_ActionResult.get('initialize')
+    .call(this);
 };
 
 /**
@@ -35,7 +36,8 @@ J.ABS.Aliased.Game_ActionResult.set('clear', Game_ActionResult.prototype.clear);
 Game_ActionResult.prototype.clear = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_ActionResult.get('clear').call(this);
+  J.ABS.Aliased.Game_ActionResult.get('clear')
+    .call(this);
 
   // refresh our custom parameters.
   this.guarded = false;

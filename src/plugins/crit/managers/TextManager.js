@@ -14,7 +14,8 @@ TextManager.longParam = function(paramId)
       return this.critParam(1);   // cdr
     default:
       // perform original logic.
-      return J.CRIT.Aliased.TextManager.get('longParam').call(this, paramId);
+      return J.CRIT.Aliased.TextManager.get('longParam')
+        .call(this, paramId);
   }
 };
 
@@ -49,7 +50,8 @@ TextManager.longParamDescription = function(paramId)
       return this.critParamDescription(1);   // cdr
     default:
       // perform original logic.
-      return J.CRIT.Aliased.TextManager.get('longParamDescription').call(this, paramId);
+      return J.CRIT.Aliased.TextManager.get('longParamDescription')
+        .call(this, paramId);
   }
 };
 
@@ -65,13 +67,11 @@ TextManager.critParamDescription = function(paramId)
     case 0:
       return [
         "The numeric value to the intensity of one's critical hits.",
-        "Higher amounts of this yield bigger critical hits."
-      ];
+        "Higher amounts of this yield bigger critical hits." ];
     case 1:
       return [
         "The numeric value to one's percent reduction of critical damage.",
-        "Enemy critical amp is directly reduced by this amount."
-      ];
+        "Enemy critical amp is directly reduced by this amount." ];
   }
 };
 //endregion TextManager

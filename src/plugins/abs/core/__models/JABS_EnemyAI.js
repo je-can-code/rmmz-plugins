@@ -2,7 +2,8 @@
 /**
  * An object representing the structure of the `JABS_Battler` AI.
  */
-class JABS_EnemyAI extends JABS_AI
+class JABS_EnemyAI
+  extends JABS_AI
 {
   /**
    * An ai trait that prevents this user from executing skills that are
@@ -79,7 +80,14 @@ class JABS_EnemyAI extends JABS_AI
     const usableSkills = this.filterUncastableSkills(user, availableSkills);
 
     // extract the AI data points out.
-    const { careful, executor, reckless, healer, follower, leader } = this;
+    const {
+      careful,
+      executor,
+      reckless,
+      healer,
+      follower,
+      leader
+    } = this;
 
     // check if this is a "leader" battler.
     if (leader)
@@ -140,7 +148,8 @@ class JABS_EnemyAI extends JABS_AI
     }
 
     // decide the action of the follower for them.
-    const decidedFollowerSkillId = leader.getAiMode().decideActionForFollower(leader, follower);
+    const decidedFollowerSkillId = leader.getAiMode()
+      .decideActionForFollower(leader, follower);
 
     // validate the skill chosen.
     if (this.isSkillIdValid(decidedFollowerSkillId))
@@ -223,7 +232,11 @@ class JABS_EnemyAI extends JABS_AI
     }
 
     // all follower actions are decided based on the leader's ai.
-    const { careful, executor, healer } = this;
+    const {
+      careful,
+      executor,
+      healer
+    } = this;
 
     // the leader calculates for the follower, so the follower gets the leader's sight as a bonus.
     const modifiedSightRadius = leaderBattler.getSightRadius() + followerBattler.getSightRadius();
@@ -271,6 +284,7 @@ class JABS_EnemyAI extends JABS_AI
 
     return chosenSkillId;
   }
+
   //endregion leader
 
   //region follower
@@ -313,7 +327,11 @@ class JABS_EnemyAI extends JABS_AI
     if (!battler.getLeaderBattler()) return false;
 
     // check to make sure that leader is still engaged in combat.
-    if (!battler.getLeaderBattler().isEngaged()) return false;
+    if (!battler.getLeaderBattler()
+      .isEngaged())
+    {
+      return false;
+    }
 
     // let the leader decide!
     return true;
@@ -362,6 +380,7 @@ class JABS_EnemyAI extends JABS_AI
     // return the skill decided.
     return basicAttackSkillId;
   }
+
   //endregion follower
 
   /**
@@ -491,7 +510,14 @@ class JABS_EnemyAI extends JABS_AI
     let comboChanceModifier = 50;
 
     // extract out this AI's traits.
-    const { careful, executor, reckless, leader, follower, healer } = this;
+    const {
+      careful,
+      executor,
+      reckless,
+      leader,
+      follower,
+      healer
+    } = this;
 
     // modify the combo chance based on the various traits.
 
@@ -567,7 +593,10 @@ class JABS_EnemyAI extends JABS_AI
     if (!skillsToUse.length > 1) return skillsToUse;
 
     // if we have no ai traits that affect skill-decision-making, then don't perform the logic.
-    const { careful, reckless } = this;
+    const {
+      careful,
+      reckless
+    } = this;
     if (!careful && !reckless) return skillsToUse;
 
     let mostWoundedAlly = null;
@@ -705,7 +734,7 @@ class JABS_EnemyAI extends JABS_AI
       }
     });
 
-    const skillOptions = [biggestHealAllSkill, biggestHealOneSkill, closestFitHealAllSkill, closestFitHealOneSkill];
+    const skillOptions = [ biggestHealAllSkill, biggestHealOneSkill, closestFitHealAllSkill, closestFitHealOneSkill ];
     bestSkillId = skillOptions[Math.randomInt(skillOptions.length)];
 
     // careful will decide in this order:
@@ -714,19 +743,25 @@ class JABS_EnemyAI extends JABS_AI
       // - if any below 40%, then prioritize heal-one of most wounded.
       if (lowestHpRatio <= 0.40)
       {
-        bestSkillId = defensive ? biggestHealOneSkill : closestFitHealOneSkill;
+        bestSkillId = defensive
+          ? biggestHealOneSkill
+          : closestFitHealOneSkill;
 
         // - if none below 40% but multiple wounded, prioritize closest-fit heal-all.
       }
       else if (alliesMissingAnyHp > 1 && lowestHpRatio < 0.80)
       {
-        bestSkillId = defensive ? biggestHealAllSkill : closestFitHealAllSkill;
+        bestSkillId = defensive
+          ? biggestHealAllSkill
+          : closestFitHealAllSkill;
 
         // - if only one wounded, then heal them.
       }
       else if (alliesMissingAnyHp === 1 && lowestHpRatio < 0.80)
       {
-        bestSkillId = defensive ? biggestHealOneSkill : closestFitHealOneSkill;
+        bestSkillId = defensive
+          ? biggestHealOneSkill
+          : closestFitHealOneSkill;
         // - if none wounded, or none below 80%, then don't heal.
       }
     }
@@ -801,7 +836,7 @@ class JABS_EnemyAI extends JABS_AI
         const testAction = new Game_Action(user.getBattler());
         testAction.setSkill(skillId);
         const rate = testAction.calcElementRate(target.getBattler());
-        elementalSkillCollection.push([skillId, rate]);
+        elementalSkillCollection.push([ skillId, rate ]);
       });
 
       // sorts the skills by their elemental effectiveness.
@@ -819,4 +854,5 @@ class JABS_EnemyAI extends JABS_AI
     return skillsToUse;
   }
 }
+
 //endregion JABS_EnemyAI

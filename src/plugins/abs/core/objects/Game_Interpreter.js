@@ -15,7 +15,9 @@ Game_Interpreter.prototype.character = function(param)
     }
     else if (this.isOnCurrentMap())
     {
-      const id = param > 0 ? param : this._eventId;
+      const id = param > 0
+        ? param
+        : this._eventId;
       return $gameMap.event(id);
     }
     else
@@ -153,7 +155,7 @@ Game_Interpreter.prototype.command302 = function(params)
 {
   if ($jabsEngine.absEnabled)
   {
-    const goods = [params];
+    const goods = [ params ];
     while (this.nextEventCode() === 605)
     {
       this._index++;

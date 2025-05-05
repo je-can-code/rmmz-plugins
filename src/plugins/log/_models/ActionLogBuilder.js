@@ -80,15 +80,21 @@ class ActionLogBuilder
     let hurtOrHeal;
     if (isCritical)
     {
-      hurtOrHeal = isHealing ? "critically healed" : "landed a critical";
+      hurtOrHeal = isHealing
+        ? "critically healed"
+        : "landed a critical";
     }
     else
     {
-      hurtOrHeal = isHealing ? "healed" : "hit";
+      hurtOrHeal = isHealing
+        ? "healed"
+        : "hit";
     }
 
     // the text color index is based on whether or not its flagged as healing.
-    const color = isHealing ? 29 : 10;
+    const color = isHealing
+      ? 29
+      : 10;
 
     // construct the message.
     // eslint-disable-next-line max-len
@@ -110,15 +116,21 @@ class ActionLogBuilder
     let hurtOrHeal;
     if (isCritical)
     {
-      hurtOrHeal = isHealing ? "critically healed" : "devastatingly damaged";
+      hurtOrHeal = isHealing
+        ? "critically healed"
+        : "devastatingly damaged";
     }
     else
     {
-      hurtOrHeal = isHealing ? "restored" : "struck";
+      hurtOrHeal = isHealing
+        ? "restored"
+        : "struck";
     }
 
     // the text color index is based on whether or not its flagged as healing.
-    const color = isHealing ? 29 : 10;
+    const color = isHealing
+      ? 29
+      : 10;
 
     // construct the message.
     // eslint-disable-next-line max-len
@@ -248,8 +260,12 @@ class ActionLogBuilder
     const defender = this.#wrapName(targetName, 16);
 
     // construct the message.
-    const prefix = isPreciseParry ? "precise-" : "";
-    const suffix = isPreciseParry ? " with finesse!" : ".";
+    const prefix = isPreciseParry
+      ? "precise-"
+      : "";
+    const suffix = isPreciseParry
+      ? " with finesse!"
+      : ".";
     const message = `${defender} ${prefix}parried ${casterName}'s \\Skill[${skillId}]${suffix}`;
 
     // assign the message to this log.
@@ -370,4 +386,5 @@ class ActionLogBuilder
     return this;
   }
 }
+
 //endregion MapLogBuilder

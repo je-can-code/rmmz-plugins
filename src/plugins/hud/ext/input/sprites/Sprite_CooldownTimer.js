@@ -38,11 +38,7 @@ Sprite_CooldownTimer.prototype.loadBitmap = function()
   this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
   this.bitmap.fontFace = this.fontFace();
   this.bitmap.fontSize = this.fontSize();
-  this.bitmap.drawText(
-    this._j._text,
-    0, 0,
-    this.bitmapWidth(), this.bitmapHeight(),
-    "center");
+  this.bitmap.drawText(this._j._text, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
 }
 
 Sprite_CooldownTimer.prototype.update = function()
@@ -67,18 +63,10 @@ Sprite_CooldownTimer.prototype.updateCooldownText = function()
     ? "COMBO!"
     : "❌";
 
-  this.bitmap.drawText(
-    cooldownBaseText,
-    0, 0,
-    this.bitmapWidth(), this.bitmapHeight(),
-    "center");
+  this.bitmap.drawText(cooldownBaseText, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
   this.bitmap.fontSize = this.fontSize() - 8;
   this.bitmap.fontItalic = true;
-  this.bitmap.drawText(
-    cooldownComboText,
-    0, this.fontSize(),
-    this.bitmapWidth(), this.bitmapHeight(),
-    "center");
+  this.bitmap.drawText(cooldownComboText, 0, this.fontSize(), this.bitmapWidth(), this.bitmapHeight(), "center");
   this.bitmap.fontSize = this.fontSize();
   this.bitmap.fontItalic = false;
 

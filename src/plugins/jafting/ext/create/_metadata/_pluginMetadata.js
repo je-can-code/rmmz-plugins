@@ -4,7 +4,8 @@
  * Such data includes things like recipes, categories, and connectivity
  * with the SDP system.
  */
-class J_CraftingCreatePluginMetadata extends PluginMetadata
+class J_CraftingCreatePluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -43,7 +44,11 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     // a mapping function for classifying the components of the recipe.
     const componentMapper = mappableComponent =>
     {
-      const { count, id, type } = mappableComponent;
+      const {
+        count,
+        id,
+        type
+      } = mappableComponent;
       const newComponent = new CraftingComponent(count, id, type);
       return newComponent;
     };
@@ -81,14 +86,20 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
 
   /**
    * Converts the JSON-parsed blob into classified {@link CraftingCategory}s.
-   * @param {any} parsedRecipesBlob The already-parsed JSON blob.
+   * @param {any} parsedCategoriesBlob The already-parsed JSON blob.
    */
   static parseCategories(parsedCategoriesBlob)
   {
     // a maping function for classify the categories of the configuration.
     const categoryMapper = mappableCategory =>
     {
-      const { name, key, iconIndex, description, unlockedByDefault } = mappableCategory;
+      const {
+        name,
+        key,
+        iconIndex,
+        description,
+        unlockedByDefault
+      } = mappableCategory;
       const newCategory = new CraftingCategory(name, key, iconIndex, description, unlockedByDefault);
       return newCategory
     };
@@ -174,7 +185,7 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
     console.log(`loaded:
       - ${this.recipes.length} recipes
       - ${this.categories.length} categories
-      from file ${J_CraftingPluginMetadata.CONFIG_PATH}.`);
+      from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
   }
 
   /**
@@ -266,4 +277,5 @@ class J_CraftingCreatePluginMetadata extends PluginMetadata
       .build();
   }
 }
+
 //endregion plugin metadata

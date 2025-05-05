@@ -23,7 +23,7 @@ Window_EquipStatus.prototype.drawAllParams = function()
  */
 Window_EquipStatus.prototype.drawAllBParams = function(ox, oy)
 {
-  const params = [0, 1, 2, 3, 4, 5, 6, 7];
+  const params = [ 0, 1, 2, 3, 4, 5, 6, 7 ];
   params.forEach((_, paramId) =>
   {
     this.drawBParamName(paramId, ox, oy);
@@ -101,7 +101,7 @@ Window_EquipStatus.prototype.drawNextBParam = function(paramId, ox, oy)
  */
 Window_EquipStatus.prototype.drawAllXParams = function(ox, oy)
 {
-  const xparams = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const xparams = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
   xparams.forEach((_, xparamId) =>
   {
     this.drawXParamName(xparamId, ox, oy);
@@ -180,7 +180,7 @@ Window_EquipStatus.prototype.drawNextXParam = function(xparamId, ox, oy)
  */
 Window_EquipStatus.prototype.drawAllSParams = function(ox, oy)
 {
-  const sparams = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const sparams = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
   sparams.forEach((_, xparamId) =>
   {
     this.drawSParamName(xparamId, ox, oy);

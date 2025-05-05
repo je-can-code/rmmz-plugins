@@ -10,7 +10,8 @@ if (J.ABS)
   JABS_Engine.prototype.gainBasicRewards = function(enemy, actor)
   {
     // perform original logic.
-    J.SDP.Aliased.JABS_Engine.get('gainBasicRewards').call(this, enemy, actor);
+    J.SDP.Aliased.JABS_Engine.get('gainBasicRewards')
+      .call(this, enemy, actor);
 
     // grab the sdp points value.
     let sdpPoints = enemy.sdpPoints();
@@ -42,10 +43,12 @@ if (J.ABS)
     if (!sdpPoints) return;
 
     // sdp points are obtained by all members in the party.
-    $gameParty.members().forEach(member => member.modSdpPoints(sdpPoints));
+    $gameParty.members()
+      .forEach(member => member.modSdpPoints(sdpPoints));
 
     // get the true amount obtained after multipliers for the leader.
-    const sdpMultiplier = actor.getBattler().sdpMultiplier();
+    const sdpMultiplier = actor.getBattler()
+      .sdpMultiplier();
     const multipliedSdpPoints = Math.round(sdpMultiplier * sdpPoints);
 
     // generate the text popup for the obtained sdp points.

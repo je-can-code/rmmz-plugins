@@ -40,4 +40,5 @@ class RegionStateData
     this.animationId = animationId;
   }
 }
+
 //endregion RegionStateData

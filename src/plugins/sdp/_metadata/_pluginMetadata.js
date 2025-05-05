@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_SdpPluginMetadata extends PluginMetadata
+class J_SdpPluginMetadata
+  extends PluginMetadata
 {
   /**
    * The path where the config for panels is located.
@@ -25,19 +26,21 @@ class J_SdpPluginMetadata extends PluginMetadata
       if (panelName.startsWith("--")) return;
 
       // destructure the details we care about.
-      const { panelParameters, panelRewards } = parsedPanel;
+      const {
+        panelParameters,
+        panelRewards
+      } = parsedPanel;
 
       // parse and assign all the various panel parameters.
       const parsedPanelParameters = [];
       panelParameters.forEach(paramBlob =>
       {
         const parsedParameter = paramBlob;
-        const panelParameter = new PanelParameter({
-          parameterId: parseInt(parsedParameter.parameterId),
-          perRank: parseFloat(parsedParameter.perRank),
-          isFlat: parsedParameter.isFlat,
-          isCore: parsedParameter.isCore,
-        });
+        const panelParameter = new PanelParameter(
+          parseInt(parsedParameter.parameterId),
+          parseFloat(parsedParameter.perRank),
+          parsedParameter.isFlat,
+          parsedParameter.isCore);
         parsedPanelParameters.push(panelParameter);
       });
 
@@ -121,7 +124,7 @@ class J_SdpPluginMetadata extends PluginMetadata
     }
 
     // classify each panel.
-    const classifiedPanels = J_SdpPluginMetadata.classifyPanels(parsedPanels);
+    const classifiedPanels = J_SdpPluginMetadata.classifyPanels(parsedPanels.sdps);
 
     /**
      * The collection of all defined SDPs.
@@ -187,4 +190,5 @@ class J_SdpPluginMetadata extends PluginMetadata
     this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === "true";
   }
 }
+
 //endregion plugin metadata

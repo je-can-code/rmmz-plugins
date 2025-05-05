@@ -79,4 +79,5 @@ class DifficultyMetadata
   hidden = false;
   //endregion access
 }
+
 //endregion Difficulty

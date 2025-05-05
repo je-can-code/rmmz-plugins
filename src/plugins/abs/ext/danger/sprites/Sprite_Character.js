@@ -17,7 +17,8 @@ Sprite_Character.prototype.initMembers = function()
   this._j._dangerIndicator = null;
 
   // perform original logic.
-  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('initMembers').call(this);
+  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('initMembers')
+    .call(this);
 };
 
 /**
@@ -27,7 +28,8 @@ J.ABS.EXT.DANGER.Aliased.Sprite_Character.set('setupJabsSprite', Sprite_Characte
 Sprite_Character.prototype.setupJabsSprite = function()
 {
   // perform original logic.
-  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('setupJabsSprite').call(this);
+  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('setupJabsSprite')
+    .call(this);
 
   // if this is a battler, configure the visual components of the battler.
   this.handleBattlerSetup();
@@ -93,7 +95,8 @@ Sprite_Character.prototype.getDangerIndicatorIcon = function()
   if (!battler) return -1;
 
   // if the sprite belongs to the player, then don't do it.
-  const player = $jabsEngine.getPlayer1().getBattler();
+  const player = $jabsEngine.getPlayer1()
+    .getBattler();
   if (player === battler) return -1;
 
   // calculate the icon.
@@ -107,7 +110,8 @@ J.ABS.EXT.DANGER.Aliased.Sprite_Character.set('update', Sprite_Character.prototy
 Sprite_Character.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('update').call(this);
+  J.ABS.EXT.DANGER.Aliased.Sprite_Character.get('update')
+    .call(this);
 
   // check if we can update the indicator.
   if (this.canUpdateDangerIndicator())
@@ -136,7 +140,11 @@ Sprite_Character.prototype.canUpdateDangerIndicator = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the indicator, then it shouldn't update.
-  if (!this._character.getJabsBattler().showDangerIndicator()) return false;
+  if (!this._character.getJabsBattler()
+    .showDangerIndicator())
+  {
+    return false;
+  }
 
   // we should update!
   return true;

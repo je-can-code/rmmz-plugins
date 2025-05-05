@@ -21,12 +21,11 @@
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
 
+    "hotfix": "npm run build:all && npm run copy:to-all",
+
     "copy:to-test": "node ./src/build-tools/copy.js",
     "copy:to-ca": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j",
     "copy:to-all": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j ./project/js/plugins",
-
-    "hotfix": "npm run build:all && npm run copy:to-test",
-    "hotfix:all": "npm run build:all && npm run copy:to-all",
 
     "build:all": "node ./src/build-tools/build-all.js",
 
@@ -61,6 +60,7 @@
     "build:hud-party": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/party ./out/hud/ext J-HUD-PartyFrame.js",
     "build:hud-target": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/target ./out/hud/ext J-HUD-TargetFrame.js",
     "build:hud-boss": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/boss ./out/hud/ext J-HUD-BossFrame.js",
+    "build:hud-quest": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/quest ./out/hud/ext J-HUD-QuestFrame.js",
 
     "build:jafting": "node ./src/build-tools/combine.js ./src/plugins/jafting/core ./out/jafting J-JAFTING.js",
     "build:jafting-create": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/create ./out/jafting/ext J-JAFTING-Creation.js",
@@ -82,6 +82,7 @@
 
     "build:omni": "node ./src/build-tools/combine.js ./src/plugins/omni/core ./out/omni J-Omnipedia.js",
     "build:omni-monster": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/monster ./out/omni/ext J-Omni-Monsters.js",
+    "build:omni-quest": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/quest ./out/omni/ext J-Omni-Questopedia.js",
     "build:omni-item": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/item ./out/omni/ext J-Omni-Itempedia.js",
     "build:omni-weapon": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/weapon ./out/omni/ext J-Omni-Weaponpedia.js",
     "build:omni-armor": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/armor ./out/omni/ext J-Omni-Armorpedia.js",

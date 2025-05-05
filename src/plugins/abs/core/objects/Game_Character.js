@@ -6,7 +6,8 @@ J.ABS.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMem
 Game_Character.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Character.get('initMembers').call(this);
+  J.ABS.Aliased.Game_Character.get('initMembers')
+    .call(this);
 
   // initialize our custom members.
   this.initJabsMembers();
@@ -118,7 +119,7 @@ Game_Character.prototype.initJabsLootMembers = function()
 
 //region JABS action
 /**
- * If the event has a `JABS_Action` associated with it, return that.
+ * If the event has a JABS action associated with it, return that.
  * @returns {JABS_Action}
  */
 Game_Character.prototype.getJabsAction = function()
@@ -127,7 +128,7 @@ Game_Character.prototype.getJabsAction = function()
 };
 
 /**
- * Binds a `JABS_Action` to this character.
+ * Binds a JABS action to this character.
  * @param {JABS_Action} action The action to assign to this character.
  */
 Game_Character.prototype.setJabsAction = function(action)
@@ -145,7 +146,7 @@ Game_Character.prototype.isJabsAction = function()
 };
 
 /**
- * Gets whether or not the underlying `JABS_Action` requires removal from the map.
+ * Gets whether or not the underlying JABS action requires removal from the map.
  * @returns {boolean} True if removal is required, false otherwise.
  */
 Game_Character.prototype.getJabsActionNeedsRemoving = function()
@@ -154,7 +155,8 @@ Game_Character.prototype.getJabsActionNeedsRemoving = function()
   if (!this.isJabsAction()) return false;
 
   // return whether or not the removal is needed.
-  return this.getJabsAction().getNeedsRemoval();
+  return this.getJabsAction()
+    .getNeedsRemoval();
 };
 
 /**
@@ -371,7 +373,7 @@ Game_Character.prototype.setLootNeedsRemoving = function(needsRemoving = true)
  */
 Game_Character.prototype.requestAnimation = function(animationId)
 {
-  $gameTemp.requestAnimation([this], animationId);
+  $gameTemp.requestAnimation([ this ], animationId);
 };
 
 /**
@@ -393,7 +395,8 @@ Game_Character.prototype.isMovementSucceeded = function()
   }
 
   // otherwise, perform original logic.
-  return J.ABS.Aliased.Game_Character.get('isMovementSucceeded').call(this);
+  return J.ABS.Aliased.Game_Character.get('isMovementSucceeded')
+    .call(this);
 };
 
 /* eslint-disable */
@@ -473,10 +476,10 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
       }
       else
       {
-        directions = [j, j];
+        directions = [ j, j ];
       }
 
-      const [horz, vert] = directions;
+      const [ horz, vert ] = directions;
       const x2 = $gameMap.roundXWithDirection(x1, horz);
       const y2 = $gameMap.roundYWithDirection(y1, vert);
       const pos2 = y2 * mapWidth + x2;
@@ -540,17 +543,27 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
   const deltaY1 = $gameMap.deltaY(node.y, start.y);
   if (deltaY1 > 0)
   {
-    return deltaX1 === 0 ? 2 : deltaX1 > 0 ? 3 : 1;
+    return deltaX1 === 0
+      ? 2
+      : deltaX1 > 0
+        ? 3
+        : 1;
   }
   else if (deltaY1 < 0)
   {
-    return deltaX1 === 0 ? 8 : deltaX1 > 0 ? 9 : 7;
+    return deltaX1 === 0
+      ? 8
+      : deltaX1 > 0
+        ? 9
+        : 7;
   }
   else
   {
     if (deltaX1 !== 0)
     {
-      return deltaX1 > 0 ? 6 : 4;
+      return deltaX1 > 0
+        ? 6
+        : 4;
     }
   }
 
@@ -560,30 +573,54 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
   {
     if (deltaX2 > 0)
     {
-      return deltaY2 === 0 ? 4 : deltaY2 > 0 ? 7 : 1;
+      return deltaY2 === 0
+        ? 4
+        : deltaY2 > 0
+          ? 7
+          : 1;
     }
     else if (deltaX2 < 0)
     {
-      return deltaY2 === 0 ? 6 : deltaY2 > 0 ? 9 : 3;
+      return deltaY2 === 0
+        ? 6
+        : deltaY2 > 0
+          ? 9
+          : 3;
     }
     else
     {
-      return deltaY2 === 0 ? 0 : deltaY2 > 0 ? 8 : 2;
+      return deltaY2 === 0
+        ? 0
+        : deltaY2 > 0
+          ? 8
+          : 2;
     }
   }
   else
   {
     if (deltaY2 > 0)
     {
-      return deltaX2 === 0 ? 8 : deltaX2 > 0 ? 7 : 9;
+      return deltaX2 === 0
+        ? 8
+        : deltaX2 > 0
+          ? 7
+          : 9;
     }
     else if (deltaY2 < 0)
     {
-      return deltaX2 === 0 ? 2 : deltaX2 > 0 ? 1 : 3;
+      return deltaX2 === 0
+        ? 2
+        : deltaX2 > 0
+          ? 1
+          : 3;
     }
     else
     {
-      return deltaX2 === 0 ? 0 : deltaX2 > 0 ? 4 : 6;
+      return deltaX2 === 0
+        ? 0
+        : deltaX2 > 0
+          ? 4
+          : 6;
     }
   }
 };

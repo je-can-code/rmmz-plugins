@@ -34,12 +34,7 @@ Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
     {
       for (const event of $gameMap.eventsXy(x, y))
       {
-        if (
-          !event.isErased() &&
-          event.isTriggerIn(triggers) &&
-          event.isNormalPriority() === normal &&
-          !event.getJabsBattler()
-        )
+        if (!event.isErased() && event.isTriggerIn(triggers) && event.isNormalPriority() === normal && !event.getJabsBattler())
         {
           event.start();
         }
@@ -49,7 +44,8 @@ Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
   else
   {
     // perform original logic.
-    J.ABS.Aliased.Game_Player.get('startMapEvent').call(this, x, y, triggers, normal);
+    J.ABS.Aliased.Game_Player.get('startMapEvent')
+      .call(this, x, y, triggers, normal);
   }
 };
 
@@ -62,7 +58,8 @@ Game_Player.prototype.canMove = function()
   // check if something related to JABS is causing the player to stop moving.
   const isMenuRequested = $jabsEngine.requestAbsMenu;
   const isAbsPaused = $jabsEngine.absPause;
-  const isPlayerCasting = $jabsEngine.getPlayer1().isCasting();
+  const isPlayerCasting = $jabsEngine.getPlayer1()
+    .isCasting();
 
   // any of these will prevent the player from moving.
   const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerCasting);
@@ -77,7 +74,8 @@ Game_Player.prototype.canMove = function()
   else
   {
     // perform original logic.
-    return J.ABS.Aliased.Game_Player.get('canMove').call(this);
+    return J.ABS.Aliased.Game_Player.get('canMove')
+      .call(this);
   }
 };
 
@@ -94,7 +92,8 @@ Game_Player.prototype.isDebugThrough = function()
   else
   {
     // perform original logic.
-    return J.ABS.Aliased.Game_Player.get('isDebugThrough').call(this);
+    return J.ABS.Aliased.Game_Player.get('isDebugThrough')
+      .call(this);
   }
 };
 
@@ -105,7 +104,8 @@ J.ABS.Aliased.Game_Player.set('refresh', Game_Player.prototype.refresh);
 Game_Player.prototype.refresh = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Player.get('refresh').call(this);
+  J.ABS.Aliased.Game_Player.get('refresh')
+    .call(this);
 
   // initialize the player when the player is refreshed.
   // TODO: consider using $jabsEngine.refreshPlayer1(); ?
@@ -119,7 +119,8 @@ J.ABS.Aliased.Game_Player.set('updateMove', Game_Player.prototype.updateMove);
 Game_Player.prototype.updateMove = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Player.get('updateMove').call(this);
+  J.ABS.Aliased.Game_Player.get('updateMove')
+    .call(this);
 
   // monitor for loot while moving about as the player.
 

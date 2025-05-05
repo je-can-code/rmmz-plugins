@@ -12,7 +12,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "callDifficultyMenu", 
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "lockDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {
@@ -25,7 +25,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "lockDifficulty", args
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "unlockDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {
@@ -38,7 +38,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "unlockDifficulty", ar
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "hideDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {
@@ -51,7 +51,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "hideDifficulty", args
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "unhideDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {
@@ -64,7 +64,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "unhideDifficulty", ar
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "enableDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {
@@ -77,7 +77,7 @@ PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "enableDifficulty", ar
  */
 PluginManager.registerCommand(J.DIFFICULTY.Metadata.name, "disableDifficulty", args =>
 {
-  let {keys} = args;
+  let { keys } = args;
   keys = JSON.parse(keys);
   keys.forEach(key =>
   {

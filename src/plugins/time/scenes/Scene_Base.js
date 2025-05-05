@@ -19,7 +19,7 @@ Scene_Base.prototype.update = function()
  */
 Scene_Base.prototype.shouldUpdateTime = function()
 {
-  const noTimeScenes = [Scene_Boot, Scene_File, Scene_Save, Scene_Load, Scene_Title, Scene_Gameover];
+  const noTimeScenes = [ Scene_Boot, Scene_File, Scene_Save, Scene_Load, Scene_Title, Scene_Gameover ];
   const checkIfNoTimeScene = scene => SceneManager._scene instanceof scene;
   const isNoTimeScene = !noTimeScenes.some(checkIfNoTimeScene);
   const isTimeActive = $gameTime.isActive();

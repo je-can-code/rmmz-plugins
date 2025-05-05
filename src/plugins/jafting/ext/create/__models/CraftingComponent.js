@@ -4,26 +4,24 @@
  */
 class CraftingComponent
 {
-  static Types =
-    {
-      Item: 'i',
-      Weapon: 'w',
-      Armor: 'a',
-      Gold: 'g',
-      SDP: 's',
-    }
+  static Types = {
+    Item: 'i',
+    Weapon: 'w',
+    Armor: 'a',
+    Gold: 'g',
+    SDP: 's',
+  }
 
-  static Typed =
-    {
-      Gold: () => CraftingComponent.builder
-        .id(0)
-        .type(CraftingComponent.Types.Gold)
-        .build(),
-      SDP: () => CraftingComponent.builder
-        .id(0)
-        .type(CraftingComponent.Types.SDP)
-        .build(),
-    }
+  static Typed = {
+    Gold: () => CraftingComponent.builder
+      .id(0)
+      .type(CraftingComponent.Types.Gold)
+      .build(),
+    SDP: () => CraftingComponent.builder
+      .id(0)
+      .type(CraftingComponent.Types.SDP)
+      .build(),
+  }
 
   /**
    * The number of instances required of the given component.
@@ -277,7 +275,11 @@ class CraftingComponent
     if (J.JAFTING.EXT.CREATE.Metadata.usingSdp())
     {
       // its SDP, so use the leader's points.
-      if (this.isSdp()) return $gameParty.leader().getSdpPoints();
+      if (this.isSdp())
+      {
+        return $gameParty.leader()
+          .getSdpPoints();
+      }
     }
 
     console.warn('an unsupported component type was presented for quantity.', this);
@@ -310,7 +312,8 @@ class CraftingComponent
     {
       // TODO: update this to only apply to the leader?
       // give the points to each member of the party.
-      $gameParty.members().forEach(actor => actor.modSdpPoints(this.#count));
+      $gameParty.members()
+        .forEach(actor => actor.modSdpPoints(this.#count));
     }
   }
 
@@ -338,7 +341,8 @@ class CraftingComponent
     {
       // TODO: update this to only apply to the leader?
       // remove points from each member of the party.
-      $gameParty.members().forEach(actor => actor.modSdpPoints(-this.#count));
+      $gameParty.members()
+        .forEach(actor => actor.modSdpPoints(-this.#count));
     }
   }
 
@@ -379,7 +383,8 @@ class CraftingComponent
     {
       // TODO: update this to only apply to the leader?
       // give the points to each member of the party.
-      return (this.#count <= $gameParty.leader().getSdpPoints());
+      return (this.#count <= $gameParty.leader()
+        .getSdpPoints());
     }
 
     // we don't have enough.
@@ -412,10 +417,7 @@ class CraftingComponent
 
     build()
     {
-      const builtComponent = new CraftingComponent(
-        this.#count,
-        this.#id,
-        this.#type)
+      const builtComponent = new CraftingComponent(this.#count, this.#id, this.#type)
 
       this.#clear();
 
@@ -448,4 +450,5 @@ class CraftingComponent
     }
   }
 }
+
 //endregion CraftingComponent

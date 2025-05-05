@@ -65,6 +65,7 @@ class CraftingRecipe
    * @type {CraftingComponent[]}
    */
   outputs = [];
+
   //endregion
 
   constructor(
@@ -238,7 +239,8 @@ class CraftingRecipe
    */
   getPrimaryOutput()
   {
-    return this.outputs.at(0)?.getItem();
+    return this.outputs.at(0)
+      ?.getItem();
   }
 
   /**
@@ -250,4 +252,5 @@ class CraftingRecipe
     this.tools.forEach(tool => tool.generate());
   }
 }
+
 //endregion CraftingRecipe

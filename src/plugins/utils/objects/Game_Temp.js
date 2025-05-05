@@ -6,7 +6,8 @@ J.UTILS.Aliased.Game_Temp.set('initMembers', Game_Temp.prototype.initMembers);
 Game_Temp.prototype.initMembers = function()
 {
   // perform original logic.
-  J.UTILS.Aliased.Game_Temp.get('initMembers').call(this);
+  J.UTILS.Aliased.Game_Temp.get('initMembers')
+    .call(this);
 
   /**
    * The shared root namespace for all of J's plugin data.

@@ -71,10 +71,7 @@ class JsonMapper
       const innerArray = this.parseArrayFromString(slicedArrayString);
 
       // splice the inner array into the original array replacing all elements.
-      exposedArray.splice(
-        innerArrayStartIndex,
-        ((outerArrayEndIndex + 1) - innerArrayStartIndex),
-        innerArray);
+      exposedArray.splice(innerArrayStartIndex, ((outerArrayEndIndex + 1) - innerArrayStartIndex), innerArray);
     }
 
     // with the content exposed, attempt to continue parsing.
@@ -90,8 +87,10 @@ class JsonMapper
   static parseString(str)
   {
     // check if its actually boolean true.
-    if (str.toLowerCase() === "true") return true;
-    // check if its actually boolean false.
+    if (str.toLowerCase() === "true")
+    {
+      return true;
+    }// check if its actually boolean false.
     else if (str.toLowerCase() === "false") return false;
 
     // check if its actually a number.
@@ -101,4 +100,5 @@ class JsonMapper
     return str;
   }
 }
+
 //endregion JsonMapper

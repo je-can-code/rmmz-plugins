@@ -6,7 +6,8 @@ J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.set('initialize', Window_AbsMenuSe
 Window_AbsMenuSelect.prototype.initialize = function(rect, type)
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.get('initialize').call(this, rect, type);
+  J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.get('initialize')
+    .call(this, rect, type);
 
   // TODO: init properly.
   this._j._chosenActorId = 0;
@@ -37,7 +38,8 @@ J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.set('makeCommandList', Window_AbsM
 Window_AbsMenuSelect.prototype.makeCommandList = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.get('makeCommandList').call(this);
+  J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.get('makeCommandList')
+    .call(this);
 
   // pivot on the menu type.
   switch (this._j._menuType)
@@ -70,7 +72,8 @@ Window_AbsMenuSelect.prototype.makeAllyList = function()
   };
 
   // build all the commands.
-  $gameParty.allMembers().forEach(forEacher, this);
+  $gameParty.allMembers()
+    .forEach(forEacher, this);
 
   // define the icons for passive/aggressive ally AI aggro settings.
   const aggroPassiveCommandName = $gameParty.isAggro()
@@ -111,7 +114,10 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
   const forEacher = mode =>
   {
     // extract some data from this ally AI mode.
-    const { key, name } = mode;
+    const {
+      key,
+      name
+    } = mode;
 
     // check if the currently selected ally AI mode is this command.
     const isEquipped = currentAi.getMode() === key;
@@ -123,10 +129,10 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
 
     // build the command.
     const command = new WindowCommandBuilder(name)
-    .setSymbol("select-ai")
-    .setIconIndex(iconIndex)
-    .setExtensionData(mode)
-    .build();
+      .setSymbol("select-ai")
+      .setIconIndex(iconIndex)
+      .setExtensionData(mode)
+      .build();
 
     // add the command to the list.
     this.addBuiltCommand(command);

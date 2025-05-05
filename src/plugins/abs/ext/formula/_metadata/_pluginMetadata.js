@@ -1,5 +1,6 @@
 //region plugin metadata
-class JFORMULA_PluginMetadata extends PluginMetadata
+class JFORMULA_PluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -34,4 +35,5 @@ class JFORMULA_PluginMetadata extends PluginMetadata
     this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
   }
 }
+
 //endregion plugin metadata

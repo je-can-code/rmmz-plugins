@@ -2,7 +2,8 @@
 /**
  * A window responsible for showing various datapoints of a skill.
  */
-class Window_SkillDetail extends Window_Base
+class Window_SkillDetail
+  extends Window_Base
 {
   constructor(rect)
   {
@@ -277,10 +278,16 @@ class Window_SkillDetail extends Window_Base
         p = skillProficiency.proficiency;
       }
     }
-    const sign = [3, 4].includes(skill.damage.type) ? -1 : 1;
+    const sign = [ 3, 4 ].includes(skill.damage.type)
+      ? -1
+      : 1;
     const value = Math.round(Math.max(eval(skill.damage.formula), 0));
-    const potential = isNaN(value) ? 0 : value;
-    const color = sign > 0 ? 10 : 24;
+    const potential = isNaN(value)
+      ? 0
+      : value;
+    const color = sign > 0
+      ? 10
+      : 24;
     return new JCMS_ParameterKvp(`\\C[${color}]Raw Damage\\C[0]`, potential);
   }
 
@@ -293,8 +300,7 @@ class Window_SkillDetail extends Window_Base
   makeHitsParam(skill, actor)
   {
     const value = (skill.repeats - 1) + skill.jabsPierceCount;
-    const param = new JCMS_ParameterKvp('Max Possible Hits', `x${value}`, ColorManager.textColor(0));
-    return param;
+    return new JCMS_ParameterKvp('Max Possible Hits', `x${value}`, ColorManager.textColor(0));
   }
 
   /**
@@ -355,13 +361,17 @@ class Window_SkillDetail extends Window_Base
    * Makes a parameter that displays this actor's proficiency with this skill.
    * @param {Game_Actor} actor The actor.
    * @param {RPG_Skill} skill The skill.
-   * @returns {JCMS_ParameterKvp}
+   * @returns {JCMS_ParameterKvp[]}
    */
   makeSkillProficiency(actor, skill)
   {
     const proficiencyParams = [];
     const skillProficiency = actor.tryGetSkillProficiencyBySkillId(skill.id);
-    proficiencyParams.push(new JCMS_ParameterKvp(`\\C[21]Proficiency:\\C[0]`, skillProficiency.proficiency));
+
+    const proficiencyKey = '\\C[21]Proficiency:\\C[0]';
+    const proficiencyValue = `${skillProficiency.proficiency}`;
+    const proficiencyParam = new JCMS_ParameterKvp(proficiencyKey, proficiencyValue);
+    proficiencyParams.push(proficiencyParam);
     proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill));
     proficiencyParams.push(this.makeDividerParam());
 
@@ -383,25 +393,28 @@ class Window_SkillDetail extends Window_Base
       // if there are no rewards, then don't even draw the "related" section.
       if (!conditional.skillRewards.length) return;
 
-
       conditional.skillRewards.forEach(skillRewardId =>
       {
         if (!skillRewardId)
         {
           console.warn(conditional);
-          console.log(skillRewardId,  "not a valid skill reward.");
+          console.log(skillRewardId, "not a valid skill reward.");
           return;
         }
 
         // get the current/required proficiency level for the reward.
-        const requiredProficiency = conditional.requirements
+        const proficiencyRequirement = conditional.requirements
           .find(requirement => requirement.skillId === skill.id);
 
         const actorKnowsSkill = actor.isLearnedSkill(skillRewardId);
         const extendedSkill = actor.skill(skillRewardId);
-        const learnedIcon = actorKnowsSkill ? 91 : 90;
+        const learnedIcon = actorKnowsSkill
+          ? 91
+          : 90;
         const name = `\\I[${learnedIcon}]\\Skill[${extendedSkill.id}]`;
-        const value = `${requiredProficiency.proficiency}`;
+        const currentProficiency = proficiencyRequirement.totalProficiency(actor);
+        const requiredProficiency = proficiencyRequirement.proficiency;
+        const value = `${currentProficiency} / ${requiredProficiency}`;
         params.push(new JCMS_ParameterKvp(name, value));
       });
     });
@@ -425,7 +438,7 @@ class Window_SkillDetail extends Window_Base
   {
     const elementParams = [];
     elementParams.push(new JCMS_ParameterKvp(`\\C[17]Elemental Affiliations\\C[0]`));
-    const attackElements = [skill.damage.elementId];
+    const attackElements = [ skill.damage.elementId ];
     attackElements.push(...Game_Action.extractElementsFromAction(skill));
     attackElements.forEach(attackElement =>
     {
@@ -453,10 +466,10 @@ class Window_SkillDetail extends Window_Base
    */
   makeSkillTypeParam(skill)
   {
-    const support = [0];
-    const damage = [1, 2];
-    const healer = [3, 4];
-    const drain = [5, 6];
+    const support = [ 0 ];
+    const damage = [ 1, 2 ];
+    const healer = [ 3, 4 ];
+    const drain = [ 5, 6 ];
 
     let name = "";
     let color = ColorManager.normalColor();
@@ -518,4 +531,5 @@ class Window_SkillDetail extends Window_Base
     return new JCMS_ParameterKvp(tpName, tpCost, tpColor);
   }
 }
+
 //endregion Window_SkillDetail

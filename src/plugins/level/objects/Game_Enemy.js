@@ -29,10 +29,10 @@ Game_Enemy.prototype.getBattlerBaseLevel = function()
 Game_Enemy.prototype.getLevelBalancer = function()
 {
   // check if we have a variable set for the fixed balancing.
-  if (J.LEVEL.Metadata.EnemyBalanceVariable)
+  if (J.LEVEL.Metadata.enemyBalanceVariable)
   {
     // return the adjustment from the variable value instead.
-    return $gameVariables.value(J.LEVEL.Metadata.EnemyBalanceVariable);
+    return $gameVariables.value(J.LEVEL.Metadata.enemyBalanceVariable);
   }
 
   // we don't have any balancing required.

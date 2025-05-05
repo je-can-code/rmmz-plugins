@@ -7,7 +7,8 @@ J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('initBattleInfo', JABS_Battler.prototy
 JABS_Battler.prototype.initBattleInfo = function()
 {
   // perform original logic.
-  J.ABS.EXT.CHARGE.Aliased.JABS_Battler.get('initBattleInfo').call(this);
+  J.ABS.EXT.CHARGE.Aliased.JABS_Battler.get('initBattleInfo')
+    .call(this);
 
   // initialize the charge-related members.
   this.initChargeData();
@@ -127,7 +128,7 @@ JABS_Battler.prototype.getCurrentChargingTier = function()
   if (!sortedFilteredTiers.length) return null;
 
   // grab the first, which should be lowest, charging tier available.
-  const [currentTier,] = sortedFilteredTiers;
+  const [ currentTier, ] = sortedFilteredTiers;
 
   // return the current tier.
   return currentTier;
@@ -161,7 +162,7 @@ JABS_Battler.prototype.getHighestChargedTier = function()
   if (!sortedFilteredTiers.length) return null;
 
   // grab the first, which should be highest, completed charge tier.
-  const [highestChargedTier,] = sortedFilteredtiers;
+  const [ highestChargedTier, ] = sortedFilteredtiers;
 
   // return the highest charged tier.
   return highestChargedTier;
@@ -197,7 +198,7 @@ JABS_Battler.prototype.getHighestChargedTierWithSkillId = function()
   if (!sortedFilteredTiers.length) return null;
 
   // grab the first, which should be highest, completed charge tier.
-  const [highestChargedTier,] = sortedFilteredTiers;
+  const [ highestChargedTier, ] = sortedFilteredTiers;
 
   // return the highest charged tier.
   return highestChargedTier;
@@ -326,7 +327,11 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
   if (!skillSlot) return false;
 
   // cannot charge slots with skills you do not know.
-  if (!this.getBattler().hasSkill(skillSlot.id)) return false;
+  if (!this.getBattler()
+    .hasSkill(skillSlot.id))
+  {
+    return false;
+  }
 
   // we can charge this slot!
   return true;
@@ -456,12 +461,7 @@ JABS_Battler.prototype.getChargingTiers = function(slot)
   {
     // destruct the tier data.
     const [
-      chargeTier,
-      maxDuration,
-      chargeSkillId,
-      whileChargingAnimationId,
-      chargeTierCompleteAnimationId,
-    ] = tierData;
+      chargeTier, maxDuration, chargeSkillId, whileChargingAnimationId, chargeTierCompleteAnimationId, ] = tierData;
 
     // return a compiled charging tier; note default animationId.
     return new JABS_ChargingTier(
@@ -469,8 +469,7 @@ JABS_Battler.prototype.getChargingTiers = function(slot)
       maxDuration,
       chargeSkillId,
       whileChargingAnimationId ?? 0,
-      chargeTierCompleteAnimationId ?? 0
-    );
+      chargeTierCompleteAnimationId ?? 0);
   });
 
   // get the normalized data.
@@ -492,7 +491,7 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
     .sort((chargeTierLeft, chargeTierRight) => chargeTierLeft.tier - chargeTierRight.tier);
 
   // grab the first tier.
-  const [firstTier] = sortedTiers;
+  const [ firstTier ] = sortedTiers;
 
   // check if the first tier is actually tier 1.
   if (firstTier.tier !== 1)
@@ -511,7 +510,7 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
     const currentTier = sortedTiers.at(index);
 
     // grab the previous item in the list.
-    const previousTier = sortedTiers.at(index-1);
+    const previousTier = sortedTiers.at(index - 1);
 
     // the calculation of the expected tier.
     const expectedTier = previousTier.tier + 1;
@@ -527,6 +526,14 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
     }
   }
 
+  // check if the final tier is missing a charge complete animation, and that we have a default to provide.
+  if (sortedTiers.at(-1).chargeTierCompleteAnimationId === 0 &&
+    J.ABS.EXT.CHARGE.Metadata.DefaultFullyChargedAnimationId)
+  {
+    // apply the default fully charged animation.
+    sortedTiers.at(-1).chargeTierCompleteAnimationId = J.ABS.EXT.CHARGE.Metadata.DefaultFullyChargedAnimationId;
+  }
+
   // return our normalized and sorted tiers.
   return sortedTiers;
 };
@@ -539,7 +546,8 @@ J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.updat
 JABS_Battler.prototype.update = function()
 {
   // perform original logic.
-  J.ABS.EXT.CHARGE.Aliased.JABS_Battler.get('update').call(this);
+  J.ABS.EXT.CHARGE.Aliased.JABS_Battler.get('update')
+    .call(this);
 
   // also update charging.
   this.updateCharging();

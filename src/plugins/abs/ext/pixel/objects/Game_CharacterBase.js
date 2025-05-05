@@ -6,7 +6,8 @@ J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase
 Game_CharacterBase.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get('initMembers').call(this);
+  J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get('initMembers')
+    .call(this);
 
   // initialize the additional members.
   this.initPixelMovementMembers();
@@ -94,7 +95,7 @@ Game_CharacterBase.prototype.addPositionalRecord = function(positionalRecord)
  * Gets the first-added record from the collection of coordinate tracking.
  * @returns {Point}
  */
-Game_CharacterBase.prototype.oldestPositionalRecord = function ()
+Game_CharacterBase.prototype.oldestPositionalRecord = function()
 {
   // grab the records.
   const records = this.positionalRecords();
@@ -248,7 +249,8 @@ Game_CharacterBase.prototype.isMoving = function()
   if (this.isMovePressed()) return true;
 
   // otherwise, return the original logic's result.
-  return J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get('isMoving').call(this);
+  return J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get('isMoving')
+    .call(this);
 };
 
 /**
@@ -280,7 +282,10 @@ Game_CharacterBase.prototype.recordPixelPosition = function()
   else if (!last || deltaDistance > 0.1)
   {
     // TODO: use the Point class?
-    const point = { x: this.x, y: this.y }; //new Point(this.x, this.y);
+    const point = {
+      x: this.x,
+      y: this.y
+    }; //new Point(this.x, this.y);
 
     // add the point to the tracking.
     this.addPositionalRecord(point);
@@ -343,8 +348,8 @@ Game_CharacterBase.prototype.diagonalDistancePerFrame = function()
 Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
 {
   // define the direction types.
-  const straightDirections = [2, 4, 6, 8];
-  const diagonalDirections = [1, 3, 7, 9];
+  const straightDirections = [ 2, 4, 6, 8 ];
+  const diagonalDirections = [ 1, 3, 7, 9 ];
 
   // check what kind of direction it was.
   const isStraight = straightDirections.includes(direction);
@@ -555,7 +560,7 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
 J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('moveDiagonally', Game_CharacterBase.prototype.moveDiagonally);
 Game_CharacterBase.prototype.moveDiagonally = function(direction)
 {
-  const [horz, vert] = this.getDiagonalDirections(direction);
+  const [ horz, vert ] = this.getDiagonalDirections(direction);
   this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
 
   if (this.isMovementSucceeded())
@@ -936,7 +941,7 @@ JABS_Battler.prototype.angleToDirection = function(angle)
   const upLeft = (angle > 30) && (angle < 60);
 
   // between 30 and -30 go straight left.
-  const left = (angle > -30)  && (angle < 30);
+  const left = (angle > -30) && (angle < 30);
 
   // between -30 and -60 go diagonal down-left.
   const downLeft = (angle > -60) && (angle < -30);

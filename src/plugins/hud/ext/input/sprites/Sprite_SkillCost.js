@@ -2,7 +2,8 @@
 /**
  * A sprite that represents a skill slot's assigned skill's mp cost.
  */
-class Sprite_SkillCost extends Sprite_BaseSkillSlot
+class Sprite_SkillCost
+  extends Sprite_BaseSkillSlot
 {
   /**
    * The supported types of skill costs for this sprite.
@@ -73,7 +74,8 @@ class Sprite_SkillCost extends Sprite_BaseSkillSlot
     const leader = $gameParty.leader();
     if (!leader) return 0;
 
-    const ability = this.skillSlot().data(leader);
+    const ability = this.skillSlot()
+      .data(leader);
     if (!ability) return 0;
 
     switch (this.skillCostType())
@@ -184,7 +186,8 @@ class Sprite_SkillCost extends Sprite_BaseSkillSlot
   synchronizeCost()
   {
     // get the cost of the assigned skill as an integer.
-    let skillCost = this.skillCost().toFixed(0);
+    let skillCost = this.skillCost()
+      .toFixed(0);
 
     // check if the icon index for this icon is up to date.
     if (this.text() !== skillCost)
@@ -201,7 +204,9 @@ class Sprite_SkillCost extends Sprite_BaseSkillSlot
     }
 
     // acknowledge the refresh.
-    this.skillSlot().acknowledgeCostRefreshByType(this.skillCostType());
+    this.skillSlot()
+      .acknowledgeCostRefreshByType(this.skillCostType());
   }
 }
+
 //endregion Sprite_SkillCost

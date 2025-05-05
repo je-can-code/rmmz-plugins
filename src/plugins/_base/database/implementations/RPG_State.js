@@ -2,7 +2,8 @@
 /**
  * An class representing a single state from the database.
  */
-class RPG_State extends RPG_Traited
+class RPG_State
+  extends RPG_Traited
 {
   //region properties
   /**
@@ -131,6 +132,7 @@ class RPG_State extends RPG_Traited
    * @type {number}
    */
   stepsToRemove = 100;
+
   //endregion properties
 
   /**
@@ -165,4 +167,5 @@ class RPG_State extends RPG_Traited
     this.stepsToRemove = state.stepsToRemove;
   }
 }
+
 //endregion RPG_State

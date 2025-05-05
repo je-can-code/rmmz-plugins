@@ -2,7 +2,8 @@
 /**
  * A single sprite that owns the drawing and management of a single input key slot.
  */
-class Sprite_InputKeySlot extends Sprite
+class Sprite_InputKeySlot
+  extends Sprite
 {
   /**
    * Extend initialization of the sprite to assign a skill slot for tracking.
@@ -127,7 +128,11 @@ class Sprite_InputKeySlot extends Sprite
     const skillId = this.skillSlot().id;
 
     // if it is an item, then the base skill id is the only id.
-    if (this.skillSlot().isItem()) return skillId;
+    if (this.skillSlot()
+      .isItem())
+    {
+      return skillId;
+    }
 
     // grab the cooldown data for this skill.
     const cooldownData = this.cooldownData();
@@ -157,7 +162,8 @@ class Sprite_InputKeySlot extends Sprite
    */
   battler()
   {
-    return this.jabsBattler().getBattler();
+    return this.jabsBattler()
+      .getBattler();
   }
 
   /**
@@ -177,6 +183,7 @@ class Sprite_InputKeySlot extends Sprite
   {
     this._j._battler = battler;
   }
+
   //endregion getters & setters
 
   //region caching
@@ -200,7 +207,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeyIconSpriteKey(skillSlot, inputType)
   {
-    return `icon-${this.battler().name()}-${this.battler().battlerId()}-${inputType}`;
+    return `icon-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}`;
   }
 
   /**
@@ -246,7 +255,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeyAbilityCostSpriteKey(amount, colorIndex, inputType)
   {
-    return `cost-${this.battler().name()}-${this.battler().battlerId()}-${inputType}-${amount}-${colorIndex}`;
+    return `cost-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}-${amount}-${colorIndex}`;
   }
 
   /**
@@ -293,7 +304,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeySkillCostSpriteKey(costType, inputType)
   {
-    return `skillcost-${this.battler().name()}-${this.battler().battlerId()}-${costType}-${inputType}`;
+    return `skillcost-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${costType}-${inputType}`;
   }
 
   /**
@@ -340,7 +353,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeyCooldowntTimerSpriteKey(cooldownData, inputType, isItem)
   {
-    return `cooldown-${this.battler().name()}-${this.battler().battlerId()}-${inputType}-${isItem}`;
+    return `cooldown-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}-${isItem}`;
   }
 
   /**
@@ -388,7 +403,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeyComboGaugeSpriteKey(cooldownData, inputType)
   {
-    return `combo-${this.battler().name()}-${this.battler().battlerId()}-${inputType}`;
+    return `combo-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}`;
   }
 
   /**
@@ -437,7 +454,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeySkillNameSpriteKey(inputType)
   {
-    return `skillname-${this.battler().name()}-${this.battler().battlerId()}-${inputType}`;
+    return `skillname-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}`;
   }
 
   /**
@@ -483,7 +502,9 @@ class Sprite_InputKeySlot extends Sprite
    */
   makeInputKeySlotNameSpriteKey(inputType)
   {
-    return `slotname-${this.battler().name()}-${this.battler().battlerId()}-${inputType}`;
+    return `slotname-${this.battler()
+      .name()}-${this.battler()
+      .battlerId()}-${inputType}`;
   }
 
   /**
@@ -532,6 +553,7 @@ class Sprite_InputKeySlot extends Sprite
     // return the created sprite.
     return sprite;
   }
+
   //endregion caching
 
   //region drawing
@@ -550,7 +572,8 @@ class Sprite_InputKeySlot extends Sprite
     // draw skill icon.
     this.drawInputKeySkillIcon(x, y);
 
-    if (!this.skillSlot().isItem())
+    if (!this.skillSlot()
+      .isItem())
     {
       this.drawInputKeyHpCost(x, y);
       this.drawInputKeyMpCost(x, y);
@@ -607,7 +630,7 @@ class Sprite_InputKeySlot extends Sprite
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeyIconSprite(skillSlot, inputType);
     sprite.show();
-    sprite.move(x+6, y+20);
+    sprite.move(x + 6, y + 20);
   }
 
   /**
@@ -622,12 +645,9 @@ class Sprite_InputKeySlot extends Sprite
     const inputType = this.skillSlot().key;
 
     // relocate the sprite.
-    const sprite = this.getOrCreateInputKeySkillCostSprite(
-      skillSlot,
-      Sprite_SkillCost.Types.HP,
-      inputType);
+    const sprite = this.getOrCreateInputKeySkillCostSprite(skillSlot, Sprite_SkillCost.Types.HP, inputType);
     sprite.show();
-    sprite.move(x-2, y-10);
+    sprite.move(x - 2, y - 10);
   }
 
   /**
@@ -642,12 +662,9 @@ class Sprite_InputKeySlot extends Sprite
     const inputType = this.skillSlot().key;
 
     // relocate the sprite.
-    const sprite = this.getOrCreateInputKeySkillCostSprite(
-      skillSlot,
-      Sprite_SkillCost.Types.MP,
-      inputType);
+    const sprite = this.getOrCreateInputKeySkillCostSprite(skillSlot, Sprite_SkillCost.Types.MP, inputType);
     sprite.show();
-    sprite.move(x-2, y);
+    sprite.move(x - 2, y);
   }
 
   /**
@@ -662,12 +679,9 @@ class Sprite_InputKeySlot extends Sprite
     const inputType = this.skillSlot().key;
 
     // relocate the sprite.
-    const sprite = this.getOrCreateInputKeySkillCostSprite(
-      skillSlot,
-      Sprite_SkillCost.Types.TP,
-      inputType);
+    const sprite = this.getOrCreateInputKeySkillCostSprite(skillSlot, Sprite_SkillCost.Types.TP, inputType);
     sprite.show();
-    sprite.move(x-2, y+10);
+    sprite.move(x - 2, y + 10);
   }
 
   /**
@@ -682,12 +696,9 @@ class Sprite_InputKeySlot extends Sprite
     const inputType = this.skillSlot().key;
 
     // relocate the sprite.
-    const sprite = this.getOrCreateInputKeySkillCostSprite(
-      skillSlot,
-      Sprite_SkillCost.Types.Item,
-      inputType);
+    const sprite = this.getOrCreateInputKeySkillCostSprite(skillSlot, Sprite_SkillCost.Types.Item, inputType);
     sprite.show();
-    sprite.move(x+36, y+10);
+    sprite.move(x + 36, y + 10);
   }
 
   /**
@@ -704,7 +715,7 @@ class Sprite_InputKeySlot extends Sprite
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeyComboGaugeSprite(cooldownData, inputType);
     sprite.show();
-    sprite.move(x+32, y+32);
+    sprite.move(x + 32, y + 32);
   }
 
   /**
@@ -721,7 +732,7 @@ class Sprite_InputKeySlot extends Sprite
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeyCooldownTimerSprite(cooldownData, inputType);
     sprite.show();
-    sprite.move(x+28, y+16);
+    sprite.move(x + 28, y + 16);
   }
 
   /**
@@ -738,7 +749,7 @@ class Sprite_InputKeySlot extends Sprite
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeySkillNameSprite(skillSlot, inputType);
     sprite.show();
-    sprite.move(x, y+36);
+    sprite.move(x, y + 36);
   }
 
   drawInputKeySlotName(x, y)
@@ -750,8 +761,10 @@ class Sprite_InputKeySlot extends Sprite
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeySlotNameSprite(skillSlot, inputType);
     sprite.show();
-    sprite.move(x, y+48);
+    sprite.move(x, y + 48);
   }
+
   //endregion drawing
 }
+
 //endregion Sprite_InputKeySlot

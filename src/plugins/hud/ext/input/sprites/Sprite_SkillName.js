@@ -2,7 +2,8 @@
 /**
  * A sprite that represents a skill slot's assigned skill's name.
  */
-class Sprite_SkillName extends Sprite_BaseSkillSlot
+class Sprite_SkillName
+  extends Sprite_BaseSkillSlot
 {
   /**
    * Extends the `update()` to also synchronize the text to
@@ -27,7 +28,8 @@ class Sprite_SkillName extends Sprite_BaseSkillSlot
    */
   needsSynchronization()
   {
-    return (this.hasSkillSlot() && this.skillSlot().needsVisualNameRefresh());
+    return (this.hasSkillSlot() && this.skillSlot()
+      .needsVisualNameRefresh());
   }
 
   /**
@@ -45,7 +47,9 @@ class Sprite_SkillName extends Sprite_BaseSkillSlot
     }
 
     // acknowledge the refresh.
-    this.skillSlot().acknowledgeNameRefresh();
+    this.skillSlot()
+      .acknowledgeNameRefresh();
   }
 }
+
 //endregion Sprite_SkillName

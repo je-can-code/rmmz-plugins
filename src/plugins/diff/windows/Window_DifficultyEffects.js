@@ -1,5 +1,6 @@
 //region Window_DifficultyEffects
-class Window_DifficultyEffects extends Window_Command
+class Window_DifficultyEffects
+  extends Window_Command
 {
   /**
    * The difficulty being hovered over from the list.
@@ -19,7 +20,7 @@ class Window_DifficultyEffects extends Window_Command
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
-  constructor(rect) 
+  constructor(rect)
   {
     // construct parent class.
     super(rect);
@@ -144,7 +145,11 @@ class Window_DifficultyEffects extends Window_Command
     if (!effectsList) return;
 
     // extract the data out of the hovered difficulty.
-    const { bparams, xparams, sparams } = effectsList;
+    const {
+      bparams,
+      xparams,
+      sparams
+    } = effectsList;
 
     // initialize our command collection for enemies.
     const battlerEffectsCommands = Array.empty;
@@ -236,15 +241,12 @@ class Window_DifficultyEffects extends Window_Command
       }
 
       // determine the compared color against the default.
-      const paramColorIndex = this.getComparedBonusColor(
-        true,
-        paramValue,
-        100);
+      const paramColorIndex = this.getComparedBonusColor(true, paramValue, 100);
 
       // build the command.
       const paramCommand = new WindowCommandBuilder(paramName)
         .setIconIndex(paramIconIndex)
-        .setRightText(`${paramSign}${paramValue-100}`)
+        .setRightText(`${paramSign}${paramValue - 100}`)
         .setColorIndex(paramColorIndex)
         .addTextLines(paramDescription)
         .build();
@@ -279,15 +281,12 @@ class Window_DifficultyEffects extends Window_Command
       }
 
       // determine the compared color against the default.
-      const paramColorIndex = this.getComparedBonusColor(
-        true,
-        paramValue,
-        100);
+      const paramColorIndex = this.getComparedBonusColor(true, paramValue, 100);
 
       // build the command.
       const paramCommand = new WindowCommandBuilder(paramName)
         .setIconIndex(paramIconIndex)
-        .setRightText(`${paramSign}${paramValue-100}`)
+        .setRightText(`${paramSign}${paramValue - 100}`)
         .setColorIndex(paramColorIndex)
         .addTextLines(paramDescription)
         .build();
@@ -322,15 +321,12 @@ class Window_DifficultyEffects extends Window_Command
       }
 
       // determine the compared color against the default.
-      const paramColorIndex = this.getComparedBonusColor(
-        true,
-        paramValue,
-        100);
+      const paramColorIndex = this.getComparedBonusColor(true, paramValue, 100);
 
       // build the command.
       const paramCommand = new WindowCommandBuilder(paramName)
         .setIconIndex(paramIconIndex)
-        .setRightText(`${paramSign}${paramValue-100}`)
+        .setRightText(`${paramSign}${paramValue - 100}`)
         .setColorIndex(paramColorIndex)
         .addTextLines(paramDescription)
         .build();
@@ -365,15 +361,12 @@ class Window_DifficultyEffects extends Window_Command
       }
 
       // determine the compared color against the default.
-      const paramColorIndex = this.getComparedBonusColor(
-        true,
-        paramValue,
-        100);
+      const paramColorIndex = this.getComparedBonusColor(true, paramValue, 100);
 
       // build the command.
       const paramCommand = new WindowCommandBuilder(paramName)
         .setIconIndex(paramIconIndex)
-        .setRightText(`${paramSign}${paramValue-100}`)
+        .setRightText(`${paramSign}${paramValue - 100}`)
         .setColorIndex(paramColorIndex)
         .addTextLines(paramDescription)
         .build();
@@ -426,15 +419,12 @@ class Window_DifficultyEffects extends Window_Command
       }
 
       // determine the compared color against the default.
-      const paramColorIndex = this.getComparedBonusColor(
-        true,
-        paramValue,
-        100);
+      const paramColorIndex = this.getComparedBonusColor(true, paramValue, 100);
 
       // build the command.
       const paramCommand = new WindowCommandBuilder(paramName)
         .setIconIndex(paramIconIndex)
-        .setRightText(`${paramSign}${paramValue-100}`)
+        .setRightText(`${paramSign}${paramValue - 100}`)
         .setColorIndex(paramColorIndex)
         .addTextLines(paramDescription)
         .build();
@@ -507,15 +497,12 @@ class Window_DifficultyEffects extends Window_Command
     }
 
     // determine the compared color against the default.
-    const paramColorIndex = this.getComparedColor(
-      this.biggerIsBetterBParameters(index),
-      paramValue,
-      100);
+    const paramColorIndex = this.getComparedColor(this.biggerIsBetterBParameters(index), paramValue, 100);
 
     // build the command.
     const paramCommand = new WindowCommandBuilder(paramName)
       .setIconIndex(paramIconIndex)
-      .setRightText(`${paramSign}${paramValue-100}`)
+      .setRightText(`${paramSign}${paramValue - 100}`)
       .setColorIndex(paramColorIndex)
       .addTextLines(paramDescription)
       .build();
@@ -549,15 +536,12 @@ class Window_DifficultyEffects extends Window_Command
     }
 
     // determine the compared color against the default.
-    const paramColorIndex = this.getComparedColor(
-      this.biggerIsBetterXParameters(index),
-      paramValue,
-      100);
+    const paramColorIndex = this.getComparedColor(this.biggerIsBetterXParameters(index), paramValue, 100);
 
     // build the command.
     const paramCommand = new WindowCommandBuilder(paramName)
       .setIconIndex(paramIconIndex)
-      .setRightText(`${paramSign}${paramValue-100}`)
+      .setRightText(`${paramSign}${paramValue - 100}`)
       .setColorIndex(paramColorIndex)
       .addTextLines(paramDescription)
       .build();
@@ -591,15 +575,12 @@ class Window_DifficultyEffects extends Window_Command
     }
 
     // determine the compared color against the default.
-    const paramColorIndex = this.getComparedColor(
-      this.biggerIsBetterSParameters(index),
-      paramValue,
-      100);
+    const paramColorIndex = this.getComparedColor(this.biggerIsBetterSParameters(index), paramValue, 100);
 
     // build the command.
     const paramCommand = new WindowCommandBuilder(paramName)
       .setIconIndex(paramIconIndex)
-      .setRightText(`${paramSign}${paramValue-100}`)
+      .setRightText(`${paramSign}${paramValue - 100}`)
       .setColorIndex(paramColorIndex)
       .addTextLines(paramDescription)
       .build();
@@ -768,4 +749,5 @@ class Window_DifficultyEffects extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_DifficultyEffects

@@ -1,5 +1,6 @@
 //region plugin metadata
-class J_PosesPluginMetadata extends PluginMetadata
+class J_PosesPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -105,4 +106,5 @@ class J_PosesPluginMetadata extends PluginMetadata
   //     .build();
   // }
 }
+
 //endregion plugin metadata

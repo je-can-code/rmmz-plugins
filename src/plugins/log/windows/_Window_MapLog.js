@@ -8,7 +8,8 @@
  * A base window that manages standard log management in a command window.<br/>
  * The default {@link Window_MapLog} is used for the action log.
  */
-class Window_MapLog extends Window_Command
+class Window_MapLog
+  extends Window_Command
 {
   /**
    * The height of one row; 16.
@@ -317,7 +318,8 @@ class Window_MapLog extends Window_Command
     if (!this.logManager) return [];
 
     // iterate over each log and build a command for them.
-    const commands = this.logManager.getLogs()
+    // return the built commands.
+    return this.logManager.getLogs()
       .map((log, index) =>
       {
         // add the message as a "command" into the log window.
@@ -326,9 +328,6 @@ class Window_MapLog extends Window_Command
           .setEnabled(true)
           .build();
       });
-
-    // return the built commands.
-    return commands;
   }
 
   //endregion update logging
@@ -389,10 +388,9 @@ class Window_MapLog extends Window_Command
     // check if the player is below this window's origin Y.
     const xInterference = (playerX > this.x) && playerX < (this.x + this.width);
     const yInterference = (playerY > this.y) && playerY < (this.y + this.height);
-    const isInterfering = (xInterference) && (yInterference);
 
     // return what we deduced.
-    return isInterfering;
+    return (xInterference) && (yInterference);
   }
 
   /**
@@ -401,8 +399,10 @@ class Window_MapLog extends Window_Command
   handlePlayerInterference()
   {
     // if we are above 64, rapidly decrement by -15 until we get below 64.
-    if (this.contentsOpacity > 64) this.contentsOpacity -= 15;
-    // if we are below 64, increment by +1 until we get to 64.
+    if (this.contentsOpacity > 64)
+    {
+      this.contentsOpacity -= 15;
+    }// if we are below 64, increment by +1 until we get to 64.
     else if (this.contentsOpacity < 64) this.contentsOpacity += 1;
   }
 
@@ -447,7 +447,7 @@ class Window_MapLog extends Window_Command
     if (this.inactivityTimer % 2 === 0)
     {
       // reduce opacity if it is.
-      this.contentsOpacity -= 12;
+      this.fadeContentsOpacityTick();
     }
     // otherwise, check if the timer is simply 0.
     else if (this.inactivityTimer === 0)
@@ -455,6 +455,12 @@ class Window_MapLog extends Window_Command
       // and hide the window if it is.
       this.hideWindow();
     }
+  }
+
+  fadeContentsOpacityTick()
+  {
+    // reduce opacity if it is.
+    this.contentsOpacity -= 12;
   }
 
   /**

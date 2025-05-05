@@ -4,13 +4,12 @@
  * The number of additional bonus hits this skill or item adds to their basic attacks.
  * @type {number}
  */
-Object.defineProperty(RPG_UsableItem.prototype, "jabsBonusHits",
+Object.defineProperty(RPG_UsableItem.prototype, "jabsBonusHits", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsBonusHits();
-    },
-  });
+    return this.getJabsBonusHits();
+  },
+});
 
 /**
  * Gets the JABS bonus hits of this skill or item.
@@ -36,13 +35,12 @@ RPG_UsableItem.prototype.extractJabsBonusHits = function()
  * The JABS cooldown when using this skill or item.
  * @type {number}
  */
-Object.defineProperty(RPG_UsableItem.prototype, "jabsCooldown",
+Object.defineProperty(RPG_UsableItem.prototype, "jabsCooldown", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsCooldown();
-    },
-  });
+    return this.getJabsCooldown();
+  },
+});
 
 /**
  * Gets the JABS cooldown for this skill or item.

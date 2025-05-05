@@ -10,7 +10,7 @@ Game_Interpreter.prototype.command301 = function(params)
   // we cannot engage in battle if already in battle.
   if ($gameParty.inBattle()) return true;
 
-  const [designationType, troopIdentifier, canEscape, canLose] = params;
+  const [ designationType, troopIdentifier, canEscape, canLose ] = params;
 
   // makes sure we don't do this if we're already in-battle.
   // convert the params into a troop id.
@@ -49,13 +49,16 @@ Game_Interpreter.prototype.command301convertToTroopId = function(designationType
   switch (designationType)
   {
     // zero = "direct designation" of the troop id.
-    case 0: return troopIdentifier;
+    case 0:
+      return troopIdentifier;
 
     // one = "variable designation" of the troop id.
-    case 1: return $gameVariables.value(troopIdentifier);
+    case 1:
+      return $gameVariables.value(troopIdentifier);
 
     // two = "random encounter designation" of the troop id.
-    case 2: return $gamePlayer.makeEncounterTroopId();
+    case 2:
+      return $gamePlayer.makeEncounterTroopId();
   }
 
   console.error(`invalid event command params, `, designationType, troopIdentifier);

@@ -52,18 +52,24 @@ Scene_Map.prototype.logClickedPlayer = function(x, y)
 Scene_Map.prototype.logClickedAnyAllies = function(x, y)
 {
   // if we aren't showing followers, don't try to log their data.
-  if (!$gamePlayer.followers().isVisible()) return;
+  if (!$gamePlayer.followers()
+    .isVisible())
+  {
+    return;
+  }
 
   // iterate over the followers.
-  $gamePlayer.followers().data().forEach(follower =>
-  {
-    // make sure the follower was clicked.
-    if (follower.pos(x, y))
+  $gamePlayer.followers()
+    .data()
+    .forEach(follower =>
     {
-      // log the output.
-      this.extractAndLogBattlerData(follower, x, y);
-    }
-  });
+      // make sure the follower was clicked.
+      if (follower.pos(x, y))
+      {
+        // log the output.
+        this.extractAndLogBattlerData(follower, x, y);
+      }
+    });
 };
 
 Scene_Map.prototype.extractAndLogBattlerData = function(target, x, y)
@@ -85,5 +91,6 @@ Scene_Map.prototype.extractAndLogBattlerData = function(target, x, y)
   }
 
   // otherwise, log the jabs battler data.
-  console.log(`[x:${x}, y:${y}]\n[uuid:${battler.getUuid()}]\n[name:${battler.getBattler().name()}]\n`, battler);
+  console.log(`[x:${x}, y:${y}]\n[uuid:${battler.getUuid()}]\n[name:${battler.getBattler()
+    .name()}]\n`, battler);
 };

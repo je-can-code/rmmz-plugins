@@ -10,7 +10,8 @@ J.CAMods.Aliased.JABS_Battler.set('getTargetFrameText', JABS_Battler.prototype.g
 JABS_Battler.prototype.getTargetFrameText = function()
 {
   // perform original logic to get the target frame text.
-  const originalTargetFrameText = J.CAMods.Aliased.JABS_Battler.get('getTargetFrameText').call(this);
+  const originalTargetFrameText = J.CAMods.Aliased.JABS_Battler.get('getTargetFrameText')
+    .call(this);
 
   // if a target frame text was provided, then just use that.
   if (originalTargetFrameText !== String.empty) return originalTargetFrameText;
@@ -25,7 +26,7 @@ JABS_Battler.prototype.getTargetFrameText = function()
   const hasAura = battler.elementRate(24) > 1;
 
   // a quick check to see if there even are any traits.
-  const hasNoTraits = !([isArmed, isFlying, isShielded, hasAura].every(trait => !!trait));
+  const hasNoTraits = !([ isArmed, isFlying, isShielded, hasAura ].every(trait => !!trait));
 
   // if we have no traits, no need to do anymore work.
   if (hasNoTraits) return String.empty;

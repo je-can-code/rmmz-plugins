@@ -4,13 +4,12 @@
  * The number of additional bonus hits this battler adds to their basic attacks.
  * @type {number}
  */
-Object.defineProperty(RPG_Class.prototype, "jabsBonusHits",
+Object.defineProperty(RPG_Class.prototype, "jabsBonusHits", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsBonusHits();
-    },
-  });
+    return this.getJabsBonusHits();
+  },
+});
 
 /**
  * Gets the JABS bonus hits of this battler.

@@ -10,7 +10,8 @@ JABS_AiManager.aiPhase0 = function(battler)
   if (battler.isEnemy())
   {
     // perform original logic for enemies.
-    J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('aiPhase0').call(this, battler);
+    J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('aiPhase0')
+      .call(this, battler);
   }
   // it must be an ally.
   else
@@ -44,7 +45,11 @@ JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
   if (!allyBattler.isAlerted()) return false;
 
   // if we are in active motion, do not idle.
-  if (!allyBattler.getCharacter().isStopping()) return false;
+  if (!allyBattler.getCharacter()
+    .isStopping())
+  {
+    return false;
+  }
 
   // perform!
   return true;
@@ -62,7 +67,8 @@ JABS_AiManager.decideAiPhase2Action = function(battler)
   if (battler.isEnemy())
   {
     // perform original logic for enemies.
-    J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('decideAiPhase2Action').call(this, battler);
+    J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('decideAiPhase2Action')
+      .call(this, battler);
   }
   // it is a Game_Actor battler, so it gets different treatment.
   else
@@ -91,10 +97,7 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
   // decide the action based on the ally ai mode currently assigned.
   const decidedSkillId = jabsBattler
     .getAllyAiMode()
-    .decideAction(
-      jabsBattler,
-      jabsBattler.getTarget(),
-      currentlyEquippedSkillIds);
+    .decideAction(jabsBattler, jabsBattler.getTarget(), currentlyEquippedSkillIds);
 
   // validate the skill chosen.
   if (!this.isSkillIdValid(decidedSkillId))

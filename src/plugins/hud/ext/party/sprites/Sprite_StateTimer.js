@@ -34,11 +34,7 @@ Sprite_StateTimer.prototype.loadBitmap = function()
   this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
   this.bitmap.fontFace = this.fontFace();
   this.bitmap.fontSize = this.fontSize();
-  this.bitmap.drawText(
-    this._j._text,
-    0, 0,
-    this.bitmapWidth(), this.bitmapHeight(),
-    "center");
+  this.bitmap.drawText(this._j._text, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
 }
 
 Sprite_StateTimer.prototype.update = function()
@@ -52,11 +48,7 @@ Sprite_StateTimer.prototype.updateCooldownText = function()
   this.bitmap.clear();
   const durationRemaining = (this._j._stateData.duration / 60).toFixed(1);
 
-  this.bitmap.drawText(
-    durationRemaining.toString(),
-    0, 0,
-    this.bitmapWidth(), this.bitmapHeight(),
-    "center");
+  this.bitmap.drawText(durationRemaining.toString(), 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
 };
 
 /**

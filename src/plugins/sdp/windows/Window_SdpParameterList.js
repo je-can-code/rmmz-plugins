@@ -1,5 +1,6 @@
 //region Window_SdpParameterList
-class Window_SdpParameterList extends Window_Command
+class Window_SdpParameterList
+  extends Window_Command
 {
   /**
    * The current parameters on the panel being hovered over.
@@ -69,17 +70,24 @@ class Window_SdpParameterList extends Window_Command
   #buildPanelParameterCommand(panelParameter)
   {
     // extract a couple parameter data points for building the display information.
-    const { parameterId, isCore } = panelParameter;
+    const {
+      parameterId,
+      isCore
+    } = panelParameter;
 
     // determine the item color.
-    const colorIndex = isCore ? 14 : 0;
+    const colorIndex = isCore
+      ? 14
+      : 0;
 
     // determine the parameter data to display.
     const paramName = TextManager.longParam(parameterId);
     const paramIcon = IconManager.longParam(parameterId);
     let paramValue = this.currentActor.longParam(parameterId);
     const isPercentParamValue = this.isPercentParameter(parameterId);
-    const percentValue = isPercentParamValue ? '%' : String.empty;
+    const percentValue = isPercentParamValue
+      ? '%'
+      : String.empty;
 
     // non-base parameters (and not max tp) get multiplied by 100.
     if (!Game_BattlerBase.isBaseParam(parameterId) && parameterId !== 30)
@@ -90,7 +98,10 @@ class Window_SdpParameterList extends Window_Command
     const paramDescription = TextManager.longParamDescription(parameterId);
 
     // determine the modifier data to display.
-    const { modifierColorIndex, modifierText } = this.#determineModifierData(panelParameter);
+    const {
+      modifierColorIndex,
+      modifierText
+    } = this.#determineModifierData(panelParameter);
 
     // build the command name.
     const commandName = `${paramName} ( ${Math.trunc(paramValue)}${percentValue} )`;
@@ -183,13 +194,22 @@ class Window_SdpParameterList extends Window_Command
     // a small helper function for building the modifier's text.
     const buildModifierText = (modifier, isFlat) =>
     {
-      const isPercent = isFlat ? `` : `%`;
-      const isPositive = modifier >= 0 ? '+' : String.empty;
+      const isPercent = isFlat
+        ? ``
+        : `%`;
+      const isPositive = modifier >= 0
+        ? '+'
+        : String.empty;
       return `(${isPositive}${modifier}${isPercent})`;
     };
 
     // deconstruct the info we need from the panel parameter.
-    const { parameterId: paramId, perRank: modifier, isFlat, isCore } = panelParameter;
+    const {
+      parameterId: paramId,
+      perRank: modifier,
+      isFlat,
+      isCore
+    } = panelParameter;
 
     // determine the current value of the parameter.
     const paramValue = this.currentActor.longParam(paramId);
@@ -204,7 +224,10 @@ class Window_SdpParameterList extends Window_Command
     const modifierText = buildModifierText(modifier, isFlat);
 
     // return our values.
-    return { modifierColorIndex, modifierText };
+    return {
+      modifierColorIndex,
+      modifierText
+    };
   }
 
   /**
@@ -289,4 +312,5 @@ class Window_SdpParameterList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_SdpParameterList

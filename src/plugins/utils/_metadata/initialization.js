@@ -38,5 +38,9 @@ J.UTILS.Helpers = {};
  * @param {any} o The object to check.
  * @returns {number} Chances are if this returns a number you're fine, otherwise it'll hang.
  */
-J.UTILS.Helpers.depth = (o) =>
-  Object (o) === o ? 1 + Math.max(-1, ...Object.values(o).map(J.UTILS.Helpers.depth)) : 0;
+J.UTILS.Helpers.depth = (o) => Object(o) === o
+  ? 1 + Math.max(
+  -1,
+  ...Object.values(o)
+    .map(J.UTILS.Helpers.depth))
+  : 0;

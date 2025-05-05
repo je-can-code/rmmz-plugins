@@ -9,10 +9,11 @@ BattleManager.enemyMap = BattleManager.enemyMap || { events: [] };
  * Extends `initMembers` to include our members as well.
  */
 J.ABS.EXT.STAR.Aliased.BattleManager.set('initMembers', BattleManager.initMembers);
-BattleManager.initMembers = function() 
+BattleManager.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.STAR.Aliased.BattleManager.get('initMembers').call(this);
+  J.ABS.EXT.STAR.Aliased.BattleManager.get('initMembers')
+    .call(this);
 
   /**
    * The origin location that the player came from.
@@ -22,9 +23,9 @@ BattleManager.initMembers = function()
   this._originLocation = null;
 
   /**
-  * Whether or not the player is engaged in battle.
-  * @type {boolean}
-  */
+   * Whether or not the player is engaged in battle.
+   * @type {boolean}
+   */
   this._inBattle = false;
 
   /**
@@ -80,7 +81,7 @@ BattleManager.setWait = function(waitFrames)
   timer.reset();
 
   // set the new maximum.
-  timer.getMaxTime(waitFrames);
+  timer.setMaxTime(waitFrames);
 };
 
 /**
@@ -111,7 +112,7 @@ BattleManager.updateTimer = function()
 /**
  * Clears the wait timer.
  */
-BattleManager.clearWait = function() 
+BattleManager.clearWait = function()
 {
   // grab the battle timer.
   const timer = this.getWaitTimer();
@@ -125,7 +126,7 @@ BattleManager.clearWait = function()
  * @param {StarOrigin} originLocation The origin location that the player came from.
  * @param {number} battleMapId The id of the battle map to teleport to.
  */
-BattleManager.setupStarBattle = function(originLocation, battleMapId) 
+BattleManager.setupStarBattle = function(originLocation, battleMapId)
 {
   // loads the troop data into the battle manager.
   BattleManager.setup($gameTroop.troop().id, true, true);
@@ -146,7 +147,7 @@ BattleManager.setupStarBattle = function(originLocation, battleMapId)
 /**
  * Marks the player as "in battle".
  */
-BattleManager.engageInBattle = function() 
+BattleManager.engageInBattle = function()
 {
   this._inBattle = true;
 };
@@ -154,7 +155,7 @@ BattleManager.engageInBattle = function()
 /**
  * Marks the player as "not in battle".
  */
-BattleManager.disengageInBattle = function() 
+BattleManager.disengageInBattle = function()
 {
   this._inBattle = false;
 };
@@ -163,7 +164,7 @@ BattleManager.disengageInBattle = function()
  * Gets whether or not the player is "in battle".
  * @returns {boolean}
  */
-BattleManager.isInBattle = function() 
+BattleManager.isInBattle = function()
 {
   return this._inBattle;
 };
@@ -173,7 +174,7 @@ BattleManager.isInBattle = function()
  * came from prior to entering battle.
  * @returns {StarOrigin}
  */
-BattleManager.origin = function() 
+BattleManager.origin = function()
 {
   return this._originLocation;
 };

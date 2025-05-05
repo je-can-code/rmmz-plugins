@@ -7,7 +7,8 @@ J.SDP.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
 Game_Actor.prototype.initMembers = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_Actor.get('initMembers').call(this);
+  J.SDP.Aliased.Game_Actor.get('initMembers')
+    .call(this);
 
   /**
    * The J object where all my additional properties live.
@@ -54,11 +55,8 @@ Game_Actor.prototype.getOrCreateSdpRankByKey = function(key)
   // grab all the rankings this actor has.
   const rankings = this.getAllSdpRankings();
 
-  // a find function for grabbing the appropriate sdp ranking by its key.
-  const finding = panelRank => panelRank.key === key;
-
   // find the sdp ranking.
-  const existingRanking = rankings.find(finding);
+  const existingRanking = rankings.find(panelRank => panelRank.key === key);
 
   // check if we already have the ranking.
   if (existingRanking)
@@ -94,6 +92,62 @@ Game_Actor.prototype.getSdpByKey = function(key)
 Game_Actor.prototype.getAllSdpRankings = function()
 {
   return this._j._sdp._ranks;
+};
+
+/**
+ * Gets all unlocked panels for this actor.
+ * @returns {PanelRanking[]}
+ */
+Game_Actor.prototype.getAllUnlockedSdps = function()
+{
+  return this.getAllSdpRankings()
+    .filter(panelRanking => panelRanking.isUnlocked());
+};
+
+/**
+ * Unlocks a panel by its key.
+ * @param {string} key The key of the panel to unlock.
+ */
+Game_Actor.prototype.unlockSdpByKey = function(key)
+{
+  // grab the panel ranking by its key.
+  const panelRanking = this.getSdpByKey(key);
+
+  // unlock the ranking.
+  panelRanking.unlock();
+};
+
+/**
+ * Checks if a particular panel is unlocked.
+ * @param {string} key The key of the panel to check.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isSdpUnlocked = function(key)
+{
+  return this.getSdpByKey(key)
+    .isUnlocked();
+};
+
+/**
+ * Check if this actor has any unlocked panels.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasAnyUnlockedSdps = function()
+{
+  return this.getAllUnlockedSdps().length > 0;
+};
+
+/**
+ * Locks a panel by its key.
+ * @param {string} key The key of the panel to lock.
+ */
+Game_Actor.prototype.lockSdpByKey = function(key)
+{
+  // grab the panel ranking by its key.
+  const panelRanking = this.getSdpByKey(key);
+
+  // lock the ranking.
+  panelRanking.lock();
 };
 
 /**
@@ -194,9 +248,7 @@ Game_Actor.prototype.sdpMultiplier = function()
   const objectsToCheck = this.getAllNotes();
 
   // get the vision multiplier from anything this battler has available.
-  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(
-    objectsToCheck,
-    J.SDP.RegExp.SdpMultiplier);
+  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
 
   // get the sum of the base and bonus multipliers.
   const sdpMultiplier = (multiplier + sdpMultiplierBonus);
@@ -211,7 +263,8 @@ Game_Actor.prototype.sdpMultiplier = function()
  */
 Game_Actor.prototype.rankUpPanel = function(panelKey)
 {
-  this.getSdpByKey(panelKey).rankUp();
+  this.getSdpByKey(panelKey)
+    .rankUp();
 };
 
 /**
@@ -230,8 +283,7 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(paramId);
     if (panelParameters.length)
     {
@@ -271,8 +323,7 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
     if (panelParameters.length)
     {
@@ -302,7 +353,8 @@ J.SDP.Aliased.Game_Actor.set("param", Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("param").call(this, paramId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("param")
+    .call(this, paramId);
 
   const panelModifications = this.getSdpBonusForCoreParam(paramId, baseParam);
   const result = baseParam + panelModifications;
@@ -316,7 +368,8 @@ J.SDP.Aliased.Game_Actor.set("xparam", Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("xparam").call(this, xparamId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("xparam")
+    .call(this, xparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(xparamId, baseParam, 8);
   const result = baseParam + panelModifications;
@@ -330,7 +383,8 @@ J.SDP.Aliased.Game_Actor.set("sparam", Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("sparam").call(this, sparamId);
+  const baseParam = J.SDP.Aliased.Game_Actor.get("sparam")
+    .call(this, sparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(sparamId, baseParam, 18);
   const result = baseParam + panelModifications;
@@ -346,7 +400,8 @@ J.SDP.Aliased.Game_Actor.set("maxTp", Game_Actor.prototype.maxTp);
 Game_Actor.prototype.maxTp = function()
 {
   // perform original logic.
-  const baseMaxTp = J.SDP.Aliased.Game_Actor.get("maxTp").call(this);
+  const baseMaxTp = J.SDP.Aliased.Game_Actor.get("maxTp")
+    .call(this);
 
   // calculate the bonus max tp from the panels.
   const bonusMaxTpFromSdp = this.maxTpSdpBonuses(baseMaxTp);
@@ -378,8 +433,7 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(30); // TODO: generalize this whole thing.
 
     // validate we have any parameters from this panel.
@@ -389,7 +443,10 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
       panelParameters.forEach(panelParameter =>
       {
         // extract the relevant details.
-        const { perRank, isFlat } = panelParameter;
+        const {
+          perRank,
+          isFlat
+        } = panelParameter;
         const { currentRank } = panelRanking;
 
         // check if the panel parameter growth is flat.

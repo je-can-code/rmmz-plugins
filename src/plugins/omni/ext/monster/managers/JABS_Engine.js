@@ -1,14 +1,15 @@
 //region JABS_Engine
 /**
  * Processes the various on-hit effects against the target.
- * @param {JABS_Action} action The `JABS_Action` containing the action data.
+ * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
  */
 J.OMNI.EXT.MONSTER.Aliased.JABS_Engine.set('processOnHitEffects', JABS_Engine.prototype.processOnHitEffects);
 JABS_Engine.prototype.processOnHitEffects = function(action, target)
 {
   // perform original logic.
-  J.OMNI.EXT.MONSTER.Aliased.JABS_Engine.get('processOnHitEffects').call(this, action, target);
+  J.OMNI.EXT.MONSTER.Aliased.JABS_Engine.get('processOnHitEffects')
+    .call(this, action, target);
 
   // check if the target is an enemy.
   if (target.isEnemy())
@@ -45,7 +46,8 @@ JABS_Engine.prototype.processElementalisticObservations = function(action, targe
   if (baseElement === -1)
   {
     // pile in the attacker's elements.
-    elements.push(...caster.getBattler().attackElements());
+    elements.push(...caster.getBattler()
+      .attackElements());
   }
   // don't add the "normal attack" element into the mix.
   else

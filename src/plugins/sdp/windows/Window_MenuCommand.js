@@ -6,18 +6,16 @@ J.SDP.Aliased.Window_MenuCommand.set('makeCommandList', Window_MenuCommand.proto
 Window_MenuCommand.prototype.makeCommandList = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Window_MenuCommand.get('makeCommandList').call(this);
+  J.SDP.Aliased.Window_MenuCommand.get('makeCommandList')
+    .call(this);
 
   // if we cannot add the command, then do not.
   if (!this.canAddSdpCommand()) return;
 
-  // The menu shouldn't be accessible if there are no panels to work with.
-  const enabled = $gameParty.getUnlockedSdpTrackings().length > 0;
-
   // build the command.
   const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
     .setSymbol("sdp-menu")
-    .setEnabled(enabled)
+    .setEnabled($gameParty.hasAnyUnlockedSdps())
     .setIconIndex(J.SDP.Metadata.commandIconIndex)
     .setColorIndex(1)
     .build();

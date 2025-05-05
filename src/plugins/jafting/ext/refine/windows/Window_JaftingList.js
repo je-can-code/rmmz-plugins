@@ -7,7 +7,8 @@ J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.set('buildCommands', Window_Jaft
 Window_JaftingList.prototype.buildCommands = function()
 {
   // get the original list of commands.
-  const commands = J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.get('buildCommands').call(this);
+  const commands = J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.get('buildCommands')
+    .call(this);
 
   // add the creation command.
   commands.push(this.buildRefinementCommand());

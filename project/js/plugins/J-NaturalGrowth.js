@@ -413,7 +413,8 @@ J.NATURAL.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
 Game_Actor.prototype.setup = function(actorId)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('setup').call(this, actorId);
+  J.NATURAL.Aliased.Game_Actor.get('setup')
+    .call(this, actorId);
 
   // initialize the parameter buffs on this battler.
   this.refreshAllParameterBuffs();
@@ -427,7 +428,8 @@ J.NATURAL.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onB
 Game_Actor.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('onBattlerDataChange').call(this);
+  J.NATURAL.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
 
   // refresh all our buffs, something could've changed.
   this.refreshAllParameterBuffs();
@@ -501,7 +503,8 @@ J.NATURAL.Aliased.Game_Actor.set('paramBase', Game_Actor.prototype.paramBase);
 Game_Actor.prototype.paramBase = function(paramId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+    .call(this, paramId);
 
   // determine the structure for this parameter.
   const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
@@ -524,7 +527,8 @@ Game_Actor.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+    .call(this, paramId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
@@ -581,7 +585,8 @@ J.NATURAL.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
@@ -604,13 +609,11 @@ Game_Actor.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+    .call(this, xparamId);
 
   // destructure into the plus and rate regexp structures.
-  const paramNaturalBonuses = this.getXparamNaturalBonuses(xparamId, structures, baseParam);
-
-  // return result.
-  return (paramNaturalBonuses);
+  return this.getXparamNaturalBonuses(xparamId, baseParam);
 };
 
 /**
@@ -662,7 +665,8 @@ J.NATURAL.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
@@ -679,7 +683,8 @@ Game_Actor.prototype.sparam = function(sparamId)
 Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexBySpParamId(sparamId);
@@ -688,7 +693,7 @@ Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, structures, baseParam);
+  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, baseParam);
 
   // return result.
   return (sparamNaturalBonuses);
@@ -698,14 +703,13 @@ Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
  * Gets all natural growths for this sp-parameter.
  * Actors have buffs and growths.
  * @param {number} sparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Actor.prototype.getSparamNaturalBonuses = function(sparamId, structures, baseParam)
+Game_Actor.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateSpParamBuff(baseParam, sparamId);
+  const paramBuff = this.calculateSpParamBuff(sparamId, baseParam);
 
   // determine permanent growth for this param.
   const paramGrowth = (this.getSparamGrowth(sparamId, baseParam) / 100);
@@ -744,7 +748,8 @@ J.NATURAL.Aliased.Game_Actor.set('levelUp', Game_Actor.prototype.levelUp);
 Game_Actor.prototype.levelUp = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Actor.get('levelUp').call(this);
+  J.NATURAL.Aliased.Game_Actor.get('levelUp')
+    .call(this);
 
   // applies all natural growths- permanent stat growths for this battler.
   this.applyNaturalGrowths();
@@ -769,7 +774,7 @@ Game_Actor.prototype.applyNaturalGrowths = function()
 Game_Actor.prototype.applyNaturalMaxTpGrowths = function()
 {
   // destructure out the plus and rate structures for growths.
-  const [,,growthPlusStructure, growthRateStructure] = this.getRegexForMaxTp();
+  const [ , , growthPlusStructure, growthRateStructure ] = this.getRegexForMaxTp();
 
   // grab the base max tp for value basing.
   const baseMaxTp = this.getBaseMaxTp();
@@ -799,10 +804,11 @@ Game_Actor.prototype.applyNaturalBparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexByBparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexByBparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -827,15 +833,24 @@ Game_Actor.prototype.getGrowthRegexByBparamId = function(paramId)
 {
   switch (paramId)
   {
-    case 0: return [J.NATURAL.RegExp.MaxLifeGrowthPlus, J.NATURAL.RegExp.MaxLifeGrowthRate];
-    case 1: return [J.NATURAL.RegExp.MaxMagiGrowthPlus, J.NATURAL.RegExp.MaxMagiGrowthRate];
-    case 2: return [J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.PowerGrowthRate];
-    case 3: return [J.NATURAL.RegExp.DefenseGrowthPlus, J.NATURAL.RegExp.DefenseGrowthRate];
-    case 4: return [J.NATURAL.RegExp.ForceGrowthPlus, J.NATURAL.RegExp.ForceGrowthRate];
-    case 5: return [J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp.ResistGrowthRate];
-    case 6: return [J.NATURAL.RegExp.SpeedGrowthPlus, J.NATURAL.RegExp.SpeedGrowthRate];
-    case 7: return [J.NATURAL.RegExp.LuckGrowthPlus, J.NATURAL.RegExp.LuckGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.MaxLifeGrowthPlus, J.NATURAL.RegExp.MaxLifeGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.MaxMagiGrowthPlus, J.NATURAL.RegExp.MaxMagiGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.PowerGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.DefenseGrowthPlus, J.NATURAL.RegExp.DefenseGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.ForceGrowthPlus, J.NATURAL.RegExp.ForceGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp.ResistGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.SpeedGrowthPlus, J.NATURAL.RegExp.SpeedGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LuckGrowthPlus, J.NATURAL.RegExp.LuckGrowthRate ];
+    default:
+      return null;
   }
 };
 
@@ -851,10 +866,11 @@ Game_Actor.prototype.applyNaturalXparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexByXparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexByXparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -879,17 +895,28 @@ Game_Actor.prototype.getGrowthRegexByXparamId = function(xparamId)
 {
   switch (xparamId)
   {
-    case 0: return [J.NATURAL.RegExp.HitGrowthPlus, J.NATURAL.RegExp.HitGrowthRate];
-    case 1: return [J.NATURAL.RegExp.EvadeGrowthPlus, J.NATURAL.RegExp.EvadeGrowthRate];
-    case 2: return [J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.RegExp.CritChanceGrowthRate];
-    case 3: return [J.NATURAL.RegExp.CritEvadeGrowthPlus, J.NATURAL.RegExp.CritEvadeGrowthRate];
-    case 4: return [J.NATURAL.RegExp.MagiEvadeGrowthPlus, J.NATURAL.RegExp.MagiEvadeGrowthRate];
-    case 5: return [J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.RegExp.MagiReflectGrowthRate];
-    case 6: return [J.NATURAL.RegExp.CounterGrowthPlus, J.NATURAL.RegExp.CounterGrowthRate];
-    case 7: return [J.NATURAL.RegExp.LifeRegenGrowthPlus, J.NATURAL.RegExp.LifeRegenGrowthRate];
-    case 8: return [J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.RegExp.MagiRegenGrowthRate];
-    case 9: return [J.NATURAL.RegExp.TechRegenGrowthPlus, J.NATURAL.RegExp.TechRegenGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.HitGrowthPlus, J.NATURAL.RegExp.HitGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.EvadeGrowthPlus, J.NATURAL.RegExp.EvadeGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.RegExp.CritChanceGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.CritEvadeGrowthPlus, J.NATURAL.RegExp.CritEvadeGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiEvadeGrowthPlus, J.NATURAL.RegExp.MagiEvadeGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.RegExp.MagiReflectGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.CounterGrowthPlus, J.NATURAL.RegExp.CounterGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LifeRegenGrowthPlus, J.NATURAL.RegExp.LifeRegenGrowthRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.RegExp.MagiRegenGrowthRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.TechRegenGrowthPlus, J.NATURAL.RegExp.TechRegenGrowthRate ];
+    default:
+      return null;
   }
 };
 
@@ -905,10 +932,11 @@ Game_Actor.prototype.applyNaturalSparamGrowths = function()
   paramIds.forEach(paramId =>
   {
     // destructure into the plus and rate regexp structures.
-    const [plusStructure, rateStructure] = this.getGrowthRegexBySparamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getGrowthRegexBySparamId(paramId);
 
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
+      .call(this, paramId);
 
     // calculate the flat growth for this parameter.
     const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -933,17 +961,28 @@ Game_Actor.prototype.getGrowthRegexBySparamId = function(sparamId)
 {
   switch (sparamId)
   {
-    case 0: return [J.NATURAL.RegExp.AggroGrowthPlus, J.NATURAL.RegExp.AggroGrowthRate];
-    case 1: return [J.NATURAL.RegExp.ParryGrowthPlus, J.NATURAL.RegExp.ParryGrowthRate];
-    case 2: return [J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegExp.HealingGrowthRate];
-    case 3: return [J.NATURAL.RegExp.ItemFxGrowthPlus, J.NATURAL.RegExp.ItemFxGrowthRate];
-    case 4: return [J.NATURAL.RegExp.MagiCostRateGrowthPlus, J.NATURAL.RegExp.MagiCostRateGrowthRate];
-    case 5: return [J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.RegExp.TechCostRateGrowthRate];
-    case 6: return [J.NATURAL.RegExp.PhysDmgRateGrowthPlus, J.NATURAL.RegExp.PhysDmgRateGrowthRate];
-    case 7: return [J.NATURAL.RegExp.MagiDmgRateGrowthPlus, J.NATURAL.RegExp.MagiDmgRateGrowthRate];
-    case 8: return [J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.RegExp.FloorDmgRateGrowthRate];
-    case 9: return [J.NATURAL.RegExp.ExpGainRateGrowthPlus, J.NATURAL.RegExp.ExpGainRateGrowthRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.AggroGrowthPlus, J.NATURAL.RegExp.AggroGrowthRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.ParryGrowthPlus, J.NATURAL.RegExp.ParryGrowthRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegExp.HealingGrowthRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.ItemFxGrowthPlus, J.NATURAL.RegExp.ItemFxGrowthRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiCostRateGrowthPlus, J.NATURAL.RegExp.MagiCostRateGrowthRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.RegExp.TechCostRateGrowthRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.PhysDmgRateGrowthPlus, J.NATURAL.RegExp.PhysDmgRateGrowthRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.MagiDmgRateGrowthPlus, J.NATURAL.RegExp.MagiDmgRateGrowthRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.RegExp.FloorDmgRateGrowthRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.ExpGainRateGrowthPlus, J.NATURAL.RegExp.ExpGainRateGrowthRate ];
+    default:
+      return null;
   }
 };
 
@@ -964,7 +1003,8 @@ J.NATURAL.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMem
 Game_Battler.prototype.initMembers = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Battler.get('initMembers').call(this);
+  J.NATURAL.Aliased.Game_Battler.get('initMembers')
+    .call(this);
 
   // initialize the natural parameter collections.
   this.initNaturalGrowthParameters();
@@ -1014,73 +1054,73 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
    * The permanent flat bonuses for each of the base parameters.
    * @type {number[]}
    */
-  this._j._natural._bParamsGrowthPlus = [0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._bParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The permanent multiplier bonuses for each of the base parameters.
    * @type {number[]}
    */
-  this._j._natural._bParamsGrowthRate = [0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._bParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary flat bonuses for each of the base parameters.
    * @type {number[]}
    */
-  this._j._natural._bParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._bParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary multiplier bonuses for each of the base parameters.
    * @type {number[]}
    */
-  this._j._natural._bParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._bParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The permanent flat bonuses for each of the sp-parameters.
    * @type {number[]}
    */
-  this._j._natural._sParamsGrowthPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._sParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The permanent multiplier bonuses for each of the sp-parameters.
    * @type {number[]}
    */
-  this._j._natural._sParamsGrowthRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._sParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary flat bonuses for each of the sp-parameters.
    * @type {number[]}
    */
-  this._j._natural._sParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._sParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary multiplier bonuses for each of the sp-parameters.
    * @type {number[]}
    */
-  this._j._natural._sParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._sParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The permanent flat bonuses for each of the ex-parameters.
    * @type {number[]}
    */
-  this._j._natural._xParamsGrowthPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._xParamsGrowthPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The permanent multiplier bonuses for each of the ex-parameters.
    * @type {number[]}
    */
-  this._j._natural._xParamsGrowthRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._xParamsGrowthRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary flat bonuses for each of the ex-parameters.
    * @type {number[]}
    */
-  this._j._natural._xParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._xParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
   /**
    * The cache of temporary multiplier bonuses for each of the ex-parameters.
    * @type {number[]}
    */
-  this._j._natural._xParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 };
 
 //region max tp
@@ -1427,12 +1467,12 @@ Game_Battler.prototype.clearAllParameterBuffs = function()
   // zero everything out.
   this._j._natural._maxTpBuffPlus = 0;
   this._j._natural._maxTpBuffRate = 0;
-  this._j._natural._bParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0];
-  this._j._natural._bParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0];
-  this._j._natural._sParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  this._j._natural._sParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  this._j._natural._xParamsBuffPlus = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-  this._j._natural._xParamsBuffRate = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  this._j._natural._bParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._bParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._sParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._sParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._xParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 };
 
 /**
@@ -1444,7 +1484,7 @@ Game_Battler.prototype.refreshMaxTpBuffs = function()
   const baseParam = this.getBaseMaxTp();
 
   // destructure out the plus and rate structures for buffs.
-  const [plusStructure, rateStructure,,] = this.getRegexForMaxTp();
+  const [ plusStructure, rateStructure, , ] = this.getRegexForMaxTp();
 
   // determine buff plus for this param.
   const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -1472,10 +1512,11 @@ Game_Battler.prototype.refreshBParamBuffs = function()
   paramIds.forEach(paramId =>
   {
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('paramBase').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Battler.get('paramBase')
+      .call(this, paramId);
 
     // determine the structure for this parameter.
-    const [plusStructure, rateStructure] = this.getRegexByParamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getRegexByParamId(paramId);
 
     // determine buff plus for this param.
     const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
@@ -1504,10 +1545,11 @@ Game_Battler.prototype.refreshXParamBuffs = function()
   paramIds.forEach(paramId =>
   {
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('xparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Battler.get('xparam')
+      .call(this, paramId);
 
     // determine the structure for this parameter.
-    const [plusStructure, rateStructure] = this.getRegexByExParamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getRegexByExParamId(paramId);
 
     // determine buff plus for this param- divided by 100 because its fractional.
     const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
@@ -1536,10 +1578,11 @@ Game_Battler.prototype.refreshSParamBuffs = function()
   paramIds.forEach(paramId =>
   {
     // get original value.
-    const baseParam = J.NATURAL.Aliased.Game_Battler.get('sparam').call(this, paramId);
+    const baseParam = J.NATURAL.Aliased.Game_Battler.get('sparam')
+      .call(this, paramId);
 
     // determine the structure for this parameter.
-    const [plusStructure, rateStructure] = this.getRegexBySpParamId(paramId);
+    const [ plusStructure, rateStructure ] = this.getRegexBySpParamId(paramId);
 
     // determine buff plus for this param- divided by 100 because its fractional.
     const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
@@ -1582,7 +1625,8 @@ Game_Battler.prototype.naturalParamBuff = function(structure, baseParam)
   paramGrowthFormulai.forEach(formula =>
   {
     // evaluate the result of the formula and add it to the bonuses.
-    const result = parseFloat(eval(formula).toFixed(3));
+    const result = parseFloat(eval(formula)
+      .toFixed(3));
     bonusParam += result;
   });
 
@@ -1643,61 +1687,92 @@ Game_Battler.prototype.getRegexByParamId = function(paramId)
 {
   switch (paramId)
   {
-    case 0: return [J.NATURAL.RegExp.MaxLifeBuffPlus, J.NATURAL.RegExp.MaxLifeBuffRate];
-    case 1: return [J.NATURAL.RegExp.MaxMagiBuffPlus, J.NATURAL.RegExp.MaxMagiBuffRate];
-    case 2: return [J.NATURAL.RegExp.PowerBuffPlus, J.NATURAL.RegExp.PowerBuffRate];
-    case 3: return [J.NATURAL.RegExp.DefenseBuffPlus, J.NATURAL.RegExp.DefenseBuffRate];
-    case 4: return [J.NATURAL.RegExp.ForceBuffPlus, J.NATURAL.RegExp.ForceBuffRate];
-    case 5: return [J.NATURAL.RegExp.ResistBuffPlus, J.NATURAL.RegExp.ResistBuffRate];
-    case 6: return [J.NATURAL.RegExp.SpeedBuffPlus, J.NATURAL.RegExp.SpeedBuffRate];
-    case 7: return [J.NATURAL.RegExp.LuckBuffPlus, J.NATURAL.RegExp.LuckBuffRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.MaxLifeBuffPlus, J.NATURAL.RegExp.MaxLifeBuffRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.MaxMagiBuffPlus, J.NATURAL.RegExp.MaxMagiBuffRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.PowerBuffPlus, J.NATURAL.RegExp.PowerBuffRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.DefenseBuffPlus, J.NATURAL.RegExp.DefenseBuffRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.ForceBuffPlus, J.NATURAL.RegExp.ForceBuffRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.ResistBuffPlus, J.NATURAL.RegExp.ResistBuffRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.SpeedBuffPlus, J.NATURAL.RegExp.SpeedBuffRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LuckBuffPlus, J.NATURAL.RegExp.LuckBuffRate ];
+    default:
+      return null;
   }
 };
 
 /**
  * Translates a ex-parameter id into its corresponding RegExp buff plus and rate structures.
  * @param {number} xParamId The ex-parameter id to find the RegExp structures for.
- * @returns {RegExp} The relevant RegExp structures for this parameter id.
+ * @returns {[RegExp, RegExp]} The relevant RegExp structures for this parameter id.
  */
 Game_Battler.prototype.getRegexByExParamId = function(xParamId)
 {
   switch (xParamId)
   {
-    case 0: return [J.NATURAL.RegExp.HitBuffPlus, J.NATURAL.RegExp.HitBuffRate];
-    case 1: return [J.NATURAL.RegExp.EvadeBuffPlus, J.NATURAL.RegExp.EvadeBuffRate];
-    case 2: return [J.NATURAL.RegExp.CritChanceBuffPlus, J.NATURAL.RegExp.CritChanceBuffRate];
-    case 3: return [J.NATURAL.RegExp.CritEvadeBuffPlus, J.NATURAL.RegExp.CritEvadeBuffRate];
-    case 4: return [J.NATURAL.RegExp.MagiEvadeBuffPlus, J.NATURAL.RegExp.MagiEvadeBuffRate];
-    case 5: return [J.NATURAL.RegExp.MagiReflectBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate];
-    case 6: return [J.NATURAL.RegExp.CounterBuffPlus, J.NATURAL.RegExp.CounterBuffRate];
-    case 7: return [J.NATURAL.RegExp.LifeRegenBuffPlus, J.NATURAL.RegExp.LifeRegenBuffRate];
-    case 8: return [J.NATURAL.RegExp.MagiRegenBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate];
-    case 9: return [J.NATURAL.RegExp.TechRegenBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.HitBuffPlus, J.NATURAL.RegExp.HitBuffRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.EvadeBuffPlus, J.NATURAL.RegExp.EvadeBuffRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.CritChanceBuffPlus, J.NATURAL.RegExp.CritChanceBuffRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.CritEvadeBuffPlus, J.NATURAL.RegExp.CritEvadeBuffRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiEvadeBuffPlus, J.NATURAL.RegExp.MagiEvadeBuffRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.MagiReflectBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.CounterBuffPlus, J.NATURAL.RegExp.CounterBuffRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.LifeRegenBuffPlus, J.NATURAL.RegExp.LifeRegenBuffRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.MagiRegenBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.TechRegenBuffPlus, J.NATURAL.RegExp.MagiReflectBuffRate ];
+    default:
+      return null;
   }
 };
 
 /**
  * Translates a sp-parameter id into its corresponding RegExp buff plus and rate structures.
  * @param {number} sParamId The sp-parameter id to find the RegExp structures for.
- * @returns {RegExp} The relevant RegExp structures for this parameter id.
+ * @returns {[RegExp, RegExp]} The relevant RegExp structures for this parameter id.
  */
 Game_Battler.prototype.getRegexBySpParamId = function(sParamId)
 {
   switch (sParamId)
   {
-    case 0: return [J.NATURAL.RegExp.AggroBuffPlus, J.NATURAL.RegExp.AggroBuffRate];
-    case 1: return [J.NATURAL.RegExp.ParryBuffPlus, J.NATURAL.RegExp.ParryBuffRate];
-    case 2: return [J.NATURAL.RegExp.HealingBuffPlus, J.NATURAL.RegExp.HealingBuffRate];
-    case 3: return [J.NATURAL.RegExp.ItemFxBuffPlus, J.NATURAL.RegExp.ItemFxBuffRate];
-    case 4: return [J.NATURAL.RegExp.MagiCostRateBuffPlus, J.NATURAL.RegExp.MagiCostRateBuffRate];
-    case 5: return [J.NATURAL.RegExp.TechCostRateBuffPlus, J.NATURAL.RegExp.TechCostRateBuffRate];
-    case 6: return [J.NATURAL.RegExp.PhysDmgRateBuffPlus, J.NATURAL.RegExp.PhysDmgRateBuffRate];
-    case 7: return [J.NATURAL.RegExp.MagiDmgRateBuffPlus, J.NATURAL.RegExp.MagiDmgRateBuffRate];
-    case 8: return [J.NATURAL.RegExp.FloorDmgRateBuffPlus, J.NATURAL.RegExp.FloorDmgRateBuffRate];
-    case 9: return [J.NATURAL.RegExp.ExpGainRateBuffPlus, J.NATURAL.RegExp.ExpGainRateBuffRate];
-    default: return null;
+    case 0:
+      return [ J.NATURAL.RegExp.AggroBuffPlus, J.NATURAL.RegExp.AggroBuffRate ];
+    case 1:
+      return [ J.NATURAL.RegExp.ParryBuffPlus, J.NATURAL.RegExp.ParryBuffRate ];
+    case 2:
+      return [ J.NATURAL.RegExp.HealingBuffPlus, J.NATURAL.RegExp.HealingBuffRate ];
+    case 3:
+      return [ J.NATURAL.RegExp.ItemFxBuffPlus, J.NATURAL.RegExp.ItemFxBuffRate ];
+    case 4:
+      return [ J.NATURAL.RegExp.MagiCostRateBuffPlus, J.NATURAL.RegExp.MagiCostRateBuffRate ];
+    case 5:
+      return [ J.NATURAL.RegExp.TechCostRateBuffPlus, J.NATURAL.RegExp.TechCostRateBuffRate ];
+    case 6:
+      return [ J.NATURAL.RegExp.PhysDmgRateBuffPlus, J.NATURAL.RegExp.PhysDmgRateBuffRate ];
+    case 7:
+      return [ J.NATURAL.RegExp.MagiDmgRateBuffPlus, J.NATURAL.RegExp.MagiDmgRateBuffRate ];
+    case 8:
+      return [ J.NATURAL.RegExp.FloorDmgRateBuffPlus, J.NATURAL.RegExp.FloorDmgRateBuffRate ];
+    case 9:
+      return [ J.NATURAL.RegExp.ExpGainRateBuffPlus, J.NATURAL.RegExp.ExpGainRateBuffRate ];
+    default:
+      return null;
   }
 };
 
@@ -1729,10 +1804,7 @@ Game_Battler.prototype.calculateBParamBuff = function(paramId, baseParam)
   const buffRate = this.bParamBuffRate(paramId) / 100;
 
   // calculate the result into a variable for debugging.
-  const result = (baseParam * buffRate) + buffPlus;
-
-  // return result.
-  return result;
+  return (baseParam * buffRate) + buffPlus;
 };
 
 /**
@@ -1744,10 +1816,10 @@ Game_Battler.prototype.calculateBParamBuff = function(paramId, baseParam)
 Game_Battler.prototype.calculateExParamBuff = function(paramId, baseParam)
 {
   // determine buff plus for this param.
-  const buffPlus = (this.xParamBuffPlus() / 100);
+  const buffPlus = this.xParamBuffPlus(paramId);
 
   // determine buff rate for this param.
-  const buffRate = (this.xParamBuffRate() / 100);
+  const buffRate = this.xParamBuffRate(paramId);
 
   // don't calculate if we don't have anything.
   if (!buffPlus && !buffRate) return 0;
@@ -1765,10 +1837,10 @@ Game_Battler.prototype.calculateExParamBuff = function(paramId, baseParam)
 Game_Battler.prototype.calculateSpParamBuff = function(paramId, baseParam)
 {
   // determine buff plus for this param.
-  const buffPlus = (this.sParamBuffPlus() / 100);
+  const buffPlus = this.sParamBuffPlus(paramId);
 
   // determine buff rate for this param.
-  const buffRate = (this.sParamBuffRate() / 100);
+  const buffRate = this.sParamBuffRate(paramId);
 
   // don't calculate if we don't have anything.
   if (!buffPlus && !buffRate) return 0;
@@ -1794,10 +1866,7 @@ Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramR
   const paramBase = (baseValue + paramPlus);
 
   // remove the value of base param since it is added at the end.
-  const result = (paramBase * paramFactor) - baseValue;
-
-  // return result.
-  return result;
+  return (paramBase * paramFactor) - baseValue;
 };
 
 //region max tp
@@ -1848,11 +1917,8 @@ Game_Battler.prototype.maxTpNaturalBonuses = function()
  */
 Game_Battler.prototype.getMaxTpNaturalBonuses = function(baseParam)
 {
-  // determine the buffs to the parameter.
-  const maxTpBuff = this.getMaxTpBuff(baseParam);
-
   // return the natural growth buffs currently applied.
-  return maxTpBuff;
+  return this.getMaxTpBuff(baseParam);
 };
 
 /**
@@ -1865,8 +1931,7 @@ Game_Battler.prototype.getRegexForMaxTp = function()
     J.NATURAL.RegExp.MaxTechBuffPlus,
     J.NATURAL.RegExp.MaxTechBuffRate,
     J.NATURAL.RegExp.MaxTechGrowthPlus,
-    J.NATURAL.RegExp.MaxTechGrowthRate,
-  ];
+    J.NATURAL.RegExp.MaxTechGrowthRate, ];
 };
 
 /**
@@ -1909,7 +1974,8 @@ J.NATURAL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
 Game_Enemy.prototype.setup = function(enemyId, x, y)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('setup').call(this, enemyId, x, y);
+  J.NATURAL.Aliased.Game_Enemy.get('setup')
+    .call(this, enemyId, x, y);
 
   // initialize the parameter buffs on this battler.
   this.refreshAllParameterBuffs();
@@ -1923,7 +1989,8 @@ J.NATURAL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onB
 Game_Enemy.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange').call(this);
+  J.NATURAL.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
 
   // refresh all our buffs, something could've changed.
   this.refreshAllParameterBuffs();
@@ -1959,7 +2026,8 @@ J.NATURAL.Aliased.Game_Enemy.set('paramBase', Game_Enemy.prototype.paramBase);
 Game_Enemy.prototype.paramBase = function(paramId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // determine the structure for this parameter.
   const paramBaseNaturalBonuses = this.paramBaseNaturalBonuses(paramId);
@@ -1982,7 +2050,8 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase').call(this, paramId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
+    .call(this, paramId);
 
   // destructure into the plus and rate regexp structures.
   const paramNaturalBonuses = this.getParamBaseNaturalBonuses(paramId, baseParam);
@@ -2001,10 +2070,7 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
 Game_Enemy.prototype.getParamBaseNaturalBonuses = function(paramId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateBParamBuff(paramId, baseParam);
-
-  // return result.
-  return paramBuff;
+  return this.calculateBParamBuff(paramId, baseParam);
 };
 //endregion b params
 
@@ -2016,7 +2082,8 @@ J.NATURAL.Aliased.Game_Enemy.set('xparam', Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const xparamNaturalBonuses = this.xparamNaturalBonuses(xparamId);
@@ -2033,7 +2100,8 @@ Game_Enemy.prototype.xparam = function(xparamId)
 Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam').call(this, xparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
+    .call(this, xparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexByExParamId(xparamId);
@@ -2042,26 +2110,19 @@ Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const paramNaturalBonuses = this.getXparamNaturalBonuses(xparamId, structures, baseParam);
-
-  // return result.
-  return paramNaturalBonuses;
+  return this.getXparamNaturalBonuses(xparamId, baseParam);
 };
 
 /**
  * Gets all natural growths for this ex-parameter.
  * @param {number} xparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Enemy.prototype.getXparamNaturalBonuses = function(xparamId, structures, baseParam)
+Game_Enemy.prototype.getXparamNaturalBonuses = function(xparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateExParamBuff(baseParam, xparamId);
-
-  // return result.
-  return paramBuff;
+  return this.calculateExParamBuff(xparamId, baseParam);
 };
 //endregion ex params
 
@@ -2073,7 +2134,8 @@ J.NATURAL.Aliased.Game_Enemy.set('sparam', Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const sparamNaturalBonuses = this.sparamNaturalBonuses(sparamId);
@@ -2090,7 +2152,8 @@ Game_Enemy.prototype.sparam = function(sparamId)
 Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
-  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam').call(this, sparamId);
+  const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
+    .call(this, sparamId);
 
   // determine the structure for this parameter.
   const structures = this.getRegexBySpParamId(sparamId);
@@ -2099,27 +2162,20 @@ Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
   if (!structures) return 0;
 
   // destructure into the plus and rate regexp structures.
-  const sparamNaturalBonuses = this.getSparamNaturalBonuses(sparamId, structures, baseParam);
-
-  // return result.
-  return sparamNaturalBonuses;
+  return this.getSparamNaturalBonuses(sparamId, baseParam);
 };
 
 /**
  * Gets all natural growths for this sp-parameter.
  * Enemies only have buffs.
  * @param {number} sparamId The parameter id in question.
- * @param {[RegExp, RegExp]} structures The pair of regex structures for plus and rate.
  * @param {number} baseParam The base parameter.
  * @returns {number} The added value of the `baseParam` + `paramBuff` + `paramGrowth`.
  */
-Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, structures, baseParam)
+Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
 {
   // determine temporary buff for this param.
-  const paramBuff = this.calculateSpParamBuff(baseParam, sparamId);
-
-  // return result.
-  return paramBuff;
+  return this.calculateSpParamBuff(sparamId, baseParam);
 };
 //endregion sp params
 //endregion Game_Enemy
@@ -2136,7 +2192,8 @@ J.NATURAL.Aliased.Game_Party.set('gainItem', Game_Party.prototype.gainItem);
 Game_Party.prototype.gainItem = function(item, amount, includeEquip)
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Party.get('gainItem').call(this, item, amount, includeEquip);
+  J.NATURAL.Aliased.Game_Party.get('gainItem')
+    .call(this, item, amount, includeEquip);
 
   // also refresh our parameter buffs.
   this.refreshAllParameterBuffsForAll();
@@ -2159,13 +2216,15 @@ Game_Party.prototype.refreshAllParameterBuffsForAll = function()
  * Also refreshes all natural parameter data.
  */
 J.NATURAL.Aliased.Scene_Equip.set('executeEquipChange', Scene_Equip.prototype.executeEquipChange);
-Scene_Equip.prototype.executeEquipChange = function() 
+Scene_Equip.prototype.executeEquipChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Scene_Equip.get('executeEquipChange').call(this);
+  J.NATURAL.Aliased.Scene_Equip.get('executeEquipChange')
+    .call(this);
 
   // refresh the actor's parameter buffs after changing equips.
-  this.actor().refreshAllParameterBuffs();
+  this.actor()
+    .refreshAllParameterBuffs();
 };
 //endregion Scene_Equip
 

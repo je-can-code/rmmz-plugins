@@ -2,7 +2,8 @@
 /**
  * A window that shows a list of all equipment.
  */
-class Window_RefinableList extends Window_Command
+class Window_RefinableList
+  extends Window_Command
 {
   /**
    * @constructor
@@ -132,7 +133,7 @@ class Window_RefinableList extends Window_Command
         ? true
         : canSelectBaseAgain; // only select the base again if you have 2+ copies of it.
 
-      let {iconIndex} = equip;
+      let { iconIndex } = equip;
 
       let errorText = "";
 
@@ -229,7 +230,10 @@ class Window_RefinableList extends Window_Command
         iconIndex = 91;
       }
 
-      const extData = {data: equip, error: errorText};
+      const extData = {
+        data: equip,
+        error: errorText
+      };
 
       const command = new WindowCommandBuilder(equip.name)
         .setSymbol('refine-object')
@@ -246,4 +250,5 @@ class Window_RefinableList extends Window_Command
     });
   }
 }
+
 //endregion Window_JaftingEquip

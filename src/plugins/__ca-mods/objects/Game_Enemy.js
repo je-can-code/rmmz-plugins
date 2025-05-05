@@ -8,7 +8,8 @@ J.CAMods.Aliased.Game_Enemy.set("dropSources", Game_Enemy.prototype.dropSources)
 Game_Enemy.prototype.dropSources = function()
 {
   // perform original logic to determine base drop sources.
-  const sources = J.CAMods.Aliased.Game_Enemy.get("dropSources").call(this);
+  const sources = J.CAMods.Aliased.Game_Enemy.get("dropSources")
+    .call(this);
 
   // also add all the passive states applied to oneself.
   sources.push(...this.allStates());

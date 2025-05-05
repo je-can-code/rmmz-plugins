@@ -7,7 +7,8 @@ J.JAFTING.EXT.REFINE.Aliased.Game_Party.set('initialize', Game_Party.prototype.i
 Game_Party.prototype.initialize = function()
 {
   // perform original logic.
-  J.JAFTING.EXT.REFINE.Aliased.Game_Party.get('initialize').call(this);
+  J.JAFTING.EXT.REFINE.Aliased.Game_Party.get('initialize')
+    .call(this);
 
   // init the members.
   this.initJaftingRefinementMembers();
@@ -102,11 +103,12 @@ Game_Party.prototype.addRefinedArmor = function(equip)
  */
 Game_Party.prototype.refreshDatabaseWeapons = function()
 {
-  this.getRefinedWeapons().forEach(weapon =>
-  {
-    const updatedWeapon = new RPG_Weapon(weapon, weapon.index);
-    $dataWeapons[updatedWeapon._key()] = updatedWeapon;
-  });
+  this.getRefinedWeapons()
+    .forEach(weapon =>
+    {
+      const updatedWeapon = new RPG_Weapon(weapon, weapon.index);
+      $dataWeapons[updatedWeapon._key()] = updatedWeapon;
+    });
 };
 
 /**
@@ -115,11 +117,12 @@ Game_Party.prototype.refreshDatabaseWeapons = function()
  */
 Game_Party.prototype.refreshDatabaseArmors = function()
 {
-  this.getRefinedArmors().forEach(armor =>
-  {
-    const updatedArmor = new RPG_Armor(armor, armor.index);
-    $dataArmors[updatedArmor._key()] = updatedArmor;
-  });
+  this.getRefinedArmors()
+    .forEach(armor =>
+    {
+      const updatedArmor = new RPG_Armor(armor, armor.index);
+      $dataArmors[updatedArmor._key()] = updatedArmor;
+    });
 };
 
 /**

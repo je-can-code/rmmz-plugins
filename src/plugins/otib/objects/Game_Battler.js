@@ -25,7 +25,8 @@ J.OTIB.Aliased.Game_Actor.set('consumeItem', Game_Battler.prototype.consumeItem)
 Game_Battler.prototype.consumeItem = function(item)
 {
   // perform original logic.
-  J.OTIB.Aliased.Game_Actor.get('consumeItem').call(this, item);
+  J.OTIB.Aliased.Game_Actor.get('consumeItem')
+    .call(this, item);
 
   // handle the otib logic.
   this.handleOtibUnlock(item);

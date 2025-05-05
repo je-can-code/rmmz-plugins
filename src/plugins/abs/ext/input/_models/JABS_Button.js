@@ -101,6 +101,7 @@ class JABS_Button
    * @type {string}
    */
   static CombatSkill4 = "CombatSkill4";
+
   //endregion  L1 + buttons
 
   /**
@@ -112,23 +113,17 @@ class JABS_Button
     // the valid set of assignable inputs.
     const okInputs = [
       // primary
-      this.Mainhand,
-      this.Offhand,
-      this.Tool,
-      this.Dodge,
+      this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
       // L1 + buttons
-      this.CombatSkill1,
-      this.CombatSkill2,
-      this.CombatSkill3,
-      this.CombatSkill4,
-    ];
+      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
 
     // a filter function for ensuring only the correct inputs are accepted.
     const filtering = buttonInput => !okInputs.includes(buttonInput);
 
     // return the filtered buttons.
-    return this.allButtons().filter(filtering);
+    return this.allButtons()
+      .filter(filtering);
   }
 
   /**
@@ -139,26 +134,17 @@ class JABS_Button
   {
     return [
       // functionality
-      this.Menu,
-      this.Select,
+      this.Menu, this.Select,
 
       // primary
-      this.Mainhand,
-      this.Offhand,
-      this.Tool,
-      this.Dodge,
+      this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
       // mobility
-      this.Strafe,
-      this.Rotate,
-      this.Guard,
+      this.Strafe, this.Rotate, this.Guard,
 
       // L1 + buttons
-      this.CombatSkill1,
-      this.CombatSkill2,
-      this.CombatSkill3,
-      this.CombatSkill4,
-    ];
+      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
   }
 }
+
 //endregion JABS_Button

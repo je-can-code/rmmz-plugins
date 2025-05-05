@@ -1,5 +1,6 @@
 //region Scene_JaftingCreate
-class Scene_JaftingCreate extends Scene_MenuBase
+class Scene_JaftingCreate
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -123,6 +124,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
      */
     this._j._crafting._create._recipeOutputList = null;
   }
+
   //endregion init
 
   //region create
@@ -172,7 +174,8 @@ class Scene_JaftingCreate extends Scene_MenuBase
   {
     // also update with the currently selected item, if one exists.
     this.getCreationDescriptionWindow()
-      .setText(this.getCategoryListWindow().currentHelpText() ?? String.empty);
+      .setText(this.getCategoryListWindow()
+        .currentHelpText() ?? String.empty);
   }
 
   /**
@@ -184,7 +187,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
     this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
     this._backgroundSprite = new Sprite();
     this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [this._backgroundFilter];
+    this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
     //this.setBackgroundOpacity(220);
   }
@@ -197,6 +200,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   createButtons()
   {
   }
+
   //endregion create
 
   //region creation description
@@ -268,6 +272,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   {
     this._j._crafting._create._creationDescription = someWindow;
   }
+
   //endregion creation description
 
   //region category list
@@ -314,7 +319,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   getCategoryListRectangle()
   {
     // the window's origin coordinates are the box window's origin as well.
-    const [x, y] = Graphics.boxOrigin;
+    const [ x, y ] = Graphics.boxOrigin;
 
     // define the width of the window.
     const width = 300;
@@ -344,9 +349,11 @@ class Scene_JaftingCreate extends Scene_MenuBase
 
   onCategoryListIndexChange()
   {
-    const helpText = this.getCategoryListWindow().currentHelpText();
+    const helpText = this.getCategoryListWindow()
+      .currentHelpText();
 
-    this.getCreationDescriptionWindow().setText(helpText ?? String.empty);
+    this.getCreationDescriptionWindow()
+      .setText(helpText ?? String.empty);
   }
 
   onCategoryListCancel()
@@ -417,6 +424,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
     window.hide();
     window.deactivate();
   }
+
   //endregion category list
 
   //region recipe list
@@ -467,7 +475,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   getRecipeListRectangle()
   {
     // the window's origin coordinates are the box window's origin as well.
-    const [x, y] = Graphics.boxOrigin;
+    const [ x, y ] = Graphics.boxOrigin;
 
     // define the width of the window.
     const width = this.getCategoryListRectangle().width;
@@ -534,10 +542,14 @@ class Scene_JaftingCreate extends Scene_MenuBase
     listWindow.deactivate();
 
     // hide all those windows.
-    this.getRecipeDetailsWindow().hide();
-    this.getRecipeIngredientListWindow().hide();
-    this.getRecipeToolListWindow().hide();
-    this.getRecipeOutputListWindow().hide();
+    this.getRecipeDetailsWindow()
+      .hide();
+    this.getRecipeIngredientListWindow()
+      .hide();
+    this.getRecipeToolListWindow()
+      .hide();
+    this.getRecipeOutputListWindow()
+      .hide();
   }
 
   onRecipeListIndexChange()
@@ -548,7 +560,11 @@ class Scene_JaftingCreate extends Scene_MenuBase
     // shorthand the currently-selected recipe.
     /** @type {CraftingRecipe} */
     const currentRecipe = recipeListWindow.currentExt();
-    const { ingredients, tools, outputs } = currentRecipe;
+    const {
+      ingredients,
+      tools,
+      outputs
+    } = currentRecipe;
 
     // set the help text to the recipe's description, which is the help text.
     this.getCreationDescriptionWindow()
@@ -601,12 +617,14 @@ class Scene_JaftingCreate extends Scene_MenuBase
 
   craftSelection()
   {
-    const currentRecipe = this.getRecipeListWindow().currentExt();
+    const currentRecipe = this.getRecipeListWindow()
+      .currentExt();
 
     currentRecipe.craft();
 
     SoundManager.playShop();
   }
+
   //endregion recipe list
 
   //region recipe details
@@ -678,6 +696,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   {
     this._j._crafting._create._recipeDetails = someWindow;
   }
+
   //endregion recipe details
 
   //region recipe ingredient list
@@ -751,6 +770,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   {
     this._j._crafting._create._recipeIngredientList = someWindow;
   }
+
   //endregion recipe ingredient list
 
   //region recipe tool list
@@ -824,6 +844,7 @@ class Scene_JaftingCreate extends Scene_MenuBase
   {
     this._j._crafting._create._recipeToolList = someWindow;
   }
+
   //endregion recipe tool list
 
   //region recipe output list
@@ -898,4 +919,5 @@ class Scene_JaftingCreate extends Scene_MenuBase
 
   //endregion recipe output list
 }
+
 //endregion Scene_JaftingCreate

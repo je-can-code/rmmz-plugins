@@ -13,11 +13,21 @@ J.MESSAGE = {};
  */
 J.MESSAGE.Metadata = {};
 J.MESSAGE.Metadata.Name = `J-MessageTextCodes`;
-J.MESSAGE.Metadata.Version = '1.1.0';
+J.MESSAGE.Metadata.Version = '1.2.0';
 
 /**
  * A collection of all base aliases.
  */
 J.MESSAGE.Aliased = {};
+J.MESSAGE.Aliased.Game_Interpreter = new Map();
+J.MESSAGE.Aliased.Game_Message = new Map();
 J.MESSAGE.Aliased.Window_Base = new Map();
+J.MESSAGE.Aliased.Window_ChoiceList = new Map();
+J.MESSAGE.Aliased.Window_ChoiceList = new Map();
+
+J.MESSAGE.RegExp = {};
+J.MESSAGE.RegExp.LeaderChoiceConditional = /<leaderChoiceCondition:[ ]?(\d+)>/i;
+J.MESSAGE.RegExp.NotLeaderChoiceConditional = /<notLeaderChoiceCondition:[ ]?(\d+)>/i;
+J.MESSAGE.RegExp.SwitchOnChoiceConditional = /<switchOnChoiceCondition:[ ]?(\d+)>/i;
+J.MESSAGE.RegExp.SwitchOffChoiceConditional = /<switchOffChoiceCondition:[ ]?(\d+)>/i;
 //endregion introduction

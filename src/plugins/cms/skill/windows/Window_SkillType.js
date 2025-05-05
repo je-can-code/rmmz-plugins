@@ -10,15 +10,20 @@ Window_SkillType.prototype.maxCols = function()
 
 Window_SkillType.prototype.makeCommandList = function()
 {
-  if (this._actor)
+  /** @type {Game_Actor} */
+  const currentActor = this._actor;
+
+  if (!currentActor) return;
+
+  /** @type {number[]} */
+  const skillTypeIds = currentActor.addedSkillTypes()
+    .filter((x, i, self) => self.indexOf(x) === i);
+
+  skillTypeIds.forEach(skillTypeId =>
   {
-    const skillTypeIds = this._actor.skillTypes();
-    skillTypeIds.forEach(skillTypeId =>
-    {
-      const name = $dataSystem.skillTypes[skillTypeId];
-      const icon = IconManager.skillType(skillTypeId);
-      this.addCommand(name, "skill", true, skillTypeId, icon);
-    });
-  }
+    const name = $dataSystem.skillTypes[skillTypeId];
+    const icon = IconManager.skillType(skillTypeId);
+    this.addCommand(name, "skill", true, skillTypeId, icon);
+  });
 };
 //endregion Window_SkillType

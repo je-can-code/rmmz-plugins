@@ -17,7 +17,8 @@ Scene_Load.prototype.reloadMapIfUpdated = function()
   else
   {
     // perform original logic.
-    J.ABS.Aliased.Scene_Load.get('reloadMapIfUpdated').call(this);
+    J.ABS.Aliased.Scene_Load.get('reloadMapIfUpdated')
+      .call(this);
   }
 };
 //endregion Scene_Load

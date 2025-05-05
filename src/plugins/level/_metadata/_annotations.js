@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.1.1 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -200,6 +200,9 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Added ability to manipulate max level for actors.
+ *    Adapted extended plugin metadata structure.
  * - 1.1.0
  *    Refactored various data retrieval methods from given battlers.
  *    Fixed issue with mismapped level calculations.
@@ -209,7 +212,11 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
+ * @param parentConfigScaling
+ * @text SCALING
+ *
  * @param useScaling
+ * @parent parentConfigScaling
  * @type boolean
  * @text Start Enabled
  * @desc Whether or not this scaling functionality is enabled by default.
@@ -218,6 +225,7 @@
  * @default true
  *
  * @param minMultiplier
+ * @parent parentConfigScaling
  * @type number
  * @decimals 2
  * @text Minimum Multiplier
@@ -225,6 +233,7 @@
  * @default 0.10
  *
  * @param maxMultiplier
+ * @parent parentConfigScaling
  * @type number
  * @decimals 2
  * @text Maximum Multiplier
@@ -232,6 +241,7 @@
  * @default 2.00
  *
  * @param growthMultiplier
+ * @parent parentConfigScaling
  * @type number
  * @decimals 2
  * @text Growth Multiplier
@@ -239,28 +249,53 @@
  * @default 0.10
  *
  * @param invariantUpperRange
+ * @parent parentConfigScaling
  * @type number
  * @text Upper Invariance
  * @desc The amount of level difference over 0 before scaling takes effect.
  * @default 1
  *
  * @param invariantLowerRange
+ * @parent parentConfigScaling
  * @type number
  * @text Lower Invariance
  * @desc The amount of level difference under 0 before scaling takes effect.
  * @default 1
  *
  * @param variableActorBalancer
+ * @parent parentConfigScaling
  * @type variable
  * @text Actor Balancer
  * @desc The variable id to act as a constant level modifier in favor of actors.
  * @default 141
  *
  * @param variableEnemyBalancer
+ * @parent parentConfigScaling
  * @type variable
  * @text Enemy Balancer
  * @desc The variable id to act as a constant level modifier in favor of enemies.
  * @default 142
+ *
+ * @param parentConfigMaxLevel
+ * @text MAX LEVEL
+ *
+ * @param defaultBeyondMaxLevel
+ * @parent parentConfigMaxLevel
+ * @type number
+ * @min 100
+ * @max 1000
+ * @text Default Beyond Max Level
+ * @desc The default for what the max level is if beyond the cap. Requires max level for actors to be set to 99.
+ * @default 255
+ *
+ * @param trueMaxLevel
+ * @parent parentConfigMaxLevel
+ * @type number
+ * @min 1
+ * @max 1000
+ * @text Max Boosted Level
+ * @desc The max level your level can be. While this is intended to always be beyond the max, it can be lower.
+ * @default 1000
  *
  *
  * @command enableScaling

@@ -6,6 +6,7 @@ function Escription()
 {
   this.initialize(...arguments);
 }
+
 Escription.prototype = {};
 Escription.prototype.constructor = Escription;
 
@@ -16,9 +17,7 @@ Escription.prototype.constructor = Escription;
  * @param {number} proximityTextRange The distance required for the describe text to be visible.
  * @param {number} proximityIconRange The distance required for the describe icon to be visible.
  */
-Escription.prototype.initialize = function(
-  text, iconIndex, proximityTextRange, proximityIconRange
-)
+Escription.prototype.initialize = function(text, iconIndex, proximityTextRange, proximityIconRange)
 {
   this._text = text;
   this._iconIndex = iconIndex;

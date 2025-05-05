@@ -119,4 +119,5 @@ class JABS_ActionBuilder
     return this;
   }
 }
+
 //endregion JABS_ActionBuilder

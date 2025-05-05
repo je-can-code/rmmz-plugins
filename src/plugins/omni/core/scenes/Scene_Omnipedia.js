@@ -2,7 +2,8 @@
 /**
  * A scene containing access to all available and implemented pedia entries.
  */
-class Scene_Omnipedia extends Scene_MenuBase
+class Scene_Omnipedia
+  extends Scene_MenuBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -75,6 +76,7 @@ class Scene_Omnipedia extends Scene_MenuBase
      */
     this._j._omni._pediaListHeader = null;
   }
+
   //endregion init
 
   //region create
@@ -107,6 +109,7 @@ class Scene_Omnipedia extends Scene_MenuBase
     // create all root windows for the main listing.
     this.createOmnipediaRootWindows();
   }
+
   //endregion create
 
   //region windows
@@ -221,6 +224,7 @@ class Scene_Omnipedia extends Scene_MenuBase
     rootHeaderWindow.close();
     rootHeaderWindow.hide();
   }
+
   //endregion header window
 
   //region list window
@@ -335,8 +339,10 @@ class Scene_Omnipedia extends Scene_MenuBase
    */
   getRootOmnipediaKey()
   {
-    return this.getOmnipediaListWindow().currentSymbol();
+    return this.getOmnipediaListWindow()
+      .currentSymbol();
   }
+
   //endregion list window
 
   /**
@@ -362,6 +368,7 @@ class Scene_Omnipedia extends Scene_MenuBase
     // close the header window.
     this.closeRootHeaderWindow();
   }
+
   //endregion windows
 
   //region actions
@@ -374,7 +381,9 @@ class Scene_Omnipedia extends Scene_MenuBase
   {
     console.debug(`selected "${this.getRootOmnipediaKey()}" option.`);
   }
+
   //endregion root actions
   //endregion actions
 }
+
 //endregion Scene_Omnipedia

@@ -8,7 +8,8 @@ J.PASSIVE.Aliased.Game_Actor.set('onSetup', Game_Actor.prototype.onSetup);
 Game_Actor.prototype.onSetup = function(actorId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Actor.get('onSetup').call(this, actorId);
+  J.PASSIVE.Aliased.Game_Actor.get('onSetup')
+    .call(this, actorId);
 
   // refresh all passive states on this battler.
   this.refreshPassiveStates();
@@ -32,8 +33,7 @@ Game_Actor.prototype.getPassiveStateSources = function()
     ...this.equippedEquips(),
 
     // also add the class for this
-    this.currentClass(),
-  ];
+    this.currentClass(), ];
 
   // combine the sources.
   const combinedSources = originalSources.concat(actorPassiveSources);
@@ -50,7 +50,8 @@ J.PASSIVE.Aliased.Game_Actor.set('traitObjects', Game_Actor.prototype.traitObjec
 Game_Actor.prototype.traitObjects = function()
 {
   // perform original logic.
-  const originalObjects = J.PASSIVE.Aliased.Game_Actor.get('traitObjects').call(this);
+  const originalObjects = J.PASSIVE.Aliased.Game_Actor.get('traitObjects')
+    .call(this);
 
   // add our own passive states.
   originalObjects.push(...this.getPassiveStates());
@@ -70,7 +71,8 @@ J.PASSIVE.Aliased.Game_Actor.set('onLearnNewSkill', Game_Actor.prototype.onLearn
 Game_Actor.prototype.onLearnNewSkill = function(skillId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Actor.get('onLearnNewSkill').call(this, skillId);
+  J.PASSIVE.Aliased.Game_Actor.get('onLearnNewSkill')
+    .call(this, skillId);
 
   // refresh our passive state list.
   this.refreshPassiveStates();
@@ -84,7 +86,8 @@ J.PASSIVE.Aliased.Game_Actor.set('onForgetSkill', Game_Actor.prototype.onForgetS
 Game_Actor.prototype.onForgetSkill = function(skillId)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Actor.get('onForgetSkill').call(this, skillId);
+  J.PASSIVE.Aliased.Game_Actor.get('onForgetSkill')
+    .call(this, skillId);
 
   // refresh our passive state list.
   this.refreshPassiveStates();
@@ -98,7 +101,8 @@ J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', Game_Actor.prototype.onEquipCh
 Game_Actor.prototype.onEquipChange = function()
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Actor.get('onEquipChange').call(this);
+  J.PASSIVE.Aliased.Game_Actor.get('onEquipChange')
+    .call(this);
 
   // refresh our passive state list.
   this.refreshPassiveStates();
@@ -112,7 +116,8 @@ J.PASSIVE.Aliased.Game_Actor.set('onClassChange', Game_Actor.prototype.onClassCh
 Game_Actor.prototype.onClassChange = function(classId, keepExp)
 {
   // perform original logic.
-  J.PASSIVE.Aliased.Game_Actor.get('onClassChange').call(this, classId, keepExp);
+  J.PASSIVE.Aliased.Game_Actor.get('onClassChange')
+    .call(this, classId, keepExp);
 
   // refresh our passive state list.
   this.refreshPassiveStates();
@@ -127,7 +132,8 @@ J.PASSIVE.Aliased.Game_Actor.set('getNotesSources', Game_Actor.prototype.getNote
 Game_Actor.prototype.getNotesSources = function()
 {
   // perform original logic to get notes.
-  const originalSources = J.PASSIVE.Aliased.Game_Actor.get('getNotesSources').call(this);
+  const originalSources = J.PASSIVE.Aliased.Game_Actor.get('getNotesSources')
+    .call(this);
 
   // newly defined sources for passives.
   const passiveSources = [
@@ -135,8 +141,7 @@ Game_Actor.prototype.getNotesSources = function()
     ...this.getPassiveStates(),
 
     // also apply the party's effects.
-    ...$gameParty.passiveStates(),
-  ];
+    ...$gameParty.passiveStates(), ];
 
   // combine the sources.
   const combinedSources = originalSources.concat(passiveSources);

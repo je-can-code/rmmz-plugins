@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.4.0 JABS] Enables combat to be carried out on the map.
+ * [v3.4.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,11 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 3.4.1
+ *    Applied significant regeneration reduction for actors while in-combat.
+ *    Fixed facing-auto-parry not working as-intended.
+ *    Fixed strafe functionality forcing strafe on allies.
+ *    Fixed knockback on player affecting all allies of the party.
  * - 3.4.0
  *    Added functionality surrounding skill auto-assignment.
  *    Extracted "poses" functionality to an extension for future enhancements.

@@ -6,7 +6,8 @@ J.DIFFICULTY.Aliased.Game_System.set('initialize', Game_System.prototype.initial
 Game_System.prototype.initialize = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.Game_System.get('initialize').call(this);
+  J.DIFFICULTY.Aliased.Game_System.get('initialize')
+    .call(this);
 
   // initializes members for this plugin.
   this.initDifficultyMembers();
@@ -54,7 +55,8 @@ J.DIFFICULTY.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfte
 Game_System.prototype.onAfterLoad = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.Game_System.get('onAfterLoad').call(this);
+  J.DIFFICULTY.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
 
   // setup the difficulty layers in the temp data.
   $gameTemp.setupDifficultySystem();
@@ -89,7 +91,8 @@ Game_System.prototype.addDifficultyConfig = function(config)
  */
 Game_System.prototype.getDifficultyConfigByKey = function(key)
 {
-  return this.getAllDifficultyConfigs().find(config => config.key === key);
+  return this.getAllDifficultyConfigs()
+    .find(config => config.key === key);
 };
 
 /**

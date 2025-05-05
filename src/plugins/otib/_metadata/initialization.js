@@ -39,8 +39,7 @@ J.OTIB.Helpers.translateOTIBs = rawJson =>
       const boostParam = new OneTimeItemBoostParam(
         parseInt(parsedBoostBlob.parameterId),
         parseFloat(parsedBoostBlob.boost),
-        parsedBoostBlob.isPercent === "true"
-      );
+        parsedBoostBlob.isPercent === "true");
       parsedBoosts.push(boostParam);
     });
 

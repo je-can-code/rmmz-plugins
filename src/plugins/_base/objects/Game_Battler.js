@@ -82,8 +82,7 @@ Game_Battler.prototype.getNotesSources = function()
     ...this.skills(),
 
     // add all currently applied states to the source list.
-    ...this.allStates(),
-  ];
+    ...this.allStates(), ];
 };
 
 /**
@@ -129,7 +128,8 @@ Game_Battler.prototype.eraseState = function(stateId)
   const oldStates = Array.from(this._states);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Battler.get('eraseState').call(this, stateId);
+  J.BASE.Aliased.Game_Battler.get('eraseState')
+    .call(this, stateId);
 
   // determine if the states array changed from what it was before original logic.
   const isChanged = !oldStates.equals(this._states);
@@ -163,7 +163,8 @@ Game_Battler.prototype.addNewState = function(stateId)
   const oldStates = Array.from(this._states);
 
   // perform original logic.
-  J.BASE.Aliased.Game_Battler.get('addNewState').call(this, stateId);
+  J.BASE.Aliased.Game_Battler.get('addNewState')
+    .call(this, stateId);
 
   // determine if the states array changed from what it was before original logic.
   const isChanged = !oldStates.equals(this._states);

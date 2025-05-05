@@ -22,6 +22,7 @@ class RPG_ClassLearning
    * @type {string}
    */
   note = String.empty;
+
   //endregion properties
 
   /**
@@ -36,4 +37,5 @@ class RPG_ClassLearning
     this.note = learning.note;
   }
 }
+
 //endregion RPG_ClassLearning

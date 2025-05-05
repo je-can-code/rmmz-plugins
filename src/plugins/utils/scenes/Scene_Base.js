@@ -7,7 +7,8 @@ J.UTILS.Aliased.Scene_Base.set('update', Scene_Base.prototype.update);
 Scene_Base.prototype.update = function()
 {
   // perform original logic.
-  J.UTILS.Aliased.Scene_Base.get('update').call(this);
+  J.UTILS.Aliased.Scene_Base.get('update')
+    .call(this);
 
   // check if the volume toggling is happening.
   if (this.isVolumeToggling())
@@ -33,7 +34,12 @@ Scene_Base.prototype.isVolumeToggling = function()
  */
 Scene_Base.prototype.toggleVolume = function()
 {
-  const { bgmVolume, bgsVolume, meVolume, seVolume } = ConfigManager;
+  const {
+    bgmVolume,
+    bgsVolume,
+    meVolume,
+    seVolume
+  } = ConfigManager;
   const isMuted = !bgmVolume || !bgsVolume || !meVolume || !seVolume;
   if (isMuted)
   {

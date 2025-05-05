@@ -22,7 +22,8 @@ TextManager.longParam = function(paramId)
       return this.sdpMultiplier(); // sdp multiplier
     default:
       // perform original logic.
-      return J.SDP.Aliased.TextManager.get('longParam').call(this, paramId);
+      return J.SDP.Aliased.TextManager.get('longParam')
+        .call(this, paramId);
   }
 };
 
@@ -49,7 +50,8 @@ TextManager.longParamDescription = function(paramId)
       return this.sdpMultiplierDescription(); // sdp multiplier
     default:
       // perform original logic.
-      return J.SDP.Aliased.TextManager.get('longParamDescription').call(this, paramId);
+      return J.SDP.Aliased.TextManager.get('longParamDescription')
+        .call(this, paramId);
   }
 };
 
@@ -61,7 +63,6 @@ TextManager.sdpMultiplierDescription = function()
 {
   return [
     "The percentage bonuses being applied against SDP point gain.",
-    "Higher amounts of this yields greater SDP point generation."
-  ];
+    "Higher amounts of this yields greater SDP point generation." ];
 };
 //endregion TextManager

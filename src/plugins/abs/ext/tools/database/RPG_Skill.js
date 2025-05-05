@@ -4,13 +4,12 @@
  * Gap-closing will pull the player to wherever the skill connected.
  * @type {boolean}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGapClose",
+Object.defineProperty(RPG_Skill.prototype, "jabsGapClose", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsGapClose();
-    },
-  });
+    return this.getJabsGapClose();
+  },
+});
 
 /**
  * Gets whether or not this skill is a gap close skill.
@@ -37,13 +36,12 @@ RPG_Skill.prototype.extractJabsGapClose = function()
  * If there is no gap close mode available, then it'll be null instead.
  * @type {J.ABS.EXT.TOOLS.GapCloseModes|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGapCloseMode",
+Object.defineProperty(RPG_Skill.prototype, "jabsGapCloseMode", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsGapCloseMode();
-    },
-  });
+    return this.getJabsGapCloseMode();
+  },
+});
 
 /**
  * Gets the gap close mode of this skill.
@@ -70,13 +68,12 @@ RPG_Skill.prototype.extractJabsGapCloseMode = function()
  * If there is no gap close position available, then it'll be null instead.
  * @type {J.ABS.EXT.TOOLS.GapClosePositions|null}
  */
-Object.defineProperty(RPG_Skill.prototype, "jabsGapClosePosition",
+Object.defineProperty(RPG_Skill.prototype, "jabsGapClosePosition", {
+  get: function()
   {
-    get: function()
-    {
-      return this.getJabsGapCloseMode();
-    },
-  });
+    return this.getJabsGapCloseMode();
+  },
+});
 
 /**
  * Gets the gap close position of this skill.

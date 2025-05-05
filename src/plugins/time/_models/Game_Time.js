@@ -4,8 +4,13 @@
  */
 function Game_Time()
 {
-  this.initialize(...arguments)
-};
+  // initialize all the properties of TIME.
+  this.initMembers();
+
+  // update the tone for the first time.
+  this.updateCurrentTone();
+}
+
 Game_Time.prototype = {};
 Game_Time.prototype.constructor = Game_Time;
 
@@ -14,109 +19,97 @@ Game_Time.prototype.constructor = Game_Time;
  * A static representation of the tones for each time of day.
  */
 Game_Time.toneOfDay = {
-  Night: [-100, -100, -30, 100],
-  Dawn: [-30, -15, 15, 64],
-  Morning: [0, 0, 0, 0],
-  Afternoon: [10, 10, 10, 10],
-  Evening: [0, -30, -30, -30],
-  Twilight: [-68, -68, 0, 68],
+  Night: [ -100, -100, -30, 100 ],
+  Dawn: [ -30, -15, 15, 64 ],
+  Morning: [ 0, 0, 0, 0 ],
+  Afternoon: [ 10, 10, 10, 10 ],
+  Evening: [ 0, -30, -30, -30 ],
+  Twilight: [ -68, -68, 0, 68 ],
 };
 //endregion statics
 
 /**
  * Initializes the members of this class.
  */
-Game_Time.prototype.initialize = function()
+Game_Time.prototype.initMembers = function()
 {
   /**
    * The number of frames that must pass before we execute a tick.
    * @type {number}
    */
-  this._tickFrames = this._tickFrames ?? J.TIME.Metadata.FramesPerTick;
+  this._tickFrames ??= J.TIME.Metadata.FramesPerTick;
 
   /**
    * The number of seconds per tick.
    * @type {number}
    */
-  this._secondsPerTick = this._secondsPerTick ?? J.TIME.Metadata.SecondsPerIncrement;
+  this._secondsPerTick ??= J.TIME.Metadata.SecondsPerIncrement;
 
   /**
    * The number of minutes per tick.
    * @type {number}
    */
-  this._minutesPerTick = this._minutesPerTick ?? J.TIME.Metadata.MinutesPerIncrement;
+  this._minutesPerTick ??= J.TIME.Metadata.MinutesPerIncrement;
 
   /**
    * The number of hours per tick.
    * @type {number}
    */
-  this._hoursPerTick = this._hoursPerTick ?? J.TIME.Metadata.HoursPerIncrement;
+  this._hoursPerTick ??= J.TIME.Metadata.HoursPerIncrement;
 
   /**
    * The number of days per tick.
    * @type {number}
    */
-  this._daysPerTick = this._daysPerTick ?? J.TIME.Metadata.DaysPerIncrement;
+  this._daysPerTick ??= J.TIME.Metadata.DaysPerIncrement;
 
   /**
    * The number of months per tick.
    * @type {number}
    */
-  this._monthsPerTick = this._monthsPerTick ?? J.TIME.Metadata.MonthsPerIncrement;
+  this._monthsPerTick ??= J.TIME.Metadata.MonthsPerIncrement;
 
   /**
    * The number of years per tick.
    * @type {number}
    */
-  this._yearsPerTick = this._yearsPerTick ?? J.TIME.Metadata.YearsPerIncrement;
+  this._yearsPerTick ??= J.TIME.Metadata.YearsPerIncrement;
 
   /**
    * The current second.
    * @type {number}
    */
-  this._seconds = this._seconds ?? J.TIME.Metadata.StartingSecond;
+  this._seconds ??= J.TIME.Metadata.StartingSecond;
 
   /**
    * The current minute.
    * @type {number}
    */
-  this._minutes = this._minutes ?? J.TIME.Metadata.StartingMinute;
+  this._minutes ??= J.TIME.Metadata.StartingMinute;
 
   /**
    * The current hour.
    * @type {number}
    */
-  this._hours = this._hours ?? J.TIME.Metadata.StartingHour;
+  this._hours ??= J.TIME.Metadata.StartingHour;
 
   /**
    * The current day (number).
    * @type {number}
    */
-  this._days = this._days ?? J.TIME.Metadata.StartingDay;
+  this._days ??= J.TIME.Metadata.StartingDay;
 
   /**
    * The current month (number).
    * @type {number}
    */
-  this._months = this._months ?? J.TIME.Metadata.StartingMonth;
+  this._months ??= J.TIME.Metadata.StartingMonth;
 
   /**
    * The current year.
    * @type {number}
    */
-  this._years = this._years ?? J.TIME.Metadata.StartingYear;
-
-  /**
-   * The general time of day, such as "twilight" or "afternoon"- numerically mapped.
-   * @type {number}
-   */
-  this._timeOfDay = 0;
-
-  /**
-   * The general season of the year, such as "spring" or "winter"- numerically mapped.
-   * @type {number}
-   */
-  this._seasonOfYear = 0;
+  this._years ??= J.TIME.Metadata.StartingYear;
 
   /**
    * Whether or not the screen's tone needs to be changed based on the time.
@@ -134,19 +127,19 @@ Game_Time.prototype.initialize = function()
    * Whether or not the tone is able to be changed.
    * @type {boolean}
    */
-  this._toneLocked = this._toneLocked ?? !J.TIME.Metadata.ChangeToneByTime;
+  this._toneLocked ??= !J.TIME.Metadata.ChangeToneByTime;
 
   /**
    * Whether or not the time window is visible on the map.
    * @type {boolean}
    */
-  this._visible = this._visible ?? J.TIME.Metadata.StartVisible;
+  this._visible ??= J.TIME.Metadata.StartVisible;
 
   /**
    * Whether or not time is currently flowing.
    * @type {boolean}
    */
-  this._active = this._active ?? J.TIME.Metadata.StartActivated;
+  this._active ??= J.TIME.Metadata.StartActivated;
 
   /**
    * Whether or not time is blocked from flowing for some predetermined reason.
@@ -154,10 +147,16 @@ Game_Time.prototype.initialize = function()
    * plugin commands.
    * @type {boolean}
    */
-  this._blocked = this._blocked ?? false;
-  this.updateCurrentTone();
+  this._blocked ??= false;
+
+  /**
+   * Whether or not this has been updated. This is primarily for HUD elements keeping in-sync with TIME.
+   * @type {boolean}
+   */
+  this._hasBeenUpdated ??= false;
 };
 
+//region properties
 /**
  * Gets the current tick speed.
  * @returns {number}
@@ -165,6 +164,32 @@ Game_Time.prototype.initialize = function()
 Game_Time.prototype.getTickSpeed = function()
 {
   return this._tickFrames;
+};
+
+/**
+ * Sets the new tick speed to (60 / multiplier) frames per second.
+ *
+ * The threshold for this multiplier is `0.1` to `10.0`.
+ * @param {number} flowSpeedMultiplier The new multiplier for how fast a single tick is.
+ */
+Game_Time.prototype.setTickSpeed = function(flowSpeedMultiplier)
+{
+  // localize the variable.
+  let flow = flowSpeedMultiplier;
+
+  // if the user is trying to speed it up to more than 10x, then lock it at 10x.
+  if (flow > 10)
+  {
+    flow = 10;
+  }
+  // if the user is trying to reduce the speed to less than 0.1x, then lock it at 0.1x.
+  else if (flow < 0.1)
+  {
+    flow = 0.1;
+  }
+
+  const newTickSpeed = Math.ceil(60 / flow);
+  this._tickFrames = newTickSpeed;
 };
 
 /**
@@ -268,45 +293,125 @@ Game_Time.prototype.showMapWindow = function()
 };
 
 /**
- * Sets the new tick speed to (60 / multiplier) frames per second.
- *
- * The threshold for this multiplier is `0.1` to `10.0`.
- * @param {number} flowSpeedMultiplier The new multiplier for how fast a single tick is.
+ * Toggles the map window visibility.
  */
-Game_Time.prototype.setTickSpeed = function(flowSpeedMultiplier)
+Game_Time.prototype.toggleMapWindow = function()
 {
-  // if the user is trying to speed it up to more than 10x, then lock it at 10x.
-  if (flowSpeedMultiplier > 10)
+  if (this._visible === true)
   {
-    flowSpeedMultiplier = 10;
+    this._visible = false;
   }
-  // if the user is trying to reduce the speed to less than 0.1x, then lock it at 0.1x.
-  else if (flowSpeedMultiplier < 0.1)
+  else if (this._visible === false)
   {
-    flowSpeedMultiplier = 0.1;
+    this._visible = true;
+  }
+};
+
+/**
+ * Flags oneself for having been updated so HUD elements can update accordingly.
+ */
+Game_Time.prototype.flagForHudUpdate = function()
+{
+  if (this._hasBeenUpdated === undefined)
+  {
+    this._hasBeenUpdated = true;
+    console.log('hasBeenUpdated property added.');
   }
 
-  const newTickSpeed = Math.ceil(60 / flowSpeedMultiplier);
-  this._tickFrames = newTickSpeed;
+  this._hasBeenUpdated = true;
 };
+
+/**
+ * Acknowledges a HUD update.
+ */
+Game_Time.prototype.acknowledgeHudUpdate = function()
+{
+  if (this._hasBeenUpdated === undefined)
+  {
+    this._hasBeenUpdated = false;
+    console.log('hasBeenUpdated property added.');
+  }
+
+  this._hasBeenUpdated = false;
+};
+
+/**
+ * Gets whether or not TIME has been updated and thus the HUD should be updated.
+ * @returns {boolean}
+ */
+Game_Time.prototype.needsHudUpdate = function()
+{
+  if (this._hasBeenUpdated === undefined)
+  {
+    this._hasBeenUpdated = false;
+    console.log('hasBeenUpdated property added.');
+  }
+
+  return this._hasBeenUpdated;
+};
+//endregion properties
 
 /**
  * Updates the time when the framecount aligns with the designated tick frame count.
  */
 Game_Time.prototype.update = function()
 {
-  if (Graphics.frameCount % this._tickFrames === 0)
+  // check if we can update TIME.
+  if (this.canUpdateTime())
   {
-    this.tickTime();
+    // process the TIME update.
+    this.handleUpdateTime();
   }
 
+  // check if we need to process a tone change.
   if (this.getNeedsToneChange())
   {
-    this.setNeedsToneChange(false);
-    this.processToneChange();
+    // process the tone update.
+    this.handleUpdateTone();
   }
 };
 
+/**
+ * Determine if TIME can be updated.
+ * @returns {boolean}
+ */
+Game_Time.prototype.canUpdateTime = function()
+{
+  // if the frame count is divisible cleanly by the flow of TIME, then its time to tick TIME.
+  if (Graphics.frameCount % this.getTickSpeed() === 0) return true;
+
+  // it is not time to update TIME.
+  return false;
+};
+
+/**
+ * Processes TIME updating.
+ */
+Game_Time.prototype.handleUpdateTime = function()
+{
+  // process time advancement.
+  this.tickTime();
+
+  // update the relevant variables- if applicable.
+  this.updateVariables();
+
+  // flag for HUD updates.
+  this.flagForHudUpdate();
+};
+
+/**
+ * Processes screen tone updating.
+ */
+Game_Time.prototype.handleUpdateTone = function()
+{
+  // disable the flag for tone change processing.
+  this.setNeedsToneChange(false);
+
+  // execute the tone change.
+  this.processToneChange();
+};
+
+//region tone management
 /**
  * Gets whether or not the screen's tone change is needed.
  * @returns {boolean}
@@ -410,7 +515,7 @@ Game_Time.prototype.translateHourToTone = function()
   const hours = J.TIME.Metadata.UseRealTime
     ? new Date().getHours()
     : this._hours;
-  let tone = [0, 0, 0, 0];
+  let tone = [ 0, 0, 0, 0 ];
   switch (hours)
   {
     case  0: // night
@@ -502,14 +607,18 @@ Game_Time.prototype.translateHourToTone = function()
  */
 Game_Time.prototype.toneBetweenTones = function(tone1, tone2, rate)
 {
-  const diff = (a, b) => a > b ? a - b : b - a;
+  const diff = (a, b) => a > b
+    ? a - b
+    : b - a;
   const newTone = [];
   tone1.forEach((color1, index) =>
   {
     const color2 = tone2[index];
     const diffToNext = diff(color1, color2);
     const partial = Math.round(diffToNext * rate);
-    const newRgbValue = color2 > color1 ? color1 + partial : color1 - partial;
+    const newRgbValue = color2 > color1
+      ? color1 + partial
+      : color1 - partial;
     newTone.push(newRgbValue);
   });
 
@@ -549,39 +658,83 @@ Game_Time.prototype.processToneChange = function(skip = false)
     $gameScreen.startTint(this._currentTone, 300);
   }
 };
+//endregion tone management
 
+//region time management
 /**
  * Gets a snapshot of the current time.
  * @returns {Time_Snapshot}
  */
 Game_Time.prototype.currentTime = function()
 {
-  let timeSnapshot;
+  // return the snapshot.
+  return this.getTimeSnapshot();
+};
+
+/**
+ * Gets the {@link Time_Snapshot} based on mode of time configured.
+ * @returns {Time_Snapshot}
+ */
+Game_Time.prototype.getTimeSnapshot = function()
+{
+  // check if we're using real or artificial time.
   if (J.TIME.Metadata.UseRealTime)
   {
-    timeSnapshot = this.determineRealTime();
+    // render a realtime snapshot.
+    return this.determineRealTime();
   }
+  // we're using artificial time.
   else
   {
-    timeSnapshot = this.determineArtificialTime();
+    // render the artificial snapshot.
+    return this.determineArtificialTime();
   }
+};
 
-  // also update the variables with the current time snapshot.
-  this.updateVariables(timeSnapshot);
-  return timeSnapshot;
+/**
+ * Builds a snapshot of the time designated by the array of numbers.
+ * @param {[number, number, number, number, number, number]} fromArray The six-length array of numbers
+ * @returns {Time_Snapshot}
+ */
+Game_Time.prototype.toTimeSnapshot = function(fromArray)
+{
+  const [ seconds, minutes, hours, days, months, years ] = fromArray;
+  const timeOfDayId = this.timeOfDay(hours);
+  const seasonOfYearId = this.seasonOfYear(months);
+  return new Time_Snapshot(
+    seconds,
+    minutes,
+    hours,
+    days,
+    months,
+    years,
+    timeOfDayId,
+    seasonOfYearId);
 };
 
 /**
  * Assigns the current time to the designated variables.
- * @param {Time_Snapshot} timeSnapshot The current time to update.
  */
-Game_Time.prototype.updateVariables = function(timeSnapshot)
+Game_Time.prototype.updateVariables = function()
 {
   // if they haven't chosen to use variable assignment, then don't do that.
-  if (!J.TIME.Metadata.UseVariableAssignment)
-  {
-    return;
-  }
+  if (!J.TIME.Metadata.UseVariableAssignment) return;
+
+  // grab the current time's snapshot.
+  const timeSnapshot = this.getTimeSnapshot();
+
+  // also update the variables with the current time snapshot.
+  this.updateVariablesBySnapshot(timeSnapshot);
+};
+
+/**
+ * Update the variables for TIME based on a {@link Time_Snapshot}.
+ * @param {Time_Snapshot} timeSnapshot The snapshot of TIME to update variables with.
+ */
+Game_Time.prototype.updateVariablesBySnapshot = function(timeSnapshot)
+{
+  // if they haven't chosen to use variable assignment, then don't do that.
+  if (!J.TIME.Metadata.UseVariableAssignment) return;
 
   // assign all them values to their variables.
   $gameVariables.setValue(J.TIME.Metadata.SecondsVariable, timeSnapshot.seconds);
@@ -630,15 +783,7 @@ Game_Time.prototype.determineRealTime = function()
   const years = date.getFullYear();
   const timeOfDayId = this.timeOfDay(hours);
   const seasonOfYearId = this.seasonOfYear(months);
-  return new Time_Snapshot(
-    seconds,
-    minutes,
-    hours,
-    days,
-    months,
-    years,
-    timeOfDayId,
-    seasonOfYearId);
+  return new Time_Snapshot(seconds, minutes, hours, days, months, years, timeOfDayId, seasonOfYearId);
 };
 
 /**
@@ -682,10 +827,10 @@ Game_Time.prototype.startOfTimeOfDay = function(timeOfDayId)
  */
 Game_Time.prototype.seasonOfYear = function(months)
 {
-  const springMonths = [3, 4, 5];
-  const summerMonths = [6, 7, 8];
-  const autumnMonths = [9, 10, 11];
-  const winterMonths = [1, 2, 12];
+  const springMonths = [ 3, 4, 5 ];
+  const summerMonths = [ 6, 7, 8 ];
+  const autumnMonths = [ 9, 10, 11 ];
+  const winterMonths = [ 1, 2, 12 ];
   switch (true)
   {
     case (springMonths.includes(months)):
@@ -762,6 +907,7 @@ Game_Time.prototype.tickTime = function()
 {
   this.addSeconds();
 };
+//endregion time management
 
 //region add time
 /**

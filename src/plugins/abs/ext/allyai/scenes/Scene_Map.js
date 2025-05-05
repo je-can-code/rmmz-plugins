@@ -139,7 +139,8 @@ Scene_Map.prototype.commandEquipMemberAi = function()
   const newMode = this._j._absMenu._allyAiEquipWindow.currentExt();
 
   // grab the current ally AI.
-  const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
+  const allyAi = $gameActors.actor(this.getAllyAiActorId())
+    .getAllyAI();
 
   // change the mode of the AI to the new one by its key.
   allyAi.changeMode(newMode.key);

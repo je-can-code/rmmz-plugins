@@ -10,9 +10,10 @@ JABS_Engine.prototype.addLootDropToMap = function(targetX, targetY, item)
 {
   // move the Y up by one because CA is weird?
   const modifiedTargetY = targetY + 1;
-  
+
   // perform original logic.
-  return J.CAMods.Aliased.JABS_Engine.get('addLootDropToMap').call(this, targetX, modifiedTargetY, item);
+  return J.CAMods.Aliased.JABS_Engine.get('addLootDropToMap')
+    .call(this, targetX, modifiedTargetY, item);
 };
 
 /**
@@ -24,7 +25,8 @@ J.CAMods.Aliased.JABS_Engine.set('handleDefeatedEnemy', JABS_Engine.prototype.ha
 JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 {
   // perform original logic.
-  J.CAMods.Aliased.JABS_Engine.get('handleDefeatedEnemy').call(this, defeatedTarget, caster);
+  J.CAMods.Aliased.JABS_Engine.get('handleDefeatedEnemy')
+    .call(this, defeatedTarget, caster);
 
   // determine whether to add to the destructibles count or regular count.
   if (defeatedTarget.isInanimate())
@@ -50,7 +52,8 @@ JABS_Engine.prototype.handleDefeatedPlayer = function()
   J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfDeaths, 1);
 
   // perform original logic.
-  J.CAMods.Aliased.JABS_Engine.get('handleDefeatedPlayer').call(this);
+  J.CAMods.Aliased.JABS_Engine.get('handleDefeatedPlayer')
+    .call(this);
 };
 
 /**
@@ -63,7 +66,8 @@ J.CAMods.Aliased.JABS_Engine.set('postExecuteSkillEffects', JABS_Engine.prototyp
 JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 {
   // execute the original method so the result is on the target.
-  J.CAMods.Aliased.JABS_Engine.get('postExecuteSkillEffects').call(this, action, target);
+  J.CAMods.Aliased.JABS_Engine.get('postExecuteSkillEffects')
+    .call(this, action, target);
 
   // don't track these data points if its a tool.
   if (action.getCooldownType() !== JABS_Button.Tool)
@@ -88,7 +92,11 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 JABS_Engine.prototype.trackAttackData = function(target)
 {
   // extract the data points from the battler's action result.
-  const {hpDamage, critical} = target.getBattler().result();
+  const {
+    hpDamage,
+    critical
+  } = target.getBattler()
+    .result();
 
   // check if it was hp-related.
   if (hpDamage > 0)
@@ -125,7 +133,13 @@ JABS_Engine.prototype.trackAttackData = function(target)
  */
 JABS_Engine.prototype.trackDefensiveData = function(target)
 {
-  const {hpDamage, critical, parried, preciseParried} = target.getBattler().result();
+  const {
+    hpDamage,
+    critical,
+    parried,
+    preciseParried
+  } = target.getBattler()
+    .result();
   if (hpDamage)
   {
     // count all damage received.
@@ -177,7 +191,8 @@ J.CAMods.Aliased.JABS_Engine.set('executeMapAction', JABS_Engine.prototype.execu
 JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targetY)
 {
   // perform original logic.
-  J.CAMods.Aliased.JABS_Engine.get('executeMapAction').call(this, caster, action, targetX, targetY);
+  J.CAMods.Aliased.JABS_Engine.get('executeMapAction')
+    .call(this, caster, action, targetX, targetY);
 
   // validate the caster is a player before tracking.
   if (caster.isPlayer())
@@ -210,5 +225,30 @@ JABS_Engine.prototype.trackActionData = function(action)
       // any skills
       break;
   }
+};
+
+J.CAMods.Aliased.JABS_Engine.set('handlePartyCycleMemberChanges', JABS_Engine.prototype.handlePartyCycleMemberChanges);
+JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
+{
+  // identify the previous leader's actorId.
+  const originalLeaderActorId = $gameParty._actors.at(0);
+
+  // perform original logic.
+  J.CAMods.Aliased.JABS_Engine.get('handlePartyCycleMemberChanges')
+    .call(this);
+
+  // identify the location of the previous leader.
+  const newIndexOfPreviousLeader = $gameParty._actors.findIndex(actorId => actorId === originalLeaderActorId);
+
+  // remove leader from previous location.
+  $gameParty._actors.splice(newIndexOfPreviousLeader, 1);
+
+  // insert them at the secondary index.
+  $gameParty._actors.splice(1, 0, originalLeaderActorId);
+
+  $gamePlayer.refresh();
+
+  // recreate the JABS player battler and set it to the player character.
+  this.refreshPlayer1Data();
 };
 //endregion JABS_Engine

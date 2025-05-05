@@ -2,7 +2,8 @@
 /**
  * A window containing the list of all crafting categories.
  */
-class Window_CategoryList extends Window_Command
+class Window_CategoryList
+  extends Window_Command
 {
   /**
    * Constructor.
@@ -73,4 +74,5 @@ class Window_CategoryList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_CategoryList

@@ -2,7 +2,8 @@
 /**
  * A window designed to display "more" data associated with the equipment.
  */
-class Window_MoreEquipData extends Window_MoreData
+class Window_MoreEquipData
+  extends Window_MoreData
 {
   constructor(rect)
   {
@@ -194,7 +195,10 @@ class Window_MoreEquipData extends Window_MoreData
     }
 
     // determine the actual skill.
-    const { name, iconIndex } = skill;
+    const {
+      name,
+      iconIndex
+    } = skill;
 
     // define the command name.
     const attackSkillCommand = `${baseAttackSkillCommand}: \\C[2]${name}\\C[0]`;
@@ -331,8 +335,8 @@ class Window_MoreEquipData extends Window_MoreData
     const allTraits = this.item.traits;
     if (!allTraits.length) return;
 
-    const xparamNoPercents = [0, 2, 7, 8, 9]; // code 22
-    const sparamNoPercents = [1]; // code 23
+    const xparamNoPercents = [ 0, 2, 7, 8, 9 ]; // code 22
+    const sparamNoPercents = [ 1 ]; // code 23
     const dividerIndex = allTraits.findIndex(trait => trait.code === J.BASE.Traits.NO_DISAPPEAR);
     const hasDivider = dividerIndex !== -1;
     if (hasDivider)
@@ -351,7 +355,9 @@ class Window_MoreEquipData extends Window_MoreData
           const paramId = convertedTrait._dataId;
           const paramBase = this.actor.paramBase(paramId);
           const bonus = paramBase * (convertedTrait._value - 1);
-          const sign = bonus >= 0 ? '+' : '-';
+          const sign = bonus >= 0
+            ? '+'
+            : '-';
           commandName += ` \\C[6](${sign}${bonus.toFixed(2)})\\C[0]`;
           break;
         case 22:
@@ -381,4 +387,5 @@ class Window_MoreEquipData extends Window_MoreData
     });
   }
 }
+
 //endregion Window_MoreEquipData

@@ -2,7 +2,8 @@
 /**
  * A window displaying the list of pedias available.
  */
-class Window_OmnipediaList extends Window_Command
+class Window_OmnipediaList
+  extends Window_Command
 {
   /**
    * Constructor.
@@ -69,4 +70,5 @@ class Window_OmnipediaList extends Window_Command
     return this.lineHeight() * 2;
   }
 }
+
 //endregion Window_OmnipediaList

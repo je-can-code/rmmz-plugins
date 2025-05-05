@@ -4,7 +4,8 @@
  * Because this plugin offers little actual functionality, there is little that
  * can be configured.
  */
-class J_CraftingPluginMetadata extends PluginMetadata
+class J_CraftingPluginMetadata
+  extends PluginMetadata
 {
   /**
    * Constructor.
@@ -14,4 +15,5 @@ class J_CraftingPluginMetadata extends PluginMetadata
     super(name, version);
   }
 }
+
 //endregion plugin metadata

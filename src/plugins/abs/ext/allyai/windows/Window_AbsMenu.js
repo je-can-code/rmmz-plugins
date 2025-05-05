@@ -8,13 +8,15 @@ J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenu.set('buildCommands', Window_AbsMenu.prot
 Window_AbsMenu.prototype.buildCommands = function()
 {
   // perform original logic to get base commands.
-  const originalCommands = J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenu.get('buildCommands').call(this);
+  const originalCommands = J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenu.get('buildCommands')
+    .call(this);
 
   // if the switch is disabled, then the command won't even appear in the menu.
   if (!this.canAddAllyAiCommand()) return originalCommands;
 
   // if followers aren't being used, then this command will be disabled.
-  const enabled = $gamePlayer.followers().isVisible();
+  const enabled = $gamePlayer.followers()
+    .isVisible();
 
   // build the command.
   const command = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
@@ -53,8 +55,7 @@ Window_AbsMenu.prototype.allyAiHelpText = function()
 {
   const description = [
     "Your AI mode selection menu.",
-    "A general direction or theme of guidance can be assigned to your allies from here."
-  ];
+    "A general direction or theme of guidance can be assigned to your allies from here." ];
 
   return description.join("\n");
 };

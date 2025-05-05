@@ -31,6 +31,29 @@
  * A skill can have multiple tiers of charging to represent the ability to
  * have different releasable abilities depending on how long you charge.
  * ----------------------------------------------------------------------------
+ * PLUGIN PARAMETERS:
+ * The plugin parameters provide some convenient defaults for the charging
+ * functionality.
+ * 
+ * DefaultChargingAnimationId:
+ * The animation that will play if none is specified while the player is
+ * charging up a skill.
+ * 
+ * DefaultTierCompleteAnimationId:
+ * The animation that will play upon completing a any non-final tier of
+ * charging.
+ * 
+ * DefaultFullyChargedAnimationId:
+ * The animation that will play upon completing the final tier of charging.
+ * 
+ * UseTierCompleteSE:
+ * If you'd prefer to go purely by sound, there are sounds configured to play
+ * instead of an animation.
+ * 
+ * AllowTierCompleteSEandAnimation:
+ * Whether or not to allow both the animation and the sounds to play. This is
+ * not recommended.
+ * ----------------------------------------------------------------------------
  * LIMITATIONS:
  * While the reference above makes it sound like ANY skill can be charged, that
  * is only partially true. ANY skill can be charged, as long as it meets a few
@@ -161,13 +184,37 @@
  * @desc This will be the default animation to play when a
  * charging tier is charged. 0 means no animation.
  * @default 0
+ * 
+ * @param defaultFullyChargedAnimId
+ * @parent defaults
+ * @type animation
+ * @text Fully Charged Animation
+ * @desc This will be the default animation to play when the
+ * player can charge no further- aka the final tier completed.
+ * @default 0
+ * 
+ * @param tierCompleteSE
+ * @parent defaults
+ * @type struct<soundEffect>
+ * @text Charge Tier Complete SE
+ * @desc This will be the default sound effect to play when a
+ * charging tier is charged. Empty means no sound effect.
+ * @default
+ * 
+ * @param chargeReadySE
+ * @parent defaults
+ * @type struct<soundEffect>
+ * @text Max Charge Ready SE
+ * @desc This will be the default sound effect to play when a
+ * all tiers are charged and ready. Empty means no sound effect.
+ * @default
  *
- * @param useTierCompleteSE
+ * @param useDefaultChargingSE
  * @parent defaults
  * @type boolean
  * @text Use Tier Complete SE
- * @desc Whether or not to use the charging tier complete sound
- * effects.
+ * @desc Whether or not to use the tierComplete and chargeReady
+ * sound effects.
  * @default false
  *
  * @param allowTierCompleteSEandAnim
@@ -177,4 +224,39 @@
  * @desc Whether or not to use both sound effects and the defined
  * animations when a charging tier completes.
  * @default false
+ */
+/*~struct~soundEffect
+ *
+ * @param name
+ * @type file
+ * @text Sound Effect Name
+ * @desc The name of the sound effect file to play.
+ * @default ""
+ * 
+ * @param volume
+ * @type number
+ * @min 0
+ * @max 100
+ * @text Volume
+ * @desc The volume at which to play the sound effect.
+ * @default 90
+ * 
+ * @param pitch
+ * @type number
+ * @min 50
+ * @max 150
+ * @text Pitch
+ * @desc The pitch of the sound effect- aka the speed of how the
+ * sound effect is played. Higher is faster.
+ * @default 100
+ * 
+ * @param pan
+ * @type number
+ * @min -100
+ * @max 100
+ * @text Volume
+ * @desc The directional pan of the sound effect.
+ * Negative is played to the left, positive to the right.
+ * @default 0
+ * 
  */
