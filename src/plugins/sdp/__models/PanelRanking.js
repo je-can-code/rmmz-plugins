@@ -73,6 +73,14 @@ PanelRanking.prototype.unlock = function()
 };
 
 /**
+ * Flags the associated panel as "locked".
+ */
+PanelRanking.prototype.lock = function()
+{
+  this._isUnlocked = false;
+};
+
+/**
  * Ranks up this panel.
  * If it is at max rank, then perform the max effect exactly once
  * and then max the panel out.

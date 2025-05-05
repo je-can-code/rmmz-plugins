@@ -28,4 +28,14 @@ Game_Actors.prototype.actorIds = function()
   return actorIds;
 };
 
+/**
+ * Gets all proper actors available in the database.
+ * @returns {Game_Actor[]}
+ */
+Game_Actors.prototype.actors = function()
+{
+  return this.actorIds()
+    .map(id => this.actor(id), this);
+};
+
 //endregion Game_Actors

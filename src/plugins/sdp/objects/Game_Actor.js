@@ -118,6 +118,39 @@ Game_Actor.prototype.unlockSdpByKey = function(key)
 };
 
 /**
+ * Checks if a particular panel is unlocked.
+ * @param {string} key The key of the panel to check.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isSdpUnlocked = function(key)
+{
+  return this.getSdpByKey(key)
+    .isUnlocked();
+};
+
+/**
+ * Check if this actor has any unlocked panels.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasAnyUnlockedSdps = function()
+{
+  return this.getAllUnlockedSdps().length > 0;
+};
+
+/**
+ * Locks a panel by its key.
+ * @param {string} key The key of the panel to lock.
+ */
+Game_Actor.prototype.lockSdpByKey = function(key)
+{
+  // grab the panel ranking by its key.
+  const panelRanking = this.getSdpByKey(key);
+
+  // lock the ranking.
+  panelRanking.lock();
+};
+
+/**
  * Gets the accumulative total of points this actor has ever gained.
  * @returns {number}
  */
@@ -250,8 +283,7 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(paramId);
     if (panelParameters.length)
     {
@@ -291,8 +323,7 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
     if (panelParameters.length)
     {
@@ -402,8 +433,7 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(30); // TODO: generalize this whole thing.
 
     // validate we have any parameters from this panel.

@@ -158,6 +158,7 @@ J.BASE.Aliased = {
   Game_Enemy: new Map(),
   Game_Party: new Map(),
   Game_Temp: new Map(),
+  Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
   SoundManager: new Map(),

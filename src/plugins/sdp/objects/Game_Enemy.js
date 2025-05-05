@@ -43,7 +43,7 @@ Game_Enemy.prototype.canDropSdp = function()
   }
 
   // if we have already unlocked the droppable panel, then don't drop it.
-  if (panel.isUnlocked()) return false;
+  if ($gameParty.isSdpUnlocked(panel.key)) return false;
 
   // drop the panel!
   return true;

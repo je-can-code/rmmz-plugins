@@ -65,6 +65,7 @@
  *    Added max item quantity functionality with tag.
  *    Added note grouping methods specific to actors/enemies.
  *    Added Window_Command updates to enable drawing faces as well.
+ *    Updated Game_Timer to track elapsed time.
  * - 2.1.3
  *    Added help text functionality for window commands.
  *    Added description text for all parameters.
@@ -256,6 +257,7 @@ J.BASE.Aliased = {
   Game_Enemy: new Map(),
   Game_Party: new Map(),
   Game_Temp: new Map(),
+  Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
   SoundManager: new Map(),
@@ -7953,6 +7955,16 @@ Game_Actors.prototype.actorIds = function()
   return actorIds;
 };
 
+/**
+ * Gets all proper actors available in the database.
+ * @returns {Game_Actor[]}
+ */
+Game_Actors.prototype.actors = function()
+{
+  return this.actorIds()
+    .map(id => this.actor(id), this);
+};
+
 //endregion Game_Actors
 
 //region Game_Battler
@@ -9086,6 +9098,49 @@ Game_Temp.prototype.initMembers = function()
 {
 };
 //endregion Game_Temp
+
+//region Game_Timer
+/**
+ * Extends {@link #initialize}.<br/>
+ * Also initializes the duration.
+ */
+J.BASE.Aliased.Game_Timer.set('initialize', Game_Timer.prototype.initialize);
+Game_Timer.prototype.initialize = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Timer.get('start')
+    .call(this);
+
+  /**
+   * Also initialize the duration of the timer.
+   * @type {number}
+   */
+  this._duration = 0;
+};
+
+/**
+ * Extends {@link #start}.<br/>
+ * Also sets the duration of the timer for tracking relative elapsed time.
+ */
+J.BASE.Aliased.Game_Timer.set('start', Game_Timer.prototype.start);
+Game_Timer.prototype.start = function(duration)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Timer.get('start')
+    .call(this, duration);
+
+  this._duration = duration;
+};
+
+/**
+ * Gets the elapsed amount of time relative to the duration.
+ * @returns {number}
+ */
+Game_Timer.prototype.elapsedFrames = function()
+{
+  return this._duration - this._frames;
+};
+//endregion Game_Timer
 
 //region Game_Vehicle
 /**
