@@ -16,13 +16,10 @@ if (J.ABS)
     // if the SDP switch is not ON, then this menu command is not present.
     if (!this.canAddSdpCommand()) return originalCommands;
 
-    // The menu shouldn't be accessible if there are no panels to work with?
-    const enabled = $gameParty.getAllSdpTrackings().length > 0;
-
     // build the command.
     const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
       .setSymbol("sdp-menu")
-      .setEnabled(enabled)
+      .setEnabled($gameParty.hasAnyUnlockedSdps())
       .setIconIndex(J.SDP.Metadata.commandIconIndex)
       .setColorIndex(1)
       .setHelpText(this.sdpHelpText())

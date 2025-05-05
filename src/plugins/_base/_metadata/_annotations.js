@@ -65,6 +65,7 @@
  *    Added max item quantity functionality with tag.
  *    Added note grouping methods specific to actors/enemies.
  *    Added Window_Command updates to enable drawing faces as well.
+ *    Updated Game_Timer to track elapsed time.
  * - 2.1.3
  *    Added help text functionality for window commands.
  *    Added description text for all parameters.

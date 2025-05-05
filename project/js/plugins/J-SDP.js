@@ -121,6 +121,14 @@ PanelRanking.prototype.unlock = function()
 };
 
 /**
+ * Flags the associated panel as "locked".
+ */
+PanelRanking.prototype.lock = function()
+{
+  this._isUnlocked = false;
+};
+
+/**
  * Ranks up this panel.
  * If it is at max rank, then perform the max effect exactly once
  * and then max the panel out.
@@ -544,8 +552,7 @@ class StatDistributionPanel
    */
   isUnlocked()
   {
-    return $gameParty.getSdpTrackingByKey(this.key)
-      .isUnlocked();
+    return $gameParty.isSdpUnlocked(this.key);
   }
 
   /**
@@ -1309,7 +1316,7 @@ J.SDP.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.SDP.RegExp = {
-  SdpPoints: /<sdpPoints:[ ]?([0-9]*)>/i,
+  SdpPoints: /<sdpPoints:[ ]?-?([0-9]+)>/i,
   SdpMultiplier: /<sdpMultiplier:[ ]?([-.\d]+)>/i,
   SdpDropData: /<sdpDropData:[ ]?(\[[-\w]+,[ ]?\d+(:?,[ ]?\d+)?])>/i,
   SdpUnlockKey: /<sdpUnlock:(.+)>/i,
@@ -1821,6 +1828,7 @@ TextManager.sdpMultiplierDescription = function()
 //endregion TextManager
 
 //region Game_Action
+//region unlock SDP
 /**
  * Extends {@link #applyGlobal}.<br>
  * Also handles any SDP effects such as unlocking.
@@ -1833,13 +1841,14 @@ Game_Action.prototype.applyGlobal = function()
     .call(this);
 
   // apply the SDP effects if appropriate.
-  this.handleSdpEffects();
+  this.applySdpUnlock();
 };
 
 /**
  * Handles any SDP-related effects for this action.
+ * @param {Game_Actor|Game_Enemy} target The target to apply the SDP-related effect to.
  */
-Game_Action.prototype.handleSdpEffects = function()
+Game_Action.prototype.applySdpUnlock = function(target)
 {
   // check if the SDP can be unlocked.
   if (this.canUnlockSdp())
@@ -1882,6 +1891,80 @@ Game_Action.prototype.applySdpUnlockEffect = function()
   // unlock the SDP.
   $gameParty.unlockSdp(item.sdpKey);
 };
+//endregion unlock SDP
+
+//region SDP point mod
+/**
+ * Extends {@link #apply}.<br/>
+ * Also applies SDP point modifications as a result of the action execution.
+ */
+J.SDP.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
+Game_Action.prototype.apply = function(target)
+{
+  // perform original logic.
+  J.SDP.Aliased.Game_Action.get('apply')
+    .call(this, target);
+
+  // also attempt to apply SDP point modifications.
+  this.applySdpPointMod(target);
+};
+
+/**
+ * Handles SDP point modification from action execution.
+ * @param {Game_Actor|Game_Enemy} target The target to apply the SDP point modification to.
+ */
+Game_Action.prototype.applySdpPointMod = function(target)
+{
+  // check if this is an SDP pickup.
+  if (this.isSdpPointMod(target))
+  {
+    // gain the points on the item.
+    this.modSdpPointsOnApply(target);
+  }
+};
+
+/**
+ * Determines whether or not this action grants SDP points.
+ * @param {Game_Actor|Game_Enemy} target The target to apply the SDP point modification to.
+ * @returns {boolean}
+ */
+Game_Action.prototype.isSdpPointMod = function(target)
+{
+  // grab the item out.
+  const item = this.item();
+
+  // if there is no item, no gaining SDP points.
+  if (!item) return false;
+
+  // if it is a skill, then no using skills to gain points.
+  if (item instanceof RPG_Skill) return false;
+
+  // SDP points can only be applied to actors.
+  if (target.isEnemy()) return false;
+
+  // if there are no points to gain from this item, then don't gain points.
+  if (RPGManager.getNumberFromNoteByRegex(item, J.SDP.RegExp.SdpPoints) === 0) return false;
+
+  // gain some points!
+  return true;
+};
+
+/**
+ * Gains (or loses) the points from the pickup against the target actor.
+ * @param {Game_Actor|Game_Enemy} target The target to apply the SDP point modification to.
+ */
+Game_Action.prototype.modSdpPointsOnApply = function(target)
+{
+  // grab the item out.
+  const item = this.item();
+
+  // determine the points modified.
+  const points = RPGManager.getNumberFromNoteByRegex(item, J.SDP.RegExp.SdpPoints);
+
+  // apply the points to the target actor.
+  target.modSdpPoints(points);
+};
+//endregion SDP point mod
 //endregion Game_Action
 
 //region Game_Actor
@@ -2001,6 +2084,39 @@ Game_Actor.prototype.unlockSdpByKey = function(key)
 
   // unlock the ranking.
   panelRanking.unlock();
+};
+
+/**
+ * Checks if a particular panel is unlocked.
+ * @param {string} key The key of the panel to check.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isSdpUnlocked = function(key)
+{
+  return this.getSdpByKey(key)
+    .isUnlocked();
+};
+
+/**
+ * Check if this actor has any unlocked panels.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasAnyUnlockedSdps = function()
+{
+  return this.getAllUnlockedSdps().length > 0;
+};
+
+/**
+ * Locks a panel by its key.
+ * @param {string} key The key of the panel to lock.
+ */
+Game_Actor.prototype.lockSdpByKey = function(key)
+{
+  // grab the panel ranking by its key.
+  const panelRanking = this.getSdpByKey(key);
+
+  // lock the ranking.
+  panelRanking.lock();
 };
 
 /**
@@ -2136,8 +2252,7 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(paramId);
     if (panelParameters.length)
     {
@@ -2177,8 +2292,7 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
     if (panelParameters.length)
     {
@@ -2288,8 +2402,7 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = $gameParty
-      .getSdpByKey(panelRanking.key)
+    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
       .getPanelParameterById(30); // TODO: generalize this whole thing.
 
     // validate we have any parameters from this panel.
@@ -2396,7 +2509,7 @@ Game_Enemy.prototype.canDropSdp = function()
   }
 
   // if we have already unlocked the droppable panel, then don't drop it.
-  if (panel.isUnlocked()) return false;
+  if ($gameParty.isSdpUnlocked(panel.key)) return false;
 
   // drop the panel!
   return true;
@@ -2468,9 +2581,6 @@ Game_Party.prototype.initialize = function()
 
   // init sdp members.
   this.initSdpMembers();
-
-  // populate the trackings.
-  this.populateSdpTrackings();
 };
 
 /**
@@ -2487,118 +2597,16 @@ Game_Party.prototype.initSdpMembers = function()
    * A grouping of all properties associated with the sdp system.
    */
   this._j._sdp ||= {};
-
-  /**
-   * A collection of all panels being tracked by this party.
-   * There should always be one for every panel imported from the
-   * configuration.
-   * @type {PanelTracking[]}
-   */
-  this._j._sdp._trackings = [];
 };
 
 /**
- * Populates all SDP trackings from the current plugin metadata.
+ * Checks if any member of the party has any unlocked panels.
+ * @returns {boolean} True if at least one member has at least one panel unlocked, false otherwise.
  */
-Game_Party.prototype.populateSdpTrackings = function()
+Game_Party.prototype.hasAnyUnlockedSdps = function()
 {
-  this._j._sdp._trackings = J.SDP.Metadata.panels
-    .map(panel => new PanelTracking(panel.key, panel.unlockedByDefault));
-};
-
-/**
- * Updates the {@link PanelTracking}s with any new ones found from the metadata.
- */
-Game_Party.prototype.updateSdpTrackingsFromConfig = function()
-{
-  // grab the current list of trackings by reference.
-  const trackings = this.getAllSdpTrackings();
-
-  J.SDP.Metadata.panels.forEach(panel =>
-  {
-    // skip ones that we shouldn't be adding.
-    if (!this.canGainEntry(panel.name)) return;
-
-    // find one by the same key in the existing trackings.
-    const foundTracking = trackings.find(tracking => tracking.key === panel.key);
-
-    // check if we found a tracking that has had its default unlock status changed.
-    if (foundTracking && !foundTracking.unlocked && panel.unlockedByDefault)
-    {
-      // unlock it.
-      panel.unlock();
-      return;
-    }
-
-    // check if we actually didn't find any panel by that key.
-    if (!foundTracking)
-    {
-      // add it anew.
-      const newTracking = new PanelTracking(panel.key, panel.unlockedByDefault);
-      trackings.push(newTracking);
-      console.log(`adding new sdp: ${newTracking.key}`);
-    }
-  });
-
-  // sort them.
-  trackings.sort((a, b) => a.key - b.key);
-};
-
-/**
- * Gets all SDP trackings.
- * @return {PanelTracking[]}
- */
-Game_Party.prototype.getAllSdpTrackings = function()
-{
-  return this._j._sdp._trackings;
-};
-
-/**
- * Get all unlocked SDP trackings.
- * @return {PanelTracking[]}
- */
-Game_Party.prototype.getUnlockedSdpTrackings = function()
-{
-  return this.getAllSdpTrackings()
-    .filter(panel => panel.isUnlocked());
-};
-
-/**
- * Gets the SDP tracking associated with a specific key.
- * @param {string} key The key of the SDP tracking to find.
- * @return {PanelTracking}
- */
-Game_Party.prototype.getSdpTrackingByKey = function(key)
-{
-  return this.getAllSdpTrackings()
-    .find(tracked => (tracked.key === key));
-};
-
-/**
- * Get a current list of all panels that are unlocked.
- * @return {StatDistributionPanel[]}
- */
-Game_Party.prototype.getUnlockedSdps = function()
-{
-  // start our tracking with an empty array.
-  const unlockedSdps = [];
-
-  // iterate over each of the unlocked trackings.
-  this.getUnlockedSdpTrackings()
-    .forEach(tracking =>
-    {
-      // grab the panel associated with the key.
-      const panel = this.getSdpByKey(tracking.key);
-
-      // skip unfound keys if we have those somehow.
-      if (!panel) return;
-
-      // add the panel to the list.
-      unlockedSdps.push(panel);
-    }, this);
-
-  // return what we found.
-  return unlockedSdps;
+  return $gameActors.actors()
+    .some(actor => actor.hasAnyUnlockedSdps());
 };
 
 /**
@@ -2616,39 +2624,29 @@ Game_Party.prototype.unlockSdp = function(key)
   }
 
   // unlock the panel.
-  this.allMembers()
+  $gameActors.actors()
     .forEach(member => member.unlockSdpByKey(key));
 };
 
 /**
- * Unlocks all defined SDPs.
+ * Checks if a particular panel is unlocked for the whole party.
+ * @param {string} key The key of the panel to check.
+ * @returns {boolean} True if every actor has it unlocked, false otherwise.
  */
-Game_Party.prototype.unlockAllSdps = function()
+Game_Party.prototype.isSdpUnlocked = function(key)
 {
-  // unlock the panel.
-  this.getAllSdpTrackings()
-    .forEach(tracking => this.unlockSdp(tracking.key));
-};
-
-Game_Party.prototype.translatePartySdpsToActorSdps = function()
-{
-  const unlockedSdps = this.getUnlockedSdps();
-  this.allMembers()
-    .forEach(member =>
-    {
-      unlockedSdps.forEach(tracking => member.unlockSdpByKey(tracking.key));
-    });
+  return $gameActors.actors()
+    .every(actor => actor.isSdpUnlocked(key));
 };
 
 /**
- * Locks an SDP being tracked by its key.
- * @param {string} key The key of the SDP to unlock.
+ * Locks a panel for all party members.
+ * @param {string} key The key of the panel unlock.
  */
 Game_Party.prototype.lockSdp = function(key)
 {
-  const panelTracking = this.getSdpTrackingByKey(key);
-
-  if (!panelTracking)
+  // validate the panel exists before unlocking.
+  if (J.SDP.Metadata.panelsMap.has(key) === false)
   {
     // stop processing.
     console.error(`The SDP key of ${key} was not found in the list of panels to lock.`);
@@ -2656,39 +2654,11 @@ Game_Party.prototype.lockSdp = function(key)
   }
 
   // lock the panel.
-  panelTracking.lock();
+  $gameActors.actors()
+    .forEach(member => member.lockSdpByKey(key));
 };
 
-/**
- * Locks all SDPs defined.
- */
-Game_Party.prototype.lockAllSdps = function()
-{
-  this.getAllSdpTrackings()
-    .forEach(tracking => tracking.lock());
-};
-
-/**
- * Returns a map of all SDPs keyed by the SDP's key with the value
- * being the SDP itself.
- * @return {Map<string, StatDistributionPanel>}
- */
-Game_Party.prototype.getAllSdpsAsMap = function()
-{
-  return J.SDP.Metadata.panelsMap;
-};
-
-/**
- * Gets the {@link StatDistributionPanel} matching the given key.
- * @param {string} key The key of the SDP to find.
- * @return {StatDistributionPanel}
- */
-Game_Party.prototype.getSdpByKey = function(key)
-{
-  return this.getAllSdpsAsMap()
-    .get(key);
-};
-
+// noinspection JSUnusedGlobalSymbols
 /**
  * Gets the rank of a given SDP for an actor by its key.
  * @param {number} actorId The id of the actor to get the rank from.
@@ -2715,15 +2685,6 @@ Game_Party.prototype.getSdpRankByActorAndKey = function(actorId, key)
   {
     return 0;
   }
-};
-
-Game_Party.prototype.normalizeSdpRankings = function()
-{
-  this.allMembers()
-    .forEach(member =>
-    {
-      member._j._sdp._ranks.forEach(ranking => ranking.normalizeRank())
-    });
 };
 //endregion Game_Party
 
@@ -2788,21 +2749,6 @@ Game_System.prototype.disableForcedSdpDrops = function()
 Game_System.prototype.shouldForceDropSdp = function()
 {
   return this._j._sdp._forceDropPanels ?? false;
-};
-
-/**
- * Extends {@link #onAfterLoad}.<br>
- * Updates the list of all available panels from the latest plugin metadata.
- */
-J.SDP.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);
-Game_System.prototype.onAfterLoad = function()
-{
-  // perform original logic.
-  J.SDP.Aliased.Game_System.get('onAfterLoad')
-    .call(this);
-
-  // setup the difficulty layers in the temp data.
-  $gameParty.updateSdpTrackingsFromConfig();
 };
 //endregion Game_System
 
@@ -3736,13 +3682,10 @@ if (J.ABS)
     // if the SDP switch is not ON, then this menu command is not present.
     if (!this.canAddSdpCommand()) return originalCommands;
 
-    // The menu shouldn't be accessible if there are no panels to work with?
-    const enabled = $gameParty.getAllSdpTrackings().length > 0;
-
     // build the command.
     const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
       .setSymbol("sdp-menu")
-      .setEnabled(enabled)
+      .setEnabled($gameParty.hasAnyUnlockedSdps())
       .setIconIndex(J.SDP.Metadata.commandIconIndex)
       .setColorIndex(1)
       .setHelpText(this.sdpHelpText())
@@ -3797,13 +3740,10 @@ Window_MenuCommand.prototype.makeCommandList = function()
   // if we cannot add the command, then do not.
   if (!this.canAddSdpCommand()) return;
 
-  // The menu shouldn't be accessible if there are no panels to work with.
-  const enabled = $gameParty.getUnlockedSdpTrackings().length > 0;
-
   // build the command.
   const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
     .setSymbol("sdp-menu")
-    .setEnabled(enabled)
+    .setEnabled($gameParty.hasAnyUnlockedSdps())
     .setIconIndex(J.SDP.Metadata.commandIconIndex)
     .setColorIndex(1)
     .build();

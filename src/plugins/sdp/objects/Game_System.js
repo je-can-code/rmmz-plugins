@@ -60,19 +60,4 @@ Game_System.prototype.shouldForceDropSdp = function()
 {
   return this._j._sdp._forceDropPanels ?? false;
 };
-
-/**
- * Extends {@link #onAfterLoad}.<br>
- * Updates the list of all available panels from the latest plugin metadata.
- */
-J.SDP.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);
-Game_System.prototype.onAfterLoad = function()
-{
-  // perform original logic.
-  J.SDP.Aliased.Game_System.get('onAfterLoad')
-    .call(this);
-
-  // setup the difficulty layers in the temp data.
-  $gameParty.updateSdpTrackingsFromConfig();
-};
 //endregion Game_System

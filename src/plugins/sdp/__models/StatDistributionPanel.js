@@ -144,8 +144,7 @@ class StatDistributionPanel
    */
   isUnlocked()
   {
-    return $gameParty.getSdpTrackingByKey(this.key)
-      .isUnlocked();
+    return $gameParty.isSdpUnlocked(this.key);
   }
 
   /**
