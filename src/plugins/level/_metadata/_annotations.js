@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.2.0 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -222,7 +222,7 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
- * - 1.1.2
+ * - 1.2.0
  *    Added ability to override JABS enemies on the map with a new level.
  * - 1.1.1
  *    Added ability to manipulate max level for actors.

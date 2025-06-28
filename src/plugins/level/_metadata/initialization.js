@@ -11,7 +11,7 @@ J.LEVEL = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.1.2');
+J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.0');
 
 /**
  * All aliased methods for this plugin.
