@@ -808,7 +808,7 @@ class StatDistributionPanel
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v2.0.2 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -944,6 +944,8 @@ class StatDistributionPanel
  * will now gain 50% increased SDP points (80 - 30 = 50).
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.2
+ *    Added new getTotalSdpRanks function to actors for a new data point.
  * - 2.0.1
  *    Added filter for skipping panels that start with particular characters.
  *    Retroactively added note about breaking web deploys for this plugin.
@@ -1286,7 +1288,7 @@ J.SDP = {};
 /**
  * The metadata associated with this plugin.
  */
-J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.0.0');
+J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.0.2');
 
 /**
  * A collection of all aliased methods for this plugin.

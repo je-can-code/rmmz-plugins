@@ -11607,7 +11607,7 @@ class JABS_Timer
 /*:
  * @target MZ
  * @plugindesc
- * [v3.4.1 JABS] Enables combat to be carried out on the map.
+ * [v3.4.2 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -11651,6 +11651,8 @@ class JABS_Timer
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 3.4.2
+ *    Adjusted font size and sprite location for enemy battler name on map.
  * - 3.4.1
  *    Applied significant regeneration reduction for actors while in-combat.
  *    Fixed facing-auto-parry not working as-intended.
@@ -13649,7 +13651,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.4.1';
+J.ABS.Metadata.Version = '3.4.2';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
