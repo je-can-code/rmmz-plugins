@@ -59,6 +59,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Added dev filter function for action to skill mapping for enemies.
  * - 2.2.0
  *    Added parent class for subclassing to strongly type plugin metadata.
  *    Added Game_Character#isVehicle function.

@@ -31152,13 +31152,13 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
   // build the text sprite.
   const sprite = new Sprite_BaseText()
     .setText(battlerName)
-    .setFontSize(10)
+    .setFontSize(16)
     .setAlignment(Sprite_BaseText.Alignments.Left)
     .setColor("#ffffff");
   sprite.setText(battlerName); // TODO: is this second assignment necessary???
 
   // relocate the sprite to a better position.
-  sprite.move(-30, 8);
+  sprite.move(-70, 0);
 
   // return this created sprite.
   return sprite;

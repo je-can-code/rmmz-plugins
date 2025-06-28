@@ -687,10 +687,11 @@ class RPGManager
     noteLines.forEach(line =>
     {
       // check if this line matches the given regex structure.
-      if (line.match(structure))
+      const match = structure.exec(line);
+      if (match)
       {
         // extract the captured formula.
-        const [ , result ] = structure.exec(line);
+        const [ , result ] = match;
 
         // parse the value out of the regex capture group.
         val.push(result);

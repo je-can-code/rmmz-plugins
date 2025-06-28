@@ -5,7 +5,7 @@
  * This nodejs script is intended to be used to quickly scaffold a group of
  * common directories using this opinionated way of dividing up RMMZ plugin
  * code logic. This also assumes it will be ran from the convenient npm package.json
- * commands found in the root package.json of this plugins monolith project.
+ * commands found in the root package.json of this plugins monorepo project.
  *
  * USAGE:
  * To use this nodejs script, just run it with a single argument:

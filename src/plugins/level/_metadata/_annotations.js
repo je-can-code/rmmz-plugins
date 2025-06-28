@@ -2,11 +2,12 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.1 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.1.2 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
+ * @orderAfter J-ABS
  * @help
  * ============================================================================
  * OVERVIEW
@@ -25,6 +26,10 @@
  * CAUTION:
  * This probably won't work with any other plugins that mess with the
  * level functionality of battlers.
+ *
+ * Integrates with others of mine plugins:
+ * - J-ABS; enables per-event-enemy level overrides.
+ *
  * ============================================================================
  * PLUGIN PARAMETERS BREAKDOWN:
  *  - Start Enabled:
@@ -78,6 +83,15 @@
  * each member of your party that gives experience- and is affected by the
  * normal level-scaling mechanics. The same applies to gold rewards.
  *
+ * NOTE ABOUT WORKING WITH JABS:
+ * If a level is present on an event that is identified as a JABS enemy, this
+ * level will override whatever is present on the database note section. You
+ * can think of the event as the real level, while the database notes are the
+ * "default" level for enemies. The overriden level still gets combined with
+ * any other modifications from states and whatnot. If an enemy has a level, by
+ * default it will show up in their battler name. If it is desired to be
+ * hidden, it can be converted to ??? by using the hide level tag.
+ *
  * DETAILS:
  * This was initially designed only for enemies, but has since been expanded to
  * also allow you to apply modifiers to your actors as well. For enemies, since
@@ -90,6 +104,7 @@
  * ENEMY TAG USAGE:
  * - Enemies
  * - States
+ * - Events (w/ JABS)
  *
  * ACTOR TAG USAGE:
  * - Actors
@@ -107,6 +122,7 @@
  *  <level:4>
  * On enemies, if on the enemy, it would set their base level to 4.
  * On enemies, if on a state, it would grant a +4 modifier to their base level.
+ * On events, this will override whatever the JABS enemy's level would be.
  * On actors, this would grant a +4 level modifier to their base level.
  *
  *  <level:-2>
@@ -114,6 +130,12 @@
  * On enemies, if on a state, and they have a base level set,
  *  this will grant a -2 modifier to their base level.
  * On actors, this will grant a -2 modifier to their base level.
+ *
+ *  <hideLevel>
+ * On enemies, this will turn the level into "???" instead of the level value.
+ * On events, this will override a singular enemy into hiding the value.
+ * On states, this will do nothing.
+ *
  * ============================================================================
  * SAMPLE CALCULATIONS:
  * Here is an example back and forth encounter between an allied party and
@@ -200,6 +222,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Added ability to override JABS enemies on the map with a new level.
  * - 1.1.1
  *    Added ability to manipulate max level for actors.
  *    Adapted extended plugin metadata structure.

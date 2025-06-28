@@ -2064,6 +2064,16 @@ Game_Actor.prototype.getAllSdpRankings = function()
 };
 
 /**
+ * Gets the total number of SDP ranks this actor has.
+ * @returns {number}
+ */
+Game_Actor.prototype.getTotalSdpRanks = function()
+{
+  return this.getAllSdpRankings()
+    .reduce((total, panelRanking) => total + panelRanking.currentRank, 0);
+};
+
+/**
  * Gets all unlocked panels for this actor.
  * @returns {PanelRanking[]}
  */
@@ -2149,7 +2159,7 @@ Game_Actor.prototype.modAccumulatedTotalSdpPoints = function(points)
  */
 Game_Actor.prototype.getAccumulatedSpentSdpPoints = function()
 {
-  return this._j._sdp._pointsEverGained;
+  return this._j._sdp._pointsSpent;
 };
 
 /**
