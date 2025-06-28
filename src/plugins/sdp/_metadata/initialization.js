@@ -24,7 +24,7 @@ J.SDP = {};
 /**
  * The metadata associated with this plugin.
  */
-J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.0.0');
+J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.0.2');
 
 /**
  * A collection of all aliased methods for this plugin.
