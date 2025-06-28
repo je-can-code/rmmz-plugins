@@ -211,4 +211,90 @@ Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
   return this.calculateSpParamBuff(sparamId, baseParam);
 };
 //endregion sp params
+
+//region rewards
+/**
+ * Overrides {@link #refreshRewardBonuses}.<br>
+ * Implements the refresh for battle reward bonuses for the enemy.
+ */
+Game_Enemy.prototype.refreshRewardBonuses = function()
+{
+  this.refreshExpRewardBonuses();
+  this.refreshGoldRewardBonuses();
+};
+
+/**
+ * Refreshes the experience reward bonuses for this enemy.
+ */
+Game_Enemy.prototype.refreshExpRewardBonuses = function()
+{
+  // add the extracted formulai to an array.
+  const expBonusFormulai = this.extractParameterFormulai(J.NATURAL.RegExp.RewardExp);
+
+  // if no formulai were found, then stop processing.
+  if (!expBonusFormulai.length) return;
+
+  // calculate all formulai found for this enemy that could affect experience.
+  const bonusExp = this.naturalParamBuff(J.NATURAL.RegExp.RewardExp, this.enemy().exp);
+
+  // update the experience reward bonus.
+  this.setExpPlus(bonusExp);
+};
+
+/**
+ * Refreshes the gold reward bonuses for this enemy.
+ */
+Game_Enemy.prototype.refreshGoldRewardBonuses = function()
+{
+  // add the extracted formulai to an array.
+  const goldBonusFormulai = this.extractParameterFormulai(J.NATURAL.RegExp.RewardGold);
+
+  // if no formulai were found, then stop processing.
+  if (!goldBonusFormulai.length) return;
+
+  // calculate all formulai found for this enemy that could affect gold.
+  const bonusGold = this.naturalParamBuff(J.NATURAL.RegExp.RewardGold, this.enemy().gold);
+
+  // update the gold reward bonus.
+  this.setGoldPlus(bonusGold);
+};
+
+/**
+ * Extends {@link #exp}.<br>
+ * Also adds on any natural bonuses of experience.
+ * @returns {number}
+ */
+J.NATURAL.Aliased.Game_Enemy.set("exp", Game_Enemy.prototype.exp);
+Game_Enemy.prototype.exp = function()
+{
+  // grab the original value.
+  const baseReward = J.NATURAL.Aliased.Game_Enemy.get("exp")
+    .call(this);
+
+  // grab the bonus experience rewards.
+  const expBonus = this.expPlus();
+
+  // return the combined value.
+  return (baseReward + expBonus);
+};
+
+/**
+ * Extends {@link #gold}.<br>
+ * Also adds on any natural bonuses of gold.
+ * @returns {number}
+ */
+J.NATURAL.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
+Game_Enemy.prototype.gold = function()
+{
+  // grab the original value.
+  const baseReward = J.NATURAL.Aliased.Game_Enemy.get("gold")
+    .call(this);
+
+  // grab the bonus gold rewards.
+  const goldBonus = this.goldPlus();
+
+  // return the combined value.
+  return (baseReward + goldBonus);
+};
+//endregion rewards
 //endregion Game_Enemy

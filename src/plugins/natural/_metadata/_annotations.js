@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.1 NATURAL] Enables level-based growth of all parameters.
+ * [v2.1.0 NATURAL] Enables level-based growth of all parameters.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -16,6 +16,7 @@
  * Integrates with others of mine plugins:
  * - J-CriticalFactors; enables natural growths of CDM/CDR.
  * - J-Passives; updates with relic gain as well.
+ * - J-LevelMaster; enables the ".lvl" access for formulas.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:
@@ -93,6 +94,38 @@
  *  <atkGrowthPlus:[a.level * 3]>
  * Gain (the battler's level multiplied by 3) attack (atk) per level.
  * This would result in gaining an ever-increasing amount of attack per level.
+ * ----------------------------------------------------------------------------
+ * NATURAL GROWTHS AND REWARDS:
+ * While the above parameters and such are shared between actors and enemies
+ * alike, and thus a common pattern was useful, there are a couple of
+ * "parameters" that are unique to enemies: rewards. Specifically, experience
+ * and gold. Since they aren't directly useful in combat, their tags are a bit
+ * different.
+ *
+ * NOTE:
+ * The base value that is in the database for experience will be added to the
+ * calculated value for exp/gold, thus the static value in the database can
+ * be thought of as a "base" value.
+ *
+ * TAG USAGE:
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <(REWARD)(PLUS):[FORMULA]>
+ * Where (REWARD) is either exp or gold.
+ * Where (PLUS) is... plus. There is no "rate" for this value.
+ * Where [FORMULA] is the formula to produce the amount.
+ *
+ * EXAMPLE:
+ *  <expPlus:[5 + a.lvl * 50]>
+ * When defeating this enemy, the experience gained will be increased by the
+ * enemy's level multiplied by 50, plus an extra 5.
+ *
+ *  <goldPlus:[100 + a.luk + a.level ** 2]>
+ * When defeating this enemy, the gold gained will be increased by 100 plus the
+ * enemy's luck value plus the enemy's level squared (to the second power).
+ *
  * ==============================================================================
  * EXAMPLE IDEAS:
  * While you can read about the syntax in the next section below, here I wanted
@@ -178,8 +211,14 @@
  * Custom Parameters:
  * - mtp (max tp)
  *
+ * Rewards (plus only, no rate):
+ * - exp
+ * - gold
+ *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Added formula evaluation for enemy rewards on enemies.
  * - 2.0.1
  *    Fixed issue with buffs not being refreshed in Scene_Equip.
  * - 2.0.0

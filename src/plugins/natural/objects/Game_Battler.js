@@ -124,6 +124,18 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
    * @type {number[]}
    */
   this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+
+  /**
+   * The amount of additional exp to gain. Only affects experience gained from an enemy's defeat.
+   * @type {number}
+   */
+  this._j._natural._expPlus = 0;
+
+  /**
+   * The amount of additional gold to gain. Only affects gold gained from an enemy's defeat.
+   * @type {number}
+   */
+  this._j._natural._goldPlus = 0;
 };
 
 //region max tp
@@ -445,6 +457,43 @@ Game_Battler.prototype.setXparamBuffRate = function(paramId, amount)
   this._j._natural._xParamsBuffRate[paramId] = amount;
 };
 //endregion x-params
+
+//region rewards
+/**
+ * Gets the bonus to rewarded experience.
+ * @returns {number}
+ */
+Game_Battler.prototype.expPlus = function()
+{
+  return this._j._natural._expPlus ?? 0;
+};
+
+/**
+ * Sets the bonus to rewarded experience.
+ * @param {number} expPlus The new bonus rewarded experience value.
+ */
+Game_Battler.prototype.setExpPlus = function(expPlus)
+{
+  this._j._natural._expPlus = expPlus;
+};
+
+/**
+ * Gets the bonus to rewarded gold.
+ */
+Game_Battler.prototype.goldPlus = function()
+{
+  return this._j._natural._goldPlus ?? 0;
+};
+
+/**
+ * Sets the bonus to rewarded gold.
+ * @param {number} goldPlus The new bonus rewarded gold value.
+ */
+Game_Battler.prototype.setGoldPlus = function(goldPlus)
+{
+  this._j._natural._goldPlus = goldPlus;
+};
+//endregion rewards
 //endregion properties
 
 /**
@@ -460,6 +509,7 @@ Game_Battler.prototype.refreshAllParameterBuffs = function()
   this.refreshBParamBuffs();
   this.refreshSParamBuffs();
   this.refreshXParamBuffs();
+  this.refreshRewardBonuses();
 };
 
 /**
@@ -476,6 +526,8 @@ Game_Battler.prototype.clearAllParameterBuffs = function()
   this._j._natural._sParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
   this._j._natural._xParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
   this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+  this._j._natural._expPlus = 0;
+  this._j._natural._goldPlus = 0;
 };
 
 /**
@@ -599,6 +651,14 @@ Game_Battler.prototype.refreshSParamBuffs = function()
     // set the s-param buff rate modifier to this amount.
     this.setSparamBuffRate(paramId, buffRate);
   }, this);
+};
+
+/**
+ * Refreshes battle reward bonuses for the battler.
+ */
+Game_Battler.prototype.refreshRewardBonuses = function()
+{
+  // do nothing at this level.
 };
 
 /**
