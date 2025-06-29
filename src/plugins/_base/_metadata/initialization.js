@@ -13,7 +13,7 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '2.2.0';
+J.BASE.Metadata.Version = '2.2.1';
 
 /**
  * A collection of helpful mappings for `notes` that are placed in

@@ -67,6 +67,7 @@ Game_Enemy.prototype.skills = function()
   // grab the actions for the enemy.
   const actions = this.enemy()
     .actions
+    .filter(this.canMapActionToSkill, this)
     .map(action => this.skill(action.skillId), this);
 
   // grab any additional skills added via traits.
@@ -78,6 +79,16 @@ Game_Enemy.prototype.skills = function()
   return actions
     .concat(skillTraits)
     .sort();
+};
+
+/**
+ * Determines whether or not the action can be mapped to a skill.
+ * @param {RPG_EnemyAction} action The action being mapped to a skill.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.canMapActionToSkill = function(action)
+{
+  return true;
 };
 
 /**

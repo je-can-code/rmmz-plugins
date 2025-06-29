@@ -96,7 +96,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.4.1';
+J.ABS.Metadata.Version = '3.4.2';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

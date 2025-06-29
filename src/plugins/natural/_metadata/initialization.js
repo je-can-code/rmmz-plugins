@@ -21,7 +21,7 @@ J.NATURAL.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '2.0.1',
+  Version: '2.1.0',
 };
 
 /**
@@ -195,5 +195,9 @@ J.NATURAL.RegExp = {
   MaxTechBuffRate: /mtpBuffRate:\[([+\-*/ ().\w]+)]>/gi,
   MaxTechGrowthPlus: /mtpGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
   MaxTechGrowthRate: /mtpGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+
+  // battle result rewards.
+  RewardExp: /<expPlus:\[([+\-*/ ().\w]+)]>/gi,
+  RewardGold: /<goldPlus:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion Metadata

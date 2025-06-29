@@ -55,7 +55,7 @@ Game_Battler.prototype.getLevel = function()
   {
     // add the level extracted from the data.
     level += this.extractLevel(rpgData);
-  });
+  }, this);
 
   // return the new amount.
   return level;
@@ -96,6 +96,6 @@ Game_Battler.prototype.getLevelBalancer = function()
 Game_Battler.prototype.extractLevel = function(rpgData)
 {
   // extract the level from the notes.
-  return rpgData.getNumberFromNotesByRegex(J.LEVEL.RegExp.BattlerLevel);
+  return RPGManager.getNumberFromNoteByRegex(rpgData, J.LEVEL.RegExp.Level);
 };
 //endregion Game_Battler
