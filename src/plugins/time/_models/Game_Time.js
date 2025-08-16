@@ -951,7 +951,7 @@ Game_Time.prototype.addMinutes = function(minutes = this._minutesPerTick)
   {
     while (potentialMinutes >= 60)
     {
-      this.addHours(this._hoursPerDay);
+      this.addHours(this._hoursPerTick);
       potentialMinutes -= 60;
     }
 

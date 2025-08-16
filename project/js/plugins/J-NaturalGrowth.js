@@ -98,14 +98,14 @@
  * NATURAL GROWTHS AND REWARDS:
  * While the above parameters and such are shared between actors and enemies
  * alike, and thus a common pattern was useful, there are a couple of
- * "parameters" that are unique to enemies: rewards. Specifically, experience
- * and gold. Since they aren't directly useful in combat, their tags are a bit
- * different.
+ * "parameters" that are unique to enemies: rewards. Specifically, experience,
+ * gold, and SDPs. Since they aren't directly useful in combat, their tags are
+ * a bit different.
  *
  * NOTE:
- * The base value that is in the database for experience will be added to the
- * calculated value for exp/gold, thus the static value in the database can
- * be thought of as a "base" value.
+ * The base value that is in the database will be added to the calculated
+ * value for exp/gold/sdp, thus the static value in the database can be
+ * thought of as a "base" value.
  *
  * TAG USAGE:
  * - Enemies
@@ -125,6 +125,10 @@
  *  <goldPlus:[100 + a.luk + a.level ** 2]>
  * When defeating this enemy, the gold gained will be increased by 100 plus the
  * enemy's luck value plus the enemy's level squared (to the second power).
+ *
+ *  <sdpPlus:[100 * a.atk]>
+ * When defeating this enemy, the SDPs gained will be increased by 1-- plus the
+ * enemy's attack value.
  *
  * ==============================================================================
  * EXAMPLE IDEAS:
@@ -214,6 +218,7 @@
  * Rewards (plus only, no rate):
  * - exp
  * - gold
+ * - sdp
  *
  * ============================================================================
  * CHANGELOG:
@@ -444,6 +449,7 @@ J.NATURAL.RegExp = {
   // battle result rewards.
   RewardExp: /<expPlus:\[([+\-*/ ().\w]+)]>/gi,
   RewardGold: /<goldPlus:\[([+\-*/ ().\w]+)]>/gi,
+  RewardSdps: /<sdpPlus:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion Metadata
 
@@ -1533,6 +1539,24 @@ Game_Battler.prototype.setGoldPlus = function(goldPlus)
 {
   this._j._natural._goldPlus = goldPlus;
 };
+
+/**
+ * Gets the bonus to rewarded SDPs.
+ * @returns {number|number|*}
+ */
+Game_Battler.prototype.sdpsPlus = function()
+{
+  return this._j._natural._sdpsPlus ?? 0;
+};
+
+/**
+ * Sets the bonus to rewarded SDPs.
+ * @param {number} sdpsPlus The new bonus rewarded SDPs value.
+ */
+Game_Battler.prototype.setSdpsPlus = function(sdpsPlus)
+{
+  this._j._natural._sdpsPlus = sdpsPlus;
+};
 //endregion rewards
 //endregion properties
 
@@ -1568,6 +1592,7 @@ Game_Battler.prototype.clearAllParameterBuffs = function()
   this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
   this._j._natural._expPlus = 0;
   this._j._natural._goldPlus = 0;
+  this._j._natural._sdpsPlus = 0;
 };
 
 /**
@@ -2291,6 +2316,7 @@ Game_Enemy.prototype.refreshRewardBonuses = function()
 {
   this.refreshExpRewardBonuses();
   this.refreshGoldRewardBonuses();
+  this.refreshSdpRewardBonuses();
 };
 
 /**
@@ -2330,6 +2356,27 @@ Game_Enemy.prototype.refreshGoldRewardBonuses = function()
 };
 
 /**
+ * Refreshes the SDP reward bonuses for this enemy.
+ */
+Game_Enemy.prototype.refreshSdpRewardBonuses = function()
+{
+  // if we are not using the SDP system, then don't do this.
+  if (!J.SDP) return;
+
+  // add the extracted formulai to an array.
+  const sdpsBonusRewardFormula = this.extractParameterFormulai(J.NATURAL.RegExp.RewardGold);
+
+  // if no formulai were found, then stop processing.
+  if (!sdpsBonusRewardFormula.length) return;
+
+  // calculate all formulai found for this enemy that could affect gold.
+  const sdpsBonus = this.naturalParamBuff(J.NATURAL.RegExp.RewardSdps, this.enemy().sdpPoints);
+
+  // update the reward bonus.
+  this.setSdpsPlus(sdpsBonus);
+};
+
+/**
  * Extends {@link #exp}.<br>
  * Also adds on any natural bonuses of experience.
  * @returns {number}
@@ -2341,11 +2388,11 @@ Game_Enemy.prototype.exp = function()
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("exp")
     .call(this);
 
-  // grab the bonus experience rewards.
-  const expBonus = this.expPlus();
+  // grab the bonus rewards.
+  const bonus = this.expPlus();
 
   // return the combined value.
-  return (baseReward + expBonus);
+  return (baseReward + bonus);
 };
 
 /**
@@ -2360,12 +2407,31 @@ Game_Enemy.prototype.gold = function()
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("gold")
     .call(this);
 
-  // grab the bonus gold rewards.
-  const goldBonus = this.goldPlus();
+  // grab the bonus rewards.
+  const bonus = this.goldPlus();
 
   // return the combined value.
-  return (baseReward + goldBonus);
+  return (baseReward + bonus);
 };
+
+/**
+ * Extends {@link #sdpPoints}.<br/>
+ * Also adds on any natural bonuses of SDPs.
+ */
+J.NATURAL.Aliased.Game_Enemy.set("sdpPoints", Game_Enemy.prototype.sdpPoints);
+Game_Enemy.prototype.sdpPoints = function()
+{
+  // grab the original value.
+  const baseReward = J.NATURAL.Aliased.Game_Enemy.get("sdpPoints")
+    .call(this);
+
+  // grab the bonus rewards.
+  const bonus = this.sdpsPlus();
+
+  // return the combined value.
+  return (baseReward + bonus);
+};
+
 //endregion rewards
 //endregion Game_Enemy
 

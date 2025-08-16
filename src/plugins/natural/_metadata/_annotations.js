@@ -98,14 +98,14 @@
  * NATURAL GROWTHS AND REWARDS:
  * While the above parameters and such are shared between actors and enemies
  * alike, and thus a common pattern was useful, there are a couple of
- * "parameters" that are unique to enemies: rewards. Specifically, experience
- * and gold. Since they aren't directly useful in combat, their tags are a bit
- * different.
+ * "parameters" that are unique to enemies: rewards. Specifically, experience,
+ * gold, and SDPs. Since they aren't directly useful in combat, their tags are
+ * a bit different.
  *
  * NOTE:
- * The base value that is in the database for experience will be added to the
- * calculated value for exp/gold, thus the static value in the database can
- * be thought of as a "base" value.
+ * The base value that is in the database will be added to the calculated
+ * value for exp/gold/sdp, thus the static value in the database can be
+ * thought of as a "base" value.
  *
  * TAG USAGE:
  * - Enemies
@@ -125,6 +125,10 @@
  *  <goldPlus:[100 + a.luk + a.level ** 2]>
  * When defeating this enemy, the gold gained will be increased by 100 plus the
  * enemy's luck value plus the enemy's level squared (to the second power).
+ *
+ *  <sdpPlus:[100 * a.atk]>
+ * When defeating this enemy, the SDPs gained will be increased by 1-- plus the
+ * enemy's attack value.
  *
  * ==============================================================================
  * EXAMPLE IDEAS:
@@ -214,6 +218,7 @@
  * Rewards (plus only, no rate):
  * - exp
  * - gold
+ * - sdp
  *
  * ============================================================================
  * CHANGELOG:

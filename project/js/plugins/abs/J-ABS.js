@@ -9715,7 +9715,7 @@ class JABS_LootDrop
    */
   get lootIcon()
   {
-    return this._lootObject.iconIndex;
+    return this._lootObject.iconIndex ?? 0;
   }
 
   /**
@@ -18137,8 +18137,24 @@ class JABS_AiManager
     // update the battler with the latest uuid.
     event.setJabsBattlerUuid(jabsBattler.getUuid());
 
+    // execute any post conversion mutation necessary.
+    this.postConvertMutate(battler, jabsBattler);
+
+    // if there is something affecting max hp- such as natural growths- they should be fully healed on-creation.
+    battler.recoverAll()
+
     // return the newly created battler.
     return jabsBattler;
+  }
+
+  /**
+   * A hook for mutating the {@link Game_Enemy} or the {@link JABS_Battler} after binding.
+   * @param {Game_Enemy} battler The enemy battler that was converted from the event.
+   * @param {JABS_Battler} jabsBattler The created JABS battler from the event.
+   */
+  static postConvertMutate(battler, jabsBattler)
+  {
+    // hook for mutation.
   }
 
   /**
@@ -31266,7 +31282,7 @@ Sprite_Character.prototype.handleLootSetup = function()
  */
 Sprite_Character.prototype.hasLootDrawn = function()
 {
-  return !this.children.length;
+  return this.children.length > 0;
 };
 
 /**

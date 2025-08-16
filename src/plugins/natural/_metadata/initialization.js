@@ -199,5 +199,6 @@ J.NATURAL.RegExp = {
   // battle result rewards.
   RewardExp: /<expPlus:\[([+\-*/ ().\w]+)]>/gi,
   RewardGold: /<goldPlus:\[([+\-*/ ().\w]+)]>/gi,
+  RewardSdps: /<sdpPlus:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion Metadata

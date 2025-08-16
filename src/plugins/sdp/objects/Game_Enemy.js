@@ -92,6 +92,64 @@ Game_Enemy.prototype.hasSdpDropData = function()
 };
 
 /**
+ * Extends {@link #findLoot}.<br/>
+ * Custom handles SDP drops to enable potentially item-less SDP relations.
+ * @param {RPG_DropItem} drop The drop being found.
+ * @param {RPG_BaseItem} itemsFound The running list of items that have been found.
+ */
+J.SDP.Aliased.Game_Enemy.set("findLoot", Game_Enemy.prototype.findLoot);
+Game_Enemy.prototype.findLoot = function(drop, itemsFound)
+{
+  // determine if the item was in fact an SDP drop.
+  if (drop.isSdpDrop())
+  {
+    // construct the dynamic custom drop.
+    const sdpLoot = this.buildSdpLoot(drop);
+
+    // add it to the running list.
+    itemsFound.push(sdpLoot);
+
+    // stop processing.
+    return;
+  }
+
+  // instead, perform original logic.
+  J.SDP.Aliased.Game_Enemy.get("findLoot")
+    .call(this, drop, itemsFound);
+};
+
+/**
+ * Dynamically generates a custom drop exclusive for picking up and unlocking an SDP without a backing item.
+ * @param {RPG_DropItem} drop The SDP loot to build.
+ * @returns {{name: string, iconIndex: number, description: string, itypeId: number, sdpKey: string, jabsUseOnPickup: boolean}}
+ */
+Game_Enemy.prototype.buildSdpLoot = function(drop)
+{
+  // identify the panel in question.
+  const panel = J.SDP.Metadata.panelsMap.get(drop.sdpKey);
+
+  const dynamicLoot = {
+    // core data.
+    id: 0,
+    meta: {},
+    note: String.empty,
+    name: panel.name,
+    iconIndex: panel.iconIndex ?? J.SDP.Metadata.sdpIconIndex,
+    description: panel.description ?? "",
+    itypeId: 1,
+    animationId: 119,
+
+    // SDP metadata for pickup behavior.
+    sdpKey: panel.key,
+
+    // Ensure it is immediately consumed on pickup instead of stored.
+    jabsUseOnPickup: true,
+  };
+
+  return dynamicLoot;
+};
+
+/**
  * Gets the base amount of SDP points this enemy grants.
  * @returns {number}
  */
