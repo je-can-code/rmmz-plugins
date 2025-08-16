@@ -7,10 +7,17 @@
 J.DROPS.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
 Game_Enemy.prototype.gold = function()
 {
+  // identifies the base rate of gold gain.
   const baseGoldRate = this.getBaseGoldRate();
+
+  // calculates the gold accordingly with the base multiplier.
   const baseGold = (J.DROPS.Aliased.Game_Enemy.get("gold")
     .call(this) * baseGoldRate);
+
+  // multiplies the gold again by the party's gold multiplier.
   const multiplier = $gameParty.getGoldMultiplier();
+
+  // returns the rounded amount to avoid fractional gains in currency.
   return Math.round(baseGold * multiplier);
 };
 
@@ -25,9 +32,9 @@ Game_Enemy.prototype.getBaseGoldRate = function()
 };
 
 /**
- * OVERWRITE Modifies the drop chance algorithm to treat the number entered in the
- * database as a percent chance instead of some weird fractional shit. Also applies
- * any applicable multipliers against the discovery rate of loot.
+ * Overrides {@link #makeDropItems}.<br/>
+ * Modifies the drop chance algorithm to treat the number entered in the database as a percent chance instead of some
+ * weird fractional shit. Also applies any applicable multipliers against the discovery rate of loot.
  * @returns {RPG_BaseItem[]} The array of loot successfully found.
  */
 Game_Enemy.prototype.makeDropItems = function()
@@ -47,14 +54,8 @@ Game_Enemy.prototype.makeDropItems = function()
   // iterate over all drops to see what we got.
   dropList.forEach(drop =>
   {
-    // we don't deal with empty loot here.
-    if (drop.kind === 0) return;
-
-    // determine the loot we're finding.
-    const item = this.itemObject(drop.kind, drop.dataId);
-
     // check if this loot is findable.
-    if (!this.canFindLoot(item)) return;
+    if (!this.canFindLoot(drop)) return;
 
     // here we're using the number from the database as a percentage chance instead.
     const rate = drop.denominator * multiplier;
@@ -67,24 +68,41 @@ Game_Enemy.prototype.makeDropItems = function()
       ? true                    // we were already a boss.
       : this.didFindLoot(rate); // roll the dice!
 
-    // check if we earned the loot.
-    if (foundLoot)
-    {
-      // add it to the list of earned drops from this enemy.
-      itemsFound.push(item);
-    }
-  });
+    // if we didn't find the loot, then don't proceed.
+    if (foundLoot === false) return;
+
+    // find the loot.
+    this.findLoot(drop, itemsFound);
+  }, this);
 
   // return all earned loot!
   return itemsFound;
 };
 
 /**
- * Determines if the item is allowed to be found.
- * @param {RPG_BaseItem} item The item to find.
+ * Builds the drop to be found and adds it to the running list.
+ * @param {RPG_DropItem} drop The drop being found.
+ * @param {RPG_BaseItem} itemsFound The running list of items that have been found.
  */
-Game_Enemy.prototype.canFindLoot = function(item)
+Game_Enemy.prototype.findLoot = function(drop, itemsFound)
 {
+  // determine the loot we're finding.
+  const item = this.itemObject(drop.kind, drop.dataId);
+
+  // add it to the list of earned drops from this enemy.
+  itemsFound.push(item);
+};
+
+/**
+ * Determines if the drop is allowed to be found.
+ * @param {RPG_DropItem} drop The drop to potentially to find.
+ */
+Game_Enemy.prototype.canFindLoot = function(drop)
+{
+  // we don't deal with empty loot here.
+  if (drop.kind === 0) return false;
+
+  // find it!
   return true;
 };
 
@@ -138,7 +156,6 @@ Game_Enemy.prototype.getDropItems = function()
 
 /**
  * Gets any additional drops from the notes of this particular enemy.
- *
  * @returns {RPG_DropItem[]}
  */
 Game_Enemy.prototype.extraDrops = function()
@@ -157,7 +174,7 @@ Game_Enemy.prototype.extraDrops = function()
 
     // add what was found.
     extraDrops.push(...drops);
-  });
+  }, this);
 
   // return all the extras.
   return extraDrops;
@@ -175,6 +192,37 @@ Game_Enemy.prototype.dropSources = function()
 
   // return what we found.
   return sources;
+};
+
+/**
+ * Parses the given reference data to extract any extra drops that may be present.
+ * @param {RPG_BaseItem} referenceData The database object to parse.
+ * @returns {RPG_DropItem[]}
+ */
+Game_Enemy.prototype.extractExtraDrops = function(referenceData)
+{
+  // get the drops found on this enemy.
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true) ?? [];
+
+  // a mapping function to build proper drop items from the arrays.
+  const mapper = drop =>
+  {
+    // deconstruct the array into drop properties.
+    const [ dropType, dropId, chance ] = drop;
+
+    // build the new drop item.
+    return new RPG_DropItemBuilder()
+      .setType(RPG_DropItem.TypeFromLetter(dropType))
+      .setId(dropId)
+      .setChance(chance)
+      .build();
+  };
+
+  // map the converted drops.
+  const convertedDrops = moreDrops.map(mapper, this);
+
+  // return the found extra drops.
+  return convertedDrops;
 };
 
 /**

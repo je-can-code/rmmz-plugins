@@ -663,7 +663,7 @@ Sprite_Character.prototype.handleLootSetup = function()
  */
 Sprite_Character.prototype.hasLootDrawn = function()
 {
-  return !this.children.length;
+  return this.children.length > 0;
 };
 
 /**

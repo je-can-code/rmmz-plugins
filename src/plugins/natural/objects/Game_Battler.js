@@ -493,6 +493,24 @@ Game_Battler.prototype.setGoldPlus = function(goldPlus)
 {
   this._j._natural._goldPlus = goldPlus;
 };
+
+/**
+ * Gets the bonus to rewarded SDPs.
+ * @returns {number|number|*}
+ */
+Game_Battler.prototype.sdpsPlus = function()
+{
+  return this._j._natural._sdpsPlus ?? 0;
+};
+
+/**
+ * Sets the bonus to rewarded SDPs.
+ * @param {number} sdpsPlus The new bonus rewarded SDPs value.
+ */
+Game_Battler.prototype.setSdpsPlus = function(sdpsPlus)
+{
+  this._j._natural._sdpsPlus = sdpsPlus;
+};
 //endregion rewards
 //endregion properties
 
@@ -528,6 +546,7 @@ Game_Battler.prototype.clearAllParameterBuffs = function()
   this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
   this._j._natural._expPlus = 0;
   this._j._natural._goldPlus = 0;
+  this._j._natural._sdpsPlus = 0;
 };
 
 /**

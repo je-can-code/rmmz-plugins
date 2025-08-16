@@ -837,6 +837,23 @@ class ActionLogBuilder
     // return the builder for continuous building.
     return this;
   }
+
+  /**
+   * Sets up a message for unlocking an SDP.
+   * @param {string} sdpKey The key of the SDP being unlocked.
+   * @returns {this} This builder, for fluent chaining.
+   */
+  setupSdpUnlocked(sdpKey)
+  {
+    // construct the message.
+    const message = `\\sdp[${sdpKey}] has been unlocked!`;
+
+    // assign the message to this log.
+    this.setMessage(message);
+
+    // return the builder for continuous building.
+    return this;
+  }
 }
 
 //endregion MapLogBuilder

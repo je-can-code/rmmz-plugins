@@ -27,6 +27,7 @@ J.LEVEL.Aliased = {
   Game_Troop: new Map(),
 
   DataManager: new Map(),
+  JABS_AiManager: new Map(),
 
   Sprite_Character: new Map(),
 };

@@ -26,6 +26,12 @@ Game_Enemy.prototype.initMembers = function()
    * @type {Record<number, number>}
    */
   this._j._level._skillLearnings = {};
+
+  /**
+   * The cached level override for this enemy if one exists.
+   * @type {number|null}
+   */
+  this._j._level._cachedLevelOverride = null;
 };
 
 /**
@@ -36,6 +42,16 @@ Game_Enemy.prototype.initMembers = function()
 Game_Enemy.prototype.setSkillLearning = function(skillId, level)
 {
   this._j._level._skillLearnings[skillId] = level;
+};
+
+Game_Enemy.prototype.getCachedLevelOverride = function()
+{
+  return this._j._level._cachedLevelOverride;
+};
+
+Game_Enemy.prototype.setCachedLevelOverride = function(level)
+{
+  this._j._level._cachedLevelOverride = level;
 };
 
 /**
@@ -127,12 +143,8 @@ Game_Enemy.prototype.getBattlerBaseLevel = function()
   // if there are no overrides, then return the base level.
   if (this.hasLevelOverride() === false) return baseLevel;
 
-  // get the JABS_Battler associated with this enemy by UUID.
-  const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
-
   // return the level override.
-  return jabsBattler.getCharacter()
-    .getLevelOverrides();
+  return this.getCachedLevelOverride();
 };
 
 /**
@@ -144,21 +156,8 @@ Game_Enemy.prototype.hasLevelOverride = function()
   // if JABS isn't available, then there won't be a level override.
   if (!J.ABS) return false;
 
-  // if there is no battler on this enemy, then there won't be a level override to check.
-  if (!this.getUuid()) return false;
-
-  // get the JABS_Battler associated with this enemy by UUID.
-  const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
-
-  // if there is no battler being tracked by this UUID, then there are no overrides.
-  if (!jabsBattler) return false;
-
   // if overrides is null, then there are none.
-  if (jabsBattler.getCharacter()
-    .getLevelOverrides() === null)
-  {
-    return false;
-  }
+  if (this.getCachedLevelOverride() === null) return false;
 
   // there must be overrides!
   return true;
