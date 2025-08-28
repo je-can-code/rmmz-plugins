@@ -60,15 +60,6 @@ Game_Actor.prototype.getMaxTpNaturalBonuses = function(baseParam)
 };
 
 /**
- * Gets the base max tp for this actor.
- * @returns {number}
- */
-Game_Actor.prototype.getBaseMaxTp = function()
-{
-  return J.NATURAL.Metadata.BaseTpMaxActors;
-};
-
-/**
  * Gets the current amount of max tp bonuses added from growths.
  * @param {number} baseParam The base parameter value.
  * @returns {number}

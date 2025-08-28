@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.0 NATURAL] Enables level-based growth of all parameters.
+ * [v2.1.1 NATURAL] Enables level-based growth of all parameters.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -222,6 +222,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.1
+ *    Shifted basic max TP management to the J.BASE plugin.
  * - 2.1.0
  *    Added formula evaluation for enemy rewards on enemies.
  * - 2.0.1
@@ -271,7 +273,7 @@ J.NATURAL.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '2.1.0',
+  Version: '2.1.1',
 };
 
 /**
@@ -512,15 +514,6 @@ Game_Actor.prototype.getMaxTpNaturalBonuses = function(baseParam)
 
   // return that combination.
   return (maxTpBuff + maxTpGrowth);
-};
-
-/**
- * Gets the base max tp for this actor.
- * @returns {number}
- */
-Game_Actor.prototype.getBaseMaxTp = function()
-{
-  return J.NATURAL.Metadata.BaseTpMaxActors;
 };
 
 /**
@@ -1999,14 +1992,14 @@ Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramR
 
 //region max tp
 /**
- * OVERWRITE Replaces the `maxTp()` function with our custom one that will respect
- * formulas and apply rates from tags, etc.
+ * Overrides {@link #maxTp}.<br/>
+ * Combines base max TP with formula-based values derived from tags.
  * @returns {number}
  */
 Game_Battler.prototype.maxTp = function()
 {
   // calculate our actual max tp.
-  return this.actualMaxTp();
+  return Math.max(0, this.actualMaxTp());
 };
 
 /**
@@ -2018,11 +2011,14 @@ Game_Battler.prototype.actualMaxTp = function()
   // get the base max tp defined
   const baseParam = this.getBaseMaxTp();
 
+  // get the bonuses to max tp.
+  const baseBonusParam = this.getBaseMaxTpBonuses();
+
   // get all bonuses to max tp from natural bonuses.
   const maxTpNaturalBonuses = this.maxTpNaturalBonuses();
 
   // return result.
-  return (baseParam + maxTpNaturalBonuses);
+  return (baseParam + baseBonusParam + maxTpNaturalBonuses);
 };
 
 /**
@@ -2034,8 +2030,14 @@ Game_Battler.prototype.maxTpNaturalBonuses = function()
   // get the base max tp for this battler.
   const baseParam = this.getBaseMaxTp();
 
+  // get the bonuses to max tp.
+  const baseBonusParam = this.getBaseMaxTpBonuses();
+
+  // calculate base max tp including bonuses.
+  const baseMaxTp = (baseParam + baseBonusParam);
+
   // return the calculated natural bonuses.
-  return this.getMaxTpNaturalBonuses(baseParam);
+  return this.getMaxTpNaturalBonuses(baseMaxTp);
 };
 
 /**
@@ -2081,15 +2083,6 @@ Game_Battler.prototype.getMaxTpBuff = function(baseParam)
   // return result.
   return this.calculatePlusRate(baseParam, buffPlus, buffRate);
 };
-
-/**
- * Gets the base max tp for this battler.
- * @returns {number}
- */
-Game_Battler.prototype.getBaseMaxTp = function()
-{
-  return 0;
-};
 //endregion max tp
 //endregion Game_Battler
 
@@ -2134,15 +2127,6 @@ Game_Enemy.prototype.maxTp = function()
 {
   // calculate our actual max tp.
   return this.actualMaxTp();
-};
-
-/**
- * Gets the base max tp for this enemy.
- * @returns {number}
- */
-Game_Enemy.prototype.getBaseMaxTp = function()
-{
-  return J.NATURAL.Metadata.BaseTpMaxEnemies;
 };
 //endregion max tp
 
