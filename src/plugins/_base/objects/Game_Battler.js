@@ -53,6 +53,46 @@ Game_Battler.prototype.class = function(classId)
 };
 
 /**
+ * Overrides {@link #maxTp}.<br/>
+ * Replaces the default of 100 for all battlers with a tag-based calculation that reviews all available notes to sum
+ * together all maxTp values for a custom value.
+ * @returns {number}
+ */
+Game_Battler.prototype.maxTp = function()
+{
+  // get the base max tp for the battler.
+  const baseMaxTp = this.getBaseMaxTp();
+
+  // determine the sum of all max tech values from the available notes- if any.
+  const combinedMaxTp = this.getBaseMaxTpBonuses();
+
+  // check if none of the notes had any max tech v
+  return Math.max(0, (baseMaxTp + combinedMaxTp));
+};
+
+/**
+ * The base max TP for all battlers- always 0 at this level.
+ * @returns {number}
+ */
+Game_Battler.prototype.getBaseMaxTp = function()
+{
+  return 0;
+};
+
+/**
+ * The base bonus to max tech on this battler.
+ * @returns {number}
+ */
+Game_Battler.prototype.getBaseMaxTpBonuses = function()
+{
+  // grab all the notes.
+  const objectsToCheck = this.getAllNotes();
+
+  // determine the sum of all max tech values from the available notes- if any.
+  return RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.BASE.RegExp.MaxTp);
+};
+
+/**
  * Gets everything that this battler has with notes on it.
  * All battlers have their own database data, along with all their states.
  * Actors also get their class, skills, and equips added.

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.0 NATURAL] Enables level-based growth of all parameters.
+ * [v2.1.1 NATURAL] Enables level-based growth of all parameters.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -222,6 +222,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.1
+ *    Shifted basic max TP management to the J.BASE plugin.
  * - 2.1.0
  *    Added formula evaluation for enemy rewards on enemies.
  * - 2.0.1

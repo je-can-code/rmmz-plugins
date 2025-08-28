@@ -40,15 +40,6 @@ Game_Enemy.prototype.maxTp = function()
   // calculate our actual max tp.
   return this.actualMaxTp();
 };
-
-/**
- * Gets the base max tp for this enemy.
- * @returns {number}
- */
-Game_Enemy.prototype.getBaseMaxTp = function()
-{
-  return J.NATURAL.Metadata.BaseTpMaxEnemies;
-};
 //endregion max tp
 
 //region b params
