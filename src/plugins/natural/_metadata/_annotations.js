@@ -17,6 +17,7 @@
  * - J-CriticalFactors; enables natural growths of CDM/CDR.
  * - J-Passives; updates with relic gain as well.
  * - J-LevelMaster; enables the ".lvl" access for formulas.
+ * - J-SDP; adds SDP to the options for reward-based formulas.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:
@@ -127,7 +128,7 @@
  * enemy's luck value plus the enemy's level squared (to the second power).
  *
  *  <sdpPlus:[100 * a.atk]>
- * When defeating this enemy, the SDPs gained will be increased by 1-- plus the
+ * When defeating this enemy, the SDPs gained will be increased by 100 plus the
  * enemy's attack value.
  *
  * ==============================================================================
@@ -151,7 +152,8 @@
  *  For every level gained by an actor using this class, they will gain a
  *  a permanent bonus of 50% of their current GRD added as a "rate" bonus,
  *  meaning it is a multiplied percent bonus against their base and plus
- *  values combined.
+ *  values combined. Note that this is stored on the actor and will persist
+ *  even after the class is changed.
  *
  * TAG:
  *  <hrgBuffPlus:[(a.level**1.3)+(a.level*5)]>
@@ -223,7 +225,8 @@
  * ============================================================================
  * CHANGELOG:
  * - 2.1.1
- *    Shifted basic max TP management to the J.BASE plugin.
+ *    Relocates basic max TP management to the J.BASE plugin.
+ *    Adds ability to also add a bonus to SDP dropped.
  * - 2.1.0
  *    Added formula evaluation for enemy rewards on enemies.
  * - 2.0.1

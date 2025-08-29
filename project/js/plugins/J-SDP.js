@@ -818,6 +818,7 @@ class StatDistributionPanel
  * @orderAfter J-ABS-Speed
  * @orderAfter J-DropsControl
  * @orderAfter J-CriticalFactors
+ * @orderAfter J-Natural
  * @orderAfter J-Proficiency
  * @help
  * ============================================================================
@@ -826,10 +827,11 @@ class StatDistributionPanel
  * of leveling up to raise an actor's stats.
  *
  * Integrates with others of mine plugins:
- * - J-DropsControl; enables usage of item-as-panel drops.
  * - J-ABS; enemies will individually drop their points and panels.
  * - J-ABS-Speed; enables usage of Movespeed Boost as a parameter on panels.
  * - J-CriticalFactors; enables usage of CDM/CDR as parameters on panels.
+ * - J-DropsControl; enables usage of item-as-panel drops.
+ * - J-Natural; enables SDP reward modifications.
  * - J-Proficiency; enables usage of Proficiency+ as a parameter on panels.
  *
  * ----------------------------------------------------------------------------
@@ -1002,6 +1004,7 @@ class StatDistributionPanel
  * CHANGELOG:
  * - 2.1.0
  *    Removed association of SDPs being backed by actual database items.
+ *    Implemented JABS-centric basis for dynamically generating drops.
  * - 2.0.2
  *    Added new getTotalSdpRanks function to actors for a new data point.
  * - 2.0.1

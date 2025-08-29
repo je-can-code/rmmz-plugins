@@ -10,7 +10,7 @@
  * @help
  * ============================================================================
  * OVERVIEW
- * This plugin does some stuff that is probably pretty cool.
+ * This plugin renders a minimap onto the map.
  *
  * Integrates with others of mine plugins:
  * - J-Base; to be honest this is just required for all my plugins.

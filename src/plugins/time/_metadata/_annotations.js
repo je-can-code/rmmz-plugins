@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 TIME] A system for tracking time- real or artificial.
+ * [v1.0.1 TIME] A system for tracking time- real or artificial.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -136,6 +136,8 @@
  *
  * ==============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Fixed issue with "hours per tick" not being respected.
  * - 1.0.0
  *    J-TIME's initial release.
  * ==============================================================================
