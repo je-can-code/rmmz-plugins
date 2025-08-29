@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.2.1 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -29,6 +29,7 @@
  *
  * Integrates with others of mine plugins:
  * - J-ABS; enables per-event-enemy level overrides.
+ * - J-LevelMaster; handles level-based max hp/mp/tp growths.
  *
  * ============================================================================
  * PLUGIN PARAMETERS BREAKDOWN:
@@ -222,6 +223,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed issue with level overrides not apply J-NATURAL growths.
  * - 1.2.0
  *    Added ability to override JABS enemies on the map with a new level.
  * - 1.1.1

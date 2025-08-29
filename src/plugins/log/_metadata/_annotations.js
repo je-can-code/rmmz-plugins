@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.0 LOG] A log window for viewing on the map.
+ * [v2.2.1 LOG] A log window for viewing on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -110,6 +110,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Added SDP drop-related logging.
  * - 2.2.0
  *    Added DiaLog functionality, enabling passive chats to happen on the map.
  *    Added Loot Log functionality, where loot-related logs now show up.

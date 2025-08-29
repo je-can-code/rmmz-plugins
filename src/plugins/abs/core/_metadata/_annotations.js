@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.4.2 JABS] Enables combat to be carried out on the map.
+ * [v3.4.3 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,8 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 3.4.3
+ *    Added hook for post-battler-conversion mutation.
  * - 3.4.2
  *    Adjusted font size and sprite location for enemy battler name on map.
  * - 3.4.1
