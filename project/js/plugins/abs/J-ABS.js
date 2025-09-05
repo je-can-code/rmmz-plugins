@@ -20712,67 +20712,79 @@ class JABS_Engine
    */
   addJabsActionToMap(actionEventData, action)
   {
-    // add the data to the $datamap.events.
-    $dataMap.events[$dataMap.events.length] = actionEventData;
-    const newIndex = $dataMap.events.length - 1;
-    actionEventData.actionIndex = newIndex;
+    // find the first available hole in the data map event list.
+    let index = -1; // the index we will insert at.
+    for (let i = 0; i < $dataMap.events.length; i++)
+    {
+      // if an empty spot is found, use that.
+      if (!$dataMap.events[i])
+      {
+        index = i; // capture the hole index.
+        break; // stop searching.
+      }
+    }
+
+    // if no hole was found, append to the end.
+    if (index === -1)
+    {
+      index = $dataMap.events.length; // assign next index.
+    }
+
+    // add the data to the $dataMap.events at the chosen index.
+    $dataMap.events[index] = actionEventData; // keep array dense.
+    actionEventData.actionIndex = index; // persist the action index.
 
     // assign this so it exists, but isn't valid.
-    actionEventData.lootIndex = 0;
+    actionEventData.lootIndex = 0; // not a loot event.
 
-    // create the event by hand with this new data
-    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, newIndex);
+    // create the event by hand with this new data.
+    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, index); // construct sprite.
 
     const {
       x: actionX,
       y: actionY
-    } = actionEventData;
-    actionEventSprite._realX = actionX;
-    actionEventSprite._realY = actionY;
-    actionEventSprite._x = actionX;
-    actionEventSprite._y = actionY;
+    } = actionEventData; // extract coordinates.
+    actionEventSprite._realX = actionX; // align position.
+    actionEventSprite._realY = actionY; // align position.
+    actionEventSprite._x = actionX; // align grid x.
+    actionEventSprite._y = actionY; // align grid y.
 
     // give it a name.
-    const skillName = action.getBaseSkill().name;
-    const casterName = action.getCaster()
-      .battlerName();
-    actionEventSprite.__actionName = `_${casterName}-${skillName}`;
+    const skillName = action.getBaseSkill().name; // get skill name.
+    const casterName = action.getCaster().battlerName(); // get caster name.
+    actionEventSprite.__actionName = `_${casterName}-${skillName}`; // tag for debugging/tools.
 
-    // on rare occasions, the timing of adding an action to the map coincides
-    // with the removal of the caster which breaks the ordering of the events.
-    // the result will throw an error and break. This should catch that.
+    // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
     {
-      console.error("that rare error occurred!");
-      return;
+      console.error("that rare error occurred!"); // preserve existing behavior.
+      return; // stop if invalid.
     }
 
-    const pageIndex = actionEventSprite.findProperPageIndex();
+    const pageIndex = actionEventSprite.findProperPageIndex(); // resolve page index.
     const {
       characterIndex,
       characterName
-    } = actionEventData.pages[pageIndex].image;
+    } = actionEventData.pages[pageIndex].image; // extract image data.
 
-    actionEventSprite.setActionSpriteNeedsAdding();
-    actionEventSprite._eventId = actionEventData.id;
-    actionEventSprite._characterName = characterName;
-    actionEventSprite._characterIndex = characterIndex;
-    const pageData = actionEventData.pages[pageIndex];
-    actionEventSprite.setMoveFrequency(pageData.moveFrequency);
-    actionEventSprite.setMoveRoute(pageData.moveRoute);
-    actionEventSprite.setDirection(action.direction());
-    actionEventSprite.setCustomDirection(action.direction());
-    actionEventSprite.setCastedDirection($gamePlayer.direction());
-    actionEventSprite.setJabsAction(action);
+    actionEventSprite.setActionSpriteNeedsAdding(); // flag to add sprite.
+    actionEventSprite._eventId = actionEventData.id; // assign event id.
+    actionEventSprite._characterName = characterName; // assign sprite name.
+    actionEventSprite._characterIndex = characterIndex; // assign sprite index.
+    const pageData = actionEventData.pages[pageIndex]; // get page.
+    actionEventSprite.setMoveFrequency(pageData.moveFrequency); // frequency.
+    actionEventSprite.setMoveRoute(pageData.moveRoute); // route.
+    actionEventSprite.setDirection(action.direction()); // facing.
+    actionEventSprite.setCustomDirection(action.direction()); // custom facing.
+    actionEventSprite.setCastedDirection($gamePlayer.direction()); // cast facing.
+    actionEventSprite.setJabsAction(action); // wire action.
 
-    // overwrites the "start" of the event for this event to be nothing.
-    // this prevents the player from accidentally interacting with the
-    // sword swing or whatever is generated by the action.
-    actionEventSprite.start = () => false;
+    // prevent player interaction with the action event.
+    actionEventSprite.start = () => false; // no-op start.
 
-    action.setActionSprite(actionEventSprite);
-    $gameMap.addEvent(actionEventSprite);
-    this.requestActionRendering = true;
+    action.setActionSprite(actionEventSprite); // associate back.
+    $gameMap.addEvent(actionEventSprite); // add to map, with hole reuse.
+    this.requestActionRendering = true; // trigger render.
   }
 
   /**
@@ -20784,36 +20796,54 @@ class JABS_Engine
   addLootDropToMap(x, y, item)
   {
     // clone the loot data from the action map event id of 1.
-    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]);
+    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]); // base template.
 
-    lootEventData.x = x;
-    lootEventData.y = y;
+    lootEventData.x = x; // position x.
+    lootEventData.y = y; // position y.
+
+    // find the first available hole in the data map event list.
+    let index = -1; // the index we will insert at.
+    for (let i = 0; i < $dataMap.events.length; i++)
+    {
+      // if an empty spot is found, use that.
+      if (!$dataMap.events[i])
+      {
+        index = i; // capture the hole index.
+        break; // stop searching.
+      }
+    }
+
+    // if no hole was found, append to the end.
+    if (index === -1)
+    {
+      index = $dataMap.events.length; // assign next index.
+    }
 
     // add the loot event to the datamap list of events.
-    $dataMap.events[$dataMap.events.length] = lootEventData;
-    const newIndex = $dataMap.events.length - 1;
-    lootEventData.lootIndex = newIndex;
+    $dataMap.events[index] = lootEventData; // keep array dense.
+    lootEventData.lootIndex = index; // persist the loot index.
 
     // create the loot event by hand with this new data.
-    const jabsLootData = new JABS_LootDrop(item);
-    lootEventData.uuid = jabsLootData.uuid;
+    const jabsLootData = new JABS_LootDrop(item); // create loot model.
+    lootEventData.uuid = jabsLootData.uuid; // associate unique id.
 
     // set the duration of this loot drop
     // if a custom time is available, then use that, otherwise use the default.
-    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration;
+    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration; // lifetime.
 
     // generate a new event to visually represent the loot drop and flag it for adding.
-    const eventId = $dataMap.events.length - 1;
-    const lootEvent = new Game_Event($gameMap.mapId(), eventId);
-    lootEvent.setJabsLoot(jabsLootData);
-    lootEvent.setLootNeedsAdding();
+    const eventId = index; // use the reused/appended index.
+    const lootEvent = new Game_Event($gameMap.mapId(), eventId); // construct sprite.
+    lootEvent.setJabsLoot(jabsLootData); // attach loot.
 
-    // add loot event to map.
-    this.requestLootRendering = true;
-    $gameMap.addEvent(lootEvent);
+    // flag for adding a character sprite later via HUD/spriteset integration (unchanged elsewhere).
+    lootEvent.setLootNeedsAdding(); // if your code uses such a flag.
 
-    // return the event in case callers need it.
-    return lootEvent;
+    // add to the map, reusing holes in the live event list as well.
+    $gameMap.addEvent(lootEvent); // will reuse holes per updated addEvent().
+
+    // trigger the spriteset to scan and add loot sprites.
+    this.requestLootRendering = true; // ensure loot renders this frame.
   }
 
   /**
@@ -20952,12 +20982,10 @@ class JABS_Engine
     if (target.guarding())
     {
       // grab the result.
-      const result = targetBattler.result();
+      const nextResult = targetBattler.result();
 
       // flag that the action was guarded.
-      result.guarded = true;
-
-
+      nextResult.guarded = true;
     }
 
     // apply the action to the target.
@@ -21396,6 +21424,7 @@ class JABS_Engine
     const debug = false;
     if (debug === true)
     {
+      // eslint-disable-next-line max-len
       console.log(`[${casterBattler.name()}] hit: ${attackerHit}, grd: ${defenderGrd}, rng: ${rng}, diff: ${difference}, parried: ${rng > difference}`);
     }
 
@@ -22195,7 +22224,8 @@ class JABS_Engine
           hitOne = true;
         }
       }
-        // if the action is a standard projectile-based action,
+
+      // if the action is a standard projectile-based action,
       // then check to see if this battler is now in range.
       else
       {
@@ -28326,7 +28356,25 @@ Game_Map.prototype.newBattlerEvents = function()
  */
 Game_Map.prototype.addEvent = function(event)
 {
-  this._events.push(event);
+  // attempt to find the first available hole in the event list.
+  let inserted = false; // whether or not we found a spot to insert.
+
+  for (let i = 0; i < this._events.length; i++)
+  {
+    // if the slot is empty/nullish, then reuse it.
+    if (!this._events[i])
+    {
+      this._events[i] = event; // assign into the first available hole.
+      inserted = true; // flag that we inserted.
+      break; // stop looking for holes.
+    }
+  }
+
+  // if we didn't find a hole, then append to the end as usual.
+  if (!inserted)
+  {
+    this._events.push(event); // append to the end.
+  }
 };
 
 /**
@@ -28347,8 +28395,8 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
     // remove it if it's a loot event.
     this.handleLootEventRemoval(eventToRemove);
 
-    // delete the event from tracking.
-    delete this._events[eventIndex];
+    // mark the slot as empty to avoid sparseness while preserving indices.
+    this._events[eventIndex] = null; // keep array dense and reusable.
   }
 };
 
@@ -28359,22 +28407,22 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
 Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
 {
   // don't process if this event isn't an action.
-  if (!actionToRemove.isJabsAction()) return;
+  if (!actionToRemove.isJabsAction()) return; // only handle actions.
 
   // get the relevant metadatas for the action.
   const actionMetadatas = this.actionEventsFromDataMapByUuid(actionToRemove.getJabsActionUuid());
 
   // all removed events get erased.
-  actionToRemove.erase();
+  actionToRemove.erase(); // ensure event is erased visually/logic-wise.
 
   // and also to cleanup the current list of active jabs action events.
-  $jabsEngine.clearActionEvents();
+  $jabsEngine.clearActionEvents(); // purge internal tracking.
 
   // iterate over each of the metadatas for deletion.
   actionMetadatas.forEach(actionMetadata =>
   {
-    // purge the action metadata from the datamap.
-    delete $dataMap.events[actionMetadata.actionIndex];
+    // instead of deleting (which creates sparse arrays), null the slot.
+    $dataMap.events[actionMetadata.actionIndex] = null; // maintain dense array kind.
   });
 };
 
@@ -28384,8 +28432,8 @@ Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
  */
 Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
 {
-  // don't process if this event isn't an action.
-  if (!lootToRemove.isJabsLoot()) return;
+  // don't process if this event isn't loot.
+  if (!lootToRemove.isJabsLoot()) return; // only handle loot.
 
   // get the relevant metadatas for the loot.
   const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid);
@@ -28393,8 +28441,8 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   // iterate over each of the metadatas for deletion.
   lootMetadatas.forEach(lootMetadata =>
   {
-    // purge the loot metadata from the datamap.
-    delete $dataMap.events[lootMetadata.lootIndex];
+    // instead of deleting (which creates sparse arrays), null the slot.
+    $dataMap.events[lootMetadata.lootIndex] = null; // maintain dense array kind.
   });
 };
 

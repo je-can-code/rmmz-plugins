@@ -82,7 +82,7 @@ Game_Event.prototype.refresh = function()
   J.LEVEL.Aliased.Game_Event.get('refresh')
     .call(this);
 
-  // clear the level override cache when the event page changes
+  // clear the level override cache when the event page changes.
   this.clearLevelCache();
 };
 

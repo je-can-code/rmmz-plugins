@@ -342,7 +342,25 @@ Game_Map.prototype.newBattlerEvents = function()
  */
 Game_Map.prototype.addEvent = function(event)
 {
-  this._events.push(event);
+  // attempt to find the first available hole in the event list.
+  let inserted = false; // whether or not we found a spot to insert.
+
+  for (let i = 0; i < this._events.length; i++)
+  {
+    // if the slot is empty/nullish, then reuse it.
+    if (!this._events[i])
+    {
+      this._events[i] = event; // assign into the first available hole.
+      inserted = true; // flag that we inserted.
+      break; // stop looking for holes.
+    }
+  }
+
+  // if we didn't find a hole, then append to the end as usual.
+  if (!inserted)
+  {
+    this._events.push(event); // append to the end.
+  }
 };
 
 /**
@@ -363,8 +381,8 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
     // remove it if it's a loot event.
     this.handleLootEventRemoval(eventToRemove);
 
-    // delete the event from tracking.
-    delete this._events[eventIndex];
+    // mark the slot as empty to avoid sparseness while preserving indices.
+    this._events[eventIndex] = null; // keep array dense and reusable.
   }
 };
 
@@ -375,22 +393,22 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
 Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
 {
   // don't process if this event isn't an action.
-  if (!actionToRemove.isJabsAction()) return;
+  if (!actionToRemove.isJabsAction()) return; // only handle actions.
 
   // get the relevant metadatas for the action.
   const actionMetadatas = this.actionEventsFromDataMapByUuid(actionToRemove.getJabsActionUuid());
 
   // all removed events get erased.
-  actionToRemove.erase();
+  actionToRemove.erase(); // ensure event is erased visually/logic-wise.
 
   // and also to cleanup the current list of active jabs action events.
-  $jabsEngine.clearActionEvents();
+  $jabsEngine.clearActionEvents(); // purge internal tracking.
 
   // iterate over each of the metadatas for deletion.
   actionMetadatas.forEach(actionMetadata =>
   {
-    // purge the action metadata from the datamap.
-    delete $dataMap.events[actionMetadata.actionIndex];
+    // instead of deleting (which creates sparse arrays), null the slot.
+    $dataMap.events[actionMetadata.actionIndex] = null; // maintain dense array kind.
   });
 };
 
@@ -400,8 +418,8 @@ Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
  */
 Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
 {
-  // don't process if this event isn't an action.
-  if (!lootToRemove.isJabsLoot()) return;
+  // don't process if this event isn't loot.
+  if (!lootToRemove.isJabsLoot()) return; // only handle loot.
 
   // get the relevant metadatas for the loot.
   const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid);
@@ -409,8 +427,8 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   // iterate over each of the metadatas for deletion.
   lootMetadatas.forEach(lootMetadata =>
   {
-    // purge the loot metadata from the datamap.
-    delete $dataMap.events[lootMetadata.lootIndex];
+    // instead of deleting (which creates sparse arrays), null the slot.
+    $dataMap.events[lootMetadata.lootIndex] = null; // maintain dense array kind.
   });
 };
 

@@ -62,7 +62,7 @@ class Sprite_MiniMap
    * Edge (directional block) stroke color.
    * @type {string}
    */
-  EDGE_COLOR = '#ffffff77';
+  EDGE_COLOR = '#e6f0ffcc';
 
   /**
    * Fill color for wholly impassable tiles (blocked in all directions).
@@ -71,37 +71,25 @@ class Sprite_MiniMap
   IMPASSABLE_COLOR = '#330000aa';
 
   /**
-   * Player marker color (green).
-   * @type {string}
-   */
-  PLAYER_COLOR = '#00cc66cc';
-
-  /**
-   * Hostile enemy marker color (red diamond).
-   * @type {string}
-   */
-  ENEMY_COLOR = '#ff4444cc';
-
-  /**
-   * Non-hostile/inanimate enemy marker color (orange diamond).
-   * @type {string}
-   */
-  INANIMATE_COLOR = '#ffaa44cc';
-
-  /**
-   * Follower marker color (blue square).
-   * @type {string}
-   */
-  FOLLOWER_COLOR = '#44aaffcc';
-
-  /**
    * Minimum marker size in pixels.
    * @type {number}
    */
   MARKER_MIN = 2;
+
+  /**
+   * Whether or not to use smooth scrolling for the map rather than tile-step based scrolling.
+   * @type {boolean}
+   */
+  SMOOTH_SCROLL = true;
+
+  /**
+   * The smoothness of scrolling- use 0 to follow the real position, or decimal for a little drag.
+   * @type {number}
+   */
+  SMOOTH_LERP = 0;
+
   //endregion configuration
 
-  //region initialize
   /**
    * Constructs a new minimap sprite and initializes the cache, overlay, and positioning.
    */
@@ -109,6 +97,15 @@ class Sprite_MiniMap
   {
     super();
 
+    this.initCoreData();
+    this.initCacheData();
+    this.initOverlayLayer();
+    this.initChromeLayer();
+    this.initFrameLayer();
+  }
+
+  initCoreData()
+  {
     /**
      * The number of padding tiles applied on each side of the cached map.
      * This is equal to MAP_RANGE and allows player-centered scrolling near edges.
@@ -143,14 +140,32 @@ class Sprite_MiniMap
 
     // Positioning
     this.anchor.set(0.5, 0.5);
-    this.x = this.POS_X >= 0
-      ? this.POS_X
+
+    this.x = J.MAP.Metadata.minimapX >= 0
+      ? J.MAP.Metadata.minimapX
       : (Graphics.boxWidth - (this._width / 2) - 10);
-    this.y = this.POS_Y >= 0
-      ? this.POS_Y
+
+    this.y = J.MAP.Metadata.minimapY >= 0
+      ? J.MAP.Metadata.minimapY
       : (Graphics.boxHeight - (this._height / 2) - 10);
+
     this.z = 200;
 
+    /**
+     * Last known player x tile; used to detect when to re-blit the window.
+     * @type {number}
+     */
+    this._lastX = -1;
+
+    /**
+     * Last known player y tile; used to detect when to re-blit the window.
+     * @type {number}
+     */
+    this._lastY = -1;
+  }
+
+  initCacheData()
+  {
     /**
      * Full-map cached bitmap (map + padding around it), rebuilt per-map.
      * @type {Bitmap}
@@ -169,6 +184,12 @@ class Sprite_MiniMap
      */
     this._cachedMapId = 0;
 
+    this._smoothFx = 0; // smoothed source X in pixels within _cacheBitmap
+    this._smoothFy = 0; // smoothed source Y in pixels within _cacheBitmap
+  }
+
+  initOverlayLayer()
+  {
     /**
      * Dynamic overlay bitmap drawn every frame (enemies, followers, etc.).
      * @type {Bitmap}
@@ -182,19 +203,26 @@ class Sprite_MiniMap
     this._overlaySprite = new Sprite(this._overlay);
     this._overlaySprite.anchor.set(0.5, 0.5);
     this.addChild(this._overlaySprite);
+  }
 
-    /**
-     * Last known player x tile; used to detect when to re-blit the window.
-     * @type {number}
-     */
-    this._lastX = -1;
+  initChromeLayer()
+  {
+    // Create a chrome layer (static UI chrome, like the North notch)
+    this._chromeBitmap = new Bitmap(this._width, this._height);
+    this._chromeSprite = new Sprite(this._chromeBitmap);
 
-    /**
-     * Last known player y tile; used to detect when to re-blit the window.
-     * @type {number}
-     */
-    this._lastY = -1;
+    // Add this line to align the chrome with the minimap center
+    this._chromeSprite.anchor.set(0.5, 0.5);
 
+    // adds it as the final layer before the frame.
+    this.addChild(this._chromeSprite);
+
+    // Draw the chrome now.
+    this.redrawChrome();
+  }
+
+  initFrameLayer()
+  {
     /**
      * The minimap's frame sprite.
      * @type {Sprite}
@@ -217,15 +245,8 @@ class Sprite_MiniMap
         thickness: 3,
         rim: 1,
         highlight: 1, // palette options (examples)
-        // cDark: "rgba(24,20,28,1.0)",
-        // cMid: "rgba(70,70,90,1.0)",
-        // cInner: "rgba(220,220,236,1.0)",
-        // cShadow: "rgba(0,0,0,0.35)",
-        // cAccent: "rgba(255,196,96,1.0)"
       });
   }
-
-  //endregion initialize
 
   //region lifecycle
   /**
@@ -258,18 +279,38 @@ class Sprite_MiniMap
       this._cachedMapId = mapId;
       this._cacheReady = true;
 
+      // Seed smoothing so there's no snap on the first frame after rebuild.
+      const {
+        fx,
+        fy
+      } = this.srcFloatFromPlayer?.() ?? {
+        fx: 0,
+        fy: 0
+      };
+      this._smoothFx = fx;
+      this._smoothFy = fy;
+
       // Force initial redraw regardless of movement.
       this._lastX = -99999;
       this._lastY = -99999;
     }
 
-    // Redraw window only if the player changed tiles.
-    if (this.needsUpdate())
+    if (this.SMOOTH_SCROLL)
     {
+      // Always redraw to follow sub-tile movement
+      this.redrawWindowSmooth();
+      this.refreshMinimapFrame();
+
+      // Keep last integer tile updated for any logic that relies on it
+      this._lastX = $gamePlayer.x;
+      this._lastY = $gamePlayer.y;
+    }
+    else if (this.needsUpdate())
+    {
+      // Legacy: only redraw when the player changes tiles
       this.redrawWindow();
       this._lastX = $gamePlayer.x;
       this._lastY = $gamePlayer.y;
-
       this.refreshMinimapFrame();
     }
 
@@ -300,6 +341,176 @@ class Sprite_MiniMap
   }
 
   //endregion lifecycle
+
+  /**
+   * Enters a temporary focus mode: the minimap is moved to the middle-right of the screen and greatly expand scope.
+   * While focused, overlap dimming is disabled and the map is always visible.
+   * Calling this while already focused is a no-op.
+   */
+  enterFocusMode()
+  {
+    // if already focused, do nothing.
+    if (this._focusMode) return;
+
+    // mark focused.
+    this._focusMode = true;
+
+    // snapshot current state to restore later.
+    this._preFocusState = {
+      mapRange: this.MAP_RANGE,           // current tiles in each direction
+      scale: this.SCALE,                  // current tile pixel size
+      width: this._width,                 // window width in px
+      height: this._height,               // window height in px
+      x: this.x,                          // position
+      y: this.y,
+      smoothFx: this._smoothFx,           // smooth scroll floats
+      smoothFy: this._smoothFy,
+    };
+
+    // Choose an expanded scope. 2x is a good default; tweak to taste.
+    // We expand MAP_RANGE (more tiles) to see far more of the map at once.
+    const focusMultiplier = 3; // show twice the tiles in each direction
+    this.MAP_RANGE = Math.max(4, Math.floor(this.MAP_RANGE * focusMultiplier));
+
+    // Optionally nudge SCALE up a hair so the whole widget is even larger
+    // (comment out if you want strictly “more area” with same per-tile size).
+    // this.SCALE = this.SCALE + 2;
+
+    // Recompute derived dimensions for the new window size.
+    this._viewTiles = (this.MAP_RANGE * 2) + 1; // tiles per axis
+    this._width = this._viewTiles * this.SCALE; // pixels
+    this._height = this._viewTiles * this.SCALE; // pixels
+
+    // Resize the base bitmap.
+    this.bitmap = new Bitmap(this._width, this._height);
+
+    // Resize overlay and keep it centered/aligned.
+    if (this._overlaySprite)
+    {
+      this._overlay = new Bitmap(this._width, this._height);
+      this._overlaySprite.bitmap = this._overlay;
+      this._overlaySprite.anchor.set(0.5, 0.5);
+    }
+
+    // Resize chrome and redraw.
+    if (this._chromeSprite)
+    {
+      this._chromeBitmap = new Bitmap(this._width, this._height);
+      this._chromeSprite.bitmap = this._chromeBitmap;
+      this._chromeSprite.anchor.set(0.5, 0.5);
+      this.redrawChrome();
+    }
+
+    // Resize and redraw frame to match.
+    this.refreshMinimapFrame();
+
+    // Reposition: center of the screen.
+    this.x = Math.floor(Graphics.boxWidth - (this._width / 2) - 10);
+    this.y = Math.floor(Graphics.boxHeight / 2);
+
+    // Force cache rebuild and seed smoothing so there is no snap.
+    this.refresh();
+    const {
+      fx,
+      fy
+    } = this.srcFloatFromPlayer?.() ?? {
+      fx: 0,
+      fy: 0
+    };
+    this._smoothFx = fx;
+    this._smoothFy = fy;
+
+    // Ensure immediate redraw.
+    this._lastX = -99999;
+    this._lastY = -99999;
+
+    // Ensure visibility while focused.
+    this.visible = true;
+  }
+
+  /**
+   * Exits focus mode and restores the previous minimap size, scope, and position.
+   * Calling this when not focused is a no-op.
+   */
+  exitFocusMode()
+  {
+    // if not focused, nothing to do.
+    if (!this._focusMode) return;
+
+    // clear focus flag first to let visibility logic work normally.
+    this._focusMode = false;
+
+    // pull prior state; if missing, just bail gracefully.
+    const st = this._preFocusState || null;
+    this._preFocusState = null;
+    if (!st) return;
+
+    // Restore core values.
+    this.MAP_RANGE = st.mapRange;
+    this.SCALE = st.scale;
+
+    // Recompute derived window size.
+    this._viewTiles = (this.MAP_RANGE * 2) + 1;
+    this._width = this._viewTiles * this.SCALE;
+    this._height = this._viewTiles * this.SCALE;
+
+    // Resize base bitmap.
+    this.bitmap = new Bitmap(this._width, this._height);
+
+    // Resize overlay bitmap/sprite.
+    if (this._overlaySprite)
+    {
+      this._overlay = new Bitmap(this._width, this._height);
+      this._overlaySprite.bitmap = this._overlay;
+      this._overlaySprite.anchor.set(0.5, 0.5);
+    }
+
+    // Resize chrome and redraw.
+    if (this._chromeSprite)
+    {
+      this._chromeBitmap = new Bitmap(this._width, this._height);
+      this._chromeSprite.bitmap = this._chromeBitmap;
+      this._chromeSprite.anchor.set(0.5, 0.5);
+      this.redrawChrome();
+    }
+
+    // Refresh the frame to match new size.
+    this.refreshMinimapFrame();
+
+    // Restore configured corner/coordinates.
+    this.anchor.set(0.5, 0.5);
+    this.x = J.MAP.Metadata.minimapX >= 0
+      ? J.MAP.Metadata.minimapX
+      : (Graphics.boxWidth - (this._width / 2) - 10);
+    this.y = J.MAP.Metadata.minimapY >= 0
+      ? J.MAP.Metadata.minimapY
+      : (Graphics.boxHeight - (this._height / 2) - 10);
+
+    // Force cache rebuild for the smaller window and reset smoothing.
+    this.refresh();
+    const {
+      fx,
+      fy
+    } = this.srcFloatFromPlayer?.() ?? {
+      fx: 0,
+      fy: 0
+    };
+    this._smoothFx = fx;
+    this._smoothFy = fy;
+
+    // Force redraw next update.
+    this._lastX = -99999;
+    this._lastY = -99999;
+  }
+
+  /**
+   * Whether the minimap is in the temporary focus mode.
+   * @returns {boolean}
+   */
+  isInFocusMode()
+  {
+    return !!this._focusMode;
+  }
 
   //region drawing
   /**
@@ -341,30 +552,34 @@ class Sprite_MiniMap
     /** @type {number[]} */
     const flags = $gameMap.tilesetFlags();
 
-    for (let y = 0; y < mapHeight; y++)
+    // Loop flags from engine
+    const loopH = $gameMap.isLoopHorizontal?.() ?? false;
+    const loopV = $gameMap.isLoopVertical?.() ?? false;
+
+    // Base map at (pad, pad)
+    this.drawMapCopyAt(pad, pad, flags);
+
+    // Horizontal wrapping (fill left/right padding)
+    if (loopH)
     {
-      for (let x = 0; x < mapWidth; x++)
-      {
-        const sx = (x + pad) * this.SCALE; // shifted by pad
-        const sy = (y + pad) * this.SCALE; // shifted by pad
+      this.drawMapCopyAt(pad - mapWidth, pad, flags); // left band
+      this.drawMapCopyAt(pad + mapWidth, pad, flags); // right band
+    }
 
-        const mask = this.blockedMaskAt(x, y, flags);
+    // Vertical wrapping (fill top/bottom padding)
+    if (loopV)
+    {
+      this.drawMapCopyAt(pad, pad - mapHeight, flags); // top band
+      this.drawMapCopyAt(pad, pad + mapHeight, flags); // bottom band
+    }
 
-        // Allow subclasses to fully override tile drawing.
-        if (this.drawCell(x, y, sx, sy, mask)) continue;
-
-        if (mask === 0x0f)
-        {
-          // Fully impassable tile
-          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
-        }
-        else
-        {
-          // Floor, then edges
-          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.FLOOR_COLOR));
-          this.drawEdges(this._cacheBitmap, sx, sy, mask);
-        }
-      }
+    // Corner quadrants when both loop
+    if (loopH && loopV)
+    {
+      this.drawMapCopyAt(pad - mapWidth, pad - mapHeight, flags); // top-left
+      this.drawMapCopyAt(pad + mapWidth, pad - mapHeight, flags); // top-right
+      this.drawMapCopyAt(pad - mapWidth, pad + mapHeight, flags); // bottom-left
+      this.drawMapCopyAt(pad + mapWidth, pad + mapHeight, flags); // bottom-right
     }
   }
 
@@ -383,9 +598,21 @@ class Sprite_MiniMap
       srcY
     } = this.cacheSrcFromPlayer();
     this.bitmap.blt(this._cacheBitmap, srcX, srcY, this._width, this._height, 0, 0);
-
     // Player marker at center (green circle)
     this.drawPlayerMarker();
+  }
+
+  /**
+   * Draws the static layer after the overlay layer.
+   */
+  redrawChrome()
+  {
+    if (!this._chromeBitmap) return;
+
+    this._chromeBitmap.clear();
+    this.drawNorthNotch(this._chromeBitmap);
+
+    this.setChildIndex(this._chromeSprite, this.children.length - 1);
   }
 
   /**
@@ -395,6 +622,50 @@ class Sprite_MiniMap
   {
     this._overlay.clear();
     this.drawOverlay(this._overlay);
+  }
+
+  redrawWindowSmooth()
+  {
+    if (!this._cacheBitmap) return;
+
+    // Target float source (pixels)
+    const {
+      fx: tfx,
+      fy: tfy
+    } = this.srcFloatFromPlayer();
+
+    // Optional easing (lerp) for extra smoothness
+    if (this.SMOOTH_LERP > 0)
+    {
+      const a = this.SMOOTH_LERP;
+      this._smoothFx = this._smoothFx + (tfx - this._smoothFx) * a;
+      this._smoothFy = this._smoothFy + (tfy - this._smoothFy) * a;
+    }
+    else
+    {
+      this._smoothFx = tfx;
+      this._smoothFy = tfy;
+    }
+
+    // Clamp source to cache bounds
+    const maxSx = Math.max(0, this._cacheBitmap.width - this._width);
+    const maxSy = Math.max(0, this._cacheBitmap.height - this._height);
+    const sfx = Math.min(Math.max(this._smoothFx, 0), maxSx);
+    const sfy = Math.min(Math.max(this._smoothFy, 0), maxSy);
+
+    // Slice on whole pixels; keep sub-pixel via dest offset
+    const srcX = Math.floor(sfx);
+    const srcY = Math.floor(sfy);
+    const dx = -(sfx - srcX); // fractional remainder, negative to keep player centered
+    const dy = -(sfy - srcY);
+
+    this.bitmap.clear();
+
+    // If your runtime floors dx/dy, wrap with Math.round(dx/dy)
+    this.bitmap.blt(this._cacheBitmap, srcX, srcY, this._width, this._height, dx, dy);
+
+    // Player marker stays at center
+    this.drawPlayerMarker();
   }
 
   /**
@@ -408,7 +679,13 @@ class Sprite_MiniMap
       leftPx,
       topPx
     } = this.tileLeftTopPx(this.MAP_RANGE, this.MAP_RANGE);
-    this.drawPlusOn(this.bitmap, leftPx, topPx, this.SCALE - 2, this.PLAYER_COLOR);
+
+    // Base player marker (plus)
+    this.drawPlusOn(this.bitmap, leftPx, topPx, this.SCALE - 2, MinimapEventType.Player.color);
+
+    // Perpendicular facing line (always on)
+    const dir = $gamePlayer.direction();
+    this.drawFacingPerpLineOn(this.bitmap, leftPx, topPx, this.SCALE, MinimapEventType.Player.color, dir);
   }
 
   /**
@@ -431,6 +708,101 @@ class Sprite_MiniMap
     if (mask & 0x08) targetBitmap.fillRect(sx, sy, s, t, c);         // top
   }
 
+  /**
+   * Draws one full map copy into the cache, offset by whole-tile origins.
+   * originTileX/Y are in cache tile space, relative to the cache’s (0,0).
+   * @param {number} originTileX
+   * @param {number} originTileY
+   * @param {number[]} flags - tileset flags (pre-fetched)
+   */
+  drawMapCopyAt(originTileX, originTileY, flags)
+  {
+    const mapWidth = $gameMap.width();
+    const mapHeight = $gameMap.height();
+
+    for (let y = 0; y < mapHeight; y++)
+    {
+      for (let x = 0; x < mapWidth; x++)
+      {
+        const sx = (originTileX + x) * this.SCALE;
+        const sy = (originTileY + y) * this.SCALE;
+
+        const mask = this.blockedMaskAt(x, y, flags);
+
+        if (this.drawCell(x, y, sx, sy, mask)) continue;
+
+        if (mask === 0x0f)
+        {
+          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
+        }
+        else
+        {
+          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.FLOOR_COLOR));
+          this.drawEdges(this._cacheBitmap, sx, sy, mask);
+        }
+      }
+    }
+  }
+
+  /**
+   * Draws a marker using a {@link MinimapEventType}'s shape and color.
+   */
+  drawByType(targetBitmap, lx, ly, sizePx, type)
+  {
+    const size = Math.max(this.MARKER_MIN, Math.min(this.SCALE, sizePx));
+    switch (type.shape)
+    {
+      case MinimapEventType.Shapes.Square:
+        this.drawSquareOn(targetBitmap, lx, ly, size, type.color);
+        break;
+      case MinimapEventType.Shapes.Diamond:
+        this.drawDiamondOn(targetBitmap, lx, ly, size, type.color);
+        break;
+      case MinimapEventType.Shapes.Plus:
+        this.drawPlusOn(targetBitmap, lx, ly, size, type.color);
+        break;
+      case MinimapEventType.Shapes.HollowSquare:
+        this.drawHollowSquareOn(targetBitmap, lx, ly, size, type.color);
+        break;
+      case MinimapEventType.Shapes.Disk:
+      default:
+        this.drawDiskOn(targetBitmap, lx, ly, size, type.color);
+        break;
+    }
+  }
+
+  drawNorthNotch(targetBitmap)
+  {
+    const w = this._width;
+    const centerX = Math.floor(w / 2);
+
+    // Use your configured edge color with a darker halo for contrast
+    const fillCol = this.toCss(this.EDGE_COLOR);     // e.g., '#ffffff77'
+    const underCol = 'rgba(0,0,0,0.40)';             // subtle dark halo
+
+    // Height scales with tile size, clamped (≈4–7 px for common scales)
+    const triH = Math.max(4, Math.min(7, Math.floor(this.SCALE / 2)));
+
+    // Inset from top to sit below any outer border lines
+    const topY = 6; // increase to 6–8 if your border is thicker
+
+    // Underlay halo (slightly wider than the fill)
+    for (let i = 0; i < triH; i++)
+    {
+      const span = i + 1;
+      const y = topY + i;
+      targetBitmap.fillRect(centerX - span - 1, y, (span * 2 + 1) + 2, 1, underCol);
+    }
+
+    // Fill: symmetric, up-pointing isosceles triangle
+    for (let i = 0; i < triH; i++)
+    {
+      const span = i;
+      const y = topY + i;
+      targetBitmap.fillRect(centerX - span, y, span * 2 + 1, 1, fillCol);
+    }
+  }
+
   //endregion drawing
 
   //region overlay & markers
@@ -445,50 +817,109 @@ class Sprite_MiniMap
   {
     if (!$gameMap || !$gamePlayer) return;
 
-    const [ leftTile, topTile ] = this.currentViewOrigin();
-    const s = this.SCALE;
+    this.drawFollowers(overlayBitmap);
+    this.drawEvents(overlayBitmap);
+  }
 
-    // 1) Enemies (hostile = red diamond, inanimate = orange diamond)
-    if (J.ABS)
+  /**
+   * Draws the followers onto the overlay bitmap.
+   */
+  drawFollowers(overlayBitmap)
+  {
+    const scale = this.SCALE;
+
+    const followers = $gamePlayer.followers()
+      .visibleFollowers();
+
+    followers.forEach(follower =>
     {
-      const enemies = JABS_AiManager
-        .getEnemyBattlers()
-        .filter(b => !b.isDead() && !b.isHidden());
+      const wx = (follower._realX ?? follower.x);
+      const wy = (follower._realY ?? follower.y);
+      const {
+        lx,
+        ly
+      } = this.worldToLocalAroundPlayer(wx, wy);
+      if (!this.inView(lx, ly)) return;
 
-      for (const b of enemies)
+      this.drawByType(overlayBitmap, lx, ly, Math.max(2, scale - 4), MinimapEventType.Follower);
+    }, this);
+  }
+
+  /**
+   * Draws the various events onto the overlay bitmap.
+   */
+  drawEvents(overlayBitmap)
+  {
+    $gameMap.events()
+      .forEach(event => this.drawEvent(overlayBitmap, event), this);
+  }
+
+  /**
+   * Draws a particular event onto the bitmap overlay.
+   * @param {Bitmap} overlayBitmap The bitmap being rendered onto.
+   * @param {Game_Event} event The event potentially being rendered onto the map.
+   */
+  drawEvent(overlayBitmap, event)
+  {
+    if (!this.isEventRenderable(event)) return;
+
+    const wx = (event._realX ?? event.x);
+    const wy = (event._realY ?? event.y);
+    const {
+      lx,
+      ly
+    } = this.worldToLocalAroundPlayer(wx, wy);
+    if (!this.inView(lx, ly)) return;
+
+    const type = event.minimapEventType();
+
+    // Special handling for teleport markers with area.
+    if (type === MinimapEventType.Teleport)
+    {
+      const {
+        w,
+        h
+      } = event.getAreaEventRect();
+
+      // if the area is more than 1x1, draw a stretched rectangle covering the area footprint.
+      if (w > 1 || h > 1)
       {
-        const char = b.getCharacter();
-        const wx = (char._realX ?? char.x);
-        const wy = (char._realY ?? char.y);
-        const {
-          lx,
-          ly
-        } = this.worldToLocal(wx, wy, leftTile, topTile);
-        if (!this.inView(lx, ly)) continue;
+        // Compute area in local pixels; assume event tile is the top-left of the area.
+        const areaWpx = Math.max(1, Math.floor(w * this.SCALE));
+        const areaHpx = Math.max(1, Math.floor(h * this.SCALE));
 
-        const color = (b.isInanimate?.() ?? false)
-          ? this.INANIMATE_COLOR
-          : this.ENEMY_COLOR;
-        this.drawDiamondOn(overlayBitmap, lx, ly, s - 2, color);
+        // adaptive outline thickness.
+        const t = Math.max(1, Math.floor(this.SCALE / 6));
+        const outlineCol = this.toCss(type.color);
+
+        // Build a softer matching fill color.
+        const fillCol = this.fillCssFrom(type.color, 0.35);
+
+        // Outline rectangle: top / bottom / left / right
+        overlayBitmap.fillRect(lx, ly, areaWpx, t, outlineCol);                    // top edge
+        overlayBitmap.fillRect(lx, ly + areaHpx - t, areaWpx, t, outlineCol);     // bottom edge
+        overlayBitmap.fillRect(lx, ly, t, areaHpx, outlineCol);                    // left edge
+        overlayBitmap.fillRect(lx + areaWpx - t, ly, t, areaHpx, outlineCol);      // right edge
+
+        // Inner fill (inside outline), if large enough.
+        const innerW = areaWpx - t * 2;
+        const innerH = areaHpx - t * 2;
+        if (innerW > 0 && innerH > 0)
+        {
+          overlayBitmap.fillRect(lx + t, ly + t, innerW, innerH, fillCol);
+        }
+
+        // skip the per-tile marker when area outline/fill was drawn.
+        return;
       }
+
+      // 1x1 teleport area: draw a single outlined square with soft fill.
+      this.drawByType(overlayBitmap, lx, ly, Math.max(2, this.SCALE - 4), type);
+      return;
     }
 
-    // 2) Followers (blue squares)
-    const followersMgr = $gamePlayer.followers?.();
-    if (followersMgr && followersMgr.visibleFollowers)
-    {
-      for (const f of followersMgr.visibleFollowers())
-      {
-        const wx = (f._realX ?? f.x);
-        const wy = (f._realY ?? f.y);
-        const {
-          lx,
-          ly
-        } = this.worldToLocal(wx, wy, leftTile, topTile);
-        if (!this.inView(lx, ly)) continue;
-        this.drawSquareOn(overlayBitmap, lx, ly, Math.max(2, s - 4), this.FOLLOWER_COLOR);
-      }
-    }
+    // All other marker types draw normally per-tile.
+    this.drawByType(overlayBitmap, lx, ly, Math.max(2, this.SCALE - 4), type);
   }
 
   /**
@@ -673,6 +1104,136 @@ class Sprite_MiniMap
     targetBitmap.fillRect(hLeft, hTop, size, thickness, col);
   }
 
+  /**
+   * Draws a hollow square or series of squares based on the given size.
+   * @param {Bitmap} targetBitmap - Target bitmap to draw on.
+   * @param {number} lx - Tile top-left x in pixels.
+   * @param {number} ly - Tile top-left y in pixels.
+   * @param {number} sizePx - Desired marker size in pixels.
+   * @param {string} color - Hex or hex+alpha string (e.g., #rrggbb or #rrggbbaa).
+   */
+  drawHollowSquareOn(targetBitmap, lx, ly, sizePx, color)
+  {
+    // Render a 1px (or 2px for larger scales) outline square centered in the tile, with a soft fill for contrast.
+    if (!this.inView(lx, ly)) return;
+
+    // compute inner centered box.
+    const {
+      size: s,
+      ox,
+      oy
+    } = this.innerBox(sizePx);
+    const x0 = lx + ox;
+    const y0 = ly + oy;
+    const w = s;
+    const h = s;
+
+    // adaptive outline thickness.
+    const t = Math.max(1, Math.floor(this.SCALE / 6));
+
+    // Outline color (as provided).
+    const outlineCol = this.toCss(color);
+
+    // Compute the fill color.
+    const fillCol = this.fillCssFrom(color, 0.35);
+
+    // Draw outline: top, bottom, left, right.
+    // top
+    targetBitmap.fillRect(x0, y0, w, t, outlineCol);
+    // bottom
+    targetBitmap.fillRect(x0, y0 + h - t, w, t, outlineCol);
+    // left
+    targetBitmap.fillRect(x0, y0, t, h, outlineCol);
+    // right
+    targetBitmap.fillRect(x0 + w - t, y0, t, h, outlineCol);
+
+    // Draw inner fill (inside the outline). Guard tiny sizes.
+    const innerW = w - t * 2;
+    const innerH = h - t * 2;
+    if (innerW > 0 && innerH > 0)
+    {
+      targetBitmap.fillRect(x0 + t, y0 + t, innerW, innerH, fillCol);
+    }
+  }
+
+  /**
+   * Draws a small flat line ("T-cap") perpendicular to the plus arm for the
+   * player's facing direction. The line sits near the tip of the faced arm
+   * and stays within the inner marker box to avoid clipping.
+   *
+   * @param {Bitmap} targetBitmap
+   * @param {number} lx - tile top-left x in pixels
+   * @param {number} ly - tile top-left y in pixels
+   * @param {number} sizePx - desired marker size in pixels
+   * @param {string} color - hex or hex+alpha (#rrggbb or #rrggbbaa)
+   * @param {number} dir - facing direction (2=down,4=left,6=right,8=up)
+   */
+  drawFacingPerpLineOn(targetBitmap, lx, ly, sizePx, color, dir)
+  {
+    if (!this.inView(lx, ly)) return;
+
+    // Compute inner box and center.
+    const {
+      size,
+      ox,
+      oy,
+      r
+    } = this.innerBox(sizePx);
+    const cx = lx + ox + r;
+    const cy = ly + oy + r;
+    const col = this.toCss(color);
+
+    // Inner box bounds (inclusive)
+    const ix0 = lx + ox;
+    const iy0 = ly + oy;
+    const ix1 = ix0 + size - 1;
+    const iy1 = iy0 + size - 1;
+
+    // Match the plus arm thickness for harmony, but make the cap a bit slimmer.
+    const thickness = Math.max(2, Math.floor(size / 3));
+    const capThickness = Math.max(1, Math.floor(thickness / 2));
+
+    // Cap length scales with size, clamped to look good and avoid overhangs.
+    const capLen = Math.max(thickness + 1, Math.min(size - 2, Math.floor(size * 0.6)));
+
+    // 1px margin from inner box edge.
+    const margin = 1;
+
+    switch (dir)
+    {
+      case 8:
+      { // Up: faced arm vertical; draw a horizontal line near top.
+        const y = iy0 + margin;
+        const x = cx - Math.floor(capLen / 2);
+        targetBitmap.fillRect(x, y, capLen, capThickness, col);
+        break;
+      }
+      case 2:
+      { // Down: horizontal line near bottom.
+        const y = iy1 - margin - (capThickness - 1);
+        const x = cx - Math.floor(capLen / 2);
+        targetBitmap.fillRect(x, y, capLen, capThickness, col);
+        break;
+      }
+      case 4:
+      { // Left: faced arm horizontal; draw a vertical line near left edge.
+        const x = ix0 + margin;
+        const y = cy - Math.floor(capLen / 2);
+        targetBitmap.fillRect(x, y, capThickness, capLen, col);
+        break;
+      }
+      case 6:
+      { // Right: vertical line near right edge.
+        const x = ix1 - margin - (capThickness - 1);
+        const y = cy - Math.floor(capLen / 2);
+        targetBitmap.fillRect(x, y, capThickness, capLen, col);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
   //endregion overlay & markers
 
   //region passability
@@ -736,6 +1297,28 @@ class Sprite_MiniMap
     return '#ff00ff'; // error/magenta
   }
 
+  fillCssFrom(hex, ratio = 0.35)
+  {
+    // strip leading '#'.
+    const raw = (hex && hex[0] === '#')
+      ? hex.slice(1)
+      : (hex ?? "");
+
+    // parse rgb from #rrggbb or #rrggbbaa.
+    const r = parseInt(raw.slice(0, 2) || "00", 16);
+    const g = parseInt(raw.slice(2, 4) || "00", 16);
+    const b = parseInt(raw.slice(4, 6) || "00", 16);
+    const a = raw.length >= 8
+      ? (parseInt(raw.slice(6, 8), 16) / 255)
+      : 1;
+
+    // scale the original alpha to a gentler fill (default ~35% of outline alpha).
+    const fillA = Math.max(0, Math.min(1, a * ratio));
+
+    // return rgba css string.
+    return `rgba(${r},${g},${b},${fillA.toFixed(3)})`;
+  }
+
   /**
    * Computes the top-left pixel in the padded cache to blit from,
    * based on the player's current tile position (kept centered).
@@ -752,6 +1335,90 @@ class Sprite_MiniMap
     };
   }
 
+  srcFloatFromPlayer()
+  {
+    const pad = this._cacheOffsetTiles; // tiles
+    const rx = ($gamePlayer._realX ?? $gamePlayer.x);
+    const ry = ($gamePlayer._realY ?? $gamePlayer.y);
+    // Top-left of window so player is centered (MAP_RANGE from origin)
+    const fx = ((rx - this.MAP_RANGE) + pad) * this.SCALE; // pixels
+    const fy = ((ry - this.MAP_RANGE) + pad) * this.SCALE; // pixels
+    return {
+      fx,
+      fy
+    };
+  }
+
+  /**
+   * Converts world tile coords to local overlay pixel coords using the shortest
+   * wrapped delta around the player. Ensures markers near map seams appear on
+   * the closest side in looping maps.
+   * @param {number} wx - World x in tiles (can be fractional).
+   * @param {number} wy - World y in tiles (can be fractional).
+   * @returns {{lx:number, ly:number}}
+   */
+  worldToLocalAroundPlayer(wx, wy)
+  {
+    const s = this.SCALE;
+
+    // Player precise position (smooth if available)
+    const px = ($gamePlayer._realX ?? $gamePlayer.x);
+    const py = ($gamePlayer._realY ?? $gamePlayer.y);
+
+    let dx = wx - px;
+    let dy = wy - py;
+
+    const loopH = $gameMap.isLoopHorizontal();
+    const loopV = $gameMap.isLoopVertical();
+    const mapW = $gameMap.width();
+    const mapH = $gameMap.height();
+
+    // Choose shortest horizontal delta on looped maps
+    if (loopH && mapW > 0)
+    {
+      if (dx > mapW / 2) dx -= mapW;
+      if (dx < -mapW / 2) dx += mapW;
+    }
+
+    // Choose shortest vertical delta on looped maps
+    if (loopV && mapH > 0)
+    {
+      if (dy > mapH / 2) dy -= mapH;
+      if (dy < -mapH / 2) dy += mapH;
+    }
+
+    // Center tile is MAP_RANGE; offset by deltas
+    const tileX = this.MAP_RANGE + dx;
+    const tileY = this.MAP_RANGE + dy;
+
+    return {
+      lx: Math.floor(tileX * s),
+      ly: Math.floor(tileY * s),
+    };
+  }
+
+  /**
+   * Returns whether an event should be rendered on the minimap.
+   * @param {Game_Event} event The event being inspected for rendering as an overlay on the minimap.
+   */
+  isEventRenderable(event)
+  {
+    if (!event) return false;
+
+    // Skip erased events.
+    if (event.isErased()) return false;
+
+    // skip transparent events.
+    if (event.isTransparent()) return false;
+
+    // Only show normal priority (same as characters) by default.
+    // TODO: monitor this to see if we need to apply any of this type of filtering.
+    // if (event.isNormalPriority() === false) return false;
+
+    // return whether or not the event should be shown on the minimap.
+    return event.shouldShowOnMinimap();
+  }
+
   //endregion utilities
 
   //region hooks
@@ -765,8 +1432,9 @@ class Sprite_MiniMap
    * @param {number} blockedMask - Directional block mask for this tile.
    * @returns {boolean} True if the tile was fully handled; false to fall back to default rendering.
    */
+  // eslint-disable-next-line no-unused-vars
   drawCell(x, y, sx, sy, blockedMask)
-  { // eslint-disable-line no-unused-vars
+  {
     // Example override:
     // if ($gameMap.regionId(x, y) === 50) { /* draw special */ return true; }
     return false;
@@ -803,7 +1471,7 @@ class Sprite_MiniMap
 
     // Colors (ARGB hex or CSS strings), tuned to look nice on most maps
     const cDark = opts.cDark ?? "rgba(18,18,22,1.0)";  // outer rim (nearly black)
-    const cMid = opts.cMid ?? "rgba(60,60,72,1.0)";  // body of the frame
+    const cMid = opts.cMid ?? "rgba(255,220,180,0.3)";  // body of the frame
     const cInner = opts.cInner ?? "rgba(200,200,220,1.0)"; // inner highlight ring
     const cShadow = opts.cShadow ?? "rgba(0,0,0,0.35)";    // soft drop shadow
     const cAccent = opts.cAccent ?? "rgba(255,215,120,1.0)"; // small corner rivets (gold-ish)
@@ -867,7 +1535,8 @@ class Sprite_MiniMap
 
     // Corner accents/rivets (tiny dots)
     const dot = 2;
-    const pad = 3; // distance from outer corner
+    const pad = 3;
+
     // top-left
     bitmap.fillRect(x + pad, y + pad, dot, dot, cAccent);
     // top-right
