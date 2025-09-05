@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 //region initialization
 /**
  * The core where all of my extensions live: in the `J` object.
