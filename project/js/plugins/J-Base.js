@@ -94,6 +94,7 @@
  * CHANGELOG:
  * - 2.3.0
  *    Added base Max TP management with tags for battlers.
+ *    Added helper functions for detecting plugin commands inside of events.
  * - 2.2.1
  *    Added dev filter function for action to skill mapping for enemies.
  * - 2.2.0
@@ -8850,6 +8851,7 @@ Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = nu
 /**
  * Extracts a value out of an event's comments based on the provided structure.
  * If there are multiple matches in the comments, only the last one will be returned.
+ * @param {rm.types.EventCommand} command The command in question.
  * @param {RegExp} structure The regex to find values for.
  * @param {any=} defaultValue The default value to start with; defaults to null.
  * @param {boolean=} andParse Whether or not to parse the results; defaults to true.
@@ -8862,6 +8864,9 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
 
   // shorthand the comment into a variable.
   const [ comment, ] = command.parameters;
+
+  // reset just in case the regex is global.
+  structure.lastIndex = 0;
 
   // check if the comment matches the regex.
   const regexResult = structure.exec(comment);
@@ -8880,6 +8885,57 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
 
   // return the parsed result instead.
   return JsonMapper.parseObject(val);
+};
+
+/**
+ * Gets the current page's event command list if it is present, or an empty array if it isn't.
+ * @returns {rm.types.EventCommand[]}
+ */
+Game_Event.prototype.getEventCommandList = function()
+{
+  // initialize to an empty array.
+  let list = [];
+
+  // in certain situations, one or both of these may be unavailable.
+  if (this.page() && this.list())
+  {
+    // the list was available.
+    list = this.list() ?? [];
+  }
+
+  // return what we found.
+  return list;
+};
+
+/**
+ * Determines whether or not the given plugin commands are present in the list of event commands for a given plugin.
+ * @param {string} targetPluginName The name of the plugin to look for commands for.
+ * @param {string[]} commandNames The collection of plugin command names to validate existence of.
+ */
+Game_Event.prototype.hasPluginCommand = function(targetPluginName, commandNames)
+{
+  // pull the current page’s command list.
+  const list = this.getEventCommandList();
+
+  // find any matching plugin command.
+  const found = !!list.find(cmd =>
+  {
+    // ensure this is a plugin command.
+    if (!cmd || cmd.code !== 357) return false;
+
+    // deconstruct the typical MZ plugin command payload.
+    const [ pluginName, commandName ] = cmd.parameters;
+    if (!commandName) return false;
+
+    // if we know the quest plugin name, require it to match.
+    if (pluginName !== targetPluginName) return false;
+
+    // return true if the command is one of the desired names.
+    return commandNames.includes(commandName);
+  });
+
+  // return whether we found a matching command.
+  return found;
 };
 
 /**
