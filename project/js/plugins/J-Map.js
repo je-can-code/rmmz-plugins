@@ -362,7 +362,7 @@ J.MAP.Aliased.JABS_InputController = new Map();
 J.MAP.Aliased.Scene_Map = new Map();
 
 J.MAP.RegExp = {};
-J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport)>/gi;
+J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport|questOffer|questProgress|questTurnIn)>/gi;
 J.MAP.RegExp.BlockMinimap = /<blockMinimap>/gi;
 J.MAP.RegExp.AreaEvent = /<areaEvent: ?(\d+)x(\d+)>/i;
 //endregion initialization
@@ -685,31 +685,17 @@ Game_Event.prototype.shouldShowOnMinimap = function()
     shouldShow = true;
   }
 
+  // 3) Quest events (auto-detected from plugin commands) should be shown.
+  if (!shouldShow && this.isQuestEvent())
+  {
+    shouldShow = true;
+  }
+
   // cache the result for future use.
   this.setCachedShowOnMinimap(shouldShow);
 
   // return what we found.
   return shouldShow;
-};
-
-/**
- * Determines whether this event’s current page contains a transfer (teleport) action.
- * @returns {boolean}
- */
-Game_Event.prototype.isTeleportEvent = function()
-{
-  // pull the current page’s command list.
-  let list = [];
-  if (this.page() && this.list())
-  {
-    list = this.list();
-  }
-
-  // command code 201 is "Transfer Player" in RMMZ event commands.
-  // we scan for any such command on the active page.
-  const hasTransfer = !!list.find(cmd => cmd && cmd.code === 201);
-
-  return !!hasTransfer;
 };
 
 /**
@@ -791,6 +777,25 @@ Game_Event.prototype.minimapEventType = function()
       }
     });
 
+  // Auto-detect quest plugin commands if still unset or to refine to a higher-priority quest state.
+  // Priority: TurnIn > Progress > Offer.
+  if (this.hasQuestPluginCommand([ "finalize-quest" ]))
+  {
+    minimapEventType = MinimapEventType.QuestTurnIn;
+  }
+  // only elevate to progress if not already a higher-priority type.
+  else if ((minimapEventType === MinimapEventType.Unset || minimapEventType === MinimapEventType.QuestOffer)
+    && this.hasQuestPluginCommand([ "progress-quest" ]))
+  {
+    minimapEventType = MinimapEventType.QuestProgress;
+  }
+
+  // only set to offer if nothing else determined yet.
+  if (minimapEventType === MinimapEventType.Unset && this.hasQuestPluginCommand([ "unlock-quests" ]))
+  {
+    minimapEventType = MinimapEventType.QuestOffer;
+  }
+
   // Auto-detect: if still unset and the page contains a transfer command, treat as teleport.
   if (minimapEventType === MinimapEventType.Unset && this.isTeleportEvent())
   {
@@ -802,6 +807,51 @@ Game_Event.prototype.minimapEventType = function()
 
   // return what we found.
   return minimapEventType;
+};
+
+/**
+ * Determines whether this event’s current page contains a transfer (teleport) action.
+ * @returns {boolean}
+ */
+Game_Event.prototype.isTeleportEvent = function()
+{
+  // pull the current page’s command list.
+  const list = this.getEventCommandList();
+
+  // command code 201 is "Transfer Player" in RMMZ event commands.
+  const hasTransfer = !!list.find(cmd => cmd && cmd.code === 201);
+
+  return !!hasTransfer;
+};
+
+/**
+ * Determines whether this event's current page contains any quest-related plugin commands.
+ * @returns {boolean}
+ */
+Game_Event.prototype.isQuestEvent = function()
+{
+  // if not using the omniquest plugin, then its not a quest event.
+  if (!J.OMNI || !J.OMNI.EXT || !J.OMNI.EXT.QUEST) return false;
+
+  // return if any of the quest commands are present.
+  return this.hasQuestPluginCommand([ "unlock-quests", "progress-quest", "finalize-quest" ]);
+};
+
+/**
+ * Determines whether or not one or more plugin commands are present by their name in an event.
+ * @param {string[]} commandNames The plugin command names to seek.
+ * @returns {boolean}
+ */
+Game_Event.prototype.hasQuestPluginCommand = function(commandNames)
+{
+  // if not using the omniquest plugin, then the event does not have any quest plugin commands.
+  if (!J.OMNI || !J.OMNI.EXT || !J.OMNI.EXT.QUEST) return false;
+
+  // find any matching plugin command.
+  const found = this.hasPluginCommand(J.OMNI.EXT.QUEST.Metadata.name, commandNames);
+
+  // return whether we found a matching command.
+  return found;
 };
 
 /**

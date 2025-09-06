@@ -94,6 +94,7 @@
  * CHANGELOG:
  * - 2.3.0
  *    Added base Max TP management with tags for battlers.
+ *    Added helper functions for detecting plugin commands inside of events.
  * - 2.2.1
  *    Added dev filter function for action to skill mapping for enemies.
  * - 2.2.0

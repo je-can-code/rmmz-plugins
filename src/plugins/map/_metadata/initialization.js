@@ -31,7 +31,7 @@ J.MAP.Aliased.JABS_InputController = new Map();
 J.MAP.Aliased.Scene_Map = new Map();
 
 J.MAP.RegExp = {};
-J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport)>/gi;
+J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport|questOffer|questProgress|questTurnIn)>/gi;
 J.MAP.RegExp.BlockMinimap = /<blockMinimap>/gi;
 J.MAP.RegExp.AreaEvent = /<areaEvent: ?(\d+)x(\d+)>/i;
 //endregion initialization
