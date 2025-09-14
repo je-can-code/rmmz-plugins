@@ -2580,6 +2580,10 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
 //endregion Scene_Map
 
 //region Spriteset_Map
+/**
+ * Extends {@link #refreshAllCharacterSprites}.<br/>
+ * Also refreshes follower ally battlers after sprites have been refreshed.
+ */
 J.ABS.EXT.ALLYAI.Aliased.Spriteset_Map.set(
   'refreshAllCharacterSprites',
   Spriteset_Map.prototype.refreshAllCharacterSprites);
