@@ -19,7 +19,7 @@
   * Guard only optional dependencies from external plugins by namespace (e.g., if (J.ABS) { ... }).
   * If a check concerns runtime state (for example, current scene or constructed instances), perform it inside the executing method at runtime, not around the prototype definition.
   * If a check is related to a new method that was added by a plugin (such as Game_Event.prototype.isErased from the J.BASE plugin), then instead ensure the owning plugin is available before using the method (ex: `if (J.BASE) { /* safe to use event.isErased() */}`).
-  * These rules are vital and should be obeyed above all- it is a waste of time to parse the dropped-in code with all the extraneous optional validations that don't need to exist when we know definitively they will exist.
+  * Never guard against a method potentially not existing directly, it should only be guarded by whether or not the owning plugin exists.
 
 ## Project Structure
 
@@ -40,7 +40,7 @@
         * `/src/plugins/abs/ext/cycle` - A JABS extension that functions as an adapter between JABS and the Cyclone-Movement plugin (not authored by me).
         * `/src/plugins/abs/ext/danger` - A JABS extension that enables small icons to be rendered that represent enemy danger levels relative to the player.
         * `/src/plugins/abs/ext/diag` - A JABS extension that enables 8-directional movement.
-        * `/src/plugins/abs/ext/formula` - An incomplete JABS extension that is intended to allow skills to have one to many formulas that all execute on a target.
+        * `/src/plugins/abs/ext/formula` - A JABS extension that is intended to allow skills to have one to many formulas that all execute on a target.
         * `/src/plugins/abs/ext/input` - A JABS extension that owns user input management and integration with JABS functionality.
         * `/src/plugins/abs/ext/pixel` - An incomplete JABS extension that enables lesser-than full-tile movement (aka pixel movement).
         * `/src/plugins/abs/ext/poses` - A JABS extension that owns management of poses and the like for battlers often during skill execution.

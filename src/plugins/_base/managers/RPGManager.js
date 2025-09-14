@@ -286,7 +286,7 @@ class RPGManager
       // handle the return.
       return nullIfEmpty
         ? null
-        : String.empty;
+        : 0;
     }
 
     // return what we found.
@@ -396,7 +396,7 @@ class RPGManager
     }
 
     // return what we found.
-    return noNullVals;
+    return vals;
   }
 
   /**
@@ -776,6 +776,117 @@ class RPGManager
 
     // return the found value.
     return val;
+  }
+
+  /**
+   * Gets all capture groups (excluding the full match) for every note line that matches the regex.
+   *
+   * Each matching line contributes one entry to the result array. The entry is an array of strings
+   * corresponding to the capture groups for that match (index 1..n of the RegExp exec result).
+   *
+   * Example:
+   *   Regex: /<on-(hit|use):affect-(self|allies|target|enemies|all):\[([+\-/ ().\w]+)]>/gi
+   *   Line:  "<on-hit:affect-self:[a.atk * 400]>"
+   *   Pushes: [ "hit", "self", "a.atk * 400" ]
+   *
+   * @param {RPG_BaseItem} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {string[][]|null} An array of capture arrays, or null.
+   */
+  static getAllCapturesFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // get the note data from this object (split by newlines).
+    const lines = databaseData.note?.split(/[\r\n]+/) ?? [];
+
+    // if we have no matching notes, then short circuit.
+    if (!lines.length)
+    {
+      // return null or [] depending on provided options.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // initialize the collection of capture arrays.
+    const captures = [];
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // reset the regex pointer to ensure consistent exec() behavior with /g.
+      structure.lastIndex = 0;
+
+      // execute the structure against this line.
+      const result = structure.exec(line);
+
+      // skip if it didn’t match.
+      if (!result) return;
+
+      // slice off the full match, keep only capture groups 1..n.
+      const groups = result.slice(1);
+
+      // push the capture group array.
+      captures.push(groups);
+    });
+
+    // check if we found nothing and want null.
+    if (!captures.length && nullIfEmpty)
+    {
+      // return null.
+      return null;
+    }
+
+    // return all captures (possibly empty array).
+    return captures;
+  }
+
+  /**
+   * Gets all capture arrays from a collection of database objects.
+   *
+   * See {@link RPGManager.getAllCapturesFromNoteByRegex} for details on the shape
+   * of the returned values for each matching tag.
+   *
+   * @param {RPG_BaseItem[]} databaseDatas The database objects to inspect.
+   * @param {RegExp} structure The regular expression to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {string[][]|null} All capture arrays found across all provided objects.
+   */
+  static getAllCapturesFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the collection of capture arrays.
+    const captures = [];
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // gather captures from this one object.
+      const found = this.getAllCapturesFromNoteByRegex(databaseData, structure, false);
+
+      // if any found, concatenate into the running collection.
+      if (found && found.length)
+      {
+        captures.push(...found);
+      }
+    }, this);
+
+    // return null if nothing found and nullIfEmpty requested.
+    if (!captures.length && nullIfEmpty)
+    {
+      return null;
+    }
+
+    // return captures (possibly empty array).
+    return captures;
   }
 }
 

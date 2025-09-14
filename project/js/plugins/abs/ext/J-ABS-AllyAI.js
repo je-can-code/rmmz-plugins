@@ -323,6 +323,8 @@ J.ABS.EXT.ALLYAI.Aliased = {
 
   Scene_Map: {},
 
+  Spriteset_Map: new Map(),
+
   Window_AbsMenu: new Map(),
   Window_AbsMenuSelect: new Map(),
 };
@@ -1541,8 +1543,8 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('handlePartyCycleMemberChanges')
     .call(this);
 
-  // rebuild all allies.
-  $gameMap.updateAllies();
+  // Defer ally rebuild to after sprite rebind; let the sprite layer trigger it.
+  $jabsEngine.requestAlliesRefresh = true;
 };
 
 /**
@@ -2576,6 +2578,28 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
   }
 };
 //endregion Scene_Map
+
+//region Spriteset_Map
+J.ABS.EXT.ALLYAI.Aliased.Spriteset_Map.set(
+  'refreshAllCharacterSprites',
+  Spriteset_Map.prototype.refreshAllCharacterSprites);
+Spriteset_Map.prototype.refreshAllCharacterSprites = function()
+{
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Spriteset_Map.get('refreshAllCharacterSprites').call(this);
+
+  // After rebinds, rebuild the ally battlers (once per refresh request).
+  if ($jabsEngine.requestAlliesRefresh)
+  {
+    // Re-parse followers into JABS_Battlers now that follower <-> actor links are current.
+    $gameMap.updateAllies();
+
+    // reset the allies refresh request flag.
+    $jabsEngine.requestAlliesRefresh = false;
+  }
+};
+
+//endregion Spriteset_Map
 
 //region Window_AbsMenu
 /**

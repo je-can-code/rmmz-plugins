@@ -289,10 +289,99 @@ Spriteset_Map.prototype.handleSpriteRefresh = function()
 
 /**
  * Refreshes all character sprites on the map.
- * Does nothing in this plugin, but leaves open for extension.
+ * TODO: is this functionally correct and consistently safe?
  */
 Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {
+  // ensure the collection exists.
+  this._characterSprites ||= [];
+
+  // 1) Identify the current party characters to display.
+  const player = $gamePlayer; // the leader
+  const followers = $gamePlayer.followers()
+    .data(); // array of Game_Follower
+
+  // 2) Locate existing player and follower sprites (tolerate non-character entries).
+  /** @type {Sprite_Character|null} */
+  let playerSprite = null;
+  /** @type {Sprite_Character[]} */
+  const followerSprites = [];
+
+  this._characterSprites.forEach(
+    /**
+     * @param {Sprite_Character} sprite
+     */
+    (sprite) =>
+    {
+      if (!sprite || typeof sprite.character !== "function") return; // skip non-character or unexpected entries
+
+      const ch = sprite.character();
+      if (!ch) return;
+
+      // Is this the player sprite?
+      if (typeof ch.isPlayer === "function" && ch.isPlayer())
+      {
+        playerSprite = sprite;
+        return;
+      }
+
+      // Is this a follower sprite?
+      if (typeof ch.isFollower === "function" && ch.isFollower())
+      {
+        followerSprites.push(sprite);
+      }
+    });
+
+  // 3) Rebind the player sprite in place (create one if somehow missing).
+  if (playerSprite)
+  {
+    if (playerSprite.character() !== player)
+    {
+      // rebind this sprite to the current player (no removal from tilemap).
+      playerSprite.setCharacter(player);
+    }
+  }
+  else
+  {
+    // If there was no existing player sprite, create and add one now.
+    const newPlayerSprite = new Sprite_Character(player);
+    this._characterSprites.push(newPlayerSprite);
+    if (this._tilemap)
+    {
+      this._tilemap.addChild(newPlayerSprite);
+    }
+  }
+
+  // 4) Ensure we have enough follower sprites; add only if we need more.
+  if (followerSprites.length < followers.length)
+  {
+    for (let i = followerSprites.length; i < followers.length; i++)
+    {
+      const follower = followers[i];
+      const followerSprite = new Sprite_Character(follower);
+      this._characterSprites.push(followerSprite);
+      if (this._tilemap)
+      {
+        this._tilemap.addChild(followerSprite);
+      }
+      followerSprites.push(followerSprite);
+    }
+  }
+
+  // 5) Rebind follower sprites to the current follower list by index.
+  const count = Math.min(followerSprites.length, followers.length);
+  for (let i = 0; i < count; i++)
+  {
+    const sprite = followerSprites[i];
+    const follower = followers[i];
+    if (sprite.character() !== follower)
+    {
+      // rebind this sprite to the current follower (no removal from tilemap).
+      sprite.setCharacter(follower);
+    }
+  }
+
+  // 6) Clear the refresh request flag to prevent repeated refresh cycles.
   $jabsEngine.requestSpriteRefresh = false;
 };
 //endregion event sprites

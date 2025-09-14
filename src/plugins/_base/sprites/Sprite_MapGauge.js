@@ -1,6 +1,6 @@
 //region Sprite_MapGauge
 /**
- * The sprite for displaying a gauge over a character's sprite.
+ * The sprite for displaying a gauge on a character's sprite.
  */
 function Sprite_MapGauge()
 {
@@ -25,6 +25,7 @@ Sprite_MapGauge.prototype.initialize = function(
   this._gauge._label = label;
   this._gauge._value = value;
   this._gauge._iconIndex = iconIndex;
+  this._gauge._iconSprite = null;
 
   this._gauge._activated = true;
 
@@ -123,7 +124,26 @@ Sprite_MapGauge.prototype.drawLabel = function()
  */
 Sprite_MapGauge.prototype.setIcon = function(iconIndex)
 {
+  // if there is an existing icon sprite, remove it first.
+  if (this._gauge._iconSprite)
+  {
+    this.removeChild(this._gauge._iconSprite);
+    this._gauge._iconSprite = null;
+  }
+
+  // assign the new index.
   this._gauge._iconIndex = iconIndex;
+
+  // if the new index is valid, create/add a new icon sprite now.
+  if (this._gauge._iconIndex > 0)
+  {
+    const sprite = this.createIconSprite();
+    sprite.move(10, 20);
+    this.addChild(sprite);
+    this._gauge._iconSprite = sprite;
+  }
+
+  // redraw the gauge (label/gradient may still need updating).
   this.redraw();
 };
 
@@ -132,14 +152,27 @@ Sprite_MapGauge.prototype.setIcon = function(iconIndex)
  */
 Sprite_MapGauge.prototype.drawIcon = function()
 {
-  if (this._gauge._iconIndex > 0 && !this.children.length)
+  // keep this method tolerant: ensure child state matches the current index.
+  if (this._gauge._iconIndex > 0 && !this._gauge._iconSprite)
   {
+    // add if missing.
     const sprite = this.createIconSprite();
     sprite.move(10, 20);
     this.addChild(sprite);
+    this._gauge._iconSprite = sprite;
+  }
+  else if (this._gauge._iconIndex <= 0 && this._gauge._iconSprite)
+  {
+    // remove if we shouldn’t have one.
+    this.removeChild(this._gauge._iconSprite);
+    this._gauge._iconSprite = null;
   }
 };
 
+/**
+ * Creates the sprite for the icon on this gauge.
+ * @returns {Sprite_Icon}
+ */
 Sprite_MapGauge.prototype.createIconSprite = function()
 {
   const sprite = new Sprite_Icon(this._gauge._iconIndex);
@@ -163,15 +196,29 @@ Sprite_MapGauge.prototype.drawValue = function()
  */
 Sprite_MapGauge.prototype.redraw = function()
 {
+  // clear any prior drawing first.
   this.bitmap.clear();
-  const currentValue = this.currentValue();
+
+  // compute current value and cache it into the same fields the base gauge uses.
+  const currentValue = this.currentValue(); // may be NaN to skip drawing
   if (!isNaN(currentValue))
   {
+
+
+    // IMPORTANT: assign backing fields for gaugeRate() to function.
+    this._value = currentValue; // current filled amount
+    this._maxValue = this.currentMaxValue(); // maximum value for fill
+
+    // draw the colored fill/backdrop using the cached rate values.
     this.drawGauge();
+
+    // draw label & icon similarly to your existing behavior (skip for "time").
     if (this._statusType !== "time")
     {
       this.drawLabel();
       this.drawIcon();
+
+      // only draw numeric value when valid (map gauges typically hide values).
       if (this.isValid())
       {
         this.drawValue();

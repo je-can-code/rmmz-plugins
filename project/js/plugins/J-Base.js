@@ -5165,7 +5165,7 @@ class RPGManager
       // handle the return.
       return nullIfEmpty
         ? null
-        : String.empty;
+        : 0;
     }
 
     // return what we found.
@@ -5275,7 +5275,7 @@ class RPGManager
     }
 
     // return what we found.
-    return noNullVals;
+    return vals;
   }
 
   /**
@@ -5655,6 +5655,117 @@ class RPGManager
 
     // return the found value.
     return val;
+  }
+
+  /**
+   * Gets all capture groups (excluding the full match) for every note line that matches the regex.
+   *
+   * Each matching line contributes one entry to the result array. The entry is an array of strings
+   * corresponding to the capture groups for that match (index 1..n of the RegExp exec result).
+   *
+   * Example:
+   *   Regex: /<on-(hit|use):affect-(self|allies|target|enemies|all):\[([+\-/ ().\w]+)]>/gi
+   *   Line:  "<on-hit:affect-self:[a.atk * 400]>"
+   *   Pushes: [ "hit", "self", "a.atk * 400" ]
+   *
+   * @param {RPG_BaseItem} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {string[][]|null} An array of capture arrays, or null.
+   */
+  static getAllCapturesFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // get the note data from this object (split by newlines).
+    const lines = databaseData.note?.split(/[\r\n]+/) ?? [];
+
+    // if we have no matching notes, then short circuit.
+    if (!lines.length)
+    {
+      // return null or [] depending on provided options.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // initialize the collection of capture arrays.
+    const captures = [];
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // reset the regex pointer to ensure consistent exec() behavior with /g.
+      structure.lastIndex = 0;
+
+      // execute the structure against this line.
+      const result = structure.exec(line);
+
+      // skip if it didn’t match.
+      if (!result) return;
+
+      // slice off the full match, keep only capture groups 1..n.
+      const groups = result.slice(1);
+
+      // push the capture group array.
+      captures.push(groups);
+    });
+
+    // check if we found nothing and want null.
+    if (!captures.length && nullIfEmpty)
+    {
+      // return null.
+      return null;
+    }
+
+    // return all captures (possibly empty array).
+    return captures;
+  }
+
+  /**
+   * Gets all capture arrays from a collection of database objects.
+   *
+   * See {@link RPGManager.getAllCapturesFromNoteByRegex} for details on the shape
+   * of the returned values for each matching tag.
+   *
+   * @param {RPG_BaseItem[]} databaseDatas The database objects to inspect.
+   * @param {RegExp} structure The regular expression to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
+   * @returns {string[][]|null} All capture arrays found across all provided objects.
+   */
+  static getAllCapturesFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the collection of capture arrays.
+    const captures = [];
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // gather captures from this one object.
+      const found = this.getAllCapturesFromNoteByRegex(databaseData, structure, false);
+
+      // if any found, concatenate into the running collection.
+      if (found && found.length)
+      {
+        captures.push(...found);
+      }
+    }, this);
+
+    // return null if nothing found and nullIfEmpty requested.
+    if (!captures.length && nullIfEmpty)
+    {
+      return null;
+    }
+
+    // return captures (possibly empty array).
+    return captures;
   }
 }
 
@@ -10113,7 +10224,7 @@ class Sprite_Icon
 
 //region Sprite_MapGauge
 /**
- * The sprite for displaying a gauge over a character's sprite.
+ * The sprite for displaying a gauge on a character's sprite.
  */
 function Sprite_MapGauge()
 {
@@ -10138,6 +10249,7 @@ Sprite_MapGauge.prototype.initialize = function(
   this._gauge._label = label;
   this._gauge._value = value;
   this._gauge._iconIndex = iconIndex;
+  this._gauge._iconSprite = null;
 
   this._gauge._activated = true;
 
@@ -10236,7 +10348,26 @@ Sprite_MapGauge.prototype.drawLabel = function()
  */
 Sprite_MapGauge.prototype.setIcon = function(iconIndex)
 {
+  // if there is an existing icon sprite, remove it first.
+  if (this._gauge._iconSprite)
+  {
+    this.removeChild(this._gauge._iconSprite);
+    this._gauge._iconSprite = null;
+  }
+
+  // assign the new index.
   this._gauge._iconIndex = iconIndex;
+
+  // if the new index is valid, create/add a new icon sprite now.
+  if (this._gauge._iconIndex > 0)
+  {
+    const sprite = this.createIconSprite();
+    sprite.move(10, 20);
+    this.addChild(sprite);
+    this._gauge._iconSprite = sprite;
+  }
+
+  // redraw the gauge (label/gradient may still need updating).
   this.redraw();
 };
 
@@ -10245,14 +10376,27 @@ Sprite_MapGauge.prototype.setIcon = function(iconIndex)
  */
 Sprite_MapGauge.prototype.drawIcon = function()
 {
-  if (this._gauge._iconIndex > 0 && !this.children.length)
+  // keep this method tolerant: ensure child state matches the current index.
+  if (this._gauge._iconIndex > 0 && !this._gauge._iconSprite)
   {
+    // add if missing.
     const sprite = this.createIconSprite();
     sprite.move(10, 20);
     this.addChild(sprite);
+    this._gauge._iconSprite = sprite;
+  }
+  else if (this._gauge._iconIndex <= 0 && this._gauge._iconSprite)
+  {
+    // remove if we shouldn’t have one.
+    this.removeChild(this._gauge._iconSprite);
+    this._gauge._iconSprite = null;
   }
 };
 
+/**
+ * Creates the sprite for the icon on this gauge.
+ * @returns {Sprite_Icon}
+ */
 Sprite_MapGauge.prototype.createIconSprite = function()
 {
   const sprite = new Sprite_Icon(this._gauge._iconIndex);
@@ -10276,15 +10420,29 @@ Sprite_MapGauge.prototype.drawValue = function()
  */
 Sprite_MapGauge.prototype.redraw = function()
 {
+  // clear any prior drawing first.
   this.bitmap.clear();
-  const currentValue = this.currentValue();
+
+  // compute current value and cache it into the same fields the base gauge uses.
+  const currentValue = this.currentValue(); // may be NaN to skip drawing
   if (!isNaN(currentValue))
   {
+
+
+    // IMPORTANT: assign backing fields for gaugeRate() to function.
+    this._value = currentValue; // current filled amount
+    this._maxValue = this.currentMaxValue(); // maximum value for fill
+
+    // draw the colored fill/backdrop using the cached rate values.
     this.drawGauge();
+
+    // draw label & icon similarly to your existing behavior (skip for "time").
     if (this._statusType !== "time")
     {
       this.drawLabel();
       this.drawIcon();
+
+      // only draw numeric value when valid (map gauges typically hide values).
       if (this.isValid())
       {
         this.drawValue();
