@@ -3592,7 +3592,6 @@ JABS_Battler.prototype.isShowingAnimation = function()
 };
 //endregion reference helpers
 
-
 //region statics
 /**
  * Generates a `JABS_Battler` based on the current leader of the party.
@@ -6924,6 +6923,24 @@ JABS_Battler.prototype.setCastCountdown = function(castTime)
 JABS_Battler.prototype.isCasting = function()
 {
   return this._casting;
+};
+
+/**
+ * Gets the current cast timer count.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getCastTimeCountdown = function()
+{
+  return this._castTimeCountdown;
+};
+
+/**
+ * Sets the current cast timer count.
+ * @param {number} castTime The new cast time.
+ */
+JABS_Battler.prototype.setCastTimeCountdown = function(castTime)
+{
+  this._castTimeCountdown = castTime;
 };
 
 /**
@@ -10569,6 +10586,7 @@ JABS_SkillSlotManager.prototype.initializeBattlerSlots = function()
  */
 JABS_SkillSlotManager.prototype.setupActorSlots = function()
 {
+  this._slots.push(new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Mainhand, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Offhand, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Tool, 0));
@@ -18207,9 +18225,6 @@ class JABS_AiManager
     // verify we can conver the follower to a battler.
     if (!this.canConvertFollowerToBattler(follower))
     {
-      // if the battler has no id, it is likely being hidden/transformed to non-battler.
-      follower.setJabsBattlerUuid(String.empty);
-
       // null is the default.
       return null;
     }
@@ -18250,8 +18265,10 @@ class JABS_AiManager
    */
   static canConvertFollowerToBattler(follower)
   {
-    // if a follower is not visible, then there is no underlying battler.
-    if (!follower.isVisible()) return false;
+    // If the follower has an actor bound, we should convert it regardless of transient visibility.
+    // Party-cycling can momentarily flip visibility; do not block creation of the battler.
+    const hasActor = !!follower.actor();
+    if (!hasActor) return false;
 
     // convert it!
     return true;
@@ -19215,28 +19232,38 @@ class JABS_Engine
   requestLootRendering = false;
 
   //#endregion static properties
+
   /**
    * Checks whether or not we have a need to request a clearing of the action sprites
    * on the current map.
    * @returns {boolean} True if clear map requested, false otherwise.
    */
   requestClearMap = false;
+
   /**
    * Checks whether or not we have a need to request a clearing of the loot sprites
    * on the current map.
    * @returns {boolean} True if clear loot requested, false otherwise.
    */
   requestClearLoot = false;
+
   /**
    * Checks whether or not we have a need to refresh all character sprites on the current map.
    * @returns {boolean} True if refresh is requested, false otherwise.
    */
   requestSpriteRefresh = false;
+
   /**
    * Whether or not there is a request issued for rendering newly generated battler sprites.
    * @type {boolean}
    */
   requestBattlerRendering = false;
+
+  /**
+   * Whether or not there is a request issued for rendering refreshed allies.
+   * @type {boolean}
+   */
+  requestAlliesRefresh = false;
 
   /**
    * @constructor
@@ -21003,6 +21030,7 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
+  // eslint-disable-next-line no-unused-vars
   preExecuteSkillEffects(action, target)
   {
   }
@@ -23221,6 +23249,18 @@ Game_Action.prototype.apply = function(target)
  * @param {Game_Battler} target The target the skill is being applied to.
  */
 Game_Action.prototype.applyJabsAction = function(target)
+{
+  // delegate to the canonical virtual apply routine.
+  this.applyVirtualJabsAction(target);
+};
+
+/**
+ * The canonical JABS action application routine.
+ * Performs pre-apply work, executes if a hit, and updates last-target bookkeeping.
+ * This is the single place that defines the apply flow for map actions.
+ * @param {Game_Actor|Game_Enemy} target The target of this action.
+ */
+Game_Action.prototype.applyVirtualJabsAction = function(target)
 {
   // do the preliminary
   this.preApplyAction(target);
@@ -30668,11 +30708,25 @@ Scene_Map.prototype.forceCloseAbsMenu = function()
 //endregion Scene_Map
 
 //region Sprite_Character
+//region init
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.
  */
 J.ABS.Aliased.Sprite_Character.set('initMembers', Sprite_Character.prototype.initMembers);
 Sprite_Character.prototype.initMembers = function()
+{
+  // initialize all JABS-related members.
+  this.initJabsMembers();
+
+  // perform original logic.
+  J.ABS.Aliased.Sprite_Character.get('initMembers')
+    .call(this);
+};
+
+/**
+ * Initialize all members for JABS.
+ */
+Sprite_Character.prototype.initJabsMembers = function()
 {
   /**
    * The shared root namespace for all of J's plugin data.
@@ -30684,10 +30738,17 @@ Sprite_Character.prototype.initMembers = function()
    */
   this._j._abs ||= {};
 
-  this._j._abs._gauges ||= {};
+  // initialize all extraneous members.
+  this.initCombatMembers();
+  this.initGaugeMembers();
+  this.initLootMembers();
+};
 
-  this._j._abs._gauges._castGauge = null;
-
+/**
+ * Initializes all combat-related members.
+ */
+Sprite_Character.prototype.initCombatMembers = function()
+{
   /**
    * Whether or not the map sprite setup has been completed.
    * @type {boolean}
@@ -30698,60 +30759,78 @@ Sprite_Character.prototype.initMembers = function()
    * The state overlay sprite associated with this character's battler.
    * @type {Sprite_StateOverlay|null}
    */
-  this._j._stateOverlaySprite = null;
-
-  /**
-   * The hp gauge sprite associated with this character's battler.
-   * @type {Sprite_MapGauge|null}
-   */
-  this._j._hpGauge = null;
+  this._j._abs._stateOverlaySprite = null;
 
   /**
    * The text sprite displaying the name of this character's battler.
    * @type {Sprite_BaseText|null}
    */
-  this._j._battlerName = null;
+  this._j._abs._battlerName = null;
+};
 
+/**
+ * Initializes all loot-related members.
+ */
+Sprite_Character.prototype.initLootMembers = function()
+{
   /**
    * The umbrella object for loot information.
-   * @type {{}}
    */
-  this._j._loot = {};
+  this._j._abs._loot = {};
 
   /**
    * Whether or not the loot sprite setup has been completed.
    * @type {boolean}
    */
-  this._j._loot._lootSetupComplete = false;
+  this._j._abs._loot._lootSetupComplete = false;
 
   /**
    * The icon sprite that represents this character if it is loot.
    * @type {Sprite_Icon|null}
    */
-  this._j._loot._sprite = null;
+  this._j._abs._loot._sprite = null;
 
   /**
    * Whether this is on the up or the down swing.
    * @type {boolean} True if on the upswing, false if on the downswing.
    */
-  this._j._loot._swing = false;
+  this._j._abs._loot._swing = false;
 
   /**
    * The modified x coordinate to draw this character as a result of swinging.
    * @type {number}
    */
-  this._j._loot._ox = 0;
+  this._j._abs._loot._ox = 0;
 
   /**
    * The modified y coordinate to draw this character as a result of swinging.
    * @type {number}
    */
-  this._j._loot._oy = 0;
-
-  // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get('initMembers')
-    .call(this);
+  this._j._abs._loot._oy = 0;
 };
+
+/**
+ * Initializes all gauge-related members.
+ */
+Sprite_Character.prototype.initGaugeMembers = function()
+{
+  /**
+   * A grouping of all gauges associated with JABS.
+   */
+  this._j._abs._gauges ||= {};
+
+  /**
+   * The hp guage for this sprite.
+   * @type {Sprite_MapGauge|null}
+   */
+  this._j._abs._gauges._hpGauge = null;
+
+  /**
+   * The cast gauge for this sprite.
+   */
+  this._j._abs._gauges._castGauge = null;
+};
+//endregion init
 
 //region setup & reference
 /**
@@ -30864,7 +30943,7 @@ Sprite_Character.prototype.isJabsAction = function()
  */
 Sprite_Character.prototype.isLootReady = function()
 {
-  return this._j._loot._lootSetupComplete;
+  return this._j._abs._loot._lootSetupComplete;
 };
 
 /**
@@ -30873,7 +30952,7 @@ Sprite_Character.prototype.isLootReady = function()
  */
 Sprite_Character.prototype.finalizeLootSetup = function()
 {
-  this._j._loot._lootSetupComplete = true;
+  this._j._abs._loot._lootSetupComplete = true;
 };
 
 /**
@@ -30967,6 +31046,9 @@ Sprite_Character.prototype.setupMapSprite = function()
   // setup a gauge sprite to display
   this.setupHpGauge();
 
+  // setup the cast gauge above the hp gauge.
+  this.setupCastGauge();
+
   // setup a text sprite to display the name of the battler on the map.
   this.setupBattlerName();
 
@@ -30985,22 +31067,22 @@ Sprite_Character.prototype.setupStateOverlay = function()
   const battler = this.getBattler();
 
   // check if we already have an overlay sprite available.
-  if (this._j._stateOverlaySprite)
+  if (this._j._abs._stateOverlaySprite)
   {
     // assign the current battler to the overlay sprite.
-    this._j._stateOverlaySprite.setup(battler);
+    this._j._abs._stateOverlaySprite.setup(battler);
   }
   // if we don't have an overlay, the build it.
   else
   {
     // create and assign the state overlay sprite..
-    this._j._stateOverlaySprite = this.createStateOverlaySprite();
+    this._j._abs._stateOverlaySprite = this.createStateOverlaySprite();
 
     // assign the current battler to the overlay sprite.
-    this._j._stateOverlaySprite.setup(battler);
+    this._j._abs._stateOverlaySprite.setup(battler);
 
     // add it to this sprite's tracking.
-    this.addChild(this._j._stateOverlaySprite);
+    this.addChild(this._j._abs._stateOverlaySprite);
   }
 };
 
@@ -31045,7 +31127,7 @@ Sprite_Character.prototype.canUpdateStateOverlay = function()
   if (!this.isJabsBattler()) return false;
 
   // if this sprite doesn't even exist yet, then it shouldn't update.
-  if (!this._j._stateOverlaySprite) return false;
+  if (!this._j._abs._stateOverlaySprite) return false;
 
   // we should update!
   return true;
@@ -31056,7 +31138,7 @@ Sprite_Character.prototype.canUpdateStateOverlay = function()
  */
 Sprite_Character.prototype.showStateOverlay = function()
 {
-  this._j._stateOverlaySprite.show();
+  this._j._abs._stateOverlaySprite.show();
 };
 
 /**
@@ -31064,7 +31146,7 @@ Sprite_Character.prototype.showStateOverlay = function()
  */
 Sprite_Character.prototype.hideStateOverlay = function()
 {
-  this._j._stateOverlaySprite.hide();
+  this._j._abs._stateOverlaySprite.hide();
 };
 //endregion state overlay
 
@@ -31075,43 +31157,72 @@ Sprite_Character.prototype.hideStateOverlay = function()
 Sprite_Character.prototype.setupHpGauge = function()
 {
   // check if we already have an hp gauge sprite available.
-  if (!this._j._hpGauge)
+  if (!this._j._abs._gauges._hpGauge)
   {
+    // create a generic gauge sprite and keep it deactivated until needed.
+    const sprite = new Sprite_MapHpGauge();
+
     // initialize the hp gauge as a generic map gauge.
-    this._j._hpGauge = this.createGenericSpriteGauge();
+    this._j._abs._gauges._hpGauge = sprite;
 
     // add the sprite to tracking.
-    this.addChild(this._j._hpGauge);
+    this.addChild(this._j._abs._gauges._hpGauge);
   }
 
-  // assign the current battler to the hp gauge sprite.
-  this._j._hpGauge.setup(this.getBattler(), "hp");
+  // bind the current battler to the hp gauge sprite.
+  this._j._abs._gauges._hpGauge.setupBattler(this.getBattler());
 
   // activate it the gauge.
-  this._j._hpGauge.activateGauge();
-
+  this._j._abs._gauges._hpGauge.activateGauge();
 
   // locate the gauge below the character.
-  this._j._hpGauge.move(-(this._j._hpGauge.bitmapWidth() / 1.5), -12);
+  this._j._abs._gauges._hpGauge.move(-(this._j._abs._gauges._hpGauge.bitmapWidth() / 1.5), -12);
 };
 
 /**
- * Creates a deactivated `Sprite_MapGauge` sprite yet to be setup.
- * @returns {Sprite_MapGauge}
+ * Sets up this character's cast gauge, which shows progress while casting.
  */
-Sprite_Character.prototype.createGenericSpriteGauge = function()
+Sprite_Character.prototype.setupCastGauge = function()
 {
-  // generate a deactivated gauge.
-  const sprite = new Sprite_MapGauge();
-  sprite.deactivateGauge();
+  // determine the current battler & character for this sprite.
+  const jabsBattler = this._character.getJabsBattler();
+  const expectedCharacter = this._character;
 
-  // relocate the gauge.
-  const x = this.x - (sprite.width / 1.5);
-  const y = this.y - 12;
+  // if we already have a cast gauge, rebind it to the current battler/character and exit.
+  if (this._j._abs._gauges._castGauge)
+  {
+    // rebind for cast logic + validity.
+    this._j._abs._gauges._castGauge.setupJabs(jabsBattler, expectedCharacter);
+
+    // ensure it’s ready to update when needed (visibility is controlled elsewhere).
+    this._j._abs._gauges._castGauge.activateGauge();
+
+    // reposition in case dimensions changed (defensive; typically unchanged).
+    const sprite = this._j._abs._gauges._castGauge;
+    const x = -(sprite.bitmapWidth() / 1.5);
+    const y = -24;
+    sprite.move(x, y);
+
+    return;
+  }
+
+  // create a dedicated cast gauge sprite and keep it activated.
+  const sprite = new Sprite_MapCastGauge();
+
+  // bind the JABS battler + expected character for cast logic and validity.
+  sprite.setupJabs(jabsBattler, expectedCharacter);
+  sprite.activateGauge();
+
+  // assign for later access.
+  this._j._abs._gauges._castGauge = sprite;
+
+  // position above the HP gauge (HP is around -12). Slightly higher so they don't overlap.
+  const x = -(sprite.bitmapWidth() / 1.5);
+  const y = -24;
   sprite.move(x, y);
 
-  // return the generic sprite centered on the character.
-  return sprite;
+  // add to this character's sprite.
+  this.addChild(sprite);
 };
 
 /**
@@ -31130,6 +31241,19 @@ Sprite_Character.prototype.updateGauges = function()
   {
     // then hide it.
     this.hideHpGauge();
+  }
+
+  // check if we can update the cast gauge.
+  if (this.canUpdateCastGauge())
+  {
+    // update it.
+    this.updateCastGauge();
+  }
+  // otherwise, if we can't update it...
+  else
+  {
+    // then hide it.
+    this.hideCastGauge();
   }
 };
 
@@ -31157,6 +31281,39 @@ Sprite_Character.prototype.canUpdateHpGauge = function()
 };
 
 /**
+ * Determines whether or not we can update the cast gauge.
+ * @returns {boolean} True if we can update the cast gauge, false otherwise.
+ */
+Sprite_Character.prototype.canUpdateCastGauge = function()
+{
+  // if we're not using JABS, then it shouldn't update.
+  if (!this.canUpdate()) return false;
+
+  // if this sprite doesn't have a battler, then it shouldn't update.
+  if (!this.isJabsBattler()) return false;
+
+  // if we don't have a cast gauge sprite, we can't update it.
+  if (!this._j._abs._gauges._castGauge) return false;
+
+  // use the current JABS battler's live casting state as the gate.
+  const jabs = this._character.getJabsBattler();
+  if (!jabs) return false; // no battler
+
+  // must be actively casting.
+  if (!jabs.isCasting()) return false;
+
+  // must have a decided action.
+  const decided = jabs.getDecidedAction();
+  if (!decided || decided.length === 0) return false;
+
+  // must have time remaining.
+  if (jabs.getCastTimeCountdown() <= 0) return false;
+
+  // ready to update this frame.
+  return true;
+};
+
+/**
  * Updates the hp gauge sprite.
  */
 Sprite_Character.prototype.updateHpGauge = function()
@@ -31165,7 +31322,39 @@ Sprite_Character.prototype.updateHpGauge = function()
   this.showHpGauge();
 
   // ensure the hp gauge matches the current battler.
-  this._j._hpGauge._battler = this.getBattler();
+  this._j._abs._gauges._hpGauge._battler = this.getBattler();
+};
+
+/**
+ * Updates the cast gauge sprite.
+ */
+Sprite_Character.prototype.updateCastGauge = function()
+{
+  // make sure we show it while casting (we only get here when canUpdateCastGauge() is true).
+  this.showCastGauge();
+
+  // ensure the gauge is always bound to the CURRENT battler/character (post-swap safe).
+  const gauge = this._j._abs._gauges._castGauge;
+  if (gauge)
+  {
+    const currentJabs = this._character.getJabsBattler();
+
+    // if the bound JABS battler or its expected host changed, rebind.
+    const needsRebind = (
+      gauge._jabsBattler !== currentJabs
+      || gauge._expectedCharacter !== this._character
+      || gauge._expectedUuid !== (currentJabs ? currentJabs.getUuid() : null)
+    );
+
+    if (needsRebind)
+    {
+      // bind JABS battler (for casting state) + expected character (host guard) + underlying battler.
+      gauge.setupJabs(currentJabs, this._character);
+    }
+
+    // keep the underlying base battler fresh for Sprite_Gauge internals.
+    gauge._battler = this.getBattler();
+  }
 };
 
 /**
@@ -31173,7 +31362,7 @@ Sprite_Character.prototype.updateHpGauge = function()
  */
 Sprite_Character.prototype.showHpGauge = function()
 {
-  this._j._hpGauge.show();
+  this._j._abs._gauges._hpGauge.show();
 };
 
 /**
@@ -31181,7 +31370,32 @@ Sprite_Character.prototype.showHpGauge = function()
  */
 Sprite_Character.prototype.hideHpGauge = function()
 {
-  this._j._hpGauge.hide();
+  this._j._abs._gauges._hpGauge.hide();
+};
+
+/**
+ * Shows the cast gauge if it exists.
+ */
+Sprite_Character.prototype.showCastGauge = function()
+{
+  const gauge = this._j._abs._gauges._castGauge;
+  if (gauge)
+  {
+    gauge.activateGauge();
+    gauge.show();
+  }
+};
+
+/**
+ * Hides the cast gauge if it exists.
+ */
+Sprite_Character.prototype.hideCastGauge = function()
+{
+  const gauge = this._j._abs._gauges._castGauge;
+  if (gauge)
+  {
+    gauge.hide();
+  }
 };
 //endregion gauges
 
@@ -31192,20 +31406,20 @@ Sprite_Character.prototype.hideHpGauge = function()
 Sprite_Character.prototype.setupBattlerName = function()
 {
   // check if we already have a battler name present.
-  if (this._j._battlerName)
+  if (this._j._abs._battlerName)
   {
     // redraw the new battler name.
-    this._j._battlerName.setText(this.getBattlerName());
+    this._j._abs._battlerName.setText(this.getBattlerName());
 
     // if we already have the sprite, no need to recreate it.
     return;
   }
 
   // build and assign the battler name sprite.
-  this._j._battlerName = this.createBattlerNameSprite();
+  this._j._abs._battlerName = this.createBattlerNameSprite();
 
   // add it to this sprite's tracking.
-  this.addChild(this._j._battlerName);
+  this.addChild(this._j._abs._battlerName);
 };
 
 /**
@@ -31296,7 +31510,7 @@ Sprite_Character.prototype.canUpdateBattlerName = function()
  */
 Sprite_Character.prototype.showBattlerName = function()
 {
-  this._j._battlerName.show();
+  this._j._abs._battlerName.show();
 };
 
 /**
@@ -31304,7 +31518,7 @@ Sprite_Character.prototype.showBattlerName = function()
  */
 Sprite_Character.prototype.hideBattlerName = function()
 {
-  this._j._battlerName.hide();
+  this._j._abs._battlerName.hide();
 };
 //endregion battler name
 
@@ -31363,7 +31577,7 @@ Sprite_Character.prototype.setupLootSprite = function()
  */
 Sprite_Character.prototype.getLootSprite = function()
 {
-  return this._j._loot._sprite;
+  return this._j._abs._loot._sprite;
 };
 
 /**
@@ -31372,7 +31586,7 @@ Sprite_Character.prototype.getLootSprite = function()
  */
 Sprite_Character.prototype.setLootSprite = function(sprite)
 {
-  this._j._loot._sprite = sprite;
+  this._j._abs._loot._sprite = sprite;
 };
 
 /**
@@ -31458,7 +31672,7 @@ Sprite_Character.prototype.isLoot = function()
  */
 Sprite_Character.prototype.lootSwing = function()
 {
-  return this._j._loot._swing;
+  return this._j._abs._loot._swing;
 };
 
 /**
@@ -31467,9 +31681,9 @@ Sprite_Character.prototype.lootSwing = function()
  */
 Sprite_Character.prototype.lootSwingUp = function(amount = 0)
 {
-  this._j._loot._swing = true;
+  this._j._abs._loot._swing = true;
 
-  this._j._loot._oy -= amount;
+  this._j._abs._loot._oy -= amount;
 };
 
 /**
@@ -31478,9 +31692,9 @@ Sprite_Character.prototype.lootSwingUp = function(amount = 0)
  */
 Sprite_Character.prototype.lootSwingDown = function(amount = 0)
 {
-  this._j._loot._swing = false;
+  this._j._abs._loot._swing = false;
 
-  this._j._loot._oy += amount;
+  this._j._abs._loot._oy += amount;
 };
 
 /**
@@ -31597,7 +31811,7 @@ Sprite_Character.prototype.lootFloatDown = function()
  */
 Sprite_Character.prototype.shouldSwingUp = function()
 {
-  return this._j._loot._oy > 5;
+  return this._j._abs._loot._oy > 5;
 };
 
 /**
@@ -31626,7 +31840,7 @@ Sprite_Character.prototype.lootFloatUp = function()
  */
 Sprite_Character.prototype.shouldSwingDown = function()
 {
-  return this._j._loot._oy < -5;
+  return this._j._abs._loot._oy < -5;
 };
 //endregion loot
 //endregion Sprite_Character
@@ -31650,6 +31864,250 @@ Sprite_Gauge.prototype.currentValue = function()
   return Math.ceil(base);
 };
 //endregion Sprite_Gauge
+
+//region Sprite_MapCastGauge
+/**
+ * A dedicated cast-time gauge for JABS battlers.
+ * Extends {@link Sprite_MapGauge} and binds to a {@link JABS_Battler}.
+ */
+function Sprite_MapCastGauge()
+{
+  this.initialize(...arguments);
+}
+
+Sprite_MapCastGauge.prototype = Object.create(Sprite_MapGauge.prototype);
+Sprite_MapCastGauge.prototype.constructor = Sprite_MapCastGauge;
+
+/**
+ * Initializes this map cast gauge with the given parameters.
+ * @param {number=} bitmapWidth The bitmap width of this gauge.
+ * @param {number=} bitmapHeight The bitmap height of this gauge.
+ * @param {number=} gaugeHeight The height of the filled strip.
+ */
+Sprite_MapCastGauge.prototype.initialize = function(
+  bitmapWidth = 128,
+  bitmapHeight = 24,
+  gaugeHeight = 10)
+{
+  // initialize as a map gauge.
+  Sprite_MapGauge.prototype.initialize.call(this, bitmapWidth, bitmapHeight, gaugeHeight);
+
+  /**
+   * The JABS battler providing cast state.
+   * @type {JABS_Battler|null}
+   */
+  this._jabsBattler = null;
+
+  // Use MP gradient for a distinct blue tone fill by default.
+  // TODO: update this to be more dynamic.
+  this._statusType = "mp";
+};
+
+/**
+ * Gets the {@link JABS_Battler} this gauge is associated with.
+ * @returns {JABS_Battler|null}
+ */
+Sprite_MapCastGauge.prototype.getJabsBattler = function()
+{
+  return this._jabsBattler;
+};
+
+/**
+ * Binds this gauge to a JABS battler and the expected character host.
+ * Also assigns the underlying Game_Battler so Sprite_Gauge internals are satisfied.
+ * @param {JABS_Battler} jabsBattler The JABS battler.
+ * @param {Game_Character} expectedCharacter The character this sprite represents.
+ */
+Sprite_MapCastGauge.prototype.setupJabs = function(jabsBattler, expectedCharacter)
+{
+  // retain the JABS battler for cast-time logic.
+  this._jabsBattler = jabsBattler;
+
+  /**
+   * The character this gauge expects the JABS battler to be bound to.
+   * (kept for reference but not used for validity gating)
+   * @type {Game_Character|null}
+   */
+  this._expectedCharacter = expectedCharacter ?? null;
+
+  /**
+   * The UUID we expect this gauge to track. Stable across leader/follower swaps.
+   * @type {string}
+   */
+  this._expectedUuid = jabsBattler ? jabsBattler.getUuid() : null;
+
+  // bind the underlying Game_Battler to satisfy Sprite_Gauge internals.
+  this.setup(jabsBattler.getBattler(), this._statusType);
+};
+
+/**
+ * Whether the gauge should be considered valid for fill-rate.
+ * Valid only while this bound JABS battler is actively casting with time left,
+ * the battler identity matches the UUID we were bound to, AND the battler
+ * remains bound to this sprite’s expected character.
+ * @returns {boolean}
+ */
+Sprite_MapCastGauge.prototype.isValid = function()
+{
+  // grab the JABS battler and basic binding state.
+  const jabsBattler = this.getJabsBattler(); // the JABS battler for this gauge.
+  const expectedUuid = this._expectedUuid; // the uuid captured at setup.
+  const expectedCharacter = this._expectedCharacter; // the sprite's character at setup.
+
+  // must have a jabs battler and an expected uuid.
+  if (!jabsBattler || !expectedUuid) return false;
+
+  // identity guard by uuid.
+  if (jabsBattler.getUuid() !== expectedUuid) return false;
+
+  // host guard by character reference (prevents cross-sprite leakage on swaps).
+  if (expectedCharacter && jabsBattler.getCharacter() !== expectedCharacter) return false;
+
+  // must be actively casting.
+  if (!jabsBattler.isCasting()) return false;
+
+  // must have a decided action and time remaining.
+  const decided = jabsBattler.getDecidedAction();
+  if (!decided || decided.length === 0) return false;
+  if (jabsBattler.getCastTimeCountdown() <= 0) return false;
+
+  // valid under these conditions.
+  return true;
+};
+
+/**
+ * The current (elapsed) value of the cast bar.
+ * @returns {number}
+ */
+Sprite_MapCastGauge.prototype.currentValue = function()
+{
+  // if we lack a JABS battler, we cannot provide values.
+  const jabsBattler = this.getJabsBattler();
+  if (!jabsBattler) return NaN;
+
+  // only provide values while actively casting with a decided action and time remaining.
+  if (!jabsBattler.isCasting()) return NaN;
+  const decided = jabsBattler.getDecidedAction();
+  if (!decided || decided.length === 0) return NaN;
+  if (jabsBattler.getCastTimeCountdown() <= 0) return NaN;
+
+  // compute elapsed from countdown vs total.
+  const [ action ] = decided;
+  const max = action.getCastTime();
+  if (!max) return NaN; // zero-cast means do not draw.
+
+  const remaining = jabsBattler.getCastTimeCountdown();
+  const elapsed = Math.max(0, max - remaining);
+  return elapsed;
+};
+
+/**
+ * The max value for the cast bar: the action's cast time at decision.
+ * @returns {number}
+ */
+Sprite_MapCastGauge.prototype.currentMaxValue = function()
+{
+  // if we lack a JABS battler, we cannot provide values.
+  const jabsBattler = this.getJabsBattler();
+  if (!jabsBattler) return NaN;
+
+  // only provide max while actively casting with a decided action and time remaining.
+  if (!jabsBattler.isCasting()) return NaN;
+  const decided = jabsBattler.getDecidedAction();
+  if (!decided || decided.length === 0) return NaN;
+  if (jabsBattler.getCastTimeCountdown() <= 0) return NaN;
+
+  const [ action ] = decided;
+  const max = action.getCastTime();
+  return max || NaN;
+};
+
+/**
+ * Updates this gauge.
+ * Ensures the label/icon match the skill being cast while valid; otherwise clears label/icon.
+ */
+Sprite_MapCastGauge.prototype.update = function()
+{
+  // always keep the base gauge bound to the correct underlying battler each frame.
+  if (this._jabsBattler)
+  {
+    this._battler = this._jabsBattler.getBattler();
+  }
+
+  // force a redraw to ensure we paint immediately when casting begins.
+  this.redraw();
+
+  // perform base updating/redraw lifecycle.
+  Sprite_MapGauge.prototype.update.call(this);
+
+  // if not casting-valid, clear adornments and exit.
+  if (!this.isValid())
+  {
+    if (this._gauge._label)
+    {
+      this.setLabel(String.empty);
+    }
+    if (this._gauge._iconIndex !== -1)
+    {
+      this.setIcon(-1);
+    }
+    return;
+  }
+
+  // while valid (casting), reflect the current skill name + icon.
+  const decided = this.getJabsBattler().getDecidedAction();
+  if (!decided || decided.length === 0) return;
+
+  const [ action ] = decided;
+  const skill = action.getBaseSkill();
+
+  // set the label and icon for the gauge; base draw uses these.
+  this.setLabel(skill.name);
+  this.setIcon(skill.iconIndex > 0 ? skill.iconIndex : -1);
+};
+//endregion Sprite_MapCastGauge
+
+//region Sprite_MapHpGauge
+/**
+ * A dedicated HP gauge for map sprites.
+ * Extends {@link Sprite_MapGauge} and binds to a {@link Game_Battler}.
+ */
+function Sprite_MapHpGauge()
+{
+  this.initialize(...arguments);
+}
+
+Sprite_MapHpGauge.prototype = Object.create(Sprite_MapGauge.prototype);
+Sprite_MapHpGauge.prototype.constructor = Sprite_MapHpGauge;
+
+/**
+ * Initializes this map HP gauge with the given parameters.
+ * @param {number=} bitmapWidth The bitmap width of this gauge.
+ * @param {number=} bitmapHeight The bitmap height of this gauge.
+ * @param {number=} gaugeHeight The height of the filled strip.
+ */
+Sprite_MapHpGauge.prototype.initialize = function(
+  bitmapWidth = 96,
+  bitmapHeight = 24,
+  gaugeHeight = 6)
+{
+  // initialize as a map gauge.
+  Sprite_MapGauge.prototype.initialize.call(this, bitmapWidth, bitmapHeight, gaugeHeight);
+
+  // designate the bar as an HP gauge.
+  this._statusType = "hp";
+};
+
+/**
+ * Binds this gauge to a battler.
+ * @param {Game_Battler} battler The battler to bind the gauge to.
+ */
+Sprite_MapHpGauge.prototype.setupBattler = function(battler)
+{
+  // use the base Sprite_Gauge setup for value/max and redraw lifecycle.
+  this.setup(battler, "hp");
+};
+//endregion Sprite_MapHpGauge
 
 //region Spriteset_Map
 /**
@@ -31942,10 +32400,99 @@ Spriteset_Map.prototype.handleSpriteRefresh = function()
 
 /**
  * Refreshes all character sprites on the map.
- * Does nothing in this plugin, but leaves open for extension.
+ * TODO: is this functionally correct and consistently safe?
  */
 Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {
+  // ensure the collection exists.
+  this._characterSprites ||= [];
+
+  // 1) Identify the current party characters to display.
+  const player = $gamePlayer; // the leader
+  const followers = $gamePlayer.followers()
+    .data(); // array of Game_Follower
+
+  // 2) Locate existing player and follower sprites (tolerate non-character entries).
+  /** @type {Sprite_Character|null} */
+  let playerSprite = null;
+  /** @type {Sprite_Character[]} */
+  const followerSprites = [];
+
+  this._characterSprites.forEach(
+    /**
+     * @param {Sprite_Character} sprite
+     */
+    (sprite) =>
+    {
+      if (!sprite || typeof sprite.character !== "function") return; // skip non-character or unexpected entries
+
+      const ch = sprite.character();
+      if (!ch) return;
+
+      // Is this the player sprite?
+      if (typeof ch.isPlayer === "function" && ch.isPlayer())
+      {
+        playerSprite = sprite;
+        return;
+      }
+
+      // Is this a follower sprite?
+      if (typeof ch.isFollower === "function" && ch.isFollower())
+      {
+        followerSprites.push(sprite);
+      }
+    });
+
+  // 3) Rebind the player sprite in place (create one if somehow missing).
+  if (playerSprite)
+  {
+    if (playerSprite.character() !== player)
+    {
+      // rebind this sprite to the current player (no removal from tilemap).
+      playerSprite.setCharacter(player);
+    }
+  }
+  else
+  {
+    // If there was no existing player sprite, create and add one now.
+    const newPlayerSprite = new Sprite_Character(player);
+    this._characterSprites.push(newPlayerSprite);
+    if (this._tilemap)
+    {
+      this._tilemap.addChild(newPlayerSprite);
+    }
+  }
+
+  // 4) Ensure we have enough follower sprites; add only if we need more.
+  if (followerSprites.length < followers.length)
+  {
+    for (let i = followerSprites.length; i < followers.length; i++)
+    {
+      const follower = followers[i];
+      const followerSprite = new Sprite_Character(follower);
+      this._characterSprites.push(followerSprite);
+      if (this._tilemap)
+      {
+        this._tilemap.addChild(followerSprite);
+      }
+      followerSprites.push(followerSprite);
+    }
+  }
+
+  // 5) Rebind follower sprites to the current follower list by index.
+  const count = Math.min(followerSprites.length, followers.length);
+  for (let i = 0; i < count; i++)
+  {
+    const sprite = followerSprites[i];
+    const follower = followers[i];
+    if (sprite.character() !== follower)
+    {
+      // rebind this sprite to the current follower (no removal from tilemap).
+      sprite.setCharacter(follower);
+    }
+  }
+
+  // 6) Clear the refresh request flag to prevent repeated refresh cycles.
   $jabsEngine.requestSpriteRefresh = false;
 };
 //endregion event sprites

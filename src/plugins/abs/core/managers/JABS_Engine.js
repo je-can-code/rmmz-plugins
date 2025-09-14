@@ -57,28 +57,38 @@ class JABS_Engine
   requestLootRendering = false;
 
   //#endregion static properties
+
   /**
    * Checks whether or not we have a need to request a clearing of the action sprites
    * on the current map.
    * @returns {boolean} True if clear map requested, false otherwise.
    */
   requestClearMap = false;
+
   /**
    * Checks whether or not we have a need to request a clearing of the loot sprites
    * on the current map.
    * @returns {boolean} True if clear loot requested, false otherwise.
    */
   requestClearLoot = false;
+
   /**
    * Checks whether or not we have a need to refresh all character sprites on the current map.
    * @returns {boolean} True if refresh is requested, false otherwise.
    */
   requestSpriteRefresh = false;
+
   /**
    * Whether or not there is a request issued for rendering newly generated battler sprites.
    * @type {boolean}
    */
   requestBattlerRendering = false;
+
+  /**
+   * Whether or not there is a request issued for rendering refreshed allies.
+   * @type {boolean}
+   */
+  requestAlliesRefresh = false;
 
   /**
    * @constructor
@@ -1845,6 +1855,7 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
+  // eslint-disable-next-line no-unused-vars
   preExecuteSkillEffects(action, target)
   {
   }

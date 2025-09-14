@@ -37,8 +37,8 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('handlePartyCycleMemberChanges')
     .call(this);
 
-  // rebuild all allies.
-  $gameMap.updateAllies();
+  // Defer ally rebuild to after sprite rebind; let the sprite layer trigger it.
+  $jabsEngine.requestAlliesRefresh = true;
 };
 
 /**

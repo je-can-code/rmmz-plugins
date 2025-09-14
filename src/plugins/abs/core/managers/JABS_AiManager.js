@@ -526,9 +526,6 @@ class JABS_AiManager
     // verify we can conver the follower to a battler.
     if (!this.canConvertFollowerToBattler(follower))
     {
-      // if the battler has no id, it is likely being hidden/transformed to non-battler.
-      follower.setJabsBattlerUuid(String.empty);
-
       // null is the default.
       return null;
     }
@@ -569,8 +566,10 @@ class JABS_AiManager
    */
   static canConvertFollowerToBattler(follower)
   {
-    // if a follower is not visible, then there is no underlying battler.
-    if (!follower.isVisible()) return false;
+    // If the follower has an actor bound, we should convert it regardless of transient visibility.
+    // Party-cycling can momentarily flip visibility; do not block creation of the battler.
+    const hasActor = !!follower.actor();
+    if (!hasActor) return false;
 
     // convert it!
     return true;

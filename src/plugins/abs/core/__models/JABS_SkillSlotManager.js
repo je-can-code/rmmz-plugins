@@ -109,6 +109,7 @@ JABS_SkillSlotManager.prototype.initializeBattlerSlots = function()
  */
 JABS_SkillSlotManager.prototype.setupActorSlots = function()
 {
+  this._slots.push(new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Mainhand, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Offhand, 0));
   this._slots.push(new JABS_SkillSlot(JABS_Button.Tool, 0));

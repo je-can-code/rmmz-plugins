@@ -106,6 +106,24 @@ JABS_Battler.prototype.isCasting = function()
 };
 
 /**
+ * Gets the current cast timer count.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getCastTimeCountdown = function()
+{
+  return this._castTimeCountdown;
+};
+
+/**
+ * Sets the current cast timer count.
+ * @param {number} castTime The new cast time.
+ */
+JABS_Battler.prototype.setCastTimeCountdown = function(castTime)
+{
+  this._castTimeCountdown = castTime;
+};
+
+/**
  * Counts down the alertedness of this battler.
  */
 JABS_Battler.prototype.countdownAlert = function()
