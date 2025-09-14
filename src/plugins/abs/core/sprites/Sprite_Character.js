@@ -490,8 +490,10 @@ Sprite_Character.prototype.setupCastGauge = function()
 
     // reposition in case dimensions changed (defensive; typically unchanged).
     const sprite = this._j._abs._gauges._castGauge;
-    const x = -(sprite.bitmapWidth() / 1.5);
-    const y = -24;
+
+    // Snap to integer pixels to avoid subpixel blur and keep placement predictable.
+    const x = -Math.round(sprite.bitmapWidth() / 2);
+    const y = -28; // a few pixels higher than -24 to accommodate the taller gauge+icon
     sprite.move(x, y);
 
     return;
@@ -507,9 +509,9 @@ Sprite_Character.prototype.setupCastGauge = function()
   // assign for later access.
   this._j._abs._gauges._castGauge = sprite;
 
-  // position above the HP gauge (HP is around -12). Slightly higher so they don't overlap.
-  const x = -(sprite.bitmapWidth() / 1.5);
-  const y = -24;
+  // position above the HP gauge, snapped and slightly raised.
+  const x = -Math.round(sprite.bitmapWidth() / 2);
+  const y = -28;
   sprite.move(x, y);
 
   // add to this character's sprite.
@@ -624,7 +626,7 @@ Sprite_Character.prototype.updateCastGauge = function()
   // make sure we show it while casting (we only get here when canUpdateCastGauge() is true).
   this.showCastGauge();
 
-  // ensure the gauge is always bound to the CURRENT battler/character (post-swap safe).
+  // ensure the gauge rebinds if host/jabs changed (post-swap safe).
   const gauge = this._j._abs._gauges._castGauge;
   if (gauge)
   {

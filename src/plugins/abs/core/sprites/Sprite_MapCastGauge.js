@@ -31,9 +31,8 @@ Sprite_MapCastGauge.prototype.initialize = function(
    */
   this._jabsBattler = null;
 
-  // Use MP gradient for a distinct blue tone fill by default.
-  // TODO: update this to be more dynamic.
-  this._statusType = "mp";
+  // indicate this is not one of the base types.
+  this._statusType = "cast";
 };
 
 /**
@@ -67,7 +66,9 @@ Sprite_MapCastGauge.prototype.setupJabs = function(jabsBattler, expectedCharacte
    * The UUID we expect this gauge to track. Stable across leader/follower swaps.
    * @type {string}
    */
-  this._expectedUuid = jabsBattler ? jabsBattler.getUuid() : null;
+  this._expectedUuid = jabsBattler
+    ? jabsBattler.getUuid()
+    : null;
 
   // bind the underlying Game_Battler to satisfy Sprite_Gauge internals.
   this.setup(jabsBattler.getBattler(), this._statusType);
@@ -162,40 +163,106 @@ Sprite_MapCastGauge.prototype.currentMaxValue = function()
 Sprite_MapCastGauge.prototype.update = function()
 {
   // always keep the base gauge bound to the correct underlying battler each frame.
-  if (this._jabsBattler)
+  if (this.getJabsBattler())
   {
-    this._battler = this._jabsBattler.getBattler();
+    this._battler = this.getJabsBattler()
+      .getBattler();
   }
 
-  // force a redraw to ensure we paint immediately when casting begins.
-  this.redraw();
+  // If casting-valid this frame, assign label+icon BEFORE the base update/redraw so they render now.
+  if (this.isValid())
+  {
+    const decided = this.getJabsBattler()
+      .getDecidedAction();
 
-  // perform base updating/redraw lifecycle.
-  Sprite_MapGauge.prototype.update.call(this);
+    if (decided && decided.length > 0)
+    {
+      const [ action ] = decided;
+      const skill = action.getBaseSkill();
 
-  // if not casting-valid, clear adornments and exit.
-  if (!this.isValid())
+      // set the label and icon (iconIndex >= 0 is valid in MZ; -1 clears).
+      this.setLabel(skill.name);
+      this.setIcon(skill.iconIndex >= 0
+        ? skill.iconIndex
+        : -1);
+    }
+  }
+  // If not valid, clear adornments right away so the base redraw reflects that state.
+  else
   {
     if (this._gauge._label)
     {
       this.setLabel(String.empty);
     }
+
+    // clear any existing icon if present (iconIndex != -1 means "has icon").
     if (this._gauge._iconIndex !== -1)
     {
       this.setIcon(-1);
     }
-    return;
   }
 
-  // while valid (casting), reflect the current skill name + icon.
-  const decided = this.getJabsBattler().getDecidedAction();
-  if (!decided || decided.length === 0) return;
+  // perform base updating/redraw lifecycle (will call redraw() internally).
+  Sprite_MapGauge.prototype.update.call(this);
+};
 
-  const [ action ] = decided;
-  const skill = action.getBaseSkill();
+/**
+ * Draws the label for the cast gauge using crisp, integer-aligned text.
+ */
+Sprite_MapCastGauge.prototype.drawLabel = function()
+{
+  // if there is no label, don't draw anything.
+  if (!this._gauge._label) return;
 
-  // set the label and icon for the gauge; base draw uses these.
-  this.setLabel(skill.name);
-  this.setIcon(skill.iconIndex > 0 ? skill.iconIndex : -1);
+  // configure font styling intentionally for small/crisp map text.
+  this.bitmap.fontFace = $gameSystem.mainFontFace(); // use game’s primary font
+  this.bitmap.fontSize = 12; // slightly larger than 12 for clarity
+  this.bitmap.outlineWidth = 2; // thinner outline to keep edges sharp
+  this.bitmap.outlineColor = "rgba(0, 0, 0, 1)"; // subtle outline
+  this.bitmap.textColor = "#ffffff"; // bright text for readability
+
+  // integer-aligned draw rect to avoid subpixel blurring.
+  const x = 32; // left padding to clear the icon
+  const y = 0;  // top of gauge bitmap
+  const w = this.bitmapWidth() - x;
+  const h = this.bitmapHeight();
+
+  this.bitmap.drawText(
+    this._gauge._label,
+    Math.floor(x),
+    Math.floor(y),
+    Math.floor(w),
+    Math.floor(h),
+    "left");
+};
+
+/**
+ * The background color for the cast gauge.
+ * @returns {string}
+ */
+Sprite_MapCastGauge.prototype.gaugeBackColor = function()
+{
+  // A subtle dark background that reads well on maps.
+  return "rgba(32, 32, 32, 0.85)";
+};
+
+/**
+ * The left gradient color for the cast gauge.
+ * @returns {string}
+ */
+Sprite_MapCastGauge.prototype.gaugeColor1 = function()
+{
+  // Purple-ish left.
+  return "#7A5CFF";
+};
+
+/**
+ * The right gradient color for the cast gauge.
+ * @returns {string}
+ */
+Sprite_MapCastGauge.prototype.gaugeColor2 = function()
+{
+  // Purple/magenta right.
+  return "#C86BFA";
 };
 //endregion Sprite_MapCastGauge
