@@ -13573,6 +13573,7 @@ class JABS_Timer
 //=================================================================================================
 /* eslint-enable max-len */
 
+/* eslint-disable max-len */
 //region Metadata
 /**
  * The core where all of my extensions live: in the `J` object.
@@ -13750,6 +13751,66 @@ J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
 J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
 J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
 J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
+
+J.ABS.Metadata.HitboxStyles = {
+  // Base defaults used for all shapes unless overridden below.
+  base: {
+    fillColor: 0xFFA500, // orange
+    fillAlpha: 0.35,
+    lineColor: 0xE08000,
+    lineAlpha: 0.9,
+    lineWidth: 2,
+  },
+
+  // Optional per-shape overrides.
+  byShape: {
+    circle: {
+      fillColor: 0xFF7F50, // coral
+    },
+    rhombus: {
+      fillColor: 0xFFD580, // light orange
+    },
+    square: {
+      fillColor: 0xFFA64D, // darker orange
+    },
+    frontsquare: {
+      fillAlpha: 0.28,
+    },
+    line: {
+      lineWidth: 3,
+    },
+    wall: {
+      lineColor: 0xCC6600,
+    },
+    cross: {
+      fillAlpha: 0.25,
+    },
+    arc: {
+      fillColor: 0xFFB84D,
+    },
+  },
+
+
+  // Battler overrides by kind (player/follower/battler)
+  byKind:
+    {
+      player:  { fillColor: 0x4DA3FF, lineColor: 0x2368CC, fillAlpha: 0.25 },
+      follower:{ fillColor: 0x9B59B6 },
+      battler: { fillColor: 0x2ECC71 },
+    },
+
+  // New: state-based overrides layered last (e.g., for collision highlighting)
+  byState:
+    {
+      colliding:
+        {
+          fillColor: 0xFF3B30, // bright red while overlapping an action.
+          fillAlpha: 0.35,
+          lineColor: 0xC12722,
+          lineWidth: 3,
+        },
+    },
+};
 //endregion metadata
 
 /**
@@ -14164,6 +14225,40 @@ J.ABS.RegExp = {
   //region ON ACTORS/CLASSES
   ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
 };
+
+//region visual metadata (new)
+/**
+ * Visual customization for action sprites (per-skill).
+ * All tags are optional and purely visual; physics/hitboxes remain unchanged.
+ */
+J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // capture full [x, y]
+J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi; // capture full [ax, ay]
+J.ABS.RegExp.VisRotate = /<visRotate>/gi; // boolean
+J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi; // capture full [sx, sy]
+J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi; // z-order override (number only)
+J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
+//endregion visual metadata (new)
+
+//region visual directional metadata (new)
+/**
+ * Direction-relative visual offsets (per-skill).
+ * Captures the entire [x, y] array for RPGManager.getArrayFromNotesByRegex.
+ *
+ * Cardinal: U/D/L/R
+ * Optional diagonals: UR/UL/DR/DL
+ */
+J.ABS.RegExp.VisOffsetU  = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetD  = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetL  = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetR  = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+
+// Optional diagonals for future use.
+J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+//endregion visual directional metadata (new)
+
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -16538,6 +16633,329 @@ RPG_Skill.prototype.extractJabsDelayData = function()
   return this.getArrayFromNotesByRegex(J.ABS.RegExp.DelayData);
 };
 //endregion delay
+
+//region visual metadata (new)
+/**
+ * Optional per-skill pixel offset to nudge the action visual relative to its default position.
+ * Example: <visOffset:[-6, -12]>
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffset", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisOffset === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
+      if (!arr)
+      {
+        this._jabsVisOffset = [ 0, 0 ]; // default, no offset.
+      }
+      else
+      {
+        // defensive parse to integers.
+        const x = Number(arr[0]) || 0;
+        const y = Number(arr[1]) || 0;
+        this._jabsVisOffset = [ x, y ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisOffset;
+  },
+});
+
+/**
+ * Optional per-skill sprite anchor override; values are 0..1.
+ * Example: <visAnchor:[0.5, 0.5]>
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisAnchor", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisAnchor === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisAnchor, true, true);
+      if (!arr)
+      {
+        this._jabsVisAnchor = null; // no override, retain engine default.
+      }
+      else
+      {
+        const ax = Math.max(0, Math.min(1, Number(arr[0])));
+        const ay = Math.max(0, Math.min(1, Number(arr[1])));
+        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay)) ? null : [ ax, ay ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisAnchor;
+  },
+});
+
+/**
+ * Optional per-skill z-order override for the action sprite.
+ * Example: <visZ: 12>
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisZ", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisZ === undefined)
+    {
+      const z = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.VisZ, true);
+      this._jabsVisZ = (z ?? null);
+    }
+
+    // provide cached value.
+    return this._jabsVisZ;
+  },
+});
+
+/**
+ * Rotate the visual to face direction/angle if present.
+ * Example: <visRotate>
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisRotate", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisRotate === undefined)
+    {
+      this._jabsVisRotate = RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.VisRotate) || false;
+    }
+
+    // provide cached value.
+    return this._jabsVisRotate;
+  },
+});
+
+/**
+ * Scale the visual if present.
+ * Example: <visScale:[1.25, 1.0]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisScale", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisScale === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
+      if (!arr)
+      {
+        this._jabsVisScale = null;
+      }
+      else
+      {
+        const sx = Number(arr[0]);
+        const sy = Number(arr[1]);
+        this._jabsVisScale = (isNaN(sx) || isNaN(sy)) ? null : [ sx, sy ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisScale;
+  },
+});
+
+/**
+ * Optional: show a tiny debug cross at the visual origin.
+ * Example: <visDebug>
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisDebug", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisDebug === undefined)
+    {
+      this._jabsVisDebug = this.getBooleanFromNotesByRegex(J.ABS.RegExp.VisDebug, true) || false;
+    }
+
+    // provide cached value.
+    return this._jabsVisDebug;
+  },
+});
+
+//region visual metadata (directional, new)
+/**
+ * Optional UP-facing visual offset.
+ * Example: <visOffsetU:[0, -24]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetU", {
+  get: function()
+  {
+    if (this._jabsVisOffsetU === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
+      this._jabsVisOffsetU = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetU;
+  },
+});
+
+/**
+ * Optional DOWN-facing visual offset.
+ * Example: <visOffsetD:[0, -24]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetD", {
+  get: function()
+  {
+    if (this._jabsVisOffsetD === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
+      this._jabsVisOffsetD = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetD;
+  },
+});
+
+/**
+ * Optional LEFT-facing visual offset.
+ * Example: <visOffsetL:[-6, -12]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
+      this._jabsVisOffsetL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetL;
+  },
+});
+
+/**
+ * Optional RIGHT-facing visual offset.
+ * Example: <visOffsetR:[6, -12]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
+      this._jabsVisOffsetR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for UP-RIGHT.
+ * Example: <visOffsetUR:[6, -18]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetUR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
+      this._jabsVisOffsetUR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetUR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for UP-LEFT.
+ * Example: <visOffsetUL:[-6, -18]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetUL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
+      this._jabsVisOffsetUL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetUL;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for DOWN-RIGHT.
+ * Example: <visOffsetDR:[6, -10]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetDR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
+      this._jabsVisOffsetDR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetDR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for DOWN-LEFT.
+ * Example: <visOffsetDL:[-6, -10]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetDL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
+      this._jabsVisOffsetDL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetDL;
+  },
+});
+
+/**
+ * Resolves the best visual offset for a given numeric direction.
+ * Falls back in this order: diagonal → nearest cardinal → <visOffset> → [0, 0].
+ * @param {1|2|3|4|6|7|8|9} direction The numeric direction from the action.
+ * @returns {[number, number]} The resolved [x, y] visual offset.
+ */
+RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
+{
+  // start from the default offset (may be [0, 0]).
+  const def = this.jabsVisOffset; // default visual offset.
+
+  // resolve directional override if present.
+  switch (direction)
+  {
+    case 8: // UP
+      return this.jabsVisOffsetU || def || [ 0, 0 ];
+    case 2: // DOWN
+      return this.jabsVisOffsetD || def || [ 0, 0 ];
+    case 4: // LEFT
+      return this.jabsVisOffsetL || def || [ 0, 0 ];
+    case 6: // RIGHT
+      return this.jabsVisOffsetR || def || [ 0, 0 ];
+
+    case 9: // UP-RIGHT
+      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def || [ 0, 0 ];
+    case 7: // UP-LEFT
+      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def || [ 0, 0 ];
+    case 3: // DOWN-RIGHT
+      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def || [ 0, 0 ];
+    case 1: // DOWN-LEFT
+      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def || [ 0, 0 ];
+  }
+
+  // unknown direction: return default.
+  return def || [ 0, 0 ];
+};
+//endregion visual metadata (directional, new)
+//endregion visual metadata (new)
 //endregion RPG_Skill effects
 
 //region RPG_State effects
@@ -30738,6 +31156,8 @@ Sprite_Character.prototype.initJabsMembers = function()
    */
   this._j._abs ||= {};
 
+  this._j._abs._visDebugGizmo = null;
+
   // initialize all extraneous members.
   this.initCombatMembers();
   this.initGaugeMembers();
@@ -31057,6 +31477,252 @@ Sprite_Character.prototype.setupMapSprite = function()
 };
 //endregion setup & reference
 
+//region visual offsetting
+/**
+ * Extends/Overrides {@link Sprite_Character.prototype.updatePosition}.<br/>
+ * Also applies per-skill visual metadata (offset, anchor, z, rotation, scale) to JABS action sprites.
+ */
+J.ABS.Aliased.Sprite_Character.set("updatePosition", Sprite_Character.prototype.updatePosition);
+Sprite_Character.prototype.updatePosition = function()
+{
+  // perform original logic.
+  J.ABS.Aliased.Sprite_Character.get("updatePosition")
+    .call(this);
+
+  // only apply to JABS action sprites that still exist and aren’t erased.
+  if (!this.isJabsAction() || this.character()
+    .isErased())
+  {
+    return;
+  }
+
+  // skip visual manipulation if the underlying action has been flagged for removal.
+  if (this.character()
+    .getJabsActionNeedsRemoving())
+  {
+    return;
+  }
+
+  // apply all visual manipulations for action sprites (anchor, z, offset, rotation, scale, debug).
+  this.applyActionVisuals();
+};
+
+/**
+ * Applies all visual manipulations for JABS action sprites in a structured manner.
+ * This includes: anchor override, z-order, direction-aware offset, rotation, scale, and debug gizmo.
+ */
+Sprite_Character.prototype.applyActionVisuals = function()
+{
+  // grab the underlying JABS action + base skill.
+  const character = this.character(); // Game_Event hosting the action.
+  const jabsAction = character.getJabsAction(); // JABS_Action for this sprite.
+  if (!jabsAction) return; // nothing to apply.
+
+  const skill = jabsAction.getBaseSkill(); // RPG_Skill of this action.
+  if (!skill) return; // cannot resolve visuals without the skill.
+
+  // 1) Optional anchor override (defaults retained when not present).
+  this.applyActionAnchor(skill);
+
+  // 2) Optional z-order override.
+  this.applyActionZ(skill);
+
+  // 3) Direction-relative per-skill visual pixel offset.
+  this.applyActionOffset(skill, jabsAction);
+
+  // 4) Optional rotation (if <visRotate>).
+  this.applyActionRotation(skill, jabsAction);
+
+  // 5) Optional scaling (if <visScale:[sx, sy]>).
+  this.applyActionScale(skill);
+
+  // 6) Optional debug gizmo at the visual origin to aid in alignment.
+  this.applyActionDebug(skill);
+};
+
+/**
+ * Applies an anchor override when present.
+ * @param {RPG_Skill} skill The base skill of the action.
+ */
+Sprite_Character.prototype.applyActionAnchor = function(skill)
+{
+  // resolve anchor override if defined.
+  const visAnchor = skill.jabsVisAnchor; // [ax, ay] or null
+  if (!visAnchor) return;
+
+  // destructure anchor components.
+  const [ ax, ay ] = visAnchor;
+
+  // only assign if different to avoid churn.
+  if (this.anchor.x !== ax || this.anchor.y !== ay)
+  {
+    this.anchor.set(ax, ay); // update anchor.
+  }
+};
+
+/**
+ * Applies a z-order override when present.
+ * @param {RPG_Skill} skill The base skill of the action.
+ */
+Sprite_Character.prototype.applyActionZ = function(skill)
+{
+  // resolve z override (nullable).
+  const visZ = skill.jabsVisZ;
+  if (visZ === null) return;
+
+  // assign z if provided.
+  this.z = visZ;
+};
+
+/**
+ * Applies the direction-aware [x,y] pixel offset for the visual.
+ * @param {RPG_Skill} skill The base skill.
+ * @param {JABS_Action} jabsAction The action providing direction.
+ */
+Sprite_Character.prototype.applyActionOffset = function(skill, jabsAction)
+{
+  // determine the current facing for this action.
+  const facing = jabsAction.direction(); // numeric 2/4/6/8 (+ diagonals 1/3/7/9).
+
+  // resolve the most-appropriate offset for the facing.
+  const [ offX, offY ] = skill.getJabsVisOffsetFor(facing);
+
+  // add the offsets if any.
+  if (offX !== 0 || offY !== 0)
+  {
+    this.x += offX; // nudge horizontally.
+    this.y += offY; // nudge vertically.
+  }
+};
+
+/**
+ * Applies sprite rotation if enabled via <visRotate>.
+ * Rotation is applied around the sprite's anchor.
+ * @param {RPG_Skill} skill The base skill containing metadata.
+ * @param {JABS_Action} jabsAction The action providing direction.
+ */
+Sprite_Character.prototype.applyActionRotation = function(skill, jabsAction)
+{
+  // if rotation not requested, do nothing.
+  if (!skill.jabsVisRotate) return;
+
+  // compute radians from the action's direction.
+  const dir = jabsAction.direction(); // 2/4/6/8 (+ diagonals 1/3/7/9).
+  const radians = this.directionToRadians(dir);
+
+  // only assign if different enough to matter.
+  if (this.rotation !== radians)
+  {
+    this.rotation = radians;
+  }
+};
+
+/**
+ * Maps numeric directions (1,2,3,4,6,7,8,9) to radians for rotation.
+ * Down (2) is treated as 0 rad to match typical "pointing down is default" slash art.
+ * Right (6) → +90°, Up (8) → 180°, Left (4) → -90°.
+ * Diagonals are ±45° in between.
+ * @param {1|2|3|4|6|7|8|9} dir The direction to convert.
+ * @returns {number} The radians to rotate by.
+ */
+Sprite_Character.prototype.directionToRadians = function(dir)
+{
+  // precomputed constants for clarity.
+  const RAD_0 = 0; // down
+  const RAD_45 = Math.PI / 4;
+  const RAD_90 = Math.PI / 2;
+  const RAD_180 = Math.PI;
+  const RAD_N90 = -Math.PI / 2;
+  const RAD_N45 = -Math.PI / 4;
+
+  switch (dir)
+  {
+    case 2:
+      return RAD_0;            // down
+    case 3:
+      return RAD_45;           // down-right
+    case 6:
+      return RAD_90;           // right
+    case 9:
+      return RAD_90 + RAD_45;  // up-right (135°)
+    case 8:
+      return RAD_180;          // up
+    case 7:
+      return -RAD_90 - RAD_45; // up-left (-135°)
+    case 4:
+      return RAD_N90;          // left
+    case 1:
+      return RAD_N45;          // down-left (-45°)
+  }
+
+  // default: no rotation.
+  return 0;
+};
+
+/**
+ * Applies sprite scaling if specified via <visScale:[sx, sy]>.
+ * @param {RPG_Skill} skill The base skill containing scale metadata.
+ */
+Sprite_Character.prototype.applyActionScale = function(skill)
+{
+  // resolve scale if present.
+  const visScale = skill.jabsVisScale; // [sx, sy] or null
+  if (!visScale) return;
+
+  // destructure components.
+  const [ sx, sy ] = visScale;
+
+  // assign scale if different to avoid churn.
+  if (this.scale.x !== sx || this.scale.y !== sy)
+  {
+    this.scale.set(sx, sy);
+  }
+};
+
+/**
+ * Adds or toggles a small crosshair at the sprite origin if <visDebug> is present.
+ * @param {RPG_Skill} skill The base skill containing debug metadata.
+ */
+Sprite_Character.prototype.applyActionDebug = function(skill)
+{
+  // if debugging is desired, ensure the gizmo is visible.
+  if (skill.jabsVisDebug)
+  {
+    this._j._abs._visDebugGizmo ||= this.createJabsVisDebugGizmo(); // create once.
+    if (!this.children.includes(this._j._abs._visDebugGizmo))
+    {
+      this.addChild(this._j._abs._visDebugGizmo); // attach gizmo.
+    }
+    this._j._abs._visDebugGizmo.visible = true; // show while debugging.
+    return;
+  }
+
+  // hide when not debugging.
+  if (this._j._abs._visDebugGizmo)
+  {
+    this._j._abs._visDebugGizmo.visible = false;
+  }
+};
+
+/**
+ * Creates a tiny crosshair to visualize the sprite’s local origin.
+ * @returns {PIXI.Graphics}
+ */
+Sprite_Character.prototype.createJabsVisDebugGizmo = function()
+{
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics();
+  g.clear();
+  g.lineStyle(1, 0xFF3366, 1.0);
+  g.moveTo(-4, 0);
+  g.lineTo(4, 0);
+  g.moveTo(0, -4);
+  g.lineTo(0, 4);
+  g.endFill();
+  return g;
+};
+//endregion visual offsetting
+
 //region state overlay
 /**
  * Sets up this character's state overlay, to show things like poison or paralysis.
@@ -31342,11 +32008,9 @@ Sprite_Character.prototype.updateCastGauge = function()
     const currentJabs = this._character.getJabsBattler();
 
     // if the bound JABS battler or its expected host changed, rebind.
-    const needsRebind = (
-      gauge._jabsBattler !== currentJabs
-      || gauge._expectedCharacter !== this._character
-      || gauge._expectedUuid !== (currentJabs ? currentJabs.getUuid() : null)
-    );
+    const needsRebind = (gauge._jabsBattler !== currentJabs || gauge._expectedCharacter !== this._character || gauge._expectedUuid !== (currentJabs
+        ? currentJabs.getUuid()
+        : null));
 
     if (needsRebind)
     {
@@ -32179,6 +32843,85 @@ Sprite_MapHpGauge.prototype.setupBattler = function(battler)
 //endregion Sprite_MapHpGauge
 
 //region Spriteset_Map
+//region init
+J.ABS.Aliased.Spriteset_Map.set('createLowerLayer', Spriteset_Map.prototype.createLowerLayer);
+Spriteset_Map.prototype.createLowerLayer = function()
+{
+  // perform original logic.
+  J.ABS.Aliased.Spriteset_Map.get('createLowerLayer')
+    .call(this);
+
+  // also create JABS-specific sprites.
+  this.createJabsLayer();
+};
+
+/**
+ * Creates JABS-unique sprites that aren't otherwise regularly-tracked sprites.
+ */
+Spriteset_Map.prototype.createJabsLayer = function()
+{
+  /**
+   * The shared root namespace for all of J's plugin data.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with JABS.
+   */
+  this._j._abs ||= {};
+
+  /**
+   * The container for all hitbox sprites.
+   * @type {Sprite}
+   */
+  this._j._abs._hitboxLayer = new Sprite();
+
+  /**
+   * Direct tracking for individual sprites by their uuid.
+   * @type {Record<string, Sprite>}
+   */
+  this._j._abs._actionHitboxSprites = {};
+
+  /**
+   * Direct tracking for battler hitbox sprites by their stable key.
+   * Keys include enemy battler uuids, and fixed keys for player/followers.
+   * @type {Record<string, Sprite>}
+   */
+  this._j._abs._battlerHitboxSprites = {};
+
+  // mount under tilemap for consistent coordinates.
+  this.addChild(this._j._abs._hitboxLayer);
+};
+
+/**
+ * Gets the hitbox overlay sprite container.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.getJabsHitboxLayer = function()
+{
+  return this._j._abs._hitboxLayer;
+};
+
+/**
+ * Get the direct tracking dictionary for hitbox sprites.
+ * @returns {Record<string, Sprite>}
+ */
+Spriteset_Map.prototype.getActionHitboxSprites = function()
+{
+  return this._j._abs._actionHitboxSprites;
+};
+
+/**
+ * Accessor for the battler hitbox sprite dictionary.
+ * @returns {Record<string, Sprite>}
+ */
+Spriteset_Map.prototype.getBattlerHitboxSprites = function()
+{
+  return this._j._abs._battlerHitboxSprites; // return the dict.
+};
+//endregion init
+
+//region update
 /**
  * Hooks into the `update` function to also update any active action sprites.
  */
@@ -32209,7 +32952,11 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 
   // manage full-screen sprite refreshes.
   this.handleSpriteRefresh();
+
+  // manage the hitbox overlays for actions.
+  this.handleHitboxOverlay();
 };
+//endregion update
 
 //region action sprites
 /**
@@ -32286,27 +33033,65 @@ Spriteset_Map.prototype.removeActionSprites = function()
  */
 Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
 {
-  // get the sprite index for the action event.
-  const spriteIndex = this._characterSprites.findIndex(sprite =>
-  {
-    // if the character doesn't match the event, then keep looking.
-    if (sprite.character() !== actionEvent) return false;
+  // Resolve the same underlying character that we used during add.
+  const jabsAction = actionEvent.getJabsAction(); // underlying JABS_Action.
+  const character = jabsAction
+    ? jabsAction.getActionSprite() // character used to create the Sprite_Character
+    : null; // fallback if something went awry.
 
-    // we found a match!
-    return true;
-  });
-
-  // confirm we did indeed find the sprite's index for removal.
-  if (spriteIndex !== -1)
+  // Find all sprites that match this character (defensive: remove all we find).
+  const matches = [];
+  for (let i = this._characterSprites.length - 1; i >= 0; i--)
   {
-    // purge the sprite from tracking.
-    this._characterSprites.splice(spriteIndex, 1);
+    const s = this._characterSprites[i];
+
+    // character() must match exactly the character we created the sprite with.
+    if (character && s.character() === character)
+    {
+      // remove from tracking first.
+      this._characterSprites.splice(i, 1);
+
+      // remove from the display tree if attached.
+      if (this._tilemap && s.parent === this._tilemap)
+      {
+        this._tilemap.removeChild(s);
+      }
+
+      // destroy the sprite to stop updates and free resources.
+      if (!s.destroyed)
+      {
+        s.destroy({ children: true });
+      }
+
+      // track for debugging/consistency if needed.
+      matches.push(s);
+    }
   }
 
-  // the action event has been removed.
+  // If the add/remove got out of sync and there was no match by character,
+  // fall back to the original search by actionEvent (legacy behavior), but
+  // ensure we fully unmount/destroy if found.
+  if (matches.length === 0)
+  {
+    const idx = this._characterSprites.findIndex(s => s.character() === actionEvent);
+    if (idx !== -1)
+    {
+      const [ s ] = this._characterSprites.splice(idx, 1);
+      if (this._tilemap && s && s.parent === this._tilemap)
+      {
+        this._tilemap.removeChild(s);
+      }
+      if (s && !s.destroyed)
+      {
+        s.destroy({ children: true });
+      }
+    }
+  }
+
+  // Acknowledge that this action’s sprite no longer needs removing.
   actionEvent.setActionSpriteNeedsRemoving(false);
 
-  // delete the now-removed sprite for this action.
+  // Clear any now-expired action events from the map.
   $gameMap.clearExpiredJabsActionEvents();
 };
 //endregion action sprites
@@ -32565,6 +33350,799 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
   $jabsEngine.requestSpriteRefresh = false;
 };
 //endregion event sprites
+
+//region hitbox sprites
+/**
+ * Renders translucent overlays for action hitboxes.
+ */
+Spriteset_Map.prototype.handleHitboxOverlay = function()
+{
+  // handle the action hitbox overlays.
+  this.handleActionHitboxes();
+
+  // handle the battler hitbox overlays.
+  this.handleBattlerHitboxes();
+};
+
+/**
+ * Applies the provided style to a PIXI.Graphics for drawing a hitbox.
+ * @param {PIXI.Graphics} g The graphics instance to apply styles to.
+ * @param {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }} style
+ */
+Spriteset_Map.prototype.applyHitboxStyle = function(g, style)
+{
+  // configure line + fill according to style.
+  g.lineStyle(style.lineWidth, style.lineColor, style.lineAlpha); // outline style.
+  g.beginFill(style.fillColor, style.fillAlpha); // fill style.
+};
+
+/**
+ * Determines if the provided battler-bearing character overlaps any active action.
+ * Uses JABS' native shape logic to ensure parity with gameplay collision.
+ * @param {{ key:string, type:string, source: Game_CharacterBase }} item The battler overlay item.
+ * @returns {boolean} True if overlapping any action; false otherwise.
+ */
+Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function(item)
+{
+  // pull the battler's character for collision checks.
+  const target = item.source; // the battler-bearing character.
+
+  // scan all active action events on the map.
+  const actions = $gameMap.actionEvents(); // current action events.
+  for (let i = 0; i < actions.length; i++)
+  {
+    // grab the action event and underlying JABS action model.
+    const actionEvent = actions[i]; // the action's event/character.
+    const jabsAction = actionEvent.getJabsAction(); // the JABS action model.
+
+    // guard: no action model means nothing to collide with.
+    if (!jabsAction) continue; // skip invalid action entries.
+
+    // direct actions (proximity-based) do not use a map shape; skip them for this visual.
+    if (jabsAction.isDirectAction()) continue; // only shaped actions.
+
+    // derive parameters for the shape collision.
+    const shape = jabsAction.getShape();
+    const range = jabsAction.getRange();
+    const facing = actionEvent.direction();
+
+    // ask the engine if the target is within this action's range according to shape logic.
+    const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape); // engine parity.
+
+    // if overlapping, we're done.
+    if (overlapped) return true; // this battler is overlapping at least one action.
+  }
+
+  // if none overlapped, report no overlap.
+  return false; // not colliding with any active action.
+};
+
+//region action hitboxes
+/**
+ * Handle the overlays for all action-based hitboxes.
+ */
+Spriteset_Map.prototype.handleActionHitboxes = function()
+{
+  // build any missing hitbox sprites for active actions.
+  this.buildMissingActionHitboxSprites();
+
+  // refresh positions and shapes for existing hitbox sprites.
+  this.refreshExistingActionHitboxSprites();
+
+  // purge hitbox sprites that no longer have a corresponding action.
+  this.purgeOrphanedActionHitboxSprites();
+};
+
+/**
+ * Resolves the style used when drawing a hitbox for a given shape.
+ * Reads from J.ABS.Metadata.HitboxStyles if present; falls back to defaults.
+ * @param {string} shape The hitbox shape name (e.g., circle, rhombus, square, etc.).
+ * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
+ */
+Spriteset_Map.prototype.getActionHitboxStyleFor = function(shape)
+{
+  // default base (orange translucent with darker outline).
+  const defaults = {
+    fillColor: 0xFFA500, // orange fill.
+    fillAlpha: 0.35, // translucent.
+    lineColor: 0xE08000, // darker orange outline.
+    lineAlpha: 0.9, // mostly opaque outline.
+    lineWidth: 2, // outline thickness.
+  };
+
+  // pull optional centralized styles if present.
+  const styles = J.ABS.Metadata.HitboxStyles || {}; // centralized config bucket.
+
+  // start with defaults, then layer global base overrides.
+  const base = Object.assign({}, defaults, styles.base || {}); // merged base.
+
+  // apply shape-specific overrides if provided.
+  const key = (shape || "").toLowerCase(); // normalized key.
+  const shapeOverrides = styles.byShape?.[key] || null; // optional per-shape.
+
+  // produce the final style.
+  const finalStyle = Object.assign({}, base, shapeOverrides || {}); // merged final style.
+  return finalStyle; // return style for caller.
+};
+
+/**
+ * Builds hitbox sprites for any action events that lack one.
+ */
+Spriteset_Map.prototype.buildMissingActionHitboxSprites = function()
+{
+  // get the container and dict for hitboxes.
+  const layer = this.getJabsHitboxLayer(); // the parent container for hitbox sprites.
+  const dict = this.getActionHitboxSprites(); // dictionary of existing hitbox sprites.
+
+  // iterate over active action events.
+  const actions = $gameMap.actionEvents(); // current action events.
+  actions.forEach(actionEvent =>
+  {
+    // obtain a stable key for this action (prefer the action uuid).
+    const key = actionEvent.getJabsActionUuid(); // stable key.
+
+    // guard: skip if no uuid present (should not happen for action events).
+    if (!key) return; // cannot track without a UUID.
+
+    // if a sprite already exists for this action, skip creation.
+    if (dict[key]) return; // already created for this action.
+
+    // create and mount a new hitbox sprite.
+    const sprite = this.createActionHitboxSprite(actionEvent); // build new hitbox sprite.
+    dict[key] = sprite; // track it in the dict by key.
+    layer.addChild(sprite); // attach to the hitbox layer.
+  });
+};
+
+/**
+ * Synchronizes position and appearance of existing hitbox sprites.
+ */
+Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function()
+{
+  // quick access to tile size.
+  const tw = $gameMap.tileWidth(); // tile width in pixels.
+  const th = $gameMap.tileHeight(); // tile height in pixels.
+
+  // iterate all current action events and refresh their hitbox sprites.
+  const actions = $gameMap.actionEvents(); // current action events to render.
+  actions.forEach(actionEvent =>
+  {
+    // read essentials from the action/event.
+    const jabsAction = actionEvent.getJabsAction(); // the underlying JABS action model.
+    if (!jabsAction) return; // guard: no action means nothing to draw.
+
+    const shape = jabsAction.getShape();
+    const range = jabsAction.getRange();
+    const facing = actionEvent.direction(); // 2=down,4=left,6=right,8=up.
+
+    // locate the sprite for this action.
+    const sprite = this.getOrCreateActionHitboxSpriteFor(actionEvent); // ensure we have a sprite.
+
+    // sync on-screen center position (align with character rendering).
+    const cx = actionEvent.screenX(); // on-screen x center.
+    const cy = actionEvent.screenY(); // on-screen y center.
+    sprite.x = cx; // place sprite at x.
+    sprite.y = cy; // place sprite at y.
+
+    // redraw the shape into the sprite's internal graphics.
+    this.drawActionHitboxInto(sprite, shape, range, facing, tw, th); // draw shape for this frame.
+  });
+};
+
+/**
+ * Removes hitbox sprites that no longer correspond to an active action.
+ */
+Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function()
+{
+  // compute the set of active keys (uuids) on the map now.
+  const activeKeys = new Set(
+    $gameMap.actionEvents()
+      .map(ev => ev.getJabsActionUuid()) // all active keys.
+  );
+
+  // walk the dict and remove any sprites whose keys aren’t active.
+  const dict = this.getActionHitboxSprites(); // existing sprites.
+  const layer = this.getJabsHitboxLayer(); // parent container.
+
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      if (activeKeys.has(key)) return; // still in use, keep it.
+
+      // detach and destroy the orphaned sprite.
+      const sprite = dict[key]; // the orphaned sprite.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite); // remove from layer.
+      }
+
+      this.destroyActionHitboxSprite(sprite); // fully destroy internals.
+      delete dict[key]; // remove from dict.
+    });
+};
+
+/**
+ * Retrieves or creates the hitbox sprite for a given action event.
+ * @param {Game_Event} actionEvent The action event.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.getOrCreateActionHitboxSpriteFor = function(actionEvent)
+{
+  // derive the dictionary key for this action.
+  const key = actionEvent.getJabsActionUuid(); // stable id.
+
+  // return the existing sprite if present.
+  const dict = this.getActionHitboxSprites(); // dictionary of sprites.
+  if (dict[key]) return dict[key]; // already made.
+
+  // otherwise create, track, and return it.
+  const sprite = this.createActionHitboxSprite(actionEvent); // create new sprite.
+  dict[key] = sprite; // track it.
+  this.getJabsHitboxLayer()
+    .addChild(sprite); // mount it.
+  return sprite; // provide to caller.
+};
+
+/**
+ * Creates a new hitbox sprite (RMMZ Sprite wrapping a PIXI.Graphics) for an action.
+ * @param {Game_Event} actionEvent The related action event.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.createActionHitboxSprite = function(actionEvent)
+{
+  // create a plain sprite to remain RMMZ-native at the boundary.
+  const sprite = new Sprite(); // container-level sprite.
+
+  // create a graphics child to actually draw the shapes.
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics(); // underlying shape drawer.
+
+  // store references and small bits of state on the sprite.
+  sprite._jabsHitboxG = g; // the internal graphics used for drawing.
+  sprite._actionUuid = actionEvent.getJabsActionUuid(); // stable id.
+
+  // attach the graphics under the sprite.
+  sprite.addChild(g); // graphics is a child of sprite.
+
+  // center the sprite so drawing at (0,0) will align to action center.
+  sprite.anchor.set(0.5, 0.5); // center origin if available on Sprite.
+
+  return sprite; // return the prepared sprite.
+};
+
+/**
+ * Destroys a hitbox sprite and its internals.
+ * @param {Sprite} sprite The sprite to destroy.
+ */
+Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite)
+{
+  if (!sprite) return; // nothing to destroy.
+
+  // cleanup graphics child if present.
+  if (sprite._jabsHitboxG)
+  {
+    sprite._jabsHitboxG.clear(); // clear any drawings.
+    sprite._jabsHitboxG.destroy({ children: true }); // dispose graphics.
+  }
+
+  // destroy the container sprite.
+  sprite.destroy();
+};
+
+/**
+ * Redraws the action's hitbox shape into a hitbox sprite's graphics.
+ * @param {Sprite} sprite The target hitbox sprite (wraps PIXI.Graphics).
+ * @param {string} shape The shape name.
+ * @param {number} range The range/radius in tiles.
+ * @param {number} facing The facing (2/4/6/8).
+ * @param {number} tw Tile width in px.
+ * @param {number} th Tile height in px.
+ */
+Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, facing, tw, th)
+{
+  // get the graphics used to draw.
+  /** @type {PIXI.Graphics} */
+  const g = sprite._jabsHitboxG; // internal graphics for drawing.
+
+  // clear previous drawings for this frame.
+  g.clear(); // remove any prior shapes.
+
+  // resolve and apply centralized style for this shape.
+  const style = this.getActionHitboxStyleFor(shape); // centralized style resolution.
+  this.applyHitboxStyle(g, style); // apply style to graphics.
+
+  // draw around local (0,0) since sprite is positioned at the action center.
+  const draw = (name) =>
+  {
+    switch ((name || "").toLowerCase())
+    {
+      case "circle":
+      {
+        const r = range * Math.min(tw, th); // circle radius in pixels.
+        g.drawCircle(0, 0, r); // draw centered circle.
+        break; // done.
+      }
+      case "rhombus":
+      {
+        this.drawRhombusG(g, range * tw, range * th); // diamond.
+        break; // done.
+      }
+      case "square":
+      {
+        const w = (2 * range + 1) * tw; // width in pixels.
+        const h = (2 * range + 1) * th; // height in pixels.
+        g.drawRect(-w / 2, -h / 2, w, h); // centered square.
+        break; // done.
+      }
+      case "frontsquare":
+      {
+        this.drawFrontSquareG(g, range, facing, tw, th); // half-square in facing dir.
+        break; // done.
+      }
+      case "line":
+      {
+        const lengthPx = range * (facing === 2 || facing === 8
+          ? th
+          : tw); // length in px.
+        if (facing === 2)
+        {
+          g.drawRect(-tw / 2, 0, tw, lengthPx);
+        }// down.
+        else if (facing === 8)
+        {
+          g.drawRect(-tw / 2, -lengthPx, tw, lengthPx);
+        }// up.
+        else if (facing === 6)
+        {
+          g.drawRect(0, -th / 2, lengthPx, th);
+        }// right.
+        else
+        {
+          g.drawRect(-lengthPx, -th / 2, lengthPx, th);
+        } // left.
+        break; // done.
+      }
+      case "wall":
+      {
+        const lenTiles = (2 * range + 1); // total tiles spanned.
+        if (facing === 2 || facing === 8)
+        {
+          const w = lenTiles * tw; // width across.
+          g.drawRect(-w / 2, -th / 2, w, th); // horizontal wall.
+        }
+        else
+        {
+          const h = lenTiles * th; // height across.
+          g.drawRect(-tw / 2, -h / 2, tw, h); // vertical wall.
+        }
+        break; // done.
+      }
+      case "cross":
+      {
+        const w = (2 * range + 1) * tw; // total width.
+        const h = (2 * range + 1) * th; // total height.
+        g.drawRect(-tw / 2, -h / 2, tw, h); // vertical line.
+        g.drawRect(-w / 2, -th / 2, w, th); // horizontal line.
+        break; // done.
+      }
+      case "arc":
+      default:
+      {
+        this.drawFrontRhombusG(g, range * tw, range * th, facing); // front diamond.
+        break; // done.
+      }
+    }
+  };
+
+  // perform the shape drawing.
+  draw(shape); // draw the selected shape.
+
+  // finalize.
+  g.endFill(); // complete fill for this shape.
+};
+
+/**
+ * Draws a diamond (rhombus) centered on the graphics' local origin.
+ * @param {PIXI.Graphics} g The graphics to draw on.
+ * @param {number} rx Horizontal radius in px.
+ * @param {number} ry Vertical radius in px.
+ */
+Spriteset_Map.prototype.drawRhombusG = function(g, rx, ry)
+{
+  g.moveTo(0, -ry); // top.
+  g.lineTo(rx, 0); // right.
+  g.lineTo(0, ry); // bottom.
+  g.lineTo(-rx, 0); // left.
+  g.closePath(); // close.
+};
+
+/**
+ * Draws a half-diamond (front rhombus) from origin in facing direction.
+ * @param {PIXI.Graphics} g The graphics to draw on.
+ * @param {number} rx Horizontal radius in px.
+ * @param {number} ry Vertical radius in px.
+ * @param {number} facing 2/4/6/8
+ */
+Spriteset_Map.prototype.drawFrontRhombusG = function(g, rx, ry, facing)
+{
+  if (facing === 2) // down
+  {
+    g.moveTo(0, 0);
+    g.lineTo(rx, 0);
+    g.lineTo(0, ry);
+    g.closePath(); // lower-right tri.
+    g.moveTo(0, 0);
+    g.lineTo(0, ry);
+    g.lineTo(-rx, 0);
+    g.closePath(); // lower-left tri.
+  }
+  else if (facing === 8) // up
+  {
+    g.moveTo(0, 0);
+    g.lineTo(0, -ry);
+    g.lineTo(rx, 0);
+    g.closePath(); // upper-right tri.
+    g.moveTo(0, 0);
+    g.lineTo(-rx, 0);
+    g.lineTo(0, -ry);
+    g.closePath(); // upper-left tri.
+  }
+  else if (facing === 6) // right
+  {
+    g.moveTo(0, 0);
+    g.lineTo(rx, 0);
+    g.lineTo(0, -ry);
+    g.closePath(); // right-upper tri.
+    g.moveTo(0, 0);
+    g.lineTo(0, ry);
+    g.lineTo(rx, 0);
+    g.closePath(); // right-lower tri.
+  }
+  else // left
+  {
+    g.moveTo(0, 0);
+    g.lineTo(-rx, 0);
+    g.lineTo(0, -ry);
+    g.closePath(); // left-upper tri.
+    g.moveTo(0, 0);
+    g.lineTo(0, ry);
+    g.lineTo(-rx, 0);
+    g.closePath(); // left-lower tri.
+  }
+};
+
+/**
+ * Draws the front-half of a square in the facing direction from origin.
+ * @param {PIXI.Graphics} g The graphics to draw on.
+ * @param {number} range Range in tiles.
+ * @param {number} facing 2/4/6/8
+ * @param {number} tw Tile width in px.
+ * @param {number} th Tile height in px.
+ */
+Spriteset_Map.prototype.drawFrontSquareG = function(g, range, facing, tw, th)
+{
+  const totalW = (2 * range + 1) * tw; // total width of full square.
+  const totalH = (2 * range + 1) * th; // total height of full square.
+  const halfH = (range + 1) * th; // half height including center.
+  const halfW = (range + 1) * tw; // half width including center.
+
+  if (facing === 2) // down
+  {
+    g.drawRect(-totalW / 2, 0, totalW, halfH); // bottom half.
+  }
+  else if (facing === 8) // up
+  {
+    g.drawRect(-totalW / 2, -halfH, totalW, halfH); // top half.
+  }
+  else if (facing === 6) // right
+  {
+    g.drawRect(0, -totalH / 2, halfW, totalH); // right half.
+  }
+  else // left
+  {
+    g.drawRect(-halfW, -totalH / 2, halfW, totalH); // left half.
+  }
+};
+//endregion action hitboxes
+
+//region battler hitboxes
+
+/**
+ * Handle the overlays for all battler-based hitboxes.
+ */
+Spriteset_Map.prototype.handleBattlerHitboxes = function()
+{
+  // build any missing hitbox sprites for active battlers.
+  this.buildMissingBattlerHitboxSprites();
+
+  // refresh positions and shapes for existing battler hitbox sprites.
+  this.refreshExistingBattlerHitboxSprites();
+
+  // purge battler hitbox sprites that no longer have a corresponding battler.
+  this.purgeOrphanedBattlerHitboxSprites();
+};
+
+/**
+ * Builds battler hitbox sprites for any battlers that lack one.
+ */
+Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function()
+{
+  // get the container and dict for battler hitboxes.
+  const layer = this.getJabsHitboxLayer(); // parent container for hitboxes.
+  const dict = this.getBattlerHitboxSprites(); // existing battler hitbox sprites.
+
+  // collect all active battler keys + sources to build for.
+  const items = this.collectActiveBattlerOverlayItems(); // [{ key, type, source }]
+
+  // create any that are missing.
+  items.forEach(item =>
+  {
+    // skip if a sprite already exists for this key.
+    if (dict[item.key]) return; // already present.
+
+    // create and mount a new battler hitbox sprite.
+    const sprite = this.createBattlerHitboxSprite(item); // build new sprite.
+    dict[item.key] = sprite; // track it.
+    layer.addChild(sprite); // attach to the hitbox layer.
+  });
+};
+
+/**
+ * Synchronizes position and appearance of existing battler hitbox sprites.
+ */
+Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function()
+{
+  // quick access to tile size.
+  const tw = $gameMap.tileWidth(); // tile width in pixels.
+  const th = $gameMap.tileHeight(); // tile height in pixels.
+
+  // collect all active battler keys + sources to refresh.
+  const items = this.collectActiveBattlerOverlayItems(); // [{ key, type, source }]
+
+  // refresh each active battler's sprite.
+  items.forEach(item =>
+  {
+    // locate or create the sprite for this battler.
+    const sprite = this.getOrCreateBattlerHitboxSpriteFor(item); // ensure sprite exists.
+
+    // compute on-screen center for the battler.
+    const cx = item.source.screenX(); // center x.
+    const cy = item.source.screenY(); // center y.
+    sprite.x = cx; // place sprite at x.
+    sprite.y = cy; // place sprite at y.
+
+    // determine if this battler currently overlaps any active action.
+    const colliding = this.isBattlerCollidingWithAnyAction(item); // true if overlapping.
+
+    // redraw the 1x1 tile square representing the battler's occupancy.
+    this.drawBattlerHitboxInto(sprite, item.type, tw, th, colliding); // draw for this frame.
+  });
+};
+
+/**
+ * Removes battler hitbox sprites that no longer correspond to an active battler.
+ */
+Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function()
+{
+  // compute the set of active keys now.
+  const active = new Set(this.collectActiveBattlerOverlayItems()
+    .map(it => it.key)); // active keys.
+
+  // walk the dict and remove any sprites whose keys aren’t active.
+  const dict = this.getBattlerHitboxSprites(); // existing sprites.
+  const layer = this.getJabsHitboxLayer(); // parent container.
+
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      if (active.has(key)) return; // still in use, keep it.
+
+      // detach and destroy the orphaned sprite.
+      const sprite = dict[key]; // the orphaned sprite.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite); // remove from layer.
+      }
+
+      this.destroyBattlerHitboxSprite(sprite); // dispose internals.
+      delete dict[key]; // remove from dict.
+    });
+};
+
+/**
+ * Collects all battler-bearing characters to overlay and produces stable keys.
+ * Includes: player, followers, and enemy battler events.
+ * @returns {{ key:string, type:"player"|"follower"|"battler", source: Game_CharacterBase }[]}
+ */
+Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
+{
+  /** @type {{ key:string, type:"player"|"follower"|"battler", source: Game_CharacterBase }[]} */
+  const items = []; // the final collection.
+
+  // include player (always present on map).
+  const player = $gamePlayer; // the player character.
+  if (player)
+  {
+    items.push({
+      key: "battler:player",
+      type: "player",
+      source: player
+    }); // add player.
+  }
+
+  // include followers (ally AI or default followers alike).
+  const followers = $gamePlayer.followers()
+    .data(); // array of Game_Follower.
+  for (let i = 0; i < followers.length; i++)
+  {
+    const follower = followers[i];
+    if (!follower || !follower.isVisible()) continue;
+
+    items.push({
+      key: `battler:follower:${i}`,
+      type: "follower",
+      source: follower
+    }); // add follower.
+  }
+
+  // include enemy battler events (events that represent battlers on the map).
+  $gameMap.events()
+    .filter(ev => ev.isJabsBattler())
+    .forEach(ev =>
+    {
+      const uuid = ev.getJabsBattlerUuid();
+      if (!uuid) return;
+
+      items.push({
+        key: uuid,
+        type: "battler",
+        source: ev
+      }); // add enemy battler event.
+    });
+
+  return items; // provide the collection.
+};
+
+/**
+ * Retrieves or creates the battler hitbox sprite for a given overlay item.
+ * @param {{ key:string, type:string, source: Game_CharacterBase }} item The overlay item.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.getOrCreateBattlerHitboxSpriteFor = function(item)
+{
+  // derive the key for this battler's sprite.
+  const { key } = item; // stable id.
+
+  // return the existing sprite if present.
+  const dict = this.getBattlerHitboxSprites(); // dictionary of sprites.
+  if (dict[key]) return dict[key]; // already made.
+
+  // otherwise create, track, and return it.
+  const sprite = this.createBattlerHitboxSprite(item); // create new sprite.
+  dict[key] = sprite; // track it.
+  this.getJabsHitboxLayer()
+    .addChild(sprite); // mount it.
+  return sprite; // provide to caller.
+};
+
+/**
+ * Creates a new battler hitbox sprite (Sprite wrapping a PIXI.Graphics).
+ * @param {{ key:string, type:string, source: Game_CharacterBase }} item The overlay item.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.createBattlerHitboxSprite = function(item)
+{
+  // create a plain sprite to remain RMMZ-native at the boundary.
+  const sprite = new Sprite(); // container-level sprite.
+
+  // create a graphics child to actually draw the shapes.
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics(); // underlying shape drawer.
+
+  // store references and small bits of state on the sprite.
+  sprite._jabsHitboxG = g; // the internal graphics used for drawing.
+  sprite._battlerKey = item.key; // stable id.
+  sprite._battlerType = item.type; // kind: player|follower|battler.
+
+  // attach the graphics under the sprite.
+  sprite.addChild(g); // graphics is a child of sprite.
+
+  // center the sprite so drawing at (0,0) will align to center.
+  sprite.anchor.set(0.5, 0.5); // center origin.
+
+  return sprite; // return the prepared sprite.
+};
+
+/**
+ * Draws the battler's occupancy hitbox (1x1 tile square) into the sprite graphics.
+ * @param {Sprite} sprite The target battler hitbox sprite.
+ * @param {"player"|"follower"|"battler"} type The kind of battler.
+ * @param {number} tw Tile width in pixels.
+ * @param {number} th Tile height in pixels.
+ * @param {boolean} colliding Whether the battler overlaps any active action.
+ */
+Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, colliding)
+{
+  // get the graphics used to draw.
+  /** @type {PIXI.Graphics} */
+  const g = sprite._jabsHitboxG; // internal graphics for drawing.
+
+  // clear previous drawings for this frame.
+  g.clear(); // remove any prior shapes.
+
+  // resolve and apply centralized style for this battler kind and state.
+  const style = this.getBattlerHitboxStyle(type,
+    colliding
+      ? "colliding"
+      : null); // style with state.
+  this.applyHitboxStyle(g, style); // apply style to graphics.
+
+  // draw a centered 1x1-tile square representing the battler's collision.
+  g.drawRect(-tw / 2, -th / 2, tw, th); // centered square.
+
+  // finalize fill.
+  g.endFill(); // complete fill for this hitbox.
+};
+
+/**
+ * Resolves the style used when drawing a battler hitbox for a given battler kind.
+ * Reads from J.ABS.Metadata.HitboxStyles.byKind and .byState; falls back to defaults.
+ * @param {"player"|"follower"|"battler"} kind The battler kind.
+ * @param {string|null} state Optional state key such as "colliding".
+ * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
+ */
+Spriteset_Map.prototype.getBattlerHitboxStyle = function(kind, state)
+{
+  // defaults tailored for battlers (green-ish for visibility against action orange).
+  const defaults = {
+    fillColor: 0x2ECC71, // green fill.
+    fillAlpha: 0.25, // translucent.
+    lineColor: 0x27AE60, // darker green outline.
+    lineAlpha: 0.9, // outline opacity.
+    lineWidth: 2, // outline thickness.
+  };
+
+  // pull optional centralized styles if present.
+  const styles = J.ABS.Metadata.HitboxStyles || {}; // centralized config bucket.
+
+  // merge base overrides if provided.
+  const base = Object.assign({}, defaults, styles.base || {}); // merged base.
+
+  // apply kind-specific overrides if provided.
+  const kindKey = (kind || "battler").toLowerCase(); // normalized.
+  const byKind = styles.byKind?.[kindKey] || null; // optional kind overrides.
+
+  // apply state-specific overrides if provided (e.g., colliding).
+  const stateKey = (state || "").toLowerCase(); // normalized.
+  const byState = stateKey
+    ? (styles.byState?.[stateKey] || null)
+    : null; // optional state overrides.
+
+  // layered result: base -> kind -> state.
+  const finalStyle = Object.assign({}, base, byKind || {}, byState || {}); // merged final style.
+  return finalStyle; // return style for caller.
+};
+
+/**
+ * Destroys a battler hitbox sprite and its internals.
+ * @param {Sprite} sprite The sprite to destroy.
+ */
+Spriteset_Map.prototype.destroyBattlerHitboxSprite = function(sprite)
+{
+  if (!sprite) return; // nothing to destroy.
+
+  // cleanup graphics child if present.
+  if (sprite._jabsHitboxG)
+  {
+    sprite._jabsHitboxG.clear(); // clear any drawings.
+    sprite._jabsHitboxG.destroy({ children: true }); // dispose graphics.
+  }
+
+  // destroy the container sprite.
+  sprite.destroy(); // dispose sprite and its children.
+};
+//endregion battler hitboxes
+//endregion hitbox sprites
 //endregion Spriteset_Map
 
 class Window_AbsHelp

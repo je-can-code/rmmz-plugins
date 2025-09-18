@@ -29,6 +29,8 @@ Sprite_Character.prototype.initJabsMembers = function()
    */
   this._j._abs ||= {};
 
+  this._j._abs._visDebugGizmo = null;
+
   // initialize all extraneous members.
   this.initCombatMembers();
   this.initGaugeMembers();
@@ -348,6 +350,252 @@ Sprite_Character.prototype.setupMapSprite = function()
 };
 //endregion setup & reference
 
+//region visual offsetting
+/**
+ * Extends/Overrides {@link Sprite_Character.prototype.updatePosition}.<br/>
+ * Also applies per-skill visual metadata (offset, anchor, z, rotation, scale) to JABS action sprites.
+ */
+J.ABS.Aliased.Sprite_Character.set("updatePosition", Sprite_Character.prototype.updatePosition);
+Sprite_Character.prototype.updatePosition = function()
+{
+  // perform original logic.
+  J.ABS.Aliased.Sprite_Character.get("updatePosition")
+    .call(this);
+
+  // only apply to JABS action sprites that still exist and aren’t erased.
+  if (!this.isJabsAction() || this.character()
+    .isErased())
+  {
+    return;
+  }
+
+  // skip visual manipulation if the underlying action has been flagged for removal.
+  if (this.character()
+    .getJabsActionNeedsRemoving())
+  {
+    return;
+  }
+
+  // apply all visual manipulations for action sprites (anchor, z, offset, rotation, scale, debug).
+  this.applyActionVisuals();
+};
+
+/**
+ * Applies all visual manipulations for JABS action sprites in a structured manner.
+ * This includes: anchor override, z-order, direction-aware offset, rotation, scale, and debug gizmo.
+ */
+Sprite_Character.prototype.applyActionVisuals = function()
+{
+  // grab the underlying JABS action + base skill.
+  const character = this.character(); // Game_Event hosting the action.
+  const jabsAction = character.getJabsAction(); // JABS_Action for this sprite.
+  if (!jabsAction) return; // nothing to apply.
+
+  const skill = jabsAction.getBaseSkill(); // RPG_Skill of this action.
+  if (!skill) return; // cannot resolve visuals without the skill.
+
+  // 1) Optional anchor override (defaults retained when not present).
+  this.applyActionAnchor(skill);
+
+  // 2) Optional z-order override.
+  this.applyActionZ(skill);
+
+  // 3) Direction-relative per-skill visual pixel offset.
+  this.applyActionOffset(skill, jabsAction);
+
+  // 4) Optional rotation (if <visRotate>).
+  this.applyActionRotation(skill, jabsAction);
+
+  // 5) Optional scaling (if <visScale:[sx, sy]>).
+  this.applyActionScale(skill);
+
+  // 6) Optional debug gizmo at the visual origin to aid in alignment.
+  this.applyActionDebug(skill);
+};
+
+/**
+ * Applies an anchor override when present.
+ * @param {RPG_Skill} skill The base skill of the action.
+ */
+Sprite_Character.prototype.applyActionAnchor = function(skill)
+{
+  // resolve anchor override if defined.
+  const visAnchor = skill.jabsVisAnchor; // [ax, ay] or null
+  if (!visAnchor) return;
+
+  // destructure anchor components.
+  const [ ax, ay ] = visAnchor;
+
+  // only assign if different to avoid churn.
+  if (this.anchor.x !== ax || this.anchor.y !== ay)
+  {
+    this.anchor.set(ax, ay); // update anchor.
+  }
+};
+
+/**
+ * Applies a z-order override when present.
+ * @param {RPG_Skill} skill The base skill of the action.
+ */
+Sprite_Character.prototype.applyActionZ = function(skill)
+{
+  // resolve z override (nullable).
+  const visZ = skill.jabsVisZ;
+  if (visZ === null) return;
+
+  // assign z if provided.
+  this.z = visZ;
+};
+
+/**
+ * Applies the direction-aware [x,y] pixel offset for the visual.
+ * @param {RPG_Skill} skill The base skill.
+ * @param {JABS_Action} jabsAction The action providing direction.
+ */
+Sprite_Character.prototype.applyActionOffset = function(skill, jabsAction)
+{
+  // determine the current facing for this action.
+  const facing = jabsAction.direction(); // numeric 2/4/6/8 (+ diagonals 1/3/7/9).
+
+  // resolve the most-appropriate offset for the facing.
+  const [ offX, offY ] = skill.getJabsVisOffsetFor(facing);
+
+  // add the offsets if any.
+  if (offX !== 0 || offY !== 0)
+  {
+    this.x += offX; // nudge horizontally.
+    this.y += offY; // nudge vertically.
+  }
+};
+
+/**
+ * Applies sprite rotation if enabled via <visRotate>.
+ * Rotation is applied around the sprite's anchor.
+ * @param {RPG_Skill} skill The base skill containing metadata.
+ * @param {JABS_Action} jabsAction The action providing direction.
+ */
+Sprite_Character.prototype.applyActionRotation = function(skill, jabsAction)
+{
+  // if rotation not requested, do nothing.
+  if (!skill.jabsVisRotate) return;
+
+  // compute radians from the action's direction.
+  const dir = jabsAction.direction(); // 2/4/6/8 (+ diagonals 1/3/7/9).
+  const radians = this.directionToRadians(dir);
+
+  // only assign if different enough to matter.
+  if (this.rotation !== radians)
+  {
+    this.rotation = radians;
+  }
+};
+
+/**
+ * Maps numeric directions (1,2,3,4,6,7,8,9) to radians for rotation.
+ * Down (2) is treated as 0 rad to match typical "pointing down is default" slash art.
+ * Right (6) → +90°, Up (8) → 180°, Left (4) → -90°.
+ * Diagonals are ±45° in between.
+ * @param {1|2|3|4|6|7|8|9} dir The direction to convert.
+ * @returns {number} The radians to rotate by.
+ */
+Sprite_Character.prototype.directionToRadians = function(dir)
+{
+  // precomputed constants for clarity.
+  const RAD_0 = 0; // down
+  const RAD_45 = Math.PI / 4;
+  const RAD_90 = Math.PI / 2;
+  const RAD_180 = Math.PI;
+  const RAD_N90 = -Math.PI / 2;
+  const RAD_N45 = -Math.PI / 4;
+
+  switch (dir)
+  {
+    case 2:
+      return RAD_0;            // down
+    case 3:
+      return RAD_45;           // down-right
+    case 6:
+      return RAD_90;           // right
+    case 9:
+      return RAD_90 + RAD_45;  // up-right (135°)
+    case 8:
+      return RAD_180;          // up
+    case 7:
+      return -RAD_90 - RAD_45; // up-left (-135°)
+    case 4:
+      return RAD_N90;          // left
+    case 1:
+      return RAD_N45;          // down-left (-45°)
+  }
+
+  // default: no rotation.
+  return 0;
+};
+
+/**
+ * Applies sprite scaling if specified via <visScale:[sx, sy]>.
+ * @param {RPG_Skill} skill The base skill containing scale metadata.
+ */
+Sprite_Character.prototype.applyActionScale = function(skill)
+{
+  // resolve scale if present.
+  const visScale = skill.jabsVisScale; // [sx, sy] or null
+  if (!visScale) return;
+
+  // destructure components.
+  const [ sx, sy ] = visScale;
+
+  // assign scale if different to avoid churn.
+  if (this.scale.x !== sx || this.scale.y !== sy)
+  {
+    this.scale.set(sx, sy);
+  }
+};
+
+/**
+ * Adds or toggles a small crosshair at the sprite origin if <visDebug> is present.
+ * @param {RPG_Skill} skill The base skill containing debug metadata.
+ */
+Sprite_Character.prototype.applyActionDebug = function(skill)
+{
+  // if debugging is desired, ensure the gizmo is visible.
+  if (skill.jabsVisDebug)
+  {
+    this._j._abs._visDebugGizmo ||= this.createJabsVisDebugGizmo(); // create once.
+    if (!this.children.includes(this._j._abs._visDebugGizmo))
+    {
+      this.addChild(this._j._abs._visDebugGizmo); // attach gizmo.
+    }
+    this._j._abs._visDebugGizmo.visible = true; // show while debugging.
+    return;
+  }
+
+  // hide when not debugging.
+  if (this._j._abs._visDebugGizmo)
+  {
+    this._j._abs._visDebugGizmo.visible = false;
+  }
+};
+
+/**
+ * Creates a tiny crosshair to visualize the sprite’s local origin.
+ * @returns {PIXI.Graphics}
+ */
+Sprite_Character.prototype.createJabsVisDebugGizmo = function()
+{
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics();
+  g.clear();
+  g.lineStyle(1, 0xFF3366, 1.0);
+  g.moveTo(-4, 0);
+  g.lineTo(4, 0);
+  g.moveTo(0, -4);
+  g.lineTo(0, 4);
+  g.endFill();
+  return g;
+};
+//endregion visual offsetting
+
 //region state overlay
 /**
  * Sets up this character's state overlay, to show things like poison or paralysis.
@@ -633,11 +881,9 @@ Sprite_Character.prototype.updateCastGauge = function()
     const currentJabs = this._character.getJabsBattler();
 
     // if the bound JABS battler or its expected host changed, rebind.
-    const needsRebind = (
-      gauge._jabsBattler !== currentJabs
-      || gauge._expectedCharacter !== this._character
-      || gauge._expectedUuid !== (currentJabs ? currentJabs.getUuid() : null)
-    );
+    const needsRebind = (gauge._jabsBattler !== currentJabs || gauge._expectedCharacter !== this._character || gauge._expectedUuid !== (currentJabs
+        ? currentJabs.getUuid()
+        : null));
 
     if (needsRebind)
     {

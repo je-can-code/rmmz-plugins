@@ -19,7 +19,7 @@
   * Guard only optional dependencies from external plugins by namespace (e.g., if (J.ABS) { ... }).
   * If a check concerns runtime state (for example, current scene or constructed instances), perform it inside the executing method at runtime, not around the prototype definition.
   * If a check is related to a new method that was added by a plugin (such as Game_Event.prototype.isErased from the J.BASE plugin), then instead ensure the owning plugin is available before using the method (ex: `if (J.BASE) { /* safe to use event.isErased() */}`).
-  * Never guard against a method potentially not existing directly, it should only be guarded by whether or not the owning plugin exists.
+  * Never guard against a method potentially not existing directly, only use namespace validation- which also shouldn't be guarded against.
 
 ## Project Structure
 
@@ -120,7 +120,10 @@ When constructing new extensions, typically the structure defined is as such:
 
 ## Code Formatting Style
 
+* All drop-in code replacements should obey the eslint rules of the project if possible.
 * When possible, almost every line should have an inline comment describing what it does using proper sentence casing.
+  * Examples of this are plentiful throughout the codebase.
+  * Add the comments on the line preceding the line the comment is written about.
 * Always terminate statements with semicolons.
 * Always indent with 2 spaces, where applicable.
 * Prefer double quotes for strings, use template literals for interpolation.

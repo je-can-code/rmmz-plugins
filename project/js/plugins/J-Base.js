@@ -5603,7 +5603,7 @@ class RPGManager
    * If the optional flag `tryParse` is true, then it will attempt to parse out
    * the array of values as well, including translating strings to numbers/booleans
    * and keeping array structures all intact.
-   * @param {string} databaseObject The contents of the note of a given object.
+   * @param {RPG_Base} databaseObject The contents of the note of a given object.
    * @param {RegExp} structure The regular expression to filter notes by.
    * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @param {boolean=} nullIfEmpty If this is true and nothing is found, null will be returned instead of empty array.

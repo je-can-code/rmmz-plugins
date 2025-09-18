@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 //region Metadata
 /**
  * The core where all of my extensions live: in the `J` object.
@@ -175,6 +176,66 @@ J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
 J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
 J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
 J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
+
+J.ABS.Metadata.HitboxStyles = {
+  // Base defaults used for all shapes unless overridden below.
+  base: {
+    fillColor: 0xFFA500, // orange
+    fillAlpha: 0.35,
+    lineColor: 0xE08000,
+    lineAlpha: 0.9,
+    lineWidth: 2,
+  },
+
+  // Optional per-shape overrides.
+  byShape: {
+    circle: {
+      fillColor: 0xFF7F50, // coral
+    },
+    rhombus: {
+      fillColor: 0xFFD580, // light orange
+    },
+    square: {
+      fillColor: 0xFFA64D, // darker orange
+    },
+    frontsquare: {
+      fillAlpha: 0.28,
+    },
+    line: {
+      lineWidth: 3,
+    },
+    wall: {
+      lineColor: 0xCC6600,
+    },
+    cross: {
+      fillAlpha: 0.25,
+    },
+    arc: {
+      fillColor: 0xFFB84D,
+    },
+  },
+
+
+  // Battler overrides by kind (player/follower/battler)
+  byKind:
+    {
+      player:  { fillColor: 0x4DA3FF, lineColor: 0x2368CC, fillAlpha: 0.25 },
+      follower:{ fillColor: 0x9B59B6 },
+      battler: { fillColor: 0x2ECC71 },
+    },
+
+  // New: state-based overrides layered last (e.g., for collision highlighting)
+  byState:
+    {
+      colliding:
+        {
+          fillColor: 0xFF3B30, // bright red while overlapping an action.
+          fillAlpha: 0.35,
+          lineColor: 0xC12722,
+          lineWidth: 3,
+        },
+    },
+};
 //endregion metadata
 
 /**
@@ -589,6 +650,40 @@ J.ABS.RegExp = {
   //region ON ACTORS/CLASSES
   ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
 };
+
+//region visual metadata (new)
+/**
+ * Visual customization for action sprites (per-skill).
+ * All tags are optional and purely visual; physics/hitboxes remain unchanged.
+ */
+J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // capture full [x, y]
+J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi; // capture full [ax, ay]
+J.ABS.RegExp.VisRotate = /<visRotate>/gi; // boolean
+J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi; // capture full [sx, sy]
+J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi; // z-order override (number only)
+J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
+//endregion visual metadata (new)
+
+//region visual directional metadata (new)
+/**
+ * Direction-relative visual offsets (per-skill).
+ * Captures the entire [x, y] array for RPGManager.getArrayFromNotesByRegex.
+ *
+ * Cardinal: U/D/L/R
+ * Optional diagonals: UR/UL/DR/DL
+ */
+J.ABS.RegExp.VisOffsetU  = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetD  = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetL  = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetR  = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+
+// Optional diagonals for future use.
+J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+//endregion visual directional metadata (new)
+
 
 /**
  * A collection of all aliased methods for this plugin.
