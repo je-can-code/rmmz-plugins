@@ -1069,4 +1069,327 @@ RPG_Skill.prototype.extractJabsDelayData = function()
   return this.getArrayFromNotesByRegex(J.ABS.RegExp.DelayData);
 };
 //endregion delay
+
+//region visual metadata (new)
+/**
+ * Optional per-skill pixel offset to nudge the action visual relative to its default position.
+ * Example: <visOffset:[-6, -12]>
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffset", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisOffset === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
+      if (!arr)
+      {
+        this._jabsVisOffset = [ 0, 0 ]; // default, no offset.
+      }
+      else
+      {
+        // defensive parse to integers.
+        const x = Number(arr[0]) || 0;
+        const y = Number(arr[1]) || 0;
+        this._jabsVisOffset = [ x, y ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisOffset;
+  },
+});
+
+/**
+ * Optional per-skill sprite anchor override; values are 0..1.
+ * Example: <visAnchor:[0.5, 0.5]>
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisAnchor", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisAnchor === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisAnchor, true, true);
+      if (!arr)
+      {
+        this._jabsVisAnchor = null; // no override, retain engine default.
+      }
+      else
+      {
+        const ax = Math.max(0, Math.min(1, Number(arr[0])));
+        const ay = Math.max(0, Math.min(1, Number(arr[1])));
+        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay)) ? null : [ ax, ay ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisAnchor;
+  },
+});
+
+/**
+ * Optional per-skill z-order override for the action sprite.
+ * Example: <visZ: 12>
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisZ", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisZ === undefined)
+    {
+      const z = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.VisZ, true);
+      this._jabsVisZ = (z ?? null);
+    }
+
+    // provide cached value.
+    return this._jabsVisZ;
+  },
+});
+
+/**
+ * Rotate the visual to face direction/angle if present.
+ * Example: <visRotate>
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisRotate", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisRotate === undefined)
+    {
+      this._jabsVisRotate = RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.VisRotate) || false;
+    }
+
+    // provide cached value.
+    return this._jabsVisRotate;
+  },
+});
+
+/**
+ * Scale the visual if present.
+ * Example: <visScale:[1.25, 1.0]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisScale", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisScale === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
+      if (!arr)
+      {
+        this._jabsVisScale = null;
+      }
+      else
+      {
+        const sx = Number(arr[0]);
+        const sy = Number(arr[1]);
+        this._jabsVisScale = (isNaN(sx) || isNaN(sy)) ? null : [ sx, sy ];
+      }
+    }
+
+    // provide cached value.
+    return this._jabsVisScale;
+  },
+});
+
+/**
+ * Optional: show a tiny debug cross at the visual origin.
+ * Example: <visDebug>
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisDebug", {
+  get: function()
+  {
+    // memoize parsed value.
+    if (this._jabsVisDebug === undefined)
+    {
+      this._jabsVisDebug = this.getBooleanFromNotesByRegex(J.ABS.RegExp.VisDebug, true) || false;
+    }
+
+    // provide cached value.
+    return this._jabsVisDebug;
+  },
+});
+
+//region visual metadata (directional, new)
+/**
+ * Optional UP-facing visual offset.
+ * Example: <visOffsetU:[0, -24]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetU", {
+  get: function()
+  {
+    if (this._jabsVisOffsetU === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
+      this._jabsVisOffsetU = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetU;
+  },
+});
+
+/**
+ * Optional DOWN-facing visual offset.
+ * Example: <visOffsetD:[0, -24]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetD", {
+  get: function()
+  {
+    if (this._jabsVisOffsetD === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
+      this._jabsVisOffsetD = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetD;
+  },
+});
+
+/**
+ * Optional LEFT-facing visual offset.
+ * Example: <visOffsetL:[-6, -12]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
+      this._jabsVisOffsetL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetL;
+  },
+});
+
+/**
+ * Optional RIGHT-facing visual offset.
+ * Example: <visOffsetR:[6, -12]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
+      this._jabsVisOffsetR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for UP-RIGHT.
+ * Example: <visOffsetUR:[6, -18]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetUR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
+      this._jabsVisOffsetUR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetUR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for UP-LEFT.
+ * Example: <visOffsetUL:[-6, -18]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetUL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
+      this._jabsVisOffsetUL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetUL;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for DOWN-RIGHT.
+ * Example: <visOffsetDR:[6, -10]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDR", {
+  get: function()
+  {
+    if (this._jabsVisOffsetDR === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
+      this._jabsVisOffsetDR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetDR;
+  },
+});
+
+/**
+ * Optional diagonal visual offset for DOWN-LEFT.
+ * Example: <visOffsetDL:[-6, -10]>
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDL", {
+  get: function()
+  {
+    if (this._jabsVisOffsetDL === undefined)
+    {
+      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
+      this._jabsVisOffsetDL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+    }
+    return this._jabsVisOffsetDL;
+  },
+});
+
+/**
+ * Resolves the best visual offset for a given numeric direction.
+ * Falls back in this order: diagonal → nearest cardinal → <visOffset> → [0, 0].
+ * @param {1|2|3|4|6|7|8|9} direction The numeric direction from the action.
+ * @returns {[number, number]} The resolved [x, y] visual offset.
+ */
+RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
+{
+  // start from the default offset (may be [0, 0]).
+  const def = this.jabsVisOffset; // default visual offset.
+
+  // resolve directional override if present.
+  switch (direction)
+  {
+    case 8: // UP
+      return this.jabsVisOffsetU || def || [ 0, 0 ];
+    case 2: // DOWN
+      return this.jabsVisOffsetD || def || [ 0, 0 ];
+    case 4: // LEFT
+      return this.jabsVisOffsetL || def || [ 0, 0 ];
+    case 6: // RIGHT
+      return this.jabsVisOffsetR || def || [ 0, 0 ];
+
+    case 9: // UP-RIGHT
+      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def || [ 0, 0 ];
+    case 7: // UP-LEFT
+      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def || [ 0, 0 ];
+    case 3: // DOWN-RIGHT
+      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def || [ 0, 0 ];
+    case 1: // DOWN-LEFT
+      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def || [ 0, 0 ];
+  }
+
+  // unknown direction: return default.
+  return def || [ 0, 0 ];
+};
+//endregion visual metadata (directional, new)
+//endregion visual metadata (new)
 //endregion RPG_Skill effects
