@@ -302,6 +302,17 @@ Game_Character.prototype.removeFlagForAddingBattler = function()
 {
   this._j._abs._battler._needsAdding = false;
 };
+
+/**
+ * Builds the current AABB model (in screen pixels) for this character.
+ * Bottom-at-feet, one tile high above feet.
+ * @returns {JABS_Aabb}
+ */
+Game_Character.prototype.getJabsAabb = function()
+{
+  // delegate to engine helper.
+  return JABS_Engine.getBattlerAabbModel(this);
+};
 //endregion JABS battler
 
 //region JABS loot

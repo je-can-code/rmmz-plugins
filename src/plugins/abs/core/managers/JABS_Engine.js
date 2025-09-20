@@ -106,7 +106,7 @@ class JABS_Engine
     }
   }
 
-  //region static properties
+  //region static
   /**
    * Gets the collection of enemy clone events currently tracked.
    * @returns {rm.types.Event[]}
@@ -148,7 +148,62 @@ class JABS_Engine
       .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
   }
 
-  //endregion properties
+  /**
+   * Computes the battler’s Axis-Aligned Bounding Box (AABB) model in screen pixels,
+   * using the “bottom-at-feet” convention (one tile above the feet).
+   * @param {Game_CharacterBase} character The character whose AABB is being queried.
+   * @returns {JABS_Aabb}
+   */
+  static getBattlerAabbModel(character)
+  {
+    // guard against missing character; provide empty rect model.
+    if (!character)
+    {
+      return new JABS_Aabb(0, 0, 0, 0);
+    }
+
+    // tile and feet info.
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
+    const feetX = character.screenX();
+    const feetY = character.screenY();
+
+    // build AABB one tile above feet.
+    return JABS_Aabb.fromFeet(feetX, feetY, tw, th);
+  }
+
+  /**
+   * Computes the on-screen pixel origin for an action event, aligned to the
+   * center of the tile above the feet (the corrected physics origin).
+   * @param {Game_Event} actionEvent The action event to compute the origin for.
+   * @returns {{ x:number, y:number }} The origin in screen pixels.
+   */
+  static getActionOriginPixels(actionEvent)
+  {
+    // guard against missing action event; return neutral origin.
+    if (!actionEvent)
+    {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
+
+    // determine the tile height for vertical correction.
+    const th = $gameMap.tileHeight(); // tile height in pixels.
+
+    // compute the corrected origin at the center of the tile above the feet.
+    const x = actionEvent.screenX(); // on-screen x at feet.
+    const y = actionEvent.screenY() - (th / 2); // corrected y above feet.
+
+    // provide the computed origin.
+    return {
+      x,
+      y
+    };
+  }
+
+  //endregion static
 
   /**
    * Creates all members available in this class.
@@ -1280,15 +1335,35 @@ class JABS_Engine
    */
   buildActionEventData(caster, action, x, y)
   {
+    // reference the action event id defined on the action.
     const eventId = action.getActionId();
+
+    // copy the event data from the action map for this action.
     const actionEventData = JsonEx.makeDeepCopy($actionMap.events[eventId]);
 
-    actionEventData.x = x ?? caster.getX();
-    actionEventData.y = y ?? caster.getY();
+    // derive spawn coordinates from provided or caster position.
+    const spawnX = x ?? caster.getX();
+
+    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
+    const spawnY = (y ?? caster.getY());
+
+    // assign the spawn coordinates to the action event.
+    actionEventData.x = spawnX;
+    actionEventData.y = spawnY;
+
+    // flag this event data as an action for downstream handling.
     actionEventData.isAction = true;
+
+    // bump id to avoid conflicts.
     actionEventData.id += 1000;
+
+    // attach the action uuid for cross-referencing.
     actionEventData.uniqueId = action.getUuid();
-    actionEventData.actionDeleted = false;
+
+    // default the deletion flag.
+    actionEventData.actionDeleted = false; // not deleted by default.
+
+    // return the mutated copy.
     return actionEventData;
   }
 
@@ -1603,7 +1678,8 @@ class JABS_Engine
 
     // give it a name.
     const skillName = action.getBaseSkill().name; // get skill name.
-    const casterName = action.getCaster().battlerName(); // get caster name.
+    const casterName = action.getCaster()
+      .battlerName(); // get caster name.
     actionEventSprite.__actionName = `_${casterName}-${skillName}`; // tag for debugging/tools.
 
     // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
@@ -3078,8 +3154,7 @@ class JABS_Engine
         }
       }
 
-      // if the action is a standard projectile-based action,
-      // then check to see if this battler is now in range.
+      // check to see if this battler is now in range.
       else
       {
         const sprite = battler.getCharacter();
@@ -3115,335 +3190,500 @@ class JABS_Engine
    */
   isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape)
   {
+    // determine collision based on the selected shape.
     switch (shape)
     {
-      // shapes that do not care about direction.
+      // shapes that do not care about direction by default.
       case J.ABS.Shapes.Circle:
+        // full circle collision.
         return this.collisionCircle(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Rhombus:
+        // diamond (Manhattan/L1) semantics; see upgraded AABB-aware implementation below.
         return this.collisionRhombus(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Square:
+        // full square centered at the action origin.
         return this.collisionSquare(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Cross:
+        // cross union (vertical + horizontal bars).
         return this.collisionCross(targetCharacter, actionEvent, range);
 
       // shapes that require action direction.
       case J.ABS.Shapes.FrontSquare:
+        // front-half of the full square selected by facing.
         return this.collisionFrontSquare(targetCharacter, actionEvent, range, facing);
+
       case J.ABS.Shapes.Line:
+        // directional bar extending outward from the origin.
         return this.collisionLine(targetCharacter, actionEvent, range, facing);
+
       case J.ABS.Shapes.Arc:
-        return this.collisionFrontRhombus(targetCharacter, actionEvent, range, facing);
+      {
+        // Arc is the sector/wedge. Default to 180° if not specified.
+        const degrees = this.getActionDegrees(actionEvent) ?? 180;
+        return this.collisionSector(targetCharacter, actionEvent, range, facing, degrees);
+      }
+
       case J.ABS.Shapes.Wall:
+        // shallow depth, broad breadth wall immediately in front.
         return this.collisionWall(targetCharacter, actionEvent, range, facing);
       default:
+        // unknown shape → no collision.
         return false;
     }
   }
 
   /**
-   * A cirlce-shaped collision.
-   * Range determines the radius of the circle.
-   * This has no specific type of use- it is a circle.
+   * Reads the <degrees:N> tag from the action’s underlying skill notes.
+   * Will return null if nothing is found.
+   * @param {Game_Event} actionEvent The action event that carries the JABS_Action.
+   * @returns {number|null} The degrees sweep (0–360), defaults to null if not found.
+   */
+  getActionDegrees(actionEvent)
+  {
+    // attempt to retrieve the underlying JABS_Action model.
+    const jabsAction = actionEvent.getJabsAction();
+
+    // retrieve the base skill for this action.
+    const baseSkill = jabsAction.getBaseSkill();
+
+    // read the capture from the notes.
+    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Degrees, true);
+
+    // if we found nothing, or found nonsense, we return nothing.
+    if (found === null || found === 0) return null;
+
+    // validate the found value and clamp to [0, 360].
+    return Math.max(0, Math.min(360, found));
+  }
+
+  /**
+   * Performs Euclidean sector (wedge) collision.
+   * Range is in tiles and is converted to pixels via tile width; this matches circle behavior.
+   * The target is checked via a circle-fast reject followed by an angle gate.
+   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
+   * @param {Game_Event} action The action event representing the origin.
+   * @param {number} range The size in tiles (converted to px radius for the circle test).
+   * @param {2|4|6|8} facing The action’s facing (cardinals only for gate).
+   * @param {number} degrees The wedge sweep in degrees (0–360); <360 enables angle gate.
+   * @returns {boolean} True if the sector overlaps the target.
+   */
+  collisionSector(target, action, range, facing, degrees)
+  {
+    // derive pixel radius from tiles.
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
+    const rPx = range * tw; // convert to pixels (use tw for circles/sectors).
+
+    // get the unified, corrected origin for the action.
+    const {
+      x: cx,
+      y: cy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // compute the target’s AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+
+    // quick reject: outside circle area means outside wedge.
+    if (!targetRect.intersectsCircle(cx, cy, rPx))
+    {
+      // no overlap with circle → no overlap with wedge.
+      return false;
+    }
+
+    // a full 360° wedge is equivalent to the circle; we’ve already passed the circle test.
+    if (degrees >= 360)
+    {
+      // immediate success for full sweep.
+      return true;
+    }
+
+    // build a unit facing vector from the numeric direction.
+    // Note: J.ABS.Directions.* uses cardinals; diagonals are not used for gating.
+    let fx = 0; // facing x component.
+    let fy = 0; // facing y component.
+    switch (facing)
+    {
+      case J.ABS.Directions.DOWN:
+        fy = 1;
+        break;
+      case J.ABS.Directions.UP:
+        fy = -1;
+        break;
+      case J.ABS.Directions.RIGHT:
+        fx = 1;
+        break;
+      case J.ABS.Directions.LEFT:
+        fx = -1;
+        break;
+      default:
+        // TODO: what would be a good default facing for unspecified facings?
+        break;
+    }
+
+    // compute vector from origin to the target rect’s center.
+    const tx = targetRect.cx - cx; // delta x to target center.
+    const ty = targetRect.cy - cy; // delta y to target center.
+
+    // degenerate case: target’s center exactly at origin → accept.
+    if (tx === 0 && ty === 0)
+    {
+      // overlapping centers are inside any wedge.
+      return true;
+    }
+
+    // normalize the target vector for dot-product angle testing.
+    const tLen = Math.hypot(tx, ty); // Euclidean length.
+    const tnx = tx / tLen; // unit x.
+    const tny = ty / tLen; // unit y.
+
+    // compute cosine threshold for the half-angle.
+    const halfAngleRad = (degrees * 0.5) * (Math.PI / 180); // half-angle in radians.
+    const cosHalf = Math.cos(halfAngleRad); // cosine threshold.
+
+    // dot-product with the facing unit vector yields cos(theta).
+    const dot = (fx * tnx) + (fy * tny); // cos(theta).
+
+    // accept if the angle is within the wedge sweep.
+    return dot >= cosHalf;
+  }
+
+  /**
+   * A circle-shaped collision in pixel space.
+   * Range is in tiles; converted to pixels using tile width.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
+   * @param {number} range How big the collision shape is (tiles).
    * @returns {boolean}
    */
   collisionCircle(target, action, range)
   {
-    // calculate the distance between the target and action.
-    const distance = $gameMap.distance(target.x, target.y, action.x, action.y);
+    // derive circle parameters in pixels.
+    const tw = $gameMap.tileWidth(); // assume square tiles unless specified otherwise.
+    const rPx = range * tw; // radius in pixels.
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = distance <= range;
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
 
-    // return the result.
-    return inRange;
+    // build the target’s AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+
+    // circle-vs-rect test.
+    return targetRect.intersectsCircle(originCx, originCy, rPx); // overlap?
   }
 
   /**
-   * A rhombus-shaped (aka diamond) collision.
-   * Range determines the size of the rhombus surrounding the action.
-   * This is typically used for AOE around the caster type skills, but could also
-   * be used for very large objects, or as an explosion radius.
+   * A rhombus-shaped (diamond) collision using AABB-aware Manhattan (L1) distance in pixel space.
+   * Range is specified in tiles; we normalize pixel gaps by tile size to preserve N-tile semantics.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @returns {boolean}
+   * @param {number} range How big the collision shape is (tiles).
+   * @returns {boolean} True if the target is within the diamond.
    */
   collisionRhombus(target, action, range)
   {
-    // calculate the absolute x and y distances.
-    const dx = Math.abs($gameMap.deltaX(target.x, action.x));
-    const dy = Math.abs($gameMap.deltaY(target.y, action.y));
+    // grab tile dimensions for normalization.
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
 
-    // the maximum distance the rhombus reaches is the combined x and y distances.
-    const distance = dx + dy;
+    // unified action origin in pixels.
+    const {
+      x: cx,
+      y: cy
+    } = JABS_Engine.getActionOriginPixels(action); // action origin.
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = distance <= range;
+    // target’s AABB in pixels.
+    const rect = JABS_Engine.getBattlerAabbModel(target); // target rect.
 
-    // return the result.
-    return inRange;
+    // initialize the unsigned horizontal pixel gap from origin point to rect.
+    let dxPx = 0;
+
+    // if the origin is left of the rect, gap is the distance to the left edge.
+    if (cx < rect.x)
+    {
+      dxPx = rect.x - cx;
+    }
+    // if the origin is right of the rect, gap is the distance to the right edge.
+    else if (cx > (rect.x + rect.w))
+    {
+      dxPx = cx - (rect.x + rect.w);
+    }
+
+    // initialize the unsigned vertical pixel gap from origin point to rect.
+    let dyPx = 0;
+
+    // if the origin is above the rect, gap is the distance to the top edge.
+    if (cy < rect.y)
+    {
+      dyPx = rect.y - cy;
+    }
+    // if the origin is below the rect, gap is the distance to the bottom edge.
+    else if (cy > (rect.y + rect.h))
+    {
+      dyPx = cy - (rect.y + rect.h);
+    }
+
+    // convert pixel gaps to tile distances.
+    const dxTiles = dxPx / tw; // x in tiles.
+    const dyTiles = dyPx / th; // y in tiles.
+
+    // inside the diamond if L1 distance in tile units is within range.
+    return (dxTiles + dyTiles) <= range;
   }
 
   /**
-   * A square-shaped collision.
-   * Range determines the size of the square around the action.
-   * The use cases for this are similar to that of rhombus, but instead of a diamond-shaped
-   * hitbox, its a plain ol' square.
+   * A square-shaped collision area centered on the action origin in pixel space.
+   * Range N tiles creates a (2N+1)×(2N+1) tile square.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
+   * @param {number} range The range in tiles.
    * @returns {boolean}
    */
   collisionSquare(target, action, range)
   {
-    // calculate the absolute x and y distances.
-    const dx = Math.abs($gameMap.deltaX(target.x, action.x));
-    const dy = Math.abs($gameMap.deltaY(target.y, action.y));
+    // compute action-centered square size in pixels.
+    const tw = $gameMap.tileWidth(); // tile width.
+    const th = $gameMap.tileHeight(); // tile height.
+    const tilesW = (2 * range + 1); // width in tiles.
+    const tilesH = (2 * range + 1); // height in tiles.
+    const wPx = tilesW * tw; // width in px.
+    const hPx = tilesH * th; // height in px.
 
-    // determine if we're in horizontal range.
-    const inHorzRange = dx <= range;
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
 
-    // determine if we're in vertical range.
-    const inVertRange = dy <= range;
+    // build action area rect centered at the corrected origin.
+    const actionRect = JABS_Aabb.centerSized(originCx, originCy, wPx, hPx); // action rect.
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inHorzRange && inVertRange;
+    // build target AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
 
-    // return the result.
-    return inRange;
+    // rect-rect test.
+    return actionRect.intersectsRect(targetRect); // overlap?
   }
 
   /**
-   * A square-shaped collision infront of the caster.
-   * Range determines the size of the square infront of the action.
-   * For when you want a square that doesn't affect targets behind the action. It would be
-   * more accurate to call this a "half-square", really.
+   * A front-square collision (half of the full square) in pixel space.
+   * The half is chosen based on facing.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
+   * @param {number} range The range in tiles.
+   * @param {2|4|6|8} facing The direction the action is facing.
    * @returns {boolean}
    */
   collisionFrontSquare(target, action, range, facing)
   {
-    // determine whether or not the target is within range of being hit.
-    const inSquareRange = this.collisionSquare(target, action, range);
+    // compute half-square dimensions in pixels.
+    const tw = $gameMap.tileWidth(); // tile width.
+    const th = $gameMap.tileHeight(); // tile height.
 
-    // if they don't even collide in the full square, they won't collide in the frontsquare.
-    if (!inSquareRange) return false;
+    const fullTiles = (2 * range + 1); // full square tiles.
+    const fullW = fullTiles * tw; // full width in px.
+    const fullH = fullTiles * th; // full height in px.
 
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
 
-    // default to being infront, we always are!
-    let inFront = true;
-
-    // switch on caster's direction.
-    // NOTE: this switch also ensures the action doesn't connect with targets behind it.
+    // derive the front-half rectangle based on facing (anchored at corrected origin).
+    let actionRect; // will be computed based on facing.
     switch (facing)
     {
-      // infront when facing down means there should be positive Y distance.
-      case J.ABS.Directions.DOWN:
-        inFront = dy >= 0;
+      case 2: // down → bottom half from origin
+        actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
         break;
-      // infront when facing left means there should be negative X distance.
-      case J.ABS.Directions.LEFT:
-        inFront = dx <= 0;
+      case 8: // up → top half up from origin
+        actionRect = new JABS_Aabb(
+          originCx - (fullW / 2),
+          originCy - (fullH / 2) - (th / 2),
+          fullW,
+          (fullH / 2) + (th / 2));
         break;
-      // infront when facing right means there should be positive X distance.
-      case J.ABS.Directions.RIGHT:
-        inFront = dx >= 0;
+      case 6: // right → right half from origin
+        actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
         break;
-      // infront when facing up means there should be negative Y distance.
-      case J.ABS.Directions.UP:
-        inFront = dy <= 0;
+      default: // 4 left → left half from origin
+        actionRect = new JABS_Aabb(
+          originCx - (fullW / 2) - (tw / 2),
+          originCy - (fullH / 2),
+          (fullW / 2) + (tw / 2),
+          fullH);
         break;
     }
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inSquareRange && inFront;
+    // build target AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
 
-    // return the result.
-    return inRange;
+    // test overlap.
+    return actionRect.intersectsRect(targetRect); // overlap?
   }
 
   /**
-   * A line-shaped collision.
-   * Range the distance of the of the line.
-   * This is typically used for spears and other stabby attacks.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
+   * A line-shaped collision approximated as a thin rectangle extending from the action origin.
+   * Range in tiles is converted to pixels. Thickness defaults to one tile.
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles.
+   * @param {2|4|6|8} facing Facing direction.
    * @returns {boolean}
    */
   collisionLine(target, action, range, facing)
   {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
 
-    // default to not hitting.
-    let inRange = false;
+    // line length in pixels (use major axis for length).
+    const lengthPx = range * Math.max(tw, th); // length in px.
 
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the line.
-    const upDownBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const leftRightBuffer = (dy <= 0.5) && (dy >= -0.5);
+    // line thickness ~ one tile (tunable later).
+    const thicknessX = tw; // horizontal thickness.
+    const thicknessY = th; // vertical thickness.
 
-    // switch on caster's direction.
+    // centralized, corrected origin.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+
+    // build the line-as-rect based on facing from origin.
+    let actionRect; // rectangle approximation of the line.
     switch (facing)
     {
-      case J.ABS.Directions.DOWN:
-        inRange = upDownBuffer && (dy >= 0) && (dy <= range);
+      case 2: // down
+        actionRect = new JABS_Aabb(originCx - (thicknessX / 2), originCy, thicknessX, lengthPx + (th / 2));
         break;
-      case J.ABS.Directions.LEFT:
-        inRange = leftRightBuffer && (dx <= 0) && (dx >= -range);
+      case 8: // up
+        actionRect = new JABS_Aabb(
+          originCx - (thicknessX / 2),
+          originCy - lengthPx - (th / 2),
+          thicknessX,
+          lengthPx + (th / 2));
         break;
-      case J.ABS.Directions.RIGHT:
-        inRange = leftRightBuffer && (dx >= 0) && (dx <= range);
+      case 6: // right
+        actionRect = new JABS_Aabb(originCx, originCy - (thicknessY / 2), lengthPx + (tw / 2), thicknessY);
         break;
-      case J.ABS.Directions.UP:
-        inRange = upDownBuffer && (dy <= 0) && (dy >= -range);
+      default: // 4 left
+        actionRect = new JABS_Aabb(
+          originCx - lengthPx - (tw / 2),
+          originCy - (thicknessY / 2),
+          lengthPx + (tw / 2),
+          thicknessY);
         break;
     }
 
-    // return the result.
-    return inRange;
+    // build target AABB and test overlap.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    return actionRect.intersectsRect(targetRect); // overlap?
   }
 
   /**
-   * An arc-shaped collision.
-   * Range determines the reach and area of arc.
-   * This is what could be considered a standard 180 degree slash-shape, the basic attack.
+   * Legacy arc/front-rhombus shim; routed to Euclidean sector (wedge) logic.
+   * Existing data with <hitbox:arc> or <hitbox:frontrhombus> should be migrated
+   * to <hitbox:circle> + <degrees:N>; while migrating, this keeps old tags functional.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
-   * @returns {boolean}
+   * @param {number} range The size in tiles.
+   * @param {2|4|6|8} facing The direction at time of cast.
+   * @returns {boolean} True if the sector overlaps the target.
    */
   collisionFrontRhombus(target, action, range, facing)
   {
-    // determine whether or not the target is within range of being hit.
-    const inRhombusRange = this.collisionRhombus(target, action, range);
+    // prefer explicit degrees if present; otherwise legacy default 180°.
+    const degrees = this.getActionDegrees(action) ?? 180;
 
-    // if they don't even collide in the full rhombus, they won't collide in the frontrhombus.
-    if (!inRhombusRange) return false;
-
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
-
-    // default to being infront, we always are!
-    let inFront = true;
-
-    // switch on caster's direction.
-    // NOTE: this switch also ensures the action doesn't connect with targets behind it.
-    switch (facing)
-    {
-      // infront when facing down means there should be positive Y distance.
-      case J.ABS.Directions.DOWN:
-        inFront = dy >= 0;
-        break;
-      // infront when facing left means there should be negative X distance.
-      case J.ABS.Directions.LEFT:
-        inFront = dx <= 0;
-        break;
-      // infront when facing right means there should be positive X distance.
-      case J.ABS.Directions.RIGHT:
-        inFront = dx >= 0;
-        break;
-      // infront when facing up means there should be negative Y distance.
-      case J.ABS.Directions.UP:
-        inFront = dy <= 0;
-        break;
-    }
-
-    // determine whether or not the target is within range of being hit.
-    const inRange = inRhombusRange && inFront;
-
-    // return the result.
-    return inRange;
+    // perform the Euclidean sector collision instead of the tile front-diamond.
+    return this.collisionSector(target, action, range, facing, degrees);
   }
 
   /**
-   * A wall-shaped collision.
-   * Range determines how wide the wall is.
-   * Typically used for hitting targets to the side of the caster.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
+   * A wall-shaped collision approximated as a wide/long rect immediately in front of the origin.
+   * Range in tiles → wall breadth (2*range+1 tiles) perpendicular to facing; depth is one tile.
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles.
+   * @param {2|4|6|8} facing Facing direction.
    * @returns {boolean}
    */
   collisionWall(target, action, range, facing)
   {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
 
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the wall.
-    const leftRightBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const upDownBuffer = (dy <= 0.5) && (dy >= -0.5);
+    const originCx = action.screenX();
+    const originCy = action.screenY() - (th / 2);
 
-    // default to not hitting.
-    let inRange = false;
+    // breadth spans a full (2*range+1) tile span perpendicular to facing.
+    const breadthTiles = (2 * range + 1);
+    const breadthW = breadthTiles * tw;
+    const breadthH = breadthTiles * th;
 
+    // depth one tile.
+    const depthW = tw; // horizontal depth when facing left/right
+    const depthH = th; // vertical depth when facing up/down
+
+    let actionRect;
     switch (facing)
     {
-      // when facing up or down, the Y distance should be minimal.
-      case J.ABS.Directions.DOWN:
-      case J.ABS.Directions.UP:
-        inRange = (Math.abs(dx) <= range) && upDownBuffer;
+      case 2: // down → horizontal wall immediately below origin
+        actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy, breadthW, depthH);
         break;
-      // when facing left or right, the X distance should be minimal.
-      case J.ABS.Directions.RIGHT:
-      case J.ABS.Directions.LEFT:
-        inRange = (Math.abs(dy) <= range) && leftRightBuffer;
+      case 8: // up → horizontal wall immediately above origin
+        actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy - depthH, breadthW, depthH);
+        break;
+      case 6: // right → vertical wall immediately right of origin
+        actionRect = new JABS_Aabb(originCx, originCy - (breadthH / 2), depthW, breadthH);
+        break;
+      default: // 4 left → vertical wall immediately left of origin
+        actionRect = new JABS_Aabb(originCx - depthW, originCy - (breadthH / 2), depthW, breadthH);
         break;
     }
 
-    // return the result.
-    return inRange;
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+    return actionRect.intersectsRect(targetRect);
   }
 
   /**
-   * A cross shaped collision.
-   * Range determines how far the cross reaches from the action.
-   * Think bomb explosions from the game bomberman.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
+   * A cross-shaped collision approximated as the union of a vertical and horizontal bar.
+   * Implemented as two rects; a hit occurs if either overlaps the target AABB.
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles (extends out from origin on each arm).
    * @returns {boolean}
    */
   collisionCross(target, action, range)
   {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
 
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the wall.
-    const leftRightBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const upDownBuffer = (dy <= 0.5) && (dy >= -0.5);
+    const originCx = action.screenX();
+    const originCy = action.screenY() - (th / 2);
 
-    // determine if we are in vertical range.
-    const inVertRange = Math.abs(dy) <= range && leftRightBuffer;
+    // arm lengths include the center tile.
+    const totalW = (2 * range + 1) * tw;
+    const totalH = (2 * range + 1) * th;
 
-    // determine if we are in horizontal range.
-    const inHorzRange = Math.abs(dx) <= range && upDownBuffer;
+    // thickness one tile.
+    const thicknessX = tw;
+    const thicknessY = th;
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inVertRange && inHorzRange;
+    // horizontal bar centered at corrected origin.
+    const horiz = new JABS_Aabb(originCx - (totalW / 2), originCy - (thicknessY / 2), totalW, thicknessY);
 
-    // return the result.
-    return inRange;
+    // vertical bar centered at corrected origin.
+    const vert = new JABS_Aabb(originCx - (thicknessX / 2), originCy - (totalH / 2), thicknessX, totalH);
+
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+    return horiz.intersectsRect(targetRect) || vert.intersectsRect(targetRect);
   }
 
   //endregion collision
