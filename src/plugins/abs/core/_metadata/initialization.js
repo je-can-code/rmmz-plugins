@@ -499,7 +499,11 @@ J.ABS.RegExp = {
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
 
-  // projectile-related.
+  // radial-size-related.
+  SizeInPixels: /<size:[ ]?(\d+)>/gi,
+  Degrees: /<degrees:[ ]?(\d+)>/gi,
+
+  // action-related.
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Projectile: /<projectile:[ ]?([12348])>/gi,

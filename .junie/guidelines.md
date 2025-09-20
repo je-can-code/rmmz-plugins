@@ -121,9 +121,10 @@ When constructing new extensions, typically the structure defined is as such:
 ## Code Formatting Style
 
 * All drop-in code replacements should obey the eslint rules of the project if possible.
-* When possible, almost every line should have an inline comment describing what it does using proper sentence casing.
+* When possible, almost every line should have an inline comment above it, describing what it does using proper sentence casing.
   * Examples of this are plentiful throughout the codebase.
   * Add the comments on the line preceding the line the comment is written about.
+  * There should never be comments above the line and also on the line.
 * Always terminate statements with semicolons.
 * Always indent with 2 spaces, where applicable.
 * Prefer double quotes for strings, use template literals for interpolation.
