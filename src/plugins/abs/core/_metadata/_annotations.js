@@ -1740,6 +1740,13 @@
  * @desc The boost to movement speed when dashing. You may need to toy with this a bit to get it right.
  * @default 1.25
  *
+ * @param hitboxOverlaysInitiallyVisible
+ * @parent miscConfigs
+ * @type boolean
+ * @text Enable Hitbox Overlays
+ * @desc Whether or not to overlay the map with battler and action hitbox visuals- for debugging.
+ * @default false
+ *
  * @param quickmenuConfigs
  * @text QUICKMENU SETUP
  *
@@ -1802,6 +1809,10 @@
  * @command Disable JABS
  * @text Disable JABS
  * @desc Disables the JABS engine.
+ *
+ * @command toggleHitboxOverlays
+ * @text Toggle Hitbox Overlays
+ * @desc Toggles the visibility of the hitbox overlays.
  *
  * @command Set JABS Skill
  * @text Assign a JABS skill

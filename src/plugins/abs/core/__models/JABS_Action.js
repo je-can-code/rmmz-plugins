@@ -105,6 +105,9 @@ class JABS_Action
     this.initPiercing();
   }
 
+  /**
+   * Initializes visual properties.
+   */
   initVisuals()
   {
     /**
@@ -118,8 +121,17 @@ class JABS_Action
      * @type {number}
      */
     this._selfAnimationId = this._baseSkill.jabsSelfAnimationId ?? 0;
+
+    /**
+     * Tracks if the self animation-on-defeat has been played to prevent duplicates.
+     * @type {boolean}
+     */
+    this._playedSelfAnimationOnDefeat = false;
   }
 
+  /**
+   * Initializes duration-centric properties.
+   */
   initDuration()
   {
     /**
@@ -133,6 +145,30 @@ class JABS_Action
      * @type {boolean}
      */
     this._needsRemoval = false;
+
+    /**
+     * Whether or not this action is currently in its linger phase.
+     * @type {boolean}
+     */
+    this._isLingering = false;
+
+    /**
+     * How many frames this action should linger visually.
+     * @type {number}
+     */
+    this._lingerMaxFrames = this._baseSkill.jabsLinger ?? 10;
+
+    /**
+     * The current linger frame counter.
+     * @type {number}
+     */
+    this._currentLinger = 0;
+
+    /**
+     * Internal toggle used to disable collision while lingering.
+     * @type {boolean}
+     */
+    this._collisionEnabled = true;
   }
 
   initDelay()
@@ -255,8 +291,14 @@ class JABS_Action
    */
   performSelfAnimation()
   {
-    this.getActionSprite()
-      ?.requestAnimation(this.getSelfAnimationId());
+    const event = this.getActionSprite();
+    if (!event) return;
+
+    if (this.hasSelfAnimationId() && !this._playedSelfAnimationOnDefeat)
+    {
+      event.requestAnimation(this.getSelfAnimationId());
+      this._playedSelfAnimationOnDefeat = true;
+    }
   }
 
   /**
@@ -536,11 +578,13 @@ class JABS_Action
    */
   decrementPierceTimes(decrement = 1)
   {
-    // reduce pierce
     this._pierceTimesLeft -= decrement;
     if (this._pierceTimesLeft <= 0)
     {
-      this.setNeedsRemoval();
+      if (!this._isLingering)
+      {
+        this.startLinger();
+      }
     }
   }
 
@@ -601,38 +645,34 @@ class JABS_Action
    */
   mainUpdate()
   {
-    // if we're still delaying and not triggering by touch...
     if (!this.canMainUpdate()) return;
 
-    // if the delay is completed, decrement the action timer.
     if (this.isDelayCompleted())
     {
-      // countdown the overall duration timer of this action.
       this.countdownDuration();
     }
 
-    // if the duration of the action expires, remove it.
+    if (this._isLingering)
+    {
+      this.updateLinger();
+      return;
+    }
+
     if (this.isReadyForCleanup())
     {
-      // execute this action's cleanup.
-      this.cleanup();
-
-      // stop processing the action.
       return;
     }
 
-    // check if this action is ready to pierce another target.
     if (!this.isPierceReady())
     {
-      // countdown the pierce timer if not ready.
       this.countdownPierceDelay();
-
-      // stop processing the action.
       return;
     }
 
-    // determine targets that this action collided with.
-    this.processCollision();
+    if (this._collisionEnabled)
+    {
+      this.processCollision();
+    }
   }
 
   /**
@@ -654,17 +694,55 @@ class JABS_Action
    */
   isReadyForCleanup()
   {
-    // if we haven't at least passed the minimum duration, then do not cleanup.
     if (this.getDuration() < JABS_Action.getMinimumDuration()) return false;
 
-    // if the action is expired, then cleanup.
-    if (this.isActionExpired()) return true;
+    if (this._isLingering)
+    {
+      if (this._currentLinger >= this._lingerMaxFrames)
+      {
+        this.cleanup();
+        return true;
+      }
 
-    // if the action has run out of piercing hits, then cleanup.
-    if (this.getPiercingTimes() <= 0) return true;
+      return false;
+    }
 
-    // not ready for cleanup.
+    const expired = this.isActionExpired();
+    const outOfPierce = this.getPiercingTimes() <= 0;
+    if (expired || outOfPierce)
+    {
+      this.startLinger();
+      return false;
+    }
+
     return false;
+  }
+
+  /**
+   * Begins the lingering effect.
+   */
+  startLinger()
+  {
+    if (this._isLingering) return;
+
+    this._isLingering = true;
+
+    this._collisionEnabled = false;
+
+    this.performSelfAnimation();
+  }
+
+  /**
+   * Updates the lingering effect.
+   */
+  updateLinger()
+  {
+    this._currentLinger++;
+
+    if (this._currentLinger >= this._lingerMaxFrames)
+    {
+      this.cleanup();
+    }
   }
 
   /**
@@ -736,6 +814,18 @@ class JABS_Action
    */
   postUpdate()
   {
+    if (this._isLingering)
+    {
+      const event = this.getActionSprite();
+      if (event)
+      {
+        const max = Math.max(1, this._lingerMaxFrames);
+        const t = Math.min(this._currentLinger, max);
+        const pct = 1 - (t / max);
+        const opacity = Math.max(0, Math.floor(255 * pct));
+        event.setOpacity?.(opacity);
+      }
+    }
   }
 
   //endregion update

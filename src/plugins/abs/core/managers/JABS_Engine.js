@@ -85,10 +85,16 @@ class JABS_Engine
   requestBattlerRendering = false;
 
   /**
-   * Whether or not there is a request issued for rendering refreshed allies.
+   * Whether or not there is a request issued for toggling the visibility of the hitbox overlays.
    * @type {boolean}
    */
-  requestAlliesRefresh = false;
+  requestToggleHitboxOverlays = false;
+
+  /**
+   * Whether or not the hitbox overlays are presently visible.
+   * @type {boolean}
+   */
+  hitboxOverlaysVisible = false;
 
   /**
    * @constructor
@@ -237,6 +243,10 @@ class JABS_Engine
     this._jabsStates = isMapTransfer
       ? this._jabsStates ?? new Map()
       : new Map();
+
+    this.hitboxOverlaysVisible = isMapTransfer
+      ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
+      : J.ABS.Metadata.HitboxOverlaysInitiallyVisible;
   }
 
   /**
@@ -1026,7 +1036,7 @@ class JABS_Engine
       if (partyIndex === 0) continue;
 
       // identify the newly swapped actorId.
-      const currentActorId = $gameParty._actors[0];
+      const [ currentActorId ] = $gameParty._actors;
 
       // grab the actor we are attempting to cycle to.
       const actor = $gameActors.actor(currentActorId);
@@ -2109,6 +2119,7 @@ class JABS_Engine
    * @param {JABS_Action} action The action potentially knocking the target back.
    * @param {JABS_Battler} target The map battler to potentially knockback.
    */
+  // eslint-disable-next-line complexity
   checkKnockback(action, target)
   {
     // if we can't be knocked back, don't process.
@@ -2117,11 +2128,11 @@ class JABS_Engine
     // you cannot be knocked back by healing-exclusive actions.
     if (action.isHealing()) return;
 
+    const targetNotes = target.getBattler()
+      .getAllNotes();
+
     // determine the current knockback resist of the target.
-    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(
-      target.getBattler()
-        .getAllNotes(),
-      J.ABS.RegExp.KnockbackResist);
+    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
 
     // don't even knock them up or around at all, they are immune to knockback.
     if (targetKnockbackResist >= 100) return;
@@ -2780,6 +2791,7 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The target having the action applied against.
    */
+  // eslint-disable-next-line no-unused-vars
   generatePopSkillUsage(action, target)
   {
     // if we are not using popups, then don't do this.
@@ -3260,6 +3272,30 @@ class JABS_Engine
   }
 
   /**
+   * Reads the thickness tag from the action’s underlying skill notes.
+   * Will return null if nothing is found.
+   * @param {Game_Event} actionEvent The action event that carries the JABS_Action.
+   * @returns {number|null} The thickness in tiles; null if not specified.
+   */
+  getActionThicknessTiles(actionEvent)
+  {
+    // attempt to retrieve the underlying JABS_Action model.
+    const jabsAction = actionEvent.getJabsAction();
+
+    // retrieve the base skill for this action.
+    const baseSkill = jabsAction.getBaseSkill();
+
+    // read the capture from the notes using the canonical <thickness:N> tag.
+    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Thickness, true);
+
+    // if nothing found, return null to allow defaulting upstream.
+    if (found === null) return null;
+
+    // ensure non-negative thickness (0 is allowed but clamped later in px space).
+    return Math.max(0, found);
+  }
+
+  /**
    * Performs Euclidean sector (wedge) collision.
    * Range is in tiles and is converted to pixels via tile width; this matches circle behavior.
    * The target is checked via a circle-fast reject followed by an angle gate.
@@ -3485,6 +3521,7 @@ class JABS_Engine
     const tw = $gameMap.tileWidth(); // tile width.
     const th = $gameMap.tileHeight(); // tile height.
 
+    // total full-square tiles and derived pixel dimensions.
     const fullTiles = (2 * range + 1); // full square tiles.
     const fullW = fullTiles * tw; // full width in px.
     const fullH = fullTiles * th; // full height in px.
@@ -3499,26 +3536,33 @@ class JABS_Engine
     let actionRect; // will be computed based on facing.
     switch (facing)
     {
-      case 2: // down → bottom half from origin
+      case J.ABS.Directions.DOWN: // 2 → bottom half from origin
         actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
         break;
-      case 8: // up → top half up from origin
+
+      case J.ABS.Directions.UP: // 8 → top half up from origin
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2),
           originCy - (fullH / 2) - (th / 2),
           fullW,
           (fullH / 2) + (th / 2));
         break;
-      case 6: // right → right half from origin
+
+      case J.ABS.Directions.RIGHT: // 6 → right half from origin
         actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
         break;
-      default: // 4 left → left half from origin
+
+      case J.ABS.Directions.LEFT: // 4 → left half from origin
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2) - (tw / 2),
           originCy - (fullH / 2),
           (fullW / 2) + (tw / 2),
           fullH);
         break;
+
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     // build target AABB.
@@ -3530,7 +3574,7 @@ class JABS_Engine
 
   /**
    * A line-shaped collision approximated as a thin rectangle extending from the action origin.
-   * Range in tiles is converted to pixels. Thickness defaults to one tile.
+   * Range in tiles is converted to pixels. Thickness defaults to one tile, or <thickness:N> tiles if provided.
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles.
@@ -3539,15 +3583,22 @@ class JABS_Engine
    */
   collisionLine(target, action, range, facing)
   {
+    // acquire tile dimensions.
     const tw = $gameMap.tileWidth(); // tile width in px.
     const th = $gameMap.tileHeight(); // tile height in px.
 
-    // line length in pixels (use major axis for length).
+    // line length in pixels (use major axis for length, matching visualization elsewhere).
     const lengthPx = range * Math.max(tw, th); // length in px.
 
-    // line thickness ~ one tile (tunable later).
-    const thicknessX = tw; // horizontal thickness.
-    const thicknessY = th; // vertical thickness.
+    // determine configured thickness in tiles, fallback to default of 1 tile.
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1; // tiles.
+
+    // clamp to a very small positive minimum in pixels to ensure the AABB has area.
+    const minPx = 1; // small positive safeguard.
+
+    // compute thickness in pixels along each orientation.
+    const thicknessX = Math.max(minPx, thicknessTiles * tw); // horizontal thickness.
+    const thicknessY = Math.max(minPx, thicknessTiles * th); // vertical thickness.
 
     // centralized, corrected origin.
     const {
@@ -3559,26 +3610,33 @@ class JABS_Engine
     let actionRect; // rectangle approximation of the line.
     switch (facing)
     {
-      case 2: // down
+      case J.ABS.Directions.DOWN: // 2
+        // extend downward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx - (thicknessX / 2), originCy, thicknessX, lengthPx + (th / 2));
         break;
-      case 8: // up
+      case J.ABS.Directions.UP: // 8
+        // extend upward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - (thicknessX / 2),
           originCy - lengthPx - (th / 2),
           thicknessX,
           lengthPx + (th / 2));
         break;
-      case 6: // right
+      case J.ABS.Directions.RIGHT: // 6
+        // extend rightward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx, originCy - (thicknessY / 2), lengthPx + (tw / 2), thicknessY);
         break;
-      default: // 4 left
+      case J.ABS.Directions.LEFT: // (4)
+        // extend leftward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - lengthPx - (tw / 2),
           originCy - (thicknessY / 2),
           lengthPx + (tw / 2),
           thicknessY);
         break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     // build target AABB and test overlap.
@@ -3607,7 +3665,7 @@ class JABS_Engine
 
   /**
    * A wall-shaped collision approximated as a wide/long rect immediately in front of the origin.
-   * Range in tiles → wall breadth (2*range+1 tiles) perpendicular to facing; depth is one tile.
+   * Breadth spans (2*range+1) tiles perpendicular to facing. Depth uses <thickness:N> tiles (default 1).
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles.
@@ -3619,33 +3677,41 @@ class JABS_Engine
     const tw = $gameMap.tileWidth();
     const th = $gameMap.tileHeight();
 
-    const originCx = action.screenX();
-    const originCy = action.screenY() - (th / 2);
+    // resolve thickness (depth) in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const depthW = Math.max(minPx, thicknessTiles * tw); // depth when vertical
+    const depthH = Math.max(minPx, thicknessTiles * th); // depth when horizontal
 
-    // breadth spans a full (2*range+1) tile span perpendicular to facing.
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // breadth spans perpendicular axis.
     const breadthTiles = (2 * range + 1);
     const breadthW = breadthTiles * tw;
     const breadthH = breadthTiles * th;
 
-    // depth one tile.
-    const depthW = tw; // horizontal depth when facing left/right
-    const depthH = th; // vertical depth when facing up/down
-
     let actionRect;
     switch (facing)
     {
-      case 2: // down → horizontal wall immediately below origin
+      case J.ABS.Directions.DOWN: // 2 → horizontal wall below origin
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy, breadthW, depthH);
         break;
-      case 8: // up → horizontal wall immediately above origin
+      case J.ABS.Directions.UP: // 8 → horizontal wall above origin
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy - depthH, breadthW, depthH);
         break;
-      case 6: // right → vertical wall immediately right of origin
+      case J.ABS.Directions.RIGHT: // 6 → vertical wall right of origin
         actionRect = new JABS_Aabb(originCx, originCy - (breadthH / 2), depthW, breadthH);
         break;
-      default: // 4 left → vertical wall immediately left of origin
+      case J.ABS.Directions.LEFT: // (4) → vertical wall left of origin
         actionRect = new JABS_Aabb(originCx - depthW, originCy - (breadthH / 2), depthW, breadthH);
         break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     const targetRect = JABS_Engine.getBattlerAabbModel(target);
@@ -3654,7 +3720,7 @@ class JABS_Engine
 
   /**
    * A cross-shaped collision approximated as the union of a vertical and horizontal bar.
-   * Implemented as two rects; a hit occurs if either overlaps the target AABB.
+   * Thickness for both bars uses <thickness:N> tiles (default 1).
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles (extends out from origin on each arm).
@@ -3665,16 +3731,21 @@ class JABS_Engine
     const tw = $gameMap.tileWidth();
     const th = $gameMap.tileHeight();
 
-    const originCx = action.screenX();
-    const originCy = action.screenY() - (th / 2);
+    // resolve thickness in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const thicknessX = Math.max(minPx, thicknessTiles * tw);
+    const thicknessY = Math.max(minPx, thicknessTiles * th);
 
-    // arm lengths include the center tile.
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // total arm extents include the center tile.
     const totalW = (2 * range + 1) * tw;
     const totalH = (2 * range + 1) * th;
-
-    // thickness one tile.
-    const thicknessX = tw;
-    const thicknessY = th;
 
     // horizontal bar centered at corrected origin.
     const horiz = new JABS_Aabb(originCx - (totalW / 2), originCy - (thicknessY / 2), totalW, thicknessY);
@@ -3756,6 +3827,7 @@ class JABS_Engine
    * Handles a non-player ally that was defeated.
    * @param {JABS_Battler} defeatedAlly The ally that was defeated.
    */
+  // eslint-disable-next-line no-unused-vars
   handleDefeatedAlly(defeatedAlly)
   {
   }
@@ -3979,6 +4051,7 @@ class JABS_Engine
    * @param {JABS_Battler} target The enemy dropping the loot.
    * @param {JABS_Battler} caster The ally that defeated the enemy.
    */
+  // eslint-disable-next-line no-unused-vars
   createLootDrops(target, caster)
   {
     // actors don't drop loot.

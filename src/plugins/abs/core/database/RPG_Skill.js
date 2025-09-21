@@ -123,6 +123,38 @@ RPG_Skill.prototype.extractJabsDuration = function()
 };
 //endregion duration
 
+//region linger
+/**
+ * The number of frames this action should visually linger after hitbox is disabled.
+ * Defaults to 10 if no tag is present.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsLinger", {
+  get: function()
+  {
+    return this.getJabsLinger();
+  },
+});
+
+/**
+ * Gets the linger frames value for this skill.
+ * @returns {number}
+ */
+RPG_Skill.prototype.getJabsLinger = function()
+{
+  return this.extractJabsLinger();
+};
+
+/**
+ * Extracts linger frames from notes.
+ * @returns {number}
+ */
+RPG_Skill.prototype.extractJabsLinger = function()
+{
+  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Linger, true) ?? 10;
+};
+//endregion linger
+
 //region shape
 /**
  * A new property for retrieving the JABS shape from this skill.
@@ -1121,7 +1153,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisAnchor", {
       {
         const ax = Math.max(0, Math.min(1, Number(arr[0])));
         const ay = Math.max(0, Math.min(1, Number(arr[1])));
-        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay)) ? null : [ ax, ay ];
+        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay))
+          ? null
+          : [ ax, ay ];
       }
     }
 
@@ -1189,7 +1223,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisScale", {
       {
         const sx = Number(arr[0]);
         const sy = Number(arr[1]);
-        this._jabsVisScale = (isNaN(sx) || isNaN(sy)) ? null : [ sx, sy ];
+        this._jabsVisScale = (isNaN(sx) || isNaN(sy))
+          ? null
+          : [ sx, sy ];
       }
     }
 
@@ -1229,7 +1265,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetU", {
     if (this._jabsVisOffsetU === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
-      this._jabsVisOffsetU = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetU = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetU;
   },
@@ -1246,7 +1284,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetD", {
     if (this._jabsVisOffsetD === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
-      this._jabsVisOffsetD = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetD = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetD;
   },
@@ -1263,7 +1303,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetL", {
     if (this._jabsVisOffsetL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
-      this._jabsVisOffsetL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetL;
   },
@@ -1280,7 +1322,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetR", {
     if (this._jabsVisOffsetR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
-      this._jabsVisOffsetR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetR;
   },
@@ -1297,7 +1341,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUR", {
     if (this._jabsVisOffsetUR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
-      this._jabsVisOffsetUR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetUR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetUR;
   },
@@ -1314,7 +1360,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUL", {
     if (this._jabsVisOffsetUL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
-      this._jabsVisOffsetUL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetUL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetUL;
   },
@@ -1331,7 +1379,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDR", {
     if (this._jabsVisOffsetDR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
-      this._jabsVisOffsetDR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetDR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetDR;
   },
@@ -1348,7 +1398,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDL", {
     if (this._jabsVisOffsetDL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
-      this._jabsVisOffsetDL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetDL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetDL;
   },

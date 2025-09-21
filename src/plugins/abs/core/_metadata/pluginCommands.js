@@ -16,6 +16,14 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
 });
 
 /**
+ * Plugin command for requesting a toggling of the hitbox overlay visibility.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.Name, "toggleHitboxOverlays", () =>
+{
+  $jabsEngine.requestToggleHitboxOverlays = true;
+});
+
+/**
  * Plugin command for assigning and locking a skill to a designated slot.
  */
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
