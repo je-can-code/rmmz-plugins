@@ -283,14 +283,56 @@ RPG_Skill.prototype.getJabsDirect = function()
 };
 
 /**
- * Extracts the JABS direct for this skill from its notes.
- * @returns {number|null}
+ * Extracts whether this skill is "direct" from its notes.
+ * Now considers either <direct> OR <directLock> as a "direct" skill.
+ * @returns {boolean}
  */
 RPG_Skill.prototype.extractJabsDirect = function()
 {
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.Direct, true);
+  // check for explicit <direct>.
+  const hasDirect = this.getBooleanFromNotesByRegex(J.ABS.RegExp.Direct, true);
+
+  // check for <directLock>, which implies "direct" as well.
+  const hasDirectLock = this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
+
+  // treat either tag as "direct".
+  return !!(hasDirect || hasDirectLock);
 };
 //endregion direct
+
+//region directLock
+/**
+ * A new property for retrieving the JABS directLock from this skill.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsDirectLock", {
+  get: function()
+  {
+    // return the boolean for <directLock>.
+    return this.getJabsDirectLock();
+  },
+});
+
+/**
+ * Gets the JABS directLock for this skill.
+ * @returns {boolean|null}
+ */
+RPG_Skill.prototype.getJabsDirectLock = function()
+{
+  // extract the boolean for <directLock>.
+  return this.extractJabsDirectLock();
+};
+
+/**
+ * Extracts the JABS directLock for this skill from its notes.
+ * @returns {boolean|null}
+ */
+RPG_Skill.prototype.extractJabsDirectLock = function()
+{
+  // parse using the new regex for <directLock>.
+  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
+};
+//endregion directLock
 
 //region bonusAggro
 /**

@@ -47,6 +47,10 @@ class JABS_Location
    * @type {JABS_LocationBuilder}
    */
   static Builder = () => new JABS_LocationBuilder();
+
+  getX = () => this.x;
+  getY = () => this.y;
+  getD = () => this.d;
 }
 
 //endregion JABS_Location

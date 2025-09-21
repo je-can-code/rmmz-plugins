@@ -63,7 +63,8 @@ JABS_Battler.prototype.isWithinScope = function(action, target, alreadyHitOne = 
 
   // action is from one of the target's allies.
   // inanimate battlers cannot be targeted by their allies with direct skills.
-  if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything) && !(action.isDirectAction() && target.isInanimate()))
+  if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything)
+    && !(action.isDirectAction() && target.isInanimate()))
   {
     return true;
   }
@@ -148,9 +149,33 @@ JABS_Battler.prototype.getAttackData = function(cooldownKey)
   // check to make sure we actually know the skill, too.
   if (!battler.hasSkill(skillId)) return [];
 
-  const actionOptions = JABS_ActionOptions.Builder()
-    .setCooldownKey(cooldownKey)
-    .build();
+  // build action options with the cooldown key.
+  const builder = JABS_ActionOptions.Builder()
+    .setCooldownKey(cooldownKey);
+
+  // attempt decision-time spatialization for direct skills lacking <directLock>.
+  const skill = this.getSkill(skillId);
+  if (skill.jabsDirect && !skill.jabsDirectLock)
+  {
+    // resolve a stable snapshot of [x,y] at decision time.
+    const [ x, y ] = this.resolveDirectActionTargetCoordinatesForSkill(skill);
+
+    // if resolved, capture into the location on the options.
+    if (x !== null && y !== null)
+    {
+      // create a JABS_Location for the snapshot.
+      const frozenLocation = JABS_Location.Builder()
+        .setX(x)
+        .setY(y)
+        .build();
+
+      // assign the frozen location to the options.
+      builder.setLocation(frozenLocation);
+    }
+  }
+
+  // finalize the options.
+  const actionOptions = builder.build();
 
   // otherwise, use the skill from the slot to build an action.
   return this.createJabsActionFromSkill(skillId, actionOptions);

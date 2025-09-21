@@ -115,8 +115,24 @@ When constructing new extensions, typically the structure defined is as such:
 * The app uses a pattern of parsing and modifying "notes" fields from RPG Maker objects, primarily through the RPGManager static class.
 * When providing code samples, one should always assume the global variables or methods referenced from other plugins exist.
   * If a validation check needs to be made on a method, instead check if the namespace of the plugin exists (ex: `if (J.ABS) { /* do JABS-related logic here */ }`).
-  * Try to be optimistic in validation, or ask for clarity instead of adding excessive validation by default.
+  * Always be optimistic in validation, or ask for clarity instead of adding excessive validation by default.
 * Due to the nature of RMMZ game projects, `async`/`await` shouldn't be used.
+
+
+## When Providing Drop-in Code Replacements
+
+* When providing drop-in code replacements, prefer using RPGManager and its methods from the J.BASE plugin.
+* All new methods should be documented using JsDocs with sensible descriptions.
+  * These descriptions should not include explicit tag contents
+  * These descriptions should not include correction information for when you messed up and I corrected you.
+* Always consider the purpose of a function by its name and JsDocs description.
+* Prefer readability over conciseness.
+  * Do not be bashful about writing a method that does some menial calculations/transformations, it is preferred when possible so you can read through the parent method and just understand what is happening by function names.
+  * When naming variables, prefer camelCase over one or two letters unless it is for coordinates (like x/y/cs/cy/etc.)
+* We should never use optional method chaining, that is strictly forbidden in this codebase and code we write should be rewritten to never need it.
+  * Assume methods we are adding exist and that all drop-in replacements will be provided simultaneously before merged into the main codebase.
+* Prefer the pattern of `if (condition === false)` versus `(if (!condition))` (or the inverse) where possible- it improves readability.
+
 
 ## Code Formatting Style
 
