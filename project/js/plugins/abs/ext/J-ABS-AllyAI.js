@@ -1506,6 +1506,15 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
 
 //region JABS_Engine
 /**
+ * Whether or not there is a request issued for rendering refreshed allies.
+ * @type {boolean}
+ */
+Object.defineProperty(JABS_Engine.prototype, "requestAlliesRefresh", {
+  value: false,
+  writeable: true,
+});
+
+/**
  * Extends {@link JABS_Engine.prePartyCycling}.<br>
  * Jumps all followers to the player upon party cycling.
  */

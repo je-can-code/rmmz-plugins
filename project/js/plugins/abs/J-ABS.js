@@ -207,6 +207,9 @@ class JABS_Action
     this.initPiercing();
   }
 
+  /**
+   * Initializes visual properties.
+   */
   initVisuals()
   {
     /**
@@ -220,8 +223,17 @@ class JABS_Action
      * @type {number}
      */
     this._selfAnimationId = this._baseSkill.jabsSelfAnimationId ?? 0;
+
+    /**
+     * Tracks if the self animation-on-defeat has been played to prevent duplicates.
+     * @type {boolean}
+     */
+    this._playedSelfAnimationOnDefeat = false;
   }
 
+  /**
+   * Initializes duration-centric properties.
+   */
   initDuration()
   {
     /**
@@ -235,6 +247,30 @@ class JABS_Action
      * @type {boolean}
      */
     this._needsRemoval = false;
+
+    /**
+     * Whether or not this action is currently in its linger phase.
+     * @type {boolean}
+     */
+    this._isLingering = false;
+
+    /**
+     * How many frames this action should linger visually.
+     * @type {number}
+     */
+    this._lingerMaxFrames = this._baseSkill.jabsLinger ?? 10;
+
+    /**
+     * The current linger frame counter.
+     * @type {number}
+     */
+    this._currentLinger = 0;
+
+    /**
+     * Internal toggle used to disable collision while lingering.
+     * @type {boolean}
+     */
+    this._collisionEnabled = true;
   }
 
   initDelay()
@@ -357,8 +393,14 @@ class JABS_Action
    */
   performSelfAnimation()
   {
-    this.getActionSprite()
-      ?.requestAnimation(this.getSelfAnimationId());
+    const event = this.getActionSprite();
+    if (!event) return;
+
+    if (this.hasSelfAnimationId() && !this._playedSelfAnimationOnDefeat)
+    {
+      event.requestAnimation(this.getSelfAnimationId());
+      this._playedSelfAnimationOnDefeat = true;
+    }
   }
 
   /**
@@ -638,11 +680,13 @@ class JABS_Action
    */
   decrementPierceTimes(decrement = 1)
   {
-    // reduce pierce
     this._pierceTimesLeft -= decrement;
     if (this._pierceTimesLeft <= 0)
     {
-      this.setNeedsRemoval();
+      if (!this._isLingering)
+      {
+        this.startLinger();
+      }
     }
   }
 
@@ -703,38 +747,34 @@ class JABS_Action
    */
   mainUpdate()
   {
-    // if we're still delaying and not triggering by touch...
     if (!this.canMainUpdate()) return;
 
-    // if the delay is completed, decrement the action timer.
     if (this.isDelayCompleted())
     {
-      // countdown the overall duration timer of this action.
       this.countdownDuration();
     }
 
-    // if the duration of the action expires, remove it.
+    if (this._isLingering)
+    {
+      this.updateLinger();
+      return;
+    }
+
     if (this.isReadyForCleanup())
     {
-      // execute this action's cleanup.
-      this.cleanup();
-
-      // stop processing the action.
       return;
     }
 
-    // check if this action is ready to pierce another target.
     if (!this.isPierceReady())
     {
-      // countdown the pierce timer if not ready.
       this.countdownPierceDelay();
-
-      // stop processing the action.
       return;
     }
 
-    // determine targets that this action collided with.
-    this.processCollision();
+    if (this._collisionEnabled)
+    {
+      this.processCollision();
+    }
   }
 
   /**
@@ -756,17 +796,55 @@ class JABS_Action
    */
   isReadyForCleanup()
   {
-    // if we haven't at least passed the minimum duration, then do not cleanup.
     if (this.getDuration() < JABS_Action.getMinimumDuration()) return false;
 
-    // if the action is expired, then cleanup.
-    if (this.isActionExpired()) return true;
+    if (this._isLingering)
+    {
+      if (this._currentLinger >= this._lingerMaxFrames)
+      {
+        this.cleanup();
+        return true;
+      }
 
-    // if the action has run out of piercing hits, then cleanup.
-    if (this.getPiercingTimes() <= 0) return true;
+      return false;
+    }
 
-    // not ready for cleanup.
+    const expired = this.isActionExpired();
+    const outOfPierce = this.getPiercingTimes() <= 0;
+    if (expired || outOfPierce)
+    {
+      this.startLinger();
+      return false;
+    }
+
     return false;
+  }
+
+  /**
+   * Begins the lingering effect.
+   */
+  startLinger()
+  {
+    if (this._isLingering) return;
+
+    this._isLingering = true;
+
+    this._collisionEnabled = false;
+
+    this.performSelfAnimation();
+  }
+
+  /**
+   * Updates the lingering effect.
+   */
+  updateLinger()
+  {
+    this._currentLinger++;
+
+    if (this._currentLinger >= this._lingerMaxFrames)
+    {
+      this.cleanup();
+    }
   }
 
   /**
@@ -838,6 +916,18 @@ class JABS_Action
    */
   postUpdate()
   {
+    if (this._isLingering)
+    {
+      const event = this.getActionSprite();
+      if (event)
+      {
+        const max = Math.max(1, this._lingerMaxFrames);
+        const t = Math.min(this._currentLinger, max);
+        const pct = 1 - (t / max);
+        const opacity = Math.max(0, Math.floor(255 * pct));
+        event.setOpacity?.(opacity);
+      }
+    }
   }
 
   //endregion update
@@ -13465,6 +13555,13 @@ class JABS_Timer
  * @desc The boost to movement speed when dashing. You may need to toy with this a bit to get it right.
  * @default 1.25
  *
+ * @param hitboxOverlaysInitiallyVisible
+ * @parent miscConfigs
+ * @type boolean
+ * @text Enable Hitbox Overlays
+ * @desc Whether or not to overlay the map with battler and action hitbox visuals- for debugging.
+ * @default false
+ *
  * @param quickmenuConfigs
  * @text QUICKMENU SETUP
  *
@@ -13527,6 +13624,10 @@ class JABS_Timer
  * @command Disable JABS
  * @text Disable JABS
  * @desc Disables the JABS engine.
+ *
+ * @command toggleHitboxOverlays
+ * @text Toggle Hitbox Overlays
+ * @desc Toggles the visibility of the hitbox overlays.
  *
  * @command Set JABS Skill
  * @text Assign a JABS skill
@@ -13844,6 +13945,7 @@ J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistan
 J.ABS.Metadata.DisableTextPops = Boolean(J.ABS.PluginParameters['disableTextPops'] === "true");
 J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRubberbandAdjustment']);
 J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
+J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === "true");
 
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
@@ -13967,6 +14069,12 @@ J.ABS.DefaultValues = {
    * @type {number}
    */
   CooldownlessItems: J.ABS.Metadata.DefaultToolCooldownTime,
+
+  /**
+   * Whether hitbox overlays are visible when a game boots.
+   * @type {boolean}
+   */
+  HitboxOverlaysInitiallyVisible: J.ABS.Metadata.HitboxOverlaysInitiallyVisible,
 };
 
 /**
@@ -14176,19 +14284,21 @@ J.ABS.RegExp = {
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
 
-  // radial-size-related.
+  // action-size-related.
   SizeInPixels: /<size:[ ]?(\d+)>/gi,
   Degrees: /<degrees:[ ]?(\d+)>/gi,
-
-  // action-related.
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
-  Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
-  Projectile: /<projectile:[ ]?([12348])>/gi,
   Shape: /<hitbox:[ ]?(circle|rhombus|square|frontsquare|line|arc|wall|cross)>/gi,
+  Projectile: /<projectile:[ ]?([12348])>/gi,
+  Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  // action-execution-related.
   Direct: /<direct>/gi,
+  Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
   DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)])>/gi,
+  Linger: /<linger:[ ]?(\d+)>/gi,
 
   // animation-related.
   SelfAnimationId: /<selfAnimationId:[ ]?(\d+)>/gi,
@@ -14416,6 +14526,14 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable JABS", () =>
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
 {
   $jabsEngine.absEnabled = false;
+});
+
+/**
+ * Plugin command for requesting a toggling of the hitbox overlay visibility.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.Name, "toggleHitboxOverlays", () =>
+{
+  $jabsEngine.requestToggleHitboxOverlays = true;
 });
 
 /**
@@ -15793,6 +15911,38 @@ RPG_Skill.prototype.extractJabsDuration = function()
 };
 //endregion duration
 
+//region linger
+/**
+ * The number of frames this action should visually linger after hitbox is disabled.
+ * Defaults to 10 if no tag is present.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsLinger", {
+  get: function()
+  {
+    return this.getJabsLinger();
+  },
+});
+
+/**
+ * Gets the linger frames value for this skill.
+ * @returns {number}
+ */
+RPG_Skill.prototype.getJabsLinger = function()
+{
+  return this.extractJabsLinger();
+};
+
+/**
+ * Extracts linger frames from notes.
+ * @returns {number}
+ */
+RPG_Skill.prototype.extractJabsLinger = function()
+{
+  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Linger, true) ?? 10;
+};
+//endregion linger
+
 //region shape
 /**
  * A new property for retrieving the JABS shape from this skill.
@@ -16791,7 +16941,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisAnchor", {
       {
         const ax = Math.max(0, Math.min(1, Number(arr[0])));
         const ay = Math.max(0, Math.min(1, Number(arr[1])));
-        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay)) ? null : [ ax, ay ];
+        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay))
+          ? null
+          : [ ax, ay ];
       }
     }
 
@@ -16859,7 +17011,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisScale", {
       {
         const sx = Number(arr[0]);
         const sy = Number(arr[1]);
-        this._jabsVisScale = (isNaN(sx) || isNaN(sy)) ? null : [ sx, sy ];
+        this._jabsVisScale = (isNaN(sx) || isNaN(sy))
+          ? null
+          : [ sx, sy ];
       }
     }
 
@@ -16899,7 +17053,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetU", {
     if (this._jabsVisOffsetU === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
-      this._jabsVisOffsetU = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetU = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetU;
   },
@@ -16916,7 +17072,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetD", {
     if (this._jabsVisOffsetD === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
-      this._jabsVisOffsetD = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetD = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetD;
   },
@@ -16933,7 +17091,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetL", {
     if (this._jabsVisOffsetL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
-      this._jabsVisOffsetL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetL;
   },
@@ -16950,7 +17110,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetR", {
     if (this._jabsVisOffsetR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
-      this._jabsVisOffsetR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetR;
   },
@@ -16967,7 +17129,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUR", {
     if (this._jabsVisOffsetUR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
-      this._jabsVisOffsetUR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetUR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetUR;
   },
@@ -16984,7 +17148,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetUL", {
     if (this._jabsVisOffsetUL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
-      this._jabsVisOffsetUL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetUL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetUL;
   },
@@ -17001,7 +17167,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDR", {
     if (this._jabsVisOffsetDR === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
-      this._jabsVisOffsetDR = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetDR = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetDR;
   },
@@ -17018,7 +17186,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisOffsetDL", {
     if (this._jabsVisOffsetDL === undefined)
     {
       const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
-      this._jabsVisOffsetDL = arr ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ] : null;
+      this._jabsVisOffsetDL = arr
+        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
+        : null;
     }
     return this._jabsVisOffsetDL;
   },
@@ -19784,10 +19954,16 @@ class JABS_Engine
   requestBattlerRendering = false;
 
   /**
-   * Whether or not there is a request issued for rendering refreshed allies.
+   * Whether or not there is a request issued for toggling the visibility of the hitbox overlays.
    * @type {boolean}
    */
-  requestAlliesRefresh = false;
+  requestToggleHitboxOverlays = false;
+
+  /**
+   * Whether or not the hitbox overlays are presently visible.
+   * @type {boolean}
+   */
+  hitboxOverlaysVisible = false;
 
   /**
    * @constructor
@@ -19936,6 +20112,10 @@ class JABS_Engine
     this._jabsStates = isMapTransfer
       ? this._jabsStates ?? new Map()
       : new Map();
+
+    this.hitboxOverlaysVisible = isMapTransfer
+      ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
+      : J.ABS.Metadata.HitboxOverlaysInitiallyVisible;
   }
 
   /**
@@ -20725,7 +20905,7 @@ class JABS_Engine
       if (partyIndex === 0) continue;
 
       // identify the newly swapped actorId.
-      const currentActorId = $gameParty._actors[0];
+      const [ currentActorId ] = $gameParty._actors;
 
       // grab the actor we are attempting to cycle to.
       const actor = $gameActors.actor(currentActorId);
@@ -21808,6 +21988,7 @@ class JABS_Engine
    * @param {JABS_Action} action The action potentially knocking the target back.
    * @param {JABS_Battler} target The map battler to potentially knockback.
    */
+  // eslint-disable-next-line complexity
   checkKnockback(action, target)
   {
     // if we can't be knocked back, don't process.
@@ -21816,11 +21997,11 @@ class JABS_Engine
     // you cannot be knocked back by healing-exclusive actions.
     if (action.isHealing()) return;
 
+    const targetNotes = target.getBattler()
+      .getAllNotes();
+
     // determine the current knockback resist of the target.
-    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(
-      target.getBattler()
-        .getAllNotes(),
-      J.ABS.RegExp.KnockbackResist);
+    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
 
     // don't even knock them up or around at all, they are immune to knockback.
     if (targetKnockbackResist >= 100) return;
@@ -22479,6 +22660,7 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The target having the action applied against.
    */
+  // eslint-disable-next-line no-unused-vars
   generatePopSkillUsage(action, target)
   {
     // if we are not using popups, then don't do this.
@@ -22959,6 +23141,30 @@ class JABS_Engine
   }
 
   /**
+   * Reads the thickness tag from the action’s underlying skill notes.
+   * Will return null if nothing is found.
+   * @param {Game_Event} actionEvent The action event that carries the JABS_Action.
+   * @returns {number|null} The thickness in tiles; null if not specified.
+   */
+  getActionThicknessTiles(actionEvent)
+  {
+    // attempt to retrieve the underlying JABS_Action model.
+    const jabsAction = actionEvent.getJabsAction();
+
+    // retrieve the base skill for this action.
+    const baseSkill = jabsAction.getBaseSkill();
+
+    // read the capture from the notes using the canonical <thickness:N> tag.
+    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Thickness, true);
+
+    // if nothing found, return null to allow defaulting upstream.
+    if (found === null) return null;
+
+    // ensure non-negative thickness (0 is allowed but clamped later in px space).
+    return Math.max(0, found);
+  }
+
+  /**
    * Performs Euclidean sector (wedge) collision.
    * Range is in tiles and is converted to pixels via tile width; this matches circle behavior.
    * The target is checked via a circle-fast reject followed by an angle gate.
@@ -23184,6 +23390,7 @@ class JABS_Engine
     const tw = $gameMap.tileWidth(); // tile width.
     const th = $gameMap.tileHeight(); // tile height.
 
+    // total full-square tiles and derived pixel dimensions.
     const fullTiles = (2 * range + 1); // full square tiles.
     const fullW = fullTiles * tw; // full width in px.
     const fullH = fullTiles * th; // full height in px.
@@ -23198,26 +23405,33 @@ class JABS_Engine
     let actionRect; // will be computed based on facing.
     switch (facing)
     {
-      case 2: // down → bottom half from origin
+      case J.ABS.Directions.DOWN: // 2 → bottom half from origin
         actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
         break;
-      case 8: // up → top half up from origin
+
+      case J.ABS.Directions.UP: // 8 → top half up from origin
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2),
           originCy - (fullH / 2) - (th / 2),
           fullW,
           (fullH / 2) + (th / 2));
         break;
-      case 6: // right → right half from origin
+
+      case J.ABS.Directions.RIGHT: // 6 → right half from origin
         actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
         break;
-      default: // 4 left → left half from origin
+
+      case J.ABS.Directions.LEFT: // 4 → left half from origin
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2) - (tw / 2),
           originCy - (fullH / 2),
           (fullW / 2) + (tw / 2),
           fullH);
         break;
+
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     // build target AABB.
@@ -23229,7 +23443,7 @@ class JABS_Engine
 
   /**
    * A line-shaped collision approximated as a thin rectangle extending from the action origin.
-   * Range in tiles is converted to pixels. Thickness defaults to one tile.
+   * Range in tiles is converted to pixels. Thickness defaults to one tile, or <thickness:N> tiles if provided.
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles.
@@ -23238,15 +23452,22 @@ class JABS_Engine
    */
   collisionLine(target, action, range, facing)
   {
+    // acquire tile dimensions.
     const tw = $gameMap.tileWidth(); // tile width in px.
     const th = $gameMap.tileHeight(); // tile height in px.
 
-    // line length in pixels (use major axis for length).
+    // line length in pixels (use major axis for length, matching visualization elsewhere).
     const lengthPx = range * Math.max(tw, th); // length in px.
 
-    // line thickness ~ one tile (tunable later).
-    const thicknessX = tw; // horizontal thickness.
-    const thicknessY = th; // vertical thickness.
+    // determine configured thickness in tiles, fallback to default of 1 tile.
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1; // tiles.
+
+    // clamp to a very small positive minimum in pixels to ensure the AABB has area.
+    const minPx = 1; // small positive safeguard.
+
+    // compute thickness in pixels along each orientation.
+    const thicknessX = Math.max(minPx, thicknessTiles * tw); // horizontal thickness.
+    const thicknessY = Math.max(minPx, thicknessTiles * th); // vertical thickness.
 
     // centralized, corrected origin.
     const {
@@ -23258,26 +23479,33 @@ class JABS_Engine
     let actionRect; // rectangle approximation of the line.
     switch (facing)
     {
-      case 2: // down
+      case J.ABS.Directions.DOWN: // 2
+        // extend downward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx - (thicknessX / 2), originCy, thicknessX, lengthPx + (th / 2));
         break;
-      case 8: // up
+      case J.ABS.Directions.UP: // 8
+        // extend upward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - (thicknessX / 2),
           originCy - lengthPx - (th / 2),
           thicknessX,
           lengthPx + (th / 2));
         break;
-      case 6: // right
+      case J.ABS.Directions.RIGHT: // 6
+        // extend rightward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx, originCy - (thicknessY / 2), lengthPx + (tw / 2), thicknessY);
         break;
-      default: // 4 left
+      case J.ABS.Directions.LEFT: // (4)
+        // extend leftward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - lengthPx - (tw / 2),
           originCy - (thicknessY / 2),
           lengthPx + (tw / 2),
           thicknessY);
         break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     // build target AABB and test overlap.
@@ -23306,7 +23534,7 @@ class JABS_Engine
 
   /**
    * A wall-shaped collision approximated as a wide/long rect immediately in front of the origin.
-   * Range in tiles → wall breadth (2*range+1 tiles) perpendicular to facing; depth is one tile.
+   * Breadth spans (2*range+1) tiles perpendicular to facing. Depth uses <thickness:N> tiles (default 1).
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles.
@@ -23318,33 +23546,41 @@ class JABS_Engine
     const tw = $gameMap.tileWidth();
     const th = $gameMap.tileHeight();
 
-    const originCx = action.screenX();
-    const originCy = action.screenY() - (th / 2);
+    // resolve thickness (depth) in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const depthW = Math.max(minPx, thicknessTiles * tw); // depth when vertical
+    const depthH = Math.max(minPx, thicknessTiles * th); // depth when horizontal
 
-    // breadth spans a full (2*range+1) tile span perpendicular to facing.
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // breadth spans perpendicular axis.
     const breadthTiles = (2 * range + 1);
     const breadthW = breadthTiles * tw;
     const breadthH = breadthTiles * th;
 
-    // depth one tile.
-    const depthW = tw; // horizontal depth when facing left/right
-    const depthH = th; // vertical depth when facing up/down
-
     let actionRect;
     switch (facing)
     {
-      case 2: // down → horizontal wall immediately below origin
+      case J.ABS.Directions.DOWN: // 2 → horizontal wall below origin
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy, breadthW, depthH);
         break;
-      case 8: // up → horizontal wall immediately above origin
+      case J.ABS.Directions.UP: // 8 → horizontal wall above origin
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy - depthH, breadthW, depthH);
         break;
-      case 6: // right → vertical wall immediately right of origin
+      case J.ABS.Directions.RIGHT: // 6 → vertical wall right of origin
         actionRect = new JABS_Aabb(originCx, originCy - (breadthH / 2), depthW, breadthH);
         break;
-      default: // 4 left → vertical wall immediately left of origin
+      case J.ABS.Directions.LEFT: // (4) → vertical wall left of origin
         actionRect = new JABS_Aabb(originCx - depthW, originCy - (breadthH / 2), depthW, breadthH);
         break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
     const targetRect = JABS_Engine.getBattlerAabbModel(target);
@@ -23353,7 +23589,7 @@ class JABS_Engine
 
   /**
    * A cross-shaped collision approximated as the union of a vertical and horizontal bar.
-   * Implemented as two rects; a hit occurs if either overlaps the target AABB.
+   * Thickness for both bars uses <thickness:N> tiles (default 1).
    * @param {Game_Event|Game_Player|Game_Character} target The target.
    * @param {Game_Event} action The action sprite.
    * @param {number} range Range in tiles (extends out from origin on each arm).
@@ -23364,16 +23600,21 @@ class JABS_Engine
     const tw = $gameMap.tileWidth();
     const th = $gameMap.tileHeight();
 
-    const originCx = action.screenX();
-    const originCy = action.screenY() - (th / 2);
+    // resolve thickness in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const thicknessX = Math.max(minPx, thicknessTiles * tw);
+    const thicknessY = Math.max(minPx, thicknessTiles * th);
 
-    // arm lengths include the center tile.
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // total arm extents include the center tile.
     const totalW = (2 * range + 1) * tw;
     const totalH = (2 * range + 1) * th;
-
-    // thickness one tile.
-    const thicknessX = tw;
-    const thicknessY = th;
 
     // horizontal bar centered at corrected origin.
     const horiz = new JABS_Aabb(originCx - (totalW / 2), originCy - (thicknessY / 2), totalW, thicknessY);
@@ -23455,6 +23696,7 @@ class JABS_Engine
    * Handles a non-player ally that was defeated.
    * @param {JABS_Battler} defeatedAlly The ally that was defeated.
    */
+  // eslint-disable-next-line no-unused-vars
   handleDefeatedAlly(defeatedAlly)
   {
   }
@@ -23678,6 +23920,7 @@ class JABS_Engine
    * @param {JABS_Battler} target The enemy dropping the loot.
    * @param {JABS_Battler} caster The ally that defeated the enemy.
    */
+  // eslint-disable-next-line no-unused-vars
   createLootDrops(target, caster)
   {
     // actors don't drop loot.
@@ -33624,31 +33867,26 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
     .data(); // array of Game_Follower
 
   // 2) Locate existing player and follower sprites (tolerate non-character entries).
-  /** @type {Sprite_Character|null} */
   let playerSprite = null;
-  /** @type {Sprite_Character[]} */
   const followerSprites = [];
 
   this._characterSprites.forEach(
-    /**
-     * @param {Sprite_Character} sprite
-     */
     (sprite) =>
     {
-      if (!sprite || typeof sprite.character !== "function") return; // skip non-character or unexpected entries
+      // skip non-character or unexpected entries.
+      if (!sprite || !sprite.character()) return;
 
       const ch = sprite.character();
-      if (!ch) return;
 
       // Is this the player sprite?
-      if (typeof ch.isPlayer === "function" && ch.isPlayer())
+      if (ch.isPlayer())
       {
         playerSprite = sprite;
         return;
       }
 
       // Is this a follower sprite?
-      if (typeof ch.isFollower === "function" && ch.isFollower())
+      if (ch.isFollower())
       {
         followerSprites.push(sprite);
       }
@@ -33714,11 +33952,113 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
  */
 Spriteset_Map.prototype.handleHitboxOverlay = function()
 {
-  // handle the action hitbox overlays.
+  // grab the hitbox overlay layer.
+  const layer = this.getJabsHitboxLayer();
+
+  // check for a request to toggle visibility of hitbox overlays.
+  if ($jabsEngine.requestToggleHitboxOverlays)
+  {
+    // determine the next visibility state by flipping the current state.
+    const nextVisible = !$jabsEngine.hitboxOverlaysVisible;
+
+    // perform the transition to the next visibility state.
+    this.transitionHitboxOverlayVisibility(nextVisible);
+
+    // acknowledge the request and clear the flag.
+    $jabsEngine.requestToggleHitboxOverlays = false;
+  }
+
+  // synchronize the layer’s visibility to the engine’s desired state.
+  layer.visible = !!$jabsEngine.hitboxOverlaysVisible;
+
+  // if overlays are hidden, do not process any overlay work.
+  if (!layer.visible)
+  {
+    // do not build/refresh/purge any hitbox overlays while hidden.
+    return;
+  }
+
+  // handle the action hitbox overlays when visible.
   this.handleActionHitboxes();
 
-  // handle the battler hitbox overlays.
+  // handle the battler hitbox overlays when visible.
   this.handleBattlerHitboxes();
+};
+
+/**
+ * Transitions the hitbox overlays to the desired visibility state.
+ * Always clears existing overlay sprites during a transition to ensure
+ * fresh rebuild when becoming visible and to release resources when hiding.
+ * @param {boolean} nextVisible The desired visibility state.
+ */
+Spriteset_Map.prototype.transitionHitboxOverlayVisibility = function(nextVisible)
+{
+  // if no change is needed, do nothing.
+  if ($jabsEngine.hitboxOverlaysVisible === !!nextVisible)
+  {
+    // nothing to do if already in the desired state.
+    return;
+  }
+
+  // clear all existing overlay sprites from the layer and tracking.
+  this.clearAllHitboxOverlays();
+
+  // set the new visibility state on the engine.
+  $jabsEngine.hitboxOverlaysVisible = !!nextVisible;
+
+  // also synchronize the layer visibility immediately.
+  const layer = this.getJabsHitboxLayer();
+  layer.visible = $jabsEngine.hitboxOverlaysVisible;
+};
+
+/**
+ * Removes and destroys all hitbox overlay sprites (both action and battler),
+ * and clears their tracking dictionaries.
+ */
+Spriteset_Map.prototype.clearAllHitboxOverlays = function()
+{
+  // grab the layer and sprite dictionaries.
+  const layer = this.getJabsHitboxLayer(); // parent container for overlays.
+  const actionDict = this.getActionHitboxSprites(); // action overlay sprites.
+  const battlerDict = this.getBattlerHitboxSprites(); // battler overlay sprites.
+
+  // remove/destroy all action overlay sprites and clear their entries.
+  Object.keys(actionDict).forEach(key =>
+  {
+    // grab the sprite by key.
+    const sprite = actionDict[key];
+
+    // if the sprite is currently attached, detach it.
+    if (sprite && sprite.parent === layer)
+    {
+      layer.removeChild(sprite);
+    }
+
+    // destroy the sprite internals.
+    this.destroyActionHitboxSprite(sprite);
+
+    // remove the sprite from the dictionary.
+    delete actionDict[key];
+  });
+
+  // remove/destroy all battler overlay sprites and clear their entries.
+  Object.keys(battlerDict).forEach(key =>
+  {
+    // grab the sprite by key.
+    const sprite = battlerDict[key];
+
+    // if the sprite is currently attached, detach it.
+    if (sprite && sprite.parent === layer)
+    {
+      layer.removeChild(sprite);
+    }
+
+    // destroy the sprite internals.
+    this.destroyBattlerHitboxSprite(sprite);
+
+    // remove the sprite from the dictionary.
+    delete battlerDict[key];
+  });
 };
 
 /**
@@ -33892,9 +34232,8 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function()
 Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function()
 {
   // compute the set of active keys (uuids) on the map now.
-  const activeKeys = new Set(
-    $gameMap.actionEvents()
-      .map(ev => ev.getJabsActionUuid()) // all active keys.
+  const activeKeys = new Set($gameMap.actionEvents()
+    .map(ev => ev.getJabsActionUuid()) // all active keys.
   );
 
   // walk the dict and remove any sprites whose keys aren’t active.
@@ -33986,9 +34325,21 @@ Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite)
   sprite.destroy();
 };
 
+/**
+ * Draws the collision/visual hitbox into the provided sprite’s internal PIXI.Graphics.
+ * Honors <thickness:N> for line, wall, and cross.
+ *
+ * @param {Sprite} sprite The container sprite that owns the PIXI.Graphics.
+ * @param {string} shape One of J.ABS.Shapes.* values.
+ * @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
+ * @param {2|4|6|8} facing One of J.ABS.Directions cardinal directions.
+ * @param {number} tw Tile width in pixels.
+ * @param {number} th Tile height in pixels.
+ * @param {Game_Event} actionEvent The action event for tag resolution.
+ */
 Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, facing, tw, th, actionEvent)
 {
-  // get the graphics used to draw.
+  // access the graphics used to draw.
   /** @type {PIXI.Graphics} */
   const g = sprite._jabsHitboxG; // internal graphics for drawing.
 
@@ -33999,124 +34350,120 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
   const style = this.getActionHitboxStyleFor(shape); // centralized style resolution.
   this.applyHitboxStyle(g, style); // apply style to graphics.
 
+  // precompute thickness (in tiles) once for any shapes that use it.
+  const thicknessTiles = ($jabsEngine.getActionThicknessTiles(actionEvent) ?? 1);
+  const minPx = 0.5; // small positive thickness minimum to avoid degenerate shapes.
+  const thicknessX = Math.max(minPx, thicknessTiles * tw);
+  const thicknessY = Math.max(minPx, thicknessTiles * th);
+
   // draw around local (0,0) since sprite is positioned at the action center.
-  const draw = (name) =>
+  switch (shape)
   {
-    switch ((name || "").toLowerCase())
+    case J.ABS.Shapes.Circle:
     {
-      case "circle":
-      {
-        // match engine: radius uses tile width (tw) for circles/sectors.
-        const r = range * tw; // circle radius in pixels.
-        g.drawCircle(0, 0, r); // draw centered circle.
-        break; // done.
-      }
-      case "rhombus":
-      {
-        // diamond visualization unchanged.
-        this.drawRhombusG(g, range * tw, range * th); // diamond.
-        break; // done.
-      }
-      case "square":
-      {
-        // match engine square silhouette.
-        const w = (2 * range + 1) * tw; // width in pixels.
-        const h = (2 * range + 1) * th; // height in pixels.
-        g.drawRect(-w / 2, -h / 2, w, h); // centered square.
-        break; // done.
-      }
-      case "frontsquare":
-      {
-        // match engine front-square half with half-tile padding.
-        this.drawFrontSquareG(g, range, facing, tw, th); // half-square in facing dir.
-        break; // done.
-      }
-      case "line":
-      {
-        // match engine: length uses major axis regardless of orientation.
-        const lengthPx = range * Math.max(tw, th); // length in px.
-
-        // draw oriented thin rect with a small extra half-tile pad like engine.
-        if (facing === 2) // down
-        {
-          g.drawRect(-tw / 2, 0, tw, lengthPx + (th / 2));
-        }
-        else if (facing === 8) // up
-        {
-          g.drawRect(-tw / 2, -lengthPx - (th / 2), tw, lengthPx + (th / 2));
-        }
-        else if (facing === 6) // right
-        {
-          g.drawRect(0, -th / 2, lengthPx + (tw / 2), th);
-        }
-        else // left
-        {
-          g.drawRect(-lengthPx - (tw / 2), -th / 2, lengthPx + (tw / 2), th);
-        }
-        break; // done.
-      }
-      case "wall":
-      {
-        // match engine wall silhouette.
-        const lenTiles = (2 * range + 1); // total tiles spanned.
-        if (facing === 2 || facing === 8)
-        {
-          const w = lenTiles * tw; // width across.
-          g.drawRect(-w / 2, -th / 2, w, th); // horizontal wall.
-        }
-        else
-        {
-          const h = lenTiles * th; // height across.
-          g.drawRect(-tw / 2, -h / 2, tw, h); // vertical wall.
-        }
-        break; // done.
-      }
-      case "cross":
-      {
-        // match engine cross silhouette.
-        const w = (2 * range + 1) * tw; // total width.
-        const h = (2 * range + 1) * th; // total height.
-        g.drawRect(-tw / 2, -h / 2, tw, h); // vertical line.
-        g.drawRect(-w / 2, -th / 2, w, th); // horizontal line.
-        break; // done.
-      }
-      case "arc":
-      default:
-      {
-        // draw a Euclidean sector wedge for Arc; resolve degrees via engine helper.
-        const degrees = ($jabsEngine.getActionDegrees(actionEvent) ?? 180); // default legacy wedge.
-
-        // compute center angle based on facing.
-        let centerRad = 0; // default right.
-        if (facing === 2) centerRad = Math.PI / 2; // down.
-        else if (facing === 8) centerRad = -Math.PI / 2; // up.
-        else if (facing === 6) centerRad = 0; // right.
-        else centerRad = Math.PI; // left.
-
-        // compute half-angle and start/end.
-        const halfRad = (degrees * 0.5) * (Math.PI / 180); // half sweep in radians.
-        const start = centerRad - halfRad; // start angle.
-        const end = centerRad + halfRad; // end angle.
-
-        // match engine radius math for sectors.
-        const r = range * tw; // radius in px.
-
-        // draw a filled wedge: origin → arc(start..end) → origin.
-        g.moveTo(0, 0); // start at origin.
-        g.lineTo(Math.cos(start) * r, Math.sin(start) * r); // edge to arc start.
-        g.arc(0, 0, r, start, end); // arc along sweep.
-        g.lineTo(0, 0); // edge back to origin.
-        g.closePath(); // close shape.
-        break; // done.
-      }
+      // circle radius uses tile width for consistency with collision.
+      const r = range * tw;
+      g.drawCircle(0, 0, r);
+      break;
     }
-  };
 
-  // perform the shape drawing.
-  draw(shape); // draw the selected shape.
+    case J.ABS.Shapes.Rhombus:
+    {
+      // diamond visualization.
+      this.drawRhombusG(g, range * tw, range * th);
+      break;
+    }
 
-  // finalize.
-  g.endFill(); // complete fill for this shape.
+    case J.ABS.Shapes.Square:
+    {
+      // full square centered at the origin.
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-w / 2, -h / 2, w, h);
+      break;
+    }
+
+    case J.ABS.Shapes.FrontSquare:
+    {
+      // front-half square selected by facing.
+      this.drawFrontSquareG(g, range, facing, tw, th);
+      break;
+    }
+
+    case J.ABS.Shapes.Line:
+    {
+      // length uses major axis regardless of orientation.
+      const lengthPx = range * Math.max(tw, th);
+
+      // draw oriented rect with a small extra half-tile pad like engine collision.
+      if (facing === J.ABS.Directions.DOWN)
+      {
+        g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.UP)
+      {
+        g.drawRect(-(thicknessX / 2), -lengthPx - (th / 2), thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.RIGHT)
+      {
+        g.drawRect(0, -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      else // J.ABS.Directions.LEFT
+      {
+        g.drawRect(-lengthPx - (tw / 2), -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Wall:
+    {
+      // breadth spans (2*range+1) tiles across the perpendicular axis.
+      const lenTiles = (2 * range + 1);
+      if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP)
+      {
+        const w = lenTiles * tw;
+        g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      }
+      else // RIGHT or LEFT
+      {
+        const h = lenTiles * th;
+        g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Cross:
+    {
+      // cross is the union of a vertical and horizontal bar.
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h); // vertical bar
+      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY); // horizontal bar
+      break;
+    }
+
+    case J.ABS.Shapes.Arc:
+    default:
+    {
+      // sector wedge; resolve degrees via engine helper.
+      const degrees = ($jabsEngine.getActionDegrees(actionEvent) ?? 180);
+
+      // compute center angle based on facing.
+      let centerRad = 0; // default right.
+      if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
+      if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
+      if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
+
+      // compute sweep in radians and draw.
+      const sweepRad = (degrees * Math.PI) / 180;
+      const r = range * tw; // radius in px
+      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
+      break;
+    }
+  }
+
+  // complete fill for this shape.
+  g.endFill();
 };
 
 /**
@@ -34193,7 +34540,7 @@ Spriteset_Map.prototype.drawFrontRhombusG = function(g, rx, ry, facing)
  * Draws the front-half of a square in the facing direction from origin.
  * @param {PIXI.Graphics} g The graphics to draw on.
  * @param {number} range Range in tiles.
- * @param {number} facing 2/4/6/8
+ * @param {2|4|6|8} facing One of J.ABS.Directions cardinals.
  * @param {number} tw Tile width in px.
  * @param {number} th Tile height in px.
  */
@@ -34204,27 +34551,83 @@ Spriteset_Map.prototype.drawFrontSquareG = function(g, range, facing, tw, th)
   const totalH = (2 * range + 1) * th; // total height of full square.
 
   // match engine collisionFrontSquare offsets with extra half-tile padding.
-  if (facing === 2) // down → bottom half from origin
+  switch (facing)
   {
-    // width full, height half + half-tile padding, starting at y=0.
-    g.drawRect(-(totalW / 2), 0, totalW, (totalH / 2) + (th / 2));
-  }
-  else if (facing === 8) // up → top half up from origin
-  {
-    // width full, height half + half-tile padding, starting above origin.
-    g.drawRect(-(totalW / 2), -((totalH / 2) + (th / 2)), totalW, (totalH / 2) + (th / 2));
-  }
-  else if (facing === 6) // right → right half from origin
-  {
-    // width half + half-tile padding, full height, starting at x=0.
-    g.drawRect(0, -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
-  }
-  else // left → left half from origin
-  {
-    // width half + half-tile padding, full height, starting to the left of origin.
-    g.drawRect(-((totalW / 2) + (tw / 2)), -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+    case J.ABS.Directions.DOWN: // 2 → bottom half from origin
+    {
+      // width full, height half + half-tile padding, starting at y=0.
+      g.drawRect(-(totalW / 2), 0, totalW, (totalH / 2) + (th / 2));
+      break;
+    }
+
+    case J.ABS.Directions.UP: // 8 → top half up from origin
+    {
+      // width full, height half + half-tile padding, starting above origin.
+      g.drawRect(-(totalW / 2), -((totalH / 2) + (th / 2)), totalW, (totalH / 2) + (th / 2));
+      break;
+    }
+
+    case J.ABS.Directions.RIGHT: // 6 → right half from origin
+    {
+      // width half + half-tile padding, full height, starting at x=0.
+      g.drawRect(0, -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+      break;
+    }
+
+    case J.ABS.Directions.LEFT: // 4 → left half from origin
+    {
+      // width half + half-tile padding, full height, starting to the left of origin.
+      g.drawRect(-((totalW / 2) + (tw / 2)), -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+      break;
+    }
+
+    default:
+    {
+      console.warn(`unsupported facing direction: ${facing}`);
+      return; // do not draw unknown
+    }
   }
 };
+
+/**
+ * Draws a filled sector (wedge) into a PIXI.Graphics.
+ * If sweepRad >= 2π (or ~360°), a full circle is drawn.
+ * @param {PIXI.Graphics} g The graphics to draw on.
+ * @param {number} cx Center X (local space).
+ * @param {number} cy Center Y (local space).
+ * @param {number} r Radius in pixels.
+ * @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
+ * @param {number} sweepRad Total sweep in radians (0–2π].
+ */
+Spriteset_Map.prototype.drawSectorG = function(g, cx, cy, r, centerRad, sweepRad)
+{
+  // normalize sweep to [0, 2π].
+  const TAU = Math.PI * 2; // 2π constant.
+  const sweep = Math.max(0, Math.min(TAU, sweepRad || 0)); // clamp.
+
+  // if the sweep is effectively a full circle, just draw a circle.
+  if (sweep >= TAU - 1e-6)
+  {
+    g.drawCircle(cx, cy, r);
+    return;
+  }
+
+  // derive start/end angles about the center angle.
+  const start = centerRad - (sweep / 2);
+  const end = centerRad + (sweep / 2);
+
+  // compute the start point on the circumference.
+  const sx = cx + (r * Math.cos(start));
+  const sy = cy + (r * Math.sin(start));
+
+  // start from center → line to arc start → arc to end → back to center → fill.
+  g.moveTo(cx, cy);
+  g.lineTo(sx, sy);
+  g.arc(cx, cy, r, start, end); // clockwise sector edge.
+  g.lineTo(cx, cy);
+  g.closePath();
+};
+
 //endregion action hitboxes
 
 //region battler hitboxes
@@ -34457,7 +34860,8 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
   g.clear(); // remove any prior shapes.
 
   // resolve and apply centralized style for this battler kind and state.
-  const style = this.getBattlerHitboxStyle(type,
+  const style = this.getBattlerHitboxStyle(
+    type,
     colliding
       ? "colliding"
       : null); // style with state.

@@ -423,31 +423,26 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
     .data(); // array of Game_Follower
 
   // 2) Locate existing player and follower sprites (tolerate non-character entries).
-  /** @type {Sprite_Character|null} */
   let playerSprite = null;
-  /** @type {Sprite_Character[]} */
   const followerSprites = [];
 
   this._characterSprites.forEach(
-    /**
-     * @param {Sprite_Character} sprite
-     */
     (sprite) =>
     {
-      if (!sprite || typeof sprite.character !== "function") return; // skip non-character or unexpected entries
+      // skip non-character or unexpected entries.
+      if (!sprite || !sprite.character()) return;
 
       const ch = sprite.character();
-      if (!ch) return;
 
       // Is this the player sprite?
-      if (typeof ch.isPlayer === "function" && ch.isPlayer())
+      if (ch.isPlayer())
       {
         playerSprite = sprite;
         return;
       }
 
       // Is this a follower sprite?
-      if (typeof ch.isFollower === "function" && ch.isFollower())
+      if (ch.isFollower())
       {
         followerSprites.push(sprite);
       }
@@ -513,11 +508,113 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
  */
 Spriteset_Map.prototype.handleHitboxOverlay = function()
 {
-  // handle the action hitbox overlays.
+  // grab the hitbox overlay layer.
+  const layer = this.getJabsHitboxLayer();
+
+  // check for a request to toggle visibility of hitbox overlays.
+  if ($jabsEngine.requestToggleHitboxOverlays)
+  {
+    // determine the next visibility state by flipping the current state.
+    const nextVisible = !$jabsEngine.hitboxOverlaysVisible;
+
+    // perform the transition to the next visibility state.
+    this.transitionHitboxOverlayVisibility(nextVisible);
+
+    // acknowledge the request and clear the flag.
+    $jabsEngine.requestToggleHitboxOverlays = false;
+  }
+
+  // synchronize the layer’s visibility to the engine’s desired state.
+  layer.visible = !!$jabsEngine.hitboxOverlaysVisible;
+
+  // if overlays are hidden, do not process any overlay work.
+  if (!layer.visible)
+  {
+    // do not build/refresh/purge any hitbox overlays while hidden.
+    return;
+  }
+
+  // handle the action hitbox overlays when visible.
   this.handleActionHitboxes();
 
-  // handle the battler hitbox overlays.
+  // handle the battler hitbox overlays when visible.
   this.handleBattlerHitboxes();
+};
+
+/**
+ * Transitions the hitbox overlays to the desired visibility state.
+ * Always clears existing overlay sprites during a transition to ensure
+ * fresh rebuild when becoming visible and to release resources when hiding.
+ * @param {boolean} nextVisible The desired visibility state.
+ */
+Spriteset_Map.prototype.transitionHitboxOverlayVisibility = function(nextVisible)
+{
+  // if no change is needed, do nothing.
+  if ($jabsEngine.hitboxOverlaysVisible === !!nextVisible)
+  {
+    // nothing to do if already in the desired state.
+    return;
+  }
+
+  // clear all existing overlay sprites from the layer and tracking.
+  this.clearAllHitboxOverlays();
+
+  // set the new visibility state on the engine.
+  $jabsEngine.hitboxOverlaysVisible = !!nextVisible;
+
+  // also synchronize the layer visibility immediately.
+  const layer = this.getJabsHitboxLayer();
+  layer.visible = $jabsEngine.hitboxOverlaysVisible;
+};
+
+/**
+ * Removes and destroys all hitbox overlay sprites (both action and battler),
+ * and clears their tracking dictionaries.
+ */
+Spriteset_Map.prototype.clearAllHitboxOverlays = function()
+{
+  // grab the layer and sprite dictionaries.
+  const layer = this.getJabsHitboxLayer(); // parent container for overlays.
+  const actionDict = this.getActionHitboxSprites(); // action overlay sprites.
+  const battlerDict = this.getBattlerHitboxSprites(); // battler overlay sprites.
+
+  // remove/destroy all action overlay sprites and clear their entries.
+  Object.keys(actionDict).forEach(key =>
+  {
+    // grab the sprite by key.
+    const sprite = actionDict[key];
+
+    // if the sprite is currently attached, detach it.
+    if (sprite && sprite.parent === layer)
+    {
+      layer.removeChild(sprite);
+    }
+
+    // destroy the sprite internals.
+    this.destroyActionHitboxSprite(sprite);
+
+    // remove the sprite from the dictionary.
+    delete actionDict[key];
+  });
+
+  // remove/destroy all battler overlay sprites and clear their entries.
+  Object.keys(battlerDict).forEach(key =>
+  {
+    // grab the sprite by key.
+    const sprite = battlerDict[key];
+
+    // if the sprite is currently attached, detach it.
+    if (sprite && sprite.parent === layer)
+    {
+      layer.removeChild(sprite);
+    }
+
+    // destroy the sprite internals.
+    this.destroyBattlerHitboxSprite(sprite);
+
+    // remove the sprite from the dictionary.
+    delete battlerDict[key];
+  });
 };
 
 /**
@@ -691,9 +788,8 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function()
 Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function()
 {
   // compute the set of active keys (uuids) on the map now.
-  const activeKeys = new Set(
-    $gameMap.actionEvents()
-      .map(ev => ev.getJabsActionUuid()) // all active keys.
+  const activeKeys = new Set($gameMap.actionEvents()
+    .map(ev => ev.getJabsActionUuid()) // all active keys.
   );
 
   // walk the dict and remove any sprites whose keys aren’t active.
@@ -785,9 +881,21 @@ Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite)
   sprite.destroy();
 };
 
+/**
+ * Draws the collision/visual hitbox into the provided sprite’s internal PIXI.Graphics.
+ * Honors <thickness:N> for line, wall, and cross.
+ *
+ * @param {Sprite} sprite The container sprite that owns the PIXI.Graphics.
+ * @param {string} shape One of J.ABS.Shapes.* values.
+ * @param {number} range Size in tiles for the shape (semantics vary by shape; see individual cases).
+ * @param {2|4|6|8} facing One of J.ABS.Directions cardinal directions.
+ * @param {number} tw Tile width in pixels.
+ * @param {number} th Tile height in pixels.
+ * @param {Game_Event} actionEvent The action event for tag resolution.
+ */
 Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, facing, tw, th, actionEvent)
 {
-  // get the graphics used to draw.
+  // access the graphics used to draw.
   /** @type {PIXI.Graphics} */
   const g = sprite._jabsHitboxG; // internal graphics for drawing.
 
@@ -798,124 +906,120 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
   const style = this.getActionHitboxStyleFor(shape); // centralized style resolution.
   this.applyHitboxStyle(g, style); // apply style to graphics.
 
+  // precompute thickness (in tiles) once for any shapes that use it.
+  const thicknessTiles = ($jabsEngine.getActionThicknessTiles(actionEvent) ?? 1);
+  const minPx = 0.5; // small positive thickness minimum to avoid degenerate shapes.
+  const thicknessX = Math.max(minPx, thicknessTiles * tw);
+  const thicknessY = Math.max(minPx, thicknessTiles * th);
+
   // draw around local (0,0) since sprite is positioned at the action center.
-  const draw = (name) =>
+  switch (shape)
   {
-    switch ((name || "").toLowerCase())
+    case J.ABS.Shapes.Circle:
     {
-      case "circle":
-      {
-        // match engine: radius uses tile width (tw) for circles/sectors.
-        const r = range * tw; // circle radius in pixels.
-        g.drawCircle(0, 0, r); // draw centered circle.
-        break; // done.
-      }
-      case "rhombus":
-      {
-        // diamond visualization unchanged.
-        this.drawRhombusG(g, range * tw, range * th); // diamond.
-        break; // done.
-      }
-      case "square":
-      {
-        // match engine square silhouette.
-        const w = (2 * range + 1) * tw; // width in pixels.
-        const h = (2 * range + 1) * th; // height in pixels.
-        g.drawRect(-w / 2, -h / 2, w, h); // centered square.
-        break; // done.
-      }
-      case "frontsquare":
-      {
-        // match engine front-square half with half-tile padding.
-        this.drawFrontSquareG(g, range, facing, tw, th); // half-square in facing dir.
-        break; // done.
-      }
-      case "line":
-      {
-        // match engine: length uses major axis regardless of orientation.
-        const lengthPx = range * Math.max(tw, th); // length in px.
-
-        // draw oriented thin rect with a small extra half-tile pad like engine.
-        if (facing === 2) // down
-        {
-          g.drawRect(-tw / 2, 0, tw, lengthPx + (th / 2));
-        }
-        else if (facing === 8) // up
-        {
-          g.drawRect(-tw / 2, -lengthPx - (th / 2), tw, lengthPx + (th / 2));
-        }
-        else if (facing === 6) // right
-        {
-          g.drawRect(0, -th / 2, lengthPx + (tw / 2), th);
-        }
-        else // left
-        {
-          g.drawRect(-lengthPx - (tw / 2), -th / 2, lengthPx + (tw / 2), th);
-        }
-        break; // done.
-      }
-      case "wall":
-      {
-        // match engine wall silhouette.
-        const lenTiles = (2 * range + 1); // total tiles spanned.
-        if (facing === 2 || facing === 8)
-        {
-          const w = lenTiles * tw; // width across.
-          g.drawRect(-w / 2, -th / 2, w, th); // horizontal wall.
-        }
-        else
-        {
-          const h = lenTiles * th; // height across.
-          g.drawRect(-tw / 2, -h / 2, tw, h); // vertical wall.
-        }
-        break; // done.
-      }
-      case "cross":
-      {
-        // match engine cross silhouette.
-        const w = (2 * range + 1) * tw; // total width.
-        const h = (2 * range + 1) * th; // total height.
-        g.drawRect(-tw / 2, -h / 2, tw, h); // vertical line.
-        g.drawRect(-w / 2, -th / 2, w, th); // horizontal line.
-        break; // done.
-      }
-      case "arc":
-      default:
-      {
-        // draw a Euclidean sector wedge for Arc; resolve degrees via engine helper.
-        const degrees = ($jabsEngine.getActionDegrees(actionEvent) ?? 180); // default legacy wedge.
-
-        // compute center angle based on facing.
-        let centerRad = 0; // default right.
-        if (facing === 2) centerRad = Math.PI / 2; // down.
-        else if (facing === 8) centerRad = -Math.PI / 2; // up.
-        else if (facing === 6) centerRad = 0; // right.
-        else centerRad = Math.PI; // left.
-
-        // compute half-angle and start/end.
-        const halfRad = (degrees * 0.5) * (Math.PI / 180); // half sweep in radians.
-        const start = centerRad - halfRad; // start angle.
-        const end = centerRad + halfRad; // end angle.
-
-        // match engine radius math for sectors.
-        const r = range * tw; // radius in px.
-
-        // draw a filled wedge: origin → arc(start..end) → origin.
-        g.moveTo(0, 0); // start at origin.
-        g.lineTo(Math.cos(start) * r, Math.sin(start) * r); // edge to arc start.
-        g.arc(0, 0, r, start, end); // arc along sweep.
-        g.lineTo(0, 0); // edge back to origin.
-        g.closePath(); // close shape.
-        break; // done.
-      }
+      // circle radius uses tile width for consistency with collision.
+      const r = range * tw;
+      g.drawCircle(0, 0, r);
+      break;
     }
-  };
 
-  // perform the shape drawing.
-  draw(shape); // draw the selected shape.
+    case J.ABS.Shapes.Rhombus:
+    {
+      // diamond visualization.
+      this.drawRhombusG(g, range * tw, range * th);
+      break;
+    }
 
-  // finalize.
-  g.endFill(); // complete fill for this shape.
+    case J.ABS.Shapes.Square:
+    {
+      // full square centered at the origin.
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-w / 2, -h / 2, w, h);
+      break;
+    }
+
+    case J.ABS.Shapes.FrontSquare:
+    {
+      // front-half square selected by facing.
+      this.drawFrontSquareG(g, range, facing, tw, th);
+      break;
+    }
+
+    case J.ABS.Shapes.Line:
+    {
+      // length uses major axis regardless of orientation.
+      const lengthPx = range * Math.max(tw, th);
+
+      // draw oriented rect with a small extra half-tile pad like engine collision.
+      if (facing === J.ABS.Directions.DOWN)
+      {
+        g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.UP)
+      {
+        g.drawRect(-(thicknessX / 2), -lengthPx - (th / 2), thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.RIGHT)
+      {
+        g.drawRect(0, -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      else // J.ABS.Directions.LEFT
+      {
+        g.drawRect(-lengthPx - (tw / 2), -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Wall:
+    {
+      // breadth spans (2*range+1) tiles across the perpendicular axis.
+      const lenTiles = (2 * range + 1);
+      if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP)
+      {
+        const w = lenTiles * tw;
+        g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      }
+      else // RIGHT or LEFT
+      {
+        const h = lenTiles * th;
+        g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Cross:
+    {
+      // cross is the union of a vertical and horizontal bar.
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h); // vertical bar
+      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY); // horizontal bar
+      break;
+    }
+
+    case J.ABS.Shapes.Arc:
+    default:
+    {
+      // sector wedge; resolve degrees via engine helper.
+      const degrees = ($jabsEngine.getActionDegrees(actionEvent) ?? 180);
+
+      // compute center angle based on facing.
+      let centerRad = 0; // default right.
+      if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
+      if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
+      if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
+
+      // compute sweep in radians and draw.
+      const sweepRad = (degrees * Math.PI) / 180;
+      const r = range * tw; // radius in px
+      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
+      break;
+    }
+  }
+
+  // complete fill for this shape.
+  g.endFill();
 };
 
 /**
@@ -992,7 +1096,7 @@ Spriteset_Map.prototype.drawFrontRhombusG = function(g, rx, ry, facing)
  * Draws the front-half of a square in the facing direction from origin.
  * @param {PIXI.Graphics} g The graphics to draw on.
  * @param {number} range Range in tiles.
- * @param {number} facing 2/4/6/8
+ * @param {2|4|6|8} facing One of J.ABS.Directions cardinals.
  * @param {number} tw Tile width in px.
  * @param {number} th Tile height in px.
  */
@@ -1003,27 +1107,83 @@ Spriteset_Map.prototype.drawFrontSquareG = function(g, range, facing, tw, th)
   const totalH = (2 * range + 1) * th; // total height of full square.
 
   // match engine collisionFrontSquare offsets with extra half-tile padding.
-  if (facing === 2) // down → bottom half from origin
+  switch (facing)
   {
-    // width full, height half + half-tile padding, starting at y=0.
-    g.drawRect(-(totalW / 2), 0, totalW, (totalH / 2) + (th / 2));
-  }
-  else if (facing === 8) // up → top half up from origin
-  {
-    // width full, height half + half-tile padding, starting above origin.
-    g.drawRect(-(totalW / 2), -((totalH / 2) + (th / 2)), totalW, (totalH / 2) + (th / 2));
-  }
-  else if (facing === 6) // right → right half from origin
-  {
-    // width half + half-tile padding, full height, starting at x=0.
-    g.drawRect(0, -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
-  }
-  else // left → left half from origin
-  {
-    // width half + half-tile padding, full height, starting to the left of origin.
-    g.drawRect(-((totalW / 2) + (tw / 2)), -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+    case J.ABS.Directions.DOWN: // 2 → bottom half from origin
+    {
+      // width full, height half + half-tile padding, starting at y=0.
+      g.drawRect(-(totalW / 2), 0, totalW, (totalH / 2) + (th / 2));
+      break;
+    }
+
+    case J.ABS.Directions.UP: // 8 → top half up from origin
+    {
+      // width full, height half + half-tile padding, starting above origin.
+      g.drawRect(-(totalW / 2), -((totalH / 2) + (th / 2)), totalW, (totalH / 2) + (th / 2));
+      break;
+    }
+
+    case J.ABS.Directions.RIGHT: // 6 → right half from origin
+    {
+      // width half + half-tile padding, full height, starting at x=0.
+      g.drawRect(0, -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+      break;
+    }
+
+    case J.ABS.Directions.LEFT: // 4 → left half from origin
+    {
+      // width half + half-tile padding, full height, starting to the left of origin.
+      g.drawRect(-((totalW / 2) + (tw / 2)), -(totalH / 2), (totalW / 2) + (tw / 2), totalH);
+      break;
+    }
+
+    default:
+    {
+      console.warn(`unsupported facing direction: ${facing}`);
+      return; // do not draw unknown
+    }
   }
 };
+
+/**
+ * Draws a filled sector (wedge) into a PIXI.Graphics.
+ * If sweepRad >= 2π (or ~360°), a full circle is drawn.
+ * @param {PIXI.Graphics} g The graphics to draw on.
+ * @param {number} cx Center X (local space).
+ * @param {number} cy Center Y (local space).
+ * @param {number} r Radius in pixels.
+ * @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
+ * @param {number} sweepRad Total sweep in radians (0–2π].
+ */
+Spriteset_Map.prototype.drawSectorG = function(g, cx, cy, r, centerRad, sweepRad)
+{
+  // normalize sweep to [0, 2π].
+  const TAU = Math.PI * 2; // 2π constant.
+  const sweep = Math.max(0, Math.min(TAU, sweepRad || 0)); // clamp.
+
+  // if the sweep is effectively a full circle, just draw a circle.
+  if (sweep >= TAU - 1e-6)
+  {
+    g.drawCircle(cx, cy, r);
+    return;
+  }
+
+  // derive start/end angles about the center angle.
+  const start = centerRad - (sweep / 2);
+  const end = centerRad + (sweep / 2);
+
+  // compute the start point on the circumference.
+  const sx = cx + (r * Math.cos(start));
+  const sy = cy + (r * Math.sin(start));
+
+  // start from center → line to arc start → arc to end → back to center → fill.
+  g.moveTo(cx, cy);
+  g.lineTo(sx, sy);
+  g.arc(cx, cy, r, start, end); // clockwise sector edge.
+  g.lineTo(cx, cy);
+  g.closePath();
+};
+
 //endregion action hitboxes
 
 //region battler hitboxes
@@ -1256,7 +1416,8 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
   g.clear(); // remove any prior shapes.
 
   // resolve and apply centralized style for this battler kind and state.
-  const style = this.getBattlerHitboxStyle(type,
+  const style = this.getBattlerHitboxStyle(
+    type,
     colliding
       ? "colliding"
       : null); // style with state.
