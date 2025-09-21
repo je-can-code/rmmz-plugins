@@ -103,6 +103,9 @@ class JABS_Action
 
     // initialize piercing-related data.
     this.initPiercing();
+
+    // initialize casting-related data.
+    this.initCasting();
   }
 
   /**
@@ -127,6 +130,12 @@ class JABS_Action
      * @type {boolean}
      */
     this._playedSelfAnimationOnDefeat = false;
+
+    /**
+     * The options used when creating this action. Includes decision-time location when applicable.
+     * @type {JABS_ActionOptions|null}
+     */
+    this._actionOptions = null;
   }
 
   /**
@@ -171,6 +180,9 @@ class JABS_Action
     this._collisionEnabled = true;
   }
 
+  /**
+   * Initialize data related to delayed triggers.
+   */
   initDelay()
   {
     /**
@@ -191,6 +203,9 @@ class JABS_Action
     this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
   }
 
+  /**
+   * Initialize data relating to piercing.
+   */
   initPiercing()
   {
     /**
@@ -238,6 +253,24 @@ class JABS_Action
     pierceCount += this._caster.getAdditionalHits(this._baseSkill, isBasicAttack);
 
     return pierceCount;
+  }
+
+  /**
+   * Initializes data relating to casting.
+   */
+  initCasting()
+  {
+    // determine the configured cast time for this action.
+    const castTime = this._baseSkill.jabsCastTime;
+
+    // determine if this action actually requires a cast time.
+    const needsCast = castTime !== null && castTime > 0;
+
+    /**
+     * Whether or not this action has been casted successfully.
+     * @type {boolean}
+     */
+    this._castComplete = !needsCast;
   }
 
   //endregion init
@@ -353,6 +386,24 @@ class JABS_Action
   getCastAnimation()
   {
     return this.getBaseSkill().jabsCastAnimation;
+  }
+
+  /**
+   * Gets whether or not the action has been cast successfully.
+   * If the action does not have a cast time, this will be true by default.
+   * @returns {boolean}
+   */
+  isCastComplete()
+  {
+    return this._castComplete;
+  }
+
+  /**
+   * Flags the action as cast-complete.
+   */
+  completeCast()
+  {
+    this._castComplete = true;
   }
 
   /**
@@ -496,6 +547,26 @@ class JABS_Action
   setActionSprite(actionSprite)
   {
     this._actionSprite = actionSprite;
+  }
+
+  /**
+   * Gets the action options for this action.
+   * @returns {JABS_ActionOptions|null}
+   */
+  getActionOptions()
+  {
+    // return the stored options, if any.
+    return this._actionOptions;
+  }
+
+  /**
+   * Sets the action options onto this action.
+   * @param {JABS_ActionOptions} options The options used to create this action.
+   */
+  setActionOptions(options)
+  {
+    // persist the options used for creation.
+    this._actionOptions = options;
   }
 
   /**
@@ -823,7 +894,7 @@ class JABS_Action
         const t = Math.min(this._currentLinger, max);
         const pct = 1 - (t / max);
         const opacity = Math.max(0, Math.floor(255 * pct));
-        event.setOpacity?.(opacity);
+        event.setOpacity(opacity);
       }
     }
   }

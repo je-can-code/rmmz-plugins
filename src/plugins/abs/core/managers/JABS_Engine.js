@@ -1222,8 +1222,35 @@ class JABS_Engine
     // apply on-execution effects for this action.
     this.applyOnExecutionEffects(caster, actions[0]);
 
+    // assign locally because overwriting input args is bad etiquette.
+    let actualX = targetX;
+    let actualY = targetY;
+
+    // if coordinates were not provided, consult the decision-time location captured in options.
+    if (targetX === null || targetY === null)
+    {
+      // grab the primary action from the collection.
+      const [ primary ] = actions;
+
+      // retrieve the options from the primary action.
+      const options = primary.getActionOptions();
+
+      // attempt to read a frozen location from the options.
+      const loc = options ? options.getTargetLocation() : null;
+
+      // if available, extract coordinates and override null inputs.
+      if (loc)
+      {
+        // assign the frozen x coordinate.
+        actualX = loc.getX();
+
+        // assign the frozen y coordinate.
+        actualY = loc.getY();
+      }
+    }
+
     // iterate over each action and execute them as the caster.
-    actions.forEach(action => this.executeMapAction(caster, action, targetX, targetY));
+    actions.forEach(action => this.executeMapAction(caster, action, actualX, actualY));
   }
 
   /**
@@ -1323,15 +1350,21 @@ class JABS_Engine
     // all actions start with null.
     let actionEventData = null;
 
-    // check if this is NOT a direct action.
-    if (!action.isDirectAction())
+    // determine if this action should create an event on the map.
+    // non-direct actions always create events; direct actions only do so if coords are provided.
+    const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
+
+    // check if we determined we should create an event.
+    if (shouldCreateEvent)
     {
       // construct the action event data to appear visually on the map.
       actionEventData = this.buildActionEventData(caster, action, x, y);
+
+      // add the event to the map and bind it to the action.
       this.addJabsActionToMap(actionEventData, action);
     }
 
-    // add the action to the tracker.
+    // add the action to the tracker regardless of whether an event was created.
     this.addActionEvent(action, actionEventData);
   }
 
@@ -3147,9 +3180,27 @@ class JABS_Engine
       if (!battler.isWithinScope(jabsAction, battler, hitOne)) return;
 
       // if the action is a direct-targeting action,
-      // then only check distance between the caster and target.
+      // then choose collision method based on whether it is spatialized.
       if (jabsAction.isDirectAction())
       {
+        // direct actions that have an action sprite (spatialized) use spatial collision.
+        if (actionSprite)
+        {
+          // perform standard spatial collision against the action's event.
+          const sprite = battler.getCharacter();
+          const actionDirection = actionSprite.direction();
+          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+          if (result)
+          {
+            targetsHit.push(battler);
+            hitOne = true;
+          }
+
+          // stop processing for this battler either way.
+          return;
+        }
+
+        // non-spatial direct actions use proximity between caster and target.
         if (gameAction.isForUser())
         {
           targetsHit.push(battler);
@@ -3157,6 +3208,7 @@ class JABS_Engine
           return;
         }
 
+        // check caster-to-target proximity for direct actions without a sprite.
         const maxDistance = jabsAction.getProximity();
         const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
         if (distance <= maxDistance)
@@ -3164,19 +3216,19 @@ class JABS_Engine
           targetsHit.push(battler);
           hitOne = true;
         }
+
+        // finished with this battler for direct actions.
+        return;
       }
 
-      // check to see if this battler is now in range.
-      else
+      // check to see if this battler is now in range for non-direct actions.
+      const sprite = battler.getCharacter();
+      const actionDirection = actionSprite.direction();
+      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+      if (result)
       {
-        const sprite = battler.getCharacter();
-        const actionDirection = actionSprite.direction();
-        const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
-        if (result)
-        {
-          targetsHit.push(battler);
-          hitOne = true;
-        }
+        targetsHit.push(battler);
+        hitOne = true;
       }
     };
 

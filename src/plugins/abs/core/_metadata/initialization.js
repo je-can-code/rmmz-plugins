@@ -515,7 +515,8 @@ J.ABS.RegExp = {
   Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   // action-execution-related.
-  Direct: /<direct>/gi,
+  Direct: /<direct>/i,
+  DirectLock: /<directLock>/i,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
@@ -697,6 +698,22 @@ J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 //endregion visual directional metadata (new)
 
+//region cast preview tags (MVP)
+/**
+ * Skill-level: disable preview for this skill.
+ */
+J.ABS.RegExp.NoCastPreviewSkill = /<noCastPreview>/gi;
+
+/**
+ * Skill-level: delay the preview until the last N frames of the cast.
+ */
+J.ABS.RegExp.CastPreviewWarnAt = /<castPreviewWarnAt:[ ]?(\d+)>/gi;
+
+/**
+ * Battler-level: disable previews for all skills this battler will execute.
+ */
+J.ABS.RegExp.NoCastPreviewsBattler = /<noCastPreviews>/gi;
+//endregion cast preview tags (MVP)
 
 /**
  * A collection of all aliased methods for this plugin.

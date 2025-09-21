@@ -83,16 +83,16 @@ JABS_Battler.prototype.canPerformCastAnimation = function()
  */
 JABS_Battler.prototype.setCastCountdown = function(castTime)
 {
-  this._castTimeCountdown = castTime;
-  if (this._castTimeCountdown > 0)
+  this.setCastTimeCountdown(castTime);
+  if (this.getCastTimeCountdown() > 0)
   {
     this._casting = true;
   }
 
-  if (this._castTimeCountdown <= 0)
+  if (this.getCastTimeCountdown() <= 0)
   {
     this._casting = false;
-    this._castTimeCountdown = 0;
+    this.setCastTimeCountdown(0);
   }
 };
 

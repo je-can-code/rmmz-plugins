@@ -205,6 +205,9 @@ class JABS_Action
 
     // initialize piercing-related data.
     this.initPiercing();
+
+    // initialize casting-related data.
+    this.initCasting();
   }
 
   /**
@@ -229,6 +232,12 @@ class JABS_Action
      * @type {boolean}
      */
     this._playedSelfAnimationOnDefeat = false;
+
+    /**
+     * The options used when creating this action. Includes decision-time location when applicable.
+     * @type {JABS_ActionOptions|null}
+     */
+    this._actionOptions = null;
   }
 
   /**
@@ -273,6 +282,9 @@ class JABS_Action
     this._collisionEnabled = true;
   }
 
+  /**
+   * Initialize data related to delayed triggers.
+   */
   initDelay()
   {
     /**
@@ -293,6 +305,9 @@ class JABS_Action
     this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
   }
 
+  /**
+   * Initialize data relating to piercing.
+   */
   initPiercing()
   {
     /**
@@ -340,6 +355,24 @@ class JABS_Action
     pierceCount += this._caster.getAdditionalHits(this._baseSkill, isBasicAttack);
 
     return pierceCount;
+  }
+
+  /**
+   * Initializes data relating to casting.
+   */
+  initCasting()
+  {
+    // determine the configured cast time for this action.
+    const castTime = this._baseSkill.jabsCastTime;
+
+    // determine if this action actually requires a cast time.
+    const needsCast = castTime !== null && castTime > 0;
+
+    /**
+     * Whether or not this action has been casted successfully.
+     * @type {boolean}
+     */
+    this._castComplete = !needsCast;
   }
 
   //endregion init
@@ -455,6 +488,24 @@ class JABS_Action
   getCastAnimation()
   {
     return this.getBaseSkill().jabsCastAnimation;
+  }
+
+  /**
+   * Gets whether or not the action has been cast successfully.
+   * If the action does not have a cast time, this will be true by default.
+   * @returns {boolean}
+   */
+  isCastComplete()
+  {
+    return this._castComplete;
+  }
+
+  /**
+   * Flags the action as cast-complete.
+   */
+  completeCast()
+  {
+    this._castComplete = true;
   }
 
   /**
@@ -598,6 +649,26 @@ class JABS_Action
   setActionSprite(actionSprite)
   {
     this._actionSprite = actionSprite;
+  }
+
+  /**
+   * Gets the action options for this action.
+   * @returns {JABS_ActionOptions|null}
+   */
+  getActionOptions()
+  {
+    // return the stored options, if any.
+    return this._actionOptions;
+  }
+
+  /**
+   * Sets the action options onto this action.
+   * @param {JABS_ActionOptions} options The options used to create this action.
+   */
+  setActionOptions(options)
+  {
+    // persist the options used for creation.
+    this._actionOptions = options;
   }
 
   /**
@@ -1112,6 +1183,12 @@ class JABS_ActionBuilder
   #isTerrainDamage = false;
 
   /**
+   * The action options used to build this action.
+   * @type {JABS_ActionOptions|null}
+   */
+  #actionOptions = null;
+
+  /**
    * Builds a new instance of the action based on the built parameters.
    * @returns {JABS_Action}
    */
@@ -1125,6 +1202,12 @@ class JABS_ActionBuilder
       this.#cooldownKey,
       this.#isTerrainDamage);
 
+    // attach the options used to create this action (carries frozen target location).
+    if (this.#actionOptions)
+    {
+      mapAction.setActionOptions(this.#actionOptions);
+    }
+
     this.clear();
 
     return mapAction;
@@ -1132,12 +1215,26 @@ class JABS_ActionBuilder
 
   clear()
   {
+    // reset the underlying game action.
     this.#gameAction = null;
+
+    // reset the caster.
     this.#caster = null;
+
+    // reset retaliation flag.
     this.#isRetaliation = false;
+
+    // reset initial direction.
     this.#initialDirection = J.ABS.Directions.DOWN;
+
+    // reset cooldown key.
     this.#cooldownKey = J.ABS.Globals.GlobalCooldownKey;
+
+    // reset terrain damage.
     this.#isTerrainDamage = false;
+
+    // reset action options.
+    this.#actionOptions = null;
   }
 
   setGameAction(gameAction)
@@ -1183,9 +1280,15 @@ class JABS_ActionBuilder
    */
   setActionOptions(actionOptions)
   {
+    // persist the entire options object for later attachment onto the built action.
+    this.#actionOptions = actionOptions;
+
+    // also extract and cache common flags for existing behavior.
     this.#isRetaliation = actionOptions.isActionRetaliation();
     this.#cooldownKey = actionOptions.getCooldownKey();
     this.#isTerrainDamage = actionOptions.isTerrainDamage();
+
+    // allow method chaining.
     return this;
   }
 }
@@ -4035,8 +4138,44 @@ JABS_Battler.prototype.processQueuedActions = function()
   // gather the most recent decided action.
   const decidedActions = this.getDecidedAction();
 
+  // grab the primary action for potential option lookups.
+  const primaryAction = decidedActions.at(0);
+
+  // initialize target coordinates as null to preserve legacy behavior if not resolved.
+  let targetX = null;
+  let targetY = null;
+
+  // if we have a primary action, attempt to use decision-time location or resolve live.
+  if (primaryAction)
+  {
+    // grab the action options for this action.
+    const options = primaryAction.getActionOptions();
+
+    // try to read a frozen target location from the options.
+    const loc = options ? options.getTargetLocation() : null;
+
+    // if a frozen location exists, extract coordinates from it.
+    if (loc)
+    {
+      // extract the frozen coordinates.
+      targetX = loc.getX();
+      targetY = loc.getY();
+    }
+
+    // if we still don’t have coordinates, perform live resolution (legacy behavior).
+    if (targetX === null || targetY === null)
+    {
+      // resolve the target coordinates for this action if applicable.
+      const [ x, y ] = this.resolveDirectActionTargetCoordinates(primaryAction);
+
+      // assign the resolved coordinates, if any.
+      targetX = x;
+      targetY = y;
+    }
+  }
+
   // execute the action.
-  $jabsEngine.executeMapActions(this, decidedActions);
+  $jabsEngine.executeMapActions(this, decidedActions, targetX, targetY);
 
   // determine the core action associated with the action collection.
   const lastUsedSkill = decidedActions.at(0);
@@ -4068,6 +4207,137 @@ JABS_Battler.prototype.canProcessQueuedActions = function()
 
   // we can process all the actions!
   return true;
+};
+
+/**
+ * Resolves the [x, y] coordinates to spatialize a direct action, if applicable.
+ * If resolution is not applicable or not possible, returns [ null, null ].
+ * @param {JABS_Action} primaryAction The primary action being executed.
+ * @returns {[number|null, number|null]} The resolved [x, y] coordinates or [null, null].
+ */
+JABS_Battler.prototype.resolveDirectActionTargetCoordinates = function(primaryAction)
+{
+  // default the coordinates to nulls.
+  let x = null;
+  let y = null;
+
+  // if there is no action or the action is not direct, do not resolve.
+  if (!primaryAction || !primaryAction.isDirectAction()) return [ x, y ];
+
+  // extract the underlying game action for scope checks.
+  const gameAction = primaryAction.getAction();
+
+  // if the action targets self, resolve to the caster's location.
+  if (gameAction.isForUser())
+  {
+    // use the caster's current tile.
+    x = this.getX();
+    y = this.getY();
+
+    // return the resolved coordinates.
+    return [ x, y ];
+  }
+
+  // if the action targets allies, attempt to resolve using an ally target if available.
+  if (gameAction.isForFriend())
+  {
+    // grab the ally target if supported.
+    const allyTarget = this.getAllyTarget();
+
+    // if an ally target exists, use their current tile.
+    if (allyTarget)
+    {
+      x = allyTarget.getX();
+      y = allyTarget.getY();
+
+      // return the resolved coordinates.
+      return [ x, y ];
+    }
+  }
+
+  // otherwise, assume opponents (or everyone) and try to use our selected or last target.
+  // prioritize the explicitly selected target.
+  let opponentTarget = this.getTarget();
+
+  // fallback to the last battler hit if no explicit target exists.
+  if (!opponentTarget)
+  {
+    opponentTarget = this.getBattlerLastHit();
+  }
+
+  // if we have an opponent candidate, use their coordinates.
+  if (opponentTarget)
+  {
+    x = opponentTarget.getX();
+    y = opponentTarget.getY();
+  }
+
+  // return whatever we resolved (or nulls if not resolved).
+  return [ x, y ];
+};
+
+/**
+ * Resolves [x,y] for a direct skill at decision-time using the battler’s current/known target context.
+ * Returns [null, null] if this is not applicable.
+ * @param {RPG_Skill} skill The skill being decided.
+ * @returns {[number|null, number|null]} The resolved coordinates, or [null, null].
+ */
+JABS_Battler.prototype.resolveDirectActionTargetCoordinatesForSkill = function(skill)
+{
+  // default to nulls.
+  let x = null;
+  let y = null;
+
+  // if not a direct skill, do not resolve.
+  if (!skill.jabsDirect) return [ x, y ];
+
+  // create a temporary Game_Action to leverage scope helpers.
+  const ga = new Game_Action(this.getBattler(), false);
+  ga.setSkill(skill.id);
+
+  // self-targeting anchors to caster.
+  if (ga.isForUser())
+  {
+    // spatialize onto the caster.
+    x = this.getX();
+    y = this.getY();
+    return [ x, y ];
+  }
+
+  // ally-targeting tries explicit ally target only.
+  if (ga.isForFriend())
+  {
+    // grab any selected ally target.
+    const allyTarget = this.getAllyTarget();
+
+    // if found, use ally tile.
+    if (allyTarget)
+    {
+      x = allyTarget.getX();
+      y = allyTarget.getY();
+      return [ x, y ];
+    }
+
+    // no ally target selected; do not guess a random ally.
+    return [ x, y ];
+  }
+
+  // opponent/everyone scopes: prefer explicit target; fall back to last-hit.
+  let opponentTarget = this.getTarget();
+  if (!opponentTarget)
+  {
+    opponentTarget = this.getBattlerLastHit();
+  }
+
+  // if we found a candidate, use that tile.
+  if (opponentTarget)
+  {
+    x = opponentTarget.getX();
+    y = opponentTarget.getY();
+  }
+
+  // return what we got (possibly nulls).
+  return [ x, y ];
 };
 //endregion queued player actions
 
@@ -4151,8 +4421,33 @@ JABS_Battler.prototype.processCastingTimer = function()
   // if casting, update the cast timer.
   if (this.isCasting())
   {
+    // process the cast countdown.
     this.countdownCastTime();
+
+    // check if we are no longer casting because we completed the cast timer.
+    if (!this.isCasting())
+    {
+      this.onCastComplete();
+    }
   }
+};
+
+/**
+ * Hook triggered when an action's cast was completed.
+ */
+JABS_Battler.prototype.onCastComplete = function()
+{
+  // grab the primary decided action.
+  const decidedActions = this.getDecidedAction();
+
+  // if we somehow don't have an action, do not proceed.
+  if (!decidedActions) return;
+
+  // extract the primary action.
+  const [ decidedAction, ] = decidedActions;
+
+  // flag the action as having completed its cast time.
+  decidedAction.completeCast();
 };
 
 /**
@@ -5368,7 +5663,8 @@ JABS_Battler.prototype.isWithinScope = function(action, target, alreadyHitOne = 
 
   // action is from one of the target's allies.
   // inanimate battlers cannot be targeted by their allies with direct skills.
-  if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything) && !(action.isDirectAction() && target.isInanimate()))
+  if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything)
+    && !(action.isDirectAction() && target.isInanimate()))
   {
     return true;
   }
@@ -5453,9 +5749,33 @@ JABS_Battler.prototype.getAttackData = function(cooldownKey)
   // check to make sure we actually know the skill, too.
   if (!battler.hasSkill(skillId)) return [];
 
-  const actionOptions = JABS_ActionOptions.Builder()
-    .setCooldownKey(cooldownKey)
-    .build();
+  // build action options with the cooldown key.
+  const builder = JABS_ActionOptions.Builder()
+    .setCooldownKey(cooldownKey);
+
+  // attempt decision-time spatialization for direct skills lacking <directLock>.
+  const skill = this.getSkill(skillId);
+  if (skill.jabsDirect && !skill.jabsDirectLock)
+  {
+    // resolve a stable snapshot of [x,y] at decision time.
+    const [ x, y ] = this.resolveDirectActionTargetCoordinatesForSkill(skill);
+
+    // if resolved, capture into the location on the options.
+    if (x !== null && y !== null)
+    {
+      // create a JABS_Location for the snapshot.
+      const frozenLocation = JABS_Location.Builder()
+        .setX(x)
+        .setY(y)
+        .build();
+
+      // assign the frozen location to the options.
+      builder.setLocation(frozenLocation);
+    }
+  }
+
+  // finalize the options.
+  const actionOptions = builder.build();
 
   // otherwise, use the skill from the slot to build an action.
   return this.createJabsActionFromSkill(skillId, actionOptions);
@@ -7095,16 +7415,16 @@ JABS_Battler.prototype.canPerformCastAnimation = function()
  */
 JABS_Battler.prototype.setCastCountdown = function(castTime)
 {
-  this._castTimeCountdown = castTime;
-  if (this._castTimeCountdown > 0)
+  this.setCastTimeCountdown(castTime);
+  if (this.getCastTimeCountdown() > 0)
   {
     this._casting = true;
   }
 
-  if (this._castTimeCountdown <= 0)
+  if (this.getCastTimeCountdown() <= 0)
   {
     this._casting = false;
-    this._castTimeCountdown = 0;
+    this.setCastTimeCountdown(0);
   }
 };
 
@@ -9626,6 +9946,10 @@ class JABS_Location
    * @type {JABS_LocationBuilder}
    */
   static Builder = () => new JABS_LocationBuilder();
+
+  getX = () => this.x;
+  getY = () => this.y;
+  getD = () => this.d;
 }
 
 //endregion JABS_Location
@@ -14293,7 +14617,8 @@ J.ABS.RegExp = {
   Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   // action-execution-related.
-  Direct: /<direct>/gi,
+  Direct: /<direct>/i,
+  DirectLock: /<directLock>/i,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
@@ -14475,6 +14800,22 @@ J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 //endregion visual directional metadata (new)
 
+//region cast preview tags (MVP)
+/**
+ * Skill-level: disable preview for this skill.
+ */
+J.ABS.RegExp.NoCastPreviewSkill = /<noCastPreview>/gi;
+
+/**
+ * Skill-level: delay the preview until the last N frames of the cast.
+ */
+J.ABS.RegExp.CastPreviewWarnAt = /<castPreviewWarnAt:[ ]?(\d+)>/gi;
+
+/**
+ * Battler-level: disable previews for all skills this battler will execute.
+ */
+J.ABS.RegExp.NoCastPreviewsBattler = /<noCastPreviews>/gi;
+//endregion cast preview tags (MVP)
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -16071,14 +16412,56 @@ RPG_Skill.prototype.getJabsDirect = function()
 };
 
 /**
- * Extracts the JABS direct for this skill from its notes.
- * @returns {number|null}
+ * Extracts whether this skill is "direct" from its notes.
+ * Now considers either <direct> OR <directLock> as a "direct" skill.
+ * @returns {boolean}
  */
 RPG_Skill.prototype.extractJabsDirect = function()
 {
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.Direct, true);
+  // check for explicit <direct>.
+  const hasDirect = this.getBooleanFromNotesByRegex(J.ABS.RegExp.Direct, true);
+
+  // check for <directLock>, which implies "direct" as well.
+  const hasDirectLock = this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
+
+  // treat either tag as "direct".
+  return !!(hasDirect || hasDirectLock);
 };
 //endregion direct
+
+//region directLock
+/**
+ * A new property for retrieving the JABS directLock from this skill.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsDirectLock", {
+  get: function()
+  {
+    // return the boolean for <directLock>.
+    return this.getJabsDirectLock();
+  },
+});
+
+/**
+ * Gets the JABS directLock for this skill.
+ * @returns {boolean|null}
+ */
+RPG_Skill.prototype.getJabsDirectLock = function()
+{
+  // extract the boolean for <directLock>.
+  return this.extractJabsDirectLock();
+};
+
+/**
+ * Extracts the JABS directLock for this skill from its notes.
+ * @returns {boolean|null}
+ */
+RPG_Skill.prototype.extractJabsDirectLock = function()
+{
+  // parse using the new regex for <directLock>.
+  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
+};
+//endregion directLock
 
 //region bonusAggro
 /**
@@ -19513,14 +19896,31 @@ class JABS_AiManager
     // face the target to execute the action.
     battler.turnTowardTarget();
 
-    // execute the queued action.
-    battler.processQueuedActions();
+    // destructure the primary action from the decided actions.
+    const [ action, ] = battler.getDecidedAction();
+    if (!action) return;
 
-    // force a wait of 1/3 a second.
-    battler.setWaitCountdown(20);
+    // check if this action is already cast.
+    if (action.isCastComplete())
+    {
+      // execute the queued action(s) now that we are in position and not casting.
+      battler.processQueuedActions();
 
-    // switch to cooldown phase.
-    battler.setPhase(3);
+      // force a brief wait after executing to prevent immediate re-action.
+      battler.setWaitCountdown(15);
+
+      // switch to cooldown phase.
+      battler.setPhase(3);
+
+      // stop processing.
+      return;
+    }
+
+    // if we are currently casting, then do not process further.
+    if (battler.isCasting()) return;
+
+    // start the cast timer.
+    battler.setCastCountdown(action.getCastTime());
   }
 
   /**
@@ -19609,8 +20009,32 @@ class JABS_AiManager
       return;
     }
 
+    // build action options; try to snapshot location for direct skills unless <directLock>.
+    const skill = battler.getSkill(skillId);
+    const optionsBuilder = JABS_ActionOptions.Builder()
+      .setCooldownKey(cooldownKey);
+
+    if (skill.jabsDirect && !skill.jabsDirectLock)
+    {
+      // capture [x,y] at decision time.
+      const [ x, y ] = battler.resolveDirectActionTargetCoordinatesForSkill(skill);
+
+      // if we got a coordinate, embed it.
+      if (x !== null && y !== null)
+      {
+        const frozen = JABS_Location.Builder()
+          .setX(x)
+          .setY(y)
+          .build();
+        optionsBuilder.setLocation(frozen);
+      }
+    }
+
+    // finalize options.
+    const actionOptions = optionsBuilder.build();
+
     // generate the actions based on the given skill id.
-    const actions = battler.createJabsActionFromSkill(skillId);
+    const actions = battler.createJabsActionFromSkill(skillId, actionOptions);
 
     // set the cooldown type for all actions.
     actions.forEach(action => action.setCooldownType(cooldownKey));
@@ -19620,12 +20044,6 @@ class JABS_AiManager
 
     // perform the execution animation.
     this.performExecutionAnimation(battler, action);
-
-    // set an arbitrary 1/3 second wait after setup.
-    battler.setWaitCountdown(10);
-
-    // set the cast time of this skill.
-    battler.setCastCountdown(action.getCastTime());
 
     // set the decided action.
     battler.setDecidedAction(actions);
@@ -21091,8 +21509,35 @@ class JABS_Engine
     // apply on-execution effects for this action.
     this.applyOnExecutionEffects(caster, actions[0]);
 
+    // assign locally because overwriting input args is bad etiquette.
+    let actualX = targetX;
+    let actualY = targetY;
+
+    // if coordinates were not provided, consult the decision-time location captured in options.
+    if (targetX === null || targetY === null)
+    {
+      // grab the primary action from the collection.
+      const [ primary ] = actions;
+
+      // retrieve the options from the primary action.
+      const options = primary.getActionOptions();
+
+      // attempt to read a frozen location from the options.
+      const loc = options ? options.getTargetLocation() : null;
+
+      // if available, extract coordinates and override null inputs.
+      if (loc)
+      {
+        // assign the frozen x coordinate.
+        actualX = loc.getX();
+
+        // assign the frozen y coordinate.
+        actualY = loc.getY();
+      }
+    }
+
     // iterate over each action and execute them as the caster.
-    actions.forEach(action => this.executeMapAction(caster, action, targetX, targetY));
+    actions.forEach(action => this.executeMapAction(caster, action, actualX, actualY));
   }
 
   /**
@@ -21192,15 +21637,21 @@ class JABS_Engine
     // all actions start with null.
     let actionEventData = null;
 
-    // check if this is NOT a direct action.
-    if (!action.isDirectAction())
+    // determine if this action should create an event on the map.
+    // non-direct actions always create events; direct actions only do so if coords are provided.
+    const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
+
+    // check if we determined we should create an event.
+    if (shouldCreateEvent)
     {
       // construct the action event data to appear visually on the map.
       actionEventData = this.buildActionEventData(caster, action, x, y);
+
+      // add the event to the map and bind it to the action.
       this.addJabsActionToMap(actionEventData, action);
     }
 
-    // add the action to the tracker.
+    // add the action to the tracker regardless of whether an event was created.
     this.addActionEvent(action, actionEventData);
   }
 
@@ -23016,9 +23467,27 @@ class JABS_Engine
       if (!battler.isWithinScope(jabsAction, battler, hitOne)) return;
 
       // if the action is a direct-targeting action,
-      // then only check distance between the caster and target.
+      // then choose collision method based on whether it is spatialized.
       if (jabsAction.isDirectAction())
       {
+        // direct actions that have an action sprite (spatialized) use spatial collision.
+        if (actionSprite)
+        {
+          // perform standard spatial collision against the action's event.
+          const sprite = battler.getCharacter();
+          const actionDirection = actionSprite.direction();
+          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+          if (result)
+          {
+            targetsHit.push(battler);
+            hitOne = true;
+          }
+
+          // stop processing for this battler either way.
+          return;
+        }
+
+        // non-spatial direct actions use proximity between caster and target.
         if (gameAction.isForUser())
         {
           targetsHit.push(battler);
@@ -23026,6 +23495,7 @@ class JABS_Engine
           return;
         }
 
+        // check caster-to-target proximity for direct actions without a sprite.
         const maxDistance = jabsAction.getProximity();
         const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
         if (distance <= maxDistance)
@@ -23033,19 +23503,19 @@ class JABS_Engine
           targetsHit.push(battler);
           hitOne = true;
         }
+
+        // finished with this battler for direct actions.
+        return;
       }
 
-      // check to see if this battler is now in range.
-      else
+      // check to see if this battler is now in range for non-direct actions.
+      const sprite = battler.getCharacter();
+      const actionDirection = actionSprite.direction();
+      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+      if (result)
       {
-        const sprite = battler.getCharacter();
-        const actionDirection = actionSprite.direction();
-        const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
-        if (result)
-        {
-          targetsHit.push(battler);
-          hitOne = true;
-        }
+        targetsHit.push(battler);
+        hitOne = true;
       }
     };
 
@@ -33471,26 +33941,40 @@ Spriteset_Map.prototype.createJabsLayer = function()
   this._j._abs ||= {};
 
   /**
-   * The container for all hitbox sprites.
+   * The container for all debug-centric hitbox sprites.
    * @type {Sprite}
    */
-  this._j._abs._hitboxLayer = new Sprite();
+  this._j._abs._debugHitboxLayer = new Sprite();
 
   /**
    * Direct tracking for individual sprites by their uuid.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._actionHitboxSprites = {};
+  this._j._abs._debugActionHitboxSprites = {};
 
   /**
    * Direct tracking for battler hitbox sprites by their stable key.
    * Keys include enemy battler uuids, and fixed keys for player/followers.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._battlerHitboxSprites = {};
+  this._j._abs._debugBattlerHitboxSprites = {};
+
+  /**
+   * Direct tracking for cast preview sprites by battler uuid.
+   * Keys are of the form: `castpreview:${uuid}`.
+   * @type {Record<string, Sprite>}
+   */
+  this._j._abs._castPreviewSprites = {};
+
+  /**
+   * The container for cast preview sprites.
+   * @type {Sprite}
+   */
+  this._j._abs._castPreviewLayer = new Sprite();
 
   // mount under tilemap for consistent coordinates.
-  this.addChild(this._j._abs._hitboxLayer);
+  this.addChild(this._j._abs._debugHitboxLayer);
+  this.addChild(this._j._abs._castPreviewLayer);
 };
 
 /**
@@ -33499,7 +33983,16 @@ Spriteset_Map.prototype.createJabsLayer = function()
  */
 Spriteset_Map.prototype.getJabsHitboxLayer = function()
 {
-  return this._j._abs._hitboxLayer;
+  return this._j._abs._debugHitboxLayer;
+};
+
+/**
+ * Gets the cast preview sprite container.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.getCastPreviewLayer = function()
+{
+  return this._j._abs._castPreviewLayer;
 };
 
 /**
@@ -33508,7 +34001,7 @@ Spriteset_Map.prototype.getJabsHitboxLayer = function()
  */
 Spriteset_Map.prototype.getActionHitboxSprites = function()
 {
-  return this._j._abs._actionHitboxSprites;
+  return this._j._abs._debugActionHitboxSprites;
 };
 
 /**
@@ -33517,7 +34010,7 @@ Spriteset_Map.prototype.getActionHitboxSprites = function()
  */
 Spriteset_Map.prototype.getBattlerHitboxSprites = function()
 {
-  return this._j._abs._battlerHitboxSprites; // return the dict.
+  return this._j._abs._debugBattlerHitboxSprites; // return the dict.
 };
 //endregion init
 
@@ -33552,6 +34045,9 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 
   // manage full-screen sprite refreshes.
   this.handleSpriteRefresh();
+
+  // manage cast preview overlays (MVP: enemies only).
+  this.handleCastPreviewOverlays();
 
   // manage the hitbox overlays for actions.
   this.handleHitboxOverlay();
@@ -33946,6 +34442,424 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 };
 //endregion event sprites
 
+//region cast preview sprites (MVP)
+/**
+ * Renders translucent overlays for casting previews (enemies only for MVP).
+ */
+Spriteset_Map.prototype.handleCastPreviewOverlays = function()
+{
+  // build any missing cast preview sprites.
+  this.buildMissingCastPreviewSprites();
+
+  // refresh existing cast preview sprites.
+  this.refreshExistingCastPreviewSprites();
+
+  // purge orphaned cast preview sprites.
+  this.purgeOrphanedCastPreviewSprites();
+};
+
+/**
+ * Collects all enemy battlers that are currently casting and should show a preview.
+ * @returns {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]}
+ */
+Spriteset_Map.prototype.collectActiveCastPreviewItems = function()
+{
+  /** @type {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]} */
+  const items = [];
+
+  // scan map events that are JABS battlers (enemies live as events).
+  $gameMap.events()
+    .filter(ev => ev.isJabsBattler())
+    .forEach(ev =>
+    {
+      // find the underlying JABS battler for this event.
+      const jabsBattler = ev.getJabsBattler();
+      if (!jabsBattler) return; // no battler.
+
+      // MVP: enemies only (exclude player/followers here).
+      if (jabsBattler.isPlayer()) return; // skip player.
+
+      // require casting state + a decided action to preview.
+      if (!jabsBattler.isCasting()) return; // not casting.
+      const decided = jabsBattler.getDecidedAction();
+      if (!decided || !decided.length) return; // no actions decided.
+
+      // extract the primary action + base skill.
+      const [ action ] = decided;
+
+      // battler-level opt-out.
+      const battlerCore = jabsBattler.getBattler();
+      const ref = battlerCore.databaseData();
+      if (RPGManager.checkForBooleanFromNoteByRegex(ref, J.ABS.RegExp.NoCastPreviewsBattler)) return;
+
+      // skill-level opt-out.
+      const skill = action.getBaseSkill();
+      if (RPGManager.checkForBooleanFromNoteByRegex(skill, J.ABS.RegExp.NoCastPreviewSkill)) return;
+
+      // optional delay window: <castPreviewWarnAt: N> (frames; show in last N frames).
+      const warnAt = RPGManager.getNumberFromNoteByRegex(skill, J.ABS.RegExp.CastPreviewWarnAt, true);
+      if (warnAt !== null)
+      {
+        const remaining = jabsBattler.getCastTimeCountdown();
+        if (remaining > warnAt) return;
+      }
+
+      // construct a stable key per battler.
+      const uuid = ev.getJabsBattlerUuid();
+      if (!uuid) return; // cannot key the sprite.
+      const key = `castpreview:${uuid}`;
+
+      // build and add the item for this frame.
+      items.push({
+        key,
+        source: ev,
+        battler: jabsBattler,
+        action,
+        skill
+      });
+    });
+
+  return items; // provide the preview candidates.
+};
+
+/**
+ * Builds cast preview sprites for any battlers that lack one.
+ */
+Spriteset_Map.prototype.buildMissingCastPreviewSprites = function()
+{
+  // get the preview container and dict.
+  const layer = this.getCastPreviewLayer(); // decoupled from debug overlay layer.
+  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+
+  // collect all active preview items for this frame.
+  const items = this.collectActiveCastPreviewItems();
+
+  // create any missing sprites.
+  items.forEach(item =>
+  {
+    // if the sprite is already present, skip.
+    if (dict[item.key]) return; // already present.
+
+    // create and mount a new preview sprite.
+    const sprite = this.createCastPreviewSprite(item);
+    dict[item.key] = sprite;
+    layer.addChild(sprite);
+  });
+};
+
+/**
+ * Synchronizes position and shape of existing cast preview sprites.
+ */
+Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function()
+{
+  // grab the preview sprite dictionary for quick access.
+  const dict = this._j._abs._castPreviewSprites;
+
+  // build an active-set of preview items for this frame keyed by their persistent key.
+  const active = new Map();
+  this.collectActiveCastPreviewItems()
+    .forEach(item => active.set(item.key, item));
+
+  // iterate over all currently tracked preview sprites.
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      // grab the preview sprite for this key.
+      const sprite = dict[key];
+
+      // grab the active item that maps to this key.
+      const item = active.get(key);
+
+      // if this preview isn't active this frame, leave cleanup to the purge step.
+      if (!item) return;
+
+      // default the preview position to the caster's feet.
+      let screenX = item.source.screenX();
+      let screenY = item.source.screenY();
+
+      // if the action is a direct-target action, try to spatialize appropriately.
+      if (item.action.isDirectAction && item.action.isDirectAction())
+      {
+        // derive base skill and lock behavior.
+        const baseSkill = item.action.getBaseSkill();
+        const isLocked = !!baseSkill.jabsDirectLock;
+
+        // default to nulls for target tile.
+        let tx = null;
+        let ty = null;
+
+        // if not locked, prefer decision-time frozen coordinates from options.
+        if (!isLocked)
+        {
+          // read the options and location.
+          const options = item.action.getActionOptions();
+          const loc = options ? options.getTargetLocation() : null;
+
+          // if a frozen location exists, extract x,y.
+          if (loc)
+          {
+            tx = loc.getX();
+            ty = loc.getY();
+          }
+        }
+
+        // if not frozen or is locked, follow the live resolver fallback.
+        if (tx === null || ty === null || isLocked)
+        {
+          const result = item.battler.resolveDirectActionTargetCoordinates(item.action);
+          tx = result[0];
+          ty = result[1];
+        }
+
+        // if we successfully resolved coords, convert them from tile to screen space.
+        if (tx !== null && ty !== null)
+        {
+          // grab tile dimensions for conversion.
+          const tw = $gameMap.tileWidth();
+          const th = $gameMap.tileHeight();
+
+          // convert tile coords to screen coords centered on the tile.
+          screenX = Math.round(($gameMap.adjustX(tx) + 0.5) * tw);
+          screenY = Math.round(($gameMap.adjustY(ty) + 0.5) * th);
+        }
+      }
+
+      // place the sprite at the decided origin for the preview.
+      sprite.x = screenX;
+      sprite.y = screenY;
+
+      // draw the preview geometry for this frame.
+      this.drawCastPreviewInto(sprite, item);
+    });
+};
+
+/**
+ * Removes any preview sprites that are no longer active.
+ */
+Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function()
+{
+  // pull dict and parent layer for previews.
+  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+  const layer = this.getCastPreviewLayer(); // parent layer for previews.
+
+  // compute active keys for this frame.
+  const activeKeys = new Set(this.collectActiveCastPreviewItems()
+    .map(it => it.key));
+
+  // walk current dict and remove non-active ones.
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      // skip ones that remain active.
+      if (activeKeys.has(key)) return; // still active.
+
+      // detach and destroy the orphaned sprite.
+      const sprite = dict[key];
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
+
+      // destroy internals and clear tracking.
+      this.destroyCastPreviewSprite(sprite);
+      delete dict[key];
+    });
+};
+
+/**
+ * Creates a new cast preview sprite.
+ * @param {{ key:string }} item The overlay item.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.createCastPreviewSprite = function(item)
+{
+  // create a container sprite + graphics to draw into.
+  const sprite = new Sprite();
+
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics();
+
+  // stash a few references.
+  sprite._jabsCastPreviewG = g; // internal preview graphics.
+  sprite._cpKey = item.key; // stable key for debugging.
+
+  // attach graphics under sprite.
+  sprite.addChild(g);
+
+  // center origin so our drawing at (0,0) aligns to battler feet center.
+  sprite.anchor.set(0.5, 0.5);
+
+  return sprite;
+};
+
+/**
+ * Destroys a cast preview sprite and its internals.
+ * @param {Sprite} sprite The sprite to destroy.
+ */
+Spriteset_Map.prototype.destroyCastPreviewSprite = function(sprite)
+{
+  if (!sprite) return;
+  if (sprite._jabsCastPreviewG)
+  {
+    sprite._jabsCastPreviewG.clear();
+    sprite._jabsCastPreviewG.destroy({ children: true });
+  }
+  sprite.destroy();
+};
+
+/**
+ * Resolves the style used when drawing a cast preview for a given shape.
+ * @param {string} shape The hitbox shape name.
+ * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
+ */
+Spriteset_Map.prototype.getCastPreviewStyleFor = function(shape)
+{
+  // MVP: a distinct, more transparent red/orange than live hitboxes.
+  return {
+    // soft orange-red
+    fillColor: 0xFF5533,
+    fillAlpha: 0.20,
+    lineColor: 0xCC3F26,
+    lineAlpha: 0.85,
+    lineWidth: 2,
+  };
+};
+
+/**
+ * Draws the cast preview shape for the item’s primary action/skill.
+ * Draws around local origin (0,0); sprite is already at caster feet.
+ * @param {Sprite} sprite The target preview sprite.
+ * @param {{ source:Game_CharacterBase, action:JABS_Action, skill:RPG_Skill }} item The item containing data.
+ */
+Spriteset_Map.prototype.drawCastPreviewInto = function(sprite, item)
+{
+  /** @type {PIXI.Graphics} */
+  const g = sprite._jabsCastPreviewG; // graphics to draw into.
+
+  // clear previous frame.
+  g.clear();
+
+  // derive shape parameters.
+  const shape = item.action.getShape && item.action.getShape();
+  const range = item.action.getRange && item.action.getRange();
+  const facing = item.source.direction(); // 2/4/6/8.
+
+  // quick access to tile size.
+  const tw = $gameMap.tileWidth();
+  const th = $gameMap.tileHeight();
+
+  // apply style.
+  const style = this.getCastPreviewStyleFor(shape);
+  this.applyHitboxStyle(g, style);
+
+  // Defaults for things we cannot derive without a live action event:
+  //  - thickness (tiles) -> 1 tile.
+  //  - arc degrees -> try skill tag if present; fallback 180°.
+  const thicknessTiles = 1;
+  const thicknessX = Math.max(0.5, thicknessTiles * tw);
+  const thicknessY = Math.max(0.5, thicknessTiles * th);
+
+  // try to pull <degrees:N> from the skill if present.
+  const degrees = RPGManager.getNumberFromNoteByRegex(item.skill, J.ABS.RegExp.Degrees, true) ?? 180;
+  const sweepRad = (degrees * Math.PI) / 180;
+
+  // draw around local (0,0) since sprite sits at caster center.
+  switch (shape)
+  {
+    case J.ABS.Shapes.Circle:
+    {
+      const r = range * tw;
+      g.drawCircle(0, 0, r);
+      break;
+    }
+
+    case J.ABS.Shapes.Rhombus:
+    {
+      this.drawRhombusG(g, range * tw, range * th);
+      break;
+    }
+
+    case J.ABS.Shapes.Square:
+    {
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-w / 2, -h / 2, w, h);
+      break;
+    }
+
+    case J.ABS.Shapes.FrontSquare:
+    {
+      this.drawFrontSquareG(g, range, facing, tw, th);
+      break;
+    }
+
+    case J.ABS.Shapes.Line:
+    {
+      const lengthPx = range * Math.max(tw, th);
+      if (facing === J.ABS.Directions.DOWN)
+      {
+        g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.UP)
+      {
+        g.drawRect(-(thicknessX / 2), -lengthPx - (th / 2), thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.RIGHT)
+      {
+        g.drawRect(0, -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      else // LEFT
+      {
+        g.drawRect(-lengthPx - (tw / 2), -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Wall:
+    {
+      const lenTiles = (2 * range + 1);
+      if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP)
+      {
+        const w = lenTiles * tw;
+        g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      }
+      else // RIGHT or LEFT
+      {
+        const h = lenTiles * th;
+        g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Cross:
+    {
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      break;
+    }
+
+    case J.ABS.Shapes.Arc:
+    default:
+    {
+      // derive a center angle from facing.
+      let centerRad = 0; // right.
+      if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
+      if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
+      if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
+
+      const r = range * tw;
+      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
+      break;
+    }
+  }
+
+  // finalize fill.
+  g.endFill();
+};
+//endregion cast preview sprites (MVP)
+
 //region hitbox sprites
 /**
  * Renders translucent overlays for action hitboxes.
@@ -34023,42 +34937,44 @@ Spriteset_Map.prototype.clearAllHitboxOverlays = function()
   const battlerDict = this.getBattlerHitboxSprites(); // battler overlay sprites.
 
   // remove/destroy all action overlay sprites and clear their entries.
-  Object.keys(actionDict).forEach(key =>
-  {
-    // grab the sprite by key.
-    const sprite = actionDict[key];
-
-    // if the sprite is currently attached, detach it.
-    if (sprite && sprite.parent === layer)
+  Object.keys(actionDict)
+    .forEach(key =>
     {
-      layer.removeChild(sprite);
-    }
+      // grab the sprite by key.
+      const sprite = actionDict[key];
 
-    // destroy the sprite internals.
-    this.destroyActionHitboxSprite(sprite);
+      // if the sprite is currently attached, detach it.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
 
-    // remove the sprite from the dictionary.
-    delete actionDict[key];
-  });
+      // destroy the sprite internals.
+      this.destroyActionHitboxSprite(sprite);
+
+      // remove the sprite from the dictionary.
+      delete actionDict[key];
+    });
 
   // remove/destroy all battler overlay sprites and clear their entries.
-  Object.keys(battlerDict).forEach(key =>
-  {
-    // grab the sprite by key.
-    const sprite = battlerDict[key];
-
-    // if the sprite is currently attached, detach it.
-    if (sprite && sprite.parent === layer)
+  Object.keys(battlerDict)
+    .forEach(key =>
     {
-      layer.removeChild(sprite);
-    }
+      // grab the sprite by key.
+      const sprite = battlerDict[key];
 
-    // destroy the sprite internals.
-    this.destroyBattlerHitboxSprite(sprite);
+      // if the sprite is currently attached, detach it.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
 
-    // remove the sprite from the dictionary.
-    delete battlerDict[key];
-  });
+      // destroy the sprite internals.
+      this.destroyBattlerHitboxSprite(sprite);
+
+      // remove the sprite from the dictionary.
+      delete battlerDict[key];
+    });
 };
 
 /**

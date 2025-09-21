@@ -1120,14 +1120,31 @@ class JABS_AiManager
     // face the target to execute the action.
     battler.turnTowardTarget();
 
-    // execute the queued action.
-    battler.processQueuedActions();
+    // destructure the primary action from the decided actions.
+    const [ action, ] = battler.getDecidedAction();
+    if (!action) return;
 
-    // force a wait of 1/3 a second.
-    battler.setWaitCountdown(20);
+    // check if this action is already cast.
+    if (action.isCastComplete())
+    {
+      // execute the queued action(s) now that we are in position and not casting.
+      battler.processQueuedActions();
 
-    // switch to cooldown phase.
-    battler.setPhase(3);
+      // force a brief wait after executing to prevent immediate re-action.
+      battler.setWaitCountdown(15);
+
+      // switch to cooldown phase.
+      battler.setPhase(3);
+
+      // stop processing.
+      return;
+    }
+
+    // if we are currently casting, then do not process further.
+    if (battler.isCasting()) return;
+
+    // start the cast timer.
+    battler.setCastCountdown(action.getCastTime());
   }
 
   /**
@@ -1216,8 +1233,32 @@ class JABS_AiManager
       return;
     }
 
+    // build action options; try to snapshot location for direct skills unless <directLock>.
+    const skill = battler.getSkill(skillId);
+    const optionsBuilder = JABS_ActionOptions.Builder()
+      .setCooldownKey(cooldownKey);
+
+    if (skill.jabsDirect && !skill.jabsDirectLock)
+    {
+      // capture [x,y] at decision time.
+      const [ x, y ] = battler.resolveDirectActionTargetCoordinatesForSkill(skill);
+
+      // if we got a coordinate, embed it.
+      if (x !== null && y !== null)
+      {
+        const frozen = JABS_Location.Builder()
+          .setX(x)
+          .setY(y)
+          .build();
+        optionsBuilder.setLocation(frozen);
+      }
+    }
+
+    // finalize options.
+    const actionOptions = optionsBuilder.build();
+
     // generate the actions based on the given skill id.
-    const actions = battler.createJabsActionFromSkill(skillId);
+    const actions = battler.createJabsActionFromSkill(skillId, actionOptions);
 
     // set the cooldown type for all actions.
     actions.forEach(action => action.setCooldownType(cooldownKey));
@@ -1227,12 +1268,6 @@ class JABS_AiManager
 
     // perform the execution animation.
     this.performExecutionAnimation(battler, action);
-
-    // set an arbitrary 1/3 second wait after setup.
-    battler.setWaitCountdown(10);
-
-    // set the cast time of this skill.
-    battler.setCastCountdown(action.getCastTime());
 
     // set the decided action.
     battler.setDecidedAction(actions);

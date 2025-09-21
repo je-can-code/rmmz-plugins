@@ -27,26 +27,40 @@ Spriteset_Map.prototype.createJabsLayer = function()
   this._j._abs ||= {};
 
   /**
-   * The container for all hitbox sprites.
+   * The container for all debug-centric hitbox sprites.
    * @type {Sprite}
    */
-  this._j._abs._hitboxLayer = new Sprite();
+  this._j._abs._debugHitboxLayer = new Sprite();
 
   /**
    * Direct tracking for individual sprites by their uuid.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._actionHitboxSprites = {};
+  this._j._abs._debugActionHitboxSprites = {};
 
   /**
    * Direct tracking for battler hitbox sprites by their stable key.
    * Keys include enemy battler uuids, and fixed keys for player/followers.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._battlerHitboxSprites = {};
+  this._j._abs._debugBattlerHitboxSprites = {};
+
+  /**
+   * Direct tracking for cast preview sprites by battler uuid.
+   * Keys are of the form: `castpreview:${uuid}`.
+   * @type {Record<string, Sprite>}
+   */
+  this._j._abs._castPreviewSprites = {};
+
+  /**
+   * The container for cast preview sprites.
+   * @type {Sprite}
+   */
+  this._j._abs._castPreviewLayer = new Sprite();
 
   // mount under tilemap for consistent coordinates.
-  this.addChild(this._j._abs._hitboxLayer);
+  this.addChild(this._j._abs._debugHitboxLayer);
+  this.addChild(this._j._abs._castPreviewLayer);
 };
 
 /**
@@ -55,7 +69,16 @@ Spriteset_Map.prototype.createJabsLayer = function()
  */
 Spriteset_Map.prototype.getJabsHitboxLayer = function()
 {
-  return this._j._abs._hitboxLayer;
+  return this._j._abs._debugHitboxLayer;
+};
+
+/**
+ * Gets the cast preview sprite container.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.getCastPreviewLayer = function()
+{
+  return this._j._abs._castPreviewLayer;
 };
 
 /**
@@ -64,7 +87,7 @@ Spriteset_Map.prototype.getJabsHitboxLayer = function()
  */
 Spriteset_Map.prototype.getActionHitboxSprites = function()
 {
-  return this._j._abs._actionHitboxSprites;
+  return this._j._abs._debugActionHitboxSprites;
 };
 
 /**
@@ -73,7 +96,7 @@ Spriteset_Map.prototype.getActionHitboxSprites = function()
  */
 Spriteset_Map.prototype.getBattlerHitboxSprites = function()
 {
-  return this._j._abs._battlerHitboxSprites; // return the dict.
+  return this._j._abs._debugBattlerHitboxSprites; // return the dict.
 };
 //endregion init
 
@@ -108,6 +131,9 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 
   // manage full-screen sprite refreshes.
   this.handleSpriteRefresh();
+
+  // manage cast preview overlays (MVP: enemies only).
+  this.handleCastPreviewOverlays();
 
   // manage the hitbox overlays for actions.
   this.handleHitboxOverlay();
@@ -502,6 +528,424 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 };
 //endregion event sprites
 
+//region cast preview sprites (MVP)
+/**
+ * Renders translucent overlays for casting previews (enemies only for MVP).
+ */
+Spriteset_Map.prototype.handleCastPreviewOverlays = function()
+{
+  // build any missing cast preview sprites.
+  this.buildMissingCastPreviewSprites();
+
+  // refresh existing cast preview sprites.
+  this.refreshExistingCastPreviewSprites();
+
+  // purge orphaned cast preview sprites.
+  this.purgeOrphanedCastPreviewSprites();
+};
+
+/**
+ * Collects all enemy battlers that are currently casting and should show a preview.
+ * @returns {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]}
+ */
+Spriteset_Map.prototype.collectActiveCastPreviewItems = function()
+{
+  /** @type {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]} */
+  const items = [];
+
+  // scan map events that are JABS battlers (enemies live as events).
+  $gameMap.events()
+    .filter(ev => ev.isJabsBattler())
+    .forEach(ev =>
+    {
+      // find the underlying JABS battler for this event.
+      const jabsBattler = ev.getJabsBattler();
+      if (!jabsBattler) return; // no battler.
+
+      // MVP: enemies only (exclude player/followers here).
+      if (jabsBattler.isPlayer()) return; // skip player.
+
+      // require casting state + a decided action to preview.
+      if (!jabsBattler.isCasting()) return; // not casting.
+      const decided = jabsBattler.getDecidedAction();
+      if (!decided || !decided.length) return; // no actions decided.
+
+      // extract the primary action + base skill.
+      const [ action ] = decided;
+
+      // battler-level opt-out.
+      const battlerCore = jabsBattler.getBattler();
+      const ref = battlerCore.databaseData();
+      if (RPGManager.checkForBooleanFromNoteByRegex(ref, J.ABS.RegExp.NoCastPreviewsBattler)) return;
+
+      // skill-level opt-out.
+      const skill = action.getBaseSkill();
+      if (RPGManager.checkForBooleanFromNoteByRegex(skill, J.ABS.RegExp.NoCastPreviewSkill)) return;
+
+      // optional delay window: <castPreviewWarnAt: N> (frames; show in last N frames).
+      const warnAt = RPGManager.getNumberFromNoteByRegex(skill, J.ABS.RegExp.CastPreviewWarnAt, true);
+      if (warnAt !== null)
+      {
+        const remaining = jabsBattler.getCastTimeCountdown();
+        if (remaining > warnAt) return;
+      }
+
+      // construct a stable key per battler.
+      const uuid = ev.getJabsBattlerUuid();
+      if (!uuid) return; // cannot key the sprite.
+      const key = `castpreview:${uuid}`;
+
+      // build and add the item for this frame.
+      items.push({
+        key,
+        source: ev,
+        battler: jabsBattler,
+        action,
+        skill
+      });
+    });
+
+  return items; // provide the preview candidates.
+};
+
+/**
+ * Builds cast preview sprites for any battlers that lack one.
+ */
+Spriteset_Map.prototype.buildMissingCastPreviewSprites = function()
+{
+  // get the preview container and dict.
+  const layer = this.getCastPreviewLayer(); // decoupled from debug overlay layer.
+  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+
+  // collect all active preview items for this frame.
+  const items = this.collectActiveCastPreviewItems();
+
+  // create any missing sprites.
+  items.forEach(item =>
+  {
+    // if the sprite is already present, skip.
+    if (dict[item.key]) return; // already present.
+
+    // create and mount a new preview sprite.
+    const sprite = this.createCastPreviewSprite(item);
+    dict[item.key] = sprite;
+    layer.addChild(sprite);
+  });
+};
+
+/**
+ * Synchronizes position and shape of existing cast preview sprites.
+ */
+Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function()
+{
+  // grab the preview sprite dictionary for quick access.
+  const dict = this._j._abs._castPreviewSprites;
+
+  // build an active-set of preview items for this frame keyed by their persistent key.
+  const active = new Map();
+  this.collectActiveCastPreviewItems()
+    .forEach(item => active.set(item.key, item));
+
+  // iterate over all currently tracked preview sprites.
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      // grab the preview sprite for this key.
+      const sprite = dict[key];
+
+      // grab the active item that maps to this key.
+      const item = active.get(key);
+
+      // if this preview isn't active this frame, leave cleanup to the purge step.
+      if (!item) return;
+
+      // default the preview position to the caster's feet.
+      let screenX = item.source.screenX();
+      let screenY = item.source.screenY();
+
+      // if the action is a direct-target action, try to spatialize appropriately.
+      if (item.action.isDirectAction && item.action.isDirectAction())
+      {
+        // derive base skill and lock behavior.
+        const baseSkill = item.action.getBaseSkill();
+        const isLocked = !!baseSkill.jabsDirectLock;
+
+        // default to nulls for target tile.
+        let tx = null;
+        let ty = null;
+
+        // if not locked, prefer decision-time frozen coordinates from options.
+        if (!isLocked)
+        {
+          // read the options and location.
+          const options = item.action.getActionOptions();
+          const loc = options ? options.getTargetLocation() : null;
+
+          // if a frozen location exists, extract x,y.
+          if (loc)
+          {
+            tx = loc.getX();
+            ty = loc.getY();
+          }
+        }
+
+        // if not frozen or is locked, follow the live resolver fallback.
+        if (tx === null || ty === null || isLocked)
+        {
+          const result = item.battler.resolveDirectActionTargetCoordinates(item.action);
+          tx = result[0];
+          ty = result[1];
+        }
+
+        // if we successfully resolved coords, convert them from tile to screen space.
+        if (tx !== null && ty !== null)
+        {
+          // grab tile dimensions for conversion.
+          const tw = $gameMap.tileWidth();
+          const th = $gameMap.tileHeight();
+
+          // convert tile coords to screen coords centered on the tile.
+          screenX = Math.round(($gameMap.adjustX(tx) + 0.5) * tw);
+          screenY = Math.round(($gameMap.adjustY(ty) + 0.5) * th);
+        }
+      }
+
+      // place the sprite at the decided origin for the preview.
+      sprite.x = screenX;
+      sprite.y = screenY;
+
+      // draw the preview geometry for this frame.
+      this.drawCastPreviewInto(sprite, item);
+    });
+};
+
+/**
+ * Removes any preview sprites that are no longer active.
+ */
+Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function()
+{
+  // pull dict and parent layer for previews.
+  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+  const layer = this.getCastPreviewLayer(); // parent layer for previews.
+
+  // compute active keys for this frame.
+  const activeKeys = new Set(this.collectActiveCastPreviewItems()
+    .map(it => it.key));
+
+  // walk current dict and remove non-active ones.
+  Object.keys(dict)
+    .forEach(key =>
+    {
+      // skip ones that remain active.
+      if (activeKeys.has(key)) return; // still active.
+
+      // detach and destroy the orphaned sprite.
+      const sprite = dict[key];
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
+
+      // destroy internals and clear tracking.
+      this.destroyCastPreviewSprite(sprite);
+      delete dict[key];
+    });
+};
+
+/**
+ * Creates a new cast preview sprite.
+ * @param {{ key:string }} item The overlay item.
+ * @returns {Sprite}
+ */
+Spriteset_Map.prototype.createCastPreviewSprite = function(item)
+{
+  // create a container sprite + graphics to draw into.
+  const sprite = new Sprite();
+
+  /** @type {PIXI.Graphics} */
+  const g = new PIXI.Graphics();
+
+  // stash a few references.
+  sprite._jabsCastPreviewG = g; // internal preview graphics.
+  sprite._cpKey = item.key; // stable key for debugging.
+
+  // attach graphics under sprite.
+  sprite.addChild(g);
+
+  // center origin so our drawing at (0,0) aligns to battler feet center.
+  sprite.anchor.set(0.5, 0.5);
+
+  return sprite;
+};
+
+/**
+ * Destroys a cast preview sprite and its internals.
+ * @param {Sprite} sprite The sprite to destroy.
+ */
+Spriteset_Map.prototype.destroyCastPreviewSprite = function(sprite)
+{
+  if (!sprite) return;
+  if (sprite._jabsCastPreviewG)
+  {
+    sprite._jabsCastPreviewG.clear();
+    sprite._jabsCastPreviewG.destroy({ children: true });
+  }
+  sprite.destroy();
+};
+
+/**
+ * Resolves the style used when drawing a cast preview for a given shape.
+ * @param {string} shape The hitbox shape name.
+ * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
+ */
+Spriteset_Map.prototype.getCastPreviewStyleFor = function(shape)
+{
+  // MVP: a distinct, more transparent red/orange than live hitboxes.
+  return {
+    // soft orange-red
+    fillColor: 0xFF5533,
+    fillAlpha: 0.20,
+    lineColor: 0xCC3F26,
+    lineAlpha: 0.85,
+    lineWidth: 2,
+  };
+};
+
+/**
+ * Draws the cast preview shape for the item’s primary action/skill.
+ * Draws around local origin (0,0); sprite is already at caster feet.
+ * @param {Sprite} sprite The target preview sprite.
+ * @param {{ source:Game_CharacterBase, action:JABS_Action, skill:RPG_Skill }} item The item containing data.
+ */
+Spriteset_Map.prototype.drawCastPreviewInto = function(sprite, item)
+{
+  /** @type {PIXI.Graphics} */
+  const g = sprite._jabsCastPreviewG; // graphics to draw into.
+
+  // clear previous frame.
+  g.clear();
+
+  // derive shape parameters.
+  const shape = item.action.getShape && item.action.getShape();
+  const range = item.action.getRange && item.action.getRange();
+  const facing = item.source.direction(); // 2/4/6/8.
+
+  // quick access to tile size.
+  const tw = $gameMap.tileWidth();
+  const th = $gameMap.tileHeight();
+
+  // apply style.
+  const style = this.getCastPreviewStyleFor(shape);
+  this.applyHitboxStyle(g, style);
+
+  // Defaults for things we cannot derive without a live action event:
+  //  - thickness (tiles) -> 1 tile.
+  //  - arc degrees -> try skill tag if present; fallback 180°.
+  const thicknessTiles = 1;
+  const thicknessX = Math.max(0.5, thicknessTiles * tw);
+  const thicknessY = Math.max(0.5, thicknessTiles * th);
+
+  // try to pull <degrees:N> from the skill if present.
+  const degrees = RPGManager.getNumberFromNoteByRegex(item.skill, J.ABS.RegExp.Degrees, true) ?? 180;
+  const sweepRad = (degrees * Math.PI) / 180;
+
+  // draw around local (0,0) since sprite sits at caster center.
+  switch (shape)
+  {
+    case J.ABS.Shapes.Circle:
+    {
+      const r = range * tw;
+      g.drawCircle(0, 0, r);
+      break;
+    }
+
+    case J.ABS.Shapes.Rhombus:
+    {
+      this.drawRhombusG(g, range * tw, range * th);
+      break;
+    }
+
+    case J.ABS.Shapes.Square:
+    {
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-w / 2, -h / 2, w, h);
+      break;
+    }
+
+    case J.ABS.Shapes.FrontSquare:
+    {
+      this.drawFrontSquareG(g, range, facing, tw, th);
+      break;
+    }
+
+    case J.ABS.Shapes.Line:
+    {
+      const lengthPx = range * Math.max(tw, th);
+      if (facing === J.ABS.Directions.DOWN)
+      {
+        g.drawRect(-(thicknessX / 2), 0, thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.UP)
+      {
+        g.drawRect(-(thicknessX / 2), -lengthPx - (th / 2), thicknessX, lengthPx + (th / 2));
+      }
+      else if (facing === J.ABS.Directions.RIGHT)
+      {
+        g.drawRect(0, -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      else // LEFT
+      {
+        g.drawRect(-lengthPx - (tw / 2), -(thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Wall:
+    {
+      const lenTiles = (2 * range + 1);
+      if (facing === J.ABS.Directions.DOWN || facing === J.ABS.Directions.UP)
+      {
+        const w = lenTiles * tw;
+        g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      }
+      else // RIGHT or LEFT
+      {
+        const h = lenTiles * th;
+        g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      }
+      break;
+    }
+
+    case J.ABS.Shapes.Cross:
+    {
+      const w = (2 * range + 1) * tw;
+      const h = (2 * range + 1) * th;
+      g.drawRect(-thicknessX / 2, -h / 2, thicknessX, h);
+      g.drawRect(-w / 2, -thicknessY / 2, w, thicknessY);
+      break;
+    }
+
+    case J.ABS.Shapes.Arc:
+    default:
+    {
+      // derive a center angle from facing.
+      let centerRad = 0; // right.
+      if (facing === J.ABS.Directions.DOWN) centerRad = Math.PI / 2;
+      if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
+      if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
+
+      const r = range * tw;
+      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
+      break;
+    }
+  }
+
+  // finalize fill.
+  g.endFill();
+};
+//endregion cast preview sprites (MVP)
+
 //region hitbox sprites
 /**
  * Renders translucent overlays for action hitboxes.
@@ -579,42 +1023,44 @@ Spriteset_Map.prototype.clearAllHitboxOverlays = function()
   const battlerDict = this.getBattlerHitboxSprites(); // battler overlay sprites.
 
   // remove/destroy all action overlay sprites and clear their entries.
-  Object.keys(actionDict).forEach(key =>
-  {
-    // grab the sprite by key.
-    const sprite = actionDict[key];
-
-    // if the sprite is currently attached, detach it.
-    if (sprite && sprite.parent === layer)
+  Object.keys(actionDict)
+    .forEach(key =>
     {
-      layer.removeChild(sprite);
-    }
+      // grab the sprite by key.
+      const sprite = actionDict[key];
 
-    // destroy the sprite internals.
-    this.destroyActionHitboxSprite(sprite);
+      // if the sprite is currently attached, detach it.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
 
-    // remove the sprite from the dictionary.
-    delete actionDict[key];
-  });
+      // destroy the sprite internals.
+      this.destroyActionHitboxSprite(sprite);
+
+      // remove the sprite from the dictionary.
+      delete actionDict[key];
+    });
 
   // remove/destroy all battler overlay sprites and clear their entries.
-  Object.keys(battlerDict).forEach(key =>
-  {
-    // grab the sprite by key.
-    const sprite = battlerDict[key];
-
-    // if the sprite is currently attached, detach it.
-    if (sprite && sprite.parent === layer)
+  Object.keys(battlerDict)
+    .forEach(key =>
     {
-      layer.removeChild(sprite);
-    }
+      // grab the sprite by key.
+      const sprite = battlerDict[key];
 
-    // destroy the sprite internals.
-    this.destroyBattlerHitboxSprite(sprite);
+      // if the sprite is currently attached, detach it.
+      if (sprite && sprite.parent === layer)
+      {
+        layer.removeChild(sprite);
+      }
 
-    // remove the sprite from the dictionary.
-    delete battlerDict[key];
-  });
+      // destroy the sprite internals.
+      this.destroyBattlerHitboxSprite(sprite);
+
+      // remove the sprite from the dictionary.
+      delete battlerDict[key];
+    });
 };
 
 /**

@@ -27,8 +27,44 @@ JABS_Battler.prototype.processQueuedActions = function()
   // gather the most recent decided action.
   const decidedActions = this.getDecidedAction();
 
+  // grab the primary action for potential option lookups.
+  const primaryAction = decidedActions.at(0);
+
+  // initialize target coordinates as null to preserve legacy behavior if not resolved.
+  let targetX = null;
+  let targetY = null;
+
+  // if we have a primary action, attempt to use decision-time location or resolve live.
+  if (primaryAction)
+  {
+    // grab the action options for this action.
+    const options = primaryAction.getActionOptions();
+
+    // try to read a frozen target location from the options.
+    const loc = options ? options.getTargetLocation() : null;
+
+    // if a frozen location exists, extract coordinates from it.
+    if (loc)
+    {
+      // extract the frozen coordinates.
+      targetX = loc.getX();
+      targetY = loc.getY();
+    }
+
+    // if we still don’t have coordinates, perform live resolution (legacy behavior).
+    if (targetX === null || targetY === null)
+    {
+      // resolve the target coordinates for this action if applicable.
+      const [ x, y ] = this.resolveDirectActionTargetCoordinates(primaryAction);
+
+      // assign the resolved coordinates, if any.
+      targetX = x;
+      targetY = y;
+    }
+  }
+
   // execute the action.
-  $jabsEngine.executeMapActions(this, decidedActions);
+  $jabsEngine.executeMapActions(this, decidedActions, targetX, targetY);
 
   // determine the core action associated with the action collection.
   const lastUsedSkill = decidedActions.at(0);
@@ -60,6 +96,137 @@ JABS_Battler.prototype.canProcessQueuedActions = function()
 
   // we can process all the actions!
   return true;
+};
+
+/**
+ * Resolves the [x, y] coordinates to spatialize a direct action, if applicable.
+ * If resolution is not applicable or not possible, returns [ null, null ].
+ * @param {JABS_Action} primaryAction The primary action being executed.
+ * @returns {[number|null, number|null]} The resolved [x, y] coordinates or [null, null].
+ */
+JABS_Battler.prototype.resolveDirectActionTargetCoordinates = function(primaryAction)
+{
+  // default the coordinates to nulls.
+  let x = null;
+  let y = null;
+
+  // if there is no action or the action is not direct, do not resolve.
+  if (!primaryAction || !primaryAction.isDirectAction()) return [ x, y ];
+
+  // extract the underlying game action for scope checks.
+  const gameAction = primaryAction.getAction();
+
+  // if the action targets self, resolve to the caster's location.
+  if (gameAction.isForUser())
+  {
+    // use the caster's current tile.
+    x = this.getX();
+    y = this.getY();
+
+    // return the resolved coordinates.
+    return [ x, y ];
+  }
+
+  // if the action targets allies, attempt to resolve using an ally target if available.
+  if (gameAction.isForFriend())
+  {
+    // grab the ally target if supported.
+    const allyTarget = this.getAllyTarget();
+
+    // if an ally target exists, use their current tile.
+    if (allyTarget)
+    {
+      x = allyTarget.getX();
+      y = allyTarget.getY();
+
+      // return the resolved coordinates.
+      return [ x, y ];
+    }
+  }
+
+  // otherwise, assume opponents (or everyone) and try to use our selected or last target.
+  // prioritize the explicitly selected target.
+  let opponentTarget = this.getTarget();
+
+  // fallback to the last battler hit if no explicit target exists.
+  if (!opponentTarget)
+  {
+    opponentTarget = this.getBattlerLastHit();
+  }
+
+  // if we have an opponent candidate, use their coordinates.
+  if (opponentTarget)
+  {
+    x = opponentTarget.getX();
+    y = opponentTarget.getY();
+  }
+
+  // return whatever we resolved (or nulls if not resolved).
+  return [ x, y ];
+};
+
+/**
+ * Resolves [x,y] for a direct skill at decision-time using the battler’s current/known target context.
+ * Returns [null, null] if this is not applicable.
+ * @param {RPG_Skill} skill The skill being decided.
+ * @returns {[number|null, number|null]} The resolved coordinates, or [null, null].
+ */
+JABS_Battler.prototype.resolveDirectActionTargetCoordinatesForSkill = function(skill)
+{
+  // default to nulls.
+  let x = null;
+  let y = null;
+
+  // if not a direct skill, do not resolve.
+  if (!skill.jabsDirect) return [ x, y ];
+
+  // create a temporary Game_Action to leverage scope helpers.
+  const ga = new Game_Action(this.getBattler(), false);
+  ga.setSkill(skill.id);
+
+  // self-targeting anchors to caster.
+  if (ga.isForUser())
+  {
+    // spatialize onto the caster.
+    x = this.getX();
+    y = this.getY();
+    return [ x, y ];
+  }
+
+  // ally-targeting tries explicit ally target only.
+  if (ga.isForFriend())
+  {
+    // grab any selected ally target.
+    const allyTarget = this.getAllyTarget();
+
+    // if found, use ally tile.
+    if (allyTarget)
+    {
+      x = allyTarget.getX();
+      y = allyTarget.getY();
+      return [ x, y ];
+    }
+
+    // no ally target selected; do not guess a random ally.
+    return [ x, y ];
+  }
+
+  // opponent/everyone scopes: prefer explicit target; fall back to last-hit.
+  let opponentTarget = this.getTarget();
+  if (!opponentTarget)
+  {
+    opponentTarget = this.getBattlerLastHit();
+  }
+
+  // if we found a candidate, use that tile.
+  if (opponentTarget)
+  {
+    x = opponentTarget.getX();
+    y = opponentTarget.getY();
+  }
+
+  // return what we got (possibly nulls).
+  return [ x, y ];
 };
 //endregion queued player actions
 
@@ -143,8 +310,33 @@ JABS_Battler.prototype.processCastingTimer = function()
   // if casting, update the cast timer.
   if (this.isCasting())
   {
+    // process the cast countdown.
     this.countdownCastTime();
+
+    // check if we are no longer casting because we completed the cast timer.
+    if (!this.isCasting())
+    {
+      this.onCastComplete();
+    }
   }
+};
+
+/**
+ * Hook triggered when an action's cast was completed.
+ */
+JABS_Battler.prototype.onCastComplete = function()
+{
+  // grab the primary decided action.
+  const decidedActions = this.getDecidedAction();
+
+  // if we somehow don't have an action, do not proceed.
+  if (!decidedActions) return;
+
+  // extract the primary action.
+  const [ decidedAction, ] = decidedActions;
+
+  // flag the action as having completed its cast time.
+  decidedAction.completeCast();
 };
 
 /**
