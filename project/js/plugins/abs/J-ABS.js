@@ -996,7 +996,7 @@ class JABS_Action
         const t = Math.min(this._currentLinger, max);
         const pct = 1 - (t / max);
         const opacity = Math.max(0, Math.floor(255 * pct));
-        event.setOpacity?.(opacity);
+        event.setOpacity(opacity);
       }
     }
   }
@@ -3908,6 +3908,27 @@ JABS_Battler.createPlayer = function()
 
   // return the created player.
   return new JABS_Battler($gamePlayer, battler, coreData);
+};
+
+/**
+ * Generates a `JABS_Battler` for an actor ally bound to a follower character.
+ * Uses the actor's own core configuration.
+ * @param {Game_Follower} follower The follower character representing this ally on the map.
+ * @param {Game_Actor} actor The underlying actor battler.
+ * @returns {JABS_Battler} The built ally battler.
+ */
+JABS_Battler.createAlly = function(follower, actor)
+{
+  // if either input is missing, we cannot build an ally battler.
+  if (!follower || !actor) return null;
+
+  // build core data from the actor's own database-driven properties.
+  const coreData = JABS_BattlerCoreData.Builder()
+    .setBattler(actor)
+    .build();
+
+  // create and return the ally battler bound to this follower.
+  return new JABS_Battler(follower, actor, coreData);
 };
 
 // TODO: parameterize this on a per-enemy basis?
@@ -18793,6 +18814,20 @@ class JABS_AiManager
   static maxAiRange = J.ABS.Metadata.MaxAiUpdateRange;
 
   /**
+   * The spatial index mapping "x,y" keys to sets of battlers occupying that tile.
+   * Used for broad-phase collision queries to avoid scanning all battlers.
+   * @type {Map<string, Set<JABS_Battler>>}
+   */
+  static spatialIndex = new Map();
+
+  /**
+   * The size of each spatial cell in tiles for the broad-phase grid.
+   * Currently fixed to 1 tile per cell to align with tile-based JABS.
+   * @type {number}
+   */
+  static spatialCellSize = 1;
+
+  /**
    * The constructor is not designed to be called.
    * This is a static class.
    */
@@ -19249,6 +19284,7 @@ class JABS_AiManager
    * @param {Game_Enemy} battler The enemy battler that was converted from the event.
    * @param {JABS_Battler} jabsBattler The created JABS battler from the event.
    */
+  // eslint-disable-next-line no-unused-vars
   static postConvertMutate(battler, jabsBattler)
   {
     // hook for mutation.
@@ -19352,6 +19388,99 @@ class JABS_AiManager
   }
 
   //endregion manage battlers
+
+  //region spatial indexing
+  /**
+   * Rebuilds the tile-based spatial index for all tracked battlers.
+   * Should be called once per frame after battlers move and before action collisions.
+   */
+  static rebuildSpatialIndex()
+  {
+    // reset the spatial index for this frame.
+    this.spatialIndex.clear();
+
+    // grab all battlers currently tracked.
+    const allBattlers = this.getAllBattlers();
+
+    // index each battler by the tile they occupy.
+    allBattlers.forEach(battler =>
+    {
+      // get the tile coordinates for this battler.
+      const x = Math.floor(battler.getX());
+      const y = Math.floor(battler.getY());
+
+      // build the spatial key for this tile.
+      const key = this._spatialKey(x, y);
+
+      // get the existing bucket for this cell.
+      let bucket = this.spatialIndex.get(key);
+
+      // if there is no bucket yet, create one.
+      if (!bucket)
+      {
+        bucket = new Set();
+        this.spatialIndex.set(key, bucket);
+      }
+
+      // add the battler to this cell's bucket.
+      bucket.add(battler);
+    });
+  }
+
+  /**
+   * Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.
+   * Returns candidates de-duplicated across all covered cells.
+   * @param {number} minX The minimum tile x.
+   * @param {number} minY The minimum tile y.
+   * @param {number} maxX The maximum tile x.
+   * @param {number} maxY The maximum tile y.
+   * @returns {JABS_Battler[]} The candidate battlers.
+   */
+  static queryBattlersInAabb(minX, minY, maxX, maxY)
+  {
+    // normalize the bounds to integers and proper ordering.
+    const x0 = Math.floor(Math.min(minX, maxX));
+    const y0 = Math.floor(Math.min(minY, maxY));
+    const x1 = Math.floor(Math.max(minX, maxX));
+    const y1 = Math.floor(Math.max(minY, maxY));
+
+    // collect candidates from each cell within the bounds.
+    const result = new Set();
+
+    // iterate the grid rows.
+    for (let y = y0; y <= y1; y++)
+    {
+      // iterate the grid columns.
+      for (let x = x0; x <= x1; x++)
+      {
+        // get the bucket for this cell.
+        const bucket = this.spatialIndex.get(this._spatialKey(x, y));
+
+        // add all battlers in the bucket if present.
+        if (bucket)
+        {
+          bucket.forEach(b => result.add(b));
+        }
+      }
+    }
+
+    // return the result as a proper array.
+    return Array.from(result);
+  }
+
+  /**
+   * Builds a stable key for a tile cell based on x,y.
+   * @param {number} x The tile x.
+   * @param {number} y The tile y.
+   * @returns {string} The key in the form "x,y".
+   */
+  static _spatialKey(x, y)
+  {
+    // build the key using the coordinates.
+    return `${x},${y}`;
+  }
+
+  //endregion spatial indexing
 
   //region update loop
   /**
@@ -20746,6 +20875,9 @@ class JABS_Engine
     // update the AI of non-player battlers.
     this.updateAiBattlers();
 
+    // rebuild the spatial index once per frame before action processing.
+    JABS_AiManager.rebuildSpatialIndex();
+
     // update all active actions on the map.
     this.updateActions();
 
@@ -21410,6 +21542,27 @@ class JABS_Engine
 
     // request a map-wide sprite refresh on cycling.
     this.requestSpriteRefresh = true;
+
+    // rebuild all actor allies (followers) so they have proper ally core and character binding.
+    this.rebuildActorAllies();
+  }
+
+  /**
+   * Rebuilds all actor allies bound to followers after party cycling.
+   * Ensures ex-leaders (now followers) regain proper ally core (sight/pursuit) and
+   * are bound to their follower characters for correct isPlayer/isFollower state.
+   */
+  rebuildActorAllies()
+  {
+    // grab all followers in order; follower index aligns to party members beyond leader.
+    const followers = $gamePlayer.followers()
+      .data();
+
+    // convert the followers into JABS battlers using the canonical helper.
+    const allyBattlers = JABS_AiManager.convertFollowersToBattlers(followers);
+
+    // register or update all ally battlers in the AI manager.
+    JABS_AiManager.addOrUpdateBattlers(allyBattlers);
   }
 
   /**
@@ -21457,7 +21610,6 @@ class JABS_Engine
   //endregion update actions
   //endregion update
 
-  //region functional
   //region action execution
   /**
    * Generates a new JABS action based on a skillId, and executes the skill.
@@ -21523,7 +21675,9 @@ class JABS_Engine
       const options = primary.getActionOptions();
 
       // attempt to read a frozen location from the options.
-      const loc = options ? options.getTargetLocation() : null;
+      const loc = options
+        ? options.getTargetLocation()
+        : null;
 
       // if available, extract coordinates and override null inputs.
       if (loc)
@@ -23419,6 +23573,7 @@ class JABS_Engine
     // self-targeting takes FIRST PRIORITY.
     if (gameAction.isForUser())
     {
+      // return only the caster as the target.
       return [ casterJabsBattler ];
     }
 
@@ -23460,7 +23615,71 @@ class JABS_Engine
     const targetsHit = [];
     let hitOne = false;
 
-    // actually process the collision.
+    // define a helper to query spatial candidates by AABB in tile-space.
+    const queryCandidates = () =>
+    {
+      // direct actions that have an action sprite (spatialized) use sprite position.
+      if (jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the center tile from the action sprite.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the inclusive bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // direct actions without a sprite use caster proximity and/or target coordinates.
+      if (jabsAction.isDirectAction() && !actionSprite)
+      {
+        // grab the caster location in tiles.
+        const cx = Math.floor(casterJabsBattler.getX());
+        const cy = Math.floor(casterJabsBattler.getY());
+
+        // use proximity radius for the AABB.
+        const radius = jabsAction.getProximity();
+
+        // build the inclusive bounds using the proximity value.
+        const minX = cx - radius;
+        const minY = cy - radius;
+        const maxX = cx + radius;
+        const maxY = cy + radius;
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // non-direct actions will have an action sprite; anchor on sprite.
+      if (!jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the sprite center in tiles.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // fallback if no anchor is available; return all battlers.
+      return JABS_AiManager.getAllBattlers();
+    };
+
+    // grab the candidate battlers from the spatial index.
+    const candidates = queryCandidates();
+
+    // actually process the collision for each candidate.
     const battlerCollisionProccessor = battler =>
     {
       // this time, it is effectively checking for the single-scope.
@@ -23479,7 +23698,10 @@ class JABS_Engine
           const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
           if (result)
           {
+            // add this battler to the list of targets hit.
             targetsHit.push(battler);
+
+            // if we only hit one, ensure subsequent single-scope checks respect that.
             hitOne = true;
           }
 
@@ -23490,6 +23712,7 @@ class JABS_Engine
         // non-spatial direct actions use proximity between caster and target.
         if (gameAction.isForUser())
         {
+          // self-targeting direct actions always hit the target candidate.
           targetsHit.push(battler);
           hitOne = true;
           return;
@@ -23500,6 +23723,7 @@ class JABS_Engine
         const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
         if (distance <= maxDistance)
         {
+          // add this battler to the list of targets hit.
           targetsHit.push(battler);
           hitOne = true;
         }
@@ -23514,20 +23738,20 @@ class JABS_Engine
       const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
       if (result)
       {
+        // add this battler to the list of targets hit.
         targetsHit.push(battler);
+
+        // if we only hit one, ensure subsequent single-scope checks respect that.
         hitOne = true;
       }
     };
 
-    // grab all the battlers that could possibly be hit.
-    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
-
     // LAST PRIORITY is just regular "did I get hit" sort of stuff.
-    battlers
+    candidates
       .filter(canActionConnectWithBattler, this)
       .forEach(battlerCollisionProccessor, this);
 
-    // return what we found.
+    // return the list of targets hit.
     return targetsHit;
   }
 
@@ -24097,7 +24321,6 @@ class JABS_Engine
   }
 
   //endregion collision
-  //endregion functional
 
   //region defeated target aftermath
   /**
@@ -33636,6 +33859,9 @@ Sprite_MapCastGauge.prototype.initialize = function(
 
   // indicate this is not one of the base types.
   this._statusType = "cast";
+
+  // default hidden to prevent any invalid-frame flashes.
+  this.visible = false;
 };
 
 /**
@@ -33772,37 +33998,48 @@ Sprite_MapCastGauge.prototype.update = function()
       .getBattler();
   }
 
-  // If casting-valid this frame, assign label+icon BEFORE the base update/redraw so they render now.
-  if (this.isValid())
-  {
-    const decided = this.getJabsBattler()
-      .getDecidedAction();
+  // determine validity for this frame.
+  const valid = this.isValid();
 
-    if (decided && decided.length > 0)
-    {
-      const [ action ] = decided;
-      const skill = action.getBaseSkill();
-
-      // set the label and icon (iconIndex >= 0 is valid in MZ; -1 clears).
-      this.setLabel(skill.name);
-      this.setIcon(skill.iconIndex >= 0
-        ? skill.iconIndex
-        : -1);
-    }
-  }
-  // If not valid, clear adornments right away so the base redraw reflects that state.
-  else
+  // if not valid, hard-exit: hide, clear adornments, and skip base update to prevent redraws.
+  if (valid === false)
   {
+    // hide the gauge entirely.
+    this.visible = false;
+
+    // clear label if present.
     if (this._gauge._label)
     {
       this.setLabel(String.empty);
     }
 
-    // clear any existing icon if present (iconIndex != -1 means "has icon").
+    // clear icon if present.
     if (this._gauge._iconIndex !== -1)
     {
       this.setIcon(-1);
     }
+
+    // do not call the base update; avoids it re-enabling visibility or repainting.
+    return;
+  }
+
+  // from here on, we are valid and should be visible.
+  this.visible = true;
+
+  // assign label+icon BEFORE base update so they render correctly this frame.
+  const decided = this.getJabsBattler()
+    .getDecidedAction();
+
+  if (decided && decided.length > 0)
+  {
+    const [ action ] = decided;
+    const skill = action.getBaseSkill();
+
+    // update the label and icon (iconIndex >= 0 is valid in MZ; -1 clears).
+    this.setLabel(skill.name);
+    this.setIcon(skill.iconIndex >= 0
+      ? skill.iconIndex
+      : -1);
   }
 
   // perform base updating/redraw lifecycle (will call redraw() internally).

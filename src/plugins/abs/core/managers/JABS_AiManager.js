@@ -17,6 +17,20 @@ class JABS_AiManager
   static maxAiRange = J.ABS.Metadata.MaxAiUpdateRange;
 
   /**
+   * The spatial index mapping "x,y" keys to sets of battlers occupying that tile.
+   * Used for broad-phase collision queries to avoid scanning all battlers.
+   * @type {Map<string, Set<JABS_Battler>>}
+   */
+  static spatialIndex = new Map();
+
+  /**
+   * The size of each spatial cell in tiles for the broad-phase grid.
+   * Currently fixed to 1 tile per cell to align with tile-based JABS.
+   * @type {number}
+   */
+  static spatialCellSize = 1;
+
+  /**
    * The constructor is not designed to be called.
    * This is a static class.
    */
@@ -473,6 +487,7 @@ class JABS_AiManager
    * @param {Game_Enemy} battler The enemy battler that was converted from the event.
    * @param {JABS_Battler} jabsBattler The created JABS battler from the event.
    */
+  // eslint-disable-next-line no-unused-vars
   static postConvertMutate(battler, jabsBattler)
   {
     // hook for mutation.
@@ -576,6 +591,99 @@ class JABS_AiManager
   }
 
   //endregion manage battlers
+
+  //region spatial indexing
+  /**
+   * Rebuilds the tile-based spatial index for all tracked battlers.
+   * Should be called once per frame after battlers move and before action collisions.
+   */
+  static rebuildSpatialIndex()
+  {
+    // reset the spatial index for this frame.
+    this.spatialIndex.clear();
+
+    // grab all battlers currently tracked.
+    const allBattlers = this.getAllBattlers();
+
+    // index each battler by the tile they occupy.
+    allBattlers.forEach(battler =>
+    {
+      // get the tile coordinates for this battler.
+      const x = Math.floor(battler.getX());
+      const y = Math.floor(battler.getY());
+
+      // build the spatial key for this tile.
+      const key = this._spatialKey(x, y);
+
+      // get the existing bucket for this cell.
+      let bucket = this.spatialIndex.get(key);
+
+      // if there is no bucket yet, create one.
+      if (!bucket)
+      {
+        bucket = new Set();
+        this.spatialIndex.set(key, bucket);
+      }
+
+      // add the battler to this cell's bucket.
+      bucket.add(battler);
+    });
+  }
+
+  /**
+   * Queries the spatial grid for battlers overlapping the inclusive AABB in tile-space.
+   * Returns candidates de-duplicated across all covered cells.
+   * @param {number} minX The minimum tile x.
+   * @param {number} minY The minimum tile y.
+   * @param {number} maxX The maximum tile x.
+   * @param {number} maxY The maximum tile y.
+   * @returns {JABS_Battler[]} The candidate battlers.
+   */
+  static queryBattlersInAabb(minX, minY, maxX, maxY)
+  {
+    // normalize the bounds to integers and proper ordering.
+    const x0 = Math.floor(Math.min(minX, maxX));
+    const y0 = Math.floor(Math.min(minY, maxY));
+    const x1 = Math.floor(Math.max(minX, maxX));
+    const y1 = Math.floor(Math.max(minY, maxY));
+
+    // collect candidates from each cell within the bounds.
+    const result = new Set();
+
+    // iterate the grid rows.
+    for (let y = y0; y <= y1; y++)
+    {
+      // iterate the grid columns.
+      for (let x = x0; x <= x1; x++)
+      {
+        // get the bucket for this cell.
+        const bucket = this.spatialIndex.get(this._spatialKey(x, y));
+
+        // add all battlers in the bucket if present.
+        if (bucket)
+        {
+          bucket.forEach(b => result.add(b));
+        }
+      }
+    }
+
+    // return the result as a proper array.
+    return Array.from(result);
+  }
+
+  /**
+   * Builds a stable key for a tile cell based on x,y.
+   * @param {number} x The tile x.
+   * @param {number} y The tile y.
+   * @returns {string} The key in the form "x,y".
+   */
+  static _spatialKey(x, y)
+  {
+    // build the key using the coordinates.
+    return `${x},${y}`;
+  }
+
+  //endregion spatial indexing
 
   //region update loop
   /**

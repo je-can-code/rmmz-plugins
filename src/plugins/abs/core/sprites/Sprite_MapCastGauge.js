@@ -33,6 +33,9 @@ Sprite_MapCastGauge.prototype.initialize = function(
 
   // indicate this is not one of the base types.
   this._statusType = "cast";
+
+  // default hidden to prevent any invalid-frame flashes.
+  this.visible = false;
 };
 
 /**
@@ -169,37 +172,48 @@ Sprite_MapCastGauge.prototype.update = function()
       .getBattler();
   }
 
-  // If casting-valid this frame, assign label+icon BEFORE the base update/redraw so they render now.
-  if (this.isValid())
-  {
-    const decided = this.getJabsBattler()
-      .getDecidedAction();
+  // determine validity for this frame.
+  const valid = this.isValid();
 
-    if (decided && decided.length > 0)
-    {
-      const [ action ] = decided;
-      const skill = action.getBaseSkill();
-
-      // set the label and icon (iconIndex >= 0 is valid in MZ; -1 clears).
-      this.setLabel(skill.name);
-      this.setIcon(skill.iconIndex >= 0
-        ? skill.iconIndex
-        : -1);
-    }
-  }
-  // If not valid, clear adornments right away so the base redraw reflects that state.
-  else
+  // if not valid, hard-exit: hide, clear adornments, and skip base update to prevent redraws.
+  if (valid === false)
   {
+    // hide the gauge entirely.
+    this.visible = false;
+
+    // clear label if present.
     if (this._gauge._label)
     {
       this.setLabel(String.empty);
     }
 
-    // clear any existing icon if present (iconIndex != -1 means "has icon").
+    // clear icon if present.
     if (this._gauge._iconIndex !== -1)
     {
       this.setIcon(-1);
     }
+
+    // do not call the base update; avoids it re-enabling visibility or repainting.
+    return;
+  }
+
+  // from here on, we are valid and should be visible.
+  this.visible = true;
+
+  // assign label+icon BEFORE base update so they render correctly this frame.
+  const decided = this.getJabsBattler()
+    .getDecidedAction();
+
+  if (decided && decided.length > 0)
+  {
+    const [ action ] = decided;
+    const skill = action.getBaseSkill();
+
+    // update the label and icon (iconIndex >= 0 is valid in MZ; -1 clears).
+    this.setLabel(skill.name);
+    this.setIcon(skill.iconIndex >= 0
+      ? skill.iconIndex
+      : -1);
   }
 
   // perform base updating/redraw lifecycle (will call redraw() internally).
