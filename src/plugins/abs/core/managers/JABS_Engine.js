@@ -459,6 +459,9 @@ class JABS_Engine
     // update the AI of non-player battlers.
     this.updateAiBattlers();
 
+    // rebuild the spatial index once per frame before action processing.
+    JABS_AiManager.rebuildSpatialIndex();
+
     // update all active actions on the map.
     this.updateActions();
 
@@ -1123,6 +1126,27 @@ class JABS_Engine
 
     // request a map-wide sprite refresh on cycling.
     this.requestSpriteRefresh = true;
+
+    // rebuild all actor allies (followers) so they have proper ally core and character binding.
+    this.rebuildActorAllies();
+  }
+
+  /**
+   * Rebuilds all actor allies bound to followers after party cycling.
+   * Ensures ex-leaders (now followers) regain proper ally core (sight/pursuit) and
+   * are bound to their follower characters for correct isPlayer/isFollower state.
+   */
+  rebuildActorAllies()
+  {
+    // grab all followers in order; follower index aligns to party members beyond leader.
+    const followers = $gamePlayer.followers()
+      .data();
+
+    // convert the followers into JABS battlers using the canonical helper.
+    const allyBattlers = JABS_AiManager.convertFollowersToBattlers(followers);
+
+    // register or update all ally battlers in the AI manager.
+    JABS_AiManager.addOrUpdateBattlers(allyBattlers);
   }
 
   /**
@@ -1170,7 +1194,6 @@ class JABS_Engine
   //endregion update actions
   //endregion update
 
-  //region functional
   //region action execution
   /**
    * Generates a new JABS action based on a skillId, and executes the skill.
@@ -1236,7 +1259,9 @@ class JABS_Engine
       const options = primary.getActionOptions();
 
       // attempt to read a frozen location from the options.
-      const loc = options ? options.getTargetLocation() : null;
+      const loc = options
+        ? options.getTargetLocation()
+        : null;
 
       // if available, extract coordinates and override null inputs.
       if (loc)
@@ -3132,6 +3157,7 @@ class JABS_Engine
     // self-targeting takes FIRST PRIORITY.
     if (gameAction.isForUser())
     {
+      // return only the caster as the target.
       return [ casterJabsBattler ];
     }
 
@@ -3173,7 +3199,71 @@ class JABS_Engine
     const targetsHit = [];
     let hitOne = false;
 
-    // actually process the collision.
+    // define a helper to query spatial candidates by AABB in tile-space.
+    const queryCandidates = () =>
+    {
+      // direct actions that have an action sprite (spatialized) use sprite position.
+      if (jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the center tile from the action sprite.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the inclusive bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // direct actions without a sprite use caster proximity and/or target coordinates.
+      if (jabsAction.isDirectAction() && !actionSprite)
+      {
+        // grab the caster location in tiles.
+        const cx = Math.floor(casterJabsBattler.getX());
+        const cy = Math.floor(casterJabsBattler.getY());
+
+        // use proximity radius for the AABB.
+        const radius = jabsAction.getProximity();
+
+        // build the inclusive bounds using the proximity value.
+        const minX = cx - radius;
+        const minY = cy - radius;
+        const maxX = cx + radius;
+        const maxY = cy + radius;
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // non-direct actions will have an action sprite; anchor on sprite.
+      if (!jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the sprite center in tiles.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // fallback if no anchor is available; return all battlers.
+      return JABS_AiManager.getAllBattlers();
+    };
+
+    // grab the candidate battlers from the spatial index.
+    const candidates = queryCandidates();
+
+    // actually process the collision for each candidate.
     const battlerCollisionProccessor = battler =>
     {
       // this time, it is effectively checking for the single-scope.
@@ -3192,7 +3282,10 @@ class JABS_Engine
           const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
           if (result)
           {
+            // add this battler to the list of targets hit.
             targetsHit.push(battler);
+
+            // if we only hit one, ensure subsequent single-scope checks respect that.
             hitOne = true;
           }
 
@@ -3203,6 +3296,7 @@ class JABS_Engine
         // non-spatial direct actions use proximity between caster and target.
         if (gameAction.isForUser())
         {
+          // self-targeting direct actions always hit the target candidate.
           targetsHit.push(battler);
           hitOne = true;
           return;
@@ -3213,6 +3307,7 @@ class JABS_Engine
         const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
         if (distance <= maxDistance)
         {
+          // add this battler to the list of targets hit.
           targetsHit.push(battler);
           hitOne = true;
         }
@@ -3227,20 +3322,20 @@ class JABS_Engine
       const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
       if (result)
       {
+        // add this battler to the list of targets hit.
         targetsHit.push(battler);
+
+        // if we only hit one, ensure subsequent single-scope checks respect that.
         hitOne = true;
       }
     };
 
-    // grab all the battlers that could possibly be hit.
-    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
-
     // LAST PRIORITY is just regular "did I get hit" sort of stuff.
-    battlers
+    candidates
       .filter(canActionConnectWithBattler, this)
       .forEach(battlerCollisionProccessor, this);
 
-    // return what we found.
+    // return the list of targets hit.
     return targetsHit;
   }
 
@@ -3810,7 +3905,6 @@ class JABS_Engine
   }
 
   //endregion collision
-  //endregion functional
 
   //region defeated target aftermath
   /**
