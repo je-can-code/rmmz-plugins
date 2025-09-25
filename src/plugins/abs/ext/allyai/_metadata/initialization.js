@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /**
  * The core where all of my extensions live: in the `J` object.
  */
@@ -61,6 +62,39 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText = J.ABS.EXT.ALLYAI.PluginParamete
 J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeVariety'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
+
+J.ABS.EXT.ALLYAI.FormationType = "rear_wedge";
+J.ABS.EXT.ALLYAI.Formations = {
+  rear_wedge:
+    [
+      [ -1, -1 ], // back-left (behind is negative Y when facing DOWN)
+      [  1, -1 ], // back-right
+      [  0, -2 ], // two tiles behind
+      [ -2, -1 ], // farther back-left
+      [  2, -1 ], // farther back-right
+      [  0, -3 ], // three tiles behind
+    ],
+  flanks:
+    [
+      [ -1,  0 ], // left
+      [  1,  0 ], // right
+      [ -2,  0 ], // far-left
+      [  2,  0 ], // far-right
+      [ -1, -1 ], // back-left (behind = -Y)
+      [  1, -1 ], // back-right
+    ],
+  circle_small:
+    [
+      [  0,  1 ], // below (was above) — full inversion of directions
+      [  1,  0 ], // right
+      [  0, -1 ], // above (was below)
+      [ -1,  0 ], // left
+      [  1,  1 ], // lower-right (was upper-right)
+      [ -1,  1 ], // lower-left (was upper-left)
+      [  1, -1 ], // upper-right (was lower-right)
+      [ -1, -1 ], // upper-left (was lower-left)
+    ]
+};
 
 /**
  * A collection of all aliased methods for this plugin.
