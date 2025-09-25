@@ -240,6 +240,7 @@
  *
  */
 
+/* eslint-disable max-len */
 /**
  * The core where all of my extensions live: in the `J` object.
  */
@@ -303,6 +304,39 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText = J.ABS.EXT.ALLYAI.PluginParamete
 J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeVariety'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
+
+J.ABS.EXT.ALLYAI.FormationType = "rear_wedge";
+J.ABS.EXT.ALLYAI.Formations = {
+  rear_wedge:
+    [
+      [ -1, -1 ], // back-left (behind is negative Y when facing DOWN)
+      [  1, -1 ], // back-right
+      [  0, -2 ], // two tiles behind
+      [ -2, -1 ], // farther back-left
+      [  2, -1 ], // farther back-right
+      [  0, -3 ], // three tiles behind
+    ],
+  flanks:
+    [
+      [ -1,  0 ], // left
+      [  1,  0 ], // right
+      [ -2,  0 ], // far-left
+      [  2,  0 ], // far-right
+      [ -1, -1 ], // back-left (behind = -Y)
+      [  1, -1 ], // back-right
+    ],
+  circle_small:
+    [
+      [  0,  1 ], // below (was above) — full inversion of directions
+      [  1,  0 ], // right
+      [  0, -1 ], // above (was below)
+      [ -1,  0 ], // left
+      [  1,  1 ], // lower-right (was upper-right)
+      [ -1,  1 ], // lower-left (was upper-left)
+      [  1, -1 ], // upper-right (was lower-right)
+      [ -1, -1 ], // upper-left (was lower-left)
+    ]
+};
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -1396,36 +1430,297 @@ JABS_AiManager.aiPhase0 = function(battler)
 
 /**
  * Decides what to do for allies in their idle phase.
+ * When not alerted/engaged, allies follow the leader in a loose formation.
  * @param {JABS_Battler} allyBattler The ally battler.
  */
 JABS_AiManager.allyAiPhase0 = function(allyBattler)
 {
-  // check if we can perform phase 0 things.
+  // always enforce follower passability policy while Ally AI controls the follower.
+  this.enforceFollowerThroughPolicy(allyBattler);
+
+  // check if we can perform phase 0 logic for allies.
   if (!this.canPerformAllyPhase0(allyBattler)) return;
 
-  // phase 0 for allies is just seeking for alerters if necessary.
-  this.seekForAlerter(allyBattler);
+  // if alerted, seek toward the alerter location first.
+  if (allyBattler.isAlerted())
+  {
+    // move toward the alert coordinates.
+    this.seekForAlerter(allyBattler);
+
+    // stop processing.
+    return;
+  }
+
+  // otherwise, perform intelligent follow behavior when idle.
+  this.allyFollowLeader(allyBattler);
+};
+
+/**
+ * Enforces the passability policy for JABS-controlled followers.
+ * While gathering, allow through (vanilla regroup). Otherwise, disable through so
+ * AI-driven movement respects terrain.
+ * @param {JABS_Battler} allyBattler The follower battler.
+ */
+JABS_AiManager.enforceFollowerThroughPolicy = function(allyBattler)
+{
+  // acquire the character and sanity-check it is a follower.
+  const chr = allyBattler.getCharacter();
+  if (!chr || !chr.isFollower()) return;
+
+  // detect gather/regroup state from the followers wrapper.
+  const followers = $gamePlayer.followers();
+  const isGathering = followers && followers.areGathering();
+
+  // while gathering, allow through for quick regroup.
+  if (isGathering)
+  {
+    chr.setThrough(true);
+    return;
+  }
+
+  // not gathering: disable through so terrain passability is enforced.
+  chr.setThrough(false);
 };
 
 /**
  * Determines whether or not the ally can do phase 0 things.
  * @param {JABS_Battler} allyBattler The ally battler.
- * @returns {boolean} True if this ally can do phae 0 things, false otherwise.
+ * @returns {boolean} True if this ally can do phase 0 things, false otherwise.
  */
 JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 {
-  // if we are not alerted, do not idle.
-  if (!allyBattler.isAlerted()) return false;
+  // we do not idle while casting.
+  if (allyBattler.isCasting()) return false;
 
-  // if we are in active motion, do not idle.
-  if (!allyBattler.getCharacter()
-    .isStopping())
-  {
-    return false;
-  }
+  // we do not idle while engaged in combat.
+  if (allyBattler.isEngaged()) return false;
 
   // perform!
   return true;
+};
+
+/**
+ * Causes an ally to follow their leader (player1) intelligently while idle.
+ * Uses a small formation offset per follower index, a leash, and keeps spacing.
+ * @param {JABS_Battler} allyBattler The ally battler to reposition.
+ */
+JABS_AiManager.allyFollowLeader = function(allyBattler)
+{
+  // resolve the current leader battler; player1 is the leader in JABS.
+  const leader = $jabsEngine.getPlayer1();
+
+  // if we lack a leader or cannot move, do not attempt to follow.
+  if (!leader || !allyBattler.canBattlerMove()) return;
+
+  // apply leash/rubberband rules relative to the leader; exit on corrective action.
+  if (this.maintainLeashAndEngagement(allyBattler, leader)) return;
+
+  // determine follower index to choose a formation slot.
+  const followerIndex = this.getFollowerIndexFromBattler(allyBattler);
+
+  // resolve the current formation type.
+  // TODO: resolve this from persisted game_system or maybe game_party?
+  const formationType = J.ABS.EXT.ALLYAI.FormationType;
+
+  // compute the desired slot tile for this follower based on formation.
+  const coords = this.computeFormationTarget(leader, followerIndex, formationType);
+  const [ desiredX, desiredY ] = coords;
+
+  // attempt to move toward the desired formation slot if needed.
+  this.moveTowardSlotIfNeeded(allyBattler, desiredX, desiredY);
+};
+
+/**
+ * Applies leash rules to keep allies reasonably near the leader.
+ * Returns true if a corrective action (like jump) occurred this frame.
+ * @param {JABS_Battler} allyBattler The ally battler.
+ * @param {JABS_Battler} leaderBattler The leader battler.
+ * @returns {boolean} True if a corrective action occurred, false otherwise.
+ */
+JABS_AiManager.maintainLeashAndEngagement = function(allyBattler, leaderBattler)
+{
+  // compute distance from ally to leader using real coords.
+  const distanceToLeader = $gameMap.distance(
+    allyBattler.getCharacter()._realX,
+    allyBattler.getCharacter()._realY,
+    leaderBattler.getCharacter()._realX,
+    leaderBattler.getCharacter()._realY);
+
+  // determine leash threshold.
+  const leash = JABS_Battler.allyRubberbandRange();
+
+  // if the ally is too far, disengage and rubberband back to the leader.
+  if (distanceToLeader > leash)
+  {
+    // prevent accidental far-away engagements.
+    allyBattler.lockEngagement();
+    allyBattler.disengageTarget();
+    allyBattler.resetAllAggro(null, true);
+
+    // jump to the leader instantly.
+    allyBattler.getCharacter().jumpToPlayer();
+
+    // signal we executed a corrective action.
+    return true;
+  }
+
+  // if back within half the leash, allow normal engagement again.
+  if (distanceToLeader <= Math.round(leash / 2))
+  {
+    // re-enable engaging.
+    allyBattler.unlockEngagement();
+  }
+
+  // no corrective action occurred.
+  return false;
+};
+
+/**
+ * Resolves the follower index for a battler bound to a Game_Follower.
+ * @param {JABS_Battler} allyBattler The ally battler to resolve index for.
+ * @returns {number} The zero-based follower index; -1 if not found.
+ */
+JABS_AiManager.getFollowerIndexFromBattler = function(allyBattler)
+{
+  // grab the character for this battler.
+  const character = allyBattler.getCharacter();
+
+  // if this is not a follower, there is no index.
+  if (!character || !character.isFollower()) return -1;
+
+  // gather the current followers list.
+  const followers = $gamePlayer.followers().data();
+
+  // return the index (may be -1 if unexpected).
+  return followers.indexOf(character);
+};
+
+/**
+ * Gets the array of [x,y] tile offsets for the requested formation type.
+ * Offsets are relative to the leader's current tile.
+ * @param {string} formationType The formation type key.
+ * @returns {number[][]} The list of offsets.
+ */
+JABS_AiManager.getFormationOffsets = function(formationType)
+{
+  // resolve and return offsets.
+  const presets = J.ABS.EXT.ALLYAI.Formations;
+  return presets[formationType] || presets.rear_wedge;
+};
+
+/**
+ * Computes the absolute map tile for a follower’s formation slot.
+ * Offsets are defined assuming the leader faces DOWN (2); they will be rotated to match current facing.
+ * @param {JABS_Battler} leaderBattler The leader battler.
+ * @param {number} followerIndex The index of the follower (0-based).
+ * @param {string} formationType The formation type key.
+ * @returns {[number, number]} The [x, y] tile target for this follower.
+ */
+JABS_AiManager.computeFormationTarget = function(leaderBattler, followerIndex, formationType)
+{
+  // cycle index through available slots.
+  const idx = Math.max(0, followerIndex);
+
+  // get offsets for the selected formation type (baseline: leader facing DOWN).
+  const offsets = this.getFormationOffsets(formationType);
+
+  // choose offset for this follower.
+  const chosen = offsets[idx % offsets.length];
+  const [ ox, oy ] = chosen;
+
+  // derive the leader's current facing.
+  const dir = leaderBattler.getCharacter()
+    .direction();
+
+  // rotate the baseline offset to the leader's current facing.
+  const rotated = this.rotateOffsetForFacing(ox, oy, dir);
+  const [ rx, ry ] = rotated;
+
+  // leader tile coords.
+  const lx = Math.floor(leaderBattler.getX());
+  const ly = Math.floor(leaderBattler.getY());
+
+  // compute absolute slot tile by applying the rotated offset.
+  const sx = lx + rx;
+  const sy = ly + ry;
+
+  // return slot coords.
+  return [ sx, sy ];
+};
+
+/**
+ * Rotates a baseline offset [ox, oy] (assumed for leader facing DOWN) into the space of the given facing.
+ * Directions follow RMMZ standard: 2=down, 4=left, 6=right, 8=up.
+ * @param {number} ox The baseline x-offset (facing DOWN).
+ * @param {number} oy The baseline y-offset (facing DOWN).
+ * @param {2|4|6|8} dir The leader's current facing direction.
+ * @returns {[number, number]} The rotated offset [x, y].
+ */
+JABS_AiManager.rotateOffsetForFacing = function(ox, oy, dir)
+{
+  // switch on the current facing to rotate the baseline-down offset.
+  switch (dir)
+  {
+    // facing DOWN: identity transform.
+    case 2:
+      return [ ox, oy ];
+
+    // facing LEFT: rotate +90 degrees (CCW): (x, y) -> (-y, x).
+    case 4:
+      return [ -oy, ox ];
+
+    // facing RIGHT: rotate -90 degrees (CW): (x, y) -> (y, -x).
+    case 6:
+      return [ oy, -ox ];
+
+    // facing UP: rotate 180 degrees: (x, y) -> (-x, -y).
+    case 8:
+      return [ -ox, -oy ];
+
+    // unsupported/unknown direction: default to identity.
+    default:
+      return [ ox, oy ];
+  }
+};
+
+/**
+ * Issues a smart move toward the designated slot if outside tolerance and able to move.
+ * @param {JABS_Battler} allyBattler The ally battler.
+ * @param {number} desiredX The desired slot x.
+ * @param {number} desiredY The desired slot y.
+ */
+JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
+{
+  // define a small tolerance to avoid jitter.
+  const tolerance = 0.5;
+
+  // if within tolerance, do not micro-adjust.
+  if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance)) return;
+
+  // only issue a new move if this follower is stopped and able to move.
+  if (allyBattler.getCharacter().isStopping() && allyBattler.canBattlerMove())
+  {
+    // move intelligently toward the desired formation slot tile.
+    allyBattler.smartMoveTowardCoordinates(desiredX, desiredY);
+  }
+};
+
+/**
+ * Checks if a battler is within a Manhattan tolerance of the target tile.
+ * @param {JABS_Battler} allyBattler The ally battler.
+ * @param {number} targetX The target x tile.
+ * @param {number} targetY The target y tile.
+ * @param {number} tolerance The allowed range before moving.
+ * @returns {boolean} True if within tolerance, false otherwise.
+ */
+JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, tolerance)
+{
+  // compute the grid distance to the desired tile.
+  const chr = allyBattler.getCharacter();
+  const dist = $gameMap.distance(chr.x, chr.y, targetX, targetY);
+
+  // return whether or not we are close enough.
+  return dist <= tolerance;
 };
 
 /**
@@ -1784,13 +2079,7 @@ Game_Follower.prototype.chaseCharacter = function(character)
     // perform original logic.
     J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
       .call(this, character);
-
-    // stop processing.
-    return;
   }
-
-  // let the AI handle the chasing.
-  this.obeyJabsAi(character);
 };
 
 /**
@@ -1810,167 +2099,14 @@ Game_Follower.prototype.canObeyJabsAi = function()
 };
 
 /**
- * Determines how this character should move in consideration of JABS' own AI manager.
- * @param {Game_Character} character The character being chased.
+ * Extends {@link #setDirectionFix}.<br/>
+ * Allows JABS to prevent the direction fix from applying as-needed.
  */
-Game_Follower.prototype.obeyJabsAi = function(character)
-{
-  // check if we should be doing dead ai things.
-  if (this.shouldObeyJabsDeadAi())
-  {
-    // handle dead jabs ai logic.
-    this.handleJabsDeadAi(character);
-  }
-
-  // check if we should be doing combat ai things.
-  if (this.shouldObeyJabsCombatAi())
-  {
-    // handle combat jabs ai logic.
-    this.handleJabsCombatAi(character);
-  }
-};
-
-/**
- * Determines whether or not this follower should be obeying the JABS DEAD AI.
- * @returns {boolean}
- */
-Game_Follower.prototype.shouldObeyJabsDeadAi = function()
-{
-  // Are we dead?
-  const isDead = this.getJabsBattler()
-    .isDead();
-
-  // return the diagnostic.
-  return isDead;
-};
-
-/**
- * Handles the repeated actions for when a battler is dead.
- *
- * If this follower is dead, this will be the only JABS AI available to follow.
- *
- * Some ideas are in the TODOs below:
- * - TODO: Add option for character sprite change.
- * - TODO: Add option for follow (default) or stay.
- * - TODO: Add option for character motion effects, try integration with moghunters?
- * @param {Game_Character} character The character being "followed".
- */
-Game_Follower.prototype.handleJabsDeadAi = function(character)
-{
-  // TODO: handle logic for repeating whilst dead.
-  // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
-    .call(this, character);
-};
-
-/**
- * Determines whether or not this follower should be obeying the JABS COMBAT AI.
- * @returns {boolean}
- */
-Game_Follower.prototype.shouldObeyJabsCombatAi = function()
-{
-  // you cannot be dead and also in combat.
-  if (this.shouldObeyJabsDeadAi()) return false;
-
-  // lets get to fighting!
-  return true;
-};
-
-/**
- * Handles the flow of logic for the movement of this character while available
- * to do combat things according to the {@link JABS_AiManager}.
- * @param character
- */
-Game_Follower.prototype.handleJabsCombatAi = function(character)
-{
-  // determine if this follower is in combat somehow.
-  if (this.isInCombat())
-  {
-    // do active combat things!
-    this.handleJabsCombatActiveAi(character);
-  }
-  // we are not actively engaged in any form of combat.
-  else
-  {
-    // do non-combat things.
-    this.handleJabsCombatInactiveAi(character);
-  }
-};
-
-/**
- * Determines whether or not this battler is considered "in combat".
- * If a battler is "in combat", their movement is given to the JABS AI for combat purposes.
- * Default things that should allow movement include already being engaged in combat, or
- * having been alerted by a foe.
- * @returns {boolean}
- */
-Game_Follower.prototype.isInCombat = function()
-{
-  // grab the battler data.
-  const battler = this.getJabsBattler();
-
-  // check if we are "in combat" in some way.
-  const isInCombat = (battler.isEngaged() || battler.isAlerted());
-
-  // return the result.
-  return isInCombat;
-};
-
-/**
- * Handles the follower logic of things to do while this battler is in active combat.
- * @param {Game_Character} character The character being "followed".
- */
-Game_Follower.prototype.handleJabsCombatActiveAi = function(character)
-{
-  // the battler is engaged, the AI will handle the movement.
-  this.handleEngagementDistancing();
-
-  // movement is relinquished to the jabs-ai-manager-senpai!
-};
-
-/**
- * Handles the repeated actions for when a battler is dead.
- *
- * If this follower is combat-ready but not alerted or engaged, they will just follow defaults.
- *
- * TODO: consider rapidly looping this when the character is far away?
- * @param {Game_Character} character The character being "followed".
- */
-Game_Follower.prototype.handleJabsCombatInactiveAi = function(character)
-{
-  // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('chaseCharacter')
-    .call(this, character);
-};
-
-/**
- * Extends {@link Game_Follower.update}.<br>
- * If this follower should be controlled by JABS AI, then modify the way it updates.
- */
-J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('update', Game_Follower.prototype.update);
-Game_Follower.prototype.update = function()
-{
-  // check if this follower should be obeying jabs ai.
-  if (!this.canObeyJabsAi())
-  {
-    // perform original logic if we are not.
-    J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update')
-      .call(this);
-
-    // stop processing.
-    return;
-  }
-
-  // update for the ally ai instead.
-  this.updateAllyAi();
-};
-
 J.ABS.EXT.ALLYAI.Aliased.Game_Follower.set('setDirectionFix', Game_Follower.prototype.setDirectionFix);
 Game_Follower.prototype.setDirectionFix = function(isDirectionFixed)
 {
   // grab the follower's battler.
   const battler = this.getJabsBattler();
-
   if (!battler)
   {
     // perform original logic if we are not.
@@ -1990,30 +2126,6 @@ Game_Follower.prototype.setDirectionFix = function(isDirectionFixed)
 };
 
 /**
- * A slightly modified update for followers controlled by JABS AI.
- */
-Game_Follower.prototype.updateAllyAi = function()
-{
-  // TODO: rewrite this entirely.
-  // perform superclass logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Follower.get('update')
-    .call(this);
-  //Game_Character.prototype.update.call(this);
-
-  // update the various parameters accordingly for followers.
-  this.setMoveSpeed($gamePlayer.realMoveSpeed());
-  this.setOpacity($gamePlayer.opacity());
-  this.setBlendMode($gamePlayer.blendMode());
-  this.setWalkAnime($gamePlayer.hasWalkAnime());
-  this.setStepAnime($gamePlayer.hasStepAnime());
-  this.setTransparent($gamePlayer.isTransparent());
-  // skip direction fix lock.
-
-  // also handle engagement distancing.
-  this.handleEngagementDistancing();
-};
-
-/**
  * Jump to the player from wherever you are.
  */
 Game_Follower.prototype.jumpToPlayer = function()
@@ -2023,45 +2135,6 @@ Game_Follower.prototype.jumpToPlayer = function()
   this.jump(sx, sy);
 };
 
-/**
- * If the battler is too far from the player, jump to them.
- */
-Game_Follower.prototype.handleEngagementDistancing = function()
-{
-  // don't manage engagement distancing if they are not valid JABS battlers ready for combat.
-  if (!this.canObeyJabsAi()) return;
-
-  // grab the underlying jabs battler.
-  const battler = this.getJabsBattler();
-
-  // calculate the distance to the player.
-  const distanceToPlayer = $gameMap.distance(this._realX, this._realY, $gamePlayer._realX, $gamePlayer._realY);
-
-  // check if we are not engaged and not alerted.
-  if (!battler.isEngaged() && !battler.isAlerted())
-  {
-    // determine if we are close enough to the player to allow engagement.
-    if (distanceToPlayer <= Math.round(JABS_Battler.allyRubberbandRange() / 2))
-    {
-      // if the ally is within range of the player, then re-enable the ability to engage.
-      battler.unlockEngagement();
-    }
-
-    // if the battler is engaged, make sure they stay within range of the player.
-  }
-
-  // determine if we have exceeded the distance allowed to be apart from the player.
-  if (distanceToPlayer > JABS_Battler.allyRubberbandRange())
-  {
-    // when the ally is too far away from the player, disengage and prevent further engagement.
-    battler.lockEngagement();
-    battler.disengageTarget();
-    battler.resetAllAggro(null, true);
-    this.jumpToPlayer();
-  }
-};
-
-// TODO: refactor handleEngagementDistancing().
 //endregion Game_Follower
 
 //region Game_Followers
