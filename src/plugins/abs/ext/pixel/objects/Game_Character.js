@@ -21,3 +21,13 @@ Game_Character.prototype.processMoveCommand = function(command)
   J.ABS.EXT.PIXEL.Aliased.Game_Character.get('processMoveCommand')
     .call(this, command);
 };
+
+/**
+ * Overwrites {@link #searchLimit}.<br/>
+ * Uses a different value to have a broader search distance.
+ * @returns {number}
+ */
+Game_Character.prototype.searchLimit = function()
+{
+  return 40;
+};

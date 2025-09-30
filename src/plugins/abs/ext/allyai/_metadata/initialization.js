@@ -63,6 +63,10 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters[
 J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
 
+J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.4;
+J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis = 0.25;
+
+// TODO: lift this to store in persistent memory like game_system or game_party.
 J.ABS.EXT.ALLYAI.FormationType = "rear_wedge";
 J.ABS.EXT.ALLYAI.Formations = {
   rear_wedge:
