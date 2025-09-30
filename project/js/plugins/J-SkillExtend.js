@@ -900,6 +900,53 @@ class OverlayManager
     return baseSkill;
   }
 
+  static overwriteNote(note)
+  {
+    const lines = note.split(/[\r\n]+/);
+    const groupedLines = Object.groupBy(lines, this._classifyLine, this);
+    console.log(groupedLines);
+
+    const {
+      unsupported: unsupportedLines,
+      keyValue: keyValueLines,
+      boolean: booleanLines,
+    } = groupedLines;
+
+    // let note = String.empty;
+
+    keyValueLines.forEach(line =>
+    {
+
+    })
+  }
+
+  /**
+   * Determines if the note line is one of our standard key-value pairs separated by a colon.
+   * @param {string} line The note line as a string.
+   * @returns {boolean} True if it is a conventional <key:value> type of line.
+   */
+  static _classifyLine(line)
+  {
+    // must at least start and end with angle brackets.
+    if (line.startsWith('<') === false || line.endsWith('>') === false) return OverlayManager.LineType.unsupported;
+
+    // too many angle brackets.
+    if ((line.match(/</g) || []).length > 1) return OverlayManager.LineType.unsupported;
+    if ((line.match(/>/g) || []).length > 1) return OverlayManager.LineType.unsupported;
+
+    // if a colon exists, then it must be a key-value pair of some kind.
+    if (line.includes(':')) return OverlayManager.LineType.kvp;
+
+    // its just a pair of angle brackets, so its a boolean-type tag.
+    return OverlayManager.LineType.boolean;
+  }
+
+  static LineType = {
+    kvp: 'kvp',
+    boolean: 'boolean',
+    unsupported: 'unsupported',
+  }
+
 //endregion overwrites
 }
 

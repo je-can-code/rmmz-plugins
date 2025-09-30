@@ -305,6 +305,10 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters[
 J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
 
+J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.4;
+J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis = 0.25;
+
+// TODO: lift this to store in persistent memory like game_system or game_party.
 J.ABS.EXT.ALLYAI.FormationType = "rear_wedge";
 J.ABS.EXT.ALLYAI.Formations = {
   rear_wedge:
@@ -1552,13 +1556,8 @@ JABS_AiManager.maintainLeashAndEngagement = function(allyBattler, leaderBattler)
   // if the ally is too far, disengage and rubberband back to the leader.
   if (distanceToLeader > leash)
   {
-    // prevent accidental far-away engagements.
-    allyBattler.lockEngagement();
-    allyBattler.disengageTarget();
-    allyBattler.resetAllAggro(null, true);
-
-    // jump to the leader instantly.
-    allyBattler.getCharacter().jumpToPlayer();
+    // Jump to the leader instantly and disengage
+    this.rubberbandAlly(allyBattler);
 
     // signal we executed a corrective action.
     return true;
@@ -1573,6 +1572,22 @@ JABS_AiManager.maintainLeashAndEngagement = function(allyBattler, leaderBattler)
 
   // no corrective action occurred.
   return false;
+};
+
+/**
+ * Rubber bands the ally back to the leader/player.
+ * @param {JABS_Battler} allyBattler The ally battler to rubber band.
+ */
+JABS_AiManager.rubberbandAlly = function(allyBattler)
+{
+  // prevent accidental far-away engagements.
+  allyBattler.lockEngagement();
+  allyBattler.disengageTarget();
+  allyBattler.resetAllAggro(null, true);
+
+  // Jump to the leader instantly.
+  const allyCharacter = allyBattler.getCharacter();
+  allyCharacter.jumpToPlayer();
 };
 
 /**
@@ -1640,6 +1655,20 @@ JABS_AiManager.computeFormationTarget = function(leaderBattler, followerIndex, f
   const lx = Math.floor(leaderBattler.getX());
   const ly = Math.floor(leaderBattler.getY());
 
+  // return slot coords.
+  return this.calculateFormationSlotCoordinates(lx, rx, ly, ry);
+};
+
+/**
+ * Calculates the formation slot's coordinates based on the given parameters.
+ * @param {number} lx The leader's x coordinate.
+ * @param {number} rx The rotated x.
+ * @param {number} ly The leader's y coordinate.
+ * @param {number} ry The rotated y.
+ * @returns {[number, number]}
+ */
+JABS_AiManager.calculateFormationSlotCoordinates = function(lx, rx, ly, ry)
+{
   // compute absolute slot tile by applying the rotated offset.
   const sx = lx + rx;
   const sy = ly + ry;
@@ -1692,15 +1721,19 @@ JABS_AiManager.rotateOffsetForFacing = function(ox, oy, dir)
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
   // define a small tolerance to avoid jitter.
-  const tolerance = 0.5;
+  const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
 
   // if within tolerance, do not micro-adjust.
   if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance)) return;
 
-  // only issue a new move if this follower is stopped and able to move.
-  if (allyBattler.getCharacter().isStopping() && allyBattler.canBattlerMove())
+  // acquire the character once.
+  const chr = allyBattler.getCharacter();
+
+  // only issue a new move if not on pixel-move cooldown and able to move.
+  const onCooldown = chr._j && chr._j._pixelMoveCooldown > 0;
+  if (!onCooldown && allyBattler.canBattlerMove())
   {
-    // move intelligently toward the desired formation slot tile.
+    // move intelligently toward the desired formation slot point (centered).
     allyBattler.smartMoveTowardCoordinates(desiredX, desiredY);
   }
 };
@@ -1715,9 +1748,11 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
  */
 JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, tolerance)
 {
-  // compute the grid distance to the desired tile.
+  // compute Euclidean distance to the target point using fractional coords.
   const chr = allyBattler.getCharacter();
-  const dist = $gameMap.distance(chr.x, chr.y, targetX, targetY);
+  const dx = chr.x - targetX;
+  const dy = chr.y - targetY;
+  const dist = Math.sqrt(dx * dx + dy * dy);
 
   // return whether or not we are close enough.
   return dist <= tolerance;

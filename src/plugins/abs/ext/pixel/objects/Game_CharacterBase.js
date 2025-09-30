@@ -1,3 +1,5 @@
+//region Game_CharacterBase
+//region init
 /**
  * Extends {@link Game_CharacterBase.initMembers}.<br>
  * Includes this plugin's extra properties as well.
@@ -48,11 +50,198 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
    */
   this._j._pixelSteps = 0;
 
+  /**
+   * Whether or not we are currently counting pixel steps.
+   * @type {boolean}
+   */
   this._j._isPixelStepping = false;
 
+  /**
+   * The last straight direction we moved while stepping.
+   * @type {number}
+   */
   this._j._pixelDirection = 0;
 
+  /**
+   * The pixel step count at which we stop stepping.
+   * @type {number}
+   */
   this._j._pixelStepsEnd = 0;
+
+  /**
+   * Cooldown frames after a pixel move before another can be issued.
+   * Prevents AllyAI from pushing every single frame.
+   * @type {number}
+   */
+  this._j._pixelMoveCooldown = 0;
+
+  /**
+   * Flag indicating whether a pixel step occurred this frame.
+   * Used to preserve walk animation even when render coords snap each update.
+   * @type {boolean}
+   */
+  this._j._movedThisFrame = false;
+
+  /**
+   * The cached direction for the micro-route (if any).
+   * @type {number}
+   */
+  this._j._mrDir = 0;
+
+  /**
+   * The remaining frames to apply the cached micro-route direction.
+   * @type {number}
+   */
+  this._j._mrFrames = 0;
+};
+//endregion init
+
+//region properties
+/**
+ * Gets the remaining cooldown frames before another pixel move can be issued.
+ * @returns {number} The remaining cooldown frames.
+ */
+Game_CharacterBase.prototype.getPixelMoveCooldown = function()
+{
+  // Return the remaining cooldown frames for pixel movement.
+  return this._j._pixelMoveCooldown;
+};
+
+/**
+ * Sets the remaining cooldown frames for pixel movement.
+ * @param {number} frames The number of frames to set for cooldown.
+ */
+Game_CharacterBase.prototype.setPixelMoveCooldown = function(frames)
+{
+  // Assign the new cooldown frame count for pixel movement.
+  this._j._pixelMoveCooldown = frames;
+};
+
+/**
+ * Decrements the pixel-move cooldown by one frame if applicable.
+ */
+Game_CharacterBase.prototype.decrementPixelMoveCooldown = function()
+{
+  // Only decrement if we actually have a cooldown remaining.
+  if (this.getPixelMoveCooldown() > 0)
+  {
+    // Reduce the cooldown by a single frame.
+    this.setPixelMoveCooldown(this.getPixelMoveCooldown() - 1);
+  }
+};
+
+/**
+ * Determines whether or not we are currently on a cooldown for pixel movement.
+ * @returns {boolean}
+ */
+Game_CharacterBase.prototype.isPixelOnCooldown = function()
+{
+  // if we have any current cooldown value, we are on cooldown.
+  return this.getPixelMoveCooldown() > 0;
+};
+
+/**
+ * Flags whether or not this character performed a pixel step this frame.
+ * @param {boolean=} moved Whether or not we moved this frame; defaults to true.
+ */
+Game_CharacterBase.prototype.setMovedThisFrame = function(moved = true)
+{
+  // Flag whether or not we moved this frame.
+  this._j._movedThisFrame = moved;
+};
+
+/**
+ * Gets whether or not this character performed a pixel step this frame.
+ * @returns {boolean} True if we moved this frame, false otherwise.
+ */
+Game_CharacterBase.prototype.didMoveThisFrame = function()
+{
+  // Return whether or not we moved this frame.
+  return this._j._movedThisFrame === true;
+};
+
+/**
+ * Clears the per-frame pixel movement flag.
+ */
+Game_CharacterBase.prototype.clearMovedThisFrame = function()
+{
+  // Reset the frame-based movement flag.
+  this._j._movedThisFrame = false;
+};
+
+/**
+ * Gets the cached micro-route direction.
+ * @returns {number} The cached 8-dir code, or 0 if unset.
+ */
+Game_CharacterBase.prototype.getMicroRouteDirection = function()
+{
+  // Return the cached micro-route direction.
+  return this._j._mrDir;
+};
+
+/**
+ * Sets the cached micro-route direction.
+ * @param {number} newDirection The 8-dir code to cache.
+ */
+Game_CharacterBase.prototype.setMicroRouteDirection = function(newDirection)
+{
+  // Assign the new cached micro-route direction.
+  this._j._mrDir = newDirection;
+};
+
+/**
+ * Gets the remaining micro-route frames.
+ * @returns {number} The remaining frames for the cached direction.
+ */
+Game_CharacterBase.prototype.getMicroRouteFrames = function()
+{
+  // Return how many frames remain for the cached micro-route.
+  return this._j._mrFrames;
+};
+
+/**
+ * Sets the remaining micro-route frames to apply the cached direction.
+ * @param {number} frames The number of frames to hold the cached direction.
+ */
+Game_CharacterBase.prototype.setMicroRouteFrames = function(frames)
+{
+  // Assign the remaining frames to apply the cached micro-route.
+  this._j._mrFrames = frames;
+};
+
+/**
+ * Decrements the remaining micro-route frames by one if applicable.
+ */
+Game_CharacterBase.prototype.decrementMicroRouteFrames = function()
+{
+  // Only decrement if there are frames remaining.
+  if (this.getMicroRouteFrames() > 0)
+  {
+    // Reduce the frames by one.
+    this.setMicroRouteFrames(this.getMicroRouteFrames() - 1);
+  }
+};
+
+/**
+ * Clears the cached micro-route direction and remaining frames.
+ */
+Game_CharacterBase.prototype.clearMicroRoute = function()
+{
+  // Reset the cached direction to none.
+  this.setMicroRouteDirection(0);
+
+  // Reset the remaining frames to zero.
+  this.setMicroRouteFrames(0);
+};
+
+/**
+ * Gets whether or not this character is currently following a cached micro-route.
+ * @returns {boolean} True if there are frames remaining, false otherwise.
+ */
+Game_CharacterBase.prototype.isMicroRouting = function()
+{
+  // Determine if we are still following a micro-route.
+  return this.getMicroRouteFrames() > 0;
 };
 
 /**
@@ -130,6 +319,41 @@ Game_CharacterBase.prototype.mostRecentPositionalRecord = function()
   // there are no records to retrieve.
   return null;
 };
+//endregion properties
+
+/**
+ * Extends {@link Game_CharacterBase.update}.<br>
+ * Ensures render coordinates match logical coordinates and clears per-frame flags.
+ */
+J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set("update", Game_CharacterBase.prototype.update);
+Game_CharacterBase.prototype.update = function()
+{
+  // Perform original logic.
+  J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get("update")
+    .call(this);
+
+  // Always synchronize render/smoothing coordinates to the logical coordinates.
+  if (this._realX !== this._x || this._realY !== this._y)
+  {
+    // Snap the render coordinates to the logical coordinates.
+    this._realX = this._x;
+    this._realY = this._y;
+  }
+
+  // Tick down the pixel-move cooldown, if any.
+  if (this.isPixelOnCooldown())
+  {
+    // Reduce the cooldown by one frame.
+    this.decrementPixelMoveCooldown();
+  }
+
+  // Clear the "moved this frame" flag after all engine logic has run.
+  if (this.didMoveThisFrame())
+  {
+    // Reset the frame-based movement flag.
+    this.clearMovedThisFrame();
+  }
+};
 
 /**
  * Gets the move distance this character has moved.
@@ -204,6 +428,25 @@ Game_CharacterBase.prototype.clearMoveDistance = function()
 };
 
 /**
+ * Extends {@link Game_CharacterBase.isMoving}.<br/>
+ * Includes whether or not a pixel movement occurred this frame.
+ * @returns {boolean}
+ */
+J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set("isMoving", Game_CharacterBase.prototype.isMoving);
+Game_CharacterBase.prototype.isMoving = function()
+{
+  // Determine movement per the original engine behavior.
+  const original = J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get("isMoving")
+    .call(this);
+
+  // Include pixel-step movement that occurred this frame.
+  const movedThisFrame = !!this._j._movedThisFrame;
+
+  // Return whether we are moving per engine or because of a pixel step.
+  return original || movedThisFrame;
+};
+
+/**
  * Gets whether or not the move input is being pressed.
  * @returns {boolean}
  */
@@ -235,22 +478,8 @@ Game_CharacterBase.prototype.onStep = function()
  */
 Game_CharacterBase.prototype.stepDistance = function()
 {
-  return 0.3;//Math.SQRT1_2;
-};
-
-/**
- * Gets whether or not this character has the move input being held down.
- * @returns {boolean} True if it is, false otherwise.
- */
-J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('isMoving', Game_CharacterBase.prototype.isMoving);
-Game_CharacterBase.prototype.isMoving = function()
-{
-  // if our special tracker is pressed, then return true.
-  if (this.isMovePressed()) return true;
-
-  // otherwise, return the original logic's result.
-  return J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.get('isMoving')
-    .call(this);
+  // Consider one full tile of travel as a single step for step-based effects.
+  return 1.0;
 };
 
 /**
@@ -299,9 +528,16 @@ Game_CharacterBase.prototype.recordPixelPosition = function()
  */
 Game_CharacterBase.prototype.relocate = function(x, y)
 {
-  // update the coordinates of this character.
+  // Update the logical coordinates of this character.
   this._x = x;
   this._y = y;
+
+  // Synchronize the render/smoothing coordinates to prevent post-teleport sliding.
+  this._realX = x;
+  this._realY = y;
+
+  // Reset the stop counter so the engine considers us stationary immediately.
+  this._stopCount = 0;
 };
 
 /**
@@ -323,6 +559,11 @@ Game_CharacterBase.prototype.stopPixelMoving = function()
 {
   // this character isn't moving.
   this.setMovePressed(false);
+
+  // Synchronize the render/smoothing coordinates to the logical position.
+  // This prevents any residual tween drift once we intentionally stop.
+  this._realX = this._x;
+  this._realY = this._y;
 
   // update the position for this character.
   this.recordPixelPosition();
@@ -347,32 +588,59 @@ Game_CharacterBase.prototype.diagonalDistancePerFrame = function()
  */
 Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
 {
-  // define the direction types.
-  const straightDirections = [ 2, 4, 6, 8 ];
-  const diagonalDirections = [ 1, 3, 7, 9 ];
+  // Cache previous logical coordinates before applying movement.
+  const prevX = this._x;
+  const prevY = this._y;
 
-  // check what kind of direction it was.
-  const isStraight = straightDirections.includes(direction);
-  const isDiagonal = diagonalDirections.includes(direction);
+  // Determine whether the direction is straight or diagonal.
+  const isStraight = this.isStraightDirection(direction);
+  const isDiagonal = this.isDiagonalDirection(direction);
 
-  // let us check if the direction was straight.
+  // If straight, then move straight.
   if (isStraight)
   {
-    // move straight.
+    // Move straight by the given distance.
     this.moveStraightDistance(direction, distance);
   }
-
-  // if not straight, then let us check if the direction was diagonal.
+  // If diagonal, then move diagonally.
   else if (isDiagonal)
   {
-    // move diagonally.
+    // Move diagonally by the given distance.
     this.moveDiagonalDistance(direction, distance);
   }
 
-  // also modify the move distance by how far we've moved.
+  // Acquire the collision radius in tile units for AABB evaluation.
+  const radius = this.getCollisionRadius();
+
+  // If we ended up overlapping solid tiles after this step, revert the move.
+  if (this.isOverlappingSolidTiles(this._x, this._y, radius))
+  {
+    // Restore the previous logical position.
+    this._x = prevX;
+    this._y = prevY;
+
+    // Synchronize the display coordinates with the restored logical position.
+    this._realX = this._x;
+    this._realY = this._y;
+
+    // Mark this movement as unsuccessful so upstream callers don’t keep pushing.
+    this.setMovementSuccess(false);
+
+    // Do not proceed with step bookkeeping after a failed move.
+    return;
+  }
+
+  // Indicate we moved this frame to preserve walk animation.
+  this.setMovedThisFrame(true);
+
+  // Synchronize the display coordinates with the logical position to avoid engine tween drift.
+  this._realX = this._x;
+  this._realY = this._y;
+
+  // Also modify the move distance by how far we've moved.
   this.modMoveDistance(distance);
 
-  // updates the pixel step counter if applicable.
+  // Updates the pixel step counter if applicable.
   this.updatePixelStepping();
 };
 
@@ -385,20 +653,20 @@ Game_CharacterBase.prototype.moveStraightDistance = function(direction, pixelDis
 {
   switch (direction)
   {
-    case 2:
+    case J.ABS.Directions.DOWN:
       this.moveStraight2Down(pixelDistance);
       break;
-    case 4:
+    case J.ABS.Directions.LEFT:
       this.moveStraight4Left(pixelDistance);
       break;
-    case 6:
+    case J.ABS.Directions.RIGHT:
       this.moveStraight6Right(pixelDistance);
       break;
-    case 8:
+    case J.ABS.Directions.UP:
       this.moveStraight8Up(pixelDistance);
       break;
     default:
-      console.warn('attempted to move an invalid straight direction: ', direction);
+      console.warn("attempted to move an invalid straight direction: ", direction);
       break;
   }
 };
@@ -412,20 +680,20 @@ Game_CharacterBase.prototype.moveDiagonalDistance = function(direction, pixelDis
 {
   switch (direction)
   {
-    case 1:
+    case J.ABS.Directions.LOWERLEFT:
       this.moveDiagonal1DownLeft(pixelDistance);
       break;
-    case 3:
+    case J.ABS.Directions.LOWERRIGHT:
       this.moveDiagonal3DownRight(pixelDistance);
       break;
-    case 7:
+    case J.ABS.Directions.UPPERLEFT:
       this.moveDiagonal7UpLeft(pixelDistance);
       break;
-    case 9:
+    case J.ABS.Directions.UPPERRIGHT:
       this.moveDiagonal9UpRight(pixelDistance);
       break;
     default:
-      console.warn('attempted to move an invalid diagonal direction: ', direction);
+      console.warn("attempted to move an invalid diagonal direction: ", direction);
       break;
   }
 };
@@ -508,31 +776,211 @@ Game_CharacterBase.prototype.moveDiagonal9UpRight = function(pixelDistance)
 
 /**
  * Determines whether or not this character can pass in the given straight direction.
+ * Substeps the probe at collision subgrid resolution to avoid skipping edges, then
+ * uses your edge-subgrid checks per substep. Character AABB collisions are checked
+ * only at the final landing point.
+ *
  * @param {2|4|6|8} direction The cardinal direction being moved.
- * @param {number} distance The distance to move in pixels, usually fractional.
- * @param {number} offset The tile offset for looking ahead.
- * @returns {boolean} True if we can move, false otherwise.
+ * @param {number} distance The distance to move (in tiles, fractional).
+ * @returns {boolean} True if movement is permitted this frame, false otherwise.
  */
-Game_CharacterBase.prototype.canPassStraight = function(direction, distance = this.distancePerFrame(), offset = 0)
+Game_CharacterBase.prototype.canPassStraight = function(direction, distance = this.distancePerFrame())
 {
-  // round the x,y coordinates.
-  const roundX = Math.round(this._x);
-  const roundY = Math.round(this._y);
+  // Acquire the current fractional center.
+  const x0 = this._x;
 
-  // switch on direction.
-  switch (direction)
+  // Acquire the current fractional center.
+  const y0 = this._y;
+
+  // Approve immediately if we are pass-through (debug or through).
+  if (this.isThrough() || this.isDebugThrough())
   {
-    case 2: // down.
-      return this.canPass(roundX + offset, Math.floor(this._y + distance), 2);
-    case 4: // left.
-      return this.canPass(Math.ceil(this._x - distance), roundY + offset, 4);
-    case 6: // right.
-      return this.canPass(Math.floor(this._x + distance), roundY + offset, 6);
-    case 8: // up.
-      return this.canPass(roundX + offset, Math.ceil(this._y - distance), 8);
-    default:
-      return false;
+    // Always allow movement when through.
+    return true;
   }
+
+  // Determine the collision subgrid resolution; avoid skipping edges at high speeds.
+  const subCount = this._pixelCollisionSubCount(distance);
+
+  // Update cached radius-based hitbox.
+  const radius = this.getCollisionRadius();
+
+  // Compute hitbox metrics relative to center.
+  const hitbox = this._pixelHitbox(radius);
+
+  // Compute the subcell size for substepping.
+  const subStepSize = 1 / subCount;
+
+  // Determine the signed unit direction components.
+  let dx = 0;
+  let dy = 0;
+  if (direction === J.ABS.Directions.RIGHT)
+  {
+    // Moving to the right.
+    dx = 1;
+  }
+  else if (direction === J.ABS.Directions.LEFT)
+  {
+    // Moving to the left.
+    dx = -1;
+  }
+  else if (direction === J.ABS.Directions.DOWN)
+  {
+    // Moving downward.
+    dy = 1;
+  }
+  else if (direction === J.ABS.Directions.UP)
+  {
+    // Moving upward.
+    dy = -1;
+  }
+  else
+  {
+    // Unsupported direction; reject.
+    return false;
+  }
+
+  // Compute the maximum substep size that won’t skip a subcell edge.
+  const maxStep = subStepSize;
+
+  // Compute how many substeps are required for this distance (at least one).
+  const steps = Math.max(1, Math.ceil(distance / maxStep));
+
+  // Compute the per-substep distance.
+  const stepSize = distance / steps;
+
+  // Initialize the rolling probe position.
+  let probeX = x0;
+  let probeY = y0;
+
+  // Process each substep sequentially.
+  for (let i = 0; i < steps; i++)
+  {
+    // Compute the proposed landing center for this substep.
+    const x1 = probeX + dx * stepSize;
+
+    // Compute the proposed landing center for this substep.
+    const y1 = probeY + dy * stepSize;
+
+    // Horizontal movement edge checks.
+    if (dx !== 0)
+    {
+      // If moving left, validate left edge; if moving right, validate right edge.
+      if (dx < 0)
+      {
+        // Validate origin out-direction on the current left edge columns.
+        if (this._pixelCheckLeftPassage(probeX, probeY, x1, hitbox, subCount) === false) return false;
+
+        // Validate destination in-direction on the new left edge columns.
+        if (this._pixelCheckRightPassage(x1, probeY, probeX, hitbox, subCount) === false) return false;
+
+        // Validate vertical lanes at the new entered LEFT column.
+        if (this._pixelCheckVerticalAtNewXColumn(probeX, x1, probeY, hitbox, subCount) === false) return false;
+      }
+      else
+      {
+        // Validate origin out-direction on the current right edge columns.
+        if (this._pixelCheckRightPassage(probeX, probeY, x1, hitbox, subCount) === false) return false;
+
+        // Validate destination in-direction on the new right edge columns.
+        if (this._pixelCheckLeftPassage(x1, probeY, probeX, hitbox, subCount) === false) return false;
+
+        // Validate vertical lanes at the new entered RIGHT column.
+        if (this._pixelCheckVerticalAtNewXColumn(probeX, x1, probeY, hitbox, subCount) === false) return false;
+      }
+    }
+
+    // Vertical movement edge checks.
+    if (dy !== 0)
+    {
+      // If moving up, validate top edge; if moving down, validate bottom edge.
+      if (dy < 0)
+      {
+        // Validate origin out-direction on the current top edge rows.
+        if (this._pixelCheckUpPassage(probeX, probeY, y1, hitbox, subCount) === false) return false;
+
+        // Validate destination in-direction on the new top edge rows.
+        if (this._pixelCheckDownPassage(probeX, y1, probeY, hitbox, subCount) === false) return false;
+
+        // Validate horizontal lanes at the new entered TOP row.
+        if (this._pixelCheckHorizontalAtNewYRow(probeY, y1, probeX, hitbox, subCount) === false) return false;
+      }
+      else
+      {
+        // Validate origin out-direction on the current bottom edge rows.
+        if (this._pixelCheckDownPassage(probeX, probeY, y1, hitbox, subCount) === false) return false;
+
+        // Validate destination in-direction on the new bottom edge rows.
+        if (this._pixelCheckUpPassage(probeX, y1, probeY, hitbox, subCount) === false) return false;
+
+        // Validate horizontal lanes at the new entered BOTTOM row.
+        if (this._pixelCheckHorizontalAtNewYRow(probeY, y1, probeX, hitbox, subCount) === false) return false;
+      }
+    }
+
+    // Advance the probe to the approved substep landing.
+    probeX = x1;
+    probeY = y1;
+  }
+
+  // Finally, apply character-vs-character collision at the final landing point.
+  const characterBlocked = this.isCharacterCollisionAt(probeX, probeY, radius);
+
+  // Approve only if no character collision would occur.
+  return characterBlocked === false;
+};
+
+/**
+ * Checks if the character's AABB at the given position would overlap any "solid wall" tiles.
+ * A "solid wall" tile is defined here as out-of-bounds or a tile that is not passable in
+ * any cardinal direction (2/4/6/8). This prevents slipping into impassable terrain corners
+ * while allowing wall sliding that the edge-lane rule enables.
+ * @param {number} px The proposed x center in tile units (fractional).
+ * @param {number} py The proposed y center in tile units (fractional).
+ * @param {number} radius The half-size of the square AABB in tiles.
+ * @returns {boolean} True if any overlapped tile is solid, false otherwise.
+ */
+Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
+{
+  // Define tiny epsilon to bias away from seams when flooring.
+  const eps = 1e-6;
+
+  // Compute the inclusive bounds of tiles overlapped by the AABB at (px, py).
+  const minCol = Math.floor(px - radius + eps);
+  const maxCol = Math.floor(px + radius - eps);
+  const minRow = Math.floor(py - radius + eps);
+  const maxRow = Math.floor(py + radius - eps);
+
+  // Iterate all overlapped tiles.
+  for (let ty = minRow; ty <= maxRow; ty++)
+  {
+    for (let tx = minCol; tx <= maxCol; tx++)
+    {
+      // Treat out-of-bounds as solid.
+      if ($gameMap.isValid(tx, ty) === false)
+      {
+        // Out-of-bounds overlaps are never allowed.
+        return true;
+      }
+
+      // Determine if this tile has any passable cardinal direction at all.
+      const anyPass =
+        $gameMap.isPassable(tx, ty, J.ABS.Directions.DOWN) ||
+        $gameMap.isPassable(tx, ty, J.ABS.Directions.LEFT) ||
+        $gameMap.isPassable(tx, ty, J.ABS.Directions.RIGHT) ||
+        $gameMap.isPassable(tx, ty, J.ABS.Directions.UP);
+
+      // If a tile is not passable in any cardinal direction, it's a solid wall tile.
+      if (anyPass === false)
+      {
+        // Overlapping a solid wall tile is not allowed.
+        return true;
+      }
+    }
+  }
+
+  // No overlapped tiles were solid; overlap is acceptable.
+  return false;
 };
 
 /**
@@ -543,11 +991,16 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
 J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('moveStraight', Game_CharacterBase.prototype.moveStraight);
 Game_CharacterBase.prototype.moveStraight = function(direction)
 {
-  this.setMovementSuccess(this.canPass(this._x, this._y, direction));
+  // Evaluate pixel-aware straight passability including character collision.
+  this.setMovementSuccess(this.canPassStraight(direction));
 
+  // If passable, perform a pixel-distance straight move and face that direction.
   if (this.isMovementSucceeded())
   {
+    // Move by the per-frame straight distance in the chosen direction.
     this.movePixelDistance(direction, this.distancePerFrame());
+
+    // Face the direction of travel.
     this.setDirection(direction);
   }
 };
@@ -558,13 +1011,14 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
  * @param {number} direction The direction being moved.
  */
 J.ABS.EXT.PIXEL.Aliased.Game_CharacterBase.set('moveDiagonally', Game_CharacterBase.prototype.moveDiagonally);
-Game_CharacterBase.prototype.moveDiagonally = function(direction)
+Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 {
-  const [ horz, vert ] = this.getDiagonalDirections(direction);
+  // const [ horz, vert ] = this.getDiagonalDirections(direction);
   this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
 
   if (this.isMovementSucceeded())
   {
+    const direction = this.directionFromHorzVert(horz, vert);
     this.movePixelDistance(direction, this.diagonalDistancePerFrame());
     this.setDirection(direction);
   }
@@ -573,445 +1027,1382 @@ Game_CharacterBase.prototype.moveDiagonally = function(direction)
 /**
  * Executes pixel movement in the given direction if possible.
  * This also returns the cardinal-normalized direction that should be faced.
- * @param {number} direction The desired direction to be moved.
+ *
+ * Notes:
+ * - This version removes all “offset lane” probes. canPassStraight no longer
+ *   accepts a perpendicular offset, so legacy offset-driven logic has been
+ *   eliminated to prevent biased early/late decisions that felt like “+0.5”.
+ * - Snapping is now epsilon-based around the orthogonal axis after a straight
+ *   move to avoid jitter without over-snapping.
+ * @param {2|4|6|8|1|3|7|9} direction The desired direction to be moved.
  * @returns {number} The cardinal-normalized direction to face while moving.
  */
 Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 {
-  // establish a local variable for the direction.
+  // Establish a local variable for the direction.
   let innerDirection = direction;
 
-  // calculate distance to move.
+  // Calculate distance to move.
   const straightDistance = this.distancePerFrame();
   const diagonalDistance = this.diagonalDistancePerFrame();
 
-  // shorthand test methods for checking if we can move in a given direction any further.
-  const downTest = (offset = 0) => this.canPassStraight(2, straightDistance, offset);
-  const upTest = (offset = 0) => this.canPassStraight(8, straightDistance, offset);
-  const leftTest = (offset = 0) => this.canPassStraight(4, straightDistance, offset);
-  const rightTest = (offset = 0) => this.canPassStraight(6, straightDistance, offset);
+  // Local probe helpers using the unified straight passability (no offset lanes).
+  const canDown = () => this.canPassStraight(J.ABS.Directions.DOWN, straightDistance);
+  const canUp = () => this.canPassStraight(J.ABS.Directions.UP, straightDistance);
+  const canLeft = () => this.canPassStraight(J.ABS.Directions.LEFT, straightDistance);
+  const canRight = () => this.canPassStraight(J.ABS.Directions.RIGHT, straightDistance);
 
-  // precalculate various directional tests for use throughout the switch.
-  const canLeft = leftTest();
-  const canDown = downTest();
-  const canRight = rightTest();
-  const canUp = upTest();
-  const offsetRightMinus = rightTest(-1);
-  const offsetRightPlus = rightTest(1);
-  const offsetLeftMinus = leftTest(-1);
-  const offsetLeftPlus = leftTest(1);
-  const offsetDownPlus = downTest(1);
-  const offsetDownMinus = downTest(-1);
-  const offsetUpPlus = upTest(1);
-  const offsetUpMinus = upTest(-1);
-
-  // round the x,y coordinates.
+  // Precompute rounded axes for light orthogonal re-centering after straight moves.
   const roundX = Math.round(this._x);
   const roundY = Math.round(this._y);
 
-  // switch on the direction given.
-  switch (direction)
+  // A small snap tolerance to gently re-center on the orthogonal axis after straight motion.
+  const SNAP_EPSILON = 0.1;
+
+  // Attempts a diagonal step if valid; returns a cardinal facing if moved, or 0 if not.
+  const tryDiagonal = (diagDir) =>
   {
-    case 1:
-      if (canLeft && canDown)
-      {
-        if (offsetLeftPlus)
-        {
-          // flag this as a successful movement.
-          this.setMovementSuccess(true);
+    // Validate diagonal acceptance including character collision.
+    if (this.canPassDiagonalByDirection(diagDir) === false)
+    {
+      // Not a valid diagonal.
+      return 0;
+    }
 
-          // actually execute the movement.
-          this.movePixelDistance(innerDirection, diagonalDistance);
+    // Execute the movement.
+    this.setMovementSuccess(true);
+    this.movePixelDistance(diagDir, diagonalDistance);
 
-          // identify this direction as cardinal, not diagonal.
-          return J.ABS.Directions.DOWN;
-        }
-        else if (this.x - roundX < roundY - this.y)
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.LEFT);
-        }
-        else
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.DOWN);
-        }
-      }
-      else if (canLeft)
+    // When moving diagonally, face a cardinal; prefer vertical for down/up vs up/down.
+    switch (diagDir)
+    {
+      case J.ABS.Directions.LOWERLEFT:
+      case J.ABS.Directions.LOWERRIGHT:
       {
-        return this.pixelMoveByInput(J.ABS.Directions.LEFT);
+        // Face down when going to a lower row.
+        this.setDirection(J.ABS.Directions.DOWN);
+        return J.ABS.Directions.DOWN;
       }
-      else if (canDown)
+      case J.ABS.Directions.UPPERLEFT:
+      case J.ABS.Directions.UPPERRIGHT:
       {
-        return this.pixelMoveByInput(J.ABS.Directions.DOWN);
+        // Face up when going to an upper row.
+        this.setDirection(J.ABS.Directions.UP);
+        return J.ABS.Directions.UP;
       }
-      else
-      {
-        direction = J.ABS.Directions.DOWN;
-      }
-      break;
-    case 3:
-      if (canRight && canDown)
-      {
-        if (offsetRightPlus)
-        {
-          // flag this as a successful movement.
-          this.setMovementSuccess(true);
+    }
 
-          // actually execute the movement.
-          this.movePixelDistance(innerDirection, diagonalDistance);
+    // Unknown diagonal; not handled.
+    return 0;
+  };
 
-          // identify this direction as cardinal, not diagonal.
-          return J.ABS.Directions.DOWN;
-        }
-        else if (roundX - this.x < roundY - this.y)
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
-        }
-        else
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.DOWN);
-        }
-      }
-      else if (canRight)
-      {
-        return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
-      }
-      else if (canDown)
-      {
-        return this.pixelMoveByInput(J.ABS.Directions.DOWN);
-      }
-      else
-      {
-        direction = J.ABS.Directions.DOWN;
-      }
-      break;
-    case 7:
-      if (canLeft && canUp)
-      {
-        if (offsetLeftMinus)
-        {
-          // flag this as a successful movement.
-          this.setMovementSuccess(true);
+  // Chooses a fallback between two cardinals by comparing residuals to the rounded axes.
+  const diagonalFallback = (preferHorzDir, preferVertDir, chooseHorizontalPredicate) =>
+  {
+    // If residual X is smaller than residual Y, prefer horizontal; else prefer vertical.
+    if (chooseHorizontalPredicate())
+    {
+      // Prefer the horizontal.
+      return this.pixelMoveByInput(preferHorzDir);
+    }
+    else
+    {
+      // Prefer the vertical.
+      return this.pixelMoveByInput(preferVertDir);
+    }
+  };
 
-          // actually execute the movement.
-          this.movePixelDistance(innerDirection, diagonalDistance);
+  // Lightly re-center X after a vertical move.
+  const recenterXAfterVertical = () =>
+  {
+    // If we are close enough to tile center, snap to eliminate drift.
+    if (Math.abs(this._x - roundX) <= SNAP_EPSILON)
+    {
+      // Assign the rounded X.
+      this._x = roundX;
+    }
+  };
 
-          // identify this direction as cardinal, not diagonal.
-          return J.ABS.Directions.UP;
-        }
-        else if (this.x - roundX < this.y - roundY)
+  // Lightly re-center Y after a horizontal move.
+  const recenterYAfterHorizontal = () =>
+  {
+    // If we are close enough to tile center, snap to eliminate drift.
+    if (Math.abs(this._y - roundY) <= SNAP_EPSILON)
+    {
+      // Assign the rounded Y.
+      this._y = roundY;
+    }
+  };
+
+  // Performs the straight move and gently re-centers the orthogonal axis if close enough.
+  const doStraightMove = (cardinalDir) =>
+  {
+    // Flag success and perform the movement.
+    this.setMovementSuccess(true);
+    this.movePixelDistance(cardinalDir, straightDistance);
+
+    // Re-center the orthogonal axis with a small tolerance to avoid jitter.
+    switch (cardinalDir)
+    {
+      case J.ABS.Directions.DOWN:
+      case J.ABS.Directions.UP:
+      {
+        // Re-center X after vertical motion.
+        recenterXAfterVertical();
+        break;
+      }
+      case J.ABS.Directions.LEFT:
+      case J.ABS.Directions.RIGHT:
+      {
+        // Re-center Y after horizontal motion.
+        recenterYAfterHorizontal();
+        break;
+      }
+    }
+
+    // Face the direction of travel.
+    this.setDirection(cardinalDir);
+
+    // Return the cardinal direction we are facing.
+    return cardinalDir;
+  };
+
+  // Handles diagonal inputs collectively with a single switch.
+  // eslint-disable-next-line complexity
+  const handleDiagonal = (diagDir) =>
+  {
+    // Handle each diagonal independently using a switch.
+    switch (diagDir)
+    {
+      case J.ABS.Directions.LOWERLEFT:
+      {
+        // If both component legs are passable, try the diagonal.
+        if (canLeft() && canDown())
         {
-          return this.pixelMoveByInput(J.ABS.Directions.LEFT);
+          // Attempt diagonal; return cardinal-facing or 0.
+          const faced = tryDiagonal(J.ABS.Directions.LOWERLEFT);
+          if (faced > 0) return faced;
+
+          // If diagonal landing blocked, split by residuals.
+          return diagonalFallback(
+            J.ABS.Directions.LEFT,
+            J.ABS.Directions.DOWN,
+            () => (this.x - roundX) < (roundY - this.y));
         }
-        else
+
+        // If only one leg is passable, recurse to that cardinal.
+        if (canLeft()) return this.pixelMoveByInput(J.ABS.Directions.LEFT);
+        if (canDown()) return this.pixelMoveByInput(J.ABS.Directions.DOWN);
+
+        // Otherwise, bias facing to down for consistency.
+        innerDirection = J.ABS.Directions.DOWN;
+        return innerDirection;
+      }
+      case J.ABS.Directions.LOWERRIGHT:
+      {
+        // If both component legs are passable, try the diagonal.
+        if (canRight() && canDown())
         {
-          return this.pixelMoveByInput(J.ABS.Directions.UP);
+          // Attempt diagonal; return cardinal-facing or 0.
+          const faced = tryDiagonal(J.ABS.Directions.LOWERRIGHT);
+          if (faced > 0) return faced;
+
+          // If diagonal landing blocked, split by residuals.
+          return diagonalFallback(
+            J.ABS.Directions.RIGHT,
+            J.ABS.Directions.DOWN,
+            () => (roundX - this.x) < (roundY - this.y));
         }
+
+        // If only one leg is passable, recurse to that cardinal.
+        if (canRight()) return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
+        if (canDown()) return this.pixelMoveByInput(J.ABS.Directions.DOWN);
+
+        // Otherwise, bias facing to down for consistency.
+        innerDirection = J.ABS.Directions.DOWN;
+        return innerDirection;
       }
-      else if (canLeft)
+      case J.ABS.Directions.UPPERLEFT:
       {
-        return this.pixelMoveByInput(J.ABS.Directions.LEFT);
-      }
-      else if (canUp)
-      {
-        return this.pixelMoveByInput(J.ABS.Directions.UP);
-      }
-      else
-      {
+        // If both component legs are passable, try the diagonal.
+        if (canLeft() && canUp())
+        {
+          // Attempt diagonal; return cardinal-facing or 0.
+          const faced = tryDiagonal(J.ABS.Directions.UPPERLEFT);
+          if (faced > 0) return faced;
+
+          // If diagonal landing blocked, split by residuals.
+          return diagonalFallback(
+            J.ABS.Directions.LEFT,
+            J.ABS.Directions.UP,
+            () => (this.x - roundX) < (this.y - roundY));
+        }
+
+        // If only one leg is passable, recurse to that cardinal.
+        if (canLeft()) return this.pixelMoveByInput(J.ABS.Directions.LEFT);
+        if (canUp()) return this.pixelMoveByInput(J.ABS.Directions.UP);
+
+        // Otherwise, bias facing to up for consistency.
         innerDirection = J.ABS.Directions.UP;
+        return innerDirection;
       }
-      break;
-    case 9:
-      if (canRight && canUp)
+      case J.ABS.Directions.UPPERRIGHT:
       {
-        if (offsetRightMinus)
+        // If both component legs are passable, try the diagonal.
+        if (canRight() && canUp())
         {
-          // flag this as a successful movement.
-          this.setMovementSuccess(true);
+          // Attempt diagonal; return cardinal-facing or 0.
+          const faced = tryDiagonal(J.ABS.Directions.UPPERRIGHT);
+          if (faced > 0) return faced;
 
-          // actually execute the movement.
-          this.movePixelDistance(innerDirection, diagonalDistance);
+          // If diagonal landing blocked, split by residuals.
+          return diagonalFallback(
+            J.ABS.Directions.RIGHT,
+            J.ABS.Directions.UP,
+            () => (roundX - this.x) < (this.y - roundY));
+        }
 
-          // identify this direction as cardinal, not diagonal.
-          return 8;
-        }
-        else if (roundX - this.x < this.y - roundY)
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
-        }
-        else
-        {
-          return this.pixelMoveByInput(J.ABS.Directions.UP);
-        }
-      }
-      else if (canRight)
-      {
-        return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
-      }
-      else if (canUp)
-      {
-        return this.pixelMoveByInput(J.ABS.Directions.UP);
-      }
-      else
-      {
+        // If only one leg is passable, recurse to that cardinal.
+        if (canRight()) return this.pixelMoveByInput(J.ABS.Directions.RIGHT);
+        if (canUp()) return this.pixelMoveByInput(J.ABS.Directions.UP);
+
+        // Otherwise, bias facing to up for consistency.
         innerDirection = J.ABS.Directions.UP;
-      }
-      break;
-    case 2:
-      if (canDown)
-      {
-        // flag this as a successful movement.
-        this.setMovementSuccess(true);
-
-        // actually execute the movement.
-        this.movePixelDistance(innerDirection, straightDistance);
-
-        if (this._x > roundX && !offsetDownPlus || this._x < roundX && !offsetDownMinus)
-        {
-          this._x = roundX;
-        }
-
         return innerDirection;
       }
-      break;
-    case 8:
-      if (canUp)
+      default:
       {
-        // flag this as a successful movement.
-        this.setMovementSuccess(true);
-
-        // actually execute the movement.
-        this.movePixelDistance(innerDirection, straightDistance);
-
-        // check if we need to adjust our coordinates.
-        if (this._x > roundX && !offsetUpPlus || this._x < roundX && !offsetUpMinus)
-        {
-          this._x = roundX;
-        }
-
-        // return the direction.
-        return innerDirection;
+        // Unknown diagonal; return 0 to indicate not handled.
+        return 0;
       }
-      break;
-    case 4:
-      if (canLeft)
+    }
+  };
+
+  // Handles straight inputs using a switch with shared execution and gentle re-centering.
+  const handleStraight = (cardinalDir) =>
+  {
+    // Handle the straight direction selection with a switch.
+    switch (cardinalDir)
+    {
+      case J.ABS.Directions.DOWN:
       {
-        // flag this as a successful movement.
-        this.setMovementSuccess(true);
-
-        // actually execute the movement.
-        this.movePixelDistance(innerDirection, straightDistance);
-
-        if (this._y > roundY && !offsetLeftPlus || this._y < roundY && !offsetLeftMinus)
-        {
-          this._y = roundY;
-        }
-
-        return innerDirection;
+        // Down if passable.
+        if (canDown()) return doStraightMove(J.ABS.Directions.DOWN);
+        return 0;
       }
-      break;
-    case 6:
-      if (canRight)
+      case J.ABS.Directions.UP:
       {
-        // flag this as a successful movement.
-        this.setMovementSuccess(true);
-
-        // actually execute the movement.
-        this.movePixelDistance(innerDirection, straightDistance);
-
-        if (this._y > roundY && !offsetRightPlus || this._y < roundY && !offsetRightMinus)
-        {
-          this._y = roundY;
-        }
-
-        return innerDirection;
+        // Up if passable.
+        if (canUp()) return doStraightMove(J.ABS.Directions.UP);
+        return 0;
       }
-      break;
+      case J.ABS.Directions.LEFT:
+      {
+        // Left if passable.
+        if (canLeft()) return doStraightMove(J.ABS.Directions.LEFT);
+        return 0;
+      }
+      case J.ABS.Directions.RIGHT:
+      {
+        // Right if passable.
+        if (canRight()) return doStraightMove(J.ABS.Directions.RIGHT);
+        return 0;
+      }
+      default:
+      {
+        // Unknown straight direction; not handled.
+        return 0;
+      }
+    }
+  };
+
+  // If diagonal, try the diagonal handler first.
+  if (this.isDiagonalDirection(direction))
+  {
+    // Attempt a diagonal execution path.
+    const faced = handleDiagonal(direction);
+    if (faced > 0) return faced;
   }
 
-  // return the calculated direction.
+  // If straight, try the straight handler.
+  if (this.isStraightDirection(direction))
+  {
+    // Attempt a straight execution path.
+    const faced = handleStraight(direction);
+    if (faced > 0) return faced;
+  }
+
+  // Fall back to returning the inner direction unchanged.
   return innerDirection;
 };
 
 /**
- * Tries to move this battler toward a set of coordinates.
- * @param {number} x The `x` coordinate to reach.
- * @param {number} y The `y` coordinate to reach.
+ * Overwrites {@link Game_CharacterBase.canPassDiagonally} with Cyclone-like semantics.
+ * Requires both legs at current, re-validates at new X and at new Y, validates reverse
+ * at destination, and rejects if a character occupies the diagonal landing point.
+ * @param {number} x The current x.
+ * @param {number} y The current y.
+ * @param {4|6} horz The horizontal leg.
+ * @param {2|8} vert The vertical leg.
+ * @returns {boolean} True if diagonal is permitted.
  */
-JABS_Battler.prototype.smartMoveTowardCoordinates = function(x, y)
+Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
 {
-  // grab the character.
-  const character = this.getCharacter();
+  // Snapshot current to restore after checks.
+  const oldX = this._x;
 
-  // check if we're either not already mid-step, or if we haven't decided a direction yet.
-  if (!this._isPixelStepping || this._pixelDirection === 0)
+  // Snapshot current to restore after checks.
+  const oldY = this._y;
+
+  // Align to provided coordinates for symmetry.
+  this._x = x;
+  this._y = y;
+
+  // If through/debug-through, approve.
+  if (this.isThrough() || this.isDebugThrough())
   {
-    // grab the current pixel steps for this character.
-    const pixelSteps = character.pixelSteps();
-
-    // flag them for pixel stepping.
-    this._isPixelStepping = true;
-
-    // define the end step counter.
-    this._pixelStepsEnd = pixelSteps + 1;
-
-    const angle = this.calculateAngle(x, y);
-
-    const directionByAngle = this.angleToDirection(angle);
-
-    const isDiagonal = character.isDiagonalDirection(directionByAngle);
-
-    if (isDiagonal)
-    {
-      const direction = character.findDiagonalDirectionTo(x, y);
-
-      // decide the direction to go next.
-      this._pixelDirection = direction;
-    }
-    else
-    {
-      const direction = character.findDirectionTo(x, y);
-
-      if (!character.canPassStraight(direction))
-      {
-        this.setWaitCountdown(6);
-        return;
-      }
-
-      // decide the direction to go next.
-      this._pixelDirection = direction;
-    }
+    // Restore and approve.
+    this._x = oldX;
+    this._y = oldY;
+    return true;
   }
 
-  // check if we have reached our end step counter.
-  if (character.pixelSteps() >= this._pixelStepsEnd)
-  {
-    // the character is no longer pixel stepping.
-    this._isPixelStepping = false;
+  // Compute step lengths.
+  const straightStep = this.distancePerFrame();
 
-    // empty the pixel steps for this character.
-    character.clearPixelSteps();
+  // Compute the diagonal step length.
+  const diagStep = this.diagonalDistancePerFrame();
+
+  // Update radius and hitbox metrics.
+  const radius = this.getCollisionRadius();
+
+  // Build the hitbox for collision sampling.
+  const hitbox = this._pixelHitbox(radius);
+
+  // Determine the subgrid resolution.
+  const subCount = this._pixelCollisionSubCount(straightStep);
+
+  // Initialize destination center X with current X.
+  let nx = this._x;
+
+  // Initialize destination center Y with current Y.
+  let ny = this._y;
+
+  // If the horizontal leg is right, add the diagonal step to X.
+  if (horz === J.ABS.Directions.RIGHT)
+  {
+    nx = this._x + diagStep;
+  }
+  // Else if the horizontal leg is left, subtract the diagonal step from X.
+  else if (horz === J.ABS.Directions.LEFT)
+  {
+    nx = this._x - diagStep;
   }
 
-  if (this._pixelDirection === 0)
+  // If the vertical leg is down, add the diagonal step to Y.
+  if (vert === J.ABS.Directions.DOWN)
   {
-    return;
+    ny = this._y + diagStep;
+  }
+  // Else if the vertical leg is up, subtract the diagonal step from Y.
+  else if (vert === J.ABS.Directions.UP)
+  {
+    ny = this._y - diagStep;
   }
 
-  // execute pixel movement based on the decided direction.
-  character.pixelMoveByInput(this._pixelDirection);
-};
-
-JABS_Battler.prototype.calculateAngle = function(x, y)
-{
-  const normalizeNumber = num => parseFloat((num).toFixed(3));
-  const x1 = this.getX();
-  const x2 = Math.abs(x);
-  const x3 = x1 - x2;
-  const y1 = this.getY();
-  const y2 = Math.abs(y);
-  const y3 = y1 - y2;
-
-  const yT = normalizeNumber(y3);
-  const xT = normalizeNumber(x3);
-  const angle = normalizeNumber(Math.atan2(yT, xT) * 180 / Math.PI);
-
-  console.log(yT, xT, angle);
-
-  return angle;
-};
-
-JABS_Battler.prototype.angleToDirection = function(angle)
-{
-  // between -60 and -120 go straight down.
-  const down = (angle < -60) && (angle > -120);
-
-  // between -120 and -150 go diagonal down-right.
-  const downRight = (angle < -120) && (angle > -150);
-
-  // between 150 and 180 or -180 and -150 go straight right.
-  const right = (angle < 180 && angle > 150) || (angle > -180 && angle < -150);
-
-  // between 120 and 150 go diagonal up-right.
-  const upRight = (angle < 150) && (angle > 120);
-
-  // between 60 and 120 go straight up.
-  const up = (angle > 60) && (angle < 120);
-
-  // between 30 and 60 go diagonal up-left.
-  const upLeft = (angle > 30) && (angle < 60);
-
-  // between 30 and -30 go straight left.
-  const left = (angle > -30) && (angle < 30);
-
-  // between -30 and -60 go diagonal down-left.
-  const downLeft = (angle > -60) && (angle < -30);
-
-  switch (true)
+  // Bounds check destination.
+  if ($gameMap.isValid(nx, ny) === false)
   {
-    case down:
-      return J.ABS.Directions.DOWN;
-    case downRight:
-      return J.ABS.Directions.LOWERRIGHT;
-    case right:
-      return J.ABS.Directions.RIGHT;
-    case upRight:
-      return J.ABS.Directions.UPPERRIGHT;
-    case up:
-      return J.ABS.Directions.UP;
-    case upLeft:
-      return J.ABS.Directions.UPPERLEFT;
-    case left:
-      return J.ABS.Directions.LEFT;
-    case downLeft:
-      return J.ABS.Directions.LOWERLEFT;
-    default:
-      return 0;
-  }
-};
+    // Restore original coordinates.
+    this._x = oldX;
+    this._y = oldY;
 
-/**
- * Tries to move this battler away from its current target.
- *
- * There is no pathfinding away, but if its not able to move directly
- * away, it will try a different direction to wiggle out of corners.
- */
-JABS_Battler.prototype.smartMoveAwayFromTarget = function()
-{
-  const target = this.getTarget();
-  if (!target) return;
-
-  const character = this.getCharacter();
-
-  character.moveAwayFromCharacter(target.getCharacter());
-
-  if (!character.isMovementSucceeded())
-  {
-    const threatDir = character.reverseDir(character.direction());
-    let newDir = (Math.randomInt(4) + 1) * 2;
-    while (newDir === threatDir)
-    {
-      newDir = (Math.randomInt(4) + 1) * 2;
-    }
-
-    character.pixelMoveByInput(newDir);
-  }
-};
-
-Game_Event.prototype.isCollidedWithEvents = function(x, y)
-{
-  // TODO: probably should fix this.
-  // TODO: need to fix melee action events?
-  // TODO: need to make a command for taking defined steps for .processMoveCommand().
-  const events = $gameMap.eventsXyNt(x, y);
-  if (events.length === 1 && events.includes(this))
-  {
+    // Destination is invalid.
     return false;
   }
 
-  return events.length > 0;
+  // Leg 1 at current center for horizontal movement.
+  if (horz === J.ABS.Directions.LEFT)
+  {
+    // Validate leftward passage from the current center.
+    if (this._pixelCheckLeftPassage(this._x, this._y, this._x - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Validate rightward passage from the current center.
+    if (this._pixelCheckRightPassage(this._x, this._y, this._x + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Leg 2 at current center for vertical movement.
+  if (vert === J.ABS.Directions.UP)
+  {
+    // Validate upward passage from the current center.
+    if (this._pixelCheckUpPassage(this._x, this._y, this._y - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Validate downward passage from the current center.
+    if (this._pixelCheckDownPassage(this._x, this._y, this._y + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Revalidate at new Y (horizontal at y2).
+  let y2 = this._y;
+
+  // If moving down on the vertical leg, add straight step to y2.
+  if (vert === J.ABS.Directions.DOWN)
+  {
+    y2 = this._y + straightStep;
+  }
+  // Else if moving up, subtract straight step from y2.
+  else if (vert === J.ABS.Directions.UP)
+  {
+    y2 = this._y - straightStep;
+  }
+
+  // Validate the horizontal leg at the displaced Y.
+  if (horz === J.ABS.Directions.LEFT)
+  {
+    // Validate leftward passage at y2.
+    if (this._pixelCheckLeftPassage(this._x, y2, this._x - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Validate rightward passage at y2.
+    if (this._pixelCheckRightPassage(this._x, y2, this._x + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Revalidate at new X (vertical at x2).
+  let x2 = this._x;
+
+  // If moving right on the horizontal leg, add straight step to x2.
+  if (horz === J.ABS.Directions.RIGHT)
+  {
+    x2 = this._x + straightStep;
+  }
+  // Else if moving left, subtract straight step from x2.
+  else if (horz === J.ABS.Directions.LEFT)
+  {
+    x2 = this._x - straightStep;
+  }
+
+  // Validate the vertical leg at the displaced X.
+  if (vert === J.ABS.Directions.UP)
+  {
+    // Validate upward passage at x2.
+    if (this._pixelCheckUpPassage(x2, this._y, this._y - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Validate downward passage at x2.
+    if (this._pixelCheckDownPassage(x2, this._y, this._y + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Validate horizontal reverse at destination center.
+  if (horz === J.ABS.Directions.LEFT)
+  {
+    // Check the reverse (rightward) at the final destination.
+    if (this._pixelCheckRightPassage(nx, ny, nx + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Check the reverse (leftward) at the final destination.
+    if (this._pixelCheckLeftPassage(nx, ny, nx - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Validate vertical reverse at destination center.
+  if (vert === J.ABS.Directions.UP)
+  {
+    // Check the reverse (downward) at the final destination.
+    if (this._pixelCheckDownPassage(nx, ny, ny + straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+  else
+  {
+    // Check the reverse (upward) at the final destination.
+    if (this._pixelCheckUpPassage(nx, ny, ny - straightStep, hitbox, subCount) === false)
+    {
+      // Restore original coordinates and reject.
+      this._x = oldX;
+      this._y = oldY;
+      return false;
+    }
+  }
+
+  // Character-vs-character check at diagonal landing.
+  const blocked = this.isCharacterCollisionAt(nx, ny, radius);
+
+  // Restore original coordinates.
+  this._x = oldX;
+  this._y = oldY;
+
+  // Approve if no character is colliding at destination.
+  return blocked === false;
 };
 
-Game_Character.prototype.searchLimit = function()
+/**
+ * Determines whether or not a diagonal by its 8-dir code is passable for the next frame.
+ * Requires both component straight legs to be passable using the tile-centered straight check,
+ * then rejects if a character-vs-character AABB would collide at the diagonal landing point.
+ * No lateral offset columns or lane sampling.
+ * @param {1|3|7|9} diagonalDir The diagonal direction (1,3,7,9).
+ * @param {number=} straightDistance Optional straight distance per frame to probe with.
+ * @returns {boolean} True if the diagonal can be taken this frame, false otherwise.
+ */
+Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
+  diagonalDir,
+  straightDistance = this.distancePerFrame())
 {
-  return 40;
+  // Leg testers using the simplified, tile-centered straight acceptance.
+  const canDown = () => this.canPassStraight(J.ABS.Directions.DOWN, straightDistance);
+  const canUp = () => this.canPassStraight(J.ABS.Directions.UP, straightDistance);
+  const canLeft = () => this.canPassStraight(J.ABS.Directions.LEFT, straightDistance);
+  const canRight = () => this.canPassStraight(J.ABS.Directions.RIGHT, straightDistance);
+
+  // Require both legs of the diagonal to be passable.
+  let legsOk = false;
+  if (diagonalDir === J.ABS.Directions.LOWERLEFT) legsOk = (canLeft() && canDown());
+  if (diagonalDir === J.ABS.Directions.LOWERRIGHT) legsOk = (canRight() && canDown());
+  if (diagonalDir === J.ABS.Directions.UPPERLEFT) legsOk = (canLeft() && canUp());
+  if (diagonalDir === J.ABS.Directions.UPPERRIGHT) legsOk = (canRight() && canUp());
+  if (legsOk === false) return false;
+
+  // Simulate the diagonal landing point (same step length you execute with).
+  const step = this.diagonalDistancePerFrame();
+  let nx = this._x;
+  let ny = this._y;
+  if (diagonalDir === J.ABS.Directions.LOWERLEFT)
+  {
+    nx -= step;
+    ny += step;
+  }
+  if (diagonalDir === J.ABS.Directions.LOWERRIGHT)
+  {
+    nx += step;
+    ny += step;
+  }
+  if (diagonalDir === J.ABS.Directions.UPPERLEFT)
+  {
+    nx -= step;
+    ny -= step;
+  }
+  if (diagonalDir === J.ABS.Directions.UPPERRIGHT)
+  {
+    nx += step;
+    ny -= step;
+  }
+
+  // Reject if a character occupies the diagonal landing point.
+  const radius = this.getCollisionRadius();
+  return this.isCharacterCollisionAt(nx, ny, radius) === false;
 };
+
+/**
+ * Checks for a collision against other solid characters at a fractional point.
+ * Uses simple AABB (square) overlap in tile space for stable, flat boundaries.
+ * Party members (player and followers) never block each other.
+ * Only events with normal priority ("Same as characters") are considered blockers.
+ * @param {number} px Proposed x (fractional tiles).
+ * @param {number} py Proposed y (fractional tiles).
+ * @param {number=} radius Optional collision half-size in tiles (default 0.35).
+ * @returns {boolean} True if any solid character would collide at (px, py).
+ */
+Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 0.35)
+{
+  // Choose the half-size (in tiles) for the probe AABB.
+  const halfW = radius;
+
+  // Choose the half-size (in tiles) for the probe AABB.
+  const halfH = radius;
+
+  // The probe center is the actual fractional coordinates in tile units.
+  const probeCx = px;
+
+  // The probe center is the actual fractional coordinates in tile units.
+  const probeCy = py;
+
+  // Acquire the player reference.
+  const player = $gamePlayer;
+
+  // Acquire follower references.
+  const followers = player._followers._data;
+
+  // Build the party list (player + followers).
+  const party = [ player ].concat(followers);
+
+  // Determine if this character is part of the party.
+  const selfIsParty = party.includes(this);
+
+  // Gather all map events as initial candidates.
+  const events = $gameMap.events();
+
+  // Initialize candidate collection.
+  const candidates = [];
+
+  // Add events that can collide.
+  events.forEach(ev =>
+  {
+    // Exclude self.
+    if (ev === this) return;
+
+    // Exclude erased events.
+    if (ev.isErased()) return;
+
+    // Exclude events flagged as through.
+    if (ev.isThrough()) return;
+
+    // Exclude events that are NOT normal priority (below/above characters don’t block movement).
+    if (ev.isNormalPriority() === false) return;
+
+    // Exclude JABS actions (do not block movement).
+    if (ev.isJabsAction()) return;
+
+    // Include this event as a candidate.
+    candidates.push(ev);
+  });
+
+  // Only add the player/followers if self is NOT a party member.
+  if (selfIsParty === false)
+  {
+    // Add the player as a candidate when not through.
+    if (player !== this && player.isThrough() === false)
+    {
+      // Include the player as a candidate.
+      candidates.push(player);
+    }
+
+    // Add followers that can collide.
+    followers.forEach(f =>
+    {
+      // Exclude self.
+      if (f === this) return;
+
+      // Exclude through followers.
+      if (f.isThrough()) return;
+
+      // Include this follower as a candidate.
+      candidates.push(f);
+    });
+  }
+
+  // Define a small helper for AABB overlap test in tile-space.
+  const aabbOverlap = function(ax, ay, ahw, ahh, bx, by, bhw, bhh)
+  {
+    // Compute deltas along each axis.
+    const dx = Math.abs(ax - bx);
+
+    // Compute deltas along each axis.
+    const dy = Math.abs(ay - by);
+
+    // Overlap if deltas are within summed half-extents along both axes.
+    return dx < (ahw + bhw) && dy < (ahh + bhh);
+  };
+
+  // Probe the AABB for each candidate.
+  for (let i = 0; i < candidates.length; i++)
+  {
+    // Grab the candidate.
+    const ch = candidates[i];
+
+    // Extra defense: skip if marked as a JABS action (even if included above).
+    if (ch.isJabsAction())
+    {
+      // Do not collide with JABS actions here.
+      continue;
+    }
+
+    // Acquire candidate center in true fractional tile space.
+    const cx = ch.x;
+
+    // Acquire candidate center in true fractional tile space.
+    const cy = ch.y;
+
+    // Candidate half-extents in tiles; use the character's configured radius.
+    const cr = ch.getCollisionRadius();
+
+    // Candidate half width in tile units.
+    const chw = cr;
+
+    // Candidate half height in tile units.
+    const chh = cr;
+
+    // Test AABB overlap.
+    if (aabbOverlap(probeCx, probeCy, halfW, halfH, cx, cy, chw, chh))
+    {
+      // Overlap found; movement would collide.
+      return true;
+    }
+  }
+
+  // No overlaps found; movement is clear.
+  return false;
+};
+
+/**
+ * Gets the collision radius for this character in tile units.
+ * This radius is used for pixel-accurate character-vs-character collision checks.
+ * @returns {number} The collision radius in tiles.
+ */
+Game_CharacterBase.prototype.getCollisionRadius = function()
+{
+  // Return a sensible default radius in tile units for this character.
+  return 0.3;
+};
+
+/**
+ * Gets the collision pivot X in tile units for this character.
+ * The pivot represents the reference point for hitbox placement and sampling.
+ * Defaults to bottom-center horizontally (0.5).
+ * @returns {number} The X pivot in tile units.
+ */
+Game_CharacterBase.prototype.getCollisionPivotX = function()
+{
+  // Return bottom-center horizontally.
+  return 0;
+};
+
+/**
+ * Gets the collision pivot Y in tile units for this character.
+ * The pivot represents the reference point for hitbox placement and sampling.
+ * Defaults to feet (bottom of the tile) at 1.0.
+ * @returns {number} The Y pivot in tile units.
+ */
+Game_CharacterBase.prototype.getCollisionPivotY = function()
+{
+  // Return the feet as the pivot (bottom of the tile).
+  return 0;
+};
+
+//region pixel helpers
+/**
+ * Computes a square hitbox derived from the configured collision radius.
+ * The hitbox is centered on the collision pivot on both axes, matching the player’s
+ * visual center to eliminate perceived half-tile skew.
+ * @param {number} radius The collision half-size in tiles.
+ * @returns {{w:number,h:number,hx:number,hy:number}}
+ */
+Game_CharacterBase.prototype._pixelHitbox = function(radius)
+{
+  // Half-width equals the radius.
+  const half = radius;
+
+  // Compute full width/height of the hitbox.
+  const width = half * 2;
+  const height = half * 2;
+
+  // Place the box centered on the pivot in both axes.
+  return {
+    // Hitbox width.
+    w: width,
+    // Hitbox height.
+    h: height,
+    // Hitbox left offset from pivot X (centered on X pivot).
+    hx: -half,
+    // Hitbox top offset from pivot Y (centered on Y pivot).
+    hy: -half,
+  };
+};
+
+/**
+ * Chooses a collision subgrid resolution that matches our PIXEL collision table.
+ * @param {number} step The intended straight step size for this frame.
+ * @returns {number} The collision subgrid count.
+ */
+Game_CharacterBase.prototype._pixelCollisionSubCount = function(step)
+{
+  if (!PIXEL_CollisionManager.collisionStepCount)
+  {
+    PIXEL_CollisionManager.initConfig();
+  }
+
+  return PIXEL_CollisionManager.collisionStepCount;
+};
+
+/**
+ * Determines passability at a fractional subcell against the PIXEL collision table.
+ * Expects coordinates already in the collision-table’s integer-aligned space
+ * (seam-aligned), which are produced by the first/last collision helpers.
+ * @param {number} px The fractional x at the sampled subcell (tile units).
+ * @param {number} py The fractional y at the sampled subcell (tile units).
+ * @param {2|4|6|8} d The direction to test (entering direction).
+ * @returns {boolean} True if passable, false otherwise.
+ */
+Game_CharacterBase.prototype._pixelIsPositionPassable = function(px, py, d)
+{
+  // Coordinates are already seam-aligned; delegate directly.
+  return PIXEL_CollisionManager.isPositionPassable(px, py, d);
+};
+
+/**
+ * Returns 180-degree reverse of a 4-dir direction.
+ * @param {2|4|6|8} d The direction.
+ * @returns {2|4|6|8} The reverse direction.
+ */
+Game_CharacterBase.prototype._pixelReverseDir = function(d)
+{
+  if (d === 2) return 8;
+  if (d === 8) return 2;
+  if (d === 4) return 6;
+  if (d === 6) return 4;
+  return d;
+};
+
+/**
+ * First collision X for hitbox at center x with subgrid count.
+ * Uses an inward-biased floor to pick the first overlapped subcolumn.
+ * Applies the per-character pivot for alignment.
+ * @param {number} x The character’s tile x.
+ * @param {{hx:number,w:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {number} First subcell x.
+ */
+Game_CharacterBase.prototype._pixelFirstCollisionXAt = function(x, hb, count)
+{
+  // Translate into pivot-space for X.
+  const px = x + this.getCollisionPivotX();
+
+  // Compute the left edge of the hitbox in subgrid units.
+  const raw = (px + hb.hx) * count;
+
+  // Define a tiny inward epsilon to resolve exact-seam ties into the current subcell.
+  const eps = 1e-7;
+
+  // Compute the first overlapped subcolumn using inward-biased floor.
+  return Math.floor(raw + eps) / count;
+};
+
+/**
+ * Last collision X for hitbox at center x with subgrid count.
+ * Uses an inward-biased floor on the right edge minus epsilon to include the last overlapped subcolumn.
+ * Applies the per-character pivot for alignment.
+ * @param {number} x The character’s tile x.
+ * @param {{hx:number,w:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {number} Last subcell x.
+ */
+Game_CharacterBase.prototype._pixelLastCollisionXAt = function(x, hb, count)
+{
+  // Translate into pivot-space for X.
+  const px = x + this.getCollisionPivotX();
+
+  // Compute the right edge of the hitbox in subgrid units.
+  const raw = (px + hb.hx + hb.w) * count;
+
+  // Define a tiny inward epsilon to resolve exact-seam ties into the current subcell.
+  const eps = 1e-7;
+
+  // Compute the last overlapped subcolumn using inward-biased floor of (edge - eps).
+  return Math.floor(raw - eps) / count;
+};
+
+/**
+ * First collision Y for hitbox at center y with subgrid count.
+ * Uses an inward-biased floor to pick the first overlapped subrow.
+ * Applies the per-character pivot for alignment.
+ * @param {number} y The character’s tile y.
+ * @param {{hy:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {number} First subcell y.
+ */
+Game_CharacterBase.prototype._pixelFirstCollisionYAt = function(y, hb, count)
+{
+  // Translate into pivot-space for Y.
+  const py = y + this.getCollisionPivotY();
+
+  // Compute the top edge of the hitbox in subgrid units.
+  const raw = (py + hb.hy) * count;
+
+  // Define a tiny inward epsilon to resolve exact-seam ties into the current subcell.
+  const eps = 1e-7;
+
+  // Compute the first overlapped subrow using inward-biased floor.
+  return Math.floor(raw + eps) / count;
+};
+
+/**
+ * Last collision Y for hitbox at center y with subgrid count.
+ * Uses an inward-biased floor on the bottom edge minus epsilon to include the last overlapped subrow.
+ * Applies the per-character pivot for alignment.
+ * @param {number} y The character’s tile y.
+ * @param {{hy:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {number} Last subcell y.
+ */
+Game_CharacterBase.prototype._pixelLastCollisionYAt = function(y, hb, count)
+{
+  // Translate into pivot-space for Y.
+  const py = y + this.getCollisionPivotY();
+
+  // Compute the bottom edge of the hitbox in subgrid units.
+  const raw = (py + hb.hy + hb.h) * count;
+
+  // Define a tiny inward epsilon to resolve exact-seam ties into the current subcell.
+  const eps = 1e-7;
+
+  // Compute the last overlapped subrow using inward-biased floor of (edge - eps).
+  return Math.floor(raw - eps) / count;
+};
+
+/**
+ * Checks leftward passage from current center at y across edge subcells.
+ * Uses integer subcell indices to detect true seam crossings and sample spans.
+ * @param {number} x Current center x.
+ * @param {number} y Current center y.
+ * @param {number} xDest Destination center x.
+ * @param {{hx:number,hy:number,w:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {boolean} True if passage allowed.
+ */
+Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, count)
+{
+  // Acquire the feet-pivoted coordinates.
+  const px0 = x + this.getCollisionPivotX();
+  const px1 = xDest + this.getCollisionPivotX();
+  const py = y + this.getCollisionPivotY();
+
+  // Tiny epsilon for seam bias into box interior.
+  const eps = 1e-7;
+
+  // Current left/right integer column indices.
+  const curLeftIdx = Math.floor((px0 + hb.hx) * count + eps);
+  const curRightIdx = Math.floor((px0 + hb.hx + hb.w) * count - eps);
+
+  // Destination left/right integer column indices.
+  const destLeftIdx = Math.floor((px1 + hb.hx) * count + eps);
+  const destRightIdx = Math.floor((px1 + hb.hx + hb.w) * count - eps);
+
+  // Determine if we truly cross the seam to the left (entering destRightIdx).
+  const crossed = (destRightIdx === curLeftIdx - 1);
+  if (crossed === false)
+  {
+    // No seam entry; nothing to validate.
+    return true;
+  }
+
+  // Compute vertical span in integer row indices at current y.
+  const firstRowIdx = Math.floor((py + hb.hy) * count + eps);
+  const lastRowIdx  = Math.floor((py + hb.hy + hb.h) * count - eps);
+
+  // Convert seam columns back to fractional for sampling.
+  const curColX  = curLeftIdx / count;
+  const destColX = destRightIdx / count;
+
+  // Iterate all overlapped rows on that column transition.
+  for (let row = firstRowIdx; row <= lastRowIdx; row++)
+  {
+    // Convert the current row index into a fractional y for sampling.
+    const ny = row / count;
+
+    // DEBUG markers.
+    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)"); // yellow current
+    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)"); // cyan dest
+
+    // Current left-most subcell must allow moving LEFT (exiting left).
+    if (this._pixelIsPositionPassable(curColX, ny, J.ABS.Directions.LEFT) === false) return false;
+
+    // Destination right-most subcell must allow moving RIGHT (entering from left).
+    if (this._pixelIsPositionPassable(destColX, ny, J.ABS.Directions.RIGHT) === false) return false;
+  }
+
+  // All sampled rows permit left passage.
+  return true;
+};
+
+/**
+ * Checks rightward passage across edge subcells using integer indices.
+ * Validates current-right vs destination-left along all overlapped rows.
+ * @param {number} x Current center x.
+ * @param {number} y Current center y.
+ * @param {number} xDest Destination center x.
+ * @param {{hx:number,hy:number,w:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {boolean} True if passage allowed.
+ */
+Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb, count)
+{
+  // Pivoted positions.
+  const px0 = x + this.getCollisionPivotX();
+  const px1 = xDest + this.getCollisionPivotX();
+  const py = y + this.getCollisionPivotY();
+
+  // Epsilon for inward bias.
+  const eps = 1e-7;
+
+  // Current right integer column index (last covered).
+  const curRightIdx = Math.floor((px0 + hb.hx + hb.w) * count - eps);
+
+  // Destination left integer column index (first covered).
+  const destLeftIdx = Math.floor((px1 + hb.hx) * count + eps);
+
+  // True rightward seam crossing occurs when dest-left is exactly one beyond cur-right.
+  const crossed = (destLeftIdx === curRightIdx + 1);
+  if (crossed === false)
+  {
+    // Did not enter a new subcolumn; nothing to validate.
+    return true;
+  }
+
+  // Vertical span in integer rows.
+  const firstRowIdx = Math.floor((py + hb.hy) * count + eps);
+  const lastRowIdx  = Math.floor((py + hb.hy + hb.h) * count - eps);
+
+  // Convert to fractional for sampling.
+  const curColX  = curRightIdx / count;
+  const destColX = destLeftIdx / count;
+
+  // Iterate all overlapped rows on that column transition.
+  for (let row = firstRowIdx; row <= lastRowIdx; row++)
+  {
+    // Convert the row index into a fractional y for sampling.
+    const ny = row / count;
+
+    // DEBUG markers.
+    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)"); // yellow current
+    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");  // cyan dest
+
+    // Current right-most must allow RIGHT (exiting right).
+    if (this._pixelIsPositionPassable(curColX, ny, J.ABS.Directions.RIGHT) === false) return false;
+
+    // Destination left-most must allow LEFT (entering from right).
+    if (this._pixelIsPositionPassable(destColX, ny, J.ABS.Directions.LEFT) === false) return false;
+  }
+
+  // All sampled rows permit right passage.
+  return true;
+};
+
+/**
+ * Checks upward passage across edge subcells using integer indices.
+ * Validates current-top vs destination-bottom along all overlapped columns.
+ * @param {number} x Current center x.
+ * @param {number} y Current center y.
+ * @param {number} yDest Destination center y.
+ * @param {{hx:number,hy:number,w:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {boolean} True if passage allowed.
+ */
+Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, count)
+{
+  // Pivoted positions.
+  const py0 = y + this.getCollisionPivotY();
+  const py1 = yDest + this.getCollisionPivotY();
+  const px  = x + this.getCollisionPivotX();
+
+  // Epsilon for inward bias.
+  const eps = 1e-7;
+
+  // Current top/bottom integer row indices.
+  const curTopIdx    = Math.floor((py0 + hb.hy) * count + eps);
+  const curBottomIdx = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+
+  // Destination top/bottom integer row indices.
+  const destTopIdx    = Math.floor((py1 + hb.hy) * count + eps);
+  const destBottomIdx = Math.floor((py1 + hb.hy + hb.h) * count - eps);
+
+  // True upward crossing: destination bottom exactly one above current top.
+  const crossed = (destBottomIdx === curTopIdx - 1);
+  if (crossed === false)
+  {
+    // No seam entry; nothing to validate.
+    return true;
+  }
+
+  // Horizontal span in integer columns.
+  const firstColIdx = Math.floor((px + hb.hx) * count + eps);
+  const lastColIdx  = Math.floor((px + hb.hx + hb.w) * count - eps);
+
+  // Convert seam rows to fractional for sampling.
+  const curRowY  = curTopIdx / count;
+  const destRowY = destBottomIdx / count;
+
+  // Iterate all overlapped columns on that row transition.
+  for (let col = firstColIdx; col <= lastColIdx; col++)
+  {
+    // Convert the column index into a fractional x for sampling.
+    const nx = col / count;
+
+    // DEBUG markers.
+    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");    // yellow current
+    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");    // cyan dest
+
+    // Current top must allow UP (exiting upward).
+    if (this._pixelIsPositionPassable(nx, curRowY,  J.ABS.Directions.UP)   === false) return false;
+
+    // Destination bottom must allow DOWN (entering from below).
+    if (this._pixelIsPositionPassable(nx, destRowY, J.ABS.Directions.DOWN) === false) return false;
+  }
+
+  // All sampled columns permit up passage.
+  return true;
+};
+
+/**
+ * Checks downward passage across edge subcells using integer indices.
+ * Validates current-bottom vs destination-top along all overlapped columns.
+ * @param {number} x Current center x.
+ * @param {number} y Current center y.
+ * @param {number} yDest Destination center y.
+ * @param {{hx:number,hy:number,w:number,h:number}} hb Hitbox.
+ * @param {number} count Subgrid count.
+ * @returns {boolean} True if passage allowed.
+ */
+Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, count)
+{
+  // Pivoted positions.
+  const py0 = y + this.getCollisionPivotY();
+  const py1 = yDest + this.getCollisionPivotY();
+  const px  = x + this.getCollisionPivotX();
+
+  // Epsilon for inward bias.
+  const eps = 1e-7;
+
+  // Current bottom integer row index.
+  const curBottomIdx = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+
+  // Destination top integer row index.
+  const destTopIdx   = Math.floor((py1 + hb.hy) * count + eps);
+
+  // True downward crossing: destination top exactly one below current bottom.
+  const crossed = (destTopIdx === curBottomIdx + 1);
+  if (crossed === false)
+  {
+    // No seam entry; nothing to validate.
+    return true;
+  }
+
+  // Horizontal span in integer columns.
+  const firstColIdx = Math.floor((px + hb.hx) * count + eps);
+  const lastColIdx  = Math.floor((px + hb.hx + hb.w) * count - eps);
+
+  // Convert seam rows to fractional for sampling.
+  const curRowY  = curBottomIdx / count;
+  const destRowY = destTopIdx   / count;
+
+  // Iterate all overlapped columns on that row transition.
+  for (let col = firstColIdx; col <= lastColIdx; col++)
+  {
+    // Convert the column index into a fractional x for sampling.
+    const nx = col / count;
+
+    // DEBUG markers.
+    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)"); // yellow current
+    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)"); // cyan dest
+
+    // Current bottom must allow DOWN (exiting downward).
+    if (this._pixelIsPositionPassable(nx, curRowY,  J.ABS.Directions.DOWN) === false) return false;
+
+    // Destination top must allow UP (entering from above).
+    if (this._pixelIsPositionPassable(nx, destRowY, J.ABS.Directions.UP)   === false) return false;
+  }
+
+  // All sampled columns permit down passage.
+  return true;
+};
+
+/**
+ * Validates vertical lanes (up/down) at the specific new X-edge column we are entering.
+ * Now uses integer column indices and runs only when a seam was truly crossed.
+ * @param {number} xCurrent The current center x before the step.
+ * @param {number} xDest The destination center x after the step.
+ * @param {number} y The current center y (for edge sampling across vertical lanes).
+ * @param {{hx:number,hy:number,w:number,h:number}} hb The hitbox metrics.
+ * @param {number} count The collision subgrid count.
+ * @returns {boolean} True if lanes ok.
+ */
+Game_CharacterBase.prototype._pixelCheckVerticalAtNewXColumn = function(xCurrent, xDest, y, hb, count)
+{
+  // If no horizontal motion, nothing to do.
+  if (xDest === xCurrent) return true;
+
+  // Pivoted positions.
+  const px0 = xCurrent + this.getCollisionPivotX();
+  const px1 = xDest    + this.getCollisionPivotX();
+  const py  = y        + this.getCollisionPivotY();
+
+  // Epsilon for inward bias.
+  const eps = 1e-7;
+
+  // Current and destination seam columns as integer indices.
+  const curRightIdx  = Math.floor((px0 + hb.hx + hb.w) * count - eps);
+  const curLeftIdx   = Math.floor((px0 + hb.hx) * count + eps);
+  const destLeftIdx  = Math.floor((px1 + hb.hx) * count + eps);
+  const destRightIdx = Math.floor((px1 + hb.hx + hb.w) * count - eps);
+
+  // Determine motion direction.
+  const movingRight = xDest > xCurrent;
+
+  // True seam entry test.
+  const crossed = movingRight
+    ? (destLeftIdx === curRightIdx + 1)
+    : (destRightIdx === curLeftIdx - 1);
+
+  // If no seam crossed, do not lane-check.
+  if (crossed === false) return true;
+
+  // Choose the destination seam column index.
+  const columnIdx = movingRight ? destLeftIdx : destRightIdx;
+
+  // Convert to fractional x for sampling.
+  const columnX = columnIdx / count;
+
+  // Vertical span.
+  const firstRowIdx = Math.floor((py + hb.hy) * count + eps);
+  const lastRowIdx  = Math.floor((py + hb.hy + hb.h) * count - eps);
+
+  // Iterate the overlapped vertical subcells on that column.
+  for (let row = firstRowIdx; row <= lastRowIdx; row++)
+  {
+    // Convert the row index into a fractional y for sampling.
+    const ny = row / count;
+
+    // DEBUG lane markers (blue).
+    J.ABS.EXT.PIXEL.Debug.push(columnX, ny, "rgba(0, 128, 255, 0.6)");
+
+    // Compute lane permissions.
+    const upOk   = this._pixelIsPositionPassable(columnX, ny, J.ABS.Directions.UP);
+    const downOk = this._pixelIsPositionPassable(columnX, ny, J.ABS.Directions.DOWN);
+
+    // Require at least one lane open for sliding.
+    if (upOk === false && downOk === false) return false;
+  }
+
+  // Lanes are open enough to permit passage.
+  return true;
+};
+
+/**
+ * Validates horizontal lanes (left/right) at the specific new Y-edge row we are entering.
+ * Now uses integer row indices and runs only when a seam was truly crossed.
+ * @param {number} yCurrent The current center y before the step.
+ * @param {number} yDest The destination center y after the step.
+ * @param {number} x The current center x (for edge sampling across horizontal lanes).
+ * @param {{hx:number,hy:number,w:number,h:number}} hb The hitbox metrics.
+ * @param {number} count The collision subgrid count.
+ * @returns {boolean} True if lanes ok.
+ */
+Game_CharacterBase.prototype._pixelCheckHorizontalAtNewYRow = function(yCurrent, yDest, x, hb, count)
+{
+  // If no vertical motion, nothing to do.
+  if (yDest === yCurrent) return true;
+
+  // Pivoted positions.
+  const py0 = yCurrent + this.getCollisionPivotY();
+  const py1 = yDest    + this.getCollisionPivotY();
+  const px  = x        + this.getCollisionPivotX();
+
+  // Epsilon for inward bias.
+  const eps = 1e-7;
+
+  // Current and destination seam rows as integer indices.
+  const curBottomIdx  = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+  const curTopIdx     = Math.floor((py0 + hb.hy) * count + eps);
+  const destTopIdx    = Math.floor((py1 + hb.hy) * count + eps);
+  const destBottomIdx = Math.floor((py1 + hb.hy + hb.h) * count - eps);
+
+  // Determine motion direction.
+  const movingDown = yDest > yCurrent;
+
+  // True seam entry test.
+  const crossed = movingDown
+    ? (destTopIdx === curBottomIdx + 1)
+    : (destBottomIdx === curTopIdx - 1);
+
+  // If no seam crossed, do not lane-check.
+  if (crossed === false) return true;
+
+  // Choose the destination seam row index.
+  const rowIdx = movingDown ? destTopIdx : destBottomIdx;
+
+  // Convert to fractional y for sampling.
+  const rowY = rowIdx / count;
+
+  // Horizontal span.
+  const firstColIdx = Math.floor((px + hb.hx) * count + eps);
+  const lastColIdx  = Math.floor((px + hb.hx + hb.w) * count - eps);
+
+  // Iterate the overlapped horizontal subcells on that row.
+  for (let col = firstColIdx; col <= lastColIdx; col++)
+  {
+    // Convert the column index into a fractional x for sampling.
+    const nx = col / count;
+
+    // DEBUG lane markers (blue).
+    J.ABS.EXT.PIXEL.Debug.push(nx, rowY, "rgba(0, 128, 255, 0.6)");
+
+    // Compute lane permissions.
+    const leftOk  = this._pixelIsPositionPassable(nx, rowY, J.ABS.Directions.LEFT);
+    const rightOk = this._pixelIsPositionPassable(nx, rowY, J.ABS.Directions.RIGHT);
+
+    // Require at least one lane open for sliding.
+    if (leftOk === false && rightOk === false) return false;
+  }
+
+  // Lanes are open enough to permit passage.
+  return true;
+};
+//endregion pixel helpers
+//endregion Game_CharacterBase
