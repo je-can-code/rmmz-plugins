@@ -132,18 +132,27 @@ When constructing new extensions, typically the structure defined is as such:
 * We should never use optional method chaining, that is strictly forbidden in this codebase and code we write should be rewritten to never need it.
   * Assume methods we are adding exist and that all drop-in replacements will be provided simultaneously before merged into the main codebase.
 * Prefer the pattern of `if (condition === false)` versus `(if (!condition))` (or the inverse) where possible- it improves readability.
-
+* New properties on objects should NEVER be dynamically instantiated if at all possible- they should be created in the `initMembers` of the respective class- or in the corresponding plugin variant (such as `initJabsMembers`)
+  * Such properties should also never directly be interacted with- they should be masked behind getter/setter functions to centralize the property access and management.
+* When building new functions, consider cognitive/cyclomatic complexity and try not to exceed 20.
+  * Functions should always be written with one of two mindsets in mind:
+    * This function is an orchestration function and will be calling many functions consecutively to perform some sort of overarching behavior or process.
+    * This function is a helper for an orchestration function and should have 1 job.
 
 ## Code Formatting Style
 
-* All drop-in code replacements should obey the eslint rules of the project if possible.
+* All drop-in code replacements should obey the eslint rules of the project.
 * When possible, almost every line should have an inline comment above it, describing what it does using proper sentence casing.
   * Examples of this are plentiful throughout the codebase.
   * Add the comments on the line preceding the line the comment is written about.
   * There should never be comments above the line and also on the line.
+  * The only exception to this rule is if the function is 1 line, then the JsDocs will suffice.
+* Always document methods with JsDocs.
+  * Never echo my feedback into the JsDocs- only write what the purpose of the function is so someone who reads it will understand the purpose of the function and not the iterative changes that occurred to the method as it was being built.
 * Always terminate statements with semicolons.
 * Always indent with 2 spaces, where applicable.
-* Prefer double quotes for strings, use template literals for interpolation.
+* Prefer double quotes for strings.
+* Always use template literals for interpolation.
 * All example snippets in this document (including aliasing examples) should follow the same style rules (double quotes, semicolons, 2-space indent).
 * Trailing commas in arrays/objects are acceptable and even encouraged in some cases to indicate there are other (possibly useful but currently ignored) parameters available.
 * Line length should be capped at 120 for all source files except `_annotations.js` files.
@@ -182,9 +191,10 @@ SOME_TYPE.prototype.SOME_METHOD = function(...args)
   const original = J.SOME_NAMESPACE.Aliased.SOME_TYPE.get("SOME_METHOD").call(this, ...args);
 
   // new/modified logic here that may or may not potentially generate an updatedOriginal variable.
+  this.SOME_SIDE_EFFECT_FUNCTION(original);
 
   // return whatever is relevant, if anything at all.
-  return original; // or updatedOriginal if some other value/variable should be returned in place of the original.
+  return original;
 };
 ```
 * When providing drop-in replacements, provide the path relative to the plugin folder, the method, and the line number, as well as the entire method being replaced.
