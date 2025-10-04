@@ -3582,14 +3582,12 @@ JABS_Battler.prototype.smartMoveTowardAllyTarget = function()
 JABS_Battler.prototype.smartMoveTowardCoordinates = function(x, y)
 {
   const character = this.getCharacter();
-  const nextDir = globalThis.CycloneMovement
-    ? character.findDirectionTo(x, y)
-    : character.findDiagonalDirectionTo(x, y);
+  const nextDir = character.findDiagonalDirectionTo(x, y);
 
   if (character.isDiagonalDirection(nextDir))
   {
-    const horzvert = character.getDiagonalDirections(nextDir);
-    character.moveDiagonally(horzvert[0], horzvert[1]);
+    const [ horz, vert ] = character.getDiagonalDirections(nextDir);
+    character.moveDiagonally(horz, vert);
   }
   else
   {
@@ -12162,7 +12160,7 @@ class JABS_Timer
 /*:
  * @target MZ
  * @plugindesc
- * [v3.4.3 JABS] Enables combat to be carried out on the map.
+ * [v4.0.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -12206,6 +12204,13 @@ class JABS_Timer
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.0.0
+ *    Added hitbox visibility for castable skills along with related tags.
+ *    Properly abstracted DIAG out of this plugin.
+ *    Added castbar visibility while casting.
+ *    Added performance improvements for maps with large battler counts.
+ *    Fixed numerous issues with collision and hitboxes.
+ *    Added additional tags related to hitboxes.
  * - 3.4.3
  *    Added hook for post-battler-conversion mutation.
  * - 3.4.2
@@ -14220,7 +14225,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.4.3';
+J.ABS.Metadata.Version = '4.0.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -22186,10 +22191,9 @@ class JABS_Engine
     const pageData = actionEventData.pages[pageIndex]; // get page.
     actionEventSprite.setMoveFrequency(pageData.moveFrequency); // frequency.
     actionEventSprite.setMoveRoute(pageData.moveRoute); // route.
-    actionEventSprite.setDirection(action.direction()); // facing.
-    actionEventSprite.setCustomDirection(action.direction()); // custom facing.
     actionEventSprite.setCastedDirection($gamePlayer.direction()); // cast facing.
-    actionEventSprite.setJabsAction(action); // wire action.
+
+    this.applyActionToActionEventSprite(actionEventSprite, action);
 
     // prevent player interaction with the action event.
     actionEventSprite.start = () => false; // no-op start.
@@ -22197,6 +22201,17 @@ class JABS_Engine
     action.setActionSprite(actionEventSprite); // associate back.
     $gameMap.addEvent(actionEventSprite); // add to map, with hole reuse.
     this.requestActionRendering = true; // trigger render.
+  }
+
+  /**
+   * Applies the {@link JABS_Action} to the {@link Game_Event}
+   * @param {Game_Event} actionEventSprite The event being created for the action.
+   * @param {JABS_Action} action The action being applied.
+   */
+  applyActionToActionEventSprite(actionEventSprite, action)
+  {
+    actionEventSprite.setJabsAction(action); // wire action.
+    actionEventSprite.setDirection(action.direction()); // facing.
   }
 
   /**
@@ -28674,27 +28689,6 @@ Game_Event.prototype.initMembers = function()
   // perform original logic.
   J.ABS.Aliased.Game_Event.get('initMembers')
     .call(this);
-};
-
-/**
- * Sets the initial direction being faced on this event's creation.
- * @param {number} direction The initial direction faced on creation.
- */
-Game_Event.prototype.setCustomDirection = function(direction)
-{
-  // don't turn if direction is fixed.
-  if (this.isDirectionFixed()) return;
-
-  this._j._abs._initialDirection = direction;
-};
-
-/**
- * Gets the initial direction being faced on this event's creation.
- * @returns {number}
- */
-Game_Event.prototype.getCustomDirection = function()
-{
-  return this._j._abs._initialDirection;
 };
 
 /**

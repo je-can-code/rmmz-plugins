@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v2.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -81,7 +81,7 @@
  * the player, it is not dependent on button inputs, but instead dependent on
  * RNG to continue a combo. Each of the modes above provide different bonuses
  * to the base 50% chance for executing a combo:
- * - do-nothing:    no bonus.   (=50% chance)
+ * - do-nothing:    no bonus because they won't even do anything.
  * - basic-attack:  +30% chance (=80% chance)
  * - variety:       +20% chance (=70% chance)
  * - full-force:    +50% chance (=100% chance!!!)
@@ -115,6 +115,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Added a concept of "formations".
+ *    Allies now own their own movement instead of mirroring the player.
+ *    Added castbar visibility while casting (for allies).
+ *    Changed rubberbanding to blink allies to the player instead of jump.
  * - 1.2.0
  *    Removed ally AI code from core JABS and added here.
  *    Fixed issue where battle memories were not correctly applied.
@@ -278,7 +283,7 @@ J.ABS.EXT.ALLYAI = {};
  */
 J.ABS.EXT.ALLYAI.Metadata = {};
 J.ABS.EXT.ALLYAI.Metadata.Name = `J-ABS-AllyAI`;
-J.ABS.EXT.ALLYAI.Metadata.Version = '1.2.0';
+J.ABS.EXT.ALLYAI.Metadata.Version = '2.0.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -305,7 +310,7 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters[
 J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
 
-J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.4;
+J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.5;
 J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis = 0.25;
 
 // TODO: lift this to store in persistent memory like game_system or game_party.
@@ -1410,8 +1415,32 @@ JABS_Battler.prototype.applyBattleMemories = function(newMemory)
 //endregion JABS_Battler
 
 //region JABS_AiManager
+
 /**
- * Extends `aiPhase0()` to accommodate the possibility of actors having an idle phase.
+ * Extends {@link #executeAi}.<br/>
+ * Enforces a functional leash for keeping ally battlers close in the execute loop.
+ * @param {JABS_Battler} battler The battler executing on the AI mode.
+ */
+J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.set('executeAi', JABS_AiManager.executeAi);
+JABS_AiManager.executeAi = function(battler)
+{
+  // check if this is an ally.
+  if (battler.isActor())
+  {
+    // resolve the current leader battler; player1 is the leader in JABS.
+    const leader = $jabsEngine.getPlayer1();
+
+    // apply leash/rubberband rules relative to the leader; exit on corrective action.
+    if (this.maintainLeashAndEngagement(battler, leader)) return;
+  }
+
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('executeAi').call(this, battler);
+};
+
+/**
+ * Extends {@link #aiPhase0}.<br/>
+ * Also accommodates the possibility of actors having an idle phase.
  * @param {JABS_Battler} battler The batter to decide for.
  */
 J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.set('aiPhase0', JABS_AiManager.aiPhase0);
@@ -1514,10 +1543,13 @@ JABS_AiManager.allyFollowLeader = function(allyBattler)
   const leader = $jabsEngine.getPlayer1();
 
   // if we lack a leader or cannot move, do not attempt to follow.
-  if (!leader || !allyBattler.canBattlerMove()) return;
+  if (!leader) return;
 
   // apply leash/rubberband rules relative to the leader; exit on corrective action.
   if (this.maintainLeashAndEngagement(allyBattler, leader)) return;
+
+  // if the ally cannot move, do not follow.
+  if (!allyBattler.canBattlerMove()) return;
 
   // determine follower index to choose a formation slot.
   const followerIndex = this.getFollowerIndexFromBattler(allyBattler);
@@ -1587,7 +1619,12 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
 
   // Jump to the leader instantly.
   const allyCharacter = allyBattler.getCharacter();
-  allyCharacter.jumpToPlayer();
+  const leader = $jabsEngine.getPlayer1();
+  const lx = Math.floor(leader.getX());
+  const ly = Math.floor(leader.getY());
+
+  // relocate directly to the leader's tile to guarantee a successful rubberband.
+  allyCharacter.locate(lx, ly);
 };
 
 /**
@@ -1727,11 +1764,13 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   if (this.isWithinTolerance(allyBattler, desiredX, desiredY, tolerance)) return;
 
   // acquire the character once.
-  const chr = allyBattler.getCharacter();
+  const character = allyBattler.getCharacter();
 
-  // only issue a new move if not on pixel-move cooldown and able to move.
-  const onCooldown = chr._j && chr._j._pixelMoveCooldown > 0;
-  if (!onCooldown && allyBattler.canBattlerMove())
+  // don't re-issue move commands if already moving.
+  if (character.isMoving()) return;
+
+  // only issue a new move if able to move.
+  if (allyBattler.canBattlerMove())
   {
     // move intelligently toward the desired formation slot point (centered).
     allyBattler.smartMoveTowardCoordinates(desiredX, desiredY);

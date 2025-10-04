@@ -29,7 +29,7 @@
  *
  * Integrates with others of mine plugins:
  * - J-ABS; enables per-event-enemy level overrides.
- * - J-LevelMaster; handles level-based max hp/mp/tp growths.
+ * - J-NATURAL; handles level-based max hp/mp/tp growths.
  *
  * ============================================================================
  * PLUGIN PARAMETERS BREAKDOWN:

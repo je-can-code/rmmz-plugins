@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v2.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -81,7 +81,7 @@
  * the player, it is not dependent on button inputs, but instead dependent on
  * RNG to continue a combo. Each of the modes above provide different bonuses
  * to the base 50% chance for executing a combo:
- * - do-nothing:    no bonus.   (=50% chance)
+ * - do-nothing:    no bonus because they won't even do anything.
  * - basic-attack:  +30% chance (=80% chance)
  * - variety:       +20% chance (=70% chance)
  * - full-force:    +50% chance (=100% chance!!!)
@@ -115,6 +115,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Added a concept of "formations".
+ *    Allies now own their own movement instead of mirroring the player.
+ *    Added castbar visibility while casting (for allies).
+ *    Changed rubberbanding to blink allies to the player instead of jump.
  * - 1.2.0
  *    Removed ally AI code from core JABS and added here.
  *    Fixed issue where battle memories were not correctly applied.
