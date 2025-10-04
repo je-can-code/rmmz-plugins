@@ -477,7 +477,7 @@ Game_Event.prototype.homeIntoBattler = function(battler)
 {
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const nextDir = (typeof(CycloneMovement) === "object")
+  const nextDir = (globalThis.CycloneMovement)
     ? this.findDirectionTo(x, y)
     : this.findDiagonalDirectionTo(x, y);
   this.setCustomDirection(nextDir);
@@ -589,7 +589,7 @@ Game_Event.prototype.seekBattler = function(battler)
   const currDir = this.getCustomDirection();
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const finalDir = (typeof(CycloneMovement) === "object")
+  const finalDir = (globalThis.CycloneMovement)
     ? this.findDirectionTo(x, y)
     : this.findDiagonalDirectionTo(x, y);
 
@@ -692,7 +692,7 @@ Game_Player.prototype.moveDiagonally = function(horz, vert)
 {
   J.ABS.EXT.DIAG.Aliased.Game_Player.moveDiagonally.call(this, horz, vert);
   // if we're using cyclone movement, rely on that instead.
-  if (globalThis && globalThis.CycloneMovement) return;
+  if (globalThis.CycloneMovement) return;
 
   if (!this.isMovementSucceeded())
   {
@@ -717,7 +717,7 @@ Game_Player.prototype.moveDiagonally = function(horz, vert)
  * If we're using cyclone movement, adjust their triggering of events to not interact
  * with battlers and such if they are also events that have event commands.
  */
-if (globalThis && globalThis.CycloneMovement)
+if (globalThis.CycloneMovement)
 {
   J.ABS.EXT.DIAG.Aliased.Game_Player.shouldTriggerEvent = Game_Player.prototype.shouldTriggerEvent;
   Game_Player.prototype.shouldTriggerEvent = function(event, triggers, normal)

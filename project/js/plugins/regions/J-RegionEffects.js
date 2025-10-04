@@ -315,7 +315,7 @@ Game_Map.prototype.refreshRegionEffects = function()
   this.refreshDenyRegionEffects();
 
   // check if using cyclone movement.
-  if (typeof(CycloneMovement) === "object")
+  if (globalThis.CycloneMovement)
   {
     // refresh the collision after the region effects are refreshed.
     CycloneMovement.setupCollision();
@@ -454,8 +454,8 @@ Game_Map.prototype.isAllowRegionId = function(regionId)
 Game_Map.prototype.projectCoordinatesByDirection = function(x, y, d)
 {
   // accommodate cyclone movement if available.
-  const increment = (typeof(CycloneMovement) === "object")
-    ? (1 / CycloneMovement?.stepCount ?? 1)
+  const increment = (globalThis.CycloneMovement)
+    ? (1 / CycloneMovement.stepCount)
     : 1;
 
   // default the projected coordinates to the current.

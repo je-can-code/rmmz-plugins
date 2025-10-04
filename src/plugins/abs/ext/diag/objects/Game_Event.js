@@ -351,7 +351,7 @@ Game_Event.prototype.homeIntoBattler = function(battler)
 {
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const nextDir = (typeof(CycloneMovement) === "object")
+  const nextDir = (globalThis.CycloneMovement)
     ? this.findDirectionTo(x, y)
     : this.findDiagonalDirectionTo(x, y);
   this.setCustomDirection(nextDir);
@@ -463,7 +463,7 @@ Game_Event.prototype.seekBattler = function(battler)
   const currDir = this.getCustomDirection();
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const finalDir = (typeof(CycloneMovement) === "object")
+  const finalDir = (globalThis.CycloneMovement)
     ? this.findDirectionTo(x, y)
     : this.findDiagonalDirectionTo(x, y);
 
