@@ -1,4 +1,31 @@
 /**
+ * Gets all valid directions supported by the default system.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidDirections = function()
+{
+  return [ ...this.getValidCardinalDirections(), ...this.getValidDiagonalDirections() ];
+};
+
+/**
+ * Gets all valid diagonal directions.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidDiagonalDirections = function()
+{
+  return [ 1, 3, 7, 9 ];
+};
+
+/**
+ * Gets all valid cardinal directions.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidCardinalDirections = function()
+{
+  return [ 2, 4, 6, 8 ];
+};
+
+/**
  * Determines if a numeric directional input is diagonal.
  * @param {number} direction The direction to check.
  * @returns {boolean} True if the input is diagonal, false otherwise.

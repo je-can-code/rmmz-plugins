@@ -96,6 +96,7 @@
  *    Added base Max TP management with tags for battlers.
  *    Added helper functions for detecting plugin commands inside of events.
  *    Added helper function for converting horz/vert directions to a direction.
+ *    Added helper functions for direction validation.
  * - 2.2.1
  *    Added dev filter function for action to skill mapping for enemies.
  * - 2.2.0
@@ -8590,6 +8591,33 @@ Game_Character.prototype.distanceFromCharacter = function(character)
 
   // return the calculated value.
   return constrainedDistance;
+};
+
+/**
+ * Gets all valid directions supported by the default system.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidDirections = function()
+{
+  return [ ...this.getValidCardinalDirections(), ...this.getValidDiagonalDirections() ];
+};
+
+/**
+ * Gets all valid diagonal directions.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidDiagonalDirections = function()
+{
+  return [ 1, 3, 7, 9 ];
+};
+
+/**
+ * Gets all valid cardinal directions.
+ * @returns {number[]}
+ */
+Game_CharacterBase.prototype.getValidCardinalDirections = function()
+{
+  return [ 2, 4, 6, 8 ];
 };
 
 /**

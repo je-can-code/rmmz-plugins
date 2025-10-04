@@ -1283,14 +1283,12 @@ JABS_Battler.prototype.smartMoveTowardAllyTarget = function()
 JABS_Battler.prototype.smartMoveTowardCoordinates = function(x, y)
 {
   const character = this.getCharacter();
-  const nextDir = globalThis.CycloneMovement
-    ? character.findDirectionTo(x, y)
-    : character.findDiagonalDirectionTo(x, y);
+  const nextDir = character.findDiagonalDirectionTo(x, y);
 
   if (character.isDiagonalDirection(nextDir))
   {
-    const horzvert = character.getDiagonalDirections(nextDir);
-    character.moveDiagonally(horzvert[0], horzvert[1]);
+    const [ horz, vert ] = character.getDiagonalDirections(nextDir);
+    character.moveDiagonally(horz, vert);
   }
   else
   {

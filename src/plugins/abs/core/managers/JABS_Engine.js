@@ -1770,10 +1770,9 @@ class JABS_Engine
     const pageData = actionEventData.pages[pageIndex]; // get page.
     actionEventSprite.setMoveFrequency(pageData.moveFrequency); // frequency.
     actionEventSprite.setMoveRoute(pageData.moveRoute); // route.
-    actionEventSprite.setDirection(action.direction()); // facing.
-    actionEventSprite.setCustomDirection(action.direction()); // custom facing.
     actionEventSprite.setCastedDirection($gamePlayer.direction()); // cast facing.
-    actionEventSprite.setJabsAction(action); // wire action.
+
+    this.applyActionToActionEventSprite(actionEventSprite, action);
 
     // prevent player interaction with the action event.
     actionEventSprite.start = () => false; // no-op start.
@@ -1781,6 +1780,17 @@ class JABS_Engine
     action.setActionSprite(actionEventSprite); // associate back.
     $gameMap.addEvent(actionEventSprite); // add to map, with hole reuse.
     this.requestActionRendering = true; // trigger render.
+  }
+
+  /**
+   * Applies the {@link JABS_Action} to the {@link Game_Event}
+   * @param {Game_Event} actionEventSprite The event being created for the action.
+   * @param {JABS_Action} action The action being applied.
+   */
+  applyActionToActionEventSprite(actionEventSprite, action)
+  {
+    actionEventSprite.setJabsAction(action); // wire action.
+    actionEventSprite.setDirection(action.direction()); // facing.
   }
 
   /**

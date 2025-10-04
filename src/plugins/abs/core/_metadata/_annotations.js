@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.4.3 JABS] Enables combat to be carried out on the map.
+ * [v4.0.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,13 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.0.0
+ *    Added hitbox visibility for castable skills along with related tags.
+ *    Properly abstracted DIAG out of this plugin.
+ *    Added castbar visibility while casting.
+ *    Added performance improvements for maps with large battler counts.
+ *    Fixed numerous issues with collision and hitboxes.
+ *    Added additional tags related to hitboxes.
  * - 3.4.3
  *    Added hook for post-battler-conversion mutation.
  * - 3.4.2
