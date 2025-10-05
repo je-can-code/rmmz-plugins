@@ -19,7 +19,7 @@ Window_AbsMenu.prototype.buildCommands = function()
     .isVisible();
 
   // build the command.
-  const command = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
+  const allyAiCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
     .setSymbol('ally-ai')
     .setEnabled(enabled)
     .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandIconIndex)
@@ -28,7 +28,19 @@ Window_AbsMenu.prototype.buildCommands = function()
     .build();
 
   // add the new command.
-  originalCommands.push(command);
+  originalCommands.push(allyAiCommand);
+
+  // build the command.
+  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
+    .setSymbol('ally-formations')
+    .setEnabled(enabled)
+    .setIconIndex(289) // TODO: parameterize this.
+    .setColorIndex(23)
+    .setHelpText(this.allyFormationsHelpText())
+    .build();
+
+  // add the new command.
+  originalCommands.push(allyFormationsCommand);
 
   // return the updated command list.
   return originalCommands;
@@ -48,7 +60,7 @@ Window_AbsMenu.prototype.canAddAllyAiCommand = function()
 };
 
 /**
- * The help text for the JABS sdp menu.
+ * The help text for the JABS ally AI menu.
  * @returns {string}
  */
 Window_AbsMenu.prototype.allyAiHelpText = function()
@@ -56,6 +68,20 @@ Window_AbsMenu.prototype.allyAiHelpText = function()
   const description = [
     "Your AI mode selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
+
+  return description.join("\n");
+};
+
+/**
+ * The help text for the JABS ally formation menu.
+ * @returns {string}
+ */
+Window_AbsMenu.prototype.allyFormationsHelpText = function()
+{
+  const description = [
+    "Your ally formation selection menu.",
+    "The formation of your allies can be changed from here."
+  ];
 
   return description.join("\n");
 };

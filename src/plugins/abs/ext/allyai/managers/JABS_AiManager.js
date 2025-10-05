@@ -19,7 +19,8 @@ JABS_AiManager.executeAi = function(battler)
   }
 
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('executeAi').call(this, battler);
+  J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('executeAi')
+    .call(this, battler);
 };
 
 /**
@@ -140,7 +141,7 @@ JABS_AiManager.allyFollowLeader = function(allyBattler)
 
   // resolve the current formation type.
   // TODO: resolve this from persisted game_system or maybe game_party?
-  const formationType = J.ABS.EXT.ALLYAI.FormationType;
+  const formationType = $gameParty.getPartyFormation();
 
   // compute the desired slot tile for this follower based on formation.
   const coords = this.computeFormationTarget(leader, followerIndex, formationType);
@@ -225,23 +226,11 @@ JABS_AiManager.getFollowerIndexFromBattler = function(allyBattler)
   if (!character || !character.isFollower()) return -1;
 
   // gather the current followers list.
-  const followers = $gamePlayer.followers().data();
+  const followers = $gamePlayer.followers()
+    .data();
 
   // return the index (may be -1 if unexpected).
   return followers.indexOf(character);
-};
-
-/**
- * Gets the array of [x,y] tile offsets for the requested formation type.
- * Offsets are relative to the leader's current tile.
- * @param {string} formationType The formation type key.
- * @returns {number[][]} The list of offsets.
- */
-JABS_AiManager.getFormationOffsets = function(formationType)
-{
-  // resolve and return offsets.
-  const presets = J.ABS.EXT.ALLYAI.Formations;
-  return presets[formationType] || presets.rear_wedge;
 };
 
 /**
@@ -278,6 +267,22 @@ JABS_AiManager.computeFormationTarget = function(leaderBattler, followerIndex, f
 
   // return slot coords.
   return this.calculateFormationSlotCoordinates(lx, rx, ly, ry);
+};
+
+/**
+ * Gets the array of [x,y] tile offsets for the requested formation type.
+ * Offsets are relative to the leader's current tile.
+ * @param {string} formationKey The formation type key.
+ * @returns {number[][]} The list of offsets.
+ */
+JABS_AiManager.getFormationOffsets = function(formationKey)
+{
+  // identify the formation in question.
+  const foundFormation = J.ABS.EXT.ALLYAI.Metadata.FormationTypes
+    .find(formation => formation.key === formationKey) ?? J.ABS.EXT.ALLYAI.Metadata.FormationTypes[0];
+
+  // resolve and return offsets.
+  return foundFormation.formation;
 };
 
 /**

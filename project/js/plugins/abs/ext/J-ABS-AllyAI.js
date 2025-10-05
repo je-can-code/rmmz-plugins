@@ -311,41 +311,66 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameter
 J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
 
 J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.5;
-J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis = 0.25;
 
-// TODO: lift this to store in persistent memory like game_system or game_party.
-J.ABS.EXT.ALLYAI.FormationType = "rear_wedge";
-J.ABS.EXT.ALLYAI.Formations = {
-  rear_wedge:
-    [
-      [ -1, -1 ], // back-left (behind is negative Y when facing DOWN)
-      [  1, -1 ], // back-right
-      [  0, -2 ], // two tiles behind
-      [ -2, -1 ], // farther back-left
-      [  2, -1 ], // farther back-right
-      [  0, -3 ], // three tiles behind
-    ],
-  flanks:
-    [
-      [ -1,  0 ], // left
-      [  1,  0 ], // right
-      [ -2,  0 ], // far-left
-      [  2,  0 ], // far-right
-      [ -1, -1 ], // back-left (behind = -Y)
-      [  1, -1 ], // back-right
-    ],
-  circle_small:
-    [
-      [  0,  1 ], // below (was above) — full inversion of directions
-      [  1,  0 ], // right
-      [  0, -1 ], // above (was below)
-      [ -1,  0 ], // left
-      [  1,  1 ], // lower-right (was upper-right)
-      [ -1,  1 ], // lower-left (was upper-left)
-      [  1, -1 ], // upper-right (was lower-right)
-      [ -1, -1 ], // upper-left (was lower-left)
-    ]
-};
+/**
+ * All available formations that a party can take.
+ * @type {JABS_Formation[]}
+ */
+J.ABS.EXT.ALLYAI.Metadata.FormationTypes = [
+  {
+    key: "fan-behind",
+    name: "Rear Support",
+    description: "The rear-wedge formation.\nAllies will fan out behind you for support.",
+    formation:
+      [
+        [ -1, -1 ], // 1 back-left (behind is negative Y when facing DOWN)
+        [  1, -1 ], // 2 back-right
+        [  0, -2 ], // 3 two tiles behind
+        [ -1, -2 ], // 4 farther back-left
+        [  1, -2 ], // 5 farther back-right
+        [  0, -4 ], // 6 three tiles behind
+      ],
+    effects: [],
+  },
+  {
+    key: "flank-sides",
+    name: "Wings",
+    description: "A side- flank formation.\nAllies will flank you at either side to look extra menacing.",
+    formation:
+      [
+        [ -1,  0 ], // 1 left
+        [  1,  0 ], // 2 right
+        [ -2,  0 ], // 3 far-left
+        [  2,  0 ], // 4 far-right
+        [ -3,  0 ], // 5 farther-left
+        [  3,  0 ], // 6 farther-right
+      ],
+    effects: [],
+  },
+  {
+    key: "close-circle",
+    name: "Body Barricade",
+    description: "The tight circle formation.\nNo one will get to most delicate squishy innard!",
+    formation:
+      [
+        [  0,  1 ], // 1 below
+        [  1,  0 ], // 2 right
+        [  0, -1 ], // 3 above
+        [ -1,  0 ], // 4 left
+        [  1,  1 ], // 5 lower-right
+        [ -1,  1 ], // 6 lower-left
+        [  1, -1 ], // 7 upper-right
+        [ -1, -1 ], // 8 upper-left
+      ],
+    effects: [],
+  },
+];
+
+/**
+ * The default formation type if none is selected.
+ * @type {string}
+ */
+J.ABS.EXT.ALLYAI.Metadata.DefaultFormationType = J.ABS.EXT.ALLYAI.Metadata.FormationTypes[0].key;
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -364,7 +389,7 @@ J.ABS.EXT.ALLYAI.Aliased = {
   JABS_AiManager: new Map(),
   JABS_Battler: new Map(),
 
-  Scene_Map: {},
+  Scene_Map: new Map(),
 
   Spriteset_Map: new Map(),
 
@@ -397,6 +422,7 @@ JABS_AllyAI.prototype.constructor = JABS_AllyAI;
  * The strict enumeration of what ai modes are available for ally ai.
  * @type {any}
  */
+// TODO: add descriptions for in-menu general explanations of each type.
 JABS_AllyAI.modes = {
   /**
    * When this mode is assigned, the battler will take no action.
@@ -1414,6 +1440,55 @@ JABS_Battler.prototype.applyBattleMemories = function(newMemory)
 };
 //endregion JABS_Battler
 
+//region JABS_Formation
+/**
+ * The structure of a party formation in JABS.
+ */
+class JABS_Formation
+{
+  /**
+   * The name of the formation.
+   * @type {string}
+   */
+  name = String.empty;
+
+  /**
+   * The description of the formation for use when reviewing formations.
+   * @type {string}
+   */
+  description = String.empty;
+
+  /**
+   * A collection of the x,y coordinates of each ally relative to the leader and their facing.
+   * @type {[number[]]}
+   */
+  formation = [];
+
+
+  /**
+   * A collection of the effects applied to the party while this formation is active.
+   * @type {any[]}
+   */
+  effects = [];
+
+  /**
+   * Constructor.
+   * @param {string} name The name of this formation.
+   * @param {string} description The description of this formation to display to the player.
+   * @param {[number[]]} formation The array of positions for allies representing the formation.
+   * @param {any[]=} effects The additional effects applied when this formation is active.
+   */
+  constructor(name, description, formation, effects = [])
+  {
+    this.name = name;
+    this.description = description;
+    this.formation = formation;
+    this.effects = effects;
+  }
+}
+
+//endregion JABS_Formation
+
 //region JABS_AiManager
 
 /**
@@ -1435,7 +1510,8 @@ JABS_AiManager.executeAi = function(battler)
   }
 
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('executeAi').call(this, battler);
+  J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('executeAi')
+    .call(this, battler);
 };
 
 /**
@@ -1556,7 +1632,7 @@ JABS_AiManager.allyFollowLeader = function(allyBattler)
 
   // resolve the current formation type.
   // TODO: resolve this from persisted game_system or maybe game_party?
-  const formationType = J.ABS.EXT.ALLYAI.FormationType;
+  const formationType = $gameParty.getPartyFormation();
 
   // compute the desired slot tile for this follower based on formation.
   const coords = this.computeFormationTarget(leader, followerIndex, formationType);
@@ -1641,23 +1717,11 @@ JABS_AiManager.getFollowerIndexFromBattler = function(allyBattler)
   if (!character || !character.isFollower()) return -1;
 
   // gather the current followers list.
-  const followers = $gamePlayer.followers().data();
+  const followers = $gamePlayer.followers()
+    .data();
 
   // return the index (may be -1 if unexpected).
   return followers.indexOf(character);
-};
-
-/**
- * Gets the array of [x,y] tile offsets for the requested formation type.
- * Offsets are relative to the leader's current tile.
- * @param {string} formationType The formation type key.
- * @returns {number[][]} The list of offsets.
- */
-JABS_AiManager.getFormationOffsets = function(formationType)
-{
-  // resolve and return offsets.
-  const presets = J.ABS.EXT.ALLYAI.Formations;
-  return presets[formationType] || presets.rear_wedge;
 };
 
 /**
@@ -1694,6 +1758,22 @@ JABS_AiManager.computeFormationTarget = function(leaderBattler, followerIndex, f
 
   // return slot coords.
   return this.calculateFormationSlotCoordinates(lx, rx, ly, ry);
+};
+
+/**
+ * Gets the array of [x,y] tile offsets for the requested formation type.
+ * Offsets are relative to the leader's current tile.
+ * @param {string} formationKey The formation type key.
+ * @returns {number[][]} The list of offsets.
+ */
+JABS_AiManager.getFormationOffsets = function(formationKey)
+{
+  // identify the formation in question.
+  const foundFormation = J.ABS.EXT.ALLYAI.Metadata.FormationTypes
+    .find(formation => formation.key === formationKey) ?? J.ABS.EXT.ALLYAI.Metadata.FormationTypes[0];
+
+  // resolve and return offsets.
+  return foundFormation.formation;
 };
 
 /**
@@ -2443,15 +2523,27 @@ Game_Party.prototype.initAllyAi = function()
   this._j ||= {};
 
   /**
-   * A grouping of all properties associated with ally ai.
+   * A grouping of all properties associated with JABS.
    */
-  this._j._allyAI ||= {};
+  this._j._abs ||= {};
+
+  /**
+   * A grouping of all properties associated with the ally ai JABS extension.
+   */
+  this._j._abs._allyAI ||= {};
 
   /**
    * Whether or not the party will engage without the player's engagement.
    * @type {boolean}
    */
-  this._j._allyAI._aggroPassiveToggle ||= false;
+  this._j._abs._allyAI._aggroPassiveToggle ||= false;
+
+  /**
+   * The name of the current formation the party is leveraging.
+   * @type {string}
+   */
+  this._j._abs._allyAI._partyFormation = J.ABS.EXT.ALLYAI.Metadata.DefaultFormationType;
+  console.log(this._j._abs._allyAI._partyFormation);
 };
 
 /**
@@ -2460,7 +2552,7 @@ Game_Party.prototype.initAllyAi = function()
  */
 Game_Party.prototype.isAggro = function()
 {
-  return this._j._allyAI._aggroPassiveToggle;
+  return this._j._abs._allyAI._aggroPassiveToggle;
 };
 
 /**
@@ -2469,7 +2561,7 @@ Game_Party.prototype.isAggro = function()
  */
 Game_Party.prototype.becomeAggro = function()
 {
-  this._j._allyAI._aggroPassiveToggle = true;
+  this._j._abs._allyAI._aggroPassiveToggle = true;
 };
 
 /**
@@ -2478,7 +2570,25 @@ Game_Party.prototype.becomeAggro = function()
  */
 Game_Party.prototype.becomePassive = function()
 {
-  this._j._allyAI._aggroPassiveToggle = false;
+  this._j._abs._allyAI._aggroPassiveToggle = false;
+};
+
+/**
+ * Gets the key of the current party formation.
+ * @returns {string}
+ */
+Game_Party.prototype.getPartyFormation = function()
+{
+  return this._j._abs._allyAI._partyFormation;
+};
+
+/**
+ * Sets the key of the current party formation to the given formation.
+ * @param formation
+ */
+Game_Party.prototype.setPartyFormation = function(formation)
+{
+  this._j._abs._allyAI._partyFormation = formation;
 };
 
 /**
@@ -2525,26 +2635,53 @@ Game_Player.prototype.jumpFollowersToMe = function()
 //endregion Game_Player
 
 //region Scene_Map
+//region init
 /**
  * Extends the JABS menu initialization to include the new ally ai management selection.
  */
-J.ABS.EXT.ALLYAI.Aliased.Scene_Map.initJabsMembers = Scene_Map.prototype.initJabsMembers;
+J.ABS.EXT.ALLYAI.Aliased.Scene_Map.set('initJabsMembers', Scene_Map.prototype.initJabsMembers);
 Scene_Map.prototype.initJabsMembers = function()
 {
-  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.initJabsMembers.call(this);
-  this.initAllyAiSubmenu();
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.get('initJabsMembers')
+    .call(this);
+
+  // init ally ai members.
+  this.initAllyAiMembers();
 };
 
 /**
  * Initializes the new windows for ally ai management.
  */
-Scene_Map.prototype.initAllyAiSubmenu = function()
+Scene_Map.prototype.initAllyAiMembers = function()
 {
+  /**
+   * The window containing the list of party members to adjust the AI for.
+   * @type {Window_AbsMenuSelect|null}
+   */
   this._j._absMenu._allyAiPartyWindow = null;
+
+  /**
+   * The window containing the list of AI strategies for use.
+   * @type {Window_AbsMenuSelect|null}
+   */
   this._j._absMenu._allyAiEquipWindow = null;
+
+  /**
+   * The window containing the list of ally formations available.
+   * @type {Window_Formations|null}
+   */
+  this._j._absMenu._allyAiFormationWindow = null;
+
+  /**
+   * The currently-selected ally actorId.
+   * @type {number}
+   */
   this._j._absMenu._allyAiActorId = 0;
 };
+//endregion init
 
+//region getter/setter
 /**
  * Sets the chosen actor id to the provided id.
  * @param {number} chosenActorId The id of the chosen actor.
@@ -2563,24 +2700,54 @@ Scene_Map.prototype.getAllyAiActorId = function()
 };
 
 /**
+ * Gets the ally formation window.
+ * @returns {Window_Formations}
+ */
+Scene_Map.prototype.getAllyFormationWindow = function()
+{
+  return this._j._absMenu._allyAiFormationWindow;
+};
+
+/**
+ * Sets the ally formation window.
+ * @param {Window_Formations} window The new window.
+ */
+Scene_Map.prototype.setAllyFormationWindow = function(window)
+{
+  this._j._absMenu._allyAiFormationWindow = window;
+};
+//endregion getter/setter
+
+//region create
+/**
  * Extends the JABS menu creation to include the new windows for ally ai management.
  */
-J.ABS.EXT.ALLYAI.Aliased.Scene_Map.createJabsAbsMenu = Scene_Map.prototype.createJabsAbsMenu;
+J.ABS.EXT.ALLYAI.Aliased.Scene_Map.set('createJabsAbsMenu', Scene_Map.prototype.createJabsAbsMenu);
 Scene_Map.prototype.createJabsAbsMenu = function()
 {
-  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.createJabsAbsMenu.call(this);
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.get('createJabsAbsMenu')
+    .call(this);
+
+  // also create the new ally AI windows..
   this.createAllyAiPartyWindow();
   this.createAllyAiEquipWindow();
+  this.createAllyAiFormationWindow();
 };
 
 /**
  * Extends the JABS menu creation to include a new command handler for ally ai.
  */
-J.ABS.EXT.ALLYAI.Aliased.Scene_Map.createJabsAbsMenuMainWindow = Scene_Map.prototype.createJabsAbsMenuMainWindow;
+J.ABS.EXT.ALLYAI.Aliased.Scene_Map.set('createJabsAbsMenuMainWindow', Scene_Map.prototype.createJabsAbsMenuMainWindow);
 Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
 {
-  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.createJabsAbsMenuMainWindow.call(this);
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.get('createJabsAbsMenuMainWindow')
+    .call(this);
+
+  // also associate the ally AI handler with the appropriate symbol.
   this._j._absMenu._mainWindow.setHandler("ally-ai", this.commandManagePartyAi.bind(this));
+  this._j._absMenu._mainWindow.setHandler("ally-formations", this.commandAllyFormations.bind(this));
 };
 
 /**
@@ -2622,12 +2789,53 @@ Scene_Map.prototype.createAllyAiEquipWindow = function()
   this.addWindow(this._j._absMenu._allyAiEquipWindow);
 };
 
+Scene_Map.prototype.createAllyAiFormationWindow = function()
+{
+  const rect = this.allyAiFormationRectangle();
+
+  const window = new Window_Formations(rect);
+
+  window.setHandler("cancel", this.closeAbsWindow.bind(this, "ally-formations"));
+  window.setHandler("select-formation", this.commandSelectAllyFormation.bind(this));
+
+  this.setAllyFormationWindow(window);
+
+  window.close();
+  window.hide();
+
+  this.addWindow(window);
+};
+
+/**
+ * Creates the rectangle representing the window for the formations.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.allyAiFormationRectangle = function()
+{
+  // define the width of the window.
+  const width = 600;
+
+  // define the height of the window.
+  const height = 400;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - width;
+
+  // define the origin y of the window.
+  const y = 200;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, width, height);
+};
+//endregion create
+
+//region commands
 /**
  * When the "manage ally ai" option is chosen, it prioritizes this window.
  */
 Scene_Map.prototype.commandManagePartyAi = function()
 {
-  this._j._absMenu._windowFocus = "ai-party-list";
+  this.setJabsMenuFocus("ai-party-list");
 };
 
 /**
@@ -2635,7 +2843,10 @@ Scene_Map.prototype.commandManagePartyAi = function()
  */
 Scene_Map.prototype.commandSelectMemberAi = function()
 {
-  this._j._absMenu._windowFocus = "select-ai";
+  // change focus to the ally AI selection window.
+  this.setJabsMenuFocus("select-ai");
+
+  // set the actorId into the AI selection window and refresh.
   const actorId = this._j._absMenu._allyAiPartyWindow.currentExt();
   this.setAllyAiActorId(actorId);
   this._j._absMenu._allyAiEquipWindow.setActorId(actorId);
@@ -2649,10 +2860,15 @@ Scene_Map.prototype.commandSelectMemberAi = function()
  */
 Scene_Map.prototype.commandAggroPassiveToggle = function()
 {
+  // play a fun sound when changing party aggro mode.
   SoundManager.playRecovery();
+
+  // toggle the party aggro mode.
   $gameParty.isAggro()
     ? $gameParty.becomePassive()
     : $gameParty.becomeAggro();
+
+  // refresh the window to pick up the new state.
   this._j._absMenu._allyAiPartyWindow.refresh();
 };
 
@@ -2675,13 +2891,34 @@ Scene_Map.prototype.commandEquipMemberAi = function()
   this._j._absMenu._allyAiEquipWindow.refresh();
 };
 
+Scene_Map.prototype.commandAllyFormations = function()
+{
+  this.setJabsMenuFocus("ally-formations");
+};
+
+Scene_Map.prototype.commandSelectAllyFormation = function()
+{
+  const window = this.getAllyFormationWindow();
+
+  /** @type {JABS_Formation} */
+  const selectedFormation = window.currentExt();
+  $gameParty.setPartyFormation(selectedFormation.key);
+  window.refresh();
+};
+//endregion commands
+
+//region manage menu
 /**
  * Manages the ABS main menu's interactivity.
  */
-J.ABS.EXT.ALLYAI.Aliased.Scene_Map.manageAbsMenu = Scene_Map.prototype.manageAbsMenu;
+J.ABS.EXT.ALLYAI.Aliased.Scene_Map.set('manageAbsMenu', Scene_Map.prototype.manageAbsMenu);
 Scene_Map.prototype.manageAbsMenu = function()
 {
-  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.manageAbsMenu.call(this);
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.get('manageAbsMenu')
+    .call(this);
+
+  // pivot on the window focus to manage which should be open and which should be closed.
   switch (this._j._absMenu._windowFocus)
   {
     case "ai-party-list":
@@ -2700,6 +2937,14 @@ Scene_Map.prototype.manageAbsMenu = function()
       this._j._absMenu._allyAiEquipWindow.open();
       this._j._absMenu._allyAiEquipWindow.activate();
       break;
+    case "ally-formations":
+    {
+      const window = this.getAllyFormationWindow();
+      window.show();
+      window.open();
+      window.activate();
+      break;
+    }
   }
 };
 
@@ -2707,10 +2952,14 @@ Scene_Map.prototype.manageAbsMenu = function()
  * Closes a given Abs menu window.
  * @param {string} absWindow The type of abs window being closed.
  */
-J.ABS.EXT.ALLYAI.Aliased.Scene_Map.closeAbsWindow = Scene_Map.prototype.closeAbsWindow;
+J.ABS.EXT.ALLYAI.Aliased.Scene_Map.set('closeAbsWindow', Scene_Map.prototype.closeAbsWindow);
 Scene_Map.prototype.closeAbsWindow = function(absWindow)
 {
-  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.closeAbsWindow.call(this, absWindow);
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Scene_Map.get('closeAbsWindow')
+    .call(this, absWindow);
+
+  // allow possibly closing ally AI windows as well.
   switch (absWindow)
   {
     case "ai-party-list":
@@ -2720,7 +2969,7 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       this._j._absMenu._mainWindow.activate();
       this._j._absMenu._mainWindow.open();
       this._j._absMenu._mainWindow.show();
-      this._j._absMenu._windowFocus = "main";
+      this.setJabsMenuFocus("main");
       break;
     case "select-ai":
       this._j._absMenu._allyAiEquipWindow.hide();
@@ -2731,8 +2980,18 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       this._j._absMenu._allyAiPartyWindow.show();
       this._j._absMenu._windowFocus = "ai-party-list";
       break;
+    case "ally-formations":
+    {
+      const window = this.getAllyFormationWindow();
+      window.hide();
+      window.close();
+      window.deactivate();
+      this.setJabsMenuFocus("main");
+      break;
+    }
   }
 };
+//endregion manage menu
 //endregion Scene_Map
 
 //region Spriteset_Map
@@ -2782,7 +3041,7 @@ Window_AbsMenu.prototype.buildCommands = function()
     .isVisible();
 
   // build the command.
-  const command = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
+  const allyAiCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
     .setSymbol('ally-ai')
     .setEnabled(enabled)
     .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandIconIndex)
@@ -2791,7 +3050,19 @@ Window_AbsMenu.prototype.buildCommands = function()
     .build();
 
   // add the new command.
-  originalCommands.push(command);
+  originalCommands.push(allyAiCommand);
+
+  // build the command.
+  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
+    .setSymbol('ally-formations')
+    .setEnabled(enabled)
+    .setIconIndex(289) // TODO: parameterize this.
+    .setColorIndex(23)
+    .setHelpText(this.allyFormationsHelpText())
+    .build();
+
+  // add the new command.
+  originalCommands.push(allyFormationsCommand);
 
   // return the updated command list.
   return originalCommands;
@@ -2811,7 +3082,7 @@ Window_AbsMenu.prototype.canAddAllyAiCommand = function()
 };
 
 /**
- * The help text for the JABS sdp menu.
+ * The help text for the JABS ally AI menu.
  * @returns {string}
  */
 Window_AbsMenu.prototype.allyAiHelpText = function()
@@ -2819,6 +3090,20 @@ Window_AbsMenu.prototype.allyAiHelpText = function()
   const description = [
     "Your AI mode selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
+
+  return description.join("\n");
+};
+
+/**
+ * The help text for the JABS ally formation menu.
+ * @returns {string}
+ */
+Window_AbsMenu.prototype.allyFormationsHelpText = function()
+{
+  const description = [
+    "Your ally formation selection menu.",
+    "The formation of your allies can be changed from here."
+  ];
 
   return description.join("\n");
 };
@@ -2968,3 +3253,71 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
   modes.forEach(forEacher, this);
 };
 //endregion Window_AbsMenuSelect
+
+/**
+ * A window that allows selection from a list of ally AI formations.
+ */
+class Window_Formations
+  extends Window_Command
+{
+  constructor(rect)
+  {
+    super(rect);
+  }
+
+  /**
+   * Generates the command list for the JABS menu.
+   */
+  makeCommandList()
+  {
+    // build all the commands.
+    const commands = this.buildCommands();
+
+    // add the built commands.
+    commands.forEach(this.addBuiltCommand, this);
+  }
+
+  buildCommands()
+  {
+    // iterate over each of the commands.
+    return J.ABS.EXT.ALLYAI.Metadata.FormationTypes.map(this.buildCommand, this);
+  }
+
+  buildCommand(formation)
+  {
+    // extract some data from the formation.
+    const {
+      key,
+      name,
+      description
+    } = formation;
+
+    // check if the currently selected formation is what this is.
+    const isEquipped = $gameParty.getPartyFormation() === key;
+
+    // build the icon based on whether or not its assigned.
+    const iconIndex = isEquipped
+      ? J.ABS.EXT.ALLYAI.Metadata.AiModeEquippedIconIndex
+      : J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex;
+
+    // build the new "command".
+    return new WindowCommandBuilder(name)
+      .setSymbol("select-formation")
+      .setTextLines(description.split(/[\r\n]/i))
+      .flagAsSubText()
+      .setIconIndex(iconIndex)
+      .setEnabled(true)
+      .setExtensionData(formation)
+      .build();
+  }
+
+  /**
+   * Overrides {@link #itemHeight}.<br>
+   * Makes the command rows bigger so there can be additional lines.
+   * @returns {number}
+   */
+  itemHeight()
+  {
+    return this.lineHeight() * 2;
+  }
+}
