@@ -15,6 +15,7 @@ JABS_AllyAI.prototype.constructor = JABS_AllyAI;
  * The strict enumeration of what ai modes are available for ally ai.
  * @type {any}
  */
+// TODO: add descriptions for in-menu general explanations of each type.
 JABS_AllyAI.modes = {
   /**
    * When this mode is assigned, the battler will take no action.

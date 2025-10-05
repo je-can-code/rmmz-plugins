@@ -43,7 +43,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
 
     // use the configured hysteresis if available.
-    hysteresis = J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis;
+    hysteresis = 0.25;
   }
 
   // compute Euclidean distance to the target point using fractional coords.
@@ -156,7 +156,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
   {
     tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
-    hysteresis = J.ABS.EXT.ALLYAI.Metadata.FormationHysteresis;
+    hysteresis = 0.25;
   }
 
   // compute Euclidean distance to the target point using fractional coords.
