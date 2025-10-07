@@ -144,7 +144,7 @@
  * @type string
  * @text Menu Text
  * @desc The text displayed in the JABS quick menu for the ally ai command.
- * @default Assign Ally AI
+ * @default Manage Allies AI
  *
  * @param jabsMenuAllyAiCommandIconIndex
  * @parent menuConfigs

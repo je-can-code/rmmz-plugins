@@ -30,18 +30,6 @@ Window_AbsMenu.prototype.buildCommands = function()
   // add the new command.
   originalCommands.push(allyAiCommand);
 
-  // build the command.
-  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
-    .setSymbol('ally-formations')
-    .setEnabled(enabled)
-    .setIconIndex(289) // TODO: parameterize this.
-    .setColorIndex(23)
-    .setHelpText(this.allyFormationsHelpText())
-    .build();
-
-  // add the new command.
-  originalCommands.push(allyFormationsCommand);
-
   // return the updated command list.
   return originalCommands;
 };
@@ -66,23 +54,19 @@ Window_AbsMenu.prototype.canAddAllyAiCommand = function()
 Window_AbsMenu.prototype.allyAiHelpText = function()
 {
   const description = [
-    "Your AI mode selection menu.",
+    "Your ally management selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
 
   return description.join("\n");
 };
 
 /**
- * The help text for the JABS ally formation menu.
- * @returns {string}
+ * Overwrites {@link #itemHeight}.<br/>
+ * Increases the height so subtext can be added.
+ * @returns {number}
  */
-Window_AbsMenu.prototype.allyFormationsHelpText = function()
+Window_AbsMenuSelect.prototype.itemHeight = function()
 {
-  const description = [
-    "Your ally formation selection menu.",
-    "The formation of your allies can be changed from here."
-  ];
-
-  return description.join("\n");
+  return this.lineHeight() * 2;
 };
 //endregion Window_AbsMenu
