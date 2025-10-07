@@ -144,7 +144,7 @@
  * @type string
  * @text Menu Text
  * @desc The text displayed in the JABS quick menu for the ally ai command.
- * @default Assign Ally AI
+ * @default Manage Allies AI
  *
  * @param jabsMenuAllyAiCommandIconIndex
  * @parent menuConfigs
@@ -420,55 +420,63 @@ JABS_AllyAI.prototype.constructor = JABS_AllyAI;
 //region statics
 /**
  * The strict enumeration of what ai modes are available for ally ai.
- * @type {any}
  */
-// TODO: add descriptions for in-menu general explanations of each type.
 JABS_AllyAI.modes = {
   /**
    * When this mode is assigned, the battler will take no action.
+   * @type {JABS_AllyAIMode}
    */
   DO_NOTHING: {
     key: "do-nothing",
     name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
+    description: "Take no action.\nThis ally will literally do nothing except maybe stand there.",
   },
 
   /**
    * When this mode is assigned, the battler will only use their mainhand attack skill.
    * If no skill is equipped in their main hand, they will do nothing.
+   * @type {JABS_AllyAIMode}
    */
   BASIC_ATTACK: {
     key: "basic-attack",
     name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
+    description: "Focus on basic attacking.\nIn fact, \\_only\\_ basic attacks will be used.",
   },
 
   /**
    * When this mode is assigned, the battler will intelligently decide from any skill they have equipped.
+   * @type {JABS_AllyAIMode}
    */
   VARIETY: {
     key: "variety",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText,
+    description: "Spread strategy across all skills.\nThis ally will execute skills based on their current situation.",
   },
 
   /**
    * When this mode is assigned, the battler will use the biggest and strongest skills available.
+   * @type {JABS_AllyAIMode}
    */
   FULL_FORCE: {
     key: "full-force",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText,
+    description: "Emphasize dealing the most damage with skills.\nThis ally won't do much other than skills.",
   },
 
   /**
    * When this mode is assigned, the battler will prioritize supporting and healing allies.
+   * @type {JABS_AllyAIMode}
    */
   SUPPORT: {
     key: "support",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText,
+    description: "Relegate to the support role.\nThis ally will try to keep you and other allies alive.",
   },
 };
 
 /**
  * Gets all valid values of the possible modes currently implemented.
- * @returns {any[]}
+ * @returns {JABS_AllyAIMode[]}
  */
 JABS_AllyAI.getModes = () => Object
   .keys(JABS_AllyAI.modes)
@@ -1285,6 +1293,46 @@ JABS_AllyAI.prototype.filterMemoriesByEffectiveness = function(usableSkills, mem
 };
 //endregion battle memory
 //endregion JABS_AllyAI
+
+//region JABS_AllyAIMode
+/**
+ * The structure for a single ally AI mode in the context of a JABS ally.
+ */
+class JABS_AllyAIMode
+{
+  /**
+   * The key of this ally AI mode.
+   * @type {string}
+   */
+  key = String.empty;
+
+  /**
+   * The human-readable name for this ally AI mode.
+   * @type {string}
+   */
+  name = String.empty;
+
+  /**
+   * The potentially multi-line description for this ally AI mode.
+   * @type {string}
+   */
+  description = String.empty;
+
+  /**
+   * Constructor.
+   * @param key
+   * @param name
+   * @param description
+   */
+  constructor(key, name, description)
+  {
+    this.key = key;
+    this.name = name;
+    this.description = description;
+  }
+}
+
+//endregion JABS_AllyAIMode
 
 //region JABS_BattleMemory
 /**
@@ -2747,7 +2795,6 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
 
   // also associate the ally AI handler with the appropriate symbol.
   this._j._absMenu._mainWindow.setHandler("ally-ai", this.commandManagePartyAi.bind(this));
-  this._j._absMenu._mainWindow.setHandler("ally-formations", this.commandAllyFormations.bind(this));
 };
 
 /**
@@ -2755,55 +2802,117 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
  */
 Scene_Map.prototype.createAllyAiPartyWindow = function()
 {
-  const w = 400;
-  const h = 250;
-  const x = Graphics.boxWidth - w;
-  const y = 200;
-  const rect = new Rectangle(x, y, w, h);
+  // identify the shape of the window.
+  const rect = this.allyAiPartyRectangle();
+
+  // build the window with the rectangle and its type.
   const aiPartyMenu = new Window_AbsMenuSelect(rect, "ai-party-list");
+
+  // setup the handlers.
   aiPartyMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "ai-party-list"));
   aiPartyMenu.setHandler("party-member", this.commandSelectMemberAi.bind(this));
   aiPartyMenu.setHandler("aggro-passive-toggle", this.commandAggroPassiveToggle.bind(this));
+  aiPartyMenu.setHandler("ally-formations", this.commandAllyFormations.bind(this));
+
+  // set the window for tracking.
   this._j._absMenu._allyAiPartyWindow = aiPartyMenu;
+  this.addWindow(this._j._absMenu._allyAiPartyWindow);
+
+  // manage the initial state of the window.
   this._j._absMenu._allyAiPartyWindow.close();
   this._j._absMenu._allyAiPartyWindow.hide();
-  this.addWindow(this._j._absMenu._allyAiPartyWindow);
 };
 
 /**
- * Creates a window that lists all available ai modes that the chose ally can use.
+ * Creates the rectangle representing the window for selecting which ally to manage AI for.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.allyAiPartyRectangle = function()
+{
+  // define the width of the window.
+  const w = 600;
+
+  // define the height of the window.
+  const h = 600;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - w;
+
+  // define the origin y of the window.
+  const y = 200;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, w, h);
+};
+
+/**
+ * Creates a window that lists all available ai modes that the chosen ally can use.
  */
 Scene_Map.prototype.createAllyAiEquipWindow = function()
 {
-  const w = 400;
-  const h = 250;
-  const x = Graphics.boxWidth - w;
-  const y = 200;
-  const rect = new Rectangle(x, y, w, h);
+  // identify the shape of the window.
+  const rect = this.allyAiEquipRectangle();
+
+  // build the window with the rectangle and its type.
   const aiMemberMenu = new Window_AbsMenuSelect(rect, "select-ai");
+
+  // setup the handlers.
   aiMemberMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "select-ai"));
   aiMemberMenu.setHandler("select-ai", this.commandEquipMemberAi.bind(this));
+
+  // set the window for tracking.
   this._j._absMenu._allyAiEquipWindow = aiMemberMenu;
+  this.addWindow(this._j._absMenu._allyAiEquipWindow);
+
+  // manage the initial state of the window.
   this._j._absMenu._allyAiEquipWindow.close();
   this._j._absMenu._allyAiEquipWindow.hide();
-  this.addWindow(this._j._absMenu._allyAiEquipWindow);
 };
 
+/**
+ * Creates the rectangle representing the window for selecting which AI mode to apply to a given ally.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.allyAiEquipRectangle = function()
+{
+  // define the width of the window.
+  const w = 600;
+
+  // define the height of the window.
+  const h = 400;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - w;
+
+  // define the origin y of the window.
+  const y = 200;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, w, h);
+};
+
+/**
+ * Creates the ally formations window.
+ */
 Scene_Map.prototype.createAllyAiFormationWindow = function()
 {
+  // identify the shape of the window.
   const rect = this.allyAiFormationRectangle();
 
+  // build the window with the rectangle.
   const window = new Window_Formations(rect);
 
+  // setup the handlers.
   window.setHandler("cancel", this.closeAbsWindow.bind(this, "ally-formations"));
   window.setHandler("select-formation", this.commandSelectAllyFormation.bind(this));
 
+  // set the window for tracking.
   this.setAllyFormationWindow(window);
+  this.addWindow(window);
 
+  // manage the initial state of the window.
   window.close();
   window.hide();
-
-  this.addWindow(window);
 };
 
 /**
@@ -2939,6 +3048,10 @@ Scene_Map.prototype.manageAbsMenu = function()
       break;
     case "ally-formations":
     {
+      this._j._absMenu._allyAiPartyWindow.hide();
+      this._j._absMenu._allyAiPartyWindow.close();
+      this._j._absMenu._allyAiPartyWindow.deactivate();
+
       const window = this.getAllyFormationWindow();
       window.show();
       window.open();
@@ -2978,7 +3091,7 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       this._j._absMenu._allyAiPartyWindow.activate();
       this._j._absMenu._allyAiPartyWindow.open();
       this._j._absMenu._allyAiPartyWindow.show();
-      this._j._absMenu._windowFocus = "ai-party-list";
+      this.setJabsMenuFocus("ai-party-list");
       break;
     case "ally-formations":
     {
@@ -2986,7 +3099,11 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       window.hide();
       window.close();
       window.deactivate();
-      this.setJabsMenuFocus("main");
+
+      this._j._absMenu._allyAiPartyWindow.activate();
+      this._j._absMenu._allyAiPartyWindow.open();
+      this._j._absMenu._allyAiPartyWindow.show();
+      this.setJabsMenuFocus("ai-party-list");
       break;
     }
   }
@@ -3052,18 +3169,6 @@ Window_AbsMenu.prototype.buildCommands = function()
   // add the new command.
   originalCommands.push(allyAiCommand);
 
-  // build the command.
-  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
-    .setSymbol('ally-formations')
-    .setEnabled(enabled)
-    .setIconIndex(289) // TODO: parameterize this.
-    .setColorIndex(23)
-    .setHelpText(this.allyFormationsHelpText())
-    .build();
-
-  // add the new command.
-  originalCommands.push(allyFormationsCommand);
-
   // return the updated command list.
   return originalCommands;
 };
@@ -3088,24 +3193,20 @@ Window_AbsMenu.prototype.canAddAllyAiCommand = function()
 Window_AbsMenu.prototype.allyAiHelpText = function()
 {
   const description = [
-    "Your AI mode selection menu.",
+    "Your ally management selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
 
   return description.join("\n");
 };
 
 /**
- * The help text for the JABS ally formation menu.
- * @returns {string}
+ * Overwrites {@link #itemHeight}.<br/>
+ * Increases the height so subtext can be added.
+ * @returns {number}
  */
-Window_AbsMenu.prototype.allyFormationsHelpText = function()
+Window_AbsMenuSelect.prototype.itemHeight = function()
 {
-  const description = [
-    "Your ally formation selection menu.",
-    "The formation of your allies can be changed from here."
-  ];
-
-  return description.join("\n");
+  return this.lineHeight() * 2;
 };
 //endregion Window_AbsMenu
 
@@ -3156,7 +3257,9 @@ Window_AbsMenuSelect.prototype.makeCommandList = function()
   switch (this._j._menuType)
   {
     case "ai-party-list":
+      this.addAggroPassiveToggleCommand();
       this.makeAllyList();
+      this.addAllyFormationCommand();
       break;
     case "select-ai":
       this.makeAllyAiModeList();
@@ -3185,7 +3288,13 @@ Window_AbsMenuSelect.prototype.makeAllyList = function()
   // build all the commands.
   $gameParty.allMembers()
     .forEach(forEacher, this);
+};
 
+/**
+ * Injects the aggro-passive toggle command into the menu.
+ */
+Window_AbsMenuSelect.prototype.addAggroPassiveToggleCommand = function()
+{
   // define the icons for passive/aggressive ally AI aggro settings.
   const aggroPassiveCommandName = $gameParty.isAggro()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveText
@@ -3194,14 +3303,42 @@ Window_AbsMenuSelect.prototype.makeAllyList = function()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex
     : J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex;
 
+  const description = $gameParty.isAggro()
+    ? "The party is currently 'aggro'.\nAllies will engage in any enemy that comes within their range."
+    : "The party is currently 'passive'.\nAllies will not engage until the leader strikes or is struck.";
+
+  const textColor = $gameParty.isAggro()
+    ? 2
+    : 3;
+
   // build the command for toggling ally AI aggro.
   const command = new WindowCommandBuilder(aggroPassiveCommandName)
     .setSymbol("aggro-passive-toggle")
+    .setTextLines(description.split(/[\r\n]/i))
+    .flagAsSubText()
+    .setColorIndex(textColor)
     .setIconIndex(aggroPassiveCommandIcon)
     .build();
 
   // add the aggro toggle command.
   this.addBuiltCommand(command);
+};
+
+/**
+ * Injects the party formations command into the menu.
+ */
+Window_AbsMenuSelect.prototype.addAllyFormationCommand = function()
+{
+  // define the icons for passive/aggressive ally AI aggro settings.
+  // build the command.
+  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
+    .setSymbol('ally-formations')
+    .setIconIndex(289) // TODO: parameterize this.
+    .setColorIndex(23)
+    .build();
+
+  // add the aggro toggle command.
+  this.addBuiltCommand(allyFormationsCommand);
 };
 
 /**
@@ -3227,7 +3364,8 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
     // extract some data from this ally AI mode.
     const {
       key,
-      name
+      name,
+      description,
     } = mode;
 
     // check if the currently selected ally AI mode is this command.
@@ -3241,7 +3379,10 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
     // build the command.
     const command = new WindowCommandBuilder(name)
       .setSymbol("select-ai")
+      .setTextLines(description.split(/[\r\n]/i))
+      .flagAsSubText()
       .setIconIndex(iconIndex)
+      .setEnabled(true)
       .setExtensionData(mode)
       .build();
 
@@ -3251,6 +3392,16 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
 
   // iterate over each mode and rebuild the commands.
   modes.forEach(forEacher, this);
+};
+
+/**
+ * Overwrites {@link #itemHeight}.<br/>
+ * Increases the height so subtext can be added.
+ * @returns {number}
+ */
+Window_AbsMenuSelect.prototype.itemHeight = function()
+{
+  return this.lineHeight() * 2;
 };
 //endregion Window_AbsMenuSelect
 

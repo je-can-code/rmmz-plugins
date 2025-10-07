@@ -111,7 +111,6 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
 
   // also associate the ally AI handler with the appropriate symbol.
   this._j._absMenu._mainWindow.setHandler("ally-ai", this.commandManagePartyAi.bind(this));
-  this._j._absMenu._mainWindow.setHandler("ally-formations", this.commandAllyFormations.bind(this));
 };
 
 /**
@@ -119,55 +118,117 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
  */
 Scene_Map.prototype.createAllyAiPartyWindow = function()
 {
-  const w = 400;
-  const h = 250;
-  const x = Graphics.boxWidth - w;
-  const y = 200;
-  const rect = new Rectangle(x, y, w, h);
+  // identify the shape of the window.
+  const rect = this.allyAiPartyRectangle();
+
+  // build the window with the rectangle and its type.
   const aiPartyMenu = new Window_AbsMenuSelect(rect, "ai-party-list");
+
+  // setup the handlers.
   aiPartyMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "ai-party-list"));
   aiPartyMenu.setHandler("party-member", this.commandSelectMemberAi.bind(this));
   aiPartyMenu.setHandler("aggro-passive-toggle", this.commandAggroPassiveToggle.bind(this));
+  aiPartyMenu.setHandler("ally-formations", this.commandAllyFormations.bind(this));
+
+  // set the window for tracking.
   this._j._absMenu._allyAiPartyWindow = aiPartyMenu;
+  this.addWindow(this._j._absMenu._allyAiPartyWindow);
+
+  // manage the initial state of the window.
   this._j._absMenu._allyAiPartyWindow.close();
   this._j._absMenu._allyAiPartyWindow.hide();
-  this.addWindow(this._j._absMenu._allyAiPartyWindow);
 };
 
 /**
- * Creates a window that lists all available ai modes that the chose ally can use.
+ * Creates the rectangle representing the window for selecting which ally to manage AI for.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.allyAiPartyRectangle = function()
+{
+  // define the width of the window.
+  const w = 600;
+
+  // define the height of the window.
+  const h = 600;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - w;
+
+  // define the origin y of the window.
+  const y = 200;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, w, h);
+};
+
+/**
+ * Creates a window that lists all available ai modes that the chosen ally can use.
  */
 Scene_Map.prototype.createAllyAiEquipWindow = function()
 {
-  const w = 400;
-  const h = 250;
-  const x = Graphics.boxWidth - w;
-  const y = 200;
-  const rect = new Rectangle(x, y, w, h);
+  // identify the shape of the window.
+  const rect = this.allyAiEquipRectangle();
+
+  // build the window with the rectangle and its type.
   const aiMemberMenu = new Window_AbsMenuSelect(rect, "select-ai");
+
+  // setup the handlers.
   aiMemberMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "select-ai"));
   aiMemberMenu.setHandler("select-ai", this.commandEquipMemberAi.bind(this));
+
+  // set the window for tracking.
   this._j._absMenu._allyAiEquipWindow = aiMemberMenu;
+  this.addWindow(this._j._absMenu._allyAiEquipWindow);
+
+  // manage the initial state of the window.
   this._j._absMenu._allyAiEquipWindow.close();
   this._j._absMenu._allyAiEquipWindow.hide();
-  this.addWindow(this._j._absMenu._allyAiEquipWindow);
 };
 
+/**
+ * Creates the rectangle representing the window for selecting which AI mode to apply to a given ally.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.allyAiEquipRectangle = function()
+{
+  // define the width of the window.
+  const w = 600;
+
+  // define the height of the window.
+  const h = 400;
+
+  // define the origin x of the window.
+  const x = Graphics.boxWidth - w;
+
+  // define the origin y of the window.
+  const y = 200;
+
+  // return the built rectangle.
+  return new Rectangle(x, y, w, h);
+};
+
+/**
+ * Creates the ally formations window.
+ */
 Scene_Map.prototype.createAllyAiFormationWindow = function()
 {
+  // identify the shape of the window.
   const rect = this.allyAiFormationRectangle();
 
+  // build the window with the rectangle.
   const window = new Window_Formations(rect);
 
+  // setup the handlers.
   window.setHandler("cancel", this.closeAbsWindow.bind(this, "ally-formations"));
   window.setHandler("select-formation", this.commandSelectAllyFormation.bind(this));
 
+  // set the window for tracking.
   this.setAllyFormationWindow(window);
+  this.addWindow(window);
 
+  // manage the initial state of the window.
   window.close();
   window.hide();
-
-  this.addWindow(window);
 };
 
 /**
@@ -303,6 +364,10 @@ Scene_Map.prototype.manageAbsMenu = function()
       break;
     case "ally-formations":
     {
+      this._j._absMenu._allyAiPartyWindow.hide();
+      this._j._absMenu._allyAiPartyWindow.close();
+      this._j._absMenu._allyAiPartyWindow.deactivate();
+
       const window = this.getAllyFormationWindow();
       window.show();
       window.open();
@@ -342,7 +407,7 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       this._j._absMenu._allyAiPartyWindow.activate();
       this._j._absMenu._allyAiPartyWindow.open();
       this._j._absMenu._allyAiPartyWindow.show();
-      this._j._absMenu._windowFocus = "ai-party-list";
+      this.setJabsMenuFocus("ai-party-list");
       break;
     case "ally-formations":
     {
@@ -350,7 +415,11 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       window.hide();
       window.close();
       window.deactivate();
-      this.setJabsMenuFocus("main");
+
+      this._j._absMenu._allyAiPartyWindow.activate();
+      this._j._absMenu._allyAiPartyWindow.open();
+      this._j._absMenu._allyAiPartyWindow.show();
+      this.setJabsMenuFocus("ai-party-list");
       break;
     }
   }

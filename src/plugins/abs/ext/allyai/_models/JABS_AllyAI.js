@@ -13,55 +13,63 @@ JABS_AllyAI.prototype.constructor = JABS_AllyAI;
 //region statics
 /**
  * The strict enumeration of what ai modes are available for ally ai.
- * @type {any}
  */
-// TODO: add descriptions for in-menu general explanations of each type.
 JABS_AllyAI.modes = {
   /**
    * When this mode is assigned, the battler will take no action.
+   * @type {JABS_AllyAIMode}
    */
   DO_NOTHING: {
     key: "do-nothing",
     name: J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText,
+    description: "Take no action.\nThis ally will literally do nothing except maybe stand there.",
   },
 
   /**
    * When this mode is assigned, the battler will only use their mainhand attack skill.
    * If no skill is equipped in their main hand, they will do nothing.
+   * @type {JABS_AllyAIMode}
    */
   BASIC_ATTACK: {
     key: "basic-attack",
     name: J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText,
+    description: "Focus on basic attacking.\nIn fact, \\_only\\_ basic attacks will be used.",
   },
 
   /**
    * When this mode is assigned, the battler will intelligently decide from any skill they have equipped.
+   * @type {JABS_AllyAIMode}
    */
   VARIETY: {
     key: "variety",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText,
+    description: "Spread strategy across all skills.\nThis ally will execute skills based on their current situation.",
   },
 
   /**
    * When this mode is assigned, the battler will use the biggest and strongest skills available.
+   * @type {JABS_AllyAIMode}
    */
   FULL_FORCE: {
     key: "full-force",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText,
+    description: "Emphasize dealing the most damage with skills.\nThis ally won't do much other than skills.",
   },
 
   /**
    * When this mode is assigned, the battler will prioritize supporting and healing allies.
+   * @type {JABS_AllyAIMode}
    */
   SUPPORT: {
     key: "support",
-    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText
+    name: J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText,
+    description: "Relegate to the support role.\nThis ally will try to keep you and other allies alive.",
   },
 };
 
 /**
  * Gets all valid values of the possible modes currently implemented.
- * @returns {any[]}
+ * @returns {JABS_AllyAIMode[]}
  */
 JABS_AllyAI.getModes = () => Object
   .keys(JABS_AllyAI.modes)
