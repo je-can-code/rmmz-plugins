@@ -980,7 +980,59 @@ class JABS_Action
   {
     // flag our first hit so we don't do this again.
     this._hitAtLeastOne = true;
+
+    // respect explicit global disable (if configured).
+    if (J.ABS.Metadata.HitboxPulse.enabled === false) return;
+
+    this.processHitboxPulse();
   }
+
+  /**
+   * Process the hitbox pulse for this action.
+   */
+  processHitboxPulse()
+  {
+    // resolve the action event and caster.
+    const actionEvent = this.getActionSprite();
+
+    // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
+    const originX = actionEvent.screenX();
+    const originY = actionEvent.screenY();
+
+    // derive geometry data from this action.
+    const shape = this.getShape();
+    const range = this.getRange();
+
+    // derive facing for directional shapes.
+    const facing = actionEvent
+      ? actionEvent.direction()
+      : this.direction();
+
+    // optional arc width and thickness from engine helpers (if applicable).
+    const degrees = actionEvent
+      ? ($jabsEngine.getActionDegrees(actionEvent) || 180)
+      : 180;
+    const thickness = actionEvent
+      ? ($jabsEngine.getActionThicknessTiles(actionEvent) || 1)
+      : 1;
+
+    // build a compact options object using the fluent API.
+    const options = JABS_HitboxPulseOptions.defaults()
+      .withOrigin(originX, originY)
+      .withShape(shape)
+      .withRange(range)
+      .withFacing(facing)
+      .withDegrees(degrees)
+      .withThickness(thickness)
+      .withFade(38, 0.42, 0.0)
+      .withScale(1.00, 1.08)
+      .withLine(0xFFFFFF, 0.85, 2)
+      .withFill(0xFFFFFF, 0.18)
+      .withBlendMode(PIXI.BLEND_MODES.ADD);
+
+    // spawn the pulse via the static manager (layer is set up by Spriteset_Map).
+    JABS_HitboxPulseManager.spawn(options);
+  };
 
   /**
    * An event hook for logic to perform after the main update of an action.
@@ -9499,6 +9551,300 @@ class JABS_GuardData
 
 //endregion JABS_GuardData
 
+//region JABS_HitboxPulseOptions
+/**
+ * Encapsulates all parameters for a transient hitbox pulse visualization.
+ * Provides defaults, fluent setters, cloning, and normalization.
+ */
+class JABS_HitboxPulseOptions
+{
+  /**
+   * Builds a new options object with default visuals and unset geometry.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  static defaults()
+  {
+    // create a new instance.
+    const o = new JABS_HitboxPulseOptions();
+
+    // geometry (to be set by caller).
+    o.x = 0;
+    o.y = 0;
+    o.shape = J.ABS.Shapes.Circle;
+    o.range = 1;
+    o.facing = 2;
+    o.degrees = 180;
+    o.thickness = 1;
+
+    // visuals/lifetime.
+    o.duration = 60;
+    o.startAlpha = 0.20;
+    o.endAlpha = 0.00;
+    o.scaleStart = 1.00;
+    o.scaleEnd = 1.08;
+    o.lineColor = 0xFFFFFF;
+    o.lineAlpha = 0.85;
+    o.lineWidth = 2;
+    o.fillColor = 0xFFFFFF;
+    o.fillAlpha = 0.18;
+    o.blendMode = PIXI.BLEND_MODES.ADD;
+
+    // return the new instance.
+    return o;
+  }
+
+  /**
+   * Creates a shallow clone of this options object.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  clone()
+  {
+    // create the new instance.
+    const c = new JABS_HitboxPulseOptions();
+
+    // copy all fields.
+    Object.assign(c, this);
+
+    // return the cloned copy.
+    return c;
+  }
+
+  /**
+   * Applies provided partial fields onto this options object.
+   * @param {Partial<JABS_HitboxPulseOptions>} patch The partial fields to apply.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  apply(patch)
+  {
+    // guard against nothing provided.
+    if (!patch) return this;
+
+    // merge fields from the provided patch.
+    Object.assign(this, patch);
+
+    // return for chaining.
+    return this;
+  }
+
+  /**
+   * Builds a plain object representation consumable by sprites.
+   */
+  toPlain()
+  {
+    // return the plain object for consumers that expect a literal.
+    return {
+      x: this.x,
+      y: this.y,
+      shape: this.shape,
+      range: this.range,
+      facing: this.facing,
+      degrees: this.degrees,
+      thickness: this.thickness,
+      duration: this.duration,
+      startAlpha: this.startAlpha,
+      endAlpha: this.endAlpha,
+      scaleStart: this.scaleStart,
+      scaleEnd: this.scaleEnd,
+      lineColor: this.lineColor,
+      lineAlpha: this.lineAlpha,
+      lineWidth: this.lineWidth,
+      fillColor: this.fillColor,
+      fillAlpha: this.fillAlpha,
+      blendMode: this.blendMode,
+    };
+  }
+
+  /**
+   * Fluent: sets the origin position.
+   * @param {number} x The world x.
+   * @param {number} y The world y.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withOrigin(x, y)
+  {
+    // assign x/y.
+    this.x = x;
+    this.y = y;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets the shape.
+   * @param {string} shape The shape name (see J.ABS.Shapes).
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withShape(shape)
+  {
+    // assign the shape.
+    this.shape = shape;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets the radial/extent range in tiles.
+   * @param {number} range The range.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withRange(range)
+  {
+    // assign the range.
+    this.range = range;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets the facing.
+   * @param {number} facing The numeric direction (2/4/6/8 and diagonals).
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withFacing(facing)
+  {
+    // assign the facing.
+    this.facing = facing;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets sector degrees for Arc shapes.
+   * @param {number} degrees The degrees (0-360).
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withDegrees(degrees)
+  {
+    // assign the degrees.
+    this.degrees = degrees;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets thickness for Line/Wall shapes.
+   * @param {number} tiles The thickness in tiles.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withThickness(tiles)
+  {
+    // assign the thickness.
+    this.thickness = tiles;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: overrides duration and fade curve.
+   * @param {number} duration The lifetime in frames.
+   * @param {number} startAlpha The starting alpha.
+   * @param {number} endAlpha The ending alpha.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withFade(duration, startAlpha, endAlpha)
+  {
+    // assign the fade/lifetime parameters.
+    this.duration = duration;
+    this.startAlpha = startAlpha;
+    this.endAlpha = endAlpha;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: overrides scale pulse curve.
+   * @param {number} start The starting uniform scale.
+   * @param {number} end The ending uniform scale.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withScale(start, end)
+  {
+    // assign the scale parameters.
+    this.scaleStart = start;
+    this.scaleEnd = end;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: overrides outline style.
+   * @param {number} color The outline color.
+   * @param {number} alpha The outline alpha.
+   * @param {number} width The outline width.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withLine(color, alpha, width)
+  {
+    // assign the outline properties.
+    this.lineColor = color;
+    this.lineAlpha = alpha;
+    this.lineWidth = width;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: overrides fill style.
+   * @param {number} color The fill color.
+   * @param {number} alpha The fill alpha.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withFill(color, alpha)
+  {
+    // assign the fill properties.
+    this.fillColor = color;
+    this.fillAlpha = alpha;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: overrides blend mode.
+   * @param {number} mode The PIXI blend mode.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withBlendMode(mode)
+  {
+    // assign the blend mode.
+    this.blendMode = mode;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Creates an options instance from either a plain object or an instance.
+   * @param {JABS_HitboxPulseOptions|Partial<JABS_HitboxPulseOptions>} data The source data.
+   * @param {JABS_HitboxPulseOptions=} base Optional base options to start from.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  static from(data, base)
+  {
+    // if already an instance, clone it to de-couple from caller.
+    if (data instanceof JABS_HitboxPulseOptions) return data.clone();
+
+    // derive a base to apply changes on.
+    const seed = base
+      ? base.clone()
+      : JABS_HitboxPulseOptions.defaults();
+
+    // apply partial fields when provided.
+    return seed.apply(data || {});
+  }
+}
+
+//endregion JABS_HitboxPulseOptions
+
 //region JABS_InputAdapter
 /**
  * This static class governs the instructions of what to do regarding input.
@@ -14364,6 +14710,23 @@ J.ABS.Metadata.HitboxStyles = {
           lineWidth: 3,
         },
     },
+};
+
+J.ABS.Metadata.HitboxPulse = {
+  enabled: true,
+  maxConcurrentPulses: 8,
+  duration: 18,
+  startAlpha: 0.22,
+  endAlpha: 0.00,
+  scaleStart: 1.00,
+  scaleEnd: 1.08,
+  lineColor: 0xFFFFFF,
+  lineAlpha: 0.85,
+  lineWidth: 2,
+  fillColor: 0xFFFFFF,
+  fillAlpha: 0.18,
+  // PIXI.BLEND_MODES.NORMAL or ADD
+  blendMode: PIXI.BLEND_MODES.ADD,
 };
 //endregion metadata
 
@@ -24885,6 +25248,304 @@ class JABS_Engine
 
 //endregion JABS_Engine
 
+//region JABS_HitboxPulseManager (static)
+/**
+ * A static manager that owns lightweight hitbox "pulses" for resolved JABS actions.
+ * Uses a small pool to avoid churn. Attach a PIXI container via `setLayer()`.
+ */
+class JABS_HitboxPulseManager
+{
+  //region static fields
+  /** @type {PIXI.Container|null} */
+  static _layer = null;
+
+  /** @type {Sprite_HitboxPulse[]} */
+  static _active = [];
+
+  /** @type {Sprite_HitboxPulse[]} */
+  static _pool = [];
+
+  /** @type {number} */
+  static _cap = 8;
+
+  /** @type {JABS_HitboxPulseOptions} */
+  static _defaults = JABS_HitboxPulseOptions.defaults();
+  //endregion static fields
+
+  //region accessors
+  /**
+   * Assigns/changes the target layer that pulses are attached to.
+   * @param {PIXI.Container} layer The container to attach pulses to.
+   */
+  static setLayer(layer)
+  {
+    // assign the destination container for pulses.
+    JABS_HitboxPulseManager._layer = layer;
+  }
+
+  /**
+   * Retrieves the current layer the pulses are attached to.
+   * @returns {PIXI.Container|null}
+   */
+  static getLayer()
+  {
+    // return the assigned layer.
+    return JABS_HitboxPulseManager._layer || null;
+  }
+
+  /**
+   * Gets the internal active collection reference.
+   * @returns {Sprite_HitboxPulse[]}
+   */
+  static getActive()
+  {
+    // return the active pulses collection.
+    return JABS_HitboxPulseManager._active;
+  }
+
+  /**
+   * Gets the internal pooled collection reference.
+   * @returns {Sprite_HitboxPulse[]}
+   */
+  static getPool()
+  {
+    // return the pool of pulses for reuse.
+    return JABS_HitboxPulseManager._pool;
+  }
+
+  /**
+   * Gets the current maximum concurrent pulse cap.
+   * @returns {number}
+   */
+  static getCap()
+  {
+    // return the current cap.
+    return JABS_HitboxPulseManager._cap;
+  }
+
+  /**
+   * Sets the maximum number of pulses concurrently alive.
+   * @param {number} cap The maximum concurrent pulses.
+   */
+  static setCap(cap)
+  {
+    // clamp to a sensible minimum of 0.
+    JABS_HitboxPulseManager._cap = Math.max(0, Math.floor(cap || 0));
+  }
+
+  /**
+   * Gets a cloned copy of the current default options used for pulses.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  static getDefaultOptions()
+  {
+    // return a cloned copy of the default options.
+    return JABS_HitboxPulseManager._defaults.clone();
+  }
+
+  /**
+   * Replaces the manager defaults with the provided options.
+   * @param {JABS_HitboxPulseOptions} opts The options to set as defaults.
+   */
+  static setDefaultOptions(opts)
+  {
+    // set the defaults to the provided copy.
+    JABS_HitboxPulseManager._defaults = opts.clone();
+  }
+
+  //endregion accessors
+
+  //region configuration
+  /**
+   * Overrides default visual/lifetime settings for the manager.
+   * Any provided fields merge over the existing defaults.
+   * @param {Partial<JABS_HitboxPulseOptions>=} opts The optional default overrides.
+   */
+  static configure(opts)
+  {
+    // if nothing provided, skip configuration.
+    if (!opts) return;
+
+    // apply the overrides to defaults.
+    JABS_HitboxPulseManager._defaults.apply(opts);
+
+    // allow cap override when provided using the setter.
+    if (typeof opts.maxConcurrentPulses === "number")
+    {
+      // set the cap accordingly.
+      JABS_HitboxPulseManager.setCap(opts.maxConcurrentPulses);
+    }
+  }
+
+  //endregion configuration
+
+  //region lifecycle
+  /**
+   * Spawns a pulse using geometry data from a resolved action.
+   * Accepts either a `JABS_HitboxPulseOptions` or a plain partial literal.
+   * @param {JABS_HitboxPulseOptions|Partial<JABS_HitboxPulseOptions>} data The pulse data.
+   */
+  static spawn(data)
+  {
+    // resolve the target layer.
+    const layer = JABS_HitboxPulseManager.getLayer();
+
+    // if no layer yet (early-map), skip spawn.
+    if (!layer) return;
+
+    // resolve collections and cap via accessors.
+    const active = JABS_HitboxPulseManager.getActive();
+    const pool = JABS_HitboxPulseManager.getPool();
+    const cap = JABS_HitboxPulseManager.getCap();
+
+    // optionally cap to keep GC and overdraw low.
+    if (active.length >= cap)
+    {
+      // remove the oldest to make space.
+      const oldest = active.shift();
+      if (oldest)
+      {
+        // detach from layer if attached.
+        if (oldest.parent === layer)
+        {
+          layer.removeChild(oldest);
+        }
+
+        // release to pool.
+        pool.push(oldest);
+      }
+    }
+
+    // produce a concrete options instance based on defaults.
+    const base = JABS_HitboxPulseManager.getDefaultOptions();
+    const options = JABS_HitboxPulseOptions.from(data, base);
+
+    // pick from the pool or create a new graphics sprite.
+    const pulse = pool.length > 0
+      ? pool.pop()
+      : new Sprite_HitboxPulse();
+
+    // reset and (re)setup geometry + visuals.
+    pulse.reset();
+    pulse.setup(options.toPlain());
+
+    // set world-space placement and rotation.
+    pulse.setWorldPosition(options.x, options.y);
+    pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(options.facing));
+
+    // attach to layer.
+    layer.addChild(pulse);
+
+    // track as active.
+    active.push(pulse);
+  }
+
+  /**
+   * Ticks all pulses and retires those that have finished.
+   */
+  static update()
+  {
+    // resolve collections and layer via accessors.
+    const active = JABS_HitboxPulseManager.getActive();
+    const pool = JABS_HitboxPulseManager.getPool();
+    const layer = JABS_HitboxPulseManager.getLayer();
+
+    // no pulses means no work.
+    if (active.length === 0) return;
+
+    // iterate from newest to oldest to allow safe splice.
+    for (let i = active.length - 1; i >= 0; i--)
+    {
+      // grab the pulse.
+      const pulse = active[i];
+
+      // update the pulse; if complete, release it.
+      pulse.update();
+      if (pulse.isExpired())
+      {
+        // detach from layer if still attached.
+        if (layer && pulse.parent === layer)
+        {
+          layer.removeChild(pulse);
+        }
+
+        // recycle the pulse back to the pool.
+        pool.push(pulse);
+
+        // remove from active.
+        active.splice(i, 1);
+      }
+    }
+  }
+
+  /**
+   * Clears all active and pooled pulses (for map transitions, etc.).
+   */
+  static clear()
+  {
+    // resolve collections and layer via accessors.
+    const active = JABS_HitboxPulseManager.getActive();
+    const pool = JABS_HitboxPulseManager.getPool();
+    const layer = JABS_HitboxPulseManager.getLayer();
+
+    // destroy/detach all active pulses.
+    for (let i = 0; i < active.length; i++)
+    {
+      // grab the pulse.
+      const pulse = active[i];
+
+      // if attached, detach.
+      if (pulse && layer && pulse.parent === layer)
+      {
+        layer.removeChild(pulse);
+      }
+    }
+
+    // reset collections.
+    active.length = 0;
+    pool.length = 0;
+  }
+
+  //endregion lifecycle
+
+  //region helpers
+  /**
+   * Converts numeric direction (1,2,3,4,6,7,8,9) to radians for pulse rotation.
+   * Baseline is Right (6) → 0 rad, because geometry is authored along +X.
+   * @param {number} dir The numeric direction.
+   * @returns {number} Radians.
+   */
+  static directionToRadians(dir)
+  {
+    // precomputed constants for clarity.
+    const RAD_0 = 0;           // right
+    const RAD_45 = Math.PI / 4;
+    const RAD_90 = Math.PI / 2;
+    const RAD_180 = Math.PI;
+    const RAD_N90 = -Math.PI / 2;
+    const RAD_N45 = -Math.PI / 4;
+
+    switch (dir)
+    {
+      case 6: return RAD_0;                // right
+      case 3: return RAD_45;               // down-right
+      case 2: return RAD_90;               // down
+      case 1: return RAD_180 - RAD_45;     // down-left (135°)
+      case 4: return RAD_180;              // left
+      case 7: return -RAD_180 + RAD_45;    // up-left (-135°)
+      case 8: return RAD_N90;              // up
+      case 9: return RAD_N45;              // up-right (-45°)
+    }
+
+    // default: point right.
+    return 0;
+  }
+
+  //endregion helpers
+}
+
+//endregion JABS_HitboxPulseManager (static)
+
 //region Game_Action
 /**
  * Overrides {@link #subject}.<br>
@@ -33818,6 +34479,268 @@ Sprite_Gauge.prototype.currentValue = function()
 };
 //endregion Sprite_Gauge
 
+//region Sprite_HitboxPulse
+/**
+ * A lightweight graphics sprite that renders a transient hitbox visualization.
+ * It supports several common JABS shapes: Circle, Square, Line, Arc (sector).
+ * Geometry is drawn in local space; caller sets world x/y and rotation.
+ */
+class Sprite_HitboxPulse
+  extends Sprite
+{
+  /**
+   * Constructor.
+   * Creates the internal Graphics child and resets members.
+   */
+  constructor()
+  {
+    // initialize base Sprite.
+    super();
+
+    /**
+     * Internal graphics used to draw the hitbox geometry.
+     * @type {PIXI.Graphics}
+     */
+    this._graphics = new PIXI.Graphics();
+
+    // attach the graphics element as a child.
+    this.addChild(this._graphics);
+
+    // initialize members.
+    this.reset();
+  }
+
+  //region lifecycle
+  /**
+   * Resets transient members to defaults for reuse.
+   */
+  reset()
+  {
+    // lifetime counters.
+    this._age = 0;           // current frame
+    this._duration = 18;     // total frames
+
+    // visual alpha curve.
+    this._startAlpha = 0.22;
+    this._endAlpha = 0.0;
+
+    // scale pulse curve.
+    this._scaleStart = 1.00;
+    this._scaleEnd = 1.08;
+
+    // base style components.
+    this._lineColor = 0xFFFFFF;
+    this._lineAlpha = 0.85;
+    this._lineWidth = 2;
+    this._fillColor = 0xFFFFFF;
+    this._fillAlpha = 0.18;
+    this._blendMode = PIXI.BLEND_MODES.ADD;
+
+    // geometry settings.
+    this._shape = J.ABS.Shapes.Circle;
+    this._range = 1;         // in tiles
+    this._degrees = 180;     // for Arc shape
+    this._thickness = 1;     // for Line/Wall width (tiles)
+
+    // snap transforms.
+    this.rotation = 0;
+    this.alpha = 1.0;
+    this.scale.set(1.0, 1.0);
+
+    // clear old geometry.
+    this._graphics.clear();
+  }
+
+  /**
+   * Sets up geometry and visuals from merged options.
+   */
+  setup(opts)
+  {
+    // cache the duration and curves.
+    this._duration = Math.max(1, opts.duration);
+    this._startAlpha = opts.startAlpha;
+    this._endAlpha = opts.endAlpha;
+    this._scaleStart = opts.scaleStart;
+    this._scaleEnd = opts.scaleEnd;
+
+    // cache style.
+    this._lineColor = opts.lineColor;
+    this._lineAlpha = opts.lineAlpha;
+    this._lineWidth = opts.lineWidth;
+    this._fillColor = opts.fillColor;
+    this._fillAlpha = opts.fillAlpha;
+    this._blendMode = opts.blendMode;
+
+    // cache geometry.
+    this._shape = opts.shape;
+    this._range = Math.max(0, opts.range);
+    this._degrees = opts.degrees !== undefined
+      ? opts.degrees
+      : 180;
+    this._thickness = opts.thickness !== undefined
+      ? Math.max(0, opts.thickness)
+      : 1;
+
+    // set blend.
+    this.blendMode = this._blendMode;
+
+    // draw the geometry now (static path; only alpha/scale animates per frame).
+    this.drawGeometry();
+  }
+
+  //endregion lifecycle
+
+  //region geometry
+  /**
+   * Draws the static geometry path according to the shape and style.
+   */
+  drawGeometry()
+  {
+    // clear previous path.
+    const g = this._graphics;
+    g.clear();
+
+    // apply outline and fill.
+    g.lineStyle(this._lineWidth, this._lineColor, this._lineAlpha);
+    g.beginFill(this._fillColor, this._fillAlpha);
+
+    // convert tiles→pixels for sizes using current map tile size.
+    const tile = $gameMap.tileWidth();
+
+    // resolve per-shape drawing.
+    switch (this._shape)
+    {
+      case J.ABS.Shapes.Circle:
+      {
+        // compute world-space pixel radius.
+        const r = this._range * tile;
+
+        // draw the circle centered at local origin.
+        g.drawCircle(0, 0, r);
+        break;
+      }
+
+      case J.ABS.Shapes.Square:
+      case J.ABS.Shapes.FrontSquare: // rotate/face externally; visual approximation here is square AABB
+      case J.ABS.Shapes.Rhombus:     // approximation for pulse visualization
+      case J.ABS.Shapes.Cross:       // approximation for pulse visualization
+      case J.ABS.Shapes.Wall:        // approximation (wall uses Line in engine; see Line branch below if needed)
+      {
+        // use a square AABB centered on origin with half-extent = range.
+        const half = this._range * tile;
+        g.drawRect(-half, -half, half * 2, half * 2);
+        break;
+      }
+
+      case J.ABS.Shapes.Line:
+      {
+        // a rectangle extending forward from origin by `range` with thickness.
+        const length = this._range * tile;
+        const thick = Math.max(1, this._thickness * tile);
+        g.drawRect(0, -thick * 0.5, length, thick);
+        break;
+      }
+
+      case J.ABS.Shapes.Arc:
+      default:
+      {
+        // draw a sector (wedge) oriented along +X (we rotate the sprite externally).
+        const r = this._range * tile;
+        const deg = Math.max(0, Math.min(360, this._degrees));
+        const rad = deg * Math.PI / 180;
+        const startAngle = -rad / 2;  // symmetric about +X axis
+        const endAngle = rad / 2;
+
+        // move to origin and arc outward with a polygonal fan for a crisp edge.
+        g.moveTo(0, 0);
+
+        // sample the arc with a reasonable step for smoothness; ~1 sample per 8°.
+        const steps = Math.max(2, Math.ceil(deg / 8));
+        for (let i = 0; i <= steps; i++)
+        {
+          // interpolate angle across the wedge.
+          const t = i / steps;
+          const a = startAngle + (endAngle - startAngle) * t;
+
+          // compute the rim point.
+          const px = Math.cos(a) * r;
+          const py = Math.sin(a) * r;
+          g.lineTo(px, py);
+        }
+
+        // close back to origin.
+        g.lineTo(0, 0);
+        break;
+      }
+    }
+
+    // finish fill.
+    g.endFill();
+  }
+
+  //endregion geometry
+
+  //region transforms
+  /**
+   * Sets the world position (tile-space aligned with JABS action sprites).
+   * @param {number} x The world x.
+   * @param {number} y The world y.
+   */
+  setWorldPosition(x, y)
+  {
+    // assign the position.
+    this.x = x;
+    this.y = y;
+  }
+
+  /**
+   * Sets the rotation for directional shapes (in radians).
+   * @param {number} r The rotation to set.
+   */
+  setRotation(r)
+  {
+    // assign the rotation in radians.
+    this.rotation = r;
+  }
+
+  //endregion transforms
+
+  //region update
+  /**
+   * Updates the pulse animation (alpha fade and gentle scale pulse).
+   */
+  update()
+  {
+    // increment age.
+    this._age++;
+
+    // compute progress 0..1.
+    const t = Math.min(1, this._age / this._duration);
+
+    // interpolate alpha and scale.
+    const a = this._startAlpha + (this._endAlpha - this._startAlpha) * t;
+    const s = this._scaleStart + (this._scaleEnd - this._scaleStart) * t;
+
+    // assign transforms.
+    this.alpha = a;
+    this.scale.set(s, s);
+  }
+
+  /**
+   * Whether the pulse has finished its lifetime.
+   * @returns {boolean}
+   */
+  isExpired()
+  {
+    // report if this pulse has reached or exceeded its lifetime.
+    return this._age >= this._duration;
+  }
+
+  //endregion update
+}
+
+//endregion Sprite_HitboxPulse
+
 //region Sprite_MapCastGauge
 /**
  * A dedicated cast-time gauge for JABS battlers.
@@ -34203,9 +35126,28 @@ Spriteset_Map.prototype.createJabsLayer = function()
    */
   this._j._abs._castPreviewLayer = new Sprite();
 
+  /**
+   * The container for transient hitbox pulses.
+   * @type {Sprite}
+   */
+  this._j._abs._hitboxPulseLayer = new Sprite();
+
   // mount under tilemap for consistent coordinates.
   this.addChild(this._j._abs._debugHitboxLayer);
   this.addChild(this._j._abs._castPreviewLayer);
+  this._tilemap.addChild(this._j._abs._hitboxPulseLayer);
+
+  // ensure no stale pulses from a prior map remain.
+  JABS_HitboxPulseManager.clear();
+
+  // bind the new layer to the static manager.
+  JABS_HitboxPulseManager.setLayer(this._j._abs._hitboxPulseLayer);
+
+  // apply optional manager configuration (duration, alpha, scale, colors, blend, etc.).
+  JABS_HitboxPulseManager.configure(J.ABS.Metadata.HitboxPulse);
+
+  // apply explicit cap if present using the public setter.
+  JABS_HitboxPulseManager.setCap(J.ABS.Metadata.HitboxPulse.maxConcurrentPulses);
 };
 
 /**
@@ -34282,6 +35224,9 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 
   // manage the hitbox overlays for actions.
   this.handleHitboxOverlay();
+
+  // update transient hitbox pulses via the manager API.
+  JABS_HitboxPulseManager.update();
 };
 //endregion update
 
