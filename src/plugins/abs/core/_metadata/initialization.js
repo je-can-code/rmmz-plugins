@@ -237,6 +237,23 @@ J.ABS.Metadata.HitboxStyles = {
         },
     },
 };
+
+J.ABS.Metadata.HitboxPulse = {
+  enabled: true,
+  maxConcurrentPulses: 8,
+  duration: 18,
+  startAlpha: 0.22,
+  endAlpha: 0.00,
+  scaleStart: 1.00,
+  scaleEnd: 1.08,
+  lineColor: 0xFFFFFF,
+  lineAlpha: 0.85,
+  lineWidth: 2,
+  fillColor: 0xFFFFFF,
+  fillAlpha: 0.18,
+  // PIXI.BLEND_MODES.NORMAL or ADD
+  blendMode: PIXI.BLEND_MODES.ADD,
+};
 //endregion metadata
 
 /**

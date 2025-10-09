@@ -58,9 +58,28 @@ Spriteset_Map.prototype.createJabsLayer = function()
    */
   this._j._abs._castPreviewLayer = new Sprite();
 
+  /**
+   * The container for transient hitbox pulses.
+   * @type {Sprite}
+   */
+  this._j._abs._hitboxPulseLayer = new Sprite();
+
   // mount under tilemap for consistent coordinates.
   this.addChild(this._j._abs._debugHitboxLayer);
   this.addChild(this._j._abs._castPreviewLayer);
+  this._tilemap.addChild(this._j._abs._hitboxPulseLayer);
+
+  // ensure no stale pulses from a prior map remain.
+  JABS_HitboxPulseManager.clear();
+
+  // bind the new layer to the static manager.
+  JABS_HitboxPulseManager.setLayer(this._j._abs._hitboxPulseLayer);
+
+  // apply optional manager configuration (duration, alpha, scale, colors, blend, etc.).
+  JABS_HitboxPulseManager.configure(J.ABS.Metadata.HitboxPulse);
+
+  // apply explicit cap if present using the public setter.
+  JABS_HitboxPulseManager.setCap(J.ABS.Metadata.HitboxPulse.maxConcurrentPulses);
 };
 
 /**
@@ -137,6 +156,9 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 
   // manage the hitbox overlays for actions.
   this.handleHitboxOverlay();
+
+  // update transient hitbox pulses via the manager API.
+  JABS_HitboxPulseManager.update();
 };
 //endregion update
 

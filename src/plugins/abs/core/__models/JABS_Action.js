@@ -878,7 +878,59 @@ class JABS_Action
   {
     // flag our first hit so we don't do this again.
     this._hitAtLeastOne = true;
+
+    // respect explicit global disable (if configured).
+    if (J.ABS.Metadata.HitboxPulse.enabled === false) return;
+
+    this.processHitboxPulse();
   }
+
+  /**
+   * Process the hitbox pulse for this action.
+   */
+  processHitboxPulse()
+  {
+    // resolve the action event and caster.
+    const actionEvent = this.getActionSprite();
+
+    // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
+    const originX = actionEvent.screenX();
+    const originY = actionEvent.screenY();
+
+    // derive geometry data from this action.
+    const shape = this.getShape();
+    const range = this.getRange();
+
+    // derive facing for directional shapes.
+    const facing = actionEvent
+      ? actionEvent.direction()
+      : this.direction();
+
+    // optional arc width and thickness from engine helpers (if applicable).
+    const degrees = actionEvent
+      ? ($jabsEngine.getActionDegrees(actionEvent) || 180)
+      : 180;
+    const thickness = actionEvent
+      ? ($jabsEngine.getActionThicknessTiles(actionEvent) || 1)
+      : 1;
+
+    // build a compact options object using the fluent API.
+    const options = JABS_HitboxPulseOptions.defaults()
+      .withOrigin(originX, originY)
+      .withShape(shape)
+      .withRange(range)
+      .withFacing(facing)
+      .withDegrees(degrees)
+      .withThickness(thickness)
+      .withFade(38, 0.42, 0.0)
+      .withScale(1.00, 1.08)
+      .withLine(0xFFFFFF, 0.85, 2)
+      .withFill(0xFFFFFF, 0.18)
+      .withBlendMode(PIXI.BLEND_MODES.ADD);
+
+    // spawn the pulse via the static manager (layer is set up by Spriteset_Map).
+    JABS_HitboxPulseManager.spawn(options);
+  };
 
   /**
    * An event hook for logic to perform after the main update of an action.
