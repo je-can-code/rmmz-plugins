@@ -930,7 +930,7 @@ class JABS_Action
 
     // spawn the pulse via the static manager (layer is set up by Spriteset_Map).
     JABS_HitboxPulseManager.spawn(options);
-  };
+  }
 
   /**
    * An event hook for logic to perform after the main update of an action.
