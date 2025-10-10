@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.0.1 REGIONS] A plugin that controls passage by region ids.
+ * @plugindesc [v1.0.2 REGIONS] A plugin that controls passage by region ids.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -53,6 +53,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Fixed issue with referencing CycloneMovement.
  * - 1.0.1
  *    Created plugin extension namespace for REGIONS plugin extensions.
  * - 1.0.0
