@@ -21889,27 +21889,6 @@ class JABS_Engine
 
     // request a map-wide sprite refresh on cycling.
     this.requestSpriteRefresh = true;
-
-    // rebuild all actor allies (followers) so they have proper ally core and character binding.
-    this.rebuildActorAllies();
-  }
-
-  /**
-   * Rebuilds all actor allies bound to followers after party cycling.
-   * Ensures ex-leaders (now followers) regain proper ally core (sight/pursuit) and
-   * are bound to their follower characters for correct isPlayer/isFollower state.
-   */
-  rebuildActorAllies()
-  {
-    // grab all followers in order; follower index aligns to party members beyond leader.
-    const followers = $gamePlayer.followers()
-      .data();
-
-    // convert the followers into JABS battlers using the canonical helper.
-    const allyBattlers = JABS_AiManager.convertFollowersToBattlers(followers);
-
-    // register or update all ally battlers in the AI manager.
-    JABS_AiManager.addOrUpdateBattlers(allyBattlers);
   }
 
   /**
