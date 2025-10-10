@@ -1394,6 +1394,27 @@ JABS_BattleMemory.prototype.wasEffective = function()
 
 //region JABS_Battler
 /**
+ * Generates a `JABS_Battler` for an actor ally bound to a follower character.
+ * Uses the actor's own core configuration.
+ * @param {Game_Follower} follower The follower character representing this ally on the map.
+ * @param {Game_Actor} actor The underlying actor battler.
+ * @returns {JABS_Battler} The built ally battler.
+ */
+JABS_Battler.createAlly = function(follower, actor)
+{
+  // if either input is missing, we cannot build an ally battler.
+  if (!follower || !actor) return null;
+
+  // build core data from the actor's own database-driven properties.
+  const coreData = JABS_BattlerCoreData.Builder()
+    .setBattler(actor)
+    .build();
+
+  // create and return the ally battler bound to this follower.
+  return new JABS_Battler(follower, actor, coreData);
+};
+
+/**
  * Extends the engagement determination to handle aggro/passive party toggling.
  * @param {JABS_Battler} target The target to see if we should engage with.
  * @returns {boolean}
