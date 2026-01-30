@@ -1829,6 +1829,9 @@ class JABS_Engine
 
     // trigger the spriteset to scan and add loot sprites.
     this.requestLootRendering = true; // ensure loot renders this frame.
+
+    // return the loot drop that was added.
+    return lootEvent;
   }
 
   /**

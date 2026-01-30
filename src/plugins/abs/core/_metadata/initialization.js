@@ -537,7 +537,7 @@ J.ABS.RegExp = {
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
-  DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)])>/gi,
+  DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)(?:,[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?))?])>/gi,
   Linger: /<linger:[ ]?(\d+)>/gi,
 
   // animation-related.

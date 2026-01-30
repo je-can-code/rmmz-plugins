@@ -1086,19 +1086,24 @@ RPG_Skill.prototype.extractJabsSelfAnimationId = function()
  *
  * The zeroth index is the number of frames to delay the execution of the skill by.
  * The first index is whether or not to execute regardless of delay by touch.
+ * The second index, if present, is the trigger radius in tiles for touch-arming.
  *
  * Will be null if the delay tag is missing from the skill.
- * @type {[number, boolean]|null}
+ * @type {[number, boolean, number]|null}
  */
 Object.defineProperty(RPG_Skill.prototype, "jabsDelayData", {
   get: function()
   {
+    // grab the parsed delay data.
     const delayData = this.getJabsDelayData();
+
+    // if none was found, return defaults for the first two values.
     if (!delayData)
     {
       return [ 0, false ];
     }
 
+    // return the captured data.
     return delayData;
   },
 });
@@ -1122,6 +1127,37 @@ Object.defineProperty(RPG_Skill.prototype, "jabsDelayTriggerByTouch", {
   get: function()
   {
     return this.jabsDelayData[1];
+  },
+});
+
+/**
+ * Optional radius in tiles used only for touch-triggering during the delay window.
+ * If not provided, the action’s normal hitbox is used (legacy behavior).
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, "jabsDelayTriggerRadius", {
+  get: function()
+  {
+    // if a third value exists, return its numeric form.
+    const data = this.jabsDelayData;
+
+    // if no third parameter was provided, return null to indicate default behavior.
+    if (!data || data.length < 3)
+    {
+      return null;
+    }
+
+    // attempt to coerce a number from the third parameter.
+    const radius = Number(data[2]);
+
+    // validate the number and return null if invalid.
+    if (isNaN(radius))
+    {
+      return null;
+    }
+
+    // return the parsed trigger radius in tiles.
+    return radius;
   },
 });
 
