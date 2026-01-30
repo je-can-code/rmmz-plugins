@@ -50,6 +50,7 @@ J.LEVEL.RegExp = {
 
   /**
    * The regex for when a skill id is learned at a designated level.
+   * The array capture group is [SKILL_ID, LEVEL_LEARNED].
    * @type {RegExp}
    */
   Learning: /<learning: ?(\[\d+, ?\d+])>/i,

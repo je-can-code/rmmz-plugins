@@ -418,7 +418,8 @@ Spriteset_Map.prototype.removeLootSprites = function()
  */
 Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
 {
-  const spriteIndex = this._characterSprites.findIndex(sprite =>
+  // attempt to find the sprite by direct character reference first.
+  let spriteIndex = this._characterSprites.findIndex(sprite =>
   {
     // if the character doesn't match the event, then keep looking.
     if (sprite.character() !== lootEvent) return false;
@@ -427,17 +428,62 @@ Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
     return true;
   });
 
+  // if not found, attempt to resolve by loot uuid to cover reference mismatches.
+  if (spriteIndex === -1)
+  {
+    // extract the target uuid for matching.
+    const targetLoot = lootEvent.getJabsLoot();
+    const targetUuid = targetLoot ? targetLoot.uuid : null;
+
+    // only attempt uuid matching if one exists.
+    if (targetUuid)
+    {
+      // scan for a sprite whose underlying loot uuid matches.
+      spriteIndex = this._characterSprites.findIndex(sprite =>
+      {
+        // get the character associated with this sprite, if any.
+        const character = sprite.character();
+
+        // ensure we have a character and that it is loot.
+        if (!character) return false;
+        if (!character.isJabsLoot()) return false;
+
+        // retrieve the loot for this character.
+        const loot = character.getJabsLoot();
+
+        // ensure loot exists and the uuid matches the target.
+        if (!loot) return false;
+        return loot.uuid === targetUuid;
+      });
+    }
+  }
+
   // confirm we did indeed find the sprite's index for removal.
   if (spriteIndex !== -1)
   {
-    // delete that sprite's loot.
-    this._characterSprites[spriteIndex].deleteLootSprite();
+    // extract the sprite to be removed.
+    const sprite = this._characterSprites[spriteIndex];
+
+    // delete that sprite's loot child sprites, if any.
+    sprite.deleteLootSprite();
+
+    // remove the sprite from the display tree if attached.
+    if (this._tilemap && sprite.parent === this._tilemap)
+    {
+      this._tilemap.removeChild(sprite);
+    }
 
     // purge the sprite from tracking.
     this._characterSprites.splice(spriteIndex, 1);
+
+    // destroy the sprite to stop updates and free resources.
+    if (!sprite.destroyed)
+    {
+      sprite.destroy();
+    }
   }
 
-  // delete the now-removed sprite for this action.
+  // delete the now-removed sprite for this loot and clear events from the map.
   $gameMap.clearExpiredLootEvents();
 };
 //endregion loot sprites

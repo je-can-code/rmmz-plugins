@@ -201,6 +201,13 @@ class JABS_Action
      * @type {boolean}
      */
     this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
+
+    /**
+     * Optional radius in tiles used only for touch-triggering during the delay window.
+     * If null, the action’s normal hitbox will be used (legacy behavior).
+     * @type {number|null}
+     */
+    this._delay._triggerRadius = this._baseSkill.jabsDelayTriggerRadius;
   }
 
   /**
@@ -633,6 +640,112 @@ class JABS_Action
   }
 
   /**
+   * Gets the configured trigger radius for this action, if any.
+   * @returns {number|null} The trigger radius in tiles, or null if not provided.
+   */
+  getTriggerRadius()
+  {
+    // return the configured trigger radius, if any.
+    return this._delay._triggerRadius ?? null;
+  }
+
+  /**
+   * Checks a small circular radius around the action sprite for potential targets
+   * solely to determine whether an action should arm during its delay phase.
+   *
+   * This does not apply damage; it only identifies whether any valid battlers are
+   * within the supplied radius.
+   *
+   * @param {JABS_Action} jabsAction The action to evaluate.
+   * @param {number} radius The trigger radius in tiles.
+   * @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
+   */
+  getTriggerTouchTargets(jabsAction, radius)
+  {
+    // read core references for filtering.
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // we only support spatial checks around an action sprite.
+    const actionSprite = jabsAction.getActionSprite();
+    if (!actionSprite)
+    {
+      return [];
+    }
+
+    /**
+     * Basic candidate filter: can be hit, in-scope for the action, and not
+     * an inanimate target (when the caster is an enemy).
+     * @param {JABS_Battler} battler The candidate battler.
+     * @returns {boolean} True if valid for proximity trigger, false otherwise.
+     */
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect())
+      {
+        return false;
+      }
+
+      // respect core scope constraints (friend/enemy/grounding, etc.).
+      if (!battler.isWithinScope(jabsAction, battler, false))
+      {
+        return false;
+      }
+
+      // enemies should not react to inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate())
+      {
+        return false;
+      }
+
+      // this candidate is valid.
+      return true;
+    };
+
+    // anchor the AABB on the action sprite center in tiles.
+    const cx = actionSprite.x;
+    const cy = actionSprite.y;
+
+    // compute inclusive bounds for the spatial index query.
+    const minX = Math.floor(cx - radius);
+    const minY = Math.floor(cy - radius);
+    const maxX = Math.ceil(cx + radius);
+    const maxY = Math.ceil(cy + radius);
+
+    // query spatial candidates from the index.
+    const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+
+    // check circle distance for each candidate relative to the action sprite.
+    const targets = [];
+    const actionDirection = actionSprite.direction();
+    candidates
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battler =>
+      {
+        // retrieve the battler's character for spatial testing.
+        const sprite = battler.getCharacter();
+
+        // reuse the engine's circle collision helper.
+        const inCircle = this.isTargetWithinRange(
+          actionDirection,
+          sprite,
+          actionSprite,
+          radius,
+          J.ABS.Shapes.Circle,
+        );
+
+        // collect if inside the trigger radius.
+        if (inCircle)
+        {
+          targets.push(battler);
+        }
+      }, this);
+
+    // return any battlers that were inside the trigger radius.
+    return targets;
+  }
+
+  /**
    * Gets the number of times this action can potentially hit a target.
    * @returns {number} The number of times remaining that this action can hit a target.
    */
@@ -708,6 +821,54 @@ class JABS_Action
   {
     // decrement the delay timer prior to action countdown.
     this.countdownDelay();
+
+    // while delaying, optionally allow arming by proximity using a small radius.
+    this.checkTriggerTouchAndArm();
+  }
+
+  /**
+   * If this action is still delaying and configured to trigger on touch, checks a
+   * smaller circular radius around the action sprite to prematurely finish the delay.
+   *
+   * This does not apply damage in this frame; it only completes the delay so that
+   * the next update runs full collision with the real hitbox.
+   */
+  checkTriggerTouchAndArm()
+  {
+    // if the delay already completed, do nothing.
+    if (this.isDelayCompleted())
+    {
+      return;
+    }
+
+    // if not configured for touch-triggering, do nothing.
+    if (this.triggerOnTouch() === false)
+    {
+      return;
+    }
+
+    // if we do not have a trigger radius defined, retain legacy behavior (do nothing here).
+    const radius = this.getTriggerRadius();
+    if (radius === null)
+    {
+      return;
+    }
+
+    // if we do not have an action sprite yet, there is no spatial anchor to test.
+    const actionSprite = this.getActionSprite();
+    if (!actionSprite)
+    {
+      return;
+    }
+
+    // query any valid targets inside the trigger radius.
+    const candidates = $jabsEngine.getTriggerTouchTargets(this, radius);
+
+    // if we found any valid candidates, end the delay immediately.
+    if (candidates.length > 0)
+    {
+      this.endDelay();
+    }
   }
 
   /**
@@ -886,25 +1047,47 @@ class JABS_Action
   }
 
   /**
-   * Process the hitbox pulse for this action.
+   * Performs the hitbox pulse visualization for the action.
    */
   processHitboxPulse()
   {
-    // resolve the action event and caster.
+    // resolve the action event that visually anchors the pulse (if available).
     const actionEvent = this.getActionSprite();
 
-    // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
-    const originX = actionEvent.screenX();
-    const originY = actionEvent.screenY();
+    // determine the origin/facing from either the action event (preferred) or the caster’s character as a fallback.
+    // this allows sprite-less actions to still render a pulse anchored to the caster.
+    let originX = 0;
+    let originY = 0;
+    let facing = 2; // default to down as a safe fallback.
 
-    // derive geometry data from this action.
+    // attempt to use the action event for origin and facing when present.
+    if (actionEvent)
+    {
+      // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
+      originX = actionEvent.screenX();
+      originY = actionEvent.screenY();
+
+      // derive facing from the action event.
+      facing = actionEvent.direction();
+    }
+    else
+    {
+      // action event is unavailable; fall back to the caster’s character sprite.
+      // this ensures sprite-less actions still draw the pulse and respect overlays.
+      const caster = this.getCaster();
+      const casterCharacter = caster.getCharacter();
+
+      // derive the on-screen origin from the caster.
+      originX = casterCharacter.screenX();
+      originY = casterCharacter.screenY();
+
+      // derive facing from the caster.
+      facing = casterCharacter.direction();
+    }
+
+    // derive geometry data directly from this action instance.
     const shape = this.getShape();
     const range = this.getRange();
-
-    // derive facing for directional shapes.
-    const facing = actionEvent
-      ? actionEvent.direction()
-      : this.direction();
 
     // optional arc width and thickness from engine helpers (if applicable).
     const degrees = actionEvent
