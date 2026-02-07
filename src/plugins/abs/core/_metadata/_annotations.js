@@ -53,6 +53,8 @@
  *    Added performance improvements for maps with large battler counts.
  *    Fixed numerous issues with collision and hitboxes.
  *    Added additional tags related to hitboxes.
+ *    Updated projectile counts 2 & 3 to no longer be V and W respectively.
+ *    Added support for delayed actions to touch-trigger within a radius.
  * - 3.4.3
  *    Added hook for post-battler-conversion mutation.
  * - 3.4.2
