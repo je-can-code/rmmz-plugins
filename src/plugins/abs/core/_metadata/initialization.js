@@ -760,6 +760,8 @@ J.ABS.Aliased = {
   Scene_Load: new Map(),
   Scene_Map: new Map(),
 
+  Sprite_Animation: new Map(),
+  Sprite_AnimationMV: new Map(),
   Spriteset_Map: new Map(),
   Sprite_Character: new Map(),
   Sprite_Gauge: new Map(),
