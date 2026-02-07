@@ -1,7 +1,7 @@
 //region Spriteset_Map
 //region init
 J.ABS.Aliased.Spriteset_Map.set('createLowerLayer', Spriteset_Map.prototype.createLowerLayer);
-Spriteset_Map.prototype.createLowerLayer = function()
+Spriteset_Map.prototype.createLowerLayer = function ()
 {
   // perform original logic.
   J.ABS.Aliased.Spriteset_Map.get('createLowerLayer')
@@ -14,7 +14,7 @@ Spriteset_Map.prototype.createLowerLayer = function()
 /**
  * Creates JABS-unique sprites that aren't otherwise regularly-tracked sprites.
  */
-Spriteset_Map.prototype.createJabsLayer = function()
+Spriteset_Map.prototype.createJabsLayer = function ()
 {
   /**
    * The shared root namespace for all of J's plugin data.
@@ -86,7 +86,7 @@ Spriteset_Map.prototype.createJabsLayer = function()
  * Gets the hitbox overlay sprite container.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.getJabsHitboxLayer = function()
+Spriteset_Map.prototype.getJabsHitboxLayer = function ()
 {
   return this._j._abs._debugHitboxLayer;
 };
@@ -95,7 +95,7 @@ Spriteset_Map.prototype.getJabsHitboxLayer = function()
  * Gets the cast preview sprite container.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.getCastPreviewLayer = function()
+Spriteset_Map.prototype.getCastPreviewLayer = function ()
 {
   return this._j._abs._castPreviewLayer;
 };
@@ -104,7 +104,7 @@ Spriteset_Map.prototype.getCastPreviewLayer = function()
  * Get the direct tracking dictionary for hitbox sprites.
  * @returns {Record<string, Sprite>}
  */
-Spriteset_Map.prototype.getActionHitboxSprites = function()
+Spriteset_Map.prototype.getActionHitboxSprites = function ()
 {
   return this._j._abs._debugActionHitboxSprites;
 };
@@ -113,7 +113,7 @@ Spriteset_Map.prototype.getActionHitboxSprites = function()
  * Accessor for the battler hitbox sprite dictionary.
  * @returns {Record<string, Sprite>}
  */
-Spriteset_Map.prototype.getBattlerHitboxSprites = function()
+Spriteset_Map.prototype.getBattlerHitboxSprites = function ()
 {
   return this._j._abs._debugBattlerHitboxSprites; // return the dict.
 };
@@ -124,7 +124,7 @@ Spriteset_Map.prototype.getBattlerHitboxSprites = function()
  * Hooks into the `update` function to also update any active action sprites.
  */
 J.ABS.Aliased.Spriteset_Map.set('update', Spriteset_Map.prototype.update);
-Spriteset_Map.prototype.update = function()
+Spriteset_Map.prototype.update = function ()
 {
   // perform original logic.
   J.ABS.Aliased.Spriteset_Map.get('update')
@@ -137,7 +137,7 @@ Spriteset_Map.prototype.update = function()
 /**
  * Updates all existing actionSprites on the map.
  */
-Spriteset_Map.prototype.updateJabsSprites = function()
+Spriteset_Map.prototype.updateJabsSprites = function ()
 {
   // manage action sprites.
   this.handleActionSprites();
@@ -166,7 +166,7 @@ Spriteset_Map.prototype.updateJabsSprites = function()
 /**
  * Processes incoming requests to add/remove action sprites.
  */
-Spriteset_Map.prototype.handleActionSprites = function()
+Spriteset_Map.prototype.handleActionSprites = function ()
 {
   // check if we have incoming requests to add new action sprites.
   if ($jabsEngine.requestActionRendering)
@@ -186,7 +186,7 @@ Spriteset_Map.prototype.handleActionSprites = function()
 /**
  * Adds all needing-to-be-added action sprites to the map and renders.
  */
-Spriteset_Map.prototype.addActionSprites = function()
+Spriteset_Map.prototype.addActionSprites = function ()
 {
   // grab all the newly-added action events.
   const newActionEvents = $gameMap.newActionEvents();
@@ -202,7 +202,7 @@ Spriteset_Map.prototype.addActionSprites = function()
  * Processes a single event and adds its corresponding action sprite if necessary.
  * @param {Game_Event} actionEvent The event that may require a new sprite added.
  */
-Spriteset_Map.prototype.addActionSprite = function(actionEvent)
+Spriteset_Map.prototype.addActionSprite = function (actionEvent)
 {
   // get the underlying character associated with this action.
   const character = actionEvent.getJabsAction()
@@ -222,7 +222,7 @@ Spriteset_Map.prototype.addActionSprite = function(actionEvent)
 /**
  * Removes all expired action sprites from the map.
  */
-Spriteset_Map.prototype.removeActionSprites = function()
+Spriteset_Map.prototype.removeActionSprites = function ()
 {
   // grab all expired action events.
   const events = $gameMap.expiredActionEvents();
@@ -235,7 +235,7 @@ Spriteset_Map.prototype.removeActionSprites = function()
  * Processes a single action event and removes its corresponding sprite(s).
  * @param {Game_Event} actionEvent The action event that requires removal.
  */
-Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
+Spriteset_Map.prototype.removeActionSprite = function (actionEvent)
 {
   // Resolve the same underlying character that we used during add.
   const jabsAction = actionEvent.getJabsAction(); // underlying JABS_Action.
@@ -273,8 +273,7 @@ Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
   }
 
   // If the add/remove got out of sync and there was no match by character,
-  // fall back to the original search by actionEvent (legacy behavior), but
-  // ensure we fully unmount/destroy if found.
+  // fall back to the original search by actionEvent (legacy behavior).
   if (matches.length === 0)
   {
     const idx = this._characterSprites.findIndex(s => s.character() === actionEvent);
@@ -292,11 +291,55 @@ Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
     }
   }
 
+  // Also purge any JABS layer sprites tied to this uuid immediately.
+  const uuid = actionEvent.getJabsActionUuid();
+  if (uuid)
+  {
+    this.purgeActionSpritesByUuid(uuid);
+  }
+
   // Acknowledge that this action’s sprite no longer needs removing.
   actionEvent.setActionSpriteNeedsRemoving(false);
 
   // Clear any now-expired action events from the map.
   $gameMap.clearExpiredJabsActionEvents();
+};
+
+/**
+ * Forcefully purges all JABS-specific layer sprites (hitboxes, previews) for a given uuid.
+ * Used during action removal to ensure no dangling sprites remain for even a single frame.
+ * @param {string} uuid The uuid of the action being purged.
+ */
+Spriteset_Map.prototype.purgeActionSpritesByUuid = function (uuid)
+{
+  // 1) Purge from action hitbox dictionary.
+  const hitboxDict = this.getActionHitboxSprites();
+  const hitboxSprite = hitboxDict[uuid];
+  if (hitboxSprite)
+  {
+    const layer = this.getJabsHitboxLayer();
+    if (hitboxSprite.parent === layer)
+    {
+      layer.removeChild(hitboxSprite);
+    }
+    this.destroyActionHitboxSprite(hitboxSprite);
+    delete hitboxDict[uuid];
+  }
+
+  // 2) Purge from cast preview dictionary.
+  const previewDict = this._j._abs._castPreviewSprites;
+  const previewKey = `castpreview:${uuid}`;
+  const previewSprite = previewDict[previewKey];
+  if (previewSprite)
+  {
+    const layer = this.getCastPreviewLayer();
+    if (previewSprite.parent === layer)
+    {
+      layer.removeChild(previewSprite);
+    }
+    this.destroyCastPreviewSprite(previewSprite);
+    delete previewDict[previewKey];
+  }
 };
 //endregion action sprites
 
@@ -304,7 +347,7 @@ Spriteset_Map.prototype.removeActionSprite = function(actionEvent)
 /**
  * Processes incoming requests to add/remove generated battler sprites.
  */
-Spriteset_Map.prototype.handleBattlerSprites = function()
+Spriteset_Map.prototype.handleBattlerSprites = function ()
 {
   if ($jabsEngine.requestBattlerRendering)
   {
@@ -315,7 +358,7 @@ Spriteset_Map.prototype.handleBattlerSprites = function()
 /**
  * Adds all needing-to-be-added generated battler sprites to the map and renders.
  */
-Spriteset_Map.prototype.addBattlerSprites = function()
+Spriteset_Map.prototype.addBattlerSprites = function ()
 {
   // grab all the newly-added action events.
   const newActionEvents = $gameMap.newBattlerEvents();
@@ -330,7 +373,7 @@ Spriteset_Map.prototype.addBattlerSprites = function()
 /**
  * Scans all events on the map and adds new generated battler sprites accordingly.
  */
-Spriteset_Map.prototype.addBattlerSprite = function(battlerEvent)
+Spriteset_Map.prototype.addBattlerSprite = function (battlerEvent)
 {
   // generate the new sprite based on the action's character.
   const sprite = new Sprite_Character(battlerEvent);
@@ -348,7 +391,7 @@ Spriteset_Map.prototype.addBattlerSprite = function(battlerEvent)
 /**
  * Processes incoming requests to add/remove loot sprites.
  */
-Spriteset_Map.prototype.handleLootSprites = function()
+Spriteset_Map.prototype.handleLootSprites = function ()
 {
   // check if we have incoming requests to add new loot sprites.
   if ($jabsEngine.requestLootRendering)
@@ -368,7 +411,7 @@ Spriteset_Map.prototype.handleLootSprites = function()
 /**
  * Scans all events on the map and adds new loot sprites accordingly.
  */
-Spriteset_Map.prototype.addLootSprites = function()
+Spriteset_Map.prototype.addLootSprites = function ()
 {
   // grab all the newly-added loot events.
   const events = $gameMap.newLootEvents();
@@ -384,7 +427,7 @@ Spriteset_Map.prototype.addLootSprites = function()
  * Processes a single event and adds its corresponding loot sprite if necessary.
  * @param {Game_Event} lootEvent The event that may require a new sprite added.
  */
-Spriteset_Map.prototype.addLootSprite = function(lootEvent)
+Spriteset_Map.prototype.addLootSprite = function (lootEvent)
 {
   // generate the new sprite based on the loot's character.
   const sprite = new Sprite_Character(lootEvent);
@@ -400,7 +443,7 @@ Spriteset_Map.prototype.addLootSprite = function(lootEvent)
 /**
  * Removes all needing-to-be-removed loot sprites from the map.
  */
-Spriteset_Map.prototype.removeLootSprites = function()
+Spriteset_Map.prototype.removeLootSprites = function ()
 {
   // grab all expired loot events.
   const events = $gameMap.expiredLootEvents();
@@ -416,7 +459,7 @@ Spriteset_Map.prototype.removeLootSprites = function()
  * Processes a single loot event and removes its corresponding sprite(s).
  * @param {Game_Event} lootEvent The loot event that requires removal.
  */
-Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
+Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
 {
   // attempt to find the sprite by direct character reference first.
   let spriteIndex = this._characterSprites.findIndex(sprite =>
@@ -433,7 +476,9 @@ Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
   {
     // extract the target uuid for matching.
     const targetLoot = lootEvent.getJabsLoot();
-    const targetUuid = targetLoot ? targetLoot.uuid : null;
+    const targetUuid = targetLoot
+      ? targetLoot.uuid
+      : null;
 
     // only attempt uuid matching if one exists.
     if (targetUuid)
@@ -492,7 +537,7 @@ Spriteset_Map.prototype.removeLootSprite = function(lootEvent)
 /**
  * Processes incoming requests to add/remove loot sprites.
  */
-Spriteset_Map.prototype.handleSpriteRefresh = function()
+Spriteset_Map.prototype.handleSpriteRefresh = function ()
 {
   // check if we have incoming requests to do a sprite refresh.
   if ($jabsEngine.requestSpriteRefresh)
@@ -506,7 +551,7 @@ Spriteset_Map.prototype.handleSpriteRefresh = function()
  * Refreshes all character sprites on the map.
  * TODO: is this functionally correct and consistently safe?
  */
-Spriteset_Map.prototype.refreshAllCharacterSprites = function()
+Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
 {
   // ensure the collection exists.
   this._characterSprites ||= [];
@@ -600,7 +645,7 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 /**
  * Renders translucent overlays for casting previews (enemies only for MVP).
  */
-Spriteset_Map.prototype.handleCastPreviewOverlays = function()
+Spriteset_Map.prototype.handleCastPreviewOverlays = function ()
 {
   // build any missing cast preview sprites.
   this.buildMissingCastPreviewSprites();
@@ -616,7 +661,7 @@ Spriteset_Map.prototype.handleCastPreviewOverlays = function()
  * Collects all enemy battlers that are currently casting and should show a preview.
  * @returns {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]}
  */
-Spriteset_Map.prototype.collectActiveCastPreviewItems = function()
+Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
 {
   /** @type {{ key:string, source: Game_CharacterBase, battler:JABS_Battler, action:JABS_Action, skill:RPG_Skill }[]} */
   const items = [];
@@ -679,7 +724,7 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function()
 /**
  * Builds cast preview sprites for any battlers that lack one.
  */
-Spriteset_Map.prototype.buildMissingCastPreviewSprites = function()
+Spriteset_Map.prototype.buildMissingCastPreviewSprites = function ()
 {
   // get the preview container and dict.
   const layer = this.getCastPreviewLayer(); // decoupled from debug overlay layer.
@@ -704,7 +749,7 @@ Spriteset_Map.prototype.buildMissingCastPreviewSprites = function()
 /**
  * Synchronizes position and shape of existing cast preview sprites.
  */
-Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function()
+Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function ()
 {
   // grab the preview sprite dictionary for quick access.
   const dict = this._j._abs._castPreviewSprites;
@@ -747,7 +792,9 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function()
         {
           // read the options and location.
           const options = item.action.getActionOptions();
-          const loc = options ? options.getTargetLocation() : null;
+          const loc = options
+            ? options.getTargetLocation()
+            : null;
 
           // if a frozen location exists, extract x,y.
           if (loc)
@@ -790,7 +837,7 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function()
 /**
  * Removes any preview sprites that are no longer active.
  */
-Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function()
+Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function ()
 {
   // pull dict and parent layer for previews.
   const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
@@ -825,7 +872,7 @@ Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function()
  * @param {{ key:string }} item The overlay item.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.createCastPreviewSprite = function(item)
+Spriteset_Map.prototype.createCastPreviewSprite = function (item)
 {
   // create a container sprite + graphics to draw into.
   const sprite = new Sprite();
@@ -850,7 +897,7 @@ Spriteset_Map.prototype.createCastPreviewSprite = function(item)
  * Destroys a cast preview sprite and its internals.
  * @param {Sprite} sprite The sprite to destroy.
  */
-Spriteset_Map.prototype.destroyCastPreviewSprite = function(sprite)
+Spriteset_Map.prototype.destroyCastPreviewSprite = function (sprite)
 {
   if (!sprite) return;
   if (sprite._jabsCastPreviewG)
@@ -866,7 +913,7 @@ Spriteset_Map.prototype.destroyCastPreviewSprite = function(sprite)
  * @param {string} shape The hitbox shape name.
  * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
  */
-Spriteset_Map.prototype.getCastPreviewStyleFor = function(shape)
+Spriteset_Map.prototype.getCastPreviewStyleFor = function (shape)
 {
   // MVP: a distinct, more transparent red/orange than live hitboxes.
   return {
@@ -885,7 +932,10 @@ Spriteset_Map.prototype.getCastPreviewStyleFor = function(shape)
  * @param {Sprite} sprite The target preview sprite.
  * @param {{ source:Game_CharacterBase, action:JABS_Action, skill:RPG_Skill }} item The item containing data.
  */
-Spriteset_Map.prototype.drawCastPreviewInto = function(sprite, item)
+Spriteset_Map.prototype.drawCastPreviewInto = function (
+  sprite,
+  item
+)
 {
   /** @type {PIXI.Graphics} */
   const g = sprite._jabsCastPreviewG; // graphics to draw into.
@@ -1018,7 +1068,7 @@ Spriteset_Map.prototype.drawCastPreviewInto = function(sprite, item)
 /**
  * Renders translucent overlays for action hitboxes.
  */
-Spriteset_Map.prototype.handleHitboxOverlay = function()
+Spriteset_Map.prototype.handleHitboxOverlay = function ()
 {
   // grab the hitbox overlay layer.
   const layer = this.getJabsHitboxLayer();
@@ -1059,7 +1109,7 @@ Spriteset_Map.prototype.handleHitboxOverlay = function()
  * fresh rebuild when becoming visible and to release resources when hiding.
  * @param {boolean} nextVisible The desired visibility state.
  */
-Spriteset_Map.prototype.transitionHitboxOverlayVisibility = function(nextVisible)
+Spriteset_Map.prototype.transitionHitboxOverlayVisibility = function (nextVisible)
 {
   // if no change is needed, do nothing.
   if ($jabsEngine.hitboxOverlaysVisible === !!nextVisible)
@@ -1083,7 +1133,7 @@ Spriteset_Map.prototype.transitionHitboxOverlayVisibility = function(nextVisible
  * Removes and destroys all hitbox overlay sprites (both action and battler),
  * and clears their tracking dictionaries.
  */
-Spriteset_Map.prototype.clearAllHitboxOverlays = function()
+Spriteset_Map.prototype.clearAllHitboxOverlays = function ()
 {
   // grab the layer and sprite dictionaries.
   const layer = this.getJabsHitboxLayer(); // parent container for overlays.
@@ -1136,7 +1186,10 @@ Spriteset_Map.prototype.clearAllHitboxOverlays = function()
  * @param {PIXI.Graphics} g The graphics instance to apply styles to.
  * @param {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }} style
  */
-Spriteset_Map.prototype.applyHitboxStyle = function(g, style)
+Spriteset_Map.prototype.applyHitboxStyle = function (
+  g,
+  style
+)
 {
   // configure line + fill according to style.
   g.lineStyle(style.lineWidth, style.lineColor, style.lineAlpha); // outline style.
@@ -1149,7 +1202,7 @@ Spriteset_Map.prototype.applyHitboxStyle = function(g, style)
  * @param {{ key:string, type:string, source: Game_CharacterBase }} item The battler overlay item.
  * @returns {boolean} True if overlapping any action; false otherwise.
  */
-Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function(item)
+Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
 {
   // pull the battler's character for collision checks.
   const target = item.source; // the battler-bearing character.
@@ -1188,7 +1241,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function(item)
 /**
  * Handle the overlays for all action-based hitboxes.
  */
-Spriteset_Map.prototype.handleActionHitboxes = function()
+Spriteset_Map.prototype.handleActionHitboxes = function ()
 {
   // build any missing hitbox sprites for active actions.
   this.buildMissingActionHitboxSprites();
@@ -1206,7 +1259,7 @@ Spriteset_Map.prototype.handleActionHitboxes = function()
  * @param {string} shape The hitbox shape name (e.g., circle, rhombus, square, etc.).
  * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
  */
-Spriteset_Map.prototype.getActionHitboxStyleFor = function(shape)
+Spriteset_Map.prototype.getActionHitboxStyleFor = function (shape)
 {
   // default base (orange translucent with darker outline).
   const defaults = {
@@ -1224,7 +1277,7 @@ Spriteset_Map.prototype.getActionHitboxStyleFor = function(shape)
   const base = Object.assign({}, defaults, styles.base || {}); // merged base.
 
   // apply shape-specific overrides if provided.
-  const key = (shape || "").toLowerCase(); // normalized key.
+  const key = (shape || '').toLowerCase(); // normalized key.
   const shapeOverrides = styles.byShape?.[key] || null; // optional per-shape.
 
   // produce the final style.
@@ -1235,7 +1288,7 @@ Spriteset_Map.prototype.getActionHitboxStyleFor = function(shape)
 /**
  * Builds hitbox sprites for any action events that lack one.
  */
-Spriteset_Map.prototype.buildMissingActionHitboxSprites = function()
+Spriteset_Map.prototype.buildMissingActionHitboxSprites = function ()
 {
   // get the container and dict for hitboxes.
   const layer = this.getJabsHitboxLayer(); // the parent container for hitbox sprites.
@@ -1264,7 +1317,7 @@ Spriteset_Map.prototype.buildMissingActionHitboxSprites = function()
 /**
  * Synchronizes position and appearance of existing hitbox sprites.
  */
-Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function()
+Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
 {
   // quick access to tile size.
   const tw = $gameMap.tileWidth(); // tile width in pixels.
@@ -1299,7 +1352,7 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function()
 /**
  * Removes hitbox sprites that no longer correspond to an active action.
  */
-Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function()
+Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function ()
 {
   // compute the set of active keys (uuids) on the map now.
   const activeKeys = new Set($gameMap.actionEvents()
@@ -1332,7 +1385,7 @@ Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function()
  * @param {Game_Event} actionEvent The action event.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.getOrCreateActionHitboxSpriteFor = function(actionEvent)
+Spriteset_Map.prototype.getOrCreateActionHitboxSpriteFor = function (actionEvent)
 {
   // derive the dictionary key for this action.
   const key = actionEvent.getJabsActionUuid(); // stable id.
@@ -1354,7 +1407,7 @@ Spriteset_Map.prototype.getOrCreateActionHitboxSpriteFor = function(actionEvent)
  * @param {Game_Event} actionEvent The related action event.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.createActionHitboxSprite = function(actionEvent)
+Spriteset_Map.prototype.createActionHitboxSprite = function (actionEvent)
 {
   // create a plain sprite to remain RMMZ-native at the boundary.
   const sprite = new Sprite(); // container-level sprite.
@@ -1380,7 +1433,7 @@ Spriteset_Map.prototype.createActionHitboxSprite = function(actionEvent)
  * Destroys a hitbox sprite and its internals.
  * @param {Sprite} sprite The sprite to destroy.
  */
-Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite)
+Spriteset_Map.prototype.destroyActionHitboxSprite = function (sprite)
 {
   if (!sprite) return; // nothing to destroy.
 
@@ -1407,7 +1460,15 @@ Spriteset_Map.prototype.destroyActionHitboxSprite = function(sprite)
  * @param {number} th Tile height in pixels.
  * @param {Game_Event} actionEvent The action event for tag resolution.
  */
-Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, facing, tw, th, actionEvent)
+Spriteset_Map.prototype.drawActionHitboxInto = function (
+  sprite,
+  shape,
+  range,
+  facing,
+  tw,
+  th,
+  actionEvent
+)
 {
   // access the graphics used to draw.
   /** @type {PIXI.Graphics} */
@@ -1542,7 +1603,11 @@ Spriteset_Map.prototype.drawActionHitboxInto = function(sprite, shape, range, fa
  * @param {number} rx Horizontal radius in px.
  * @param {number} ry Vertical radius in px.
  */
-Spriteset_Map.prototype.drawRhombusG = function(g, rx, ry)
+Spriteset_Map.prototype.drawRhombusG = function (
+  g,
+  rx,
+  ry
+)
 {
   g.moveTo(0, -ry); // top.
   g.lineTo(rx, 0); // right.
@@ -1558,7 +1623,12 @@ Spriteset_Map.prototype.drawRhombusG = function(g, rx, ry)
  * @param {number} ry Vertical radius in px.
  * @param {number} facing 2/4/6/8
  */
-Spriteset_Map.prototype.drawFrontRhombusG = function(g, rx, ry, facing)
+Spriteset_Map.prototype.drawFrontRhombusG = function (
+  g,
+  rx,
+  ry,
+  facing
+)
 {
   if (facing === 2) // down
   {
@@ -1614,7 +1684,13 @@ Spriteset_Map.prototype.drawFrontRhombusG = function(g, rx, ry, facing)
  * @param {number} tw Tile width in px.
  * @param {number} th Tile height in px.
  */
-Spriteset_Map.prototype.drawFrontSquareG = function(g, range, facing, tw, th)
+Spriteset_Map.prototype.drawFrontSquareG = function (
+  g,
+  range,
+  facing,
+  tw,
+  th
+)
 {
   // total full-square size in pixels.
   const totalW = (2 * range + 1) * tw; // total width of full square.
@@ -1669,7 +1745,14 @@ Spriteset_Map.prototype.drawFrontSquareG = function(g, range, facing, tw, th)
  * @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
  * @param {number} sweepRad Total sweep in radians (0–2π].
  */
-Spriteset_Map.prototype.drawSectorG = function(g, cx, cy, r, centerRad, sweepRad)
+Spriteset_Map.prototype.drawSectorG = function (
+  g,
+  cx,
+  cy,
+  r,
+  centerRad,
+  sweepRad
+)
 {
   // normalize sweep to [0, 2π].
   const TAU = Math.PI * 2; // 2π constant.
@@ -1705,7 +1788,7 @@ Spriteset_Map.prototype.drawSectorG = function(g, cx, cy, r, centerRad, sweepRad
 /**
  * Handle the overlays for all battler-based hitboxes.
  */
-Spriteset_Map.prototype.handleBattlerHitboxes = function()
+Spriteset_Map.prototype.handleBattlerHitboxes = function ()
 {
   // build any missing hitbox sprites for active battlers.
   this.buildMissingBattlerHitboxSprites();
@@ -1720,7 +1803,7 @@ Spriteset_Map.prototype.handleBattlerHitboxes = function()
 /**
  * Builds battler hitbox sprites for any battlers that lack one.
  */
-Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function()
+Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function ()
 {
   // get the container and dict for battler hitboxes.
   const layer = this.getJabsHitboxLayer(); // parent container for hitboxes.
@@ -1745,7 +1828,7 @@ Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function()
 /**
  * Synchronizes position and appearance of existing battler hitbox sprites.
  */
-Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function()
+Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function ()
 {
   // quick access to tile size.
   const tw = $gameMap.tileWidth(); // tile width in pixels.
@@ -1780,7 +1863,7 @@ Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function()
 /**
  * Removes battler hitbox sprites that no longer correspond to an active battler.
  */
-Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function()
+Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function ()
 {
   // compute the set of active keys now.
   const active = new Set(this.collectActiveBattlerOverlayItems()
@@ -1810,11 +1893,11 @@ Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function()
 /**
  * Collects all battler-bearing characters to overlay and produces stable keys.
  * Includes: player, followers, and enemy battler events.
- * @returns {{ key:string, type:"player"|"follower"|"battler", source: Game_CharacterBase }[]}
+ * @returns {{ key:string, type:'player'|'follower'|'battler', source: Game_CharacterBase }[]}
  */
-Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
+Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function ()
 {
-  /** @type {{ key:string, type:"player"|"follower"|"battler", source: Game_CharacterBase }[]} */
+  /** @type {{ key:string, type:'player'|'follower'|'battler', source: Game_CharacterBase }[]} */
   const items = []; // the final collection.
 
   // include player (always present on map).
@@ -1822,8 +1905,8 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
   if (player)
   {
     items.push({
-      key: "battler:player",
-      type: "player",
+      key: 'battler:player',
+      type: 'player',
       source: player
     }); // add player.
   }
@@ -1838,7 +1921,7 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
 
     items.push({
       key: `battler:follower:${i}`,
-      type: "follower",
+      type: 'follower',
       source: follower
     }); // add follower.
   }
@@ -1853,7 +1936,7 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
 
       items.push({
         key: uuid,
-        type: "battler",
+        type: 'battler',
         source: ev
       }); // add enemy battler event.
     });
@@ -1866,7 +1949,7 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function()
  * @param {{ key:string, type:string, source: Game_CharacterBase }} item The overlay item.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.getOrCreateBattlerHitboxSpriteFor = function(item)
+Spriteset_Map.prototype.getOrCreateBattlerHitboxSpriteFor = function (item)
 {
   // derive the key for this battler's sprite.
   const { key } = item; // stable id.
@@ -1888,7 +1971,7 @@ Spriteset_Map.prototype.getOrCreateBattlerHitboxSpriteFor = function(item)
  * @param {{ key:string, type:string, source: Game_CharacterBase }} item The overlay item.
  * @returns {Sprite}
  */
-Spriteset_Map.prototype.createBattlerHitboxSprite = function(item)
+Spriteset_Map.prototype.createBattlerHitboxSprite = function (item)
 {
   // create a plain sprite to remain RMMZ-native at the boundary.
   const sprite = new Sprite(); // container-level sprite.
@@ -1914,13 +1997,20 @@ Spriteset_Map.prototype.createBattlerHitboxSprite = function(item)
 /**
  * Draws the battler's occupancy hitbox (1x1 tile square) into the sprite graphics.
  * @param {Sprite} sprite The target battler hitbox sprite.
- * @param {"player"|"follower"|"battler"} type The kind of battler.
+ * @param {'player'|'follower'|'battler'} type The kind of battler.
  * @param {number} tw Tile width in pixels.
  * @param {number} th Tile height in pixels.
  * @param {boolean} colliding Whether the battler overlaps any active action.
  * @param {JABS_Aabb} aabb The model rect for this battler in screen pixels.
  */
-Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, colliding, aabb)
+Spriteset_Map.prototype.drawBattlerHitboxInto = function (
+  sprite,
+  type,
+  tw,
+  th,
+  colliding,
+  aabb
+)
 {
   // get the graphics used to draw.
   /** @type {PIXI.Graphics} */
@@ -1933,8 +2023,9 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
   const style = this.getBattlerHitboxStyle(
     type,
     colliding
-      ? "colliding"
-      : null); // style with state.
+      ? 'colliding'
+      : null
+  ); // style with state.
   this.applyHitboxStyle(g, style); // apply style to graphics.
 
   // compute local offsets: sprite is centered at feet (cx,cy) with anchor 0.5,0.5.
@@ -1951,11 +2042,14 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
 /**
  * Resolves the style used when drawing a battler hitbox for a given battler kind.
  * Reads from J.ABS.Metadata.HitboxStyles.byKind and .byState; falls back to defaults.
- * @param {"player"|"follower"|"battler"} kind The battler kind.
+ * @param {'player'|'follower'|'battler'} kind The battler kind.
  * @param {string|null} state Optional state key such as "colliding".
  * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
  */
-Spriteset_Map.prototype.getBattlerHitboxStyle = function(kind, state)
+Spriteset_Map.prototype.getBattlerHitboxStyle = function (
+  kind,
+  state
+)
 {
   // defaults tailored for battlers (green-ish for visibility against action orange).
   const defaults = {
@@ -1973,11 +2067,11 @@ Spriteset_Map.prototype.getBattlerHitboxStyle = function(kind, state)
   const base = Object.assign({}, defaults, styles.base || {}); // merged base.
 
   // apply kind-specific overrides if provided.
-  const kindKey = (kind || "battler").toLowerCase(); // normalized.
+  const kindKey = (kind || 'battler').toLowerCase(); // normalized.
   const byKind = styles.byKind?.[kindKey] || null; // optional kind overrides.
 
   // apply state-specific overrides if provided (e.g., colliding).
-  const stateKey = (state || "").toLowerCase(); // normalized.
+  const stateKey = (state || '').toLowerCase(); // normalized.
   const byState = stateKey
     ? (styles.byState?.[stateKey] || null)
     : null; // optional state overrides.
@@ -1991,7 +2085,7 @@ Spriteset_Map.prototype.getBattlerHitboxStyle = function(kind, state)
  * Destroys a battler hitbox sprite and its internals.
  * @param {Sprite} sprite The sprite to destroy.
  */
-Spriteset_Map.prototype.destroyBattlerHitboxSprite = function(sprite)
+Spriteset_Map.prototype.destroyBattlerHitboxSprite = function (sprite)
 {
   if (!sprite) return; // nothing to destroy.
 
