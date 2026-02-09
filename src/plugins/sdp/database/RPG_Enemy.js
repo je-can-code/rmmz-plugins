@@ -72,17 +72,6 @@ Object.defineProperty(RPG_Enemy.prototype, "sdpDropChance", {
 });
 
 /**
- * Gets the id of the item associated with this panel, if any.
- * @type {number}
- */
-Object.defineProperty(RPG_Enemy.prototype, "sdpDropItemId", {
-  get: function()
-  {
-    return this.sdpDropData[2] ?? 0;
-  },
-});
-
-/**
  * Gets the SDP data for this enemy.
  * @returns {[string, number, number]|null}
  */

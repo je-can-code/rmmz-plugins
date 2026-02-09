@@ -45,6 +45,37 @@ J.ABS.EXT.PIXEL.PluginParameters = PluginManager.parameters(J.ABS.EXT.PIXEL.Meta
 J.ABS.EXT.PIXEL.Aliased = {
   Game_Character: new Map(),
   Game_CharacterBase: new Map(),
+  Game_Follower: new Map(),
+  Game_Map: new Map(),
   Game_Player: new Map(),
+
+  JABS_AiManager: new Map(),
+
+  Spriteset_Map: new Map(),
 };
 //endregion metadata
+
+/**
+ * A small debug container for one-frame collision sampling traces.
+ */
+J.ABS.EXT.PIXEL.Debug = {
+  /** @type {{x:number,y:number,color:string}[]} */
+  samples: [],
+
+  /**
+   * Queues a subcell sample to be drawn this frame by the overlay.
+   * @param {number} x Fractional tile x (seam-aligned).
+   * @param {number} y Fractional tile y (seam-aligned).
+   * @param {string} color A rgba color string.
+   */
+  push(x, y, color)
+  {
+    this.samples.push({ x, y, color });
+  },
+
+  /** Clears samples at end-of-frame. */
+  clear()
+  {
+    this.samples.length = 0;
+  }
+};

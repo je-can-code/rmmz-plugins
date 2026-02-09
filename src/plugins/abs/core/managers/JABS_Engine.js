@@ -24,61 +24,83 @@ class JABS_Engine
    * @returns {boolean} True if enabled, false otherwise.
    */
   absEnabled = true;
+
   /**
    * Retrieves whether or not the ABS is currently paused.
    * @returns {boolean} True if paused, false otherwise.
    */
   absPause = false;
+
   /**
    * Checks whether or not we have a need to request the JABS quick menu.
    * @returns {boolean} True if menu requested, false otherwise.
    */
   requestAbsMenu = false;
+
   /**
    * Gets whether or not there is a request to cycle through party members.
    * @returns {boolean}
    */
   requestPartyRotation = false;
+
   /**
    * Gets whether or not there is a request to refresh the JABS menu.
    * The most common use case for this is adding new commands to the menu.
    * @returns {boolean}
    */
   requestJabsMenuRefresh = false;
+
   /**
    * Checks whether or not we have a need to request rendering for new actions.
    * @returns {boolean} True if needing to render actions, false otherwise.
    */
   requestActionRendering = false;
+
   /**
    * Checks whether or not we have a need to request rendering for new loot sprites.
    * @returns {boolean} True if needing to render loot, false otherwise.
    */
   requestLootRendering = false;
 
-  //#endregion static properties
   /**
    * Checks whether or not we have a need to request a clearing of the action sprites
    * on the current map.
    * @returns {boolean} True if clear map requested, false otherwise.
    */
   requestClearMap = false;
+
   /**
    * Checks whether or not we have a need to request a clearing of the loot sprites
    * on the current map.
    * @returns {boolean} True if clear loot requested, false otherwise.
    */
   requestClearLoot = false;
+
   /**
    * Checks whether or not we have a need to refresh all character sprites on the current map.
    * @returns {boolean} True if refresh is requested, false otherwise.
    */
   requestSpriteRefresh = false;
+
   /**
    * Whether or not there is a request issued for rendering newly generated battler sprites.
    * @type {boolean}
    */
   requestBattlerRendering = false;
+
+  /**
+   * Whether or not there is a request issued for toggling the visibility of the hitbox overlays.
+   * @type {boolean}
+   */
+  requestToggleHitboxOverlays = false;
+
+  /**
+   * Whether or not the hitbox overlays are presently visible.
+   * @type {boolean}
+   */
+  hitboxOverlaysVisible = false;
+
+  //endregion properties
 
   /**
    * @constructor
@@ -96,7 +118,7 @@ class JABS_Engine
     }
   }
 
-  //region static properties
+  //region static
   /**
    * Gets the collection of enemy clone events currently tracked.
    * @returns {rm.types.Event[]}
@@ -130,7 +152,7 @@ class JABS_Engine
   static initializeEnemyMap()
   {
     // determine the map that is configured for enemy clones.
-    const mapFilename = "Map%1.json".format(J.ABS.Metadata.DefaultEnemyMapId.padZero(3));
+    const mapFilename = 'Map%1.json'.format(J.ABS.Metadata.DefaultEnemyMapId.padZero(3));
 
     // fetch the data and update the data into the enemy clone tracker list.
     fetch(`data/${mapFilename}`)
@@ -138,7 +160,62 @@ class JABS_Engine
       .then(dataMap => JABS_Engine.setEnemyCloneList(dataMap.events));
   }
 
-  //endregion properties
+  /**
+   * Computes the battler’s Axis-Aligned Bounding Box (AABB) model in screen pixels,
+   * using the “bottom-at-feet” convention (one tile above the feet).
+   * @param {Game_CharacterBase} character The character whose AABB is being queried.
+   * @returns {JABS_Aabb}
+   */
+  static getBattlerAabbModel(character)
+  {
+    // guard against missing character; provide empty rect model.
+    if (!character)
+    {
+      return new JABS_Aabb(0, 0, 0, 0);
+    }
+
+    // tile and feet info.
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
+    const feetX = character.screenX();
+    const feetY = character.screenY();
+
+    // build AABB one tile above feet.
+    return JABS_Aabb.fromFeet(feetX, feetY, tw, th);
+  }
+
+  /**
+   * Computes the on-screen pixel origin for an action event, aligned to the
+   * center of the tile above the feet (the corrected physics origin).
+   * @param {Game_Event} actionEvent The action event to compute the origin for.
+   * @returns {{ x:number, y:number }} The origin in screen pixels.
+   */
+  static getActionOriginPixels(actionEvent)
+  {
+    // guard against missing action event; return neutral origin.
+    if (!actionEvent)
+    {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
+
+    // determine the tile height for vertical correction.
+    const th = $gameMap.tileHeight(); // tile height in pixels.
+
+    // compute the corrected origin at the center of the tile above the feet.
+    const x = actionEvent.screenX(); // on-screen x at feet.
+    const y = actionEvent.screenY() - (th / 2); // corrected y above feet.
+
+    // provide the computed origin.
+    return {
+      x,
+      y
+    };
+  }
+
+  //endregion static
 
   /**
    * Creates all members available in this class.
@@ -172,6 +249,10 @@ class JABS_Engine
     this._jabsStates = isMapTransfer
       ? this._jabsStates ?? new Map()
       : new Map();
+
+    this.hitboxOverlaysVisible = isMapTransfer
+      ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
+      : J.ABS.Metadata.HitboxOverlaysInitiallyVisible;
   }
 
   /**
@@ -194,7 +275,10 @@ class JABS_Engine
    * @param {JABS_Action} actionEvent The JABS action to add.
    * @param {rm.types.Event} actionEventData The event metadata, if anything.
    */
-  addActionEvent(actionEvent, actionEventData)
+  addActionEvent(
+    actionEvent,
+    actionEventData
+  )
   {
     // grab the current collection of actions.
     const actions = this.getAllActionEvents();
@@ -252,7 +336,10 @@ class JABS_Engine
    * @param {object} skill The $dataSkills object for this skill.
    * @param {JABS_Battler} caster The caster of this skill.
    */
-  getAnimationId(skill, caster)
+  getAnimationId(
+    skill,
+    caster
+  )
   {
     // grab the animation id from the skill.
     const { animationId } = skill;
@@ -383,6 +470,9 @@ class JABS_Engine
 
     // update the AI of non-player battlers.
     this.updateAiBattlers();
+
+    // rebuild the spatial index once per frame before action processing.
+    JABS_AiManager.rebuildSpatialIndex();
 
     // update all active actions on the map.
     this.updateActions();
@@ -574,7 +664,10 @@ class JABS_Engine
    * @param {number} stateId The state id to check if a battler is afflicted with.
    * @returns {boolean} True if the battler is currently afflicted with the given state, false otherwise.
    */
-  hasJabsStateByUuid(uuid, stateId)
+  hasJabsStateByUuid(
+    uuid,
+    stateId
+  )
   {
     // grabs a list of tracked states the battler is currently afflicted with.
     const jabsStates = this.getJabsStatesByUuid(uuid);
@@ -589,7 +682,10 @@ class JABS_Engine
    * @param {number} stateId The id of the state to find.
    * @returns {JABS_State|undefined} The tracked state data, or undefined if the battler isn't afflicted.
    */
-  getJabsStateByUuidAndStateId(uuid, stateId)
+  getJabsStateByUuidAndStateId(
+    uuid,
+    stateId
+  )
   {
     // grabs a list of tracked states the battler is currently afflicted with.
     const jabsStates = this.getJabsStatesByUuid(uuid);
@@ -603,7 +699,10 @@ class JABS_Engine
    * @param {string} uuid The uuid of the battler.
    * @param {JABS_State} jabsState The state in to add or update.
    */
-  addOrUpdateStateByUuid(uuid, jabsState)
+  addOrUpdateStateByUuid(
+    uuid,
+    jabsState
+  )
   {
     // check if the battler has the given state.
     if (this.hasJabsStateByUuid(uuid, jabsState.stateId))
@@ -624,7 +723,10 @@ class JABS_Engine
    * @param {string} uuid The uuid of the battler.
    * @param {JABS_State} newJabsState The state in to update.
    */
-  updateJabsStateByUuid(uuid, newJabsState)
+  updateJabsStateByUuid(
+    uuid,
+    newJabsState
+  )
   {
     // get the states afflicted upon this battler.
     const jabsStates = this.getJabsStatesByUuid(uuid);
@@ -648,7 +750,11 @@ class JABS_Engine
    * @param {JABS_State} jabsState The previous tracked state data.
    * @param {JABS_State} newJabsState The new tracked state data.
    */
-  handleJabsStateUpdate(updateType, jabsState, newJabsState)
+  handleJabsStateUpdate(
+    updateType,
+    jabsState,
+    newJabsState
+  )
   {
     switch (updateType)
     {
@@ -670,7 +776,10 @@ class JABS_Engine
    * @param {JABS_State} jabsState The previous tracked state data.
    * @param {JABS_State} newJabsState The new tracked state data.
    */
-  refreshJabsState(jabsState, newJabsState)
+  refreshJabsState(
+    jabsState,
+    newJabsState
+  )
   {
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
@@ -700,7 +809,10 @@ class JABS_Engine
    * @param {JABS_State} jabsState The previous tracked state data.
    * @param {JABS_State} newJabsState The new tracked state data.
    */
-  extendJabsState(jabsState, newJabsState)
+  extendJabsState(
+    jabsState,
+    newJabsState
+  )
   {
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
@@ -727,7 +839,10 @@ class JABS_Engine
    * @param {JABS_State} jabsState The previous tracked state data.
    * @param {JABS_State} newJabsState The new tracked state data.
    */
-  stackJabsState(jabsState, newJabsState)
+  stackJabsState(
+    jabsState,
+    newJabsState
+  )
   {
     // don't refresh the state if it was just applied.
     if (jabsState.wasRecentlyApplied()) return;
@@ -750,7 +865,10 @@ class JABS_Engine
    * @param {string} uuid The uuid of the battler.
    * @param {JABS_State} jabsState The state in to add.
    */
-  addJabsStateByUuid(uuid, jabsState)
+  addJabsStateByUuid(
+    uuid,
+    jabsState
+  )
   {
     // get the states afflicted upon this battler.
     const jabsStates = this.getJabsStatesByUuid(uuid);
@@ -961,7 +1079,7 @@ class JABS_Engine
       if (partyIndex === 0) continue;
 
       // identify the newly swapped actorId.
-      const currentActorId = $gameParty._actors[0];
+      const [ currentActorId ] = $gameParty._actors;
 
       // grab the actor we are attempting to cycle to.
       const actor = $gameActors.actor(currentActorId);
@@ -1056,7 +1174,10 @@ class JABS_Engine
    * @param {number} partyIndex The index of the member in the party.
    * @returns
    */
-  canCycleToAlly(actorId, partyIndex)
+  canCycleToAlly(
+    actorId,
+    partyIndex
+  )
   {
     // ignore switching to self.
     if (partyIndex === 0) return false;
@@ -1095,7 +1216,6 @@ class JABS_Engine
   //endregion update actions
   //endregion update
 
-  //region functional
   //region action execution
   /**
    * Generates a new JABS action based on a skillId, and executes the skill.
@@ -1109,7 +1229,14 @@ class JABS_Engine
    * @param {number=} targetY The target's `y` coordinate; defaults to null.
    * @param {boolean=} isMapDamage Whether or not this skill is from an environmental hazard.
    */
-  forceMapAction(caster, skillId, isRetaliation = false, targetX = null, targetY = null, isMapDamage = false)
+  forceMapAction(
+    caster,
+    skillId,
+    isRetaliation = false,
+    targetX = null,
+    targetY = null,
+    isMapDamage = false
+  )
   {
     // build options based on inputs.
     const actionLocation = JABS_Location.Builder()
@@ -1139,7 +1266,12 @@ class JABS_Engine
    * @param {number|null} targetX The target's `x` coordinate, if applicable.
    * @param {number|null} targetY The target's `y` coordinate, if applicable.
    */
-  executeMapActions(caster, actions, targetX = null, targetY = null)
+  executeMapActions(
+    caster,
+    actions,
+    targetX = null,
+    targetY = null
+  )
   {
     // if we cannot execute map actions, then do not.
     if (!this.canExecuteMapActions(caster, actions)) return;
@@ -1147,8 +1279,37 @@ class JABS_Engine
     // apply on-execution effects for this action.
     this.applyOnExecutionEffects(caster, actions[0]);
 
+    // assign locally because overwriting input args is bad etiquette.
+    let actualX = targetX;
+    let actualY = targetY;
+
+    // if coordinates were not provided, consult the decision-time location captured in options.
+    if (targetX === null || targetY === null)
+    {
+      // grab the primary action from the collection.
+      const [ primary ] = actions;
+
+      // retrieve the options from the primary action.
+      const options = primary.getActionOptions();
+
+      // attempt to read a frozen location from the options.
+      const loc = options
+        ? options.getTargetLocation()
+        : null;
+
+      // if available, extract coordinates and override null inputs.
+      if (loc)
+      {
+        // assign the frozen x coordinate.
+        actualX = loc.getX();
+
+        // assign the frozen y coordinate.
+        actualY = loc.getY();
+      }
+    }
+
     // iterate over each action and execute them as the caster.
-    actions.forEach(action => this.executeMapAction(caster, action, targetX, targetY));
+    actions.forEach(action => this.executeMapAction(caster, action, actualX, actualY));
   }
 
   /**
@@ -1157,7 +1318,10 @@ class JABS_Engine
    * @param {JABS_Action[]} actions All actions to perform.
    * @returns {boolean} True if the actions can be executed, false otherwise.
    */
-  canExecuteMapActions(caster, actions)
+  canExecuteMapActions(
+    caster,
+    actions
+  )
   {
     // if there are no actions to execute, then do not execute.
     if (!actions.length) return false;
@@ -1171,7 +1335,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The battler executing the skill.
    * @param {JABS_Action} primaryAction The 0th index action.
    */
-  applyOnExecutionEffects(caster, primaryAction)
+  applyOnExecutionEffects(
+    caster,
+    primaryAction
+  )
   {
     // retaliation skills are exempt from execution effects.
     if (primaryAction.isRetaliation()) return;
@@ -1192,7 +1359,12 @@ class JABS_Engine
    * @param {number?} targetX The target's `x` coordinate, if applicable.
    * @param {number?} targetY The target's `y` coordinate, if applicable.
    */
-  executeMapAction(caster, action, targetX, targetY)
+  executeMapAction(
+    caster,
+    action,
+    targetX,
+    targetY
+  )
   {
     // handle the possibility of "freecombo".
     this.handleActionCombo(caster, action);
@@ -1209,13 +1381,16 @@ class JABS_Engine
    * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  handleActionCombo(caster, action)
+  handleActionCombo(
+    caster,
+    action
+  )
   {
     // check if this action has the "freecombo" tag.
     if (action.getBaseSkill().jabsFreeCombo)
     {
       // trigger the free combo effect for this action.
-      this.checkComboSequence(caster, action)
+      this.checkComboSequence(caster, action);
     }
   }
 
@@ -1224,7 +1399,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  handleActionCastAnimation(caster, action)
+  handleActionCastAnimation(
+    caster,
+    action
+  )
   {
     // check if a cast animation exists.
     const casterAnimation = action.getCastAnimation();
@@ -1243,20 +1421,31 @@ class JABS_Engine
    * @param {number|null} x The target's `x` coordinate, if applicable.
    * @param {number|null} y The target's `y` coordinate, if applicable.
    */
-  handleActionGeneration(caster, action, x, y)
+  handleActionGeneration(
+    caster,
+    action,
+    x,
+    y
+  )
   {
     // all actions start with null.
     let actionEventData = null;
 
-    // check if this is NOT a direct action.
-    if (!action.isDirectAction())
+    // determine if this action should create an event on the map.
+    // non-direct actions always create events; direct actions only do so if coords are provided.
+    const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
+
+    // check if we determined we should create an event.
+    if (shouldCreateEvent)
     {
       // construct the action event data to appear visually on the map.
       actionEventData = this.buildActionEventData(caster, action, x, y);
+
+      // add the event to the map and bind it to the action.
       this.addJabsActionToMap(actionEventData, action);
     }
 
-    // add the action to the tracker.
+    // add the action to the tracker regardless of whether an event was created.
     this.addActionEvent(action, actionEventData);
   }
 
@@ -1268,17 +1457,65 @@ class JABS_Engine
    * @param {number|null} y The target's `y` coordinate, if applicable.
    * @returns {rm.types.Event}
    */
-  buildActionEventData(caster, action, x, y)
+  buildActionEventData(
+    caster,
+    action,
+    x,
+    y
+  )
   {
+    // reference the action event id defined on the action.
     const eventId = action.getActionId();
+
+    // copy the event data from the action map for this action.
     const actionEventData = JsonEx.makeDeepCopy($actionMap.events[eventId]);
 
-    actionEventData.x = x ?? caster.getX();
-    actionEventData.y = y ?? caster.getY();
+    // derive spawn coordinates from provided or caster position.
+    let spawnX = x ?? caster.getX();
+
+    // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
+    let spawnY = (y ?? caster.getY());
+
+    // if per-action options provided an explicit location, honor it (for any action type).
+    const options = action.getActionOptions();
+    if (options)
+    {
+      // retrieve the target location from the options.
+      const loc = options.getTargetLocation();
+
+      // if a concrete tile coordinate is present, override the spawn.
+      if (loc)
+      {
+        const lx = loc.getX();
+        const ly = loc.getY();
+
+        // respect only when both coordinates are defined.
+        if (lx !== null && ly !== null)
+        {
+          // assign the explicit location into the spawn position.
+          spawnX = lx;
+          spawnY = ly;
+        }
+      }
+    }
+
+    // assign the spawn coordinates to the action event.
+    actionEventData.x = spawnX;
+    actionEventData.y = spawnY;
+
+    // flag this event data as an action for downstream handling.
     actionEventData.isAction = true;
+
+    // bump id to avoid conflicts.
     actionEventData.id += 1000;
+
+    // attach the action uuid for cross-referencing.
     actionEventData.uniqueId = action.getUuid();
-    actionEventData.actionDeleted = false;
+
+    // default the deletion flag.
+    actionEventData.actionDeleted = false; // not deleted by default.
+
+    // return the mutated copy.
     return actionEventData;
   }
 
@@ -1288,36 +1525,59 @@ class JABS_Engine
    * @param {number} projectile The pattern/number of projectiles to generate directions for.
    * @returns {number[]} The collection of directions to fire projectiles off in.
    */
-  determineActionDirections(facing, projectile)
+  determineActionDirections(
+    facing,
+    projectile
+  )
   {
+    // initialize the collection of directions.
     const directions = [];
+
+    // choose directions based on projectile pattern.
     switch (projectile)
     {
       case 1:
+      {
+        // single projectile: just straight in the current facing.
         directions.push(facing);
         break;
+      }
       case 2:
-        directions.push(this.rotate45degrees(facing, true));
-        directions.push(this.rotate45degrees(facing, false));
-        break;
-      case 3:
+      {
+        // two projectiles: both straight in the current facing (parallel lanes).
         directions.push(facing);
-        directions.push(this.rotate45degrees(facing, true));
-        directions.push(this.rotate45degrees(facing, false));
+        directions.push(facing);
         break;
+      }
+      case 3:
+      {
+        // three projectiles: all straight in the current facing (center + two parallel lanes).
+        directions.push(facing);
+        directions.push(facing);
+        directions.push(facing);
+        break;
+      }
       case 4:
+      {
+        // four projectiles: retain legacy cross pattern.
         directions.push(facing);
         directions.push(this.rotate90degrees(facing, true));
         directions.push(this.rotate90degrees(facing, false));
         directions.push(this.rotate180degrees(facing));
         break;
+      }
       case 8:
+      {
+        // eight projectiles: retain legacy radial pattern.
         directions.push(
           1, 3, 7, 9,   // diagonal
-          2, 4, 6, 8);  // cardinal
+          2, 4, 6, 8
+        );  // cardinal
         break;
+      }
     }
 
+    // return the built collection of directions.
     return directions;
   }
 
@@ -1327,7 +1587,10 @@ class JABS_Engine
    * @param {boolean} clockwise True if rotating clockwise, false otherwise.
    * @returns {number} The direction after rotation.
    */
-  rotate45degrees(direction, clockwise)
+  rotate45degrees(
+    direction,
+    clockwise
+  )
   {
     let newDirection = direction;
     switch (direction)
@@ -1386,7 +1649,10 @@ class JABS_Engine
    * @param {boolean} clockwise True if rotating clockwise, false otherwise.
    * @returns {number} The direction after rotation.
    */
-  rotate90degrees(direction, clockwise)
+  rotate90degrees(
+    direction,
+    clockwise
+  )
   {
     let newDirection = direction;
     switch (direction)
@@ -1498,7 +1764,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The battler casting the action.
    * @param {JABS_Action} action The action(skill) to pay the cost for.
    */
-  paySkillCosts(caster, action)
+  paySkillCosts(
+    caster,
+    action
+  )
   {
     const battler = caster.getBattler();
     const skill = action.getBaseSkill();
@@ -1510,7 +1779,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  applyCooldownCounters(caster, action)
+  applyCooldownCounters(
+    caster,
+    action
+  )
   {
     this.applyPlayerCooldowns(caster, action);
   }
@@ -1520,7 +1792,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The player.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  applyPlayerCooldowns(caster, action)
+  applyPlayerCooldowns(
+    caster,
+    action
+  )
   {
     const cooldownType = action.getCooldownType();
     const cooldownValue = action.getCooldown();
@@ -1552,69 +1827,98 @@ class JABS_Engine
    * @param {rm.types.Event} actionEventData An object representing the data of a `Game_Event`.
    * @param {JABS_Action} action An object representing the data of a `Game_Event`.
    */
-  addJabsActionToMap(actionEventData, action)
+  addJabsActionToMap(
+    actionEventData,
+    action
+  )
   {
-    // add the data to the $datamap.events.
-    $dataMap.events[$dataMap.events.length] = actionEventData;
-    const newIndex = $dataMap.events.length - 1;
-    actionEventData.actionIndex = newIndex;
+    // find the first available hole in the data map event list.
+    let index = -1; // the index we will insert at.
+    for (let i = 0; i < $dataMap.events.length; i++)
+    {
+      // if an empty spot is found, use that.
+      if (!$dataMap.events[i])
+      {
+        index = i; // capture the hole index.
+        break; // stop searching.
+      }
+    }
+
+    // if no hole was found, append to the end.
+    if (index === -1)
+    {
+      index = $dataMap.events.length; // assign next index.
+    }
+
+    // add the data to the $dataMap.events at the chosen index.
+    $dataMap.events[index] = actionEventData; // keep array dense.
+    actionEventData.actionIndex = index; // persist the action index.
 
     // assign this so it exists, but isn't valid.
-    actionEventData.lootIndex = 0;
+    actionEventData.lootIndex = 0; // not a loot event.
 
-    // create the event by hand with this new data
-    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, newIndex);
+    // create the event by hand with this new data.
+    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, index); // construct sprite.
 
     const {
       x: actionX,
       y: actionY
-    } = actionEventData;
-    actionEventSprite._realX = actionX;
-    actionEventSprite._realY = actionY;
-    actionEventSprite._x = actionX;
-    actionEventSprite._y = actionY;
+    } = actionEventData; // extract coordinates.
+    actionEventSprite._realX = actionX; // align position.
+    actionEventSprite._realY = actionY; // align position.
+    actionEventSprite._x = actionX; // align grid x.
+    actionEventSprite._y = actionY; // align grid y.
 
     // give it a name.
-    const skillName = action.getBaseSkill().name;
+    const skillName = action.getBaseSkill().name; // get skill name.
     const casterName = action.getCaster()
-      .battlerName();
-    actionEventSprite.__actionName = `_${casterName}-${skillName}`;
+      .battlerName(); // get caster name.
+    actionEventSprite.__actionName = `_${casterName}-${skillName}`; // tag for debugging/tools.
 
-    // on rare occasions, the timing of adding an action to the map coincides
-    // with the removal of the caster which breaks the ordering of the events.
-    // the result will throw an error and break. This should catch that.
+    // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
     {
-      console.error("that rare error occurred!");
-      return;
+      console.error('that rare error occurred!'); // preserve existing behavior.
+      return; // stop if invalid.
     }
 
-    const pageIndex = actionEventSprite.findProperPageIndex();
+    const pageIndex = actionEventSprite.findProperPageIndex(); // resolve page index.
     const {
       characterIndex,
       characterName
-    } = actionEventData.pages[pageIndex].image;
+    } = actionEventData.pages[pageIndex].image; // extract image data.
 
-    actionEventSprite.setActionSpriteNeedsAdding();
-    actionEventSprite._eventId = actionEventData.id;
-    actionEventSprite._characterName = characterName;
-    actionEventSprite._characterIndex = characterIndex;
-    const pageData = actionEventData.pages[pageIndex];
-    actionEventSprite.setMoveFrequency(pageData.moveFrequency);
-    actionEventSprite.setMoveRoute(pageData.moveRoute);
-    actionEventSprite.setDirection(action.direction());
-    actionEventSprite.setCustomDirection(action.direction());
-    actionEventSprite.setCastedDirection($gamePlayer.direction());
-    actionEventSprite.setJabsAction(action);
+    actionEventSprite.setActionSpriteNeedsAdding(); // flag to add sprite.
+    actionEventSprite._eventId = actionEventData.id; // assign event id.
+    actionEventSprite._characterName = characterName; // assign sprite name.
+    actionEventSprite._characterIndex = characterIndex; // assign sprite index.
+    const pageData = actionEventData.pages[pageIndex]; // get page.
+    actionEventSprite.setMoveFrequency(pageData.moveFrequency); // frequency.
+    actionEventSprite.setMoveRoute(pageData.moveRoute); // route.
+    actionEventSprite.setCastedDirection($gamePlayer.direction()); // cast facing.
 
-    // overwrites the "start" of the event for this event to be nothing.
-    // this prevents the player from accidentally interacting with the
-    // sword swing or whatever is generated by the action.
-    actionEventSprite.start = () => false;
+    this.applyActionToActionEventSprite(actionEventSprite, action);
 
-    action.setActionSprite(actionEventSprite);
-    $gameMap.addEvent(actionEventSprite);
-    this.requestActionRendering = true;
+    // prevent player interaction with the action event.
+    actionEventSprite.start = () => false; // no-op start.
+
+    action.setActionSprite(actionEventSprite); // associate back.
+    $gameMap.addEvent(actionEventSprite); // add to map, with hole reuse.
+    this.requestActionRendering = true; // trigger render.
+  }
+
+  /**
+   * Applies the {@link JABS_Action} to the {@link Game_Event}
+   * @param {Game_Event} actionEventSprite The event being created for the action.
+   * @param {JABS_Action} action The action being applied.
+   */
+  applyActionToActionEventSprite(
+    actionEventSprite,
+    action
+  )
+  {
+    actionEventSprite.setJabsAction(action); // wire action.
+    actionEventSprite.setDirection(action.direction()); // facing.
   }
 
   /**
@@ -1623,38 +1927,63 @@ class JABS_Engine
    * @param {number} y The `y` coordinate of the battler dropping the loot.
    * @param {RPG_EquipItem|RPG_Item} item The loot's raw data object.
    */
-  addLootDropToMap(x, y, item)
+  addLootDropToMap(
+    x,
+    y,
+    item
+  )
   {
     // clone the loot data from the action map event id of 1.
-    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]);
+    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]); // base template.
 
-    lootEventData.x = x;
-    lootEventData.y = y;
+    lootEventData.x = x; // position x.
+    lootEventData.y = y; // position y.
+
+    // find the first available hole in the data map event list.
+    let index = -1; // the index we will insert at.
+    for (let i = 0; i < $dataMap.events.length; i++)
+    {
+      // if an empty spot is found, use that.
+      if (!$dataMap.events[i])
+      {
+        index = i; // capture the hole index.
+        break; // stop searching.
+      }
+    }
+
+    // if no hole was found, append to the end.
+    if (index === -1)
+    {
+      index = $dataMap.events.length; // assign next index.
+    }
 
     // add the loot event to the datamap list of events.
-    $dataMap.events[$dataMap.events.length] = lootEventData;
-    const newIndex = $dataMap.events.length - 1;
-    lootEventData.lootIndex = newIndex;
+    $dataMap.events[index] = lootEventData; // keep array dense.
+    lootEventData.lootIndex = index; // persist the loot index.
 
     // create the loot event by hand with this new data.
-    const jabsLootData = new JABS_LootDrop(item);
-    lootEventData.uuid = jabsLootData.uuid;
+    const jabsLootData = new JABS_LootDrop(item); // create loot model.
+    lootEventData.uuid = jabsLootData.uuid; // associate unique id.
 
     // set the duration of this loot drop
     // if a custom time is available, then use that, otherwise use the default.
-    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration;
+    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration; // lifetime.
 
     // generate a new event to visually represent the loot drop and flag it for adding.
-    const eventId = $dataMap.events.length - 1;
-    const lootEvent = new Game_Event($gameMap.mapId(), eventId);
-    lootEvent.setJabsLoot(jabsLootData);
-    lootEvent.setLootNeedsAdding();
+    const eventId = index; // use the reused/appended index.
+    const lootEvent = new Game_Event($gameMap.mapId(), eventId); // construct sprite.
+    lootEvent.setJabsLoot(jabsLootData); // attach loot.
 
-    // add loot event to map.
-    this.requestLootRendering = true;
-    $gameMap.addEvent(lootEvent);
+    // flag for adding a character sprite later via HUD/spriteset integration (unchanged elsewhere).
+    lootEvent.setLootNeedsAdding(); // if your code uses such a flag.
 
-    // return the event in case callers need it.
+    // add to the map, reusing holes in the live event list as well.
+    $gameMap.addEvent(lootEvent); // will reuse holes per updated addEvent().
+
+    // trigger the spriteset to scan and add loot sprites.
+    this.requestLootRendering = true; // ensure loot renders this frame.
+
+    // return the loot drop that was added.
     return lootEvent;
   }
 
@@ -1665,7 +1994,11 @@ class JABS_Engine
    * @param {number} y The y coordinate of where to place the enemy on the map.
    * @param {number} enemyCloneEventId The eventId from the enemy clone map identifying the enemy to clone.
    */
-  addEnemyToMap(x, y, enemyCloneEventId)
+  addEnemyToMap(
+    x,
+    y,
+    enemyCloneEventId
+  )
   {
     // check if we've initialized the enemy map, yet.
     if (!JABS_Engine.#isEnemyMapInitialized())
@@ -1718,7 +2051,10 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  applyPrimaryBattleEffects(action, target)
+  applyPrimaryBattleEffects(
+    action,
+    target
+  )
   {
     // execute the action against the target.
     this.executeSkillEffects(action, target);
@@ -1739,7 +2075,10 @@ class JABS_Engine
    * @param {JABS_Battler} target The target to apply skill effects against.
    * @returns {Game_ActionResult}
    */
-  executeSkillEffects(action, target)
+  executeSkillEffects(
+    action,
+    target
+  )
   {
     // grab the battler of the target.
     const targetBattler = target.getBattler();
@@ -1794,12 +2133,10 @@ class JABS_Engine
     if (target.guarding())
     {
       // grab the result.
-      const result = targetBattler.result();
+      const nextResult = targetBattler.result();
 
       // flag that the action was guarded.
-      result.guarded = true;
-
-
+      nextResult.guarded = true;
     }
 
     // apply the action to the target.
@@ -1817,7 +2154,11 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  preExecuteSkillEffects(action, target)
+  // eslint-disable-next-line no-unused-vars
+  preExecuteSkillEffects(
+    action,
+    target
+  )
   {
   }
 
@@ -1827,7 +2168,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action being executed.
    * @param {JABS_Battler} target The target to apply skill effects against.
    */
-  postExecuteSkillEffects(action, target)
+  postExecuteSkillEffects(
+    action,
+    target
+  )
   {
     // apply aggro regardless of successful hit.
     this.applyAggroEffects(action, target);
@@ -1838,7 +2182,10 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  applyAggroEffects(action, target)
+  applyAggroEffects(
+    action,
+    target
+  )
   {
     // grab the attacker.
     const attacker = action.getCaster();
@@ -1932,7 +2279,10 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  applyOnHitEffects(action, target)
+  applyOnHitEffects(
+    action,
+    target
+  )
   {
     // if the result isn't a hit or a parry, then we don't process on-hit effects.
     const result = target.getBattler()
@@ -1948,7 +2298,10 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  processOnHitEffects(action, target)
+  processOnHitEffects(
+    action,
+    target
+  )
   {
     // grab some shorthand variables for local use.
     const caster = action.getCaster();
@@ -1994,7 +2347,11 @@ class JABS_Engine
    * @param {JABS_Action} action The action potentially knocking the target back.
    * @param {JABS_Battler} target The map battler to potentially knockback.
    */
-  checkKnockback(action, target)
+  // eslint-disable-next-line complexity
+  checkKnockback(
+    action,
+    target
+  )
   {
     // if we can't be knocked back, don't process.
     if (!this.canBeKnockedBack(action, target)) return;
@@ -2002,11 +2359,11 @@ class JABS_Engine
     // you cannot be knocked back by healing-exclusive actions.
     if (action.isHealing()) return;
 
+    const targetNotes = target.getBattler()
+      .getAllNotes();
+
     // determine the current knockback resist of the target.
-    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(
-      target.getBattler()
-        .getAllNotes(),
-      J.ABS.RegExp.KnockbackResist);
+    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
 
     // don't even knock them up or around at all, they are immune to knockback.
     if (targetKnockbackResist >= 100) return;
@@ -2094,7 +2451,10 @@ class JABS_Engine
     targetSprite.jump(realX - targetSprite.x, realY - targetSprite.y);
   }
 
-  canBeKnockedBack(action, target)
+  canBeKnockedBack(
+    action,
+    target
+  )
   {
     // don't knockback if already being knocked back.
     if (target.getCharacter()
@@ -2119,7 +2479,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The battler that casted this skill.
    * @param {JABS_Action} action The action that contains the skill to check for combos.
    */
-  checkComboSequence(caster, action)
+  checkComboSequence(
+    caster,
+    action
+  )
   {
     // check to make sure we have combo data before processing the combo.
     if (!this.canUpdateComboSequence(caster, action)) return;
@@ -2135,7 +2498,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action executed.
    * @returns {boolean} True if the combo action should be updated, false otherwise.
    */
-  canUpdateComboSequence(caster, action)
+  canUpdateComboSequence(
+    caster,
+    action
+  )
   {
     // grab the skill out of the action.
     const skill = action.getBaseSkill();
@@ -2160,7 +2526,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The caster of the action.
    * @param {JABS_Action} action The action executed.
    */
-  updateComboSequence(caster, action)
+  updateComboSequence(
+    caster,
+    action
+  )
   {
     // extract the combo data out of the skill.
     const {
@@ -2195,7 +2564,11 @@ class JABS_Engine
    * @param {JABS_Action} action The action being executed.
    * @returns {boolean} True if the action was parried, false otherwise.
    */
-  checkParry(caster, target, action)
+  checkParry(
+    caster,
+    target,
+    action
+  )
   {
     // cannot parry if not facing target.
     if (!this.isParryPossible(caster, target)) return false;
@@ -2238,6 +2611,7 @@ class JABS_Engine
     const debug = false;
     if (debug === true)
     {
+      // eslint-disable-next-line max-len
       console.log(`[${casterBattler.name()}] hit: ${attackerHit}, grd: ${defenderGrd}, rng: ${rng}, diff: ${difference}, parried: ${rng > difference}`);
     }
 
@@ -2290,7 +2664,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The one executing the skill against the target.
    * @param {JABS_Battler} target The one being attacked by the caster.
    */
-  isParryPossible(caster, target)
+  isParryPossible(
+    caster,
+    target
+  )
   {
     // cannot parry if not facing target.
     const isFacing = caster.isFacingTarget(target.getCharacter());
@@ -2316,7 +2693,10 @@ class JABS_Engine
    * @param {JABS_Battler} attacker The battler triggering the alert.
    * @param {JABS_Battler} target The battler entering the alert state.
    */
-  triggerAlert(attacker, target)
+  triggerAlert(
+    attacker,
+    target
+  )
   {
     // check if the target can actually be alerted first.
     if (!this.canBeAlerted(attacker, target)) return;
@@ -2340,7 +2720,10 @@ class JABS_Engine
    * @param {JABS_Battler} battler The battler to be alerted.
    * @return {boolean} True if they can be alerted, false otherwise.
    */
-  canBeAlerted(attacker, battler)
+  canBeAlerted(
+    attacker,
+    battler
+  )
   {
     // cannot be alerted by inanimate battlers.
     if (attacker.isInanimate()) return false;
@@ -2365,7 +2748,10 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action containing the action data.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  continuedPrimaryBattleEffects(action, target)
+  continuedPrimaryBattleEffects(
+    action,
+    target
+  )
   {
     // checks for retaliation from the target.
     this.checkRetaliate(action, target);
@@ -2376,7 +2762,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} targetBattler The target having the action applied against.
    */
-  checkRetaliate(action, targetBattler)
+  checkRetaliate(
+    action,
+    targetBattler
+  )
   {
     // do not retaliate against other battler's retaliations.
     if (action.isRetaliation()) return;
@@ -2423,7 +2812,7 @@ class JABS_Engine
     }
 
     // handle counter-guarding next.
-    const didCounterGuard = this.handleCounterGuard(battler, didCounterParry)
+    const didCounterGuard = this.handleCounterGuard(battler, didCounterParry);
 
     // if we have autocounter, trigger those if we haven't already done the other.
     if (!didCounterParry && !didCounterGuard)
@@ -2446,7 +2835,7 @@ class JABS_Engine
         {
           this.forceMapAction(battler, skillChance.skillId, true);
         }
-      })
+      });
     }
   }
 
@@ -2480,7 +2869,10 @@ class JABS_Engine
     return true;
   }
 
-  handleCounterGuard(battler, alreadyCounterParried)
+  handleCounterGuard(
+    battler,
+    alreadyCounterParried
+  )
   {
     // do nothing if the battler already counter-parried, no double-dipping!
     if (alreadyCounterParried) return false;
@@ -2530,7 +2922,10 @@ class JABS_Engine
    * @param {JABS_Battler} battler The battler doing the autocounter.
    * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doAutoCounter(battler, slot = JABS_Button.Offhand)
+  doAutoCounter(
+    battler,
+    slot = JABS_Button.Offhand
+  )
   {
     // execute counterparrying.
     this.doCounterParry(battler, slot);
@@ -2544,7 +2939,10 @@ class JABS_Engine
    * @param {JABS_Battler} battler The battler to perform the skills.
    * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterGuard(battler, slot = JABS_Button.Offhand)
+  doCounterGuard(
+    battler,
+    slot = JABS_Button.Offhand
+  )
   {
     // destructure out the guard and parry ids.
     const { counterGuardIds } = battler.getGuardData(slot);
@@ -2562,7 +2960,10 @@ class JABS_Engine
    * @param {JABS_Battler} battler The battler to perform the skills.
    * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterParry(battler, slot = JABS_Button.Offhand)
+  doCounterParry(
+    battler,
+    slot = JABS_Button.Offhand
+  )
   {
     // destructure out the parry ids.
     const { counterParryIds } = battler.getGuardData(slot);
@@ -2615,7 +3016,7 @@ class JABS_Engine
         {
           this.forceMapAction(enemy, skillChance.skillId, true);
         }
-      })
+      });
     }
   }
 
@@ -2624,7 +3025,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  postPrimaryBattleEffects(action, target)
+  postPrimaryBattleEffects(
+    action,
+    target
+  )
   {
     // generate log for this action.
     this.createAttackLog(action, target);
@@ -2641,7 +3045,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  generatePopAttack(action, target)
+  generatePopAttack(
+    action,
+    target
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -2664,7 +3071,11 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The target having the action applied against.
    */
-  generatePopSkillUsage(action, target)
+  // eslint-disable-next-line no-unused-vars
+  generatePopSkillUsage(
+    action,
+    target
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -2695,7 +3106,10 @@ class JABS_Engine
    * @param {JABS_Action} action The action affecting the target.
    * @param {JABS_Battler} target The `JABS_Battler` who was the target of the action.
    */
-  createAttackLog(action, target)
+  createAttackLog(
+    action,
+    target
+  )
   {
     // if not enabled, skip this.
     if (!J.LOG) return;
@@ -2753,9 +3167,9 @@ class JABS_Engine
       roundedDamage = roundedDamage >= 0
         ? roundedDamage
         : roundedDamage.toString()
-          .replace("-", "");
+          .replace('-', '');
       const damageReduction = Math.round(result.reduced);
-      let reducedAmount = "";
+      let reducedAmount = '';
       if (damageReduction)
       {
         reducedAmount = `(${parseInt(damageReduction)})`;
@@ -2825,7 +3239,12 @@ class JABS_Engine
    * @param {JABS_Battler} target The target battler the popup is placed on.
    * @returns {Map_TextPop}
    */
-  configureDamagePop(gameAction, skill, caster, target)
+  configureDamagePop(
+    gameAction,
+    skill,
+    caster,
+    target
+  )
   {
     // get the underlying battler associated with the popup.
     const targetBattler = target.getBattler();
@@ -2916,7 +3335,10 @@ class JABS_Engine
    * @param {JABS_Battler} caster The battler performing the action.
    * @returns {number} The icon index to use for this popup.
    */
-  determineElementalIcon(skill, caster)
+  determineElementalIcon(
+    skill,
+    caster
+  )
   {
     // if not using the elemental icons, don't return one.
     if (!J.ABS.Metadata.UseElementalIcons) return 0;
@@ -2971,6 +3393,7 @@ class JABS_Engine
     // self-targeting takes FIRST PRIORITY.
     if (gameAction.isForUser())
     {
+      // return only the caster as the target.
       return [ casterJabsBattler ];
     }
 
@@ -3012,55 +3435,143 @@ class JABS_Engine
     const targetsHit = [];
     let hitOne = false;
 
-    // actually process the collision.
+    // define a helper to query spatial candidates by AABB in tile-space.
+    const queryCandidates = () =>
+    {
+      // direct actions that have an action sprite (spatialized) use sprite position.
+      if (jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the center tile from the action sprite.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the inclusive bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // direct actions without a sprite use caster proximity and/or target coordinates.
+      if (jabsAction.isDirectAction() && !actionSprite)
+      {
+        // grab the caster location in tiles.
+        const cx = Math.floor(casterJabsBattler.getX());
+        const cy = Math.floor(casterJabsBattler.getY());
+
+        // use proximity radius for the AABB.
+        const radius = jabsAction.getProximity();
+
+        // build the inclusive bounds using the proximity value.
+        const minX = cx - radius;
+        const minY = cy - radius;
+        const maxX = cx + radius;
+        const maxY = cy + radius;
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // non-direct actions will have an action sprite; anchor on sprite.
+      if (!jabsAction.isDirectAction() && actionSprite)
+      {
+        // read the sprite center in tiles.
+        const cx = actionSprite.x;
+        const cy = actionSprite.y;
+
+        // build the bounds using the action range.
+        const minX = Math.floor(cx - range);
+        const minY = Math.floor(cy - range);
+        const maxX = Math.ceil(cx + range);
+        const maxY = Math.ceil(cy + range);
+
+        // return the candidates from the spatial index.
+        return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+      }
+
+      // fallback if no anchor is available; return all battlers.
+      return JABS_AiManager.getAllBattlers();
+    };
+
+    // grab the candidate battlers from the spatial index.
+    const candidates = queryCandidates();
+
+    // actually process the collision for each candidate.
     const battlerCollisionProccessor = battler =>
     {
       // this time, it is effectively checking for the single-scope.
       if (!battler.isWithinScope(jabsAction, battler, hitOne)) return;
 
       // if the action is a direct-targeting action,
-      // then only check distance between the caster and target.
+      // then choose collision method based on whether it is spatialized.
       if (jabsAction.isDirectAction())
       {
+        // direct actions that have an action sprite (spatialized) use spatial collision.
+        if (actionSprite)
+        {
+          // perform standard spatial collision against the action's event.
+          const sprite = battler.getCharacter();
+          const actionDirection = actionSprite.direction();
+          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+          if (result)
+          {
+            // add this battler to the list of targets hit.
+            targetsHit.push(battler);
+
+            // if we only hit one, ensure subsequent single-scope checks respect that.
+            hitOne = true;
+          }
+
+          // stop processing for this battler either way.
+          return;
+        }
+
+        // non-spatial direct actions use proximity between caster and target.
         if (gameAction.isForUser())
         {
+          // self-targeting direct actions always hit the target candidate.
           targetsHit.push(battler);
           hitOne = true;
           return;
         }
 
+        // check caster-to-target proximity for direct actions without a sprite.
         const maxDistance = jabsAction.getProximity();
         const distance = casterJabsBattler.distanceToDesignatedTarget(battler);
         if (distance <= maxDistance)
         {
+          // add this battler to the list of targets hit.
           targetsHit.push(battler);
           hitOne = true;
         }
+
+        // finished with this battler for direct actions.
+        return;
       }
-        // if the action is a standard projectile-based action,
-      // then check to see if this battler is now in range.
-      else
+
+      // check to see if this battler is now in range for non-direct actions.
+      const sprite = battler.getCharacter();
+      const actionDirection = actionSprite.direction();
+      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+      if (result)
       {
-        const sprite = battler.getCharacter();
-        const actionDirection = actionSprite.direction();
-        const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
-        if (result)
-        {
-          targetsHit.push(battler);
-          hitOne = true;
-        }
+        // add this battler to the list of targets hit.
+        targetsHit.push(battler);
+
+        // if we only hit one, ensure subsequent single-scope checks respect that.
+        hitOne = true;
       }
     };
 
-    // grab all the battlers that could possibly be hit.
-    const battlers = JABS_AiManager.getAllBattlersDistanceSortedFromBattler(casterJabsBattler);
-
     // LAST PRIORITY is just regular "did I get hit" sort of stuff.
-    battlers
+    candidates
       .filter(canActionConnectWithBattler, this)
       .forEach(battlerCollisionProccessor, this);
 
-    // return what we found.
+    // return the list of targets hit.
     return targetsHit;
   }
 
@@ -3072,341 +3583,616 @@ class JABS_Engine
    * @param {number} range How big the collision shape is.
    * @param {string} shape The collision formula based on shape.
    */
-  isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape)
+  isTargetWithinRange(
+    facing,
+    targetCharacter,
+    actionEvent,
+    range,
+    shape
+  )
   {
+    // determine collision based on the selected shape.
     switch (shape)
     {
-      // shapes that do not care about direction.
+      // shapes that do not care about direction by default.
       case J.ABS.Shapes.Circle:
+        // full circle collision.
         return this.collisionCircle(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Rhombus:
+        // diamond (Manhattan/L1) semantics; see upgraded AABB-aware implementation below.
         return this.collisionRhombus(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Square:
+        // full square centered at the action origin.
         return this.collisionSquare(targetCharacter, actionEvent, range);
+
       case J.ABS.Shapes.Cross:
+        // cross union (vertical + horizontal bars).
         return this.collisionCross(targetCharacter, actionEvent, range);
 
       // shapes that require action direction.
       case J.ABS.Shapes.FrontSquare:
+        // front-half of the full square selected by facing.
         return this.collisionFrontSquare(targetCharacter, actionEvent, range, facing);
+
       case J.ABS.Shapes.Line:
+        // directional bar extending outward from the origin.
         return this.collisionLine(targetCharacter, actionEvent, range, facing);
+
       case J.ABS.Shapes.Arc:
-        return this.collisionFrontRhombus(targetCharacter, actionEvent, range, facing);
+      {
+        // Arc is the sector/wedge. Default to 180° if not specified.
+        const degrees = this.getActionDegrees(actionEvent) ?? 180;
+        return this.collisionSector(targetCharacter, actionEvent, range, facing, degrees);
+      }
+
       case J.ABS.Shapes.Wall:
+        // shallow depth, broad breadth wall immediately in front.
         return this.collisionWall(targetCharacter, actionEvent, range, facing);
       default:
+        // unknown shape → no collision.
         return false;
     }
   }
 
   /**
-   * A cirlce-shaped collision.
-   * Range determines the radius of the circle.
-   * This has no specific type of use- it is a circle.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @returns {boolean}
+   * Reads the <degrees:N> tag from the action’s underlying skill notes.
+   * Will return null if nothing is found.
+   * @param {Game_Event} actionEvent The action event that carries the JABS_Action.
+   * @returns {number|null} The degrees sweep (0–360), defaults to null if not found.
    */
-  collisionCircle(target, action, range)
+  getActionDegrees(actionEvent)
   {
-    // calculate the distance between the target and action.
-    const distance = $gameMap.distance(target.x, target.y, action.x, action.y);
+    // attempt to retrieve the underlying JABS_Action model.
+    const jabsAction = actionEvent.getJabsAction();
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = distance <= range;
+    // retrieve the base skill for this action.
+    const baseSkill = jabsAction.getBaseSkill();
 
-    // return the result.
-    return inRange;
+    // read the capture from the notes.
+    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Degrees, true);
+
+    // if we found nothing, or found nonsense, we return nothing.
+    if (found === null || found === 0) return null;
+
+    // validate the found value and clamp to [0, 360].
+    return Math.max(0, Math.min(360, found));
   }
 
   /**
-   * A rhombus-shaped (aka diamond) collision.
-   * Range determines the size of the rhombus surrounding the action.
-   * This is typically used for AOE around the caster type skills, but could also
-   * be used for very large objects, or as an explosion radius.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @returns {boolean}
+   * Reads the thickness tag from the action’s underlying skill notes.
+   * Will return null if nothing is found.
+   * @param {Game_Event} actionEvent The action event that carries the JABS_Action.
+   * @returns {number|null} The thickness in tiles; null if not specified.
    */
-  collisionRhombus(target, action, range)
+  getActionThicknessTiles(actionEvent)
   {
-    // calculate the absolute x and y distances.
-    const dx = Math.abs($gameMap.deltaX(target.x, action.x));
-    const dy = Math.abs($gameMap.deltaY(target.y, action.y));
+    // attempt to retrieve the underlying JABS_Action model.
+    const jabsAction = actionEvent.getJabsAction();
 
-    // the maximum distance the rhombus reaches is the combined x and y distances.
-    const distance = dx + dy;
+    // retrieve the base skill for this action.
+    const baseSkill = jabsAction.getBaseSkill();
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = distance <= range;
+    // read the capture from the notes using the canonical <thickness:N> tag.
+    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Thickness, true);
 
-    // return the result.
-    return inRange;
+    // if nothing found, return null to allow defaulting upstream.
+    if (found === null) return null;
+
+    // ensure non-negative thickness (0 is allowed but clamped later in px space).
+    return Math.max(0, found);
   }
 
   /**
-   * A square-shaped collision.
-   * Range determines the size of the square around the action.
-   * The use cases for this are similar to that of rhombus, but instead of a diamond-shaped
-   * hitbox, its a plain ol' square.
+   * Performs Euclidean sector (wedge) collision.
+   * Range is in tiles and is converted to pixels via tile width; this matches circle behavior.
+   * The target is checked via a circle-fast reject followed by an angle gate.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @returns {boolean}
+   * @param {Game_Event} action The action event representing the origin.
+   * @param {number} range The size in tiles (converted to px radius for the circle test).
+   * @param {2|4|6|8} facing The action’s facing (cardinals only for gate).
+   * @param {number} degrees The wedge sweep in degrees (0–360); <360 enables angle gate.
+   * @returns {boolean} True if the sector overlaps the target.
    */
-  collisionSquare(target, action, range)
+  collisionSector(
+    target,
+    action,
+    range,
+    facing,
+    degrees
+  )
   {
-    // calculate the absolute x and y distances.
-    const dx = Math.abs($gameMap.deltaX(target.x, action.x));
-    const dy = Math.abs($gameMap.deltaY(target.y, action.y));
+    // derive pixel radius from tiles.
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
+    const rPx = range * tw; // convert to pixels (use tw for circles/sectors).
 
-    // determine if we're in horizontal range.
-    const inHorzRange = dx <= range;
+    // get the unified, corrected origin for the action.
+    const {
+      x: cx,
+      y: cy
+    } = JABS_Engine.getActionOriginPixels(action);
 
-    // determine if we're in vertical range.
-    const inVertRange = dy <= range;
+    // compute the target’s AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inHorzRange && inVertRange;
-
-    // return the result.
-    return inRange;
-  }
-
-  /**
-   * A square-shaped collision infront of the caster.
-   * Range determines the size of the square infront of the action.
-   * For when you want a square that doesn't affect targets behind the action. It would be
-   * more accurate to call this a "half-square", really.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
-   * @returns {boolean}
-   */
-  collisionFrontSquare(target, action, range, facing)
-  {
-    // determine whether or not the target is within range of being hit.
-    const inSquareRange = this.collisionSquare(target, action, range);
-
-    // if they don't even collide in the full square, they won't collide in the frontsquare.
-    if (!inSquareRange) return false;
-
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
-
-    // default to being infront, we always are!
-    let inFront = true;
-
-    // switch on caster's direction.
-    // NOTE: this switch also ensures the action doesn't connect with targets behind it.
-    switch (facing)
+    // quick reject: outside circle area means outside wedge.
+    if (!targetRect.intersectsCircle(cx, cy, rPx))
     {
-      // infront when facing down means there should be positive Y distance.
-      case J.ABS.Directions.DOWN:
-        inFront = dy >= 0;
-        break;
-      // infront when facing left means there should be negative X distance.
-      case J.ABS.Directions.LEFT:
-        inFront = dx <= 0;
-        break;
-      // infront when facing right means there should be positive X distance.
-      case J.ABS.Directions.RIGHT:
-        inFront = dx >= 0;
-        break;
-      // infront when facing up means there should be negative Y distance.
-      case J.ABS.Directions.UP:
-        inFront = dy <= 0;
-        break;
+      // no overlap with circle → no overlap with wedge.
+      return false;
     }
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inSquareRange && inFront;
+    // a full 360° wedge is equivalent to the circle; we’ve already passed the circle test.
+    if (degrees >= 360)
+    {
+      // immediate success for full sweep.
+      return true;
+    }
 
-    // return the result.
-    return inRange;
-  }
-
-  /**
-   * A line-shaped collision.
-   * Range the distance of the of the line.
-   * This is typically used for spears and other stabby attacks.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
-   * @returns {boolean}
-   */
-  collisionLine(target, action, range, facing)
-  {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
-
-    // default to not hitting.
-    let inRange = false;
-
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the line.
-    const upDownBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const leftRightBuffer = (dy <= 0.5) && (dy >= -0.5);
-
-    // switch on caster's direction.
+    // build a unit facing vector from the numeric direction.
+    // Note: J.ABS.Directions.* uses cardinals; diagonals are not used for gating.
+    let fx = 0; // facing x component.
+    let fy = 0; // facing y component.
     switch (facing)
     {
       case J.ABS.Directions.DOWN:
-        inRange = upDownBuffer && (dy >= 0) && (dy <= range);
-        break;
-      case J.ABS.Directions.LEFT:
-        inRange = leftRightBuffer && (dx <= 0) && (dx >= -range);
-        break;
-      case J.ABS.Directions.RIGHT:
-        inRange = leftRightBuffer && (dx >= 0) && (dx <= range);
+        fy = 1;
         break;
       case J.ABS.Directions.UP:
-        inRange = upDownBuffer && (dy <= 0) && (dy >= -range);
+        fy = -1;
+        break;
+      case J.ABS.Directions.RIGHT:
+        fx = 1;
+        break;
+      case J.ABS.Directions.LEFT:
+        fx = -1;
+        break;
+      default:
+        // TODO: what would be a good default facing for unspecified facings?
         break;
     }
 
-    // return the result.
-    return inRange;
+    // compute vector from origin to the target rect’s center.
+    const tx = targetRect.cx - cx; // delta x to target center.
+    const ty = targetRect.cy - cy; // delta y to target center.
+
+    // degenerate case: target’s center exactly at origin → accept.
+    if (tx === 0 && ty === 0)
+    {
+      // overlapping centers are inside any wedge.
+      return true;
+    }
+
+    // normalize the target vector for dot-product angle testing.
+    const tLen = Math.hypot(tx, ty); // Euclidean length.
+    const tnx = tx / tLen; // unit x.
+    const tny = ty / tLen; // unit y.
+
+    // compute cosine threshold for the half-angle.
+    const halfAngleRad = (degrees * 0.5) * (Math.PI / 180); // half-angle in radians.
+    const cosHalf = Math.cos(halfAngleRad); // cosine threshold.
+
+    // dot-product with the facing unit vector yields cos(theta).
+    const dot = (fx * tnx) + (fy * tny); // cos(theta).
+
+    // accept if the angle is within the wedge sweep.
+    return dot >= cosHalf;
   }
 
   /**
-   * An arc-shaped collision.
-   * Range determines the reach and area of arc.
-   * This is what could be considered a standard 180 degree slash-shape, the basic attack.
+   * A circle-shaped collision in pixel space.
+   * Range is in tiles; converted to pixels using tile width.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
+   * @param {number} range How big the collision shape is (tiles).
    * @returns {boolean}
    */
-  collisionFrontRhombus(target, action, range, facing)
+  collisionCircle(
+    target,
+    action,
+    range
+  )
   {
-    // determine whether or not the target is within range of being hit.
-    const inRhombusRange = this.collisionRhombus(target, action, range);
+    // derive circle parameters in pixels.
+    const tw = $gameMap.tileWidth(); // assume square tiles unless specified otherwise.
+    const rPx = range * tw; // radius in pixels.
 
-    // if they don't even collide in the full rhombus, they won't collide in the frontrhombus.
-    if (!inRhombusRange) return false;
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
 
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    // build the target’s AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
 
-    // default to being infront, we always are!
-    let inFront = true;
+    // circle-vs-rect test.
+    return targetRect.intersectsCircle(originCx, originCy, rPx); // overlap?
+  }
 
-    // switch on caster's direction.
-    // NOTE: this switch also ensures the action doesn't connect with targets behind it.
+  /**
+   * A rhombus-shaped (diamond) collision using AABB-aware Manhattan (L1) distance in pixel space.
+   * Range is specified in tiles; we normalize pixel gaps by tile size to preserve N-tile semantics.
+   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
+   * @param {Game_Event} action The action sprite against the target.
+   * @param {number} range How big the collision shape is (tiles).
+   * @returns {boolean} True if the target is within the diamond.
+   */
+  collisionRhombus(
+    target,
+    action,
+    range
+  )
+  {
+    // grab tile dimensions for normalization.
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
+
+    // unified action origin in pixels.
+    const {
+      x: cx,
+      y: cy
+    } = JABS_Engine.getActionOriginPixels(action); // action origin.
+
+    // target’s AABB in pixels.
+    const rect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+
+    // initialize the unsigned horizontal pixel gap from origin point to rect.
+    let dxPx = 0;
+
+    // if the origin is left of the rect, gap is the distance to the left edge.
+    if (cx < rect.x)
+    {
+      dxPx = rect.x - cx;
+    }
+    // if the origin is right of the rect, gap is the distance to the right edge.
+    else if (cx > (rect.x + rect.w))
+    {
+      dxPx = cx - (rect.x + rect.w);
+    }
+
+    // initialize the unsigned vertical pixel gap from origin point to rect.
+    let dyPx = 0;
+
+    // if the origin is above the rect, gap is the distance to the top edge.
+    if (cy < rect.y)
+    {
+      dyPx = rect.y - cy;
+    }
+    // if the origin is below the rect, gap is the distance to the bottom edge.
+    else if (cy > (rect.y + rect.h))
+    {
+      dyPx = cy - (rect.y + rect.h);
+    }
+
+    // convert pixel gaps to tile distances.
+    const dxTiles = dxPx / tw; // x in tiles.
+    const dyTiles = dyPx / th; // y in tiles.
+
+    // inside the diamond if L1 distance in tile units is within range.
+    return (dxTiles + dyTiles) <= range;
+  }
+
+  /**
+   * A square-shaped collision area centered on the action origin in pixel space.
+   * Range N tiles creates a (2N+1)×(2N+1) tile square.
+   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
+   * @param {Game_Event} action The action sprite against the target.
+   * @param {number} range The range in tiles.
+   * @returns {boolean}
+   */
+  collisionSquare(
+    target,
+    action,
+    range
+  )
+  {
+    // compute action-centered square size in pixels.
+    const tw = $gameMap.tileWidth(); // tile width.
+    const th = $gameMap.tileHeight(); // tile height.
+    const tilesW = (2 * range + 1); // width in tiles.
+    const tilesH = (2 * range + 1); // height in tiles.
+    const wPx = tilesW * tw; // width in px.
+    const hPx = tilesH * th; // height in px.
+
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+
+    // build action area rect centered at the corrected origin.
+    const actionRect = JABS_Aabb.centerSized(originCx, originCy, wPx, hPx); // action rect.
+
+    // build target AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+
+    // rect-rect test.
+    return actionRect.intersectsRect(targetRect); // overlap?
+  }
+
+  /**
+   * A front-square collision (half of the full square) in pixel space.
+   * The half is chosen based on facing.
+   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
+   * @param {Game_Event} action The action sprite against the target.
+   * @param {number} range The range in tiles.
+   * @param {2|4|6|8} facing The direction the action is facing.
+   * @returns {boolean}
+   */
+  collisionFrontSquare(
+    target,
+    action,
+    range,
+    facing
+  )
+  {
+    // compute half-square dimensions in pixels.
+    const tw = $gameMap.tileWidth(); // tile width.
+    const th = $gameMap.tileHeight(); // tile height.
+
+    // total full-square tiles and derived pixel dimensions.
+    const fullTiles = (2 * range + 1); // full square tiles.
+    const fullW = fullTiles * tw; // full width in px.
+    const fullH = fullTiles * th; // full height in px.
+
+    // centralized, corrected origin for action.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+
+    // derive the front-half rectangle based on facing (anchored at corrected origin).
+    let actionRect; // will be computed based on facing.
     switch (facing)
     {
-      // infront when facing down means there should be positive Y distance.
-      case J.ABS.Directions.DOWN:
-        inFront = dy >= 0;
+      case J.ABS.Directions.DOWN: // 2 → bottom half from origin
+        actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
         break;
-      // infront when facing left means there should be negative X distance.
-      case J.ABS.Directions.LEFT:
-        inFront = dx <= 0;
+
+      case J.ABS.Directions.UP: // 8 → top half up from origin
+        actionRect = new JABS_Aabb(
+          originCx - (fullW / 2),
+          originCy - (fullH / 2) - (th / 2),
+          fullW,
+          (fullH / 2) + (th / 2)
+        );
         break;
-      // infront when facing right means there should be positive X distance.
-      case J.ABS.Directions.RIGHT:
-        inFront = dx >= 0;
+
+      case J.ABS.Directions.RIGHT: // 6 → right half from origin
+        actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
         break;
-      // infront when facing up means there should be negative Y distance.
-      case J.ABS.Directions.UP:
-        inFront = dy <= 0;
+
+      case J.ABS.Directions.LEFT: // 4 → left half from origin
+        actionRect = new JABS_Aabb(
+          originCx - (fullW / 2) - (tw / 2),
+          originCy - (fullH / 2),
+          (fullW / 2) + (tw / 2),
+          fullH
+        );
         break;
+
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inRhombusRange && inFront;
+    // build target AABB.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
 
-    // return the result.
-    return inRange;
+    // test overlap.
+    return actionRect.intersectsRect(targetRect); // overlap?
   }
 
   /**
-   * A wall-shaped collision.
-   * Range determines how wide the wall is.
-   * Typically used for hitting targets to the side of the caster.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
-   * @param {number} facing The direction the caster is facing at time of cast.
+   * A line-shaped collision approximated as a thin rectangle extending from the action origin.
+   * Range in tiles is converted to pixels. Thickness defaults to one tile, or <thickness:N> tiles if provided.
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles.
+   * @param {2|4|6|8} facing Facing direction.
    * @returns {boolean}
    */
-  collisionWall(target, action, range, facing)
+  collisionLine(
+    target,
+    action,
+    range,
+    facing
+  )
   {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    // acquire tile dimensions.
+    const tw = $gameMap.tileWidth(); // tile width in px.
+    const th = $gameMap.tileHeight(); // tile height in px.
 
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the wall.
-    const leftRightBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const upDownBuffer = (dy <= 0.5) && (dy >= -0.5);
+    // line length in pixels (use major axis for length, matching visualization elsewhere).
+    const lengthPx = range * Math.max(tw, th); // length in px.
 
-    // default to not hitting.
-    let inRange = false;
+    // determine configured thickness in tiles, fallback to default of 1 tile.
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1; // tiles.
 
+    // clamp to a very small positive minimum in pixels to ensure the AABB has area.
+    const minPx = 1; // small positive safeguard.
+
+    // compute thickness in pixels along each orientation.
+    const thicknessX = Math.max(minPx, thicknessTiles * tw); // horizontal thickness.
+    const thicknessY = Math.max(minPx, thicknessTiles * th); // vertical thickness.
+
+    // centralized, corrected origin.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+
+    // build the line-as-rect based on facing from origin.
+    let actionRect; // rectangle approximation of the line.
     switch (facing)
     {
-      // when facing up or down, the Y distance should be minimal.
-      case J.ABS.Directions.DOWN:
-      case J.ABS.Directions.UP:
-        inRange = (Math.abs(dx) <= range) && upDownBuffer;
+      case J.ABS.Directions.DOWN: // 2
+        // extend downward from the origin center, include a small extra half-tile pad.
+        actionRect = new JABS_Aabb(originCx - (thicknessX / 2), originCy, thicknessX, lengthPx + (th / 2));
         break;
-      // when facing left or right, the X distance should be minimal.
-      case J.ABS.Directions.RIGHT:
-      case J.ABS.Directions.LEFT:
-        inRange = (Math.abs(dy) <= range) && leftRightBuffer;
+      case J.ABS.Directions.UP: // 8
+        // extend upward from the origin center, include a small extra half-tile pad.
+        actionRect = new JABS_Aabb(
+          originCx - (thicknessX / 2),
+          originCy - lengthPx - (th / 2),
+          thicknessX,
+          lengthPx + (th / 2)
+        );
         break;
+      case J.ABS.Directions.RIGHT: // 6
+        // extend rightward from the origin center, include a small extra half-tile pad.
+        actionRect = new JABS_Aabb(originCx, originCy - (thicknessY / 2), lengthPx + (tw / 2), thicknessY);
+        break;
+      case J.ABS.Directions.LEFT: // (4)
+        // extend leftward from the origin center, include a small extra half-tile pad.
+        actionRect = new JABS_Aabb(
+          originCx - lengthPx - (tw / 2),
+          originCy - (thicknessY / 2),
+          lengthPx + (tw / 2),
+          thicknessY
+        );
+        break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
     }
 
-    // return the result.
-    return inRange;
+    // build target AABB and test overlap.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    return actionRect.intersectsRect(targetRect); // overlap?
   }
 
   /**
-   * A cross shaped collision.
-   * Range determines how far the cross reaches from the action.
-   * Think bomb explosions from the game bomberman.
+   * Legacy arc/front-rhombus shim; routed to Euclidean sector (wedge) logic.
+   * Existing data with <hitbox:arc> or <hitbox:frontrhombus> should be migrated
+   * to <hitbox:circle> + <degrees:N>; while migrating, this keeps old tags functional.
    * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
    * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range How big the collision shape is.
+   * @param {number} range The size in tiles.
+   * @param {2|4|6|8} facing The direction at time of cast.
+   * @returns {boolean} True if the sector overlaps the target.
+   */
+  collisionFrontRhombus(
+    target,
+    action,
+    range,
+    facing
+  )
+  {
+    // prefer explicit degrees if present; otherwise legacy default 180°.
+    const degrees = this.getActionDegrees(action) ?? 180;
+
+    // perform the Euclidean sector collision instead of the tile front-diamond.
+    return this.collisionSector(target, action, range, facing, degrees);
+  }
+
+  /**
+   * A wall-shaped collision approximated as a wide/long rect immediately in front of the origin.
+   * Breadth spans (2*range+1) tiles perpendicular to facing. Depth uses <thickness:N> tiles (default 1).
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles.
+   * @param {2|4|6|8} facing Facing direction.
    * @returns {boolean}
    */
-  collisionCross(target, action, range)
+  collisionWall(
+    target,
+    action,
+    range,
+    facing
+  )
   {
-    // calculate the non-absolute x and y distances.
-    const dx = $gameMap.deltaX(target.x, action.x);
-    const dy = $gameMap.deltaY(target.y, action.y);
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
 
-    // some wiggle room rather than being precisely 0 distance for lines.
-    // TODO: accommodate a new <size:#> tag for defining width of the wall.
-    const leftRightBuffer = (dx <= 0.5) && (dx >= -0.5);
-    const upDownBuffer = (dy <= 0.5) && (dy >= -0.5);
+    // resolve thickness (depth) in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const depthW = Math.max(minPx, thicknessTiles * tw); // depth when vertical
+    const depthH = Math.max(minPx, thicknessTiles * th); // depth when horizontal
 
-    // determine if we are in vertical range.
-    const inVertRange = Math.abs(dy) <= range && leftRightBuffer;
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
 
-    // determine if we are in horizontal range.
-    const inHorzRange = Math.abs(dx) <= range && upDownBuffer;
+    // breadth spans perpendicular axis.
+    const breadthTiles = (2 * range + 1);
+    const breadthW = breadthTiles * tw;
+    const breadthH = breadthTiles * th;
 
-    // determine whether or not the target is within range of being hit.
-    const inRange = inVertRange && inHorzRange;
+    let actionRect;
+    switch (facing)
+    {
+      case J.ABS.Directions.DOWN: // 2 → horizontal wall below origin
+        actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy, breadthW, depthH);
+        break;
+      case J.ABS.Directions.UP: // 8 → horizontal wall above origin
+        actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy - depthH, breadthW, depthH);
+        break;
+      case J.ABS.Directions.RIGHT: // 6 → vertical wall right of origin
+        actionRect = new JABS_Aabb(originCx, originCy - (breadthH / 2), depthW, breadthH);
+        break;
+      case J.ABS.Directions.LEFT: // (4) → vertical wall left of origin
+        actionRect = new JABS_Aabb(originCx - depthW, originCy - (breadthH / 2), depthW, breadthH);
+        break;
+      default:
+        console.warn(`unsupported facing direction: ${facing}`);
+        return false;
+    }
 
-    // return the result.
-    return inRange;
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+    return actionRect.intersectsRect(targetRect);
+  }
+
+  /**
+   * A cross-shaped collision approximated as the union of a vertical and horizontal bar.
+   * Thickness for both bars uses <thickness:N> tiles (default 1).
+   * @param {Game_Event|Game_Player|Game_Character} target The target.
+   * @param {Game_Event} action The action sprite.
+   * @param {number} range Range in tiles (extends out from origin on each arm).
+   * @returns {boolean}
+   */
+  collisionCross(
+    target,
+    action,
+    range
+  )
+  {
+    const tw = $gameMap.tileWidth();
+    const th = $gameMap.tileHeight();
+
+    // resolve thickness in tiles (default 1 tile if not specified).
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    const minPx = 1;
+    const thicknessX = Math.max(minPx, thicknessTiles * tw);
+    const thicknessY = Math.max(minPx, thicknessTiles * th);
+
+    // unified origin consistent with other shapes.
+    const {
+      x: originCx,
+      y: originCy
+    } = JABS_Engine.getActionOriginPixels(action);
+
+    // total arm extents include the center tile.
+    const totalW = (2 * range + 1) * tw;
+    const totalH = (2 * range + 1) * th;
+
+    // horizontal bar centered at corrected origin.
+    const horiz = new JABS_Aabb(originCx - (totalW / 2), originCy - (thicknessY / 2), totalW, thicknessY);
+
+    // vertical bar centered at corrected origin.
+    const vert = new JABS_Aabb(originCx - (thicknessX / 2), originCy - (totalH / 2), thicknessX, totalH);
+
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+    return horiz.intersectsRect(targetRect) || vert.intersectsRect(targetRect);
   }
 
   //endregion collision
-  //endregion functional
 
   //region defeated target aftermath
   /**
@@ -3414,7 +4200,10 @@ class JABS_Engine
    * @param {JABS_Battler} target The `Game_Battler` that was defeated.
    * @param {JABS_Battler} caster The `Game_Battler` that defeated the target.
    */
-  handleDefeatedTarget(target, caster)
+  handleDefeatedTarget(
+    target,
+    caster
+  )
   {
     // handle on-defeat effects, but before the battler is actually removed.
     this.predefeatHandler(target, caster);
@@ -3445,7 +4234,10 @@ class JABS_Engine
    * @param {JABS_Battler} target The `Game_Battler` that was defeated.
    * @param {JABS_Battler} caster The `Game_Battler` that defeated the target.
    */
-  predefeatHandler(target, caster)
+  predefeatHandler(
+    target,
+    caster
+  )
   {
     target.performPredefeatEffects(caster);
   }
@@ -3455,7 +4247,10 @@ class JABS_Engine
    * @param {JABS_Battler} target The `Game_Battler` that was defeated.
    * @param {JABS_Battler} caster The `Game_Battler` that defeated the target.
    */
-  postDefeatHandler(target, caster)
+  postDefeatHandler(
+    target,
+    caster
+  )
   {
     target.performPostdefeatEffects(caster);
   }
@@ -3475,6 +4270,7 @@ class JABS_Engine
    * Handles a non-player ally that was defeated.
    * @param {JABS_Battler} defeatedAlly The ally that was defeated.
    */
+  // eslint-disable-next-line no-unused-vars
   handleDefeatedAlly(defeatedAlly)
   {
   }
@@ -3484,7 +4280,10 @@ class JABS_Engine
    * @param {JABS_Battler} defeatedTarget The `JABS_Battler` that was defeated.
    * @param {JABS_Battler} caster The `JABS_Battler` that defeated the target.
    */
-  handleDefeatedEnemy(defeatedTarget, caster)
+  handleDefeatedEnemy(
+    defeatedTarget,
+    caster
+  )
   {
     // remove all leader/follower data the battler may have.
     defeatedTarget.clearFollowers();
@@ -3521,7 +4320,10 @@ class JABS_Engine
    * @param {Game_Enemy} enemy The target battler that was defeated.
    * @param {JABS_Battler} actor The map battler that defeated the target.
    */
-  gainBasicRewards(enemy, actor)
+  gainBasicRewards(
+    enemy,
+    actor
+  )
   {
     let experience = enemy.exp();
     let gold = enemy.gold();
@@ -3543,7 +4345,10 @@ class JABS_Engine
    * @param {Game_Battler} enemy The target battler that was defeated.
    * @param {JABS_Battler} actor The map battler that defeated the target.
    */
-  getRewardScalingMultiplier(enemy, actor)
+  getRewardScalingMultiplier(
+    enemy,
+    actor
+  )
   {
     // default the multiplier to 1x.
     let multiplier = 1.0;
@@ -3566,7 +4371,10 @@ class JABS_Engine
    * @param {number} experience The experience to be gained as a reward.
    * @param {Game_Character} casterCharacter The character who defeated the target.
    */
-  gainExperienceReward(experience, casterCharacter)
+  gainExperienceReward(
+    experience,
+    casterCharacter
+  )
   {
     // don't do anything if the enemy didn't grant any experience.
     if (!experience) return;
@@ -3587,7 +4395,10 @@ class JABS_Engine
    * @param {number} amount The amount in the popup.
    * @param {Game_Character} character The character the popup is on.
    */
-  generatePopExperience(amount, character)
+  generatePopExperience(
+    amount,
+    character
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -3621,7 +4432,10 @@ class JABS_Engine
    * @param {number} gold The gold to be gained as a reward.
    * @param {Game_Character} character The character who defeated the target.
    */
-  gainGoldReward(gold, character)
+  gainGoldReward(
+    gold,
+    character
+  )
   {
     // don't do anything if the enemy didn't grant any gold.
     if (!gold) return;
@@ -3638,7 +4452,10 @@ class JABS_Engine
    * @param {number} amount The amount in the popup.
    * @param {Game_Character} character The character the popup is on.
    */
-  generatePopGold(amount, character)
+  generatePopGold(
+    amount,
+    character
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -3672,7 +4489,11 @@ class JABS_Engine
    * @param {number} gold The gold to be gained as a reward.
    * @param {JABS_Battler} caster The ally gaining the experience and gold.
    */
-  createRewardsLog(experience, gold, caster)
+  createRewardsLog(
+    experience,
+    gold,
+    caster
+  )
   {
     if (!J.LOG) return;
 
@@ -3698,7 +4519,11 @@ class JABS_Engine
    * @param {JABS_Battler} target The enemy dropping the loot.
    * @param {JABS_Battler} caster The ally that defeated the enemy.
    */
-  createLootDrops(target, caster)
+  // eslint-disable-next-line no-unused-vars
+  createLootDrops(
+    target,
+    caster
+  )
   {
     // actors don't drop loot.
     if (target.isActor()) return;
@@ -3722,15 +4547,15 @@ class JABS_Engine
     let lootType = String.empty;
     if (item.atypeId)
     {
-      lootType = "armor";
+      lootType = 'armor';
     }
     else if (item.wtypeId)
     {
-      lootType = "weapon";
+      lootType = 'weapon';
     }
     else if (item.itypeId)
     {
-      lootType = "item";
+      lootType = 'item';
     }
 
     // the player is always going to be the one collecting the loot- for now.
@@ -3745,13 +4570,19 @@ class JABS_Engine
    * @param {RPG_BaseItem[]} itemDataList All items picked up.
    * @param {Game_Character} character The character displaying the popups.
    */
-  generatePopItemBulk(itemDataList, character)
+  generatePopItemBulk(
+    itemDataList,
+    character
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
 
     // iterate over all loot.
-    itemDataList.forEach((itemData, index) =>
+    itemDataList.forEach((
+      itemData,
+      index
+    ) =>
     {
       // generate a pop that moves based on index.
       this.generatePopItem(itemData, character, 32 + (index * 24));
@@ -3771,7 +4602,11 @@ class JABS_Engine
    * @param {Game_Character} character The character displaying the popup.
    * @param {number} y The y coordiante for this item pop.
    */
-  generatePopItem(itemData, character, y)
+  generatePopItem(
+    itemData,
+    character,
+    y
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -3788,7 +4623,10 @@ class JABS_Engine
    * @param {RPG_BaseItem} itemData The item's database object.
    * @param {number} y The y coordiante for this item pop.
    */
-  configureItemPop(itemData, y)
+  configureItemPop(
+    itemData,
+    y
+  )
   {
     // build the popup.
     return new TextPopBuilder(itemData.name)
@@ -3861,7 +4699,10 @@ class JABS_Engine
    * @param {number} newLevel The level being reached.
    * @returns {ActionLog}
    */
-  configureLevelUpLog(targetName, newLevel)
+  configureLevelUpLog(
+    targetName,
+    newLevel
+  )
   {
     return new ActionLogBuilder()
       .setupLevelUp(targetName, newLevel)
@@ -3882,7 +4723,10 @@ class JABS_Engine
    * @param {RPG_Skill} skill The skill being learned.
    * @param {string} uuid The uuid of the battler leveling up.
    */
-  battlerSkillLearn(skill, uuid)
+  battlerSkillLearn(
+    skill,
+    uuid
+  )
   {
     const battler = JABS_AiManager.getBattlerByUuid(uuid);
     if (battler)
@@ -3898,7 +4742,10 @@ class JABS_Engine
    * @param {RPG_Skill} skill The skill being learned.
    * @param {Game_Character} character The character to show the popup on.
    */
-  generatePopSkillLearn(skill, character)
+  generatePopSkillLearn(
+    skill,
+    character
+  )
   {
     // if we are not using popups, then don't do this.
     if (!J.POPUPS) return;
@@ -3928,7 +4775,10 @@ class JABS_Engine
    * @param {RPG_Skill} skill The skill being learned.
    * @param {JABS_Battler} player The player's `JABS_Battler`.
    */
-  createSkillLearnLog(skill, player)
+  createSkillLearnLog(
+    skill,
+    player
+  )
   {
     if (!J.LOG) return;
 
@@ -3942,7 +4792,10 @@ class JABS_Engine
    * @param {number} learnedSkillId The id of the skill learned.
    * @returns {ActionLog}
    */
-  configureSkillLearnLog(targetName, learnedSkillId)
+  configureSkillLearnLog(
+    targetName,
+    learnedSkillId
+  )
   {
     return new ActionLogBuilder()
       .setupSkillLearn(targetName, learnedSkillId)

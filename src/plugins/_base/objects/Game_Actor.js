@@ -507,4 +507,13 @@ Game_Actor.prototype.levelDown = function()
   // triggers the on-level-down hook.
   this.onLevelDown();
 };
+
+/**
+ * Gets the base max tp for this actor.
+ * @returns {number}
+ */
+Game_Actor.prototype.getBaseMaxTp = function()
+{
+  return J.BASE.Metadata.BaseTpMaxActors;
+};
 //endregion Game_Actor

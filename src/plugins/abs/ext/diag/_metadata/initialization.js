@@ -33,34 +33,21 @@ J.ABS.EXT.DIAG = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.ABS.EXT.DIAG.Metadata = {
-  /**
-   * The version of this plugin.
-   */
-  Name: `J-ABS-Diagonals`,
-};
+J.ABS.EXT.DIAG.Metadata = {};
+J.ABS.EXT.DIAG.Metadata.Name = `J-ABS-Diagonals`;
+J.ABS.EXT.DIAG.Metadata.Version = '1.1.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
  */
 J.ABS.EXT.DIAG.PluginParameters = PluginManager.parameters(J.ABS.EXT.DIAG.Metadata.Name);
-J.ABS.EXT.DIAG.Metadata = {
-  ...J.ABS.EXT.DIAG.Metadata,
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.0',
-};
 
 /**
  * A collection of all aliased methods for this plugin.
  */
-J.ABS.EXT.DIAG.Aliased = {
-  Game_BattleMap: {},
-  Game_Character: {},
-  Game_Event: {},
-  Game_Map: {},
-  Game_Player: {},
-};
+J.ABS.EXT.DIAG.Aliased = {};
+J.ABS.EXT.DIAG.Aliased.Game_Event = new Map();
+J.ABS.EXT.DIAG.Aliased.Game_Player = new Map();
+J.ABS.EXT.DIAG.Aliased.JABS_Engine = new Map();
 //endregion plugin metadata
 //endregion Initialization

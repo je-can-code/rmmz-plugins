@@ -78,6 +78,18 @@ Game_Action.prototype.apply = function(target)
  */
 Game_Action.prototype.applyJabsAction = function(target)
 {
+  // delegate to the canonical virtual apply routine.
+  this.applyVirtualJabsAction(target);
+};
+
+/**
+ * The canonical JABS action application routine.
+ * Performs pre-apply work, executes if a hit, and updates last-target bookkeeping.
+ * This is the single place that defines the apply flow for map actions.
+ * @param {Game_Actor|Game_Enemy} target The target of this action.
+ */
+Game_Action.prototype.applyVirtualJabsAction = function(target)
+{
   // do the preliminary
   this.preApplyAction(target);
 

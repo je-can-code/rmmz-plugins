@@ -5,7 +5,7 @@ import Logger from "./logger.js";
 const start = performance.now();
 
 // grab all the destinations.
-let destinations = process.argv.slice(2);
+const destinations = process.argv.slice(2);
 
 // build it.
 const mirror = new Mirror();
@@ -23,4 +23,4 @@ if (destinations.length)
 await mirror.mirrorToAllDestinations();
 
 const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
-Logger.logAnyway(`Mirror™ has completed copying in ${durationSeconds}s. 💯✅`);
+Logger.logAnyway(`Mirror™ has completed copying in ${durationSeconds}s. 📋  ✅`);

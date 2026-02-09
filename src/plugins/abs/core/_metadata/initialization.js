@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 //region Metadata
 /**
  * The core where all of my extensions live: in the `J` object.
@@ -96,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '3.4.2';
+J.ABS.Metadata.Version = '4.0.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -166,6 +167,7 @@ J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistan
 J.ABS.Metadata.DisableTextPops = Boolean(J.ABS.PluginParameters['disableTextPops'] === "true");
 J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRubberbandAdjustment']);
 J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
+J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === "true");
 
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
@@ -175,6 +177,83 @@ J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
 J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
 J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
 J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
+
+J.ABS.Metadata.HitboxStyles = {
+  // Base defaults used for all shapes unless overridden below.
+  base: {
+    fillColor: 0xFFA500, // orange
+    fillAlpha: 0.35,
+    lineColor: 0xE08000,
+    lineAlpha: 0.9,
+    lineWidth: 2,
+  },
+
+  // Optional per-shape overrides.
+  byShape: {
+    circle: {
+      fillColor: 0xFF7F50, // coral
+    },
+    rhombus: {
+      fillColor: 0xFFD580, // light orange
+    },
+    square: {
+      fillColor: 0xFFA64D, // darker orange
+    },
+    frontsquare: {
+      fillAlpha: 0.28,
+    },
+    line: {
+      lineWidth: 3,
+    },
+    wall: {
+      lineColor: 0xCC6600,
+    },
+    cross: {
+      fillAlpha: 0.25,
+    },
+    arc: {
+      fillColor: 0xFFB84D,
+    },
+  },
+
+
+  // Battler overrides by kind (player/follower/battler)
+  byKind:
+    {
+      player:  { fillColor: 0x4DA3FF, lineColor: 0x2368CC, fillAlpha: 0.25 },
+      follower:{ fillColor: 0x9B59B6 },
+      battler: { fillColor: 0x2ECC71 },
+    },
+
+  // New: state-based overrides layered last (e.g., for collision highlighting)
+  byState:
+    {
+      colliding:
+        {
+          fillColor: 0xFF3B30, // bright red while overlapping an action.
+          fillAlpha: 0.35,
+          lineColor: 0xC12722,
+          lineWidth: 3,
+        },
+    },
+};
+
+J.ABS.Metadata.HitboxPulse = {
+  enabled: true,
+  maxConcurrentPulses: 8,
+  duration: 18,
+  startAlpha: 0.22,
+  endAlpha: 0.00,
+  scaleStart: 1.00,
+  scaleEnd: 1.08,
+  lineColor: 0xFFFFFF,
+  lineAlpha: 0.85,
+  lineWidth: 2,
+  fillColor: 0xFFFFFF,
+  fillAlpha: 0.18,
+  // PIXI.BLEND_MODES.NORMAL or ADD
+  blendMode: PIXI.BLEND_MODES.ADD,
+};
 //endregion metadata
 
 /**
@@ -229,6 +308,12 @@ J.ABS.DefaultValues = {
    * @type {number}
    */
   CooldownlessItems: J.ABS.Metadata.DefaultToolCooldownTime,
+
+  /**
+   * Whether hitbox overlays are visible when a game boots.
+   * @type {boolean}
+   */
+  HitboxOverlaysInitiallyVisible: J.ABS.Metadata.HitboxOverlaysInitiallyVisible,
 };
 
 /**
@@ -438,15 +523,22 @@ J.ABS.RegExp = {
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
 
-  // projectile-related.
+  // action-size-related.
+  SizeInPixels: /<size:[ ]?(\d+)>/gi,
+  Degrees: /<degrees:[ ]?(\d+)>/gi,
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
-  Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
-  Projectile: /<projectile:[ ]?([12348])>/gi,
   Shape: /<hitbox:[ ]?(circle|rhombus|square|frontsquare|line|arc|wall|cross)>/gi,
-  Direct: /<direct>/gi,
+  Projectile: /<projectile:[ ]?([12348])>/gi,
+  Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  // action-execution-related.
+  Direct: /<direct>/i,
+  DirectLock: /<directLock>/i,
+  Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
-  DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)])>/gi,
+  DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)(?:,[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?))?])>/gi,
+  Linger: /<linger:[ ]?(\d+)>/gi,
 
   // animation-related.
   SelfAnimationId: /<selfAnimationId:[ ]?(\d+)>/gi,
@@ -590,6 +682,56 @@ J.ABS.RegExp = {
   ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
 };
 
+//region visual metadata (new)
+/**
+ * Visual customization for action sprites (per-skill).
+ * All tags are optional and purely visual; physics/hitboxes remain unchanged.
+ */
+J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // capture full [x, y]
+J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi; // capture full [ax, ay]
+J.ABS.RegExp.VisRotate = /<visRotate>/gi; // boolean
+J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi; // capture full [sx, sy]
+J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi; // z-order override (number only)
+J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
+//endregion visual metadata (new)
+
+//region visual directional metadata (new)
+/**
+ * Direction-relative visual offsets (per-skill).
+ * Captures the entire [x, y] array for RPGManager.getArrayFromNotesByRegex.
+ *
+ * Cardinal: U/D/L/R
+ * Optional diagonals: UR/UL/DR/DL
+ */
+J.ABS.RegExp.VisOffsetU  = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetD  = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetL  = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetR  = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+
+// Optional diagonals for future use.
+J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+//endregion visual directional metadata (new)
+
+//region cast preview tags (MVP)
+/**
+ * Skill-level: disable preview for this skill.
+ */
+J.ABS.RegExp.NoCastPreviewSkill = /<noCastPreview>/gi;
+
+/**
+ * Skill-level: delay the preview until the last N frames of the cast.
+ */
+J.ABS.RegExp.CastPreviewWarnAt = /<castPreviewWarnAt:[ ]?(\d+)>/gi;
+
+/**
+ * Battler-level: disable previews for all skills this battler will execute.
+ */
+J.ABS.RegExp.NoCastPreviewsBattler = /<noCastPreviews>/gi;
+//endregion cast preview tags (MVP)
+
 /**
  * A collection of all aliased methods for this plugin.
  */
@@ -618,6 +760,8 @@ J.ABS.Aliased = {
   Scene_Load: new Map(),
   Scene_Map: new Map(),
 
+  Sprite_Animation: new Map(),
+  Sprite_AnimationMV: new Map(),
   Spriteset_Map: new Map(),
   Sprite_Character: new Map(),
   Sprite_Gauge: new Map(),

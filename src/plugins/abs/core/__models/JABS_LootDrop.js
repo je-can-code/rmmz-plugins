@@ -157,7 +157,7 @@ class JABS_LootDrop
    */
   get lootIcon()
   {
-    return this._lootObject.iconIndex;
+    return this._lootObject.iconIndex ?? 0;
   }
 
   /**

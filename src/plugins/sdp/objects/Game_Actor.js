@@ -293,24 +293,28 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
-      .getPanelParameterById(paramId);
-    if (panelParameters.length)
+    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+    if (!panel)
     {
-      panelParameters.forEach(panelParameter =>
-      {
-        const { perRank } = panelParameter;
-        const curRank = panelRanking.currentRank;
-        if (!panelParameter.isFlat)
-        {
-          panelModifications += Math.floor(baseParam * (curRank * perRank) / 100);
-        }
-        else
-        {
-          panelModifications += curRank * perRank;
-        }
-      });
+      return;
     }
+
+    const panelParameters = panel.getPanelParameterById(paramId);
+    if (!panelParameters.length) return;
+
+    panelParameters.forEach(panelParameter =>
+    {
+      const { perRank } = panelParameter;
+      const curRank = panelRanking.currentRank;
+      if (!panelParameter.isFlat)
+      {
+        panelModifications += Math.floor(baseParam * (curRank * perRank) / 100);
+      }
+      else
+      {
+        panelModifications += curRank * perRank;
+      }
+    });
   });
 
   return panelModifications;
@@ -333,24 +337,28 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
-      .getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
-    if (panelParameters.length)
+    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+    if (!panel)
     {
-      panelParameters.forEach(panelParameter =>
-      {
-        const { perRank } = panelParameter;
-        const curRank = panelRanking.currentRank;
-        if (!panelParameter.isFlat)
-        {
-          panelModifications += baseParam * (curRank * perRank) / 100;
-        }
-        else
-        {
-          panelModifications += (curRank * perRank) / 100;
-        }
-      });
+      return;
     }
+
+    const panelParameters = panel.getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
+    if (!panelParameters.length) return;
+
+    panelParameters.forEach(panelParameter =>
+    {
+      const { perRank } = panelParameter;
+      const curRank = panelRanking.currentRank;
+      if (!panelParameter.isFlat)
+      {
+        panelModifications += baseParam * (curRank * perRank) / 100;
+      }
+      else
+      {
+        panelModifications += (curRank * perRank) / 100;
+      }
+    });
   });
 
   return panelModifications;
@@ -443,8 +451,14 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
   panelRankings.forEach(panelRanking =>
   {
     // get the corresponding SDP's panel parameters.
-    const panelParameters = J.SDP.Metadata.panelsMap.get(panelRanking.key)
-      .getPanelParameterById(30); // TODO: generalize this whole thing.
+    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+    if (!panel)
+    {
+      return;
+    }
+
+    // TODO: generalize this whole thing.
+    const panelParameters = panel.getPanelParameterById(30);
 
     // validate we have any parameters from this panel.
     if (panelParameters.length)

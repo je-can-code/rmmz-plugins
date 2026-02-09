@@ -24,15 +24,27 @@ Game_Party.prototype.initAllyAi = function()
   this._j ||= {};
 
   /**
-   * A grouping of all properties associated with ally ai.
+   * A grouping of all properties associated with JABS.
    */
-  this._j._allyAI ||= {};
+  this._j._abs ||= {};
+
+  /**
+   * A grouping of all properties associated with the ally ai JABS extension.
+   */
+  this._j._abs._allyAI ||= {};
 
   /**
    * Whether or not the party will engage without the player's engagement.
    * @type {boolean}
    */
-  this._j._allyAI._aggroPassiveToggle ||= false;
+  this._j._abs._allyAI._aggroPassiveToggle ||= false;
+
+  /**
+   * The name of the current formation the party is leveraging.
+   * @type {string}
+   */
+  this._j._abs._allyAI._partyFormation = J.ABS.EXT.ALLYAI.Metadata.DefaultFormationType;
+  console.log(this._j._abs._allyAI._partyFormation);
 };
 
 /**
@@ -41,7 +53,7 @@ Game_Party.prototype.initAllyAi = function()
  */
 Game_Party.prototype.isAggro = function()
 {
-  return this._j._allyAI._aggroPassiveToggle;
+  return this._j._abs._allyAI._aggroPassiveToggle;
 };
 
 /**
@@ -50,7 +62,7 @@ Game_Party.prototype.isAggro = function()
  */
 Game_Party.prototype.becomeAggro = function()
 {
-  this._j._allyAI._aggroPassiveToggle = true;
+  this._j._abs._allyAI._aggroPassiveToggle = true;
 };
 
 /**
@@ -59,7 +71,25 @@ Game_Party.prototype.becomeAggro = function()
  */
 Game_Party.prototype.becomePassive = function()
 {
-  this._j._allyAI._aggroPassiveToggle = false;
+  this._j._abs._allyAI._aggroPassiveToggle = false;
+};
+
+/**
+ * Gets the key of the current party formation.
+ * @returns {string}
+ */
+Game_Party.prototype.getPartyFormation = function()
+{
+  return this._j._abs._allyAI._partyFormation;
+};
+
+/**
+ * Sets the key of the current party formation to the given formation.
+ * @param formation
+ */
+Game_Party.prototype.setPartyFormation = function(formation)
+{
+  this._j._abs._allyAI._partyFormation = formation;
 };
 
 /**

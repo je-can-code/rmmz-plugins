@@ -103,8 +103,14 @@ class JABS_Action
 
     // initialize piercing-related data.
     this.initPiercing();
+
+    // initialize casting-related data.
+    this.initCasting();
   }
 
+  /**
+   * Initializes visual properties.
+   */
   initVisuals()
   {
     /**
@@ -118,8 +124,23 @@ class JABS_Action
      * @type {number}
      */
     this._selfAnimationId = this._baseSkill.jabsSelfAnimationId ?? 0;
+
+    /**
+     * Tracks if the self animation-on-defeat has been played to prevent duplicates.
+     * @type {boolean}
+     */
+    this._playedSelfAnimationOnDefeat = false;
+
+    /**
+     * The options used when creating this action. Includes decision-time location when applicable.
+     * @type {JABS_ActionOptions|null}
+     */
+    this._actionOptions = null;
   }
 
+  /**
+   * Initializes duration-centric properties.
+   */
   initDuration()
   {
     /**
@@ -133,8 +154,35 @@ class JABS_Action
      * @type {boolean}
      */
     this._needsRemoval = false;
+
+    /**
+     * Whether or not this action is currently in its linger phase.
+     * @type {boolean}
+     */
+    this._isLingering = false;
+
+    /**
+     * How many frames this action should linger visually.
+     * @type {number}
+     */
+    this._lingerMaxFrames = this._baseSkill.jabsLinger ?? 10;
+
+    /**
+     * The current linger frame counter.
+     * @type {number}
+     */
+    this._currentLinger = 0;
+
+    /**
+     * Internal toggle used to disable collision while lingering.
+     * @type {boolean}
+     */
+    this._collisionEnabled = true;
   }
 
+  /**
+   * Initialize data related to delayed triggers.
+   */
   initDelay()
   {
     /**
@@ -153,8 +201,18 @@ class JABS_Action
      * @type {boolean}
      */
     this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
+
+    /**
+     * Optional radius in tiles used only for touch-triggering during the delay window.
+     * If null, the action’s normal hitbox will be used (legacy behavior).
+     * @type {number|null}
+     */
+    this._delay._triggerRadius = this._baseSkill.jabsDelayTriggerRadius;
   }
 
+  /**
+   * Initialize data relating to piercing.
+   */
   initPiercing()
   {
     /**
@@ -202,6 +260,24 @@ class JABS_Action
     pierceCount += this._caster.getAdditionalHits(this._baseSkill, isBasicAttack);
 
     return pierceCount;
+  }
+
+  /**
+   * Initializes data relating to casting.
+   */
+  initCasting()
+  {
+    // determine the configured cast time for this action.
+    const castTime = this._baseSkill.jabsCastTime;
+
+    // determine if this action actually requires a cast time.
+    const needsCast = castTime !== null && castTime > 0;
+
+    /**
+     * Whether or not this action has been casted successfully.
+     * @type {boolean}
+     */
+    this._castComplete = !needsCast;
   }
 
   //endregion init
@@ -255,8 +331,14 @@ class JABS_Action
    */
   performSelfAnimation()
   {
-    this.getActionSprite()
-      ?.requestAnimation(this.getSelfAnimationId());
+    const event = this.getActionSprite();
+    if (!event) return;
+
+    if (this.hasSelfAnimationId() && !this._playedSelfAnimationOnDefeat)
+    {
+      event.requestAnimation(this.getSelfAnimationId());
+      this._playedSelfAnimationOnDefeat = true;
+    }
   }
 
   /**
@@ -311,6 +393,24 @@ class JABS_Action
   getCastAnimation()
   {
     return this.getBaseSkill().jabsCastAnimation;
+  }
+
+  /**
+   * Gets whether or not the action has been cast successfully.
+   * If the action does not have a cast time, this will be true by default.
+   * @returns {boolean}
+   */
+  isCastComplete()
+  {
+    return this._castComplete;
+  }
+
+  /**
+   * Flags the action as cast-complete.
+   */
+  completeCast()
+  {
+    this._castComplete = true;
   }
 
   /**
@@ -457,6 +557,26 @@ class JABS_Action
   }
 
   /**
+   * Gets the action options for this action.
+   * @returns {JABS_ActionOptions|null}
+   */
+  getActionOptions()
+  {
+    // return the stored options, if any.
+    return this._actionOptions;
+  }
+
+  /**
+   * Sets the action options onto this action.
+   * @param {JABS_ActionOptions} options The options used to create this action.
+   */
+  setActionOptions(options)
+  {
+    // persist the options used for creation.
+    this._actionOptions = options;
+  }
+
+  /**
    * Decrements the pre-countdown delay timer for this action. If the action does not
    * have `touchOnTrigger`, then the action will not affect anyone until the timer expires.
    */
@@ -520,6 +640,112 @@ class JABS_Action
   }
 
   /**
+   * Gets the configured trigger radius for this action, if any.
+   * @returns {number|null} The trigger radius in tiles, or null if not provided.
+   */
+  getTriggerRadius()
+  {
+    // return the configured trigger radius, if any.
+    return this._delay._triggerRadius ?? null;
+  }
+
+  /**
+   * Checks a small circular radius around the action sprite for potential targets
+   * solely to determine whether an action should arm during its delay phase.
+   *
+   * This does not apply damage; it only identifies whether any valid battlers are
+   * within the supplied radius.
+   *
+   * @param {JABS_Action} jabsAction The action to evaluate.
+   * @param {number} radius The trigger radius in tiles.
+   * @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
+   */
+  getTriggerTouchTargets(jabsAction, radius)
+  {
+    // read core references for filtering.
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // we only support spatial checks around an action sprite.
+    const actionSprite = jabsAction.getActionSprite();
+    if (!actionSprite)
+    {
+      return [];
+    }
+
+    /**
+     * Basic candidate filter: can be hit, in-scope for the action, and not
+     * an inanimate target (when the caster is an enemy).
+     * @param {JABS_Battler} battler The candidate battler.
+     * @returns {boolean} True if valid for proximity trigger, false otherwise.
+     */
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect())
+      {
+        return false;
+      }
+
+      // respect core scope constraints (friend/enemy/grounding, etc.).
+      if (!battler.isWithinScope(jabsAction, battler, false))
+      {
+        return false;
+      }
+
+      // enemies should not react to inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate())
+      {
+        return false;
+      }
+
+      // this candidate is valid.
+      return true;
+    };
+
+    // anchor the AABB on the action sprite center in tiles.
+    const cx = actionSprite.x;
+    const cy = actionSprite.y;
+
+    // compute inclusive bounds for the spatial index query.
+    const minX = Math.floor(cx - radius);
+    const minY = Math.floor(cy - radius);
+    const maxX = Math.ceil(cx + radius);
+    const maxY = Math.ceil(cy + radius);
+
+    // query spatial candidates from the index.
+    const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+
+    // check circle distance for each candidate relative to the action sprite.
+    const targets = [];
+    const actionDirection = actionSprite.direction();
+    candidates
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battler =>
+      {
+        // retrieve the battler's character for spatial testing.
+        const sprite = battler.getCharacter();
+
+        // reuse the engine's circle collision helper.
+        const inCircle = this.isTargetWithinRange(
+          actionDirection,
+          sprite,
+          actionSprite,
+          radius,
+          J.ABS.Shapes.Circle,
+        );
+
+        // collect if inside the trigger radius.
+        if (inCircle)
+        {
+          targets.push(battler);
+        }
+      }, this);
+
+    // return any battlers that were inside the trigger radius.
+    return targets;
+  }
+
+  /**
    * Gets the number of times this action can potentially hit a target.
    * @returns {number} The number of times remaining that this action can hit a target.
    */
@@ -536,11 +762,13 @@ class JABS_Action
    */
   decrementPierceTimes(decrement = 1)
   {
-    // reduce pierce
     this._pierceTimesLeft -= decrement;
     if (this._pierceTimesLeft <= 0)
     {
-      this.setNeedsRemoval();
+      if (!this._isLingering)
+      {
+        this.startLinger();
+      }
     }
   }
 
@@ -593,6 +821,54 @@ class JABS_Action
   {
     // decrement the delay timer prior to action countdown.
     this.countdownDelay();
+
+    // while delaying, optionally allow arming by proximity using a small radius.
+    this.checkTriggerTouchAndArm();
+  }
+
+  /**
+   * If this action is still delaying and configured to trigger on touch, checks a
+   * smaller circular radius around the action sprite to prematurely finish the delay.
+   *
+   * This does not apply damage in this frame; it only completes the delay so that
+   * the next update runs full collision with the real hitbox.
+   */
+  checkTriggerTouchAndArm()
+  {
+    // if the delay already completed, do nothing.
+    if (this.isDelayCompleted())
+    {
+      return;
+    }
+
+    // if not configured for touch-triggering, do nothing.
+    if (this.triggerOnTouch() === false)
+    {
+      return;
+    }
+
+    // if we do not have a trigger radius defined, retain legacy behavior (do nothing here).
+    const radius = this.getTriggerRadius();
+    if (radius === null)
+    {
+      return;
+    }
+
+    // if we do not have an action sprite yet, there is no spatial anchor to test.
+    const actionSprite = this.getActionSprite();
+    if (!actionSprite)
+    {
+      return;
+    }
+
+    // query any valid targets inside the trigger radius.
+    const candidates = $jabsEngine.getTriggerTouchTargets(this, radius);
+
+    // if we found any valid candidates, end the delay immediately.
+    if (candidates.length > 0)
+    {
+      this.endDelay();
+    }
   }
 
   /**
@@ -601,38 +877,34 @@ class JABS_Action
    */
   mainUpdate()
   {
-    // if we're still delaying and not triggering by touch...
     if (!this.canMainUpdate()) return;
 
-    // if the delay is completed, decrement the action timer.
     if (this.isDelayCompleted())
     {
-      // countdown the overall duration timer of this action.
       this.countdownDuration();
     }
 
-    // if the duration of the action expires, remove it.
+    if (this._isLingering)
+    {
+      this.updateLinger();
+      return;
+    }
+
     if (this.isReadyForCleanup())
     {
-      // execute this action's cleanup.
-      this.cleanup();
-
-      // stop processing the action.
       return;
     }
 
-    // check if this action is ready to pierce another target.
     if (!this.isPierceReady())
     {
-      // countdown the pierce timer if not ready.
       this.countdownPierceDelay();
-
-      // stop processing the action.
       return;
     }
 
-    // determine targets that this action collided with.
-    this.processCollision();
+    if (this._collisionEnabled)
+    {
+      this.processCollision();
+    }
   }
 
   /**
@@ -654,17 +926,55 @@ class JABS_Action
    */
   isReadyForCleanup()
   {
-    // if we haven't at least passed the minimum duration, then do not cleanup.
     if (this.getDuration() < JABS_Action.getMinimumDuration()) return false;
 
-    // if the action is expired, then cleanup.
-    if (this.isActionExpired()) return true;
+    if (this._isLingering)
+    {
+      if (this._currentLinger >= this._lingerMaxFrames)
+      {
+        this.cleanup();
+        return true;
+      }
 
-    // if the action has run out of piercing hits, then cleanup.
-    if (this.getPiercingTimes() <= 0) return true;
+      return false;
+    }
 
-    // not ready for cleanup.
+    const expired = this.isActionExpired();
+    const outOfPierce = this.getPiercingTimes() <= 0;
+    if (expired || outOfPierce)
+    {
+      this.startLinger();
+      return false;
+    }
+
     return false;
+  }
+
+  /**
+   * Begins the lingering effect.
+   */
+  startLinger()
+  {
+    if (this._isLingering) return;
+
+    this._isLingering = true;
+
+    this._collisionEnabled = false;
+
+    this.performSelfAnimation();
+  }
+
+  /**
+   * Updates the lingering effect.
+   */
+  updateLinger()
+  {
+    this._currentLinger++;
+
+    if (this._currentLinger >= this._lingerMaxFrames)
+    {
+      this.cleanup();
+    }
   }
 
   /**
@@ -729,6 +1039,80 @@ class JABS_Action
   {
     // flag our first hit so we don't do this again.
     this._hitAtLeastOne = true;
+
+    // respect explicit global disable (if configured).
+    if (J.ABS.Metadata.HitboxPulse.enabled === false) return;
+
+    this.processHitboxPulse();
+  }
+
+  /**
+   * Performs the hitbox pulse visualization for the action.
+   */
+  processHitboxPulse()
+  {
+    // resolve the action event that visually anchors the pulse (if available).
+    const actionEvent = this.getActionSprite();
+
+    // determine the origin/facing from either the action event (preferred) or the caster’s character as a fallback.
+    // this allows sprite-less actions to still render a pulse anchored to the caster.
+    let originX = 0;
+    let originY = 0;
+    let facing = 2; // default to down as a safe fallback.
+
+    // attempt to use the action event for origin and facing when present.
+    if (actionEvent)
+    {
+      // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
+      originX = actionEvent.screenX();
+      originY = actionEvent.screenY();
+
+      // derive facing from the action event.
+      facing = actionEvent.direction();
+    }
+    else
+    {
+      // action event is unavailable; fall back to the caster’s character sprite.
+      // this ensures sprite-less actions still draw the pulse and respect overlays.
+      const caster = this.getCaster();
+      const casterCharacter = caster.getCharacter();
+
+      // derive the on-screen origin from the caster.
+      originX = casterCharacter.screenX();
+      originY = casterCharacter.screenY();
+
+      // derive facing from the caster.
+      facing = casterCharacter.direction();
+    }
+
+    // derive geometry data directly from this action instance.
+    const shape = this.getShape();
+    const range = this.getRange();
+
+    // optional arc width and thickness from engine helpers (if applicable).
+    const degrees = actionEvent
+      ? ($jabsEngine.getActionDegrees(actionEvent) || 180)
+      : 180;
+    const thickness = actionEvent
+      ? ($jabsEngine.getActionThicknessTiles(actionEvent) || 1)
+      : 1;
+
+    // build a compact options object using the fluent API.
+    const options = JABS_HitboxPulseOptions.defaults()
+      .withOrigin(originX, originY)
+      .withShape(shape)
+      .withRange(range)
+      .withFacing(facing)
+      .withDegrees(degrees)
+      .withThickness(thickness)
+      .withFade(38, 0.42, 0.0)
+      .withScale(1.00, 1.08)
+      .withLine(0xFFFFFF, 0.85, 2)
+      .withFill(0xFFFFFF, 0.18)
+      .withBlendMode(PIXI.BLEND_MODES.ADD);
+
+    // spawn the pulse via the static manager (layer is set up by Spriteset_Map).
+    JABS_HitboxPulseManager.spawn(options);
   }
 
   /**
@@ -736,6 +1120,18 @@ class JABS_Action
    */
   postUpdate()
   {
+    if (this._isLingering)
+    {
+      const event = this.getActionSprite();
+      if (event)
+      {
+        const max = Math.max(1, this._lingerMaxFrames);
+        const t = Math.min(this._currentLinger, max);
+        const pct = 1 - (t / max);
+        const opacity = Math.max(0, Math.floor(255 * pct));
+        event.setOpacity(opacity);
+      }
+    }
   }
 
   //endregion update

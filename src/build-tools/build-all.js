@@ -85,4 +85,4 @@ await Promise.all(executions);
 
 // capture the duration of this build-all execution in seconds.
 const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
-Logger.logAnyway(`Builder™ has completed building all plugins in ${durationSeconds}s. 💯✅`);
+Logger.logAnyway(`Builder™ has completed building all plugins in ${durationSeconds}s. 🛠️  ✅`);
