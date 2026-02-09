@@ -40,15 +40,6 @@ Game_Enemy.prototype.maxTp = function()
   // calculate our actual max tp.
   return this.actualMaxTp();
 };
-
-/**
- * Gets the base max tp for this enemy.
- * @returns {number}
- */
-Game_Enemy.prototype.getBaseMaxTp = function()
-{
-  return J.NATURAL.Metadata.BaseTpMaxEnemies;
-};
 //endregion max tp
 
 //region b params
@@ -221,6 +212,7 @@ Game_Enemy.prototype.refreshRewardBonuses = function()
 {
   this.refreshExpRewardBonuses();
   this.refreshGoldRewardBonuses();
+  this.refreshSdpRewardBonuses();
 };
 
 /**
@@ -260,6 +252,27 @@ Game_Enemy.prototype.refreshGoldRewardBonuses = function()
 };
 
 /**
+ * Refreshes the SDP reward bonuses for this enemy.
+ */
+Game_Enemy.prototype.refreshSdpRewardBonuses = function()
+{
+  // if we are not using the SDP system, then don't do this.
+  if (!J.SDP) return;
+
+  // add the extracted formulai to an array.
+  const sdpsBonusRewardFormula = this.extractParameterFormulai(J.NATURAL.RegExp.RewardGold);
+
+  // if no formulai were found, then stop processing.
+  if (!sdpsBonusRewardFormula.length) return;
+
+  // calculate all formulai found for this enemy that could affect gold.
+  const sdpsBonus = this.naturalParamBuff(J.NATURAL.RegExp.RewardSdps, this.enemy().sdpPoints);
+
+  // update the reward bonus.
+  this.setSdpsPlus(sdpsBonus);
+};
+
+/**
  * Extends {@link #exp}.<br>
  * Also adds on any natural bonuses of experience.
  * @returns {number}
@@ -271,11 +284,11 @@ Game_Enemy.prototype.exp = function()
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("exp")
     .call(this);
 
-  // grab the bonus experience rewards.
-  const expBonus = this.expPlus();
+  // grab the bonus rewards.
+  const bonus = this.expPlus();
 
   // return the combined value.
-  return (baseReward + expBonus);
+  return (baseReward + bonus);
 };
 
 /**
@@ -290,11 +303,30 @@ Game_Enemy.prototype.gold = function()
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("gold")
     .call(this);
 
-  // grab the bonus gold rewards.
-  const goldBonus = this.goldPlus();
+  // grab the bonus rewards.
+  const bonus = this.goldPlus();
 
   // return the combined value.
-  return (baseReward + goldBonus);
+  return (baseReward + bonus);
 };
+
+/**
+ * Extends {@link #sdpPoints}.<br/>
+ * Also adds on any natural bonuses of SDPs.
+ */
+J.NATURAL.Aliased.Game_Enemy.set("sdpPoints", Game_Enemy.prototype.sdpPoints);
+Game_Enemy.prototype.sdpPoints = function()
+{
+  // grab the original value.
+  const baseReward = J.NATURAL.Aliased.Game_Enemy.get("sdpPoints")
+    .call(this);
+
+  // grab the bonus rewards.
+  const bonus = this.sdpsPlus();
+
+  // return the combined value.
+  return (baseReward + bonus);
+};
+
 //endregion rewards
 //endregion Game_Enemy

@@ -11,7 +11,7 @@ J.LEVEL = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.0');
+J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.1');
 
 /**
  * All aliased methods for this plugin.
@@ -27,6 +27,7 @@ J.LEVEL.Aliased = {
   Game_Troop: new Map(),
 
   DataManager: new Map(),
+  JABS_AiManager: new Map(),
 
   Sprite_Character: new Map(),
 };
@@ -49,6 +50,7 @@ J.LEVEL.RegExp = {
 
   /**
    * The regex for when a skill id is learned at a designated level.
+   * The array capture group is [SKILL_ID, LEVEL_LEARNED].
    * @type {RegExp}
    */
   Learning: /<learning: ?(\[\d+, ?\d+])>/i,

@@ -493,6 +493,24 @@ Game_Battler.prototype.setGoldPlus = function(goldPlus)
 {
   this._j._natural._goldPlus = goldPlus;
 };
+
+/**
+ * Gets the bonus to rewarded SDPs.
+ * @returns {number|number|*}
+ */
+Game_Battler.prototype.sdpsPlus = function()
+{
+  return this._j._natural._sdpsPlus ?? 0;
+};
+
+/**
+ * Sets the bonus to rewarded SDPs.
+ * @param {number} sdpsPlus The new bonus rewarded SDPs value.
+ */
+Game_Battler.prototype.setSdpsPlus = function(sdpsPlus)
+{
+  this._j._natural._sdpsPlus = sdpsPlus;
+};
 //endregion rewards
 //endregion properties
 
@@ -528,6 +546,7 @@ Game_Battler.prototype.clearAllParameterBuffs = function()
   this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
   this._j._natural._expPlus = 0;
   this._j._natural._goldPlus = 0;
+  this._j._natural._sdpsPlus = 0;
 };
 
 /**
@@ -934,14 +953,14 @@ Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramR
 
 //region max tp
 /**
- * OVERWRITE Replaces the `maxTp()` function with our custom one that will respect
- * formulas and apply rates from tags, etc.
+ * Overrides {@link #maxTp}.<br/>
+ * Combines base max TP with formula-based values derived from tags.
  * @returns {number}
  */
 Game_Battler.prototype.maxTp = function()
 {
   // calculate our actual max tp.
-  return this.actualMaxTp();
+  return Math.max(0, this.actualMaxTp());
 };
 
 /**
@@ -953,11 +972,14 @@ Game_Battler.prototype.actualMaxTp = function()
   // get the base max tp defined
   const baseParam = this.getBaseMaxTp();
 
+  // get the bonuses to max tp.
+  const baseBonusParam = this.getBaseMaxTpBonuses();
+
   // get all bonuses to max tp from natural bonuses.
   const maxTpNaturalBonuses = this.maxTpNaturalBonuses();
 
   // return result.
-  return (baseParam + maxTpNaturalBonuses);
+  return (baseParam + baseBonusParam + maxTpNaturalBonuses);
 };
 
 /**
@@ -969,8 +991,14 @@ Game_Battler.prototype.maxTpNaturalBonuses = function()
   // get the base max tp for this battler.
   const baseParam = this.getBaseMaxTp();
 
+  // get the bonuses to max tp.
+  const baseBonusParam = this.getBaseMaxTpBonuses();
+
+  // calculate base max tp including bonuses.
+  const baseMaxTp = (baseParam + baseBonusParam);
+
   // return the calculated natural bonuses.
-  return this.getMaxTpNaturalBonuses(baseParam);
+  return this.getMaxTpNaturalBonuses(baseMaxTp);
 };
 
 /**
@@ -1015,15 +1043,6 @@ Game_Battler.prototype.getMaxTpBuff = function(baseParam)
 
   // return result.
   return this.calculatePlusRate(baseParam, buffPlus, buffRate);
-};
-
-/**
- * Gets the base max tp for this battler.
- * @returns {number}
- */
-Game_Battler.prototype.getBaseMaxTp = function()
-{
-  return 0;
 };
 //endregion max tp
 //endregion Game_Battler

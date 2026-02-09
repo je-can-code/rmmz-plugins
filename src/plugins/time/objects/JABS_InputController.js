@@ -25,7 +25,6 @@ JABS_InputController.prototype.updateTimeWindowAction = function()
     // execute the action.
     this.performTimeWindowAction();
   }
-
 };
 
 /**

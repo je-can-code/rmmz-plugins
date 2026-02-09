@@ -154,4 +154,13 @@ Game_Enemy.prototype.onDeath = function()
   // flag this battler for needing a data update.
   this.onBattlerDataChange();
 };
+
+/**
+ * Gets the base max tp for this enemy.
+ * @returns {number}
+ */
+Game_Enemy.prototype.getBaseMaxTp = function()
+{
+  return J.BASE.Metadata.BaseTpMaxEnemies;
+};
 //endregion Game_Enemy

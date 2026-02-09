@@ -18,27 +18,44 @@ Game_Player.prototype.checkEventTriggerHere = function(triggers)
 };
 
 /**
- * Extends {@link checkEventTriggerThere}.<br>
- * Includes the rounding of the x,y coordinates when checking event triggers for things infront of you.
+ * Overrides {@link Game_Player.checkEventTriggerThere}.<br/>
+ * Computes the front tile from the current facing using rounded base coordinates,
+ * then starts map events there; if that tile is a counter, also checks one tile beyond.
  * @param {number[]} triggers The triggers associated with checking the event at the location.
- * TODO: does this actually need to round?
  */
-J.ABS.EXT.PIXEL.Aliased.Game_Player.set('checkEventTriggerThere', Game_Player.prototype.checkEventTriggerThere);
 Game_Player.prototype.checkEventTriggerThere = function(triggers)
 {
-  const oldX = this._x;
-  const oldY = this._y;
+  // Check if we can start an event at the target location.
+  if (this.canStartLocalEvents() === false) return;
 
-  // round the x,y coordinates.
-  this._x = Math.round(this.x);
-  this._y = Math.round(this.y);
+  // Round the base coordinates to the nearest tile for consistent tile addressing.
+  const baseX = Math.round(this.x);
+  const baseY = Math.round(this.y);
 
-  // perform original logic.
-  J.ABS.EXT.PIXEL.Aliased.Game_Player.get('checkEventTriggerThere')
-    .call(this, triggers);
+  // Acquire the current facing direction (expects cardinal).
+  const dir = this.direction();
 
-  this._x = oldX;
-  this._y = oldY;
+  // Compute the front tile from the rounded base coordinates and facing.
+  const x1 = $gameMap.roundXWithDirection(baseX, dir);
+  const y1 = $gameMap.roundYWithDirection(baseY, dir);
+
+  // Start any qualifying events on the front tile; treat them as "there"/normal.
+  this.startMapEvent(x1, y1, triggers, true);
+
+  // Determine if the front tile is a counter.
+  const isCounter = $gameMap.isCounter(x1, y1);
+
+  // If the front tile is a counter, also check one tile beyond.
+  if (isCounter)
+  {
+    // Compute the tile one more step beyond the counter tile.
+    const x2 = $gameMap.roundXWithDirection(x1, dir);
+    const y2 = $gameMap.roundYWithDirection(y1, dir);
+
+    // Start any qualifying events on the tile beyond the counter.
+    this.startMapEvent(x2, y2, triggers, true);
+  }
+
 };
 
 /**
@@ -65,6 +82,56 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   }
 
   // no triggering the event.
+  return false;
+};
+
+/**
+ * Overrides {@link Game_Player.checkEventTriggerTouchFront}.<br/>
+ * Computes the front tile from the current facing using rounded base coordinates,
+ * checks for touch triggers there via PIXEL threshold logic, and if the front tile
+ * is a counter, also checks the tile beyond.
+ * @param {number} direction The attempted move direction (ignored; uses current facing).
+ * @returns {boolean} True if a touch trigger fired, false otherwise.
+ */
+Game_Player.prototype.checkEventTriggerTouchFront = function(direction)
+{
+  // Round the base coordinates to the nearest tile for consistent tile addressing.
+  const baseX = Math.round(this.x);
+  const baseY = Math.round(this.y);
+
+  // Always use the player's current facing for front-touch checks.
+  const dir = this.direction();
+
+  // Compute the front tile from the rounded base coordinates and facing.
+  const x1 = $gameMap.roundXWithDirection(baseX, dir);
+  const y1 = $gameMap.roundYWithDirection(baseY, dir);
+
+  // Attempt to touch-trigger events on the front tile using PIXEL's threshold logic.
+  if (this.checkEventTriggerTouch(x1, y1))
+  {
+    // A front-touch trigger was fired.
+    return true;
+  }
+
+  // Determine if the front tile is a counter.
+  const isCounter = $gameMap.isCounter(x1, y1);
+
+  // If the front tile is a counter, also check one tile beyond.
+  if (isCounter)
+  {
+    // Compute the tile one more step beyond the counter tile.
+    const x2 = $gameMap.roundXWithDirection(x1, dir);
+    const y2 = $gameMap.roundYWithDirection(y1, dir);
+
+    // Attempt to touch-trigger events on the beyond tile using PIXEL's threshold logic.
+    if (this.checkEventTriggerTouch(x2, y2))
+    {
+      // A beyond-counter touch trigger was fired.
+      return true;
+    }
+  }
+
+  // No touch triggers fired for front or beyond.
   return false;
 };
 
@@ -203,41 +270,35 @@ Game_Player.prototype.handleOnStepEffects = function()
  */
 Game_Player.prototype.processFollowersPixelMoving = function()
 {
-  // update the position for the player.
+  // Update the position for the player.
   this.recordPixelPosition();
 
-  // grab all the followers the player has.
+  // Grab all the followers the player has.
   const followers = this._followers._data;
 
-  // iterate over all the followers to do movement things.
+  // Iterate over all the followers to do movement things.
   followers.forEach((follower, index) =>
   {
-    // grab the battler from the follower.
-    const battler = follower.getJabsBattler();
+    // If Ally AI is present and this follower is AI-controlled, do not relocate via follower-train.
+    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
 
-    // check if we have a battler.
-    if (battler)
-    {
-      // stop processing if the battler is engaged or alerted.
-      if (battler.isEngaged() || battler.isAlerted()) return;
-    }
-
-    // determine who the previous character was in the sequence.
+    // Determine who the previous character was in the sequence.
     const precedingCharacter = index > 0
       ? followers.at(index - 1)
       : $gamePlayer;
 
-    // update the follower's direction.
+    // Update the follower's direction.
     follower.pixelFaceCharacter(precedingCharacter);
 
+    // Move the follower along the player's breadcrumb trail (vanilla-style train).
     const last = precedingCharacter.oldestPositionalRecord();
     if (last)
     {
-      // move the follower to the new location.
+      // Move the follower to the new location.
       follower.relocate(last.x, last.y);
     }
 
-    // flag the follower as holding the button.
+    // Flag the follower as holding the button.
     follower.startPixelMoving();
   });
 };
@@ -247,6 +308,13 @@ Game_Player.prototype.processFollowersPixelMoving = function()
  */
 Game_Player.prototype.stopFollowersPixelMoving = function()
 {
-  // iterate over the followers and halt their pixel movement.
-  this._followers._data.forEach(follower => follower.stopPixelMoving());
+  // Iterate over the followers and halt their pixel movement.
+  this._followers._data.forEach(follower =>
+  {
+    // If Ally AI is present and this follower is AI-controlled, do not interfere.
+    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
+
+    // Otherwise, stop pixel moving to prevent residual drift.
+    follower.stopPixelMoving();
+  });
 };

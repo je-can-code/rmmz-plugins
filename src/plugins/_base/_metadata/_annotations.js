@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.1 BASE] The base class for all J plugins.
+ * [v2.3.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -11,11 +11,6 @@
  * This is the base class that is required for basically ALL of J-* plugins.
  * Please be sure this is above all other J-* plugins, and keep it up to date!
  * ----------------------------------------------------------------------------
- * While this plugin doesn't do a whole lot all by itself, it contains a number
- * of centralized functionalities that are used by ALL of my plugins.
- * ----------------------------------------------------------------------------
- * If you are not a dev, you can stop reading if you want (or read on to learn
- * more about the code underneath).
  * ============================================================================
  * MAX ITEM QUANTITY:
  * Have you ever wanted to define a max quantity for items/weapons/armors in
@@ -39,6 +34,44 @@
  *  <max:15>
  * The maximum amount of the database entry decorated with this is 15.
  * ============================================================================
+ * CUSTOM MAX TP:
+ * Have you ever wanted to define a max value for TP instead of the default of
+ * 100 across the board for all battlers?  Well now you can! By applying the
+ * correct tags to the relevant entries in the database, you too can have
+ * varying amounts of max tp for actors and enemies alike!.
+ *
+ * NOTE ABOUT COMBINING TAGS:
+ * This is additive across the board, so if a single actor has multiple tags
+ * from various equipment and/or states, all amounts of max tP will be summed
+ * together.
+ *
+ * NOTE ABOUT NEGATIVES:
+ * The tag value can be negative, so you can make "cursed" equipment or states
+ * that reduce TP capabilities.
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <maxTp:VALUE>
+ *    Where VALUE represents the amount of max TP provided by the entry.
+ *
+ * TAG EXAMPLES:
+ *  <maxTp:15>    (on actor)
+ * The max TP for this battler would be 15.
+ *
+ *  <maxTp:25>    (on state)
+ *  <maxTp:100>   (on weapon)
+ *  <maxTp:50000> (on armor)
+ * The max TP for this battler would be 50125 until the state wears off, then
+ * it would reduce to 50100.
+ *
+ * ============================================================================
  *
  * DEV DETAILS:
  * I would encourage you peruse the added functions to the various classes.
@@ -59,6 +92,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Added base Max TP management with tags for battlers.
+ *    Added helper functions for detecting plugin commands inside of events.
+ *    Added helper function for converting horz/vert directions to a direction.
+ *    Added helper functions for direction validation.
  * - 2.2.1
  *    Added dev filter function for action to skill mapping for enemies.
  * - 2.2.0
@@ -96,5 +134,18 @@
  *    All equipment now have a ._jafting property available on them.
  * - 1.0.0
  *    First proper actual release where I'm leveraging and enforcing versioning.
- * ==============================================================================
+ * ============================================================================
+ * @param actorBaseTp
+ * @type number
+ * @min 0
+ * @text Actor Base TP Max
+ * @desc The base TP for actors is this amount. Any formulai add onto this.
+ * @default 0
+ *
+ * @param enemyBaseTp
+ * @type number
+ * @min 0
+ * @text Enemy Base TP Max
+ * @desc The base TP for enemies is this amount. Any formulai add onto this.
+ * @default 100
  */

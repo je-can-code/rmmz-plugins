@@ -1,39 +1,142 @@
 //region Game_Event
+/**
+ * Extends {@link #initMembers}.<br/>
+ * Also initializes the diagonal data members.
+ */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
+Game_Event.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('initMembers')
+    .call(this);
+
+  // initialize our diagonal members.
+  this.initDiagMembers();
+};
+
+/**
+ * Initialize the diagonal-related members.
+ */
+Game_Event.prototype.initDiagMembers = function()
+{
+  /**
+   * The shared root namespace for all of J's plugin data.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with JABS.
+   */
+  this._j._abs ||= {};
+
+  /**
+   * A grouping of all properties associated with the diagonal extension.
+   */
+  this._j._abs._diag = {};
+
+  /**
+   * The initial direction this event is facing.
+   */
+  this._j._abs._diag._initialDirection = 0;
+};
+
+/**
+ * Sets the custom direction being faced on this event's creation.
+ * @param {number} direction The custom direction faced on creation.
+ */
+Game_Event.prototype.setCustomDirection = function(direction)
+{
+  // don't turn if direction is fixed.
+  if (this.isDirectionFixed()) return;
+
+  this._j._abs._diag._initialDirection = direction;
+};
+
+/**
+ * Gets the custom direction being faced on this event's creation.
+ * This direction gets mutated over time based on changed facing from a moveroute.
+ * @returns {number}
+ */
+Game_Event.prototype.getCustomDirection = function()
+{
+  return this._j._abs._diag._initialDirection;
+};
+
 //region update existing functionality
 /**
- * Moves straight in a given direction.
- * If there is an underlying diagonal direction, then move diagonally.
+ * Extends {@link #moveStraight}.<br/>
+ * If this is a JABS action and also it has an custom set direction that is diagonal, move diagonal instead.
  * @param {number} direction The direction being moved.
  */
-J.ABS.EXT.DIAG.Aliased.Game_Event.moveStraight = Game_Event.prototype.moveStraight;
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('moveStraight', Game_Event.prototype.moveStraight);
 Game_Event.prototype.moveStraight = function(direction)
 {
+  // if this isn't an action, don't look for manually set potentially diagonal directions.
+  if (this.isJabsAction() === false)
+  {
+    return J.ABS.EXT.DIAG.Aliased.Game_Event.get('moveStraight')
+      .call(this, direction);
+  }
+
+  // identify the custom direction this action is facing.
   const initialDirection = this.getCustomDirection();
-  if (this.isDiagonalDirection(initialDirection))
+  if (this.isDiagonalDirection(initialDirection) === false)
   {
-    const diagonalDirections = this.getDiagonalDirections(initialDirection);
-    this.moveDiagonally(...diagonalDirections);
+    // must be a straight direction, so just perform original logic.
+    return J.ABS.EXT.DIAG.Aliased.Game_Event.get('moveStraight')
+      .call(this, direction);
   }
-  else
-  {
-    J.ABS.EXT.DIAG.Aliased.Game_Event.moveStraight.call(this, direction);
-  }
+
+  // determine what the diagonal direction to move is.
+  const [ horz, vert ] = this.getDiagonalDirections(initialDirection);
+
+  // execute the move.
+  this.moveDiagonally(horz, vert);
+
+  // return the diagonal direction.
+  return initialDirection;
 };
 
-J.ABS.EXT.DIAG.Aliased.Game_Event.moveDiagonally = Game_Event.prototype.moveDiagonally;
+/**
+ * Extends {@link #moveDiagonally}.<br/>
+ * Noramlizes action directions when moving diagonally to face an appropriate cardinal direction instead.
+ * @type {Game_Event.moveDiagonally}
+ */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('moveDiagonally', Game_Event.prototype.moveDiagonally);
 Game_Event.prototype.moveDiagonally = function(horz, vert)
 {
-  J.ABS.EXT.DIAG.Aliased.Game_Event.moveDiagonally.call(this, horz, vert);
-  if (this.isDiagonalDirection(this.direction()))
-  {
-    this.convertDiagonalToDir4();
-  }
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('moveDiagonally')
+    .call(this, horz, vert);
+
+  // if this isn't an action event, we shouldn't try to normalize the direction.
+  if (this.isJabsAction() === false) return;
+
+  // if this is not a diagonal direction, don't try to modify facing.
+  if (this.isDiagonalDirection(this.direction()) === false) return;
+
+  // determine the correct direction to face and set it.
+  const newDirection = this.normalizeActionDirection();
+  this.setDirection(newDirection);
 };
 
-Game_Event.prototype.convertDiagonalToDir4 = function()
+/**
+ * Determines the appropriate cardinal direction to face if moving a diagonal direction.
+ * @returns {2|4|6|8}
+ */
+// eslint-disable-next-line complexity
+Game_Event.prototype.normalizeActionDirection = function()
 {
+  // if this isn't an action, then this shouldn't try to calculate.
+  if (this.isJabsAction() === false) return this.direction();
+
+  // identify the direction this action was casted in.
   const castedDirection = this.getCastedDirection();
+
+  // identify this action's current facing.
   const actionDirection = this.direction();
+
+  // normalize the direction that should be faced.
   switch (castedDirection)
   {
     case 2: // caster faced down
@@ -41,128 +144,132 @@ Game_Event.prototype.convertDiagonalToDir4 = function()
       {
         case 1: // action moving lower left
         case 3: // action moving lower right
-          this.setDirection(castedDirection);
-          break;
+          return castedDirection;
         case 7: // action moving upper left
         case 9: // action moving upper right
-          this.setDirection(this.reverseDir(castedDirection));
-          break;
+          return this.reverseDir(castedDirection);
       }
-      return;
+      return castedDirection;
+
     case 4: // caster faced left
       switch (actionDirection)
       {
         case 1: // action moving lower left
         case 7: // action moving upper left
-          this.setDirection(castedDirection);
-          break;
+          return castedDirection;
         case 3: // action moving lower right
         case 9: // action moving upper right
-          this.setDirection(this.reverseDir(castedDirection));
-          break;
+          return this.reverseDir(castedDirection);
       }
-      return;
+      return castedDirection;
+
     case 6: // caster faced right
       switch (actionDirection)
       {
         case 3: // action moving lower right
         case 9: // action moving upper right
-          this.setDirection(castedDirection);
-          break;
+          return castedDirection;
         case 1: // action moving lower left
         case 7: // action moving upper left
-          this.setDirection(this.reverseDir(castedDirection));
-          break;
+          return this.reverseDir(castedDirection);
       }
-      return;
+      return castedDirection;
+
     case 8: // caster faced up
       switch (actionDirection)
       {
         case 7: // action moving upper left
         case 9: // action moving upper right
-          this.setDirection(castedDirection);
-          break;
+          return castedDirection;
         case 1: // action moving lower left
         case 3: // action moving lower right
-          this.setDirection(this.reverseDir(castedDirection));
-          break;
+          return this.reverseDir(castedDirection);
       }
-      return;
+      return castedDirection;
+
+    default: // somehow we were not facing one of the four cardinal directions, return default.
+      return castedDirection;
   }
 };
 
 /**
- * Extends the turn 180 to also manage diagonal rotations.
+ * Extends {@link #turn180}.<br/>
+ * Also rotates the custom direction after turn 180 executes.
  */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('turn180', Game_Event.prototype.turn180);
 Game_Event.prototype.turn180 = function()
 {
-  Game_Character.prototype.turn180.call(this);
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('turn180')
+    .call(this);
+
+  // also set the underlying direction.
   this.setCustomDirection(this.reverseDir(this.getCustomDirection()));
 };
 
 /**
- * Extends the turn random to also turn potentially diagonal as well.
+ * Extends {@link #turnRight90}.<br/>
+ * Also rotates the custom direction after turn right 90 executes.
  */
-Game_Character.prototype.turnRandom = function()
-{
-  Game_Character.prototype.turnRandom.call(this);
-  do
-  {
-    this.setCustomDirection(1 + Math.randomInt(9));
-  }
-  while (this.getCustomDirection() === 5); // 5 isn't a direction.
-};
-
-/**
- * Extends the turn right to also manage diagonal turns.
- */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('turnRight90', Game_Event.prototype.turnRight90);
 Game_Event.prototype.turnRight90 = function()
 {
-  Game_Character.prototype.turnRight90.call(this);
-  if (this.getCustomDirection())
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('turnRight90')
+    .call(this);
+
+  // if there is no custom direction, then don't bother rotating it.
+  if (!this.getCustomDirection()) return;
+
+  // rotate the custom direction.
+  switch (this.getCustomDirection())
   {
-    switch (this.getCustomDirection())
-    {
-      case 1:
-        this.setCustomDirection(7);
-        break;
-      case 3:
-        this.setCustomDirection(1);
-        break;
-      case 7:
-        this.setCustomDirection(9);
-        break;
-      case 9:
-        this.setCustomDirection(3);
-        break;
-    }
+    case 1:
+      this.setCustomDirection(7);
+      break;
+    case 3:
+      this.setCustomDirection(1);
+      break;
+    case 7:
+      this.setCustomDirection(9);
+      break;
+    case 9:
+      this.setCustomDirection(3);
+      break;
   }
 };
 
 /**
- * Extends the turn left to also manage diagonal turns.
+ * Extends {@link #turnLeft90}.<br/>
+ * Also rotates the custom direction after turn left 90 executes.
  */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('turnLeft90', Game_Event.prototype.turnLeft90);
 Game_Event.prototype.turnLeft90 = function()
 {
-  Game_Character.prototype.turnLeft90.call(this);
-  if (this.getCustomDirection())
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('turnLeft90')
+    .call(this);
+
+  // if there is no custom direction, then don't bother rotating it.
+  if (!this.getCustomDirection()) return;
+
+  // rotate the custom direction.
+  switch (this.direction())
   {
-    switch (this.direction())
-    {
-      case 1:
-        this.setDirection(3);
-        break;
-      case 3:
-        this.setDirection(9);
-        break;
-      case 7:
-        this.setDirection(1);
-        break;
-      case 9:
-        this.setDirection(7);
-        break;
-    }
+    case 1:
+      this.setDirection(3);
+      break;
+    case 3:
+      this.setDirection(9);
+      break;
+    case 7:
+      this.setDirection(1);
+      break;
+    case 9:
+      this.setDirection(7);
+      break;
   }
+
 };
 
 /**
@@ -254,6 +361,28 @@ Game_Event.prototype.turnRightOrLeft45 = function()
     ? this.turnLeft45()
     : this.turnRight45();
 };
+
+/**
+ * Extends {@link #turnRandom}.<br/>
+ * For actions, this will set a custom direction from any of the valid directions that aren't the way the action is
+ * currently facing.
+ */
+J.ABS.EXT.DIAG.Aliased.Game_Event.set('turnRandom', Game_Event.prototype.turnRandom);
+Game_Event.prototype.turnRandom = function()
+{
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Event.get('turnRandom')
+    .call(this);
+
+  // identify all the available directions.
+  const validDirections = this.getValidDirections()
+    // exclude the currently faced direction to force a change of direction.
+    .filter(dir => dir !== this.direction());
+
+  // choose and set a random direction for the action.
+  const randomDirection = validDirections[Math.randomInt(validDirections.length)];
+  this.setCustomDirection(randomDirection);
+};
 //endregion update existing functionality
 
 //region homing movement
@@ -264,6 +393,7 @@ Game_Event.prototype.turnRightOrLeft45 = function()
  */
 Game_Event.prototype.homeIntoTarget = function()
 {
+  // handle homing for actions.
   if (this.isJabsAction())
   {
     const target = this.getJabsAction()
@@ -271,12 +401,14 @@ Game_Event.prototype.homeIntoTarget = function()
       .getTarget();
     this.homeIntoTargetBattler(target);
   }
+  // handle homing for battlers.
   else if (this.isJabsBattler())
   {
     const target = this.getJabsBattler()
       .getTarget();
     this.homeIntoTargetBattler(target);
   }
+  // just move straight- no homing.
   else
   {
     this.moveStraight(this.direction());
@@ -290,6 +422,7 @@ Game_Event.prototype.homeIntoTarget = function()
  */
 Game_Event.prototype.homeIntoLastHit = function()
 {
+  // handle homing for actions.
   if (this.isJabsAction())
   {
     const lastHit = this.getJabsAction()
@@ -297,12 +430,14 @@ Game_Event.prototype.homeIntoLastHit = function()
       .getBattlerLastHit();
     this.homeIntoLastHitBattler(lastHit);
   }
+  // handle homing for battlers.
   else if (this.isJabsBattler())
   {
     const lastHit = this.getJabsBattler()
       .getBattlerLastHit();
     this.homeIntoLastHitBattler(lastHit);
   }
+  // just move straight- no homing.
   else
   {
     this.moveStraight(this.direction());
@@ -351,9 +486,7 @@ Game_Event.prototype.homeIntoBattler = function(battler)
 {
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const nextDir = CycloneMovement
-    ? this.findDirectionTo(x, y)
-    : this.findDiagonalDirectionTo(x, y);
+  const nextDir = this.findDiagonalDirectionTo(x, y);
   this.setCustomDirection(nextDir);
   if (this.isStraightDirection(nextDir))
   {
@@ -374,6 +507,7 @@ Game_Event.prototype.homeIntoBattler = function(battler)
  */
 Game_Event.prototype.seekTarget = function()
 {
+  // handle seeking for actions.
   if (this.isJabsAction())
   {
     const target = this.getJabsAction()
@@ -381,12 +515,14 @@ Game_Event.prototype.seekTarget = function()
       .getTarget();
     this.seekTargetBattler(target);
   }
+  // handle seeking for battlers.
   else if (this.isJabsBattler())
   {
     const target = this.getJabsBattler()
       .getTarget();
     this.seekTargetBattler(target);
   }
+  // just move straight- no seeking.
   else
   {
     this.moveStraight(this.direction());
@@ -400,6 +536,7 @@ Game_Event.prototype.seekTarget = function()
  */
 Game_Event.prototype.seekLastHit = function()
 {
+  // handle seeking for actions.
   if (this.isJabsAction())
   {
     const lastHit = this.getJabsAction()
@@ -407,12 +544,14 @@ Game_Event.prototype.seekLastHit = function()
       .getBattlerLastHit();
     this.seekLastHitBattler(lastHit);
   }
+  // handle seeking for battlers.
   else if (this.isJabsBattler())
   {
     const lastHit = this.getJabsBattler()
       .getBattlerLastHit();
     this.seekLastHitBattler(lastHit);
   }
+  // just move straight- no seeking.
   else
   {
     this.moveStraight(this.direction());
@@ -463,9 +602,7 @@ Game_Event.prototype.seekBattler = function(battler)
   const currDir = this.getCustomDirection();
   const [ x, y ] = [ battler.getX(), battler.getY() ];
   // get the next direction to the last hit, diagonal directions included.
-  const finalDir = CycloneMovement
-    ? this.findDirectionTo(x, y)
-    : this.findDiagonalDirectionTo(x, y);
+  const finalDir = this.findDiagonalDirectionTo(x, y);
 
   this.gradualRotateToDirection(currDir, finalDir);
   this.moveStraight(this.direction());

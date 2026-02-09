@@ -165,7 +165,7 @@ class QuestManager
 
     // return if the objective can be executed.
     return quest.canExecuteObjectiveById(objectiveId);
-  };
+  }
 
   /**
    * Checks if a quest is active.
@@ -392,6 +392,7 @@ class QuestManager
           // validate the objective isn't an empty collection of questkeys for some reason- that doesn't count.
           if (objective.questCompletionData().length === 0)
           {
+            // eslint-disable-next-line max-len
             console.warn(`quest of ${objective.questKey} has objective of id ${objective.id} set to "quest completion", but lacks 'fulfillmentQuestKeys'}.`);
             return false;
           }

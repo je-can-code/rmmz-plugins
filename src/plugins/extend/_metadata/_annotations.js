@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 EXTEND] Extends the capabilities of skills/actions.
+ * [v1.1.0 EXTEND] Extends the capabilities of skills/actions.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -85,43 +85,20 @@
  *      only for this execution of the skill for overlay purposes only.
  *    - the editor's speed cap of +/-2000 is not respected!
  *    - the editor's success cap of 0-100 is not respected!
- *  If using JABS, the following data points are added if missing or if
- * they already exist on the base skill, their values are updated:
- *  - moveType (???)
- *  - projectile
- *  - counterGuard (***)
- *  - counterParry (***)
- *  - parry (***)
- *  - guard (***)
- *  - bonusHits
- *  - aggroMultiplier
- *  - bonusAggro
- *  - combo (!!!)
- *  - castTime
- *  - castAnimation
- *  - poseSuffix
- *  - knockback
- *  - piercing
- *  - shape
- *  - duration
- *  - actionId (!!!)
- *  - proximity
- *  - range
- *  - cooldown
- * If using JABs, the following datapoints will simply continue to exist
- * because they are idempotent traits:
- *  - uniqueCooldown
- *  - direct (!!!)
- *  - freeCombo
+ *  When it comes to the note section:
+ *    - all tags by default will be overridden where the key matches.
+ *    - you can avoid override behavior by configuring duplicate keys.
  *
- * ???:
+ * If using this plugin with JABS...
+ *
+ * Note about adding move-related tags:
  *  The effects of adding the "moveType" tag onto a skill that didn't
  *  previously have it are completely untested, use at your own risk!
- * ***:
+ * Note about adding guard-related tags:
  *  The effects of adding the "counterGuard/counterParry" tags onto a skill
  *  that didn't previously have it are untested, though shouldn't cause any
  *  problems if they are added onto a skill with "guard & parry".
- * !!!:
+ * Note about combo-related tags:
  *  The effects of adding the "combo/actionId/direct" tags onto any skills is
  *  something to be careful about, as they very significantly change how
  *  the manager interacts with the actions. Replacing any of those values
@@ -175,6 +152,8 @@
  * target. This happens regardless the outcome of the skill.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Rewrite tag override functionality to replace excluding specified keys.
  * - 1.0.1
  *    Fixed reference error when attempting to extend skills w/ on-hit effects.
  *    Retroactively added this CHANGELOG.

@@ -98,5 +98,51 @@ if (J.ABS)
       .build();
     $actionLogManager.addLog(sdpLog);
   };
+
+  /**
+   * Generates a text pop for an SDP unlock on a target character.
+   * @param {string} sdpKey The key of the SDP being unlocked.
+   * @param {Game_Character} character The character to display the pop on.
+   */
+  JABS_Engine.prototype.generateSdpUnlock = function(sdpKey, character)
+  {
+    // if we are not using popups, then don't do this.
+    if (!J.POPUPS) return;
+    
+    const sdp = J.SDP.Metadata.panelsMap.get(sdpKey);
+
+    // generate the textpop.
+    const sdpPop = this.configureSdpUnlockPop(sdp);
+
+    // add the pop to the caster's tracking.
+    character.addTextPop(sdpPop);
+    character.requestTextPop();
+  };
+
+  /**
+   * Creates the text pop of the SDP unlocked.
+   * @param {StatDistributionPanel} panel The SDP to create a pop for.
+   * @returns {Map_TextPop}
+   */
+  JABS_Engine.prototype.configureSdpUnlockPop = function(panel)
+  {
+    return new TextPopBuilder(panel.name)
+      .isSdpPoints()
+      .build();
+  };
+
+  /**
+   * Creates the log entry if using the J-LOG.
+   * @param {string} sdpKey The SDP ponts gained.
+   */
+  JABS_Engine.prototype.createSdpUnlockLog = function(sdpKey)
+  {
+    if (!J.LOG) return;
+
+    const sdpLog = new ActionLogBuilder()
+      .setupSdpUnlocked(sdpKey)
+      .build();
+    $actionLogManager.addLog(sdpLog);
+  };
 }
 //endregion JABS_Engine

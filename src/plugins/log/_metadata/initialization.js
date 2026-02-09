@@ -26,7 +26,7 @@ J.LOG = {};
  */
 J.LOG.Metadata = {};
 J.LOG.Metadata.Name = `J-Log`;
-J.LOG.Metadata.Version = `2.1.0`;
+J.LOG.Metadata.Version = `2.1.1`;
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

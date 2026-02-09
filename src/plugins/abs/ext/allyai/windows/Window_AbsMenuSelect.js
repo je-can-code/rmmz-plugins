@@ -45,7 +45,9 @@ Window_AbsMenuSelect.prototype.makeCommandList = function()
   switch (this._j._menuType)
   {
     case "ai-party-list":
+      this.addAggroPassiveToggleCommand();
       this.makeAllyList();
+      this.addAllyFormationCommand();
       break;
     case "select-ai":
       this.makeAllyAiModeList();
@@ -74,7 +76,13 @@ Window_AbsMenuSelect.prototype.makeAllyList = function()
   // build all the commands.
   $gameParty.allMembers()
     .forEach(forEacher, this);
+};
 
+/**
+ * Injects the aggro-passive toggle command into the menu.
+ */
+Window_AbsMenuSelect.prototype.addAggroPassiveToggleCommand = function()
+{
   // define the icons for passive/aggressive ally AI aggro settings.
   const aggroPassiveCommandName = $gameParty.isAggro()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveText
@@ -83,14 +91,42 @@ Window_AbsMenuSelect.prototype.makeAllyList = function()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex
     : J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex;
 
+  const description = $gameParty.isAggro()
+    ? "The party is currently 'aggro'.\nAllies will engage in any enemy that comes within their range."
+    : "The party is currently 'passive'.\nAllies will not engage until the leader strikes or is struck.";
+
+  const textColor = $gameParty.isAggro()
+    ? 2
+    : 3;
+
   // build the command for toggling ally AI aggro.
   const command = new WindowCommandBuilder(aggroPassiveCommandName)
     .setSymbol("aggro-passive-toggle")
+    .setTextLines(description.split(/[\r\n]/i))
+    .flagAsSubText()
+    .setColorIndex(textColor)
     .setIconIndex(aggroPassiveCommandIcon)
     .build();
 
   // add the aggro toggle command.
   this.addBuiltCommand(command);
+};
+
+/**
+ * Injects the party formations command into the menu.
+ */
+Window_AbsMenuSelect.prototype.addAllyFormationCommand = function()
+{
+  // define the icons for passive/aggressive ally AI aggro settings.
+  // build the command.
+  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
+    .setSymbol('ally-formations')
+    .setIconIndex(289) // TODO: parameterize this.
+    .setColorIndex(23)
+    .build();
+
+  // add the aggro toggle command.
+  this.addBuiltCommand(allyFormationsCommand);
 };
 
 /**
@@ -116,7 +152,8 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
     // extract some data from this ally AI mode.
     const {
       key,
-      name
+      name,
+      description,
     } = mode;
 
     // check if the currently selected ally AI mode is this command.
@@ -130,7 +167,10 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
     // build the command.
     const command = new WindowCommandBuilder(name)
       .setSymbol("select-ai")
+      .setTextLines(description.split(/[\r\n]/i))
+      .flagAsSubText()
       .setIconIndex(iconIndex)
+      .setEnabled(true)
       .setExtensionData(mode)
       .build();
 
@@ -140,5 +180,15 @@ Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
 
   // iterate over each mode and rebuild the commands.
   modes.forEach(forEacher, this);
+};
+
+/**
+ * Overwrites {@link #itemHeight}.<br/>
+ * Increases the height so subtext can be added.
+ * @returns {number}
+ */
+Window_AbsMenuSelect.prototype.itemHeight = function()
+{
+  return this.lineHeight() * 2;
 };
 //endregion Window_AbsMenuSelect

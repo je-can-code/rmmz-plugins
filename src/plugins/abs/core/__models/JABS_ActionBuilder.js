@@ -42,6 +42,12 @@ class JABS_ActionBuilder
   #isTerrainDamage = false;
 
   /**
+   * The action options used to build this action.
+   * @type {JABS_ActionOptions|null}
+   */
+  #actionOptions = null;
+
+  /**
    * Builds a new instance of the action based on the built parameters.
    * @returns {JABS_Action}
    */
@@ -55,6 +61,12 @@ class JABS_ActionBuilder
       this.#cooldownKey,
       this.#isTerrainDamage);
 
+    // attach the options used to create this action (carries frozen target location).
+    if (this.#actionOptions)
+    {
+      mapAction.setActionOptions(this.#actionOptions);
+    }
+
     this.clear();
 
     return mapAction;
@@ -62,12 +74,26 @@ class JABS_ActionBuilder
 
   clear()
   {
+    // reset the underlying game action.
     this.#gameAction = null;
+
+    // reset the caster.
     this.#caster = null;
+
+    // reset retaliation flag.
     this.#isRetaliation = false;
+
+    // reset initial direction.
     this.#initialDirection = J.ABS.Directions.DOWN;
+
+    // reset cooldown key.
     this.#cooldownKey = J.ABS.Globals.GlobalCooldownKey;
+
+    // reset terrain damage.
     this.#isTerrainDamage = false;
+
+    // reset action options.
+    this.#actionOptions = null;
   }
 
   setGameAction(gameAction)
@@ -113,9 +139,15 @@ class JABS_ActionBuilder
    */
   setActionOptions(actionOptions)
   {
+    // persist the entire options object for later attachment onto the built action.
+    this.#actionOptions = actionOptions;
+
+    // also extract and cache common flags for existing behavior.
     this.#isRetaliation = actionOptions.isActionRetaliation();
     this.#cooldownKey = actionOptions.getCooldownKey();
     this.#isTerrainDamage = actionOptions.isTerrainDamage();
+
+    // allow method chaining.
     return this;
   }
 }

@@ -1,5 +1,14 @@
 //region JABS_Engine
 /**
+ * Whether or not there is a request issued for rendering refreshed allies.
+ * @type {boolean}
+ */
+Object.defineProperty(JABS_Engine.prototype, "requestAlliesRefresh", {
+  value: false,
+  writeable: true,
+});
+
+/**
  * Extends {@link JABS_Engine.prePartyCycling}.<br>
  * Jumps all followers to the player upon party cycling.
  */
@@ -37,8 +46,8 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('handlePartyCycleMemberChanges')
     .call(this);
 
-  // rebuild all allies.
-  $gameMap.updateAllies();
+  // Defer ally rebuild to after sprite rebind; let the sprite layer trigger it.
+  $jabsEngine.requestAlliesRefresh = true;
 };
 
 /**
@@ -72,12 +81,8 @@ JABS_Engine.prototype.applyBattleMemories = function(result, action, target)
   if (this.canApplyBattleMemories(target)) return;
 
   // generate the new battle memory of the action and its result for the target.
-  const newMemory = new JABS_BattleMemory(
-    target.getBattlerId(),
-    action.getBaseSkill().id,
-    action.getAction()
-      .calculateRawElementRate(target.getBattler()),
-    result.hpDamage);
+  const newMemory = new JABS_BattleMemory(target.getBattlerId(), action.getBaseSkill().id, action.getAction()
+    .calculateRawElementRate(target.getBattler()), result.hpDamage);
 
   // determine the one who who executed the action.
   const attacker = action.getCaster();
@@ -98,5 +103,37 @@ JABS_Engine.prototype.canApplyBattleMemories = function(target)
 
   // apply the memories!
   return true;
+};
+
+/**
+ * Rebuilds all actor allies bound to followers after party cycling.
+ * Ensures ex-leaders (now followers) regain proper ally core (sight/pursuit) and
+ * are bound to their follower characters for correct isPlayer/isFollower state.
+ */
+JABS_Engine.prototype.rebuildActorAllies = function()
+{
+  // grab all followers in order; follower index aligns to party members beyond leader.
+  const followers = $gamePlayer.followers()
+    .data();
+
+  // convert the followers into JABS battlers using the canonical helper.
+  const allyBattlers = JABS_AiManager.convertFollowersToBattlers(followers);
+
+  // register or update all ally battlers in the AI manager.
+  JABS_AiManager.addOrUpdateBattlers(allyBattlers);
+};
+
+/**
+ * Extends {@link #postPartyCycling}.<br/>
+ * Also rebuilds allies so they can be correctly aligned with the proper battler data.
+ */
+J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set('postPartyCycling', JABS_Engine.prototype.postPartyCycling);
+JABS_Engine.prototype.postPartyCycling = function()
+{
+  // perform original logic.
+  J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('postPartyCycling').call(this);
+
+  // rebuild all actor allies (followers) so they have proper ally core and character binding.
+  this.rebuildActorAllies();
 };
 //endregion JABS_Engine

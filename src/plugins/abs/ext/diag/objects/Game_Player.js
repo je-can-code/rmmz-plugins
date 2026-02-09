@@ -1,6 +1,7 @@
 //region Game_Player
 /**
- * OVERWRITE Leverages dir8 instead of dir4 by default.
+ * Overwrites {@link #getInputDirection}.<br/>
+ * Leverages dir8 instead of dir4 by default.
  * @returns {number}
  */
 Game_Player.prototype.getInputDirection = function()
@@ -13,25 +14,32 @@ Game_Player.prototype.getInputDirection = function()
  * If there is an underlying diagonal direction, then move diagonally.
  * @param {number} direction The direction being moved.
  */
-J.ABS.EXT.DIAG.Aliased.Game_Player.moveStraight = Game_Player.prototype.moveStraight;
+J.ABS.EXT.DIAG.Aliased.Game_Player.set('moveStraight', Game_Player.prototype.moveStraight);
 Game_Player.prototype.moveStraight = function(direction)
 {
   // if we're using cyclone movement, rely on that instead.
   if (globalThis.CycloneMovement)
   {
-    J.ABS.EXT.DIAG.Aliased.Game_Player.moveStraight.call(this, direction);
-    return;
+    // perform original logic.
+    return J.ABS.EXT.DIAG.Aliased.Game_Player.get('moveStraight')
+      .call(this, direction);
   }
 
-  if (this.isDiagonalDirection(direction))
+  // check if the direction being moved is actually a diagonal direction.
+  if (this.isDiagonalDirection(direction) === false)
   {
-    const diagonalDirections = this.getDiagonalDirections(direction);
-    this.moveDiagonally(...diagonalDirections);
+    // perform original logic.
+    return J.ABS.EXT.DIAG.Aliased.Game_Player.moveStraight.call(this, direction);
   }
-  else
-  {
-    J.ABS.EXT.DIAG.Aliased.Game_Player.moveStraight.call(this, direction);
-  }
+
+  // break down the diagonal directions from the single directional.
+  const [ horz, vert ] = this.getDiagonalDirections(direction);
+
+  // execute the diagonal movement.
+  this.moveDiagonally(horz, vert);
+
+  // return the direction moved.
+  return direction;
 };
 
 /**
@@ -40,49 +48,33 @@ Game_Player.prototype.moveStraight = function(direction)
  * @param {number} horz The horizontal piece of the direction to move.
  * @param {number} vert The vertical piece of the direction to move.
  */
-J.ABS.EXT.DIAG.Aliased.Game_Player.moveDiagonally = Game_Player.prototype.moveDiagonally;
+J.ABS.EXT.DIAG.Aliased.Game_Player.set('moveDiagonally', Game_Player.prototype.moveDiagonally);
 Game_Player.prototype.moveDiagonally = function(horz, vert)
 {
-  J.ABS.EXT.DIAG.Aliased.Game_Player.moveDiagonally.call(this, horz, vert);
+  // perform original logic.
+  J.ABS.EXT.DIAG.Aliased.Game_Player.get('moveDiagonally')
+    .call(this, horz, vert);
+
   // if we're using cyclone movement, rely on that instead.
-  if (globalThis && globalThis.CycloneMovement) return;
+  if (globalThis.CycloneMovement) return;
 
-  if (!this.isMovementSucceeded())
+  // check if the movement failed.
+  if (this.isMovementSucceeded() === true) return;
+
+  // try sliding vertically.
+  this.setMovementSuccess(this.canPass(this._x, this._y, vert));
+  if (this.isMovementSucceeded())
   {
-
-    // try vertical move
-    this.setMovementSuccess(this.canPass(this._x, this._y, vert));
-    if (this.isMovementSucceeded())
-    {
-      this.moveStraight(vert);
-    }
-
-    // try horizontal move
-    this.setMovementSuccess(this.canPass(this._x, this._y, horz));
-    if (this.isMovementSucceeded())
-    {
-      this.moveStraight(horz);
-    }
+    this.moveStraight(vert);
   }
-};
 
-/**
- * If we're using cyclone movement, adjust their triggering of events to not interact
- * with battlers and such if they are also events that have event commands.
- */
-if (globalThis && globalThis.CycloneMovement)
-{
-  J.ABS.EXT.DIAG.Aliased.Game_Player.shouldTriggerEvent = Game_Player.prototype.shouldTriggerEvent;
-  Game_Player.prototype.shouldTriggerEvent = function(event, triggers, normal)
+  // try sliding horizontally.
+  this.setMovementSuccess(this.canPass(this._x, this._y, horz));
+  if (this.isMovementSucceeded())
   {
-    if (event.isJabsBattler())
-    {
-      return false;
-    }
-    else
-    {
-      return J.ABS.EXT.DIAG.Aliased.Game_Player.shouldTriggerEvent.call(this, event, triggers, normal);
-    }
-  };
-}
+    this.moveStraight(horz);
+  }
+
+  // don't move at all.
+};
 //endregion Game_Player

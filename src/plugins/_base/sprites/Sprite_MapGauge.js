@@ -1,6 +1,6 @@
 //region Sprite_MapGauge
 /**
- * The sprite for displaying a gauge over a character's sprite.
+ * The sprite for displaying a gauge on a character's sprite.
  */
 function Sprite_MapGauge()
 {
@@ -17,7 +17,6 @@ Sprite_MapGauge.prototype.initialize = function(
   value = null,
   iconIndex = -1)
 {
-  this._duration = 0;
   this._gauge = {};
   this._gauge._bitmapWidth = bitmapWidth;
   this._gauge._bitmapHeight = bitmapHeight;
@@ -25,6 +24,7 @@ Sprite_MapGauge.prototype.initialize = function(
   this._gauge._label = label;
   this._gauge._value = value;
   this._gauge._iconIndex = iconIndex;
+  this._gauge._iconSprite = null;
 
   this._gauge._activated = true;
 
@@ -50,7 +50,6 @@ Sprite_MapGauge.prototype.update = function()
   if (!this._gauge._activated) return;
 
   Sprite_Gauge.prototype.update.call(this);
-  //this.manageGaugeVisibility();
 };
 
 /**
@@ -123,7 +122,43 @@ Sprite_MapGauge.prototype.drawLabel = function()
  */
 Sprite_MapGauge.prototype.setIcon = function(iconIndex)
 {
+  // assign the new index (use -1 as the sentinel for "no icon").
   this._gauge._iconIndex = iconIndex;
+
+  // if we already have an icon sprite, update it in-place.
+  if (this._gauge._iconSprite)
+  {
+    // when "no icon", keep the sprite but hide it.
+    if (this._gauge._iconIndex < 0)
+    {
+      this._gauge._iconSprite.visible = false; // hide without removing
+    }
+    else
+    {
+      // update the icon tile and make sure it is visible.
+      this._gauge._iconSprite.setIconIndex(this._gauge._iconIndex);
+      this._gauge._iconSprite.visible = true;
+
+      // re-center vertically in case the gauge height changed.
+      const iconHeight = 16; // after 0.5 scale of a 32px icon
+      const centeredY = Math.floor((this.bitmapHeight() - iconHeight) / 2);
+      this._gauge._iconSprite.move(10, centeredY);
+    }
+
+    // redraw the gauge (label/gradient may still need updating).
+    this.redraw();
+    return;
+  }
+
+  // if we don’t have a sprite yet and the index is valid, create one now.
+  if (this._gauge._iconIndex >= 0)
+  {
+    const sprite = this.createIconSprite();
+    this.addChild(sprite);
+    this._gauge._iconSprite = sprite;
+  }
+
+  // redraw the gauge (label/gradient may still need updating).
   this.redraw();
 };
 
@@ -132,19 +167,47 @@ Sprite_MapGauge.prototype.setIcon = function(iconIndex)
  */
 Sprite_MapGauge.prototype.drawIcon = function()
 {
-  if (this._gauge._iconIndex > 0 && !this.children.length)
+  // reconcile presence & visibility without destroying when unnecessary.
+  if (this._gauge._iconIndex >= 0)
   {
-    const sprite = this.createIconSprite();
-    sprite.move(10, 20);
-    this.addChild(sprite);
+    if (!this._gauge._iconSprite)
+    {
+      // add if missing.
+      const sprite = this.createIconSprite();
+      this.addChild(sprite);
+      this._gauge._iconSprite = sprite;
+    }
+
+    // ensure visible when we have an icon index.
+    this._gauge._iconSprite.visible = true;
+  }
+  else if (this._gauge._iconSprite)
+  {
+    // hide (do not remove) when no icon is intended.
+    this._gauge._iconSprite.visible = false;
   }
 };
 
+/**
+ * Creates the sprite for the icon on this gauge.
+ * @returns {Sprite_Icon}
+ */
 Sprite_MapGauge.prototype.createIconSprite = function()
 {
+  // create the icon sprite at the current index.
   const sprite = new Sprite_Icon(this._gauge._iconIndex);
+
+  // scale the icon smaller for map display.
   sprite.scale.x = 0.5;
   sprite.scale.y = 0.5;
+
+  // center the icon vertically inside this gauge’s bitmap height.
+  const iconHeight = 16;
+  const centeredY = Math.floor((this.bitmapHeight() - iconHeight) / 2);
+
+  // give it a small left padding so the label can start at x=32 nicely.
+  sprite.move(10, centeredY);
+
   return sprite;
 };
 
@@ -163,15 +226,29 @@ Sprite_MapGauge.prototype.drawValue = function()
  */
 Sprite_MapGauge.prototype.redraw = function()
 {
+  // clear any prior drawing first.
   this.bitmap.clear();
-  const currentValue = this.currentValue();
+
+  // compute current value and cache it into the same fields the base gauge uses.
+  const currentValue = this.currentValue(); // may be NaN to skip drawing
   if (!isNaN(currentValue))
   {
+
+
+    // IMPORTANT: assign backing fields for gaugeRate() to function.
+    this._value = currentValue; // current filled amount
+    this._maxValue = this.currentMaxValue(); // maximum value for fill
+
+    // draw the colored fill/backdrop using the cached rate values.
     this.drawGauge();
+
+    // draw label & icon similarly to your existing behavior (skip for "time").
     if (this._statusType !== "time")
     {
       this.drawLabel();
       this.drawIcon();
+
+      // only draw numeric value when valid (map gauges typically hide values).
       if (this.isValid())
       {
         this.drawValue();

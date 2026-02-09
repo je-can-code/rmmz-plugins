@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.2.1 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -29,6 +29,7 @@
  *
  * Integrates with others of mine plugins:
  * - J-ABS; enables per-event-enemy level overrides.
+ * - J-NATURAL; handles level-based max hp/mp/tp growths.
  *
  * ============================================================================
  * PLUGIN PARAMETERS BREAKDOWN:
@@ -137,6 +138,77 @@
  * On states, this will do nothing.
  *
  * ============================================================================
+ * SKILL LEARNING TAGS
+ * Have you ever wanted enemies to learn new skills as they "level up"? Well,
+ * now you can! By applying the appropriate tag w/ data points to the enemies,
+ * you too can have enemies obtain new skills as they reach ever-higher levels!
+ *
+ * NOTE ABOUT LEVELS AND SKILLS:
+ * The actual skill needs to be in the actions list of an enemy in order for it
+ * to ever be available. The tag is basically a "guard" that level-checks before
+ * allowing the skill to be included in the skill list when the list of skills
+ * for an enemy is grabbed and mapped.
+ *
+ * NOTE ABOUT COMPATIBILITY:
+ * Due to the nature of how this functionality works, this tag probably won't
+ * work as-intended outside of JABS. An extension would need to be drafted
+ * that leverages the Game_Enemy.prototype.skills function to determine their
+ * available skills instead of the default- which directly parses the actions.
+ *
+ * TAG USAGE:
+ * - Enemies only.
+ *
+ * TAG FORMAT:
+ *  <learning:[SKILL_ID, LEVEL_LEARNED]>
+ * Where SKILL_ID is the skill being learned, and LEVEL_LEARNED is the level
+ * at which the enemy must be before the skill becomes available to them.
+ *
+ * TAG EXAMPLE:
+ *  <learning:[210, 10]>
+ * An enemy with this tag will have skill of ID 210 become "learned" when the
+ * enemy is level 10 or higher.
+ *
+ * ============================================================================
+ * BEYOND THE MAX LEVELS
+ * Have you ever wanted levels to exceed 99? Well now you can! By properly
+ * setting the plugin configuration, you too can reach beyond the max level!
+ *
+ * NOTE ABOUT PLUGIN CONFIGURATION:
+ * There are two important values that should be considered when working with
+ * beyond max level tags: the "default beyond max level" value- aka the "base",
+ * and the "max boosted level" value- aka the "cap", as they influence the tags
+ * in this section.
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - States
+ *
+ * TAG FORMAT:
+ *  <maxLevelBoost:AMOUNT>
+ * Where AMOUNT is a negative or positive integer applied to the base beyond
+ * max level.
+ *
+ * TAG EXAMPLES:
+ *  <maxLevelBoost:+25> (on the actor)
+ * The actor with this tag will have a +25 modifier to their base max level,
+ * but no higher than the cap max level.
+ *
+ *  <maxLevelBoost:+100> (on the actor)
+ *  <maxLevelBoost:-25> (on an equipped weapon)
+ * The actor with these tags will have a +75 (100-25=75) modifier to their base
+ * max level, but no higher than the cap max level.
+ *
+ *  <maxLevelBoost:-50> (on the actor)
+ *  <maxLevelBoost:-25> (on a learned skill for the actor)
+ *  <maxLevelBoost:+10> (on a state applied to the actor)
+ * The actor with these tags will have a -65 (-50-25+10=-65) modifier to their
+ * base max level.
+ *
+ * ============================================================================
  * SAMPLE CALCULATIONS:
  * Here is an example back and forth encounter between an allied party and
  * enemy party.
@@ -222,6 +294,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed issue with level overrides not apply J-NATURAL growths.
  * - 1.2.0
  *    Added ability to override JABS enemies on the map with a new level.
  * - 1.1.1
@@ -438,7 +512,7 @@ J.LEVEL = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.0');
+J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.1');
 
 /**
  * All aliased methods for this plugin.
@@ -454,6 +528,7 @@ J.LEVEL.Aliased = {
   Game_Troop: new Map(),
 
   DataManager: new Map(),
+  JABS_AiManager: new Map(),
 
   Sprite_Character: new Map(),
 };
@@ -476,6 +551,7 @@ J.LEVEL.RegExp = {
 
   /**
    * The regex for when a skill id is learned at a designated level.
+   * The array capture group is [SKILL_ID, LEVEL_LEARNED].
    * @type {RegExp}
    */
   Learning: /<learning: ?(\[\d+, ?\d+])>/i,
@@ -524,6 +600,35 @@ DataManager.setupNewGame = function()
   $gameTemp.buildBeyondMaxData();
 };
 //endregion DataManager
+
+//region JABS_AiManager
+/**
+ * Extends {@link #postConvertMutate}.<br/>
+ * Also applies the level override.
+ * @param {Game_Enemy} battler The enemy battler that was converted from the event.
+ * @param {JABS_Battler} jabsBattler The created JABS battler from the event.
+ */
+J.LEVEL.Aliased.JABS_AiManager.set('postConvertMutate', JABS_AiManager.postConvertMutate);
+JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
+{
+  // perform original logic.
+  J.LEVEL.Aliased.JABS_AiManager.get('postConvertMutate')
+    .call(this, battler, jabsBattler);
+
+  const character = jabsBattler.getCharacter();
+
+  const levelOverride = character.getLevelOverrides();
+  if (levelOverride !== null)
+  {
+    battler.setCachedLevelOverride(levelOverride);
+
+    if (J.NATURAL)
+    {
+      battler.refreshAllParameterBuffs();
+    }
+  }
+};
+//endregion JABS_AiManager
 
 //region LevelScaling
 /**
@@ -992,6 +1097,12 @@ Game_Enemy.prototype.initMembers = function()
    * @type {Record<number, number>}
    */
   this._j._level._skillLearnings = {};
+
+  /**
+   * The cached level override for this enemy if one exists.
+   * @type {number|null}
+   */
+  this._j._level._cachedLevelOverride = null;
 };
 
 /**
@@ -1002,6 +1113,16 @@ Game_Enemy.prototype.initMembers = function()
 Game_Enemy.prototype.setSkillLearning = function(skillId, level)
 {
   this._j._level._skillLearnings[skillId] = level;
+};
+
+Game_Enemy.prototype.getCachedLevelOverride = function()
+{
+  return this._j._level._cachedLevelOverride;
+};
+
+Game_Enemy.prototype.setCachedLevelOverride = function(level)
+{
+  this._j._level._cachedLevelOverride = level;
 };
 
 /**
@@ -1093,12 +1214,8 @@ Game_Enemy.prototype.getBattlerBaseLevel = function()
   // if there are no overrides, then return the base level.
   if (this.hasLevelOverride() === false) return baseLevel;
 
-  // get the JABS_Battler associated with this enemy by UUID.
-  const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
-
   // return the level override.
-  return jabsBattler.getCharacter()
-    .getLevelOverrides();
+  return this.getCachedLevelOverride();
 };
 
 /**
@@ -1110,21 +1227,8 @@ Game_Enemy.prototype.hasLevelOverride = function()
   // if JABS isn't available, then there won't be a level override.
   if (!J.ABS) return false;
 
-  // if there is no battler on this enemy, then there won't be a level override to check.
-  if (!this.getUuid()) return false;
-
-  // get the JABS_Battler associated with this enemy by UUID.
-  const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
-
-  // if there is no battler being tracked by this UUID, then there are no overrides.
-  if (!jabsBattler) return false;
-
   // if overrides is null, then there are none.
-  if (jabsBattler.getCharacter()
-    .getLevelOverrides() === null)
-  {
-    return false;
-  }
+  if (this.getCachedLevelOverride() === null) return false;
 
   // there must be overrides!
   return true;
@@ -1260,7 +1364,7 @@ Game_Event.prototype.refresh = function()
   J.LEVEL.Aliased.Game_Event.get('refresh')
     .call(this);
 
-  // clear the level override cache when the event page changes
+  // clear the level override cache when the event page changes.
   this.clearLevelCache();
 };
 

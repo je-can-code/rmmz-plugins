@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.2 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v2.1.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -13,6 +13,7 @@
  * @orderAfter J-ABS-Speed
  * @orderAfter J-DropsControl
  * @orderAfter J-CriticalFactors
+ * @orderAfter J-Natural
  * @orderAfter J-Proficiency
  * @help
  * ============================================================================
@@ -21,10 +22,11 @@
  * of leveling up to raise an actor's stats.
  *
  * Integrates with others of mine plugins:
- * - J-DropsControl; enables usage of item-as-panel drops.
  * - J-ABS; enemies will individually drop their points and panels.
  * - J-ABS-Speed; enables usage of Movespeed Boost as a parameter on panels.
  * - J-CriticalFactors; enables usage of CDM/CDR as parameters on panels.
+ * - J-DropsControl; enables usage of item-as-panel drops.
+ * - J-Natural; enables SDP reward modifications.
  * - J-Proficiency; enables usage of Proficiency+ as a parameter on panels.
  *
  * ----------------------------------------------------------------------------
@@ -85,6 +87,60 @@
  * Then the panel will not be included in the list that is parsed from the
  * configuration file upon starting the game.
  * ============================================================================
+ * ENEMY SDP DROPS:
+ * Ever want enemies to drop SDPs themselves for unlocking across the party?
+ * Well now you can! By applying the appropriate tag to enemies in the
+ * database, you can have enemies drop any singular SDP at any integer percent
+ * chance you want them to.
+ *
+ * NOTE ABOUT SDP DROPS AND JABS:
+ * This system was explicitly designed with JABS in mind. If you are not using
+ * JABS, you probably instead should just use the SDP UNLOCK tag on an item
+ * that the enemy drops for similar functionality. This functionality will
+ * dynamically generate the loot for the SDP being unlocked with no database
+ * backing and unlock it upon pickup- which would be incompatible outside of
+ * JABS.
+ *
+ * TAG USAGE:
+ * - Enemies only.
+ *
+ * TAG FORMAT:
+ *  <sdpDropData:[SDP_KEY, DROP_CHANCE]>
+ *   Where SDP_KEY is the unique string key for the SDP to unlock.
+ *   Where DROP_CHANCE is the 1-100 percent chance that the SDP will drop.
+ *
+ * TAG EXAMPLES:
+ *  <sdpDropData:[ORC_1, 5]>
+ * The enemy with this tag will drop an SDP with the key of "ORC_1" upon defeat
+ * 5% of the time.
+ *
+ *  <sdpDropData:[GOB_4, 100]>
+ * The enemy with this tag will drop an SDP with the key of "GOB_4" upon defeat
+ * 100% of the time- aka guaranteed drop upon defeat.
+ *
+ * ============================================================================
+ * SDP UNLOCK:
+ * Ever wanted items used to unlock SDPs? Well now you can! By applying the
+ * necessary tags onto items in the database, you too can have items that will
+ * function as SDP unlockers (in addition to whatever else they do).
+ * 
+ * TAG USAGE:
+ * - Items only.
+ * 
+ * TAG FORMAT:
+ *  <sdpUnlock:SDP_KEY>
+ *   Where SDP_KEY is the unique string key for the SDP to unlock.
+ *
+ * TAG EXAMPLES:
+ *  <sdpUnlock:ORC_1>
+ * An item used with this tag on it will unlock the SDP with the key of "ORC_1"
+ * upon use- in addition to its other effects.
+ *
+ *  <sdpUnlock:GOB_4>
+ * An item used with this tag on it will unlock the SDP with the key of "GOB_4"
+ * upon use- in addition to its other effects.
+ * 
+ * ============================================================================
  * SDP POINTS:
  * Ever want enemies to drop SDP Points? Well now they can! By applying the
  * appropriate tag to the enemy/enemies in question, you can have enemies drop
@@ -102,6 +158,7 @@
  *
  *  <sdp:123456>
  * The party will gain 123456 SDP points from defeating this enemy.
+ *
  * ============================================================================
  * SDP MULTIPLIERS:
  * Ever want allies to gain some percentage amount more (or less) of the SDP
@@ -137,8 +194,12 @@
  *  <sdpMultiplier:-30>
  * An actor with something equipped/applied that has both of the above tags
  * will now gain 50% increased SDP points (80 - 30 = 50).
+ *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Removed association of SDPs being backed by actual database items.
+ *    Implemented JABS-centric basis for dynamically generating drops.
  * - 2.0.2
  *    Added new getTotalSdpRanks function to actors for a new data point.
  * - 2.0.1
@@ -169,6 +230,7 @@
  *    Update to accommodate J-CriticalFactors.
  * - 1.0.0
  *    The initial release.
+ *
  * ============================================================================
  *
  * @param SDPconfigs

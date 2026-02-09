@@ -19,7 +19,7 @@ Window_AbsMenu.prototype.buildCommands = function()
     .isVisible();
 
   // build the command.
-  const command = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
+  const allyAiCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandName)
     .setSymbol('ally-ai')
     .setEnabled(enabled)
     .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyAiCommandIconIndex)
@@ -28,7 +28,7 @@ Window_AbsMenu.prototype.buildCommands = function()
     .build();
 
   // add the new command.
-  originalCommands.push(command);
+  originalCommands.push(allyAiCommand);
 
   // return the updated command list.
   return originalCommands;
@@ -48,15 +48,25 @@ Window_AbsMenu.prototype.canAddAllyAiCommand = function()
 };
 
 /**
- * The help text for the JABS sdp menu.
+ * The help text for the JABS ally AI menu.
  * @returns {string}
  */
 Window_AbsMenu.prototype.allyAiHelpText = function()
 {
   const description = [
-    "Your AI mode selection menu.",
+    "Your ally management selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
 
   return description.join("\n");
+};
+
+/**
+ * Overwrites {@link #itemHeight}.<br/>
+ * Increases the height so subtext can be added.
+ * @returns {number}
+ */
+Window_AbsMenuSelect.prototype.itemHeight = function()
+{
+  return this.lineHeight() * 2;
 };
 //endregion Window_AbsMenu

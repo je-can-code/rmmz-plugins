@@ -19,7 +19,7 @@ J.REGIONS.EXT = {};
  */
 J.REGIONS.Metadata = {};
 J.REGIONS.Metadata.Name = `J-RegionEffects`;
-J.REGIONS.Metadata.Version = '1.0.0';
+J.REGIONS.Metadata.Version = '1.0.2';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

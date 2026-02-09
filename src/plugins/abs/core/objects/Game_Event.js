@@ -41,27 +41,6 @@ Game_Event.prototype.initMembers = function()
  * Sets the initial direction being faced on this event's creation.
  * @param {number} direction The initial direction faced on creation.
  */
-Game_Event.prototype.setCustomDirection = function(direction)
-{
-  // don't turn if direction is fixed.
-  if (this.isDirectionFixed()) return;
-
-  this._j._abs._initialDirection = direction;
-};
-
-/**
- * Gets the initial direction being faced on this event's creation.
- * @returns {number}
- */
-Game_Event.prototype.getCustomDirection = function()
-{
-  return this._j._abs._initialDirection;
-};
-
-/**
- * Sets the initial direction being faced on this event's creation.
- * @param {number} direction The initial direction faced on creation.
- */
 Game_Event.prototype.setCastedDirection = function(direction)
 {
   // don't turn if direction is fixed.

@@ -13,7 +13,14 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '2.2.1';
+J.BASE.Metadata.Version = '2.3.0';
+
+/**
+ * The actual `plugin parameters` extracted from RMMZ.
+ */
+J.BASE.PluginParameters = PluginManager.parameters(J.BASE.Metadata.Name);
+J.BASE.Metadata.BaseTpMaxActors = Number(J.BASE.PluginParameters['actorBaseTp']);
+J.BASE.Metadata.BaseTpMaxEnemies = Number(J.BASE.PluginParameters['enemyBaseTp']);
 
 /**
  * A collection of helpful mappings for `notes` that are placed in
@@ -145,6 +152,11 @@ J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
  * @type {RegExp}
  */
 J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
+
+/**
+ * The basic structure for retrieving summable max tech values.
+ */
+J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
 
 /**
  * A collection of all aliased methods for this plugin.

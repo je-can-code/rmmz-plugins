@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 DROPS] Enables greater control over loot drops.
+ * [v2.1.0 DROPS] Enables greater control over loot drops.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -158,6 +158,8 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Further abstracted some of the logic for drops to support extension.
  * - 2.0.0
  *    Retroactively added this CHANGELOG.
  *    Refactored various data retrieval methods from given battlers.

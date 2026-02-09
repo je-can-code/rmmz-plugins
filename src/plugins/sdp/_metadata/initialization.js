@@ -24,7 +24,7 @@ J.SDP = {};
 /**
  * The metadata associated with this plugin.
  */
-J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.0.2');
+J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.1.0');
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -40,6 +40,7 @@ J.SDP.Aliased = {
   Game_Actor: new Map(),
   Game_Enemy: new Map(),
   Game_Party: new Map(),
+  Game_Player: new Map(),
   Game_Switches: new Map(),
   Game_System: new Map(),
 
@@ -54,9 +55,9 @@ J.SDP.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.SDP.RegExp = {
-  SdpPoints: /<sdpPoints:[ ]?-?([0-9]+)>/i,
-  SdpMultiplier: /<sdpMultiplier:[ ]?([-.\d]+)>/i,
-  SdpDropData: /<sdpDropData:[ ]?(\[[-\w]+,[ ]?\d+(:?,[ ]?\d+)?])>/i,
-  SdpUnlockKey: /<sdpUnlock:(.+)>/i,
+  SdpPoints: /<sdpPoints: ?-?([0-9]+)>/i,
+  SdpMultiplier: /<sdpMultiplier: ?([-.\d]+)>/i,
+  SdpDropData: /<sdpDropData: ?(\[[-\w]+,[ ]?\d+])>/i,
+  SdpUnlockKey: /<sdpUnlock: ?(.+)>/i,
 };
 //endregion Introduction
