@@ -12874,7 +12874,7 @@ class JABS_Timer
 /*:
  * @target MZ
  * @plugindesc
- * [v4.0.0 JABS] Enables combat to be carried out on the map.
+ * [v4.1.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -12918,6 +12918,8 @@ class JABS_Timer
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.1.0
+ *    Added support for J-ABS-InputManager 2.0.0 (including button remaps).
  * - 4.0.0
  *    Added hitbox visibility for castable skills along with related tags.
  *    Properly abstracted DIAG out of this plugin.
