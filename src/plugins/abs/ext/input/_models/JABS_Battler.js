@@ -11,7 +11,7 @@ JABS_Battler.createPlayer = function()
     .call(this);
 
   // assign newly players are created to controller 1.
-  $jabsController1.battler = playerJabsBattler;
+  $jabsController1.setBattler(playerJabsBattler);
 
   // return original logic data.
   return playerJabsBattler;

@@ -58,7 +58,7 @@ class Window_QuestopediaCategories
   maxCols()
   {
     return QuestManager.categories(false).length;
-  };
+  }
 }
 
 //endregion Window_QuestopediaCategories

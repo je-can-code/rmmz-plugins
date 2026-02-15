@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_managers.js v1.7.0
+// rmmz_managers.js v1.10.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -11,34 +11,103 @@ function DataManager() {
     throw new Error("This is a static class");
 }
 
+/**
+ * All actor metadata extracted from the database.
+ * @type {RPG_Actor[]}
+ */
 $dataActors = null;
+
+/**
+ * All class metadata extracted from the database.
+ * @type {RPG_Class[]}
+ */
 $dataClasses = null;
+
+/**
+ * All skill metadata extracted from the database.
+ * @type {RPG_Item[]}
+ */
 $dataSkills = null;
+
+/**
+ * All item metadata extracted from the database.
+ * @type {RPG_Item[]}
+ */
 $dataItems = null;
+
+/**
+ * All weapon metadata extracted from the database.
+ * @type {RPG_Weapon[]}
+ */
 $dataWeapons = null;
+
+/**
+ * All armor metadata extracted from the database.
+ * @type {RPG_Armor[]}
+ */
 $dataArmors = null;
+
+/**
+ * All enemy metadata extracted from the database.
+ * @type {RPG_Enemy[]}
+ */
 $dataEnemies = null;
-$dataTroops = null;
+
+/**
+ * All state metadata extracted from the database.
+ * @type {RPG_State[]}
+ */
 $dataStates = null;
+
+$dataTroops = null;
+
 $dataAnimations = null;
 $dataTilesets = null;
 $dataCommonEvents = null;
 $dataSystem = null;
 $dataMapInfos = null;
 $dataMap = null;
+
+/** @type {Game_Temp} */
 $gameTemp = null;
+
+/** @type {Game_System} */
 $gameSystem = null;
+
+/** @type {Game_Screen} */
 $gameScreen = null;
+
+/** @type {Game_Timer} */
 $gameTimer = null;
+
+/** @type {Game_Message} */
 $gameMessage = null;
+
+/** @type {Game_Switches} */
 $gameSwitches = null;
+
+/** @type {Game_Variables} */
 $gameVariables = null;
+
+/** @type {Game_SelfSwitches} */
 $gameSelfSwitches = null;
+
+/** @type {Game_Actors} */
 $gameActors = null;
+
+/** @type {Game_Party} */
 $gameParty = null;
+
+/** @type {Game_Troop} */
 $gameTroop = null;
+
+/** @type {Game_Map} */
 $gameMap = null;
+
+/** @type {Game_Player} */
 $gamePlayer = null;
+
+/** @type {Game_Event} */
 $testEvent = null;
 
 DataManager._globalInfo = null;
@@ -851,14 +920,58 @@ function ImageManager() {
     throw new Error("This is a static class");
 }
 
-ImageManager.iconWidth = 32;
-ImageManager.iconHeight = 32;
-ImageManager.faceWidth = 144;
-ImageManager.faceHeight = 144;
+ImageManager.standardIconWidth = 32;
+ImageManager.standardIconHeight = 32;
+ImageManager.standardFaceWidth = 144;
+ImageManager.standardFaceHeight = 144;
 
 ImageManager._cache = {};
 ImageManager._system = {};
 ImageManager._emptyBitmap = new Bitmap(1, 1);
+
+Object.defineProperty(ImageManager, "iconWidth", {
+    get: function() {
+        return this.getIconSize();
+    },
+    configurable: true
+});
+
+Object.defineProperty(ImageManager, "iconHeight", {
+    get: function() {
+        return this.getIconSize();
+    },
+    configurable: true
+});
+
+Object.defineProperty(ImageManager, "faceWidth", {
+    get: function() {
+        return this.getFaceSize();
+    },
+    configurable: true
+});
+
+Object.defineProperty(ImageManager, "faceHeight", {
+    get: function() {
+        return this.getFaceSize();
+    },
+    configurable: true
+});
+
+ImageManager.getIconSize = function() {
+    if ("iconSize" in $dataSystem) {
+        return $dataSystem.iconSize;
+    } else {
+        return this.standardIconWidth;
+    }
+};
+
+ImageManager.getFaceSize = function() {
+    if ("faceSize" in $dataSystem) {
+        return $dataSystem.faceSize;
+    } else {
+        return this.standardFaceWidth;
+    }
+};
 
 ImageManager.loadAnimation = function(filename) {
     return this.loadBitmap("img/animations/", filename);
@@ -2806,8 +2919,8 @@ BattleManager.invokeMagicReflection = function(subject, target) {
 
 BattleManager.applySubstitute = function(target) {
     if (this.checkSubstitute(target)) {
-        const substitute = target.friendsUnit().substituteBattler();
-        if (substitute && target !== substitute) {
+        const substitute = target.friendsUnit().substituteBattler(target);
+        if (substitute) {
             this._logWindow.displaySubstitute(substitute, target);
             return substitute;
         }
@@ -2820,7 +2933,11 @@ BattleManager.checkSubstitute = function(target) {
 };
 
 BattleManager.isActionForced = function() {
-    return !!this._actionForcedBattler;
+    return (
+        !!this._actionForcedBattler &&
+        !$gameParty.isAllDead() &&
+        !$gameTroop.isAllDead()
+    );
 };
 
 BattleManager.forceAction = function(battler) {

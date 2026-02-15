@@ -11,7 +11,7 @@ JABS_Engine.prototype.performPartyCycling = function()
     .call(this);
 
   // when the player party cycles, update their controls to the updated battler.
-  $jabsController1.battler = this.getPlayer1();
+  $jabsController1.setBattler(this.getPlayer1());
 };
 
 /**

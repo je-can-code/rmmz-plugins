@@ -7,6 +7,10 @@ DataManager.createGameObjects = function()
     .call(this);
 
   // initialize controller 1 for JABS.
-  $jabsController1 = new JABS_InputController();
+  if (!$jabsController1)
+  {
+    // TODO: figure out how to prevent duplicate registration of controllers.
+    $jabsController1 = new JABS_StandardController();
+  }
 };
 //endregion DataManager

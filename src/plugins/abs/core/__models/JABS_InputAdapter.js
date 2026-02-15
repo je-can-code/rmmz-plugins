@@ -9,7 +9,7 @@ class JABS_InputAdapter
 {
   /**
    * A collection of registered controllers.
-   * @type {JABS_InputController|any}
+   * @type {JABS_BaseController[]}
    */
   static controllers = [];
 
@@ -24,7 +24,7 @@ class JABS_InputAdapter
 
   /**
    * Registers a controller with this input adapter.
-   * @param {JABS_InputController|any} controller The controller to register.
+   * @param {JABS_BaseController} controller The controller to register.
    */
   static register(controller)
   {
@@ -32,8 +32,7 @@ class JABS_InputAdapter
   }
 
   /**
-   * Checks whether or not any controllers have been registered
-   * with this input adapter.
+   * Checks whether or not any controllers have been registered with this input adapter.
    * @returns {boolean} True if we have at least one registered controller, false otherwise.
    */
   static hasControllers()
@@ -271,6 +270,31 @@ class JABS_InputAdapter
     if (jabsBattler.getAttackData(slot).length === 0) return false;
 
     // perform!
+    return true;
+  }
+
+  /**
+   * Executes the sprint action.
+   * The player will move at increased speed while sprinting is active.
+   * @param {boolean} sprinting True if the player is sprinting, false otherwise.
+   * @param {JABS_Battler} jabsBattler The battler performing the action.
+   */
+  static performSprint(sprinting, jabsBattler)
+  {
+    // check if we can sprint.
+    if (!this.#canPerformSprint(jabsBattler)) return;
+
+    // perform the sprint.
+    jabsBattler.getCharacter()._dashing = sprinting;
+  }
+
+  /**
+   * Determines whether or not the player can sprint.
+   * @param {JABS_Battler} jabsBattler The battler performing the action.
+   * @returns {boolean} True if they can, false otherwise.
+   */
+  static #canPerformSprint(jabsBattler)
+  {
     return true;
   }
 
