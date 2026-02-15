@@ -27,7 +27,7 @@ J.MAP.Aliased.Game_Event = new Map();
 J.MAP.Aliased.Game_Map = new Map();
 J.MAP.Aliased.Game_System = new Map();
 J.MAP.Aliased.JABS_Engine = new Map();
-J.MAP.Aliased.JABS_InputController = new Map();
+J.MAP.Aliased.JABS_StandardController = new Map();
 J.MAP.Aliased.Scene_Map = new Map();
 
 J.MAP.RegExp = {};

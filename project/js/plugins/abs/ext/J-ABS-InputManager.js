@@ -80,17 +80,21 @@ J.ABS.EXT.INPUT.Metadata = {
  */
 J.ABS.EXT.INPUT.Aliased = {
   DataManager: new Map(),
+  Game_System: new Map(),
   JABS_Engine: new Map(),
   JABS_Battler: new Map(),
+  Window_MenuCommand: new Map(),
+  Scene_Menu: new Map(),
 };
 //endregion metadata
 
 /**
  * The global reference for the player's input manager.
  * This interprets and manages incoming inputs for JABS-related functionality.
- * @type {JABS_InputController}
+ * @type {JABS_StandardController}
  * @global
  */
+// eslint-disable-next-line no-unused-vars
 var $jabsController1 = null;
 //endregion introduction
 
@@ -107,7 +111,7 @@ JABS_Battler.createPlayer = function()
     .call(this);
 
   // assign newly players are created to controller 1.
-  $jabsController1.battler = playerJabsBattler;
+  $jabsController1.setBattler(playerJabsBattler);
 
   // return original logic data.
   return playerJabsBattler;
@@ -126,14 +130,14 @@ class JABS_Button
    * Used for bringing up the JABS menu on the map.
    * @type {string}
    */
-  static Menu = "Menu";
+  static Menu = 'Menu';
 
   /**
    * The "select" key.
    * Used for party-cycling.
    * @type {string}
    */
-  static Select = "Select";
+  static Select = 'Select';
   //endregion functionality
 
   //region primary
@@ -142,52 +146,66 @@ class JABS_Button
    * Used for executing the mainhand action.
    * @type {string}
    */
-  static Mainhand = "Main";
+  static Mainhand = 'Main';
 
   /**
    * The "offhand", "B" button, or "X" key.
    * Used for executing the offhand action.
    * @type {string}
    */
-  static Offhand = "Offhand";
+  static Offhand = 'Offhand';
 
   /**
    * The "tool", "Y" button, or "C" key.
    * Used for executing the currently selected tool skill.
    * @type {string}
    */
-  static Tool = "Tool";
+  static Tool = 'Tool';
 
   /**
    * The "dodge", "R2" button, or "Tab" key.
    * Used for executing the currently selected dodge skill.
    * @type {string}
    */
-  static Dodge = "Dodge";
+  static Dodge = 'Dodge';
   //endregion primary
 
-  //region mobility
+  //region mobility & modifiers
+  /**
+   * The sprint/dash input (engine-native dash replacement).
+   * While held, the player sprints if allowed.
+   * @type {string}
+   */
+  static Sprint = "Sprint";
+
   /**
    * The "strafe", "L2" button, or "Left Ctrl" key.
    * Used for locking the direction faced while the input is held.
    * @type {string}
    */
-  static Strafe = "Strafe";
+  static Strafe = 'Strafe';
 
   /**
    * The "rotate", "R1" button, or "W" and "E" key(s).
    * Used for locking in-place while the input is held.
    * @type {string}
    */
-  static Rotate = "Rotate";
+  static Rotate = 'Rotate';
 
   /**
    * The "guard", "R1" button, or "W", and "E" key(s).
    * Used for activating the guard function while the input is held.
    * @type {string}
    */
-  static Guard = "Guard";
-  //endregion mobility
+  static Guard = 'Guard';
+
+  /**
+   * The combat "enabler" (commonly L1 hold on gamepads).
+   * Used as a modifier to enable Combat Skill 1–4 actions while held.
+   * @type {string}
+   */
+  static SkillTrigger = 'SkillTrigger';
+  //endregion mobility & modifiers
 
   //region L1 + buttons
   /**
@@ -195,28 +213,28 @@ class JABS_Button
    * Executes combat skill 1.
    * @type {string}
    */
-  static CombatSkill1 = "CombatSkill1";
+  static CombatSkill1 = 'CombatSkill1';
 
   /**
    * The `L1 + B` or 2 key.
    * Executes combat skill 2.
    * @type {string}
    */
-  static CombatSkill2 = "CombatSkill2";
+  static CombatSkill2 = 'CombatSkill2';
 
   /**
    * The `L1 + X` or 3 key.
    * Executes combat skill 3.
    * @type {string}
    */
-  static CombatSkill3 = "CombatSkill3";
+  static CombatSkill3 = 'CombatSkill3';
 
   /**
    * The `L1 + Y` or 4 key.
    * Executes combat skill 4.
    * @type {string}
    */
-  static CombatSkill4 = "CombatSkill4";
+  static CombatSkill4 = 'CombatSkill4';
 
   //endregion  L1 + buttons
 
@@ -231,11 +249,15 @@ class JABS_Button
       // primary
       this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
-      // L1 + buttons
-      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
+      // modifiers & mobility
+      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate,
+
+      // functionality
+      this.Menu, this.Select,
+    ];
 
     // a filter function for ensuring only the correct inputs are accepted.
-    const filtering = buttonInput => !okInputs.includes(buttonInput);
+    const filtering = buttonInput => okInputs.includes(buttonInput);
 
     // return the filtered buttons.
     return this.allButtons()
@@ -255,28 +277,47 @@ class JABS_Button
       // primary
       this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
-      // mobility
-      this.Strafe, this.Rotate, this.Guard,
+      // mobility & modifiers
+      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate, this.Guard,
 
       // L1 + buttons
-      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
+      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4,
+    ];
   }
 }
 
 //endregion JABS_Button
 
+//region JABS_InputAdapter.getAllControllers
+/**
+ * Gets all registered input controllers managed by the adapter.
+ * Returns a shallow copy to prevent external mutation.
+ * @returns {JABS_StandardController[]} The list of registered controllers.
+ */
+JABS_InputAdapter.getAllControllers = function()
+{
+  // return a shallow copy of the internal controllers list.
+  return this.controllers.slice(0);
+};
+//endregion JABS_InputAdapter.getAllControllers
+
 //region JABS_InputController
 /**
  * The class that handles input in the context of JABS for a player.
  * A battler must be set in order for this to update.
+ * It is important to note that rotate and guard are arbitrarily coupled together by this controller.
  */
-class JABS_InputController
+class JABS_StandardController
+  extends JABS_BaseController
 {
   /**
    * Constructor.
    */
   constructor()
   {
+    // also run superclass constructor for registration.
+    super();
+
     // initialize this.
     this.initialize();
   }
@@ -286,12 +327,10 @@ class JABS_InputController
    */
   initialize()
   {
-    // register this controller with the input adapter.
-    JABS_InputAdapter.register(this);
-
     // initialize the other members of the class.
     this.initMembers();
 
+    // initialize default mappings.
     this.initMapping();
   }
 
@@ -300,42 +339,249 @@ class JABS_InputController
    */
   initMembers()
   {
-    /**
-     * The battler that this input manager manages.
-     * @type {JABS_Battler|null}
-     */
+    // start with a null battler when initializing.
     this.battler = null;
 
     /**
-     * A collection of input mappings from button to function.
-     * @type {Map<string, string>}
+     * A collection of input mappings from logical action (button) to an array of physical inputs.
+     * "Physical inputs" are `Input` symbols like `ok`, `cancel`, or custom entries registered by plugins.
+     * @type {Map<string, string[]>}
      */
     this.inputMapping = new Map();
   }
 
   /**
-   * Initialize the button to input mappings.
+   * Initialize the button-to-input mappings.
+   * Seeds from current JABS defaults.
    */
   initMapping()
   {
-    this.inputMapping.set(JABS_Button.Mainhand, J.ABS.Input.Mainhand);
-    this.inputMapping.set(JABS_Button.Offhand, J.ABS.Input.Offhand);
-    this.inputMapping.set(JABS_Button.Tool, J.ABS.Input.Tool);
-    this.inputMapping.set(JABS_Button.Dodge, J.ABS.Input.Dash);
-    this.inputMapping.set(JABS_Button.CombatSkill1, J.ABS.Input.CombatSkill1);
-    this.inputMapping.set(JABS_Button.CombatSkill2, J.ABS.Input.CombatSkill2);
-    this.inputMapping.set(JABS_Button.CombatSkill3, J.ABS.Input.CombatSkill3);
-    this.inputMapping.set(JABS_Button.CombatSkill4, J.ABS.Input.CombatSkill4);
+    // seed defaults from current JABS input symbols using string[] per action.
+    this.inputMapping.set(JABS_Button.Menu, [ J.ABS.Input.Quickmenu ]);
+    this.inputMapping.set(JABS_Button.Select, [ J.ABS.Input.PartyCycle ]);
+
+    // seed primaries.
+    this.inputMapping.set(JABS_Button.Mainhand, [ J.ABS.Input.Mainhand ]);
+    this.inputMapping.set(JABS_Button.Offhand, [ J.ABS.Input.Offhand ]);
+    this.inputMapping.set(JABS_Button.Tool, [ J.ABS.Input.Tool ]);
+    this.inputMapping.set(JABS_Button.Dodge, [ J.ABS.Input.MobilitySkill ]);
+
+    // seed mobility & modifiers.
+    this.inputMapping.set(JABS_Button.Sprint, [ J.ABS.Input.Dash ]);
+    this.inputMapping.set(JABS_Button.Strafe, [ J.ABS.Input.StrafeTrigger ]);
+    this.inputMapping.set(JABS_Button.Rotate, [ J.ABS.Input.GuardTrigger ]);
+    this.inputMapping.set(JABS_Button.Guard, [ J.ABS.Input.GuardTrigger ]);
+    this.inputMapping.set(JABS_Button.SkillTrigger, [ J.ABS.Input.SkillTrigger ]);
+
+    // seed L1 + buttons (combat skills).
+    this.inputMapping.set(JABS_Button.CombatSkill1, [ J.ABS.Input.CombatSkill1 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill2, [ J.ABS.Input.CombatSkill2 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill3, [ J.ABS.Input.CombatSkill3 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill4, [ J.ABS.Input.CombatSkill4 ]);
   }
 
   /**
-   * Gets the key input for the given button.
-   * @param {string} slot The button mapping to the slot.
-   * @returns {string} The input to press for this given slot.
+   * Builds a plain-object of the default mappings without mutating this controller.
+   * This is safe to use for "Reset to Defaults" previews in the remap scene.
+   * @returns {Object<string, string[]>} The default logical->physical mapping.
+   */
+  buildDefaultMapping()
+  {
+    // create a new object to hold the default mappings.
+    const defaults = {};
+
+    // seed defaults from current JABS input symbols using string[] per action.
+    defaults[JABS_Button.Menu] = [ J.ABS.Input.Quickmenu ];
+    defaults[JABS_Button.Select] = [ J.ABS.Input.PartyCycle ];
+
+    // seed primaries.
+    defaults[JABS_Button.Mainhand] = [ J.ABS.Input.Mainhand ];
+    defaults[JABS_Button.Offhand] = [ J.ABS.Input.Offhand ];
+    defaults[JABS_Button.Tool] = [ J.ABS.Input.Tool ];
+    defaults[JABS_Button.Dodge] = [ J.ABS.Input.MobilitySkill ];
+
+    // seed mobility/modifiers.
+    defaults[JABS_Button.Sprint] = [ J.ABS.Input.Dash ];
+    defaults[JABS_Button.Strafe] = [ J.ABS.Input.StrafeTrigger ];
+    defaults[JABS_Button.Rotate] = [ J.ABS.Input.GuardTrigger ];
+    defaults[JABS_Button.Guard] = [ J.ABS.Input.GuardTrigger ];
+    defaults[JABS_Button.SkillTrigger] = [ J.ABS.Input.SkillTrigger ];
+
+    // seed L1 + buttons (combat skills).
+    defaults[JABS_Button.CombatSkill1] = [ J.ABS.Input.CombatSkill1 ];
+    defaults[JABS_Button.CombatSkill2] = [ J.ABS.Input.CombatSkill2 ];
+    defaults[JABS_Button.CombatSkill3] = [ J.ABS.Input.CombatSkill3 ];
+    defaults[JABS_Button.CombatSkill4] = [ J.ABS.Input.CombatSkill4 ];
+
+    // return the assembled defaults.
+    return defaults;
+  }
+
+  /**
+   * Resets this controller’s live bindings back to the defaults.
+   * Does not touch persistence; the caller should save if desired.
+   */
+  resetToDefaults()
+  {
+    // rebuild the default mapping without mutating first.
+    const defaults = this.buildDefaultMapping();
+
+    // apply the defaults to this controller.
+    this.setAllInputs(defaults);
+  }
+
+  /**
+   * Gets the physical inputs for the given logical button.
+   * @param {string} button The logical action key.
+   * @returns {string[]} The list of physical inputs associated with this action.
+   */
+  getInputsForButton(button)
+  {
+    // get the configured value for this button.
+    const raw = this.inputMapping.get(button);
+
+    // return an empty array if nothing was configured.
+    if (!raw) return [];
+
+    // normalize string -> [ string ], and copy arrays for safety.
+    if (Array.isArray(raw)) return raw.slice(0);
+
+    // if the mapping is a single string, convert it into an array.
+    return [ raw ];
+  }
+
+  /**
+   * Gets the primary physical input for the given button (convenience).
+   * @param {string} slot The logical action key.
+   * @returns {string|undefined} The first physical input, if any.
    */
   getInputForButton(slot)
   {
-    return this.inputMapping.get(slot);
+    // grab the list of inputs for the button.
+    const inputs = this.getInputsForButton(slot);
+
+    // return the first one from the list, if available.
+    return inputs.length > 0
+      ? inputs[0]
+      : undefined;
+  }
+
+  /**
+   * Overwrites the entire mapping for this controller in one call.
+   * Accepts either a `Map<string, string|string[]>` or a plain object `{ [button]: string|string[] }`.
+   * No saving happens here; this is purely runtime state.
+   * @param {Map<string,(string|string[])>|Object<string,(string|string[])>} mapping The mapping to apply.
+   */
+  setAllInputs(mapping)
+  {
+    // clear current map before applying new one.
+    this.inputMapping.clear();
+
+    // helper to normalize a mapping entry into an array of strings.
+    const toArray = value =>
+    {
+      // return a shallow copy if the value is already an array.
+      if (Array.isArray(value)) return value.slice(0);
+
+      // return an empty array if there is no value.
+      if (!value) return [];
+
+      // otherwise, wrap the single value in an array.
+      return [ value ];
+    };
+
+    // apply based on input type.
+    if (mapping instanceof Map)
+    {
+      // copy entries from the provided map.
+      mapping.forEach((value, key) =>
+      {
+        // set the normalized entry for this key.
+        this.inputMapping.set(key, toArray(value));
+      }, this);
+    }
+    else
+    {
+      // treat it like a POJO and copy own keys.
+      Object.keys(mapping)
+        .forEach(key =>
+        {
+          // set the normalized entry for this key.
+          this.inputMapping.set(key, toArray(mapping[key]));
+        });
+    }
+
+    // read the current rotate inputs (if any) after normalization.
+    const rotateInputs = this.inputMapping.get(JABS_Button.Rotate) || [];
+
+    // overwrite Guard with a cloned copy of Rotate’s inputs.
+    this.inputMapping.set(JABS_Button.Guard, rotateInputs.slice(0));
+  }
+
+  /**
+   * Exports the current mapping as a plain object suitable for saving.
+   * @returns {Object<string,string[]>} A shallow copy of the current mapping.
+   */
+  exportAllInputs()
+  {
+    // create a plain object export of the map.
+    const out = {};
+
+    // iterate all entries and copy arrays into the object.
+    this.inputMapping.forEach((value, key) => out[key] = Array.isArray(value)
+      ? value.slice(0)
+      : []);
+
+    // return the export.
+    return out;
+  }
+
+  /**
+   * Determines if any physical input bound to the logical action was triggered this frame.
+   * @param {string} button The logical action key.
+   * @returns {boolean}
+   */
+  isActionTriggered(button)
+  {
+    // get the inputs to check.
+    const inputs = this.getInputsForButton(button);
+
+    // iterate all inputs and short-circuit on the first triggered.
+    for (let i = 0; i < inputs.length; i++)
+    {
+      // grab the physical input at this index.
+      const physical = inputs[i];
+
+      // if this physical input was triggered, then the action is triggered.
+      if (Input.isTriggered(physical)) return true;
+    }
+
+    // none of the inputs were triggered for this action.
+    return false;
+  }
+
+  /**
+   * Determines if any physical input bound to the logical action is currently pressed.
+   * @param {string} button The logical action key.
+   * @returns {boolean}
+   */
+  isActionPressed(button)
+  {
+    // get the inputs to check.
+    const inputs = this.getInputsForButton(button);
+
+    // iterate all inputs and short-circuit on the first pressed.
+    for (let i = 0; i < inputs.length; i++)
+    {
+      // grab the physical input at this index.
+      const physical = inputs[i];
+
+      // if this physical input is pressed, then the action is pressed.
+      if (Input.isPressed(physical)) return true;
+    }
+
+    // none of the inputs are pressed for this action.
+    return false;
   }
 
   //region update
@@ -345,7 +591,7 @@ class JABS_InputController
   update()
   {
     // if updating is not available, then do not.
-    if (!this.canUpdate()) return;
+    if (this.canUpdate() === false) return;
 
     // update input for the management actions.
     this.updateMenuAction();
@@ -364,19 +610,20 @@ class JABS_InputController
     this.updateCombatAction4();
 
     // update input for the pressed(held down)-button actions.
+    this.updateSprintCommand();
     this.updateGuardCommand();
     this.updateStrafeCommand();
     this.updateRotateCommand();
   }
 
   /**
-   * Checks whether or not we can update this input manager.
+   * Checks whether or not we can update this controller's input.
    * @returns {boolean}
    */
   canUpdate()
   {
     // if we don't have a battler, we can't update their input.
-    if (!this.battler) return false;
+    if (this.getBattler() === null) return false;
 
     // update!
     return true;
@@ -406,7 +653,7 @@ class JABS_InputController
   isMenuActionTriggered()
   {
     // this action requires Menu to be triggered.
-    if (Input.isTriggered(J.ABS.Input.Quickmenu))
+    if (this.isActionTriggered(JABS_Button.Menu))
     {
       return true;
     }
@@ -420,6 +667,7 @@ class JABS_InputController
    */
   performMenuAction()
   {
+    // perform the quick menu action via the adapter.
     JABS_InputAdapter.performMenuAction();
   }
 
@@ -447,7 +695,7 @@ class JABS_InputController
   isPartyCycleActionTriggered()
   {
     // this action requires Select to be triggered.
-    if (Input.isTriggered(J.ABS.Input.PartyCycle))
+    if (this.isActionTriggered(JABS_Button.Select))
     {
       return true;
     }
@@ -461,6 +709,7 @@ class JABS_InputController
    */
   performPartyCycleAction()
   {
+    // perform party cycling via the adapter.
     JABS_InputAdapter.performPartyCycling(false);
   }
 
@@ -493,13 +742,13 @@ class JABS_InputController
       return false;
     }
 
-    // this action requires A to be triggered.
-    if (Input.isTriggered(J.ABS.Input.Mainhand))
+    // this action requires the logical Mainhand to be triggered.
+    if (this.isActionTriggered(JABS_Button.Mainhand))
     {
       return true;
     }
 
-    // A is not being triggered.
+    // Mainhand is not being triggered.
     return false;
   }
 
@@ -508,7 +757,8 @@ class JABS_InputController
    */
   performMainhandAction()
   {
-    JABS_InputAdapter.performMainhandAction(this.battler);
+    // perform the mainhand action for this controller's battler.
+    JABS_InputAdapter.performMainhandAction(this.getBattler());
   }
 
   //endregion mainhand
@@ -524,7 +774,7 @@ class JABS_InputController
     if (this.isOffhandActionTriggered())
     {
       // execute the action.
-      this.performOffhandAction()
+      this.performOffhandAction();
     }
   }
 
@@ -540,13 +790,13 @@ class JABS_InputController
       return false;
     }
 
-    // this action requires B to be triggered.
-    if (Input.isTriggered(J.ABS.Input.Offhand))
+    // this action requires the logical Offhand to be triggered.
+    if (this.isActionTriggered(JABS_Button.Offhand))
     {
       return true;
     }
 
-    // B is not being triggered.
+    // Offhand is not being triggered.
     return false;
   }
 
@@ -555,10 +805,63 @@ class JABS_InputController
    */
   performOffhandAction()
   {
-    JABS_InputAdapter.performOffhandAction(this.battler);
+    // perform the offhand action for this controller's battler.
+    JABS_InputAdapter.performOffhandAction(this.getBattler());
   }
 
   //endregion offhand
+
+  //region sprint
+  updateSprintCommand()
+  {
+    // check if the action's input requirements have been met.
+    if (this.isSprintActionTriggered())
+    {
+      // execute the action.
+      this.performSprintAction();
+    }
+    // if they aren't being met.
+    else
+    {
+      // then execute the alter-action.
+      this.performSprintAlterAction();
+    }
+  }
+
+  /**
+   * Checks the inputs of the sprint action currently assigned (Shift default).
+   * @returns {boolean}
+   */
+  isSprintActionTriggered()
+  {
+    // this action requires Sprint to be pressed.
+    if (this.isActionPressed(JABS_Button.Sprint))
+    {
+      return true;
+    }
+
+    // Sprint is not being pressed.
+    return false;
+  }
+
+  /**
+   * Enables sprinting for this controller's battler.
+   */
+  performSprintAction()
+  {
+    // perform sprint enable for this controller's battler.
+    JABS_InputAdapter.performSprint(true, this.battler);
+  }
+
+  /**
+   * Disables sprinting for this controller's battler.
+   */
+  performSprintAlterAction()
+  {
+    // perform sprint disable for this controller's battler.
+    JABS_InputAdapter.performSprint(false, this.battler);
+  }
+  //endregion sprint
 
   //region tool
   /**
@@ -587,13 +890,13 @@ class JABS_InputController
       return false;
     }
 
-    // this action requires Y to be triggered.
-    if (Input.isTriggered(J.ABS.Input.Tool))
+    // this action requires the logical Tool to be triggered.
+    if (this.isActionTriggered(JABS_Button.Tool))
     {
       return true;
     }
 
-    // Y is not being triggered.
+    // Tool is not being triggered.
     return false;
   }
 
@@ -602,7 +905,8 @@ class JABS_InputController
    */
   performToolAction()
   {
-    JABS_InputAdapter.performToolAction($jabsEngine.getPlayer1());
+    // perform the tool action for this controller's battler.
+    JABS_InputAdapter.performToolAction(this.getBattler());
   }
 
   //endregion tool
@@ -628,13 +932,13 @@ class JABS_InputController
    */
   isDodgeActionTriggered()
   {
-    // this action requires R2 to be triggered.
-    if (Input.isTriggered(J.ABS.Input.MobilitySkill))
+    // this action requires the logical Dodge to be triggered.
+    if (this.isActionTriggered(JABS_Button.Dodge))
     {
       return true;
     }
 
-    // R2 is not being triggered.
+    // Dodge is not being triggered.
     return false;
   }
 
@@ -643,26 +947,26 @@ class JABS_InputController
    */
   performDodgeAction()
   {
-    JABS_InputAdapter.performDodgeAction($jabsEngine.getPlayer1());
+    // perform the dodge action for this controller's battler.
+    JABS_InputAdapter.performDodgeAction(this.getBattler());
   }
 
   //endregion dodge
 
   //region combat actions
   /**
-   * Checks the inputs to ensure the combat action enabler is being held down.
-   * (L1 default).
+   * Checks the inputs to ensure the combat action enabler is being held down (L1 default).
    * @returns {boolean}
    */
   isCombatSkillUsageEnabled()
   {
-    // this action requires L1 to be held down.
-    if (Input.isPressed(J.ABS.Input.SkillTrigger))
+    // this action requires the logical SkillTrigger to be held down.
+    if (this.isActionPressed(JABS_Button.SkillTrigger))
     {
       return true;
     }
 
-    // L1 is not being held down.
+    // SkillTrigger is not being held down.
     return false;
   }
 
@@ -672,13 +976,14 @@ class JABS_InputController
    */
   performCombatAction(slot)
   {
-    JABS_InputAdapter.performCombatAction(slot, $jabsEngine.getPlayer1());
+    // perform the combat action for this controller's battler and the given slot.
+    JABS_InputAdapter.performCombatAction(slot, this.getBattler());
   }
 
   //region combat action 1
   /**
    * Monitors and takes action based on player input regarding combat action 1.
-   * This is `L1+A` on the gamepad by default.
+   * This is `L1 + Mainhand` on the gamepad by default.
    */
   updateCombatAction1()
   {
@@ -691,25 +996,29 @@ class JABS_InputController
   }
 
   /**
-   * Checks the inputs of the combat action in slot 1 (L1+A default).
+   * Checks the inputs of the combat action in slot 1.
+   * Requires SkillTrigger held and CombatSkill1 triggered.
    * @returns {boolean}
    */
   isCombatAction1Triggered()
   {
-    // this action requires L1 to be held down...
+    // if the SkillTrigger is being held down...
     if (this.isCombatSkillUsageEnabled())
     {
-      // ...and also having A triggered at the same time.
-      if (Input.isTriggered(J.ABS.Input.Mainhand))
+      // ...and Mainhand is triggered this frame, then combat action 1 should fire.
+      if (this.isActionTriggered(JABS_Button.Mainhand))
       {
         return true;
       }
     }
 
-    // if the keyboard input is met, then we are triggering this input.
-    if (Input.isTriggered(J.ABS.Input.CombatSkill1)) return true;
+    // alternatively, if the keyboard shortcut for CombatSkill1 was triggered, then fire.
+    if (this.isActionTriggered(JABS_Button.CombatSkill1))
+    {
+      return true;
+    }
 
-    // A was never triggered while L1 was held down.
+    // neither the chord nor the keyboard shortcut were used.
     return false;
   }
 
@@ -718,7 +1027,7 @@ class JABS_InputController
   //region combat action 2
   /**
    * Monitors and takes action based on player input regarding combat action 2.
-   * This is `L1+B` on the gamepad by default.
+   * This is `L1 + Offhand` on the gamepad by default.
    */
   updateCombatAction2()
   {
@@ -731,25 +1040,29 @@ class JABS_InputController
   }
 
   /**
-   * Checks the inputs of the combat action in slot 2 (L1+B default).
+   * Checks the inputs of the combat action in slot 2.
+   * Requires SkillTrigger held and CombatSkill2 triggered.
    * @returns {boolean}
    */
   isCombatAction2Triggered()
   {
-    // this action requires L1 to be held down...
+    // if the SkillTrigger is being held down...
     if (this.isCombatSkillUsageEnabled())
     {
-      // ...and also having B triggered at the same time.
-      if (Input.isTriggered(J.ABS.Input.Offhand))
+      // ...and Offhand is triggered this frame, then combat action 2 should fire.
+      if (this.isActionTriggered(JABS_Button.Offhand))
       {
         return true;
       }
     }
 
-    // if the keyboard input is met, then we are triggering this input.
-    if (Input.isTriggered(J.ABS.Input.CombatSkill2)) return true;
+    // alternatively, if the keyboard shortcut for CombatSkill2 was triggered, then fire.
+    if (this.isActionTriggered(JABS_Button.CombatSkill2))
+    {
+      return true;
+    }
 
-    // B was never triggered while L1 was held down.
+    // neither the chord nor the keyboard shortcut were used.
     return false;
   }
 
@@ -758,7 +1071,7 @@ class JABS_InputController
   //region combat action 3
   /**
    * Monitors and takes action based on player input regarding combat action 3.
-   * This is `L1+X` on the gamepad by default.
+   * This is `L1 + Dash` (X) on the gamepad by default.
    */
   updateCombatAction3()
   {
@@ -771,25 +1084,29 @@ class JABS_InputController
   }
 
   /**
-   * Checks the inputs of the combat action in slot 3 (L1+X default).
+   * Checks the inputs of the combat action in slot 3.
+   * Requires SkillTrigger held and CombatSkill3 triggered.
    * @returns {boolean}
    */
   isCombatAction3Triggered()
   {
-    // this action requires L1 to be held down...
+    // if the SkillTrigger is being held down...
     if (this.isCombatSkillUsageEnabled())
     {
-      // ...and also having X triggered at the same time.
-      if (Input.isTriggered(J.ABS.Input.Dash))
+      // ...and Dodge is triggered this frame, then combat action 3 should fire.
+      if (this.isActionTriggered(JABS_Button.Dodge))
       {
         return true;
       }
     }
 
-    // if the keyboard input is met, then we are triggering this input.
-    if (Input.isTriggered(J.ABS.Input.CombatSkill3)) return true;
+    // alternatively, if the keyboard shortcut for CombatSkill3 was triggered, then fire.
+    if (this.isActionTriggered(JABS_Button.CombatSkill3))
+    {
+      return true;
+    }
 
-    // X was never triggered while L1 was held down.
+    // neither the chord nor the keyboard shortcut were used.
     return false;
   }
 
@@ -798,7 +1115,7 @@ class JABS_InputController
   //region combat action 4
   /**
    * Monitors and takes action based on player input regarding combat action 4.
-   * This is `L1+Y` on the gamepad by default.
+   * This is `L1 + Tool` (Y) on the gamepad by default.
    */
   updateCombatAction4()
   {
@@ -811,25 +1128,29 @@ class JABS_InputController
   }
 
   /**
-   * Checks the inputs of the combat action in slot 4 (L1+Y default).
+   * Checks the inputs of the combat action in slot 4.
+   * Requires SkillTrigger held and CombatSkill4 triggered.
    * @returns {boolean}
    */
   isCombatAction4Triggered()
   {
-    // this action requires L1 to be held down...
+    // if the SkillTrigger is being held down...
     if (this.isCombatSkillUsageEnabled())
     {
-      // ...and also having Y triggered at the same time.
-      if (Input.isTriggered(J.ABS.Input.Tool))
+      // ...and Tool is triggered this frame, then combat action 4 should fire.
+      if (this.isActionTriggered(JABS_Button.Tool))
       {
         return true;
       }
     }
 
-    // if the keyboard input is met, then we are triggering this input.
-    if (Input.isTriggered(J.ABS.Input.CombatSkill4)) return true;
+    // alternatively, if the keyboard shortcut for CombatSkill4 was triggered, then fire.
+    if (this.isActionTriggered(JABS_Button.CombatSkill4))
+    {
+      return true;
+    }
 
-    // Y was never triggered while L1 was held down.
+    // neither the chord nor the keyboard shortcut were used.
     return false;
   }
 
@@ -863,13 +1184,13 @@ class JABS_InputController
    */
   isStrafeActionTriggered()
   {
-    // this action requires L2 to be triggered.
-    if (Input.isPressed(J.ABS.Input.StrafeTrigger))
+    // this action requires Strafe to be pressed.
+    if (this.isActionPressed(JABS_Button.Strafe))
     {
       return true;
     }
 
-    // R2 is not being triggered.
+    // Strafe is not being pressed.
     return false;
   }
 
@@ -878,7 +1199,8 @@ class JABS_InputController
    */
   performStrafeAction()
   {
-    JABS_InputAdapter.performStrafe(true, this.battler);
+    // perform strafe enable for this controller's battler.
+    JABS_InputAdapter.performStrafe(true, this.getBattler());
   }
 
   /**
@@ -886,7 +1208,8 @@ class JABS_InputController
    */
   performStrafeAlterAction()
   {
-    JABS_InputAdapter.performStrafe(false, this.battler);
+    // perform strafe disable for this controller's battler.
+    JABS_InputAdapter.performStrafe(false, this.getBattler());
   }
 
   //endregion strafe
@@ -894,7 +1217,7 @@ class JABS_InputController
   //region rotate
   /**
    * Monitors and takes action based on player input regarding the rotate action.
-   * This is `L2` on the gamepad by default.
+   * This is `R1` on the gamepad by default.
    */
   updateRotateCommand()
   {
@@ -913,18 +1236,18 @@ class JABS_InputController
   }
 
   /**
-   * Checks the inputs of the rotate action currently assigned (L2 default).
+   * Checks the inputs of the rotate action currently assigned (R1 default).
    * @returns {boolean}
    */
   isRotateActionTriggered()
   {
-    // this action requires R1 to be triggered.
-    if (Input.isPressed(J.ABS.Input.GuardTrigger))
+    // this action requires Rotate to be pressed.
+    if (this.isActionPressed(JABS_Button.Rotate))
     {
       return true;
     }
 
-    // R1 is not being triggered.
+    // Rotate is not being pressed.
     return false;
   }
 
@@ -933,7 +1256,11 @@ class JABS_InputController
    */
   performRotateAction()
   {
-    JABS_InputAdapter.performRotate(true, $jabsEngine.getPlayer1());
+    // perform rotate enable for this controller's battler.
+    JABS_InputAdapter.performRotate(true, this.getBattler());
+
+    // also enable guarding while rotating; adapter/battler will vet eligibility.
+    JABS_InputAdapter.performGuard(true, this.getBattler());
   }
 
   /**
@@ -941,15 +1268,19 @@ class JABS_InputController
    */
   performRotateAlterAction()
   {
-    JABS_InputAdapter.performRotate(false, $jabsEngine.getPlayer1());
+    // perform rotate disable for this controller's battler.
+    JABS_InputAdapter.performRotate(false, this.getBattler());
+
+    // also disable guarding when rotation stops; adapter/battler will vet eligibility.
+    JABS_InputAdapter.performGuard(false, this.getBattler());
   }
 
-  //endregion strafe
+  //endregion rotate
 
   //region guard
   /**
    * Monitors and takes action based on player input regarding the guard action.
-   * This is `L2` on the gamepad by default.
+   * This is `R1` on the gamepad by default.
    */
   updateGuardCommand()
   {
@@ -973,22 +1304,23 @@ class JABS_InputController
    */
   isGuardActionTriggered()
   {
-    // this action requires R1 to be held down.
-    if (Input.isPressed(J.ABS.Input.GuardTrigger))
+    // this action requires Guard to be held down.
+    if (this.isActionPressed(JABS_Button.Guard))
     {
       return true;
     }
 
-    // R1 is not being held down.
+    // Guard is not being held down.
     return false;
   }
 
   /**
-   * Activates the currently assigned guard action (untouched-R1 default).
+   * Activates the currently assigned guard action (R1 default).
    */
   performGuardAction()
   {
-    JABS_InputAdapter.performGuard(true, $jabsEngine.getPlayer1());
+    // perform guard enable for this controller's battler.
+    JABS_InputAdapter.performGuard(true, this.getBattler());
   }
 
   /**
@@ -996,7 +1328,8 @@ class JABS_InputController
    */
   performGuardAlterAction()
   {
-    JABS_InputAdapter.performGuard(false, $jabsEngine.getPlayer1());
+    // perform guard disable for this controller's battler.
+    JABS_InputAdapter.performGuard(false, this.getBattler());
   }
 
   //endregion guard
@@ -1013,7 +1346,11 @@ DataManager.createGameObjects = function()
     .call(this);
 
   // initialize controller 1 for JABS.
-  $jabsController1 = new JABS_InputController();
+  if (!$jabsController1)
+  {
+    // TODO: figure out how to prevent duplicate registration of controllers.
+    $jabsController1 = new JABS_StandardController();
+  }
 };
 //endregion DataManager
 
@@ -1071,7 +1408,7 @@ JABS_Engine.prototype.performPartyCycling = function()
     .call(this);
 
   // when the player party cycles, update their controls to the updated battler.
-  $jabsController1.battler = this.getPlayer1();
+  $jabsController1.setBattler(this.getPlayer1());
 };
 
 /**
@@ -1091,3 +1428,1499 @@ JABS_Engine.prototype.updateInput = function()
   $jabsController1.update();
 };
 //endregion JABS_Engine
+
+//region Game_System
+/**
+ * Extends {@link #initMembers}.<br/>
+ * Initializes members used for storing JABS input mappings per controller.
+ */
+J.ABS.EXT.INPUT.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.ABS.EXT.INPUT.Aliased.Game_System.get('initMembers')
+    .call(this);
+
+  // initialize extension members for JABS input configurations.
+  this.initJabsInputConfigMembers();
+};
+
+/**
+ * Initializes members used for storing JABS input mappings and controller references.
+ */
+Game_System.prototype.initJabsInputConfigMembers = function()
+{
+  /**
+   * Root namespace for J-related data stored on the system object.
+   */
+  this._j ||= {};
+
+  /**
+   * ABS (JABS) namespace stored under the J-root on the system object.
+   */
+  this._j._abs ||= {};
+
+  /**
+   * Input extension namespace stored under the ABS namespace on the system object.
+   */
+  this._j._abs._input ||= {};
+
+  /**
+   * Dictionary of controllerKey -> mapping object `{ [button]: symbol }`.
+   * @type {Object<string, Object<string, string>>}
+   */
+  this._j._abs._input._mappings ||= {};
+};
+
+/**
+ * Gets the stored mapping dictionary of controllerKey -> mapping object.
+ * @returns {Object<string, Object<string,string>>}
+ */
+Game_System.prototype.getJabsInputMappings = function()
+{
+  // return the full mappings dictionary.
+  return this._j._abs._input._mappings;
+};
+
+/**
+ * Overwrites the stored mapping dictionary of controllerKey -> mapping object.
+ * @param {Object<string, Object<string,string>>} mappings The new mappings dictionary.
+ */
+Game_System.prototype.setJabsInputMappings = function(mappings)
+{
+  // assign the provided mappings dictionary.
+  this._j._abs._input._mappings = mappings;
+};
+
+/**
+ * Stores a full mapping for the given controller key.
+ * @param {string} controllerKey The key representing which controller this mapping belongs to.
+ * @param {Object<string,string>} mapping The mapping object to store.
+ */
+Game_System.prototype.setJabsInputConfig = function(controllerKey, mapping)
+{
+  // create a shallow copy to avoid external mutation.
+  const copy = {};
+
+  // copy each mapping entry by key.
+  Object.keys(mapping)
+    .forEach(key => copy[key] = mapping[key]);
+
+  // set the new value into the mappings dictionary via the setter.
+  const mappings = this.getJabsInputMappings();
+  mappings[controllerKey] = copy;
+  this.setJabsInputMappings(mappings);
+};
+
+/**
+ * Gets the stored mapping for the given controller key.
+ * @param {string} controllerKey The key representing which controller’s mapping to retrieve.
+ * @returns {Object<string,string>|null} The stored mapping, or null if none found.
+ */
+Game_System.prototype.getJabsInputConfig = function(controllerKey)
+{
+  // read the mappings dictionary.
+  const mappings = this.getJabsInputMappings();
+
+  // grab the mapping bucket for this key.
+  const found = mappings[controllerKey];
+
+  // return null if not found.
+  if (!found) return null;
+
+  // return a shallow copy for safety.
+  const copy = {};
+  Object.keys(found)
+    .forEach(key => copy[key] = found[key]);
+  return copy;
+};
+
+/**
+ * Applies a stored mapping (if present) to the given controller.
+ * @param {string} controllerKey The key used to look up the mapping.
+ * @param {JABS_StandardController} controller The input controller to apply to.
+ */
+Game_System.prototype.applyJabsInputConfigToController = function(controllerKey, controller)
+{
+  // fetch any stored mapping for this key.
+  const mapping = this.getJabsInputConfig(controllerKey);
+
+  // if nothing was found, there is nothing to apply.
+  if (!mapping) return;
+
+  // push the full mapping to the controller in one call.
+  controller.setAllInputs(mapping);
+};
+
+/**
+ * Captures current mappings from all known controllers into system storage.
+ * This should be called before save, or explicitly by the remap scene’s Save.
+ */
+Game_System.prototype.saveAllJabsInputConfigs = function()
+{
+  // get all currently registered controllers from the adapter.
+  const controllers = JABS_InputAdapter.getAllControllers();
+
+  // iterate each controller and snapshot its mapping.
+  controllers.forEach((controller, index) =>
+  {
+    // resolve a key for this controller.
+    const key = this.resolveJabsControllerKey(controller, index);
+
+    // export and store the controller’s mapping.
+    this.setJabsInputConfig(key, controller.exportAllInputs());
+  });
+};
+
+/**
+ * Applies stored mappings to all currently registered controllers.
+ * Intended to be called after a save file loads.
+ */
+Game_System.prototype.applyAllJabsInputConfigs = function()
+{
+  // get all currently registered controllers from the adapter.
+  const controllers = JABS_InputAdapter.getAllControllers();
+
+  // apply per resolved key.
+  controllers.forEach((controller, index) =>
+  {
+    const key = this.resolveJabsControllerKey(controller, index);
+    this.applyJabsInputConfigToController(key, controller);
+  });
+};
+
+/**
+ * Resets a controller to defaults and persists the mapping.
+ * @param {number} index The adapter index of the controller to reset.
+ */
+Game_System.prototype.resetJabsInputConfigToDefaults = function(index)
+{
+  // get controllers from adapter.
+  const list = JABS_InputAdapter.getAllControllers();
+
+  // get the controller and its key.
+  const controller = list[index];
+  const key = this.resolveJabsControllerKey(controller, index);
+
+  // build and apply defaults.
+  const defaults = controller.buildDefaultMapping();
+  controller.setAllInputs(defaults);
+
+  // persist the defaults for future loads.
+  this.setJabsInputConfig(key, defaults);
+};
+
+/**
+ * Resolves a stable key for the given controller for config storage.
+ * Default strategy: "player" + (index+1).
+ * @param {JABS_StandardController} controller The controller to resolve a key for.
+ * @param {number} index The index of this controller in the adapter list.
+ * @returns {string} The resolved key.
+ */
+Game_System.prototype.resolveJabsControllerKey = function(controller, index)
+{
+  // basic, stable default: player1, player2, ...
+  return `player${index + 1}`;
+};
+
+/**
+ * Extends {@link #onBeforeSave}.<br/>
+ * Snapshots controller mappings before saving.
+ */
+J.ABS.EXT.INPUT.Aliased.Game_System.set('onBeforeSave', Game_System.prototype.onBeforeSave);
+Game_System.prototype.onBeforeSave = function()
+{
+  // perform original logic.
+  const original = J.ABS.EXT.INPUT.Aliased.Game_System.get('onBeforeSave');
+  original.call(this);
+
+  // snapshot all current controller mappings into system storage.
+  this.saveAllJabsInputConfigs();
+};
+
+/**
+ * Extends {@link #onAfterLoad}.<br/>
+ * Applies stored mappings after loading.
+ */
+J.ABS.EXT.INPUT.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);
+Game_System.prototype.onAfterLoad = function()
+{
+  // perform original logic.
+  J.ABS.EXT.INPUT.Aliased.Game_System.get('onAfterLoad')
+    .call(this);
+
+  // attempt to apply stored configs to any currently registered controllers.
+  this.applyAllJabsInputConfigs();
+};
+
+//endregion Game_System
+
+//region Scene_JabsRemap
+/**
+ * The scene for remapping JABS inputs.
+ * Owns layout, capture flow, and applying/saving mappings.
+ */
+class Scene_JabsRemap
+  extends Scene_MenuBase
+{
+  /**
+   * Initializes this scene.
+   */
+  initialize()
+  {
+    // perform super initialize.
+    super.initialize();
+
+    /**
+     * The index of the controller being edited (aligned with adapter order).
+     * Always 0 for single-controller UX.
+     * @type {number}
+     */
+    this._controllerIndex = 0;
+
+    /**
+     * The list of controllers from the adapter (constrained to [0]).
+     * @type {JABS_StandardController[]}
+     */
+    this._controllers = [];
+
+    /**
+     * The working copy of mappings per controller key.
+     * @type {Object<string, Object<string, string[]>>}
+     */
+    this._pendingByKey = {};
+
+    /**
+     * The capture state flag.
+     * @type {boolean}
+     */
+    this._isCapturing = false;
+
+    /**
+     * The logical action currently being captured.
+     * @type {string|null}
+     */
+    this._capturingButton = null;
+  }
+
+  /**
+   * Creates all display objects for this scene.
+   */
+  create()
+  {
+    // perform super create.
+    super.create();
+
+    // build the initial controller list and pending maps.
+    this.buildControllerList();
+
+    // create the help window first (top region).
+    this.createHelpWindow();
+
+    // create the actions window (middle region).
+    this.createActionsWindow();
+
+    // create the command window (bottom region).
+    this.createCommandWindow();
+
+    // create the capture overlay (fullscreen overlay, hidden by default).
+    this.createPromptWindow();
+
+    // refresh layout with the current controller.
+    this.refreshAll();
+  }
+
+  /**
+   * Builds the controller list from the adapter and snapshots as pending.
+   */
+  buildControllerList()
+  {
+    // get all controllers from the adapter.
+    const all = JABS_InputAdapter.getAllControllers();
+
+    // constrain to the first controller only for the current UX.
+    this._controllers = all.length > 0
+      ? [ all[0] ]
+      : [];
+
+    // build pending maps keyed to playerN using the resolver.
+    for (let i = 0; i < this._controllers.length; i++)
+    {
+      // resolve the key for this index.
+      const key = this.resolveControllerKey(i);
+
+      // export the live mapping from the controller.
+      const exportMap = this._controllers[i].exportAllInputs();
+
+      // ensure arrays for each binding (normalization).
+      const normalized = {};
+
+      // iterate over each exported mapping key.
+      Object.keys(exportMap)
+        .forEach(k =>
+        {
+          // read the value for this key.
+          const v = exportMap[k];
+
+          // if the value is already an array, clone it.
+          if (Array.isArray(v))
+          {
+            normalized[k] = v.slice(0);
+          }
+          // if a single value exists, wrap it in an array.
+          else if (v)
+          {
+            normalized[k] = [ v ];
+          }
+          // otherwise, use an empty array for no binding.
+          else
+          {
+            normalized[k] = [];
+          }
+        });
+
+      // store the mapping as the initial pending state.
+      this._pendingByKey[key] = normalized;
+    }
+  }
+
+  /**
+   * Resolves the stored-key for a controller index.
+   * @param {number} index The adapter index for the controller.
+   * @returns {string} The key in the form of player{n}.
+   */
+  resolveControllerKey(index)
+  {
+    // return the playerN key for this index.
+    return `player${index + 1}`;
+  }
+
+  /**
+   * Creates the help window (top).
+   */
+  createHelpWindow()
+  {
+    // define the rectangle for the help window (top, 3 lines).
+    const rect = this.helpWindowRect();
+
+    // create the help window.
+    this._helpWindow = new Window_JabsRemapHelp(rect);
+
+    // add the window to the scene.
+    this.addWindow(this._helpWindow);
+  }
+
+  /**
+   * Creates the actions list window (middle).
+   */
+  createActionsWindow()
+  {
+    // define the rectangle for the actions window.
+    const rect = this.actionsWindowRect();
+
+    // create the actions window.
+    this._actionsWindow = new Window_JabsRemapActions(rect);
+
+    // wire handlers.
+    this._actionsWindow.setHandler('ok', this.onRemapRequested.bind(this));
+    this._actionsWindow.setHandler('clear', this.onClearBinding.bind(this));
+    this._actionsWindow.setHandler('cancel', this.onActionsCancel.bind(this));
+
+    // connect help.
+    this._actionsWindow.setHelpWindow(this._helpWindow);
+
+    // add to scene.
+    this.addWindow(this._actionsWindow);
+  }
+
+  /**
+   * Creates the bottom command window (Apply/Reset/Cancel).
+   */
+  createCommandWindow()
+  {
+    // define the rectangle for the command window (bottom strip).
+    const rect = this.commandWindowRect();
+
+    // create the command window.
+    this._commandWindow = new Window_JabsRemapCommand(rect);
+
+    // set the handlers for command selections.
+    this._commandWindow.setHandler("apply", this.onApply.bind(this));
+    this._commandWindow.setHandler("defaults", this.onDefaults.bind(this));
+    this._commandWindow.setHandler("reset", this.onReset.bind(this));
+    this._commandWindow.setHandler("cancel", this.popScene.bind(this));
+
+    // add the window to the scene.
+    this.addWindow(this._commandWindow);
+
+    // keep actions as the primary interaction by default.
+    this._commandWindow.deselect();
+    this._commandWindow.deactivate();
+  }
+
+  /**
+   * Creates the capture prompt overlay window.
+   */
+  createPromptWindow()
+  {
+    // create the prompt window covering the full screen.
+    const rect = new Rectangle(0, 0, Graphics.boxWidth, Graphics.boxHeight);
+
+    // instantiate the prompt.
+    this._promptWindow = new Window_JabsRemapPrompt(rect);
+
+    // start hidden by default.
+    this._promptWindow.hide();
+
+    // add the window to the scene.
+    this.addWindow(this._promptWindow);
+  }
+
+  /**
+   * Calculates the rectangle for the help window (top).
+   * @returns {Rectangle}
+   */
+  helpWindowRect()
+  {
+    // determine width and height for the help window (3 lines).
+    const ww = Math.floor(Graphics.boxWidth * 0.50);
+    const wh = this.calcWindowHeight(2.7, false);
+    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+    const wy = 0;
+
+    // return the rectangle describing the help window.
+    return new Rectangle(wx, wy, ww, wh);
+  }
+
+  /**
+   * Calculates the rectangle for the bottom command window.
+   * @returns {Rectangle}
+   */
+  commandWindowRect()
+  {
+    // determine the height for the command window (bottom strip).
+    const wh = this.calcWindowHeight(4, true);
+
+    // determine the width as 75% of the screen.
+    const ww = Math.floor(Graphics.boxWidth * 0.25);
+
+    // center the window horizontally.
+    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+
+    // position the window at the bottom of the screen.
+    const wy = Graphics.boxHeight - wh;
+
+    // return the rectangle describing the command window.
+    return new Rectangle(wx, wy, ww, wh);
+  }
+
+  /**
+   * Calculates the rectangle for the actions window (middle region).
+   * @returns {Rectangle}
+   */
+  actionsWindowRect()
+  {
+    // compute heights of top and bottom bands.
+    const helpH = this.helpWindowRect().height;
+    const cmdH = this.commandWindowRect().height;
+
+    // determine the height for the actions window (middle band).
+    const wy = helpH;
+    const wh = Graphics.boxHeight - helpH - cmdH;
+
+    // determine the width as 50% of the screen.
+    const ww = Math.floor(Graphics.boxWidth * 0.5);
+
+    // center the window horizontally.
+    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+
+    // return the rectangle describing the actions window.
+    return new Rectangle(wx, wy, ww, wh);
+  }
+
+  /**
+   * Refreshes all windows for the current controller.
+   */
+  refreshAll()
+  {
+    // get the pending mapping for the current controller.
+    const mapping = this.currentPendingMapping();
+
+    // set the actions mapping and ensure it is the active focus.
+    this._actionsWindow.setMapping(mapping);
+    this._actionsWindow.activate();
+
+    // ensure the bottom command strip is not active by default.
+    this._commandWindow.deactivate();
+  }
+
+  /**
+   * Gets the pending mapping object for the current controller.
+   * @returns {Object<string, string[]>}
+   */
+  currentPendingMapping()
+  {
+    // resolve the key for this controller index.
+    const key = this.resolveControllerKey(this._controllerIndex);
+
+    // return the mapping for this key.
+    return this._pendingByKey[key];
+  }
+
+  /**
+   * Handler when Apply is chosen.
+   */
+  onApply()
+  {
+    // iterate all controllers to apply their pending mappings (single controller today).
+    for (let i = 0; i < this._controllers.length; i++)
+    {
+      // get controller and key.
+      const controller = this._controllers[i];
+      const key = this.resolveControllerKey(i);
+
+      // get the pending mapping for this controller.
+      const mapping = this._pendingByKey[key];
+
+      // set the live mapping on the controller.
+      controller.setAllInputs(mapping);
+
+      // persist the mapping into the system for saves.
+      $gameSystem.setJabsInputConfig(key, mapping);
+    }
+
+    // exit the scene after applying.
+    SceneManager.pop();
+  }
+
+  /**
+   * Replaces the pending map with the controller’s defaults (preview),
+   * without applying to the live controller or saving.
+   */
+  onDefaults()
+  {
+    // get the working controller index and key.
+    const idx = this._controllerIndex;
+    const key = this.resolveControllerKey(idx);
+
+    // get the controller being edited.
+    const controller = this._controllers[idx];
+
+    // build a fresh default mapping.
+    const defaults = controller.buildDefaultMapping();
+
+    // replace the pending mapping with defaults.
+    this._pendingByKey[key] = defaults;
+
+    // refresh the actions to reflect defaults.
+    this._actionsWindow.setMapping(this._pendingByKey[key]);
+
+    // flip back to the remap window.
+    this.onActionsCancel();
+    this._commandWindow.deactivate();
+    this._actionsWindow.activate();
+  }
+
+  /**
+   * Handler when Reset is chosen.
+   */
+  onReset()
+  {
+    // rebuild pending based on current live controller mappings.
+    this.buildControllerList();
+
+    // refresh everything.
+    this.refreshAll();
+  }
+
+  /**
+   * Handler when the action list cancels.
+   * Switch focus to the bottom command strip.
+   */
+  onActionsCancel()
+  {
+    // deactivate the actions window.
+    this._actionsWindow.deactivate();
+
+    // select the first command and activate the command window.
+    this._commandWindow.select(0);
+    this._commandWindow.activate();
+  }
+
+  /**
+   * Begins a capture for the currently selected logical action.
+   */
+  onRemapRequested()
+  {
+    // get the logical action being edited.
+    const button = this._actionsWindow.currentButton();
+
+    // begin capture for this logical action.
+    this.beginCapture(button);
+  }
+
+  /**
+   * Clears the binding for the selected logical action.
+   */
+  onClearBinding()
+  {
+    // get the logical action.
+    const button = this._actionsWindow.currentButton();
+
+    // get the pending map and clear this button.
+    const pending = this.currentPendingMapping();
+    pending[button] = [];
+
+    // refresh the actions to reflect the change.
+    this._actionsWindow.setMapping(pending);
+  }
+
+  /**
+   * Begins the capture overlay for a logical action.
+   * @param {string} button The logical action to capture for.
+   */
+  beginCapture(button)
+  {
+    // record which logical action we are capturing for.
+    this._capturingButton = button;
+
+    // set the capture flag.
+    this._isCapturing = true;
+
+    // show the capture prompt overlay.
+    this._promptWindow.startPrompt(button);
+
+    // deactivate normal windows while capturing.
+    this._commandWindow.deactivate();
+    this._actionsWindow.deactivate();
+  }
+
+  /**
+   * Ends the capture overlay.
+   */
+  endCapture()
+  {
+    // clear the capture flag and button.
+    this._isCapturing = false;
+    this._capturingButton = null;
+
+    // hide the capture prompt overlay.
+    this._promptWindow.endPrompt();
+
+    // reactivate actions window.
+    this._actionsWindow.activate();
+  }
+
+  /**
+   * Standard per-frame update.
+   */
+  update()
+  {
+    // perform super update.
+    super.update();
+
+    // if we are not capturing, do nothing.
+    if (this._isCapturing === false) return;
+
+    // attempt to read a captured symbol from the prompt overlay.
+    const captured = this._promptWindow.pollCapturedSymbol();
+
+    // if nothing has been captured yet, continue waiting.
+    if (!captured) return;
+
+    // write the captured symbol as a single-binding array for the selected button.
+    const pending = this.currentPendingMapping();
+    pending[this._capturingButton] = [ captured ];
+
+    // reflect the updated mapping in the actions window.
+    this._actionsWindow.setMapping(pending);
+
+    // end the capture flow.
+    this.endCapture();
+  }
+}
+
+//endregion Scene_JabsRemap
+
+/**
+ * Extends {@link #createCommandWindow}.<br/>
+ * Also wires the handler for opening the JABS input remapping scene.
+ */
+J.ABS.EXT.INPUT.Aliased.Scene_Menu.set('createCommandWindow', Scene_Menu.prototype.createCommandWindow);
+Scene_Menu.prototype.createCommandWindow = function()
+{
+  // perform original logic.
+  J.ABS.EXT.INPUT.Aliased.Scene_Menu.get('createCommandWindow')
+    .call(this);
+
+  // wire the handler for our custom command symbol.
+  this._commandWindow.setHandler('jabsRemap', () =>
+  {
+    // open the JABS remapping scene.
+    SceneManager.push(Scene_JabsRemap);
+  });
+};
+
+//region Window_JabsRemapActions
+/**
+ * The list window that shows logical actions and current bindings.
+ */
+class Window_JabsRemapActions
+  extends Window_Selectable
+{
+  /**
+   * @param {Rectangle} rect The rectangle to draw this window within.
+   */
+  constructor(rect)
+  {
+    // perform super initialize.
+    super(rect);
+
+    /**
+     * The working mapping being displayed.
+     * @type {Object<string, string[]>}
+     */
+    this._mapping = {};
+
+    /**
+     * The ordered list of logical action keys for display.
+     * @type {string[]}
+     */
+    this._buttons = this.buildButtonList();
+
+    // align the help window behavior.
+    this.select(0);
+  }
+
+  /**
+   * Builds the ordered list of logical actions to show.
+   * @returns {string[]}
+   */
+  buildButtonList()
+  {
+    // build from the canonical list of assignable inputs provided by JABS_Button.
+    const list = JABS_Button.assignableInputs();
+
+    // return as-is (the provided list is authoritative and de-duplicated).
+    return list;
+  }
+
+  /**
+   * Returns the current logical button at the cursor.
+   * @returns {string}
+   */
+  currentButton()
+  {
+    // return the button from the list at the index.
+    return this._buttons[this.index()];
+  }
+
+  /**
+   * Sets the mapping to display and refreshes.
+   * @param {Object<string, string[]>} mapping The mapping to show and edit.
+   */
+  setMapping(mapping)
+  {
+    // store the mapping reference (scene owns lifecycle of the object).
+    this._mapping = mapping;
+
+    // refresh to draw the values.
+    this.refresh();
+  }
+
+  /**
+   * Gets the number of items to render.
+   * @returns {number}
+   */
+  maxItems()
+  {
+    // return the count of buttons.
+    return this._buttons.length;
+  }
+
+  /**
+   * Draws a single item.
+   * @param {number} index The index to draw.
+   */
+  drawItem(index)
+  {
+    // get the rectangle for this line.
+    const rect = this.itemRectWithPadding(index);
+
+    // get the logical button and current bindings.
+    const button = this._buttons[index];
+    const boundList = this._mapping[button] || [];
+    const bound = boundList.length > 0
+      ? boundList[0]
+      : "";
+
+    // determine the icon index for the bound physical symbol.
+    const iconIndex = this.iconIndexForSymbol(bound);
+
+    // pull icon sizing for positioning.
+    const iw = ImageManager.iconWidth;
+    const ih = ImageManager.iconHeight;
+
+    // compute a vertically-centered y for the icon.
+    const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
+
+    // track the x-position for the action text, starting at the left side.
+    let leftTextX = rect.x;
+
+    // if we have a valid icon index (> 0), draw it and bump the text to the right.
+    if (iconIndex > 0)
+    {
+      // draw the icon to the far-left, preceding the action label.
+      this.drawIcon(iconIndex, rect.x, iconY);
+
+      // add spacing for the icon width + padding before drawing the action text.
+      leftTextX += iw + 6;
+    }
+
+    // draw the logical action label to the right of the icon (if any).
+    this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
+
+    // draw an arrow separating columns.
+    const arrow = "→";
+
+    // compute mid-column x.
+    const midX = rect.x + rect.width / 2;
+
+    // draw the arrow centered between columns.
+    this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
+
+    // draw the mapping text on the right column (no icon here anymore).
+    this.drawText(this.humanizeSymbol(bound), midX, rect.y, rect.width / 2, "right");
+  }
+
+  /**
+   * Converts a logical button key into a readable label.
+   * @param {string} button The logical button key.
+   * @returns {string}
+   */
+  humanizeButton(button)
+  {
+    // map known logical keys to nice labels.
+    const map = {};
+    map[JABS_Button.Mainhand] = 'Mainhand';
+    map[JABS_Button.Offhand] = 'Offhand';
+    map[JABS_Button.Tool] = 'Tool';
+    map[JABS_Button.Dodge] = 'Dodge';
+
+    // updated, descriptive labels for the four combat actions (not assignable here).
+    map[JABS_Button.CombatSkill1] = 'Skill Trigger + Mainhand';
+    map[JABS_Button.CombatSkill2] = 'Skill Trigger + Offhand';
+    map[JABS_Button.CombatSkill3] = 'Skill Trigger + Dodge';
+    map[JABS_Button.CombatSkill4] = 'Skill Trigger + Tool';
+
+    // modifiers & mobility.
+    map[JABS_Button.Sprint] = 'Sprint';
+    map[JABS_Button.SkillTrigger] = 'Skill Trigger';
+    map[JABS_Button.Strafe] = 'Strafe';
+    map[JABS_Button.Rotate] = 'Rotate';
+    map[JABS_Button.Guard] = 'Guard';
+
+    // functionality.
+    map[JABS_Button.Menu] = 'Menu';
+    map[JABS_Button.Select] = 'Party Cycle';
+
+    // return the translated label or the key if missing.
+    return map[button] || button;
+  }
+
+  /**
+   * Converts a physical input symbol to a readable label.
+   * @param {string} symbol The physical symbol.
+   * @returns {string}
+   */
+  humanizeSymbol(symbol)
+  {
+    // handle empty/unbound case.
+    if (!symbol) return '(unbound)';
+
+    switch (symbol)
+    {
+      case 'ok':
+        return 'A-button / Z-key [OK]';
+      case 'cancel':
+        return 'B-button / X-key [Cancel]';
+      case 'tab':
+        return 'Y-button / C-key';
+      case 'shift':
+        return 'X-Button / Shift-key [Dash/Sprint]';
+      case 'pagedown':
+        return 'R1-button / E-key [Cycle Forward]';
+      case 'pageup':
+        return 'L1-button / Q-key [Cycle Back]';
+      case 'r2':
+        return 'R2-button / Tab-key';
+      case 'l2':
+        return 'L2-button / L-Control-key';
+      case 'select':
+        return 'Select-button';
+      case 'start':
+        return 'Start-button';
+
+      default:
+        return symbol;
+    }
+  }
+
+  /**
+   * Resolves an icon for a physical input symbol by consulting J.ABS.Input as the authority.
+   * Falls back to 0 (no icon) when unmapped.
+   * @param {string} symbol The physical symbol to resolve an icon for.
+   * @returns {number} The icon index to draw, or 0 if none.
+   */
+  iconIndexForSymbol(symbol)
+  {
+    // if nothing is bound, do not draw an icon.
+    if (!symbol) return 0;
+
+    // reference the configured input constants (source of truth for symbols).
+    const I = J.ABS.Input;
+
+    // normalize any engine-native synonyms to the configured constant values if needed.
+    const normalized = symbol;
+
+    // map configured inputs to icon indices.
+    const iconByInput = {
+      // primaries
+      [I.Mainhand]: 76,       // (Cross / A)-button / Z-key
+      [I.Offhand]: 77,        // (Circle / B)-button / X-key
+      [I.Tool]: 176,           // (Triangle / Y)-button / C-key
+      [I.Dash]: 140,           // (Square / X)-button / Shift-key
+
+      // modifiers & mobility
+      [I.SkillTrigger]: 86,   // L1-button / Q-key
+      [I.StrafeTrigger]: 82,  // L2-button / L-Control-key
+      [I.GuardTrigger]: 83,   // R1-button / E-key
+      [I.MobilitySkill]: 13,  // R2-button / Tab-key
+
+      // menu-ish
+      [I.Quickmenu]: 2563,      // Start-button
+      [I.PartyCycle]: 75,     // Select-button
+
+      // combat face button triggers
+      [I.CombatSkill1]: 79,
+      [I.CombatSkill2]: 79,
+      [I.CombatSkill3]: 79,
+      [I.CombatSkill4]: 79,
+    };
+
+    // return the matching icon index or 0 if not mapped.
+    return iconByInput[normalized] || 0;
+  }
+
+  /**
+   * Defines the standard handlers for OK/Cancel and Clear.
+   */
+  processHandling()
+  {
+    // perform super handling.
+    super.processHandling();
+
+    // handle clear binding when the delete-like key is pressed.
+    if (this.isOpenAndActive())
+    {
+      // if the PageDown key was triggered, clear the binding.
+      if (Input.isTriggered('pagedown')) this.callHandler('clear');
+    }
+  }
+}
+
+//endregion Window_JabsRemapActions
+
+//region Window_JabsRemapCommand
+/**
+ * Bottom command strip for Apply / Reset / Cancel.
+ */
+class Window_JabsRemapCommand
+  extends Window_Command
+{
+  /**
+   * @param {Rectangle} rect The rectangle to draw this window within.
+   */
+  constructor(rect)
+  {
+    // perform super initialize.
+    super(rect);
+  }
+
+  /**
+   * Gets the number of visible rows.
+   * @returns {number}
+   */
+  numVisibleRows()
+  {
+    // render a single row.
+    return 4;
+  }
+
+  /**
+   * Defines the commands for this window.
+   */
+  makeCommandList()
+  {
+    // add the apply command.
+    this.addCommand("Apply current remapping", "apply");
+
+    // add the defaults command (reset to defaults preview).
+    this.addCommand("Reset to defaults", "defaults");
+
+    // add the reset command (revert pending to current live bindings).
+    this.addCommand("Undo changes", "reset");
+
+    // add the close command.
+    this.addCommand("Exit without saving", "cancel");
+  }
+}
+
+//endregion Window_JabsRemapCommand
+
+//region Window_JabsRemapHelp
+/**
+ * Help/instructions window for remapping.
+ */
+class Window_JabsRemapHelp
+  extends Window_Help
+{
+  /**
+   * @param {Rectangle} rect The rectangle to draw this window within.
+   */
+  constructor(rect)
+  {
+    // perform super initialize.
+    super(rect);
+
+    // refresh immediately.
+    this.refresh();
+  }
+
+  /**
+   * Refreshes the help text.
+   */
+  refresh()
+  {
+    // clear the contents.
+    this.contents.clear();
+
+    // Line 1: how to rebind and clear using PS terms.
+    const l1 = "OK/A-button/Z-key: Rebind Prompt   |   R1/W-key/E-key: Clear Binding";
+
+    // Line 2: how to apply/reset using PS terms (Options/Triangle).
+    const l2 = "Select: Apply   |   Triangle/Y-button/C-key: Reset";
+
+    // Line 3: combat guidance for PS controller.
+    const l3 = "For combat skills, hold the skill-trigger + (mainhand/offhand/tool/dash).";
+
+    // draw the three lines.
+    this.drawText(l1, 0, 0, this.contentsWidth());
+    this.drawText(l2, 0, this.lineHeight(), this.contentsWidth());
+    this.drawText(l3, 0, this.lineHeight() * 3, this.contentsWidth());
+  }
+
+  lineHeight()
+  {
+    return super.lineHeight() * 0.66;
+  }
+}
+
+//endregion Window_JabsRemapHelp
+
+//region Window_JabsRemapPrompt
+/**
+ * Full-screen overlay that captures the next input symbol.
+ */
+class Window_JabsRemapPrompt
+  extends Window_Base
+{
+  /**
+   * @param {Rectangle} rect The rectangle to draw this window within.
+   */
+  constructor(rect)
+  {
+    // perform super initialize.
+    super(rect);
+
+    /**
+     * The captured symbol awaiting pickup by the scene.
+     * @type {string|null}
+     */
+    this._captured = null;
+
+    /**
+     * Whether or not the prompt is currently active.
+     * @type {boolean}
+     */
+    this._activePrompt = false;
+
+    /**
+     * Debounce (in frames) to avoid immediately capturing the OK used to open the prompt.
+     * @type {number}
+     */
+    this._warmupFrames = 0;
+
+    /**
+     * The remaining frames before this prompt auto-times out. (60 FPS assumed)
+     * @type {number}
+     */
+    this._timeoutFrames = 0;
+
+    /**
+     * The label of the logical action currently being rebound.
+     * @type {string}
+     */
+    this._buttonLabel = '';
+
+    // make background darker for overlay effect.
+    this.opacity = 192;
+
+    // draw once empty.
+    this.refresh();
+  }
+
+  /**
+   * Begins the prompt for the given logical action.
+   * @param {string} button The logical action being captured.
+   */
+  startPrompt(button)
+  {
+    // reset the captured symbol.
+    this._captured = null;
+
+    // set the active flag.
+    this._activePrompt = true;
+
+    // set a short warmup to avoid immediately capturing OK/Cancel.
+    this._warmupFrames = 30; // ~0.16s at 60 FPS
+
+    // set the timeout to 5 seconds (assuming 60 FPS).
+    this._timeoutFrames = 5 * 60; // 300
+
+    // store the label for redraws each frame.
+    this._buttonLabel = button;
+
+    // show the window.
+    this.show();
+
+    // draw prompt text.
+    this.drawPrompt();
+  }
+
+  /**
+   * Ends the capture prompt.
+   */
+  endPrompt()
+  {
+    // clear flags.
+    this._activePrompt = false;
+
+    // hide the window.
+    this.hide();
+  }
+
+  /**
+   * Draws the prompt text for the current button.
+   */
+  drawPrompt()
+  {
+    // clear then draw the prompt text centered.
+    this.contents.clear();
+
+    // compute center coordinates.
+    const cx = 0;
+    const cy = this.contentsHeight() / 2 - this.lineHeight();
+
+    // draw title.
+    this.drawText('Press a key or button…', cx, cy, this.contentsWidth(), 'center');
+
+    // draw the logical button label.
+    this.drawText(`for: ${this._buttonLabel}`, cx, cy + this.lineHeight(), this.contentsWidth(), 'center');
+
+    // draw the countdown using inline math (60 FPS assumed).
+    this.drawText(
+      `Auto-cancels in ${(this._timeoutFrames / 60).toFixed(1)}s`,
+      cx,
+      cy + this.lineHeight() * 2,
+      this.contentsWidth(),
+      'center'
+    );
+  }
+
+  /**
+   * Per-frame update for capture.
+   */
+  /**
+   * Per-frame update for capture.
+   */
+  update()
+  {
+    // perform super update.
+    super.update();
+
+    // if not active, do nothing.
+    if (this._activePrompt === false) return;
+
+    // scan for a triggered symbol using curated lists and warmup rules.
+    const found = this._findTriggeredSymbol();
+
+    // decrement warmup if active.
+    this._decrementWarmup();
+
+    // if we captured something, store it and end the prompt.
+    if (found)
+    {
+      // set the captured symbol.
+      this._captured = found;
+
+      // end the prompt.
+      this.endPrompt();
+      return;
+    }
+
+    // tick timeout, redraw countdown, and auto-cancel if time elapsed.
+    if (this._tickTimeoutAndRedraw())
+    {
+      // timed out; end the prompt without capturing.
+      this._captured = null;
+      this.endPrompt();
+    }
+  }
+
+  /**
+   * Determines whether or not the user cancelled the prompt this frame.
+   * @returns {boolean}
+   */
+  _isCancelTriggered()
+  {
+    // return true if the cancel input was pressed.
+    if (Input.isTriggered("cancel"))
+    {
+      return true;
+    }
+
+    // not cancelled.
+    return false;
+  }
+
+  /**
+   * Attempts to find a triggered symbol from curated sets, honoring warmup rules.
+   * @returns {string|null}
+   */
+  _findTriggeredSymbol()
+  {
+    // define all symbols we want to scan for.
+    const symbols = this._curatedSymbols();
+
+    // define symbols we ignore during warmup to prevent instant-binding of UI controls.
+    const uiSymbols = this._uiSymbols();
+
+    // check the curated list first.
+    for (let i = 0; i < symbols.length; i++)
+    {
+      // get the symbol at this index.
+      const s = symbols[i];
+
+      // if in warmup and this symbol is a UI symbol, skip it.
+      if (this._warmupFrames > 0 && uiSymbols.includes(s))
+      {
+        // skip UI-like inputs during warmup.
+        continue;
+      }
+
+      // if this symbol was triggered, capture it.
+      if (Input.isTriggered(s))
+      {
+        // return the found symbol.
+        return s;
+      }
+    }
+
+    // fallback: if nothing triggered, consider latest button if available and allowed.
+    const latest = Input._latestButton;
+    if (latest)
+    {
+      // when in warmup, ignore UI symbols.
+      const allowLatest = this._warmupFrames === 0 || uiSymbols.includes(latest) === false;
+      if (allowLatest)
+      {
+        // return the latest captured symbol.
+        return latest;
+      }
+    }
+
+    // nothing was triggered.
+    return null;
+  }
+
+  /**
+   * Gets the curated list of symbols to poll each frame.
+   * @returns {string[]}
+   */
+  _curatedSymbols()
+  {
+    // collect core input constants from your adapter.
+    const k = J.ABS.Input;
+
+    // build a base list using your constants first (preferred).
+    const inputs = [
+      // face/core actions
+      k.Mainhand,
+      k.Offhand,
+      k.Dash,
+      k.Tool,
+
+      // modifier/shoulder/trigger style
+      k.SkillTrigger,
+      k.GuardTrigger,
+      k.StrafeTrigger,
+      k.MobilitySkill,
+
+      // utility
+      k.PartyCycle,
+      k.Quickmenu,
+
+      // d-pad
+      k.DirUp,
+      k.DirDown,
+      k.DirLeft,
+      k.DirRight,
+    ];
+
+    // add preferred constants.
+    const curated = [];
+    inputs.forEach(sym => curated.push(sym));
+
+    // return the curated symbol list.
+    return curated;
+  }
+
+  /**
+   * Gets the set of UI/navigation symbols ignored during warmup.
+   * @returns {string[]}
+   */
+  _uiSymbols()
+  {
+    // inputs commonly used to operate UI, not to bind immediately.
+    return [ "ok", "cancel", "up", "down", "left", "right" ];
+  }
+
+  /**
+   * Decrements the warmup countdown when active.
+   */
+  _decrementWarmup()
+  {
+    // reduce warmup frames if still active.
+    if (this._warmupFrames > 0)
+    {
+      // decrement remaining warmup frames.
+      this._warmupFrames--;
+    }
+  }
+
+  /**
+   * Decrements the timeout, redraws countdown text, and returns whether it expired.
+   * @returns {boolean} True if timeout reached zero this frame; false otherwise.
+   */
+  _tickTimeoutAndRedraw()
+  {
+    // if there is no timeout active, nothing to tick.
+    if (this._timeoutFrames <= 0)
+    {
+      return false;
+    }
+
+    // decrement remaining frames until timeout.
+    this._timeoutFrames--;
+
+    // redraw the prompt text with updated countdown.
+    this.drawPrompt();
+
+    // if the timeout reached zero, report expiry.
+    if (this._timeoutFrames === 0)
+    {
+      return true;
+    }
+
+    // timeout still active.
+    return false;
+  }
+
+  /**
+   * Returns the captured symbol for one frame and clears it.
+   * @returns {string|null}
+   */
+  pollCapturedSymbol()
+  {
+    // take the captured symbol into a temp.
+    const out = this._captured;
+
+    // clear the captured symbol.
+    this._captured = null;
+
+    // return the symbol.
+    return out;
+  }
+}
+
+//endregion Window_JabsRemapPrompt
+
+/**
+ * Extends {@link #addOriginalCommands}.<br/>
+ * Also adds a command to open the JABS input remapping scene from the main menu.
+ */
+J.ABS.EXT.INPUT.Aliased.Window_MenuCommand.set('addOriginalCommands', Window_MenuCommand.prototype.addOriginalCommands);
+Window_MenuCommand.prototype.addOriginalCommands = function()
+{
+  // perform original logic.
+  J.ABS.EXT.INPUT.Aliased.Window_MenuCommand.get('addOriginalCommands')
+    .call(this);
+
+  // if we cannot add the command, then do not.
+  if (this.canAddJabsRemapCommand() === false) return;
+
+  this.addJabsRemapCommand();
+};
+
+/**
+ * Adds the JABS Controls command to the main menu.
+ */
+Window_MenuCommand.prototype.addJabsRemapCommand = function()
+{
+  // build the JABS remap command.
+  const command = new WindowCommandBuilder('JABS Controls')
+    .setSymbol('jabsRemap')
+    .setIconIndex(2569)
+    .setEnabled(true)
+    .build();
+
+  // determine what the last command is.
+  const lastCommand = this._list.at(-1);
+
+  // check if the last command is the "End Game" command.
+  if (lastCommand.symbol === "gameEnd")
+  {
+    // add it before the "End Game" command.
+    this._list.splice(this._list.length - 2, 0, command);
+  }
+  // the last command is something else.
+  else
+  {
+    // just add it to the end.
+    this.addBuiltCommand(command);
+  }
+};
+
+/**
+ * Determines whether or not the JABS Controls command can be added to the main menu.
+ * @returns {boolean} True if the command should be added, false otherwise.
+ */
+Window_MenuCommand.prototype.canAddJabsRemapCommand = function()
+{
+  // if JABS is not present, then do not render this command.
+  if (!J.ABS) return false;
+
+  // render the command!
+  return true;
+};

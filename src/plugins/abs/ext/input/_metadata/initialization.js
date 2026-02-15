@@ -48,16 +48,20 @@ J.ABS.EXT.INPUT.Metadata = {
  */
 J.ABS.EXT.INPUT.Aliased = {
   DataManager: new Map(),
+  Game_System: new Map(),
   JABS_Engine: new Map(),
   JABS_Battler: new Map(),
+  Window_MenuCommand: new Map(),
+  Scene_Menu: new Map(),
 };
 //endregion metadata
 
 /**
  * The global reference for the player's input manager.
  * This interprets and manages incoming inputs for JABS-related functionality.
- * @type {JABS_InputController}
+ * @type {JABS_StandardController}
  * @global
  */
+// eslint-disable-next-line no-unused-vars
 var $jabsController1 = null;
 //endregion introduction

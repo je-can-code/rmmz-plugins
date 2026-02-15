@@ -10,14 +10,14 @@ class JABS_Button
    * Used for bringing up the JABS menu on the map.
    * @type {string}
    */
-  static Menu = "Menu";
+  static Menu = 'Menu';
 
   /**
    * The "select" key.
    * Used for party-cycling.
    * @type {string}
    */
-  static Select = "Select";
+  static Select = 'Select';
   //endregion functionality
 
   //region primary
@@ -26,52 +26,66 @@ class JABS_Button
    * Used for executing the mainhand action.
    * @type {string}
    */
-  static Mainhand = "Main";
+  static Mainhand = 'Main';
 
   /**
    * The "offhand", "B" button, or "X" key.
    * Used for executing the offhand action.
    * @type {string}
    */
-  static Offhand = "Offhand";
+  static Offhand = 'Offhand';
 
   /**
    * The "tool", "Y" button, or "C" key.
    * Used for executing the currently selected tool skill.
    * @type {string}
    */
-  static Tool = "Tool";
+  static Tool = 'Tool';
 
   /**
    * The "dodge", "R2" button, or "Tab" key.
    * Used for executing the currently selected dodge skill.
    * @type {string}
    */
-  static Dodge = "Dodge";
+  static Dodge = 'Dodge';
   //endregion primary
 
-  //region mobility
+  //region mobility & modifiers
+  /**
+   * The sprint/dash input (engine-native dash replacement).
+   * While held, the player sprints if allowed.
+   * @type {string}
+   */
+  static Sprint = "Sprint";
+
   /**
    * The "strafe", "L2" button, or "Left Ctrl" key.
    * Used for locking the direction faced while the input is held.
    * @type {string}
    */
-  static Strafe = "Strafe";
+  static Strafe = 'Strafe';
 
   /**
    * The "rotate", "R1" button, or "W" and "E" key(s).
    * Used for locking in-place while the input is held.
    * @type {string}
    */
-  static Rotate = "Rotate";
+  static Rotate = 'Rotate';
 
   /**
    * The "guard", "R1" button, or "W", and "E" key(s).
    * Used for activating the guard function while the input is held.
    * @type {string}
    */
-  static Guard = "Guard";
-  //endregion mobility
+  static Guard = 'Guard';
+
+  /**
+   * The combat "enabler" (commonly L1 hold on gamepads).
+   * Used as a modifier to enable Combat Skill 1–4 actions while held.
+   * @type {string}
+   */
+  static SkillTrigger = 'SkillTrigger';
+  //endregion mobility & modifiers
 
   //region L1 + buttons
   /**
@@ -79,28 +93,28 @@ class JABS_Button
    * Executes combat skill 1.
    * @type {string}
    */
-  static CombatSkill1 = "CombatSkill1";
+  static CombatSkill1 = 'CombatSkill1';
 
   /**
    * The `L1 + B` or 2 key.
    * Executes combat skill 2.
    * @type {string}
    */
-  static CombatSkill2 = "CombatSkill2";
+  static CombatSkill2 = 'CombatSkill2';
 
   /**
    * The `L1 + X` or 3 key.
    * Executes combat skill 3.
    * @type {string}
    */
-  static CombatSkill3 = "CombatSkill3";
+  static CombatSkill3 = 'CombatSkill3';
 
   /**
    * The `L1 + Y` or 4 key.
    * Executes combat skill 4.
    * @type {string}
    */
-  static CombatSkill4 = "CombatSkill4";
+  static CombatSkill4 = 'CombatSkill4';
 
   //endregion  L1 + buttons
 
@@ -115,11 +129,15 @@ class JABS_Button
       // primary
       this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
-      // L1 + buttons
-      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
+      // modifiers & mobility
+      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate,
+
+      // functionality
+      this.Menu, this.Select,
+    ];
 
     // a filter function for ensuring only the correct inputs are accepted.
-    const filtering = buttonInput => !okInputs.includes(buttonInput);
+    const filtering = buttonInput => okInputs.includes(buttonInput);
 
     // return the filtered buttons.
     return this.allButtons()
@@ -139,11 +157,12 @@ class JABS_Button
       // primary
       this.Mainhand, this.Offhand, this.Tool, this.Dodge,
 
-      // mobility
-      this.Strafe, this.Rotate, this.Guard,
+      // mobility & modifiers
+      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate, this.Guard,
 
       // L1 + buttons
-      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4, ];
+      this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4,
+    ];
   }
 }
 
