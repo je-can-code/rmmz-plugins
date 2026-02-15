@@ -271,17 +271,18 @@ class JABS_Button
   static allButtons()
   {
     return [
-      // functionality
-      this.Menu, this.Select,
-
       // primary
-      this.Mainhand, this.Offhand, this.Tool, this.Dodge,
+      this.Mainhand, this.Offhand, this.Tool, this.Sprint,
+
 
       // mobility & modifiers
-      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate, this.Guard,
+      this.SkillTrigger,  this.Strafe, this.Rotate, this.Guard, this.Dodge,
 
       // L1 + buttons
       this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4,
+
+      // functionality
+      this.Menu, this.Select,
     ];
   }
 }
@@ -1714,13 +1715,16 @@ class Scene_JabsRemap
     // build the initial controller list and pending maps.
     this.buildControllerList();
 
-    // create the help window first (top region).
-    this.createHelpWindow();
+    // create the top action help (conventional help window).
+    this.createTopHelpWindow();
 
-    // create the actions window (middle region).
+    // create the actions window (middle-left region).
     this.createActionsWindow();
 
-    // create the command window (bottom region).
+    // create the right-side usage/help panel (middle-right region).
+    this.createUsageHelpWindow();
+
+    // create the bottom command window (bottom region).
     this.createCommandWindow();
 
     // create the capture overlay (fullscreen overlay, hidden by default).
@@ -1796,18 +1800,18 @@ class Scene_JabsRemap
   }
 
   /**
-   * Creates the help window (top).
+   * Creates the top help window that describes the selected logical action.
    */
-  createHelpWindow()
+  createTopHelpWindow()
   {
-    // define the rectangle for the help window (top, 3 lines).
-    const rect = this.helpWindowRect();
+    // define the rectangle for the top help window (conventional help band).
+    const rect = this.topHelpWindowRect();
 
-    // create the help window.
-    this._helpWindow = new Window_JabsRemapHelp(rect);
+    // create the top help window.
+    this._topHelpWindow = new Window_Help(rect);
 
     // add the window to the scene.
-    this.addWindow(this._helpWindow);
+    this.addWindow(this._topHelpWindow);
   }
 
   /**
@@ -1815,21 +1819,21 @@ class Scene_JabsRemap
    */
   createActionsWindow()
   {
-    // define the rectangle for the actions window.
+    // define the rectangle for the actions window (middle-left band).
     const rect = this.actionsWindowRect();
 
     // create the actions window.
     this._actionsWindow = new Window_JabsRemapActions(rect);
 
-    // wire handlers.
+    // bind handlers for interactions.
     this._actionsWindow.setHandler('ok', this.onRemapRequested.bind(this));
     this._actionsWindow.setHandler('clear', this.onClearBinding.bind(this));
     this._actionsWindow.setHandler('cancel', this.onActionsCancel.bind(this));
 
-    // connect help.
-    this._actionsWindow.setHelpWindow(this._helpWindow);
+    // attach the top help so selection changes update descriptions.
+    this._actionsWindow.setHelpWindow(this._topHelpWindow);
 
-    // add to scene.
+    // add the window to the scene.
     this.addWindow(this._actionsWindow);
   }
 
@@ -1838,17 +1842,17 @@ class Scene_JabsRemap
    */
   createCommandWindow()
   {
-    // define the rectangle for the command window (bottom strip).
+    // define the rectangle for the command window.
     const rect = this.commandWindowRect();
 
     // create the command window.
     this._commandWindow = new Window_JabsRemapCommand(rect);
 
     // set the handlers for command selections.
-    this._commandWindow.setHandler("apply", this.onApply.bind(this));
-    this._commandWindow.setHandler("defaults", this.onDefaults.bind(this));
-    this._commandWindow.setHandler("reset", this.onReset.bind(this));
-    this._commandWindow.setHandler("cancel", this.popScene.bind(this));
+    this._commandWindow.setHandler('apply', this.onApply.bind(this));
+    this._commandWindow.setHandler('defaults', this.onDefaults.bind(this));
+    this._commandWindow.setHandler('reset', this.onReset.bind(this));
+    this._commandWindow.setHandler('cancel', this.popScene.bind(this));
 
     // add the window to the scene.
     this.addWindow(this._commandWindow);
@@ -1877,18 +1881,39 @@ class Scene_JabsRemap
   }
 
   /**
-   * Calculates the rectangle for the help window (top).
+   * Creates the right-side usage/help panel that lists scene controls.
+   */
+  createUsageHelpWindow()
+  {
+    // define the rectangle for the right-side usage/help window.
+    const rect = this.usageHelpWindowRect();
+
+    // create the usage help window.
+    this._usageHelpWindow = new Window_JabsRemapUsageHelp(rect);
+
+    // add the window to the scene.
+    this.addWindow(this._usageHelpWindow);
+  }
+
+  /**
+   * Calculates the rectangle for the top help window (conventional band).
    * @returns {Rectangle}
    */
-  helpWindowRect()
+  topHelpWindowRect()
   {
-    // determine width and height for the help window (3 lines).
-    const ww = Math.floor(Graphics.boxWidth * 0.50);
-    const wh = this.calcWindowHeight(2.7, false);
+    // determine the height for the top help window (single row).
+    const wh = this.calcWindowHeight(1.8, true);
+
+    // compute the total width for the centered middle group.
+    const ww = Math.floor(Graphics.boxWidth * 0.60);
+
+    // compute the starting x so the band is centered on-screen.
     const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+
+    // position the window at the top of the screen.
     const wy = 0;
 
-    // return the rectangle describing the help window.
+    // return the rectangle describing the top help window.
     return new Rectangle(wx, wy, ww, wh);
   }
 
@@ -1921,21 +1946,60 @@ class Scene_JabsRemap
   actionsWindowRect()
   {
     // compute heights of top and bottom bands.
-    const helpH = this.helpWindowRect().height;
+    const topH = this.topHelpWindowRect().height;
     const cmdH = this.commandWindowRect().height;
 
-    // determine the height for the actions window (middle band).
-    const wy = helpH;
-    const wh = Graphics.boxHeight - helpH - cmdH;
+    // determine the height for the actions window (middle-left band).
+    const wy = topH;
+    const wh = Graphics.boxHeight - topH - cmdH;
 
-    // determine the width as 50% of the screen.
-    const ww = Math.floor(Graphics.boxWidth * 0.5);
+    // compute the total width for the centered middle group (actions + usage help).
+    const groupW = Math.floor(Graphics.boxWidth * 0.60);
 
-    // center the window horizontally.
-    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+    // compute the starting x so the group is centered on-screen.
+    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
+
+    // compute the actions window width as 70% of the group.
+    const actionsW = Math.floor(groupW * 0.70);
+
+    // place the actions window at the left of the centered group.
+    const wx = groupX;
 
     // return the rectangle describing the actions window.
-    return new Rectangle(wx, wy, ww, wh);
+    return new Rectangle(wx, wy, actionsW, wh);
+  }
+
+  /**
+   * Calculates the rectangle for the right-side usage/help window.
+   * @returns {Rectangle}
+   */
+  usageHelpWindowRect()
+  {
+    // compute heights of top and bottom bands.
+    const topH = this.topHelpWindowRect().height;
+    const cmdH = this.commandWindowRect().height;
+
+    // determine the height for the usage/help window (middle-right band).
+    const wy = topH;
+    const wh = Graphics.boxHeight - topH - cmdH;
+
+    // compute the total width for the centered middle group (actions + usage help).
+    const groupW = Math.floor(Graphics.boxWidth * 0.60);
+
+    // compute the starting x so the group is centered on-screen.
+    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
+
+    // compute the actions window width as 70% of the group.
+    const actionsW = Math.floor(groupW * 0.70);
+
+    // compute the usage/help window width as the remaining 30% of the group.
+    const usageW = groupW - actionsW;
+
+    // place the usage/help window immediately to the right of the actions window.
+    const wx = groupX + actionsW;
+
+    // return the rectangle describing the usage/help window.
+    return new Rectangle(wx, wy, usageW, wh);
   }
 
   /**
@@ -1968,11 +2032,46 @@ class Scene_JabsRemap
   }
 
   /**
+   * Ensures at most one logical action holds a given symbol across the mapping.
+   * Last occurrence wins in iteration order.
+   * @param {Object<string, string[]>} mapping The mapping to sanitize.
+   */
+  sanitizeMappingUnique(mapping)
+  {
+    // track the first owner of each symbol while scanning.
+    const ownerBySymbol = {};
+
+    // first pass: record the first time we see a symbol and clear dups on the fly.
+    Object.keys(mapping)
+      .forEach(button =>
+      {
+        // get the list for this button (we treat only the first binding in UI).
+        const list = mapping[button] || [];
+
+        // if empty, continue.
+        if (list.length === 0) return;
+
+        // read the primary symbol.
+        const [ symbol ] = list;
+
+        // if we’ve not seen it, mark ownership and continue.
+        if (!ownerBySymbol[symbol])
+        {
+          ownerBySymbol[symbol] = button;
+          return;
+        }
+
+        // otherwise another action already owns it; unbind here.
+        mapping[button] = [];
+      });
+  }
+
+  /**
    * Handler when Apply is chosen.
    */
   onApply()
   {
-    // iterate all controllers to apply their pending mappings (single controller today).
+    // iterate all controllers to apply their pending mappings.
     for (let i = 0; i < this._controllers.length; i++)
     {
       // get controller and key.
@@ -1981,6 +2080,9 @@ class Scene_JabsRemap
 
       // get the pending mapping for this controller.
       const mapping = this._pendingByKey[key];
+
+      // enforce uniqueness as a final pass before applying.
+      this.sanitizeMappingUnique(mapping);
 
       // set the live mapping on the controller.
       controller.setAllInputs(mapping);
@@ -2112,6 +2214,56 @@ class Scene_JabsRemap
   }
 
   /**
+   * Removes a symbol from all actions in the provided mapping, except for one.
+   * @param {Object<string, string[]>} mapping The mapping to sanitize.
+   * @param {string} symbol The physical input symbol to remove.
+   * @param {string} exceptButton The logical action to exclude from removal.
+   */
+  unbindSymbolFromMapping(mapping, symbol, exceptButton)
+  {
+    // iterate all logical actions in the mapping.
+    Object.keys(mapping)
+      .forEach(key =>
+      {
+        // skip the action that is intended to receive this symbol.
+        if (key === exceptButton) return;
+
+        // read the current list for this action.
+        const list = mapping[key] || [];
+
+        // if there is nothing to remove, continue.
+        if (!list.length) return;
+
+        // filter out the symbol.
+        const filtered = list.filter(s => s !== symbol);
+
+        // if changed, write back the filtered list.
+        if (filtered.length !== list.length)
+        {
+          mapping[key] = filtered;
+        }
+      });
+  }
+
+  /**
+   * Assigns a symbol to the given logical action while enforcing uniqueness.
+   * If the symbol exists on any other action, it will be unbound there first.
+   * @param {string} button The logical action receiving the new binding.
+   * @param {string} symbol The physical input symbol to assign.
+   */
+  assignWithConflictResolution(button, symbol)
+  {
+    // get the pending mapping for this controller.
+    const pending = this.currentPendingMapping();
+
+    // unbind this symbol from any other actions in this mapping.
+    this.unbindSymbolFromMapping(pending, symbol, button);
+
+    // write the symbol as a single-binding array for the target action.
+    pending[button] = [ symbol ];
+  }
+
+  /**
    * Standard per-frame update.
    */
   update()
@@ -2128,12 +2280,11 @@ class Scene_JabsRemap
     // if nothing has been captured yet, continue waiting.
     if (!captured) return;
 
-    // write the captured symbol as a single-binding array for the selected button.
-    const pending = this.currentPendingMapping();
-    pending[this._capturingButton] = [ captured ];
+    // resolve and assign with conflict handling.
+    this.assignWithConflictResolution(this._capturingButton, captured);
 
     // reflect the updated mapping in the actions window.
-    this._actionsWindow.setMapping(pending);
+    this._actionsWindow.setMapping(this.currentPendingMapping());
 
     // end the capture flow.
     this.endCapture();
@@ -2252,7 +2403,7 @@ class Window_JabsRemapActions
     const boundList = this._mapping[button] || [];
     const bound = boundList.length > 0
       ? boundList[0]
-      : "";
+      : '';
 
     // determine the icon index for the bound physical symbol.
     const iconIndex = this.iconIndexForSymbol(bound);
@@ -2281,7 +2432,7 @@ class Window_JabsRemapActions
     this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
 
     // draw an arrow separating columns.
-    const arrow = "→";
+    const arrow = '→';
 
     // compute mid-column x.
     const midX = rect.x + rect.width / 2;
@@ -2289,8 +2440,17 @@ class Window_JabsRemapActions
     // draw the arrow centered between columns.
     this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
 
-    // draw the mapping text on the right column (no icon here anymore).
-    this.drawText(this.humanizeSymbol(bound), midX, rect.y, rect.width / 2, "right");
+    // build the right-column rich text (supports icons/escape codes).
+    const rightText = this.humanizeSymbol(bound);
+
+    // measure the rendered width (icons + text) to right-align manually.
+    const rightWidth = this.textSizeEx(rightText).width;
+
+    // compute the right-aligned x within the right half.
+    const rightX = midX + (rect.width / 2) - rightWidth;
+
+    // draw the mapping text on the right column using drawTextEx (enables icons).
+    this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
   }
 
   /**
@@ -2341,25 +2501,25 @@ class Window_JabsRemapActions
     switch (symbol)
     {
       case 'ok':
-        return 'A-button / Z-key [OK]';
+        return '\\I[2448] / \\I[2432]';
       case 'cancel':
-        return 'B-button / X-key [Cancel]';
-      case 'tab':
-        return 'Y-button / C-key';
+        return '\\I[2449] / \\I[2433]';
       case 'shift':
-        return 'X-Button / Shift-key [Dash/Sprint]';
-      case 'pagedown':
-        return 'R1-button / E-key [Cycle Forward]';
+        return '\\I[2450] / \\I[2434]';
+      case 'tab':
+        return '\\I[2451] / \\I[2435]';
       case 'pageup':
-        return 'L1-button / Q-key [Cycle Back]';
-      case 'r2':
-        return 'R2-button / Tab-key';
+        return '\\I[2452] / \\I[2436]';
       case 'l2':
-        return 'L2-button / L-Control-key';
-      case 'select':
-        return 'Select-button';
+        return '\\I[2454] / \\I[2437]';
+      case 'pagedown':
+        return '\\I[2453] / \\I[2438]';
+      case 'r2':
+        return '\\I[2455] / \\I[2439]';
       case 'start':
-        return 'Start-button';
+        return '\\I[2456] / \\I[2440]';
+      case 'select':
+        return '\\I[2457] / \\I[2441]';
 
       default:
         return symbol;
@@ -2413,6 +2573,66 @@ class Window_JabsRemapActions
   }
 
   /**
+   * Updates the linked help window with a description of the selected action.
+   */
+  updateHelp()
+  {
+    // if we have no help window, do nothing.
+    if (!this._helpWindow) return;
+
+    // resolve the currently selected logical button.
+    const button = this.currentButton();
+
+    // build the description for this button.
+    const text = this.describeButton(button);
+
+    // update the help text.
+    this._helpWindow.setText(text);
+  }
+
+  /**
+   * Gets a human-readable description for a logical action.
+   * @param {string} button The logical action key.
+   * @returns {string} The description text.
+   */
+  /**
+   * Gets a human-readable description for a logical action.
+   * @param {string} button The logical action key.
+   * @returns {string} The description text.
+   */
+  describeButton(button)
+  {
+    // a small dictionary of descriptions per logical action.
+    const d = {};
+
+    // functionality
+    d[JABS_Button.Menu] = "Open the JABS quick menu.\nAccess actions, tools, and options.";
+    d[JABS_Button.Select] = "Cycle the party leader.\nRotate the front actor with the next in line.";
+
+    // primaries
+    d[JABS_Button.Mainhand] = "Use the mainhand action.\nTypically your basic weapon attack.";
+    d[JABS_Button.Offhand] = "Use the offhand action.\nSecondary skill or guard-ready indicator.";
+    d[JABS_Button.Tool] = "Use the selected tool.\nCasts the currently equipped tool skill.";
+    d[JABS_Button.Dodge] = "Execute the mobility skill.\nLunge, backstep, tumble, or similar move.";
+
+    // modifiers & mobility
+    d[JABS_Button.Sprint] = "Sprint while held.\nMove faster when conditions allow.";
+    d[JABS_Button.Strafe] = "Hold facing while moving.\nLocks direction for circle-strafing.";
+    d[JABS_Button.Rotate] = "Rotate in place while held.\nPrevents movement for precise facing.";
+    d[JABS_Button.Guard] = "Hold to raise guard (if eligible).\nUses offhand guard skill when available.";
+    d[JABS_Button.SkillTrigger] = "Enable combat skills while held.\nFace buttons become Combat 1–4.";
+
+    // combat (L1 + face buttons)
+    d[JABS_Button.CombatSkill1] = "Trigger Combat Skill 1.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill2] = "Trigger Combat Skill 2.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill3] = "Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill4] = "Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.";
+
+    // fallback to the logical name if no description exists.
+    return d[button] || String(button);
+  }
+
+  /**
    * Defines the standard handlers for OK/Cancel and Clear.
    */
   processHandling()
@@ -2462,71 +2682,52 @@ class Window_JabsRemapCommand
    */
   makeCommandList()
   {
-    // add the apply command.
-    this.addCommand("Apply current remapping", "apply");
+    // build the commands.
+    const commands = this.buildCommands();
 
-    // add the defaults command (reset to defaults preview).
-    this.addCommand("Reset to defaults", "defaults");
+    // add the built commands.
+    commands.forEach(this.addBuiltCommand, this);
+  }
 
-    // add the reset command (revert pending to current live bindings).
-    this.addCommand("Undo changes", "reset");
+  /**
+   * Builds the commands for this window.
+   * @returns {BuiltWindowCommand[]}
+   */
+  buildCommands()
+  {
+    // build the "Apply" command.
+    const apply = new WindowCommandBuilder('Apply current remapping')
+      .setIconIndex(91)
+      .setSymbol('apply')
+      .setEnabled(true)
+      .build();
 
-    // add the close command.
-    this.addCommand("Exit without saving", "cancel");
+    // build the "Reset to Defaults" command.
+    const defaults = new WindowCommandBuilder('Reset to defaults')
+      .setIconIndex(207)
+      .setSymbol('defaults')
+      .setEnabled(true)
+      .build();
+
+    // build the "Undo changes" command.
+    const reset = new WindowCommandBuilder('Undo changes')
+      .setIconIndex(74)
+      .setSymbol('reset')
+      .setEnabled(true)
+      .build();
+
+    // build the "Exit without saving" command.
+    const cancel = new WindowCommandBuilder('Exit without saving')
+      .setIconIndex(90)
+      .setSymbol('cancel')
+      .setEnabled(true)
+      .build();
+
+    return [ apply, defaults, reset, cancel ];
   }
 }
 
 //endregion Window_JabsRemapCommand
-
-//region Window_JabsRemapHelp
-/**
- * Help/instructions window for remapping.
- */
-class Window_JabsRemapHelp
-  extends Window_Help
-{
-  /**
-   * @param {Rectangle} rect The rectangle to draw this window within.
-   */
-  constructor(rect)
-  {
-    // perform super initialize.
-    super(rect);
-
-    // refresh immediately.
-    this.refresh();
-  }
-
-  /**
-   * Refreshes the help text.
-   */
-  refresh()
-  {
-    // clear the contents.
-    this.contents.clear();
-
-    // Line 1: how to rebind and clear using PS terms.
-    const l1 = "OK/A-button/Z-key: Rebind Prompt   |   R1/W-key/E-key: Clear Binding";
-
-    // Line 2: how to apply/reset using PS terms (Options/Triangle).
-    const l2 = "Select: Apply   |   Triangle/Y-button/C-key: Reset";
-
-    // Line 3: combat guidance for PS controller.
-    const l3 = "For combat skills, hold the skill-trigger + (mainhand/offhand/tool/dash).";
-
-    // draw the three lines.
-    this.drawText(l1, 0, 0, this.contentsWidth());
-    this.drawText(l2, 0, this.lineHeight(), this.contentsWidth());
-    this.drawText(l3, 0, this.lineHeight() * 3, this.contentsWidth());
-  }
-
-  lineHeight()
-  {
-    return super.lineHeight() * 0.66;
-  }
-}
-
-//endregion Window_JabsRemapHelp
 
 //region Window_JabsRemapPrompt
 /**
@@ -2865,6 +3066,100 @@ class Window_JabsRemapPrompt
 }
 
 //endregion Window_JabsRemapPrompt
+
+//region Window_JabsRemapUsageHelp
+/**
+ * Static usage/help panel for the JABS remap scene (right side).
+ */
+class Window_JabsRemapUsageHelp
+  extends Window_Base
+{
+  /**
+   * @param {Rectangle} rect The rectangle to draw this window within.
+   */
+  constructor(rect)
+  {
+    // perform super initialize.
+    super(rect);
+
+    // refresh immediately.
+    this.refresh();
+  }
+
+  /**
+   * Refreshes the static help text.
+   */
+  refresh()
+  {
+    // clear the contents.
+    this.contents.clear();
+
+    // build the ex-text with icons for each hint line.
+    const rebind = `${this.iconTextForSymbol('ok')} Rebind`;
+    const clear = `${this.iconTextForSymbol(J.ABS.Input.GuardTrigger)} Clear Binding`;
+    const apply = `${this.iconTextForSymbol(J.ABS.Input.Quickmenu)} Apply`;
+    const reset = `${this.iconTextForSymbol(J.ABS.Input.Tool)} Reset`;
+
+    // draw each line using drawTextEx so icons render.
+    this.drawTextEx(rebind, 0, this.lineHeight() * 0, this.contentsWidth());
+    this.drawTextEx(clear, 0, this.lineHeight() * 1, this.contentsWidth());
+    this.drawTextEx(apply, 0, this.lineHeight() * 2, this.contentsWidth());
+    this.drawTextEx(reset, 0, this.lineHeight() * 3, this.contentsWidth());
+  }
+
+  /**
+   * Converts a physical input symbol into icon ex-text for display.
+   * Returns combined gamepad/keyboard icons when available.
+   * @param {string} symbol The physical symbol.
+   * @returns {string} The ex-text (may include one or more \I[...] tokens).
+   */
+  iconTextForSymbol(symbol)
+  {
+    // handle empty/unbound case.
+    if (!symbol) return '(unbound)';
+
+    // map common symbols to your established icon pairs.
+    switch (symbol)
+    {
+      case 'ok':
+        // Cross (pad) / Z (kb)
+        return '\\I[2448] / \\I[2432]';
+      case 'cancel':
+        // Circle (pad) / X (kb)
+        return '\\I[2449] / \\I[2433]';
+      case 'shift':
+        // Square (pad) / Shift (kb)
+        return '\\I[2450] / \\I[2434]';
+      case 'tab':
+        // Triangle (pad) / C (kb)
+        return '\\I[2451] / \\I[2435]';
+      case 'pageup':
+        // L1 (pad) / Q (kb)
+        return '\\I[2452] / \\I[2436]';
+      case 'l2':
+        // L2 (pad) / Ctrl (kb)
+        return '\\I[2454] / \\I[2437]';
+      case 'pagedown':
+        // R1 (pad) / E (kb)
+        return '\\I[2453] / \\I[2438]';
+      case 'r2':
+        // R2 (pad) / Tab (kb)
+        return '\\I[2455] / \\I[2439]';
+      case 'start':
+        // Options/Menu (pad) / Enter (kb)
+        return '\\I[2456] / \\I[2440]';
+      case 'select':
+        // Select/Share (pad) / Del (kb)
+        return '\\I[2457] / \\I[2441]';
+
+      default:
+        // fall back to raw text if unmapped.
+        return String(symbol);
+    }
+  }
+}
+
+//endregion Window_JabsRemapUsageHelp
 
 /**
  * Extends {@link #addOriginalCommands}.<br/>

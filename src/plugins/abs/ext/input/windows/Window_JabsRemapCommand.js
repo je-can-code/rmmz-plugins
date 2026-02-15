@@ -29,17 +29,48 @@ class Window_JabsRemapCommand
    */
   makeCommandList()
   {
-    // add the apply command.
-    this.addCommand("Apply current remapping", "apply");
+    // build the commands.
+    const commands = this.buildCommands();
 
-    // add the defaults command (reset to defaults preview).
-    this.addCommand("Reset to defaults", "defaults");
+    // add the built commands.
+    commands.forEach(this.addBuiltCommand, this);
+  }
 
-    // add the reset command (revert pending to current live bindings).
-    this.addCommand("Undo changes", "reset");
+  /**
+   * Builds the commands for this window.
+   * @returns {BuiltWindowCommand[]}
+   */
+  buildCommands()
+  {
+    // build the "Apply" command.
+    const apply = new WindowCommandBuilder('Apply current remapping')
+      .setIconIndex(91)
+      .setSymbol('apply')
+      .setEnabled(true)
+      .build();
 
-    // add the close command.
-    this.addCommand("Exit without saving", "cancel");
+    // build the "Reset to Defaults" command.
+    const defaults = new WindowCommandBuilder('Reset to defaults')
+      .setIconIndex(207)
+      .setSymbol('defaults')
+      .setEnabled(true)
+      .build();
+
+    // build the "Undo changes" command.
+    const reset = new WindowCommandBuilder('Undo changes')
+      .setIconIndex(74)
+      .setSymbol('reset')
+      .setEnabled(true)
+      .build();
+
+    // build the "Exit without saving" command.
+    const cancel = new WindowCommandBuilder('Exit without saving')
+      .setIconIndex(90)
+      .setSymbol('cancel')
+      .setEnabled(true)
+      .build();
+
+    return [ apply, defaults, reset, cancel ];
   }
 }
 

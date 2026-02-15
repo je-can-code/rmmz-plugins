@@ -89,7 +89,7 @@ class Window_JabsRemapActions
     const boundList = this._mapping[button] || [];
     const bound = boundList.length > 0
       ? boundList[0]
-      : "";
+      : '';
 
     // determine the icon index for the bound physical symbol.
     const iconIndex = this.iconIndexForSymbol(bound);
@@ -118,7 +118,7 @@ class Window_JabsRemapActions
     this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
 
     // draw an arrow separating columns.
-    const arrow = "→";
+    const arrow = '→';
 
     // compute mid-column x.
     const midX = rect.x + rect.width / 2;
@@ -126,8 +126,17 @@ class Window_JabsRemapActions
     // draw the arrow centered between columns.
     this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
 
-    // draw the mapping text on the right column (no icon here anymore).
-    this.drawText(this.humanizeSymbol(bound), midX, rect.y, rect.width / 2, "right");
+    // build the right-column rich text (supports icons/escape codes).
+    const rightText = this.humanizeSymbol(bound);
+
+    // measure the rendered width (icons + text) to right-align manually.
+    const rightWidth = this.textSizeEx(rightText).width;
+
+    // compute the right-aligned x within the right half.
+    const rightX = midX + (rect.width / 2) - rightWidth;
+
+    // draw the mapping text on the right column using drawTextEx (enables icons).
+    this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
   }
 
   /**
@@ -178,25 +187,25 @@ class Window_JabsRemapActions
     switch (symbol)
     {
       case 'ok':
-        return 'A-button / Z-key [OK]';
+        return '\\I[2448] / \\I[2432]';
       case 'cancel':
-        return 'B-button / X-key [Cancel]';
-      case 'tab':
-        return 'Y-button / C-key';
+        return '\\I[2449] / \\I[2433]';
       case 'shift':
-        return 'X-Button / Shift-key [Dash/Sprint]';
-      case 'pagedown':
-        return 'R1-button / E-key [Cycle Forward]';
+        return '\\I[2450] / \\I[2434]';
+      case 'tab':
+        return '\\I[2451] / \\I[2435]';
       case 'pageup':
-        return 'L1-button / Q-key [Cycle Back]';
-      case 'r2':
-        return 'R2-button / Tab-key';
+        return '\\I[2452] / \\I[2436]';
       case 'l2':
-        return 'L2-button / L-Control-key';
-      case 'select':
-        return 'Select-button';
+        return '\\I[2454] / \\I[2437]';
+      case 'pagedown':
+        return '\\I[2453] / \\I[2438]';
+      case 'r2':
+        return '\\I[2455] / \\I[2439]';
       case 'start':
-        return 'Start-button';
+        return '\\I[2456] / \\I[2440]';
+      case 'select':
+        return '\\I[2457] / \\I[2441]';
 
       default:
         return symbol;
@@ -247,6 +256,66 @@ class Window_JabsRemapActions
 
     // return the matching icon index or 0 if not mapped.
     return iconByInput[normalized] || 0;
+  }
+
+  /**
+   * Updates the linked help window with a description of the selected action.
+   */
+  updateHelp()
+  {
+    // if we have no help window, do nothing.
+    if (!this._helpWindow) return;
+
+    // resolve the currently selected logical button.
+    const button = this.currentButton();
+
+    // build the description for this button.
+    const text = this.describeButton(button);
+
+    // update the help text.
+    this._helpWindow.setText(text);
+  }
+
+  /**
+   * Gets a human-readable description for a logical action.
+   * @param {string} button The logical action key.
+   * @returns {string} The description text.
+   */
+  /**
+   * Gets a human-readable description for a logical action.
+   * @param {string} button The logical action key.
+   * @returns {string} The description text.
+   */
+  describeButton(button)
+  {
+    // a small dictionary of descriptions per logical action.
+    const d = {};
+
+    // functionality
+    d[JABS_Button.Menu] = "Open the JABS quick menu.\nAccess actions, tools, and options.";
+    d[JABS_Button.Select] = "Cycle the party leader.\nRotate the front actor with the next in line.";
+
+    // primaries
+    d[JABS_Button.Mainhand] = "Use the mainhand action.\nTypically your basic weapon attack.";
+    d[JABS_Button.Offhand] = "Use the offhand action.\nSecondary skill or guard-ready indicator.";
+    d[JABS_Button.Tool] = "Use the selected tool.\nCasts the currently equipped tool skill.";
+    d[JABS_Button.Dodge] = "Execute the mobility skill.\nLunge, backstep, tumble, or similar move.";
+
+    // modifiers & mobility
+    d[JABS_Button.Sprint] = "Sprint while held.\nMove faster when conditions allow.";
+    d[JABS_Button.Strafe] = "Hold facing while moving.\nLocks direction for circle-strafing.";
+    d[JABS_Button.Rotate] = "Rotate in place while held.\nPrevents movement for precise facing.";
+    d[JABS_Button.Guard] = "Hold to raise guard (if eligible).\nUses offhand guard skill when available.";
+    d[JABS_Button.SkillTrigger] = "Enable combat skills while held.\nFace buttons become Combat 1–4.";
+
+    // combat (L1 + face buttons)
+    d[JABS_Button.CombatSkill1] = "Trigger Combat Skill 1.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill2] = "Trigger Combat Skill 2.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill3] = "Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill4] = "Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.";
+
+    // fallback to the logical name if no description exists.
+    return d[button] || String(button);
   }
 
   /**
