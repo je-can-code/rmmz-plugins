@@ -20,10 +20,16 @@ class Window_JabsRemapActions
     this._mapping = {};
 
     /**
-     * The ordered list of logical action keys for display.
+     * The ordered list of logical action keys for display (flat, assignable-only).
      * @type {string[]}
      */
     this._buttons = this.buildButtonList();
+
+    /**
+     * The grouped row model combining headers and actions.
+     * @type {{ kind: string, label?: string, button?: string }[]}
+     */
+    this._rows = this.buildRows();
 
     // align the help window behavior.
     this.select(0);
@@ -48,8 +54,74 @@ class Window_JabsRemapActions
    */
   currentButton()
   {
-    // return the button from the list at the index.
-    return this._buttons[this.index()];
+    // resolve the row at the current index.
+    const row = this.rowAt(this.index());
+
+    // return the logical button for the selected action row.
+    return (row.kind === 'action'
+      ? String(row.button)
+      : String(row.label));
+  }
+
+  /**
+   * Builds the grouped row model based on the current assignable inputs.
+   * @returns {{ kind: string, label?: string, button?: string }[]} The grouped rows.
+   */
+  buildRows()
+  {
+    // reference the assignable set for quick membership checks.
+    const can = new Set(this._buttons);
+
+    // a small helper to add a labeled header.
+    const header = label => ({
+      kind: 'header',
+      label
+    });
+
+    // a small helper to add an action row when assignable.
+    const action = button => ({
+      kind: 'action',
+      button
+    });
+
+    // construct the rows per requested groups.
+    const rows = [];
+
+    // primary actions.
+    rows.push(header('Primary Actions'));
+    if (can.has(JABS_Button.Mainhand)) rows.push(action(JABS_Button.Mainhand));
+    if (can.has(JABS_Button.Offhand)) rows.push(action(JABS_Button.Offhand));
+    if (can.has(JABS_Button.Tool)) rows.push(action(JABS_Button.Tool));
+    if (can.has(JABS_Button.Sprint)) rows.push(action(JABS_Button.Sprint));
+
+    // secondary actions.
+    rows.push(header('Secondary Actions'));
+    if (can.has(JABS_Button.SkillTrigger)) rows.push(action(JABS_Button.SkillTrigger));
+    if (can.has(JABS_Button.Rotate)) rows.push(action(JABS_Button.Rotate));
+    if (can.has(JABS_Button.Strafe)) rows.push(action(JABS_Button.Strafe));
+    if (can.has(JABS_Button.Dodge)) rows.push(action(JABS_Button.Dodge));
+
+    // functional actions.
+    rows.push(header('Functional Actions'));
+    if (can.has(JABS_Button.Menu)) rows.push(action(JABS_Button.Menu));
+    if (can.has(JABS_Button.Select)) rows.push(action(JABS_Button.Select));
+
+    // return the assembled rows.
+    return rows;
+  }
+
+  /**
+   * Gets the row at the provided index.
+   * @param {number} index The index of the row.
+   * @returns {{ kind: string, label?: string, button?: string }|null}
+   */
+  rowAt(index)
+  {
+    // return the row if within range.
+    if (index >= 0 && index < this._rows.length) return this._rows[index];
+
+    // out of range yields null.
+    return null;
   }
 
   /**
@@ -72,7 +144,7 @@ class Window_JabsRemapActions
   maxItems()
   {
     // return the count of buttons.
-    return this._buttons.length;
+    return this._rows.length;
   }
 
   /**
@@ -84,8 +156,29 @@ class Window_JabsRemapActions
     // get the rectangle for this line.
     const rect = this.itemRectWithPadding(index);
 
+    // resolve the row to draw.
+    const row = this.rowAt(index);
+
+    // if this is a header row, draw the section title and exit.
+    if (row && row.kind === 'header')
+    {
+      // pick a stronger font and centered alignment for headers.
+      const name = row.label || '';
+
+      // draw the header text centered across the full row.
+      this.changeTextColor(ColorManager.systemColor());
+      this.contents.fontBold = true;
+      this.drawText(name, rect.x, rect.y, rect.width, 'center');
+      this.resetTextColor();
+      this.contents.fontBold = false;
+      return;
+    }
+
+    // fallback if no row was found.
+    if (!row || row.kind !== 'action') return;
+
     // get the logical button and current bindings.
-    const button = this._buttons[index];
+    const { button } = row;
     const boundList = this._mapping[button] || [];
     const bound = boundList.length > 0
       ? boundList[0]
@@ -127,7 +220,7 @@ class Window_JabsRemapActions
     this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
 
     // build the right-column rich text (supports icons/escape codes).
-    const rightText = this.humanizeSymbol(bound);
+    const rightText = IconManager.jabsIconTextForSymbol(bound);
 
     // measure the rendered width (icons + text) to right-align manually.
     const rightWidth = this.textSizeEx(rightText).width;
@@ -175,44 +268,6 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Converts a physical input symbol to a readable label.
-   * @param {string} symbol The physical symbol.
-   * @returns {string}
-   */
-  humanizeSymbol(symbol)
-  {
-    // handle empty/unbound case.
-    if (!symbol) return '(unbound)';
-
-    switch (symbol)
-    {
-      case 'ok':
-        return '\\I[2448] / \\I[2432]';
-      case 'cancel':
-        return '\\I[2449] / \\I[2433]';
-      case 'shift':
-        return '\\I[2450] / \\I[2434]';
-      case 'tab':
-        return '\\I[2451] / \\I[2435]';
-      case 'pageup':
-        return '\\I[2452] / \\I[2436]';
-      case 'l2':
-        return '\\I[2454] / \\I[2437]';
-      case 'pagedown':
-        return '\\I[2453] / \\I[2438]';
-      case 'r2':
-        return '\\I[2455] / \\I[2439]';
-      case 'start':
-        return '\\I[2456] / \\I[2440]';
-      case 'select':
-        return '\\I[2457] / \\I[2441]';
-
-      default:
-        return symbol;
-    }
-  }
-
-  /**
    * Resolves an icon for a physical input symbol by consulting J.ABS.Input as the authority.
    * Falls back to 0 (no icon) when unmapped.
    * @param {string} symbol The physical symbol to resolve an icon for.
@@ -220,42 +275,8 @@ class Window_JabsRemapActions
    */
   iconIndexForSymbol(symbol)
   {
-    // if nothing is bound, do not draw an icon.
-    if (!symbol) return 0;
-
-    // reference the configured input constants (source of truth for symbols).
-    const I = J.ABS.Input;
-
-    // normalize any engine-native synonyms to the configured constant values if needed.
-    const normalized = symbol;
-
-    // map configured inputs to icon indices.
-    const iconByInput = {
-      // primaries
-      [I.Mainhand]: 76,       // (Cross / A)-button / Z-key
-      [I.Offhand]: 77,        // (Circle / B)-button / X-key
-      [I.Tool]: 176,           // (Triangle / Y)-button / C-key
-      [I.Dash]: 140,           // (Square / X)-button / Shift-key
-
-      // modifiers & mobility
-      [I.SkillTrigger]: 86,   // L1-button / Q-key
-      [I.StrafeTrigger]: 82,  // L2-button / L-Control-key
-      [I.GuardTrigger]: 83,   // R1-button / E-key
-      [I.MobilitySkill]: 13,  // R2-button / Tab-key
-
-      // menu-ish
-      [I.Quickmenu]: 2563,      // Start-button
-      [I.PartyCycle]: 75,     // Select-button
-
-      // combat face button triggers
-      [I.CombatSkill1]: 79,
-      [I.CombatSkill2]: 79,
-      [I.CombatSkill3]: 79,
-      [I.CombatSkill4]: 79,
-    };
-
-    // return the matching icon index or 0 if not mapped.
-    return iconByInput[normalized] || 0;
+    // delegate to IconManager for a single icon index (or 0).
+    return IconManager.jabsIconIndexForSymbol(symbol);
   }
 
   /**
@@ -281,41 +302,80 @@ class Window_JabsRemapActions
    * @param {string} button The logical action key.
    * @returns {string} The description text.
    */
-  /**
-   * Gets a human-readable description for a logical action.
-   * @param {string} button The logical action key.
-   * @returns {string} The description text.
-   */
   describeButton(button)
   {
+    // provide descriptions for section headers when selected.
+    if (button === 'Primary Actions')
+    {
+      // describe the purpose of primary actions.
+      return 'Primary actions used moment-to-moment: mainhand/offhand attacks and tools.\n'
+        + 'These are your core mapped buttons for direct, immediate use.';
+    }
+
+    // provide descriptions for section headers when selected.
+    if (button === 'Secondary Actions')
+    {
+      // describe the purpose of secondary actions.
+      return 'Secondary and modifier inputs: Skill Trigger, Rotate, Strafe, Dodge.\n'
+        + 'Hold or tap to modify movement or enable combat skill slots.';
+    }
+
+    // provide descriptions for section headers when selected.
+    if (button === 'Functional Actions')
+    {
+      // describe the purpose of functional actions.
+      return 'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\n'
+        + 'Useful for management between encounters or to swap leaders on the fly.';
+    }
+
     // a small dictionary of descriptions per logical action.
     const d = {};
 
     // functionality
-    d[JABS_Button.Menu] = "Open the JABS quick menu.\nAccess actions, tools, and options.";
-    d[JABS_Button.Select] = "Cycle the party leader.\nRotate the front actor with the next in line.";
+    d[JABS_Button.Menu] = 'Open the JABS quick menu.\nAccess actions, tools, and options.';
+    d[JABS_Button.Select] = 'Cycle the party leader.\nRotate the front actor with the next in line.';
 
     // primaries
-    d[JABS_Button.Mainhand] = "Use the mainhand action.\nTypically your basic weapon attack.";
-    d[JABS_Button.Offhand] = "Use the offhand action.\nSecondary skill or guard-ready indicator.";
-    d[JABS_Button.Tool] = "Use the selected tool.\nCasts the currently equipped tool skill.";
-    d[JABS_Button.Dodge] = "Execute the mobility skill.\nLunge, backstep, tumble, or similar move.";
+    d[JABS_Button.Mainhand] = 'Use the mainhand action.\nTypically your basic weapon attack.';
+    d[JABS_Button.Offhand] = 'Use the offhand action.\nTypically your secondary skill, or the guard-ready indicator.';
+    d[JABS_Button.Tool] = 'Use the selected tool.\nExecutes the currently equipped tool skill.';
+    d[JABS_Button.Sprint] = 'Sprint while held.\nMove faster when conditions allow.';
 
-    // modifiers & mobility
-    d[JABS_Button.Sprint] = "Sprint while held.\nMove faster when conditions allow.";
-    d[JABS_Button.Strafe] = "Hold facing while moving.\nLocks direction for circle-strafing.";
-    d[JABS_Button.Rotate] = "Rotate in place while held.\nPrevents movement for precise facing.";
-    d[JABS_Button.Guard] = "Hold to raise guard (if eligible).\nUses offhand guard skill when available.";
-    d[JABS_Button.SkillTrigger] = "Enable combat skills while held.\nFace buttons become Combat 1–4.";
+    // modifiers
+    d[JABS_Button.Dodge] = 'Execute the mobility skill.\nLunge, backstep, tumble, or similar move.';
+    d[JABS_Button.Strafe] = 'Hold facing while moving.\nLocks direction for circle-strafing.';
+    d[JABS_Button.Rotate] = 'Rotate in place while held.\nIf you are guard-ready, you will also raise your guard.';
+    d[JABS_Button.SkillTrigger] = 'Enable combat skills while held.\nPrimary actions become Combat skills 1-4.';
+
+    // NOTE: this is not actually directly mappable- it arbitrarily shares input with rotation.
+    d[JABS_Button.Guard] = 'Hold to raise guard (if guard skill is available).\nRaises guard skill when available.';
 
     // combat (L1 + face buttons)
-    d[JABS_Button.CombatSkill1] = "Trigger Combat Skill 1.\nUsed with the Skill Trigger modifier.";
-    d[JABS_Button.CombatSkill2] = "Trigger Combat Skill 2.\nUsed with the Skill Trigger modifier.";
-    d[JABS_Button.CombatSkill3] = "Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.";
-    d[JABS_Button.CombatSkill4] = "Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.";
+    d[JABS_Button.CombatSkill1] = 'Trigger Combat Skill 1.\nUsed with the Skill Trigger modifier.';
+    d[JABS_Button.CombatSkill2] = 'Trigger Combat Skill 2.\nUsed with the Skill Trigger modifier.';
+    d[JABS_Button.CombatSkill3] = 'Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.';
+    d[JABS_Button.CombatSkill4] = 'Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.';
 
     // fallback to the logical name if no description exists.
     return d[button] || String(button);
+  }
+
+  /**
+   * Processes the OK input.
+   * Prevents confirming header rows.
+   */
+  processOk()
+  {
+    // if we are not on an action row, buzz and do nothing.
+    const row = this.rowAt(this.index());
+    if (!row || row.kind !== 'action')
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
+    // defer to default behavior when actionable.
+    super.processOk();
   }
 
   /**
