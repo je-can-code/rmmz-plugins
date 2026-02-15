@@ -151,17 +151,18 @@ class JABS_Button
   static allButtons()
   {
     return [
-      // functionality
-      this.Menu, this.Select,
-
       // primary
-      this.Mainhand, this.Offhand, this.Tool, this.Dodge,
+      this.Mainhand, this.Offhand, this.Tool, this.Sprint,
+
 
       // mobility & modifiers
-      this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate, this.Guard,
+      this.SkillTrigger,  this.Strafe, this.Rotate, this.Guard, this.Dodge,
 
       // L1 + buttons
       this.CombatSkill1, this.CombatSkill2, this.CombatSkill3, this.CombatSkill4,
+
+      // functionality
+      this.Menu, this.Select,
     ];
   }
 }
