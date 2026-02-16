@@ -6,6 +6,9 @@ DataManager.createGameObjects = function()
   J.ABS.EXT.INPUT.Aliased.DataManager.get('createGameObjects')
     .call(this);
 
+  // Ensure engine-wide input remap defaults/labels are bootstrapped once per session.
+  Input.ensureRemapBootstrapped();
+
   // initialize controller 1 for JABS.
   if (!$jabsController1)
   {

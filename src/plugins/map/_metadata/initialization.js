@@ -23,12 +23,14 @@ J.MAP.Metadata = new J_MAP__PluginMetadata('J-MAP', '1.0.0');
  * A collection of all aliased methods for this plugin.
  */
 J.MAP.Aliased = {};
+J.MAP.Aliased.DataManager = new Map();
 J.MAP.Aliased.Game_Event = new Map();
 J.MAP.Aliased.Game_Map = new Map();
 J.MAP.Aliased.Game_System = new Map();
 J.MAP.Aliased.JABS_Engine = new Map();
 J.MAP.Aliased.JABS_StandardController = new Map();
 J.MAP.Aliased.Scene_Map = new Map();
+J.MAP.Aliased.Window_JabsRemapActions = new Map();
 
 J.MAP.RegExp = {};
 J.MAP.RegExp.MinimapEvent = /<(?:mm|minimap):(npc|loot|object|teleport|questOffer|questProgress|questTurnIn)>/gi;
