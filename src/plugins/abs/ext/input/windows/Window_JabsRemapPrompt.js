@@ -246,26 +246,23 @@ class Window_JabsRemapPrompt
    */
   _findTriggeredSymbol()
   {
+    // if in warmup, block all input to avoid accidental captures.
+    if (this.getWarmupFrames() > 0)
+    {
+      return null;
+    }
+
     // get curated symbols to poll.
     const symbols = this._curatedSymbols();
 
     // build a membership set for fast checks (also used for latest fallback).
     const allow = new Set(symbols);
 
-    // define symbols we ignore during warmup to prevent instant-binding of UI controls.
-    const uiSymbols = this._uiSymbols();
-
-    // check the curated list first.
+    // check the curated list first (edge-triggered only).
     for (let i = 0; i < symbols.length; i++)
     {
       // get the symbol at this index.
       const s = symbols[i];
-
-      // if in warmup and this symbol is a UI symbol, skip it.
-      if (this.getWarmupFrames() > 0 && uiSymbols.indexOf(s) >= 0)
-      {
-        continue;
-      }
 
       // if this symbol was triggered, capture it.
       if (Input.isTriggered(s))
@@ -274,16 +271,11 @@ class Window_JabsRemapPrompt
       }
     }
 
-    // fallback: if nothing triggered, consider latest button if available and allowed.
+    // guarded fallback: allow latest only if it is curated AND edge-triggered.
     const latest = Input._latestButton;
-    if (latest)
+    if (latest && allow.has(latest) && Input.isTriggered(latest))
     {
-      // require membership in curated set (no mouse) and allow if warmup permits UI symbols.
-      const warmupBlocks = this.getWarmupFrames() > 0 && uiSymbols.indexOf(latest) >= 0;
-      if (allow.has(latest) && warmupBlocks === false)
-      {
-        return latest;
-      }
+      return latest;
     }
 
     // nothing was captured this frame.
@@ -302,28 +294,24 @@ class Window_JabsRemapPrompt
 
     // build the list using adapter constants.
     const inputs = [
-      // face/core actions
+      // face/core actions.
       k.Mainhand, k.Offhand, k.Dash, k.Tool,
 
-      // modifier/shoulder/trigger style
+      // modifier/shoulder/trigger style.
       k.SkillTrigger, k.GuardTrigger, k.StrafeTrigger, k.MobilitySkill,
 
-      // utility
+      // utility.
       k.PartyCycle, k.Quickmenu,
+
+      // controller d-pad inputs.
+      k.DPadUp, k.DPadDown, k.DPadLeft, k.DPadRight,
     ];
 
-    // return the curated symbol list (duplicates are harmless but unlikely).
-    return inputs;
-  }
+    // merge in engine-wide capture symbols registered by other plugins.
+    const extras = Input.getRemapCaptureSymbols();
 
-  /**
-   * Gets the set of UI/navigation symbols ignored during warmup.
-   * @returns {string[]}
-   */
-  _uiSymbols()
-  {
-    // inputs commonly used to operate UI, not to bind immediately during warmup.
-    return [ 'ok', 'cancel', 'up', 'down', 'left', 'right', 'pageup', 'pagedown' ];
+    // return the curated symbol list.
+    return inputs.concat(extras);
   }
 
   /**

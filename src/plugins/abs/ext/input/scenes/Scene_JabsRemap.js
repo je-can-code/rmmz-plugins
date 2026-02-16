@@ -782,11 +782,33 @@ class Scene_JabsRemap
    */
   onRemapRequested()
   {
-    // get the logical action being edited.
+    // read the current command row.
+    const cmd = this.getActionsWindow()
+      .currentData();
+
+    // external row: start capture with a stable token and friendly label.
+    if (cmd && cmd.ext && cmd.ext.kind === 'ext-action')
+    {
+      // store a token we will parse on apply: __ext__<ns>:<key>
+      const token = `__ext__${cmd.ext.ns}:${cmd.ext.key}`;
+
+      // begin capture with friendly label.
+      this._state()._capturingButton = token;
+      this._state()._isCapturing = true;
+      this.getPromptWindow()
+        .startPrompt(String(cmd.ext.label || ''));
+
+      // deactivate normal windows while capturing.
+      this.getCommandWindow()
+        .deactivate();
+      this.getActionsWindow()
+        .deactivate();
+      return;
+    }
+
+    // JABS logical action path (original behavior).
     const button = this.getActionsWindow()
       .currentButton();
-
-    // begin capture for this logical action.
     this.beginCapture(button);
   }
 
@@ -795,15 +817,24 @@ class Scene_JabsRemap
    */
   onClearBinding()
   {
-    // get the logical action.
+    // read the current command row.
+    const cmd = this.getActionsWindow()
+      .currentData();
+
+    // if external, clear via Input registry and refresh the list.
+    if (cmd && cmd.ext && cmd.ext.kind === 'ext-action')
+    {
+      Input.setBindings(cmd.ext.ns, cmd.ext.key, []);
+      this.getActionsWindow()
+        .refresh();
+      return;
+    }
+
+    // JABS logical action path (original behavior).
     const button = this.getActionsWindow()
       .currentButton();
-
-    // get the pending map and clear this button.
     const pending = this.currentPendingMapping();
     pending[button] = [];
-
-    // refresh the actions to reflect the change.
     this.getActionsWindow()
       .setMapping(pending);
   }
@@ -883,19 +914,31 @@ class Scene_JabsRemap
 
   /**
    * Assigns a symbol to the given logical action while enforcing uniqueness.
-   * If the symbol exists on any other action, it will be unbound there first.
-   * @param {string} button The logical action receiving the new binding.
+   * If external, writes directly to Input registry.
+   * @param {string} button The logical action receiving the new binding, or an external token.
    * @param {string} symbol The physical input symbol to assign.
    */
   assignWithConflictResolution(button, symbol)
   {
-    // get the pending mapping for this controller.
+    // external capture token: __ext__<ns>:<key>
+    if (typeof button === 'string' && button.indexOf('__ext__') === 0)
+    {
+      const without = button.substring('__ext__'.length);
+      const splitAt = without.indexOf(':');
+      if (splitAt > 0)
+      {
+        const ns = without.substring(0, splitAt);
+        const key = without.substring(splitAt + 1);
+        Input.setBindings(ns, key, [ symbol ]);
+        this.getActionsWindow()
+          .refresh();
+        return;
+      }
+    }
+
+    // otherwise, original JABS behavior for the pending map.
     const pending = this.currentPendingMapping();
-
-    // unbind this symbol from any other actions in this mapping.
     this.unbindSymbolFromMapping(pending, symbol, button);
-
-    // write the symbol as a single-binding array for the target action.
     pending[button] = [ symbol ];
   }
 

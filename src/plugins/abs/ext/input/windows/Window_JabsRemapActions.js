@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 //region Window_JabsRemapActions
 /**
  * The list window that shows logical actions and current bindings.
@@ -133,7 +135,9 @@ class Window_JabsRemapActions
   setButtons(buttons)
   {
     // store a defensive copy of the ordered button list.
-    this._state()._buttons = Array.isArray(buttons) ? buttons.slice(0) : [];
+    this._state()._buttons = Array.isArray(buttons)
+      ? buttons.slice(0)
+      : [];
 
     // rebuild the command list to reflect the new set of rows.
     this.refresh();
@@ -180,8 +184,14 @@ class Window_JabsRemapActions
       return String(cmd.ext.label || '');
     }
 
+    // if this is an external action, return its display label (for prompt/help).
+    if (cmd.ext && cmd.ext.kind === 'ext-action')
+    {
+      return String(cmd.ext.label || '');
+    }
+
     // otherwise return the logical action key.
-    return String(cmd.symbol || cmd.ext?.button || '');
+    return String(cmd.symbol || '');
   }
 
   /**
@@ -207,7 +217,10 @@ class Window_JabsRemapActions
 
     // ensure and return the state bag.
     const actions = this._j._abs._input._actions;
-    actions._state ||= { _mapping: {}, _buttons: [] };
+    actions._state ||= {
+      _mapping: {},
+      _buttons: []
+    };
     return actions._state;
   }
 
@@ -257,6 +270,7 @@ class Window_JabsRemapActions
 
   /**
    * Builds all commands for this command window (headers + actions).
+   * Composed from small group builders to encourage extension.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
@@ -264,37 +278,114 @@ class Window_JabsRemapActions
     // reference the assignable set for quick membership checks; falls back if not stored yet.
     const can = new Set(this.getButtons());
 
-    // a small helper to test and build an action command.
-    const addIf = (rows, label, button) =>
-    {
-      // only add if the action is assignable in this context.
-      if (can.has(button)) rows.push(this.buildActionCommand(button));
-    };
-
-    // compile the rows in the requested grouping order.
+    // compile the rows in order using composition.
     const rows = [];
 
-    // primary actions section.
-    rows.push(this.buildHeaderCommand("Primary Actions"));
-    addIf(rows, "Mainhand", JABS_Button.Mainhand);
-    addIf(rows, "Offhand", JABS_Button.Offhand);
-    addIf(rows, "Tool", JABS_Button.Tool);
-    addIf(rows, "Sprint", JABS_Button.Sprint);
+    // allow extensions to prepend entire sections before the built-ins.
+    this.buildPreExtensionGroups(rows, can);
 
-    // secondary actions section.
-    rows.push(this.buildHeaderCommand("Secondary Actions"));
-    addIf(rows, "Skill Trigger", JABS_Button.SkillTrigger);
-    addIf(rows, "Rotate", JABS_Button.Rotate);
-    addIf(rows, "Strafe", JABS_Button.Strafe);
-    addIf(rows, "Dodge", JABS_Button.Dodge);
+    // build primary group.
+    this.buildPrimaryGroupRows(rows, can);
 
-    // functional actions section.
-    rows.push(this.buildHeaderCommand("Functional Actions"));
-    addIf(rows, "Menu", JABS_Button.Menu);
-    addIf(rows, "Party Cycle", JABS_Button.Select);
+    // build secondary group.
+    this.buildSecondaryGroupRows(rows, can);
+
+    // build functional group.
+    this.buildFunctionalGroupRows(rows, can);
+
+    // allow extensions to append entire sections after the built-ins.
+    this.buildPostExtensionGroups(rows, can);
 
     // return the compiled list of commands.
     return rows;
+  }
+
+  /**
+   * Adds an action command row if the logical button is assignable in this context.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   * @param {string} button The logical button to conditionally add.
+   */
+  _addIf(rows, can, button)
+  {
+    // only add if the action is assignable in this context.
+    if (can.has(button))
+    {
+      // build and push the action command row.
+      rows.push(this.buildActionCommand(button));
+    }
+  }
+
+  /**
+   * Allows plugins to prepend custom sections before the built-in groups.
+   * Default: no-op. Alias to insert rows.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   */
+  // eslint-disable-next-line no-unused-vars
+  buildPreExtensionGroups(rows, can)
+  {
+  }
+
+  /**
+   * Builds the Primary Actions section and its rows.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   */
+  buildPrimaryGroupRows(rows, can)
+  {
+    // add a header for the primary actions.
+    rows.push(this.buildHeaderCommand('Primary Actions'));
+
+    // add primary logical actions if assignable.
+    this._addIf(rows, can, JABS_Button.Mainhand);
+    this._addIf(rows, can, JABS_Button.Offhand);
+    this._addIf(rows, can, JABS_Button.Tool);
+    this._addIf(rows, can, JABS_Button.Sprint);
+  }
+
+  /**
+   * Builds the Secondary Actions section and its rows.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   */
+  buildSecondaryGroupRows(rows, can)
+  {
+    // add a header for the secondary actions.
+    rows.push(this.buildHeaderCommand('Secondary Actions'));
+
+    // add secondary logical actions if assignable.
+    this._addIf(rows, can, JABS_Button.SkillTrigger);
+    this._addIf(rows, can, JABS_Button.Rotate);
+    this._addIf(rows, can, JABS_Button.Strafe);
+    this._addIf(rows, can, JABS_Button.Dodge);
+  }
+
+  /**
+   * Builds the Functional Actions section and its rows.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   */
+  buildFunctionalGroupRows(rows, can)
+  {
+    // add a header for the functional actions.
+    rows.push(this.buildHeaderCommand('Functional Actions'));
+
+    // add functional logical actions if assignable.
+    this._addIf(rows, can, JABS_Button.Menu);
+    this._addIf(rows, can, JABS_Button.Select);
+  }
+
+  /**
+   * Allows plugins to append custom sections after the built-in groups.
+   * Default: no-op. Override/alias to insert rows.
+   * @param {BuiltWindowCommand[]} rows The rows being built.
+   * @param {Set<string>} can The set of assignable logical action keys.
+   */
+  // eslint-disable-next-line no-unused-vars
+  buildPostExtensionGroups(rows, can)
+  {
+    // default: intentionally empty for extensions to override.
   }
 
   /**
@@ -333,9 +424,36 @@ class Window_JabsRemapActions
       .build();
   }
 
+  /**
+   * Builds an actionable command for an external namespace logical action.
+   * The window will read/write these directly via the Input registry.
+   * @param {string} ns The namespace (ex: "J.MAP").
+   * @param {string} key The logical key within that namespace.
+   * @param {string} label The row label to display.
+   * @returns {BuiltWindowCommand}
+   */
+  buildExternalActionCommand(ns, key, label)
+  {
+    // build an enabled command that carries external namespace metadata.
+    return new WindowCommandBuilder(label)
+      .setSymbol(`__ext__${ns}:${key}`)
+      .setExtensionData({
+        kind: 'ext-action',
+        ns: ns,
+        key: key,
+        label: label,
+      })
+      .setEnabled(true)
+      .build();
+  }
+
   //endregion builders
 
   //region drawing
+  /**
+   * Draws a single item.
+   * @param {number} index The index to draw.
+   */
   /**
    * Draws a single item.
    * @param {number} index The index to draw.
@@ -366,65 +484,93 @@ class Window_JabsRemapActions
       return;
     }
 
-    // compute the logical action key for this row.
+    // external registry-backed action: render from Input registry bindings.
+    if (cmd.ext && cmd.ext.kind === 'ext-action')
+    {
+      // label is provided by the command.
+      const displayLabel = String(cmd.ext.label || '');
+
+      // read the bindings directly from the Input registry.
+      const boundList = Input.getBindings(cmd.ext.ns, cmd.ext.key) || [];
+
+      // extract the primary binding if any.
+      const bound = boundList.length > 0
+        ? boundList[0]
+        : String.empty;
+
+      // determine the icon index for the bound physical symbol.
+      const iconIndex = this.iconIndexForSymbol(bound);
+
+      // pull icon sizing for positioning.
+      const iw = ImageManager.iconWidth;
+      const ih = ImageManager.iconHeight;
+
+      // compute a vertically-centered y for the icon.
+      const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
+
+      // track the x-position for the action text, starting at the left side.
+      let leftTextX = rect.x;
+
+      // if we have a valid icon index (> 0), draw it and bump the text to the right.
+      if (iconIndex > 0)
+      {
+        // draw the icon to the far-left, preceding the action label.
+        this.drawIcon(iconIndex, rect.x, iconY);
+
+        // add spacing for the icon width + padding before drawing the action text.
+        leftTextX += iw + 6;
+      }
+
+      // draw the action label to the right of the icon (if any).
+      this.drawText(displayLabel, leftTextX, rect.y, rect.width / 2);
+
+      // draw an arrow separating columns.
+      const arrow = '→';
+
+      // compute mid-column x.
+      const midX = rect.x + rect.width / 2;
+
+      // draw the arrow centered between columns.
+      this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
+
+      // build the right-column rich text (supports icons/escape codes).
+      const rightText = IconManager.jabsIconTextForSymbol(bound);
+
+      // measure the rendered width (icons + text) to right-align manually.
+      const rightWidth = this.textSizeEx(rightText).width;
+
+      // compute the right-aligned x within the right half.
+      const rightX = midX + (rect.width / 2) - rightWidth;
+
+      // draw the mapping text on the right column using drawTextEx (enables icons).
+      this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
+      return;
+    }
+
+    // JABS logical action row: original behavior.
     const button = String(cmd.symbol);
-
-    // read the current bindings for this logical action from the mapping.
     const mapping = this.getMapping();
-
-    // get the list of bound symbols for this action.
     const boundList = mapping[button] || [];
-
-    // extract the primary binding if any.
     const bound = boundList.length > 0
       ? boundList[0]
       : String.empty;
-
-    // determine the icon index for the bound physical symbol.
     const iconIndex = this.iconIndexForSymbol(bound);
-
-    // pull icon sizing for positioning.
     const iw = ImageManager.iconWidth;
     const ih = ImageManager.iconHeight;
-
-    // compute a vertically-centered y for the icon.
     const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
-
-    // track the x-position for the action text, starting at the left side.
     let leftTextX = rect.x;
-
-    // if we have a valid icon index (> 0), draw it and bump the text to the right.
     if (iconIndex > 0)
     {
-      // draw the icon to the far-left, preceding the action label.
       this.drawIcon(iconIndex, rect.x, iconY);
-
-      // add spacing for the icon width + padding before drawing the action text.
       leftTextX += iw + 6;
     }
-
-    // draw the logical action label to the right of the icon (if any).
     this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
-
-    // draw an arrow separating columns.
     const arrow = '→';
-
-    // compute mid-column x.
     const midX = rect.x + rect.width / 2;
-
-    // draw the arrow centered between columns.
     this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
-
-    // build the right-column rich text (supports icons/escape codes).
     const rightText = IconManager.jabsIconTextForSymbol(bound);
-
-    // measure the rendered width (icons + text) to right-align manually.
     const rightWidth = this.textSizeEx(rightText).width;
-
-    // compute the right-aligned x within the right half.
     const rightX = midX + (rect.width / 2) - rightWidth;
-
-    // draw the mapping text on the right column using drawTextEx (enables icons).
     this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
   }
 
@@ -572,24 +718,21 @@ class Window_JabsRemapActions
     if (button === 'Primary Actions')
     {
       // describe the purpose of primary actions.
-      return 'Primary actions used moment-to-moment: mainhand/offhand attacks and tools.\n'
-        + 'These are your core mapped buttons for direct, immediate use.';
+      return 'Primary actions used moment-to-moment: mainhand/offhand attacks and tools.\n' + 'These are your core mapped buttons for direct, immediate use.';
     }
 
     // provide descriptions for section headers when selected.
     if (button === 'Secondary Actions')
     {
       // describe the purpose of secondary actions.
-      return 'Secondary and modifier inputs: Skill Trigger, Rotate, Strafe, Dodge.\n'
-        + 'Hold or tap to modify movement or enable combat skill slots.';
+      return 'Secondary and modifier inputs: Skill Trigger, Rotate, Strafe, Dodge.\n' + 'Hold or tap to modify movement or enable combat skill slots.';
     }
 
     // provide descriptions for section headers when selected.
     if (button === 'Functional Actions')
     {
       // describe the purpose of functional actions.
-      return 'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\n'
-        + 'Useful for management between encounters or to swap leaders on the fly.';
+      return 'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\n' + 'Useful for management between encounters or to swap leaders on the fly.';
     }
 
     // a small dictionary of descriptions per logical action.

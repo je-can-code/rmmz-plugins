@@ -49,6 +49,7 @@ J.ABS.EXT.INPUT.Metadata = {
 J.ABS.EXT.INPUT.Aliased = {
   DataManager: new Map(),
   Game_System: new Map(),
+  Input: new Map(),
   JABS_Engine: new Map(),
   JABS_Battler: new Map(),
   Window_MenuCommand: new Map(),

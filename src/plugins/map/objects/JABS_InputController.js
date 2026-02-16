@@ -2,6 +2,44 @@
 if (J.ABS)
 {
   /**
+   * Extends/Overrides {@link #initMembers}.<br/>
+   * Also initializes the minimap controller-local state without lazy init.
+   */
+  J.MAP.Aliased.JABS_StandardController.set('initMembers', JABS_StandardController.prototype.initMembers);
+  JABS_StandardController.prototype.initMembers = function()
+  {
+    // perform original logic.
+    const original = J.MAP.Aliased.JABS_StandardController.get('initMembers')
+      .call(this);
+
+    // initialize the previously-lazy field for minimap focus tracking.
+    this._minimapFocusPressedPrev = false;
+
+    // return whatever the original returned, if anything.
+    return original;
+  };
+
+  /**
+   * Gets whether or not the expand-minimap action was pressed in the prior frame.
+   * @returns {boolean}
+   */
+  JABS_StandardController.prototype.getMinimapFocusPressedPrev = function()
+  {
+    // return the prior pressed state.
+    return this._minimapFocusPressedPrev === true;
+  };
+
+  /**
+   * Sets whether or not the expand-minimap action was pressed in the prior frame.
+   * @param {boolean} v The new pressed state.
+   */
+  JABS_StandardController.prototype.setMinimapFocusPressedPrev = function(v)
+  {
+    // set the prior pressed state.
+    this._minimapFocusPressedPrev = v === true;
+  };
+
+  /**
    * Extends {@link #update}.<br/>
    * Also handles input detection for the the minimap window toggle shortcut key.
    */
@@ -38,15 +76,15 @@ if (J.ABS)
    */
   JABS_StandardController.prototype.isMiniMapWindowActionTriggered = function()
   {
-    // this action requires the left stick button to be triggered.
-    if (Input.isTriggered(J.ABS.Input.L3))
+    // this action requires the registered minimap toggle to be triggered (edge).
+    if (Input.isActionTriggered('J.MAP', 'minimap-toggle'))
     {
       return true;
     }
 
     // input was not triggered.
     return false;
-  }
+  };
 
   /**
    * Executes the time window toggle action.
@@ -54,7 +92,7 @@ if (J.ABS)
   JABS_StandardController.prototype.performMiniMapWindowAction = function()
   {
     JABS_InputAdapter.performMinimapWindowAction();
-  }
+  };
 
   /**
    * Handles press-and-hold on the MobilitySkill input to show a centered, expanded minimap.
@@ -64,9 +102,6 @@ if (J.ABS)
   {
     // do not allow if the current map blocks the minimap entirely.
     if ($gameMap.isMinimapBlocked()) return;
-
-    // track prior pressed state (init lazily on first use).
-    this._mmFocusPressedPrev ??= false;
 
     // edge: pressed this frame → start focus.
     if (this.isMinimapFocusPeekActionHeld())
@@ -80,27 +115,31 @@ if (J.ABS)
       this.performMinimapFocusEnd();
     }
 
-    // persist press state for R2 / MobilitySkill.
-    this._mmFocusPressedPrev = Input.isPressed(J.ABS.Input.MobilitySkill);
+    // persist press state for the registered expand-minimap action.
+    this.setMinimapFocusPressedPrev(Input.isActionPressed('J.MAP', 'expand-minimap'));
   };
 
   JABS_StandardController.prototype.isMinimapFocusPeekActionHeld = function()
   {
-    if (Input.isPressed(J.ABS.Input.MobilitySkill) && !this._mmFocusPressedPrev)
+    // edge: newly pressed this frame.
+    if (Input.isActionPressed('J.MAP', 'expand-minimap') && this.getMinimapFocusPressedPrev() === false)
     {
       return true;
     }
 
+    // not newly pressed.
     return false;
   };
 
   JABS_StandardController.prototype.isMinimapFocusPeekActionLifted = function()
   {
-    if (!Input.isPressed(J.ABS.Input.MobilitySkill) && this._mmFocusPressedPrev)
+    // edge: just released this frame.
+    if (Input.isActionPressed('J.MAP', 'expand-minimap') === false && this.getMinimapFocusPressedPrev() === true)
     {
       return true;
     }
 
+    // not released this frame.
     return false;
   };
 
