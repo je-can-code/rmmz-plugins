@@ -1,11 +1,14 @@
 //region Window_JabsRemapActions
 /**
  * The list window that shows logical actions and current bindings.
+ * Refactored to extend {@link Window_Command} with builder-style organization
+ * and namespaced state under {@link this._j._abs._input}.
  */
 class Window_JabsRemapActions
-  extends Window_Selectable
+  extends Window_Command
 {
   /**
+   * Constructor.
    * @param {Rectangle} rect The rectangle to draw this window within.
    */
   constructor(rect)
@@ -13,28 +16,219 @@ class Window_JabsRemapActions
     // perform super initialize.
     super(rect);
 
-    /**
-     * The working mapping being displayed.
-     * @type {Object<string, string[]>}
-     */
-    this._mapping = {};
+    // initialize the root-namespace definition members.
+    this.initCoreMembers();
 
-    /**
-     * The ordered list of logical action keys for display (flat, assignable-only).
-     * @type {string[]}
-     */
-    this._buttons = this.buildButtonList();
+    // initialize the window-local members.
+    this.initPrimaryMembers();
 
-    /**
-     * The grouped row model combining headers and actions.
-     * @type {{ kind: string, label?: string, button?: string }[]}
-     */
-    this._rows = this.buildRows();
-
-    // align the help window behavior.
-    this.select(0);
+    // align selection to the first actionable entry by default.
+    this.select(this.firstActionIndex());
   }
 
+  //region init
+  /**
+   * Initializes the shared root namespace for this plugin branch.
+   */
+  initCoreMembers()
+  {
+    /**
+     * The shared root namespace for all of J's plugin data.
+     */
+    this._j ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS.
+     */
+    this._j._abs ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS input.
+     */
+    this._j._abs._input ||= {};
+
+    /**
+     * A grouping for this window within the input branch.
+     */
+    this._j._abs._input._actions ||= {};
+  }
+
+  /**
+   * Initializes the state and view members for this window.
+   */
+  initPrimaryMembers()
+  {
+    /**
+     * Window-local state bag.
+     */
+    this._j._abs._input._actions._state = {
+      _mapping: {},
+      _buttons: [],
+    };
+
+    /**
+     * Window-local view bag.
+     */
+    this._j._abs._input._actions._view = {
+      _helpWindow: null,
+    };
+
+    // pre-build the static button list if not already present.
+    if (this.getButtons().length === 0)
+    {
+      // set the authoritative buttons list for this window.
+      this.setButtons(this.buildButtonList());
+    }
+  }
+
+  //endregion init
+
+  //region accessors
+  /**
+   * Gets the current mapping being displayed.
+   * @returns {Object<string, string[]>}
+   */
+  getMapping()
+  {
+    // read from the lazily-initialized state bag.
+    return this._state()._mapping || {};
+  }
+
+  /**
+   * Sets the mapping to display and refreshes.
+   * @param {Object<string, string[]>} mapping The mapping to show and edit.
+   */
+  setMapping(mapping)
+  {
+    // store the mapping reference (scene owns lifecycle of the object).
+    this._state()._mapping = mapping || {};
+
+    // refresh the contents to draw the values.
+    this.refresh();
+  }
+
+  /**
+   * Gets the ordered list of logical action keys.
+   * @returns {string[]}
+   */
+  getButtons()
+  {
+    // obtain the window state bag.
+    const state = this._state();
+
+    // if we already have an authoritative list, use it.
+    if (state._buttons && state._buttons.length > 0)
+    {
+      return state._buttons;
+    }
+
+    // otherwise, fall back to the canonical assignable list without mutating state.
+    return this.buildButtonList();
+  }
+
+  /**
+   * Sets the ordered list of logical action keys.
+   * @param {string[]} buttons The ordered list of buttons.
+   */
+  setButtons(buttons)
+  {
+    // store a defensive copy of the ordered button list.
+    this._state()._buttons = Array.isArray(buttons) ? buttons.slice(0) : [];
+
+    // rebuild the command list to reflect the new set of rows.
+    this.refresh();
+  }
+
+  /**
+   * Gets the currently bound help window.
+   * @returns {Window_Help|null}
+   */
+  getHelpWindow()
+  {
+    // return the tracked help window instance.
+    return this._view()._helpWindow;
+  }
+
+  /**
+   * Sets the help window and forwards to the base implementation for linkage.
+   * @param {Window_Help} helpWindow The help window to bind.
+   */
+  setHelpWindow(helpWindow)
+  {
+    // store a local reference for access via getter.
+    this._view()._helpWindow = helpWindow;
+
+    // also perform the default linkage.
+    super.setHelpWindow(helpWindow);
+  }
+
+  /**
+   * Returns the current logical button at the cursor (or section label for headers).
+   * @returns {string}
+   */
+  currentButton()
+  {
+    // read the current command.
+    const cmd = this.currentData();
+
+    // if there is no command, return empty.
+    if (!cmd) return String.empty;
+
+    // if this is a header, return its label.
+    if (cmd.ext && cmd.ext.kind === 'header')
+    {
+      return String(cmd.ext.label || '');
+    }
+
+    // otherwise return the logical action key.
+    return String(cmd.symbol || cmd.ext?.button || '');
+  }
+
+  /**
+   * Lazily ensures the root namespace exists.
+   */
+  _root()
+  {
+    // ensure root namespaces.
+    this._j ||= {};
+    this._j._abs ||= {};
+    this._j._abs._input ||= {};
+    this._j._abs._input._actions ||= {};
+  }
+
+  /**
+   * Lazily ensures and returns the window-local state bag.
+   * @returns {{_mapping:Object<string,string[]>, _buttons:string[]}}
+   */
+  _state()
+  {
+    // ensure root namespaces.
+    this._root();
+
+    // ensure and return the state bag.
+    const actions = this._j._abs._input._actions;
+    actions._state ||= { _mapping: {}, _buttons: [] };
+    return actions._state;
+  }
+
+  /**
+   * Lazily ensures and returns the window-local view bag.
+   * @returns {{_helpWindow:Window_Help|null}}
+   */
+  _view()
+  {
+    // ensure root namespaces.
+    this._root();
+
+    // ensure and return the view bag.
+    const actions = this._j._abs._input._actions;
+    actions._view ||= { _helpWindow: null };
+    return actions._view;
+  }
+
+  //endregion accessors
+
+  //region builders
   /**
    * Builds the ordered list of logical actions to show.
    * @returns {string[]}
@@ -49,104 +243,99 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Returns the current logical button at the cursor.
-   * @returns {string}
+   * Implements {@link Window_Command.prototype.makeCommandList}.<br>
+   * Creates all commands (headers + actions) for this window.
    */
-  currentButton()
+  makeCommandList()
   {
-    // resolve the row at the current index.
-    const row = this.rowAt(this.index());
+    // build all the commands for the window; this does not require pre-initialized state.
+    const commands = this.buildCommands();
 
-    // return the logical button for the selected action row.
-    return (row.kind === 'action'
-      ? String(row.button)
-      : String(row.label));
+    // add all built commands to the list.
+    commands.forEach(this.addBuiltCommand, this);
   }
 
   /**
-   * Builds the grouped row model based on the current assignable inputs.
-   * @returns {{ kind: string, label?: string, button?: string }[]} The grouped rows.
+   * Builds all commands for this command window (headers + actions).
+   * @returns {BuiltWindowCommand[]}
    */
-  buildRows()
+  buildCommands()
   {
-    // reference the assignable set for quick membership checks.
-    const can = new Set(this._buttons);
+    // reference the assignable set for quick membership checks; falls back if not stored yet.
+    const can = new Set(this.getButtons());
 
-    // a small helper to add a labeled header.
-    const header = label => ({
-      kind: 'header',
-      label
-    });
+    // a small helper to test and build an action command.
+    const addIf = (rows, label, button) =>
+    {
+      // only add if the action is assignable in this context.
+      if (can.has(button)) rows.push(this.buildActionCommand(button));
+    };
 
-    // a small helper to add an action row when assignable.
-    const action = button => ({
-      kind: 'action',
-      button
-    });
-
-    // construct the rows per requested groups.
+    // compile the rows in the requested grouping order.
     const rows = [];
 
-    // primary actions.
-    rows.push(header('Primary Actions'));
-    if (can.has(JABS_Button.Mainhand)) rows.push(action(JABS_Button.Mainhand));
-    if (can.has(JABS_Button.Offhand)) rows.push(action(JABS_Button.Offhand));
-    if (can.has(JABS_Button.Tool)) rows.push(action(JABS_Button.Tool));
-    if (can.has(JABS_Button.Sprint)) rows.push(action(JABS_Button.Sprint));
+    // primary actions section.
+    rows.push(this.buildHeaderCommand("Primary Actions"));
+    addIf(rows, "Mainhand", JABS_Button.Mainhand);
+    addIf(rows, "Offhand", JABS_Button.Offhand);
+    addIf(rows, "Tool", JABS_Button.Tool);
+    addIf(rows, "Sprint", JABS_Button.Sprint);
 
-    // secondary actions.
-    rows.push(header('Secondary Actions'));
-    if (can.has(JABS_Button.SkillTrigger)) rows.push(action(JABS_Button.SkillTrigger));
-    if (can.has(JABS_Button.Rotate)) rows.push(action(JABS_Button.Rotate));
-    if (can.has(JABS_Button.Strafe)) rows.push(action(JABS_Button.Strafe));
-    if (can.has(JABS_Button.Dodge)) rows.push(action(JABS_Button.Dodge));
+    // secondary actions section.
+    rows.push(this.buildHeaderCommand("Secondary Actions"));
+    addIf(rows, "Skill Trigger", JABS_Button.SkillTrigger);
+    addIf(rows, "Rotate", JABS_Button.Rotate);
+    addIf(rows, "Strafe", JABS_Button.Strafe);
+    addIf(rows, "Dodge", JABS_Button.Dodge);
 
-    // functional actions.
-    rows.push(header('Functional Actions'));
-    if (can.has(JABS_Button.Menu)) rows.push(action(JABS_Button.Menu));
-    if (can.has(JABS_Button.Select)) rows.push(action(JABS_Button.Select));
+    // functional actions section.
+    rows.push(this.buildHeaderCommand("Functional Actions"));
+    addIf(rows, "Menu", JABS_Button.Menu);
+    addIf(rows, "Party Cycle", JABS_Button.Select);
 
-    // return the assembled rows.
+    // return the compiled list of commands.
     return rows;
   }
 
   /**
-   * Gets the row at the provided index.
-   * @param {number} index The index of the row.
-   * @returns {{ kind: string, label?: string, button?: string }|null}
+   * Builds a header command that is non-interactive.
+   * @param {string} label The header label to display.
+   * @returns {BuiltWindowCommand}
    */
-  rowAt(index)
+  buildHeaderCommand(label)
   {
-    // return the row if within range.
-    if (index >= 0 && index < this._rows.length) return this._rows[index];
-
-    // out of range yields null.
-    return null;
+    // build a disabled command that represents a section header.
+    return new WindowCommandBuilder(label)
+      .setSymbol(`__header__${label}`)
+      .setExtensionData({
+        kind: 'header',
+        label
+      })
+      .setEnabled(false)
+      .build();
   }
 
   /**
-   * Sets the mapping to display and refreshes.
-   * @param {Object<string, string[]>} mapping The mapping to show and edit.
+   * Builds an actionable command for a logical action button.
+   * @param {string} button The logical action key.
+   * @returns {BuiltWindowCommand}
    */
-  setMapping(mapping)
+  buildActionCommand(button)
   {
-    // store the mapping reference (scene owns lifecycle of the object).
-    this._mapping = mapping;
-
-    // refresh to draw the values.
-    this.refresh();
+    // build an enabled command that represents a remappable action.
+    return new WindowCommandBuilder(this.humanizeButton(button))
+      .setSymbol(button)
+      .setExtensionData({
+        kind: 'action',
+        button
+      })
+      .setEnabled(true)
+      .build();
   }
 
-  /**
-   * Gets the number of items to render.
-   * @returns {number}
-   */
-  maxItems()
-  {
-    // return the count of buttons.
-    return this._rows.length;
-  }
+  //endregion builders
 
+  //region drawing
   /**
    * Draws a single item.
    * @param {number} index The index to draw.
@@ -156,14 +345,17 @@ class Window_JabsRemapActions
     // get the rectangle for this line.
     const rect = this.itemRectWithPadding(index);
 
-    // resolve the row to draw.
-    const row = this.rowAt(index);
+    // resolve the command to draw.
+    const cmd = this._list[index];
+
+    // fallback if no command was found.
+    if (!cmd) return;
 
     // if this is a header row, draw the section title and exit.
-    if (row && row.kind === 'header')
+    if (cmd.ext && cmd.ext.kind === 'header')
     {
       // pick a stronger font and centered alignment for headers.
-      const name = row.label || '';
+      const name = cmd.name || '';
 
       // draw the header text centered across the full row.
       this.changeTextColor(ColorManager.systemColor());
@@ -174,15 +366,19 @@ class Window_JabsRemapActions
       return;
     }
 
-    // fallback if no row was found.
-    if (!row || row.kind !== 'action') return;
+    // compute the logical action key for this row.
+    const button = String(cmd.symbol);
 
-    // get the logical button and current bindings.
-    const { button } = row;
-    const boundList = this._mapping[button] || [];
+    // read the current bindings for this logical action from the mapping.
+    const mapping = this.getMapping();
+
+    // get the list of bound symbols for this action.
+    const boundList = mapping[button] || [];
+
+    // extract the primary binding if any.
     const bound = boundList.length > 0
       ? boundList[0]
-      : '';
+      : String.empty;
 
     // determine the icon index for the bound physical symbol.
     const iconIndex = this.iconIndexForSymbol(bound);
@@ -232,6 +428,92 @@ class Window_JabsRemapActions
     this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
   }
 
+  //endregion drawing
+
+  //region help
+  /**
+   * Updates the linked help window with a description of the selected action.
+   */
+  updateHelp()
+  {
+    // read the bound help window.
+    const help = this.getHelpWindow();
+
+    // if we have no help window, do nothing.
+    if (!help) return;
+
+    // resolve the currently selected logical or header label.
+    const button = this.currentButton();
+
+    // build the description for this selection.
+    const text = this.describeButton(button);
+
+    // update the help text.
+    help.setText(text);
+  }
+
+  //endregion help
+
+  //region handling
+  /**
+   * Processes the OK input.
+   * Prevents confirming header rows.
+   */
+  processOk()
+  {
+    // read the current command.
+    const cmd = this.currentData();
+
+    // if this is not an action row, buzz and do nothing.
+    if (!cmd || (cmd.ext && cmd.ext.kind !== 'action'))
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
+    // defer to default behavior when actionable.
+    super.processOk();
+  }
+
+  /**
+   * Defines the standard handlers for OK/Cancel and Clear.
+   */
+  processHandling()
+  {
+    // perform super handling.
+    super.processHandling();
+
+    // handle clear binding when the delete-like key is pressed.
+    if (this.isOpenAndActive())
+    {
+      // if the PageDown key was triggered, clear the binding.
+      if (Input.isTriggered('pagedown')) this.callHandler('clear');
+    }
+  }
+
+  //endregion handling
+
+  //region utils
+  /**
+   * Finds the first actionable command index (skips headers).
+   * @returns {number}
+   */
+  firstActionIndex()
+  {
+    // find the first index in the list that is enabled.
+    for (let i = 0; i < this._list.length; i++)
+    {
+      // read the command at this index.
+      const cmd = this._list[i];
+
+      // if enabled, return this index.
+      if (cmd && cmd.enabled !== false) return i;
+    }
+
+    // fallback to zero when none found.
+    return 0;
+  }
+
   /**
    * Converts a logical button key into a readable label.
    * @param {string} button The logical button key.
@@ -268,7 +550,7 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Resolves an icon for a physical input symbol by consulting J.ABS.Input as the authority.
+   * Resolves an icon for a physical input symbol by consulting the IconManager.
    * Falls back to 0 (no icon) when unmapped.
    * @param {string} symbol The physical symbol to resolve an icon for.
    * @returns {number} The icon index to draw, or 0 if none.
@@ -280,26 +562,8 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Updates the linked help window with a description of the selected action.
-   */
-  updateHelp()
-  {
-    // if we have no help window, do nothing.
-    if (!this._helpWindow) return;
-
-    // resolve the currently selected logical button.
-    const button = this.currentButton();
-
-    // build the description for this button.
-    const text = this.describeButton(button);
-
-    // update the help text.
-    this._helpWindow.setText(text);
-  }
-
-  /**
-   * Gets a human-readable description for a logical action.
-   * @param {string} button The logical action key.
+   * Gets a human-readable description for a logical action or header.
+   * @param {string} button The logical action key or header label.
    * @returns {string} The description text.
    */
   describeButton(button)
@@ -360,39 +624,7 @@ class Window_JabsRemapActions
     return d[button] || String(button);
   }
 
-  /**
-   * Processes the OK input.
-   * Prevents confirming header rows.
-   */
-  processOk()
-  {
-    // if we are not on an action row, buzz and do nothing.
-    const row = this.rowAt(this.index());
-    if (!row || row.kind !== 'action')
-    {
-      SoundManager.playBuzzer();
-      return;
-    }
-
-    // defer to default behavior when actionable.
-    super.processOk();
-  }
-
-  /**
-   * Defines the standard handlers for OK/Cancel and Clear.
-   */
-  processHandling()
-  {
-    // perform super handling.
-    super.processHandling();
-
-    // handle clear binding when the delete-like key is pressed.
-    if (this.isOpenAndActive())
-    {
-      // if the PageDown key was triggered, clear the binding.
-      if (Input.isTriggered('pagedown')) this.callHandler('clear');
-    }
-  }
+  //endregion utils
 }
 
 //endregion Window_JabsRemapActions

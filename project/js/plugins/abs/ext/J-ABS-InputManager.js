@@ -1787,56 +1787,134 @@ class Scene_JabsRemap
   extends Scene_MenuBase
 {
   /**
-   * Initializes this scene.
+   * Constructor.
+   */
+  constructor()
+  {
+    // call super when having extended constructors.
+    super();
+
+    // jumpstart initialization on creation.
+    this.initialize();
+  }
+
+  /**
+   * Pushes this current scene onto the stack, forcing it into action.
+   */
+  static callScene()
+  {
+    SceneManager.push(this);
+  }
+
+  //region init
+  /**
+   * Initializes this scene and members.
    */
   initialize()
   {
-    // perform super initialize.
+    // perform original logic.
     super.initialize();
 
-    /**
-     * The index of the controller being edited (aligned with adapter order).
-     * Always 0 for single-controller UX.
-     * @type {number}
-     */
-    this._controllerIndex = 0;
-
-    /**
-     * The list of controllers from the adapter (constrained to [0]).
-     * @type {JABS_StandardController[]}
-     */
-    this._controllers = [];
-
-    /**
-     * The working copy of mappings per controller key.
-     * @type {Object<string, Object<string, string[]>>}
-     */
-    this._pendingByKey = {};
-
-    /**
-     * The capture state flag.
-     * @type {boolean}
-     */
-    this._isCapturing = false;
-
-    /**
-     * The logical action currently being captured.
-     * @type {string|null}
-     */
-    this._capturingButton = null;
+    // also initialize our scene properties.
+    this.initMembers();
   }
 
+  /**
+   * Initialize all properties required by the scene.
+   */
+  initMembers()
+  {
+    // initialize the root-namespace definition members.
+    this.initCoreMembers();
+
+    // initialize the primary members for the remap scene.
+    this.initPrimaryMembers();
+  }
+
+  /**
+   * Initializes the shared root namespace for this plugin branch.
+   */
+  initCoreMembers()
+  {
+    /**
+     * The shared root namespace for all of J's plugin data.
+     */
+    this._j ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS.
+     */
+    this._j._abs ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS input.
+     */
+    this._j._abs._input ||= {};
+  }
+
+  /**
+   * Initializes windows and state tracking for the remap scene.
+   */
+  initPrimaryMembers()
+  {
+    /**
+     * The collection of windows owned by this scene.
+     */
+    this._j._abs._input._windows = {
+      _topHelp: null,
+      _actions: null,
+      _usageHelp: null,
+      _command: null,
+      _prompt: null,
+    };
+
+    /**
+     * The state data for this scene.
+     */
+    this._j._abs._input._state = {
+      _controllerIndex: 0,
+      _controllers: [],
+      _pendingByKey: {},
+      _isCapturing: false,
+      _capturingButton: null,
+    };
+  }
+
+  //endregion init
+
+  //region create
   /**
    * Creates all display objects for this scene.
    */
   create()
   {
-    // perform super create.
+    // perform original logic.
     super.create();
 
     // build the initial controller list and pending maps.
     this.buildControllerList();
 
+    // create the various display objects on the screen.
+    this.createDisplayObjects();
+
+    // refresh layout with the current controller.
+    this.refreshAll();
+  }
+
+  /**
+   * Creates the display objects for this scene.
+   */
+  createDisplayObjects()
+  {
+    // create all our windows.
+    this.createAllWindows();
+  }
+
+  /**
+   * Creates all remap-related windows.
+   */
+  createAllWindows()
+  {
     // create the top action help (conventional help window).
     this.createTopHelpWindow();
 
@@ -1851,11 +1929,411 @@ class Scene_JabsRemap
 
     // create the capture overlay (fullscreen overlay, hidden by default).
     this.createPromptWindow();
-
-    // refresh layout with the current controller.
-    this.refreshAll();
   }
 
+  //endregion create
+
+  //region windows
+  //region top help window
+  /**
+   * Creates the top help window that describes the selected logical action.
+   */
+  createTopHelpWindow()
+  {
+    // create the window.
+    const window = this.buildTopHelpWindow();
+
+    // update the tracker with the new window.
+    this.setTopHelpWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the top help window.
+   * @returns {Window_Help}
+   */
+  buildTopHelpWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.topHelpWindowRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_Help(rectangle);
+
+    // return the built and configured help window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the top help window.
+   * @returns {Rectangle}
+   */
+  topHelpWindowRectangle()
+  {
+    // determine the height for the top help window (single row).
+    const wh = this.calcWindowHeight(1.8, true);
+
+    // compute the total width for the centered middle group.
+    const ww = Math.floor(Graphics.boxWidth * 0.60);
+
+    // compute the starting x so the band is centered on-screen.
+    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+
+    // position the window at the top of the screen.
+    const wy = 0;
+
+    // build the rectangle to return.
+    return new Rectangle(wx, wy, ww, wh);
+  }
+
+  /**
+   * Gets the currently tracked top help window.
+   * @returns {Window_Help}
+   */
+  getTopHelpWindow()
+  {
+    return this._j._abs._input._windows._topHelp;
+  }
+
+  /**
+   * Set the currently tracked top help window to the given window.
+   * @param {Window_Help} helpWindow The help window to track.
+   */
+  setTopHelpWindow(helpWindow)
+  {
+    this._j._abs._input._windows._topHelp = helpWindow;
+  }
+
+  //endregion top help window
+
+  //region actions window
+  /**
+   * Creates the actions list window (middle-left region).
+   */
+  createActionsWindow()
+  {
+    // create the window.
+    const window = this.buildActionsWindow();
+
+    // update the tracker with the new window.
+    this.setActionsWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the actions window.
+   * @returns {Window_JabsRemapActions}
+   */
+  buildActionsWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.actionsWindowRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_JabsRemapActions(rectangle);
+
+    // bind handlers for interactions.
+    window.setHandler('ok', this.onRemapRequested.bind(this));
+    window.setHandler('clear', this.onClearBinding.bind(this));
+    window.setHandler('cancel', this.onActionsCancel.bind(this));
+
+    // attach the top help so selection changes update descriptions.
+    window.setHelpWindow(this.getTopHelpWindow());
+
+    // return the built and configured actions window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the actions window (middle-left region).
+   * @returns {Rectangle}
+   */
+  actionsWindowRectangle()
+  {
+    // compute heights of top and bottom bands.
+    const topH = this.topHelpWindowRectangle().height;
+    const cmdH = this.commandWindowRectangle().height;
+
+    // determine the height for the actions window (middle-left band).
+    const wy = topH;
+    const wh = Graphics.boxHeight - topH - cmdH;
+
+    // compute the total width for the centered middle group (actions + usage help).
+    const groupW = Math.floor(Graphics.boxWidth * 0.60);
+
+    // compute the starting x so the group is centered on-screen.
+    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
+
+    // compute the actions window width as 70% of the group.
+    const actionsW = Math.floor(groupW * 0.70);
+
+    // place the actions window at the left of the centered group.
+    const wx = groupX;
+
+    // build the rectangle to return.
+    return new Rectangle(wx, wy, actionsW, wh);
+  }
+
+  /**
+   * Gets the currently tracked actions window.
+   * @returns {Window_JabsRemapActions}
+   */
+  getActionsWindow()
+  {
+    return this._j._abs._input._windows._actions;
+  }
+
+  /**
+   * Set the currently tracked actions window to the given window.
+   * @param {Window_JabsRemapActions} actionsWindow The actions window to track.
+   */
+  setActionsWindow(actionsWindow)
+  {
+    this._j._abs._input._windows._actions = actionsWindow;
+  }
+
+  //endregion actions window
+
+  //region usage help window
+  /**
+   * Creates the right-side usage/help panel that lists scene controls.
+   */
+  createUsageHelpWindow()
+  {
+    // create the window.
+    const window = this.buildUsageHelpWindow();
+
+    // update the tracker with the new window.
+    this.setUsageHelpWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the usage/help window.
+   * @returns {Window_JabsRemapUsageHelp}
+   */
+  buildUsageHelpWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.usageHelpWindowRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_JabsRemapUsageHelp(rectangle);
+
+    // return the built and configured usage/help window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the right-side usage/help window.
+   * @returns {Rectangle}
+   */
+  usageHelpWindowRectangle()
+  {
+    // compute heights of top and bottom bands.
+    const topH = this.topHelpWindowRectangle().height;
+    const cmdH = this.commandWindowRectangle().height;
+
+    // determine the height for the usage/help window (middle-right band).
+    const wy = topH;
+    const wh = Graphics.boxHeight - topH - cmdH;
+
+    // compute the total width for the centered middle group (actions + usage help).
+    const groupW = Math.floor(Graphics.boxWidth * 0.60);
+
+    // compute the starting x so the group is centered on-screen.
+    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
+
+    // compute the actions window width as 70% of the group.
+    const actionsW = Math.floor(groupW * 0.70);
+
+    // compute the usage/help window width as the remaining 30% of the group.
+    const usageW = groupW - actionsW;
+
+    // place the usage/help window immediately to the right of the actions window.
+    const wx = groupX + actionsW;
+
+    // build the rectangle to return.
+    return new Rectangle(wx, wy, usageW, wh);
+  }
+
+  /**
+   * Gets the currently tracked usage/help window.
+   * @returns {Window_JabsRemapUsageHelp}
+   */
+  getUsageHelpWindow()
+  {
+    return this._j._abs._input._windows._usageHelp;
+  }
+
+  /**
+   * Set the currently tracked usage/help window to the given window.
+   * @param {Window_JabsRemapUsageHelp} helpWindow The usage/help window to track.
+   */
+  setUsageHelpWindow(helpWindow)
+  {
+    this._j._abs._input._windows._usageHelp = helpWindow;
+  }
+
+  //endregion usage help window
+
+  //region command window
+  /**
+   * Creates the bottom command window (Apply/Reset/Cancel).
+   */
+  createCommandWindow()
+  {
+    // create the window.
+    const window = this.buildCommandWindow();
+
+    // update the tracker with the new window.
+    this.setCommandWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+
+    // keep actions as the primary interaction by default.
+    window.deselect();
+    window.deactivate();
+  }
+
+  /**
+   * Sets up and defines the command window.
+   * @returns {Window_JabsRemapCommand}
+   */
+  buildCommandWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.commandWindowRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_JabsRemapCommand(rectangle);
+
+    // set the handlers for command selections.
+    window.setHandler('apply', this.onApply.bind(this));
+    window.setHandler('defaults', this.onDefaults.bind(this));
+    window.setHandler('reset', this.onReset.bind(this));
+    window.setHandler('cancel', this.popScene.bind(this));
+
+    // return the built and configured command window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the command window.
+   * @returns {Rectangle}
+   */
+  commandWindowRectangle()
+  {
+    // determine the height for the command window (bottom strip).
+    const wh = this.calcWindowHeight(4, true);
+
+    // determine the width as 75% of the screen.
+    const ww = Math.floor(Graphics.boxWidth * 0.25);
+
+    // center the window horizontally.
+    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
+
+    // position the window at the bottom of the screen.
+    const wy = Graphics.boxHeight - wh;
+
+    // build the rectangle to return.
+    return new Rectangle(wx, wy, ww, wh);
+  }
+
+  /**
+   * Gets the currently tracked command window.
+   * @returns {Window_JabsRemapCommand}
+   */
+  getCommandWindow()
+  {
+    return this._j._abs._input._windows._command;
+  }
+
+  /**
+   * Set the currently tracked command window to the given window.
+   * @param {Window_JabsRemapCommand} commandWindow The command window to track.
+   */
+  setCommandWindow(commandWindow)
+  {
+    this._j._abs._input._windows._command = commandWindow;
+  }
+
+  //endregion command window
+
+  //region prompt window
+  /**
+   * Creates the capture prompt overlay window.
+   */
+  createPromptWindow()
+  {
+    // create the window.
+    const window = this.buildPromptWindow();
+
+    // update the tracker with the new window.
+    this.setPromptWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Sets up and defines the prompt overlay window.
+   * @returns {Window_JabsRemapPrompt}
+   */
+  buildPromptWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.promptWindowRectangle();
+
+    // instantiate the prompt.
+    const window = new Window_JabsRemapPrompt(rectangle);
+
+    // start hidden by default.
+    window.hide();
+
+    // return the built and configured prompt window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with the prompt overlay window.
+   * @returns {Rectangle}
+   */
+  promptWindowRectangle()
+  {
+    // define a fullscreen rectangle.
+    return new Rectangle(0, 0, Graphics.boxWidth, Graphics.boxHeight);
+  }
+
+  /**
+   * Gets the currently tracked prompt overlay window.
+   * @returns {Window_JabsRemapPrompt}
+   */
+  getPromptWindow()
+  {
+    return this._j._abs._input._windows._prompt;
+  }
+
+  /**
+   * Set the currently tracked prompt overlay window to the given window.
+   * @param {Window_JabsRemapPrompt} promptWindow The prompt window to track.
+   */
+  setPromptWindow(promptWindow)
+  {
+    this._j._abs._input._windows._prompt = promptWindow;
+  }
+
+  //endregion prompt window
+  //endregion windows
+
+  //region actions
   /**
    * Builds the controller list from the adapter and snapshots as pending.
    */
@@ -1865,18 +2343,19 @@ class Scene_JabsRemap
     const all = JABS_InputAdapter.getAllControllers();
 
     // constrain to the first controller only for the current UX.
-    this._controllers = all.length > 0
+    const controllers = all.length > 0
       ? [ all[0] ]
       : [];
+    this.setControllers(controllers);
 
     // build pending maps keyed to playerN using the resolver.
-    for (let i = 0; i < this._controllers.length; i++)
+    for (let i = 0; i < controllers.length; i++)
     {
       // resolve the key for this index.
       const key = this.resolveControllerKey(i);
 
       // export the live mapping from the controller.
-      const exportMap = this._controllers[i].exportAllInputs();
+      const exportMap = controllers[i].exportAllInputs();
 
       // ensure arrays for each binding (normalization).
       const normalized = {};
@@ -1906,7 +2385,7 @@ class Scene_JabsRemap
         });
 
       // store the mapping as the initial pending state.
-      this._pendingByKey[key] = normalized;
+      this._state()._pendingByKey[key] = normalized;
     }
   }
 
@@ -1922,209 +2401,6 @@ class Scene_JabsRemap
   }
 
   /**
-   * Creates the top help window that describes the selected logical action.
-   */
-  createTopHelpWindow()
-  {
-    // define the rectangle for the top help window (conventional help band).
-    const rect = this.topHelpWindowRect();
-
-    // create the top help window.
-    this._topHelpWindow = new Window_Help(rect);
-
-    // add the window to the scene.
-    this.addWindow(this._topHelpWindow);
-  }
-
-  /**
-   * Creates the actions list window (middle).
-   */
-  createActionsWindow()
-  {
-    // define the rectangle for the actions window (middle-left band).
-    const rect = this.actionsWindowRect();
-
-    // create the actions window.
-    this._actionsWindow = new Window_JabsRemapActions(rect);
-
-    // bind handlers for interactions.
-    this._actionsWindow.setHandler('ok', this.onRemapRequested.bind(this));
-    this._actionsWindow.setHandler('clear', this.onClearBinding.bind(this));
-    this._actionsWindow.setHandler('cancel', this.onActionsCancel.bind(this));
-
-    // attach the top help so selection changes update descriptions.
-    this._actionsWindow.setHelpWindow(this._topHelpWindow);
-
-    // add the window to the scene.
-    this.addWindow(this._actionsWindow);
-  }
-
-  /**
-   * Creates the bottom command window (Apply/Reset/Cancel).
-   */
-  createCommandWindow()
-  {
-    // define the rectangle for the command window.
-    const rect = this.commandWindowRect();
-
-    // create the command window.
-    this._commandWindow = new Window_JabsRemapCommand(rect);
-
-    // set the handlers for command selections.
-    this._commandWindow.setHandler('apply', this.onApply.bind(this));
-    this._commandWindow.setHandler('defaults', this.onDefaults.bind(this));
-    this._commandWindow.setHandler('reset', this.onReset.bind(this));
-    this._commandWindow.setHandler('cancel', this.popScene.bind(this));
-
-    // add the window to the scene.
-    this.addWindow(this._commandWindow);
-
-    // keep actions as the primary interaction by default.
-    this._commandWindow.deselect();
-    this._commandWindow.deactivate();
-  }
-
-  /**
-   * Creates the capture prompt overlay window.
-   */
-  createPromptWindow()
-  {
-    // create the prompt window covering the full screen.
-    const rect = new Rectangle(0, 0, Graphics.boxWidth, Graphics.boxHeight);
-
-    // instantiate the prompt.
-    this._promptWindow = new Window_JabsRemapPrompt(rect);
-
-    // start hidden by default.
-    this._promptWindow.hide();
-
-    // add the window to the scene.
-    this.addWindow(this._promptWindow);
-  }
-
-  /**
-   * Creates the right-side usage/help panel that lists scene controls.
-   */
-  createUsageHelpWindow()
-  {
-    // define the rectangle for the right-side usage/help window.
-    const rect = this.usageHelpWindowRect();
-
-    // create the usage help window.
-    this._usageHelpWindow = new Window_JabsRemapUsageHelp(rect);
-
-    // add the window to the scene.
-    this.addWindow(this._usageHelpWindow);
-  }
-
-  /**
-   * Calculates the rectangle for the top help window (conventional band).
-   * @returns {Rectangle}
-   */
-  topHelpWindowRect()
-  {
-    // determine the height for the top help window (single row).
-    const wh = this.calcWindowHeight(1.8, true);
-
-    // compute the total width for the centered middle group.
-    const ww = Math.floor(Graphics.boxWidth * 0.60);
-
-    // compute the starting x so the band is centered on-screen.
-    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
-
-    // position the window at the top of the screen.
-    const wy = 0;
-
-    // return the rectangle describing the top help window.
-    return new Rectangle(wx, wy, ww, wh);
-  }
-
-  /**
-   * Calculates the rectangle for the bottom command window.
-   * @returns {Rectangle}
-   */
-  commandWindowRect()
-  {
-    // determine the height for the command window (bottom strip).
-    const wh = this.calcWindowHeight(4, true);
-
-    // determine the width as 75% of the screen.
-    const ww = Math.floor(Graphics.boxWidth * 0.25);
-
-    // center the window horizontally.
-    const wx = Math.floor((Graphics.boxWidth - ww) / 2);
-
-    // position the window at the bottom of the screen.
-    const wy = Graphics.boxHeight - wh;
-
-    // return the rectangle describing the command window.
-    return new Rectangle(wx, wy, ww, wh);
-  }
-
-  /**
-   * Calculates the rectangle for the actions window (middle region).
-   * @returns {Rectangle}
-   */
-  actionsWindowRect()
-  {
-    // compute heights of top and bottom bands.
-    const topH = this.topHelpWindowRect().height;
-    const cmdH = this.commandWindowRect().height;
-
-    // determine the height for the actions window (middle-left band).
-    const wy = topH;
-    const wh = Graphics.boxHeight - topH - cmdH;
-
-    // compute the total width for the centered middle group (actions + usage help).
-    const groupW = Math.floor(Graphics.boxWidth * 0.60);
-
-    // compute the starting x so the group is centered on-screen.
-    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
-
-    // compute the actions window width as 70% of the group.
-    const actionsW = Math.floor(groupW * 0.70);
-
-    // place the actions window at the left of the centered group.
-    const wx = groupX;
-
-    // return the rectangle describing the actions window.
-    return new Rectangle(wx, wy, actionsW, wh);
-  }
-
-  /**
-   * Calculates the rectangle for the right-side usage/help window.
-   * @returns {Rectangle}
-   */
-  usageHelpWindowRect()
-  {
-    // compute heights of top and bottom bands.
-    const topH = this.topHelpWindowRect().height;
-    const cmdH = this.commandWindowRect().height;
-
-    // determine the height for the usage/help window (middle-right band).
-    const wy = topH;
-    const wh = Graphics.boxHeight - topH - cmdH;
-
-    // compute the total width for the centered middle group (actions + usage help).
-    const groupW = Math.floor(Graphics.boxWidth * 0.60);
-
-    // compute the starting x so the group is centered on-screen.
-    const groupX = Math.floor((Graphics.boxWidth - groupW) / 2);
-
-    // compute the actions window width as 70% of the group.
-    const actionsW = Math.floor(groupW * 0.70);
-
-    // compute the usage/help window width as the remaining 30% of the group.
-    const usageW = groupW - actionsW;
-
-    // place the usage/help window immediately to the right of the actions window.
-    const wx = groupX + actionsW;
-
-    // return the rectangle describing the usage/help window.
-    return new Rectangle(wx, wy, usageW, wh);
-  }
-
-  /**
    * Refreshes all windows for the current controller.
    */
   refreshAll()
@@ -2133,11 +2409,14 @@ class Scene_JabsRemap
     const mapping = this.currentPendingMapping();
 
     // set the actions mapping and ensure it is the active focus.
-    this._actionsWindow.setMapping(mapping);
-    this._actionsWindow.activate();
+    this.getActionsWindow()
+      .setMapping(mapping);
+    this.getActionsWindow()
+      .activate();
 
     // ensure the bottom command strip is not active by default.
-    this._commandWindow.deactivate();
+    this.getCommandWindow()
+      .deactivate();
   }
 
   /**
@@ -2147,10 +2426,10 @@ class Scene_JabsRemap
   currentPendingMapping()
   {
     // resolve the key for this controller index.
-    const key = this.resolveControllerKey(this._controllerIndex);
+    const key = this.resolveControllerKey(this._state()._controllerIndex);
 
     // return the mapping for this key.
-    return this._pendingByKey[key];
+    return this._state()._pendingByKey[key];
   }
 
   /**
@@ -2194,14 +2473,15 @@ class Scene_JabsRemap
   onApply()
   {
     // iterate all controllers to apply their pending mappings.
-    for (let i = 0; i < this._controllers.length; i++)
+    const controllers = this._state()._controllers;
+    for (let i = 0; i < controllers.length; i++)
     {
       // get controller and key.
-      const controller = this._controllers[i];
+      const controller = controllers[i];
       const key = this.resolveControllerKey(i);
 
       // get the pending mapping for this controller.
-      const mapping = this._pendingByKey[key];
+      const mapping = this._state()._pendingByKey[key];
 
       // enforce uniqueness as a final pass before applying.
       this.sanitizeMappingUnique(mapping);
@@ -2224,25 +2504,28 @@ class Scene_JabsRemap
   onDefaults()
   {
     // get the working controller index and key.
-    const idx = this._controllerIndex;
+    const idx = this._state()._controllerIndex;
     const key = this.resolveControllerKey(idx);
 
     // get the controller being edited.
-    const controller = this._controllers[idx];
+    const controller = this._state()._controllers[idx];
 
     // build a fresh default mapping.
     const defaults = controller.buildDefaultMapping();
 
     // replace the pending mapping with defaults.
-    this._pendingByKey[key] = defaults;
+    this._state()._pendingByKey[key] = defaults;
 
     // refresh the actions to reflect defaults.
-    this._actionsWindow.setMapping(this._pendingByKey[key]);
+    this.getActionsWindow()
+      .setMapping(this._state()._pendingByKey[key]);
 
     // flip back to the remap window.
     this.onActionsCancel();
-    this._commandWindow.deactivate();
-    this._actionsWindow.activate();
+    this.getCommandWindow()
+      .deactivate();
+    this.getActionsWindow()
+      .activate();
   }
 
   /**
@@ -2264,11 +2547,14 @@ class Scene_JabsRemap
   onActionsCancel()
   {
     // deactivate the actions window.
-    this._actionsWindow.deactivate();
+    this.getActionsWindow()
+      .deactivate();
 
     // select the first command and activate the command window.
-    this._commandWindow.select(0);
-    this._commandWindow.activate();
+    this.getCommandWindow()
+      .select(0);
+    this.getCommandWindow()
+      .activate();
   }
 
   /**
@@ -2277,7 +2563,8 @@ class Scene_JabsRemap
   onRemapRequested()
   {
     // get the logical action being edited.
-    const button = this._actionsWindow.currentButton();
+    const button = this.getActionsWindow()
+      .currentButton();
 
     // begin capture for this logical action.
     this.beginCapture(button);
@@ -2289,14 +2576,16 @@ class Scene_JabsRemap
   onClearBinding()
   {
     // get the logical action.
-    const button = this._actionsWindow.currentButton();
+    const button = this.getActionsWindow()
+      .currentButton();
 
     // get the pending map and clear this button.
     const pending = this.currentPendingMapping();
     pending[button] = [];
 
     // refresh the actions to reflect the change.
-    this._actionsWindow.setMapping(pending);
+    this.getActionsWindow()
+      .setMapping(pending);
   }
 
   /**
@@ -2306,17 +2595,20 @@ class Scene_JabsRemap
   beginCapture(button)
   {
     // record which logical action we are capturing for.
-    this._capturingButton = button;
+    this._state()._capturingButton = button;
 
     // set the capture flag.
-    this._isCapturing = true;
+    this._state()._isCapturing = true;
 
     // show the capture prompt overlay.
-    this._promptWindow.startPrompt(button);
+    this.getPromptWindow()
+      .startPrompt(button);
 
     // deactivate normal windows while capturing.
-    this._commandWindow.deactivate();
-    this._actionsWindow.deactivate();
+    this.getCommandWindow()
+      .deactivate();
+    this.getActionsWindow()
+      .deactivate();
   }
 
   /**
@@ -2325,14 +2617,16 @@ class Scene_JabsRemap
   endCapture()
   {
     // clear the capture flag and button.
-    this._isCapturing = false;
-    this._capturingButton = null;
+    this._state()._isCapturing = false;
+    this._state()._capturingButton = null;
 
     // hide the capture prompt overlay.
-    this._promptWindow.endPrompt();
+    this.getPromptWindow()
+      .endPrompt();
 
     // reactivate actions window.
-    this._actionsWindow.activate();
+    this.getActionsWindow()
+      .activate();
   }
 
   /**
@@ -2385,32 +2679,65 @@ class Scene_JabsRemap
     pending[button] = [ symbol ];
   }
 
+  //endregion actions
+
+  //region update
   /**
    * Standard per-frame update.
    */
   update()
   {
-    // perform super update.
+    // perform original logic.
     super.update();
 
     // if we are not capturing, do nothing.
-    if (this._isCapturing === false) return;
+    if (this._state()._isCapturing === false)
+    {
+      return;
+    }
 
     // attempt to read a captured symbol from the prompt overlay.
-    const captured = this._promptWindow.pollCapturedSymbol();
+    const captured = this.getPromptWindow()
+      .pollCapturedSymbol();
 
     // if nothing has been captured yet, continue waiting.
-    if (!captured) return;
+    if (!captured)
+    {
+      return;
+    }
 
     // resolve and assign with conflict handling.
-    this.assignWithConflictResolution(this._capturingButton, captured);
+    this.assignWithConflictResolution(this._state()._capturingButton, captured);
 
     // reflect the updated mapping in the actions window.
-    this._actionsWindow.setMapping(this.currentPendingMapping());
+    this.getActionsWindow()
+      .setMapping(this.currentPendingMapping());
 
     // end the capture flow.
     this.endCapture();
   }
+
+  //endregion update
+
+  //region helpers
+  /**
+   * Convenience accessor for the scene state object.
+   */
+  _state()
+  {
+    return this._j._abs._input._state;
+  }
+
+  /**
+   * Sets the controller collection being edited.
+   * @param {Object[]} controllers The list of controllers.
+   */
+  setControllers(controllers)
+  {
+    this._state()._controllers = controllers;
+  }
+
+  //endregion helpers
 }
 
 //endregion Scene_JabsRemap
@@ -2437,11 +2764,14 @@ Scene_Menu.prototype.createCommandWindow = function()
 //region Window_JabsRemapActions
 /**
  * The list window that shows logical actions and current bindings.
+ * Refactored to extend {@link Window_Command} with builder-style organization
+ * and namespaced state under {@link this._j._abs._input}.
  */
 class Window_JabsRemapActions
-  extends Window_Selectable
+  extends Window_Command
 {
   /**
+   * Constructor.
    * @param {Rectangle} rect The rectangle to draw this window within.
    */
   constructor(rect)
@@ -2449,28 +2779,219 @@ class Window_JabsRemapActions
     // perform super initialize.
     super(rect);
 
-    /**
-     * The working mapping being displayed.
-     * @type {Object<string, string[]>}
-     */
-    this._mapping = {};
+    // initialize the root-namespace definition members.
+    this.initCoreMembers();
 
-    /**
-     * The ordered list of logical action keys for display (flat, assignable-only).
-     * @type {string[]}
-     */
-    this._buttons = this.buildButtonList();
+    // initialize the window-local members.
+    this.initPrimaryMembers();
 
-    /**
-     * The grouped row model combining headers and actions.
-     * @type {{ kind: string, label?: string, button?: string }[]}
-     */
-    this._rows = this.buildRows();
-
-    // align the help window behavior.
-    this.select(0);
+    // align selection to the first actionable entry by default.
+    this.select(this.firstActionIndex());
   }
 
+  //region init
+  /**
+   * Initializes the shared root namespace for this plugin branch.
+   */
+  initCoreMembers()
+  {
+    /**
+     * The shared root namespace for all of J's plugin data.
+     */
+    this._j ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS.
+     */
+    this._j._abs ||= {};
+
+    /**
+     * A grouping of all properties associated with JABS input.
+     */
+    this._j._abs._input ||= {};
+
+    /**
+     * A grouping for this window within the input branch.
+     */
+    this._j._abs._input._actions ||= {};
+  }
+
+  /**
+   * Initializes the state and view members for this window.
+   */
+  initPrimaryMembers()
+  {
+    /**
+     * Window-local state bag.
+     */
+    this._j._abs._input._actions._state = {
+      _mapping: {},
+      _buttons: [],
+    };
+
+    /**
+     * Window-local view bag.
+     */
+    this._j._abs._input._actions._view = {
+      _helpWindow: null,
+    };
+
+    // pre-build the static button list if not already present.
+    if (this.getButtons().length === 0)
+    {
+      // set the authoritative buttons list for this window.
+      this.setButtons(this.buildButtonList());
+    }
+  }
+
+  //endregion init
+
+  //region accessors
+  /**
+   * Gets the current mapping being displayed.
+   * @returns {Object<string, string[]>}
+   */
+  getMapping()
+  {
+    // read from the lazily-initialized state bag.
+    return this._state()._mapping || {};
+  }
+
+  /**
+   * Sets the mapping to display and refreshes.
+   * @param {Object<string, string[]>} mapping The mapping to show and edit.
+   */
+  setMapping(mapping)
+  {
+    // store the mapping reference (scene owns lifecycle of the object).
+    this._state()._mapping = mapping || {};
+
+    // refresh the contents to draw the values.
+    this.refresh();
+  }
+
+  /**
+   * Gets the ordered list of logical action keys.
+   * @returns {string[]}
+   */
+  getButtons()
+  {
+    // obtain the window state bag.
+    const state = this._state();
+
+    // if we already have an authoritative list, use it.
+    if (state._buttons && state._buttons.length > 0)
+    {
+      return state._buttons;
+    }
+
+    // otherwise, fall back to the canonical assignable list without mutating state.
+    return this.buildButtonList();
+  }
+
+  /**
+   * Sets the ordered list of logical action keys.
+   * @param {string[]} buttons The ordered list of buttons.
+   */
+  setButtons(buttons)
+  {
+    // store a defensive copy of the ordered button list.
+    this._state()._buttons = Array.isArray(buttons) ? buttons.slice(0) : [];
+
+    // rebuild the command list to reflect the new set of rows.
+    this.refresh();
+  }
+
+  /**
+   * Gets the currently bound help window.
+   * @returns {Window_Help|null}
+   */
+  getHelpWindow()
+  {
+    // return the tracked help window instance.
+    return this._view()._helpWindow;
+  }
+
+  /**
+   * Sets the help window and forwards to the base implementation for linkage.
+   * @param {Window_Help} helpWindow The help window to bind.
+   */
+  setHelpWindow(helpWindow)
+  {
+    // store a local reference for access via getter.
+    this._view()._helpWindow = helpWindow;
+
+    // also perform the default linkage.
+    super.setHelpWindow(helpWindow);
+  }
+
+  /**
+   * Returns the current logical button at the cursor (or section label for headers).
+   * @returns {string}
+   */
+  currentButton()
+  {
+    // read the current command.
+    const cmd = this.currentData();
+
+    // if there is no command, return empty.
+    if (!cmd) return String.empty;
+
+    // if this is a header, return its label.
+    if (cmd.ext && cmd.ext.kind === 'header')
+    {
+      return String(cmd.ext.label || '');
+    }
+
+    // otherwise return the logical action key.
+    return String(cmd.symbol || cmd.ext?.button || '');
+  }
+
+  /**
+   * Lazily ensures the root namespace exists.
+   */
+  _root()
+  {
+    // ensure root namespaces.
+    this._j ||= {};
+    this._j._abs ||= {};
+    this._j._abs._input ||= {};
+    this._j._abs._input._actions ||= {};
+  }
+
+  /**
+   * Lazily ensures and returns the window-local state bag.
+   * @returns {{_mapping:Object<string,string[]>, _buttons:string[]}}
+   */
+  _state()
+  {
+    // ensure root namespaces.
+    this._root();
+
+    // ensure and return the state bag.
+    const actions = this._j._abs._input._actions;
+    actions._state ||= { _mapping: {}, _buttons: [] };
+    return actions._state;
+  }
+
+  /**
+   * Lazily ensures and returns the window-local view bag.
+   * @returns {{_helpWindow:Window_Help|null}}
+   */
+  _view()
+  {
+    // ensure root namespaces.
+    this._root();
+
+    // ensure and return the view bag.
+    const actions = this._j._abs._input._actions;
+    actions._view ||= { _helpWindow: null };
+    return actions._view;
+  }
+
+  //endregion accessors
+
+  //region builders
   /**
    * Builds the ordered list of logical actions to show.
    * @returns {string[]}
@@ -2485,104 +3006,99 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Returns the current logical button at the cursor.
-   * @returns {string}
+   * Implements {@link Window_Command.prototype.makeCommandList}.<br>
+   * Creates all commands (headers + actions) for this window.
    */
-  currentButton()
+  makeCommandList()
   {
-    // resolve the row at the current index.
-    const row = this.rowAt(this.index());
+    // build all the commands for the window; this does not require pre-initialized state.
+    const commands = this.buildCommands();
 
-    // return the logical button for the selected action row.
-    return (row.kind === 'action'
-      ? String(row.button)
-      : String(row.label));
+    // add all built commands to the list.
+    commands.forEach(this.addBuiltCommand, this);
   }
 
   /**
-   * Builds the grouped row model based on the current assignable inputs.
-   * @returns {{ kind: string, label?: string, button?: string }[]} The grouped rows.
+   * Builds all commands for this command window (headers + actions).
+   * @returns {BuiltWindowCommand[]}
    */
-  buildRows()
+  buildCommands()
   {
-    // reference the assignable set for quick membership checks.
-    const can = new Set(this._buttons);
+    // reference the assignable set for quick membership checks; falls back if not stored yet.
+    const can = new Set(this.getButtons());
 
-    // a small helper to add a labeled header.
-    const header = label => ({
-      kind: 'header',
-      label
-    });
+    // a small helper to test and build an action command.
+    const addIf = (rows, label, button) =>
+    {
+      // only add if the action is assignable in this context.
+      if (can.has(button)) rows.push(this.buildActionCommand(button));
+    };
 
-    // a small helper to add an action row when assignable.
-    const action = button => ({
-      kind: 'action',
-      button
-    });
-
-    // construct the rows per requested groups.
+    // compile the rows in the requested grouping order.
     const rows = [];
 
-    // primary actions.
-    rows.push(header('Primary Actions'));
-    if (can.has(JABS_Button.Mainhand)) rows.push(action(JABS_Button.Mainhand));
-    if (can.has(JABS_Button.Offhand)) rows.push(action(JABS_Button.Offhand));
-    if (can.has(JABS_Button.Tool)) rows.push(action(JABS_Button.Tool));
-    if (can.has(JABS_Button.Sprint)) rows.push(action(JABS_Button.Sprint));
+    // primary actions section.
+    rows.push(this.buildHeaderCommand("Primary Actions"));
+    addIf(rows, "Mainhand", JABS_Button.Mainhand);
+    addIf(rows, "Offhand", JABS_Button.Offhand);
+    addIf(rows, "Tool", JABS_Button.Tool);
+    addIf(rows, "Sprint", JABS_Button.Sprint);
 
-    // secondary actions.
-    rows.push(header('Secondary Actions'));
-    if (can.has(JABS_Button.SkillTrigger)) rows.push(action(JABS_Button.SkillTrigger));
-    if (can.has(JABS_Button.Rotate)) rows.push(action(JABS_Button.Rotate));
-    if (can.has(JABS_Button.Strafe)) rows.push(action(JABS_Button.Strafe));
-    if (can.has(JABS_Button.Dodge)) rows.push(action(JABS_Button.Dodge));
+    // secondary actions section.
+    rows.push(this.buildHeaderCommand("Secondary Actions"));
+    addIf(rows, "Skill Trigger", JABS_Button.SkillTrigger);
+    addIf(rows, "Rotate", JABS_Button.Rotate);
+    addIf(rows, "Strafe", JABS_Button.Strafe);
+    addIf(rows, "Dodge", JABS_Button.Dodge);
 
-    // functional actions.
-    rows.push(header('Functional Actions'));
-    if (can.has(JABS_Button.Menu)) rows.push(action(JABS_Button.Menu));
-    if (can.has(JABS_Button.Select)) rows.push(action(JABS_Button.Select));
+    // functional actions section.
+    rows.push(this.buildHeaderCommand("Functional Actions"));
+    addIf(rows, "Menu", JABS_Button.Menu);
+    addIf(rows, "Party Cycle", JABS_Button.Select);
 
-    // return the assembled rows.
+    // return the compiled list of commands.
     return rows;
   }
 
   /**
-   * Gets the row at the provided index.
-   * @param {number} index The index of the row.
-   * @returns {{ kind: string, label?: string, button?: string }|null}
+   * Builds a header command that is non-interactive.
+   * @param {string} label The header label to display.
+   * @returns {BuiltWindowCommand}
    */
-  rowAt(index)
+  buildHeaderCommand(label)
   {
-    // return the row if within range.
-    if (index >= 0 && index < this._rows.length) return this._rows[index];
-
-    // out of range yields null.
-    return null;
+    // build a disabled command that represents a section header.
+    return new WindowCommandBuilder(label)
+      .setSymbol(`__header__${label}`)
+      .setExtensionData({
+        kind: 'header',
+        label
+      })
+      .setEnabled(false)
+      .build();
   }
 
   /**
-   * Sets the mapping to display and refreshes.
-   * @param {Object<string, string[]>} mapping The mapping to show and edit.
+   * Builds an actionable command for a logical action button.
+   * @param {string} button The logical action key.
+   * @returns {BuiltWindowCommand}
    */
-  setMapping(mapping)
+  buildActionCommand(button)
   {
-    // store the mapping reference (scene owns lifecycle of the object).
-    this._mapping = mapping;
-
-    // refresh to draw the values.
-    this.refresh();
+    // build an enabled command that represents a remappable action.
+    return new WindowCommandBuilder(this.humanizeButton(button))
+      .setSymbol(button)
+      .setExtensionData({
+        kind: 'action',
+        button
+      })
+      .setEnabled(true)
+      .build();
   }
 
-  /**
-   * Gets the number of items to render.
-   * @returns {number}
-   */
-  maxItems()
-  {
-    // return the count of buttons.
-    return this._rows.length;
-  }
+  //endregion builders
 
+  //region drawing
   /**
    * Draws a single item.
    * @param {number} index The index to draw.
@@ -2592,14 +3108,17 @@ class Window_JabsRemapActions
     // get the rectangle for this line.
     const rect = this.itemRectWithPadding(index);
 
-    // resolve the row to draw.
-    const row = this.rowAt(index);
+    // resolve the command to draw.
+    const cmd = this._list[index];
+
+    // fallback if no command was found.
+    if (!cmd) return;
 
     // if this is a header row, draw the section title and exit.
-    if (row && row.kind === 'header')
+    if (cmd.ext && cmd.ext.kind === 'header')
     {
       // pick a stronger font and centered alignment for headers.
-      const name = row.label || '';
+      const name = cmd.name || '';
 
       // draw the header text centered across the full row.
       this.changeTextColor(ColorManager.systemColor());
@@ -2610,15 +3129,19 @@ class Window_JabsRemapActions
       return;
     }
 
-    // fallback if no row was found.
-    if (!row || row.kind !== 'action') return;
+    // compute the logical action key for this row.
+    const button = String(cmd.symbol);
 
-    // get the logical button and current bindings.
-    const { button } = row;
-    const boundList = this._mapping[button] || [];
+    // read the current bindings for this logical action from the mapping.
+    const mapping = this.getMapping();
+
+    // get the list of bound symbols for this action.
+    const boundList = mapping[button] || [];
+
+    // extract the primary binding if any.
     const bound = boundList.length > 0
       ? boundList[0]
-      : '';
+      : String.empty;
 
     // determine the icon index for the bound physical symbol.
     const iconIndex = this.iconIndexForSymbol(bound);
@@ -2668,6 +3191,92 @@ class Window_JabsRemapActions
     this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
   }
 
+  //endregion drawing
+
+  //region help
+  /**
+   * Updates the linked help window with a description of the selected action.
+   */
+  updateHelp()
+  {
+    // read the bound help window.
+    const help = this.getHelpWindow();
+
+    // if we have no help window, do nothing.
+    if (!help) return;
+
+    // resolve the currently selected logical or header label.
+    const button = this.currentButton();
+
+    // build the description for this selection.
+    const text = this.describeButton(button);
+
+    // update the help text.
+    help.setText(text);
+  }
+
+  //endregion help
+
+  //region handling
+  /**
+   * Processes the OK input.
+   * Prevents confirming header rows.
+   */
+  processOk()
+  {
+    // read the current command.
+    const cmd = this.currentData();
+
+    // if this is not an action row, buzz and do nothing.
+    if (!cmd || (cmd.ext && cmd.ext.kind !== 'action'))
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
+    // defer to default behavior when actionable.
+    super.processOk();
+  }
+
+  /**
+   * Defines the standard handlers for OK/Cancel and Clear.
+   */
+  processHandling()
+  {
+    // perform super handling.
+    super.processHandling();
+
+    // handle clear binding when the delete-like key is pressed.
+    if (this.isOpenAndActive())
+    {
+      // if the PageDown key was triggered, clear the binding.
+      if (Input.isTriggered('pagedown')) this.callHandler('clear');
+    }
+  }
+
+  //endregion handling
+
+  //region utils
+  /**
+   * Finds the first actionable command index (skips headers).
+   * @returns {number}
+   */
+  firstActionIndex()
+  {
+    // find the first index in the list that is enabled.
+    for (let i = 0; i < this._list.length; i++)
+    {
+      // read the command at this index.
+      const cmd = this._list[i];
+
+      // if enabled, return this index.
+      if (cmd && cmd.enabled !== false) return i;
+    }
+
+    // fallback to zero when none found.
+    return 0;
+  }
+
   /**
    * Converts a logical button key into a readable label.
    * @param {string} button The logical button key.
@@ -2704,7 +3313,7 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Resolves an icon for a physical input symbol by consulting J.ABS.Input as the authority.
+   * Resolves an icon for a physical input symbol by consulting the IconManager.
    * Falls back to 0 (no icon) when unmapped.
    * @param {string} symbol The physical symbol to resolve an icon for.
    * @returns {number} The icon index to draw, or 0 if none.
@@ -2716,26 +3325,8 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Updates the linked help window with a description of the selected action.
-   */
-  updateHelp()
-  {
-    // if we have no help window, do nothing.
-    if (!this._helpWindow) return;
-
-    // resolve the currently selected logical button.
-    const button = this.currentButton();
-
-    // build the description for this button.
-    const text = this.describeButton(button);
-
-    // update the help text.
-    this._helpWindow.setText(text);
-  }
-
-  /**
-   * Gets a human-readable description for a logical action.
-   * @param {string} button The logical action key.
+   * Gets a human-readable description for a logical action or header.
+   * @param {string} button The logical action key or header label.
    * @returns {string} The description text.
    */
   describeButton(button)
@@ -2796,39 +3387,7 @@ class Window_JabsRemapActions
     return d[button] || String(button);
   }
 
-  /**
-   * Processes the OK input.
-   * Prevents confirming header rows.
-   */
-  processOk()
-  {
-    // if we are not on an action row, buzz and do nothing.
-    const row = this.rowAt(this.index());
-    if (!row || row.kind !== 'action')
-    {
-      SoundManager.playBuzzer();
-      return;
-    }
-
-    // defer to default behavior when actionable.
-    super.processOk();
-  }
-
-  /**
-   * Defines the standard handlers for OK/Cancel and Clear.
-   */
-  processHandling()
-  {
-    // perform super handling.
-    super.processHandling();
-
-    // handle clear binding when the delete-like key is pressed.
-    if (this.isOpenAndActive())
-    {
-      // if the PageDown key was triggered, clear the binding.
-      if (Input.isTriggered('pagedown')) this.callHandler('clear');
-    }
-  }
+  //endregion utils
 }
 
 //endregion Window_JabsRemapActions
@@ -2918,6 +3477,24 @@ class Window_JabsRemapCommand
 class Window_JabsRemapPrompt
   extends Window_Base
 {
+  //region static
+  /**
+   * Frames to ignore immediate UI inputs after opening the prompt.
+   * Adjusted for 60 FPS.
+   * Can be migrated to plugin parameters later.
+   * @type {number}
+   */
+  static WarmupFrames = 20; // ~0.33s
+
+  /**
+   * Maximum frames the prompt remains active before auto-closing.
+   * Adjusted for 60 FPS.
+   * Can be migrated to plugin parameters later.
+   * @type {number}
+   */
+  static TimeoutFrames = 5 * 60; // 5s
+  //endregion static
+
   /**
    * @param {Rectangle} rect The rectangle to draw this window within.
    */
@@ -2926,43 +3503,131 @@ class Window_JabsRemapPrompt
     // perform super initialize.
     super(rect);
 
-    /**
-     * The captured symbol awaiting pickup by the scene.
-     * @type {string|null}
-     */
-    this._captured = null;
-
-    /**
-     * Whether or not the prompt is currently active.
-     * @type {boolean}
-     */
-    this._activePrompt = false;
-
-    /**
-     * Debounce (in frames) to avoid immediately capturing the OK used to open the prompt.
-     * @type {number}
-     */
-    this._warmupFrames = 0;
-
-    /**
-     * The remaining frames before this prompt auto-times out. (60 FPS assumed)
-     * @type {number}
-     */
-    this._timeoutFrames = 0;
-
-    /**
-     * The label of the logical action currently being rebound.
-     * @type {string}
-     */
-    this._buttonLabel = '';
-
     // make background darker for overlay effect.
     this.opacity = 192;
 
-    // draw once empty.
+    // initial draw.
     this.refresh();
   }
 
+  //region init
+  /**
+   * Lazily ensures the root plugin namespace exists for this window's data.
+   */
+  _root()
+  {
+    // ensure root namespaces.
+    this._j ||= {};
+    this._j._abs ||= {};
+    this._j._abs._input ||= {};
+  }
+
+  //endregion init
+
+  //region accessors
+  /**
+   * Gets the captured symbol awaiting pickup by the scene.
+   * @returns {string|null}
+   */
+  getCapturedSymbol()
+  {
+    this._root();
+    return this._j._abs._input._remapCaptured ?? null;
+  }
+
+  /**
+   * Sets the captured symbol awaiting pickup by the scene.
+   * @param {string|null} v The captured symbol.
+   */
+  setCapturedSymbol(v)
+  {
+    this._root();
+    this._j._abs._input._remapCaptured = v ?? null;
+  }
+
+  /**
+   * Gets whether or not the prompt is currently active.
+   * @returns {boolean}
+   */
+  isActive()
+  {
+    this._root();
+    return this._j._abs._input._remapActive === true;
+  }
+
+  /**
+   * Sets whether or not the prompt is currently active.
+   * @param {boolean} v The new active state.
+   */
+  setActive(v)
+  {
+    this._root();
+    this._j._abs._input._remapActive = v === true;
+  }
+
+  /**
+   * Gets the remaining warmup frames.
+   * @returns {number}
+   */
+  getWarmupFrames()
+  {
+    this._root();
+    return this._j._abs._input._remapWarmup | 0;
+  }
+
+  /**
+   * Sets the remaining warmup frames.
+   * @param {number} v The frames to set.
+   */
+  setWarmupFrames(v)
+  {
+    this._root();
+    this._j._abs._input._remapWarmup = Math.max(0, v | 0);
+  }
+
+  /**
+   * Gets the remaining timeout frames.
+   * @returns {number}
+   */
+  getTimeoutFrames()
+  {
+    this._root();
+    return this._j._abs._input._remapTimeout | 0;
+  }
+
+  /**
+   * Sets the remaining timeout frames.
+   * @param {number} v The frames to set.
+   */
+  setTimeoutFrames(v)
+  {
+    this._root();
+    this._j._abs._input._remapTimeout = Math.max(0, v | 0);
+  }
+
+  /**
+   * Gets the logical action label being captured for.
+   * @returns {string}
+   */
+  getButtonLabel()
+  {
+    this._root();
+    return this._j._abs._input._remapButtonLabel || String.empty;
+  }
+
+  /**
+   * Sets the logical action label being captured for.
+   * @param {string} v The button label.
+   */
+  setButtonLabel(v)
+  {
+    this._root();
+    this._j._abs._input._remapButtonLabel = String(v || '');
+  }
+
+  //endregion accessors
+
+  //region lifecycle
   /**
    * Begins the prompt for the given logical action.
    * @param {string} button The logical action being captured.
@@ -2970,25 +3635,25 @@ class Window_JabsRemapPrompt
   startPrompt(button)
   {
     // reset the captured symbol.
-    this._captured = null;
+    this.setCapturedSymbol(null);
 
     // set the active flag.
-    this._activePrompt = true;
+    this.setActive(true);
 
-    // set a short warmup to avoid immediately capturing OK/Cancel.
-    this._warmupFrames = 30; // ~0.16s at 60 FPS
+    // set a short warmup to avoid immediately capturing UI inputs.
+    this.setWarmupFrames(Window_JabsRemapPrompt.WarmupFrames);
 
-    // set the timeout to 5 seconds (assuming 60 FPS).
-    this._timeoutFrames = 5 * 60; // 300
+    // set the timeout duration.
+    this.setTimeoutFrames(Window_JabsRemapPrompt.TimeoutFrames);
 
     // store the label for redraws each frame.
-    this._buttonLabel = button;
+    this.setButtonLabel(button);
 
     // show the window.
     this.show();
 
     // draw prompt text.
-    this.drawPrompt();
+    this.refresh();
   }
 
   /**
@@ -2996,56 +3661,31 @@ class Window_JabsRemapPrompt
    */
   endPrompt()
   {
-    // clear flags.
-    this._activePrompt = false;
+    // clear the active flag.
+    this.setActive(false);
 
     // hide the window.
     this.hide();
   }
 
-  /**
-   * Draws the prompt text for the current button.
-   */
-  drawPrompt()
-  {
-    // clear then draw the prompt text centered.
-    this.contents.clear();
+  //endregion lifecycle
 
-    // compute center coordinates.
-    const cx = 0;
-    const cy = this.contentsHeight() / 2 - this.lineHeight();
-
-    // draw title.
-    this.drawText('Press a key or button…', cx, cy, this.contentsWidth(), 'center');
-
-    // draw the logical button label.
-    this.drawText(`for: ${this._buttonLabel}`, cx, cy + this.lineHeight(), this.contentsWidth(), 'center');
-
-    // draw the countdown using inline math (60 FPS assumed).
-    this.drawText(
-      `Auto-cancels in ${(this._timeoutFrames / 60).toFixed(1)}s`,
-      cx,
-      cy + this.lineHeight() * 2,
-      this.contentsWidth(),
-      'center'
-    );
-  }
-
-  /**
-   * Per-frame update for capture.
-   */
+  //region update/capture
   /**
    * Per-frame update for capture.
    */
   update()
   {
-    // perform super update.
+    // perform original logic.
     super.update();
 
     // if not active, do nothing.
-    if (this._activePrompt === false) return;
+    if (this.isActive() === false)
+    {
+      return;
+    }
 
-    // scan for a triggered symbol using curated lists and warmup rules.
+    // attempt to find a triggered symbol using curated lists and warmup rules.
     const found = this._findTriggeredSymbol();
 
     // decrement warmup if active.
@@ -3055,7 +3695,7 @@ class Window_JabsRemapPrompt
     if (found)
     {
       // set the captured symbol.
-      this._captured = found;
+      this.setCapturedSymbol(found);
 
       // end the prompt.
       this.endPrompt();
@@ -3066,35 +3706,23 @@ class Window_JabsRemapPrompt
     if (this._tickTimeoutAndRedraw())
     {
       // timed out; end the prompt without capturing.
-      this._captured = null;
+      this.setCapturedSymbol(null);
       this.endPrompt();
     }
   }
 
   /**
-   * Determines whether or not the user cancelled the prompt this frame.
-   * @returns {boolean}
-   */
-  _isCancelTriggered()
-  {
-    // return true if the cancel input was pressed.
-    if (Input.isTriggered("cancel"))
-    {
-      return true;
-    }
-
-    // not cancelled.
-    return false;
-  }
-
-  /**
-   * Attempts to find a triggered symbol from curated sets, honoring warmup rules.
+   * Attempts to find a triggered symbol from curated sets, honoring warmup.
+   * Accepts only keyboard/gamepad symbols; mouse inputs are not considered.
    * @returns {string|null}
    */
   _findTriggeredSymbol()
   {
-    // define all symbols we want to scan for.
+    // get curated symbols to poll.
     const symbols = this._curatedSymbols();
+
+    // build a membership set for fast checks (also used for latest fallback).
+    const allow = new Set(symbols);
 
     // define symbols we ignore during warmup to prevent instant-binding of UI controls.
     const uiSymbols = this._uiSymbols();
@@ -3106,16 +3734,14 @@ class Window_JabsRemapPrompt
       const s = symbols[i];
 
       // if in warmup and this symbol is a UI symbol, skip it.
-      if (this._warmupFrames > 0 && uiSymbols.includes(s))
+      if (this.getWarmupFrames() > 0 && uiSymbols.indexOf(s) >= 0)
       {
-        // skip UI-like inputs during warmup.
         continue;
       }
 
       // if this symbol was triggered, capture it.
       if (Input.isTriggered(s))
       {
-        // return the found symbol.
         return s;
       }
     }
@@ -3124,59 +3750,42 @@ class Window_JabsRemapPrompt
     const latest = Input._latestButton;
     if (latest)
     {
-      // when in warmup, ignore UI symbols.
-      const allowLatest = this._warmupFrames === 0 || uiSymbols.includes(latest) === false;
-      if (allowLatest)
+      // require membership in curated set (no mouse) and allow if warmup permits UI symbols.
+      const warmupBlocks = this.getWarmupFrames() > 0 && uiSymbols.indexOf(latest) >= 0;
+      if (allow.has(latest) && warmupBlocks === false)
       {
-        // return the latest captured symbol.
         return latest;
       }
     }
 
-    // nothing was triggered.
+    // nothing was captured this frame.
     return null;
   }
 
   /**
-   * Gets the curated list of symbols to poll each frame.
+   * Gets the curated list of keyboard/gamepad symbols to poll each frame.
    * @returns {string[]}
    */
   _curatedSymbols()
   {
-    // collect core input constants from your adapter.
+    // collect core input constants from the JABS input adapter constants.
+    // These should reflect only keyboard/gamepad bindings.
     const k = J.ABS.Input;
 
-    // build a base list using your constants first (preferred).
+    // build the list using adapter constants.
     const inputs = [
       // face/core actions
-      k.Mainhand,
-      k.Offhand,
-      k.Dash,
-      k.Tool,
+      k.Mainhand, k.Offhand, k.Dash, k.Tool,
 
       // modifier/shoulder/trigger style
-      k.SkillTrigger,
-      k.GuardTrigger,
-      k.StrafeTrigger,
-      k.MobilitySkill,
+      k.SkillTrigger, k.GuardTrigger, k.StrafeTrigger, k.MobilitySkill,
 
       // utility
-      k.PartyCycle,
-      k.Quickmenu,
-
-      // d-pad
-      k.DirUp,
-      k.DirDown,
-      k.DirLeft,
-      k.DirRight,
+      k.PartyCycle, k.Quickmenu,
     ];
 
-    // add preferred constants.
-    const curated = [];
-    inputs.forEach(sym => curated.push(sym));
-
-    // return the curated symbol list.
-    return curated;
+    // return the curated symbol list (duplicates are harmless but unlikely).
+    return inputs;
   }
 
   /**
@@ -3185,8 +3794,8 @@ class Window_JabsRemapPrompt
    */
   _uiSymbols()
   {
-    // inputs commonly used to operate UI, not to bind immediately.
-    return [ "ok", "cancel", "up", "down", "left", "right" ];
+    // inputs commonly used to operate UI, not to bind immediately during warmup.
+    return [ 'ok', 'cancel', 'up', 'down', 'left', 'right', 'pageup', 'pagedown' ];
   }
 
   /**
@@ -3195,10 +3804,9 @@ class Window_JabsRemapPrompt
   _decrementWarmup()
   {
     // reduce warmup frames if still active.
-    if (this._warmupFrames > 0)
+    if (this.getWarmupFrames() > 0)
     {
-      // decrement remaining warmup frames.
-      this._warmupFrames--;
+      this.setWarmupFrames(this.getWarmupFrames() - 1);
     }
   }
 
@@ -3209,19 +3817,19 @@ class Window_JabsRemapPrompt
   _tickTimeoutAndRedraw()
   {
     // if there is no timeout active, nothing to tick.
-    if (this._timeoutFrames <= 0)
+    if (this.getTimeoutFrames() <= 0)
     {
       return false;
     }
 
     // decrement remaining frames until timeout.
-    this._timeoutFrames--;
+    this.setTimeoutFrames(this.getTimeoutFrames() - 1);
 
     // redraw the prompt text with updated countdown.
-    this.drawPrompt();
+    this.refresh();
 
     // if the timeout reached zero, report expiry.
-    if (this._timeoutFrames === 0)
+    if (this.getTimeoutFrames() === 0)
     {
       return true;
     }
@@ -3230,6 +3838,52 @@ class Window_JabsRemapPrompt
     return false;
   }
 
+  //endregion update/capture
+
+  //region drawing
+  /**
+   * Redraws the prompt if active, otherwise clears contents.
+   */
+  refresh()
+  {
+    // clear then draw if active.
+    this.contents.clear();
+
+    // only draw the prompt when active.
+    if (this.isActive())
+    {
+      this.drawPrompt();
+    }
+  }
+
+  /**
+   * Draws the prompt text for the current button.
+   */
+  drawPrompt()
+  {
+    // compute center coordinates.
+    const cx = 0;
+    const cy = Math.floor(this.contentsHeight() / 2) - this.lineHeight();
+
+    // draw title.
+    this.drawText('Press a key or button…', cx, cy, this.contentsWidth(), 'center');
+
+    // draw the logical button label.
+    this.drawText(`for: ${this.getButtonLabel()}`, cx, cy + this.lineHeight(), this.contentsWidth(), 'center');
+
+    // draw the countdown using inline math (60 FPS assumed).
+    this.drawText(
+      `Auto-cancels in ${(this.getTimeoutFrames() / 60).toFixed(1)}s`,
+      cx,
+      cy + this.lineHeight() * 2,
+      this.contentsWidth(),
+      'center',
+    );
+  }
+
+  //endregion drawing
+
+  //region api
   /**
    * Returns the captured symbol for one frame and clears it.
    * @returns {string|null}
@@ -3237,14 +3891,16 @@ class Window_JabsRemapPrompt
   pollCapturedSymbol()
   {
     // take the captured symbol into a temp.
-    const out = this._captured;
+    const out = this.getCapturedSymbol();
 
     // clear the captured symbol.
-    this._captured = null;
+    this.setCapturedSymbol(null);
 
     // return the symbol.
     return out;
   }
+
+  //endregion api
 }
 
 //endregion Window_JabsRemapPrompt
