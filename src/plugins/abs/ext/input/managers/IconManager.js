@@ -162,7 +162,7 @@ IconManager.jabsInputTextForSymbol = function(symbol)
   const normalizedSymbol = validatedSymbol.toLowerCase();
 
   // return the ex-text for the symbol, or the symbol itself if not mapped.
-  return registry[normalizedSymbol] || symbol;
+  return registry[normalizedSymbol] || Input.labelForSymbol(normalizedSymbol) || symbol;
 };
 
 /**
