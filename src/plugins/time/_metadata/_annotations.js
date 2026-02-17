@@ -139,6 +139,7 @@
  * - 1.0.2
  *    Adapted input remappability update of J-ABS-InputManager.
  *    Removed connection between J-MAP and J-TIME toggling (HUD).
+ *    Updated to support RMMZ v1.10.X base scripts (Scene_Splash).
  * - 1.0.1
  *    Fixed issue with "hours per tick" not being respected.
  * - 1.0.0
