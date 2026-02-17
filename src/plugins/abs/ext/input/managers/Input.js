@@ -424,164 +424,337 @@ Input.setAxisThreshold = function(v)
 J.ABS.EXT.INPUT.Aliased.Input.set('_updateGamepadState', Input._updateGamepadState);
 Input._updateGamepadState = function(gamepad)
 {
-  // perform original logic first (creates newState and updates _currentState/_gamepadStates).
+  // perform original engine logic first.
   J.ABS.EXT.INPUT.Aliased.Input
     .get('_updateGamepadState')
     .call(this, gamepad);
 
-  // if no pad, nothing further to do.
+  // if there is no pad, there is nothing further to do this frame.
   if (!gamepad)
   {
     return;
   }
 
-  // ensure we have the merged current state bag and per-pad state.
-  const s = this._currentState;
-  const padState = this._gamepadStates && typeof gamepad.index === 'number'
-    ? this._gamepadStates[gamepad.index]
-    : null;
-  if (!s || !padState)
+  // ensure we have both state bags; bail if missing.
+  const ensured = Input._ensurePadStates(gamepad);
+  if (!ensured)
   {
     return;
   }
 
-  // --- D-Pad normalization: force dpad-* to match raw buttons 12..15 exactly ---
-  const dpu = !!(gamepad.buttons && gamepad.buttons[12] && gamepad.buttons[12].pressed);
-  const dpd = !!(gamepad.buttons && gamepad.buttons[13] && gamepad.buttons[13].pressed);
-  const dpl = !!(gamepad.buttons && gamepad.buttons[14] && gamepad.buttons[14].pressed);
-  const dpr = !!(gamepad.buttons && gamepad.buttons[15] && gamepad.buttons[15].pressed);
+  // unpack the state bags for readability.
+  const { s } = ensured;
+  const { padState } = ensured;
 
-  // Overwrite merged & per-pad strictly from raw dpad buttons.
-  s['dpad-up'] = dpu;
-  padState['dpad-up'] = dpu;
-  s['dpad-down'] = dpd;
-  padState['dpad-down'] = dpd;
-  s['dpad-left'] = dpl;
-  padState['dpad-left'] = dpl;
-  s['dpad-right'] = dpr;
-  padState['dpad-right'] = dpr;
+  // 1) Normalize D-pad strictly from raw buttons 12..15.
+  Input._normalizeDpadFromButtons(gamepad, s, padState);
 
-  // If no axes array, stop after D-pad normalization.
+  // if there are no axes to process, stop here after D-pad normalization.
   if (!gamepad.axes || gamepad.axes.length < 2)
   {
     return;
   }
 
-  // --- Capture last frame’s axes contribution and the current merged snapshot ---
+  // 2) Capture the merged snapshot BEFORE axis processing (for keyboard approx).
+  const s0 = Input._snapshotMergedDirections(s);
+
+  // 3) Resolve axis flags from the left stick.
+  const flags = Input._resolveAxesFlags(gamepad);
+
+  // 4) Apply axis flags to the per-pad snapshot with mutual exclusivity + neutral clearing.
+  Input._applyAxesToPerPad(padState, flags);
+
+  // 5) Compute current axes contribution from the per-pad snapshot.
+  const axesNow = Input._axesNowFromPadState(padState);
+
+  // 6) Derive keyboard-only approximation using last merged-vs-axes stamp.
   const prevAxes = Input._axesStamp || {
     up: false,
     down: false,
     left: false,
-    right: false
+    right: false,
   };
-  const s0_up = !!s.up;
-  const s0_down = !!s.down;
-  const s0_left = !!s.left;
-  const s0_right = !!s.right;
+  const kbdApprox = Input._keyboardApproxFromSnapshot(s0, prevAxes);
 
-  // --- analog stick threshold assist (mutually-exclusive in per-pad) ---
-  const ax = gamepad.axes[0] || 0; // X (left/right)
-  const ay = gamepad.axes[1] || 0; // Y (up/down)
+  // 7) Rebuild merged directions as (keyboardApprox OR current axes).
+  Input._rebuildMergedDirections(s, kbdApprox, axesNow);
+
+  // 8) Update the axes stamp for next frame's separation logic.
+  Input._axesStamp = axesNow;
+};
+
+/**
+ * Ensures we have both the merged current state bag and the per-pad snapshot.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @returns {{ s: object, padState: object }|null}
+ */
+Input._ensurePadStates = function(gamepad)
+{
+  // read the merged state for this frame.
+  const s = this._currentState;
+
+  // resolve the per-pad state snapshot for this index.
+  const padState = this._gamepadStates && typeof gamepad.index === 'number'
+    ? this._gamepadStates[gamepad.index]
+    : null;
+
+  // if either is missing, we cannot proceed.
+  if (!s || !padState)
+  {
+    return null;
+  }
+
+  // provide both state bags to the caller.
+  return {
+    s,
+    padState
+  };
+};
+
+/**
+ * Normalizes the four D-pad symbols strictly from raw buttons 12..15.
+ * Writes into both merged current state and per-pad snapshot.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @param {object} s The merged current state bag.
+ * @param {object} padState The per-pad snapshot for this device.
+ */
+Input._normalizeDpadFromButtons = function(gamepad, s, padState)
+{
+  // coerce D-pad buttons to booleans from the raw Gamepad API.
+  const dpu = !!(gamepad.buttons && gamepad.buttons[12] && gamepad.buttons[12].pressed);
+  const dpd = !!(gamepad.buttons && gamepad.buttons[13] && gamepad.buttons[13].pressed);
+  const dpl = !!(gamepad.buttons && gamepad.buttons[14] && gamepad.buttons[14].pressed);
+  const dpr = !!(gamepad.buttons && gamepad.buttons[15] && gamepad.buttons[15].pressed);
+
+  // write merged state for D-pad symbols.
+  s['dpad-up'] = dpu;
+  s['dpad-down'] = dpd;
+  s['dpad-left'] = dpl;
+  s['dpad-right'] = dpr;
+
+  // mirror into per-pad snapshot for edge/trigger bookkeeping.
+  padState['dpad-up'] = dpu;
+  padState['dpad-down'] = dpd;
+  padState['dpad-left'] = dpl;
+  padState['dpad-right'] = dpr;
+};
+
+/**
+ * Captures the current merged cardinal directions into a plain object.
+ * @param {object} s The merged current state bag.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._snapshotMergedDirections = function(s)
+{
+  // build a simple snapshot of current merged directions.
+  return {
+    up: !!s.up,
+    down: !!s.down,
+    left: !!s.left,
+    right: !!s.right,
+  };
+};
+
+/**
+ * Resolves axis flags from the left stick using the configured threshold.
+ * @param {Gamepad} gamepad The polled gamepad.
+ */
+Input._resolveAxesFlags = function(gamepad)
+{
+  // read the two primary axes.
+  const ax = gamepad.axes && gamepad.axes.length > 0
+    ? (gamepad.axes[0] || 0)
+    : 0;
+  const ay = gamepad.axes && gamepad.axes.length > 1
+    ? (gamepad.axes[1] || 0)
+    : 0;
+
+  // apply the configured threshold to derive flags.
   const t = Input._axisThreshold;
-
-  // resolve horizontal direction.
   const holdLeft = ax <= -t;
   const holdRight = ax >= t;
   const neutralX = !holdLeft && !holdRight;
-
-  // resolve vertical direction.
   const holdUp = ay <= -t;
   const holdDown = ay >= t;
   const neutralY = !holdUp && !holdDown;
 
-  // apply to per-pad state (mutual exclusivity + neutral clearing).
-  if (holdLeft)
+  // return all computed values to the caller.
+  return {
+    ax,
+    ay,
+    holdLeft,
+    holdRight,
+    holdUp,
+    holdDown,
+    neutralX,
+    neutralY
+  };
+};
+
+/**
+ * Applies axis flags to the per-pad snapshot with mutual exclusivity and neutral clearing.
+ * @param {object} padState The per-pad snapshot for this device.
+ * @param {object} f The axis flags.
+ */
+Input._applyAxesToPerPad = function(padState, f)
+{
+  // resolve horizontal contribution.
+  if (f.holdLeft)
   {
     padState.left = true;
     padState.right = false;
   }
-  else if (holdRight)
+  else if (f.holdRight)
   {
     padState.right = true;
     padState.left = false;
   }
-  else if (neutralX)
+  else if (f.neutralX)
   {
     padState.left = false;
     padState.right = false;
   }
 
-  if (holdUp)
+  // resolve vertical contribution.
+  if (f.holdUp)
   {
     padState.up = true;
     padState.down = false;
   }
-  else if (holdDown)
+  else if (f.holdDown)
   {
     padState.down = true;
     padState.up = false;
   }
-  else if (neutralY)
+  else if (f.neutralY)
   {
     padState.up = false;
     padState.down = false;
   }
+};
 
-  // --- Current axes contribution (from our per-pad resolution this frame) ---
-  const axesNow = {
+/**
+ * Extracts the current axis-derived directions from the per-pad snapshot.
+ * @param {object} padState The per-pad snapshot for this device.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._axesNowFromPadState = function(padState)
+{
+  // interpret the per-pad snapshot booleans as the axes contribution for this frame.
+  return {
     up: padState.up === true,
     down: padState.down === true,
     left: padState.left === true,
     right: padState.right === true,
   };
+};
 
-  // --- Approximate keyboard-only contribution from previous merged state ---
-  // If merged had it last frame AND it wasn’t set by axes last frame, treat as keyboard.
-  const kbdApprox = {
-    up: s0_up && (prevAxes.up === false),
-    down: s0_down && (prevAxes.down === false),
-    left: s0_left && (prevAxes.left === false),
-    right: s0_right && (prevAxes.right === false),
+/**
+ * Separates an approximate keyboard-only contribution from the previous merged snapshot.
+ * Anything present in merged last frame that was NOT set by axes last frame is treated as keyboard.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} s0 The merged snapshot prior to axes resolution.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} prevAxes The last frame's axes contribution.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._keyboardApproxFromSnapshot = function(s0, prevAxes)
+{
+  // derive a keyboard-only approximation by subtracting prior axes contribution.
+  return {
+    up: s0.up && (prevAxes.up === false),
+    down: s0.down && (prevAxes.down === false),
+    left: s0.left && (prevAxes.left === false),
+    right: s0.right && (prevAxes.right === false),
   };
+};
 
-  // --- Rebuild merged state as (keyboardApprox OR currentGamepadAxes) ---
+/**
+ * Rebuilds merged directions as (keyboardApprox OR currentGamepadAxes) for each cardinal.
+ * @param {object} s The merged current state bag to write into.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} kbdApprox The keyboard-only approximation.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} axesNow The axes contribution for this frame.
+ */
+Input._rebuildMergedDirections = function(s, kbdApprox, axesNow)
+{
+  // combine keyboard approximation with current axes for each direction.
   s.up = (kbdApprox.up === true) || (axesNow.up === true);
   s.down = (kbdApprox.down === true) || (axesNow.down === true);
   s.left = (kbdApprox.left === true) || (axesNow.left === true);
   s.right = (kbdApprox.right === true) || (axesNow.right === true);
+};
 
-  // --- Update our stamp for next frame’s separation logic ---
-  Input._axesStamp = axesNow;
+/**
+ * Exports a deep-cloned snapshot of all live namespace bindings for save.
+ * Shape: { [ns: string]: { [key: string]: string[] } }
+ * @returns {Object<string, Object<string, string[]>>}
+ */
+Input.exportAllBindingsForSave = function()
+{
+  // read the live bindings bag.
+  const b = Input._jRegistries.bindings || Object.create(null);
 
-  // --- optional compact diagnostic (unchanged), if enabled ---
-  if (Input._diagEnabled)
+  // deep clone to avoid save-time mutation risks.
+  const out = Object.create(null);
+  const namespaces = Object.keys(b);
+  for (let i = 0; i < namespaces.length; i++)
   {
-    const idx = typeof gamepad.index === 'number'
-      ? gamepad.index
-      : 0;
-    const map = gamepad.mapping || '';
-    const sDpd = s['dpad-down']
-      ? 1
-      : 0;
-    const sDn = s.down
-      ? 1
-      : 0;
-    console.log(
-      `[Pad${idx} ${map === 'standard'
-        ? 'std'
-        : 'ns'}] ` +
-      `ax=${ax.toFixed(2)} ay=${ay.toFixed(2)} ` +
-      `b12=${dpu
-        ? 1
-        : 0} b13=${dpd
-        ? 1
-        : 0} b14=${dpl
-        ? 1
-        : 0} b15=${dpr
-        ? 1
-        : 0} | ` +
-      `sym down=${sDn} dpad-down=${sDpd}`
-    );
+    // clone each namespace mapping.
+    const ns = namespaces[i];
+    const map = b[ns] || Object.create(null);
+    const clone = Object.create(null);
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      clone[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+    out[ns] = clone;
+  }
+
+  // return the cloned snapshot.
+  return out;
+};
+
+/**
+ * Imports all namespace bindings from a saved snapshot into the live registry.
+ * Any namespaces absent from the snapshot retain their current (bootstrapped) values.
+ * @param {Object<string, Object<string, string[]>>} saved The snapshot to import.
+ */
+Input.importAllBindingsFromSave = function(saved)
+{
+  // ignore invalid inputs.
+  if (!saved || typeof saved !== 'object')
+  {
+    return;
+  }
+
+  // ensure the bindings bag exists.
+  const b = Input._jRegistries.bindings;
+
+  // apply each namespace from the save.
+  const namespaces = Object.keys(saved);
+  for (let i = 0; i < namespaces.length; i++)
+  {
+    // read the namespace and its map.
+    const ns = namespaces[i];
+    const map = saved[ns] || Object.create(null);
+
+    // build a safe clone of the map for assignment.
+    const clone = Object.create(null);
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      clone[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+
+    // replace the live namespace mapping with the cloned one.
+    b[ns] = clone;
   }
 };
 

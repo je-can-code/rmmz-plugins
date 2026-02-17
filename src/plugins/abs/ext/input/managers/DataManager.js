@@ -9,6 +9,10 @@ DataManager.createGameObjects = function()
   // Ensure engine-wide input remap defaults/labels are bootstrapped once per session.
   Input.ensureRemapBootstrapped();
 
+  // register JABS icons.
+  IconManager.registerJabsIcons();
+  IconManager.registerJabsInputTexts();
+
   // initialize controller 1 for JABS.
   if (!$jabsController1)
   {

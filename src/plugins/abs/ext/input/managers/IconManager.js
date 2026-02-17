@@ -1,106 +1,201 @@
-//region IconManager (JABS-Input helpers)
+//region IconManager
+//region jabs icon registry
 /**
- * Resolves a combined (controller/keyboard) icon ex-text for a physical input symbol.
- * Falls back to raw symbol text when unmapped.
+ * A key-value mapping of physical input symbols to icon indices.
+ * @type {Record<string, number>}
+ */
+IconManager._jabsActionIconRegistry = {};
+
+/**
+ * Gets the icon registry for JABS input symbols.
+ * @returns {Record<string, number>}
+ */
+IconManager.getJabsIconRegistry = function()
+{
+  return IconManager._jabsActionIconRegistry;
+};
+
+/**
+ * Registers a custom icon for a given symbol.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
- * @returns {string} The ex-text to render (may include one or more `\I[...]` tokens).
+ * @param {number} iconIndex The icon index to use for the given symbol.
+ */
+IconManager.registerJabsIcon = function(symbol, iconIndex)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+  if (!normalizedSymbol)
+  {
+    throw new Error(`Attempting to register an empty symbol for icon index: ${iconIndex}`);
+  }
+
+  // validate iconIndex to ensure its a number.
+  const validatedIconIndex = Number(iconIndex);
+  if (isNaN(validatedIconIndex))
+  {
+    throw new Error(`Invalid icon index for symbol '${normalizedSymbol}': ${iconIndex}`);
+  }
+
+  // grab the registry for updating.
+  const registry = this.getJabsIconRegistry();
+
+  // register the icon index for the symbol.
+  registry[normalizedSymbol] = validatedIconIndex;
+};
+
+/**
+ * Gets the icon index for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {number} The icon index to use for the given symbol, or 0 if not mapped.
+ */
+IconManager.jabsIconIndexForSymbol = function(symbol)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+
+  // bail early if the symbol is empty.
+  if (!normalizedSymbol) return 0;
+
+  // grab the registry for querying.
+  const registry = this.getJabsIconRegistry();
+
+  // return the icon index for the symbol, or 0 if not mapped.
+  return registry[normalizedSymbol] || 0;
+};
+
+/**
+ * Registers all JABS input symbols with their respective icon indices.
+ */
+IconManager.registerJabsIcons = function()
+{
+  this.registerJabsIcon(J.ABS.Input.Mainhand, 76);
+  this.registerJabsIcon(J.ABS.Input.Offhand, 77);
+  this.registerJabsIcon(J.ABS.Input.Tool, 176);
+  this.registerJabsIcon(J.ABS.Input.Dash, 140);
+
+  this.registerJabsIcon(J.ABS.Input.SkillTrigger, 86);
+  this.registerJabsIcon(J.ABS.Input.StrafeTrigger, 82);
+  this.registerJabsIcon(J.ABS.Input.GuardTrigger, 83);
+  this.registerJabsIcon(J.ABS.Input.MobilitySkill, 13);
+
+  this.registerJabsIcon(J.ABS.Input.Quickmenu, 2563);
+  this.registerJabsIcon(J.ABS.Input.PartyCycle, 75);
+
+  this.registerJabsIcon(J.ABS.Input.CombatSkill1, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill2, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill3, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill4, 79);
+};
+
+//endregion jabs icon registry
+
+//region jabs text registry
+/**
+ * A key-value mapping of physical input symbols to ex-text.
+ * @type {Record<string, string>}
+ */
+IconManager._jabsInputTextRegistry = {};
+
+/**
+ * Gets the ex-text registry for JABS input symbols.
+ * @returns {Record<string, string>}
+ */
+IconManager.getJabsInputTextRegistry = function()
+{
+  return IconManager._jabsInputTextRegistry;
+};
+
+/**
+ * Registers custom ex-text for a given symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @param {string} text The ex-text to use for the given symbol.
+ */
+IconManager.registerJabsInputText = function(symbol, text)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+  if (!normalizedSymbol)
+  {
+    throw new Error(`Attempting to register an empty symbol for ex-text: ${text}`);
+  }
+
+  // validate text to ensure its a string.
+  const validatedText = String(text).trim();
+  if (!validatedText)
+  {
+    throw new Error(`Attempting to register an empty ex-text for symbol: ${normalizedSymbol}`);
+  }
+
+  // grab the registry for updating.
+  const registry = this.getJabsInputTextRegistry();
+
+  // register the ex-text for the symbol.
+  registry[normalizedSymbol] = validatedText;
+};
+
+/**
+ * Get the ex-text for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
+ */
+IconManager.jabsInputTextForSymbol = function(symbol)
+{
+  // grab the registry for querying.
+  const registry = this.getJabsInputTextRegistry();
+
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.toLowerCase();
+
+  // return the ex-text for the symbol, or the symbol itself if not mapped.
+  return registry[normalizedSymbol] || symbol;
+};
+
+/**
+ * Registers all JABS input symbols with their respective ex-text.
+ */
+IconManager.registerJabsInputTexts = function()
+{
+  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
+  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
+  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
+  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
+
+  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
+  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2453] / \\I[2438]");
+  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2454] / \\I[2437]");
+  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
+
+  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
+  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
+};
+
+/**
+ * Gets the ex-text for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
  */
 IconManager.jabsIconTextForSymbol = function(symbol)
 {
   // handle empty/unbound case.
   if (!symbol) return "(unbound)";
 
-  // translate common engine/gamepad symbols to paired glyphs.
-  switch (symbol)
-  {
-    // confirm / cancel
-    case "ok":
-      // Cross (pad) / Z (kb)
-      return "\\I[2448] / \\I[2432]";
-    case "cancel":
-      // Circle (pad) / X (kb)
-      return "\\I[2449] / \\I[2433]";
-
-    // face buttons / modifiers
-    case "shift":
-      // Square (pad) / Shift (kb)
-      return "\\I[2450] / \\I[2434]";
-    case "tab":
-      // Triangle (pad) / C (kb)
-      return "\\I[2451] / \\I[2435]";
-
-    // bumpers / triggers
-    case "pageup":
-      // L1 (pad) / Q (kb)
-      return "\\I[2452] / \\I[2436]";
-    case "pagedown":
-      // R1 (pad) / E (kb)
-      return "\\I[2453] / \\I[2438]";
-    case "l2":
-      // L2 (pad) / Ctrl (kb)
-      return "\\I[2454] / \\I[2437]";
-    case "r2":
-      // R2 (pad) / Tab (kb)
-      return "\\I[2455] / \\I[2439]";
-
-    // meta buttons
-    case "start":
-      // Options/Menu (pad) / Enter (kb)
-      return "\\I[2456] / \\I[2440]";
-    case "select":
-      // Select/Share (pad) / Del (kb)
-      return "\\I[2457] / \\I[2441]";
-
-    // default fallback
-    default:
-      // fall back to raw text if unmapped.
-      return String(symbol);
-  }
+  // return the ex-text for the symbol, or the symbol itself if not mapped.
+  return this.jabsInputTextForSymbol(symbol) || String(symbol);
 };
-
-/**
- * Resolves a single icon index for a physical input symbol by consulting J.ABS.Input.
- * Useful for left-column glyphs. Returns 0 when unmapped.
- * @param {string} symbol The physical input symbol.
- * @returns {number} The icon index to draw, or 0 if none.
- */
-IconManager.jabsIconIndexForSymbol = function(symbol)
-{
-  // if nothing is bound, do not draw an icon.
-  if (!symbol) return 0;
-
-  // reference the configured input constants (source of truth for symbols).
-  const I = J.ABS.Input;
-
-  // normalize any aliases if needed (currently a pass-through).
-  const normalized = symbol;
-
-  // map configured inputs to icon indices (single-glyph usage).
-  const iconByInput = {
-    // primaries
-    [I.Mainhand]: 76,         // Cross / Z
-    [I.Offhand]: 77,          // Circle / X
-    [I.Tool]: 176,            // Triangle / C
-    [I.Dash]: 140,            // Square / Shift
-
-    // modifiers & mobility
-    [I.SkillTrigger]: 86,     // L1 / Q
-    [I.StrafeTrigger]: 82,    // L2 / Ctrl
-    [I.GuardTrigger]: 83,     // R1 / E
-    [I.MobilitySkill]: 13,    // R2 / Tab
-
-    // menu-ish
-    [I.Quickmenu]: 2563,      // Start / Enter
-    [I.PartyCycle]: 75,       // Select / Del
-
-    // combat face button triggers (shared glyph, by choice)
-    [I.CombatSkill1]: 79,
-    [I.CombatSkill2]: 79,
-    [I.CombatSkill3]: 79,
-    [I.CombatSkill4]: 79,
-  };
-
-  // return the matching icon index or 0 if not mapped.
-  return iconByInput[normalized] || 0;
-};
-//endregion IconManager (JABS-Input helpers)
+//endregion jabs text registry
+//endregion IconManager

@@ -64,7 +64,13 @@ class Window_JabsRemapActions
      * Window-local state bag.
      */
     this._j._abs._input._actions._state = {
+      // The JABS mapping to display (owned/managed by the scene).
       _mapping: {},
+
+      // The external mapping for rows built via buildExternalActionCommand().
+      _externalMapping: {},
+
+      // The authoritative, ordered list of JABS logical action keys to display.
       _buttons: [],
     };
 
@@ -72,13 +78,14 @@ class Window_JabsRemapActions
      * Window-local view bag.
      */
     this._j._abs._input._actions._view = {
+      // The help window bound to this command window.
       _helpWindow: null,
     };
 
-    // pre-build the static button list if not already present.
+    // Pre-build the static button list if not already present.
     if (this.getButtons().length === 0)
     {
-      // set the authoritative buttons list for this window.
+      // Set the authoritative buttons list for this window.
       this.setButtons(this.buildButtonList());
     }
   }
@@ -106,6 +113,31 @@ class Window_JabsRemapActions
     this._state()._mapping = mapping || {};
 
     // refresh the contents to draw the values.
+    this.refresh();
+  }
+
+  /**
+   * Gets the current external mapping reference owned by the scene.
+   * The shape is: { [`${ns}:${key}`]: string[] }
+   * @returns {Object<string, string[]>}
+   */
+  getExternalMapping()
+  {
+    // Read from the lazily-initialized state bag.
+    return this._state()._externalMapping || {};
+  }
+
+  /**
+   * Sets the external mapping reference for external action rows.
+   * The scene should maintain and update this object; the window only reads it.
+   * @param {Object<string, string[]>} externalMapping The external mapping.
+   */
+  setExternalMapping(externalMapping)
+  {
+    // Store the reference (scene owns lifecycle and updates).
+    this._state()._externalMapping = externalMapping || {};
+
+    // Refresh the contents to draw the values.
     this.refresh();
   }
 
@@ -208,18 +240,19 @@ class Window_JabsRemapActions
 
   /**
    * Lazily ensures and returns the window-local state bag.
-   * @returns {{_mapping:Object<string,string[]>, _buttons:string[]}}
+   * @returns {{_mapping:Object<string,string[]>, _externalMapping:Object<string, string[]> , _buttons:string[]}}
    */
   _state()
   {
-    // ensure root namespaces.
+    // Ensure root namespaces.
     this._root();
 
-    // ensure and return the state bag.
+    // Ensure and return the state bag with all tracked properties.
     const actions = this._j._abs._input._actions;
     actions._state ||= {
       _mapping: {},
-      _buttons: []
+      _externalMapping: {},
+      _buttons: [],
     };
     return actions._state;
   }
@@ -430,9 +463,10 @@ class Window_JabsRemapActions
    * @param {string} ns The namespace (ex: "J.MAP").
    * @param {string} key The logical key within that namespace.
    * @param {string} label The row label to display.
+   * @param {number} [iconIndex=0] Optional fixed left-side icon index for this action.
    * @returns {BuiltWindowCommand}
    */
-  buildExternalActionCommand(ns, key, label)
+  buildExternalActionCommand(ns, key, label, iconIndex)
   {
     // build an enabled command that carries external namespace metadata.
     return new WindowCommandBuilder(label)
@@ -442,6 +476,8 @@ class Window_JabsRemapActions
         ns: ns,
         key: key,
         label: label,
+        // an optional fixed per-action icon for the left glyph; 0 means none provided.
+        icon: Number(iconIndex) || 0,
       })
       .setEnabled(true)
       .build();
@@ -454,10 +490,6 @@ class Window_JabsRemapActions
    * Draws a single item.
    * @param {number} index The index to draw.
    */
-  /**
-   * Draws a single item.
-   * @param {number} index The index to draw.
-   */
   drawItem(index)
   {
     // get the rectangle for this line.
@@ -466,112 +498,222 @@ class Window_JabsRemapActions
     // resolve the command to draw.
     const cmd = this._list[index];
 
-    // fallback if no command was found.
-    if (!cmd) return;
+    // if no command found, do nothing.
+    if (!cmd)
+    {
+      return;
+    }
 
-    // if this is a header row, draw the section title and exit.
+    // if this is a header row, draw it and exit.
     if (cmd.ext && cmd.ext.kind === 'header')
     {
-      // pick a stronger font and centered alignment for headers.
-      const name = cmd.name || '';
-
-      // draw the header text centered across the full row.
-      this.changeTextColor(ColorManager.systemColor());
-      this.contents.fontBold = true;
-      this.drawText(name, rect.x, rect.y, rect.width, 'center');
-      this.resetTextColor();
-      this.contents.fontBold = false;
+      this._drawHeaderItem(rect, cmd);
       return;
     }
 
-    // external registry-backed action: render from Input registry bindings.
+    // if this is an external registry-backed action, draw that and exit.
     if (cmd.ext && cmd.ext.kind === 'ext-action')
     {
-      // label is provided by the command.
-      const displayLabel = String(cmd.ext.label || '');
-
-      // read the bindings directly from the Input registry.
-      const boundList = Input.getBindings(cmd.ext.ns, cmd.ext.key) || [];
-
-      // extract the primary binding if any.
-      const bound = boundList.length > 0
-        ? boundList[0]
-        : String.empty;
-
-      // determine the icon index for the bound physical symbol.
-      const iconIndex = this.iconIndexForSymbol(bound);
-
-      // pull icon sizing for positioning.
-      const iw = ImageManager.iconWidth;
-      const ih = ImageManager.iconHeight;
-
-      // compute a vertically-centered y for the icon.
-      const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
-
-      // track the x-position for the action text, starting at the left side.
-      let leftTextX = rect.x;
-
-      // if we have a valid icon index (> 0), draw it and bump the text to the right.
-      if (iconIndex > 0)
-      {
-        // draw the icon to the far-left, preceding the action label.
-        this.drawIcon(iconIndex, rect.x, iconY);
-
-        // add spacing for the icon width + padding before drawing the action text.
-        leftTextX += iw + 6;
-      }
-
-      // draw the action label to the right of the icon (if any).
-      this.drawText(displayLabel, leftTextX, rect.y, rect.width / 2);
-
-      // draw an arrow separating columns.
-      const arrow = '→';
-
-      // compute mid-column x.
-      const midX = rect.x + rect.width / 2;
-
-      // draw the arrow centered between columns.
-      this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
-
-      // build the right-column rich text (supports icons/escape codes).
-      const rightText = IconManager.jabsIconTextForSymbol(bound);
-
-      // measure the rendered width (icons + text) to right-align manually.
-      const rightWidth = this.textSizeEx(rightText).width;
-
-      // compute the right-aligned x within the right half.
-      const rightX = midX + (rect.width / 2) - rightWidth;
-
-      // draw the mapping text on the right column using drawTextEx (enables icons).
-      this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
+      this._drawExternalActionItem(rect, cmd);
       return;
     }
 
-    // JABS logical action row: original behavior.
-    const button = String(cmd.symbol);
-    const mapping = this.getMapping();
-    const boundList = mapping[button] || [];
+    // otherwise render the standard JABS logical action row.
+    this._drawJabsActionItem(rect, cmd);
+  }
+
+  /**
+   * Draws a header row centered with system color styling.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{name:string, ext:object}} cmd The command data for this row.
+   */
+  _drawHeaderItem(rect, cmd)
+  {
+    // resolve a friendly header label.
+    const name = cmd.name || '';
+
+    // apply system color and bold before drawing.
+    this.changeTextColor(ColorManager.systemColor());
+    this.contents.fontBold = true;
+
+    // draw the header centered across the full row.
+    this.drawText(name, rect.x, rect.y, rect.width, 'center');
+
+    // reset text styling after drawing.
+    this.resetTextColor();
+    this.contents.fontBold = false;
+  }
+
+  /**
+   * Draws an external registry-backed action row.
+   * Prefers a fixed per-action icon when provided; otherwise uses the bound symbol’s icon.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{ name:string, ext:object }} cmd The command data for this row.
+   */
+  _drawExternalActionItem(rect, cmd)
+  {
+    // read the display label for this external action.
+    const displayLabel = String(cmd.ext.label || '');
+
+    // read the live/staged binding list for the external action.
+    const boundList = (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
+
+    // extract the primary binding if any.
     const bound = boundList.length > 0
       ? boundList[0]
       : String.empty;
-    const iconIndex = this.iconIndexForSymbol(bound);
-    const iw = ImageManager.iconWidth;
+
+    // prefer a fixed per-action icon if provided; otherwise use the bound symbol’s icon.
+    const leftIcon = (cmd.ext.icon && cmd.ext.icon > 0)
+      ? cmd.ext.icon
+      : this.iconIndexForSymbol(bound);
+
+    // compute vertical placement for the icon and the mid X for two-column layout.
+    const iconY = this._iconYForRect(rect);
+    const midX = rect.x + Math.floor(rect.width / 2);
+
+    // draw the left column (icon + label).
+    this._drawLeftLabelWithOptionalIcon(rect.x, iconY, leftIcon, displayLabel, rect, midX);
+
+    // draw the center arrow.
+    this._drawArrowBetweenColumns(rect, midX);
+
+    // draw the right column binding text with icon escapes.
+    const rightText = IconManager.jabsIconTextForSymbol(bound);
+    this._drawRightBindingText(rect, midX, rightText);
+  }
+
+  /**
+   * Draws a standard JABS logical action row using the window’s mapping.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{symbol:string}} cmd The command data for this row.
+   */
+  _drawJabsActionItem(rect, cmd)
+  {
+    // resolve the logical button key from the command.
+    const button = String(cmd.symbol);
+
+    // read the displayed mapping from the window state.
+    const mapping = this.getMapping();
+
+    // read the binding list for this logical action.
+    const boundList = mapping[button] || [];
+
+    // extract the primary binding if present.
+    const bound = boundList.length > 0
+      ? boundList[0]
+      : String.empty;
+
+    // choose a readable label for the logical action.
+    const label = this.humanizeButton(button);
+
+    // draw the shared layout for this label/binding.
+    this._drawActionBindingRow(rect, label, bound);
+  }
+
+  /**
+   * Computes a vertically-centered Y for drawing an icon within a row.
+   * @param {Rectangle} rect The row rectangle.
+   * @returns {number} The Y coordinate for the icon.
+   */
+  _iconYForRect(rect)
+  {
+    // read shared icon height from the image manager.
     const ih = ImageManager.iconHeight;
-    const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
-    let leftTextX = rect.x;
+
+    // compute a vertically-centered y for the icon within the row.
+    return rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
+  }
+
+  /**
+   * Draws an optional icon at the left and the provided label next to it.
+   * @param {number} leftX The left column start X.
+   * @param {number} iconY The Y where an icon would be drawn.
+   * @param {number} iconIndex The icon index to draw; 0 means no icon.
+   * @param {string} label The label to draw.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The mid X to limit left column width.
+   */
+  _drawLeftLabelWithOptionalIcon(leftX, iconY, iconIndex, label, rect, midX)
+  {
+    // start the text at the left side.
+    let labelX = leftX;
+
+    // if we have a valid icon index (> 0), draw it and push the text to the right.
     if (iconIndex > 0)
     {
-      this.drawIcon(iconIndex, rect.x, iconY);
-      leftTextX += iw + 6;
+      // draw the icon to the far-left, preceding the action label.
+      this.drawIcon(iconIndex, leftX, iconY);
+
+      // add spacing for the icon width + padding before drawing the action text.
+      labelX += ImageManager.iconWidth + 6;
     }
-    this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
-    const arrow = '→';
-    const midX = rect.x + rect.width / 2;
-    this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
+
+    // compute the maximum width for the left column (half of the row width).
+    const leftW = Math.max(0, midX - rect.x);
+
+    // draw the action label to the right of the icon (if any).
+    this.drawText(label, labelX, rect.y, leftW);
+  }
+
+  /**
+   * Draws a complete two-column action row for a given label and binding.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {string} label The left-column label to display.
+   * @param {string} bound The primary bound physical symbol to display on the right.
+   */
+  _drawActionBindingRow(rect, label, bound)
+  {
+    // resolve an icon index for the bound physical symbol.
+    const iconIndex = this.iconIndexForSymbol(bound);
+
+    // compute the vertical placement for an icon.
+    const iconY = this._iconYForRect(rect);
+
+    // compute the middle x for two-column layout.
+    const midX = rect.x + Math.floor(rect.width / 2);
+
+    // draw the left column (icon + label).
+    this._drawLeftLabelWithOptionalIcon(rect.x, iconY, iconIndex, label, rect, midX);
+
+    // draw the center arrow.
+    this._drawArrowBetweenColumns(rect, midX);
+
+    // draw the right column binding text with icon escapes.
     const rightText = IconManager.jabsIconTextForSymbol(bound);
+    this._drawRightBindingText(rect, midX, rightText);
+  }
+
+  /**
+   * Draws the center arrow that separates left/right columns.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The middle X of the row.
+   */
+  _drawArrowBetweenColumns(rect, midX)
+  {
+    // define the arrow glyph to draw.
+    const arrow = '→';
+
+    // draw the arrow centered between columns.
+    this.drawText(arrow, midX - this.textWidth(arrow), rect.y, Math.floor(rect.width / 2));
+  }
+
+  /**
+   * Draws the right-column binding text (may contain icon escapes), right-aligned.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The middle X of the row.
+   * @param {string} rightText The text to draw (often produced by IconManager).
+   */
+  _drawRightBindingText(rect, midX, rightText)
+  {
+    // measure the rendered width (icons + text) to right-align manually.
     const rightWidth = this.textSizeEx(rightText).width;
-    const rightX = midX + (rect.width / 2) - rightWidth;
-    this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
+
+    // compute the right-aligned x within the right half.
+    const rightX = midX + Math.floor(rect.width / 2) - rightWidth;
+
+    // draw the mapping text on the right column using drawTextEx (enables icons).
+    this.drawTextEx(rightText, rightX, rect.y, Math.floor(rect.width / 2));
   }
 
   //endregion drawing
@@ -610,8 +752,15 @@ class Window_JabsRemapActions
     // read the current command.
     const cmd = this.currentData();
 
-    // if this is not an action row, buzz and do nothing.
-    if (!cmd || (cmd.ext && cmd.ext.kind !== 'action'))
+    // if there is no command, buzz and do nothing.
+    if (!cmd)
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
+    // block only headers; allow normal and external actions to proceed.
+    if (cmd.ext && cmd.ext.kind === 'header')
     {
       SoundManager.playBuzzer();
       return;
