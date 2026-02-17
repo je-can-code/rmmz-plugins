@@ -99,6 +99,7 @@
  * CHANGELOG:
  * - 1.0.1
  *    Adds support for JABS-based input remapping.
+ *    Removes connection between TIME system and minimap visibility.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
