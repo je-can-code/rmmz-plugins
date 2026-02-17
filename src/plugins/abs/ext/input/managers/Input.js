@@ -378,14 +378,22 @@ Input.ensureRemapBootstrapped = function()
   Input.seedDefaultBindings('JABS', d);
   Input.getAllBindings('JABS'); // lazy-init live bindings
 
-  // Optional: friendly labels for some common symbols.
-  Input.registerSymbolLabel(J.ABS.Input.L3, 'L3');
-  Input.registerSymbolLabel(J.ABS.Input.R3, 'R3');
-  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, 'R2');
+  // friendly labels for some common symbols.
+  Input.registerSymbolLabel(J.ABS.Input.L3, "L3");
+  Input.registerSymbolLabel(J.ABS.Input.R3, "R3");
+  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, "R2");
+  Input.registerSymbolLabel(J.ABS.Input.DPadUp, "D-Pad Up");
+  Input.registerSymbolLabel(J.ABS.Input.DPadDown, "D-Pad Down");
+  Input.registerSymbolLabel(J.ABS.Input.DPadLeft, "D-Pad Left");
+  Input.registerSymbolLabel(J.ABS.Input.DPadRight, "D-Pad Right");
 
   // Allow these symbols to be captured in the prompt if desired.
   Input.registerRemapCaptureSymbol(J.ABS.Input.L3);
   Input.registerRemapCaptureSymbol(J.ABS.Input.R3);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadUp);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadDown);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadLeft);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadRight);
 
   // Mark as bootstrapped for this runtime session.
   Input._jRegistries.bootstrapped = true;

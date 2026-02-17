@@ -1546,25 +1546,6 @@ IconManager.jabsInputTextForSymbol = function(symbol)
 };
 
 /**
- * Registers all JABS input symbols with their respective ex-text.
- */
-IconManager.registerJabsInputTexts = function()
-{
-  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
-  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
-  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
-  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
-
-  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
-  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2453] / \\I[2438]");
-  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2454] / \\I[2437]");
-  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
-
-  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
-  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
-};
-
-/**
  * Gets the ex-text for a given physical input symbol.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
  * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
@@ -1576,6 +1557,25 @@ IconManager.jabsIconTextForSymbol = function(symbol)
 
   // return the ex-text for the symbol, or the symbol itself if not mapped.
   return this.jabsInputTextForSymbol(symbol) || String(symbol);
+};
+
+/**
+ * Registers all JABS input symbols with their respective ex-text.
+ */
+IconManager.registerJabsInputTexts = function()
+{
+  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
+  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
+  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
+  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
+
+  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
+  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2454] / \\I[2438]");
+  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2453] / \\I[2437]");
+  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
+
+  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
+  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
 };
 //endregion jabs text registry
 //endregion IconManager
@@ -1960,14 +1960,22 @@ Input.ensureRemapBootstrapped = function()
   Input.seedDefaultBindings('JABS', d);
   Input.getAllBindings('JABS'); // lazy-init live bindings
 
-  // Optional: friendly labels for some common symbols.
-  Input.registerSymbolLabel(J.ABS.Input.L3, 'L3');
-  Input.registerSymbolLabel(J.ABS.Input.R3, 'R3');
-  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, 'R2');
+  // friendly labels for some common symbols.
+  Input.registerSymbolLabel(J.ABS.Input.L3, "L3");
+  Input.registerSymbolLabel(J.ABS.Input.R3, "R3");
+  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, "R2");
+  Input.registerSymbolLabel(J.ABS.Input.DPadUp, "D-Pad Up");
+  Input.registerSymbolLabel(J.ABS.Input.DPadDown, "D-Pad Down");
+  Input.registerSymbolLabel(J.ABS.Input.DPadLeft, "D-Pad Left");
+  Input.registerSymbolLabel(J.ABS.Input.DPadRight, "D-Pad Right");
 
   // Allow these symbols to be captured in the prompt if desired.
   Input.registerRemapCaptureSymbol(J.ABS.Input.L3);
   Input.registerRemapCaptureSymbol(J.ABS.Input.R3);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadUp);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadDown);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadLeft);
+  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadRight);
 
   // Mark as bootstrapped for this runtime session.
   Input._jRegistries.bootstrapped = true;
@@ -2947,9 +2955,6 @@ class Scene_JabsRemap
     // attach the top help so selection changes update descriptions.
     window.setHelpWindow(this.getTopHelpWindow());
 
-    // inject the scene-managed external mapping reference used by ext-action rows.
-    window.setExternalMapping(this.getPendingExternal());
-
     // return the built and configured actions window.
     return window;
   }
@@ -3311,24 +3316,58 @@ class Scene_JabsRemap
    */
   refreshAll()
   {
-    // get the pending mapping for the current controller.
-    const mapping = this.currentPendingMapping();
+    // Build a combined display mapping (controller pending + external staged tokens).
+    const combined = this.buildDisplayMapping();
 
-    // set the actions mapping and ensure it is the active focus.
+    // Set the combined mapping and ensure it is the active focus.
     this.getActionsWindow()
-      .setMapping(mapping);
+      .setMapping(combined);
 
-    // also ensure the window reads the latest external staged map by reference.
-    this.getActionsWindow()
-      .setExternalMapping(this.getPendingExternal());
-
-    // activate the actions window by default.
+    // Activate the actions window by default.
     this.getActionsWindow()
       .activate();
 
-    // ensure the bottom command strip is not active by default.
+    // Ensure the bottom command strip is not active by default.
     this.getCommandWindow()
       .deactivate();
+  }
+
+  /**
+   * Builds a combined display mapping for the actions window.
+   * Combines the current controller’s pending JABS mapping with staged external rows.
+   * External rows are keyed as tokens: "__ext__<ns>:<key>" → string[].
+   * @returns {Object<string, string[]>}
+   */
+  buildDisplayMapping()
+  {
+    // Start with a shallow clone of the controller’s pending mapping.
+    const base = this.currentPendingMapping() || {};
+    const combined = {};
+
+    // clone base logical mappings (first binding shown by UI is at [0]).
+    Object.keys(base)
+      .forEach(button =>
+      {
+        const list = base[button];
+        combined[button] = Array.isArray(list)
+          ? list.slice(0)
+          : [];
+      });
+
+    // Overlay staged external bindings as tokenized keys.
+    const ext = this.getPendingExternal();
+    const extKeys = Object.keys(ext);
+    for (let i = 0; i < extKeys.length; i++)
+    {
+      const compound = extKeys[i]; // in the form ns:key
+      const arr = ext[compound];
+      combined[`__ext__${compound}`] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+
+    // Return the merged bag used purely for display in the window.
+    return combined;
   }
 
   /**
@@ -3636,9 +3675,9 @@ class Scene_JabsRemap
         // stage the binding into the scene-stored pending-external map.
         this.setPendingExternalBinding(ns, key, [ symbol ]);
 
-        // refresh the actions window to reflect staged binding.
+        // reflect the updated mapping in the actions window immediately.
         this.getActionsWindow()
-          .refresh();
+          .setMapping(this.buildDisplayMapping());
 
         // do not write to Input registry here; Apply will commit it.
         return;
@@ -3653,6 +3692,10 @@ class Scene_JabsRemap
 
     // assign the symbol to the given logical action.
     pending[button] = [ symbol ];
+
+    // reflect logical mapping updates, too.
+    this.getActionsWindow()
+      .setMapping(this.buildDisplayMapping());
   }
 
   /**
@@ -3747,10 +3790,9 @@ class Scene_JabsRemap
     // clear the staged map so future edits start fresh.
     this._state()._pendingExternal = {};
 
-    // rebind the new (empty) staged map reference into the actions window so it
-    // immediately reflects that there are no longer any staged changes.
+    // after clearing, reflect the (now-committed) state in the window.
     this.getActionsWindow()
-      .setExternalMapping(this.getPendingExternal());
+      .setMapping(this.buildDisplayMapping());
   }
 
   //endregion actions
@@ -3793,9 +3835,9 @@ class Scene_JabsRemap
     // resolve and assign with conflict handling.
     this.assignWithConflictResolution(this._state()._capturingButton, captured);
 
-    // reflect the updated mapping in the actions window.
+    // reflect the updated combined mapping (controller pending + external staged).
     this.getActionsWindow()
-      .setMapping(this.currentPendingMapping());
+      .setMapping(this.buildDisplayMapping());
 
     // end the capture flow.
     this.endCapture();
@@ -4393,17 +4435,28 @@ class Window_JabsRemapActions
 
   /**
    * Draws an external registry-backed action row.
-   * Prefers a fixed per-action icon when provided; otherwise uses the bound symbol’s icon.
    * @param {Rectangle} rect The row rectangle.
-   * @param {{ name:string, ext:object }} cmd The command data for this row.
+   * @param {{ name:string, symbol:string, ext:object }} cmd The command for this row.
    */
   _drawExternalActionItem(rect, cmd)
   {
     // read the display label for this external action.
-    const displayLabel = String(cmd.ext.label || '');
+    const displayLabel = String(cmd.ext.label || "");
 
-    // read the live/staged binding list for the external action.
-    const boundList = (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
+    // read the combined mapping from the window (scene-provided view model).
+    const combined = this.getMapping();
+
+    // the command symbol is a stable token: "__ext__<ns>:<key>".
+    const token = String(cmd.symbol || "");
+
+    // if a staged entry exists in the combined mapping, prefer that list.
+    const hasStaged = Object.prototype.hasOwnProperty.call(combined, token);
+    const staged = hasStaged ? combined[token] : null;
+
+    // otherwise, fall back to the live registry for this external action.
+    const boundList = staged !== null
+      ? (Array.isArray(staged) ? staged : [])
+      : (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
 
     // extract the primary binding if any.
     const bound = boundList.length > 0

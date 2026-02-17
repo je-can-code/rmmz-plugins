@@ -264,9 +264,6 @@ class Scene_JabsRemap
     // attach the top help so selection changes update descriptions.
     window.setHelpWindow(this.getTopHelpWindow());
 
-    // inject the scene-managed external mapping reference used by ext-action rows.
-    window.setExternalMapping(this.getPendingExternal());
-
     // return the built and configured actions window.
     return window;
   }
@@ -628,24 +625,58 @@ class Scene_JabsRemap
    */
   refreshAll()
   {
-    // get the pending mapping for the current controller.
-    const mapping = this.currentPendingMapping();
+    // Build a combined display mapping (controller pending + external staged tokens).
+    const combined = this.buildDisplayMapping();
 
-    // set the actions mapping and ensure it is the active focus.
+    // Set the combined mapping and ensure it is the active focus.
     this.getActionsWindow()
-      .setMapping(mapping);
+      .setMapping(combined);
 
-    // also ensure the window reads the latest external staged map by reference.
-    this.getActionsWindow()
-      .setExternalMapping(this.getPendingExternal());
-
-    // activate the actions window by default.
+    // Activate the actions window by default.
     this.getActionsWindow()
       .activate();
 
-    // ensure the bottom command strip is not active by default.
+    // Ensure the bottom command strip is not active by default.
     this.getCommandWindow()
       .deactivate();
+  }
+
+  /**
+   * Builds a combined display mapping for the actions window.
+   * Combines the current controller’s pending JABS mapping with staged external rows.
+   * External rows are keyed as tokens: "__ext__<ns>:<key>" → string[].
+   * @returns {Object<string, string[]>}
+   */
+  buildDisplayMapping()
+  {
+    // Start with a shallow clone of the controller’s pending mapping.
+    const base = this.currentPendingMapping() || {};
+    const combined = {};
+
+    // clone base logical mappings (first binding shown by UI is at [0]).
+    Object.keys(base)
+      .forEach(button =>
+      {
+        const list = base[button];
+        combined[button] = Array.isArray(list)
+          ? list.slice(0)
+          : [];
+      });
+
+    // Overlay staged external bindings as tokenized keys.
+    const ext = this.getPendingExternal();
+    const extKeys = Object.keys(ext);
+    for (let i = 0; i < extKeys.length; i++)
+    {
+      const compound = extKeys[i]; // in the form ns:key
+      const arr = ext[compound];
+      combined[`__ext__${compound}`] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+
+    // Return the merged bag used purely for display in the window.
+    return combined;
   }
 
   /**
@@ -953,9 +984,9 @@ class Scene_JabsRemap
         // stage the binding into the scene-stored pending-external map.
         this.setPendingExternalBinding(ns, key, [ symbol ]);
 
-        // refresh the actions window to reflect staged binding.
+        // reflect the updated mapping in the actions window immediately.
         this.getActionsWindow()
-          .refresh();
+          .setMapping(this.buildDisplayMapping());
 
         // do not write to Input registry here; Apply will commit it.
         return;
@@ -970,6 +1001,10 @@ class Scene_JabsRemap
 
     // assign the symbol to the given logical action.
     pending[button] = [ symbol ];
+
+    // reflect logical mapping updates, too.
+    this.getActionsWindow()
+      .setMapping(this.buildDisplayMapping());
   }
 
   /**
@@ -1064,10 +1099,9 @@ class Scene_JabsRemap
     // clear the staged map so future edits start fresh.
     this._state()._pendingExternal = {};
 
-    // rebind the new (empty) staged map reference into the actions window so it
-    // immediately reflects that there are no longer any staged changes.
+    // after clearing, reflect the (now-committed) state in the window.
     this.getActionsWindow()
-      .setExternalMapping(this.getPendingExternal());
+      .setMapping(this.buildDisplayMapping());
   }
 
   //endregion actions
@@ -1110,9 +1144,9 @@ class Scene_JabsRemap
     // resolve and assign with conflict handling.
     this.assignWithConflictResolution(this._state()._capturingButton, captured);
 
-    // reflect the updated mapping in the actions window.
+    // reflect the updated combined mapping (controller pending + external staged).
     this.getActionsWindow()
-      .setMapping(this.currentPendingMapping());
+      .setMapping(this.buildDisplayMapping());
 
     // end the capture flow.
     this.endCapture();

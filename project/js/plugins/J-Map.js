@@ -463,12 +463,6 @@ DataManager.registerMinimapInputActions = function()
     'expand-minimap': [ J.ABS.Input.DPadDown ],
   });
   Input.getAllBindings('J.MAP');
-
-  // make sure these symbols are capture-eligible and nicely labeled.
-  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadUp);
-  Input.registerRemapCaptureSymbol(J.ABS.Input.DPadDown);
-  Input.registerSymbolLabel(J.ABS.Input.DPadUp, 'D-Pad Up');
-  Input.registerSymbolLabel(J.ABS.Input.DPadDown, 'D-Pad Down');
 };
 
 //endregion DataManager
