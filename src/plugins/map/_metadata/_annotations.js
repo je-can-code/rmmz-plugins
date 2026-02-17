@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 MAP] Renders a passability-driven minimap on the screen.
+ * [v1.0.1 MAP] Renders a passability-driven minimap on the screen.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -97,6 +97,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Adds support for JABS-based input remapping.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

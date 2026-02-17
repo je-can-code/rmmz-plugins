@@ -39,6 +39,12 @@ Game_System.prototype.initJabsInputConfigMembers = function()
    * @type {Object<string, Object<string, string>>}
    */
   this._j._abs._input._mappings ||= {};
+
+  /**
+   * Snapshot of the full Input registry bindings across all namespaces.
+   * @type {Object<string, Object<string, string[]>>}
+   */
+  this._j._abs._input._bindings ||= {};
 };
 
 /**
@@ -102,6 +108,46 @@ Game_System.prototype.getJabsInputConfig = function(controllerKey)
   Object.keys(found)
     .forEach(key => copy[key] = found[key]);
   return copy;
+};
+
+/**
+ * Gets the persisted snapshot of the Input registry bindings.
+ * Shape: { [ns: string]: { [key: string]: string[] } }
+ * @returns {Object<string, Object<string, string[]>>}
+ */
+Game_System.prototype.getInputBindingsSnapshot = function()
+{
+  // return the stored snapshot bag (may be empty object).
+  return this._j._abs._input._bindings || {};
+};
+
+/**
+ * Overwrites the persisted Input bindings snapshot on the system object.
+ * The provided object should follow the shape: { [ns]: { [key]: string[] } }.
+ * @param {Object<string, Object<string, string[]>>} snapshot The snapshot to store.
+ */
+Game_System.prototype.setInputBindingsSnapshot = function(snapshot)
+{
+  // assign a defensive deep clone to avoid mutation via shared references.
+  const out = {};
+  const namespaces = Object.keys(snapshot || {});
+  for (let i = 0; i < namespaces.length; i++)
+  {
+    const ns = namespaces[i];
+    const map = snapshot[ns] || {};
+    const copy = {};
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      copy[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+    out[ns] = copy;
+  }
+  this._j._abs._input._bindings = out;
 };
 
 /**
@@ -180,6 +226,32 @@ Game_System.prototype.resetJabsInputConfigToDefaults = function(index)
 };
 
 /**
+ * Snapshots all live Input namespace bindings into system storage for persistence.
+ */
+Game_System.prototype.saveAllInputBindingsFromInput = function()
+{
+  // delegate to the Input manager to export all namespaces.
+  const snapshot = Input.exportAllBindingsForSave();
+
+  // persist the snapshot on the system object.
+  this.setInputBindingsSnapshot(snapshot);
+};
+
+/**
+ * Applies the persisted Input bindings snapshot back into the live Input registry.
+ * Ensures Input defaults are bootstrapped before applying.
+ */
+Game_System.prototype.applyAllInputBindingsToInput = function()
+{
+  // ensure live registries have defaults before overlaying saved data.
+  Input.ensureRemapBootstrapped();
+
+  // import from the system-stored snapshot across all namespaces.
+  const saved = this.getInputBindingsSnapshot();
+  Input.importAllBindingsFromSave(saved);
+};
+
+/**
  * Resolves a stable key for the given controller for config storage.
  * Default strategy: "player" + (index+1).
  * @param {JABS_StandardController} controller The controller to resolve a key for.
@@ -205,6 +277,9 @@ Game_System.prototype.onBeforeSave = function()
 
   // snapshot all current controller mappings into system storage.
   this.saveAllJabsInputConfigs();
+
+  // snapshot the full Input registry (all namespaces) into system storage.
+  this.saveAllInputBindingsFromInput();
 };
 
 /**
@@ -217,6 +292,9 @@ Game_System.prototype.onAfterLoad = function()
   // perform original logic.
   J.ABS.EXT.INPUT.Aliased.Game_System.get('onAfterLoad')
     .call(this);
+
+  // apply the persisted Input bindings back into the live registry.
+  this.applyAllInputBindingsToInput();
 
   // attempt to apply stored configs to any currently registered controllers.
   this.applyAllJabsInputConfigs();

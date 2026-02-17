@@ -1365,6 +1365,10 @@ DataManager.createGameObjects = function()
   // Ensure engine-wide input remap defaults/labels are bootstrapped once per session.
   Input.ensureRemapBootstrapped();
 
+  // register JABS icons.
+  IconManager.registerJabsIcons();
+  IconManager.registerJabsInputTexts();
+
   // initialize controller 1 for JABS.
   if (!$jabsController1)
   {
@@ -1374,112 +1378,207 @@ DataManager.createGameObjects = function()
 };
 //endregion DataManager
 
-//region IconManager (JABS-Input helpers)
+//region IconManager
+//region jabs icon registry
 /**
- * Resolves a combined (controller/keyboard) icon ex-text for a physical input symbol.
- * Falls back to raw symbol text when unmapped.
+ * A key-value mapping of physical input symbols to icon indices.
+ * @type {Record<string, number>}
+ */
+IconManager._jabsActionIconRegistry = {};
+
+/**
+ * Gets the icon registry for JABS input symbols.
+ * @returns {Record<string, number>}
+ */
+IconManager.getJabsIconRegistry = function()
+{
+  return IconManager._jabsActionIconRegistry;
+};
+
+/**
+ * Registers a custom icon for a given symbol.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
- * @returns {string} The ex-text to render (may include one or more `\I[...]` tokens).
+ * @param {number} iconIndex The icon index to use for the given symbol.
+ */
+IconManager.registerJabsIcon = function(symbol, iconIndex)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+  if (!normalizedSymbol)
+  {
+    throw new Error(`Attempting to register an empty symbol for icon index: ${iconIndex}`);
+  }
+
+  // validate iconIndex to ensure its a number.
+  const validatedIconIndex = Number(iconIndex);
+  if (isNaN(validatedIconIndex))
+  {
+    throw new Error(`Invalid icon index for symbol '${normalizedSymbol}': ${iconIndex}`);
+  }
+
+  // grab the registry for updating.
+  const registry = this.getJabsIconRegistry();
+
+  // register the icon index for the symbol.
+  registry[normalizedSymbol] = validatedIconIndex;
+};
+
+/**
+ * Gets the icon index for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {number} The icon index to use for the given symbol, or 0 if not mapped.
+ */
+IconManager.jabsIconIndexForSymbol = function(symbol)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+
+  // bail early if the symbol is empty.
+  if (!normalizedSymbol) return 0;
+
+  // grab the registry for querying.
+  const registry = this.getJabsIconRegistry();
+
+  // return the icon index for the symbol, or 0 if not mapped.
+  return registry[normalizedSymbol] || 0;
+};
+
+/**
+ * Registers all JABS input symbols with their respective icon indices.
+ */
+IconManager.registerJabsIcons = function()
+{
+  this.registerJabsIcon(J.ABS.Input.Mainhand, 76);
+  this.registerJabsIcon(J.ABS.Input.Offhand, 77);
+  this.registerJabsIcon(J.ABS.Input.Tool, 176);
+  this.registerJabsIcon(J.ABS.Input.Dash, 140);
+
+  this.registerJabsIcon(J.ABS.Input.SkillTrigger, 86);
+  this.registerJabsIcon(J.ABS.Input.StrafeTrigger, 82);
+  this.registerJabsIcon(J.ABS.Input.GuardTrigger, 83);
+  this.registerJabsIcon(J.ABS.Input.MobilitySkill, 13);
+
+  this.registerJabsIcon(J.ABS.Input.Quickmenu, 2563);
+  this.registerJabsIcon(J.ABS.Input.PartyCycle, 75);
+
+  this.registerJabsIcon(J.ABS.Input.CombatSkill1, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill2, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill3, 79);
+  this.registerJabsIcon(J.ABS.Input.CombatSkill4, 79);
+};
+
+//endregion jabs icon registry
+
+//region jabs text registry
+/**
+ * A key-value mapping of physical input symbols to ex-text.
+ * @type {Record<string, string>}
+ */
+IconManager._jabsInputTextRegistry = {};
+
+/**
+ * Gets the ex-text registry for JABS input symbols.
+ * @returns {Record<string, string>}
+ */
+IconManager.getJabsInputTextRegistry = function()
+{
+  return IconManager._jabsInputTextRegistry;
+};
+
+/**
+ * Registers custom ex-text for a given symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @param {string} text The ex-text to use for the given symbol.
+ */
+IconManager.registerJabsInputText = function(symbol, text)
+{
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.trim()
+    .toLowerCase();
+  if (!normalizedSymbol)
+  {
+    throw new Error(`Attempting to register an empty symbol for ex-text: ${text}`);
+  }
+
+  // validate text to ensure its a string.
+  const validatedText = String(text).trim();
+  if (!validatedText)
+  {
+    throw new Error(`Attempting to register an empty ex-text for symbol: ${normalizedSymbol}`);
+  }
+
+  // grab the registry for updating.
+  const registry = this.getJabsInputTextRegistry();
+
+  // register the ex-text for the symbol.
+  registry[normalizedSymbol] = validatedText;
+};
+
+/**
+ * Get the ex-text for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
+ */
+IconManager.jabsInputTextForSymbol = function(symbol)
+{
+  // grab the registry for querying.
+  const registry = this.getJabsInputTextRegistry();
+
+  // validate symbol to ensure its a string.
+  const validatedSymbol = String(symbol);
+
+  // normalize the symbol to lowercase.
+  const normalizedSymbol = validatedSymbol.toLowerCase();
+
+  // return the ex-text for the symbol, or the symbol itself if not mapped.
+  return registry[normalizedSymbol] || symbol;
+};
+
+/**
+ * Registers all JABS input symbols with their respective ex-text.
+ */
+IconManager.registerJabsInputTexts = function()
+{
+  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
+  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
+  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
+  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
+
+  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
+  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2453] / \\I[2438]");
+  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2454] / \\I[2437]");
+  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
+
+  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
+  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
+};
+
+/**
+ * Gets the ex-text for a given physical input symbol.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
  */
 IconManager.jabsIconTextForSymbol = function(symbol)
 {
   // handle empty/unbound case.
   if (!symbol) return "(unbound)";
 
-  // translate common engine/gamepad symbols to paired glyphs.
-  switch (symbol)
-  {
-    // confirm / cancel
-    case "ok":
-      // Cross (pad) / Z (kb)
-      return "\\I[2448] / \\I[2432]";
-    case "cancel":
-      // Circle (pad) / X (kb)
-      return "\\I[2449] / \\I[2433]";
-
-    // face buttons / modifiers
-    case "shift":
-      // Square (pad) / Shift (kb)
-      return "\\I[2450] / \\I[2434]";
-    case "tab":
-      // Triangle (pad) / C (kb)
-      return "\\I[2451] / \\I[2435]";
-
-    // bumpers / triggers
-    case "pageup":
-      // L1 (pad) / Q (kb)
-      return "\\I[2452] / \\I[2436]";
-    case "pagedown":
-      // R1 (pad) / E (kb)
-      return "\\I[2453] / \\I[2438]";
-    case "l2":
-      // L2 (pad) / Ctrl (kb)
-      return "\\I[2454] / \\I[2437]";
-    case "r2":
-      // R2 (pad) / Tab (kb)
-      return "\\I[2455] / \\I[2439]";
-
-    // meta buttons
-    case "start":
-      // Options/Menu (pad) / Enter (kb)
-      return "\\I[2456] / \\I[2440]";
-    case "select":
-      // Select/Share (pad) / Del (kb)
-      return "\\I[2457] / \\I[2441]";
-
-    // default fallback
-    default:
-      // fall back to raw text if unmapped.
-      return String(symbol);
-  }
+  // return the ex-text for the symbol, or the symbol itself if not mapped.
+  return this.jabsInputTextForSymbol(symbol) || String(symbol);
 };
-
-/**
- * Resolves a single icon index for a physical input symbol by consulting J.ABS.Input.
- * Useful for left-column glyphs. Returns 0 when unmapped.
- * @param {string} symbol The physical input symbol.
- * @returns {number} The icon index to draw, or 0 if none.
- */
-IconManager.jabsIconIndexForSymbol = function(symbol)
-{
-  // if nothing is bound, do not draw an icon.
-  if (!symbol) return 0;
-
-  // reference the configured input constants (source of truth for symbols).
-  const I = J.ABS.Input;
-
-  // normalize any aliases if needed (currently a pass-through).
-  const normalized = symbol;
-
-  // map configured inputs to icon indices (single-glyph usage).
-  const iconByInput = {
-    // primaries
-    [I.Mainhand]: 76,         // Cross / Z
-    [I.Offhand]: 77,          // Circle / X
-    [I.Tool]: 176,            // Triangle / C
-    [I.Dash]: 140,            // Square / Shift
-
-    // modifiers & mobility
-    [I.SkillTrigger]: 86,     // L1 / Q
-    [I.StrafeTrigger]: 82,    // L2 / Ctrl
-    [I.GuardTrigger]: 83,     // R1 / E
-    [I.MobilitySkill]: 13,    // R2 / Tab
-
-    // menu-ish
-    [I.Quickmenu]: 2563,      // Start / Enter
-    [I.PartyCycle]: 75,       // Select / Del
-
-    // combat face button triggers (shared glyph, by choice)
-    [I.CombatSkill1]: 79,
-    [I.CombatSkill2]: 79,
-    [I.CombatSkill3]: 79,
-    [I.CombatSkill4]: 79,
-  };
-
-  // return the matching icon index or 0 if not mapped.
-  return iconByInput[normalized] || 0;
-};
-//endregion IconManager (JABS-Input helpers)
+//endregion jabs text registry
+//endregion IconManager
 
 //region Input
 /**
@@ -1907,164 +2006,337 @@ Input.setAxisThreshold = function(v)
 J.ABS.EXT.INPUT.Aliased.Input.set('_updateGamepadState', Input._updateGamepadState);
 Input._updateGamepadState = function(gamepad)
 {
-  // perform original logic first (creates newState and updates _currentState/_gamepadStates).
+  // perform original engine logic first.
   J.ABS.EXT.INPUT.Aliased.Input
     .get('_updateGamepadState')
     .call(this, gamepad);
 
-  // if no pad, nothing further to do.
+  // if there is no pad, there is nothing further to do this frame.
   if (!gamepad)
   {
     return;
   }
 
-  // ensure we have the merged current state bag and per-pad state.
-  const s = this._currentState;
-  const padState = this._gamepadStates && typeof gamepad.index === 'number'
-    ? this._gamepadStates[gamepad.index]
-    : null;
-  if (!s || !padState)
+  // ensure we have both state bags; bail if missing.
+  const ensured = Input._ensurePadStates(gamepad);
+  if (!ensured)
   {
     return;
   }
 
-  // --- D-Pad normalization: force dpad-* to match raw buttons 12..15 exactly ---
-  const dpu = !!(gamepad.buttons && gamepad.buttons[12] && gamepad.buttons[12].pressed);
-  const dpd = !!(gamepad.buttons && gamepad.buttons[13] && gamepad.buttons[13].pressed);
-  const dpl = !!(gamepad.buttons && gamepad.buttons[14] && gamepad.buttons[14].pressed);
-  const dpr = !!(gamepad.buttons && gamepad.buttons[15] && gamepad.buttons[15].pressed);
+  // unpack the state bags for readability.
+  const { s } = ensured;
+  const { padState } = ensured;
 
-  // Overwrite merged & per-pad strictly from raw dpad buttons.
-  s['dpad-up'] = dpu;
-  padState['dpad-up'] = dpu;
-  s['dpad-down'] = dpd;
-  padState['dpad-down'] = dpd;
-  s['dpad-left'] = dpl;
-  padState['dpad-left'] = dpl;
-  s['dpad-right'] = dpr;
-  padState['dpad-right'] = dpr;
+  // 1) Normalize D-pad strictly from raw buttons 12..15.
+  Input._normalizeDpadFromButtons(gamepad, s, padState);
 
-  // If no axes array, stop after D-pad normalization.
+  // if there are no axes to process, stop here after D-pad normalization.
   if (!gamepad.axes || gamepad.axes.length < 2)
   {
     return;
   }
 
-  // --- Capture last frame’s axes contribution and the current merged snapshot ---
+  // 2) Capture the merged snapshot BEFORE axis processing (for keyboard approx).
+  const s0 = Input._snapshotMergedDirections(s);
+
+  // 3) Resolve axis flags from the left stick.
+  const flags = Input._resolveAxesFlags(gamepad);
+
+  // 4) Apply axis flags to the per-pad snapshot with mutual exclusivity + neutral clearing.
+  Input._applyAxesToPerPad(padState, flags);
+
+  // 5) Compute current axes contribution from the per-pad snapshot.
+  const axesNow = Input._axesNowFromPadState(padState);
+
+  // 6) Derive keyboard-only approximation using last merged-vs-axes stamp.
   const prevAxes = Input._axesStamp || {
     up: false,
     down: false,
     left: false,
-    right: false
+    right: false,
   };
-  const s0_up = !!s.up;
-  const s0_down = !!s.down;
-  const s0_left = !!s.left;
-  const s0_right = !!s.right;
+  const kbdApprox = Input._keyboardApproxFromSnapshot(s0, prevAxes);
 
-  // --- analog stick threshold assist (mutually-exclusive in per-pad) ---
-  const ax = gamepad.axes[0] || 0; // X (left/right)
-  const ay = gamepad.axes[1] || 0; // Y (up/down)
+  // 7) Rebuild merged directions as (keyboardApprox OR current axes).
+  Input._rebuildMergedDirections(s, kbdApprox, axesNow);
+
+  // 8) Update the axes stamp for next frame's separation logic.
+  Input._axesStamp = axesNow;
+};
+
+/**
+ * Ensures we have both the merged current state bag and the per-pad snapshot.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @returns {{ s: object, padState: object }|null}
+ */
+Input._ensurePadStates = function(gamepad)
+{
+  // read the merged state for this frame.
+  const s = this._currentState;
+
+  // resolve the per-pad state snapshot for this index.
+  const padState = this._gamepadStates && typeof gamepad.index === 'number'
+    ? this._gamepadStates[gamepad.index]
+    : null;
+
+  // if either is missing, we cannot proceed.
+  if (!s || !padState)
+  {
+    return null;
+  }
+
+  // provide both state bags to the caller.
+  return {
+    s,
+    padState
+  };
+};
+
+/**
+ * Normalizes the four D-pad symbols strictly from raw buttons 12..15.
+ * Writes into both merged current state and per-pad snapshot.
+ * @param {Gamepad} gamepad The polled gamepad.
+ * @param {object} s The merged current state bag.
+ * @param {object} padState The per-pad snapshot for this device.
+ */
+Input._normalizeDpadFromButtons = function(gamepad, s, padState)
+{
+  // coerce D-pad buttons to booleans from the raw Gamepad API.
+  const dpu = !!(gamepad.buttons && gamepad.buttons[12] && gamepad.buttons[12].pressed);
+  const dpd = !!(gamepad.buttons && gamepad.buttons[13] && gamepad.buttons[13].pressed);
+  const dpl = !!(gamepad.buttons && gamepad.buttons[14] && gamepad.buttons[14].pressed);
+  const dpr = !!(gamepad.buttons && gamepad.buttons[15] && gamepad.buttons[15].pressed);
+
+  // write merged state for D-pad symbols.
+  s['dpad-up'] = dpu;
+  s['dpad-down'] = dpd;
+  s['dpad-left'] = dpl;
+  s['dpad-right'] = dpr;
+
+  // mirror into per-pad snapshot for edge/trigger bookkeeping.
+  padState['dpad-up'] = dpu;
+  padState['dpad-down'] = dpd;
+  padState['dpad-left'] = dpl;
+  padState['dpad-right'] = dpr;
+};
+
+/**
+ * Captures the current merged cardinal directions into a plain object.
+ * @param {object} s The merged current state bag.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._snapshotMergedDirections = function(s)
+{
+  // build a simple snapshot of current merged directions.
+  return {
+    up: !!s.up,
+    down: !!s.down,
+    left: !!s.left,
+    right: !!s.right,
+  };
+};
+
+/**
+ * Resolves axis flags from the left stick using the configured threshold.
+ * @param {Gamepad} gamepad The polled gamepad.
+ */
+Input._resolveAxesFlags = function(gamepad)
+{
+  // read the two primary axes.
+  const ax = gamepad.axes && gamepad.axes.length > 0
+    ? (gamepad.axes[0] || 0)
+    : 0;
+  const ay = gamepad.axes && gamepad.axes.length > 1
+    ? (gamepad.axes[1] || 0)
+    : 0;
+
+  // apply the configured threshold to derive flags.
   const t = Input._axisThreshold;
-
-  // resolve horizontal direction.
   const holdLeft = ax <= -t;
   const holdRight = ax >= t;
   const neutralX = !holdLeft && !holdRight;
-
-  // resolve vertical direction.
   const holdUp = ay <= -t;
   const holdDown = ay >= t;
   const neutralY = !holdUp && !holdDown;
 
-  // apply to per-pad state (mutual exclusivity + neutral clearing).
-  if (holdLeft)
+  // return all computed values to the caller.
+  return {
+    ax,
+    ay,
+    holdLeft,
+    holdRight,
+    holdUp,
+    holdDown,
+    neutralX,
+    neutralY
+  };
+};
+
+/**
+ * Applies axis flags to the per-pad snapshot with mutual exclusivity and neutral clearing.
+ * @param {object} padState The per-pad snapshot for this device.
+ * @param {object} f The axis flags.
+ */
+Input._applyAxesToPerPad = function(padState, f)
+{
+  // resolve horizontal contribution.
+  if (f.holdLeft)
   {
     padState.left = true;
     padState.right = false;
   }
-  else if (holdRight)
+  else if (f.holdRight)
   {
     padState.right = true;
     padState.left = false;
   }
-  else if (neutralX)
+  else if (f.neutralX)
   {
     padState.left = false;
     padState.right = false;
   }
 
-  if (holdUp)
+  // resolve vertical contribution.
+  if (f.holdUp)
   {
     padState.up = true;
     padState.down = false;
   }
-  else if (holdDown)
+  else if (f.holdDown)
   {
     padState.down = true;
     padState.up = false;
   }
-  else if (neutralY)
+  else if (f.neutralY)
   {
     padState.up = false;
     padState.down = false;
   }
+};
 
-  // --- Current axes contribution (from our per-pad resolution this frame) ---
-  const axesNow = {
+/**
+ * Extracts the current axis-derived directions from the per-pad snapshot.
+ * @param {object} padState The per-pad snapshot for this device.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._axesNowFromPadState = function(padState)
+{
+  // interpret the per-pad snapshot booleans as the axes contribution for this frame.
+  return {
     up: padState.up === true,
     down: padState.down === true,
     left: padState.left === true,
     right: padState.right === true,
   };
+};
 
-  // --- Approximate keyboard-only contribution from previous merged state ---
-  // If merged had it last frame AND it wasn’t set by axes last frame, treat as keyboard.
-  const kbdApprox = {
-    up: s0_up && (prevAxes.up === false),
-    down: s0_down && (prevAxes.down === false),
-    left: s0_left && (prevAxes.left === false),
-    right: s0_right && (prevAxes.right === false),
+/**
+ * Separates an approximate keyboard-only contribution from the previous merged snapshot.
+ * Anything present in merged last frame that was NOT set by axes last frame is treated as keyboard.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} s0 The merged snapshot prior to axes resolution.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} prevAxes The last frame's axes contribution.
+ * @returns {{up:boolean,down:boolean,left:boolean,right:boolean}}
+ */
+Input._keyboardApproxFromSnapshot = function(s0, prevAxes)
+{
+  // derive a keyboard-only approximation by subtracting prior axes contribution.
+  return {
+    up: s0.up && (prevAxes.up === false),
+    down: s0.down && (prevAxes.down === false),
+    left: s0.left && (prevAxes.left === false),
+    right: s0.right && (prevAxes.right === false),
   };
+};
 
-  // --- Rebuild merged state as (keyboardApprox OR currentGamepadAxes) ---
+/**
+ * Rebuilds merged directions as (keyboardApprox OR currentGamepadAxes) for each cardinal.
+ * @param {object} s The merged current state bag to write into.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} kbdApprox The keyboard-only approximation.
+ * @param {{up:boolean,down:boolean,left:boolean,right:boolean}} axesNow The axes contribution for this frame.
+ */
+Input._rebuildMergedDirections = function(s, kbdApprox, axesNow)
+{
+  // combine keyboard approximation with current axes for each direction.
   s.up = (kbdApprox.up === true) || (axesNow.up === true);
   s.down = (kbdApprox.down === true) || (axesNow.down === true);
   s.left = (kbdApprox.left === true) || (axesNow.left === true);
   s.right = (kbdApprox.right === true) || (axesNow.right === true);
+};
 
-  // --- Update our stamp for next frame’s separation logic ---
-  Input._axesStamp = axesNow;
+/**
+ * Exports a deep-cloned snapshot of all live namespace bindings for save.
+ * Shape: { [ns: string]: { [key: string]: string[] } }
+ * @returns {Object<string, Object<string, string[]>>}
+ */
+Input.exportAllBindingsForSave = function()
+{
+  // read the live bindings bag.
+  const b = Input._jRegistries.bindings || Object.create(null);
 
-  // --- optional compact diagnostic (unchanged), if enabled ---
-  if (Input._diagEnabled)
+  // deep clone to avoid save-time mutation risks.
+  const out = Object.create(null);
+  const namespaces = Object.keys(b);
+  for (let i = 0; i < namespaces.length; i++)
   {
-    const idx = typeof gamepad.index === 'number'
-      ? gamepad.index
-      : 0;
-    const map = gamepad.mapping || '';
-    const sDpd = s['dpad-down']
-      ? 1
-      : 0;
-    const sDn = s.down
-      ? 1
-      : 0;
-    console.log(
-      `[Pad${idx} ${map === 'standard'
-        ? 'std'
-        : 'ns'}] ` +
-      `ax=${ax.toFixed(2)} ay=${ay.toFixed(2)} ` +
-      `b12=${dpu
-        ? 1
-        : 0} b13=${dpd
-        ? 1
-        : 0} b14=${dpl
-        ? 1
-        : 0} b15=${dpr
-        ? 1
-        : 0} | ` +
-      `sym down=${sDn} dpad-down=${sDpd}`
-    );
+    // clone each namespace mapping.
+    const ns = namespaces[i];
+    const map = b[ns] || Object.create(null);
+    const clone = Object.create(null);
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      clone[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+    out[ns] = clone;
+  }
+
+  // return the cloned snapshot.
+  return out;
+};
+
+/**
+ * Imports all namespace bindings from a saved snapshot into the live registry.
+ * Any namespaces absent from the snapshot retain their current (bootstrapped) values.
+ * @param {Object<string, Object<string, string[]>>} saved The snapshot to import.
+ */
+Input.importAllBindingsFromSave = function(saved)
+{
+  // ignore invalid inputs.
+  if (!saved || typeof saved !== 'object')
+  {
+    return;
+  }
+
+  // ensure the bindings bag exists.
+  const b = Input._jRegistries.bindings;
+
+  // apply each namespace from the save.
+  const namespaces = Object.keys(saved);
+  for (let i = 0; i < namespaces.length; i++)
+  {
+    // read the namespace and its map.
+    const ns = namespaces[i];
+    const map = saved[ns] || Object.create(null);
+
+    // build a safe clone of the map for assignment.
+    const clone = Object.create(null);
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      clone[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+
+    // replace the live namespace mapping with the cloned one.
+    b[ns] = clone;
   }
 };
 
@@ -2146,6 +2418,12 @@ Game_System.prototype.initJabsInputConfigMembers = function()
    * @type {Object<string, Object<string, string>>}
    */
   this._j._abs._input._mappings ||= {};
+
+  /**
+   * Snapshot of the full Input registry bindings across all namespaces.
+   * @type {Object<string, Object<string, string[]>>}
+   */
+  this._j._abs._input._bindings ||= {};
 };
 
 /**
@@ -2209,6 +2487,46 @@ Game_System.prototype.getJabsInputConfig = function(controllerKey)
   Object.keys(found)
     .forEach(key => copy[key] = found[key]);
   return copy;
+};
+
+/**
+ * Gets the persisted snapshot of the Input registry bindings.
+ * Shape: { [ns: string]: { [key: string]: string[] } }
+ * @returns {Object<string, Object<string, string[]>>}
+ */
+Game_System.prototype.getInputBindingsSnapshot = function()
+{
+  // return the stored snapshot bag (may be empty object).
+  return this._j._abs._input._bindings || {};
+};
+
+/**
+ * Overwrites the persisted Input bindings snapshot on the system object.
+ * The provided object should follow the shape: { [ns]: { [key]: string[] } }.
+ * @param {Object<string, Object<string, string[]>>} snapshot The snapshot to store.
+ */
+Game_System.prototype.setInputBindingsSnapshot = function(snapshot)
+{
+  // assign a defensive deep clone to avoid mutation via shared references.
+  const out = {};
+  const namespaces = Object.keys(snapshot || {});
+  for (let i = 0; i < namespaces.length; i++)
+  {
+    const ns = namespaces[i];
+    const map = snapshot[ns] || {};
+    const copy = {};
+    const keys = Object.keys(map);
+    for (let k = 0; k < keys.length; k++)
+    {
+      const key = keys[k];
+      const arr = map[key];
+      copy[key] = Array.isArray(arr)
+        ? arr.slice(0)
+        : [];
+    }
+    out[ns] = copy;
+  }
+  this._j._abs._input._bindings = out;
 };
 
 /**
@@ -2287,6 +2605,32 @@ Game_System.prototype.resetJabsInputConfigToDefaults = function(index)
 };
 
 /**
+ * Snapshots all live Input namespace bindings into system storage for persistence.
+ */
+Game_System.prototype.saveAllInputBindingsFromInput = function()
+{
+  // delegate to the Input manager to export all namespaces.
+  const snapshot = Input.exportAllBindingsForSave();
+
+  // persist the snapshot on the system object.
+  this.setInputBindingsSnapshot(snapshot);
+};
+
+/**
+ * Applies the persisted Input bindings snapshot back into the live Input registry.
+ * Ensures Input defaults are bootstrapped before applying.
+ */
+Game_System.prototype.applyAllInputBindingsToInput = function()
+{
+  // ensure live registries have defaults before overlaying saved data.
+  Input.ensureRemapBootstrapped();
+
+  // import from the system-stored snapshot across all namespaces.
+  const saved = this.getInputBindingsSnapshot();
+  Input.importAllBindingsFromSave(saved);
+};
+
+/**
  * Resolves a stable key for the given controller for config storage.
  * Default strategy: "player" + (index+1).
  * @param {JABS_StandardController} controller The controller to resolve a key for.
@@ -2312,6 +2656,9 @@ Game_System.prototype.onBeforeSave = function()
 
   // snapshot all current controller mappings into system storage.
   this.saveAllJabsInputConfigs();
+
+  // snapshot the full Input registry (all namespaces) into system storage.
+  this.saveAllInputBindingsFromInput();
 };
 
 /**
@@ -2324,6 +2671,9 @@ Game_System.prototype.onAfterLoad = function()
   // perform original logic.
   J.ABS.EXT.INPUT.Aliased.Game_System.get('onAfterLoad')
     .call(this);
+
+  // apply the persisted Input bindings back into the live registry.
+  this.applyAllInputBindingsToInput();
 
   // attempt to apply stored configs to any currently registered controllers.
   this.applyAllJabsInputConfigs();
@@ -2596,6 +2946,9 @@ class Scene_JabsRemap
 
     // attach the top help so selection changes update descriptions.
     window.setHelpWindow(this.getTopHelpWindow());
+
+    // inject the scene-managed external mapping reference used by ext-action rows.
+    window.setExternalMapping(this.getPendingExternal());
 
     // return the built and configured actions window.
     return window;
@@ -2964,6 +3317,12 @@ class Scene_JabsRemap
     // set the actions mapping and ensure it is the active focus.
     this.getActionsWindow()
       .setMapping(mapping);
+
+    // also ensure the window reads the latest external staged map by reference.
+    this.getActionsWindow()
+      .setExternalMapping(this.getPendingExternal());
+
+    // activate the actions window by default.
     this.getActionsWindow()
       .activate();
 
@@ -3025,7 +3384,7 @@ class Scene_JabsRemap
    */
   onApply()
   {
-    // iterate all controllers to apply their pending mappings.
+    // iterate all controllers to apply their pending JABS mappings.
     const controllers = this._state()._controllers;
     for (let i = 0; i < controllers.length; i++)
     {
@@ -3045,6 +3404,9 @@ class Scene_JabsRemap
       // persist the mapping into the system for saves.
       $gameSystem.setJabsInputConfig(key, mapping);
     }
+
+    // commit any staged external (registry-backed) edits now that Apply was chosen.
+    this.flushPendingExternalBindings();
 
     // exit the scene after applying.
     SceneManager.pop();
@@ -3154,10 +3516,13 @@ class Scene_JabsRemap
     const cmd = this.getActionsWindow()
       .currentData();
 
-    // if external, clear via Input registry and refresh the list.
+    // if this row represents an external registry-backed action, clear the staged value only.
     if (cmd && cmd.ext && cmd.ext.kind === 'ext-action')
     {
-      Input.setBindings(cmd.ext.ns, cmd.ext.key, []);
+      // stage an empty binding array for this external action.
+      this.setPendingExternalBinding(cmd.ext.ns, cmd.ext.key, []);
+
+      // refresh to reflect the staged clear.
       this.getActionsWindow()
         .refresh();
       return;
@@ -3247,32 +3612,145 @@ class Scene_JabsRemap
 
   /**
    * Assigns a symbol to the given logical action while enforcing uniqueness.
-   * If external, writes directly to Input registry.
+   * If external, writes into the scene’s pending external map (not live Input).
+   * Live Input registry is only updated on Apply.
    * @param {string} button The logical action receiving the new binding, or an external token.
    * @param {string} symbol The physical input symbol to assign.
    */
   assignWithConflictResolution(button, symbol)
   {
-    // external capture token: __ext__<ns>:<key>
+    // check if this is an external capture token.
     if (typeof button === 'string' && button.indexOf('__ext__') === 0)
     {
+      // extract the namespace and key from the token format: __ext__<ns>:<key>
       const without = button.substring('__ext__'.length);
       const splitAt = without.indexOf(':');
+
+      // if the token was parseable, stage the change into pending-external.
       if (splitAt > 0)
       {
+        // resolve the namespace and key within that namespace.
         const ns = without.substring(0, splitAt);
         const key = without.substring(splitAt + 1);
-        Input.setBindings(ns, key, [ symbol ]);
+
+        // stage the binding into the scene-stored pending-external map.
+        this.setPendingExternalBinding(ns, key, [ symbol ]);
+
+        // refresh the actions window to reflect staged binding.
         this.getActionsWindow()
           .refresh();
+
+        // do not write to Input registry here; Apply will commit it.
         return;
       }
     }
 
     // otherwise, original JABS behavior for the pending map.
     const pending = this.currentPendingMapping();
+
+    // remove this symbol from all other actions before assigning.
     this.unbindSymbolFromMapping(pending, symbol, button);
+
+    // assign the symbol to the given logical action.
     pending[button] = [ symbol ];
+  }
+
+  /**
+   * Gets (and initializes) the pending external bindings map for this scene.
+   * Map shape: { 'ns:key': string[] }
+   * @returns {Object<string, string[]>}
+   */
+  getPendingExternal()
+  {
+    // ensure the state bag exists.
+    const state = this._state();
+
+    // lazily add the pending external map if not present.
+    state._pendingExternal ||= {};
+
+    // return the map reference.
+    return state._pendingExternal;
+  }
+
+  /**
+   * Reads a staged binding array for an external action if present; otherwise null.
+   * @param {string} ns The namespace, such as 'J.MAP'.
+   * @param {string} key The logical key within that namespace.
+   * @returns {string[]|null}
+   */
+  getPendingExternalBinding(ns, key)
+  {
+    // compute the compound key for this external binding.
+    const compound = `${ns}:${key}`;
+
+    // read the map of staged external bindings.
+    const map = this.getPendingExternal();
+
+    // return the staged array or null when absent.
+    return Object.prototype.hasOwnProperty.call(map, compound)
+      ? map[compound]
+      : null;
+  }
+
+  /**
+   * Stages a binding array for an external logical action.
+   * @param {string} ns The namespace, such as 'J.MAP'.
+   * @param {string} key The logical key within that namespace.
+   * @param {string[]} physical The array of physical symbols to stage.
+   */
+  setPendingExternalBinding(ns, key, physical)
+  {
+    // compute the compound external key.
+    const compound = `${ns}:${key}`;
+
+    // write a defensive copy of the array into the staged map.
+    this.getPendingExternal()[compound] = Array.isArray(physical)
+      ? physical.slice(0)
+      : [];
+  }
+
+  /**
+   * Writes all staged external bindings into the live Input registry and clears the stage.
+   */
+  flushPendingExternalBindings()
+  {
+    // read the staged external binds map.
+    const map = this.getPendingExternal();
+
+    // iterate all staged keys and commit them to the Input registry.
+    Object.keys(map)
+      .forEach(compound =>
+      {
+        // split the compound key to extract ns and key.
+        const splitAt = compound.indexOf(':');
+
+        // skip malformed keys (should not happen).
+        if (splitAt <= 0)
+        {
+          return;
+        }
+
+        // extract parts.
+        const ns = compound.substring(0, splitAt);
+        const key = compound.substring(splitAt + 1);
+
+        // read the staged physical symbols.
+        const physical = map[compound] || [];
+
+        // commit to the engine-owned Input registry.
+        Input.setBindings(ns, key, physical);
+      });
+
+    // persist the now-updated Input registry snapshot into $gameSystem.
+    $gameSystem.saveAllInputBindingsFromInput();
+
+    // clear the staged map so future edits start fresh.
+    this._state()._pendingExternal = {};
+
+    // rebind the new (empty) staged map reference into the actions window so it
+    // immediately reflects that there are no longer any staged changes.
+    this.getActionsWindow()
+      .setExternalMapping(this.getPendingExternal());
   }
 
   //endregion actions
@@ -3296,9 +3774,19 @@ class Scene_JabsRemap
     const captured = this.getPromptWindow()
       .pollCapturedSymbol();
 
-    // if nothing has been captured yet, continue waiting.
+    // if nothing has been captured yet, determine if the prompt has auto-closed.
     if (!captured)
     {
+      // if the prompt is no longer active (timed out or otherwise closed),
+      // then end the capture flow without applying a binding.
+      if (this.getPromptWindow()
+        .isActive() === false)
+      {
+        // end the capture flow and reactivate the actions window.
+        this.endCapture();
+      }
+
+      // continue waiting if still active.
       return;
     }
 
@@ -3423,7 +3911,13 @@ class Window_JabsRemapActions
      * Window-local state bag.
      */
     this._j._abs._input._actions._state = {
+      // The JABS mapping to display (owned/managed by the scene).
       _mapping: {},
+
+      // The external mapping for rows built via buildExternalActionCommand().
+      _externalMapping: {},
+
+      // The authoritative, ordered list of JABS logical action keys to display.
       _buttons: [],
     };
 
@@ -3431,13 +3925,14 @@ class Window_JabsRemapActions
      * Window-local view bag.
      */
     this._j._abs._input._actions._view = {
+      // The help window bound to this command window.
       _helpWindow: null,
     };
 
-    // pre-build the static button list if not already present.
+    // Pre-build the static button list if not already present.
     if (this.getButtons().length === 0)
     {
-      // set the authoritative buttons list for this window.
+      // Set the authoritative buttons list for this window.
       this.setButtons(this.buildButtonList());
     }
   }
@@ -3465,6 +3960,31 @@ class Window_JabsRemapActions
     this._state()._mapping = mapping || {};
 
     // refresh the contents to draw the values.
+    this.refresh();
+  }
+
+  /**
+   * Gets the current external mapping reference owned by the scene.
+   * The shape is: { [`${ns}:${key}`]: string[] }
+   * @returns {Object<string, string[]>}
+   */
+  getExternalMapping()
+  {
+    // Read from the lazily-initialized state bag.
+    return this._state()._externalMapping || {};
+  }
+
+  /**
+   * Sets the external mapping reference for external action rows.
+   * The scene should maintain and update this object; the window only reads it.
+   * @param {Object<string, string[]>} externalMapping The external mapping.
+   */
+  setExternalMapping(externalMapping)
+  {
+    // Store the reference (scene owns lifecycle and updates).
+    this._state()._externalMapping = externalMapping || {};
+
+    // Refresh the contents to draw the values.
     this.refresh();
   }
 
@@ -3567,18 +4087,19 @@ class Window_JabsRemapActions
 
   /**
    * Lazily ensures and returns the window-local state bag.
-   * @returns {{_mapping:Object<string,string[]>, _buttons:string[]}}
+   * @returns {{_mapping:Object<string,string[]>, _externalMapping:Object<string, string[]> , _buttons:string[]}}
    */
   _state()
   {
-    // ensure root namespaces.
+    // Ensure root namespaces.
     this._root();
 
-    // ensure and return the state bag.
+    // Ensure and return the state bag with all tracked properties.
     const actions = this._j._abs._input._actions;
     actions._state ||= {
       _mapping: {},
-      _buttons: []
+      _externalMapping: {},
+      _buttons: [],
     };
     return actions._state;
   }
@@ -3789,9 +4310,10 @@ class Window_JabsRemapActions
    * @param {string} ns The namespace (ex: "J.MAP").
    * @param {string} key The logical key within that namespace.
    * @param {string} label The row label to display.
+   * @param {number} [iconIndex=0] Optional fixed left-side icon index for this action.
    * @returns {BuiltWindowCommand}
    */
-  buildExternalActionCommand(ns, key, label)
+  buildExternalActionCommand(ns, key, label, iconIndex)
   {
     // build an enabled command that carries external namespace metadata.
     return new WindowCommandBuilder(label)
@@ -3801,6 +4323,8 @@ class Window_JabsRemapActions
         ns: ns,
         key: key,
         label: label,
+        // an optional fixed per-action icon for the left glyph; 0 means none provided.
+        icon: Number(iconIndex) || 0,
       })
       .setEnabled(true)
       .build();
@@ -3813,10 +4337,6 @@ class Window_JabsRemapActions
    * Draws a single item.
    * @param {number} index The index to draw.
    */
-  /**
-   * Draws a single item.
-   * @param {number} index The index to draw.
-   */
   drawItem(index)
   {
     // get the rectangle for this line.
@@ -3825,112 +4345,222 @@ class Window_JabsRemapActions
     // resolve the command to draw.
     const cmd = this._list[index];
 
-    // fallback if no command was found.
-    if (!cmd) return;
+    // if no command found, do nothing.
+    if (!cmd)
+    {
+      return;
+    }
 
-    // if this is a header row, draw the section title and exit.
+    // if this is a header row, draw it and exit.
     if (cmd.ext && cmd.ext.kind === 'header')
     {
-      // pick a stronger font and centered alignment for headers.
-      const name = cmd.name || '';
-
-      // draw the header text centered across the full row.
-      this.changeTextColor(ColorManager.systemColor());
-      this.contents.fontBold = true;
-      this.drawText(name, rect.x, rect.y, rect.width, 'center');
-      this.resetTextColor();
-      this.contents.fontBold = false;
+      this._drawHeaderItem(rect, cmd);
       return;
     }
 
-    // external registry-backed action: render from Input registry bindings.
+    // if this is an external registry-backed action, draw that and exit.
     if (cmd.ext && cmd.ext.kind === 'ext-action')
     {
-      // label is provided by the command.
-      const displayLabel = String(cmd.ext.label || '');
-
-      // read the bindings directly from the Input registry.
-      const boundList = Input.getBindings(cmd.ext.ns, cmd.ext.key) || [];
-
-      // extract the primary binding if any.
-      const bound = boundList.length > 0
-        ? boundList[0]
-        : String.empty;
-
-      // determine the icon index for the bound physical symbol.
-      const iconIndex = this.iconIndexForSymbol(bound);
-
-      // pull icon sizing for positioning.
-      const iw = ImageManager.iconWidth;
-      const ih = ImageManager.iconHeight;
-
-      // compute a vertically-centered y for the icon.
-      const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
-
-      // track the x-position for the action text, starting at the left side.
-      let leftTextX = rect.x;
-
-      // if we have a valid icon index (> 0), draw it and bump the text to the right.
-      if (iconIndex > 0)
-      {
-        // draw the icon to the far-left, preceding the action label.
-        this.drawIcon(iconIndex, rect.x, iconY);
-
-        // add spacing for the icon width + padding before drawing the action text.
-        leftTextX += iw + 6;
-      }
-
-      // draw the action label to the right of the icon (if any).
-      this.drawText(displayLabel, leftTextX, rect.y, rect.width / 2);
-
-      // draw an arrow separating columns.
-      const arrow = '→';
-
-      // compute mid-column x.
-      const midX = rect.x + rect.width / 2;
-
-      // draw the arrow centered between columns.
-      this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
-
-      // build the right-column rich text (supports icons/escape codes).
-      const rightText = IconManager.jabsIconTextForSymbol(bound);
-
-      // measure the rendered width (icons + text) to right-align manually.
-      const rightWidth = this.textSizeEx(rightText).width;
-
-      // compute the right-aligned x within the right half.
-      const rightX = midX + (rect.width / 2) - rightWidth;
-
-      // draw the mapping text on the right column using drawTextEx (enables icons).
-      this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
+      this._drawExternalActionItem(rect, cmd);
       return;
     }
 
-    // JABS logical action row: original behavior.
-    const button = String(cmd.symbol);
-    const mapping = this.getMapping();
-    const boundList = mapping[button] || [];
+    // otherwise render the standard JABS logical action row.
+    this._drawJabsActionItem(rect, cmd);
+  }
+
+  /**
+   * Draws a header row centered with system color styling.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{name:string, ext:object}} cmd The command data for this row.
+   */
+  _drawHeaderItem(rect, cmd)
+  {
+    // resolve a friendly header label.
+    const name = cmd.name || '';
+
+    // apply system color and bold before drawing.
+    this.changeTextColor(ColorManager.systemColor());
+    this.contents.fontBold = true;
+
+    // draw the header centered across the full row.
+    this.drawText(name, rect.x, rect.y, rect.width, 'center');
+
+    // reset text styling after drawing.
+    this.resetTextColor();
+    this.contents.fontBold = false;
+  }
+
+  /**
+   * Draws an external registry-backed action row.
+   * Prefers a fixed per-action icon when provided; otherwise uses the bound symbol’s icon.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{ name:string, ext:object }} cmd The command data for this row.
+   */
+  _drawExternalActionItem(rect, cmd)
+  {
+    // read the display label for this external action.
+    const displayLabel = String(cmd.ext.label || '');
+
+    // read the live/staged binding list for the external action.
+    const boundList = (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
+
+    // extract the primary binding if any.
     const bound = boundList.length > 0
       ? boundList[0]
       : String.empty;
-    const iconIndex = this.iconIndexForSymbol(bound);
-    const iw = ImageManager.iconWidth;
+
+    // prefer a fixed per-action icon if provided; otherwise use the bound symbol’s icon.
+    const leftIcon = (cmd.ext.icon && cmd.ext.icon > 0)
+      ? cmd.ext.icon
+      : this.iconIndexForSymbol(bound);
+
+    // compute vertical placement for the icon and the mid X for two-column layout.
+    const iconY = this._iconYForRect(rect);
+    const midX = rect.x + Math.floor(rect.width / 2);
+
+    // draw the left column (icon + label).
+    this._drawLeftLabelWithOptionalIcon(rect.x, iconY, leftIcon, displayLabel, rect, midX);
+
+    // draw the center arrow.
+    this._drawArrowBetweenColumns(rect, midX);
+
+    // draw the right column binding text with icon escapes.
+    const rightText = IconManager.jabsIconTextForSymbol(bound);
+    this._drawRightBindingText(rect, midX, rightText);
+  }
+
+  /**
+   * Draws a standard JABS logical action row using the window’s mapping.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {{symbol:string}} cmd The command data for this row.
+   */
+  _drawJabsActionItem(rect, cmd)
+  {
+    // resolve the logical button key from the command.
+    const button = String(cmd.symbol);
+
+    // read the displayed mapping from the window state.
+    const mapping = this.getMapping();
+
+    // read the binding list for this logical action.
+    const boundList = mapping[button] || [];
+
+    // extract the primary binding if present.
+    const bound = boundList.length > 0
+      ? boundList[0]
+      : String.empty;
+
+    // choose a readable label for the logical action.
+    const label = this.humanizeButton(button);
+
+    // draw the shared layout for this label/binding.
+    this._drawActionBindingRow(rect, label, bound);
+  }
+
+  /**
+   * Computes a vertically-centered Y for drawing an icon within a row.
+   * @param {Rectangle} rect The row rectangle.
+   * @returns {number} The Y coordinate for the icon.
+   */
+  _iconYForRect(rect)
+  {
+    // read shared icon height from the image manager.
     const ih = ImageManager.iconHeight;
-    const iconY = rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
-    let leftTextX = rect.x;
+
+    // compute a vertically-centered y for the icon within the row.
+    return rect.y + Math.max(0, Math.floor((this.lineHeight() - ih) / 2));
+  }
+
+  /**
+   * Draws an optional icon at the left and the provided label next to it.
+   * @param {number} leftX The left column start X.
+   * @param {number} iconY The Y where an icon would be drawn.
+   * @param {number} iconIndex The icon index to draw; 0 means no icon.
+   * @param {string} label The label to draw.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The mid X to limit left column width.
+   */
+  _drawLeftLabelWithOptionalIcon(leftX, iconY, iconIndex, label, rect, midX)
+  {
+    // start the text at the left side.
+    let labelX = leftX;
+
+    // if we have a valid icon index (> 0), draw it and push the text to the right.
     if (iconIndex > 0)
     {
-      this.drawIcon(iconIndex, rect.x, iconY);
-      leftTextX += iw + 6;
+      // draw the icon to the far-left, preceding the action label.
+      this.drawIcon(iconIndex, leftX, iconY);
+
+      // add spacing for the icon width + padding before drawing the action text.
+      labelX += ImageManager.iconWidth + 6;
     }
-    this.drawText(this.humanizeButton(button), leftTextX, rect.y, rect.width / 2);
-    const arrow = '→';
-    const midX = rect.x + rect.width / 2;
-    this.drawText(arrow, midX - this.textWidth(arrow), rect.y, rect.width / 2);
+
+    // compute the maximum width for the left column (half of the row width).
+    const leftW = Math.max(0, midX - rect.x);
+
+    // draw the action label to the right of the icon (if any).
+    this.drawText(label, labelX, rect.y, leftW);
+  }
+
+  /**
+   * Draws a complete two-column action row for a given label and binding.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {string} label The left-column label to display.
+   * @param {string} bound The primary bound physical symbol to display on the right.
+   */
+  _drawActionBindingRow(rect, label, bound)
+  {
+    // resolve an icon index for the bound physical symbol.
+    const iconIndex = this.iconIndexForSymbol(bound);
+
+    // compute the vertical placement for an icon.
+    const iconY = this._iconYForRect(rect);
+
+    // compute the middle x for two-column layout.
+    const midX = rect.x + Math.floor(rect.width / 2);
+
+    // draw the left column (icon + label).
+    this._drawLeftLabelWithOptionalIcon(rect.x, iconY, iconIndex, label, rect, midX);
+
+    // draw the center arrow.
+    this._drawArrowBetweenColumns(rect, midX);
+
+    // draw the right column binding text with icon escapes.
     const rightText = IconManager.jabsIconTextForSymbol(bound);
+    this._drawRightBindingText(rect, midX, rightText);
+  }
+
+  /**
+   * Draws the center arrow that separates left/right columns.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The middle X of the row.
+   */
+  _drawArrowBetweenColumns(rect, midX)
+  {
+    // define the arrow glyph to draw.
+    const arrow = '→';
+
+    // draw the arrow centered between columns.
+    this.drawText(arrow, midX - this.textWidth(arrow), rect.y, Math.floor(rect.width / 2));
+  }
+
+  /**
+   * Draws the right-column binding text (may contain icon escapes), right-aligned.
+   * @param {Rectangle} rect The row rectangle.
+   * @param {number} midX The middle X of the row.
+   * @param {string} rightText The text to draw (often produced by IconManager).
+   */
+  _drawRightBindingText(rect, midX, rightText)
+  {
+    // measure the rendered width (icons + text) to right-align manually.
     const rightWidth = this.textSizeEx(rightText).width;
-    const rightX = midX + (rect.width / 2) - rightWidth;
-    this.drawTextEx(rightText, rightX, rect.y, rect.width / 2);
+
+    // compute the right-aligned x within the right half.
+    const rightX = midX + Math.floor(rect.width / 2) - rightWidth;
+
+    // draw the mapping text on the right column using drawTextEx (enables icons).
+    this.drawTextEx(rightText, rightX, rect.y, Math.floor(rect.width / 2));
   }
 
   //endregion drawing
@@ -3969,8 +4599,15 @@ class Window_JabsRemapActions
     // read the current command.
     const cmd = this.currentData();
 
-    // if this is not an action row, buzz and do nothing.
-    if (!cmd || (cmd.ext && cmd.ext.kind !== 'action'))
+    // if there is no command, buzz and do nothing.
+    if (!cmd)
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
+    // block only headers; allow normal and external actions to proceed.
+    if (cmd.ext && cmd.ext.kind === 'header')
     {
       SoundManager.playBuzzer();
       return;

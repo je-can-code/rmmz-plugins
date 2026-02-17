@@ -119,7 +119,7 @@ class MinimapEventType
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 MAP] Renders a passability-driven minimap on the screen.
+ * [v1.0.1 MAP] Renders a passability-driven minimap on the screen.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -214,6 +214,8 @@ class MinimapEventType
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Adds support for JABS-based input remapping.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -348,7 +350,7 @@ J.MAP.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.MAP.Metadata = new J_MAP__PluginMetadata('J-MAP', '1.0.0');
+J.MAP.Metadata = new J_MAP__PluginMetadata('J-MAP', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -2963,14 +2965,14 @@ Window_JabsRemapActions.prototype.buildPostExtensionGroups = function(rows, can)
 {
   // perform original logic (default: no-op).
   J.MAP.Aliased.Window_JabsRemapActions
-    .get('buildPostExtensionGroups')
+    .get("buildPostExtensionGroups")
     .call(this, rows, can);
 
   // append a header for the minimap actions.
-  rows.push(this.buildHeaderCommand('Map Actions'));
+  rows.push(this.buildHeaderCommand("Map Actions"));
 
-  // add two registry-backed external actions for the minimap.
-  rows.push(this.buildExternalActionCommand('J.MAP', 'minimap-toggle', 'Toggle Minimap'));
-  rows.push(this.buildExternalActionCommand('J.MAP', 'expand-minimap', 'Expand Minimap (Hold)'));
+  // add external actions for the minimap with fixed per-action icons (feature glyphs).
+  rows.push(this.buildExternalActionCommand("J.MAP", "minimap-toggle", "Toggle Minimap", 190));
+  rows.push(this.buildExternalActionCommand("J.MAP", "expand-minimap", "Expand Minimap (Hold)", 2480));
 };
 //endregion Window_JabsRemapActions
