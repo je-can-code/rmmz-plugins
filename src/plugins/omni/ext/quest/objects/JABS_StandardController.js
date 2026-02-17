@@ -34,8 +34,8 @@ JABS_StandardController.prototype.updateQuestopediaAction = function()
  */
 JABS_StandardController.prototype.isQuestopediaActionTriggered = function()
 {
-  // this action requires the right stick button to be triggered.
-  if (Input.isTriggered(J.ABS.Input.R3))
+  // this action requires the registered quest open to be triggered (edge press).
+  if (Input.isActionTriggered("J.OMNI.QUEST", "open-quest-log"))
   {
     return true;
   }
