@@ -379,13 +379,13 @@ Input.ensureRemapBootstrapped = function()
   Input.getAllBindings('JABS'); // lazy-init live bindings
 
   // friendly labels for some common symbols.
-  Input.registerSymbolLabel(J.ABS.Input.L3, "L3");
-  Input.registerSymbolLabel(J.ABS.Input.R3, "R3");
-  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, "R2");
-  Input.registerSymbolLabel(J.ABS.Input.DPadUp, "D-Pad Up");
-  Input.registerSymbolLabel(J.ABS.Input.DPadDown, "D-Pad Down");
-  Input.registerSymbolLabel(J.ABS.Input.DPadLeft, "D-Pad Left");
-  Input.registerSymbolLabel(J.ABS.Input.DPadRight, "D-Pad Right");
+  Input.registerSymbolLabel(J.ABS.Input.L3, 'L3');
+  Input.registerSymbolLabel(J.ABS.Input.R3, 'R3');
+  Input.registerSymbolLabel(J.ABS.Input.MobilitySkill, 'R2');
+  Input.registerSymbolLabel(J.ABS.Input.DPadUp, 'D-Pad Up');
+  Input.registerSymbolLabel(J.ABS.Input.DPadDown, 'D-Pad Down');
+  Input.registerSymbolLabel(J.ABS.Input.DPadLeft, 'D-Pad Left');
+  Input.registerSymbolLabel(J.ABS.Input.DPadRight, 'D-Pad Right');
 
   // Allow these symbols to be captured in the prompt if desired.
   Input.registerRemapCaptureSymbol(J.ABS.Input.L3);
@@ -395,8 +395,221 @@ Input.ensureRemapBootstrapped = function()
   Input.registerRemapCaptureSymbol(J.ABS.Input.DPadLeft);
   Input.registerRemapCaptureSymbol(J.ABS.Input.DPadRight);
 
+  // NEW: expose all non-engine keyboard keys for capture/binding.
+  Input.bootstrapAllKeyboardKeysForCapture();
+
   // Mark as bootstrapped for this runtime session.
   Input._jRegistries.bootstrapped = true;
+};
+
+/**
+ * Generates capture-eligible symbols for any keyboard keycodes that are not
+ * already mapped to core RMMZ symbols, and registers readable labels for them.
+ */
+Input.bootstrapAllKeyboardKeysForCapture = function()
+{
+  // collect a snapshot of engine/core-reserved symbols to avoid overriding them.
+  const reserved = new Set([
+    // core engine actions and directions.
+    'ok', 'cancel', 'menu', 'escape',
+    'tab', 'pageup', 'pagedown', 'shift', 'control',
+    'up', 'down', 'left', 'right',
+  ]);
+
+  // also consider whatever the current keyMapper already resolves to.
+  const existingMap = Object.assign({}, Input.keyMapper);
+  Object.keys(existingMap)
+    .forEach(code =>
+    {
+      // read the mapped symbol for this code.
+      const sym = existingMap[code];
+
+      // if mapped to a core-like word, add to the reserved set for safety.
+      if (typeof sym === 'string' && sym.length)
+      {
+        reserved.add(sym);
+      }
+    });
+
+  // iterate a reasonable range of DOM KeyboardEvent.keyCode values.
+  for (let code = 8; code <= 222; code++)
+  {
+    // never capture or map blacklisted keycodes (Function keys, etc.).
+    if (Input._isBlacklistedKeycode(code))
+    {
+      continue;
+    }
+
+    // if the engine already has a mapping for this keycode, leave it alone.
+    if (Object.prototype.hasOwnProperty.call(Input.keyMapper, code))
+    {
+      // still allow capture if it is NOT a reserved symbol and NOT blacklisted.
+      const s = Input.keyMapper[code];
+      if (s && reserved.has(s) === false)
+      {
+        // register this existing non-engine symbol for the prompt & label.
+        Input.registerRemapCaptureSymbol(s);
+        Input.registerSymbolLabel(s, Input._keycodeLabelFor(code, s));
+      }
+      continue;
+    }
+
+    // create a stable unique symbol for this unmapped keycode.
+    const symbol = `key-${code}`;
+
+    // define a keyboard mapping so Input can detect presses for this key.
+    Input.keyMapper[code] = symbol;
+
+    // allow the capture prompt to consider this symbol.
+    Input.registerRemapCaptureSymbol(symbol);
+
+    // provide a human-friendly label for the remap UI.
+    Input.registerSymbolLabel(symbol, Input._keycodeLabelFor(code, symbol));
+  }
+};
+
+/**
+ * Determines if a keycode should be excluded from capture/mapping.
+ * Currently blacklists Function keys to avoid conflicts with RMMZ/NW.js.
+ *
+ * @param {number} code The keycode to evaluate.
+ * @returns {boolean} True if blacklisted; false otherwise.
+ */
+Input._isBlacklistedKeycode = function(code)
+{
+  // F1–F12 are 112–123.
+  if (code >= 112 && code <= 123)
+  {
+    return true;
+  }
+
+  // Some platforms expose F13–F24 as 124–135; exclude those as well for safety.
+  if (code >= 124 && code <= 135)
+  {
+    return true;
+  }
+
+  // allow all other keys.
+  return false;
+};
+
+/**
+ * Resolves a display label for a given keycode.
+ * Falls back to the symbol if not recognized.
+ * @param {number} code The keyboard keycode (8..222 range typically).
+ * @param {string} fallback The fallback label when unknown.
+ * @returns {string}
+ */
+Input._keycodeLabelFor = function(code, fallback)
+{
+  // A–Z
+  if (code >= 65 && code <= 90)
+  {
+    // convert 65->A, 66->B, etc.
+    return String.fromCharCode(code);
+  }
+
+  // 0–9 (top row)
+  if (code >= 48 && code <= 57)
+  {
+    return String(code - 48);
+  }
+
+  // Numpad 0–9
+  if (code >= 96 && code <= 105)
+  {
+    return `Num ${code - 96}`;
+  }
+
+  // Function keys F1–F12
+  if (code >= 112 && code <= 123)
+  {
+    return `F${code - 111}`;
+  }
+
+  // Common punctuation and special keys.
+  switch (code)
+  {
+    case 8:
+      return 'Backspace';
+    case 9:
+      return 'Tab';
+    case 13:
+      return 'Enter';
+    case 16:
+      return 'Shift';
+    case 17:
+      return 'Ctrl';
+    case 18:
+      return 'Alt';
+    case 19:
+      return 'Pause';
+    case 20:
+      return 'CapsLock';
+    case 27:
+      return 'Esc';
+    case 32:
+      return 'Space';
+    case 33:
+      return 'PageUp';
+    case 34:
+      return 'PageDown';
+    case 35:
+      return 'End';
+    case 36:
+      return 'Home';
+    case 37:
+      return 'Left';
+    case 38:
+      return 'Up';
+    case 39:
+      return 'Right';
+    case 40:
+      return 'Down';
+    case 45:
+      return 'Insert';
+    case 46:
+      return 'Delete';
+    case 91:
+      return 'Meta';
+    case 93:
+      return 'Context';
+    case 106:
+      return 'Num *';
+    case 107:
+      return 'Num +';
+    case 109:
+      return 'Num -';
+    case 110:
+      return 'Num .';
+    case 111:
+      return 'Num /';
+    case 186:
+      return '; :';
+    case 187:
+      return '= +';
+    case 188:
+      return ', <';
+    case 189:
+      return '- _';
+    case 190:
+      return '. >';
+    case 191:
+      return '/ ?';
+    case 192:
+      return '` ~';
+    case 219:
+      return '[ {';
+    case 220:
+      return '\\ |';
+    case 221:
+      return '] }';
+    case 222:
+      return '\' "';
+  }
+
+  // fallback to the provided symbol when unknown.
+  return String(fallback || `Key ${code}`);
 };
 
 /**
