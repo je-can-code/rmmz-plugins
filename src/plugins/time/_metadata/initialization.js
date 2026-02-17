@@ -12,7 +12,7 @@ J.TIME = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.TIME.Metadata = {};
-J.TIME.Metadata.Version = '1.0.1';
+J.TIME.Metadata.Version = '1.0.2';
 J.TIME.Metadata.Name = `J-TIME`;
 
 /**
