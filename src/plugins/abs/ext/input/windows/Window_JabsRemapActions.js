@@ -546,17 +546,28 @@ class Window_JabsRemapActions
 
   /**
    * Draws an external registry-backed action row.
-   * Prefers a fixed per-action icon when provided; otherwise uses the bound symbol’s icon.
    * @param {Rectangle} rect The row rectangle.
-   * @param {{ name:string, ext:object }} cmd The command data for this row.
+   * @param {{ name:string, symbol:string, ext:object }} cmd The command for this row.
    */
   _drawExternalActionItem(rect, cmd)
   {
     // read the display label for this external action.
-    const displayLabel = String(cmd.ext.label || '');
+    const displayLabel = String(cmd.ext.label || "");
 
-    // read the live/staged binding list for the external action.
-    const boundList = (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
+    // read the combined mapping from the window (scene-provided view model).
+    const combined = this.getMapping();
+
+    // the command symbol is a stable token: "__ext__<ns>:<key>".
+    const token = String(cmd.symbol || "");
+
+    // if a staged entry exists in the combined mapping, prefer that list.
+    const hasStaged = Object.prototype.hasOwnProperty.call(combined, token);
+    const staged = hasStaged ? combined[token] : null;
+
+    // otherwise, fall back to the live registry for this external action.
+    const boundList = staged !== null
+      ? (Array.isArray(staged) ? staged : [])
+      : (Input.getBindings(cmd.ext.ns, cmd.ext.key) || []);
 
     // extract the primary binding if any.
     const bound = boundList.length > 0

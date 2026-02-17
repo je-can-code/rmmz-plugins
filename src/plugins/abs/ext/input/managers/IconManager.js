@@ -166,25 +166,6 @@ IconManager.jabsInputTextForSymbol = function(symbol)
 };
 
 /**
- * Registers all JABS input symbols with their respective ex-text.
- */
-IconManager.registerJabsInputTexts = function()
-{
-  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
-  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
-  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
-  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
-
-  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
-  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2453] / \\I[2438]");
-  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2454] / \\I[2437]");
-  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
-
-  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
-  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
-};
-
-/**
  * Gets the ex-text for a given physical input symbol.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
  * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
@@ -196,6 +177,25 @@ IconManager.jabsIconTextForSymbol = function(symbol)
 
   // return the ex-text for the symbol, or the symbol itself if not mapped.
   return this.jabsInputTextForSymbol(symbol) || String(symbol);
+};
+
+/**
+ * Registers all JABS input symbols with their respective ex-text.
+ */
+IconManager.registerJabsInputTexts = function()
+{
+  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
+  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
+  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
+  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
+
+  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
+  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2454] / \\I[2438]");
+  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2453] / \\I[2437]");
+  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
+
+  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
+  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
 };
 //endregion jabs text registry
 //endregion IconManager
