@@ -18,21 +18,23 @@ J.OMNI.EXT.QUEST = {};
 /**
  * The metadata associated with this plugin.
  */
-J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.0.0');
+J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.
  */
 J.OMNI.EXT.QUEST.Aliased = {};
+J.OMNI.EXT.QUEST.Aliased.DataManager = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Enemy = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Event = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Interpreter = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Map = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_Party = new Map();
 J.OMNI.EXT.QUEST.Aliased.Game_System = new Map();
-J.OMNI.EXT.QUEST.Aliased.JABS_InputController = new Map();
+J.OMNI.EXT.QUEST.Aliased.JABS_StandardController = new Map();
 J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia = new Map();
 J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList = new Map();
+J.OMNI.EXT.QUEST.Aliased.Window_JabsRemapActions = new Map();
 
 /**
  * All regular expressions used by this plugin.

@@ -52,12 +52,12 @@ DataManager.getSkillMasterMap = function()
   const mapId = J.ABS.DefaultValues.ActionMap;
   if (mapId > 0)
   {
-    const filename = "Map%1.json".format(mapId.padZero(3));
-    this.loadSkillMasterMap("$dataMap", filename);
+    const filename = 'Map%1.json'.format(mapId.padZero(3));
+    this.loadSkillMasterMap('$dataMap', filename);
   }
   else
   {
-    throw new Error("Missing skill master map.");
+    throw new Error('Missing skill master map.');
   }
 };
 
@@ -69,9 +69,9 @@ DataManager.getSkillMasterMap = function()
 DataManager.loadSkillMasterMap = function(name, src)
 {
   const xhr = new XMLHttpRequest();
-  const url = "data/" + src;
-  xhr.open("GET", url);
-  xhr.overrideMimeType("application/json");
+  const url = 'data/' + src;
+  xhr.open('GET', url);
+  xhr.overrideMimeType('application/json');
   xhr.onload = () => this.onMapGet(xhr, name, src, url);
   xhr.onerror = () => this.gracefulFail(name, src, url);
   xhr.send();

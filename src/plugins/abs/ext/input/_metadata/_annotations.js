@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 INPUT] A manager for overseeing the input of JABS.
+ * [v2.0.0 INPUT] A manager for overseeing the input of JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -13,19 +13,34 @@
  * @orderBefore J-HUD
  * @help
  * ============================================================================
+ * OVERVIEW
+ * ----------------------------------------------------------------------------
  * This plugin is a mapping of inputs to controls for JABS.
- * This plugin governs the mapping of button inputs to JABS functionality.
  *
- * This is a fully-built controller for JABS.
- * It interfaces with the JABS_InputAdapter in a 1:1 fashion to functionality
- * as the engine was intended to be used with a controller.
+ * This plugin requires JABS.
+ * This plugin has no additional configuration required.
+ * ----------------------------------------------------------------------------
+ * DETAILS:
+ * This entire plugin provides an implementation of a "controller" that the
+ * player leverages to control inputs for JABS. With it, the player can press
+ * keys or buttons to trigger JABS-specific functionality, like execution of
+ * a skill, cycling with other members of the party, or bringing up the quick
+ * menu. This plugin also provides a way to remap inputs to different keys or
+ * buttons to suit the player's preferences.
+ *
+ * NOTE ABOUT DUPLICATES:
+ * No single input can be mapped to multiple actions. Mapping the same input
+ * to a second action will unbind the original. Be sure all actions you care
+ * about are mapped! These cannot be undone mid-run by the player! (but they
+ * can there is an exposed function on Game_System that will reset all input
+ * mapping back to defaults via script call if necessary).
+ *
  * ============================================================================
- * DEVELOPER NOTES:
- * This plugin defines the means of which button inputs are mapped to the
- * publicly exposed JABS_InputAdapter endpoints. Because the JABS_InputController
- * is an instance-type class, additional instances of it can be created and
- * mapped to different functionality like additional battlers if one wanted.
- * Alternatively, button input mapping changes would take place here, though
- * do be sure to review J-ABS's Input keymapper to see what is already there.
+ * CHANGELOG
+ * ----------------------------------------------------------------------------
+ * - 2.0.0
+ *   Significantly overhauled the plugin to support with input remapping.
+ * - 1.0.0
+ *   Initial release.
  * ============================================================================
  */

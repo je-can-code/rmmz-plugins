@@ -21,7 +21,25 @@ if (J.ABS)
    */
   JABS_InputAdapter._canPerformQuestopediaAction = function()
   {
-    // TODO: check if questopedia is accessible.
+    // only allow while on the map scene.
+    if (!(SceneManager._scene instanceof Scene_Map))
+    {
+      return false;
+    }
+
+    // block while messages are active to avoid input conflicts.
+    if ($gameMessage.isBusy())
+    {
+      return false;
+    }
+
+    // block during transfers to avoid scene-change collisions.
+    if ($gamePlayer.isTransferring())
+    {
+      return false;
+    }
+
+    // allow otherwise.
     return true;
   };
 }
