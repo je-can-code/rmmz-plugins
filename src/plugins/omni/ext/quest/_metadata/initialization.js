@@ -18,7 +18,7 @@ J.OMNI.EXT.QUEST = {};
 /**
  * The metadata associated with this plugin.
  */
-J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.0.1');
+J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.0.2');
 
 /**
  * A collection of all aliased methods for this plugin.

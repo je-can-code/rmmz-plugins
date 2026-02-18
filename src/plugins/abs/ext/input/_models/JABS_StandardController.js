@@ -54,27 +54,27 @@ class JABS_StandardController
   initMapping()
   {
     // seed defaults from current JABS input symbols using string[] per action.
-    this.inputMapping.set(JABS_Button.Menu, [ J.ABS.Input.Quickmenu ]);
-    this.inputMapping.set(JABS_Button.Select, [ J.ABS.Input.PartyCycle ]);
+    this.inputMapping.set(JABS_Button.Menu, [ J.ABS.EXT.INPUT.Symbols.Quickmenu ]);
+    this.inputMapping.set(JABS_Button.Select, [ J.ABS.EXT.INPUT.Symbols.PartyCycle ]);
 
     // seed primaries.
-    this.inputMapping.set(JABS_Button.Mainhand, [ J.ABS.Input.Mainhand ]);
-    this.inputMapping.set(JABS_Button.Offhand, [ J.ABS.Input.Offhand ]);
-    this.inputMapping.set(JABS_Button.Tool, [ J.ABS.Input.Tool ]);
-    this.inputMapping.set(JABS_Button.Dodge, [ J.ABS.Input.MobilitySkill ]);
+    this.inputMapping.set(JABS_Button.Mainhand, [ J.ABS.EXT.INPUT.Symbols.Mainhand ]);
+    this.inputMapping.set(JABS_Button.Offhand, [ J.ABS.EXT.INPUT.Symbols.Offhand ]);
+    this.inputMapping.set(JABS_Button.Tool, [ J.ABS.EXT.INPUT.Symbols.Tool ]);
+    this.inputMapping.set(JABS_Button.Dodge, [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ]);
 
     // seed mobility & modifiers.
-    this.inputMapping.set(JABS_Button.Sprint, [ J.ABS.Input.Dash ]);
-    this.inputMapping.set(JABS_Button.Strafe, [ J.ABS.Input.StrafeTrigger ]);
-    this.inputMapping.set(JABS_Button.Rotate, [ J.ABS.Input.GuardTrigger ]);
-    this.inputMapping.set(JABS_Button.Guard, [ J.ABS.Input.GuardTrigger ]);
-    this.inputMapping.set(JABS_Button.SkillTrigger, [ J.ABS.Input.SkillTrigger ]);
+    this.inputMapping.set(JABS_Button.Sprint, [ J.ABS.EXT.INPUT.Symbols.Dash ]);
+    this.inputMapping.set(JABS_Button.Strafe, [ J.ABS.EXT.INPUT.Symbols.StrafeTrigger ]);
+    this.inputMapping.set(JABS_Button.Rotate, [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ]);
+    this.inputMapping.set(JABS_Button.Guard, [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ]);
+    this.inputMapping.set(JABS_Button.SkillTrigger, [ J.ABS.EXT.INPUT.Symbols.SkillTrigger ]);
 
     // seed L1 + buttons (combat skills).
-    this.inputMapping.set(JABS_Button.CombatSkill1, [ J.ABS.Input.CombatSkill1 ]);
-    this.inputMapping.set(JABS_Button.CombatSkill2, [ J.ABS.Input.CombatSkill2 ]);
-    this.inputMapping.set(JABS_Button.CombatSkill3, [ J.ABS.Input.CombatSkill3 ]);
-    this.inputMapping.set(JABS_Button.CombatSkill4, [ J.ABS.Input.CombatSkill4 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill1, [ J.ABS.EXT.INPUT.Symbols.CombatSkill1 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill2, [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill3, [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ]);
+    this.inputMapping.set(JABS_Button.CombatSkill4, [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ]);
   }
 
   /**
@@ -88,27 +88,27 @@ class JABS_StandardController
     const defaults = {};
 
     // seed defaults from current JABS input symbols using string[] per action.
-    defaults[JABS_Button.Menu] = [ J.ABS.Input.Quickmenu ];
-    defaults[JABS_Button.Select] = [ J.ABS.Input.PartyCycle ];
+    defaults[JABS_Button.Menu] = [ J.ABS.EXT.INPUT.Symbols.Quickmenu ];
+    defaults[JABS_Button.Select] = [ J.ABS.EXT.INPUT.Symbols.PartyCycle ];
 
     // seed primaries.
-    defaults[JABS_Button.Mainhand] = [ J.ABS.Input.Mainhand ];
-    defaults[JABS_Button.Offhand] = [ J.ABS.Input.Offhand ];
-    defaults[JABS_Button.Tool] = [ J.ABS.Input.Tool ];
-    defaults[JABS_Button.Dodge] = [ J.ABS.Input.MobilitySkill ];
+    defaults[JABS_Button.Mainhand] = [ J.ABS.EXT.INPUT.Symbols.Mainhand ];
+    defaults[JABS_Button.Offhand] = [ J.ABS.EXT.INPUT.Symbols.Offhand ];
+    defaults[JABS_Button.Tool] = [ J.ABS.EXT.INPUT.Symbols.Tool ];
+    defaults[JABS_Button.Dodge] = [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ];
 
     // seed mobility/modifiers.
-    defaults[JABS_Button.Sprint] = [ J.ABS.Input.Dash ];
-    defaults[JABS_Button.Strafe] = [ J.ABS.Input.StrafeTrigger ];
-    defaults[JABS_Button.Rotate] = [ J.ABS.Input.GuardTrigger ];
-    defaults[JABS_Button.Guard] = [ J.ABS.Input.GuardTrigger ];
-    defaults[JABS_Button.SkillTrigger] = [ J.ABS.Input.SkillTrigger ];
+    defaults[JABS_Button.Sprint] = [ J.ABS.EXT.INPUT.Symbols.Dash ];
+    defaults[JABS_Button.Strafe] = [ J.ABS.EXT.INPUT.Symbols.StrafeTrigger ];
+    defaults[JABS_Button.Rotate] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
+    defaults[JABS_Button.Guard] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
+    defaults[JABS_Button.SkillTrigger] = [ J.ABS.EXT.INPUT.Symbols.SkillTrigger ];
 
     // seed L1 + buttons (combat skills).
-    defaults[JABS_Button.CombatSkill1] = [ J.ABS.Input.CombatSkill1 ];
-    defaults[JABS_Button.CombatSkill2] = [ J.ABS.Input.CombatSkill2 ];
-    defaults[JABS_Button.CombatSkill3] = [ J.ABS.Input.CombatSkill3 ];
-    defaults[JABS_Button.CombatSkill4] = [ J.ABS.Input.CombatSkill4 ];
+    defaults[JABS_Button.CombatSkill1] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill1 ];
+    defaults[JABS_Button.CombatSkill2] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ];
+    defaults[JABS_Button.CombatSkill3] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ];
+    defaults[JABS_Button.CombatSkill4] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ];
 
     // return the assembled defaults.
     return defaults;

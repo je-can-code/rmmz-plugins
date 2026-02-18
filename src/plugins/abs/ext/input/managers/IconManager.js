@@ -76,23 +76,23 @@ IconManager.jabsIconIndexForSymbol = function(symbol)
  */
 IconManager.registerJabsIcons = function()
 {
-  this.registerJabsIcon(J.ABS.Input.Mainhand, 76);
-  this.registerJabsIcon(J.ABS.Input.Offhand, 77);
-  this.registerJabsIcon(J.ABS.Input.Tool, 176);
-  this.registerJabsIcon(J.ABS.Input.Dash, 140);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.Mainhand, 76);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.Offhand, 77);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.Tool, 176);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.Dash, 140);
 
-  this.registerJabsIcon(J.ABS.Input.SkillTrigger, 86);
-  this.registerJabsIcon(J.ABS.Input.StrafeTrigger, 82);
-  this.registerJabsIcon(J.ABS.Input.GuardTrigger, 83);
-  this.registerJabsIcon(J.ABS.Input.MobilitySkill, 13);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.SkillTrigger, 86);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, 82);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.GuardTrigger, 83);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.MobilitySkill, 13);
 
-  this.registerJabsIcon(J.ABS.Input.Quickmenu, 2563);
-  this.registerJabsIcon(J.ABS.Input.PartyCycle, 75);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.Quickmenu, 2563);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.PartyCycle, 75);
 
-  this.registerJabsIcon(J.ABS.Input.CombatSkill1, 79);
-  this.registerJabsIcon(J.ABS.Input.CombatSkill2, 79);
-  this.registerJabsIcon(J.ABS.Input.CombatSkill3, 79);
-  this.registerJabsIcon(J.ABS.Input.CombatSkill4, 79);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.CombatSkill1, 79);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.CombatSkill2, 79);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.CombatSkill3, 79);
+  this.registerJabsIcon(J.ABS.EXT.INPUT.Symbols.CombatSkill4, 79);
 };
 
 //endregion jabs icon registry
@@ -184,18 +184,18 @@ IconManager.jabsIconTextForSymbol = function(symbol)
  */
 IconManager.registerJabsInputTexts = function()
 {
-  this.registerJabsInputText(J.ABS.Input.Mainhand, "\\I[2448] / \\I[2432]");
-  this.registerJabsInputText(J.ABS.Input.Offhand, "\\I[2449] / \\I[2433]");
-  this.registerJabsInputText(J.ABS.Input.Tool, "\\I[2450] / \\I[2434]");
-  this.registerJabsInputText(J.ABS.Input.Dash, "\\I[2451] / \\I[2435]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Mainhand, "\\I[2448] / \\I[2432]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Offhand, "\\I[2449] / \\I[2433]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Tool, "\\I[2450] / \\I[2434]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Dash, "\\I[2451] / \\I[2435]");
 
-  this.registerJabsInputText(J.ABS.Input.SkillTrigger, "\\I[2452] / \\I[2436]");
-  this.registerJabsInputText(J.ABS.Input.StrafeTrigger, "\\I[2454] / \\I[2438]");
-  this.registerJabsInputText(J.ABS.Input.GuardTrigger, "\\I[2453] / \\I[2437]");
-  this.registerJabsInputText(J.ABS.Input.MobilitySkill, "\\I[2455] / \\I[2439]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.SkillTrigger, "\\I[2452] / \\I[2436]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, "\\I[2454] / \\I[2438]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.GuardTrigger, "\\I[2453] / \\I[2437]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.MobilitySkill, "\\I[2455] / \\I[2439]");
 
-  this.registerJabsInputText(J.ABS.Input.Quickmenu, "\\I[2456] / \\I[2440]");
-  this.registerJabsInputText(J.ABS.Input.PartyCycle, "\\I[2457] / \\I[2441]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Quickmenu, "\\I[2456] / \\I[2440]");
+  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.PartyCycle, "\\I[2457] / \\I[2441]");
 };
 //endregion jabs text registry
 //endregion IconManager

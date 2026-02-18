@@ -34,7 +34,7 @@ JABS_StandardController.prototype.updateTimeWindowAction = function()
 JABS_StandardController.prototype.isTimeWindowActionTriggered = function()
 {
   // this action requires the left stick button to be triggered.
-  if (Input.isTriggered(J.ABS.Input.L3))
+  if (Input.isTriggered(J.ABS.EXT.INPUT.Symbols.L3))
   {
     return true;
   }
