@@ -17,7 +17,7 @@ J.MAP.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.MAP.Metadata = new J_MAP__PluginMetadata('J-MAP', '1.0.1');
+J.MAP.Metadata = new J_MAP__PluginMetadata('J-MAP', '1.0.2');
 
 /**
  * A collection of all aliased methods for this plugin.

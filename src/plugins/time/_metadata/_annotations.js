@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 TIME] A system for tracking time- real or artificial.
+ * [v1.0.3 TIME] A system for tracking time- real or artificial.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -136,6 +136,8 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Adapted for updates to J-ABS-InputManager (input namespace).
  * - 1.0.2
  *    Adapted input remappability update of J-ABS-InputManager.
  *    Removed connection between J-MAP and J-TIME toggling (HUD).

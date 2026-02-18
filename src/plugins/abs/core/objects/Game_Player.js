@@ -1,26 +1,5 @@
 //region Game_Player
 /**
- * OVERWRITE Changes the button detection to look for a different button instead of SHIFT.
- */
-Game_Player.prototype.isDashButtonPressed = function()
-{
-  // define the baseline for whether or not the player is dashing.
-  const shift = Input.isPressed(J.ABS.Input.Dash);
-
-  // figure out if we're inverting the baseline.
-  if (ConfigManager.alwaysDash)
-  {
-    // invert the baseline.
-    return !shift;
-  }
-  else
-  {
-    // keep with the baseline.
-    return shift;
-  }
-};
-
-/**
  * While JABS is enabled, don't try to interact with events if they are enemies.
  */
 J.ABS.Aliased.Game_Player.set('startMapEvent', Game_Player.prototype.startMapEvent);
@@ -34,6 +13,7 @@ Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
     {
       for (const event of $gameMap.eventsXy(x, y))
       {
+        // eslint-disable-next-line max-len
         if (!event.isErased() && event.isTriggerIn(triggers) && event.isNormalPriority() === normal && !event.getJabsBattler())
         {
           event.start();
@@ -75,24 +55,6 @@ Game_Player.prototype.canMove = function()
   {
     // perform original logic.
     return J.ABS.Aliased.Game_Player.get('canMove')
-      .call(this);
-  }
-};
-
-J.ABS.Aliased.Game_Player.set('isDebugThrough', Game_Player.prototype.isDebugThrough);
-Game_Player.prototype.isDebugThrough = function()
-{
-  // check if JABS is enabled.
-  if ($jabsEngine.absEnabled)
-  {
-    // the debug button is changed while JABS is active.
-    return Input.isPressed(J.ABS.Input.Debug) && $gameTemp.isPlaytest();
-  }
-  // JABS is not enabled.
-  else
-  {
-    // perform original logic.
-    return J.ABS.Aliased.Game_Player.get('isDebugThrough')
       .call(this);
   }
 };

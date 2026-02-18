@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.1.0 JABS] Enables combat to be carried out on the map.
+ * [v4.1.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,9 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.1.1
+ *    Moved ownership of debug movement to J-ABS-InputManager.
+ *    Removed dead code (deprecated dash input).
  * - 4.1.0
  *    Added support for J-ABS-InputManager 2.0.0 (including button remaps).
  * - 4.0.0

@@ -24,13 +24,13 @@ DataManager.registerQuestopediaInputActions = function()
   Input.registerAction('J.OMNI.QUEST', {
     key: 'open-quest-log',
     label: 'Open Quest Log',
-    defaults: [ J.ABS.Input.DPadRight ],
+    defaults: [ J.ABS.EXT.INPUT.Symbols.DPadRight ],
     category: 'ui',
   });
 
   // seed defaults (replacement-idempotent) and ensure live bindings exist.
   Input.seedDefaultBindings('J.OMNI.QUEST', {
-    'open-quest-log': [ J.ABS.Input.DPadRight ],
+    'open-quest-log': [ J.ABS.EXT.INPUT.Symbols.DPadRight ],
   });
 
   // lazily initialize the live bindings bucket for this ns if needed.

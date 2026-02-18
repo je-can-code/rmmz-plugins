@@ -20,7 +20,7 @@ J.ABS.EXT.CHARGE.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '1.0.0',
+  Version: '1.0.1',
 };
 
 /**
