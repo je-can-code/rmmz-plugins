@@ -1,5 +1,5 @@
 //=============================================================================
-// rmmz_scenes.js v1.7.0
+// rmmz_scenes.js v1.10.0
 //=============================================================================
 
 //-----------------------------------------------------------------------------
@@ -341,8 +341,8 @@ Scene_Boot.prototype.start = function() {
 Scene_Boot.prototype.startNormalGame = function() {
     this.checkPlayerLocation();
     DataManager.setupNewGame();
-    SceneManager.goto(Scene_Title);
     Window_TitleCommand.initCommandPosition();
+    SceneManager.goto(Scene_Splash);
 };
 
 Scene_Boot.prototype.resizeScreen = function() {
@@ -388,6 +388,96 @@ Scene_Boot.prototype.checkPlayerLocation = function() {
     if ($dataSystem.startMapId === 0) {
         throw new Error("Player's starting position is not set");
     }
+};
+
+//-----------------------------------------------------------------------------
+// Scene_Splash
+//
+// The scene class of the splash screen.
+
+function Scene_Splash() {
+    this.initialize(...arguments);
+}
+
+Scene_Splash.prototype = Object.create(Scene_Base.prototype);
+Scene_Splash.prototype.constructor = Scene_Splash;
+
+Scene_Splash.prototype.initialize = function() {
+    Scene_Base.prototype.initialize.call(this);
+    this.initWaitCount();
+};
+
+Scene_Splash.prototype.create = function() {
+    Scene_Base.prototype.create.call(this);
+    if (this.isEnabled()) {
+        this.createBackground();
+    }
+};
+
+Scene_Splash.prototype.start = function() {
+    Scene_Base.prototype.start.call(this);
+    if (this.isEnabled()) {
+        this.adjustBackground();
+        this.startFadeIn(this.fadeSpeed(), false);
+    }
+};
+
+Scene_Splash.prototype.update = function() {
+    Scene_Base.prototype.update.call(this);
+    if (this.isActive()) {
+        if (!this.updateWaitCount()) {
+            this.gotoTitle();
+        }
+        this.checkSkip();
+    }
+};
+
+Scene_Splash.prototype.stop = function() {
+    Scene_Base.prototype.stop.call(this);
+    if (this.isEnabled()) {
+        this.startFadeOut(this.fadeSpeed());
+    }
+};
+
+Scene_Splash.prototype.createBackground = function() {
+    this._backSprite = new Sprite();
+    this._backSprite.bitmap = ImageManager.loadSystem("Splash");
+    this.addChild(this._backSprite);
+};
+
+Scene_Splash.prototype.adjustBackground = function() {
+    this.scaleSprite(this._backSprite);
+    this.centerSprite(this._backSprite);
+};
+
+Scene_Splash.prototype.isEnabled = function() {
+    return $dataSystem.optSplashScreen;
+};
+
+Scene_Splash.prototype.initWaitCount = function() {
+    if (this.isEnabled()) {
+        this._waitCount = 120;
+    } else {
+        this._waitCount = 0;
+    }
+};
+
+Scene_Splash.prototype.updateWaitCount = function() {
+    if (this._waitCount > 0) {
+        this._waitCount--;
+        return true;
+    }
+    return false;
+};
+
+Scene_Splash.prototype.checkSkip = function() {
+    if (Input.isTriggered("ok") || TouchInput.isTriggered()) {
+        this._waitCount = 0;
+    }
+};
+
+Scene_Splash.prototype.gotoTitle = function() {
+    SceneManager.goto(Scene_Title);
 };
 
 //-----------------------------------------------------------------------------
@@ -645,6 +735,10 @@ Scene_Message.prototype.associateWindows = function() {
     this._eventItemWindow.setMessageWindow(messageWindow);
 };
 
+Scene_Message.prototype.cancelMessageWait = function() {
+    this._messageWindow.cancelWait();
+};
+
 //-----------------------------------------------------------------------------
 // Scene_Map
 //
@@ -738,6 +832,7 @@ Scene_Map.prototype.update = function() {
 
 Scene_Map.prototype.updateMainMultiply = function() {
     if (this.isFastForward()) {
+        this.cancelMessageWait();
         this.updateMain();
     }
     this.updateMain();
@@ -1924,7 +2019,7 @@ Scene_Equip.prototype.onSlotOk = function() {
     this._slotWindow.hide();
     this._itemWindow.show();
     this._itemWindow.activate();
-    this._itemWindow.select(0);
+    this._itemWindow.forceSelect(0);
 };
 
 Scene_Equip.prototype.onSlotCancel = function() {
@@ -2589,6 +2684,7 @@ Scene_Shop.prototype.createSellWindow = function() {
     if (!this._categoryWindow.needsSelection()) {
         this._sellWindow.y -= this._categoryWindow.height;
         this._sellWindow.height += this._categoryWindow.height;
+        this._sellWindow.createContents();
     }
 };
 
@@ -2663,6 +2759,7 @@ Scene_Shop.prototype.onBuyCancel = function() {
 Scene_Shop.prototype.onCategoryOk = function() {
     this.activateSellWindow();
     this._sellWindow.select(0);
+    this._sellWindow.setTopRow(0);
 };
 
 Scene_Shop.prototype.onCategoryCancel = function() {
@@ -2812,7 +2909,7 @@ Scene_Name.prototype.editWindowRect = function() {
     const inputWindowHeight = this.calcWindowHeight(9, true);
     const padding = $gameSystem.windowPadding();
     const ww = 600;
-    const wh = ImageManager.faceHeight + padding * 2;
+    const wh = ImageManager.standardFaceHeight + padding * 2;
     const wx = (Graphics.boxWidth - ww) / 2;
     const wy = (Graphics.boxHeight - (wh + inputWindowHeight + 8)) / 2;
     return new Rectangle(wx, wy, ww, wh);

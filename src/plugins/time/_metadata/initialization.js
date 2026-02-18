@@ -12,7 +12,7 @@ J.TIME = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.TIME.Metadata = {};
-J.TIME.Metadata.Version = '1.0.1';
+J.TIME.Metadata.Version = '1.0.2';
 J.TIME.Metadata.Name = `J-TIME`;
 
 /**
@@ -64,9 +64,9 @@ J.TIME.Aliased = {
   Game_Event: new Map(),
   Game_Interpreter: new Map(),
 
-  JABS_InputController: new Map(),
+  JABS_StandardController: new Map(),
 
-  Scene_Base: {},
+  Scene_Base: new Map(),
   Scene_Map: new Map(),
 
   Window_Base: new Map(),
@@ -91,6 +91,7 @@ J.TIME.RegExp.MonthRangePage = /<monthRangePage:[ ]?(\d+)-(\d+)>/i;
 J.TIME.RegExp.YearRangePage = /<yearRangePage:[ ]?(\d+)-(\d+)>/i;
 
 J.TIME.RegExp.TimeRangePage = /<timeRangePage:[ ]?(\d{1,2}):(\d{1,2})-(\d{1,2}):(\d{1,2})>/i;
+// eslint-disable-next-line max-len
 J.TIME.RegExp.FullDateRangePage = /<fullDateRangePage:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])-(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])>/i
 
 
@@ -109,6 +110,7 @@ J.TIME.RegExp.MonthRangeChoice = /<monthRangeChoice:[ ]?(\d+)-(\d+)>/i;
 J.TIME.RegExp.YearRangeChoice = /<yearRangeChoice:[ ]?(\d+)-(\d+)>/i;
 
 J.TIME.RegExp.TimeRangeChoice = /<timeRangeChoice:[ ]?(\d{1,2}):(\d{1,2})-(\d{1,2}):(\d{1,2})>/i;
+// eslint-disable-next-line max-len
 J.TIME.RegExp.FullDateRangeChoice = /<fullDateRangeChoice:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])-(\[\d+, ?\d+, ?\d+, ?\d+, ?\d+])>/i
 
 /**
@@ -116,5 +118,6 @@ J.TIME.RegExp.FullDateRangeChoice = /<fullDateRangeChoice:[ ]?(\[\d+, ?\d+, ?\d+
  * @global
  * @type {Game_Time}
  */
+// eslint-disable-next-line no-unused-vars
 var $gameTime = null;
 //endregion Introduction

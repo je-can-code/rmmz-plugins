@@ -1,5 +1,16 @@
 # Project Guidelines
 
+## Primary Directives
+
+* **NEVER** use terminal commands like `cat`, `sed`, `grep`, `awk`, `head`, or `tail` to read or search file contents.
+* To read or examine file contents, you **MUST** use the provided internal tools (like `open`, `open_entire_file`, `get_file_structure`, or `search_project`) to bring the file data directly into your context.
+* You should NEVER write to the filesystem, ever. I will choose what files to add and what to add to them.
+* Prefer your own internal tools over various terminal commands for parsing/searching code (ex: open_file instead of cat).
+
+---
+
+## General Guidelines
+
 * This codebase is a monorepo of plugins for the RPG Maker MZ (often called RMMZ) engine.
 * All code responses should use the same coding style and formatting as exists across the codebase.
 * There are zero automated tests in this codebase, not for lack of want but low priority.
