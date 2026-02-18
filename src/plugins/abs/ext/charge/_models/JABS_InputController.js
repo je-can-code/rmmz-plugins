@@ -135,7 +135,7 @@ JABS_StandardController.prototype.isMainhandActionCharging = function()
   if (!this.canChargeMainhandAction()) return false;
 
   // this action requires A to be held down.
-  if (Input.isPressed(J.ABS.Input.Mainhand)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Mainhand)) return true;
 
   // A is not being held down.
   return false;
@@ -248,7 +248,7 @@ JABS_StandardController.prototype.isOffhandActionCharging = function()
   if (!this.canChargeOffhandAction()) return false;
 
   // this action requires A to be held down.
-  if (Input.isPressed(J.ABS.Input.Offhand)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Offhand)) return true;
 
   // A is not being held down.
   return false;
@@ -407,7 +407,7 @@ JABS_StandardController.prototype.isCombatAction1Charging = function()
   if (!this.isCombatSkillUsageEnabled()) return false;
 
   // or just the single-button input to be held down.
-  if (Input.isPressed(J.ABS.Input.Mainhand) || Input.isPressed(J.ABS.Input.CombatSkill1)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Mainhand) || Input.isPressed(J.ABS.EXT.INPUT.Symbols.CombatSkill1)) return true;
 
   // inputs are not being held down.
   return false;
@@ -476,7 +476,7 @@ JABS_StandardController.prototype.isCombatAction2Charging = function()
   if (!this.isCombatSkillUsageEnabled()) return false;
 
   // or just the single-button input to be held down.
-  if (Input.isPressed(J.ABS.Input.Offhand) || Input.isPressed(J.ABS.Input.CombatSkill2)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Offhand) || Input.isPressed(J.ABS.EXT.INPUT.Symbols.CombatSkill2)) return true;
 
   // inputs are not being held down.
   return false;
@@ -545,7 +545,7 @@ JABS_StandardController.prototype.isCombatAction3Charging = function()
   if (!this.isCombatSkillUsageEnabled()) return false;
 
   // or just the single-button input to be held down.
-  if (Input.isPressed(J.ABS.Input.Dash) || Input.isPressed(J.ABS.Input.CombatSkill3)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Dash) || Input.isPressed(J.ABS.EXT.INPUT.Symbols.CombatSkill3)) return true;
 
   // inputs are not being held down.
   return false;
@@ -614,7 +614,7 @@ JABS_StandardController.prototype.isCombatAction4Charging = function()
   if (!this.isCombatSkillUsageEnabled()) return false;
 
   // or just the single-button input to be held down.
-  if (Input.isPressed(J.ABS.Input.Tool) || Input.isPressed(J.ABS.Input.CombatSkill4)) return true;
+  if (Input.isPressed(J.ABS.EXT.INPUT.Symbols.Tool) || Input.isPressed(J.ABS.EXT.INPUT.Symbols.CombatSkill4)) return true;
 
   // inputs are not being held down.
   return false;

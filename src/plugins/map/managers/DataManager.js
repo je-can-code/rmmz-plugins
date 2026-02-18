@@ -24,21 +24,21 @@ DataManager.registerMinimapInputActions = function()
   Input.registerAction('J.MAP', {
     key: 'minimap-toggle',
     label: 'Toggle Minimap',
-    defaults: [ J.ABS.Input.DPadUp ],
+    defaults: [ J.ABS.EXT.INPUT.Symbols.DPadUp ],
     category: 'ui',
   });
 
   Input.registerAction('J.MAP', {
     key: 'expand-minimap',
     label: 'Expand Minimap (Hold)',
-    defaults: [ J.ABS.Input.DPadDown ],
+    defaults: [ J.ABS.EXT.INPUT.Symbols.DPadDown ],
     category: 'ui',
   });
 
   // seed defaults (replacement-idempotent) and ensure live bindings exist.
   Input.seedDefaultBindings('J.MAP', {
-    'minimap-toggle': [ J.ABS.Input.DPadUp ],
-    'expand-minimap': [ J.ABS.Input.DPadDown ],
+    'minimap-toggle': [ J.ABS.EXT.INPUT.Symbols.DPadUp ],
+    'expand-minimap': [ J.ABS.EXT.INPUT.Symbols.DPadDown ],
   });
   Input.getAllBindings('J.MAP');
 };

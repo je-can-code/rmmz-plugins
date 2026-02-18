@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
+ * [v1.0.2 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -94,6 +94,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Adapted for updates to J-ABS-InputManager (input namespace).
  * - 1.0.1
  *    Adds support for JABS-based input remapping.
  * - 1.0.0

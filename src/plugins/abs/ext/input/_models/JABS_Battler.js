@@ -16,4 +16,20 @@ JABS_Battler.createPlayer = function()
   // return original logic data.
   return playerJabsBattler;
 };
+
+/**
+ * Extends {@link JABS_Battler.canActionConnect}.<br/>
+ * While the debug button is pressed, the player cannot be targeted.
+ * @returns {boolean} True if actions can potentially connect, false otherwise.
+ */
+J.ABS.EXT.INPUT.Aliased.JABS_Battler.set('canActionConnect', JABS_Battler.prototype.canActionConnect);
+JABS_Battler.prototype.canActionConnect = function()
+{
+  // the player cannot be targeted while holding the DEBUG button.
+  if (this.isPlayer() && Input.isPressed(J.ABS.EXT.INPUT.Symbols.Debug)) return false;
+
+  // perform original logic.
+  return J.ABS.EXT.INPUT.Aliased.JABS_Battler.get('canActionConnect')
+    .call(this);
+};
 //endregion JABS_Battler
