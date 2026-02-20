@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.1.1';
+J.ABS.Metadata.Version = '4.2.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -409,7 +409,7 @@ J.ABS.Directions = {
   UP: 8,
 
   /**
-   * Represents the RIGTH direction, or 6.
+   * Represents the RIGHT direction, or 6.
    * @type {6}
    */
   RIGHT: 6,
@@ -497,6 +497,26 @@ J.ABS.Shapes = {
 };
 
 /**
+ * Strongly-typed projectile formation names used across JABS.
+ */
+J.ABS.ProjectileFormations = {
+  /** A single spoke in the forward direction. */
+  Line: "line",
+
+  /** Three spokes: forward, forward-left, forward-right. */
+  Spray: "spray",
+
+  /** Four cardinals: up, right, down, left. */
+  Cross: "cross",
+
+  /** Four diagonals: up-right, down-right, down-left, up-left. */
+  Xburst: "xburst",
+
+  /** All eight directions: cardinals + diagonals. */
+  Nova: "nova",
+};
+
+/**
  * A collection of helpful mappings for `notes` that are placed in
  * various locations, like events on the map, or in a database enemy.
  */
@@ -523,12 +543,13 @@ J.ABS.RegExp = {
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
 
-  // action-size-related.
+  // action size/shape/count related.
   SizeInPixels: /<size:[ ]?(\d+)>/gi,
   Degrees: /<degrees:[ ]?(\d+)>/gi,
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Shape: /<hitbox:[ ]?(circle|rhombus|square|frontsquare|line|arc|wall|cross)>/gi,
-  Projectile: /<projectile:[ ]?([12348])>/gi,
+  Projectile: /<projectile:[ ]?(\d+)>/gi,
+  ProjectileFormation: /<formation:[ ]?(line|spray|cross|xburst|nova)>/gi,
   Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   // action-execution-related.
