@@ -46,6 +46,8 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.2.0
+ *    Split projectile count from projectile formation.
  * - 4.1.1
  *    Moved ownership of debug movement to J-ABS-InputManager.
  *    Removed dead code (deprecated dash input).
@@ -522,19 +524,32 @@
  * ----------------------------------------------------------------------------
  * PROJECTILE:
  * The "projectile" value will define how many projectiles will be fired when
- * the skill is executed. This works a bit differently than you probably think.
- * The values available for this are:
- *  1: A single projectile that will fire forward.
- *  2: Two projectiles in a V shape firing forward.
- *  3: Three projectiles in a W shape firing forward.
- *  4: Four projectiles, one in each of the cardinal directions.
- *  8: Eight projectiles, one in each of the cardinal and diagonal directions.
+ * the skill is executed. All counts are fired in parallel starting in the
+ * direction that the caster is facing.
  *
  *    <projectile:VAL>
- *  Where VAL is one of the valid numeric values listed above.
+ *  Where VAL is the number of projectiles per direction that will fire.
+ *
+ * NOTE ABOUT COUNT LIMITS:
+ * Technically speaking, there is not really a hard limit that I have coded
+ * into the engine to prevent abuse. However, it is recommended to keep the
+ * count "reasonable" to avoid performance issues...
+ *
+ * ----------------------------------------------------------------------------
+ * FORMATION:
+ * The "formation" value will define what direction the projectile count will
+ * fire in. There are currently 5 valid values:
+ *  line: Fire in a straight line.
+ *  spray: Fire in a spray pattern (like a W).
+ *  cross: Fire in a cross pattern (in the cardinal 4 directions).
+ *  xburst: Fire in an X pattern (in the diagonal 4 directions).
+ *  nova: Fire in a circle pattern (in all 8 cardinal & diagonal directions).
+ *
+ *    <formation:VAL>
+ *  Where VAL is one of the valid formation values listed above.
  *
  * NOTE ABOUT PROJECTILE MOTION:
- * I would strongly encourage when building your actions on the action map,
+ * I would strongly encourage when building your actions on the action map
  * to use "turn X degrees" instead of "turn X direction", as they can mess up
  * the illusion of the projectiles obeying the direction they were fired in.
  * In that same vein, I'd also encourage using "1 step forward/backward" in
