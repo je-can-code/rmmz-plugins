@@ -3,7 +3,7 @@
  * Performs a preliminary check to see if the target is actually able to be hit.
  * @returns {boolean} True if actions can potentially connect, false otherwise.
  */
-JABS_Battler.prototype.canActionConnect = function ()
+JABS_Battler.prototype.canActionConnect = function()
 {
   // this battler is untargetable.
   if (this.isInvincible()) return false;
@@ -28,7 +28,7 @@ JABS_Battler.prototype.canActionConnect = function ()
  * @param {boolean} alreadyHitOne Whether or not this action has already hit a target.
  */
 // eslint-disable-next-line complexity
-JABS_Battler.prototype.isWithinScope = function (
+JABS_Battler.prototype.isWithinScope = function(
   action,
   target,
   alreadyHitOne = false
@@ -86,7 +86,7 @@ JABS_Battler.prototype.isWithinScope = function (
  * @param {JABS_ActionOptions=} actionOptions The options associated with this action.
  * @returns {JABS_Action[]} The JABS actions based on the skill id provided.
  */
-JABS_Battler.prototype.createJabsActionFromSkill = function (
+JABS_Battler.prototype.createJabsActionFromSkill = function(
   skillId,
   actionOptions = JABS_ActionOptions.Default()
 )
@@ -100,147 +100,41 @@ JABS_Battler.prototype.createJabsActionFromSkill = function (
   // grab the potentially extended skill.
   const skill = this.getSkill(skillId);
 
-  // calculate the projectile count and directions.
-  const projectileCount = skill.jabsProjectile ?? 1;
-  const projectileDirections = $jabsEngine.determineActionDirections(this.getCharacter()
-    .direction(), projectileCount);
+  // resolve the formation for this skill; defaults to "line" if not provided.
+  const formation = $jabsEngine.resolveProjectileFormationForSkill(skill);
+
+  // resolve the projectile count for this skill; defaults to 1 if not provided.
+  const projectileCount = $jabsEngine.resolveProjectileCountForSkill(skill);
+
+  // generate the spoke directions based on facing, formation, and count.
+  const facing = this.getCharacter()
+    .direction();
+  const projectileDirections = $jabsEngine.determineActionDirections(facing, formation, projectileCount);
 
   // calculate how many actions will be generated to accommodate the directions.
   const actions = this.convertProjectileDirectionsToActions(projectileDirections, action, actionOptions);
 
+  // return the generated actions.
   return actions;
 };
 
 /**
  * Generates actions for each projectile direction given.
- * Also applies lateral spawn offsets for parallel lanes on 2- and 3-projectile patterns.
+ * Applies lateral spawn offsets per spoke to create parallel lanes for any count (odd/even),
+ * including diagonals, while remaining 8-dir/tile-native.
  * @param {number[]} projectileDirections The directions that should be mapped to actions.
  * @param {Game_Action} action The underlying action data.
  * @param {JABS_ActionOptions} actionOptions The options for this action.
  * @returns {JABS_Action[]}
  */
-JABS_Battler.prototype.convertProjectileDirectionsToActions = function (
+JABS_Battler.prototype.convertProjectileDirectionsToActions = function(
   projectileDirections,
   action,
   actionOptions
 )
 {
-  // determine how many projectiles we are generating.
-  const count = projectileDirections.length;
-
-  // compute the lateral offsets in tiles for the given count.
-  // 1: [0]
-  // 2: [-0.5, +0.5]
-  // 3: [0, +1, -1]
-  const computeOffsets = projectileCount =>
-  {
-    if (projectileCount === 1)
-    {
-      // center only.
-      return [ 0 ];
-    }
-
-    if (projectileCount === 2)
-    {
-      // two lanes with 1 tile between them (0.5 tile offset from center for each).
-      return [ -0.5, 0.5 ];
-    }
-
-    if (projectileCount === 3)
-    {
-      // center + left/right at 1 tile.
-      return [ 0, 1, -1 ];
-    }
-
-    // for other patterns, do not offset.
-    const zeros = [];
-    for (let i = 0; i < projectileCount; i++)
-    {
-      zeros.push(0);
-    }
-
-    return zeros;
-  };
-
-  // capture the offsets collection for this volley.
-  const lateralOffsets = computeOffsets(count);
-
-  // resolve the caster’s current position as the base origin.
-  const originX = this.getX();
-  const originY = this.getY();
-
-  // helper to translate a lateral offset into dx/dy against a facing.
-  const offsetToDelta = (
-    facing,
-    lateral
-  ) =>
-  {
-    // default to no offset.
-    let dx = 0;
-    let dy = 0;
-
-    // for vertical facings (up/down), lateral offset maps to X.
-    if (facing === J.ABS.Directions.UP || facing === J.ABS.Directions.DOWN)
-    {
-      // apply the offset to x.
-      dx = lateral;
-    }
-    // for horizontal facings (left/right), lateral offset maps to Y.
-    else if (facing === J.ABS.Directions.LEFT || facing === J.ABS.Directions.RIGHT)
-    {
-      // apply the offset to y.
-      dy = lateral;
-    }
-
-    // return the computed delta as a tuple.
-    return [ dx, dy ];
-  };
-
-  // build a single action with its own positional offset.
-  const mapper = (
-    projectileDirection,
-    index
-  ) =>
-  {
-    // derive the lateral in-tiles offset for this specific projectile.
-    const lateral = lateralOffsets[index] ?? 0;
-
-    // translate lateral offset into dx/dy for the given facing.
-    const [ dx, dy ] = offsetToDelta(projectileDirection, lateral);
-
-    // compute the per-projectile spawn location in tiles.
-    const spawnX = originX + dx;
-    const spawnY = originY + dy;
-
-    // construct a location for this projectile; also capture direction for clarity.
-    const perActionLocation = JABS_Location.Builder()
-      .setX(spawnX)
-      .setY(spawnY)
-      .setDirection(projectileDirection)
-      .build();
-
-    // clone/compose a new options instance per projectile to avoid shared state.
-    const perActionOptions = JABS_ActionOptions.Builder()
-      .setIsRetaliation(actionOptions.isActionRetaliation())
-      .setCooldownKey(actionOptions.getCooldownKey())
-      .setLocation(perActionLocation)
-      .setIsTerrainDamage(actionOptions.isTerrainDamage())
-      .build();
-
-    // build and return the action bound to this projectile’s setup.
-    return JABS_Action.Builder()
-      .setCaster(this)
-      .setGameAction(action)
-      .setInitialDirection(projectileDirection)
-      .setActionOptions(perActionOptions)
-      .build();
-  };
-
-  // map directions to fully built actions with offsets.
-  const actions = projectileDirections.map(mapper, this);
-
-  // return the full collection of actions for this volley.
-  return actions;
+  // delegate to the shared action spawner for volley construction.
+  return JABS_ActionSpawner.buildVolley(this, projectileDirections, action, actionOptions);
 };
 
 /**
@@ -248,7 +142,7 @@ JABS_Battler.prototype.convertProjectileDirectionsToActions = function (
  * @param {string} cooldownKey The cooldown key.
  * @returns {JABS_Action[]} The constructed JABS actions.
  */
-JABS_Battler.prototype.getAttackData = function (cooldownKey)
+JABS_Battler.prototype.getAttackData = function(cooldownKey)
 {
   // grab the underlying battler.
   const battler = this.getBattler();
@@ -303,7 +197,7 @@ JABS_Battler.prototype.getAttackData = function (cooldownKey)
  * @param {string} slot The slot for the skill to check.
  * @returns {number}
  */
-JABS_Battler.prototype.getSkillIdForAction = function (slot)
+JABS_Battler.prototype.getSkillIdForAction = function(slot)
 {
   // grab the underlying battler.
   const battler = this.getBattler();
@@ -334,7 +228,7 @@ JABS_Battler.prototype.getSkillIdForAction = function (slot)
  * @param {boolean} isLoot Whether or not this is a loot pickup.
  */
 // eslint-disable-next-line complexity
-JABS_Battler.prototype.applyToolEffects = function (
+JABS_Battler.prototype.applyToolEffects = function(
   toolId,
   isLoot = false
 )
@@ -459,7 +353,7 @@ JABS_Battler.prototype.applyToolEffects = function (
  * Applies the effects of the tool against the leader.
  * @param {number} toolId The id of the tool/item being used.
  */
-JABS_Battler.prototype.applyToolToPlayer = function (toolId)
+JABS_Battler.prototype.applyToolToPlayer = function(toolId)
 {
   // apply tool effects against player.
   const battler = this.getBattler();
@@ -480,7 +374,7 @@ JABS_Battler.prototype.applyToolToPlayer = function (toolId)
  * @param {number} itemId The target having the action applied against.
  * @param {JABS_Battler} target The target for calculating damage; defaults to self.
  */
-JABS_Battler.prototype.generatePopItem = function (
+JABS_Battler.prototype.generatePopItem = function(
   gameAction,
   itemId,
   target = this
@@ -511,7 +405,7 @@ JABS_Battler.prototype.generatePopItem = function (
  * Applies the effects of the tool against all allies on the team.
  * @param {number} toolId The id of the tool/item being used.
  */
-JABS_Battler.prototype.applyToolForAllAllies = function (toolId)
+JABS_Battler.prototype.applyToolForAllAllies = function(toolId)
 {
   const battlers = $gameParty.battleMembers();
   if (battlers.length > 1)
@@ -533,7 +427,7 @@ JABS_Battler.prototype.applyToolForAllAllies = function (toolId)
  * Applies the effects of the tool against all opponents on the map.
  * @param {number} toolId The id of the tool/item being used.
  */
-JABS_Battler.prototype.applyToolForOneOpponent = function (toolId)
+JABS_Battler.prototype.applyToolForOneOpponent = function(toolId)
 {
   const item = $dataItems[toolId];
   let jabsBattler = this.getTarget();
@@ -566,7 +460,7 @@ JABS_Battler.prototype.applyToolForOneOpponent = function (toolId)
  * Applies the effects of the tool against all opponents on the map.
  * @param {number} toolId The id of the tool/item being used.
  */
-JABS_Battler.prototype.applyToolForAllOpponents = function (toolId)
+JABS_Battler.prototype.applyToolForAllOpponents = function(toolId)
 {
   const battlers = JABS_AiManager.getEnemyBattlers();
   battlers.forEach(jabsBattler =>
@@ -589,7 +483,7 @@ JABS_Battler.prototype.applyToolForAllOpponents = function (toolId)
  * Creates the text log entry for executing an tool effect.
  * @param {RPG_Item} item The tool being used in the log.
  */
-JABS_Battler.prototype.createToolLog = function (item)
+JABS_Battler.prototype.createToolLog = function(item)
 {
   // if not enabled, skip this.
   if (!J.LOG) return;
@@ -604,7 +498,7 @@ JABS_Battler.prototype.createToolLog = function (item)
  * Executes the pre-defeat processing for a battler.
  * @param {JABS_Battler} victor The battler that defeated this battler.
  */
-JABS_Battler.prototype.performPredefeatEffects = function (victor)
+JABS_Battler.prototype.performPredefeatEffects = function(victor)
 {
   // handle death animations first.
   this.handleOnDeathAnimations();
@@ -619,7 +513,7 @@ JABS_Battler.prototype.performPredefeatEffects = function (victor)
 /**
  * Handles the on-death animations associated with this battler.
  */
-JABS_Battler.prototype.handleOnDeathAnimations = function ()
+JABS_Battler.prototype.handleOnDeathAnimations = function()
 {
   // grab the loser battler.
   const battler = this.getBattler();
@@ -643,7 +537,7 @@ JABS_Battler.prototype.handleOnDeathAnimations = function ()
  * Since actors will persist as followers after defeat, they require additional
  * logic to prevent the repeated loop of death animation.
  */
-JABS_Battler.prototype.handleActorOnDeathAnimation = function ()
+JABS_Battler.prototype.handleActorOnDeathAnimation = function()
 {
   // perform the actor death animation.
   this.showAnimation(152);
@@ -658,7 +552,7 @@ JABS_Battler.prototype.handleActorOnDeathAnimation = function ()
  * Since they are instantly removed after, their logic doesn't require
  * toggling of battler death effects.
  */
-JABS_Battler.prototype.handleEnemyOnDeathAnimation = function ()
+JABS_Battler.prototype.handleEnemyOnDeathAnimation = function()
 {
   // perform the enemy death animation.
   this.showAnimation(151);
@@ -668,7 +562,7 @@ JABS_Battler.prototype.handleEnemyOnDeathAnimation = function ()
  * Handles the execution of any on-own-defeat skills the defeated battler may possess.
  * @param {JABS_Battler} victor The battler that defeated this battler.
  */
-JABS_Battler.prototype.handleOnOwnDefeatSkills = function (victor)
+JABS_Battler.prototype.handleOnOwnDefeatSkills = function(victor)
 {
   // grab the loser battler.
   const battler = this.getBattler();
@@ -711,7 +605,7 @@ JABS_Battler.prototype.handleOnOwnDefeatSkills = function (victor)
  * Handles the execution of any on-target-defeat skills the victorious battler may possess.
  * @param {JABS_Battler} victor The battler that defeated this battler.
  */
-JABS_Battler.prototype.handleOnTargetDefeatSkills = function (victor)
+JABS_Battler.prototype.handleOnTargetDefeatSkills = function(victor)
 {
   // grab all of the victor battler's on-target-defeat skills.
   const onTargetDefeatSkills = victor.getBattler()
@@ -752,7 +646,8 @@ JABS_Battler.prototype.handleOnTargetDefeatSkills = function (victor)
  * Executes the post-defeat processing for a defeated battler.
  * @param {JABS_Battler} victor The battler that defeated this battler.
  */
-JABS_Battler.prototype.performPostdefeatEffects = function (victor)
+// eslint-disable-next-line no-unused-vars
+JABS_Battler.prototype.performPostdefeatEffects = function(victor)
 {
   // check if the defeated battler is an actor.
   if (this.isActor())
