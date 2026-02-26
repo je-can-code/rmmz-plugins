@@ -1,7 +1,7 @@
 //region Window_Status
 /**
- * OVERWRITE Changes the `x:y` coordinates for where to draw the components of this block.
- * Also does NOT write nicknames, because why is that a thing?
+ * Overwrites {@link #drawBlock1}.<br/>
+ * Renders the actor name and class without the nickname.
  */
 Window_Status.prototype.drawBlock1 = function()
 {
@@ -16,7 +16,8 @@ Window_Status.prototype.drawBlock1 = function()
 };
 
 /**
- * OVERWRITE Changes the `x:y` coordinates for where to draw the components of this block.
+ * Overwrites {@link #drawBlock2}.<br/>
+ * Renders the actor face, basic info, and experience at non-default positioning.
  */
 Window_Status.prototype.drawBlock2 = function()
 {
