@@ -38,12 +38,17 @@ class StatusParameter
   /**
    * Constructor.
    * @param {number} value The value of the parameter.
-   * @param {boolean=} longParamId True if this should be multiplied by 100, false otherwise.
+   * @param {number} longParamId The long parameter id this value represents.
    */
   constructor(value, longParamId)
   {
+    // assign the raw numeric value of the parameter.
     this.value = value;
+
+    // assign the long param id that describes how this value should be displayed.
     this.longParamId = longParamId;
+
+    // refresh the derived display data for this parameter.
     this.refresh();
   }
 
@@ -64,125 +69,92 @@ class StatusParameter
    */
   prettyValue(withPadding = false)
   {
-    // copy the value.
-    let prettyValue = this.value;
+    // start with a working numeric copy of the value.
+    let num = this.value;
 
-    // subjectively, whole numbers are better than 0-1 decimal numbers.
-    const needsMultiplyBy100 = [
-      8, 9, 10, 11, 12, 13, 14, 15, 16, 17,     // ex-params
-      18, 19, 20, 21, 22, 23, 24, 25, 26, 27,   // sp-params
-      28, 29                                    // crit params
+    // define which long param ids should be scaled to whole-number percent space.
+    const multiplyBy100Ids = [
+      8, 9, 10, 11, 12, 13, 14, 15, 16, 17,   // ex-params
+      18, 19, 20, 21, 22, 23, 24, 25, 26, 27, // s-params
+      28, 29,                                 // crit params
     ];
 
-    // check if our long param id is in this group.
-    if (needsMultiplyBy100.includes(this.longParamId))
+    // scale to percent space when applicable.
+    if (multiplyBy100Ids.includes(this.longParamId))
     {
-      // multiply by 100 then.
-      prettyValue *= 100;
+      num *= 100;
     }
 
-    // subjectively, the sp-params would look better if they were 0-based instead of 100-based.
-    const needsMinusBy100 = [
-      18, 19, 20, 21, 22, 23, 24, 25, 26, 27,   // sp-params
-    ];
-
-    // check if our long param id is in this group.
-    if (needsMinusBy100.includes(this.longParamId))
+    // the s-params look nicer centered around 0 instead of 100.
+    const minus100Ids = [ 18, 19, 20, 21, 22, 23, 24, 25, 26, 27 ];
+    if (minus100Ids.includes(this.longParamId))
     {
-      // reduce by 100 then.
-      prettyValue -= 100;
+      num -= 100;
     }
 
-    // check to make sure we're using padding.
+    // handle regen values as per-second rate (engine’s native 1/5s tick assumed).
+    const regenIds = [ 15, 16, 17 ];
+    if (regenIds.includes(this.longParamId))
+    {
+      // compute the per-second rate.
+      const perSecond = (num / 5);
+
+      // if not an integer, show one decimal place; else show whole.
+      const regenStr = Number.isInteger(perSecond)
+        ? perSecond.toString()
+        : perSecond.toFixed(1);
+
+      // return the decorated regen string.
+      return `${regenStr}/s`;
+    }
+
+    // turn numeric into a base string, trimming ".0" trailing decimals.
+    let base = Number.isInteger(num)
+      ? num.toString()
+      : num.toFixed(1);
+    if (base.endsWith('.0'))
+    {
+      base = base.slice(0, base.length - 2);
+    }
+
+    // apply optional left-padding on the base string before suffixes.
     if (withPadding && this.value)
     {
-      // subjectively, the big parameters like hp and mp should have leading zeroes.
-      const needs6ZeroPadding = [
-        0, 1,                                     // max hp/mp
-      ];
+      // note: padding widths grouped by visual scale of the stat block.
+      const pad6 = [ 0, 1 ];                           // MHP, MMP
+      const pad4 = [ 2, 3, 4, 5, 6, 7, 19, 28, 29, 30 ]; // b-params, GRD, crits, MTP
+      const pad3 = [ 13, 14, 18, 20, 21, 22, 23, 24, 25, 26, 27 ]; // CNT, MRF, most s-params
 
-      // subjectively, the sorta big parameters like b-params, crit-params, and max tp also get zeroes.
-      const needs4ZeroPadding = [
-        2, 3, 4, 5, 6, 7,                         // most b-params
-        19,                                       // just GRD
-        28, 29,                                   // crit params
-        30,                                       // max tp
-      ];
-
-      // subjectively, the sp-params (except GRD) should have fewer leading zeroes.
-      const needs3ZeroPadding = [
-        13, 14,                               // CNT & MRF
-        18, 20, 21, 22, 23, 24, 25, 26, 27,   // sp-params
-      ];
-
-      // check if our long param id is in this group.
-      if (needs6ZeroPadding.includes(this.longParamId))
+      if (pad6.includes(this.longParamId))
       {
-        // pad with up to 6 zeroes.
-        prettyValue = prettyValue.padZero(6);
+        base = String(base)
+          .padZero(6);
       }
-      // check if our long param id is in this group.
-      else if (needs4ZeroPadding.includes(this.longParamId))
+      else if (pad4.includes(this.longParamId))
       {
-        // pad with up to 4 zeroes.
-        prettyValue = prettyValue.padZero(4);
+        base = String(base)
+          .padZero(4);
       }
-      // check if our long param id is in this group.
-      else if (needs3ZeroPadding.includes(this.longParamId))
+      else if (pad3.includes(this.longParamId))
       {
-        // pad with up to 3 zeroes.
-        prettyValue = prettyValue.padZero(3);
+        base = String(base)
+          .padZero(3);
       }
     }
 
-    let finalPrettyValue = !(Number.isInteger(prettyValue))
-      ? prettyValue.toFixed(1)
-      : prettyValue.toString();
-
-    // check if we just have unused decimals.
-    if (finalPrettyValue.endsWith(".0"))
-    {
-      // strip em off.
-      finalPrettyValue = finalPrettyValue.slice(0, finalPrettyValue.length - 2);
-    }
-
-    // the long param ids that should be decorated with a % symbol.
-    const needsPercentSymbol = [
-      9, 13, 14,                                // EVA & CNT & MRF
-      20, 21, 22, 23, 24, 25, 26, 27,           // sp-params
-      28, 29,                                   // crit params
+    // add a percent sign for the appropriate groups.
+    const percentIds = [
+      9, 13, 14,                 // EVA, CNT, MRF
+      20, 21, 22, 23, 24, 25, 26, 27, // selected s-params
+      28, 29,                    // crit params
     ];
-
-    // check if our long param id is in this group.
-    if (needsPercentSymbol.includes(this.longParamId))
+    if (percentIds.includes(this.longParamId))
     {
-      // append with a % symbol.
-      finalPrettyValue = `${finalPrettyValue}%`;
+      base = `${base}%`;
     }
 
-    // the long param ids that should be decorated with a regen rate per second.
-    const needsRegenRate = [
-      15, 16, 17 ];
-
-    // check if our long param id is in this group.
-    if (needsRegenRate.includes(this.longParamId))
-    {
-      // calculate the per-second rate of regen.
-      let per1rate = (prettyValue / 5);
-
-      // check if it came out to be a clean whole number or not.
-      if (!Number.isInteger(per1rate))
-      {
-        // chop off the shit after 2 decimals.
-        per1rate = per1rate.toFixed(1);
-      }
-
-      // decorate the value with the per-second rate.
-      finalPrettyValue = `${per1rate}/s`;
-    }
-
-    // return the "pretty" value!
-    return finalPrettyValue;
+    // return the final formatted value.
+    return base;
   }
 }
 

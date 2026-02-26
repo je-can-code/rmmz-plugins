@@ -27,7 +27,7 @@ J.ABS.EXT.INPUT = {};
  */
 J.ABS.EXT.INPUT = {};
 J.ABS.EXT.INPUT.Metadata = {};
-J.ABS.EXT.INPUT.Metadata.Version = '2.1.0';
+J.ABS.EXT.INPUT.Metadata.Version = '2.1.1';
 J.ABS.EXT.INPUT.Metadata.Name = `J-ABS-InputManager`;
 
 /**
