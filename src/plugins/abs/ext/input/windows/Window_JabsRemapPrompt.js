@@ -290,7 +290,7 @@ class Window_JabsRemapPrompt
   {
     // collect core input constants from the JABS input adapter constants.
     // These should reflect only keyboard/gamepad bindings.
-    const k = J.ABS.Input;
+    const k = J.ABS.EXT.INPUT.Symbols;
 
     // build the list using adapter constants.
     const inputs = [

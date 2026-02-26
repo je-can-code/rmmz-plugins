@@ -13,7 +13,6 @@ class Window_StatusParameters
   constructor(rect)
   {
     super(rect);
-    super.initialize(rect);
     this.initMembers();
   }
 
@@ -26,7 +25,8 @@ class Window_StatusParameters
   }
 
   /**
-   * OVERWRITE Changes the lineheight to default to something smaller than 36 for this window.
+   * Overwrites {@link #lineHeight}.<br/>
+   * Reduces line height for this window.
    * @returns {number}
    */
   lineHeight()
@@ -686,7 +686,8 @@ class Window_StatusParameters
   }
 
   /**
-   * OVERWRITE Replaces this with a smaller font size reduction.
+   * Overwrites {@link #makeFontSmaller}.<br/>
+   * Makes the reduction step smaller.
    */
   makeFontSmaller()
   {
@@ -697,7 +698,8 @@ class Window_StatusParameters
   }
 
   /**
-   * OVERWRITE Replaces this with a smaller font size increase.
+   * Overwrites {@link #makeFontBigger}.<br/>
+   * Makes the expansion step smaller.
    */
   makeFontBigger()
   {
