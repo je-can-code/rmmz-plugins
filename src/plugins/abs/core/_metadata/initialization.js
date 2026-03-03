@@ -9,7 +9,7 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.3';
+  const requiredBaseVersion = '2.3.1';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -27,7 +27,7 @@ J.ABS = {};
 /**
  * The parent namespace for all JABS extensions.
  */
-J.ABS.EXT = {}
+J.ABS.EXT = {};
 
 //region helpers
 /**
@@ -49,17 +49,17 @@ J.ABS.Helpers.PluginManager.TranslateOptionToSlot = slot =>
 {
   switch (slot)
   {
-    case "Tool":
+    case 'Tool':
       return JABS_Button.Tool;
-    case "Dodge":
+    case 'Dodge':
       return JABS_Button.Dodge;
-    case "L1A":
+    case 'L1A':
       return JABS_Button.CombatSkill1;
-    case "L1B":
+    case 'L1B':
       return JABS_Button.CombatSkill2;
-    case "L1X":
+    case 'L1X':
       return JABS_Button.CombatSkill3;
-    case "L1Y":
+    case 'L1Y':
       return JABS_Button.CombatSkill4;
   }
 };
@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.2.0';
+J.ABS.Metadata.Version = '4.3.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -125,14 +125,14 @@ J.ABS.Metadata.DefaultEnemyPursuitRange = Number(J.ABS.PluginParameters['default
 J.ABS.Metadata.DefaultEnemyAlertedSightBoost = Number(J.ABS.PluginParameters['defaultEnemyAlertedSightBoost']);
 J.ABS.Metadata.DefaultEnemyAlertedPursuitBoost = Number(J.ABS.PluginParameters['defaultEnemyAlertedPursuitBoost']);
 J.ABS.Metadata.DefaultEnemyAlertDuration = Number(J.ABS.PluginParameters['defaultEnemyAlertDuration']);
-J.ABS.Metadata.DefaultEnemyCanIdle = Boolean(J.ABS.PluginParameters['defaultEnemyCanIdle'] === "true");
-J.ABS.Metadata.DefaultEnemyShowHpBar = Boolean(J.ABS.PluginParameters['defaultEnemyShowHpBar'] === "true");
-J.ABS.Metadata.DefaultEnemyShowBattlerName = Boolean(J.ABS.PluginParameters['defaultEnemyShowBattlerName'] === "true");
-J.ABS.Metadata.DefaultEnemyIsInvincible = Boolean(J.ABS.PluginParameters['defaultEnemyIsInvincible'] === "true");
-J.ABS.Metadata.DefaultEnemyIsInanimate = Boolean(J.ABS.PluginParameters['defaultEnemyIsInanimate'] === "true");
+J.ABS.Metadata.DefaultEnemyCanIdle = Boolean(J.ABS.PluginParameters['defaultEnemyCanIdle'] === 'true');
+J.ABS.Metadata.DefaultEnemyShowHpBar = Boolean(J.ABS.PluginParameters['defaultEnemyShowHpBar'] === 'true');
+J.ABS.Metadata.DefaultEnemyShowBattlerName = Boolean(J.ABS.PluginParameters['defaultEnemyShowBattlerName'] === 'true');
+J.ABS.Metadata.DefaultEnemyIsInvincible = Boolean(J.ABS.PluginParameters['defaultEnemyIsInvincible'] === 'true');
+J.ABS.Metadata.DefaultEnemyIsInanimate = Boolean(J.ABS.PluginParameters['defaultEnemyIsInanimate'] === 'true');
 
 // custom data configurations.
-J.ABS.Metadata.UseElementalIcons = J.ABS.PluginParameters['useElementalIcons'] === "true";
+J.ABS.Metadata.UseElementalIcons = J.ABS.PluginParameters['useElementalIcons'] === 'true';
 J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['elementalIconData']);
 
 // action decided configurations.
@@ -164,10 +164,10 @@ J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce = (J.ABS.PluginParameters['defaul
 
 // miscellaneous configurations.
 J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistance']);
-J.ABS.Metadata.DisableTextPops = Boolean(J.ABS.PluginParameters['disableTextPops'] === "true");
+J.ABS.Metadata.DisableTextPops = Boolean(J.ABS.PluginParameters['disableTextPops'] === 'true');
 J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRubberbandAdjustment']);
 J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
-J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === "true");
+J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === 'true');
 
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
@@ -220,8 +220,12 @@ J.ABS.Metadata.HitboxStyles = {
   // Battler overrides by kind (player/follower/battler)
   byKind:
     {
-      player:  { fillColor: 0x4DA3FF, lineColor: 0x2368CC, fillAlpha: 0.25 },
-      follower:{ fillColor: 0x9B59B6 },
+      player: {
+        fillColor: 0x4DA3FF,
+        lineColor: 0x2368CC,
+        fillAlpha: 0.25
+      },
+      follower: { fillColor: 0x9B59B6 },
       battler: { fillColor: 0x2ECC71 },
     },
 
@@ -331,9 +335,9 @@ J.ABS.Globals = {};
  *
  * * TODO: implement the global cooldown blocking other cooldowns.
  * * TODO: alternatively, consider applying cooldowns against global to all slots on a battler.
- * @type {"global"}
+ * @type {'global'}
  */
-J.ABS.Globals.GlobalCooldownKey = "global";
+J.ABS.Globals.GlobalCooldownKey = 'global';
 
 /**
  * A collection of helpful mappings for emoji balloons
@@ -458,42 +462,42 @@ J.ABS.Shapes = {
   /**
    * A circle shaped hitbox.
    */
-  Circle: "circle",
+  Circle: 'circle',
 
   /**
    * A rhombus (aka diamond) shaped hitbox.
    */
-  Rhombus: "rhombus",
+  Rhombus: 'rhombus',
 
   /**
    * A square around the target hitbox.
    */
-  Square: "square",
+  Square: 'square',
 
   /**
    *  A square in front of the target hitbox.
    */
-  FrontSquare: "frontsquare",
+  FrontSquare: 'frontsquare',
 
   /**
    * A line from the target hitbox.
    */
-  Line: "line",
+  Line: 'line',
 
   /**
    * An arc shape hitbox in front of the action.
    */
-  Arc: "arc",
+  Arc: 'arc',
 
   /**
    * A wall in front of the target hitbox.
    */
-  Wall: "wall",
+  Wall: 'wall',
 
   /**
    * A cross from the target hitbox.
    */
-  Cross: "cross"
+  Cross: 'cross'
 };
 
 /**
@@ -501,19 +505,19 @@ J.ABS.Shapes = {
  */
 J.ABS.ProjectileFormations = {
   /** A single spoke in the forward direction. */
-  Line: "line",
+  Line: 'line',
 
   /** Three spokes: forward, forward-left, forward-right. */
-  Spray: "spray",
+  Spray: 'spray',
 
   /** Four cardinals: up, right, down, left. */
-  Cross: "cross",
+  Cross: 'cross',
 
   /** Four diagonals: up-right, down-right, down-left, up-left. */
-  Xburst: "xburst",
+  Xburst: 'xburst',
 
   /** All eight directions: cardinals + diagonals. */
-  Nova: "nova",
+  Nova: 'nova',
 };
 
 /**
@@ -522,9 +526,9 @@ J.ABS.ProjectileFormations = {
  */
 J.ABS.Notetags = {
   MoveType: {
-    Forward: "forward",
-    Backward: "backward",
-    Directional: "directional",
+    Forward: 'forward',
+    Backward: 'backward',
+    Directional: 'directional',
   }
 };
 
@@ -563,6 +567,7 @@ J.ABS.RegExp = {
 
   // animation-related.
   SelfAnimationId: /<selfAnimationId:[ ]?(\d+)>/gi,
+  OnCastAnimationId: /<onCastAnimationId:[ ]?(\d+)>/gi,
 
   // combo-related.
   ComboAction: /<combo:[ ]?(\[\d+,[ ]?\d+])>/gi,
@@ -724,10 +729,10 @@ J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
  * Cardinal: U/D/L/R
  * Optional diagonals: UR/UL/DR/DL
  */
-J.ABS.RegExp.VisOffsetU  = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetD  = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetL  = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetR  = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetU = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetD = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetL = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+J.ABS.RegExp.VisOffsetR = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
 
 // Optional diagonals for future use.
 J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]

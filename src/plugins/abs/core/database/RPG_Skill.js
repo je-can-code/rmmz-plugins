@@ -1116,6 +1116,40 @@ RPG_Skill.prototype.extractJabsSelfAnimationId = function()
 };
 //endregion range
 
+//region onCastAnimation
+/**
+ * The animation id to play on the caster once when the skill actually executes.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsOnCastAnimationId', {
+  get: function()
+  {
+    // retrieve the parsed on-cast animation id from notes.
+    return this.getJabsOnCastAnimationId();
+  },
+});
+
+/**
+ * Gets the on-cast animation id for this skill.
+ * @returns {number}
+ */
+RPG_Skill.prototype.getJabsOnCastAnimationId = function()
+{
+  // parse and return the value from notes.
+  return this.extractJabsOnCastAnimationId();
+};
+
+/**
+ * Extracts the on-cast animation id for this skill from its notes.
+ * @returns {number}
+ */
+RPG_Skill.prototype.extractJabsOnCastAnimationId = function()
+{
+  // use the shared regex dictionary to pull the integer.
+  return this.getNumberFromNotesByRegex(J.ABS.RegExp.OnCastAnimationId, true);
+};
+//endregion onCastAnimation
+
 //region delay
 /**
  * The JABS delay data for this skill.

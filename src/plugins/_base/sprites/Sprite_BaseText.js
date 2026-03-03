@@ -10,9 +10,9 @@ class Sprite_BaseText
    * The available supported text alignments.
    */
   static Alignments = {
-    Left: "left",
-    Center: "center",
-    Right: "right",
+    Left: 'left',
+    Center: 'center',
+    Right: 'right',
   };
 
   /**
@@ -58,7 +58,7 @@ class Sprite_BaseText
      * This should be a hexcode.
      * @type {string}
      */
-    this._j._color = "#ffffff";
+    this._j._color = '#ffffff';
 
     /**
      * The alignment of text in this sprite.
@@ -89,6 +89,19 @@ class Sprite_BaseText
      * @type {number}
      */
     this._j._fontSize = $gameSystem.mainFontSize();
+
+    /**
+     * The minimum width of the text.
+     * @type {number}
+     */
+    this._j._minWidth = 0;
+
+    /**
+     * Some systems that leverage {@link Sprite_BaseText} may have automation to manage the opacity of their text.
+     * Setting this flag to true will disable that automation and allow you to manage the opacity yourself.
+     * @type {boolean}
+     */
+    this._j._disableManagedOpacity = false;
   }
 
   /**
@@ -122,6 +135,9 @@ class Sprite_BaseText
     this.bitmap.fontBold = this.isBold();
     this.bitmap.fontItalic = this.isItalics();
     this.bitmap.textColor = this.color();
+
+    this.bitmap.outlineColor = "#000000"; // or a theme color
+    this.bitmap.outlineWidth = Math.max(2, Math.floor(this.fontSize() / 6));
   }
 
   /**
@@ -160,8 +176,10 @@ class Sprite_BaseText
     this._j._testBitmap.fontItalic = this.isItalics();
     this._j._testBitmap.fontBold = this.isBold();
 
-    // and return the measured text width.
-    return this._j._testBitmap.measureTextWidth(this.text());
+    // measure the text and respect a configured minimum width, if any.
+    const measured = this._j._testBitmap.measureTextWidth(this.text());
+    const min = this._j._minWidth;
+    return Math.max(measured, min);
   }
 
   /**
@@ -243,7 +261,7 @@ class Sprite_BaseText
   isValidColor(color)
   {
     // use regex to validate the hex color.
-    const structure = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+    const structure = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
     const isHexColor = structure.test(color);
 
     // check if we failed the validation.
@@ -295,7 +313,8 @@ class Sprite_BaseText
   isValidAlignment(alignment)
   {
     const validAlignments = [
-      Sprite_BaseText.Alignments.Left, Sprite_BaseText.Alignments.Center, Sprite_BaseText.Alignments.Right ]
+      Sprite_BaseText.Alignments.Left, Sprite_BaseText.Alignments.Center, Sprite_BaseText.Alignments.Right
+    ];
 
     return validAlignments.includes(alignment);
   }
@@ -407,16 +426,71 @@ class Sprite_BaseText
   }
 
   /**
+   * Gets the minimum width for the text box.
+   * @returns {number}
+   */
+  minWidth()
+  {
+    return this._j._minWidth;
+  }
+
+  /**
+   * Sets a minimum width for the text box. Useful to make center/right alignment visible.
+   * @param {number} width The minimum pixel width of this sprite’s bitmap.
+   * @returns {this}
+   */
+  setMinWidth(width)
+  {
+    // guard to make sure the width isn't being set to something negative.
+    const w = Math.max(0, width);
+
+    if (this._j._minWidth !== w)
+    {
+      this._j._minWidth = w;
+      this.refresh();
+    }
+
+    // return this for chaining if desired.
+    return this;
+  }
+
+  /**
+   * Flags this sprite to disable the managed opacity automation.
+   */
+  selfManageOpacity()
+  {
+    this._j._disableManagedOpacity = true;
+  }
+
+  /**
+   * Unflags this sprite to enable the managed opacity automation.
+   */
+  autoManageOpacity()
+  {
+    this._j._disableManagedOpacity = false;
+  }
+
+  /**
+   * Checks whether or not this sprite is flagged for self-managed opacity.
+   * @returns {boolean}
+   */
+  hasSelfManagedOpacity()
+  {
+    return this._j._disableManagedOpacity;
+  }
+
+  /**
    * Renders the text of this sprite.
    */
   renderText()
   {
-    const width = this.alignment() === Sprite_BaseText.Alignments.Center
-      ? this.width
+    // always draw using the bitmap’s own width so alignment behaves predictably.
+    const drawWidth = this.bitmap
+      ? this.bitmap.width
       : this.bitmapWidth();
 
     // draw the text with the current settings onto the bitmap.
-    this.bitmap.drawText(this.text(), 0, 0, width, this.bitmapHeight(), this.alignment());
+    this.bitmap.drawText(this.text(), 0, 0, drawWidth, this.bitmapHeight(), this.alignment());
   }
 }
 

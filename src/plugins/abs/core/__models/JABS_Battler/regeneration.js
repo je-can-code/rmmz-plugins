@@ -2,10 +2,10 @@
 /**
  * Updates all regenerations and ticks four times per second.
  */
-JABS_Battler.prototype.updateRG = function()
+JABS_Battler.prototype.updateRegen = function()
 {
   // check if we are able to update the RG.
-  if (!this.canUpdateRG()) return;
+  if (!this.canUpdateRegen()) return;
 
   //
   this.performRegeneration();
@@ -16,7 +16,7 @@ JABS_Battler.prototype.updateRG = function()
  * Determines whether or not the regeneration can be updated.
  * @returns {boolean}
  */
-JABS_Battler.prototype.canUpdateRG = function()
+JABS_Battler.prototype.canUpdateRegen = function()
 {
   // check if the regen is even ready for this battler.
   if (!this.isRegenReady()) return false;
@@ -112,8 +112,6 @@ JABS_Battler.prototype.processNaturalRegens = function()
   // process the natural hp/mp regens, possibly reduced.
   this.processNaturalHpRegen(isReduced);
   this.processNaturalMpRegen(isReduced);
-
-  // natural TP regen is never reduced.
   this.processNaturalTpRegen(isReduced);
 };
 
@@ -126,12 +124,11 @@ JABS_Battler.prototype.isNaturalRegenReduced = function()
   // enemies are not impacted by reduced natural regen.
   if (this.isEnemy()) return false;
 
-  // in-combat players will have a "last battler hit" tracked. Once that fades, they aren't in combat.
-  // TODO: may need to add a "i was last hit in the last 10 seconds" tracker.
-  if (this.isPlayer() && this.getBattlerLastHit() !== null) return true;
+  // if combat is globally forced (boss phases, etc), always reduced for non‑enemies.
+  if ($jabsEngine.forcedCombat === true) return true;
 
   // in-combat allies will be actors that are presently engaged.
-  if (this.isActor() && this.isEngaged()) return true;
+  if (this.isActor() && this.isInCombat()) return true;
 
   // no reason to reduce natural regen.
   return false;
@@ -502,7 +499,7 @@ JABS_Battler.prototype.slipEval = function(formula, sourceBattler, afflictedBatt
     if (!Number.isFinite(result))
     {
       // throw, and then catch to properly log in the next block.
-      throw new Error("Invalid formula.")
+      throw new Error('Invalid formula.');
     }
   }
   catch (err)

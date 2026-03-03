@@ -36,7 +36,7 @@
 import { globSync } from 'glob';
 import { existsSync } from 'fs';
 import * as fs from 'fs/promises';
-import Logger from './logger.js';
+import Logger, { LogStyle } from './logger.js';
 
 // whether or not to include a timestamp of when this was bundled up.
 const USE_BUNDLE_TIMESTAMP = false;
@@ -82,13 +82,13 @@ async function main()
   }
 
   // concat the files into 1.
-  const bundledJs = files.join("\n\n");
+  const bundledJs = files.join('\n\n');
 
   // write the file to the designated location.
   await fs.writeFile(filepathAndName, bundledJs, 'utf-8');
 
-  Logger.log(`finished combining all files into 1.`);
-  Logger.logAnyway(`Combiner™ has completed execution for ${OUT_FILENAME}. 💯✅`);
+  Logger.log(`finished combining all files into 1.`, LogStyle.magenta);
+  Logger.logAnyway(`Combiner™ has completed execution for ${OUT_FILENAME}.`, LogStyle.rainbow);
 }
 
 /**
@@ -99,13 +99,13 @@ function getArgs()
 {
   const args = process.argv.slice(2);
 
-  const SRC_PATH = args[0] ?? "./src";
-  const OUT_PATH = args[1] ?? "../plugins/j";
-  const OUT_FILENAME = args[2] ?? "some_plugin.js";
+  const SRC_PATH = args[0] ?? './src';
+  const OUT_PATH = args[1] ?? '../plugins/j';
+  const OUT_FILENAME = args[2] ?? 'some_plugin.js';
 
-  Logger.log(`source path: ${SRC_PATH}`);
-  Logger.log(`output path: ${OUT_PATH}`);
-  Logger.log(`output filename: ${OUT_FILENAME}`);
+  Logger.log(`source path: ${SRC_PATH}`, LogStyle.yellow);
+  Logger.log(`output path: ${OUT_PATH}`, LogStyle.yellow);
+  Logger.log(`output filename: ${OUT_FILENAME}`, LogStyle.yellow);
 
   return [ SRC_PATH, OUT_PATH, OUT_FILENAME ];
 }
@@ -123,11 +123,11 @@ async function validateOutputDir(output_path)
     // make sure the directory is created.
     await fs.mkdir(output_path, { recursive: true });
 
-    Logger.log(`output directory created: ${output_path}`);
+    Logger.log(`output directory created: ${output_path}`, LogStyle.dim);
   }
   else
   {
-    Logger.log(`output directory already exists; ${output_path}`);
+    Logger.log(`output directory already exists; ${output_path}`, LogStyle.dim);
   }
 }
 
@@ -138,7 +138,7 @@ async function validateOutputDir(output_path)
 function getFilepaths(src, out)
 {
   const options = {
-    ignore: [ "node_modules/**/*", out ],
+    ignore: [ 'node_modules/**/*', out ],
     absolute: true
   };
 
@@ -146,7 +146,7 @@ function getFilepaths(src, out)
 
   return filepaths.sort((a, b) =>
   {
-    const left = a.toLowerCase()
+    const left = a.toLowerCase();
     const right = b.toLowerCase();
     if (left < right) //sort string ascending
     {
@@ -178,7 +178,7 @@ async function getFiles(filePaths)
     files.push(file);
   }
 
-  Logger.log(`found ${files.length} files to combine.`);
+  Logger.log(`found ${files.length} files to combine.`, LogStyle.dim);
 
   // returns all the found files.
   return files;

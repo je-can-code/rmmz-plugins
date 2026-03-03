@@ -26,7 +26,7 @@
  */
 
 import Mirror from './mirror.js';
-import Logger from "./logger.js";
+import Logger, { LogStyle } from './logger.js';
 
 /**
  * Initializes a new directory for the purpose of developing a new plugin.
@@ -51,7 +51,7 @@ class Initter
    */
   static async init()
   {
-    Logger.log(`working directory: ${process.cwd()}`);
+    Logger.log(`working directory: ${process.cwd()}`, LogStyle.dim);
 
     // derive a new mirror for mirroring our template.
     const mirror = new Mirror();
@@ -60,7 +60,7 @@ class Initter
     // clone the template into the destination.
     await mirror.mirrorToDestination(`${this.DEFAULT_BASE_PLUGIN_PATH}/${destinationPath}`);
 
-    Logger.logAnyway(`Initter™ has completed execution. 💯✅`);
+    Logger.logAnyway(`Initter™ has completed execution.`, LogStyle.rainbow);
   }
 }
 

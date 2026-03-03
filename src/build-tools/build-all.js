@@ -27,13 +27,13 @@ import { exec } from 'child_process';
 import * as fs from 'fs/promises';
 
 const pkg = JSON.parse(await fs.readFile('./package.json', 'utf-8'));
-import Logger from './logger.js';
+import Logger, { LogStyle } from './logger.js';
 
 // start for timings sake.
 const start = performance.now();
 
 // don't recursively build everything, or start generating a bunch of empty directories.
-const ignoredKeys = [ "plugin:", "copy:", "build:all", "hotfix" ];
+const ignoredKeys = [ 'plugin:', 'copy:', 'build:all', 'hotfix' ];
 
 // extract the scripts section of our package.json.
 const { scripts } = pkg;
@@ -46,7 +46,7 @@ for (const key in scripts)
 {
   if (ignoredKeys.some(ignoredKey => key.startsWith(ignoredKey)))
   {
-    Logger.log(`skipping: [${key}] because it starts with an ignored prefix.`)
+    Logger.log(`skipping: [${key}] because it starts with an ignored prefix.`);
     continue;
   }
 
@@ -56,6 +56,7 @@ for (const key in scripts)
   // capture the execution as a promise for parallelization.
   const execution = new Promise(resolve =>
   {
+    // eslint-disable-next-line no-unused-vars
     const handleOutcome = (error, stdout, stderr) =>
     {
       if (error)
@@ -65,16 +66,16 @@ for (const key in scripts)
       }
 
       resolve();
-    }
+    };
 
-    Logger.log(command);
+    Logger.log(command, LogStyle.yellow);
 
     // kick off the command.
     const process = exec(command, handleOutcome);
 
     // track the output and log it.
     process.stdout.on('data', data => Logger.log(data));
-  })
+  });
 
   // add the execution to the collection.
   executions.push(execution);
@@ -85,4 +86,7 @@ await Promise.all(executions);
 
 // capture the duration of this build-all execution in seconds.
 const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
-Logger.logAnyway(`Builder™ has completed building all plugins in ${durationSeconds}s. 🛠️  ✅`);
+Logger.logAnyway(
+  `Builder™ has completed building all ${executions.length} plugins in ${durationSeconds}s.`,
+  LogStyle.rainbow
+);

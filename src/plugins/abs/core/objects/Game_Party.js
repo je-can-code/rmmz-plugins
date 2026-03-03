@@ -78,4 +78,29 @@ Game_Party.prototype.leaderJabsBattler = function()
   // return the leader's battler.
   return JABS_AiManager.getBattlerByUuid(leaderUuid);
 };
+
+/**
+ * Gets whether any current party battle member is in combat.
+ * @returns {boolean}
+ */
+Game_Party.prototype.anyMemberInCombat = function()
+{
+  // if globally forced, then the party is in combat.
+  if ($jabsEngine.forcedCombat === true) return true;
+
+  // check each battle member for a tracked JABS battler that is in combat.
+  const members = this.battleMembers();
+  for (let i = 0; i < members.length; i++)
+  {
+    const actor = members[i];
+    const jabsBattler = JABS_AiManager.getBattlerByUuid(actor.getUuid());
+    if (jabsBattler && jabsBattler.isInCombat())
+    {
+      return true;
+    }
+  }
+
+  // nobody is in combat.
+  return false;
+};
 //endregion Game_Party

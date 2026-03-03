@@ -97,4 +97,29 @@ JABS_Aggro.prototype.modAggro = function(modAggro, forced = false)
   this.aggro += modAggro;
   if (this.aggro < 0) this.aggro = 0;
 };
+
+/**
+ * Determines whether or not this aggro is for a living actor.
+ * @returns {boolean}
+ */
+JABS_Aggro.prototype.isForLivingActor = function()
+{
+  // grab the battler for reference.
+  const battler = JABS_AiManager.getBattlerByUuid(this.battlerUuid);
+
+  // if there was no battler by this id, then its not for an actor.
+  if (!battler) return false;
+
+  // if the battler is not an actor, then its not for an actor.
+  if (battler.isActor() !== false) return false;
+
+  // if the actor is dead, then it doesn't count.
+  if (battler.isDead() === true) return false;
+
+  // if the aggro is reset/empty, then it doesn't count.
+  if (this.aggro <= 0) return false;
+
+  // the aggro's target is a living actor.
+  return true;
+};
 //endregion JABS_Aggro

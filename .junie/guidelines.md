@@ -175,8 +175,13 @@ When constructing new extensions, typically the structure defined is as such:
   * Never echo my feedback into the JsDocs- only write what the purpose of the function is so someone who reads it will understand the purpose of the function and not the iterative changes that occurred to the method as it was being built.
 * Always terminate statements with semicolons.
 * Always indent with 2 spaces, where applicable.
-* Prefer double quotes for strings.
-* Always use template literals for interpolation.
+* Prefer single quotes for strings.
+* Prefer to destructure objects and arrays if more than one property/item is being leveraged from the object/array.
+* Never write nested ternary operators.
+  * If you need to nest ternary operators, spell out the conditions with if blocks.
+* Prefer modern syntax where possible (such as `this._j ||= {}` instead of `if (!this._j) this._j = {}` or `this._j = this._j || {}` instead of `this._j = this._j || {}`).
+* Always prefer to expose new properties with getter and setter functions rather than direct property mutation.
+* Always use template literals for interpolation instead of `const someString = anotherString + yetAnotherString;`.
 * All example snippets in this document (including aliasing examples) should follow the same style rules (double quotes, semicolons, 2-space indent).
 * Trailing commas in arrays/objects are acceptable and even encouraged in some cases to indicate there are other (possibly useful but currently ignored) parameters available.
 * Line length should be capped at 120 for all source files except `_annotations.js` files.
@@ -184,6 +189,16 @@ When constructing new extensions, typically the structure defined is as such:
     * The whole file is effectively a metadata file that gets parsed explicitly by the RPG Maker MZ editor.
     * It is very much an oversized JSDoc, and uses multi-line comments, opening with `/**`, having ` * ` on every line, and closing with `*/`.
     * There are a number of special @ annotations and multi-line structures (see existing examples for reference).
+* do not needlessly/defensively attempt to validate/coerce state- it should be assumed that the state is valid.
+* When working with state, use this formula to determine the structure:
+  * `this._j.SENSIBLE_PLUGIN_ABBREVATION.FUNCTION_CONTAINER_NAME.SOME_STATE_NAME = default state`.
+    * for example, `this._j._abs._input._lastInput = null;`.
+  * always provide getter and setter functions for accessing and mutating state.
+  * never mutate state outside of a setter function.
+  * when a state represents a boolean, the getter may be named like `hasSomeState` or `isSomeState`.
+  * when a state represents a boolean, the setter may be named like `flagSomeState` or `toggleSomeState` or more appropriately based on the intended functionality.
+  * state should never be initialized in a getter or setter function, with one exception:
+    * if state is in a window, and properties need to be calculated upon initialization, then the getter/setter may need property initialization- use a common "init state" function (like _root()) to establish state default if it doesn't exist.
 * **Braces placement**:
   * Opening braces `{` should always be on a new line if syntactically possible
   * Closing braces `}` are on their own line

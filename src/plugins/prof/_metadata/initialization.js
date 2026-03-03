@@ -12,7 +12,7 @@ J.PROF = {};
  * The metadata associated with this plugin.
  * @type {J_ProficiencyPluginMetadata}
  */
-J.PROF.Metadata = new J_ProficiencyPluginMetadata('J-Proficiency', '2.0.0');
+J.PROF.Metadata = new J_ProficiencyPluginMetadata('J-Proficiency', '2.0.1');
 
 /**
  * The various aliases associated with this plugin.

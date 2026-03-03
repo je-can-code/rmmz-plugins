@@ -79,29 +79,70 @@ Sprite_ActorValue.prototype.refresh = function()
  */
 Sprite_ActorValue.prototype.hasParameterChanged = function()
 {
+  // default to "changed" in case we do not match a parameter.
   let changed = true;
+
+  // decide which parameter we are tracking and compare against the cache.
   switch (this._j._parameter)
   {
-    case "hp":
+    case 'hp':
+    {
+      // check for hp change.
       changed = this._j._actor.hp !== this._j._last._hp;
+
+      // update the last-known hp if changed.
       if (changed) this._j._last._hp = this._j._actor.hp;
+
+      // end case.
       return changed;
-    case "mp":
+    }
+    case 'mp':
+    {
+      // check for mp change.
       changed = this._j._actor.mp !== this._j._last._mp;
+
+      // update the last-known mp if changed.
       if (changed) this._j._last._mp = this._j._actor.mp;
+
+      // end case.
       return changed;
-    case "tp":
+    }
+    case 'tp':
+    {
+      // check for tp change.
       changed = this._j._actor.tp !== this._j._last._tp;
-      if (changed) this._j._last.tp = this._j._actor.tp;
+
+      // update the last-known tp if changed.
+      if (changed) this._j._last._tp = this._j._actor.tp;
+
+      // end case.
       return changed;
-    case "time":
-      changed = this._j._actor.currentExp() !== this._j._last._xp;
-      if (changed) this._j._last._xp = this._j._actor.currentExp();
+    }
+    case 'time':
+    {
+      // compute the current exp for comparison.
+      const current = this._j._actor.currentExp();
+
+      // check for exp change.
+      changed = current !== this._j._last._xp;
+
+      // update the last-known exp if changed.
+      if (changed) this._j._last._xp = current;
+
+      // end case.
       return changed;
-    case "lvl":
+    }
+    case 'lvl':
+    {
+      // check for level change.
       changed = this._j._actor.level !== this._j._last._lvl;
+
+      // update the last-known level if changed.
       if (changed) this._j._last._lvl = this._j._actor.level;
+
+      // end case.
       return changed;
+    }
   }
 };
 
@@ -110,44 +151,109 @@ Sprite_ActorValue.prototype.hasParameterChanged = function()
  */
 Sprite_ActorValue.prototype.createBitmap = function()
 {
+  // default the value to 0.
   let value = 0;
+
+  // determine the bitmap dimensions.
   const width = this.bitmapWidth();
+
+  // determine the bitmap height relative to font size.
   const height = this.fontSize() + 4;
+
+  // create the bitmap for this value sprite.
   const bitmap = new Bitmap(width, height);
+
+  // assign the font face for this value.
   bitmap.fontFace = this.fontFace();
+
+  // assign the font size for this value.
   bitmap.fontSize = this.fontSize();
+
+  // decide how to render based on the parameter being displayed.
   switch (this._j._parameter)
   {
-    case "hp":
+    case 'hp':
+    {
+      // set the outline thickness for readability.
       bitmap.outlineWidth = 4;
-      bitmap.outlineColor = "rgba(128, 24, 24, 1.0)";
-      value = Math.floor(this._j._actor.hp);
+
+      // set the red-tinted outline color for HP.
+      bitmap.outlineColor = 'rgba(128, 24, 24, 1.0)';
+
+      // display rounded HP to avoid off-by-one visuals against fractional HP.
+      value = Math.round(this._j._actor.hp);
+
+      // end case.
       break;
-    case "mp":
+    }
+    case 'mp':
+    {
+      // set the outline thickness for readability.
       bitmap.outlineWidth = 4;
-      bitmap.outlineColor = "rgba(24, 24, 192, 1.0)";
-      value = Math.floor(this._j._actor.mp);
+
+      // set the blue-tinted outline color for MP.
+      bitmap.outlineColor = 'rgba(24, 24, 192, 1.0)';
+
+      // display rounded MP to align with fractional accumulation.
+      value = Math.round(this._j._actor.mp);
+
+      // end case.
       break;
-    case "tp":
+    }
+    case 'tp':
+    {
+      // set the outline thickness for readability.
       bitmap.outlineWidth = 2;
-      bitmap.outlineColor = "rgba(64, 128, 64, 1.0)";
-      value = Math.floor(this._j._actor.tp);
+
+      // set the green-tinted outline color for TP.
+      bitmap.outlineColor = 'rgba(64, 128, 64, 1.0)';
+
+      // TP can change in non-integers under JABS; display rounded for consistency.
+      value = Math.round(this._j._actor.tp);
+
+      // end case.
       break;
-    case "time":
+    }
+    case 'time':
+    {
+      // set the outline thickness for readability.
       bitmap.outlineWidth = 4;
-      bitmap.outlineColor = "rgba(72, 72, 72, 1.0)";
+
+      // set the neutral outline for XP remaining.
+      bitmap.outlineColor = 'rgba(72, 72, 72, 1.0)';
+
+      // compute exp remaining to next level.
       const curExp = (this._j._actor.nextLevelExp() - this._j._actor.currentLevelExp());
+
+      // compute progress into the current level.
       const nextLv = (this._j._actor.currentExp() - this._j._actor.currentLevelExp());
+
+      // calculate the remaining exp as a whole number.
       value = curExp - nextLv;
+
+      // end case.
       break;
-    case "lvl":
+    }
+    case 'lvl':
+    {
+      // set the outline thickness for readability.
       bitmap.outlineWidth = 4;
-      bitmap.outlineColor = "rgba(72, 72, 72, 1.0)";
+
+      // set the neutral outline for level text.
+      bitmap.outlineColor = 'rgba(72, 72, 72, 1.0)';
+
+      // display the level as a 3-digit number.
       value = this._j._actor.level.padZero(3);
+
+      // end case.
       break;
+    }
   }
 
-  bitmap.drawText(value, 0, 0, bitmap.width, bitmap.height, "left");
+  // draw the value left-aligned across the bitmap.
+  bitmap.drawText(value, 0, 0, bitmap.width, bitmap.height, 'left');
+
+  // return the created bitmap.
   return bitmap;
 };
 

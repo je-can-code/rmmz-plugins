@@ -21,7 +21,9 @@
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
 
-    "hotfix": "npm run build:all && npm run copy:to-all",
+    "hotfix": "npm run clean:out && npm run build:all && npm run copy:to-all",
+
+    "clean:out": "node ./src/build-tools/obliterator.js ./out",
 
     "copy:to-test": "node ./src/build-tools/copy.js",
     "copy:to-ca": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j",
