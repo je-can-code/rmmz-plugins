@@ -427,6 +427,18 @@ JABS_Battler.prototype.initBattleInfo = function()
    * @type {JABS_Aggro[]}
    */
   this._aggros = [];
+
+  /**
+   * Frames remaining that this battler is considered “in combat”.
+   * @type {number}
+   */
+  this._inCombatCountdown = 0;
+
+  /**
+   * Default window for the in‑combat countdown (60fps × seconds).
+   * @type {number}
+   */
+  this._inCombatWindowMax = 600; // 10s default.
 };
 
 /**

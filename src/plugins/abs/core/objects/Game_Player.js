@@ -60,6 +60,25 @@ Game_Player.prototype.canMove = function()
 };
 
 /**
+ * Extends/Overrides {@link #isDashing}.<br/>
+ * Disables engine dash while the player is in JABS combat.
+ */
+J.ABS.Aliased.Game_Player.set("isDashing", Game_Player.prototype.isDashing);
+Game_Player.prototype.isDashing = function()
+{
+  // if JABS says the party is in combat, engine-style dashing is disabled.
+  const inCombat = $gameParty.anyMemberInCombat();
+  if (inCombat)
+  {
+    // force no dash during combat so sprint cannot re-assert itself.
+    return false;
+  }
+
+  // otherwise, perform original engine logic.
+  return J.ABS.Aliased.Game_Player.get("isDashing").call(this);
+};
+
+/**
  * Initializes the player's `JABS_Battler` if it was not already initialized.
  */
 J.ABS.Aliased.Game_Player.set('refresh', Game_Player.prototype.refresh);
@@ -90,6 +109,7 @@ Game_Player.prototype.updateMove = function()
   this.checkForLoot();
 };
 
+//region loot
 /**
  * Checks to see if the player coordinates are intercepting with any loot
  * currently on the ground.
@@ -254,4 +274,5 @@ Game_Player.prototype.removeLoot = function(lootEvent)
   lootEvent.setLootNeedsRemoving(true);
   $jabsEngine.requestClearLoot = true;
 };
+//endregion loot
 //endregion Game_Player

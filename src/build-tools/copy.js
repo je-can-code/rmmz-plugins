@@ -1,5 +1,5 @@
-import Mirror from './mirror.js'
-import Logger from "./logger.js";
+import Mirror from './mirror.js';
+import Logger, { LogStyle } from './logger.js';
 
 // start for timings sake.
 const start = performance.now();
@@ -23,4 +23,4 @@ if (destinations.length)
 await mirror.mirrorToAllDestinations();
 
 const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);
-Logger.logAnyway(`Mirror™ has completed copying in ${durationSeconds}s. 📋  ✅`);
+Logger.logAnyway(`Mirror™ has completed copying in ${durationSeconds}s.`, LogStyle.rainbow);

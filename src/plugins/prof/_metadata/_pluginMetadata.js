@@ -21,14 +21,16 @@ class J_ProficiencyPluginMetadata
         .map(requirement => new ProficiencyRequirement(
           requirement.skillId,
           requirement.proficiency,
-          requirement.secondarySkillIds));
+          requirement.secondarySkillIds
+        ));
 
       return new ProficiencyConditional(
         conditional.key,
         conditional.actorIds,
         requirements,
         conditional.skillRewards,
-        conditional.jsRewards);
+        conditional.jsRewards
+      );
     });
   }
 
@@ -85,11 +87,18 @@ class J_ProficiencyPluginMetadata
         data.push(conditional);
         this.actorConditionalsMap.set(actorId, data);
       });
-    })
+    });
 
-    console.log(`loaded:
+    if (J.BASE.Metadata.ShowExternalFileLoadInfo)
+    {
+      console.log(`loaded:
       - ${this.conditionals.length} proficiency conditionals
       from file ${J_ProficiencyPluginMetadata.CONFIG_PATH}.`);
+    }
+    else
+    {
+      console.log(`loaded from file ${J_ProficiencyPluginMetadata.CONFIG_PATH}.`);
+    }
   }
 }
 

@@ -12,29 +12,29 @@ class Window_PartyFrame
     /**
      * The type of gauge for hp.
      */
-    HP: "hp",
+    HP: 'hp',
 
     /**
      * The type of gauge for mp.
      */
-    MP: "mp",
+    MP: 'mp',
 
     /**
      * The type of gauge for tp.
      */
-    TP: "tp",
+    TP: 'tp',
 
     /**
      * The type of gauge for xp.
      * We borrow the "time" gauge for this, though.
      */
-    XP: "time",
+    XP: 'time',
 
     /**
      * Not actually a gauge, but does have an actorvalue representing
      * the actor's level.
      */
-    Level: "lvl"
+    Level: 'lvl'
   };
 
   /**
@@ -73,7 +73,7 @@ class Window_PartyFrame
   {
     /**
      * The cached collection of hud sprites.
-     * @type {Map<string, Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon>}
+     * @type {Map<string, Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText>}
      */
     this._hudSprites = new Map();
   }
@@ -280,7 +280,8 @@ class Window_PartyFrame
       Window_PartyFrame.gaugeTypes.HP,
       Window_PartyFrame.gaugeTypes.MP,
       Window_PartyFrame.gaugeTypes.TP,
-      Window_PartyFrame.gaugeTypes.XP ];
+      Window_PartyFrame.gaugeTypes.XP
+    ];
   }
 
   /**
@@ -606,6 +607,117 @@ class Window_PartyFrame
     return sprite;
   }
 
+  /**
+   * Creates or retrieves the combat icon sprite for the given actor.
+   * @param {Game_Actor} actor The actor this icon represents.
+   * @returns {Sprite_Icon} The combat icon sprite.
+   */
+  getOrCreateCombatIcon(actor)
+  {
+    // create a unique cache key for the icon.
+    const key = `combat-icon-${actor.name()}-${actor.actorId()}`;
+
+    // if cached already, return it.
+    if (this._hudSprites.has(key))
+    {
+      return this._hudSprites.get(key);
+    }
+
+    // in-combat icon index is two fists punching.
+    const iconIndex = 31;
+
+    // create the icon sprite.
+    const sprite = new Sprite_Icon(iconIndex);
+
+    // indicate we'll manage the opacity ourselves.
+    sprite.selfManageOpacity();
+
+    // cache and stage it.
+    this._hudSprites.set(key, sprite);
+    sprite.hide();
+    this.addChild(sprite);
+
+    // return the created sprite.
+    return sprite;
+  }
+
+  /**
+   * Creates or retrieves the combat timer sprite for the given actor.
+   * @param {Game_Actor} actor The actor this timer represents.
+   * @returns {Sprite_BaseText} The combat seconds text sprite.
+   */
+  getOrCreateCombatTimer(actor)
+  {
+    // create a unique cache key for the timer.
+    const key = `combat-timer-${actor.name()}-${actor.actorId()}`;
+
+    // if cached already, return it.
+    if (this._hudSprites.has(key))
+    {
+      return this._hudSprites.get(key);
+    }
+
+    // create a text sprite.
+    const sprite = new Sprite_BaseText('');
+
+    // configure the font for a small numeric readout (seconds, one decimal).
+    sprite.setFontFace($gameSystem.numberFontFace());
+    sprite.setFontSize($gameSystem.mainFontSize() - 10);
+    sprite.setAlignment(Sprite_BaseText.Alignments.Center);
+    sprite.setMinWidth(ImageManager.iconWidth);
+
+    // this sprite manages its own opacity (for fade out), so opt out of auto-managed opacity.
+    sprite.selfManageOpacity();
+
+    // start hidden until we actually show it in-combat.
+    sprite.hide();
+
+    // cache and stage it.
+    this._hudSprites.set(key, sprite);
+    this.addChild(sprite);
+
+    // return the created sprite.
+    return sprite;
+  }
+
+  /**
+   * Creates or retrieves the combat label sprite for the given actor.
+   * Shows a text blurb like "IN COMBAT" or "FREE" near the combat icon.
+   * @param {Game_Actor} actor The actor this label represents.
+   * @returns {Sprite_BaseText} The combat status label sprite.
+   */
+  getOrCreateCombatLabel(actor)
+  {
+    // create a unique cache key for the label.
+    const key = `combat-label-${actor.name()}-${actor.actorId()}`;
+
+    // if cached already, return it.
+    if (this._hudSprites.has(key))
+    {
+      return this._hudSprites.get(key);
+    }
+
+    // create a text sprite.
+    const sprite = new Sprite_BaseText('');
+
+    // configure the font for emphasis and readability.
+    sprite
+      .setFontFace($gameSystem.mainFontFace())
+      .setFontSize($gameSystem.mainFontSize() - 6)
+      .setAlignment(Sprite_BaseText.Alignments.Center)
+      .setBold(true)
+      .setItalics(true)
+      .setMinWidth(Math.round(ImageManager.iconWidth * 2.5))
+      .selfManageOpacity();
+
+    // cache and stage it.
+    this._hudSprites.set(key, sprite);
+    this.addChild(sprite);
+
+    // return the created sprite.
+    return sprite;
+  }
+
   //endregion caching
 
   /**
@@ -711,13 +823,20 @@ class Window_PartyFrame
   {
     this._hudSprites.forEach((sprite, _) =>
     {
+      // if the interference shouldn't be handled for this sprite, then don't.
+      if (this.canHandleSpriteInterference(sprite) === false) return;
+
       // if we are above 64, rapidly decrement by -15 until we get below 64.
       if (sprite.opacity > 64)
       {
         sprite.opacity -= 15;
-      }// if we are below 64, increment by +1 until we get to 64.
-      else if (sprite.opacity < 64) sprite.opacity += 1;
-    });
+      }
+      // if we are below 64, increment by +1 until we get to 64.
+      else if (sprite.opacity < 64)
+      {
+        sprite.opacity += 1;
+      }
+    }, this);
   }
 
   /**
@@ -727,13 +846,38 @@ class Window_PartyFrame
   {
     this._hudSprites.forEach((sprite, _) =>
     {
+      // if the interference shouldn't be handled for this sprite, then don't.
+      if (this.canHandleSpriteInterference(sprite) === false) return;
+
       // if we are below 255, rapidly increment by +15 until we get to 255.
       if (sprite.opacity < 255)
       {
         sprite.opacity += 15;
-      }// if we are above 255, set to 255.
-      else if (sprite.opacity > 255) sprite.opacity = 255;
-    });
+      }
+      // if we are above 255, set to 255.
+      else if (sprite.opacity > 255)
+      {
+        sprite.opacity = 255;
+      }
+    }, this);
+  }
+
+  /**
+   * Checks if the given sprite should be handled for interference.
+   * @param {Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText} sprite
+   * @returns {boolean}
+   */
+  canHandleSpriteInterference(sprite)
+  {
+    // certain sprites can have self-managed opacity.
+    if (sprite instanceof Sprite_BaseText || sprite instanceof Sprite_Icon)
+    {
+      // if they have self-managed opacity, they shouldn't be handled.
+      if (sprite.hasSelfManagedOpacity() === true) return false;
+    }
+
+    // let the system handle the opacity management.
+    return true;
   }
 
   //endregion visibility
@@ -767,6 +911,9 @@ class Window_PartyFrame
     const statesX = gaugesX;
     const statesY = gaugesY - (ImageManager.iconHeight * 2) - 24;
     this.drawStates(statesX, statesY);
+
+    // draw the in‑combat indicator (icon + timer) just to the right of the gauges.
+    this.drawLeaderCombatIndicator(gaugesX, gaugesY);
   }
 
   /**
@@ -895,6 +1042,108 @@ class Window_PartyFrame
   }
 
   /**
+   * Draws the leader's "in‑combat" indicator to the right of the gauges.
+   * @param {number} gaugesX The x coordinate where gauges start.
+   * @param {number} gaugesY The y coordinate where gauges start.
+   */
+  drawLeaderCombatIndicator(gaugesX, gaugesY)
+  {
+    // grab the leader and their tracked battler.
+    const leader = $gameParty.leader();
+    const leaderBattler = $gameParty.leaderJabsBattler();
+
+    // if we cannot resolve the tracked battler, don't draw.
+    if (!leader || !leaderBattler) return;
+
+    // decide visibility based on the combat rules.
+    const inCombat = ($jabsEngine.forcedCombat === true) || leaderBattler.isInCombat();
+
+    // grab the hp gauge sprite for width math (hp/mp/tp share the same width).
+
+    // fetch or create the three sprites we need.
+    const icon = this.getOrCreateCombatIcon(leader);
+    const timer = this.getOrCreateCombatTimer(leader);
+    const label = this.getOrCreateCombatLabel(leader);
+
+    // determine anchor coordinates to the immediate right of the gauges.
+    const hpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.HP);
+    const iconX = (gaugesX - 24) + hpGauge.bitmapWidth() + 8;
+    const iconY = gaugesY; // align with the HP row.
+    icon.move(iconX, iconY);
+
+    // move the timer to be centered below the icon.
+    const timerWidth = timer.bitmap
+      ? timer.bitmap.width
+      : ImageManager.iconWidth;
+    const timerX = iconX + Math.floor((ImageManager.iconWidth - timerWidth) / 2);
+    const timerY = iconY + ImageManager.iconHeight - 6;
+    timer.move(timerX, timerY);
+
+    // move the label to be centered above the icon.
+    const labelX = iconX - Math.floor((label.bitmap.width - ImageManager.iconWidth) / 2);
+    const labelY = iconY - label.bitmap.height;
+    label.move(labelX, labelY);
+
+    // configure a per‑frame fade step for ~0.5 seconds at 60fps.
+    const fadeStep = 9; // 255 / 30 ≈ 8.5 → 9
+
+    // we only branch once on inCombat for all three sprites.
+    if (inCombat)
+    {
+      // icon: snap visible and fully opaque while in combat.
+      icon.visible = true;
+      icon.opacity = 255;
+
+      // timer: update text, show, fully opaque.
+      const seconds = leaderBattler.getCombatSecondsRemaining();
+      const secondsText = Number(seconds)
+        .toFixed(1);
+      timer.setText(secondsText);
+      timer.show();
+      timer.opacity = 255;
+
+      // label: red "IN COMBAT" above the icon.
+      label.setColor('#ff3b3b');
+      label.setText('IN COMBAT');
+      label.show();
+      label.opacity = 255;
+    }
+    else
+    {
+      // not in combat: fade the icon and timer out over ~0.5s, then hide.
+
+      // icon fade.
+      if (icon.opacity > 0)
+      {
+        icon.opacity = Math.max(0, icon.opacity - fadeStep);
+        icon.visible = true;
+        if (icon.opacity === 0) icon.visible = false;
+      }
+      else
+      {
+        icon.visible = false;
+      }
+
+      // timer fade.
+      if (timer.opacity > 0)
+      {
+        timer.opacity = Math.max(0, timer.opacity - fadeStep);
+        if (timer.opacity === 0) timer.hide();
+      }
+      else
+      {
+        timer.hide();
+      }
+
+      // label: instant green "FREE" for strong visual contrast when idle.
+      label.setColor('#44ff66');
+      label.setText('FREE');
+      label.show();
+      label.opacity = 255;
+    }
+  }
+
+  /**
    * Hides all expired states on the leader.
    * @param {Game_Actor} leader The actor to hide states for.
    */
@@ -958,7 +1207,7 @@ class Window_PartyFrame
 
     this.drawText(`x${trackedState.stackCount}`, ox, y - 30, 64, Window_Base.TextAlignments.Left);
 
-    this.resetFontSettings()
+    this.resetFontSettings();
   }
 
   /**

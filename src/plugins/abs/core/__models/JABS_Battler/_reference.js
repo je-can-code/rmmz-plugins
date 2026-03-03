@@ -1,4 +1,5 @@
 //region reference helpers
+//region else
 /**
  * Reassigns the character to something else.
  * @param {Game_Event|Game_Player|Game_Follower} newCharacter The new character to assign.
@@ -313,7 +314,7 @@ JABS_Battler.prototype.addFollower = function(newFollowerUuid)
   const found = this.getFollowerByUuid(newFollowerUuid);
   if (found)
   {
-    console.error("this follower already existed within the follower list.");
+    console.error('this follower already existed within the follower list.');
   }
   else
   {
@@ -334,7 +335,7 @@ JABS_Battler.prototype.removeFollower = function(oldFollowerUuid)
   }
   else
   {
-    console.error("could not find follower to remove from the list.", oldFollowerUuid);
+    console.error('could not find follower to remove from the list.', oldFollowerUuid);
   }
 };
 
@@ -392,7 +393,7 @@ JABS_Battler.prototype.removeFollowerByUuid = function(uuid)
  */
 JABS_Battler.prototype.clearLeaderData = function()
 {
-  this.setLeader("");
+  this.setLeader('');
   this.clearLeaderDecidedActionsQueue();
 };
 
@@ -465,7 +466,7 @@ JABS_Battler.prototype.isPlayer = function()
  */
 JABS_Battler.prototype.isActor = function()
 {
-  return (this.isPlayer() || this.getBattler() instanceof Game_Actor)
+  return (this.isPlayer() || this.getBattler() instanceof Game_Actor);
 };
 
 /**
@@ -1584,4 +1585,127 @@ JABS_Battler.prototype.isShowingAnimation = function()
   return this.getCharacter()
     .isAnimationPlaying();
 };
+
+//endregion rest
+
+//region in-combat
+/**
+ * Flags this battler as in‑combat for the full window.
+ */
+JABS_Battler.prototype.enterCombat = function()
+{
+  // set the in‑combat countdown to the window max.
+  this.setInCombatCountdown(this.getCombatWindowMax());
+};
+
+/**
+ * Gets the remaining frames for the in‑combat countdown.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getInCombatCountdown = function()
+{
+  // return the number of frames remaining while in combat.
+  return this._inCombatCountdown || 0;
+};
+
+/**
+ * Gets the remaining in‑combat time in seconds with one decimal.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getCombatSecondsRemaining = function()
+{
+  // convert remaining frames to seconds (60fps) with one decimal place.
+  const seconds = (this.getInCombatCountdown() / 60).toFixed(1);
+
+  // return the remaining seconds as a number.
+  return parseFloat(seconds);
+};
+
+/**
+ * Gets whether or not this battler is currently considered in‑combat.
+ * @returns {boolean}
+ */
+JABS_Battler.prototype.isInCombat = function()
+{
+  // honor the forced combat flag.
+  if ($jabsEngine.forcedCombat === true) return true;
+
+  // a positive countdown means still in combat.
+  if (this._inCombatCountdown > 0) return true;
+
+  // nothing combat-related is happening.
+  return false;
+};
+
+/**
+ * Gets the default in‑combat window duration.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getCombatWindowMax = function()
+{
+  // return the configured max (fallback guards against legacy saves).
+  return this._inCombatWindowMax || 600;
+};
+
+/**
+ * Sets the default in‑combat window duration.
+ * @param {number} frames The number of frames to use for the window.
+ */
+JABS_Battler.prototype.setCombatWindowMax = function(frames)
+{
+  // clamp to zero minimum.
+  this._inCombatWindowMax = Math.max(0, frames);
+};
+
+/**
+ * Sets the current in‑combat countdown window.
+ * @param {number} frames The number of frames remaining.
+ */
+JABS_Battler.prototype.setInCombatCountdown = function(frames)
+{
+  // clamp to zero minimum.
+  this._inCombatCountdown = Math.max(0, frames);
+};
+
+/**
+ * Counts down the in‑combat timer.
+ */
+JABS_Battler.prototype.countdownCombat = function()
+{
+  // stop counting if finished.
+  if (this._inCombatCountdown <= 0)
+  {
+    this._inCombatCountdown = 0;
+    return;
+  }
+
+  // opportunistically compress the countdown when combat is truly clear.
+  // This reduces long tails after one‑shot wipes or non-retaliated kills.
+  // Tail length is 120 frames (2.0s) by default.
+  this._maybeShortenCombatTail(120);
+
+  // tick the countdown.
+  this._inCombatCountdown--;
+};
+
+/**
+ * Optionally clamps the in‑combat countdown to a short tail when there are
+ * no living enemies with aggro on the party.
+ * @param {number} tailFrames The maximum tail to leave when calm (in frames).
+ */
+JABS_Battler.prototype._maybeShortenCombatTail = function(tailFrames)
+{
+  // do not lengthen; only clamp if the window is larger than our tail.
+  if (this._inCombatCountdown <= tailFrames)
+  {
+    return;
+  }
+
+  // if nobody is aggroed to the party, compress the combat tail.
+  if (JABS_AiManager.anyLivingEnemiesAggroedToParty() === false)
+  {
+    this._inCombatCountdown = tailFrames;
+  }
+};
+//endregion in-combat
 //endregion reference helpers

@@ -46,6 +46,11 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.3.0
+ *    Unified sprint and dash as one alter-action.
+ *    Added a notion of "being in combat" based on hitting or being hit.
+ *    Force dash function to change to mobility skill while "in combat".
+ *    Added "on cast animation" that plays once a skill is done casting.
  * - 4.2.0
  *    Split projectile count from projectile formation.
  * - 4.1.1

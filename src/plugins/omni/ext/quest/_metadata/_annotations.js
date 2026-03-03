@@ -2,14 +2,15 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
+ * [v1.0.3 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @base J-Omnipedia
  * @orderAfter J-Base
- * @orderAfter J-MessageTextCodes
  * @orderAfter J-Omnipedia
+ * @orderAfter J-HUD
+ * @orderAfter J-MessageTextCodes
  * @help
  * ============================================================================
  * OVERVIEW
@@ -94,6 +95,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Updated to accommodate for mapping shortcut to view quest log.
+ *    Added flag for showing external file load info.
  * - 1.0.2
  *    Adapted for updates to J-ABS-InputManager (input namespace).
  * - 1.0.1

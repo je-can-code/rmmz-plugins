@@ -3,19 +3,6 @@
  */
 var J = J || {};
 
-//region version checks
-(() =>
-{
-  // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.3';
-  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
-  {
-    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
-  }
-})();
-//endregion version check
-
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -24,7 +11,7 @@ J.SDP = {};
 /**
  * The metadata associated with this plugin.
  */
-J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.1.0');
+J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.1.1');
 
 /**
  * A collection of all aliased methods for this plugin.

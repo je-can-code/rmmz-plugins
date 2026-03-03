@@ -25,9 +25,9 @@ class J_QUEST_PluginMetadata
     {
       // validate the name is not one of the organizational names for the editor-only.
       const questName = parsedQuest.name;
-      if (questName.startsWith("__")) return;
-      if (questName.startsWith("==")) return;
-      if (questName.startsWith("--")) return;
+      if (questName.startsWith('__')) return;
+      if (questName.startsWith('==')) return;
+      if (questName.startsWith('--')) return;
 
       const builtQuest = OmniQuest.Builder()
         .name(parsedQuest.name)
@@ -40,7 +40,7 @@ class J_QUEST_PluginMetadata
         .objectives(parsedQuest.objectives)
         .build();
 
-      parsedQuests.push(builtQuest)
+      parsedQuests.push(builtQuest);
     };
 
     parsedBlob.forEach(foreacher, this);
@@ -123,11 +123,18 @@ class J_QUEST_PluginMetadata
      */
     this.tagsMap = tagMap;
 
-    console.log(`loaded:
-      - ${this.quests.length} quests
-      - ${this.categories.length} categories
-      - ${this.tags.length} tags
-      from file ${J_QUEST_PluginMetadata.CONFIG_PATH}.`);
+    if (J_QUEST_PluginMetadata.#hasMinimumBaseVersion() && J.BASE.Metadata.ShowExternalFileLoadInfo)
+    {
+      console.log(`loaded:
+        - ${this.quests.length} quests
+        - ${this.categories.length} categories
+        - ${this.tags.length} tags
+        from file ${J_QUEST_PluginMetadata.CONFIG_PATH}.`);
+    }
+    else
+    {
+      console.log(`loaded from file ${J_QUEST_PluginMetadata.CONFIG_PATH}.`);
+    }
   }
 
   /**
@@ -154,18 +161,51 @@ class J_QUEST_PluginMetadata
       /**
        * The name of the command when viewed from the Omnipedia.
        */
-      Name: "Questopedia",
+      Name: 'Questopedia',
 
       /**
        * The symbol of the command in the command list.
        */
-      Symbol: "quest-pedia",
+      Symbol: 'quest-pedia',
 
       /**
        * The icon for the command anywhere it is viewed.
        */
       IconIndex: 2564,
     };
+  }
+
+  /**
+   * Checks if the BASE plugin meets the minimum version requirement for this plugin.
+   * @return {boolean}
+   */
+  static #hasMinimumBaseVersion()
+  {
+    // identify the two versions for comparison.
+    const minimumVersion = this.#minimumBaseVersion();
+    const actualVersion = new PluginVersion(J.BASE.Metadata.Version);
+
+    // check if we meet the minimum version threshold.
+    const meetsThreshold = actualVersion.satisfiesPluginVersion(minimumVersion);
+
+    // if the version isn't high enough, then we cannot proceed.
+    if (!meetsThreshold) return false;
+
+    // we're good!
+    return true;
+  }
+
+  /**
+   * Gets the current minimum version of the J-BASE system this plugin requires.
+   * @returns {PluginVersion}
+   */
+  static #minimumBaseVersion()
+  {
+    return PluginVersion.builder
+      .major('2')
+      .minor('3')
+      .patch('1')
+      .build();
   }
 }
 

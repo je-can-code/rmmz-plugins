@@ -100,6 +100,12 @@ class JABS_Engine
    */
   hitboxOverlaysVisible = false;
 
+  /**
+   * When `true`, all non‑enemies are considered in combat (UI and mechanics that consult the engine).
+   * Useful for boss phases or scripted moments.
+   * @type {boolean}
+   */
+  forcedCombat = false;
   //endregion properties
 
   /**
@@ -1315,6 +1321,9 @@ class JABS_Engine
     // handle the cast animation for this action.
     this.handleActionCastAnimation(caster, action);
 
+    // handle the one-off on-cast animation on the caster at execution time.
+    this.handleActionOnCastAnimation(caster, action);
+
     // handle the generation of the action on the map.
     this.handleActionGeneration(caster, action, targetX, targetY);
   }
@@ -1348,6 +1357,21 @@ class JABS_Engine
       // execute the cast animation.
       caster.getCharacter()
         .requestAnimation(casterAnimation);
+    }
+  }
+
+  /**
+   * Handles the single-fire, on-cast animation on the caster at execution time.
+   * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
+   */
+  handleActionOnCastAnimation(caster, action)
+  {
+    // only perform if an on-cast animation id is configured.
+    if (action.hasOnCastAnimationId())
+    {
+      // play it once on the caster’s character.
+      action.performOnCastAnimation(caster);
     }
   }
 
@@ -2394,9 +2418,19 @@ class JABS_Engine
     this.triggerAlert(caster, target);
 
     // if the attacker and the target are the same team, then don't set that as "last hit".
-    if (!(caster.isSameTeam(target.getTeam())))
+    if ((caster.isSameTeam(target.getTeam())) === false)
     {
       caster.setBattlerLastHit(target);
+
+      // refresh in‑combat timers on real engagements only.
+      const isHealing = action.isHealing();
+      const hitOrParry = (result.isHit() || result.parried);
+      if (hitOrParry && isHealing === false && target.isInanimate() === false)
+      {
+        // both sides are considered engaged.
+        caster.enterCombat();
+        target.enterCombat();
+      }
     }
   }
 

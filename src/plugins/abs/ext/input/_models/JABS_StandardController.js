@@ -45,6 +45,14 @@ class JABS_StandardController
      * @type {Map<string, string[]>}
      */
     this.inputMapping = new Map();
+
+    /**
+     * Tracks whether the last-processed frame was considered in combat.
+     * Used for treating a hold across the boundary (exploration → combat)
+     * as a single edge-press for Mobility.
+     * @type {boolean}
+     */
+    this._lastInCombat = false;
   }
 
   /**
@@ -61,7 +69,8 @@ class JABS_StandardController
     this.inputMapping.set(JABS_Button.Mainhand, [ J.ABS.EXT.INPUT.Symbols.Mainhand ]);
     this.inputMapping.set(JABS_Button.Offhand, [ J.ABS.EXT.INPUT.Symbols.Offhand ]);
     this.inputMapping.set(JABS_Button.Tool, [ J.ABS.EXT.INPUT.Symbols.Tool ]);
-    this.inputMapping.set(JABS_Button.Dodge, [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ]);
+
+    // NOTE: Dodge is intentionally not seeded; Sprint handles mobility contextually.
 
     // seed mobility & modifiers.
     this.inputMapping.set(JABS_Button.Sprint, [ J.ABS.EXT.INPUT.Symbols.Dash ]);
@@ -70,7 +79,7 @@ class JABS_StandardController
     this.inputMapping.set(JABS_Button.Guard, [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ]);
     this.inputMapping.set(JABS_Button.SkillTrigger, [ J.ABS.EXT.INPUT.Symbols.SkillTrigger ]);
 
-    // seed L1 + buttons (combat skills).
+    // seed L1+ face shortcuts (keyboard direct shortcuts available separately).
     this.inputMapping.set(JABS_Button.CombatSkill1, [ J.ABS.EXT.INPUT.Symbols.CombatSkill1 ]);
     this.inputMapping.set(JABS_Button.CombatSkill2, [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ]);
     this.inputMapping.set(JABS_Button.CombatSkill3, [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ]);
@@ -298,7 +307,7 @@ class JABS_StandardController
     this.updateMainhandAction();
     this.updateOffhandAction();
     this.updateToolAction();
-    this.updateDodgeAction();
+    this.updateSprintCommand();
 
     // update input for multi-button actions.
     this.updateCombatAction1();
@@ -307,7 +316,6 @@ class JABS_StandardController
     this.updateCombatAction4();
 
     // update input for the pressed(held down)-button actions.
-    this.updateSprintCommand();
     this.updateGuardCommand();
     this.updateStrafeCommand();
     this.updateRotateCommand();
@@ -527,27 +535,61 @@ class JABS_StandardController
 
   /**
    * Checks the inputs of the sprint action currently assigned (Shift default).
+   * Context-aware:
+   * - Out of combat: treat Sprint as a held input (classic run).
+   * - In combat: treat Sprint strictly as an edge-trigger (for Mobility/Dodge).
    * @returns {boolean}
    */
   isSprintActionTriggered()
   {
-    // this action requires Sprint to be pressed.
-    if (this.isActionPressed(JABS_Button.Sprint))
+    // grab the battler for reference.
+    const battler = this.getBattler();
+
+    // determine if the battler is in combat.
+    const inCombat = battler.isInCombat();
+
+    // if in combat, only a new press (edge) should trigger mobility.
+    if (inCombat)
     {
-      return true;
+      // update last-known combat state for subsequent frames.
+      this._lastInCombat = true;
+
+      // return whether Sprint was newly triggered this frame.
+      return this.isActionTriggered(JABS_Button.Sprint);
     }
 
-    // Sprint is not being pressed.
-    return false;
+    // not in combat → classic sprint is a held input.
+    // update last-known combat state before returning.
+    this._lastInCombat = false;
+
+    // return whether Sprint is currently held.
+    return this.isActionPressed(JABS_Button.Sprint);
   }
 
   /**
-   * Enables sprinting for this controller's battler.
+   * Enables sprinting for this controller's battler when out of combat.
+   * In combat, Sprint becomes the Mobility/Dodge action instead.
    */
   performSprintAction()
   {
-    // perform sprint enable for this controller's battler.
-    JABS_InputAdapter.performSprint(true, this.battler);
+    // grab the battler for reference.
+    const battler = this.getBattler();
+
+    // check if the battler is in combat.
+    if (battler.isInCombat())
+    {
+      // proactively disable exploration sprint when entering combat.
+      JABS_InputAdapter.performSprint(false, battler);
+
+      // perform the dodge action for this controller's battler.
+      JABS_InputAdapter.performDodgeAction(battler);
+
+      // end early; no sprint toggling while in combat.
+      return;
+    }
+
+    // not in combat → enable classic sprint while the input is held.
+    JABS_InputAdapter.performSprint(true, battler);
   }
 
   /**
@@ -555,9 +597,19 @@ class JABS_StandardController
    */
   performSprintAlterAction()
   {
-    // perform sprint disable for this controller's battler.
-    JABS_InputAdapter.performSprint(false, this.battler);
+    // grab the battler for reference.
+    const battler = this.getBattler();
+
+    // check if the battler is in combat.
+    if (battler.isInCombat())
+    {
+      return;
+    }
+
+    // not in combat → disable sprint when the input is released.
+    JABS_InputAdapter.performSprint(false, battler);
   }
+
   //endregion sprint
 
   //region tool
@@ -607,48 +659,6 @@ class JABS_StandardController
   }
 
   //endregion tool
-
-  //region dodge
-  /**
-   * Monitors and takes action based on player input regarding the dodge action.
-   * This is `R2` on the gamepad by default.
-   */
-  updateDodgeAction()
-  {
-    // check if the action's input requirements have been met.
-    if (this.isDodgeActionTriggered())
-    {
-      // execute the action.
-      this.performDodgeAction();
-    }
-  }
-
-  /**
-   * Checks the inputs of the dodge action currently assigned (R2 default).
-   * @returns {boolean}
-   */
-  isDodgeActionTriggered()
-  {
-    // this action requires the logical Dodge to be triggered.
-    if (this.isActionTriggered(JABS_Button.Dodge))
-    {
-      return true;
-    }
-
-    // Dodge is not being triggered.
-    return false;
-  }
-
-  /**
-   * Executes the currently assigned dodge action (R2 default).
-   */
-  performDodgeAction()
-  {
-    // perform the dodge action for this controller's battler.
-    JABS_InputAdapter.performDodgeAction(this.getBattler());
-  }
-
-  //endregion dodge
 
   //region combat actions
   /**
@@ -791,7 +801,7 @@ class JABS_StandardController
     if (this.isCombatSkillUsageEnabled())
     {
       // ...and Dodge is triggered this frame, then combat action 3 should fire.
-      if (this.isActionTriggered(JABS_Button.Dodge))
+      if (this.isActionTriggered(JABS_Button.Sprint))
       {
         return true;
       }

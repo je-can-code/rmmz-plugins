@@ -21,9 +21,9 @@ class J_SdpPluginMetadata
     {
       // validate the name is not one of the organizational names for the editor-only.
       const panelName = parsedPanel.name;
-      if (panelName.startsWith("__")) return;
-      if (panelName.startsWith("==")) return;
-      if (panelName.startsWith("--")) return;
+      if (panelName.startsWith('__')) return;
+      if (panelName.startsWith('==')) return;
+      if (panelName.startsWith('--')) return;
 
       // destructure the details we care about.
       const {
@@ -40,7 +40,8 @@ class J_SdpPluginMetadata
           parseInt(parsedParameter.parameterId),
           parseFloat(parsedParameter.perRank),
           parsedParameter.isFlat,
-          parsedParameter.isCore);
+          parsedParameter.isCore
+        );
         parsedPanelParameters.push(panelParameter);
       });
 
@@ -54,7 +55,8 @@ class J_SdpPluginMetadata
           const panelReward = new PanelRankupReward(
             parsedReward.rewardName,
             parseInt(parsedReward.rankRequired),
-            parsedReward.effect);
+            parsedReward.effect
+          );
           parsedPanelRewards.push(panelReward);
         });
       }
@@ -77,7 +79,7 @@ class J_SdpPluginMetadata
         .build();
 
       parsedPanels.push(panel);
-    }
+    };
 
     // build an SDP from each parsed item provided.
     parsedBlob.forEach(foreacher, this);
@@ -141,9 +143,16 @@ class J_SdpPluginMetadata
      */
     this.panelsMap = panelMap;
 
-    console.log(`loaded:
+    if (J_SdpPluginMetadata.#hasMinimumBaseVersion() && J.BASE.Metadata.ShowExternalFileLoadInfo)
+    {
+      console.log(`loaded:
       - ${this.panels.length} panels
       from file ${J_SdpPluginMetadata.CONFIG_PATH}.`);
+    }
+    else
+    {
+      console.log(`loaded from file ${J_SdpPluginMetadata.CONFIG_PATH}.`);
+    }
   }
 
   initializeMetadata()
@@ -187,7 +196,40 @@ class J_SdpPluginMetadata
      * Both menus are shown/hidden by the menu switch id.
      * @type {boolean}
      */
-    this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === "true";
+    this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === 'true';
+  }
+
+  /**
+   * Checks if the BASE plugin meets the minimum version requirement for this plugin.
+   * @return {boolean}
+   */
+  static #hasMinimumBaseVersion()
+  {
+    // identify the two versions for comparison.
+    const minimumVersion = this.#minimumBaseVersion();
+    const actualVersion = new PluginVersion(J.BASE.Metadata.Version);
+
+    // check if we meet the minimum version threshold.
+    const meetsThreshold = actualVersion.satisfiesPluginVersion(minimumVersion);
+
+    // if the version isn't high enough, then we cannot proceed.
+    if (!meetsThreshold) return false;
+
+    // we're good!
+    return true;
+  }
+
+  /**
+   * Gets the current minimum version of the J-BASE system this plugin requires.
+   * @returns {PluginVersion}
+   */
+  static #minimumBaseVersion()
+  {
+    return PluginVersion.builder
+      .major('2')
+      .minor('3')
+      .patch('1')
+      .build();
   }
 }
 

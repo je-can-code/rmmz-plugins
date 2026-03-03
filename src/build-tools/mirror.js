@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Logger from './logger.js';
+import Logger, { LogStyle } from './logger.js';
 
 /**
  * A utility class that is a wrapper over {@link fs.cp}.
@@ -12,13 +12,13 @@ class Mirror
    * The source from which to mirror the structure of.
    * @type {string}
    */
-  #source = "./out";
+  #source = './out';
 
   /**
    * The destinations currently designated to this mirroring utility.
    * @type {[]}
    */
-  #destinations = [ "./project/js/plugins" ];
+  #destinations = [ './project/js/plugins' ];
 
   /**
    * Gets the destinations that have been assigned to this mirror.
@@ -35,7 +35,7 @@ class Mirror
    */
   setDestinations(destinations)
   {
-    this.#destinations = destinations
+    this.#destinations = destinations;
   }
 
   /**
@@ -98,8 +98,9 @@ class Mirror
       resolvedSource,
       resolvedDestination,
       { recursive: true },
-      this.#handleFileError);
-    Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`);
+      this.#handleFileError
+    );
+    Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
   }
 
   /**
@@ -113,13 +114,15 @@ class Mirror
     if (!fs.existsSync(`${targetPath}`))
     {
       // make sure the directory is created.
-      await fs.mkdir(targetPath,
+      await fs.mkdir(
+        targetPath,
         {
           force: true,
           recursive: true
         },
-        this.#handleFileError);
-      Logger.logAnyway(`target directory created: ${targetPath}`);
+        this.#handleFileError
+      );
+      Logger.logAnyway(`target directory created: ${targetPath}`, LogStyle.dim);
     }
     else
     {

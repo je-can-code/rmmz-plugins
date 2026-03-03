@@ -60,7 +60,7 @@ Scene_Map.prototype.buildInputFrameWindow = function()
 
   // return the built and configured window.
   return window;
-}
+};
 
 /**
  * Creates the rectangle representing the window for the input frame.
@@ -68,29 +68,33 @@ Scene_Map.prototype.buildInputFrameWindow = function()
  */
 Scene_Map.prototype.inputFrameWindowRect = function()
 {
-  // if using the keyboard layout, apply a modifier against the width.
-  const usingKeyboardWidthModifier = J.HUD.EXT.INPUT.Metadata.UseGamepadLayout
-    ? 0     // no bonus for gamepads.
-    : 220;  // bonus width for all-in-one row.
+  // Match Window_InputFrame’s key geometry.
+  const ikw = 72;
+  const ikh = 72;
 
-  // define the width of the window.
-  const width = 500 + usingKeyboardWidthModifier;
+  // Use the same diamond gap as the window, for perfect alignment.
+  const bodyGap = Window_InputFrame.DiamondGap;
 
-  // if using the keyboard layout, apply a modifier against the height.
-  const usingKeyboardHeightModifier = J.HUD.EXT.INPUT.Metadata.UseGamepadLayout
-    ? 0
-    : -60;
+  // Visual span.
+  const diamondBodyWidth = (3 * ikw) + (2 * bodyGap);
+  const diamondBodyHeight = (2 * ikh) + bodyGap;
 
-  // define the height of the window.
-  const height = 160 + usingKeyboardHeightModifier;
+  // Reserve horizontal space for the labels (“Actions” left, “Skills” right).
+  const labelReserveEachSide = 48;
 
-  // define the origin x of the window.
-  const x = Graphics.boxWidth - width;
+  // Add small margins to avoid clipping gradients/labels.
+  const marginX = 24;
+  const marginY = 24;
 
-  // define the origin y of the window.
+  // Final window size: body span + label reserves + visual margins.
+  const width = Math.ceil(diamondBodyWidth + (labelReserveEachSide * 2) + marginX);
+  const height = Math.ceil(diamondBodyHeight + marginY);
+
+  // Center horizontally; anchor bottom.
+  const x = Math.floor((Graphics.boxWidth - width) / 2);
   const y = Graphics.boxHeight - height;
 
-  // return the built rectangle.
+  // Build and return the rectangle.
   return new Rectangle(x, y, width, height);
 };
 
@@ -101,7 +105,7 @@ Scene_Map.prototype.inputFrameWindowRect = function()
 Scene_Map.prototype.getInputFrameWindow = function()
 {
   return this._j._hud._inputFrame;
-}
+};
 
 /**
  * Set the currently tracked input frame window to the given window.
@@ -110,7 +114,7 @@ Scene_Map.prototype.getInputFrameWindow = function()
 Scene_Map.prototype.setInputFrameWindow = function(window)
 {
   this._j._hud._inputFrame = window;
-}
+};
 //endregion input frame
 
 /**

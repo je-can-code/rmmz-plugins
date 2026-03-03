@@ -36,7 +36,7 @@ class JABS_AiManager
    */
   constructor()
   {
-    throw new Error("This is a static class.");
+    throw new Error('This is a static class.');
   }
 
   //region get battlers
@@ -353,6 +353,38 @@ class JABS_AiManager
     return battlers.sort(comparing);
   }
 
+  /**
+   * Determines whether any living enemy currently has aggro on any party member.
+   * @returns {boolean}
+   */
+  static anyLivingEnemiesAggroedToParty()
+  {
+    // get all tracked enemy battlers from your registry.
+    const enemies = JABS_AiManager.getEnemyBattlers();
+
+    // if there are no enemies, then there is no aggro.
+    if (!enemies.length) return false;
+
+    // iterate for any enemy who is alive and has aggro on a party target.
+    const hasAggroOnParty = enemies.some(enemy =>
+    {
+      // grab all the aggros for this enemy for reference.
+      const aggros = enemy.getAllAggros();
+
+      // if there are no aggros, then this enemy has no aggro for the party.
+      if (aggros.length === 0) return false;
+
+      // return whether or not there are active aggros for a living actor.
+      return aggros.some(aggro => aggro.isForLivingActor());
+    });
+
+    // one or more of the enemies has active aggro on the party.
+    if (hasAggroOnParty) return true;
+
+    // nobody has aggro on the party.
+    return false;
+  }
+
   //endregion get battlers
 
   //region manage battlers
@@ -476,7 +508,7 @@ class JABS_AiManager
     this.postConvertMutate(battler, jabsBattler);
 
     // if there is something affecting max hp- such as natural growths- they should be fully healed on-creation.
-    battler.recoverAll()
+    battler.recoverAll();
 
     // return the newly created battler.
     return jabsBattler;
@@ -558,7 +590,7 @@ class JABS_AiManager
     if (J.ABS.EXT.DANGER)
     {
       // never show the danger indicator for allies.
-      builder.setShowDangerIndicator(false)
+      builder.setShowDangerIndicator(false);
     }
 
     // build the core data.
@@ -725,7 +757,8 @@ class JABS_AiManager
     // grab all available battlers within a fixed range.
     const battlers = this.getAllBattlersWithinRangeSortedByDistance(
       $jabsEngine.getPlayer1(),
-      J.ABS.Metadata.MaxAiUpdateRange);
+      J.ABS.Metadata.MaxAiUpdateRange
+    );
 
     // if we have no battlers, then do not process AI.
     if (!battlers.length) return;
@@ -1435,13 +1468,13 @@ class JABS_AiManager
     if (action.isSupportAction())
     {
       // show the "support decision" animation on the battler.
-      battler.showAnimation(J.ABS.Metadata.SupportDecidedAnimationId)
+      battler.showAnimation(J.ABS.Metadata.SupportDecidedAnimationId);
     }
     // the action is not a support action.
     else
     {
       // show the "attack decision" animation on the battler.
-      battler.showAnimation(J.ABS.Metadata.AttackDecidedAnimationId)
+      battler.showAnimation(J.ABS.Metadata.AttackDecidedAnimationId);
     }
   }
 
