@@ -197,6 +197,8 @@ class Sprite_InputKeySlot
 
     // grab the leader and their battler for doing things.
     const leader = $gameParty.leader();
+
+    // TODO: implement.
   }
 
   /**
@@ -351,7 +353,7 @@ class Sprite_InputKeySlot
    * @param {boolean} isItem Whether or not this cooldown timer is for the item slot.
    * @returns {string}
    */
-  makeInputKeyCooldowntTimerSpriteKey(cooldownData, inputType, isItem)
+  makeInputKeyCooldownTimerSpriteKey(cooldownData, inputType, isItem)
   {
     return `cooldown-${this.battler()
       .name()}-${this.battler()
@@ -370,7 +372,7 @@ class Sprite_InputKeySlot
     const isItem = inputType === JABS_Button.Tool;
 
     // determine the key for this sprite.
-    const key = this.makeInputKeyCooldowntTimerSpriteKey(cooldownData, inputType, isItem);
+    const key = this.makeInputKeyCooldownTimerSpriteKey(cooldownData, inputType, isItem);
 
     // check if the key already maps to a cached sprite.
     if (this._j._spriteCache.has(key))
@@ -698,7 +700,7 @@ class Sprite_InputKeySlot
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeySkillCostSprite(skillSlot, Sprite_SkillCost.Types.Item, inputType);
     sprite.show();
-    sprite.move(x + 36, y + 10);
+    sprite.move(x + 42, y + 24);
   }
 
   /**

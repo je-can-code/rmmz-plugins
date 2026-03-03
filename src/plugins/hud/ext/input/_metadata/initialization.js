@@ -7,7 +7,7 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.2';
+  const requiredBaseVersion = '2.3.1';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -27,17 +27,8 @@ J.HUD.EXT.INPUT = {};
  */
 J.HUD.EXT.INPUT = {};
 J.HUD.EXT.INPUT.Metadata = {};
-J.HUD.EXT.INPUT.Metadata.Version = '1.0.0';
+J.HUD.EXT.INPUT.Metadata.Version = '1.1.0';
 J.HUD.EXT.INPUT.Metadata.Name = `J-HUD-InputFrame`;
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.HUD.EXT.INPUT.PluginParameters = PluginManager.parameters(J.HUD.EXT.INPUT.Metadata.Name);
-
-J.HUD.EXT.INPUT.Metadata.InputFrameX = Number(J.HUD.EXT.INPUT.PluginParameters['inputFrameX']);
-J.HUD.EXT.INPUT.Metadata.InputFrameY = Number(J.HUD.EXT.INPUT.PluginParameters['inputFrameY']);
-J.HUD.EXT.INPUT.Metadata.UseGamepadLayout = false;
 
 /**
  * A collection of all aliased methods for this plugin.

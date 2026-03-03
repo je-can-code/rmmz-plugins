@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.3.0 BASE] The base class for all J plugins.
+ * [v2.3.1 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -92,6 +92,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.1
+ *    Added flag for showing external file load info across plugins.
+ *    Removed extraneous note tag enum-like object.
+ *    Updated various custom sprites with additional helpful methods.
  * - 2.3.0
  *    Added base Max TP management with tags for battlers.
  *    Added helper functions for detecting plugin commands inside of events.

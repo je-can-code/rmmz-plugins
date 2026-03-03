@@ -187,9 +187,16 @@ class J_DiffPluginMetadata
      */
     this.allMetadatas = classifiedMetadatas;
 
-    console.log(`loaded:
+    if (J.BASE.Metadata.ShowExternalFileLoadInfo)
+    {
+      console.log(`loaded:
       - ${this.allMetadatas.size} difficulty layers
       from file ${J_DiffPluginMetadata.CONFIG_PATH}.`);
+    }
+    else
+    {
+      console.log(`loaded from file ${J_DiffPluginMetadata.CONFIG_PATH}.`);
+    }
   }
 
   initializeMetadata()

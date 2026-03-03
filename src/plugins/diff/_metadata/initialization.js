@@ -8,7 +8,7 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.3';
+  const requiredBaseVersion = '2.3.1';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -25,7 +25,7 @@ J.DIFFICULTY = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.DIFFICULTY.Metadata = new J_DiffPluginMetadata('J-Difficulty', '3.0.0');
+J.DIFFICULTY.Metadata = new J_DiffPluginMetadata('J-Difficulty', '2.0.1');
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

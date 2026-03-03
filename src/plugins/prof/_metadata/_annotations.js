@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 PROF] Enables skill proficiency tracking.
+ * [v2.0.1 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -147,6 +147,9 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.1
+ *    Added flag for showing external file load info.
+ *    Removed dead plugin parameters for conditionals.
  * - 2.0.0
  *    THIS UPDATE BREAKS WEB DEPLOY FUNCTIONALITY FOR YOUR GAME.
  *    Updated to extend common plugin metadata patterns.
@@ -156,12 +159,6 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
- * @param conditionals
- * @type struct<ProficiencyConditionalStruct>[]
- * @text Proficiency Conditionals
- * @desc A set of conditions that when met reward the player.
- * @default []
- *
  * @command modifyActorSkillProficiency
  * @text Modify Actor's Proficiency
  * @desc Increase/decrease one or more actor's proficiency with one or more skills.

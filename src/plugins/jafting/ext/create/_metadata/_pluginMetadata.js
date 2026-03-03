@@ -72,7 +72,8 @@ class J_CraftingCreatePluginMetadata
         mappableRecipe.maskedUntilCrafted,
         parsedIngredients,
         parsedTools,
-        parsedOutputs);
+        parsedOutputs
+      );
 
       return newJaftingRecipe;
     };
@@ -101,7 +102,7 @@ class J_CraftingCreatePluginMetadata
         unlockedByDefault
       } = mappableCategory;
       const newCategory = new CraftingCategory(name, key, iconIndex, description, unlockedByDefault);
-      return newCategory
+      return newCategory;
     };
 
     // iterate over each category to classify the data.
@@ -182,10 +183,17 @@ class J_CraftingCreatePluginMetadata
      */
     this.categoriesMap = categoriesMap;
 
-    console.log(`loaded:
+    if (this.#hasMinimumBaseVersion() && J.BASE.Metadata.ShowExternalFileLoadInfo)
+    {
+      console.log(`loaded:
       - ${this.recipes.length} recipes
       - ${this.categories.length} categories
       from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
+    }
+    else
+    {
+      console.log(`loaded from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
+    }
   }
 
   /**
@@ -274,6 +282,39 @@ class J_CraftingCreatePluginMetadata
       .major('2')
       .minor('0')
       .patch('0')
+      .build();
+  }
+
+  /**
+   * Checks if the BASE plugin meets the minimum version requirement for this plugin.
+   * @return {boolean}
+   */
+  #hasMinimumBaseVersion()
+  {
+    // identify the two versions for comparison.
+    const minimumVersion = this.#minimumBaseVersion();
+    const actualVersion = new PluginVersion(J.BASE.Metadata.Version);
+
+    // check if we meet the minimum version threshold.
+    const meetsThreshold = actualVersion.satisfiesPluginVersion(minimumVersion);
+
+    // if the version isn't high enough, then we cannot proceed.
+    if (!meetsThreshold) return false;
+
+    // we're good!
+    return true;
+  }
+
+  /**
+   * Gets the current minimum version of the J-BASE system this plugin requires.
+   * @returns {PluginVersion}
+   */
+  #minimumBaseVersion()
+  {
+    return PluginVersion.builder
+      .major('2')
+      .minor('3')
+      .patch('1')
       .build();
   }
 }

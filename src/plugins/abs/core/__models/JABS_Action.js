@@ -136,6 +136,12 @@ class JABS_Action
      * @type {JABS_ActionOptions|null}
      */
     this._actionOptions = null;
+
+    /**
+     * The animation id to play once on the caster when the skill executes (after any casting).
+     * @type {number}
+     */
+    this._onCastAnimationId = this.getBaseSkill().jabsOnCastAnimationId ?? 0;
   }
 
   /**
@@ -342,6 +348,46 @@ class JABS_Action
   }
 
   /**
+   * Gets whether or not this action has an on-cast animation id.
+   * @returns {boolean}
+   */
+  hasOnCastAnimationId()
+  {
+    // non-zero indicates a configured animation.
+    return this.getOnCastAnimationId() !== 0;
+  }
+
+  /**
+   * Gets the on-cast animation id to display on the caster when executing this action.
+   * @returns {number}
+   */
+  getOnCastAnimationId()
+  {
+    // return the cached on-cast animation id.
+    return this._onCastAnimationId;
+  }
+
+  /**
+   * Performs the on-cast animation on the caster.
+   * @param {JABS_Battler=} caster Optional caster override; defaults to this action’s caster.
+   */
+  performOnCastAnimation(caster)
+  {
+    // determine the caster if not provided.
+    const who = caster || this.getCaster();
+
+    // validate a caster exists.
+    if (!who) return;
+
+    // only perform if a valid animation id is defined.
+    if (this.hasOnCastAnimationId())
+    {
+      // request the one-off animation on the caster’s map character.
+      who.getCharacter().requestAnimation(this.getOnCastAnimationId());
+    }
+  }
+
+  /**
    * Gets the `uuid` of this action.
    *
    * If one is not returned, then it is probably a direct action with no event representing it.
@@ -492,7 +538,7 @@ class JABS_Action
    */
   getMaxDuration()
   {
-    return Math.max(this.getBaseSkill().jabsDuration, JABS_Action.getMinimumDuration())
+    return Math.max(this.getBaseSkill().jabsDuration, JABS_Action.getMinimumDuration());
   }
 
   /**

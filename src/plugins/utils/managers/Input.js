@@ -9,4 +9,24 @@ Input.keyMapper = {
   // F6, the volume toggle key.
   117: 'volumeToggle',
 };
+
+/**
+ * Extends/Overrides {@link #_updateGamepadState}.<br/>
+ * Also logs only freshly pressed gamepad buttons/directions.
+ */
+J.UTILS.Aliased.Input.set("_updateGamepadState", Input._updateGamepadState);
+Input._updateGamepadState = function(gamepad)
+{
+  // capture the last known button state array for this pad.
+  const prev = this._gamepadStates[gamepad.index] || [];
+
+  // perform the original update to refresh internal states.
+  J.UTILS.Aliased.Input.get("_updateGamepadState").call(this, gamepad);
+
+  // extract the updated button state array populated by the original logic.
+  const next = this._gamepadStates[gamepad.index] || [];
+
+  // log only fresh presses resolved through the centralized mapper.
+  J.UTILS.GamepadLog.logFreshPresses(gamepad, prev, next);
+};
 //endregion Input

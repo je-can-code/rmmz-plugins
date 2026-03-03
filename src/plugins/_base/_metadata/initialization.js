@@ -13,7 +13,7 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '2.3.0';
+J.BASE.Metadata.Version = '2.3.1';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -22,34 +22,8 @@ J.BASE.PluginParameters = PluginManager.parameters(J.BASE.Metadata.Name);
 J.BASE.Metadata.BaseTpMaxActors = Number(J.BASE.PluginParameters['actorBaseTp']);
 J.BASE.Metadata.BaseTpMaxEnemies = Number(J.BASE.PluginParameters['enemyBaseTp']);
 
-/**
- * A collection of helpful mappings for `notes` that are placed in
- * various locations, like events on the map, or in a database enemy.
- */
-J.BASE.Notetags = {
-  // on actors in database.
-  KnockbackResist: "knockbackResist",
-  NoSwitch: "noSwitch",
-
-  MaxRefineCount: "maxRefine",
-  MaxRefineTraits: "maxRefinedTraits",
-  NotRefinementBase: "notRefinementBase",
-  NotRefinementMaterial: "notRefinementMaterial",
-  NoRefinement: "noRefine",
-
-  // on events on map.
-  Sight: "s",
-  Pursuit: "p",
-  MoveSpeed: "ms",
-  NoIdle: "noIdle",
-  NoHpBar: "noHpBar",
-  NoDangerIndicator: "noDangerIndicator",
-  NoBattlerName: "noName",
-  Inanimate: "inanimate",
-  AlertDuration: "ad",
-  AlertSightBoost: "as",
-  AlertPursuitBoost: "ap",
-};
+// TODO: plugin parameterize this and make it "show/minimal/hide".
+J.BASE.Metadata.ShowExternalFileLoadInfo = false;
 
 /**
  * The various traits captured here by id with a more meaningful descriptor.
@@ -136,6 +110,10 @@ J.BASE.Traits = {
  * All regular expressions used by this plugin.
  */
 J.BASE.RegExp = {};
+
+/**
+ * The basic structure for the maximum count of a number of items holdable is.
+ */
 J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
 
 /**
@@ -149,7 +127,6 @@ J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
  *    <someKeyWithStringValue:someValue>
  *    <someKeyWithRangeValue:startRange-endRange>
  *  </pre>
- * @type {RegExp}
  */
 J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
 

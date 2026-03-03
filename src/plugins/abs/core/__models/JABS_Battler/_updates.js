@@ -10,7 +10,7 @@ JABS_Battler.prototype.update = function()
   this.updateCooldowns();
   this.updateTimers();
   this.updateEngagement();
-  this.updateRG();
+  this.updateRegen();
   this.updateDodging();
   this.updateDeathHandling();
 };
@@ -41,7 +41,9 @@ JABS_Battler.prototype.processQueuedActions = function()
     const options = primaryAction.getActionOptions();
 
     // try to read a frozen target location from the options.
-    const loc = options ? options.getTargetLocation() : null;
+    const loc = options
+      ? options.getTargetLocation()
+      : null;
 
     // if a frozen location exists, extract coordinates from it.
     if (loc)
@@ -252,6 +254,7 @@ JABS_Battler.prototype.updateTimers = function()
   this.processAlertTimer();
   this.processParryTimer();
   this.processLastHitTimer();
+  this.processCombatTimer();
   this.processCastingTimer();
   this.processEngagementTimer();
 };
@@ -299,6 +302,18 @@ JABS_Battler.prototype.processLastHitTimer = function()
   if (this.hasBattlerLastHit())
   {
     this.countdownLastHit();
+  }
+};
+
+/**
+ * Updates the timer for "in combat".
+ */
+JABS_Battler.prototype.processCombatTimer = function()
+{
+  // if in combat, update the combat timer.
+  if (this.isInCombat())
+  {
+    this.countdownCombat();
   }
 };
 

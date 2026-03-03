@@ -1,7 +1,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 UTIL] Various system utilities.
+ * [v1.1.1 UTIL] Various system utilities.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -17,6 +17,8 @@
  * - pull up devtools window in background upon testplay (always).
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Added debugger for gamepad inputs.
  * - 1.1.0
  *    Implements strongly-typed plugin metadata.
  *    Added "pull up devtools upon testplay" functionality.

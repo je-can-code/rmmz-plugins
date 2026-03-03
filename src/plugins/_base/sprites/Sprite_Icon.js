@@ -68,6 +68,13 @@ class Sprite_Icon
      * @type {number}
      */
     this._j._iconColumns = ImageManager.iconColumns;
+
+    /**
+     * Some systems that leverage {@link Sprite_Icon} may have automation to manage the opacity of their icons.
+     * Setting this flag to true will disable that automation and allow you to manage the opacity yourself.
+     * @type {boolean}
+     */
+    this._j._disableManagedOpacity = false;
   }
 
   /**
@@ -90,7 +97,7 @@ class Sprite_Icon
     // upon promise delivery, execute the rendering.
     Promise.all([ bitmapPromise ])
       // execute on-ready logic, such as setting the icon index of this sprite to render.
-      .then(() => this.onReady(iconIndex))
+      .then(() => this.onReady(iconIndex));
   }
 
   /**
@@ -119,6 +126,7 @@ class Sprite_Icon
     this.bitmap = bitmap;
   }
 
+  //region properties
   /**
    * Gets the icon index from the iconset for this sprite.
    * @returns {number}
@@ -197,6 +205,33 @@ class Sprite_Icon
   {
     this._j._iconColumns = columns;
   }
+
+  /**
+   * Flags this sprite to disable the managed opacity automation.
+   */
+  selfManageOpacity()
+  {
+    this._j._disableManagedOpacity = true;
+  }
+
+  /**
+   * Unflags this sprite to enable the managed opacity automation.
+   */
+  autoManageOpacity()
+  {
+    this._j._disableManagedOpacity = false;
+  }
+
+  /**
+   * Checks whether or not this sprite is flagged for self-managed opacity.
+   * @returns {boolean}
+   */
+  hasSelfManagedOpacity()
+  {
+    return this._j._disableManagedOpacity;
+  }
+
+  //endregion properties
 
   /**
    * Upon becoming ready, execute this logic.

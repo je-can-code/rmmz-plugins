@@ -193,7 +193,7 @@ class Scene_JabsRemap
   topHelpWindowRectangle()
   {
     // determine the height for the top help window (single row).
-    const wh = this.calcWindowHeight(1.8, true);
+    const wh = this.calcWindowHeight(1.6, true);
 
     // compute the total width for the centered middle group.
     const ww = Math.floor(Graphics.boxWidth * 0.60);

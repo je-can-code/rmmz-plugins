@@ -352,31 +352,42 @@ Input.getRemapCaptureSymbols = function()
  */
 Input.ensureRemapBootstrapped = function()
 {
+  // if already bootstrapped for this session, do nothing.
   if (Input._jRegistries.bootstrapped === true)
   {
-    return; // already bootstrapped for this session
+    return;
   }
 
   // Seed JABS defaults (logical actions -> physical symbols).
   const d = {};
+
+  // functionality
   d[JABS_Button.Menu] = [ J.ABS.EXT.INPUT.Symbols.Quickmenu ];
   d[JABS_Button.Select] = [ J.ABS.EXT.INPUT.Symbols.PartyCycle ];
+
+  // primary actions
   d[JABS_Button.Mainhand] = [ J.ABS.EXT.INPUT.Symbols.Mainhand ];
   d[JABS_Button.Offhand] = [ J.ABS.EXT.INPUT.Symbols.Offhand ];
   d[JABS_Button.Tool] = [ J.ABS.EXT.INPUT.Symbols.Tool ];
-  d[JABS_Button.Dodge] = [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ];
+
+  // mobility & modifiers
+  // IMPORTANT: No default binding for Dodge; Sprint handles mobility contextually.
+  // d[JABS_Button.Dodge] is intentionally omitted.
   d[JABS_Button.Sprint] = [ J.ABS.EXT.INPUT.Symbols.Dash ];
   d[JABS_Button.Strafe] = [ J.ABS.EXT.INPUT.Symbols.StrafeTrigger ];
   d[JABS_Button.Rotate] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
   d[JABS_Button.Guard] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
   d[JABS_Button.SkillTrigger] = [ J.ABS.EXT.INPUT.Symbols.SkillTrigger ];
+
+  // L1 + buttons (keyboard shortcuts available separately)
   d[JABS_Button.CombatSkill1] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill1 ];
   d[JABS_Button.CombatSkill2] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ];
   d[JABS_Button.CombatSkill3] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ];
   d[JABS_Button.CombatSkill4] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ];
 
+  // register the defaults and ensure live bindings are initialized.
   Input.seedDefaultBindings('JABS', d);
-  Input.getAllBindings('JABS'); // lazy-init live bindings
+  Input.getAllBindings('JABS');
 
   // friendly labels for some common symbols.
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.L3, 'L3');
@@ -387,7 +398,7 @@ Input.ensureRemapBootstrapped = function()
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadLeft, 'D-Pad Left');
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadRight, 'D-Pad Right');
 
-  // Allow these symbols to be captured in the prompt if desired.
+  // allow these symbols to be captured in the prompt if desired.
   Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.L3);
   Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.R3);
   Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadUp);
@@ -395,11 +406,41 @@ Input.ensureRemapBootstrapped = function()
   Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadLeft);
   Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadRight);
 
-  // NEW: expose all non-engine keyboard keys for capture/binding.
+  // expose all non-engine keyboard keys for capture/binding.
   Input.bootstrapAllKeyboardKeysForCapture();
 
-  // Mark as bootstrapped for this runtime session.
+  // SAFETY: strip deprecated Dodge bindings from existing saves/config.
+  Input.removeDeprecatedDodgeBindings();
+
+  // mark as bootstrapped for this runtime session.
   Input._jRegistries.bootstrapped = true;
+};
+
+/**
+ * Removes any live/default bindings for the deprecated standalone Dodge action.
+ * This is a migration helper and may be removed in a future version.
+ */
+Input.removeDeprecatedDodgeBindings = function()
+{
+
+  // TODO: remove this function in some later patch after 2.0.2.
+
+
+  // read live bindings for JABS and clear Dodge if present.
+  const live = Input.getAllBindings('JABS');
+  if (live && Object.hasOwn(live, JABS_Button.Dodge))
+  {
+    // clear the list of physical symbols bound to Dodge.
+    live[JABS_Button.Dodge] = [];
+  }
+
+  // also clear from defaults if present (legacy boot sequences).
+  const defs = Input._jRegistries.defaults['JABS'];
+  if (defs && Object.hasOwn(defs, JABS_Button.Dodge))
+  {
+    // clear any default mapping that may have been serialized previously.
+    defs[JABS_Button.Dodge] = [];
+  }
 };
 
 /**
@@ -411,9 +452,7 @@ Input.bootstrapAllKeyboardKeysForCapture = function()
   // collect a snapshot of engine/core-reserved symbols to avoid overriding them.
   const reserved = new Set([
     // core engine actions and directions.
-    'ok', 'cancel', 'menu', 'escape',
-    'tab', 'pageup', 'pagedown', 'shift', 'control',
-    'up', 'down', 'left', 'right',
+    'ok', 'cancel', 'menu', 'escape', 'tab', 'pageup', 'pagedown', 'shift', 'control', 'up', 'down', 'left', 'right',
   ]);
 
   // also consider whatever the current keyMapper already resolves to.

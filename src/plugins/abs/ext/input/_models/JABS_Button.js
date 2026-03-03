@@ -127,7 +127,7 @@ class JABS_Button
     // the valid set of assignable inputs.
     const okInputs = [
       // primary
-      this.Mainhand, this.Offhand, this.Tool, this.Dodge,
+      this.Mainhand, this.Offhand, this.Tool,
 
       // modifiers & mobility
       this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate,

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.1 INPUT] A manager for overseeing the input of JABS.
+ * [v2.2.0 INPUT] A manager for overseeing the input of JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -38,6 +38,10 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 2.2.0
+ *    Removed independent remappability of sprint and mobility.
+ *    Added support for tracking "in combat" to handle dash/mobility switching.
+ *    Updated sprint input to switch to mobility skill while "in combat".
  * - 2.1.1
  *    Fixed typo in custom input mapping.
  * - 2.1.0
