@@ -30,6 +30,14 @@ class J_UtilsPluginMetadata
      * @type {boolean}
      */
     this.autoloadDevtools = this.parsedPluginParameters['autoload-devtools'] === 'true';
+
+    /**
+     * A toggle for circular save data check.
+     * The console gets very noisy when this is true, but is helpful for identifying issues
+     * with serialization that is blocking saving.
+     * @type {boolean}
+     */
+    this.useCircularSaveDataCheck = false;
   }
 }
 

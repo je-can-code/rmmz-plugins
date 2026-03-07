@@ -1701,6 +1701,19 @@ JABS_Battler.prototype._maybeShortenCombatTail = function(tailFrames)
     return;
   }
 
+  // establish the full combat window for comparison.
+  const windowMax = this.getCombatWindowMax();
+
+  // define a grace period to allow AI aggro to register after (re)entering combat.
+  const graceFrames = 15;
+
+  // determine if we are within the grace window (i.e., just re/entered combat).
+  const withinGraceWindow = this._inCombatCountdown > (windowMax - graceFrames);
+  if (withinGraceWindow)
+  {
+    return;
+  }
+
   // if nobody is aggroed to the party, compress the combat tail.
   if (JABS_AiManager.anyLivingEnemiesAggroedToParty() === false)
   {

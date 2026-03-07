@@ -84,7 +84,7 @@ class Window_PartyFrame
   configure()
   {
     // make the window's background opacity transparent.
-    this.opacity = 0;
+    this.opacity = 32;
 
     // initialize the cache.
     this.refreshCache();
@@ -300,28 +300,6 @@ class Window_PartyFrame
   }
 
   /**
-   * Determines the gauge height based on the gauge type.
-   * @param {Window_PartyFrame.gaugeTypes} gaugeType The type of gauge we need height for.
-   * @returns {number}
-   */
-  fullGaugeHeight(gaugeType)
-  {
-    switch (gaugeType)
-    {
-      case Window_PartyFrame.gaugeTypes.HP:
-        return 18;
-      case Window_PartyFrame.gaugeTypes.MP:
-        return 14;
-      case Window_PartyFrame.gaugeTypes.TP:
-        return 10;
-      case Window_PartyFrame.gaugeTypes.XP:
-        return 8;
-      default:
-        throw new Error(`Please use a valid gauge type from the list.`);
-    }
-  }
-
-  /**
    * Creates a full-sized gauge sprite for the given actor and caches it.
    * @param {Game_Actor} actor The actor to draw a gauge sprite for.
    * @param {Window_PartyFrame.gaugeTypes} gaugeType The type of gauge this is.
@@ -340,7 +318,9 @@ class Window_PartyFrame
     }
 
     // gets the full-sized gauge height for this gauge type.
-    const gaugeHeight = this.fullGaugeHeight(gaugeType);
+    const gaugeHeight = gaugeType === Window_PartyFrame.gaugeTypes.XP
+      ? 12
+      : 24;
 
     // determine gauge width based on gauge type.
     const gaugeWidth = gaugeType === Window_PartyFrame.gaugeTypes.XP
@@ -348,7 +328,7 @@ class Window_PartyFrame
       : 144;
 
     // create a new full-sized gauge sprite of the actor.
-    const sprite = new Sprite_MapGauge(gaugeWidth, gaugeHeight, 32);
+    const sprite = new Sprite_MapGauge(gaugeWidth, gaugeHeight, gaugeHeight);
 
     // setup the gauge sprite to point to the actor.
     sprite.setup(actor, gaugeType);
@@ -370,28 +350,6 @@ class Window_PartyFrame
   }
 
   /**
-   * Determines the gauge height based on the gauge type.
-   * @param {Window_PartyFrame.gaugeTypes} gaugeType The type of gauge we need height for.
-   * @returns {number}
-   */
-  miniGaugeHeight(gaugeType)
-  {
-    switch (gaugeType)
-    {
-      case Window_PartyFrame.gaugeTypes.HP:
-        return 10;
-      case Window_PartyFrame.gaugeTypes.MP:
-        return 10;
-      case Window_PartyFrame.gaugeTypes.TP:
-        return 10;
-      case Window_PartyFrame.gaugeTypes.XP:
-        return 4;
-      default:
-        throw new Error(`Please use a valid gauge type from the list.`);
-    }
-  }
-
-  /**
    * Creates a mini-sized gauge sprite for the given actor and caches it.
    * @param {Game_Actor} actor The actor to draw a gauge sprite for.
    * @param {Window_PartyFrame.gaugeTypes} gaugeType The type of gauge this is.
@@ -410,15 +368,15 @@ class Window_PartyFrame
     }
 
     // gets the mini-sized gauge height for this gauge type.
-    const gaugeHeight = this.miniGaugeHeight(gaugeType);
+    const bitmapHeight = 12;
 
     // determine gauge width based on gauge type.
-    const gaugeWidth = gaugeType === Window_PartyFrame.gaugeTypes.XP
+    const bitmapWidth = gaugeType === Window_PartyFrame.gaugeTypes.XP
       ? 42
       : 96;
 
     // create a new mini-sized gauge sprite of the actor.
-    const sprite = new Sprite_MapGauge(gaugeWidth, gaugeHeight, 24);
+    const sprite = new Sprite_MapGauge(bitmapWidth, bitmapHeight, bitmapHeight);
 
     // setup the gauge sprite to point to the actor.
     sprite.setup(actor, gaugeType);
@@ -471,8 +429,10 @@ class Window_PartyFrame
       return this._hudSprites.get(key);
     }
 
-    // determine the font size based on the gauget ype.
-    const valueFontSize = this.actorValueFontSize(gaugeType);
+    // determine the font size.
+    const valueFontSize = gaugeType === Window_PartyFrame.gaugeTypes.XP
+      ? -6
+      : -2;
 
     // create a new full-sized face sprite of the actor.
     const sprite = new Sprite_ActorValue(actor, gaugeType, valueFontSize);
@@ -488,30 +448,6 @@ class Window_PartyFrame
 
     // return the created sprite.
     return sprite;
-  }
-
-  /**
-   * Determines the font size for the actor value based on the gauge type.
-   * @param {Window_PartyFrame.gaugeTypes} gaugeType The type of actor value this is.
-   * @returns {number}
-   */
-  actorValueFontSize(gaugeType)
-  {
-    switch (gaugeType)
-    {
-      case Window_PartyFrame.gaugeTypes.HP:
-        return -4;
-      case Window_PartyFrame.gaugeTypes.MP:
-        return -6;
-      case Window_PartyFrame.gaugeTypes.TP:
-        return -10;
-      case Window_PartyFrame.gaugeTypes.XP:
-        return -6;
-      case Window_PartyFrame.gaugeTypes.Level:
-        return 2;
-      default:
-        throw new Error(`Please use a valid gauge type from the list.`);
-    }
   }
 
   /**
@@ -577,7 +513,7 @@ class Window_PartyFrame
    * Creates the timer sprite for a given state.
    * @param {Game_Actor} actor The actor to draw the state data for.
    * @param {JABS_State} trackedState The tracked state data for this state.
-   * @returns {Sprite_StateTimer} The state timer sprite.
+   * @returns {Sprite_BaseText} The state timer sprite.
    */
   getOrCreateStateTimer(actor, trackedState)
   {
@@ -592,19 +528,76 @@ class Window_PartyFrame
     }
 
     // create a new full-sized face sprite of the actor.
-    const sprite = new Sprite_StateTimer(trackedState);
+    const spriteText = new Sprite_BaseText();
+
+    // configure the font for a small numeric readout (seconds, one decimal).
+    spriteText.setFontFace($gameSystem.numberFontFace());
+    spriteText.setFontSize($gameSystem.mainFontSize() - 6);
+    spriteText.setAlignment(Sprite_BaseText.Alignments.Center);
+    spriteText.setMinWidth(ImageManager.iconWidth);
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this._hudSprites.set(key, spriteText);
 
     // hide the sprite for now.
-    sprite.hide();
+    spriteText.hide();
 
     // add the sprite to tracking.
-    this.addChild(sprite);
+    this.addChild(spriteText);
 
     // return the created sprite.
-    return sprite;
+    return spriteText;
+  }
+
+  /**
+   * Creates the key for an actor's state affliction.
+   * @param {Game_Actor} actor The actor to draw a actor value sprite for.
+   * @param {number} stateId The id of the state to generate a key for.
+   * @returns {string} The key for this actor value sprite.
+   */
+  makeStateStackCountSpriteKey(actor, stateId)
+  {
+    return `stacks-${stateId}-${actor.name()}-${actor.actorId()}`;
+  }
+
+  /**
+   * Creates the timer sprite for a given state.
+   * @param {Game_Actor} actor The actor to draw the state data for.
+   * @param {JABS_State} trackedState The tracked state data for this state.
+   * @returns {Sprite_BaseText} The state timer sprite.
+   */
+  getOrCreateStateStackCount(actor, trackedState)
+  {
+    // the key for the sprite.
+    const key = this.makeStateStackCountSpriteKey(actor, trackedState.stateId);
+
+    // check if the key already maps to a cached sprite.
+    if (this._hudSprites.has(key))
+    {
+      // if it does, just return that.
+      return this._hudSprites.get(key);
+    }
+
+    // create a new full-sized face sprite of the actor.
+    const spriteText = new Sprite_BaseText();
+
+    // configure the font for a small numeric readout (seconds, one decimal).
+    spriteText.setFontFace($gameSystem.numberFontFace());
+    spriteText.setFontSize($gameSystem.mainFontSize() - 4);
+    spriteText.setAlignment(Sprite_BaseText.Alignments.Center);
+    spriteText.setMinWidth(ImageManager.iconWidth);
+
+    // cache the sprite.
+    this._hudSprites.set(key, spriteText);
+
+    // hide the sprite for now.
+    spriteText.hide();
+
+    // add the sprite to tracking.
+    this.addChild(spriteText);
+
+    // return the created sprite.
+    return spriteText;
   }
 
   /**
@@ -662,7 +655,7 @@ class Window_PartyFrame
 
     // configure the font for a small numeric readout (seconds, one decimal).
     sprite.setFontFace($gameSystem.numberFontFace());
-    sprite.setFontSize($gameSystem.mainFontSize() - 10);
+    sprite.setFontSize($gameSystem.mainFontSize() - 8);
     sprite.setAlignment(Sprite_BaseText.Alignments.Center);
     sprite.setMinWidth(ImageManager.iconWidth);
 
@@ -674,6 +667,8 @@ class Window_PartyFrame
 
     // cache and stage it.
     this._hudSprites.set(key, sprite);
+
+    // add the sprite to tracking.
     this.addChild(sprite);
 
     // return the created sprite.
@@ -703,7 +698,7 @@ class Window_PartyFrame
     // configure the font for emphasis and readability.
     sprite
       .setFontFace($gameSystem.mainFontFace())
-      .setFontSize($gameSystem.mainFontSize() - 6)
+      .setFontSize($gameSystem.mainFontSize() - 8)
       .setAlignment(Sprite_BaseText.Alignments.Center)
       .setBold(true)
       .setItalics(true)
@@ -730,30 +725,6 @@ class Window_PartyFrame
 
     // update our stuff.
     this.drawHud();
-  }
-
-  /**
-   * Draws the contents of the HUD.
-   */
-  drawHud()
-  {
-    // if we cannot draw the hud, then do not.
-    if (!$hudManager.canShowHud()) return;
-
-    // handle the visibility of the hud for dynamic interferences.
-    this.manageVisibility();
-
-    // draw the leader data.
-    const leaderX = 0;
-    const leaderY = 0;
-    this.drawLeader(leaderX, leaderY);
-
-    // if we cannot draw your allies, then do not.
-    if (!$hudManager.canShowAllies()) return;
-
-    // draw all allies' data.
-    const alliesY = this.height - ImageManager.faceHeight - (this.lineHeight() + 12);
-    this.drawAllies(leaderX, alliesY);
   }
 
   //region visibility
@@ -882,6 +853,31 @@ class Window_PartyFrame
 
   //endregion visibility
 
+  //region draw
+  /**
+   * Draws the contents of the HUD.
+   */
+  drawHud()
+  {
+    // if we cannot draw the hud, then do not.
+    if (!$hudManager.canShowHud()) return;
+
+    // handle the visibility of the hud for dynamic interferences.
+    this.manageVisibility();
+
+    // draw the leader data.
+    const leaderX = 0;
+    const leaderY = 0;
+    this.drawLeader(leaderX, leaderY);
+
+    // if we cannot draw your allies, then do not.
+    if (!$hudManager.canShowAllies()) return;
+
+    // draw all allies' data.
+    const alliesY = this.height - ImageManager.faceHeight - (this.lineHeight() + 12);
+    this.drawAllies(leaderX, alliesY);
+  }
+
   /**
    * Draw the leader's data for the HUD.
    * @param {number} x The x coordinate.
@@ -898,7 +894,7 @@ class Window_PartyFrame
 
     // render the resource gauges: hp/mp/tp.
     const gaugesX = x + ImageManager.faceWidth;
-    const gaugeHeight = 16;
+    const gaugeHeight = 24;
     const gaugesY = this.height - (gaugeHeight * 3);
     this.drawLeaderResourceGauges(gaugesX, gaugesY);
 
@@ -909,7 +905,7 @@ class Window_PartyFrame
 
     // draw states for the leader.
     const statesX = gaugesX;
-    const statesY = gaugesY - (ImageManager.iconHeight * 2) - 24;
+    const statesY = gaugesY - (ImageManager.iconHeight * 2) - 48;
     this.drawStates(statesX, statesY);
 
     // draw the in‑combat indicator (icon + timer) just to the right of the gauges.
@@ -932,48 +928,59 @@ class Window_PartyFrame
     sprite.show();
   }
 
+  /**
+   * Draws all the various resource gauges for the leader.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   */
   drawLeaderResourceGauges(x, y)
   {
     // grab the leader of the party.
     const leader = $gameParty.leader();
 
-    // shorthand the line height variable.
-    const lh = this.lineHeight();
+    const numbersX = x + 12;
 
     // locate the hp gauge.
     const hpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.HP);
     hpGauge.activateGauge();
-    hpGauge.move(x - 24, y);
+    hpGauge.move(x, y);
     hpGauge.show();
 
     // locate the hp numbers.
     const hpNumbers = this.getOrCreateActorValueSprite(leader, Window_PartyFrame.gaugeTypes.HP);
-    hpNumbers.move(x, y);
+    hpNumbers.move(numbersX, y - 2);
     hpNumbers.show();
 
     // grab and locate the sprite.
+    const mpGaugeY = y + 24;
     const mpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.MP);
     mpGauge.activateGauge();
-    mpGauge.move(x - 24, y + lh - 2 - mpGauge.bitmapHeight());
+    mpGauge.move(x, mpGaugeY);
     mpGauge.show();
 
     // locate the mp numbers.
     const mpNumbers = this.getOrCreateActorValueSprite(leader, Window_PartyFrame.gaugeTypes.MP);
-    mpNumbers.move(x, y + 19);
+    mpNumbers.move(numbersX, mpGaugeY - 2);
     mpNumbers.show();
 
     // grab and locate the sprite.
+    const tpGaugeY = y + 48;
     const tpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.TP);
     tpGauge.activateGauge();
-    tpGauge.move(x - 24, y + 46 - tpGauge.bitmapHeight());
+    tpGauge.move(x, tpGaugeY);
     tpGauge.show();
 
     // locate the tp numbers.
     const tpNumbers = this.getOrCreateActorValueSprite(leader, Window_PartyFrame.gaugeTypes.TP);
-    tpNumbers.move(x, y + 33);
+    tpNumbers.move(numbersX, tpGaugeY - 2);
     tpNumbers.show();
   }
 
+  /**
+   * Draws all the extraneous resource gauges for the leader.
+   * @param {number} x The x coordinate.
+   * @param {number} y The y coordinate.
+   */
   drawLeaderExtraneousGauges(x, y)
   {
     // grab the leader of the party.
@@ -983,17 +990,17 @@ class Window_PartyFrame
     const xpY = y;
     const xpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.XP);
     xpGauge.activateGauge();
-    xpGauge.move(x + 5, xpY);
+    xpGauge.move(x, xpY);
     xpGauge.show();
 
     // locate the xp numbers.
     const xpNumbers = this.getOrCreateActorValueSprite(leader, Window_PartyFrame.gaugeTypes.XP);
-    xpNumbers.move(x, xpY);
+    xpNumbers.move(x + 4, xpY);
     xpNumbers.show();
 
     // locate the level numbers.
     const levelNumbers = this.getOrCreateActorValueSprite(leader, Window_PartyFrame.gaugeTypes.Level);
-    levelNumbers.move(x + 84, xpY);
+    levelNumbers.move(x + 80, xpY);
     levelNumbers.show();
   }
 
@@ -1056,7 +1063,7 @@ class Window_PartyFrame
     if (!leader || !leaderBattler) return;
 
     // decide visibility based on the combat rules.
-    const inCombat = ($jabsEngine.forcedCombat === true) || leaderBattler.isInCombat();
+    const inCombat = leaderBattler.isInCombat();
 
     // grab the hp gauge sprite for width math (hp/mp/tp share the same width).
 
@@ -1067,8 +1074,8 @@ class Window_PartyFrame
 
     // determine anchor coordinates to the immediate right of the gauges.
     const hpGauge = this.getOrCreateFullSizeGaugeSprite(leader, Window_PartyFrame.gaugeTypes.HP);
-    const iconX = (gaugesX - 24) + hpGauge.bitmapWidth() + 8;
-    const iconY = gaugesY; // align with the HP row.
+    const iconX = gaugesX + hpGauge.bitmapWidth() + ImageManager.iconWidth;
+    const iconY = gaugesY + 10; // align with the HP row.
     icon.move(iconX, iconY);
 
     // move the timer to be centered below the icon.
@@ -1076,12 +1083,12 @@ class Window_PartyFrame
       ? timer.bitmap.width
       : ImageManager.iconWidth;
     const timerX = iconX + Math.floor((ImageManager.iconWidth - timerWidth) / 2);
-    const timerY = iconY + ImageManager.iconHeight - 6;
+    const timerY = iconY + ImageManager.iconHeight - 16;
     timer.move(timerX, timerY);
 
     // move the label to be centered above the icon.
     const labelX = iconX - Math.floor((label.bitmap.width - ImageManager.iconWidth) / 2);
-    const labelY = iconY - label.bitmap.height;
+    const labelY = iconY - label.bitmap.height + 20;
     label.move(labelX, labelY);
 
     // configure a per‑frame fade step for ~0.5 seconds at 60fps.
@@ -1167,20 +1174,34 @@ class Window_PartyFrame
         // make the keys for the sprites in question.
         const iconKey = this.makeStateIconSpriteKey(leader, state.stateId);
         const timerKey = this.makeStateTimerSpriteKey(leader, state.stateId);
+        const stackKey = this.makeStateStackCountSpriteKey(leader, state.stateId);
 
-        // skip trying if they don't exist.
-        if (!this._hudSprites.has(iconKey) || !this._hudSprites.has(timerKey)) return;
+        // check if we have an icon sprite to hide.
+        if (this._hudSprites.has(iconKey))
+        {
+          // fetch and hide it.
+          const iconSprite = this._hudSprites.get(iconKey);
+          iconSprite.hide();
+        }
 
-        // get the sprites in question.
-        const iconSprite = this._hudSprites.get(iconKey);
-        const timerSprite = this._hudSprites.get(timerKey);
+        // check if we have a timer sprite to hide.
+        if (this._hudSprites.has(timerKey))
+        {
+          // fetch and clear and hide it.
+          const timerSprite = this._hudSprites.get(timerKey);
+          timerSprite.setText('');
+          timerSprite.hide();
+        }
 
-        // hide the sprites.
-        iconSprite.hide();
-        timerSprite.hide();
+        // check if we have a stack count sprite to hide.
+        if (this._hudSprites.has(stackKey))
+        {
+          // fetch and clear and hide it.
+          const stackSprite = this._hudSprites.get(stackKey);
+          stackSprite.setText('');
+          stackSprite.hide();
+        }
       });
-
-      this.clearContent();
     }
   }
 
@@ -1197,15 +1218,23 @@ class Window_PartyFrame
     iconSprite.move(ox, y);
     iconSprite.show();
 
+    const seconds = (trackedState.duration / 60).toFixed(1);
     const timerSprite = this.getOrCreateStateTimer(actor, trackedState);
-    timerSprite.move(ox - 4, y + 20);
+    timerSprite.setText(seconds);
+    timerSprite.move(ox, y + 20);
     timerSprite.show();
 
-    this.modFontSize(-0);
+    this.modFontSize(-4);
     this.toggleBold();
     this.toggleItalics();
 
-    this.drawText(`x${trackedState.stackCount}`, ox, y - 30, 64, Window_Base.TextAlignments.Left);
+    if (trackedState.stackCount > 1)
+    {
+      const stackSprite = this.getOrCreateStateStackCount(actor, trackedState);
+      stackSprite.setText(`x${trackedState.stackCount}`);
+      stackSprite.move(ox, y - ImageManager.iconHeight);
+      stackSprite.show();
+    }
 
     this.resetFontSettings();
   }
@@ -1278,21 +1307,23 @@ class Window_PartyFrame
     // locate the hp gauge.
     const hpGauge = this.getOrCreateMiniSizeGaugeSprite(ally, Window_PartyFrame.gaugeTypes.HP);
     hpGauge.activateGauge();
-    hpGauge.move(x - 24, oy + lh * 0);
+    hpGauge.move(x, oy + lh * 0);
     hpGauge.show();
 
     // grab and locate the sprite.
     const mpGauge = this.getOrCreateMiniSizeGaugeSprite(ally, Window_PartyFrame.gaugeTypes.MP);
     mpGauge.activateGauge();
-    mpGauge.move(x - 24, oy + lh * 1);
+    mpGauge.move(x, oy + lh * 1);
     mpGauge.show();
 
     // grab and locate the sprite.
     const tpGauge = this.getOrCreateMiniSizeGaugeSprite(ally, Window_PartyFrame.gaugeTypes.TP);
     tpGauge.activateGauge();
-    tpGauge.move(x - 24, oy + lh * 2);
+    tpGauge.move(x, oy + lh * 2);
     tpGauge.show();
   }
+
+  //endregion draw
 }
 
 //endregion Window_PartyFrame

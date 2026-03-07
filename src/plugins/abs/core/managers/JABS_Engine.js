@@ -14,7 +14,6 @@ class JABS_Engine
   // TODO: implement them as a map.
   /**
    * A cached collection of actions keyed by their uuids.
-   * @type {JABS_Timer, JABS_Action}
    */
   cachedActions = new Map();
 
@@ -106,6 +105,7 @@ class JABS_Engine
    * @type {boolean}
    */
   forcedCombat = false;
+
   //endregion properties
 
   /**
@@ -1188,7 +1188,7 @@ class JABS_Engine
   //endregion update actions
   //endregion update
 
-  //region action execution
+  //region actions
   /**
    * Generates a new JABS action based on a skillId, and executes the skill.
    * This overrides the need for costs or cooldowns.<br/>
@@ -1987,7 +1987,7 @@ class JABS_Engine
     const skillName = action.getBaseSkill().name; // get skill name.
     const casterName = action.getCaster()
       .battlerName(); // get caster name.
-    actionEventSprite.__actionName = `_${casterName}-${skillName}`; // tag for debugging/tools.
+    actionEventSprite.__actionName = `_${casterName}-${skillName}-${index}`; // tag for debugging/tools.
 
     // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
@@ -3401,7 +3401,7 @@ class JABS_Engine
       : 0;
   }
 
-  //endregion action execution
+  //endregion actions
 
   //region collision
   /**

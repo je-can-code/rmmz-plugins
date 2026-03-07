@@ -360,7 +360,8 @@ class JABS_AiManager
   static anyLivingEnemiesAggroedToParty()
   {
     // get all tracked enemy battlers from your registry.
-    const enemies = JABS_AiManager.getEnemyBattlers();
+    const enemies = JABS_AiManager.getEnemyBattlers()
+      .filter(enemy => enemy.isDead() === false);
 
     // if there are no enemies, then there is no aggro.
     if (!enemies.length) return false;

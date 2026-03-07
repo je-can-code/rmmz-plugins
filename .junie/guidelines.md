@@ -24,6 +24,9 @@
 * This project does not support modules, we purely use prototypes and sequential ordering of code, but can use whatever a browser/nodejs may have available in 2025.
   * Do not use import/export in files under `/src/plugins/**`.
   * `import`/`export` may be used in `/src/build-tools` and `/src/defs` if already present in the repo’s patterns.
+* This project does not use IIFEs, instead we leverage object-driven namespacing (such as `J.ABS.EXT.SHIELD` etc) and aliasing.
+* Do not use ternary operators with `typeof something` to check if functions or properties exist- instead just open the file and review what the actual functions are.
+  * If a function or property is missing- but necessary- provide implementation for them if nothing else satisfies the need (such as a function or property with a different name that accomplishes the same thing).
 
 ## DRY and Complexity
 - Target cyclomatic complexity ≤ 20 for all methods. If a method risks exceeding 20, prefer extracting private helpers.
