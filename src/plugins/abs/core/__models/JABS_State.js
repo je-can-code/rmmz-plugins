@@ -337,7 +337,7 @@ class JABS_State
   refreshDuration(newDuration = this.#baseDuration)
   {
     // don't refresh the state if the provided duration is actually 0.
-    if (newDuration <= 0) return;
+    if (newDuration === 0) return;
 
     // refresh the duration.
     this.duration = newDuration;

@@ -839,7 +839,7 @@ class Scene_JabsRemap
       this._state()._capturingButton = token;
       this._state()._isCapturing = true;
       this.getPromptWindow()
-        .startPrompt(String(cmd.ext.label || ''));
+        .startPrompt(String(cmd.ext.label || String.empty));
 
       // deactivate normal windows while capturing.
       this.getCommandWindow()

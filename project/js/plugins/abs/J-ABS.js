@@ -12605,7 +12605,7 @@ class JABS_State
   refreshDuration(newDuration = this.#baseDuration)
   {
     // don't refresh the state if the provided duration is actually 0.
-    if (newDuration <= 0) return;
+    if (newDuration === 0) return;
 
     // refresh the duration.
     this.duration = newDuration;
@@ -22671,7 +22671,7 @@ class JABS_Engine
     const refreshAmount = newJabsState.duration - diminishmentAmount;
 
     // safely capture the duration.
-    const actualDuration = Math.max(refreshAmount, 0);
+    const actualDuration = Math.max(refreshAmount, -1);
 
     // refresh the refresh reset counter since this state is being refreshed.
     jabsState.refreshRefreshResetCounter(state.jabsStateRefreshReset);
@@ -25094,9 +25094,9 @@ class JABS_Engine
       roundedDamage = roundedDamage >= 0
         ? roundedDamage
         : roundedDamage.toString()
-          .replace('-', '');
+          .replace('-', String.empty);
       const damageReduction = Math.round(result.reduced);
-      let reducedAmount = '';
+      let reducedAmount = String.empty;
       if (damageReduction)
       {
         reducedAmount = `(${parseInt(damageReduction)})`;
@@ -37881,7 +37881,7 @@ Spriteset_Map.prototype.getActionHitboxStyleFor = function (shape)
   const base = Object.assign({}, defaults, styles.base || {}); // merged base.
 
   // apply shape-specific overrides if provided.
-  const key = (shape || '').toLowerCase(); // normalized key.
+  const key = (shape || String.empty).toLowerCase(); // normalized key.
   const shapeOverrides = styles.byShape?.[key] || null; // optional per-shape.
 
   // produce the final style.
@@ -38675,7 +38675,7 @@ Spriteset_Map.prototype.getBattlerHitboxStyle = function (
   const byKind = styles.byKind?.[kindKey] || null; // optional kind overrides.
 
   // apply state-specific overrides if provided (e.g., colliding).
-  const stateKey = (state || '').toLowerCase(); // normalized.
+  const stateKey = (state || String.empty).toLowerCase(); // normalized.
   const byState = stateKey
     ? (styles.byState?.[stateKey] || null)
     : null; // optional state overrides.

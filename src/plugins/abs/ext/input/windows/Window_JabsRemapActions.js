@@ -213,17 +213,17 @@ class Window_JabsRemapActions
     // if this is a header, return its label.
     if (cmd.ext && cmd.ext.kind === 'header')
     {
-      return String(cmd.ext.label || '');
+      return String(cmd.ext.label || String.empty);
     }
 
     // if this is an external action, return its display label (for prompt/help).
     if (cmd.ext && cmd.ext.kind === 'ext-action')
     {
-      return String(cmd.ext.label || '');
+      return String(cmd.ext.label || String.empty);
     }
 
     // otherwise return the logical action key.
-    return String(cmd.symbol || '');
+    return String(cmd.symbol || String.empty);
   }
 
   /**
@@ -530,7 +530,7 @@ class Window_JabsRemapActions
   _drawHeaderItem(rect, cmd)
   {
     // resolve a friendly header label.
-    const name = cmd.name || '';
+    const name = cmd.name || String.empty;
 
     // apply system color and bold before drawing.
     this.changeTextColor(ColorManager.systemColor());

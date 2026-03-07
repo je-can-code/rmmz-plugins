@@ -1367,7 +1367,7 @@ class Window_PartyFrame
     }
 
     // create a text sprite.
-    const sprite = new Sprite_BaseText('');
+    const sprite = new Sprite_BaseText(String.empty);
 
     // configure the font for a small numeric readout (seconds, one decimal).
     sprite.setFontFace($gameSystem.numberFontFace());
@@ -1409,7 +1409,7 @@ class Window_PartyFrame
     }
 
     // create a text sprite.
-    const sprite = new Sprite_BaseText('');
+    const sprite = new Sprite_BaseText(String.empty);
 
     // configure the font for emphasis and readability.
     sprite
@@ -1905,7 +1905,7 @@ class Window_PartyFrame
         {
           // fetch and clear and hide it.
           const timerSprite = this._hudSprites.get(timerKey);
-          timerSprite.setText('');
+          timerSprite.setText(String.empty);
           timerSprite.hide();
         }
 
@@ -1914,7 +1914,7 @@ class Window_PartyFrame
         {
           // fetch and clear and hide it.
           const stackSprite = this._hudSprites.get(stackKey);
-          stackSprite.setText('');
+          stackSprite.setText(String.empty);
           stackSprite.hide();
         }
       });
@@ -1930,26 +1930,35 @@ class Window_PartyFrame
    */
   drawState(actor, trackedState, ox, y)
   {
+    // don't render an eternal duration- they are just -1.
+    if (trackedState.hasEternalDuration() === false)
+    {
+      const seconds = (trackedState.duration / 60).toFixed(1);
+      const timerSprite = this.getOrCreateStateTimer(actor, trackedState);
+      timerSprite.setText(seconds);
+      timerSprite.move(ox, y + 20);
+      timerSprite.show();
+    }
+
     const iconSprite = this.getOrCreateStateIcon(actor, trackedState.stateId);
     iconSprite.move(ox, y);
     iconSprite.show();
-
-    const seconds = (trackedState.duration / 60).toFixed(1);
-    const timerSprite = this.getOrCreateStateTimer(actor, trackedState);
-    timerSprite.setText(seconds);
-    timerSprite.move(ox, y + 20);
-    timerSprite.show();
 
     this.modFontSize(-4);
     this.toggleBold();
     this.toggleItalics();
 
+    const stackSprite = this.getOrCreateStateStackCount(actor, trackedState);
     if (trackedState.stackCount > 1)
     {
-      const stackSprite = this.getOrCreateStateStackCount(actor, trackedState);
       stackSprite.setText(`x${trackedState.stackCount}`);
       stackSprite.move(ox, y - ImageManager.iconHeight);
       stackSprite.show();
+    }
+    else
+    {
+      stackSprite.setText(String.empty);
+      stackSprite.hide();
     }
 
     this.resetFontSettings();

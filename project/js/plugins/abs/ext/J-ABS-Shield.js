@@ -1636,7 +1636,7 @@ class Sprite_ShieldMapGauge
    */
   label()
   {
-    return '';
+    return String.empty;
   }
 }
 

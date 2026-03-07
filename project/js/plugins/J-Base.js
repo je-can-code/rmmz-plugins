@@ -1491,7 +1491,7 @@ class RPG_UsableEffect
       case 11:
         const flatHp = this.value2;
         const percHp = this.value1 * 100;
-        let msg = '';
+        let msg = String.empty;
         if (flatHp) msg += flatHp;
         if (percHp) msg += ` ${percHp}%`;
         if (flatHp === 0 && percHp === 0) msg = '0';
