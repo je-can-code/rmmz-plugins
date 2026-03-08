@@ -27,6 +27,7 @@
 * This project does not use IIFEs, instead we leverage object-driven namespacing (such as `J.ABS.EXT.SHIELD` etc) and aliasing.
 * Do not use ternary operators with `typeof something` to check if functions or properties exist- instead just open the file and review what the actual functions are.
   * If a function or property is missing- but necessary- provide implementation for them if nothing else satisfies the need (such as a function or property with a different name that accomplishes the same thing).
+* Never add arbitrary nested blocks that violate that violate eslint "no-lone-blocks" rule.
 
 ## DRY and Complexity
 - Target cyclomatic complexity ≤ 20 for all methods. If a method risks exceeding 20, prefer extracting private helpers.

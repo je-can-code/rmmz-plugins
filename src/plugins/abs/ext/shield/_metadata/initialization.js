@@ -24,6 +24,7 @@ J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata('J-ABS-Shield', '1.0.0');
  */
 J.ABS.EXT.SHIELD.Aliased = {
   Game_Action: new Map(),
+  Game_Actor: new Map(),
   Game_Battler: new Map(),
   JABS_Engine: new Map(),
   JABS_State: new Map(),
@@ -37,43 +38,44 @@ J.ABS.EXT.SHIELD.Aliased = {
  */
 J.ABS.EXT.SHIELD.RegExp = {
   /**
-   * Represents the shield points of a shield.
-   */
-  Points: /<shield:[ ]?(\d+)>/i,
-
-  /**
    * Represents the shield points derived from a damage formula.
    */
-  PointsFormula: /<sh-formula:\[([+\-*/ ().\w]+)]>/gi,
-
-  /**
-   * Represents the shield cap of a shield.
-   */
-  Cap: /<shield-cap:[ ]?(\d+)>/i,
+  ShieldPointsFormula: /<shield:\[([+\-*/ ().\w]+)]>/gi,
 
   /**
    * Represents the shield cap derived from a damage formula.
    */
-  CapFormula: /<sh-cap-formula:\[([+\-*/ ().\w]+)]>/gi,
+  ShieldCapFormula: /<shieldCap:\[([+\-*/ ().\w]+)]>/gi,
 
   /**
    * Represents the priority of a shield.
    */
-  Priority: /<shield-priority:[ ]?(\d+)>/i,
-
-  /**
-   * Represents the type of shield.
-   */
-  Type: /<shield-type:[ ]?(\[[\d, ]+])>/gi,
+  Priority: /<shieldPriority:[ ]?(\d+)>/i,
 
   /**
    * Dictates if the shield should prevent overflow damage upon breaking.
    */
-  Protect: /<shield-protect>/i,
+  Protect: /<shieldProtect>/i,
+
+  /**
+   * Represents the type of shield.
+   */
+  Type: /<shieldType:[ ]?(\[[\d, ]+])>/gi,
 
   /**
    * On an action, this means it will bypass either all shields or specific shields.
    */
-  Bypass: /<shield-bypass(?::[ ]?(\[[\d, ]+]))?>/gi,
+  Bypass: /<shieldBypass(?::[ ]?(\[[\d, ]+]))?>/gi,
+
+  /**
+   * Represents an additional damage formula for shield-only damage from the action.
+   * 'a' is the attacker, 'b' is the shielded battler, 'o' is the original damage before mitigation.
+   */
+  ShieldDamage: /<shieldDamage:\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Represents one or many skills to fire when this state’s shield breaks.
+   */
+  Break: /<shieldBreak:[ ]?(\[[\d, ]+])>/i,
 };
 //endregion initialization

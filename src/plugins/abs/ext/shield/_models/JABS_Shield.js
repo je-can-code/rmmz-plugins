@@ -16,11 +16,8 @@ class JABS_Shield
     // TODO: target may perceive enhanced shield bonuses from state.
     const state = target.state(stateId);
 
-    // check how many points the shield is.
-    const flatPoints = RPGManager.getNumberFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.Points);
-
     // grab all the formulas that the
-    const pointFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.PointsFormula);
+    const pointFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.ShieldPointsFormula);
 
     // allows access to the battler and state itself.
     /* eslint-disable no-unused-vars */
@@ -29,20 +26,17 @@ class JABS_Shield
     /* eslint-enable no-unused-vars */
 
     const totalPoints = pointFormulas
-      .reduce((total, formula) => total + eval(formula), 0) + flatPoints;
+      .reduce((total, formula) => total + eval(formula), 0);
 
     // if we have no shield points, then nothing else matters.
     if (totalPoints === 0) return null;
 
-    // identify the cap for shields of this state.
-    const flatCap = RPGManager.getNumberFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.Cap);
-
     // grab all the formulas that make up the cap.
-    const capFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.CapFormula);
+    const capFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.ShieldCapFormula);
 
     // combine all the cap formulas into a single value and add the flat cap points.
     const totalCap = capFormulas
-      .reduce((total, formula) => total + eval(formula), 0) + flatCap;
+      .reduce((total, formula) => total + eval(formula), 0);
 
     // if no cap was specified, then use the total points as the cap by default.
     const normalizedCap = totalCap === 0

@@ -59,6 +59,7 @@ Game_Action.prototype.applyShields = function(target, value)
 
 /**
  * Applies the shield to the damage value against the target.
+ * Also applies any shield-only bonus damage from this action.
  * @param {JABS_State} shieldState The state bearing the shield.
  * @param {Game_Actor|Game_Enemy} target The target of the action.
  * @param {number} value The damage value to be applied.
@@ -66,75 +67,40 @@ Game_Action.prototype.applyShields = function(target, value)
  */
 Game_Action.prototype.applyShield = function(shieldState, target, value)
 {
-  // check if we should bypass shields for this hit (typed or universal).
-  if (this.shouldBypassShield(shieldState.shield))
+  // validate we have a shield to work with.
+  const { shield } = shieldState;
+
+  // if there is no shield, then there is nothing to apply.
+  if (!shield)
   {
     return value;
   }
 
-  // track the remaining damage for this hit as we consume shields.
-  let remaining = value;
+  // resolve the elements for this action for relevance checks.
+  const skillOrItem = this.item();
+  const actionElements = this.getActionElementsForShieldChecks(this.subject(), skillOrItem);
 
-  // continue absorbing while there is damage remaining and this state still has a shield pool.
-  // this enables rolling overflow into the next stack (same state) within the same hit.
-  while (remaining > 0)
+  // if the shield is typed but does not match the action, the shield is not relevant to this hit.
+  if (this.isShieldRelevantToAction(shield, actionElements) === false)
   {
-    // re-resolve the shield reference in case the state refilled/removed it on a previous break.
-    const { shield } = shieldState;
-
-    // if there is no capacity remaining on this pool (defensive), stop.
-    const before = shield.getCurrent();
-    if (before <= 0)
-    {
-      break;
-    }
-
-    // absorb as much as possible from this pool.
-    const absorbed = Math.min(remaining, before);
-
-    // apply the absorption.
-    shield.setCurrent(before - absorbed);
-
-    // reduce the remaining incoming damage by what was absorbed.
-    remaining -= absorbed;
-
-    // show a shield damage popup for the absorbed amount.
-    if (absorbed > 0)
-    {
-      this.generateShieldDamagePop(target, absorbed);
-    }
-
-    // determine whether this shield broke on this partial application.
-    const brokeThisHit = (before > 0 && shield.getCurrent() === 0);
-
-    // if the shield broke on this hit, handle the break lifecycle.
-    if (brokeThisHit)
-    {
-      // consume a stack, refill if stacks remain, or remove the state if none remain.
-      shieldState.onShieldBreak();
-
-      // show a popup indicating the shield broke.
-      this.generateShieldBreakPop(target);
-
-      // if this shield is protected, the remainder of this hit is nullified.
-      if (shield.isProtected())
-      {
-        // stop processing entirely for this hit.
-        return 0;
-      }
-
-      // if not protected: if stacks remain, the state refilled and we loop to keep absorbing.
-      // if no stacks remain, shieldState.shield will be null and the loop will exit.
-      continue;
-    }
-
-    // if this pool did not break and we still have remainder, the next shield state will handle it.
-    // break out of the loop to allow the outer iteration over other states to proceed.
-    break;
+    return value;
   }
 
-  // return whatever damage remains after rolling through this state's stacks.
-  return remaining;
+  // check if we should bypass shields for this hit (typed or universal).
+  if (this.shouldBypassShield(shield))
+  {
+    return value;
+  }
+
+  // compute shield-only damage bonus for this target.
+  // this bonus can only be absorbed by shields; it will never spill into HP.
+  const pendingBonusInitial = this.calculateShieldBonusDamage(target, value);
+
+  // delegate the absorption into a helper that mutates the pools and handles break logic.
+  const postAbsorption = this.absorbDamageIntoShield(shieldState, target, value, pendingBonusInitial);
+
+  // return whatever HP damage remains after shield absorption.
+  return postAbsorption;
 };
 
 /**
@@ -144,6 +110,12 @@ Game_Action.prototype.applyShield = function(shieldState, target, value)
  */
 Game_Action.prototype.shouldBypassShield = function(shield)
 {
+  // no shield means there is nothing to bypass.
+  if (!shield)
+  {
+    return false;
+  }
+
   // grab the actionable data.
   const skillOrItem = this.item();
 
@@ -159,42 +131,227 @@ Game_Action.prototype.shouldBypassShield = function(shield)
     return true;
   }
 
-  // gather this action's applicable elements.
-  // default to the skill/item's own element id.
-  let actionElements = [ skillOrItem.damage.elementId ];
-
-  // check if using the elementalistics plugin.
-  if (J.ELEM)
-  {
-    // gather all elements applicable for this action from the subject.
-    actionElements = [ ...this.getApplicableElements(this.subject()) ];
-  }
-
   // read the shield's typed elements and the typed bypass elements from the action.
   const shieldElements = shield.getShieldTypes();
   const bypassElements = skillOrItem.shieldBypassElements;
 
   // typing needs to be present on both sides of the bypass, or it won't bypass.
-  if (bypassElements.length === 0 || shieldElements.length === 0)
+  if (!bypassElements || bypassElements.length === 0 || shieldElements.length === 0)
   {
     return false;
   }
 
-  // we have a typed shield and typed bypass list; verify both intersections include this action's elements.
-  const actionEnablesBypass = ArrayHelper.hasAnyIntersection(actionElements, bypassElements);
-  if (actionEnablesBypass === false)
+  // typed bypass applies when the action's bypass list targets this shield's types.
+  const bypassesThisShield = ArrayHelper.hasAnyIntersection(shieldElements, bypassElements);
+  if (bypassesThisShield === false)
   {
     return false;
   }
 
-  // ensure the shield's types are actually relevant to this action's elements.
-  const shieldMatchesAction = ArrayHelper.hasAnyIntersection(actionElements, shieldElements);
-  if (shieldMatchesAction === false)
+  // typed bypass conditions satisfied: bypass this shield for this hit.
+  return true;
+};
+
+/**
+ * Calculates the SHIELD-ONLY bonus damage for this action against a specific target.
+ * The result may be absorbed by shields but can never spill into HP damage.
+ *
+ * Variables available to formulas:
+ * - a: the subject/caster of this action.
+ * - b: the target receiving this action.
+ * - o: the HP damage value for this hit (pre-shield processing).
+ *
+ * @param {Game_Actor|Game_Enemy} target The target of the action.
+ * @param {number} baseDamage The base HP damage value (pre-shield).
+ * @returns {number} The total non-negative, rounded shield-only bonus value.
+ */
+Game_Action.prototype.calculateShieldBonusDamage = function(target, baseDamage)
+{
+  // Grab the action data.
+  const skillOrItem = this.item();
+
+  // Pull all shield-bonus formulas.
+  const formulas = skillOrItem.shieldBonusFormulas;
+
+  // If no formulas are present, then there is no bonus.
+  if (formulas.length === 0)
+  {
+    return 0;
+  }
+
+  // Provide common variables for evaluation.
+  /* eslint-disable no-unused-vars */
+  const a = this.subject();
+  const b = target;
+  const o = baseDamage;
+  /* eslint-enable no-unused-vars */
+
+  // Sum the evaluated formulas (clamped to non-negative, rounded).
+  const sum = formulas.reduce((total, f) =>
+  {
+    // Evaluate the formula in the action context.
+    const result = eval(f);
+
+    // Coerce to number and clamp to non-negative.
+    const n = Number(result) || 0;
+
+    // Accumulate the rounded non-negative value.
+    return total + Math.max(0, Math.round(n));
+  }, 0);
+
+  // Return the computed sum.
+  return sum;
+};
+
+/**
+ * Absorbs as much of the provided damage as possible into the provided shield state.
+ * This will also consume any shield-only bonus damage, display pops, and handle break logic.
+ * If the shield is protected, the remainder of the hit is nullified.
+ *
+ * @param {JABS_State} shieldState The state bearing the shield to absorb damage.
+ * @param {Game_Actor|Game_Enemy} target The target receiving the action.
+ * @param {number} overflowDamage The current remaining HP damage to be applied to the target.
+ * @param {number} bonusDamage The current remaining SHIELD-ONLY bonus damage available.
+ * @returns {number} The leftover HP damage after absorption (0 if shield protected and nullified).
+ */
+Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, overflowDamage, bonusDamage)
+{
+  // assign locally.
+  let remainingDamage = overflowDamage;
+  let pendingBonusDamage = bonusDamage;
+
+  // continue absorbing while there is remaining HP damage OR pending shield-bonus,
+  // and this state still has a shield pool (handle stacked state refresh).
+  while ((remainingDamage > 0 || pendingBonusDamage > 0))
+  {
+    // re-resolve the shield reference (it may have been refreshed on a prior break in this loop).
+    const { shield: updatedShield } = shieldState;
+
+    // if there is no shield to absorb, stop processing this state.
+    if (!updatedShield || updatedShield.getCurrent() <= 0)
+    {
+      break;
+    }
+
+    // how much could be absorbed this iteration when considering the bonus?
+    const before = updatedShield.getCurrent();
+
+    // the maximum absorb this tick is limited by the pool.
+    const maxAbsorbThisTick = before;
+
+    // our available absorb power combines real damage + pendingBonus.
+    const absorbPower = remainingDamage + pendingBonusDamage;
+
+    // determine absorption this iteration.
+    const absorbed = Math.min(absorbPower, maxAbsorbThisTick);
+
+    // split the absorption between real damage and bonus.
+    const useFromReal = Math.min(remainingDamage, absorbed);
+    const useFromBonus = absorbed - useFromReal;
+
+    // deduct from the shield first.
+    updatedShield.setCurrent(before - absorbed);
+
+    // reduce the pools accordingly.
+    remainingDamage -= useFromReal;
+    pendingBonusDamage -= useFromBonus;
+
+    // show a shield damage popup for the amount absorbed (real + bonus).
+    if (absorbed > 0)
+    {
+      this.generateShieldDamagePop(target, absorbed);
+    }
+
+    // determine whether this shield broke on this application.
+    const brokeThisHit = (before > 0 && updatedShield.getCurrent() === 0);
+
+    // if the shield broke on this hit, handle the break lifecycle.
+    if (brokeThisHit)
+    {
+      // show a popup indicating the shield broke.
+      this.generateShieldBreakPop(target);
+
+      // consume a stack, refill if stacks remain, or remove the state if none remain.
+      shieldState.onShieldBreak();
+
+      // if this shield is protected, the remainder of this hit is nullified.
+      if (updatedShield.isProtected())
+      {
+        // stop processing entirely for this hit.
+        return 0;
+      }
+
+      // loop again: if stacks remain, the state refilled and we keep absorbing.
+      continue;
+    }
+
+    // if the pool did not break and we still have either remaining HP damage or pending bonus,
+    // the next shield state (outer loop) will handle it; break out for this state.
+    break;
+  }
+
+  // return whatever HP damage remains after rolling through this state's stacks.
+  // note: pendingBonus never affects returned HP damage.
+  return remainingDamage;
+};
+
+/**
+ * Resolves the element ids that should be considered for shield relevance checks.
+ * Falls back to the skill/item's element, expands via J.ELEM when present,
+ * or uses the subject's normal attack elements when the element id is -1.
+ * @param {Game_Battler} subject The acting battler.
+ * @param {RPG_UsableItem} skillOrItem The action being executed.
+ * @returns {number[]} The collection of element ids for this action.
+ */
+Game_Action.prototype.getActionElementsForShieldChecks = function(subject, skillOrItem)
+{
+  // start with the database-declared element id.
+  const declaredId = skillOrItem.damage.elementId;
+
+  // if using the elementalistics plugin, gather all applicable elements.
+  if (J.ELEM)
+  {
+    // gather all elements applicable for this action from the subject.
+    return [ ...this.getApplicableElements(subject) ];
+  }
+
+  // if the element is "normal attack", use the subject's attack elements.
+  if (declaredId === -1)
+  {
+    // include all the subject's normal attack elements.
+    return [ ...subject.attackElements() ];
+  }
+
+  // otherwise just use the declared element id.
+  return [ declaredId ];
+};
+
+/**
+ * Determines whether or not the provided shield is relevant to the action's elements.
+ * Untyped shields are always relevant. Typed shields must intersect with the action's elements.
+ * @param {JABS_Shield} shield The shield being checked for relevance.
+ * @param {number[]} actionElements The elements associated with the action.
+ * @returns {boolean} True if the shield is relevant to this action, false otherwise.
+ */
+Game_Action.prototype.isShieldRelevantToAction = function(shield, actionElements)
+{
+  // read the shield's typed elements.
+  const shieldElements = shield.getShieldTypes();
+
+  // untyped shields are always relevant.
+  if (shieldElements.length === 0)
+  {
+    return true;
+  }
+
+  // typed shields are only relevant if the action elements overlap the shield types.
+  const matches = ArrayHelper.hasAnyIntersection(actionElements, shieldElements);
+  if (matches === false)
   {
     return false;
   }
 
-  // both conditions satisfied: bypass this shield for this hit.
+  // the shield is relevant to this action.
   return true;
 };
 

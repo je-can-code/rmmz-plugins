@@ -40,12 +40,7 @@ Sprite_ActorValue.prototype.makeShieldValue = function(actor)
   if (actor.currentShieldStacks() > 1)
   {
     // append the stack count.
-    shieldLabel += `🛡` // this is a shield emoji.
-      .repeat(actor.currentShieldStacks());
-  }
-  else
-  {
-    shieldLabel = String.empty;
+    shieldLabel += `${actor.currentShieldStacks()}x🛡`
   }
 
   // return the shield value.

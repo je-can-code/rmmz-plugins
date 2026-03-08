@@ -149,5 +149,47 @@ Game_Battler.prototype.currentShieldStacks = function()
  */
 Game_Battler.prototype.onShieldBreak = function()
 {
+  // Resolve the bearer’s JABS battler.
+  const caster = JABS_AiManager.getBattlerByUuid(this.getUuid());
+
+  // check if we have a valid caster.
+  if (!caster) return;
+
+  // identify all the sources from which shield break skills can be pulled from.
+  const sources = this.shieldBreakSources().filter(source => !!source);
+
+  /**
+   * A reducer function to grab all the shield break skills.
+   * @param {number[]} accumulator The accumulator of skill ids.
+   * @param {RPG_Base} source The source from which to pull shield break skills.
+   */
+  const reducer = (accumulator, source) =>
+  {
+    // grab all the skill ids.
+    const skillIds = RPGManager.getArrayFromNotesByRegex(source, J.ABS.EXT.SHIELD.RegExp.Break, true);
+
+    // concat them onto the accumulation.
+    return accumulator.concat(...skillIds);
+  };
+
+  // grab all the shield break skills.
+  const breakSkillIds = sources.reduce(reducer, []);
+
+  // if no skillIds were found, then we can skip processing.
+  if (breakSkillIds.length === 0) return;
+
+  // trigger all skills in succession.
+  breakSkillIds.forEach(skillId => $jabsEngine.forceMapAction(caster, skillId, true));
+};
+
+/**
+ * Gets all the sources from which shield break skills can be pulled from.
+ * @returns {[RPG_Actor|RPG_Enemy|RPG_State]}
+ */
+Game_Battler.prototype.shieldBreakSources = function()
+{
+  return [
+    this.databaseData(), ...this.states(),
+  ];
 };
 //endregion Game_Battler

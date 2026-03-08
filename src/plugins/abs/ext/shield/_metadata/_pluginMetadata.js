@@ -28,11 +28,7 @@ class JShield_PluginMetadata
    */
   initializeMetadata()
   {
-    /**
-     * The id of a switch that represents whether or not this system is accessible in the menu.
-     * @type {number}
-     */
-    this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
+    // no-op; no configuration to initialize.
   }
 }
 
