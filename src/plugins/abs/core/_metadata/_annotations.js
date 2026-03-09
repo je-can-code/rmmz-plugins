@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.1.1 JABS] Enables combat to be carried out on the map.
+ * [v4.3.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,14 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.3.1
+ *    Prevented serialization of JABS_Action#_actionSprite.
+ *    Fixed issue with combat indicator and duration tailing not working.
+ *    Extended JABS_State to leverage a builder for extension.
+ *    Adjusted state stack loss to allow non-duration stack loss.
+ *    Fixed issue where eternal states were not refreshing if removed.
+ *    Removed action events from being added to save files.
+ *
  * - 4.3.0
  *    Unified sprint and dash as one alter-action.
  *    Added a notion of "being in combat" based on hitting or being hit.

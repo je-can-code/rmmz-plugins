@@ -344,7 +344,6 @@ Game_Time.prototype.needsHudUpdate = function()
   if (this._hasBeenUpdated === undefined)
   {
     this._hasBeenUpdated = false;
-    console.log('hasBeenUpdated property added.');
   }
 
   return this._hasBeenUpdated;

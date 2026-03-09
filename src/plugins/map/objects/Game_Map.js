@@ -9,6 +9,6 @@ Game_Map.prototype.isMinimapBlocked = function()
   J.MAP.RegExp.BlockMinimap.lastIndex = 0;
 
   // return what we found.
-  return J.MAP.RegExp.BlockMinimap.test(this.note() ?? '');
+  return J.MAP.RegExp.BlockMinimap.test(this.note() ?? String.empty);
 };
 //endregion Game_Map

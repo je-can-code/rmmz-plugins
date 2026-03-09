@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 TIME] A system for tracking time- real or artificial.
+ * [v1.0.4 TIME] A system for tracking time- real or artificial.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -136,6 +136,8 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.0.4
+ *    Fixed reversed check that only let time pass while blocked (oops!).
  * - 1.0.3
  *    Adapted for updates to J-ABS-InputManager (input namespace).
  * - 1.0.2

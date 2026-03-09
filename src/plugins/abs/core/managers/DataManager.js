@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 //region DataManager
 /**
  * The global reference for the `JABS_Engine` data object.
@@ -105,5 +106,38 @@ DataManager.onMapGet = function(xhr, name, src, url)
 DataManager.gracefulFail = function(name, src, url)
 {
   console.error(name, src, url);
+};
+
+/**
+ * Extends {@link DataManager.makeSaveContents}.<br/>
+ * Reviews the save contents to ensure that there are no circular references.
+ */
+J.ABS.Aliased.DataManager.set('makeSaveContents', DataManager.makeSaveContents);
+DataManager.makeSaveContents = function()
+{
+  // perform original logic.
+  const contents = J.ABS.Aliased.DataManager.get('makeSaveContents')
+    .call(this);
+
+  /** @type {Game_Event[]} */
+  const originalEvents = contents.map._events;
+
+  const actionlessEvents = originalEvents.map(event =>
+  {
+    // if the event itself is falsey, then return whatever it is.
+    if (!event) return event;
+
+    // don't save actions.
+    if (event.isJabsAction()) return null;
+
+    // save it.
+    return event;
+  });
+
+  // update the events with the action-free list.
+  contents.map._events = actionlessEvents;
+
+  // return the contents.
+  return contents;
 };
 //endregion

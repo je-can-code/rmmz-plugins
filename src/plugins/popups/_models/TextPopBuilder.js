@@ -550,7 +550,7 @@ class TextPopBuilder
   }
 
   /**
-   * Add some convenient defaults for configuration earned experience popups.
+   * Add some convenient defaults for configuring earned experience popups.
    * @returns {TextPopBuilder} The builder, for fluent chaining.
    */
   isExperience()
@@ -575,7 +575,7 @@ class TextPopBuilder
   }
 
   /**
-   * Add some convenient defaults for configuration found gold popups.
+   * Add some convenient defaults for configuring found gold popups.
    * @returns {TextPopBuilder} The builder, for fluent chaining.
    */
   isGold()
@@ -625,7 +625,7 @@ class TextPopBuilder
   }
 
   /**
-   * Add some convenient defaults for configuration collected loot popups.
+   * Add some convenient defaults for configuring collected loot popups.
    * @param {number} y The y coordinate.
    * @returns {TextPopBuilder} The builder, for fluent chaining.
    */

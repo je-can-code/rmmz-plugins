@@ -150,7 +150,7 @@ class Window_JabsRemapPrompt
   setButtonLabel(v)
   {
     this._root();
-    this._j._abs._input._remapButtonLabel = String(v || '');
+    this._j._abs._input._remapButtonLabel = String(v || String.empty);
   }
 
   //endregion accessors

@@ -4,6 +4,12 @@
  */
 class JABS_State
 {
+  /**
+   * A factory that generates builders for creating {@link JABS_State}s.
+   * @returns {JABS_StateBuilder}
+   */
+  static Builder = (target, stateId) => new JABS_StateBuilder(target, stateId);
+
   //region properties
   /**
    * The list of rulesets available for how to handle reapplication of a state.
@@ -11,22 +17,22 @@ class JABS_State
   static reapplicationType = {
     /**
      * "Refresh" will refresh the duration of a state when reapplied.
-     * @type {"refresh"}
+     * @type {'refresh'}
      */
-    Refresh: "refresh",
+    Refresh: 'refresh',
 
     /**
      * "Extend" will add the remaining duration onto the new duration when reapplied.
-     * @type {"extend"}
+     * @type {'extend'}
      */
-    Extend: "extend",
+    Extend: 'extend',
 
     /**
      * "Stack" will add an additional stack of the state when reapplied.
-     * @type {"stack"}
+     * @type {'stack'}
      */
-    Stack: "stack",
-  }
+    Stack: 'stack',
+  };
 
   /**
    * The battler being afflicted with this state.
@@ -176,7 +182,7 @@ class JABS_State
    */
   refreshRefreshResetCounter(newRefreshResetAmount = J.ABS.Metadata.DefaultStateRefreshReset)
   {
-    this.#refreshResetCounter = newRefreshResetAmount
+    this.#refreshResetCounter = newRefreshResetAmount;
   }
 
   /**
@@ -188,8 +194,8 @@ class JABS_State
     // handle all counters associated with the state.
     this.handleCounters();
 
-    // remove stacks as-needed.
-    this.decrementStacks();
+    // remove stacks on a duration-centric basis.
+    this.handleStackLossFromDuration();
 
     // handle the removal if applicable.
     this.handleExpiration();
@@ -255,27 +261,65 @@ class JABS_State
 
   /**
    * Decrement the stack counter as-needed.
+   * @param {number=} stacksToRemove The number of stacks to decrement; defaults to 1.
    */
-  decrementStacks()
+  decrementStacks(stacksToRemove = 1)
   {
-    // check if we are at 0 duration and have stacks remaining.
-    if (this.duration <= 0 && this.stackCount > 0 && !this.hasEternalDuration())
+    // if not being forced, then consider losing all stacks at once.
+    this.stackCount -= stacksToRemove;
+
+    // check if we STILL have stacks remaining.
+    if (this.stackCount > 0)
     {
-      // grab whether or not to lose all stacks at once.
-      const loseAllStacksAtOnce = this.source.state(this.stateId).jabsLoseAllStacksAtOnce;
-
-      // decrement the stack counter accordingly.
-      this.stackCount -= loseAllStacksAtOnce
-        ? this.stackCount
-        : 1;
-
-      // check if we STILL have stacks remaining.
-      if (this.stackCount > 0)
-      {
-        // reset the duration to the initial duration.
-        this.refreshDuration();
-      }
+      // reset the duration to the initial duration.
+      this.refreshDuration();
     }
+
+    // check if we need to normalize the stack count.
+    if (this.stackCount < 0)
+    {
+      // normalize the stack count.
+      this.stackCount = 0;
+    }
+  }
+
+  /**
+   * Handles stack loss from duration.
+   */
+  handleStackLossFromDuration()
+  {
+    // don't do anything if we should not decrement.
+    if (this.canLoseStackFromDuration() === false) return;
+
+    // grab whether or not to lose all stacks at once.
+    const loseAllStacksAtOnce = this.source.state(this.stateId).jabsLoseAllStacksAtOnce;
+
+    // if not being forced, then consider losing all stacks at once.
+    const stacksLossCount = (loseAllStacksAtOnce === true)
+      ? this.stackCount
+      : 1;
+
+    // decrement the stacks.
+    this.decrementStacks(stacksLossCount);
+  }
+
+  /**
+   * Determines whether or not this state can lose stacks from duration.
+   * @returns {boolean} True if it can, false otherwise.
+   */
+  canLoseStackFromDuration()
+  {
+    // must still have stacks left.
+    if (this.stackCount <= 0) return false;
+
+    // duration must be zero.
+    if (this.duration > 0) return false;
+
+    // cannot be a perpetual state.
+    if (this.hasEternalDuration()) return false;
+
+    // this is a decrementable state.
+    return true;
   }
 
   /**
@@ -285,7 +329,7 @@ class JABS_State
   refreshDuration(newDuration = this.#baseDuration)
   {
     // don't refresh the state if the provided duration is actually 0.
-    if (newDuration <= 0) return;
+    if (newDuration === 0) return;
 
     // refresh the duration.
     this.duration = newDuration;

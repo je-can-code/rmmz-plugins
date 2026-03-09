@@ -13,7 +13,7 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '2.3.1';
+J.BASE.Metadata.Version = '2.3.2';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

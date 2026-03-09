@@ -1,3 +1,5 @@
+/* eslint-disable max-len */
+
 //region RPGManager
 /**
  * A utility class for handling common database-related translations.
@@ -170,6 +172,68 @@ class RPGManager
     }
 
     // return what we found.
+    return val;
+  }
+
+  /**
+   * Gathers all string instances matching the regex from the given database object.
+   * @param {RPG_BaseItem} databaseData The database object to inspect.
+   * @param {RegExp} structure The RegExp structure to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
+   * @returns {string[]|null} The array of strings matching the structure, or an empty array if not found, or null with the flag.
+   */
+  static getStringsFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (!databaseData)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // initialize the value.
+    const val = [];
+
+    // get the note data from this skill.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // validate the notes to ensure there even are any.
+    if (lines.length === 0)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // grab the regex execution result for this note line.
+      const result = structure.exec(line);
+
+      // skip if we somehow encounter something amiss here.
+      if (result === null) return;
+
+      // extract the captured formula.
+      const [ /* skip first index */, stringResult ] = result;
+
+      // set this to what we found.
+      val.push(stringResult);
+    });
+
+    // validate the actual findings to evaluate return values.
+    if (val.length === 0)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : [];
+    }
+
+    // return the found value.
     return val;
   }
 
@@ -633,7 +697,8 @@ class RPGManager
     const results = databaseDatas.map(databaseData => this.checkForBooleanFromNoteByRegex(
       databaseData,
       structure,
-      nullIfEmpty));
+      nullIfEmpty
+    ));
 
     // filter away the non-values.
     const onlyTrueRemains = results

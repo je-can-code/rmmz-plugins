@@ -82,6 +82,7 @@
     "build:jabs-speed": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/speed ./out/abs/ext J-ABS-Speed.js",
     "build:jabs-timing": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/timing ./out/abs/ext J-ABS-Timing.js",
     "build:jabs-tools": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/tools ./out/abs/ext J-ABS-Tools.js",
+    "build:jabs-shield": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/shield ./out/abs/ext J-ABS-Shield.js",
     "build:jabs-star": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/star ./out/abs/ext J-ABS-Star.js",
 
     "build:omni": "node ./src/build-tools/combine.js ./src/plugins/omni/core ./out/omni J-Omnipedia.js",

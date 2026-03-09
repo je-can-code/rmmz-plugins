@@ -136,7 +136,7 @@ class Sprite_BaseText
     this.bitmap.fontItalic = this.isItalics();
     this.bitmap.textColor = this.color();
 
-    this.bitmap.outlineColor = "#000000"; // or a theme color
+    this.bitmap.outlineColor = '#000000'; // or a theme color
     this.bitmap.outlineWidth = Math.max(2, Math.floor(this.fontSize() / 6));
   }
 
