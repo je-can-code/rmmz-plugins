@@ -58,13 +58,13 @@ JABS_State.prototype.removeShield = function()
 JABS_State.prototype.recalculateShield = function()
 {
   // recalculates the shield based on the current state.
-  const updatedShield = JABS_Shield.fromStateId(this.stateId, this.battler);
+  const updatedShield = JABS_Shield.fromStateId(this.stateId, this.battler, this.source);
 
   // validate we have a shield to update.
   if (updatedShield === null || updatedShield === undefined) return;
 
   // update the updated shield with the current shield's current value.
-  updatedShield.setCurrent(this.shield.getCurrent());
+  updatedShield.setCurrent(this.shield?.getCurrent() ?? 0);
 
   // updates the shield.
   this.shield = updatedShield;

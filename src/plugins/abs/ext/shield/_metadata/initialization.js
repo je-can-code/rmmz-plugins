@@ -39,11 +39,13 @@ J.ABS.EXT.SHIELD.Aliased = {
 J.ABS.EXT.SHIELD.RegExp = {
   /**
    * Represents the shield points derived from a damage formula.
+   * 'a' is the attacker, 'b' is the shielded battler.
    */
   ShieldPointsFormula: /<shield:\[([+\-*/ ().\w]+)]>/gi,
 
   /**
    * Represents the shield cap derived from a damage formula.
+   * 'a' is the attacker, 'b' is the shielded battler.
    */
   ShieldCapFormula: /<shieldCap:\[([+\-*/ ().\w]+)]>/gi,
 

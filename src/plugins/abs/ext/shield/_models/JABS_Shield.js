@@ -7,26 +7,48 @@ class JABS_Shield
   /**
    * Derives a {@link JABS_Shield} from a state id.
    * @param {number} stateId The id of the state we should derive a shield from.
-   * @param {Game_Battler} target The battler that will have the shield.
+   * @param {Game_Actor|Game_Enemy} target The battler that will have the shield.
+   * @param {Game_Actor|Game_Enemy} attacker The battler that is applying the state.
    * @returns {JABS_Shield|null} The shield data, or null if the state is not a shield state.
    */
-  static fromStateId(stateId, target)
+  static fromStateId(stateId, target, attacker)
   {
+    // TODO: implement shield bonuses from target.
+
     // grab the state we're working with.
-    // TODO: target may perceive enhanced shield bonuses from state.
     const state = target.state(stateId);
 
     // grab all the formulas that the
     const pointFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.ShieldPointsFormula);
 
-    // allows access to the battler and state itself.
+    // allows access to the attacker and target.
     /* eslint-disable no-unused-vars */
-    const a = target;
-    const b = state;
+    const a = attacker ?? target;
+    const b = target;
     /* eslint-enable no-unused-vars */
 
+    /**
+     * A safe reduce function that wears a diaper during evaluation.
+     * @param {number} total The current total value.
+     * @param {string} formula The formula to evaluate.
+     * @returns {number} The new total value.
+     */
+    const safeReduce = (total, formula) =>
+    {
+      try
+      {
+        return total + eval(formula);
+      }
+      catch (e)
+      {
+        console.error(`Error evaluating shield formula: ${formula}`, target, attacker, e);
+        return total;
+      }
+    };
+
+    // combine all the point formulas into a single value.
     const totalPoints = pointFormulas
-      .reduce((total, formula) => total + eval(formula), 0);
+      .reduce(safeReduce, 0);
 
     // if we have no shield points, then nothing else matters.
     if (totalPoints === 0) return null;
@@ -36,7 +58,7 @@ class JABS_Shield
 
     // combine all the cap formulas into a single value and add the flat cap points.
     const totalCap = capFormulas
-      .reduce((total, formula) => total + eval(formula), 0);
+      .reduce(safeReduce, 0);
 
     // if no cap was specified, then use the total points as the cap by default.
     const normalizedCap = totalCap === 0
