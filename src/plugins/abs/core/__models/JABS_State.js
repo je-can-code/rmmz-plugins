@@ -105,12 +105,6 @@ class JABS_State
    */
   #refreshResetCounter = 0;
 
-  /**
-   * The shield that this state bestows.
-   * @type {JABS_Shield|null}
-   */
-  shield = null;
-
   //endregion properties
 
   /**
@@ -121,9 +115,8 @@ class JABS_State
    * @param {number} duration The duration in frames that this state will remain.
    * @param {number=} startingStacks The number of stacks to start out with; defaults to 1.
    * @param {Game_Battler=} source The battler who afflicted the state; defaults to self.
-   * @param {JABS_Shield=} shield The shield that this state grants; defaults to null.
    */
-  constructor(battler, stateId, iconIndex, duration, startingStacks = 1, source = battler, shield = null)
+  constructor(battler, stateId, iconIndex, duration, startingStacks = 1, source = battler)
   {
     // initialize the values of the tracker.
     this.battler = battler;
@@ -132,7 +125,6 @@ class JABS_State
     this.duration = duration;
     this.stackCount = startingStacks;
     this.source = source;
-    this.shield = shield;
 
     // mirror the duration as base duration for stacks.
     this.setBaseDuration(duration);

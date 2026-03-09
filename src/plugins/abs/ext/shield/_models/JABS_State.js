@@ -1,4 +1,33 @@
 //region JABS_State
+
+/**
+ * The shield for this state.
+ * @type {JABS_Shield|null}
+ */
+Object.defineProperty(
+  JABS_State.prototype, 'shield',
+  {
+    get()
+    {
+      // Return null if the backing field hasn’t been set yet.
+      if (this._shield === undefined)
+      {
+        return null;
+      }
+
+      // Return the current shield value.
+      return this._shield;
+    },
+    set(v)
+    {
+      // Assign the shield backing field.
+      this._shield = v;
+    },
+    enumerable: true,
+    configurable: true,
+  }
+);
+
 /**
  * Extends {@link #removeFromBattler}.<br/>
  * Also removes the shield when the state expires.
@@ -63,8 +92,13 @@ JABS_State.prototype.recalculateShield = function()
   // validate we have a shield to update.
   if (updatedShield === null || updatedShield === undefined) return;
 
+  // sometimes, somehow, the shield is null at this stage.
+  const current = this.shield
+    ? this.shield.getCurrent()
+    : 0;
+
   // update the updated shield with the current shield's current value.
-  updatedShield.setCurrent(this.shield?.getCurrent() ?? 0);
+  updatedShield.setCurrent(current);
 
   // updates the shield.
   this.shield = updatedShield;

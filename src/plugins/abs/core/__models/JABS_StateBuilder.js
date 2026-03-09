@@ -10,7 +10,6 @@
  * const built = new JABS_StateBuilder(target, stateId, iconIndex, duration)
  *   .setStartingStacks(2)
  *   .setSource(attacker)
- *   .setShield(myShield)
  *   .build();
  */
 class JABS_StateBuilder
@@ -54,12 +53,6 @@ class JABS_StateBuilder
    */
   #source = null;
 
-  /**
-   * The optional shield model to attach directly to the resulting {@link JABS_State} via `state.shield`.
-   * @type {JABS_Shield|null}
-   */
-  #shield = null;
-
   //endregion private fields
 
   /**
@@ -87,40 +80,10 @@ class JABS_StateBuilder
       this.#duration,
       this.#startingStacks,
       this.#source,
-      this.#shield,
     );
 
     // return the fully constructed state instance.
     return state;
-  }
-
-  /**
-   * Sets the starting stack count for the state (defaults to 1 if not set).
-   * @param {number} stacks The starting stack count.
-   * @returns {JABS_StateBuilder} This builder for chaining.
-   */
-  setStartingStacks(stacks)
-  {
-    // assign the starting stacks.
-    this.#startingStacks = stacks;
-
-    // return this for chaining.
-    return this;
-  }
-
-  /**
-   * Sets the source battler who applied the state.
-   * If not provided, it defaults to the afflicted battler during {@link build}.
-   * @param {Game_Battler} source The applying battler.
-   * @returns {JABS_StateBuilder} This builder for chaining.
-   */
-  setSource(source)
-  {
-    // assign the source battler.
-    this.#source = source;
-
-    // return this for chaining.
-    return this;
   }
 
   /**
@@ -151,14 +114,29 @@ class JABS_StateBuilder
   }
 
   /**
-   * Attaches a prebuilt {@link JABS_Shield} to the state after construction.
-   * @param {JABS_Shield} shield The shield model to assign.
+   * Sets the starting stack count for the state (defaults to 1 if not set).
+   * @param {number} stacks The starting stack count.
    * @returns {JABS_StateBuilder} This builder for chaining.
    */
-  setShield(shield)
+  setStartingStacks(stacks)
   {
-    // assign the shield to be applied post-construction.
-    this.#shield = shield;
+    // assign the starting stacks.
+    this.#startingStacks = stacks;
+
+    // return this for chaining.
+    return this;
+  }
+
+  /**
+   * Sets the source battler who applied the state.
+   * If not provided, it defaults to the afflicted battler during {@link build}.
+   * @param {Game_Battler} source The applying battler.
+   * @returns {JABS_StateBuilder} This builder for chaining.
+   */
+  setSource(source)
+  {
+    // assign the source battler.
+    this.#source = source;
 
     // return this for chaining.
     return this;

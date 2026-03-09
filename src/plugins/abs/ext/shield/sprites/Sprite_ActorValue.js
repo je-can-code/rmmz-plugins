@@ -34,7 +34,7 @@ Sprite_ActorValue.prototype.makeShieldValue = function(actor)
   if (currentShields === 0) return String.empty;
 
   // return the shield value.
-  let shieldLabel = `(${currentShields})`;
+  let shieldLabel = `(${Math.round(currentShields)})`;
 
   // check if there are multiple stacks on the shield.
   if (actor.currentShieldStacks() > 1)

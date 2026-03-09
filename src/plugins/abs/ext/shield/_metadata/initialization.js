@@ -28,6 +28,7 @@ J.ABS.EXT.SHIELD.Aliased = {
   Game_Battler: new Map(),
   JABS_Engine: new Map(),
   JABS_State: new Map(),
+  JABS_StateBuilder: new Map(),
   Sprite_ActorValue: new Map(),
   Sprite_Character: new Map(),
   Window_PartyFrame: new Map(),

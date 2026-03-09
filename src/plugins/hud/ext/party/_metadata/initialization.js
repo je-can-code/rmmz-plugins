@@ -7,7 +7,7 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.3.1';
+  const requiredBaseVersion = '2.3.2';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -27,7 +27,7 @@ J.HUD.EXT.PARTY = {};
  */
 J.HUD.EXT.PARTY = {};
 J.HUD.EXT.PARTY.Metadata = {};
-J.HUD.EXT.PARTY.Metadata.Version = '1.1.0';
+J.HUD.EXT.PARTY.Metadata.Version = '1.2.0';
 J.HUD.EXT.PARTY.Metadata.Name = `J-HUD-PartyFrame`;
 
 /**
