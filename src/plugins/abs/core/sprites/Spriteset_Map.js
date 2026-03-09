@@ -1277,7 +1277,7 @@ Spriteset_Map.prototype.getActionHitboxStyleFor = function (shape)
   const base = Object.assign({}, defaults, styles.base || {}); // merged base.
 
   // apply shape-specific overrides if provided.
-  const key = (shape || '').toLowerCase(); // normalized key.
+  const key = (shape || String.empty).toLowerCase(); // normalized key.
   const shapeOverrides = styles.byShape?.[key] || null; // optional per-shape.
 
   // produce the final style.
@@ -2071,7 +2071,7 @@ Spriteset_Map.prototype.getBattlerHitboxStyle = function (
   const byKind = styles.byKind?.[kindKey] || null; // optional kind overrides.
 
   // apply state-specific overrides if provided (e.g., colliding).
-  const stateKey = (state || '').toLowerCase(); // normalized.
+  const stateKey = (state || String.empty).toLowerCase(); // normalized.
   const byState = stateKey
     ? (styles.byState?.[stateKey] || null)
     : null; // optional state overrides.

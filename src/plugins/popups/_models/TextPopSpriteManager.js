@@ -89,7 +89,6 @@ class TextPopSpriteManager
       case Map_TextPop.Types.Slip:
         return 0;
       default:
-        console.warn(`unsupported popup type of [${popupType}] found.`);
         return 0;
     }
   }

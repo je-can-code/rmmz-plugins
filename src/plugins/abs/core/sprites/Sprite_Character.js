@@ -271,7 +271,7 @@ Sprite_Character.prototype.isEmptyCharacter = function()
     ? false
     // otherwise, perform original logic.
     : J.ABS.Aliased.Sprite_Character.get('isEmptyCharacter')
-      .call(this)
+      .call(this);
 };
 
 /**
@@ -355,11 +355,11 @@ Sprite_Character.prototype.setupMapSprite = function()
  * Extends/Overrides {@link Sprite_Character.prototype.updatePosition}.<br/>
  * Also applies per-skill visual metadata (offset, anchor, z, rotation, scale) to JABS action sprites.
  */
-J.ABS.Aliased.Sprite_Character.set("updatePosition", Sprite_Character.prototype.updatePosition);
+J.ABS.Aliased.Sprite_Character.set('updatePosition', Sprite_Character.prototype.updatePosition);
 Sprite_Character.prototype.updatePosition = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Sprite_Character.get("updatePosition")
+  J.ABS.Aliased.Sprite_Character.get('updatePosition')
     .call(this);
 
   // only apply to JABS action sprites that still exist and aren’t erased.
@@ -715,7 +715,7 @@ Sprite_Character.prototype.setupHpGauge = function()
   this._j._abs._gauges._hpGauge.activateGauge();
 
   // locate the gauge below the character.
-  this._j._abs._gauges._hpGauge.move(-(this._j._abs._gauges._hpGauge.bitmapWidth() / 1.5), -12);
+  this._j._abs._gauges._hpGauge.move(-(this._j._abs._gauges._hpGauge.bitmapWidth() / 2), -12);
 };
 
 /**
@@ -881,9 +881,10 @@ Sprite_Character.prototype.updateCastGauge = function()
     const currentJabs = this._character.getJabsBattler();
 
     // if the bound JABS battler or its expected host changed, rebind.
+    // eslint-disable-next-line max-len
     const needsRebind = (gauge._jabsBattler !== currentJabs || gauge._expectedCharacter !== this._character || gauge._expectedUuid !== (currentJabs
-        ? currentJabs.getUuid()
-        : null));
+      ? currentJabs.getUuid()
+      : null));
 
     if (needsRebind)
     {
@@ -975,7 +976,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     .setText(battlerName)
     .setFontSize(16)
     .setAlignment(Sprite_BaseText.Alignments.Left)
-    .setColor("#ffffff");
+    .setColor('#ffffff');
   sprite.setText(battlerName); // TODO: is this second assignment necessary???
 
   // relocate the sprite to a better position.

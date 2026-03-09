@@ -111,7 +111,7 @@ JABS_Aggro.prototype.isForLivingActor = function()
   if (!battler) return false;
 
   // if the battler is not an actor, then its not for an actor.
-  if (battler.isActor() !== false) return false;
+  if (battler.isActor() === false) return false;
 
   // if the actor is dead, then it doesn't count.
   if (battler.isDead() === true) return false;

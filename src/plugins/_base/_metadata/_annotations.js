@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.3.1 BASE] The base class for all J plugins.
+ * [v2.3.2 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -92,6 +92,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.2
+ *    Added helper function to determine array intersections.
+ *    Added prototype helper class for common prototype operations (unused).
+ *    Added new RPGManager.getStringsFromNoteByRegex(...) helper function.
+ *    Updated multiple ephemereal classes to be modern class syntax.
  * - 2.3.1
  *    Added flag for showing external file load info across plugins.
  *    Removed extraneous note tag enum-like object.

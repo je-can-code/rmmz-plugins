@@ -682,11 +682,34 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
   // grab the number of stacks to apply at once.
   const stacks = state.jabsStateStacksApplied;
 
-  // build the new state.
-  const jabsState = new JABS_State(this, stateId, iconIndex, totalDuration, stacks, assailant);
+  // populate the state builder.
+  const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stacks, assailant);
+
+  // build the state.
+  const jabsState = builder.build();
 
   // add the state to the engine's tracker.
   $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
+};
+
+/**
+ * An abstraction for creating a new {@link JABS_State} with the given parameters.
+ * Returns the builder with the designated parameters so that extension from the builder is possible.
+ * @param {Game_Battler} target the battler being affected by the state.
+ * @param {number} stateId The id of the state being applied.
+ * @param {number} iconIndex The icon index of the state being applied.
+ * @param {number} totalDuration The total duration in frames of the state being applied.
+ * @param {number} stacks The number of stacks of the state being applied.
+ * @param {Game_Battler} attacker The battler applying the state.
+ * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
+ */
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker)
+{
+  return JABS_State.Builder(target, stateId)
+    .setIconIndex(iconIndex)
+    .setDuration(totalDuration)
+    .setStartingStacks(stacks)
+    .setSource(attacker);
 };
 
 /**
@@ -714,7 +737,8 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
     objectsToCheck,
     J.ABS.RegExp.StateDurationFormulaPlus,
     baseDuration,
-    this);
+    this
+  );
 
   // sum the boosts together to get the total boost.
   const durationBoost = flat + percentBoost + formulaiBoost;
@@ -761,7 +785,8 @@ Game_Battler.prototype.refreshBonusHits = function()
 Game_Battler.prototype.getBonusHitsSources = function()
 {
   return [
-    this.states(), [ this.databaseData() ], ];
+    this.states(), [ this.databaseData() ],
+  ];
 };
 
 /**
@@ -814,7 +839,7 @@ Game_Battler.prototype.getBonusHitsFromSources = function(sources)
     bonusHits += source.traits
       .filter(isHitsTrait)
       .reduce(addHitsReducer, 0);
-  }
+  };
 
   // iterate over all equips.
   sources.forEach(collectBonusHitsForEacher);

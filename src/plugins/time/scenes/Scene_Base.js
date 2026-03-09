@@ -41,8 +41,8 @@ Scene_Base.prototype.shouldUpdateTime = function()
   if (isTimeInactive) return false;
 
   // if time is blocked, then it shouldn't update.
-  const isTimeUnblocked = $gameTime.isBlocked() === false;
-  if (isTimeUnblocked) return false;
+  const isTimeBlocked = $gameTime.isBlocked() === true;
+  if (isTimeBlocked) return false;
 
   // time can update!
   return true;

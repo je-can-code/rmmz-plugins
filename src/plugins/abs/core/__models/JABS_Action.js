@@ -117,7 +117,13 @@ class JABS_Action
      * The `Game_Event` this JABS action is bound to. Represents the visual aspect on the map.
      * @type {Game_Event}
      */
-    this._actionSprite = null;
+    Object.defineProperty(this, '_actionSprite',
+      {
+        value: null,
+        enumerable: false,
+        writable: true,
+        configurable: true,
+      });
 
     /**
      * The animation id to be performed on the action itself upon execution.
@@ -383,7 +389,8 @@ class JABS_Action
     if (this.hasOnCastAnimationId())
     {
       // request the one-off animation on the caster’s map character.
-      who.getCharacter().requestAnimation(this.getOnCastAnimationId());
+      who.getCharacter()
+        .requestAnimation(this.getOnCastAnimationId());
     }
   }
 

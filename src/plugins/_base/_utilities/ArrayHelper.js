@@ -16,12 +16,56 @@ class ArrayHelper
   }
 
   /**
-   * A filter function for ignoring any falsey values.
-   * @param {any} value The value of the array being filtered.
-   * @returns {boolean} True if the value is truthy, false if the value is falsey.
+   * Determines whether two arrays share at least one common element.
+   * Builds a Set from the smaller array for O(n + m) performance and early exit.
+   *
+   * Notes:
+   * - Accepts numbers or strings (ids, keys, etc.).
+   * - Returns false if either array is empty.
+   *
+   * @param {(number|string)[]} left The first collection of values.
+   * @param {(number|string)[]} right The second collection of values.
+   * @returns {boolean} True if a value is found in both arrays; otherwise false.
    */
-  static NoFalsey(value)
+  static hasAnyIntersection(left, right)
   {
-    return !!value;
+    // if either collection is missing or empty, then there is no intersection.
+    if (!left || left.length === 0)
+    {
+      return false;
+    }
+
+    if (!right || right.length === 0)
+    {
+      return false;
+    }
+
+    // identify the smaller/larger arrays to minimize Set size.
+    let small = left;
+    let large = right;
+    if (right.length < left.length)
+    {
+      small = right;
+      large = left;
+    }
+
+    // create a set for O(1) membership checks.
+    const lookup = new Set(small);
+
+    // iterate the larger array and check for membership in the set.
+    for (let i = 0; i < large.length; i++)
+    {
+      // grab the current value from the larger array.
+      const value = large[i];
+
+      // if it exists in the set, we found an intersection.
+      if (lookup.has(value))
+      {
+        return true;
+      }
+    }
+
+    // no matches were found across both arrays.
+    return false;
   }
 }
