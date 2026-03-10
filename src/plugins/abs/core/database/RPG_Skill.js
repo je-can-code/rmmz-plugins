@@ -675,7 +675,40 @@ RPG_Skill.prototype.extractJabsUniqueCooldown = function()
 };
 //endregion uniqueCooldown
 
-//region moveType
+//region dodging
+/**
+ * The number of steps that the battler will move during this dodge.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsDodgeSteps', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.DodgeSteps);
+  },
+});
+
+/**
+ * The speed bonus the battler will receive during this dodge.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsDodgeSpeed', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.DodgeSpeed);
+  },
+});
+
+/**
+ * The iFrames for the start and end of an action that will be applied to the battler.
+ * @type {[number, number]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsIFrames', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.IFrames, true, true);
+  },
+});
+
 /**
  * The direction that this dodge skill will move.
  * @type {string}
@@ -683,30 +716,10 @@ RPG_Skill.prototype.extractJabsUniqueCooldown = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsMoveType', {
   get: function()
   {
-    return this.getJabsMoveType();
+    return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.MoveType, true);
   },
 });
 
-/**
- * Gets the JABS moveType this skill.
- * @returns {string|null}
- */
-RPG_Skill.prototype.getJabsMoveType = function()
-{
-  return this.extractJabsMoveType();
-};
-
-/**
- * Extracts the JABS moveType for this skill from its notes.
- * @returns {string|null}
- */
-RPG_Skill.prototype.extractJabsMoveType = function()
-{
-  return this.getStringFromNotesByRegex(J.ABS.RegExp.MoveType, true);
-};
-//endregion moveType
-
-//region invincibleDodge
 /**
  * Whether or not the battler is invincible for the duration of this
  * skill's dodge movement.
@@ -715,29 +728,12 @@ RPG_Skill.prototype.extractJabsMoveType = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsInvincibleDodge', {
   get: function()
   {
-    return this.getJabsInvincibileDodge();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.InvincibleDodge);
   },
 });
+//endregion dodging
 
-/**
- * Gets the dodge invincibility flag for this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsInvincibileDodge = function()
-{
-  return this.extractJabsInvincibleDodge();
-};
-
-/**
- * Extracts the JABS invincibleDodge for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsInvincibleDodge = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.InvincibleDodge, true);
-};
-//endregion invincibleDodge
-
+//region combos
 //region freeCombo
 /**
  * Whether or not this skill has the "free combo" trait on it.
@@ -958,6 +954,7 @@ RPG_Skill.prototype.shouldRecurseForComboSkills = function(skill, lastSkillId)
   // we should recurse!
   return true;
 };
+//endregion combos
 
 //region piercing
 /**
@@ -1250,7 +1247,7 @@ RPG_Skill.prototype.extractJabsDelayData = function()
 };
 //endregion delay
 
-//region visual metadata (new)
+//region visual metadata
 /**
  * Optional per-skill pixel offset to nudge the action visual relative to its default position.
  * Example: <visOffset:[-6, -12]>
@@ -1401,7 +1398,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisDebug', {
   },
 });
 
-//region visual metadata (directional, new)
+//region directional
 /**
  * Optional UP-facing visual offset.
  * Example: <visOffsetU:[0, -24]>
@@ -1560,6 +1557,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetDL', {
  * @param {1|2|3|4|6|7|8|9} direction The numeric direction from the action.
  * @returns {[number, number]} The resolved [x, y] visual offset.
  */
+// eslint-disable-next-line complexity
 RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
 {
   // start from the default offset (may be [0, 0]).
@@ -1590,6 +1588,6 @@ RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
   // unknown direction: return default.
   return def || [ 0, 0 ];
 };
-//endregion visual metadata (directional, new)
-//endregion visual metadata (new)
+//endregion directional
+//endregion visual metadata
 //endregion RPG_Skill effects
