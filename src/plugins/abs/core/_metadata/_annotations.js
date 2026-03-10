@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.3.1 JABS] Enables combat to be carried out on the map.
+ * [v4.4.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,10 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.4.0
+ *    Revamped dodge skills.
+ *    Dodge skills now execute their skill as well.
+ *    Added new tags for additional customization of dodge skills.
  * - 4.3.1
  *    Prevented serialization of JABS_Action#_actionSprite.
  *    Fixed issue with combat indicator and duration tailing not working.
@@ -53,7 +57,6 @@
  *    Adjusted state stack loss to allow non-duration stack loss.
  *    Fixed issue where eternal states were not refreshing if removed.
  *    Removed action events from being added to save files.
- *
  * - 4.3.0
  *    Unified sprint and dash as one alter-action.
  *    Added a notion of "being in combat" based on hitting or being hit.
@@ -932,6 +935,11 @@
  * will not only need some tags below, but also need to be a part of the skill
  * type that is defined in the plugin parameters for "dodge skill type".
  *
+ * NOTE ABOUT OTHER ASPECTS OF THE DODGE SKILL:
+ * Aside from the tags you'll see below, the skill will still be executed
+ * through the normal JABS action execution pipeline, meaning it can still
+ * apply states, deal damage, fire projectiles, be extended, etc.
+ *
  * DODGE MOVETYPE:
  * The "move type" defines one of three kinds of movetypes available for the
  * dodge skill.
@@ -947,6 +955,24 @@
  * The "directional move type" will grant the player the ability to move in
  * whatever direction they are pressing when the skill is executed.
  *
+ * DODGE DISTANCE:
+ * Sometimes you may want the player to only dodge a couple steps, maybe other
+ * times you'll want them to be able to dodge across the map. In either case,
+ * if you want to define this distance, you'll use the "dodge" tag:
+ *    <dodge:DISTANCE>
+ *  Where DISTANCE is the number of tiles to be forcefully moved.
+ *
+ * DODGE SPEED:
+ * Dodging can be fast or slow (it is up to you). For your designing
+ * convenience, there is a tag that designates the speed at which the dodging
+ * will move. Note that this is considered a "modifier" against the player's
+ * current movespeed at the time of dodge skill execution:
+ *    <dodgeSpeed:MODIFIER>
+ *  Where MODIFIER is the amount of speed to add to the player's current speed.
+ *
+ * Note that the amount can be a decimal (ex: 1.5, 2.3).
+ * Note that the amount can be negative. (ex: -0.75, -2).
+ *
  * DODGE INVINCIBILITY:
  * Normally when performing a dodge skill, the player is simply being
  * forcefully moved by the skill, but are still susceptible to interruption by
@@ -955,13 +981,21 @@
  * this tag.
  *    <invincibleDodge>
  *
- * DODGE DISTANCE:
- * Sometimes you may want the player to only dodge a couple steps, maybe other
- * times you'll want them to be able to dodge across the map. In either case,
- * if you want to define this distance, you'll use the "radius" tag that is
- * already used to define distance for skills:
- *    <radius:DISTANCE>
- *  Where DISTANCE is the number of tiles to be forcefully moved.
+ * Alternatively, if you prefer to not have full invincibility for the whole
+ * duration of the dodge, you can specify a window of frames that will
+ * basically count as "i-frames" during the dodge execution:
+ *    <iframes:[START_FRAME, END_FRAME]>
+ *  Where START_FRAME is the frame at which the player begins being invincible.
+ *  Where END_FRAME is the frame at which the player stops being invincible.
+ *
+ * Note that short dodge distance and/or high dodge speed can result in very
+ * small durations of dodging. If the window described by "iframes" is outside
+ * of the dodge duration, then the player will only be invincible for the
+ * times the window intersects with the dodge duration. For example, if the
+ * window is [3,10] (indicating you start invicibility at frame 3, and stop
+ * invincibility at frame 10), but the dodge duration is only 5 frames, then
+ * the player will only be invincible for frames 3, 4, and 5 and the rest will
+ * be ignored.
  *
  * ----------------------------------------------------------------------------
  * COMBAT SKILL SLOTS:

@@ -559,11 +559,42 @@ JABS_Battler.prototype.shouldCancelDodge = function()
  */
 JABS_Battler.prototype.handleDodgeMovement = function()
 {
+  // update the iframes for the dodge.
+  this.updateDodgeIFrames()
+
   // if we cannot dodge move, do not.
   if (!this.canDodgeMove()) return;
 
   // perform the movement.
   this.executeDodgeMovement();
+};
+
+/**
+ * Updates the dodge iframes, and applies windowed invincibility.
+ */
+JABS_Battler.prototype.updateDodgeIFrames = function()
+{
+  // only process i‑frames while actively dodging.
+  if (!this.isDodging()) return;
+
+  // advance the dodge frames.
+  this.incrementDodgeFrame();
+
+  // grab the iframes window.
+  const iframesWindow = this.getDodgeIFrames();
+
+  // if there isn't an iframe window, then don't update them.
+  if (iframesWindow === null) return;
+
+  // destructure the iframe window into its start and end frames.
+  const [ startF, endF ] = iframesWindow;
+
+  // grab the current frame.
+  const currentFrame = this.getDodgeFrame();
+
+  // apply windowed invincibility.
+  const inWindow = (currentFrame >= startF && currentFrame <= endF);
+  this.setInvincible(inWindow);
 };
 
 /**
@@ -597,12 +628,22 @@ JABS_Battler.prototype.canDodgeMove = function()
  */
 JABS_Battler.prototype.executeDodgeMovement = function()
 {
-  // move the character.
-  this.getCharacter()
-    .moveStraight(this._dodgeDirection);
+  const character = this.getCharacter();
+  const direction = this.getDodgeDirection();
+
+  // move the character based on their direction.
+  if (character.isDiagonalDirection(direction))
+  {
+    character.moveDiagonally(direction);
+  }
+  else if (character.isStraightDirection(direction))
+  {
+    character.moveStraight(direction);
+  }
+
 
   // reduce the dodge steps.
-  this._dodgeSteps--;
+  this.decrementDodgeSteps();
 };
 
 /**
@@ -610,6 +651,9 @@ JABS_Battler.prototype.executeDodgeMovement = function()
  */
 JABS_Battler.prototype.handleDodgeEnd = function()
 {
+  // keep i‑frames evaluated every tick even if we didn’t step this frame.
+  this.updateDodgeIFrames();
+
   // check if we even should end the dodge.
   if (!this.shouldEndDodge()) return;
 
@@ -647,6 +691,15 @@ JABS_Battler.prototype.endDodge = function()
 
   // disable the invincibility from dodging.
   this.setInvincible(false);
+
+  // explicitly clear the dodge speed modifier to avoid residual boosts.
+  this.getCharacter().setDodgeModifier(0);
+
+  // reset the dodge frames.
+  this.setDodgeFrame(0);
+
+  // reset the dodge Iframes.
+  this.setDodgeIFrames(0);
 };
 //endregion update dodging
 

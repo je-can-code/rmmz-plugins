@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.3.1';
+J.ABS.Metadata.Version = '4.4.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -600,13 +600,17 @@ J.ABS.RegExp = {
   CounterGuard: /<counterGuard:[ ]?(\[\d+(?:\.\d+)?(?:,\s*\d+(?:\.\d+)?)*])>/gi,
 
   // dodge-related.
+  DodgeSteps: /<dodge:[ ]?(\d+)>/gi,
+  DodgeSpeed: /<dodgeSpeed:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
   MoveType: /<moveType:[ ]?(forward|backward|directional)>/gi,
   InvincibleDodge: /<invincibleDodge>/gi,
+  IFrames: /<iframes:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // counter-related (on-chance-effect template)
   Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi, //endregion ON SKILLS
+  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  //endregion ON SKILLS
 
   //region ON EQUIPS
   // skill-related.
@@ -741,7 +745,7 @@ J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
 //endregion visual directional metadata (new)
 
-//region cast preview tags (MVP)
+//region cast preview tags
 /**
  * Skill-level: disable preview for this skill.
  */
@@ -756,7 +760,7 @@ J.ABS.RegExp.CastPreviewWarnAt = /<castPreviewWarnAt:[ ]?(\d+)>/gi;
  * Battler-level: disable previews for all skills this battler will execute.
  */
 J.ABS.RegExp.NoCastPreviewsBattler = /<noCastPreviews>/gi;
-//endregion cast preview tags (MVP)
+//endregion cast preview tags
 
 /**
  * A collection of all aliased methods for this plugin.
