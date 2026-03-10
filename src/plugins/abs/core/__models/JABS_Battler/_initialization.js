@@ -42,9 +42,12 @@ JABS_Battler.prototype.initialize = function(event, battler, battlerCoreData)
    * @type {boolean}
    */
   this._hidden = false;
+
+  // initialize the sectioned battler properties.
   this.initCoreData(battlerCoreData);
   this.initFromNotes();
   this.initGeneralInfo();
+  this.initDodgeInfo();
   this.initBattleInfo();
   this.initIdleInfo();
   this.initCooldowns();
@@ -190,6 +193,43 @@ JABS_Battler.prototype.initGeneralInfo = function()
    * @type {JABS_Timer}
    */
   this._engagementTimer = new JABS_Timer(15);
+};
+
+/**
+ * Initialize the dodge-related information for this battler.
+ */
+JABS_Battler.prototype.initDodgeInfo = function()
+{
+  /**
+   * The distance in steps/tiles/squares that the dodge will move the battler.
+   * @type {number}
+   */
+  this._dodgeSteps = 0;
+
+  /**
+   * Whether or not this battler is dodging.
+   * @type {boolean}
+   */
+  this._dodging = false;
+
+  /**
+   * The direction of which this battler is dodging.
+   * Always `0` until a dodge is executed.
+   * @type {number}
+   */
+  this._dodgeDirection = 0;
+
+  /**
+   * The current frame of the dodge animation.
+   * @type {number}
+   */
+  this._dodgeFrame = 0;
+
+  /**
+   * The window of frames that the battler is invincible.
+   * @type {[number, number]|null}
+   */
+  this._dodgeIframes = null;
 };
 
 /**
@@ -353,25 +393,6 @@ JABS_Battler.prototype.initBattleInfo = function()
    * @type {number}
    */
   this._regenCounter = 1;
-
-  /**
-   * The distance in steps/tiles/squares that the dodge will move the battler.
-   * @type {number}
-   */
-  this._dodgeSteps = 0;
-
-  /**
-   * Whether or not this battler is dodging.
-   * @type {boolean}
-   */
-  this._dodging = false;
-
-  /**
-   * The direction of which this battler is dodging.
-   * Always `0` until a dodge is executed.
-   * @type {number}
-   */
-  this._dodgeDirection = 0;
 
   /**
    * Whether or not this battler is guarding.
