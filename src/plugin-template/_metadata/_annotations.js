@@ -1,4 +1,4 @@
-//region annoations
+//region annotations
 /*:
  * @target MZ
  * @plugindesc

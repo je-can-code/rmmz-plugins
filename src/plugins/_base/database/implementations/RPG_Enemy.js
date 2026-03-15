@@ -76,6 +76,24 @@ class RPG_Enemy
     this.gold = enemy.gold;
     this.params = enemy.params;
   }
+
+  /**
+   * Whether or not this database entry is an enemy.
+   * @returns {boolean}
+   */
+  isEnemy()
+  {
+    return true;
+  }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:enemy`;
+  }
 }
 
 //endregion RPG_Enemy

@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars */
+
 //region Game_Actor
 /**
  * Gets the parameter value from the "long" parameter id.
@@ -126,7 +128,8 @@ Game_Actor.prototype.getActorNotes = function()
     actor,
 
     // add the actor's class to the source list.
-    this.class(actor.classId) ];
+    this.class(actor.classId)
+  ];
 };
 
 /**
@@ -144,7 +147,8 @@ Game_Actor.prototype.getNotesSources = function()
     this.currentClass(),
 
     // add all of the actor's valid equips to the source list.
-    ...this.equippedEquips(), ];
+    ...this.equippedEquips(),
+  ];
 
   // combine the two source lists.
   const combinedNoteSources = baseNoteSources.concat(actorUniqueNoteSources);
@@ -295,6 +299,10 @@ Game_Actor.prototype.onEquipChange = function()
   this.onBattlerDataChange();
 };
 
+/**
+ * Extends {@link #changeClass}.<br/>
+ * Adds a hook for performing actions when the actor changes class.
+ */
 J.BASE.Aliased.Game_Actor.set('changeClass', Game_Actor.prototype.changeClass);
 Game_Actor.prototype.changeClass = function(classId, keepExp)
 {
@@ -463,6 +471,19 @@ Game_Actor.prototype.equippedEquips = function()
 };
 
 /**
+ * Sets the level of this actor to the given level.
+ * @param {number} level The level to set this actor to.
+ */
+Game_Actor.prototype.setLevel = function(level)
+{
+  // Identify the minimum threshold of experience for the target level.
+  const newExperience = this.expForLevel(level);
+
+  // change the experience for this actor to the new level's amount.
+  this.changeExp(newExperience, false);
+};
+
+/**
  * An event hook fired when this actor levels up.
  */
 Game_Actor.prototype.onLevelUp = function()
@@ -471,7 +492,7 @@ Game_Actor.prototype.onLevelUp = function()
 };
 
 /**
- * Extends {@link #levelUp}.<br>
+ * Extends {@link #levelUp}.<br/>
  * Adds a hook for performing actions when an the actor levels up.
  */
 J.BASE.Aliased.Game_Actor.set('levelUp', Game_Actor.prototype.levelUp);

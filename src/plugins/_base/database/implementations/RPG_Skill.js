@@ -96,6 +96,15 @@ class RPG_Skill
   {
     return true;
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:skill`;
+  }
 }
 
 //endregion RPG_Skill

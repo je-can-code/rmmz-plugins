@@ -166,6 +166,24 @@ class RPG_State
     this.restriction = state.restriction;
     this.stepsToRemove = state.stepsToRemove;
   }
+
+  /**
+   * Whether or not this database entry is a state.
+   * @returns {boolean}
+   */
+  isState()
+  {
+    return true;
+  }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:state`;
+  }
 }
 
 //endregion RPG_State

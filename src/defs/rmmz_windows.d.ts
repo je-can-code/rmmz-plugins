@@ -588,12 +588,13 @@ declare class Window_Base
    * @param {number} x
    * @param {number} y
    * @param {number} width
+   * @param {number} height
    * @param {number} rate
    * @param {String} color1
    * @param {String} color2
    * @memberof Window_Base
    */
-  drawGauge(x: number, y: number, width: number, rate: number, color1: string, color2: string): void;
+  drawGauge(x: number, y: number, width: number, height: number, rate: number, color1: string, color2: string): void;
 
   /**
    * Returns the hp color as a css String.
