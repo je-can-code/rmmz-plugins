@@ -52,6 +52,24 @@ class RPG_Class
     this.traits = classData.traits
       .map(trait => new RPG_Trait(trait));
   }
+
+  /**
+   * Whether or not this database entry is a class.
+   * @returns {boolean}
+   */
+  isClass()
+  {
+    return true;
+  }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:class`;
+  }
 }
 
 //endregion RPG_Class

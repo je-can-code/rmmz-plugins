@@ -64,6 +64,15 @@ class RPG_EquipItem
   {
     return this.etypeId > 1;
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:equip`;
+  }
 }
 
 //endregion RPG_EquipItem

@@ -183,8 +183,31 @@ Game_Party.prototype.recoverAllMembers = function()
     .forEach(member => member.recoverAll());
 };
 
+/**
+ * Overrides {@link #maxBattleMembers}.<br/>
+ * Sets the maximum number of battle members to 8.
+ * @returns {number}
+ */
 Game_Party.prototype.maxBattleMembers = function()
 {
   return 8;
+};
+
+/**
+ * Sets the level of all party members to the given level.
+ * @param {number} level The level to set all party members to.
+ */
+Game_Party.prototype.setLevel = function(level)
+{
+  // iterate over each member and set their level to the designated level.
+  this.members()
+    .forEach(member =>
+    {
+      // ensure the level is within the valid range.
+      const normalizedLevel = level.clamp(1, member.maxLevel());
+
+      // set the level.
+      member.setLevel(normalizedLevel);
+    });
 };
 //endregion Game_Party

@@ -34,6 +34,15 @@ class RPG_BaseBattler
     this.traits = battler.traits
       .map(trait => new RPG_Trait(trait));
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:battler`;
+  }
 }
 
 //endregion RPG_BaseBattler

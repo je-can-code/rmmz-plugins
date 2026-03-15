@@ -57,6 +57,15 @@ class RPG_Item
   {
     return true;
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:item`;
+  }
 }
 
 //endregion RPG_Item

@@ -64,7 +64,7 @@ Window_Command.prototype.drawItem = function(index)
   const rightText = this.commandRightText(index);
 
   // grab the subtext for this command.
-  const isSubtext = this.isCommandSubtext(index)
+  const isSubtext = this.isCommandSubtext(index);
   const subtexts = this.commandSubtext(index);
 
   // grab the extra lines for this command.
@@ -112,7 +112,8 @@ Window_Command.prototype.drawItem = function(index)
       commandNameX - 36,
       faceY - 12,
       ImageManager.faceWidth,
-      ImageManager.faceHeight);
+      ImageManager.faceHeight
+    );
     commandNameX += 36;
   }
 
@@ -156,7 +157,7 @@ Window_Command.prototype.drawItem = function(index)
     this.processColorChange(this.commandRightColorIndex(index));
 
     // render the right-aligned text.
-    this.drawText(rightText, rightTextX, rightTextY, textWidth, "right");
+    this.drawText(rightText, rightTextX, rightTextY, textWidth, 'right');
 
     // bolden the text if we have subtext to make it stand out.
     this.toggleBold(false);
