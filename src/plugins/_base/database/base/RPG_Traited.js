@@ -25,6 +25,15 @@ class RPG_Traited
     // map the base item's traits.
     this.traits = baseItem.traits.map(trait => new RPG_Trait(trait));
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:traited`;
+  }
 }
 
 //endregion RPG_Traited

@@ -43,6 +43,15 @@ class RPG_Armor
   {
     return true;
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:armor`;
+  }
 }
 
 //endregion RPG_Armor

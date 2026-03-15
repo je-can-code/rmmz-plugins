@@ -173,7 +173,7 @@ class RPG_Base
    */
   deleteMetadata(key)
   {
-    delete this.meta[key]
+    delete this.meta[key];
   }
 
   /**
@@ -233,12 +233,12 @@ class RPG_Base
     if (fromMeta)
     {
       // check if the value was a truthy value.
-      if (fromMeta === true || fromMeta.toLowerCase() === "true")
+      if (fromMeta === true || fromMeta.toLowerCase() === 'true')
       {
         return true;
       }
       // check if the value was a falsey value.
-      else if (fromMeta === false || fromMeta.toLowerCase() === "false")
+      else if (fromMeta === false || fromMeta.toLowerCase() === 'false')
       {
         return false;
       }
@@ -276,10 +276,10 @@ class RPG_Base
   #parseObject(obj)
   {
     // check if the object to parse is a string.
-    if (typeof obj === "string")
+    if (typeof obj === 'string')
     {
       // check if the string is an unparsed array.
-      if (obj.startsWith("[") && obj.endsWith("]"))
+      if (obj.startsWith('[') && obj.endsWith(']'))
       {
         // expose the stringified segments of the array.
         const exposedArray = obj
@@ -314,11 +314,11 @@ class RPG_Base
   #parseString(str)
   {
     // check if its actually boolean true.
-    if (str.toLowerCase() === "true")
+    if (str.toLowerCase() === 'true')
     {
       return true;
     }// check if its actually boolean false.
-    else if (str.toLowerCase() === "false") return false;
+    else if (str.toLowerCase() === 'false') return false;
 
     // check if its actually a number.
     if (!Number.isNaN(parseFloat(str))) return parseFloat(str);
@@ -880,6 +880,33 @@ class RPG_Base
   //endregion note
 
   /**
+   * Whether or not this database entry is an actor.
+   * @returns {boolean}
+   */
+  isActor()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is a class.
+   * @returns {boolean}
+   */
+  isClass()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is an enemy.
+   * @returns {boolean}
+   */
+  isEnemy()
+  {
+    return false;
+  }
+
+  /**
    * Whether or not this database entry is an item.
    * @returns {boolean}
    */
@@ -913,6 +940,24 @@ class RPG_Base
   isSkill()
   {
     return false;
+  }
+
+  /**
+   * Whether or not this database entry is a state.
+   * @returns {boolean}
+   */
+  isState()
+  {
+    return false;
+  }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return '@base';
   }
 }
 

@@ -84,7 +84,7 @@ class RPG_Actor
     super(actor, index);
 
     // map the data.
-    this.initMembers(actor)
+    this.initMembers(actor);
   }
 
   /**
@@ -104,6 +104,24 @@ class RPG_Actor
     this.maxLevel = actor.maxLevel;
     this.nickname = actor.nickname;
     this.profile = actor.profile;
+  }
+
+  /**
+   * Whether or not this database entry is an actor.
+   * @returns {boolean}
+   */
+  isActor()
+  {
+    return true;
+  }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:actor`;
   }
 }
 

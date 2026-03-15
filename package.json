@@ -35,6 +35,8 @@
     "build:utils": "node ./src/build-tools/combine.js ./src/plugins/utils ./out J-SystemUtilities.js",
     "build:base": "node ./src/build-tools/combine.js ./src/plugins/_base ./out J-Base.js",
 
+    "build:apt": "node ./src/build-tools/combine.js ./src/plugins/apt/core ./out/apt J-Aptitude.js",
+
     "build:crit": "node ./src/build-tools/combine.js ./src/plugins/crit ./out J-CriticalFactors.js",
     "build:diff": "node ./src/build-tools/combine.js ./src/plugins/diff ./out J-Difficulty.js",
     "build:drops": "node ./src/build-tools/combine.js ./src/plugins/drops ./out J-DropsControl.js",

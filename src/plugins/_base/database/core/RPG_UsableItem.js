@@ -91,6 +91,15 @@ class RPG_UsableItem
     this.successRate = usableItem.successRate;
     this.tpGain = usableItem.tpGain;
   }
+
+  /**
+   * Gets the type of implementation this database entry is.
+   * @returns {string}
+   */
+  implementationType()
+  {
+    return `${super.implementationType()}:usable`;
+  }
 }
 
 //endregion RPG_UsableItem

@@ -165,7 +165,8 @@ Game_Actor.prototype.getLevelSources = function()
     ...this.equips(),
 
     // add all currently applied states to the source list.
-    ...this.allStates(), ];
+    ...this.allStates(),
+  ];
 };
 
 /**
