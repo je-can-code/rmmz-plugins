@@ -1546,7 +1546,7 @@ Object.defineProperty(RPG_Enemy.prototype, "sdpDropData", {
   get: function()
   {
     // grab the data from the enemy.
-    const sdpData = RPGManager.getArrayFromNotesByRegex(this, J.SDP.RegExp.SdpDropData, true);
+    const sdpData = RPGManager.getArrayFromNotesByRegex(this, J.SDP.RegExp.SdpDropData, true, true);
 
     // return the data, or the default.
     return sdpData ?? [ String.empty, 0 ];

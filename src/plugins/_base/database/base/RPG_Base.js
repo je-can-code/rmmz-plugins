@@ -19,7 +19,7 @@ class RPG_Base
    * The index of this entry in the database.
    * @type {number}
    */
-  #index = 0;
+  index = 0;
 
   /**
    * The entry's id in the database.
@@ -57,7 +57,7 @@ class RPG_Base
   constructor(baseItem, index)
   {
     this.#original = baseItem;
-    this.#index = index;
+    this.index = index;
 
     // map the core data that all database objects have.
     this.id = baseItem.id;
@@ -75,7 +75,7 @@ class RPG_Base
    */
   _index()
   {
-    return this.#index;
+    return this.index;
   }
 
   /**
@@ -84,7 +84,7 @@ class RPG_Base
    */
   _updateIndex(newIndex)
   {
-    this.#index = newIndex;
+    this.index = newIndex;
   }
 
   /**
