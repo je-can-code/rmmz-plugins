@@ -28,8 +28,13 @@ J.EXTEND.Metadata.Version = '1.1.0';
  * A collection of all aliased methods for this plugin.
  */
 J.EXTEND.Aliased = {};
+J.EXTEND.Aliased.DataManager = new Map();
 J.EXTEND.Aliased.Game_Action = new Map();
+J.EXTEND.Aliased.Game_Actor = new Map();
+J.EXTEND.Aliased.Game_Enemy = new Map();
 J.EXTEND.Aliased.Game_Item = new Map();
+J.EXTEND.Aliased.Game_Item = new Map();
+J.EXTEND.Aliased.JABS_SkillSlotManager = new Map();
 
 /**
  * All regular expressions used by this plugin.

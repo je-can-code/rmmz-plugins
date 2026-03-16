@@ -106,7 +106,7 @@ Game_Party.prototype.refreshDatabaseWeapons = function()
   this.getRefinedWeapons()
     .forEach(weapon =>
     {
-      const updatedWeapon = new RPG_Weapon(weapon, weapon.index);
+      const updatedWeapon = new RPG_Weapon(weapon, weapon._index());
       $dataWeapons[updatedWeapon._key()] = updatedWeapon;
     });
 };
@@ -120,7 +120,7 @@ Game_Party.prototype.refreshDatabaseArmors = function()
   this.getRefinedArmors()
     .forEach(armor =>
     {
-      const updatedArmor = new RPG_Armor(armor, armor.index);
+      const updatedArmor = new RPG_Armor(armor, armor._index());
       $dataArmors[updatedArmor._key()] = updatedArmor;
     });
 };

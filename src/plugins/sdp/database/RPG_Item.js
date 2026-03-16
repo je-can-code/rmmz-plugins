@@ -3,19 +3,10 @@
  * The SDP key that this item unlocks upon use.
  * @type {string}
  */
-Object.defineProperty(RPG_Item.prototype, "sdpKey", {
+Object.defineProperty(RPG_Item.prototype, 'sdpKey', {
   get: function()
   {
-    return this.getSdpKey();
+    return RPGManager.getStringFromNoteByRegex(this, J.SDP.RegExp.SdpUnlockKey);
   },
 });
-
-/**
- * Gets the key of the SDP this item unlocks.
- * @returns {string}
- */
-RPG_Item.prototype.getSdpKey = function()
-{
-  return this.getStringFromNotesByRegex(J.SDP.RegExp.SdpUnlockKey);
-};
 //endregion RPG_Item

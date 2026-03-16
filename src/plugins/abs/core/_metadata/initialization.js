@@ -538,6 +538,7 @@ J.ABS.Notetags = {
 J.ABS.RegExp = {
   //region ON SKILLS
   ActionId: /<actionId:[ ]?(\d+)>/gi,
+  HideFromJabsMenu: /<hideFromJabsMenu>/gi,
 
   // pre-execution-related.
   CastTime: /<castTime:[ ]?(\d+)>/gi,
@@ -609,7 +610,8 @@ J.ABS.RegExp = {
   // counter-related (on-chance-effect template)
   Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnDefeatedTarget: /<onDefeatedTarget>/gi,
   //endregion ON SKILLS
 
   //region ON EQUIPS
@@ -709,7 +711,8 @@ J.ABS.RegExp = {
   ConfigShowName: /<jabsConfig:[ ]?showName>/i, //endregion ON BATTLERS
 
   //region ON ACTORS/CLASSES
-  ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
+  ConfigNoSwitch: /<noSwitch>/i,
+  //endregion ON ACTORS/CLASSES
 };
 
 //region visual metadata (new)
@@ -728,7 +731,6 @@ J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
 //region visual directional metadata (new)
 /**
  * Direction-relative visual offsets (per-skill).
- * Captures the entire [x, y] array for RPGManager.getArrayFromNotesByRegex.
  *
  * Cardinal: U/D/L/R
  * Optional diagonals: UR/UL/DR/DL

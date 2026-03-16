@@ -54,6 +54,7 @@ Game_Enemy.prototype.onBattlerDataChange = function()
  * A hook for performing actions when an actor learns a new skill.
  * @param {number} skillId The skill id of the skill learned.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Enemy.prototype.onLearnNewSkill = function(skillId)
 {
   // flag this battler for needing a data update.
@@ -278,7 +279,7 @@ Game_Enemy.prototype.alertDuration = function()
   }
 
   // if we don't have a note, then just return the default.
-  return J.ABS.Metadata.DefaultEnemyAlertDuration
+  return J.ABS.Metadata.DefaultEnemyAlertDuration;
 };
 
 /**
@@ -428,7 +429,8 @@ Game_Enemy.prototype.getBonusHitsSources = function()
     this.states(),
 
     // the enemy itself may contain bonus hits.
-    [ this.databaseData() ], ];
+    [ this.databaseData() ],
+  ];
 };
 //endregion JABS bonus hits
 //endregion Game_Enemy

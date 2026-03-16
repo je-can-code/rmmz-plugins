@@ -176,7 +176,7 @@ J.NATURAL.RegExp = {
   FloorDmgRateGrowthPlus: /<fdrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
   ExpGainRateGrowthPlus: /<exrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
 
-  // sp parameter buffs rate (permanent).
+  // sp parameter growths rate (permanent).
   AggroGrowthRate: /<tgrGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
   ParryGrowthRate: /<grdGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
   HealingGrowthRate: /<recGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
@@ -191,10 +191,10 @@ J.NATURAL.RegExp = {
   // additionally supported parameters.
   // TP-related parameters.
   BaseMaxTech: /<baseMaxTp:\[([+\-*/ ().\w]+)]>/gi,
-  MaxTechBuffPlus: /mtpBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
-  MaxTechBuffRate: /mtpBuffRate:\[([+\-*/ ().\w]+)]>/gi,
-  MaxTechGrowthPlus: /mtpGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
-  MaxTechGrowthRate: /mtpGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+  MaxTechBuffPlus: /<mtpBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  MaxTechBuffRate: /<mtpBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  MaxTechGrowthPlus: /<mtpGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  MaxTechGrowthRate: /<mtpGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 
   // battle result rewards.
   RewardExp: /<expPlus:\[([+\-*/ ().\w]+)]>/gi,
