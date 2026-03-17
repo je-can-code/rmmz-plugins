@@ -21,8 +21,6 @@ class JAptitude_PluginMetadata
 
     // initialize this plugin from configuration.
     this.initializeMetadata();
-
-    this.verifyVersions();
   }
 
   /**

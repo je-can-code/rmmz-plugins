@@ -4,6 +4,19 @@
  */
 var J = J || {};
 
+//region version checks
+(() =>
+{
+  // Check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '3.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (!hasBaseRequirement)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//endregion version check
+
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -22,7 +35,7 @@ J.EXTEND.Metadata.Name = `J-SkillExtend`;
 /**
  * The version of this plugin.
  */
-J.EXTEND.Metadata.Version = '1.1.0';
+J.EXTEND.Metadata.Version = '1.2.0';
 
 /**
  * A collection of all aliased methods for this plugin.

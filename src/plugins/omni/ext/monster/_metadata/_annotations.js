@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 OMNI-MON] Extends the Omnipedia with a Monsterpedia entry.
+ * [v1.0.2 OMNI-MON] Extends the Omnipedia with a Monsterpedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -25,6 +25,10 @@
  * - J-SDP              : renders SDP points earned and panel drop rate.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Consumed `RPGManager` updates.
+ *    Fixed missed issue with SDP rendering.
+ *    Adjusted monster detail view to accommodate fontsize 24 at 1080p.
  * - 1.0.1
  *    Added support for auto-generating target frame icons where applicable.
  * - 1.0.0

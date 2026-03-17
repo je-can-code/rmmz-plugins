@@ -808,7 +808,7 @@ class StatDistributionPanel
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v2.1.2 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -1002,6 +1002,8 @@ class StatDistributionPanel
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.2
+ *    Consumed `RPGManager` updates.
  * - 2.1.1
  *    Added flag for showing external file load info.
  * - 2.1.0
@@ -1381,7 +1383,7 @@ J.SDP = {};
 /**
  * The metadata associated with this plugin.
  */
-J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.1.1');
+J.SDP.Metadata = new J_SdpPluginMetadata('J-SDP', '2.1.2');
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -1855,7 +1857,7 @@ if (J.ABS)
  */
 TextManager.sdpPoints = function()
 {
-  return "SDPs";
+  return 'SDPs';
 };
 
 /**
@@ -1883,7 +1885,7 @@ TextManager.longParam = function(paramId)
  */
 TextManager.sdpMultiplier = function()
 {
-  return "SDP Multiplier";
+  return 'SDP Multiplier';
 };
 
 /**
@@ -1912,8 +1914,9 @@ TextManager.longParamDescription = function(paramId)
 TextManager.sdpMultiplierDescription = function()
 {
   return [
-    "The percentage bonuses being applied against SDP point gain.",
-    "Higher amounts of this yields greater SDP point generation." ];
+    'The percentage bonuses being applied against SDP point gain.',
+    'Higher amounts of this yields greater SDP point generation.'
+  ];
 };
 //endregion TextManager
 

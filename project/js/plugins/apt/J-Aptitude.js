@@ -93,7 +93,7 @@
  * ============================================================================
  * CHANGELOG:
  * - 1.0.1
- *    - Added emergency initialization for existing saves.
+ *    Added emergency initialization for existing saves.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -165,8 +165,6 @@ class JAptitude_PluginMetadata
 
     // initialize this plugin from configuration.
     this.initializeMetadata();
-
-    this.verifyVersions();
   }
 
   /**

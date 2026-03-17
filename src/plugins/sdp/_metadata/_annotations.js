@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v2.1.2 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -197,6 +197,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.2
+ *    Consumed `RPGManager` updates.
  * - 2.1.1
  *    Added flag for showing external file load info.
  * - 2.1.0
