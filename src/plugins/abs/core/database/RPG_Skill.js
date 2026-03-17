@@ -9,26 +9,9 @@
 Object.defineProperty(RPG_Skill.prototype, 'jabsRadius', {
   get: function()
   {
-    return this.getJabsRadius();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Range, true);
   },
 });
-
-/**
- * Gets the JABS range for this skill.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsRadius = function()
-{
-  return this.extractJabsRadius();
-};
-
-/**
- * Extracts the JABS range for this skill from its notes.
- */
-RPG_Skill.prototype.extractJabsRadius = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Range, true);
-};
 //endregion range
 
 //region proximity
@@ -39,26 +22,9 @@ RPG_Skill.prototype.extractJabsRadius = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsProximity', {
   get: function()
   {
-    return this.getJabsProximity();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Proximity, true);
   },
 });
-
-/**
- * Gets the JABS proximity this skill.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsProximity = function()
-{
-  return this.extractJabsProximity();
-};
-
-/**
- * Extracts the JABS proximity for this skill from its notes.
- */
-RPG_Skill.prototype.extractJabsProximity = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Proximity, true);
-};
 //endregion proximity
 
 //region actionId
@@ -69,27 +35,9 @@ RPG_Skill.prototype.extractJabsProximity = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsActionId', {
   get: function()
   {
-    return this.getJabsActionId();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ActionId, true);
   },
 });
-
-/**
- * Gets the JABS actionId this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsActionId = function()
-{
-  return this.extractJabsActionId();
-};
-
-/**
- * Extracts the JABS actionId for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsActionId = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.ActionId, true);
-};
 //endregion actionId
 
 //region duration
@@ -100,27 +48,9 @@ RPG_Skill.prototype.extractJabsActionId = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsDuration', {
   get: function()
   {
-    return this.getJabsDuration();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Duration, true);
   },
 });
-
-/**
- * Gets the JABS duration this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsDuration = function()
-{
-  return this.extractJabsDuration();
-};
-
-/**
- * Extracts the JABS duration for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsDuration = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Duration, true);
-};
 //endregion duration
 
 //region linger
@@ -132,27 +62,10 @@ RPG_Skill.prototype.extractJabsDuration = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsLinger', {
   get: function()
   {
-    return this.getJabsLinger();
+    const value = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Linger, true);
+    return value ?? 10;
   },
 });
-
-/**
- * Gets the linger frames value for this skill.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsLinger = function()
-{
-  return this.extractJabsLinger();
-};
-
-/**
- * Extracts linger frames from notes.
- * @returns {number}
- */
-RPG_Skill.prototype.extractJabsLinger = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Linger, true) ?? 10;
-};
 //endregion linger
 
 //region shape
@@ -163,27 +76,9 @@ RPG_Skill.prototype.extractJabsLinger = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsShape', {
   get: function()
   {
-    return this.getJabsShape();
+    return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.Shape, true);
   },
 });
-
-/**
- * Gets the JABS shape this skill.
- * @returns {string|null}
- */
-RPG_Skill.prototype.getJabsShape = function()
-{
-  return this.extractJabsShape();
-};
-
-/**
- * Extracts the JABS shape for this skill from its notes.
- * @returns {string|null}
- */
-RPG_Skill.prototype.extractJabsShape = function()
-{
-  return this.getStringFromNotesByRegex(J.ABS.RegExp.Shape, true);
-};
 //endregion shape
 
 //region knockback
@@ -199,7 +94,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsKnockback', {
 });
 //endregion knockback
 
-//region castAnimation
+//region casting
 /**
  * A new property for retrieving the JABS castAnimation id from this skill.
  * @type {number}
@@ -207,30 +102,10 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsKnockback', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsCastAnimation', {
   get: function()
   {
-    return this.getJabsCastAnimation();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.CastAnimation, true);
   },
 });
 
-/**
- * Gets the JABS castAnimation this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsCastAnimation = function()
-{
-  return this.extractJabsCastAnimation();
-};
-
-/**
- * Extracts the JABS castAnimation for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsCastAnimation = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.CastAnimation, true);
-};
-//endregion castAnimation
-
-//region castTime
 /**
  * A new property for retrieving the JABS castTime from this skill.
  * @type {number}
@@ -238,30 +113,12 @@ RPG_Skill.prototype.extractJabsCastAnimation = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsCastTime', {
   get: function()
   {
-    return this.getJabsCastTime();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.CastTime, true);
   },
 });
+//endregion casting
 
-/**
- * Gets the JABS castTime this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsCastTime = function()
-{
-  return this.extractJabsCastTime();
-};
-
-/**
- * Extracts the JABS castTime for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsCastTime = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.CastTime, true);
-};
-//endregion castTime
-
-//region direct
+//region direct targeting
 /**
  * A new property for retrieving the JABS direct from this skill.
  * @type {boolean}
@@ -269,38 +126,13 @@ RPG_Skill.prototype.extractJabsCastTime = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsDirect', {
   get: function()
   {
-    return this.getJabsDirect();
+    // treat either <direct> or <directLock> as a direct skill.
+    const hasDirect = RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Direct, true);
+    const hasDirectLock = RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.DirectLock, true);
+    return !!(hasDirect || hasDirectLock);
   },
 });
 
-/**
- * Gets the JABS direct this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsDirect = function()
-{
-  return this.extractJabsDirect();
-};
-
-/**
- * Extracts whether this skill is "direct" from its notes.
- * Now considers either <direct> OR <directLock> as a "direct" skill.
- * @returns {boolean}
- */
-RPG_Skill.prototype.extractJabsDirect = function()
-{
-  // check for explicit <direct>.
-  const hasDirect = this.getBooleanFromNotesByRegex(J.ABS.RegExp.Direct, true);
-
-  // check for <directLock>, which implies "direct" as well.
-  const hasDirectLock = this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
-
-  // treat either tag as "direct".
-  return !!(hasDirect || hasDirectLock);
-};
-//endregion direct
-
-//region directLock
 /**
  * A new property for retrieving the JABS directLock from this skill.
  * @type {boolean}
@@ -308,33 +140,12 @@ RPG_Skill.prototype.extractJabsDirect = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsDirectLock', {
   get: function()
   {
-    // return the boolean for <directLock>.
-    return this.getJabsDirectLock();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.DirectLock, true);
   },
 });
+//endregion direct targeting
 
-/**
- * Gets the JABS directLock for this skill.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getJabsDirectLock = function()
-{
-  // extract the boolean for <directLock>.
-  return this.extractJabsDirectLock();
-};
-
-/**
- * Extracts the JABS directLock for this skill from its notes.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.extractJabsDirectLock = function()
-{
-  // parse using the new regex for <directLock>.
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.DirectLock, true);
-};
-//endregion directLock
-
-//region bonusAggro
+//region aggro
 /**
  * A new property for retrieving the JABS bonusAggro from this skill.
  * @type {number}
@@ -342,30 +153,10 @@ RPG_Skill.prototype.extractJabsDirectLock = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsBonusAggro', {
   get: function()
   {
-    return this.getJabsBonusAggro();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusAggro, true);
   },
 });
 
-/**
- * Gets the JABS bonusAggro this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsBonusAggro = function()
-{
-  return this.extractJabsBonusAggro();
-};
-
-/**
- * Extracts the JABS bonusAggro for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsBonusAggro = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.BonusAggro, true);
-};
-//endregion bonusAggro
-
-//region aggroMultiplier
 /**
  * A new property for retrieving the JABS aggroMultiplier from this skill.
  * @type {number}
@@ -373,28 +164,10 @@ RPG_Skill.prototype.extractJabsBonusAggro = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsAggroMultiplier', {
   get: function()
   {
-    return this.getJabsAggroMultiplier();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroMultiplier, true);
   },
 });
-
-/**
- * Gets the JABS aggroMultiplier this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsAggroMultiplier = function()
-{
-  return this.extractJabsAggroMultiplier();
-};
-
-/**
- * Extracts the JABS aggroMultiplier for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsAggroMultiplier = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.AggroMultiplier, true);
-};
-//endregion aggroMultiplier
+//endregion aggro
 
 //region jabsGuardData
 /**
@@ -405,25 +178,16 @@ RPG_Skill.prototype.extractJabsAggroMultiplier = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsGuardData', {
   get: function()
   {
-    return this.getJabsGuardData();
+    return new JABS_GuardData(
+      this.id,
+      this.jabsGuard[0],
+      this.jabsGuard[1],
+      this.jabsCounterGuard,
+      this.jabsCounterParry,
+      this.jabsParry
+    );
   },
 });
-
-/**
- * Gets the JABS guard this skill.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.getJabsGuardData = function()
-{
-  return new JABS_GuardData(
-    this.id,
-    this.jabsGuardFlat,
-    this.jabsGuardPercent,
-    this.jabsCounterGuard,
-    this.jabsCounterParry,
-    this.jabsParry
-  );
-};
 //endregion jabsGuardData
 
 //region guard
@@ -434,53 +198,9 @@ RPG_Skill.prototype.getJabsGuardData = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsGuard', {
   get: function()
   {
-    return this.getJabsGuard();
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.Guard, true, true);
   },
 });
-
-/**
- * The flat amount of damage reduced by this skill when guarding.
- * Should be negative.
- * If positive, this flat damage will instead be added on while guarding.
- * @type {number|null}
- */
-Object.defineProperty(RPG_Skill.prototype, 'jabsGuardFlat', {
-  get: function()
-  {
-    return this.jabsGuard[0];
-  },
-});
-
-/**
- * The percent amount of damage reduced by this skill when guarding.
- * Should be negative.
- * If positive, this percent damage will instead be added on while guarding.
- * @type {number}
- */
-Object.defineProperty(RPG_Skill.prototype, 'jabsGuardPercent', {
-  get: function()
-  {
-    return this.jabsGuard[1];
-  },
-});
-
-/**
- * Gets the JABS guard this skill.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.getJabsGuard = function()
-{
-  return this.extractJabsGuard();
-};
-
-/**
- * Extracts the JABS guard for this skill from its notes.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.extractJabsGuard = function()
-{
-  return this.getArrayFromNotesByRegex(J.ABS.RegExp.Guard);
-};
 //endregion guard
 
 //region parry
@@ -492,28 +212,23 @@ RPG_Skill.prototype.extractJabsGuard = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsParry', {
   get: function()
   {
-    return this.getJabsParryFrames();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Parry, true);
   },
 });
-
-/**
- * Gets the JABS parry this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsParryFrames = function()
-{
-  return this.extractJabsParryFrames();
-};
-
-/**
- * Extracts the JABS parry for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsParryFrames = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Parry, true);
-};
 //endregion parry
+
+//region counterGuard
+/**
+ * While guarding, this skill id will be automatically executed in retaliation.
+ * @type {number[]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsCounterGuard', {
+  get: function()
+  {
+    return RPGManager.getNumbersFromNoteByRegex(this, J.ABS.RegExp.CounterGuard);
+  },
+});
+//endregion counterGuard
 
 //region counterParry
 /**
@@ -524,61 +239,12 @@ RPG_Skill.prototype.extractJabsParryFrames = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsCounterParry', {
   get: function()
   {
-    return this.getJabsCounterParry();
+    return RPGManager.getNumbersFromNoteByRegex(this, J.ABS.RegExp.CounterParry);
   },
 });
-
-/**
- * Gets the JABS counterParry this skill.
- * @returns {number[]}
- */
-RPG_Skill.prototype.getJabsCounterParry = function()
-{
-  return this.extractJabsCounterParry();
-};
-
-/**
- * Extracts the JABS counterParry for this skill from its notes.
- * @returns {number[]}
- */
-RPG_Skill.prototype.extractJabsCounterParry = function()
-{
-  return this.getNumberArrayFromNotesByRegex(J.ABS.RegExp.CounterParry);
-};
 //endregion counterParry
 
-//region counterGuard
-/**
- * While guarding, this skill id will be automatically executed in retaliation.
- * @type {number[]}
- */
-Object.defineProperty(RPG_Skill.prototype, 'jabsCounterGuard', {
-  get: function()
-  {
-    return this.getJabsCounterGuard();
-  },
-});
-
-/**
- * Gets the JABS counterGuard this skill.
- * @returns {number[]}
- */
-RPG_Skill.prototype.getJabsCounterGuard = function()
-{
-  return this.extractJabsCounterGuard();
-};
-
-/**
- * Extracts the JABS counterGuard for this skill from its notes.
- * @returns {number[]}
- */
-RPG_Skill.prototype.extractJabsCounterGuard = function()
-{
-  return this.getNumberArrayFromNotesByRegex(J.ABS.RegExp.CounterGuard);
-};
-//endregion counterGuard
-
-//region projectile
+//region projectiles
 /**
  * A new property for retrieving the JABS projectile frames from this skill.
  * @type {number}
@@ -586,30 +252,10 @@ RPG_Skill.prototype.extractJabsCounterGuard = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsProjectile', {
   get: function()
   {
-    return this.getJabsProjectile();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Projectile, true);
   },
 });
 
-/**
- * Gets the JABS projectile this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsProjectile = function()
-{
-  return this.extractJabsProjectile();
-};
-
-/**
- * Extracts the JABS projectile for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsProjectile = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Projectile, true);
-};
-//endregion projectile
-
-//region projectileFormation
 /**
  * A new property for retrieving the JABS projectile formation from this skill.
  * @type {string}
@@ -617,63 +263,10 @@ RPG_Skill.prototype.extractJabsProjectile = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsProjectileFormation', {
   get: function()
   {
-    // get the parsed projectile formation.
-    return this.getJabsProjectileFormation();
+    return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.ProjectileFormation, true);
   },
 });
-
-/**
- * Gets the JABS projectile formation for this skill.
- * @returns {string|null}
- */
-RPG_Skill.prototype.getJabsProjectileFormation = function()
-{
-  // extract the projectile formation.
-  return this.extractJabsProjectileFormation();
-};
-
-/**
- * Extracts the JABS projectile formation for this skill from its notes.
- * Parsing is validated by regex; returns the matched formation or null.
- * @returns {string|null}
- */
-RPG_Skill.prototype.extractJabsProjectileFormation = function()
-{
-  // parse the projectile formation from notes using the strict regex.
-  return this.getStringFromNotesByRegex(J.ABS.RegExp.ProjectileFormation, true);
-};
-//endregion projectileFormation
-
-//region uniqueCooldown
-/**
- * A new property for retrieving the JABS uniqueCooldown from this skill.
- * @type {boolean}
- */
-Object.defineProperty(RPG_Skill.prototype, 'jabsUniqueCooldown', {
-  get: function()
-  {
-    return this.getJabsUniqueCooldown();
-  },
-});
-
-/**
- * Gets the JABS uniqueCooldown this skill.
- * @returns {number|null}
- */
-RPG_Skill.prototype.getJabsUniqueCooldown = function()
-{
-  return this.extractJabsUniqueCooldown();
-};
-
-/**
- * Extracts the JABS uniqueCooldown for this skill from its notes.
- * @returns {number|null}
- */
-RPG_Skill.prototype.extractJabsUniqueCooldown = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.UniqueCooldown, true);
-};
-//endregion uniqueCooldown
+//endregion projectiles
 
 //region dodging
 /**
@@ -744,27 +337,9 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsInvincibleDodge', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsFreeCombo', {
   get: function()
   {
-    return this.getJabsFreeCombo();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.FreeCombo);
   },
 });
-
-/**
- * Gets the JABS freeCombo this skill.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getJabsFreeCombo = function()
-{
-  return this.extractJabsFreeCombo();
-};
-
-/**
- * Extracts the JABS freeCombo for this skill from its notes.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.extractJabsFreeCombo = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.FreeCombo, true);
-};
 //endregion freeCombo
 
 //region comboAction
@@ -780,7 +355,7 @@ RPG_Skill.prototype.extractJabsFreeCombo = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsComboAction', {
   get: function()
   {
-    return this.getJabsComboAction();
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.ComboAction, true, true);
   },
 });
 
@@ -790,18 +365,9 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboAction', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsComboStarter', {
   get: function()
   {
-    return this.getJabsComboStarter();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ComboStarter);
   },
 });
-
-/**
- * Checks the skill's metadata for the presence of the combo starter.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getJabsComboStarter = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.ComboStarter);
-};
 
 /**
  * Whether or not this skill is a "skill extend" skill.
@@ -810,18 +376,13 @@ RPG_Skill.prototype.getJabsComboStarter = function()
 Object.defineProperty(RPG_Skill.prototype, 'isSkillExtender', {
   get: function()
   {
-    return !!this.getSkillExtender();
+    // if we're not using the extend plugin, then this is an automatic no.
+    if (!J.EXTEND) return false;
+
+    // if the skill doesn't have the extend tag, then it's not an extend skill.
+    return J.EXTEND.RegExp.SkillExtend.test(this.note);
   },
 });
-
-/**
- * Checks the skill's metadata for the presence of the JABS AI skill exclusion tag.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getSkillExtender = function()
-{
-  return this.metadata('skillExtend');
-};
 
 /**
  * Whether or not this skill can be chosen at all by the JABS AI.
@@ -830,18 +391,9 @@ RPG_Skill.prototype.getSkillExtender = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsAiSkillExclusion', {
   get: function()
   {
-    return this.getAiSkillExclusion();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiSkillExclusion);
   },
 });
-
-/**
- * Checks the skill's metadata for the presence of the JABS AI skill exclusion tag.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getAiSkillExclusion = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.AiSkillExclusion);
-};
 
 /**
  * The JABS combo skill id that this skill can lead into if the skill is learned
@@ -865,24 +417,6 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboDelay', {
     return this.jabsComboAction[1];
   },
 });
-
-/**
- * Gets the JABS combo this skill.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.getJabsComboAction = function()
-{
-  return this.extractJabsComboAction();
-};
-
-/**
- * Extracts the JABS combo for this skill from its notes.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.extractJabsComboAction = function()
-{
-  return this.getArrayFromNotesByRegex(J.ABS.RegExp.ComboAction);
-};
 //endregion comboAction
 
 /**
@@ -969,55 +503,39 @@ RPG_Skill.prototype.shouldRecurseForComboSkills = function(skill, lastSkillId)
 Object.defineProperty(RPG_Skill.prototype, 'jabsPiercingData', {
   get: function()
   {
-    const piercingData = this.getJabsPiercingData();
-    if (!piercingData)
-    {
-      return [ 1, 0 ];
-    }
+    // grab the piercing data from the skill.
+    const piercingData = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.PiercingData, true, true);
 
+    // if there is no data, return defaults.
+    if (!piercingData) return [ 1, 0 ];
+
+    // return the data found.
     return piercingData;
   },
 });
 
 /**
  * The number of times this skill can hit targets.
- * @type {number|null}
+ * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsPierceCount', {
   get: function()
   {
-    return this.jabsPiercingData.at(0);
+    return this.jabsPiercingData[0];
   },
 });
 
 /**
  * The delay in frames between each pierce hit on targets.
- * @type {number|null}
+ * There is an arbitrary minimum delay of 5 frames.
+ * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsPierceDelay', {
   get: function()
   {
-    return Math.max(this.jabsPiercingData.at(1), 5);
+    return Math.max(this.jabsPiercingData[1], 5);
   },
 });
-
-/**
- * Gets the JABS percing data this skill.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.getJabsPiercingData = function()
-{
-  return this.extractJabsPiercingData();
-};
-
-/**
- * Extracts the data for this skill from its notes.
- * @returns {[number, number]|null}
- */
-RPG_Skill.prototype.extractJabsPiercingData = function()
-{
-  return this.getArrayFromNotesByRegex(J.ABS.RegExp.PiercingData);
-};
 //endregion piercing
 
 //region ignoreParry
@@ -1028,30 +546,12 @@ RPG_Skill.prototype.extractJabsPiercingData = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsIgnoreParry', {
   get: function()
   {
-    return this.getJabsIgnoreParry();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.IgnoreParry, true);
   },
 });
-
-/**
- * Gets the ignore parry amount for this skill.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsIgnoreParry = function()
-{
-  return this.extractJabsIgnoreParry();
-};
-
-/**
- * Gets the value from the notes.
- */
-RPG_Skill.prototype.extractJabsIgnoreParry = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.IgnoreParry, true);
-};
 //endregion ignoreParry
 
 //region unparryable
-//region RPG_Skill
 /**
  * Whether or not this skill is completely unparryable by the target.
  * @type {boolean}
@@ -1059,28 +559,9 @@ RPG_Skill.prototype.extractJabsIgnoreParry = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsUnparryable', {
   get: function()
   {
-    return this.getJabsUnparryable();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Unparryable, true);
   },
 });
-
-/**
- * Gets whether or not this skill is unparryable.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.getJabsUnparryable = function()
-{
-  return this.extractJabsUnparryable();
-};
-
-/**
- * Extracts the boolean from the notes.
- * @returns {boolean|null}
- */
-RPG_Skill.prototype.extractJabsUnparryable = function()
-{
-  return this.getBooleanFromNotesByRegex(J.ABS.RegExp.Unparryable, true);
-};
-//endregion RPG_Skill
 //endregion unparryable
 
 //region selfAnimation
@@ -1091,27 +572,10 @@ RPG_Skill.prototype.extractJabsUnparryable = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsSelfAnimationId', {
   get: function()
   {
-    return this.getJabsSelfAnimationId();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SelfAnimationId, true);
   },
 });
-
-/**
- * Gets the JABS self animation id.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsSelfAnimationId = function()
-{
-  return this.extractJabsSelfAnimationId();
-};
-
-/**
- * Extracts the value from the notes.
- */
-RPG_Skill.prototype.extractJabsSelfAnimationId = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.SelfAnimationId, true);
-};
-//endregion range
+//endregion selfAnimation
 
 //region onCastAnimation
 /**
@@ -1121,30 +585,9 @@ RPG_Skill.prototype.extractJabsSelfAnimationId = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsOnCastAnimationId', {
   get: function()
   {
-    // retrieve the parsed on-cast animation id from notes.
-    return this.getJabsOnCastAnimationId();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.OnCastAnimationId, true);
   },
 });
-
-/**
- * Gets the on-cast animation id for this skill.
- * @returns {number}
- */
-RPG_Skill.prototype.getJabsOnCastAnimationId = function()
-{
-  // parse and return the value from notes.
-  return this.extractJabsOnCastAnimationId();
-};
-
-/**
- * Extracts the on-cast animation id for this skill from its notes.
- * @returns {number}
- */
-RPG_Skill.prototype.extractJabsOnCastAnimationId = function()
-{
-  // use the shared regex dictionary to pull the integer.
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.OnCastAnimationId, true);
-};
 //endregion onCastAnimation
 
 //region delay
@@ -1162,10 +605,10 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsDelayData', {
   get: function()
   {
     // grab the parsed delay data.
-    const delayData = this.getJabsDelayData();
+    const delayData = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.DelayData, true, true);
 
     // if none was found, return defaults for the first two values.
-    if (!delayData)
+    if (delayData === null)
     {
       return [ 0, false ];
     }
@@ -1209,42 +652,18 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsDelayTriggerRadius', {
     const data = this.jabsDelayData;
 
     // if no third parameter was provided, return null to indicate default behavior.
-    if (!data || data.length < 3)
+    if (data.length < 3)
     {
       return null;
     }
 
     // attempt to coerce a number from the third parameter.
-    const radius = Number(data[2]);
-
-    // validate the number and return null if invalid.
-    if (isNaN(radius))
-    {
-      return null;
-    }
+    const [ , , radius ] = data;
 
     // return the parsed trigger radius in tiles.
     return radius;
   },
 });
-
-/**
- * Gets the JABS delay data for this skill.
- * @returns {[number, boolean]|null}
- */
-RPG_Skill.prototype.getJabsDelayData = function()
-{
-  return this.extractJabsDelayData();
-};
-
-/**
- * Extracts the data from the notes.
- * @returns {[number, boolean]|null}
- */
-RPG_Skill.prototype.extractJabsDelayData = function()
-{
-  return this.getArrayFromNotesByRegex(J.ABS.RegExp.DelayData);
-};
 //endregion delay
 
 //region visual metadata
@@ -1256,25 +675,18 @@ RPG_Skill.prototype.extractJabsDelayData = function()
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffset', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisOffset === undefined)
+    // grab the data for the skill.
+    const data = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
+
+    // validate we have data.
+    if (data !== null)
     {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
-      if (!arr)
-      {
-        this._jabsVisOffset = [ 0, 0 ]; // default, no offset.
-      }
-      else
-      {
-        // defensive parse to integers.
-        const x = Number(arr[0]) || 0;
-        const y = Number(arr[1]) || 0;
-        this._jabsVisOffset = [ x, y ];
-      }
+      // and return it.
+      return data;
     }
 
-    // provide cached value.
-    return this._jabsVisOffset;
+    // use default value.
+    return [ 0, 0 ];
   },
 });
 
@@ -1286,26 +698,22 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffset', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisAnchor', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisAnchor === undefined)
+    // grab the data for the skill.
+    const data = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisAnchor, true, true);
+
+    // validate we have data.
+    if (data !== null)
     {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisAnchor, true, true);
-      if (!arr)
-      {
-        this._jabsVisAnchor = null; // no override, retain engine default.
-      }
-      else
-      {
-        const ax = Math.max(0, Math.min(1, Number(arr[0])));
-        const ay = Math.max(0, Math.min(1, Number(arr[1])));
-        this._jabsVisAnchor = (isNaN(ax) || isNaN(ay))
-          ? null
-          : [ ax, ay ];
-      }
+      // normalize between 0 and 1.
+      const ax = Math.max(0, Math.min(1, data[0]));
+      const ay = Math.max(0, Math.min(1, data[1]));
+
+      // return the normalized anchor.
+      return [ ax, ay ];
     }
 
-    // provide cached value.
-    return this._jabsVisAnchor;
+    // use default value.
+    return null;
   },
 });
 
@@ -1317,15 +725,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisAnchor', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisZ', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisZ === undefined)
-    {
-      const z = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.VisZ, true);
-      this._jabsVisZ = (z ?? null);
-    }
-
-    // provide cached value.
-    return this._jabsVisZ;
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.VisZ, true);
   },
 });
 
@@ -1337,14 +737,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisZ', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisRotate', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisRotate === undefined)
-    {
-      this._jabsVisRotate = RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.VisRotate) || false;
-    }
-
-    // provide cached value.
-    return this._jabsVisRotate;
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.VisRotate, true);
   },
 });
 
@@ -1356,26 +749,18 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisRotate', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisScale', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisScale === undefined)
+    // grab the data for the skill.
+    const data = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
+
+    // validate we have data.
+    if (data !== null)
     {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
-      if (!arr)
-      {
-        this._jabsVisScale = null;
-      }
-      else
-      {
-        const sx = Number(arr[0]);
-        const sy = Number(arr[1]);
-        this._jabsVisScale = (isNaN(sx) || isNaN(sy))
-          ? null
-          : [ sx, sy ];
-      }
+      // and return it.
+      return data;
     }
 
     // provide cached value.
-    return this._jabsVisScale;
+    return null;
   },
 });
 
@@ -1387,14 +772,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisScale', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisDebug', {
   get: function()
   {
-    // memoize parsed value.
-    if (this._jabsVisDebug === undefined)
-    {
-      this._jabsVisDebug = this.getBooleanFromNotesByRegex(J.ABS.RegExp.VisDebug, true) || false;
-    }
-
-    // provide cached value.
-    return this._jabsVisDebug;
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.VisDebug, true);
   },
 });
 
@@ -1407,14 +785,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisDebug', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetU', {
   get: function()
   {
-    if (this._jabsVisOffsetU === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
-      this._jabsVisOffsetU = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetU;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetU, true, true);
   },
 });
 
@@ -1426,14 +797,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetU', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetD', {
   get: function()
   {
-    if (this._jabsVisOffsetD === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
-      this._jabsVisOffsetD = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetD;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetD, true, true);
   },
 });
 
@@ -1445,14 +809,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetD', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetL', {
   get: function()
   {
-    if (this._jabsVisOffsetL === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
-      this._jabsVisOffsetL = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetL;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetL, true, true);
   },
 });
 
@@ -1464,14 +821,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetL', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetR', {
   get: function()
   {
-    if (this._jabsVisOffsetR === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
-      this._jabsVisOffsetR = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetR;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetR, true, true);
   },
 });
 
@@ -1483,14 +833,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetR', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetUR', {
   get: function()
   {
-    if (this._jabsVisOffsetUR === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
-      this._jabsVisOffsetUR = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetUR;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUR, true, true);
   },
 });
 
@@ -1502,14 +845,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetUR', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetUL', {
   get: function()
   {
-    if (this._jabsVisOffsetUL === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
-      this._jabsVisOffsetUL = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetUL;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetUL, true, true);
   },
 });
 
@@ -1521,14 +857,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetUL', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetDR', {
   get: function()
   {
-    if (this._jabsVisOffsetDR === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
-      this._jabsVisOffsetDR = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetDR;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDR, true, true);
   },
 });
 
@@ -1540,14 +869,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetDR', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetDL', {
   get: function()
   {
-    if (this._jabsVisOffsetDL === undefined)
-    {
-      const arr = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
-      this._jabsVisOffsetDL = arr
-        ? [ Number(arr[0]) || 0, Number(arr[1]) || 0 ]
-        : null;
-    }
-    return this._jabsVisOffsetDL;
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffsetDL, true, true);
   },
 });
 

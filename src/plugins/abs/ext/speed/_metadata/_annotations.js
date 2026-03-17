@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 MOVE] Enable modifying move speeds.
+ * [v1.0.1 MOVE] Enable modifying move speeds.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -66,6 +66,8 @@
  * This battler's movement speed will be increased by ~40%.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Consumed `RPGManager` update.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

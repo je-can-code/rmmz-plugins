@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 APT] A plugin that grants the ability to learn by gaining points.
+ * [v1.0.1 APT] A plugin that grants the ability to learn by gaining points.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -92,6 +92,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Added emergency initialization for existing saves.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

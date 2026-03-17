@@ -64,9 +64,8 @@ class JABS_OnChanceEffect
     // grab the underlying skill for this on-chance effect.
     const skill = this.baseSkill();
 
-    //
-    return skill.getBooleanFromNotesByRegex(/<onDefeatedTarget>/gi);
-    //return !!skill.meta["onDefeatedTarget"];
+    // check the notes.
+    return RPGManager.checkForBooleanFromNoteByRegex(skill, J.ABS.RegExp.OnDefeatedTarget);
   }
 
   /**
@@ -77,58 +76,7 @@ class JABS_OnChanceEffect
    */
   shouldTrigger(rollForPositive = 1, rollForNegative = 0)
   {
-    // 0% chance skills should never trigger.
-    if (this.chance === 0) return false;
-
-    // default fail.
-    let success = false;
-
-    // keep rolling for positive while we have positive rolls and aren't already successful.
-    while (rollForPositive && !success)
-    {
-      // roll for effect!
-      const chance = Math.randomInt(100) + 1;
-
-      // check if the roll meets the chance criteria.
-      if (chance <= this.chance)
-      {
-        // flag for success!
-        success = true;
-      }
-
-      // decrement the positive roll counter.
-      rollForPositive--;
-    }
-
-    // if successful and we have negative rerolls, lets get fight RNG for success!
-    if (success && rollForNegative)
-    {
-      // keep rolling for negative while we have negative rerolls and are still successful.
-      while (rollForNegative && success)
-      {
-        // roll for effect!
-        const chance = Math.randomInt(100) + 1;
-
-        // check if the roll meets the chance criteria.
-        if (chance <= this.chance)
-        {
-          // we keep our flag! (this time...)
-          success = true;
-        }
-        // we didn't meet the chance criteria this time.
-        else
-        {
-          // undo our success and stop rolling :(
-          return false;
-        }
-
-        // decrement the negative reroll counter.
-        rollForNegative--;
-      }
-    }
-
-    // return our successes (or failure).
-    return success;
+    return RPGManager.chanceIn100(this.chance, rollForPositive, rollForNegative);
   }
 }
 

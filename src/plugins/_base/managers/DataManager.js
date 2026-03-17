@@ -662,4 +662,51 @@ DataManager.isArmor = function(unidentified)
 {
   return unidentified && ('atypeId' in unidentified);
 };
+
+//region caching
+/**
+ * Extends {@link #setupNewGame}.<br/>
+ * Also clears the RPGManager note cache for a fresh session.
+ */
+J.BASE.Aliased.DataManager.set('setupNewGame', DataManager.setupNewGame);
+DataManager.setupNewGame = function()
+{
+  // clear any previously cached note parses before creating a new game.
+  RPGManager.clearCache();
+
+  // perform original logic.
+  J.BASE.Aliased.DataManager.get('setupNewGame')
+    .call(this);
+};
+
+/**
+ * Extends {@link #extractSaveContents}.<br/>
+ * Also clears the RPGManager note cache before applying save data.
+ */
+J.BASE.Aliased.DataManager.set('extractSaveContents', DataManager.extractSaveContents);
+DataManager.extractSaveContents = function(contents)
+{
+  // clear any previously cached note parses before applying the save contents.
+  RPGManager.clearCache();
+
+  // perform original logic.
+  J.BASE.Aliased.DataManager.get('extractSaveContents')
+    .call(this, contents);
+};
+
+/**
+ * Extends {@link #setupBattleTest}.<br/>
+ * Also clears the RPGManager note cache when entering battle test.
+ */
+J.BASE.Aliased.DataManager.set('setupBattleTest', DataManager.setupBattleTest);
+DataManager.setupBattleTest = function()
+{
+  // clear cache to ensure battle test uses fresh parses.
+  RPGManager.clearCache();
+
+  // perform original logic.
+  J.BASE.Aliased.DataManager.get('setupBattleTest')
+    .call(this);
+};
+//endregion caching
 //endregion DataManager

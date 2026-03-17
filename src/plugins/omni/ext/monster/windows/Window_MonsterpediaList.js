@@ -73,6 +73,9 @@ class Window_MonsterpediaList
     // if an enemy is explicitly hidden, then the enemy is invalid.
     if (enemy.hideFromMonsterpedia) return false;
 
+    // enemies that have names starting with '===' are placeholders.
+    if (enemy.name.startsWith('===')) return false;
+
     // the enemy is valid!
     return true;
   }

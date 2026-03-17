@@ -7,11 +7,19 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.0';
+  const requiredBaseVersion = '3.0.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  // Check to ensure we have the minimum required version of the J-ABS plugin.
+  const requiredJabsVersion = '4.5.0';
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  if (!hasJabsRequirement)
+  {
+    throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
   }
 })();
 //endregion version check
@@ -33,7 +41,7 @@ J.ABS.EXT.TOOLS.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '1.0.0',
+  Version: '1.0.1',
 };
 
 /**

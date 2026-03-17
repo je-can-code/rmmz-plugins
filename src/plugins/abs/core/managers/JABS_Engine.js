@@ -2452,7 +2452,7 @@ class JABS_Engine
       .getAllNotes();
 
     // determine the current knockback resist of the target.
-    const targetKnockbackResist = RPGManager.getNumberFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
+    const targetKnockbackResist = RPGManager.getSumFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
 
     // don't even knock them up or around at all, they are immune to knockback.
     if (targetKnockbackResist >= 100) return;

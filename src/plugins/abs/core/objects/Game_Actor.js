@@ -312,21 +312,24 @@ Game_Actor.prototype.getJabsParameter = function(structure, defaultValue)
   // grab the class data from the actor.
   const classData = this.currentClass();
 
+  // grab the parameter from the class.
+  const classJabsParameter = RPGManager.getNumberFromNoteByRegex(classData, structure, true);
+
   // check if the class has sight on it.
-  if (classData.getNumberFromNotesByRegex(structure))
+  if (classJabsParameter !== null)
   {
     // return the sight from the class.
-    return classData.getNumberFromNotesByRegex(structure)
+    return classJabsParameter;
   }
 
-  // grab the data for this actor.
-  const actorData = this.actor();
+  // grab the parameter from the actor.
+  const actorJabsParameter = RPGManager.getNumberFromNoteByRegex(this.actor(), structure, true);
 
   // if there is no class prepare tag, then look to the actor.
-  if (actorData.getNumberFromNotesByRegex(structure))
+  if (actorJabsParameter !== null)
   {
     // return the sight from the battler.
-    return actorData.getNumberFromNotesByRegex(structure);
+    return actorJabsParameter;
   }
 
   return defaultValue;
@@ -497,7 +500,7 @@ Game_Actor.prototype.switchLocked = function()
 
   // check if any of the things have this tag on it.
   const switchLocked = objectsToCheck
-    .some(object => object.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigNoSwitch));
+    .some(object => RPGManager.checkForBooleanFromNoteByRegex(object, J.ABS.RegExp.ConfigNoSwitch));
 
   // return the result.
   return switchLocked;
@@ -802,20 +805,20 @@ Game_Actor.prototype.canUpgradeSkill = function(skillSlot, skillId)
 
   // if the actor is not allowed to auto upgrade skills, then do not.
   const canAutoUpgrade = objectsToCheck
-    .some(object => object.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigAutoUpgradeSkills));
+    .some(object => RPGManager.checkForBooleanFromNoteByRegex(object, J.ABS.RegExp.ConfigAutoUpgradeSkills));
   if (!canAutoUpgrade) return false;
 
   // identify the skill based on the current skillslot.
   const currentSkillData = this.skill(skillSlot.id);
 
   // if auto-assignment is disallowed explicitly, then don't upgrade this slot.
-  const isSkillAutoUpgradeBlocked = currentSkillData
-    .getBooleanFromNotesByRegex(J.ABS.RegExp.NoSkillUpgrading);
+  const isSkillAutoUpgradeBlocked = RPGManager
+    .checkForBooleanFromNoteByRegex(currentSkillData, J.ABS.RegExp.NoSkillUpgrading);
   if (isSkillAutoUpgradeBlocked) return false;
 
   // if the current skillslot's skill isn't the one that should be upgraded, then don't upgrade.
-  const upgradeOverThisSkillId = this.skill(skillId)
-    .getNumberFromNotesByRegex(J.ABS.RegExp.UpgradeOverSkill);
+  const upgradeOverThisSkillId = RPGManager
+    .getNumberFromNoteByRegex(this.skill(skillId), J.ABS.RegExp.UpgradeOverSkill);
   if (skillSlot.id !== upgradeOverThisSkillId) return false;
 
   // we should upgrade this skill with this new skillId!
@@ -853,7 +856,7 @@ Game_Actor.prototype.canAutoAssignSkillOnLevelup = function(skillId)
 
   // if the actor is not allowed to auto assign skills, then do not.
   const canAutoAssign = objectsToCheck
-    .some(object => object.getBooleanFromNotesByRegex(J.ABS.RegExp.ConfigAutoAssignSkills));
+    .some(object => RPGManager.checkForBooleanFromNoteByRegex(object, J.ABS.RegExp.ConfigAutoAssignSkills));
   if (!canAutoAssign) return false;
 
   // if we already have the skill equipped, don't equip it again.
@@ -869,18 +872,18 @@ Game_Actor.prototype.canAutoAssignSkillOnLevelup = function(skillId)
   const skillData = this.skill(skillId);
 
   // if the skill is preventing auto assignment, don't auto assign.
-  const isSkillAutoAssignBlocked = skillData.getBooleanFromNotesByRegex(J.ABS.RegExp.NoAutoAssign);
+  const isSkillAutoAssignBlocked = RPGManager.checkForBooleanFromNoteByRegex(skillData, J.ABS.RegExp.NoAutoAssign);
   if (isSkillAutoAssignBlocked) return false;
 
   // skills that are upgrade-only cannot be assigned to blank slots.
-  const onlyUpgradeable = skillData.getBooleanFromNotesByRegex(J.ABS.RegExp.UpgradeOnlySkill);
+  const onlyUpgradeable = RPGManager.checkForBooleanFromNoteByRegex(skillData, J.ABS.RegExp.UpgradeOnlySkill);
   if (onlyUpgradeable) return false;
 
   // if the skill type is blacklisted, don't allow auto assigning.
   const blacklistedBySkillTypeId = objectsToCheck.some(object =>
   {
     // grab the blacklisted skills by the actor/class.
-    const skillTypeIds = object.getNumberArrayFromNotesByRegex(J.PASSIVE.RegExp.EquippedPassiveStateIds);
+    const skillTypeIds = RPGManager.getNumbersFromNoteByRegex(object, J.PASSIVE.RegExp.EquippedPassiveStateIds);
 
     // if the skill's type was amongst the blacklisted types, don't auto assign it.
     if (skillTypeIds.includes(skillData.stypeId)) return true;

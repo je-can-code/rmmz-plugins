@@ -101,7 +101,7 @@ Game_Party.prototype.maxItems = function(item = null)
   if (!item) return defaultMax;
 
   // grab the individual item's max quantity.
-  const maxForItem = item.getNumberFromNotesByRegex(J.BASE.RegExp.MaxItems, true);
+  const maxForItem = RPGManager.getNumberFromNoteByRegex(item, J.BASE.RegExp.MaxItems, true);
 
   // check to ensure that quantity is defined.
   if (maxForItem !== null)

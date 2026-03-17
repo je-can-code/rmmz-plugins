@@ -14,27 +14,9 @@ RPG_EquipItem.prototype.jaftingRefinedCount ||= 0;
 Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementBase", {
   get: function()
   {
-    return this.getJaftingNotRefinementBase();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.NotRefinementBase);
   },
 });
-
-/**
- * Gets whether or not this equip is blocked from being used as a base for refinement.
- * @returns {boolean}
- */
-RPG_EquipItem.prototype.getJaftingNotRefinementBase = function()
-{
-  return this.extractJaftingNotRefinementBase();
-};
-
-/**
- * Extracts the value from the notes.
- * @returns {boolean}
- */
-RPG_EquipItem.prototype.extractJaftingNotRefinementBase = function()
-{
-  return this.getBooleanFromNotesByRegex(J.JAFTING.EXT.REFINE.RegExp.NotRefinementBase);
-};
 //endregion notRefinementBase
 
 //region notRefinementMaterial
@@ -45,27 +27,9 @@ RPG_EquipItem.prototype.extractJaftingNotRefinementBase = function()
 Object.defineProperty(RPG_EquipItem.prototype, "jaftingNotRefinementMaterial", {
   get: function()
   {
-    return this.getJaftingNotRefinementBase();
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.NotRefinementMaterial);
   },
 });
-
-/**
- * Gets whether or not this equip is blocked from being used as a material for refinement.
- * @returns {boolean}
- */
-RPG_EquipItem.prototype.getJaftingNotRefinementBase = function()
-{
-  return this.extractJaftingNotRefinementMaterial();
-};
-
-/**
- * Extracts the value from the notes.
- * @returns {boolean}
- */
-RPG_EquipItem.prototype.extractJaftingNotRefinementMaterial = function()
-{
-  return this.getBooleanFromNotesByRegex(J.JAFTING.EXT.REFINE.RegExp.NotRefinementMaterial);
-};
 //endregion notRefinementMaterial
 
 //region unrefinable
@@ -89,7 +53,7 @@ Object.defineProperty(RPG_EquipItem.prototype, "jaftingUnrefinable", {
 RPG_EquipItem.prototype.getJaftingUnrefinable = function()
 {
   // check if the notes say this is explicitly unrefinable.
-  let unrefinable = this.extractJaftingUnrefinable();
+  let unrefinable = RPGManager.checkForBooleanFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.Unrefinable);
 
   // if the notes didn't have the tag, lets check for the other pair.
   if (!unrefinable)
@@ -109,15 +73,6 @@ RPG_EquipItem.prototype.getJaftingUnrefinable = function()
   // return our result.
   return unrefinable;
 };
-
-/**
- * Extracts the value from the notes.
- * @returns {boolean}
- */
-RPG_EquipItem.prototype.extractJaftingUnrefinable = function()
-{
-  return this.getBooleanFromNotesByRegex(J.JAFTING.EXT.REFINE.RegExp.Unrefinable);
-};
 //endregion unrefinable
 
 //region maxRefineCount
@@ -128,26 +83,9 @@ RPG_EquipItem.prototype.extractJaftingUnrefinable = function()
 Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxRefineCount", {
   get: function()
   {
-    return this.getJaftingMaxRefineCount();
+    return RPGManager.getNumberFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.MaxRefineCount);
   },
 });
-
-/**
- * Gets how many times this equip can be refined.
- * @returns {number}
- */
-RPG_EquipItem.prototype.getJaftingMaxRefineCount = function()
-{
-  return this.extractJaftingMaxRefineCount();
-};
-
-/**
- * Extracts the value from the notes.
- */
-RPG_EquipItem.prototype.extractJaftingMaxRefineCount = function()
-{
-  return this.getNumberFromNotesByRegex(J.JAFTING.EXT.REFINE.RegExp.MaxRefineCount);
-};
 //endregion maxRefineCount
 
 //region maxTraitCount
@@ -159,24 +97,7 @@ RPG_EquipItem.prototype.extractJaftingMaxRefineCount = function()
 Object.defineProperty(RPG_EquipItem.prototype, "jaftingMaxTraitCount", {
   get: function()
   {
-    return this.getJaftingMaxTraitCount();
+    return RPGManager.getNumberFromNoteByRegex(this, J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount);
   },
 });
-
-/**
- * Gets how many traits this equip can have from refinement.
- * @returns {number}
- */
-RPG_EquipItem.prototype.getJaftingMaxTraitCount = function()
-{
-  return this.extractJaftingMaxTraitCount();
-};
-
-/**
- * Extracts the value from the notes.
- */
-RPG_EquipItem.prototype.extractJaftingMaxTraitCount = function()
-{
-  return this.getNumberFromNotesByRegex(J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount);
-};
 //endregion maxRefineCount

@@ -5,30 +5,12 @@
  * This is typically found on weapons and offhand armors.
  * @type {number|null}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsSkillId", {
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsSkillId', {
   get: function()
   {
-    return this.getJabsSkillId();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SkillId, true);
   },
 });
-
-/**
- * Gets the JABS skill id for this equip.
- * @returns {number|null}
- */
-RPG_EquipItem.prototype.getJabsSkillId = function()
-{
-  return this.extractJabsSkillId();
-};
-
-/**
- * Gets the value from its notes.
- * @returns {number|null}
- */
-RPG_EquipItem.prototype.extractJabsSkillId = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.SkillId, true);
-};
 //endregion skillId
 
 //region offhand skillId
@@ -36,29 +18,12 @@ RPG_EquipItem.prototype.extractJabsSkillId = function()
  * The offhand skill id override from this equip.
  * @type {number}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsOffhandSkillId", {
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsOffhandSkillId', {
   get: function()
   {
-    return this.getJabsOffhandSkillId();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.OffhandSkillId, true);
   },
 });
-
-/**
- * Gets the JABS offhand skill id override for this equip.
- * @returns {number}
- */
-RPG_EquipItem.prototype.getJabsOffhandSkillId = function()
-{
-  return this.extractJabsOffhandSkillId()
-};
-
-/**
- * Gets the value from its notes.
- */
-RPG_EquipItem.prototype.extractJabsOffhandSkillId = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.OffhandSkillId, true);
-};
 //endregion offhand skillId
 
 
@@ -68,7 +33,7 @@ RPG_EquipItem.prototype.extractJabsOffhandSkillId = function()
  * upon being picked up, however, equipment cannot be "used".
  * @type {false}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsUseOnPickup", {
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsUseOnPickup', {
   get: function()
   {
     return false;
@@ -81,29 +46,11 @@ Object.defineProperty(RPG_EquipItem.prototype, "jabsUseOnPickup", {
  * The expiration time in frames for this equip drop.
  * @type {number|null}
  */
-Object.defineProperty(RPG_EquipItem.prototype, "jabsExpiration", {
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsExpiration', {
   get: function()
   {
-    return this.getJabsExpirationFrames();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Expires, true);
   },
 });
-
-/**
- * Gets the expiration time in frames.
- * @returns {number|null}
- */
-RPG_EquipItem.prototype.getJabsExpirationFrames = function()
-{
-  return this.extractJabsExpirationFrames();
-};
-
-/**
- * Gets the value from its notes.
- * @returns {number|null}
- */
-RPG_EquipItem.prototype.extractJabsExpirationFrames = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Expires, true);
-};
 //endregion expiration
 //endregion RPG_EquipItem

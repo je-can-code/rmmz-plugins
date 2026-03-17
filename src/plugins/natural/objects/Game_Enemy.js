@@ -220,12 +220,6 @@ Game_Enemy.prototype.refreshRewardBonuses = function()
  */
 Game_Enemy.prototype.refreshExpRewardBonuses = function()
 {
-  // add the extracted formulai to an array.
-  const expBonusFormulai = this.extractParameterFormulai(J.NATURAL.RegExp.RewardExp);
-
-  // if no formulai were found, then stop processing.
-  if (!expBonusFormulai.length) return;
-
   // calculate all formulai found for this enemy that could affect experience.
   const bonusExp = this.naturalParamBuff(J.NATURAL.RegExp.RewardExp, this.enemy().exp);
 
@@ -238,12 +232,6 @@ Game_Enemy.prototype.refreshExpRewardBonuses = function()
  */
 Game_Enemy.prototype.refreshGoldRewardBonuses = function()
 {
-  // add the extracted formulai to an array.
-  const goldBonusFormulai = this.extractParameterFormulai(J.NATURAL.RegExp.RewardGold);
-
-  // if no formulai were found, then stop processing.
-  if (!goldBonusFormulai.length) return;
-
   // calculate all formulai found for this enemy that could affect gold.
   const bonusGold = this.naturalParamBuff(J.NATURAL.RegExp.RewardGold, this.enemy().gold);
 
@@ -259,13 +247,7 @@ Game_Enemy.prototype.refreshSdpRewardBonuses = function()
   // if we are not using the SDP system, then don't do this.
   if (!J.SDP) return;
 
-  // add the extracted formulai to an array.
-  const sdpsBonusRewardFormula = this.extractParameterFormulai(J.NATURAL.RegExp.RewardGold);
-
-  // if no formulai were found, then stop processing.
-  if (!sdpsBonusRewardFormula.length) return;
-
-  // calculate all formulai found for this enemy that could affect gold.
+  // calculate all formulai found for this enemy that could affect SDPs.
   const sdpsBonus = this.naturalParamBuff(J.NATURAL.RegExp.RewardSdps, this.enemy().sdpPoints);
 
   // update the reward bonus.

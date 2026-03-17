@@ -65,6 +65,11 @@ class PluginMetadata
     return this.#plugins.has(pluginName);
   }
 
+  static getPlugin(pluginName)
+  {
+    return this.#plugins.get(pluginName);
+  }
+
   /**
    * Registers a plugin for tracking.
    * @param {PluginMetadata} pluginMetadata The metadata to track.

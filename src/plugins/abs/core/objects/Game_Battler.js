@@ -474,7 +474,7 @@ Game_Battler.prototype.onTargetDefeatSkillIds = function()
   const objectsToCheck = this.getAllNotes();
 
   // get all on-target-defeat skills from the notes.
-  const onTargetKills = RPGManager.getOnChanceEffectsFromDatabaseObjects(objectsToCheck, J.ABS.RegExp.onTargetDefeat);
+  const onTargetKills = RPGManager.getOnChanceEffectsFromDatabaseObjects(objectsToCheck, J.ABS.RegExp.OnTargetDefeat);
 
   // return what was found.
   return onTargetKills;
