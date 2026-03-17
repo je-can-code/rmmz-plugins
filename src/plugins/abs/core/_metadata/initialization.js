@@ -9,7 +9,7 @@ var J = J || {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.3.2';
+  const requiredBaseVersion = '3.0.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.4.0';
+J.ABS.Metadata.Version = '4.5.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -538,6 +538,7 @@ J.ABS.Notetags = {
 J.ABS.RegExp = {
   //region ON SKILLS
   ActionId: /<actionId:[ ]?(\d+)>/gi,
+  HideFromJabsMenu: /<hideFromJabsMenu>/gi,
 
   // pre-execution-related.
   CastTime: /<castTime:[ ]?(\d+)>/gi,
@@ -609,7 +610,8 @@ J.ABS.RegExp = {
   // counter-related (on-chance-effect template)
   Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  onTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnDefeatedTarget: /<onDefeatedTarget>/gi,
   //endregion ON SKILLS
 
   //region ON EQUIPS
@@ -709,7 +711,8 @@ J.ABS.RegExp = {
   ConfigShowName: /<jabsConfig:[ ]?showName>/i, //endregion ON BATTLERS
 
   //region ON ACTORS/CLASSES
-  ConfigNoSwitch: /<noSwitch>/i, //endregion ON ACTORS/CLASSES
+  ConfigNoSwitch: /<noSwitch>/i,
+  //endregion ON ACTORS/CLASSES
 };
 
 //region visual metadata (new)
@@ -728,7 +731,6 @@ J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
 //region visual directional metadata (new)
 /**
  * Direction-relative visual offsets (per-skill).
- * Captures the entire [x, y] array for RPGManager.getArrayFromNotesByRegex.
  *
  * Cardinal: U/D/L/R
  * Optional diagonals: UR/UL/DR/DL

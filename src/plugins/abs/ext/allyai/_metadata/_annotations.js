@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v2.0.1 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -115,6 +115,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.1
+ *    Consumed `RPGManager` update.
  * - 2.0.0
  *    Added a concept of "formations".
  *    Allies now own their own movement instead of mirroring the player.

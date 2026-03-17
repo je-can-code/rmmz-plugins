@@ -7,18 +7,9 @@
 Object.defineProperty(RPG_BaseBattler.prototype, "passiveStateIds", {
   get: function()
   {
-    return this.extractPassiveStateIds();
+    return RPGManager.getNumbersFromNoteByRegex(this, J.PASSIVE.RegExp.PassiveStateIds);
   },
 });
-
-/**
- * Extracts the value from the notes.
- * @returns {number[]}
- */
-RPG_BaseBattler.prototype.extractPassiveStateIds = function()
-{
-  return this.getNumberArrayFromNotesByRegex(J.PASSIVE.RegExp.PassiveStateIds);
-};
 //endregion passive state ids
 
 //region unique passive state ids
@@ -29,18 +20,9 @@ RPG_BaseBattler.prototype.extractPassiveStateIds = function()
 Object.defineProperty(RPG_BaseBattler.prototype, "uniquePassiveStateIds", {
   get: function()
   {
-    return this.extractUniquePassiveStateIds();
+    return RPGManager.getNumbersFromNoteByRegex(this, J.PASSIVE.RegExp.UniquePassiveStateIds);
   },
 });
-
-/**
- * Extracts the value from the notes.
- * @returns {number[]}
- */
-RPG_BaseBattler.prototype.extractUniquePassiveStateIds = function()
-{
-  return this.getNumberArrayFromNotesByRegex(J.PASSIVE.RegExp.UniquePassiveStateIds);
-};
 //endregion unique passive state ids
 
 //region equipped passive state ids

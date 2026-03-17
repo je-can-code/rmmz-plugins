@@ -128,29 +128,12 @@ JABS_SkillSlotManager.prototype.setupActorSlots = function()
  */
 JABS_SkillSlotManager.prototype.setupEnemySlots = function(enemy)
 {
+  // grab the database data.
   const battlerData = enemy.databaseData();
-  if (!battlerData)
-  {
-    console.warn('missing battler data.', enemy);
-    return;
-  }
-
-  // filter out any "extend" skills as far as this collection is concerned.
-  const filtering = action =>
-  {
-    // grab the skill from the database.
-    const skill = enemy.skill(action.skillId);
-
-    // determine if the skill is an extend skill or not.
-    const isExtendSkill = skill.metadata('skillExtend');
-
-    // filter out the extend skills.
-    return !isExtendSkill;
-  };
 
   // filter the skills.
   const skillIds = battlerData.actions
-    .filter(filtering)
+    .filter(action => this.filterActionSkills(enemy, action))
     .map(action => action.skillId);
 
   // grab the basic attack skill id as well.
@@ -175,6 +158,17 @@ JABS_SkillSlotManager.prototype.setupEnemySlots = function(enemy)
     // add the slot to the manager for this enemy.
     this.addSlot(slotKey, skillId);
   }, this);
+};
+
+/**
+ * A filter function for whether or not a skill should be included in the skill slot manager for enemies.
+ * @param {Game_Enemy} enemy The enemy to check.
+ * @param {RPG_EnemyAction} action The action to check.
+ */
+// eslint-disable-next-line no-unused-vars
+JABS_SkillSlotManager.prototype.filterActionSkills = function(enemy, action)
+{
+  return true;
 };
 
 /**

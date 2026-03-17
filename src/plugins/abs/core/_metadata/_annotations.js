@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.4.0 JABS] Enables combat to be carried out on the map.
+ * [v4.5.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,11 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.5.0
+ *    Consumed `RPGManager` update.
+ *    Removed useless extraneous layers that handled note extraction.
+ *    Removed hard-coded reference to `J-Extend` from this plugin.
+ *    Shifted hard-coded regex to live in the initialization section.
  * - 4.4.0
  *    Revamped dodge skills.
  *    Dodge skills now execute their skill as well.

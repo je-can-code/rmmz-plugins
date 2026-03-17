@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.3.2 BASE] The base class for all J plugins.
+ * [v3.0.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -92,6 +92,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.0
+ *    Removed all legacy note-parsing logic from RPG_Base.
+ *    Updated RPGManager to leverage WeakMap caching for parsed notes.
  * - 2.3.3
  *    Extended database object type-checking.
  *    Provided way for any database object to provide a unique identifier.

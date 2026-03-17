@@ -48,6 +48,9 @@ Game_Actor.prototype.initAptitudeMembers = function()
  */
 Game_Actor.prototype.getAllAptitudeProgresses = function()
 {
+  // emergency initialize for existing saves.
+  if (!this._j._aptitude) this.initAptitudeMembers();
+
   return this._j._aptitude._progress;
 };
 
@@ -57,6 +60,9 @@ Game_Actor.prototype.getAllAptitudeProgresses = function()
  */
 Game_Actor.prototype.getAllAptitudeSkillsLearned = function()
 {
+  // emergency initialize for existing saves.
+  if (!this._j._aptitude) this.initAptitudeMembers();
+
   return this._j._aptitude._learned;
 };
 
@@ -118,6 +124,9 @@ Game_Actor.prototype.getAptitudeSkillAggregates = function()
  */
 Game_Actor.prototype.getAptitudeProgress = function(key)
 {
+  // emergency initialize for existing saves.
+  if (!this._j._aptitude) this.initAptitudeMembers();
+
   // get the progress, or coalesce politely to null if it doesn't exist.
   return this._j._aptitude._progress[key] ?? null;
 };

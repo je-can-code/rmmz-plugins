@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 ELEM] Enables greater control over elements.
+ * [v1.0.1 ELEM] Enables greater control over elements.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -202,5 +202,11 @@
  *  <strictElements:[1,8]> on battler (either actor or enemy).
  * This battler now can only receive damage from skills that include the
  * element id of 1, 2, 3, 4, 5, 6, or 8.
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    Consumed `RPGManager` updates.
+ * - 1.0.0
+ *    The initial release.
  * ============================================================================
  */

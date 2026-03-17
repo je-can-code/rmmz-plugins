@@ -4,6 +4,27 @@
  */
 var J = J || {};
 
+//region version checks
+(() =>
+{
+  // Check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '3.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (!hasBaseRequirement)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  // Check to ensure we have the minimum required version of the J-ABS plugin.
+  const requiredJabsVersion = '4.5.0';
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  if (!hasJabsRequirement)
+  {
+    throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
+  }
+})();
+//endregion version check
+
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -17,7 +38,7 @@ J.ABS.EXT.POSES.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.ABS.EXT.POSES.Metadata = new J_PosesPluginMetadata('J-ABS-Poses', '1.0.0');
+J.ABS.EXT.POSES.Metadata = new J_PosesPluginMetadata('J-ABS-Poses', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.

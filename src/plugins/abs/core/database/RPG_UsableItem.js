@@ -7,30 +7,12 @@
 Object.defineProperty(RPG_UsableItem.prototype, "jabsBonusHits", {
   get: function()
   {
-    return this.getJabsBonusHits();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHits, true);
   },
 });
-
-/**
- * Gets the JABS bonus hits of this skill or item.
- * @returns {number|null}
- */
-RPG_UsableItem.prototype.getJabsBonusHits = function()
-{
-  return this.extractJabsBonusHits();
-};
-
-/**
- * Extracts the value from the notes.
- * @returns {number|null}
- */
-RPG_UsableItem.prototype.extractJabsBonusHits = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.BonusHits, true);
-};
 //endregion bonusHits
 
-//region cooldown
+//region cooldowns
 /**
  * The JABS cooldown when using this skill or item.
  * @type {number}
@@ -38,25 +20,32 @@ RPG_UsableItem.prototype.extractJabsBonusHits = function()
 Object.defineProperty(RPG_UsableItem.prototype, "jabsCooldown", {
   get: function()
   {
-    return this.getJabsCooldown();
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Cooldown, true);
   },
 });
 
 /**
- * Gets the JABS cooldown for this skill or item.
- * @returns {number}
+ * A new property for retrieving the JABS uniqueCooldown from this skill.
+ * @type {boolean}
  */
-RPG_UsableItem.prototype.getJabsCooldown = function()
-{
-  return this.extractJabsCooldown()
-};
+Object.defineProperty(RPG_UsableItem.prototype, 'jabsUniqueCooldown', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.UniqueCooldown, true);
+  },
+});
+//endregion cooldowns
 
+//region usability
 /**
- * Gets the value from the notes.
+ * Whether or not the skill or item is visible in the JABS quick menus.
+ * @type {boolean}
  */
-RPG_UsableItem.prototype.extractJabsCooldown = function()
-{
-  return this.getNumberFromNotesByRegex(J.ABS.RegExp.Cooldown, true);
-};
-//endregion cooldown
+Object.defineProperty(RPG_UsableItem.prototype, 'jabsVisibleInMenus', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.HideFromJabsMenu);
+  },
+});
+//endregion usability
 //endregion RPG_UsableItem
