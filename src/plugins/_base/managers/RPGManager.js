@@ -58,6 +58,11 @@ class RPGManager
     {
       this._metrics.misses++;
 
+      if (object instanceof RPG_Class && tagKey === 'any[][]:<aptitudeTyped:[ ]?(\\[\\d+,[ ]?\\d+,[ ]?[A-Za-z]+,[ ]?[A-Za-z0-9_\\- ]+])>::gi::tryParse=true::nullIfEmpty=false')
+      {
+        console.log('hit!', object);
+      }
+
       // compute the data and cache it.
       const data = computeFn();
       cache.set(tagKey, data);
@@ -877,6 +882,12 @@ class RPGManager
    */
   static #getArraysFromNotesByRegex(databaseData, structure, tryParse = true, nullIfEmpty = false)
   {
+    // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
+    const safeFlags = structure.flags
+      .replace('g', '')
+      .replace('y', '');
+    const scan = new RegExp(structure.source, safeFlags);
+
     // get the note data from this skill.
     const lines = databaseData.note.split(/[\r\n]+/);
 
@@ -889,19 +900,20 @@ class RPGManager
     // iterate the note data array.
     lines.forEach(line =>
     {
-      // check if this line matches the given regex structure.
-      const match = structure.exec(line);
-      if (match)
-      {
-        // extract the captured formula.
-        const [ , result ] = match;
+      // grab the regex execution result for this note line.
+      const result = scan.exec(line);
 
-        // parse the value out of the regex capture group.
-        val.push(result);
+      // if there is no result, then skip.
+      if (result === null) return;
 
-        // flag that we found a match.
-        hasMatch = true;
-      }
+      // extract the captured formula.
+      const [ , match ] = result;
+
+      // parse the value out of the regex capture group.
+      val.push(match);
+
+      // flag that we found a match.
+      hasMatch = true;
     });
 
     // if we didn't find a match, return null instead of attempting to parse.

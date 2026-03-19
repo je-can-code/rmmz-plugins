@@ -17,9 +17,6 @@ if (J.ABS)
     // grab the AP amount from the enemy.
     const ap = enemy.apPoints();
 
-    // if there is no AP, do nothing.
-    if (ap === 0) return;
-
     // gain the AP.
     this.gainAptitudeReward(ap, actor, enemy);
   };
@@ -28,7 +25,7 @@ if (J.ABS)
    * Gains AP from battle rewards.
    * @param {number} ap The AP to gain.
    * @param {JABS_Battler} actor The map battler that defeated the target.
-   * @param {JABS_Battler} enemy The map battler that was defeated.
+   * @param {Game_Enemy} enemy The map battler that was defeated.
    */
   JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
   {

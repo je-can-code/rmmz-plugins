@@ -135,6 +135,41 @@ class Scene_Aptitude
     this._j._aptitude._windows._sourceDetails = null;
   }
 
+  /**
+   * Applies initial visibility and selection to match the current view mode.
+   * Ensures index 0 is selected (or the remembered index) and details are set.
+   */
+  initializeView()
+  {
+    // ensure we have selection trackers for this actor.
+    this.resetSelectionTrackers();
+
+    // decide which index to start from based on the active view.
+    const startIndex = this.viewMode() === Scene_Aptitude.viewMode.AGGREGATE
+      ? this.lastAggregateIndex()
+      : this.lastSourceIndex();
+
+    // align visibility and selections with the current view mode.
+    if (this.viewMode() === Scene_Aptitude.viewMode.AGGREGATE)
+    {
+      // hide the source pair and show the aggregate pair.
+      this.hideSourceWindows();
+      this.showAggregateWindows();
+
+      // select/activate and push selection into details.
+      this.refreshSelectionForCurrentView(startIndex);
+    }
+    else
+    {
+      // hide the aggregate pair and show the source pair.
+      this.hideAggregateWindows();
+      this.showSourceWindows();
+
+      // select/activate and push selection into details.
+      this.refreshSelectionForCurrentView(startIndex);
+    }
+  }
+
   //endregion init
 
   //region accessors
@@ -145,7 +180,8 @@ class Scene_Aptitude
   lastAggregateIndex()
   {
     // get the current actor id.
-    const actorId = this.actor().actorId();
+    const actorId = this.actor()
+      .actorId();
 
     // pull from the map; default to 0 if not yet set.
     const map = this._j._aptitude._lastAggregateIndexByActor;
@@ -165,7 +201,8 @@ class Scene_Aptitude
   setLastAggregateIndex(index)
   {
     // get the current actor id.
-    const actorId = this.actor().actorId();
+    const actorId = this.actor()
+      .actorId();
 
     // update the remembered index for this actor.
     this._j._aptitude._lastAggregateIndexByActor[actorId] = index;
@@ -178,7 +215,8 @@ class Scene_Aptitude
   lastSourceIndex()
   {
     // get the current actor id.
-    const actorId = this.actor().actorId();
+    const actorId = this.actor()
+      .actorId();
 
     // pull from the map; default to 0 if not yet set.
     const map = this._j._aptitude._lastSourceIndexByActor;
@@ -198,7 +236,8 @@ class Scene_Aptitude
   setLastSourceIndex(index)
   {
     // get the current actor id.
-    const actorId = this.actor().actorId();
+    const actorId = this.actor()
+      .actorId();
 
     // update the remembered index for this actor.
     this._j._aptitude._lastSourceIndexByActor[actorId] = index;
@@ -211,7 +250,8 @@ class Scene_Aptitude
   resetSelectionTrackers()
   {
     // get the current actor id.
-    const actorId = this.actor().actorId();
+    const actorId = this.actor()
+      .actorId();
 
     // ensure aggregate index exists.
     const aggMap = this._j._aptitude._lastAggregateIndexByActor;
@@ -239,6 +279,15 @@ class Scene_Aptitude
   }
 
   /**
+   * Sets the cached list of per‑skill aggregates for the current actor.
+   * @param {AptitudeSkillAggregate[]} aggregates The new aggregates.
+   */
+  setAggregates(aggregates)
+  {
+    this._j._aptitude._aggregates = aggregates;
+  }
+
+  /**
    * Rebuilds the aggregates cache for the current actor.
    */
   rebuildAggregatesForActor()
@@ -248,7 +297,7 @@ class Scene_Aptitude
       .getAptitudeSkillAggregates();
 
     // replace the cache.
-    this._j._aptitude._aggregates = next;
+    this.setAggregates(next);
   }
 
   /**
@@ -279,7 +328,7 @@ class Scene_Aptitude
       .getAptitudeSources();
 
     // replace the cache.
-    this._j._aptitude._sources = next;
+    this.setSources(next);
   }
 
   /**
@@ -420,6 +469,9 @@ class Scene_Aptitude
 
     // create the details window that responds to source selection.
     this.createAptitudeSourceDetailsWindow();
+
+    // initialize the view mode.
+    this.initializeView();
   }
 
   //region ribbon
@@ -1121,7 +1173,7 @@ class Scene_Aptitude
     SoundManager.playOk();
 
     // reselect the list to ensure it remains active.
-    this.aptitudeAggregateListWindow()
+    this.currentListWindow()
       .activate();
   }
 

@@ -10,7 +10,7 @@ class IconManager
    */
   constructor()
   {
-    throw new Error("This is a static class.");
+    throw new Error('This is a static class.');
   }
 
   /**
@@ -353,8 +353,26 @@ class IconManager
   {
     switch (weaponTypeId)
     {
-      case 1:
-        return 16;
+      case 1:   // blade
+        return 401;
+      case 2:   // spear
+        return 408;
+      case 3:   // gun
+        return 438;
+      case 4:   // axe
+        return 434;
+      case 5:   // wand
+        return 442;
+      case 6:   // fist
+        return 461;
+      case 7:   // only-earthie
+        return 2074;
+      case 8:   // only-skye
+        return 2077;
+      case 9:   // only-cynder
+        return 2076;
+      case 10:  // only-aqualock
+        return 2075;
       default:
         return 16;
     }
@@ -494,9 +512,9 @@ class IconManager
    * A tag for correlating a JABS parameter to an icon.
    */
   static JABS_PARAMETER = {
-    BONUS_HITS: "bonus-hits",
-    ATTACK_SKILL: "attack-skill",
-    SPEED_BOOST: "speed-boost",
+    BONUS_HITS: 'bonus-hits',
+    ATTACK_SKILL: 'attack-skill',
+    SPEED_BOOST: 'speed-boost',
   };
 
   /**
@@ -521,12 +539,12 @@ class IconManager
    * A tag for correlating a JAFTING parameter to an icon.
    */
   static JAFTING_PARAMETER = {
-    MAX_REFINE: "max-refine-count",
-    MAX_TRAITS: "max-trait-count",
-    NOT_BASE: "not-refinement-base",
-    NOT_MATERIAL: "not-refinement-material",
-    TIMES_REFINED: "refined-count",
-    UNREFINABLE: "unrefinable"
+    MAX_REFINE: 'max-refine-count',
+    MAX_TRAITS: 'max-trait-count',
+    NOT_BASE: 'not-refinement-base',
+    NOT_MATERIAL: 'not-refinement-material',
+    TIMES_REFINED: 'refined-count',
+    UNREFINABLE: 'unrefinable'
   };
 
   /**

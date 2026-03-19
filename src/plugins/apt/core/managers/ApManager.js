@@ -10,23 +10,20 @@ class ApManager
    */
   static gainAp(actor, amount, cause = 'victory')
   {
-    // don't bother if the AP gained is zero.
+    // don't bother if the AP gained is zero or actor cannot gain.
     if (this.canGainAp(actor, amount) === false) return;
 
     // build the list of active sources for this actor.
-    const teachableSources = this.#activeTeachables(actor);
+    const teachableSources = this.activeTeachables(actor);
 
     // iterate each active source to apply AP.
     teachableSources.forEach(source =>
     {
       // deconstruct the source for readability.
-      const {
-        key,
-        teachables
-      } = source;
+      const { key, teachables } = source;
 
       // apply the AP to this source's taught skills.
-      this.#applyApToSource(actor, key, teachables, amount, cause);
+      this.applyApToSource(actor, key, teachables, amount, cause);
     });
   }
 
@@ -225,7 +222,7 @@ class ApManager
    * @param {Game_Actor} actor The actor to evaluate.
    * @returns {{ key: string, teachables: AptitudeTeachable[] }[]} The active teachable sources.
    */
-  static #activeTeachables(actor)
+  static activeTeachables(actor)
   {
     // acquire all potential sources.
     const sources = actor.getAptitudeSources();
@@ -283,7 +280,7 @@ class ApManager
    * @param {number} amount The AP awarded for this tick.
    * @param {string} cause The cause string for debugging/toasts.
    */
-  static #applyApToSource(actor, sourceKey, teachables, amount, cause)
+  static applyApToSource(actor, sourceKey, teachables, amount, cause)
   {
     // iterate each teachable to add progress and check thresholds.
     teachables.forEach(teachable =>
