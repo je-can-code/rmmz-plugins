@@ -283,6 +283,9 @@ class Window_AptitudeAggregateDetails
     // draw the icon + label on the left side of the row.
     this.drawTextEx(`\\C[${activityColorIndex}]\\I[${iconIndex}]${name}\\C[0]`, 0, y, leftW);
 
+    // give extensions an opportunity to render additional info.
+    this.drawExtensionData(sourceProgress, 0 + leftW, y);
+
     // determine learned state for this specific source.
     const learned = sourceProgress.learned() === true;
 
@@ -334,35 +337,62 @@ class Window_AptitudeAggregateDetails
     const shouldDrawGauge = learned === false && knownElsewhere === false;
     if (shouldDrawGauge === true)
     {
-      // compute the gauge rectangle centered vertically within the row.
-      const gaugeX = Math.floor(this.contentsWidth() * 0.40);
-      const gaugeY = y + Math.round(this.lineHeight() / 2) - Math.round(this.gaugeHeight() / 2);
-      const rect = new Rectangle(gaugeX, gaugeY, this.gaugeWidth(), this.gaugeHeight());
-
-      // compute the rate between 0..1 for the gauge.
-      const progressRate = Math.max(0, Math.min(sourceProgress.currentAp() / sourceProgress.requiredAp(), 1));
-
-      // build the gauge options with a dynamic segment count and colors.
-      const leftGaugeColor = isActive
-        ? this.gaugeColor1()
-        : this.inactiveColor1();
-      const rightGaugeColor = isActive
-        ? this.gaugeColor2()
-        : this.inactiveColor2();
-      const segOpts = WindowGaugeOptions.Builder()
-        .gaugeType(Window_Base.GAUGE_TYPES.Segmented)
-        .segments(Math.max(1, Math.ceil(sourceProgress.requiredAp() / this.segmentValue())))
-        .gap(2)
-        .leftGradientColor(leftGaugeColor)
-        .rightGradientColor(rightGaugeColor)
-        .build();
-
       // draw the segmented gauge.
-      this.drawGauge(rect, progressRate, segOpts);
+      this.drawProgressGauge(sourceProgress.currentAp(), sourceProgress.requiredAp(), isActive);
     }
 
     // advance to the next row position.
     this.setNextY(y + this.lineHeight());
+  }
+
+  /**
+   * Extension hook for drawing additional per-source information (such as typed badges).
+   * @param {AptitudeSkillSourceProgress} sourceProgress - The per-source progress for this skill.
+   * @param {number} x - The row's x coordinate.
+   * @param {number} y - The row's y coordinate.
+   */
+  // eslint-disable-next-line no-unused-vars
+  drawExtensionData(sourceProgress, x, y)
+  {
+    // no-op.
+  }
+
+  /**
+   * Draws a gauge for a progress of the skill for this source.
+   * @param {number} currentAp The current AP for the progress.
+   * @param {number} requiredAp The required AP for the progress.
+   * @param {boolean} isActive Whether the source is currently active.
+   */
+  drawProgressGauge(currentAp, requiredAp, isActive)
+  {
+    // grab the next y position.
+    const y = this.nextY();
+
+    // compute the gauge rectangle centered vertically within the row.
+    const gaugeX = Math.floor(this.contentsWidth() * 0.40);
+    const gaugeY = y + Math.round(this.lineHeight() / 2) - Math.round(this.gaugeHeight() / 2);
+    const rect = new Rectangle(gaugeX, gaugeY, this.gaugeWidth(), this.gaugeHeight());
+
+    // compute the rate between 0..1 for the gauge.
+    const progressRate = Math.max(0, Math.min(currentAp / requiredAp, 1));
+
+    // build the gauge options with a dynamic segment count and colors.
+    const leftGaugeColor = isActive
+      ? this.gaugeColor1()
+      : this.inactiveColor1();
+    const rightGaugeColor = isActive
+      ? this.gaugeColor2()
+      : this.inactiveColor2();
+    const segOpts = WindowGaugeOptions.Builder()
+      .gaugeType(Window_Base.GAUGE_TYPES.Segmented)
+      .segments(Math.max(1, Math.ceil(requiredAp / this.segmentValue())))
+      .gap(2)
+      .leftGradientColor(leftGaugeColor)
+      .rightGradientColor(rightGaugeColor)
+      .build();
+
+    // draw the segmented gauge.
+    this.drawGauge(rect, progressRate, segOpts);
   }
 
   //endregion draw
@@ -374,7 +404,7 @@ class Window_AptitudeAggregateDetails
    */
   gaugeWidth()
   {
-    return 256;
+    return 200;
   }
 
   /**

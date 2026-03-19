@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 APT] A plugin that grants the ability to learn by gaining points.
+ * [v1.0.2 APT] A plugin that grants the ability to learn by gaining points.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -54,7 +54,7 @@
  *    Where REQUIRED_AP is how much AP that source needs to teach it.
  *
  * TAG EXAMPLES:
- *  <aptitude:[12, 150]>
+ *  <aptitude:[12,150]>
  * This source enables learning skill of id 12 once the owner gains 150 AP.
  * ============================================================================
  * AP
@@ -72,7 +72,7 @@
  * - Enemies only.
  *
  * TAG FORMAT:
- *  <ap:[AMOUNT]>
+ *  <ap:AMOUNT>
  *    Where AMOUNT is the amount of AP to be gained.
  *
  * TAG EXAMPLES:
@@ -92,6 +92,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Updated to be more extensible for extensions.
+ *    Fixed issue with parsing inputs for aptitude progresses.
  * - 1.0.1
  *    Added emergency initialization for existing saves.
  * - 1.0.0
@@ -127,6 +130,7 @@
  * @min -99999999
  * @max 99999999
  * @desc The amount of AP to modify by. Negative removes AP. Per-source never goes below 0.
+ * @default 10
  *
  * @command mod-ap
  * @text Add/Remove AP
@@ -134,10 +138,12 @@
  * @arg actorId
  * @type actor
  * @desc The id of the actor to modify AP for.
+ * @default 1
  * @arg points
  * @type number
  * @min -99999999
  * @max 99999999
  * @desc The amount of AP to modify by. Negative removes AP. Per-source never goes below 0.
+ * @default 10
  */
 //endregion annotations
