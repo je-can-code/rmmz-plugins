@@ -44,19 +44,11 @@ class AptitudeSkillSourceProgress
    */
   constructor(sourceKey, skillId, currentAp, requiredAp, learned)
   {
-    // store the source key.
-    this.#sourceKey = sourceKey;
-
-    this.#skillId = skillId;
-
-    // store current AP.
-    this.#currentAp = currentAp;
-
-    // store required AP.
-    this.#requiredAp = requiredAp;
-
-    // store learned flag.
-    this.#learned = learned === true;
+    this.#sourceKey = String(sourceKey);
+    this.#skillId = Number(skillId);
+    this.#currentAp = Number(currentAp);
+    this.#requiredAp = Number(requiredAp);
+    this.#learned = Boolean(learned === true);
   }
 
   /**

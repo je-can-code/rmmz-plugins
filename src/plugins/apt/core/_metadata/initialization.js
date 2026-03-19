@@ -38,7 +38,7 @@ J.APT.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.APT.Metadata = new JAptitude_PluginMetadata('J-Aptitude', '1.0.1');
+J.APT.Metadata = new JAptitude_PluginMetadata('J-Aptitude', '1.0.2');
 
 /**
  * A collection of all aliased methods for this plugin.
