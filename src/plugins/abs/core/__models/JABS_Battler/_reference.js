@@ -786,7 +786,16 @@ JABS_Battler.prototype.engageTarget = function(target)
   // if we're alerted, also clear the alert state.
   this.clearAlert();
 
-  // TODO: abstract this.
+  // perform on-engage effects.
+  this.onEngage();
+};
+
+/**
+ * A hook to perform all side effects of engaging a target.
+ * Extensions may alias this to add telemetry, custom visuals, or other behavior.
+ */
+JABS_Battler.prototype.onEngage = function()
+{
   this.showBalloon(J.ABS.Balloons.Exclamation);
 };
 
@@ -814,6 +823,19 @@ JABS_Battler.prototype.disengageTarget = function()
 
   // reset all the phases back to default.
   this.resetPhases();
+
+  // perform on-disengage effects.
+  this.onDisengage();
+};
+
+/**
+ * A hook to perform all side effects of disengaging from a target.
+ * Extensions may alias this to add telemetry, custom visuals, or other behavior.
+ */
+JABS_Battler.prototype.onDisengage = function()
+{
+  if (J.ABS.Metadata.ShowDisengageBalloon === false) return;
+  this.showBalloon(J.ABS.Metadata.DisengageBalloonId);
 };
 
 /**
