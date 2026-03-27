@@ -113,7 +113,7 @@ Game_Event.prototype.moveDiagonally = function(horz, vert)
   if (this.isJabsAction() === false) return;
 
   // if this is not a diagonal direction, don't try to modify facing.
-  if !this.isDiagonalDirection(this.direction()) return;
+  if (!this.isDiagonalDirection(this.direction())) return;
 
   // determine the correct direction to face and set it.
   const newDirection = this.normalizeActionDirection();
