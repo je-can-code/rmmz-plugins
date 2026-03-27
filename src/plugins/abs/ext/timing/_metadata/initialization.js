@@ -47,6 +47,34 @@ J.ABS.EXT.TIMING.Metadata = {
 
 J.ABS.EXT.TIMING.PluginParameters = PluginManager.parameters(J.ABS.EXT.TIMING.Metadata.Name);
 
+J.ABS.EXT.TIMING.Metadata = {
+  ...J.ABS.EXT.TIMING.Metadata,
+
+  /**
+   * The base cast speed modifier applied globally before notetags.
+   * @type {number}
+   */
+  BaseCastSpeed: Number(J.ABS.EXT.TIMING.PluginParameters['baseCastSpeed'] ?? 0),
+
+  /**
+   * The minimum cast time in frames.
+   * @type {number}
+   */
+  MinimumCastTime: Number(J.ABS.EXT.TIMING.PluginParameters['minimumCastTime'] ?? 0),
+
+  /**
+   * The base fast cooldown modifier applied globally before notetags.
+   * @type {number}
+   */
+  BaseFastCooldown: Number(J.ABS.EXT.TIMING.PluginParameters['baseFastCooldown'] ?? 0),
+
+  /**
+   * The minimum cooldown in frames.
+   * @type {number}
+   */
+  MinimumCooldown: Number(J.ABS.EXT.TIMING.PluginParameters['minimumCooldown'] ?? 0),
+};
+
 /**
  * A collection of all aliased methods for this plugin.
  */

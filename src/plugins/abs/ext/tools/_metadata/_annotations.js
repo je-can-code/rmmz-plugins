@@ -86,4 +86,22 @@
  * @text Gap Close Default
  * @desc True if you can gap close to anything hittable, false if only specific targets.
  * @default false
+ *
+ * @param grabThrowConfigs
+ * @text GRAB AND THROW DEFAULTS
+ *
+ * @param grabThrowEnabled
+ * @parent grabThrowConfigs
+ * @type boolean
+ * @text Grab and Throw Enabled
+ * @desc True if grab and throw functionality is enabled globally by default.
+ * @default true
+ *
+ * @param directionFixAlways
+ * @parent grabThrowConfigs
+ * @type boolean
+ * @text Always Fix Throw Direction
+ * @desc True if the throw direction is always fixed regardless of input.
+ * @default false
+ *
  */

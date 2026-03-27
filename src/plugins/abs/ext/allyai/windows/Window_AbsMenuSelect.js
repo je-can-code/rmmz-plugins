@@ -1,6 +1,7 @@
 //region Window_AbsMenuSelect
 /**
- * Extends the initialization to include the actor id for ai management.
+ * Extends {@link Window_AbsMenuSelect#initialize}.<br/>
+ * Also initializes the ally AI members.
  */
 J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.set('initialize', Window_AbsMenuSelect.prototype.initialize);
 Window_AbsMenuSelect.prototype.initialize = function(rect, type)
@@ -9,7 +10,19 @@ Window_AbsMenuSelect.prototype.initialize = function(rect, type)
   J.ABS.EXT.ALLYAI.Aliased.Window_AbsMenuSelect.get('initialize')
     .call(this, rect, type);
 
-  // TODO: init properly.
+  // initialize ally AI-specific members.
+  this.initJabsAllyAiMenuMembers();
+};
+
+/**
+ * Initializes the ally AI members for this window.
+ */
+Window_AbsMenuSelect.prototype.initJabsAllyAiMenuMembers = function()
+{
+  /**
+   * The actor id of the ally currently being managed via this window.
+   * @type {number}
+   */
   this._j._chosenActorId = 0;
 };
 
@@ -117,13 +130,9 @@ Window_AbsMenuSelect.prototype.addAggroPassiveToggleCommand = function()
  */
 Window_AbsMenuSelect.prototype.addAllyFormationCommand = function()
 {
-  // define the icons for passive/aggressive ally AI aggro settings.
-  // build the command.
-  // tODO: parameterize this.
-  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations")
+  const allyFormationsCommand = new WindowCommandBuilder(J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandName)
     .setSymbol('ally-formations')
-    // tODO: parameterize this.
-    .setIconIndex(289)
+    .setIconIndex(J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandIconIndex)
     .setColorIndex(23)
     .build();
 

@@ -264,8 +264,7 @@ Game_Battler.prototype.baseCastSpeed = function()
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
-  // TODO: add to plugin parameters?
-  const baseParam = 0;
+  const baseParam = J.ABS.EXT.TIMING.Metadata.BaseCastSpeed;
 
   // sum together all the csp flat modifiers.
   const baseCsp = RPGManager.getResultsFromAllNotesByRegex(
@@ -371,8 +370,7 @@ Game_Battler.prototype.applyCastSpeed = function(originalCastTime)
  */
 Game_Battler.prototype.minimumCastTime = function()
 {
-  // TODO: parameterize minimum into plugin parameter.
-  return 0;
+  return J.ABS.EXT.TIMING.Metadata.MinimumCastTime;
 };
 //endregion castspeed
 
@@ -390,8 +388,7 @@ Game_Battler.prototype.baseFastCooldown = function()
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
-  // TODO: add to plugin parameters?
-  const baseParam = 0;
+  const baseParam = J.ABS.EXT.TIMING.Metadata.BaseFastCooldown;
 
   // sum together all the fcd flat modifiers.
   const baseFcd = RPGManager.getResultsFromAllNotesByRegex(
@@ -500,8 +497,7 @@ Game_Battler.prototype.applyFastCooldown = function(originalCooldownTime)
  */
 Game_Battler.prototype.minimumCooldown = function()
 {
-  // TODO: parameterize minimum into plugin parameter.
-  return 0;
+  return J.ABS.EXT.TIMING.Metadata.MinimumCooldown;
 };
 //endregion fast cooldown
 //endregion Game_Battler

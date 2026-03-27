@@ -193,6 +193,23 @@
  * @desc The icon indicating party-wide aggressive engagement is enabled.
  * @default 15
  *
+ * @param allyFormationsConfigs
+ * @text ALLY FORMATIONS DETAILS
+ *
+ * @param allyFormationsCommandName
+ * @parent allyFormationsConfigs
+ * @type string
+ * @text Formations Command Text
+ * @desc The text displayed for the ally formations command in the party menu.
+ * @default Ally Formations
+ *
+ * @param allyFormationsCommandIconIndex
+ * @parent allyFormationsConfigs
+ * @type number
+ * @text Formations Command Icon
+ * @desc The icon displayed beside the ally formations command.
+ * @default 289
+ *
  * @param aiModeConfigs
  * @text AI-MODE DETAILS
  *
