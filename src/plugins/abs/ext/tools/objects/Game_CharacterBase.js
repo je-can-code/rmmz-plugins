@@ -45,8 +45,7 @@ Game_CharacterBase.prototype.initToolsMembers = function()
 
   this._j._tools._grabThrow._throw._through = false;
 
-  // tODO: from plugin params.
-  this._j._tools._grabThrow._throw._directionFixAlways = false;
+  this._j._tools._grabThrow._throw._directionFixAlways = J.ABS.EXT.TOOLS.Metadata.DirectionFixAlways;
 
   this._j._tools._grabThrow._throw._directionFix = false;
 

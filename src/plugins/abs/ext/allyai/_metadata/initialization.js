@@ -58,6 +58,9 @@ J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex = Number(J.ABS.EXT.ALLYAI.P
 // configuration for the various ai modes.
 J.ABS.EXT.ALLYAI.Metadata.AiModeEquippedIconIndex = Number(J.ABS.EXT.ALLYAI.PluginParameters['aiModeEquipped']);
 J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex = Number(J.ABS.EXT.ALLYAI.PluginParameters['aiModeNotEquipped']);
+J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandName = J.ABS.EXT.ALLYAI.PluginParameters['allyFormationsCommandName'] || 'Ally Formations';
+J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandIconIndex = Number(J.ABS.EXT.ALLYAI.PluginParameters['allyFormationsCommandIconIndex'] || 289);
+
 J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeDoNothing'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeOnlyAttack'];
 J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeVariety'];

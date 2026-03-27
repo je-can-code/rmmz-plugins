@@ -30,8 +30,7 @@ Game_System.prototype.initToolsMembers = function()
    * Whether or not the grab and throw functionality is currently enabled.
    * @type {boolean}
    */
-  // tODO: parameterize this.
-  this._j._tools._grabThrowEnabled = true;
+  this._j._tools._grabThrowEnabled = J.ABS.EXT.TOOLS.Metadata.GrabThrowEnabled;
 };
 
 /**
