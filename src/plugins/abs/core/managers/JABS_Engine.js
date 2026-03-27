@@ -11,7 +11,6 @@ class JABS_Engine
    */
   static #enemyCloneList = null;
 
-  // TODO: implement them as a map.
   /**
    * A cached collection of actions keyed by their uuids.
    */

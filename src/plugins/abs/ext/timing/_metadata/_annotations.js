@@ -220,4 +220,38 @@
  * - 1.0.0
  *    Initial release.
  * ==============================================================================
+ * @param castTimeConfigs
+ * @text CAST TIME DEFAULTS
+ *
+ * @param baseCastSpeed
+ * @parent castTimeConfigs
+ * @type number
+ * @text Base Cast Speed
+ * @desc The base cast speed modifier applied to all battlers before tags. Positive = slower, negative = faster.
+ * @default 0
+ *
+ * @param minimumCastTime
+ * @parent castTimeConfigs
+ * @type number
+ * @text Minimum Cast Time
+ * @desc The minimum number of frames a cast time can be reduced to.
+ * @default 0
+ *
+ * @param cooldownConfigs
+ * @text COOLDOWN DEFAULTS
+ *
+ * @param baseFastCooldown
+ * @parent cooldownConfigs
+ * @type number
+ * @text Base Fast Cooldown
+ * @desc The base fast cooldown modifier applied to all battlers before tags. Positive = slower, negative = faster.
+ * @default 0
+ *
+ * @param minimumCooldown
+ * @parent cooldownConfigs
+ * @type number
+ * @text Minimum Cooldown
+ * @desc The minimum number of frames a cooldown can be reduced to.
+ * @default 0
+ *
  */

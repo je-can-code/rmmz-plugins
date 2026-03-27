@@ -62,7 +62,19 @@ J.ABS.EXT.TOOLS.Metadata = {
    * The behavior for whether or not the player can gap close to anything they hit, or if they
    * can only gap close to targets bearing the "gap close target" tag.
    */
-  CanGapCloseByDefault: J.ABS.EXT.TOOLS.PluginParameters["canGapCloseByDefault"] === "true",
+  CanGapCloseByDefault: J.ABS.EXT.TOOLS.PluginParameters['canGapCloseByDefault'] === 'true',
+
+  /**
+   * Whether or not grab and throw functionality is enabled globally by default.
+   * @type {boolean}
+   */
+  GrabThrowEnabled: J.ABS.EXT.TOOLS.PluginParameters['grabThrowEnabled'] !== 'false',
+
+  /**
+   * Whether or not the throw direction is always fixed regardless of input.
+   * @type {boolean}
+   */
+  DirectionFixAlways: J.ABS.EXT.TOOLS.PluginParameters['directionFixAlways'] === 'true',
 };
 
 /**
