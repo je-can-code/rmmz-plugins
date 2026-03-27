@@ -1,3 +1,4 @@
+//region Game_Player
 /**
  * Extends {@link Game_Player.clearTransferInfo}.<br>
  * Parse out enemy data from the troop and convert them into JABS battlers.
@@ -44,3 +45,4 @@ Game_Player.prototype.reserveOriginTransfer = function()
   } = BattleManager.origin();
   this.reserveTransfer(mapId, x, y);
 };
+//endregion Game_Player

@@ -40,7 +40,7 @@ class JABS_Location
    * @param {JABS_Location} sourceLocation The source location to copy the values of.
    * @returns {JABS_Location} A new instance of the same location.
    */
-  static Clone = sourceLocation => new JABS_Location(sourceLocation?.x, sourceLocation?.y, sourceLocation?.d);
+  static Clone = sourceLocation => new JABS_Location(sourceLocation.x, sourceLocation.y, sourceLocation.d);
 
   /**
    * A factory that generates builders for creating {@link JABS_Location}s.

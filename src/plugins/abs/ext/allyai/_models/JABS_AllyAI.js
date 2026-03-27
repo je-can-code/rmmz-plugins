@@ -456,7 +456,8 @@ JABS_AllyAI.prototype.decideSupportCleansing = function(availableSkills, healer)
       // the find the first one that we can cleanse.
       const cleansableState = allyStates.find(state =>
       {
-        const isNegative = state.jabsNegative; // skills to be cleansed have a "negative" tag.
+        // skills to be cleansed have a "negative" tag.
+        const isNegative = state.jabsNegative;
         const canBeCleansed = this.determineBestSkillForStateCleansing(availableSkills, state.id, healer);
         return isNegative && canBeCleansed;
       });
@@ -526,9 +527,12 @@ JABS_AllyAI.prototype.decideSupportHealing = function(availableSkills, healer)
   {
     const testAction = new Game_Action(healer.getBattler());
     testAction.setSkill(skillId);
-    return (testAction.isForAliveFriend() &&  // must target living allies.
-      testAction.isRecover() &&               // must recover something.
-      testAction.isHpEffect());               // must affect hp.
+    // must target living allies.
+    return (testAction.isForAliveFriend() &&
+      // must recover something.
+      testAction.isRecover() &&
+      // must affect hp.
+      testAction.isHpEffect());
   });
 
   let bestSkillId = 0;
@@ -631,7 +635,8 @@ JABS_AllyAI.prototype.countLowHpAllies = function(healer, threshold = 0.6)
 JABS_AllyAI.prototype.bestFitHealingOneSkill = function(healingTypeSkills, healerBattler, lowestAllyBattler)
 {
   let bestSkillId = 0;
-  let smallestDifference = Number.MAX_SAFE_INTEGER; // need it to be an unrealistically high difference to start.
+  // need it to be an unrealistically high difference to start.
+  let smallestDifference = Number.MAX_SAFE_INTEGER;
   healingTypeSkills.forEach(skillId =>
   {
     const skill = healerBattler.skill(skillId);
@@ -687,7 +692,8 @@ JABS_AllyAI.prototype.bestFitHealingAllSkill = function(healingTypeSkills, heale
   // if there is only one skill that multi-targets, then use that.
   if (multiTargetHealingTypeSkills.length === 1) return multiTargetHealingTypeSkills[0];
 
-  let smallestDifference = 99999999; // need it to be an unrealistically high difference to start.
+  // need it to be an unrealistically high difference to start.
+  let smallestDifference = 99999999;
   multiTargetHealingTypeSkills.forEach(skillId =>
   {
     const skill = healerBattler.skill(skillId);

@@ -1,3 +1,4 @@
+//region Game_Character
 /**
  * Extends {@link processMoveCommand}.<br>
  * Ensures when move routes are being processed, that we adjust the x,y coordinates.
@@ -31,3 +32,4 @@ Game_Character.prototype.searchLimit = function()
 {
   return 40;
 };
+//endregion Game_Character

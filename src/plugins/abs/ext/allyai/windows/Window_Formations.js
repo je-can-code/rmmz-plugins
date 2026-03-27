@@ -1,3 +1,4 @@
+//region Window_Formations
 /**
  * A window that allows selection from a list of ally AI formations.
  */
@@ -65,3 +66,4 @@ class Window_Formations
     return this.lineHeight() * 2;
   }
 }
+//endregion Window_Formations

@@ -1,3 +1,4 @@
+//region JABS_ActionSpawner
 /**
  * The action spawner is responsible for translating projectile directions into
  * fully-formed `JABS_Action` instances, including per-spoke odd/even parallel
@@ -53,7 +54,9 @@ class JABS_ActionSpawner
   static buildProjectileCountsByDirection(projectileDirections)
   {
     // initialize the per-direction counts.
-    /** @type {Object.<number, number>} */
+    /**
+     * @type {Object.<number, number>}
+     */
     const totalByDir = {};
 
     // iterate over all projectile directions.
@@ -82,7 +85,9 @@ class JABS_ActionSpawner
   static buildOffsetsByDirection(countsByDir)
   {
     // initialize the per-direction offsets.
-    /** @type {Object.<number, number[]>} */
+    /**
+     * @type {Object.<number, number[]>}
+     */
     const offsetsByDir = {};
 
     // iterate over the directions present.
@@ -213,7 +218,9 @@ class JABS_ActionSpawner
   )
   {
     // track how many offsets have been consumed per direction.
-    /** @type {Object.<number, number>} */
+    /**
+     * @type {Object.<number, number>}
+     */
     const usedIndexByDir = {};
 
     // a mapping function to build one action for a projectile in a specific direction.
@@ -275,3 +282,4 @@ class JABS_ActionSpawner
     return actions;
   }
 }
+//endregion JABS_ActionSpawner

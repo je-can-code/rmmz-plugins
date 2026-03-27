@@ -480,10 +480,14 @@ JABS_Battler.prototype.slipEval = function(formula, sourceBattler, afflictedBatt
 {
   // variables for contextual eval().
   /* eslint-disable no-unused-vars */
-  const a = sourceBattler;        // the one who applied the state.
-  const b = afflictedBattler;     // this battler, afflicted by the state.
-  const v = $gameVariables._data; // access to variables if you need it.
-  const s = state;                // access to the state itself if you need it.
+  // the one who applied the state.
+  const a = sourceBattler;
+  // this battler, afflicted by the state.
+  const b = afflictedBattler;
+  // access to variables if you need it.
+  const v = $gameVariables._data;
+  // access to the state itself if you need it.
+  const s = state;
   /* eslint-enable no-unused-vars */
 
   // initialize the result.
@@ -576,13 +580,16 @@ JABS_Battler.prototype.configureSlipPop = function(amount, type)
   // based on the hp/mp/tp type, we apply different visual effects.
   switch (type)
   {
-    case 0: // hp
+    // hp.
+    case 0:
       textPopBuilder.isHpDamage();
       break;
-    case 1: // mp
+    // mp.
+    case 1:
       textPopBuilder.isMpDamage();
       break;
-    case 2: // tp
+    // tp.
+    case 2:
       textPopBuilder.isTpDamage();
       break;
   }

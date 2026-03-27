@@ -878,21 +878,21 @@ class Window_JabsRemapActions
     if (button === 'Primary Actions')
     {
       // describe the purpose of primary actions.
-      return 'Primary actions used moment-to-moment: mainhand/offhand attacks and tools.\n' + 'These are your core mapped buttons for direct, immediate use.';
+      return 'Primary actions used moment-to-moment: mainhand/offhand attacks and tools.\nThese are your core mapped buttons for direct, immediate use.';
     }
 
     // provide descriptions for section headers when selected.
     if (button === 'Secondary Actions')
     {
       // describe the purpose of secondary actions.
-      return 'Secondary and modifier inputs: Skill Trigger, Rotate, Strafe, Dodge.\n' + 'Hold or tap to modify movement or enable combat skill slots.';
+      return 'Secondary and modifier inputs: Skill Trigger, Rotate, Strafe, Dodge.\nHold or tap to modify movement or enable combat skill slots.';
     }
 
     // provide descriptions for section headers when selected.
     if (button === 'Functional Actions')
     {
       // describe the purpose of functional actions.
-      return 'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\n' + 'Useful for management between encounters or to swap leaders on the fly.';
+      return 'Functional shortcuts unrelated to attacks: open the JABS menu, cycle party leader.\nUseful for management between encounters or to swap leaders on the fly.';
     }
 
     // a small dictionary of descriptions per logical action.

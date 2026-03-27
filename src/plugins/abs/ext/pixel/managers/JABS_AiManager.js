@@ -35,8 +35,10 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   const chr = allyBattler.getCharacter();
 
   // resolve tolerances.
-  let tolerance = 0.45; // default if ALLYAI not present.
-  let hysteresis = 0.25; // extra ring outside tolerance for gentle throttling near target.
+  // default if ALLYAI not present.
+  let tolerance = 0.45;
+  // extra ring outside tolerance for gentle throttling near target.
+  let hysteresis = 0.25;
   if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
   {
     // use the configured formation tolerance if available.
@@ -151,8 +153,10 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   const chr = allyBattler.getCharacter();
 
   // resolve tolerances.
-  let tolerance = 0.45; // default if ALLYAI not present.
-  let hysteresis = 0.25; // extra ring outside tolerance for gentle throttling near target.
+  // default if ALLYAI not present.
+  let tolerance = 0.45;
+  // extra ring outside tolerance for gentle throttling near target.
+  let hysteresis = 0.25;
   if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
   {
     tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;

@@ -1,3 +1,4 @@
+//region Game_Follower
 /**
  * Overrides {@link Game_Follower.chaseCharacter}.<br>
  * Prevents the follower from chasing after the player while they are in combat.
@@ -33,3 +34,4 @@ Game_Follower.prototype.isDoingJabsAllyAiThings = function()
   // we must be doing JABS AI things!
   return true;
 };
+//endregion Game_Follower

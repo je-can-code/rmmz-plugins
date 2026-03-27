@@ -102,7 +102,9 @@ class JABS_AiManager
     const nearbyBattlers = this.getAlliedBattlersWithinRange(leaderBattler, leaderBattler.getPursuitRadius());
 
     // the filter function for determining if a battler is a follower to this leader.
-    /** @param battler {JABS_Battler} */
+    /**
+     * @param {JABS_Battler} battler
+     */
     const filtering = battler =>
     {
       // actors are not considered for leader/follower.

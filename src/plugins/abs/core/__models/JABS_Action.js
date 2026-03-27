@@ -312,10 +312,9 @@ class JABS_Action
     const event = this.getActionSprite();
 
     // check if the action has an animation to play before destroying.
-    if (this.hasSelfAnimationId())
+    if (this.hasSelfAnimationId() && event)
     {
-      // play it on oneself.
-      event?.requestAnimation(this.getSelfAnimationId());
+      event.requestAnimation(this.getSelfAnimationId());
     }
   }
 
@@ -479,8 +478,10 @@ class JABS_Action
   {
     const damageType = this.getBaseSkill().damage.type;
     return [
-      3, // HP recover
-      4, // MP recover
+      // hP recover.
+      3,
+      // mP recover.
+      4,
     ].includes(damageType);
   }
 
@@ -1111,7 +1112,8 @@ class JABS_Action
     // this allows sprite-less actions to still render a pulse anchored to the caster.
     let originX = 0;
     let originY = 0;
-    let facing = 2; // default to down as a safe fallback.
+    // default to down as a safe fallback.
+    let facing = 2;
 
     // attempt to use the action event for origin and facing when present.
     if (actionEvent)

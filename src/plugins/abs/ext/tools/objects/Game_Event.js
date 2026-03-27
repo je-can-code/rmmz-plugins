@@ -1,3 +1,4 @@
+//region Game_Event
 /**
  * Determines whether or not this event has any gap close target overrides.
  * @returns {boolean} True if this event has a gap close override, false otherwise.
@@ -25,3 +26,4 @@ Game_Event.prototype.isGapClosable = function()
   // return what we found.
   return gapCloseTarget;
 };
+//endregion Game_Event

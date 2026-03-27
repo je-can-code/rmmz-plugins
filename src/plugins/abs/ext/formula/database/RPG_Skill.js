@@ -7,8 +7,10 @@
 RPG_Skill.prototype.jabsFormulaEffects = function()
 {
   // initialize cache location if missing.
-  this._j ||= {}; // shared J root.
-  this._j._abs ||= {}; // JABS root.
+  // shared J root.
+  this._j ||= {};
+  // jABS root.
+  this._j._abs ||= {};
 
   // build and cache on first access.
   if (!this._j._abs._formulaEffects)

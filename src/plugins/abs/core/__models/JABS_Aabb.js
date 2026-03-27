@@ -14,13 +14,41 @@ class JABS_Aabb
    */
   constructor(x, y, w, h)
   {
-    /** @type {number} */ this.x = x; // top-left x in pixels.
-    /** @type {number} */ this.y = y; // top-left y in pixels.
-    /** @type {number} */ this.w = w; // width in pixels.
-    /** @type {number} */ this.h = h; // height in pixels.
+    /**
+     * The top-left x coordinate in pixels.
+     * @type {number}
+     */
+    this.x = x;
 
-    /** @type {number} */ this.cx = x + (w / 2); // center x in pixels.
-    /** @type {number} */ this.cy = y + (h / 2); // center y in pixels.
+    /**
+     * The top-left y coordinate in pixels.
+     * @type {number}
+     */
+    this.y = y;
+
+    /**
+     * The width in pixels.
+     * @type {number}
+     */
+    this.w = w;
+
+    /**
+     * The height in pixels.
+     * @type {number}
+     */
+    this.h = h;
+
+    /**
+     * The center x coordinate in pixels.
+     * @type {number}
+     */
+    this.cx = x + (w / 2);
+
+    /**
+     * The center y coordinate in pixels.
+     * @type {number}
+     */
+    this.cy = y + (h / 2);
   }
 
   /**
@@ -33,8 +61,10 @@ class JABS_Aabb
    */
   static fromFeet(feetX, feetY, tw, th)
   {
-    const x = feetX - (tw / 2); // left edge half a tile left of feet.
-    const y = feetY - th;       // top edge one tile above feet.
+    // left edge half a tile left of feet.
+    const x = feetX - (tw / 2);
+    // top edge one tile above feet.
+    const y = feetY - th;
     return new JABS_Aabb(x, y, tw, th);
   }
 

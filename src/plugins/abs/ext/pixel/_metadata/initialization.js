@@ -67,7 +67,9 @@ J.ABS.EXT.PIXEL.Aliased = {
  * A small debug container for one-frame collision sampling traces.
  */
 J.ABS.EXT.PIXEL.Debug = {
-  /** @type {{x:number,y:number,color:string}[]} */
+  /**
+   * @type {{x:number,y:number,color:string}[]}
+   */
   samples: [],
 
   /**
@@ -81,7 +83,9 @@ J.ABS.EXT.PIXEL.Debug = {
     this.samples.push({ x, y, color });
   },
 
-  /** Clears samples at end-of-frame. */
+  /**
+   * Clears samples at end-of-frame.
+   */
   clear()
   {
     this.samples.length = 0;

@@ -1,3 +1,4 @@
+//region JABS_Battler
 /**
  * Sets the number of steps that will be force-moved when dodging.
  * @param {number} stepCount The number of steps to dodge.
@@ -35,3 +36,4 @@ JABS_Battler.prototype.destroy = function()
     CycloneMovement.loadDefaultCollisionTable();
   }
 };
+//endregion JABS_Battler
