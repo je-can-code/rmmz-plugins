@@ -58,16 +58,8 @@
     * The project policy forbids module syntax for anything in the `/src/plugins/**` directory; also avoid features that
       require compilation/transformations in the plugin layer.
 * Engine globals guard policy
-    * Assume RMMZ engine globals (e.g., Game_*, Scene_*, Window_*, Spriteset_*, DataManager, SceneManager) exist when
-      plugins are evaluated. Do not guard engine classes during prototype extension.
-    * Guard only optional dependencies from external plugins by namespace (e.g., if (J.ABS) { ... }).
-    * If a check concerns runtime state (for example, current scene or constructed instances), perform it inside the
-      executing method at runtime, not around the prototype definition.
-    * If a check is related to a new method that was added by a plugin (such as Game_Event.prototype.isErased from the
-      J.BASE plugin), then instead ensure the owning plugin is available before using the method (ex:
-      `if (J.BASE) { /* safe to use event.isErased() */}`).
-    * Never guard against a method potentially not existing directly, only use namespace validation- which also
-      shouldn't be guarded against.
+    * Never guard in any way, unless explicitly instructed to do so.
+    * Even when explicitly instructed to, always ask for clarification about the guarding to ensure no useless checks are written.
 
 ## Project Structure
 
@@ -479,3 +471,46 @@ SomeClass.prototype.someNewMethod = function(/* args if required */)
         doSomething();
       }
       ```
+
+---
+
+## Known Architectural Issues (Future Work)
+
+These are cross-cutting concerns that are out of scope for any single PR but should be addressed
+collaboratively over time. Before working on any of these, confirm with the author that the timing
+is right and that no other PR is in flight that would conflict.
+
+### `JsonEx` serialization registry
+
+**Problem:**
+`JsonEx` (RMMZ's save/load serializer) resolves class constructors by looking up `window[className]`
+at deserialization time. This was designed for a pre-ES6 world where everything was a `function`
+declaration and therefore automatically a property of `window`. Modern `class` syntax does NOT
+automatically land on `window`, which forces one of two workarounds:
+- An explicit `window.MyClass = MyClass` line after every serializable class definition.
+- Using prototype constructor functions (`function MyClass() {}`) which ARE automatically on
+  `window`, but are significantly more verbose.
+
+Both approaches are symptoms of `JsonEx` using `window` as an accidental class registry.
+
+**Desired solution:**
+Augment `JsonEx` in `J-Base` to check an explicit, intentional registry before falling back to
+`window`. Expose a `J.register(constructor)` helper that plugins call once per serializable class.
+This would allow modern `class` syntax everywhere, remove all `window.X = X` assignments, and make
+serialization intent explicit and discoverable.
+
+```javascript
+// in J-Base — defined once
+J.SerializableRegistry = {};
+J.register = function(constructor) { J.SerializableRegistry[constructor.name] = constructor; };
+
+// in any plugin model file — explicit and intentional
+J.register(SkillEquipSlot);
+```
+
+**Scope:** J-Base core + audit of all existing serializable models across every plugin to replace
+`window.X = X` and prototype constructor workarounds with `J.register(X)`.
+
+**Current workaround in use:** Prototype constructors (see `_models/` directories). Until this is
+resolved, any new serializable model should use a prototype constructor OR `class` + `window.X = X`
+with a comment referencing this note.
