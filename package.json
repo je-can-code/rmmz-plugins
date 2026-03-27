@@ -54,6 +54,7 @@
     "build:popups": "node ./src/build-tools/combine.js ./src/plugins/popups ./out J-TextPops.js",
     "build:prof": "node ./src/build-tools/combine.js ./src/plugins/prof ./out J-Proficiency.js",
     "build:sdp": "node ./src/build-tools/combine.js ./src/plugins/sdp ./out J-SDP.js",
+    "build:sks": "node ./src/build-tools/combine.js ./src/plugins/sks ./out J-SkillSlots.js",
     "build:time": "node ./src/build-tools/combine.js ./src/plugins/time ./out J-TIME.js",
 
     "build:cms-equip": "node ./src/build-tools/combine.js ./src/plugins/cms/equip ./out/cms J-CMS-Equip.js",

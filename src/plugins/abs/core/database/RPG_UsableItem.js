@@ -38,12 +38,14 @@ Object.defineProperty(RPG_UsableItem.prototype, 'jabsUniqueCooldown', {
 
 //region usability
 /**
- * Whether or not the skill or item is visible in the JABS quick menus.
+ * Whether or not the skill or item is hidden from the JABS quick menus.
+ * True when the explicit hide tag is present; false otherwise.
  * @type {boolean}
  */
-Object.defineProperty(RPG_UsableItem.prototype, 'jabsVisibleInMenus', {
+Object.defineProperty(RPG_UsableItem.prototype, 'jabsHiddenFromMenus', {
   get: function()
   {
+    // direct passthrough: tag present = true (hidden), tag absent = false (visible).
     return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.HideFromJabsMenu);
   },
 });

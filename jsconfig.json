@@ -6,12 +6,11 @@
       "DOM.Iterable"
     ],
     "target":"ESNext",
-    "module": "nodenext",
-    "checkJs": true
+    "module": "commonjs",
+    "checkJs": false
   },
   "exclude": [
     "**/node_modules/**",
-    "./project/**",
     "./out/**"
   ],
   "include": [

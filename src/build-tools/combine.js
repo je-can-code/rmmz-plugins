@@ -34,7 +34,6 @@
  */
 
 import { globSync } from 'glob';
-import { existsSync } from 'fs';
 import * as fs from 'fs/promises';
 import Logger, { LogStyle } from './logger.js';
 
@@ -111,24 +110,17 @@ function getArgs()
 }
 
 /**
- * Validates that the output directory exists.
- * If it does not exist, it will be created.
+ * Ensures the output directory exists, creating it (and any parents) if needed.
+ * Uses recursive mkdir which is idempotent and safe under parallel execution.
  * @param {string} output_path The output path to confirm exists.
  */
 async function validateOutputDir(output_path)
 {
-  // check if the directory is missing.
-  if (!existsSync(`${output_path}`))
-  {
-    // make sure the directory is created.
-    await fs.mkdir(output_path, { recursive: true });
+  // always call mkdir with recursive; it is a no-op if the directory already exists
+  // and avoids a TOCTOU race when multiple builds run in parallel.
+  await fs.mkdir(output_path, { recursive: true });
 
-    Logger.log(`output directory created: ${output_path}`, LogStyle.dim);
-  }
-  else
-  {
-    Logger.log(`output directory already exists; ${output_path}`, LogStyle.dim);
-  }
+  Logger.log(`output directory ready: ${output_path}`, LogStyle.dim);
 }
 
 /**
