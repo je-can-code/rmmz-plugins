@@ -315,19 +315,14 @@ Game_Action.prototype.processParry = function(jabsBattler)
   // perform on-parry effects.
   this.onParry(jabsBattler);
 
-  // TODO: pull the parry logic out of the requestanimation function.
-  // play the parry animation.
-  const parryAnimationId = 122;
-  jabsBattler.getCharacter()
-    .requestAnimation(parryAnimationId);
-
   // reset the player's guarding.
   jabsBattler.setParryWindow(0);
   jabsBattler.setGuardSkillId(0);
 };
 
 /**
- * A hook to perform actions on-parry.
+ * A hook to perform all side effects of a successful parry.
+ * Extensions may alias this to add telemetry, custom visuals, or other behavior.
  * @param {JABS_Battler} jabsBattler The battler that is parrying.
  */
 Game_Action.prototype.onParry = function(jabsBattler)
@@ -338,6 +333,11 @@ Game_Action.prototype.onParry = function(jabsBattler)
   // gain 10x of the tp from the guard skill when parrying.
   jabsBattler.getBattler()
     .gainTp(guardSkillTp);
+
+  // play the parry animation.
+  const parryAnimationId = 122;
+  jabsBattler.getCharacter()
+    .requestAnimation(parryAnimationId);
 };
 
 /**

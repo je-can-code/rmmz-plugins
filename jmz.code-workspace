@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "name": "rmmz-plugins",
+      "path": "."
+    },
+    {
+      "name": "ca",
+      "path": "../ca"
+    },
+    {
+      "name": "jmz-data-editor",
+      "path": "../jmz-data-editor"
+    }
+  ]
+}
