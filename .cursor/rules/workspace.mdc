@@ -1,0 +1,69 @@
+---
+description: Universal context for the JMZ workspace — all three projects, coding standards, workflow, and known future work.
+alwaysApply: true
+---
+
+# JMZ Workspace
+
+## Projects
+
+Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
+
+| Folder | What it is |
+|---|---|
+| `rmmz-plugins` | Monorepo of RPG Maker MZ plugins (JavaScript, no modules in `/src/plugins/**`). Primary project. |
+| `ca` | Consumer test game ("Chef Adventure"). The actual RMMZ project lives at `ca/chef-adventure/`. |
+| `jmz-data-editor` | React + Neutralino.js GUI for editing plugin data. TypeScript + Vite + Bun. |
+
+## Author & Style
+
+- **No emojis** in code or responses unless explicitly requested.
+- **No unnecessary comments** that just restate the code. Comments explain *why*, not *what*.
+- Always read `rmmz-plugins/.junie/guidelines.md` before working in `rmmz-plugins` — it is the authoritative style reference.
+
+## Universal Coding Style (all three projects)
+
+- **Allman braces**: opening `{` on its own line for functions, classes, and all blocks — including arrow functions.
+- **Semicolons**: always required.
+- **2-space indent**.
+- **Inline comments**: one line above the code they describe, never on the same line. Lowercase, end with a period.
+- **JsDocs**: always multiline (`/**` / ` * ` / `*/`). Include `@param` and `@returns`. Never echo back change history or feedback.
+- **Explicit boolean checks**: prefer `if (condition === false)` over `if (!condition)`. Exception: `!value` is fine for null/undefined guards.
+- **No optional chaining** (`?.`). Assume state is valid; do not add defensive guards unless explicitly asked.
+- **No nested ternaries**. Spell them out as `if` blocks.
+- **Destructure** when using more than one property from an object or array.
+- **Template literals** for string interpolation; never `+` concatenation.
+- **Trailing commas** on multiline objects/arrays are acceptable and encouraged.
+- **Line length**: 120 characters max (except `_annotations.js` files in rmmz-plugins).
+
+## rmmz-plugins Specific
+
+- **Single quotes** for strings.
+- **No `import`/`export` anywhere in `rmmz-plugins` plugin source.** These files are concatenated by `combine.js` and loaded as plain JS by the RMMZ engine — there is no compilation step. Modules simply do not work here. (`src/build-tools` uses Node `require`/`import` normally since it runs in Node, not in the game.)
+- **No IIFEs**. Use object namespaces (`J.ABS`, `J.SKS`, etc.) and alias maps.
+- **Prototype + alias pattern** for augmenting engine/other-plugin classes. `class extends` for new scene/window subclasses (unless serialized → prototype constructor).
+- **Serialized models** (saved to file via `JsonEx`): use prototype constructors with JSON-safe fields only. See `_models/` directories for examples.
+- **`//region` / `//endregion`** wrappers on every file; region name = filename.
+- Use `RPGManager` methods for all notetag parsing. Never parse `note` strings manually.
+- Build tools: `bun run build:<plugin>` → `combine.js` concatenates source into `out/`. Built files are committed to `project/js/plugins/`.
+- PR format: per-plugin `## \`J-PluginName\` [major/minor/patch] update` sections with bullet points. No generic Summary/Test Plan tables.
+
+## jmz-data-editor Specific
+
+- **TypeScript** throughout. Preserve ambient RMMZ-style `import X = Rmmz.*` usage.
+- **Double quotes** for strings and imports.
+- **Named exports grouped at the bottom** of each file.
+- UI is built with **MUI (Material-UI)**. State via `useState` / `useEffect`.
+- App is organized into "boards" per editor type (enemies, crafting, SDP, etc.).
+
+## Workflow
+
+- **OS**: Bazzite Linux (immutable Fedora base). No `rpm-ostree` or `apt` without a reboot. Install user binaries to `~/.local/bin`.
+- **Package manager**: Bun everywhere. Never suggest `npm` or `yarn`.
+- **GitHub CLI**: `gh` is installed at `~/.local/bin/gh` and authenticated as `je-can-code`. Use it for all PR operations. Write PR bodies to a temp file and pass via `--body-file` to avoid heredoc quoting issues.
+- **Git credential helper**: configured via `gh auth setup-git` — `git push` works without GUI prompts.
+
+## Known Future Work (do not tackle without checking first)
+
+1. **`JsonEx` serialization registry** — `JsonEx` resolves classes via `window[className]`. Plan: add `J.register(constructor)` in J-Base and audit all serializable models. Tracked in `guidelines.md`.
+2. **`checkForBooleanFromNoteByRegex` audit** — Any property that checks a negatively-named tag (hide/block/disable) without `nullIfEmpty: true` has inverted logic. A full sweep of all such properties is needed. Do not fix opportunistically; do it as a dedicated PR.

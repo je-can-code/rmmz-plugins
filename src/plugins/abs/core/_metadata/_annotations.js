@@ -1828,6 +1828,25 @@
  * @desc Whether or not to overlay the map with battler and action hitbox visuals- for debugging.
  * @default false
  *
+ *
+ * @param disengageConfigs
+ * @text DISENGAGE SETUP
+ *
+ * @param showDisengageBalloon
+ * @parent disengageConfigs
+ * @type boolean
+ * @text Show Disengage Balloon
+ * @desc Whether or not to show a balloon above a battler when they disengage from their target.
+ * @default false
+ *
+ * @param disengageBalloonId
+ * @parent disengageConfigs
+ * @type number
+ * @text Disengage Balloon Id
+ * @desc The id of the balloon to display when a battler disengages. Requires "Show Disengage Balloon" to be enabled.
+ * @default 7
+ *
+ *
  * @param quickmenuConfigs
  * @text QUICKMENU SETUP
  *
