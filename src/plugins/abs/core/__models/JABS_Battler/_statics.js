@@ -124,7 +124,7 @@ JABS_Battler.isSkillVisibleInCombatMenu = function(skill)
   if (!skill) return false;
 
   // explicitly hidden skills are not visible in the combat skill menu.
-  if (skill.jabsVisibleInMenus === false) return false;
+  if (skill.jabsHiddenFromMenus) return false;
 
   // dodge skills are not visible in the combat skill menu.
   if (JABS_Battler.isDodgeSkillById(skill.id)) return false;
@@ -151,7 +151,7 @@ JABS_Battler.isSkillVisibleInDodgeMenu = function(skill)
   if (!skill) return false;
 
   // explicitly hidden skills are not visible in the dodge menu.
-  if (skill.jabsVisibleInMenus === false) return false;
+  if (skill.jabsHiddenFromMenus) return false;
 
   // non-dodge skills are not visible in the dodge menu.
   if (!JABS_Battler.isDodgeSkillById(skill.id)) return false;
@@ -172,7 +172,7 @@ JABS_Battler.isItemVisibleInToolMenu = function(item)
   if (!item) return false;
 
   // explicitly hidden items are not visible in the item menu.
-  if (item.jabsVisibleInMenus === false) return false;
+  if (item.jabsHiddenFromMenus) return false;
 
   // non-items or non-always-occasion items are not visible in the item menu.
   const isItem = DataManager.isItem(item) && item.itypeId === 1;
