@@ -410,7 +410,8 @@ JABS_Battler.prototype.applyToolForAllAllies = function(toolId)
   const battlers = $gameParty.battleMembers();
   if (battlers.length > 1)
   {
-    battlers.shift(); // remove the leader, because that's the player.
+    // remove the leader, because that's the player.
+    battlers.shift();
     battlers.forEach(battler =>
     {
       const gameAction = new Game_Action(battler, false);

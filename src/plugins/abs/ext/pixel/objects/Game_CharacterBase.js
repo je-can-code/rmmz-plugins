@@ -514,7 +514,8 @@ Game_CharacterBase.prototype.recordPixelPosition = function()
     const point = {
       x: this.x,
       y: this.y
-    }; //new Point(this.x, this.y);
+    // new Point(this.x, this.y);.
+    };
 
     // add the point to the tracking.
     this.addPositionalRecord(point);
@@ -2058,8 +2059,10 @@ Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, 
     const ny = row / count;
 
     // DEBUG markers.
-    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)"); // yellow current
-    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)"); // cyan dest
+    // yellow current.
+    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    // cyan dest.
+    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current left-most subcell must allow moving LEFT (exiting left).
     if (this._pixelIsPositionPassable(curColX, ny, J.ABS.Directions.LEFT) === false) return false;
@@ -2121,8 +2124,10 @@ Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb,
     const ny = row / count;
 
     // DEBUG markers.
-    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)"); // yellow current
-    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");  // cyan dest
+    // yellow current.
+    J.ABS.EXT.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    // cyan dest.
+    J.ABS.EXT.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current right-most must allow RIGHT (exiting right).
     if (this._pixelIsPositionPassable(curColX, ny, J.ABS.Directions.RIGHT) === false) return false;
@@ -2186,8 +2191,10 @@ Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, co
     const nx = col / count;
 
     // DEBUG markers.
-    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");    // yellow current
-    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");    // cyan dest
+    // yellow current.
+    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    // cyan dest.
+    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current top must allow UP (exiting upward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.ABS.Directions.UP)   === false) return false;
@@ -2249,8 +2256,10 @@ Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, 
     const nx = col / count;
 
     // DEBUG markers.
-    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)"); // yellow current
-    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)"); // cyan dest
+    // yellow current.
+    J.ABS.EXT.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    // cyan dest.
+    J.ABS.EXT.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current bottom must allow DOWN (exiting downward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.ABS.Directions.DOWN) === false) return false;

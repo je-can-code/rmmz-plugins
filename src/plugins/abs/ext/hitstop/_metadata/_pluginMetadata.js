@@ -71,7 +71,7 @@ class JHitstop_PluginMetadata
      */
     this.flashOnHit = false;
 
-    // region shake
+    //region shake
     /**
      * Enables a tiny screen shake when hitstop is applied.
      * @type {boolean}

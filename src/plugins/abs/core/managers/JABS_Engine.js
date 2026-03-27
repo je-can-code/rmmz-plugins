@@ -207,14 +207,13 @@ class JABS_Engine
       };
     }
 
-    // determine the tile height for vertical correction.
-    const th = $gameMap.tileHeight(); // tile height in pixels.
+    // tile height is needed to vertically center the origin above the feet.
+    const th = $gameMap.tileHeight();
 
-    // compute the corrected origin at the center of the tile above the feet.
-    const x = actionEvent.screenX(); // on-screen x at feet.
-    const y = actionEvent.screenY() - (th / 2); // corrected y above feet.
+    // center the origin one tile above the feet position.
+    const x = actionEvent.screenX();
+    const y = actionEvent.screenY() - (th / 2);
 
-    // provide the computed origin.
     return {
       x,
       y
@@ -596,7 +595,9 @@ class JABS_Engine
   getPositiveJabsStatesByUuid(uuid)
   {
     // a filter function defining what is a "positive" state.
-    /** @param {JABS_State} trackedState */
+    /**
+     * @param {JABS_State} trackedState
+     */
     const filtering = trackedState =>
     {
       // if the state is expired, it is not positive.
@@ -1464,7 +1465,8 @@ class JABS_Engine
     actionEventData.uniqueId = action.getUuid();
 
     // default the deletion flag.
-    actionEventData.actionDeleted = false; // not deleted by default.
+    // not deleted by default.
+    actionEventData.actionDeleted = false;
 
     // return the mutated copy.
     return actionEventData;
@@ -1947,78 +1949,110 @@ class JABS_Engine
   addJabsActionToMap(actionEventData, action)
   {
     // find the first available hole in the data map event list.
-    let index = -1; // the index we will insert at.
+    // the index we will insert at.
+    let index = -1;
     for (let i = 0; i < $dataMap.events.length; i++)
     {
       // if an empty spot is found, use that.
       if (!$dataMap.events[i])
       {
-        index = i; // capture the hole index.
-        break; // stop searching.
+        // capture the hole index.
+        index = i;
+        // stop searching.
+        break;
       }
     }
 
     // if no hole was found, append to the end.
     if (index === -1)
     {
-      index = $dataMap.events.length; // assign next index.
+      // assign next index.
+      index = $dataMap.events.length;
     }
 
     // add the data to the $dataMap.events at the chosen index.
-    $dataMap.events[index] = actionEventData; // keep array dense.
-    actionEventData.actionIndex = index; // persist the action index.
+    // keep array dense.
+    $dataMap.events[index] = actionEventData;
+    // persist the action index.
+    actionEventData.actionIndex = index;
 
     // assign this so it exists, but isn't valid.
-    actionEventData.lootIndex = 0; // not a loot event.
+    // not a loot event.
+    actionEventData.lootIndex = 0;
 
     // create the event by hand with this new data.
-    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, index); // construct sprite.
+    // construct sprite.
+    const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, index);
 
     const {
       x: actionX,
       y: actionY
-    } = actionEventData; // extract coordinates.
-    actionEventSprite._realX = actionX; // align position.
-    actionEventSprite._realY = actionY; // align position.
-    actionEventSprite._x = actionX; // align grid x.
-    actionEventSprite._y = actionY; // align grid y.
+    // extract coordinates.
+    } = actionEventData;
+    // align position.
+    actionEventSprite._realX = actionX;
+    // align position.
+    actionEventSprite._realY = actionY;
+    // align grid x.
+    actionEventSprite._x = actionX;
+    // align grid y.
+    actionEventSprite._y = actionY;
 
     // give it a name.
-    const skillName = action.getBaseSkill().name; // get skill name.
+    // get skill name.
+    const skillName = action.getBaseSkill().name;
     const casterName = action.getCaster()
-      .battlerName(); // get caster name.
-    actionEventSprite.__actionName = `_${casterName}-${skillName}-${index}`; // tag for debugging/tools.
+      // get caster name.
+      .battlerName();
+    // tag for debugging/tools.
+    actionEventSprite.__actionName = `_${casterName}-${skillName}-${index}`;
 
     // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
     {
-      console.error('that rare error occurred!'); // preserve existing behavior.
-      return; // stop if invalid.
+      // preserve existing behavior.
+      console.error('that rare error occurred!');
+      // stop if invalid.
+      return;
     }
 
-    const pageIndex = actionEventSprite.findProperPageIndex(); // resolve page index.
+    // resolve page index.
+    const pageIndex = actionEventSprite.findProperPageIndex();
     const {
       characterIndex,
       characterName
-    } = actionEventData.pages[pageIndex].image; // extract image data.
+    // extract image data.
+    } = actionEventData.pages[pageIndex].image;
 
-    actionEventSprite.setActionSpriteNeedsAdding(); // flag to add sprite.
-    actionEventSprite._eventId = actionEventData.id; // assign event id.
-    actionEventSprite._characterName = characterName; // assign sprite name.
-    actionEventSprite._characterIndex = characterIndex; // assign sprite index.
-    const pageData = actionEventData.pages[pageIndex]; // get page.
-    actionEventSprite.setMoveFrequency(pageData.moveFrequency); // frequency.
-    actionEventSprite.setMoveRoute(pageData.moveRoute); // route.
-    actionEventSprite.setCastedDirection($gamePlayer.direction()); // cast facing.
+    // flag to add sprite.
+    actionEventSprite.setActionSpriteNeedsAdding();
+    // assign event id.
+    actionEventSprite._eventId = actionEventData.id;
+    // assign sprite name.
+    actionEventSprite._characterName = characterName;
+    // assign sprite index.
+    actionEventSprite._characterIndex = characterIndex;
+    // get page.
+    const pageData = actionEventData.pages[pageIndex];
+    // frequency.
+    actionEventSprite.setMoveFrequency(pageData.moveFrequency);
+    // route.
+    actionEventSprite.setMoveRoute(pageData.moveRoute);
+    // cast facing.
+    actionEventSprite.setCastedDirection($gamePlayer.direction());
 
     this.applyActionToActionEventSprite(actionEventSprite, action);
 
     // prevent player interaction with the action event.
-    actionEventSprite.start = () => false; // no-op start.
+    // no-op start.
+    actionEventSprite.start = () => false;
 
-    action.setActionSprite(actionEventSprite); // associate back.
-    $gameMap.addEvent(actionEventSprite); // add to map, with hole reuse.
-    this.requestActionRendering = true; // trigger render.
+    // associate back.
+    action.setActionSprite(actionEventSprite);
+    // add to map, with hole reuse.
+    $gameMap.addEvent(actionEventSprite);
+    // trigger render.
+    this.requestActionRendering = true;
   }
 
   /**
@@ -2028,8 +2062,10 @@ class JABS_Engine
    */
   applyActionToActionEventSprite(actionEventSprite, action)
   {
-    actionEventSprite.setJabsAction(action); // wire action.
-    actionEventSprite.setDirection(action.direction()); // facing.
+    // wire action.
+    actionEventSprite.setJabsAction(action);
+    // facing.
+    actionEventSprite.setDirection(action.direction());
   }
 
   /**
@@ -2041,54 +2077,72 @@ class JABS_Engine
   addLootDropToMap(x, y, item)
   {
     // clone the loot data from the action map event id of 1.
-    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]); // base template.
+    // base template.
+    const lootEventData = JsonEx.makeDeepCopy($actionMap.events[1]);
 
-    lootEventData.x = x; // position x.
-    lootEventData.y = y; // position y.
+    // position x.
+    lootEventData.x = x;
+    // position y.
+    lootEventData.y = y;
 
     // find the first available hole in the data map event list.
-    let index = -1; // the index we will insert at.
+    // the index we will insert at.
+    let index = -1;
     for (let i = 0; i < $dataMap.events.length; i++)
     {
       // if an empty spot is found, use that.
       if (!$dataMap.events[i])
       {
-        index = i; // capture the hole index.
-        break; // stop searching.
+        // capture the hole index.
+        index = i;
+        // stop searching.
+        break;
       }
     }
 
     // if no hole was found, append to the end.
     if (index === -1)
     {
-      index = $dataMap.events.length; // assign next index.
+      // assign next index.
+      index = $dataMap.events.length;
     }
 
     // add the loot event to the datamap list of events.
-    $dataMap.events[index] = lootEventData; // keep array dense.
-    lootEventData.lootIndex = index; // persist the loot index.
+    // keep array dense.
+    $dataMap.events[index] = lootEventData;
+    // persist the loot index.
+    lootEventData.lootIndex = index;
 
     // create the loot event by hand with this new data.
-    const jabsLootData = new JABS_LootDrop(item); // create loot model.
-    lootEventData.uuid = jabsLootData.uuid; // associate unique id.
+    // create loot model.
+    const jabsLootData = new JABS_LootDrop(item);
+    // associate unique id.
+    lootEventData.uuid = jabsLootData.uuid;
 
     // set the duration of this loot drop
     // if a custom time is available, then use that, otherwise use the default.
-    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration; // lifetime.
+    // lifetime.
+    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration;
 
     // generate a new event to visually represent the loot drop and flag it for adding.
-    const eventId = index; // use the reused/appended index.
-    const lootEvent = new Game_Event($gameMap.mapId(), eventId); // construct sprite.
-    lootEvent.setJabsLoot(jabsLootData); // attach loot.
+    // use the reused/appended index.
+    const eventId = index;
+    // construct sprite.
+    const lootEvent = new Game_Event($gameMap.mapId(), eventId);
+    // attach loot.
+    lootEvent.setJabsLoot(jabsLootData);
 
     // flag for adding a character sprite later via HUD/spriteset integration (unchanged elsewhere).
-    lootEvent.setLootNeedsAdding(); // if your code uses such a flag.
+    // if your code uses such a flag.
+    lootEvent.setLootNeedsAdding();
 
     // add to the map, reusing holes in the live event list as well.
-    $gameMap.addEvent(lootEvent); // will reuse holes per updated addEvent().
+    // will reuse holes per updated addEvent().
+    $gameMap.addEvent(lootEvent);
 
     // trigger the spriteset to scan and add loot sprites.
-    this.requestLootRendering = true; // ensure loot renders this frame.
+    // ensure loot renders this frame.
+    this.requestLootRendering = true;
 
     // return the loot drop that was added.
     return lootEvent;
@@ -2665,7 +2719,8 @@ class JABS_Engine
     const defenderGrd = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
 
     // attacker's stat calculation of hit, bonuses from agi/luk.
-    const defaultHit = 50; // this flat amount is necessary to not be ridiculously parryful early game.
+    // this flat amount is necessary to not be ridiculously parryful early game.
+    const defaultHit = 50;
     const baseHit = hundredX(casterBattler.hit) + defaultHit;
     const bonusHitFromAgi = tenPercent(casterBattler.agi);
     const bonusHitFromLuk = tenPercent(casterBattler.luk);
@@ -2692,7 +2747,8 @@ class JABS_Engine
     if (difference > 100)
     {
       return false;
-    }// the grd is too great, there is no chance of landing a hit.
+    // the grd is too great, there is no chance of landing a hit.
+    }
     else if (difference <= 0) return true;
 
     return rng > difference;
@@ -3718,9 +3774,12 @@ class JABS_Engine
   collisionSector(target, action, range, facing, degrees)
   {
     // derive pixel radius from tiles.
-    const tw = $gameMap.tileWidth(); // tile width in px.
-    const th = $gameMap.tileHeight(); // tile height in px.
-    const rPx = range * tw; // convert to pixels (use tw for circles/sectors).
+    // tile width in px.
+    const tw = $gameMap.tileWidth();
+    // tile height in px.
+    const th = $gameMap.tileHeight();
+    // convert to pixels (use tw for circles/sectors).
+    const rPx = range * tw;
 
     // get the unified, corrected origin for the action.
     const {
@@ -3747,8 +3806,10 @@ class JABS_Engine
 
     // build a unit facing vector from the numeric direction.
     // Note: J.ABS.Directions.* uses cardinals; diagonals are not used for gating.
-    let fx = 0; // facing x component.
-    let fy = 0; // facing y component.
+    // facing x component.
+    let fx = 0;
+    // facing y component.
+    let fy = 0;
     switch (facing)
     {
       case J.ABS.Directions.DOWN:
@@ -3769,8 +3830,10 @@ class JABS_Engine
     }
 
     // compute vector from origin to the target rect’s center.
-    const tx = targetRect.cx - cx; // delta x to target center.
-    const ty = targetRect.cy - cy; // delta y to target center.
+    // delta x to target center.
+    const tx = targetRect.cx - cx;
+    // delta y to target center.
+    const ty = targetRect.cy - cy;
 
     // degenerate case: target’s center exactly at origin → accept.
     if (tx === 0 && ty === 0)
@@ -3780,16 +3843,22 @@ class JABS_Engine
     }
 
     // normalize the target vector for dot-product angle testing.
-    const tLen = Math.hypot(tx, ty); // Euclidean length.
-    const tnx = tx / tLen; // unit x.
-    const tny = ty / tLen; // unit y.
+    // euclidean length.
+    const tLen = Math.hypot(tx, ty);
+    // unit x.
+    const tnx = tx / tLen;
+    // unit y.
+    const tny = ty / tLen;
 
     // compute cosine threshold for the half-angle.
-    const halfAngleRad = (degrees * 0.5) * (Math.PI / 180); // half-angle in radians.
-    const cosHalf = Math.cos(halfAngleRad); // cosine threshold.
+    // half-angle in radians.
+    const halfAngleRad = (degrees * 0.5) * (Math.PI / 180);
+    // cosine threshold.
+    const cosHalf = Math.cos(halfAngleRad);
 
     // dot-product with the facing unit vector yields cos(theta).
-    const dot = (fx * tnx) + (fy * tny); // cos(theta).
+    // cos(theta).
+    const dot = (fx * tnx) + (fy * tny);
 
     // accept if the angle is within the wedge sweep.
     return dot >= cosHalf;
@@ -3806,20 +3875,25 @@ class JABS_Engine
   collisionCircle(target, action, range)
   {
     // derive circle parameters in pixels.
-    const tw = $gameMap.tileWidth(); // assume square tiles unless specified otherwise.
-    const rPx = range * tw; // radius in pixels.
+    // assume square tiles unless specified otherwise.
+    const tw = $gameMap.tileWidth();
+    // radius in pixels.
+    const rPx = range * tw;
 
     // centralized, corrected origin for action.
     const {
       x: originCx,
       y: originCy
-    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+    // unified origin.
+    } = JABS_Engine.getActionOriginPixels(action);
 
     // build the target’s AABB.
-    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    // target rect.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
 
     // circle-vs-rect test.
-    return targetRect.intersectsCircle(originCx, originCy, rPx); // overlap?
+    // overlap?
+    return targetRect.intersectsCircle(originCx, originCy, rPx);
   }
 
   /**
@@ -3833,17 +3907,21 @@ class JABS_Engine
   collisionRhombus(target, action, range)
   {
     // grab tile dimensions for normalization.
-    const tw = $gameMap.tileWidth(); // tile width in px.
-    const th = $gameMap.tileHeight(); // tile height in px.
+    // tile width in px.
+    const tw = $gameMap.tileWidth();
+    // tile height in px.
+    const th = $gameMap.tileHeight();
 
     // unified action origin in pixels.
     const {
       x: cx,
       y: cy
-    } = JABS_Engine.getActionOriginPixels(action); // action origin.
+    // action origin.
+    } = JABS_Engine.getActionOriginPixels(action);
 
     // target’s AABB in pixels.
-    const rect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    // target rect.
+    const rect = JABS_Engine.getBattlerAabbModel(target);
 
     // initialize the unsigned horizontal pixel gap from origin point to rect.
     let dxPx = 0;
@@ -3874,8 +3952,10 @@ class JABS_Engine
     }
 
     // convert pixel gaps to tile distances.
-    const dxTiles = dxPx / tw; // x in tiles.
-    const dyTiles = dyPx / th; // y in tiles.
+    // x in tiles.
+    const dxTiles = dxPx / tw;
+    // y in tiles.
+    const dyTiles = dyPx / th;
 
     // inside the diamond if L1 distance in tile units is within range.
     return (dxTiles + dyTiles) <= range;
@@ -3892,27 +3972,37 @@ class JABS_Engine
   collisionSquare(target, action, range)
   {
     // compute action-centered square size in pixels.
-    const tw = $gameMap.tileWidth(); // tile width.
-    const th = $gameMap.tileHeight(); // tile height.
-    const tilesW = (2 * range + 1); // width in tiles.
-    const tilesH = (2 * range + 1); // height in tiles.
-    const wPx = tilesW * tw; // width in px.
-    const hPx = tilesH * th; // height in px.
+    // tile width.
+    const tw = $gameMap.tileWidth();
+    // tile height.
+    const th = $gameMap.tileHeight();
+    // width in tiles.
+    const tilesW = (2 * range + 1);
+    // height in tiles.
+    const tilesH = (2 * range + 1);
+    // width in px.
+    const wPx = tilesW * tw;
+    // height in px.
+    const hPx = tilesH * th;
 
     // centralized, corrected origin for action.
     const {
       x: originCx,
       y: originCy
-    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+    // unified origin.
+    } = JABS_Engine.getActionOriginPixels(action);
 
     // build action area rect centered at the corrected origin.
-    const actionRect = JABS_Aabb.centerSized(originCx, originCy, wPx, hPx); // action rect.
+    // action rect.
+    const actionRect = JABS_Aabb.centerSized(originCx, originCy, wPx, hPx);
 
     // build target AABB.
-    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    // target rect.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
 
     // rect-rect test.
-    return actionRect.intersectsRect(targetRect); // overlap?
+    // overlap?
+    return actionRect.intersectsRect(targetRect);
   }
 
   /**
@@ -3927,29 +4017,38 @@ class JABS_Engine
   collisionFrontSquare(target, action, range, facing)
   {
     // compute half-square dimensions in pixels.
-    const tw = $gameMap.tileWidth(); // tile width.
-    const th = $gameMap.tileHeight(); // tile height.
+    // tile width.
+    const tw = $gameMap.tileWidth();
+    // tile height.
+    const th = $gameMap.tileHeight();
 
     // total full-square tiles and derived pixel dimensions.
-    const fullTiles = (2 * range + 1); // full square tiles.
-    const fullW = fullTiles * tw; // full width in px.
-    const fullH = fullTiles * th; // full height in px.
+    // full square tiles.
+    const fullTiles = (2 * range + 1);
+    // full width in px.
+    const fullW = fullTiles * tw;
+    // full height in px.
+    const fullH = fullTiles * th;
 
     // centralized, corrected origin for action.
     const {
       x: originCx,
       y: originCy
-    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+    // unified origin.
+    } = JABS_Engine.getActionOriginPixels(action);
 
     // derive the front-half rectangle based on facing (anchored at corrected origin).
-    let actionRect; // will be computed based on facing.
+    // will be computed based on facing.
+    let actionRect;
     switch (facing)
     {
-      case J.ABS.Directions.DOWN: // 2 → bottom half from origin
+      // 2 → bottom half from origin.
+      case J.ABS.Directions.DOWN:
         actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
         break;
 
-      case J.ABS.Directions.UP: // 8 → top half up from origin
+      // 8 → top half up from origin.
+      case J.ABS.Directions.UP:
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2),
           originCy - (fullH / 2) - (th / 2),
@@ -3958,11 +4057,13 @@ class JABS_Engine
         );
         break;
 
-      case J.ABS.Directions.RIGHT: // 6 → right half from origin
+      // 6 → right half from origin.
+      case J.ABS.Directions.RIGHT:
         actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
         break;
 
-      case J.ABS.Directions.LEFT: // 4 → left half from origin
+      // 4 → left half from origin.
+      case J.ABS.Directions.LEFT:
         actionRect = new JABS_Aabb(
           originCx - (fullW / 2) - (tw / 2),
           originCy - (fullH / 2),
@@ -3977,10 +4078,12 @@ class JABS_Engine
     }
 
     // build target AABB.
-    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
+    // target rect.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
 
     // test overlap.
-    return actionRect.intersectsRect(targetRect); // overlap?
+    // overlap?
+    return actionRect.intersectsRect(targetRect);
   }
 
   /**
@@ -3995,37 +4098,48 @@ class JABS_Engine
   collisionLine(target, action, range, facing)
   {
     // acquire tile dimensions.
-    const tw = $gameMap.tileWidth(); // tile width in px.
-    const th = $gameMap.tileHeight(); // tile height in px.
+    // tile width in px.
+    const tw = $gameMap.tileWidth();
+    // tile height in px.
+    const th = $gameMap.tileHeight();
 
     // line length in pixels (use major axis for length, matching visualization elsewhere).
-    const lengthPx = range * Math.max(tw, th); // length in px.
+    // length in px.
+    const lengthPx = range * Math.max(tw, th);
 
     // determine configured thickness in tiles, fallback to default of 1 tile.
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1; // tiles.
+    // tiles.
+    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
 
     // clamp to a very small positive minimum in pixels to ensure the AABB has area.
-    const minPx = 1; // small positive safeguard.
+    // small positive safeguard.
+    const minPx = 1;
 
     // compute thickness in pixels along each orientation.
-    const thicknessX = Math.max(minPx, thicknessTiles * tw); // horizontal thickness.
-    const thicknessY = Math.max(minPx, thicknessTiles * th); // vertical thickness.
+    // horizontal thickness.
+    const thicknessX = Math.max(minPx, thicknessTiles * tw);
+    // vertical thickness.
+    const thicknessY = Math.max(minPx, thicknessTiles * th);
 
     // centralized, corrected origin.
     const {
       x: originCx,
       y: originCy
-    } = JABS_Engine.getActionOriginPixels(action); // unified origin.
+    // unified origin.
+    } = JABS_Engine.getActionOriginPixels(action);
 
     // build the line-as-rect based on facing from origin.
-    let actionRect; // rectangle approximation of the line.
+    // rectangle approximation of the line.
+    let actionRect;
     switch (facing)
     {
-      case J.ABS.Directions.DOWN: // 2
+      // 2.
+      case J.ABS.Directions.DOWN:
         // extend downward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx - (thicknessX / 2), originCy, thicknessX, lengthPx + (th / 2));
         break;
-      case J.ABS.Directions.UP: // 8
+      // 8.
+      case J.ABS.Directions.UP:
         // extend upward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - (thicknessX / 2),
@@ -4034,11 +4148,13 @@ class JABS_Engine
           lengthPx + (th / 2)
         );
         break;
-      case J.ABS.Directions.RIGHT: // 6
+      // 6.
+      case J.ABS.Directions.RIGHT:
         // extend rightward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(originCx, originCy - (thicknessY / 2), lengthPx + (tw / 2), thicknessY);
         break;
-      case J.ABS.Directions.LEFT: // (4)
+      // (4).
+      case J.ABS.Directions.LEFT:
         // extend leftward from the origin center, include a small extra half-tile pad.
         actionRect = new JABS_Aabb(
           originCx - lengthPx - (tw / 2),
@@ -4053,8 +4169,10 @@ class JABS_Engine
     }
 
     // build target AABB and test overlap.
-    const targetRect = JABS_Engine.getBattlerAabbModel(target); // target rect.
-    return actionRect.intersectsRect(targetRect); // overlap?
+    // target rect.
+    const targetRect = JABS_Engine.getBattlerAabbModel(target);
+    // overlap?
+    return actionRect.intersectsRect(targetRect);
   }
 
   /**
@@ -4093,8 +4211,10 @@ class JABS_Engine
     // resolve thickness (depth) in tiles (default 1 tile if not specified).
     const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
     const minPx = 1;
-    const depthW = Math.max(minPx, thicknessTiles * tw); // depth when vertical
-    const depthH = Math.max(minPx, thicknessTiles * th); // depth when horizontal
+    // depth when vertical.
+    const depthW = Math.max(minPx, thicknessTiles * tw);
+    // depth when horizontal.
+    const depthH = Math.max(minPx, thicknessTiles * th);
 
     // unified origin consistent with other shapes.
     const {
@@ -4110,16 +4230,20 @@ class JABS_Engine
     let actionRect;
     switch (facing)
     {
-      case J.ABS.Directions.DOWN: // 2 → horizontal wall below origin
+      // 2 → horizontal wall below origin.
+      case J.ABS.Directions.DOWN:
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy, breadthW, depthH);
         break;
-      case J.ABS.Directions.UP: // 8 → horizontal wall above origin
+      // 8 → horizontal wall above origin.
+      case J.ABS.Directions.UP:
         actionRect = new JABS_Aabb(originCx - (breadthW / 2), originCy - depthH, breadthW, depthH);
         break;
-      case J.ABS.Directions.RIGHT: // 6 → vertical wall right of origin
+      // 6 → vertical wall right of origin.
+      case J.ABS.Directions.RIGHT:
         actionRect = new JABS_Aabb(originCx, originCy - (breadthH / 2), depthW, breadthH);
         break;
-      case J.ABS.Directions.LEFT: // (4) → vertical wall left of origin
+      // (4) → vertical wall left of origin.
+      case J.ABS.Directions.LEFT:
         actionRect = new JABS_Aabb(originCx - depthW, originCy - (breadthH / 2), depthW, breadthH);
         break;
       default:

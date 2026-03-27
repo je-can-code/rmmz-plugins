@@ -668,7 +668,8 @@ class Scene_JabsRemap
     const extKeys = Object.keys(ext);
     for (let i = 0; i < extKeys.length; i++)
     {
-      const compound = extKeys[i]; // in the form ns:key
+      // in the form ns:key.
+      const compound = extKeys[i];
       const arr = ext[compound];
       combined[`__ext__${compound}`] = Array.isArray(arr)
         ? arr.slice(0)

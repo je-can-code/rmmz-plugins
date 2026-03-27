@@ -1,3 +1,4 @@
+//region Game_CharacterBase
 /**
  * Extends {@link Game_CharacterBase.initMembers}.<br>
  * Also initializes our new members.
@@ -44,7 +45,8 @@ Game_CharacterBase.prototype.initToolsMembers = function()
 
   this._j._tools._grabThrow._throw._through = false;
 
-  this._j._tools._grabThrow._throw._directionFixAlways = false; // TODO: from plugin params.
+  // tODO: from plugin params.
+  this._j._tools._grabThrow._throw._directionFixAlways = false;
 
   this._j._tools._grabThrow._throw._directionFix = false;
 
@@ -52,3 +54,4 @@ Game_CharacterBase.prototype.initToolsMembers = function()
 
   this._j._tools._grabThrow._throw._wait = new JABS_Timer(0);
 };
+//endregion Game_CharacterBase

@@ -499,7 +499,8 @@ Game_Action.prototype.itemEffectAddState = function(target, effect)
 Game_Action.prototype.canItemEffectAddState = function(target, effect)
 {
   // if the target parried the result, then its state-related effects do not apply.
-  if (target.result()?.parried) return false;
+  const result = target.result();
+  if (result && result.parried) return false;
 
   // see if the state-related effects are applied!
   return true;

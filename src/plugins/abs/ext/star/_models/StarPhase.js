@@ -1,3 +1,4 @@
+//region StarPhase
 /**
  * A single phase in the stars battle.
  */
@@ -26,3 +27,4 @@ class StarPhase
    */
   key = 0;
 }
+//endregion StarPhase

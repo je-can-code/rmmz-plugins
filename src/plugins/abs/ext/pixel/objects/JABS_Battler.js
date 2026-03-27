@@ -525,61 +525,77 @@ JABS_Battler.prototype.angleToDirection = function(angle)
   const half = 22.5;
 
   // RIGHT: -22.5 .. 22.5
-  const isRight = angle > -half && angle <= half; // 6
+  // 6.
+  const isRight = angle > -half && angle <= half;
 
   // DOWN-RIGHT: 22.5 .. 67.5
-  const isDownRight = angle > half && angle <= (half + 45); // 3
+  // 3.
+  const isDownRight = angle > half && angle <= (half + 45);
 
   // DOWN: 67.5 .. 112.5
-  const isDown = angle > (half + 45) && angle <= (half + 90); // 2
+  // 2.
+  const isDown = angle > (half + 45) && angle <= (half + 90);
 
   // DOWN-LEFT: 112.5 .. 157.5
-  const isDownLeft = angle > (half + 90) && angle <= (half + 135); // 1
+  // 1.
+  const isDownLeft = angle > (half + 90) && angle <= (half + 135);
 
   // LEFT: >157.5 or <= -157.5
-  const isLeft = angle > (half + 135) || angle <= -(half + 135); // 4
+  // 4.
+  const isLeft = angle > (half + 135) || angle <= -(half + 135);
 
   // UP-LEFT: -157.5 .. -112.5
-  const isUpLeft = angle > -(half + 135) && angle <= -(half + 90); // 7
+  // 7.
+  const isUpLeft = angle > -(half + 135) && angle <= -(half + 90);
 
   // UP: -112.5 .. -67.5
-  const isUp = angle > -(half + 90) && angle <= -(half + 45); // 8
+  // 8.
+  const isUp = angle > -(half + 90) && angle <= -(half + 45);
 
   // UP-RIGHT: -67.5 .. -22.5
-  const isUpRight = angle > -(half + 45) && angle <= -half; // 9
+  // 9.
+  const isUpRight = angle > -(half + 45) && angle <= -half;
 
   // Map the sector to the direction numbers.
   if (isRight)
   {
-    return J.ABS.Directions.RIGHT; // 6
+    // 6.
+    return J.ABS.Directions.RIGHT;
   }
   else if (isDownRight)
   {
-    return J.ABS.Directions.LOWERRIGHT; // 3
+    // 3.
+    return J.ABS.Directions.LOWERRIGHT;
   }
   else if (isDown)
   {
-    return J.ABS.Directions.DOWN; // 2
+    // 2.
+    return J.ABS.Directions.DOWN;
   }
   else if (isDownLeft)
   {
-    return J.ABS.Directions.LOWERLEFT; // 1
+    // 1.
+    return J.ABS.Directions.LOWERLEFT;
   }
   else if (isLeft)
   {
-    return J.ABS.Directions.LEFT; // 4
+    // 4.
+    return J.ABS.Directions.LEFT;
   }
   else if (isUpLeft)
   {
-    return J.ABS.Directions.UPPERLEFT; // 7
+    // 7.
+    return J.ABS.Directions.UPPERLEFT;
   }
   else if (isUp)
   {
-    return J.ABS.Directions.UP; // 8
+    // 8.
+    return J.ABS.Directions.UP;
   }
   else if (isUpRight)
   {
-    return J.ABS.Directions.UPPERRIGHT; // 9
+    // 9.
+    return J.ABS.Directions.UPPERRIGHT;
   }
 
   // Unknown sector; return 0.

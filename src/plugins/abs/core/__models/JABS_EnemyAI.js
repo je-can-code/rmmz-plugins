@@ -643,9 +643,12 @@ class JABS_EnemyAI
     {
       const testAction = new Game_Action(user.getBattler());
       testAction.setSkill(skillId);
-      return (testAction.isForAliveFriend() &&  // must target living allies.
-        testAction.isRecover() &&               // must recover something.
-        testAction.isHpEffect());               // must affect hp.
+      // must target living allies.
+      return (testAction.isForAliveFriend() &&
+        // must recover something.
+        testAction.isRecover() &&
+        // must affect hp.
+        testAction.isHpEffect());
     });
 
     // if we have 0 or 1 skills left after healing, just return that.

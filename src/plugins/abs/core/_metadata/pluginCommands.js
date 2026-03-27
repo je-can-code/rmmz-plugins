@@ -191,7 +191,9 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Loot", args =>
   const parsedArmors = JSON.parse(lootArmorIds)
     .map(id => $dataArmors.at(parseInt(id)));
   const parsedAnimationId = parseInt(spawnAnimationId);
-  /** @type {Game_Event} */
+  /**
+   * @type {Game_Event}
+   */
   let lastDropped = null;
 
   // iterate and drop all the item loot.

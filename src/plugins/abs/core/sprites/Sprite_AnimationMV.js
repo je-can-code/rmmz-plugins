@@ -1,3 +1,4 @@
+//region Sprite_AnimationMV
 /**
  * Extends/Overrides {@link Sprite_AnimationMV.prototype.updatePosition}.<br/>
  * Adds a guard to ensure we don't attempt to follow destroyed or removed sprites.
@@ -76,3 +77,4 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
       .call(this);
   }
 };
+//endregion Sprite_AnimationMV

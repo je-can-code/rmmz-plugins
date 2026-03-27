@@ -1,3 +1,4 @@
+//region JABS_Battler
 /**
  * Initializes the properties of this battler that are not related to anything in particular.
  */
@@ -296,3 +297,4 @@ JABS_Battler.gapCloseWiggleRoom = function()
 {
   return 0.5;
 };
+//endregion JABS_Battler

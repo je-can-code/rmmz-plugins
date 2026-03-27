@@ -1,3 +1,4 @@
+//region Game_Player
 /**
  * Overrides {@link Game_Player.checkEventTriggerHere}.<br>
  * Includes the rounding of the x,y coordinates when checking event triggers for things beneath you.
@@ -71,7 +72,8 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
 
   // TODO: does this actually need to round?
   // determine the threshold for pixel movement regarding event triggering.
-  const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3; // within 1/3 of a tile triggers?
+  // within 1/3 of a tile triggers?
+  const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3;
 
   // check if the event was triggered with the threshold coordinates.
   if (didTrigger)
@@ -318,3 +320,4 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
     follower.stopPixelMoving();
   });
 };
+//endregion Game_Player

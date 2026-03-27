@@ -1,3 +1,4 @@
+//region BattleManager
 /**
  * The `enemyMap` is a property containing the master map from which enemies
  * from the troop are derived from.
@@ -178,3 +179,4 @@ BattleManager.origin = function()
 {
   return this._originLocation;
 };
+//endregion BattleManager

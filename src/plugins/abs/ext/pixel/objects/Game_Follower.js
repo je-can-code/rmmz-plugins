@@ -1,3 +1,4 @@
+//region Game_Follower
 /**
  * Updates the direction and position based on the preceding character.
  * This forces followers to always face the character infront of them in the follower train.
@@ -154,3 +155,4 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
   J.ABS.EXT.PIXEL.Aliased.Game_Follower.get("moveDiagonally")
     .call(this, horz, vert);
 };
+//endregion Game_Follower

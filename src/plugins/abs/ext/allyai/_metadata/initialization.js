@@ -1,3 +1,4 @@
+//region Introduction
 /* eslint-disable max-len */
 /**
  * The core where all of my extensions live: in the `J` object.
@@ -76,12 +77,18 @@ J.ABS.EXT.ALLYAI.Metadata.FormationTypes = [
     description: "The rear-wedge formation.\nAllies will fan out behind you for support.",
     formation:
       [
-        [ -1, -1 ], // 1 back-left (behind is negative Y when facing DOWN)
-        [  1, -1 ], // 2 back-right
-        [  0, -2 ], // 3 two tiles behind
-        [ -1, -2 ], // 4 farther back-left
-        [  1, -2 ], // 5 farther back-right
-        [  0, -4 ], // 6 three tiles behind
+        // 1 back-left (behind is negative Y when facing DOWN).
+        [ -1, -1 ],
+        // 2 back-right.
+        [  1, -1 ],
+        // 3 two tiles behind.
+        [  0, -2 ],
+        // 4 farther back-left.
+        [ -1, -2 ],
+        // 5 farther back-right.
+        [  1, -2 ],
+        // 6 three tiles behind.
+        [  0, -4 ],
       ],
     effects: [],
   },
@@ -91,12 +98,18 @@ J.ABS.EXT.ALLYAI.Metadata.FormationTypes = [
     description: "A side- flank formation.\nAllies will flank you at either side to look extra menacing.",
     formation:
       [
-        [ -1,  0 ], // 1 left
-        [  1,  0 ], // 2 right
-        [ -2,  0 ], // 3 far-left
-        [  2,  0 ], // 4 far-right
-        [ -3,  0 ], // 5 farther-left
-        [  3,  0 ], // 6 farther-right
+        // 1 left.
+        [ -1,  0 ],
+        // 2 right.
+        [  1,  0 ],
+        // 3 far-left.
+        [ -2,  0 ],
+        // 4 far-right.
+        [  2,  0 ],
+        // 5 farther-left.
+        [ -3,  0 ],
+        // 6 farther-right.
+        [  3,  0 ],
       ],
     effects: [],
   },
@@ -106,14 +119,22 @@ J.ABS.EXT.ALLYAI.Metadata.FormationTypes = [
     description: "The tight circle formation.\nNo one will get to most delicate squishy innard!",
     formation:
       [
-        [  0,  1 ], // 1 below
-        [  1,  0 ], // 2 right
-        [  0, -1 ], // 3 above
-        [ -1,  0 ], // 4 left
-        [  1,  1 ], // 5 lower-right
-        [ -1,  1 ], // 6 lower-left
-        [  1, -1 ], // 7 upper-right
-        [ -1, -1 ], // 8 upper-left
+        // 1 below.
+        [  0,  1 ],
+        // 2 right.
+        [  1,  0 ],
+        // 3 above.
+        [  0, -1 ],
+        // 4 left.
+        [ -1,  0 ],
+        // 5 lower-right.
+        [  1,  1 ],
+        // 6 lower-left.
+        [ -1,  1 ],
+        // 7 upper-right.
+        [  1, -1 ],
+        // 8 upper-left.
+        [ -1, -1 ],
       ],
     effects: [],
   },

@@ -114,7 +114,8 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
    * @type {boolean}
    */
   this._canIdle = battlerCoreData.isInanimate()
-    ? false // don't move idly if inanimate.
+    // don't move idly if inanimate.
+    ? false
     : battlerCoreData.canIdle();
 
   /**
@@ -123,7 +124,8 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
    * @type {boolean}
    */
   this._showHpBar = battlerCoreData.isInanimate()
-    ? false // don't show hp bar if inanimate.
+    // don't show hp bar if inanimate.
+    ? false
     : battlerCoreData.showHpBar();
 
   /**
@@ -132,7 +134,8 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
    * @type {boolean}
    */
   this._showBattlerName = battlerCoreData.isInanimate()
-    ? false // don't show battler name if inanimate.
+    // don't show battler name if inanimate.
+    ? false
     : battlerCoreData.showBattlerName();
 
   /**
@@ -459,7 +462,8 @@ JABS_Battler.prototype.initBattleInfo = function()
    * Default window for the in‑combat countdown (60fps × seconds).
    * @type {number}
    */
-  this._inCombatWindowMax = 600; // 10s default.
+  // 10s default.
+  this._inCombatWindowMax = 600;
 };
 
 /**

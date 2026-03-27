@@ -70,7 +70,7 @@ DataManager.getSkillMasterMap = function()
 DataManager.loadSkillMasterMap = function(name, src)
 {
   const xhr = new XMLHttpRequest();
-  const url = 'data/' + src;
+  const url = `data/${src}`;
   xhr.open('GET', url);
   xhr.overrideMimeType('application/json');
   xhr.onload = () => this.onMapGet(xhr, name, src, url);
@@ -119,7 +119,9 @@ DataManager.makeSaveContents = function()
   const contents = J.ABS.Aliased.DataManager.get('makeSaveContents')
     .call(this);
 
-  /** @type {Game_Event[]} */
+  /**
+   * @type {Game_Event[]}
+   */
   const originalEvents = contents.map._events;
 
   const actionlessEvents = originalEvents.map(event =>

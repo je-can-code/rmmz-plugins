@@ -251,7 +251,9 @@ class Window_AbsMenuSelect
     const leader = $gameParty.leader();
 
     // an iterator function for iterating over skill slots and rendering their data.
-    /** @param {JABS_SkillSlot} skillSlot */
+    /**
+     * @param {JABS_SkillSlot} skillSlot
+     */
     const forEacher = skillSlot =>
     {
       // initialize the command variables.

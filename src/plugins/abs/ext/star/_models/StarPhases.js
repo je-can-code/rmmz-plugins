@@ -1,3 +1,4 @@
+//region StarPhases
 /**
  * A collection of {@link StarPhase}s that represent the flow of a star battle.
  * @type {StarPhases}
@@ -52,3 +53,4 @@ class StarPhases
    */
   static BACKTOMAP = new StarPhase("Back-to-map", 5);
 }
+//endregion StarPhases

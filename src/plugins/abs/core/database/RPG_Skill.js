@@ -883,27 +883,36 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisOffsetDL', {
 RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
 {
   // start from the default offset (may be [0, 0]).
-  const def = this.jabsVisOffset; // default visual offset.
+  // default visual offset.
+  const def = this.jabsVisOffset;
 
   // resolve directional override if present.
   switch (direction)
   {
-    case 8: // UP
+    // uP.
+    case 8:
       return this.jabsVisOffsetU || def || [ 0, 0 ];
-    case 2: // DOWN
+    // dOWN.
+    case 2:
       return this.jabsVisOffsetD || def || [ 0, 0 ];
-    case 4: // LEFT
+    // lEFT.
+    case 4:
       return this.jabsVisOffsetL || def || [ 0, 0 ];
-    case 6: // RIGHT
+    // rIGHT.
+    case 6:
       return this.jabsVisOffsetR || def || [ 0, 0 ];
 
-    case 9: // UP-RIGHT
+    // uP-RIGHT.
+    case 9:
       return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def || [ 0, 0 ];
-    case 7: // UP-LEFT
+    // uP-LEFT.
+    case 7:
       return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def || [ 0, 0 ];
-    case 3: // DOWN-RIGHT
+    // dOWN-RIGHT.
+    case 3:
       return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def || [ 0, 0 ];
-    case 1: // DOWN-LEFT
+    // dOWN-LEFT.
+    case 1:
       return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def || [ 0, 0 ];
   }
 
