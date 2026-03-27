@@ -181,7 +181,8 @@ J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
 J.ABS.Metadata.HitboxStyles = {
   // Base defaults used for all shapes unless overridden below.
   base: {
-    fillColor: 0xFFA500, // orange
+    // orange.
+    fillColor: 0xFFA500,
     fillAlpha: 0.35,
     lineColor: 0xE08000,
     lineAlpha: 0.9,
@@ -191,13 +192,16 @@ J.ABS.Metadata.HitboxStyles = {
   // Optional per-shape overrides.
   byShape: {
     circle: {
-      fillColor: 0xFF7F50, // coral
+      // coral.
+      fillColor: 0xFF7F50,
     },
     rhombus: {
-      fillColor: 0xFFD580, // light orange
+      // light orange.
+      fillColor: 0xFFD580,
     },
     square: {
-      fillColor: 0xFFA64D, // darker orange
+      // darker orange.
+      fillColor: 0xFFA64D,
     },
     frontsquare: {
       fillAlpha: 0.28,
@@ -234,7 +238,8 @@ J.ABS.Metadata.HitboxStyles = {
     {
       colliding:
         {
-          fillColor: 0xFF3B30, // bright red while overlapping an action.
+          // bright red while overlapping an action.
+          fillColor: 0xFF3B30,
           fillAlpha: 0.35,
           lineColor: 0xC12722,
           lineWidth: 3,
@@ -504,19 +509,29 @@ J.ABS.Shapes = {
  * Strongly-typed projectile formation names used across JABS.
  */
 J.ABS.ProjectileFormations = {
-  /** A single spoke in the forward direction. */
+  /**
+   * A single spoke in the forward direction.
+   */
   Line: 'line',
 
-  /** Three spokes: forward, forward-left, forward-right. */
+  /**
+   * Three spokes: forward, forward-left, forward-right.
+   */
   Spray: 'spray',
 
-  /** Four cardinals: up, right, down, left. */
+  /**
+   * Four cardinals: up, right, down, left.
+   */
   Cross: 'cross',
 
-  /** Four diagonals: up-right, down-right, down-left, up-left. */
+  /**
+   * Four diagonals: up-right, down-right, down-left, up-left.
+   */
   Xburst: 'xburst',
 
-  /** All eight directions: cardinals + diagonals. */
+  /**
+   * All eight directions: cardinals + diagonals.
+   */
   Nova: 'nova',
 };
 
@@ -623,11 +638,13 @@ J.ABS.RegExp = {
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
 
   // parry-related.
-  IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi, //endregion ON EQUIPS
+  IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
+  //endregion ON EQUIPS
 
   //region ON ITEMS
   UseOnPickup: /<useOnPickup>/gi,
-  Expires: /<expires:[ ]?(\d+)>/gi, //endregion ON ITEMS
+  Expires: /<expires:[ ]?(\d+)>/gi,
+  //endregion ON ITEMS
 
   //region ON STATES
   // definition-related.
@@ -671,7 +688,8 @@ J.ABS.RegExp = {
   // state duration-related.
   StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
   StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
-  StateDurationFormulaPlus: /<stateDurationForm:\[([+\-*/ ().\w]+)]>/gi, //endregion ON STATES
+  StateDurationFormulaPlus: /<stateDurationForm:\[([+\-*/ ().\w]+)]>/gi,
+  //endregion ON STATES
 
   //region ON BATTLERS
   // core concepts.
@@ -708,7 +726,8 @@ J.ABS.RegExp = {
   ConfigInvincible: /<jabsConfig:[ ]?invincible>/i,
   ConfigNotInvincible: /<jabsConfig:[ ]?notInvincible>/i,
   ConfigNoName: /<jabsConfig:[ ]?noName>/i,
-  ConfigShowName: /<jabsConfig:[ ]?showName>/i, //endregion ON BATTLERS
+  ConfigShowName: /<jabsConfig:[ ]?showName>/i,
+  //endregion ON BATTLERS
 
   //region ON ACTORS/CLASSES
   ConfigNoSwitch: /<noSwitch>/i,
@@ -720,12 +739,18 @@ J.ABS.RegExp = {
  * Visual customization for action sprites (per-skill).
  * All tags are optional and purely visual; physics/hitboxes remain unchanged.
  */
-J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // capture full [x, y]
-J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi; // capture full [ax, ay]
-J.ABS.RegExp.VisRotate = /<visRotate>/gi; // boolean
-J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi; // capture full [sx, sy]
-J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi; // z-order override (number only)
-J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
+// capture full [x, y].
+J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// capture full [ax, ay].
+J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi;
+// boolean.
+J.ABS.RegExp.VisRotate = /<visRotate>/gi;
+// capture full [sx, sy].
+J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi;
+// z-order override (number only).
+J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi;
+// show visual center/debug gizmo.
+J.ABS.RegExp.VisDebug = /<visDebug>/gi;
 //endregion visual metadata (new)
 
 //region visual directional metadata (new)
@@ -735,16 +760,24 @@ J.ABS.RegExp.VisDebug = /<visDebug>/gi; // show visual center/debug gizmo
  * Cardinal: U/D/L/R
  * Optional diagonals: UR/UL/DR/DL
  */
-J.ABS.RegExp.VisOffsetU = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetD = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetL = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
-J.ABS.RegExp.VisOffsetR = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;  // [x, y]
+// [x, y].
+J.ABS.RegExp.VisOffsetU = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetD = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetL = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetR = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
 
 // Optional diagonals for future use.
-J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
-J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
-J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
-J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi; // [x, y]
+// [x, y].
+J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
+// [x, y].
+J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
 //endregion visual directional metadata (new)
 
 //region cast preview tags

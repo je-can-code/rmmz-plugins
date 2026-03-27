@@ -161,7 +161,9 @@ Game_Map.prototype.expiredActionEvents = function()
 Game_Map.prototype.actionEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving action metadatas from the datamap.
-  /** @param {rm.types.Event} metadata */
+  /**
+   * @param {rm.types.Event} metadata
+   */
   const filtering = metadata =>
   {
     // don't include invalid or non-action event metadatas.
@@ -249,7 +251,9 @@ Game_Map.prototype.expiredLootEvents = function()
 Game_Map.prototype.lootEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving loot metadatas from the datamap.
-  /** @param {rm.types.Event} metadata */
+  /**
+   * @param {rm.types.Event} metadata
+   */
   const filtering = metadata =>
   {
     // don't include invalid or non-action event metadatas.
@@ -343,23 +347,28 @@ Game_Map.prototype.newBattlerEvents = function()
 Game_Map.prototype.addEvent = function(event)
 {
   // attempt to find the first available hole in the event list.
-  let inserted = false; // whether or not we found a spot to insert.
+  // whether or not we found a spot to insert.
+  let inserted = false;
 
   for (let i = 0; i < this._events.length; i++)
   {
     // if the slot is empty/nullish, then reuse it.
     if (!this._events[i])
     {
-      this._events[i] = event; // assign into the first available hole.
-      inserted = true; // flag that we inserted.
-      break; // stop looking for holes.
+      // assign into the first available hole.
+      this._events[i] = event;
+      // flag that we inserted.
+      inserted = true;
+      // stop looking for holes.
+      break;
     }
   }
 
   // if we didn't find a hole, then append to the end as usual.
   if (!inserted)
   {
-    this._events.push(event); // append to the end.
+    // append to the end.
+    this._events.push(event);
   }
 };
 
@@ -382,7 +391,8 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
     this.handleLootEventRemoval(eventToRemove);
 
     // mark the slot as empty to avoid sparseness while preserving indices.
-    this._events[eventIndex] = null; // keep array dense and reusable.
+    // keep array dense and reusable.
+    this._events[eventIndex] = null;
   }
 };
 
@@ -393,22 +403,26 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
 Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
 {
   // don't process if this event isn't an action.
-  if (!actionToRemove.isJabsAction()) return; // only handle actions.
+  // only handle actions.
+  if (!actionToRemove.isJabsAction()) return;
 
   // get the relevant metadatas for the action.
   const actionMetadatas = this.actionEventsFromDataMapByUuid(actionToRemove.getJabsActionUuid());
 
   // all removed events get erased.
-  actionToRemove.erase(); // ensure event is erased visually/logic-wise.
+  // ensure event is erased visually/logic-wise.
+  actionToRemove.erase();
 
   // and also to cleanup the current list of active jabs action events.
-  $jabsEngine.clearActionEvents(); // purge internal tracking.
+  // purge internal tracking.
+  $jabsEngine.clearActionEvents();
 
   // iterate over each of the metadatas for deletion.
   actionMetadatas.forEach(actionMetadata =>
   {
     // instead of deleting (which creates sparse arrays), null the slot.
-    $dataMap.events[actionMetadata.actionIndex] = null; // maintain dense array kind.
+    // maintain dense array kind.
+    $dataMap.events[actionMetadata.actionIndex] = null;
   });
 };
 
@@ -419,7 +433,8 @@ Game_Map.prototype.handleActionEventRemoval = function(actionToRemove)
 Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
 {
   // don't process if this event isn't loot.
-  if (!lootToRemove.isJabsLoot()) return; // only handle loot.
+  // only handle loot.
+  if (!lootToRemove.isJabsLoot()) return;
 
   // get the relevant metadatas for the loot.
   const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid);
@@ -428,7 +443,8 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   lootMetadatas.forEach(lootMetadata =>
   {
     // instead of deleting (which creates sparse arrays), null the slot.
-    $dataMap.events[lootMetadata.lootIndex] = null; // maintain dense array kind.
+    // maintain dense array kind.
+    $dataMap.events[lootMetadata.lootIndex] = null;
   });
 };
 
@@ -492,7 +508,7 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
 
   // when using cyclone's movement plugin, rounding is necessary to accommodate interacting with events
   // without actually executing your weapon attack.
-  if (J.ABS.EXT?.CYCLE)
+  if (J.ABS.EXT.CYCLE)
   {
     x2 = Math.round($gameMap.roundXWithDirection(x1, direction));
     y2 = Math.round($gameMap.roundYWithDirection(y1, direction));

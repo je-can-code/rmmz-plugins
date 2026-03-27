@@ -1,3 +1,4 @@
+//region Game_Troop
 /**
  * Extends {@link Game_Troop.initialize}.<br>
  * Initializes our additional members for STABS.
@@ -60,3 +61,4 @@ Game_Troop.prototype.areEnemiesAlive = function()
 {
   return this.getRemainingEnemyCount() > 0;
 };
+//endregion Game_Troop

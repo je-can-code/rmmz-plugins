@@ -1,3 +1,4 @@
+//region JABS_Engine
 /**
  * Processes the various on-hit effects against the target.
  * @param {JABS_Action} action The JABS action containing the action data.
@@ -49,3 +50,4 @@ JABS_Engine.prototype.canGapClose = function(action, target)
   // we can gap close!
   return true;
 };
+//endregion JABS_Engine

@@ -119,9 +119,11 @@ Window_AbsMenuSelect.prototype.addAllyFormationCommand = function()
 {
   // define the icons for passive/aggressive ally AI aggro settings.
   // build the command.
-  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations") // TODO: parameterize this.
+  // tODO: parameterize this.
+  const allyFormationsCommand = new WindowCommandBuilder("Ally Formations")
     .setSymbol('ally-formations')
-    .setIconIndex(289) // TODO: parameterize this.
+    // tODO: parameterize this.
+    .setIconIndex(289)
     .setColorIndex(23)
     .build();
 

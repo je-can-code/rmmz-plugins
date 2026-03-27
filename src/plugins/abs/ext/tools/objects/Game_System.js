@@ -1,3 +1,4 @@
+//region Game_System
 /**
  * Extends {@link Game_System.initMembers}.<br>
  * Also initializes our new members.
@@ -29,7 +30,8 @@ Game_System.prototype.initToolsMembers = function()
    * Whether or not the grab and throw functionality is currently enabled.
    * @type {boolean}
    */
-  this._j._tools._grabThrowEnabled = true; // TODO: parameterize this.
+  // tODO: parameterize this.
+  this._j._tools._grabThrowEnabled = true;
 };
 
 /**
@@ -57,3 +59,4 @@ Game_System.prototype.toggleGrabThrowEnabled = function()
 {
   this._j._tools._grabThrowEnabled = !this.isGrabThrowEnabled();
 };
+//endregion Game_System

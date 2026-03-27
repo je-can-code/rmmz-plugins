@@ -492,7 +492,9 @@ J.ABS.Aliased.Game_Battler.set('states', Game_Battler.prototype.states);
 Game_Battler.prototype.states = function()
 {
   // grab the original states as they were.
-  /** @type {RPG_State[]} */
+  /**
+   * @type {RPG_State[]}
+   */
   const originalStates = J.ABS.Aliased.Game_Battler.get('states')
     .call(this);
 

@@ -1,3 +1,4 @@
+//region Window_MenuCommand
 /**
  * Extends {@link #addOriginalCommands}.<br/>
  * Also adds a command to open the JABS input remapping scene from the main menu.
@@ -56,3 +57,4 @@ Window_MenuCommand.prototype.canAddJabsRemapCommand = function()
   // render the command!
   return true;
 };
+//endregion Window_MenuCommand

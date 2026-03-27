@@ -43,13 +43,19 @@ J.ABS.EXT.FORMULA.Aliased.JABS_Engine = new Map();
  * Execution-time context flags and helpers for this extension.
  */
 J.ABS.EXT.FORMULA.Context = {
-  /** Whether sub-executions should suppress cascading of this extension. */
+  /**
+   * Whether sub-executions should suppress cascading of this extension.
+   */
   suppressCascades: false,
 
-  /** Whether to suppress applyGlobal() (i.e., skip child skill common events). */
+  /**
+   * Whether to suppress applyGlobal() (i.e., skip child skill common events).
+   */
   suppressCommonEvents: false,
 
-  /** The active trigger while applying packets ("hit" | "use"). */
+  /**
+   * The active trigger while applying packets ("hit" | "use").
+   */
   activeTrigger: null,
 
   /**
@@ -71,7 +77,9 @@ J.ABS.EXT.FORMULA.Settings = {
    */
   logFlushTiming: "after-base",
 
-  /** Prefer appending if supported by the manager (so base logs remain visually first). */
+  /**
+   * Prefer appending if supported by the manager (so base logs remain visually first).
+   */
   preferAppend: true,
 };
 

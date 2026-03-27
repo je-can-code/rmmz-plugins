@@ -1,5 +1,4 @@
 //region Game_Action
-//region Game_Action
 /**
  * Extends {@link Game_Action.applyVirtualJabsAction}.<br/>
  * Injects on-use packets before the core apply flow, and on-hit packets after.
@@ -37,7 +36,8 @@ Game_Action.prototype.applyFormulaPackets = function(trigger, parentTarget)
 {
   // ensure we have an item/skill to check.
   const skill = this.item();
-  if (!skill || !skill.isSkill()) return; // only skills for now.
+  // only skills for now.
+  if (!skill || !skill.isSkill()) return;
 
   // gather all effects and filter by trigger.
   const allEffects = skill.jabsFormulaEffects();
@@ -190,15 +190,19 @@ Game_Action.prototype.applyFormulaModePacket = function(effect, recipient)
   const raw = this.evaluateFormula(effect.formula, this.subject(), recipient, this.item());
   if (!raw) return;
 
-  const isDamage = raw > 0; // identify damage vs healing/gain.
-  const baseMag = Math.abs(raw); // pipeline expects a positive magnitude.
+  // identify damage vs healing/gain.
+  const isDamage = raw > 0;
+  // pipeline expects a positive magnitude.
+  const baseMag = Math.abs(raw);
 
   // run magnitude through battle pipeline (element/phys-mag/guard/variance/JABS guard; REC on heals).
   const piped = this.pipeFormulaThroughBattleCalculations(recipient, baseMag, effect, isDamage);
 
   // finalize and apply by resource.
-  const mag = Math.max(0, Math.round(piped)); // enforce non-negative integer.
-  if (mag === 0) return; // no net impact.
+  // enforce non-negative integer.
+  const mag = Math.max(0, Math.round(piped));
+  // no net impact.
+  if (mag === 0) return;
 
   // snapshot the current result so our packet doesn't overwrite the base action's result.
   const r = recipient.result();
@@ -250,7 +254,8 @@ Game_Action.prototype.applyFormulaModePacket = function(effect, recipient)
   // action log for any resource, attributed to the parent skill id.
   const signed = isDamage
     ? mag
-    : -mag; // negative => heal/gain, positive => damage/loss.
+    // negative => heal/gain, positive => damage/loss.
+    : -mag;
   const parentSkillId = this.item()
     ? this.item().id
     : 0;
@@ -298,7 +303,8 @@ Game_Action.prototype.pipeFormulaThroughBattleCalculations = function(target, ma
   value *= this.calcElementRate(target);
 
   // 2) critical only for damage and only if parent was critical (on-hit context).
-  if (isDamage && J.ABS.EXT.FORMULA.Context.activeTrigger === FormulaEffect.Trigger.HIT && target.result()?.critical)
+  const targetResult = target.result();
+  if (isDamage && J.ABS.EXT.FORMULA.Context.activeTrigger === FormulaEffect.Trigger.HIT && targetResult && targetResult.critical)
   {
     value = this.applyCritical(value);
   }
@@ -374,12 +380,14 @@ Game_Action.prototype.executeChildSkillPacket = function(effect, recipient, pare
 {
   // look up the child skill.
   const child = $dataSkills[effect.skillId];
-  if (!child) return; // invalid skill id => nothing to do.
+  // invalid skill id => nothing to do.
+  if (!child) return;
 
   // resolve the subject as a JABS battler; full JABS actions require a JABS_Battler caster.
   const subject = this.subject();
   const jabsSubject = JABS_AiManager.getBattlerByUuid(subject.getUuid());
-  if (!jabsSubject) return; // subject must exist on-map as a JABS battler.
+  // subject must exist on-map as a JABS battler.
+  if (!jabsSubject) return;
 
   // optionally bias execution with the recipient’s current coordinates (useful for target/ground casts).
   let targetX = null;
@@ -494,7 +502,8 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
   const isHeal = signed < 0;
 
   // heals can also be critical; use the recipient's current action result flag if present.
-  const wasCrit = recipient.result()?.critical === true;
+  const recipientResult = recipient.result();
+  const wasCrit = recipientResult ? recipientResult.critical === true : false;
 
   // build and enqueue the action log entry using the standard execution line.
   const log = new ActionLogBuilder()

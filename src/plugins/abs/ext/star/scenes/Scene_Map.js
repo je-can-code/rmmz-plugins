@@ -1,3 +1,4 @@
+//region Scene_Map
 /**
  * Overrides {@link Scene_Map.updateEncounter}.<br>
  * Disables base encounter scene management.
@@ -24,3 +25,4 @@ Scene_Map.prototype.update = function()
 
   //? TODO: Modify encountereffect here.
 };
+//endregion Scene_Map

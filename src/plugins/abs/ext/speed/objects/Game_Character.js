@@ -70,7 +70,8 @@ Game_Character.prototype.minimumDistancePerFrame = function()
 {
   // the minimum speed is "2" aka "4x slower" according to events.
   // remove comment to let it go lower, but be careful, thats really low!
-  const minimumDistance = 0.015625; // / 2;
+  // / 2;.
+  const minimumDistance = 0.015625;
 
   // return the calculated amount.
   return minimumDistance;

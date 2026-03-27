@@ -1,3 +1,4 @@
+//region Game_Interpreter
 /**
  * Overrides {@link Game_Interpreter.command301}.<br>
  * Alters the event command handler of "Battle Processing".
@@ -64,3 +65,4 @@ Game_Interpreter.prototype.command301convertToTroopId = function(designationType
   console.error(`invalid event command params, `, designationType, troopIdentifier);
   throw new Error('borked');
 };
+//endregion Game_Interpreter

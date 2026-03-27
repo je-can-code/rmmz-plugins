@@ -1,3 +1,4 @@
+//region DataManager
 /**
  * Extends {@link DataManager.createGameObjects}.<br>
  * Includes fetching the enemy map and storing it memory.
@@ -76,3 +77,4 @@ DataManager.onEnemyMapGet = function(xhr, name, src, url)
     this.gracefulFail(name, src, url);
   }
 };
+//endregion DataManager

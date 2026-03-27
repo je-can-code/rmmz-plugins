@@ -6,19 +6,29 @@
 class JABS_HitboxPulseManager
 {
   //region static fields
-  /** @type {PIXI.Container|null} */
+  /**
+   * @type {PIXI.Container|null}
+   */
   static _layer = null;
 
-  /** @type {Sprite_HitboxPulse[]} */
+  /**
+   * @type {Sprite_HitboxPulse[]}
+   */
   static _active = [];
 
-  /** @type {Sprite_HitboxPulse[]} */
+  /**
+   * @type {Sprite_HitboxPulse[]}
+   */
   static _pool = [];
 
-  /** @type {number} */
+  /**
+   * @type {number}
+   */
   static _cap = 8;
 
-  /** @type {JABS_HitboxPulseOptions} */
+  /**
+   * @type {JABS_HitboxPulseOptions}
+   */
   static _defaults = JABS_HitboxPulseOptions.defaults();
   //endregion static fields
 
@@ -268,7 +278,8 @@ class JABS_HitboxPulseManager
   static directionToRadians(dir)
   {
     // precomputed constants for clarity.
-    const RAD_0 = 0;           // right
+    // right.
+    const RAD_0 = 0;
     const RAD_45 = Math.PI / 4;
     const RAD_90 = Math.PI / 2;
     const RAD_180 = Math.PI;
@@ -277,14 +288,22 @@ class JABS_HitboxPulseManager
 
     switch (dir)
     {
-      case 6: return RAD_0;                // right
-      case 3: return RAD_45;               // down-right
-      case 2: return RAD_90;               // down
-      case 1: return RAD_180 - RAD_45;     // down-left (135°)
-      case 4: return RAD_180;              // left
-      case 7: return -RAD_180 + RAD_45;    // up-left (-135°)
-      case 8: return RAD_N90;              // up
-      case 9: return RAD_N45;              // up-right (-45°)
+      // right.
+      case 6: return RAD_0;
+      // down-right.
+      case 3: return RAD_45;
+      // down.
+      case 2: return RAD_90;
+      // down-left (135°).
+      case 1: return RAD_180 - RAD_45;
+      // left.
+      case 4: return RAD_180;
+      // up-left (-135°).
+      case 7: return -RAD_180 + RAD_45;
+      // up.
+      case 8: return RAD_N90;
+      // up-right (-45°).
+      case 9: return RAD_N45;
     }
 
     // default: point right.

@@ -1,3 +1,4 @@
+//region StarOrigin
 /**
  * A simple container of the coordinates of a destination.
  */
@@ -34,3 +35,4 @@ class StarOrigin
     this.y = y;
   }
 }
+//endregion StarOrigin

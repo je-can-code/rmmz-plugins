@@ -1,3 +1,4 @@
+//region Game_Battler
 /**
  * Gets the numeric representation of this battler's strength.
  * @returns {number}
@@ -75,3 +76,4 @@ Game_Battler.prototype.getDangerIndicatorIcon = function()
       return -1;
   }
 };
+//endregion Game_Battler

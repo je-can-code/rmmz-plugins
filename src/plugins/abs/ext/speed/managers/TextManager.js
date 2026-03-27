@@ -9,7 +9,8 @@ TextManager.longParam = function(paramId)
   switch (paramId)
   {
     case 31:
-      return this.movespeed(); // move speed boost
+      // move speed boost.
+      return this.movespeed();
     default:
       // perform original logic.
       return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParam')
@@ -36,7 +37,8 @@ TextManager.longParamDescription = function(paramId)
   switch (paramId)
   {
     case 31:
-      return this.moveSpeedDescription(); // move speed boost
+      // move speed boost.
+      return this.moveSpeedDescription();
     default:
       // perform original logic.
       return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParamDescription')

@@ -1,3 +1,4 @@
+//region Scene_Menu
 /**
  * Extends {@link #createCommandWindow}.<br/>
  * Also wires the handler for opening the JABS input remapping scene.
@@ -16,3 +17,4 @@ Scene_Menu.prototype.createCommandWindow = function()
     SceneManager.push(Scene_JabsRemap);
   });
 };
+//endregion Scene_Menu

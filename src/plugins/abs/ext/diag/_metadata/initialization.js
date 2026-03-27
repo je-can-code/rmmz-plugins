@@ -1,3 +1,4 @@
+//region Initialization
 /**
  * The core where all of my extensions live: in the `J` object.
  */

@@ -1,3 +1,4 @@
+//region Sprite_Animation
 /**
  * Extends {@link Sprite_Animation.prototype.targetPosition}.<br/>
  * Adds a guard to ensure we don't attempt to calculate positions for destroyed sprites.
@@ -69,3 +70,4 @@ Sprite_Animation.prototype.targetSpritePosition = function (sprite)
     return new Point(0, 0);
   }
 };
+//endregion Sprite_Animation

@@ -28,14 +28,17 @@ JABS_Engine.prototype.applyOnUseFormulaPackets = function(caster, primaryAction)
 {
   // obtain the underlying Game_Action from the JABS action.
   const gameAction = primaryAction.getAction();
-  if (!gameAction) return; // no underlying action => nothing to apply.
+  // no underlying action => nothing to apply.
+  if (!gameAction) return;
 
   // set context to on-use while evaluating packets.
   const ctx = J.ABS.EXT.FORMULA.Context;
   const prevTrigger = ctx.activeTrigger;
   const prevCascade = ctx.suppressCascades;
-  ctx.activeTrigger = FormulaEffect.Trigger.USE; // "use"
-  ctx.suppressCascades = false; // parent-level packets should execute.
+  // "use".
+  ctx.activeTrigger = FormulaEffect.Trigger.USE;
+  // parent-level packets should execute.
+  ctx.suppressCascades = false;
 
   try
   {
@@ -73,29 +76,40 @@ JABS_Engine.prototype.forceMapAction = function(
 {
   // build options based on inputs (to derive a primary action for on-use packets).
   const actionLocation = JABS_Location.Builder()
-    .setX(targetX) // set the target x.
-    .setY(targetY) // set the target y.
-    .build(); // build the location.
+    // set the target x.
+    .setX(targetX)
+    // set the target y.
+    .setY(targetY)
+    // build the location.
+    .build();
   const actionOptions = JABS_ActionOptions.Builder()
-    .setIsRetaliation(isRetaliation) // set if this is a retaliation.
-    .setLocation(actionLocation) // apply the action location.
-    .setIsTerrainDamage(isMapDamage) // set if this is environmental damage.
-    .build(); // build the options.
+    // set if this is a retaliation.
+    .setIsRetaliation(isRetaliation)
+    // apply the action location.
+    .setLocation(actionLocation)
+    // set if this is environmental damage.
+    .setIsTerrainDamage(isMapDamage)
+    // build the options.
+    .build();
 
   // generate the actions to obtain the primary action for on-use packet firing.
   // NOTE: this preview is used only to feed the on-use hook below; actual execution is
   // performed by the original method to avoid duplication and preserve core behavior.
-  const previewActions = caster.createJabsActionFromSkill(skillId, actionOptions); // create preview.
+  // create preview.
+  const previewActions = caster.createJabsActionFromSkill(skillId, actionOptions);
 
   // if we cannot execute map actions, then do not proceed.
-  if (!this.canExecuteMapActions(caster, previewActions)) return; // guard execution.
+  // guard execution.
+  if (!this.canExecuteMapActions(caster, previewActions)) return;
 
   // fire on-use packets at launch time for forced actions using the primary preview action.
-  this.applyOnUseFormulaPackets(caster, previewActions[0]); // launch-time on-use.
+  // launch-time on-use.
+  this.applyOnUseFormulaPackets(caster, previewActions[0]);
 
   // delegate to the original forceMapAction (immediate execution path without costs/cooldowns/cast time),
   // preserving all core behavior (animations, collisions, effects, logs, threat, etc.).
   J.ABS.EXT.FORMULA.Aliased.JABS_Engine.get("forceMapAction")
-    .call(this, caster, skillId, isRetaliation, targetX, targetY, isMapDamage); // call original.
+    // call original.
+    .call(this, caster, skillId, isRetaliation, targetX, targetY, isMapDamage);
 };
 //endregion JABS_Engine

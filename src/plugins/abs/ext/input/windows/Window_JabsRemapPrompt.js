@@ -12,7 +12,8 @@ class Window_JabsRemapPrompt
    * Can be migrated to plugin parameters later.
    * @type {number}
    */
-  static WarmupFrames = 20; // ~0.33s
+  // ~0.33s.
+  static WarmupFrames = 20;
 
   /**
    * Maximum frames the prompt remains active before auto-closing.
@@ -20,7 +21,8 @@ class Window_JabsRemapPrompt
    * Can be migrated to plugin parameters later.
    * @type {number}
    */
-  static TimeoutFrames = 5 * 60; // 5s
+  // 5s.
+  static TimeoutFrames = 5 * 60;
   //endregion static
 
   /**

@@ -325,7 +325,9 @@ Scene_Map.prototype.commandSelectAllyFormation = function()
 {
   const window = this.getAllyFormationWindow();
 
-  /** @type {JABS_Formation} */
+  /**
+   * @type {JABS_Formation}
+   */
   const selectedFormation = window.currentExt();
   $gameParty.setPartyFormation(selectedFormation.key);
   window.refresh();

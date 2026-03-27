@@ -47,11 +47,17 @@ J.ABS.EXT.HITSTOP.Aliased.JABS_Action = new Map();
  * All regular expressions used by this plugin.
  */
 J.ABS.EXT.HITSTOP.RegExp = {
-  /** Skill: `<hitstop:N>` */
+  /**
+   * Skill: `<hitstop:N>`
+   */
   Hitstop: /<hitstop:[ ]?(\d+)>/i,
-  /** Skill: `<noHitstop>` */
+  /**
+   * Skill: `<noHitstop>`
+   */
   NoHitstop: /<noHitstop>/i,
-  /** Actor/Enemy: `<hitstopScale:P%>` */
+  /**
+   * Actor/Enemy: `<hitstopScale:P%>`
+   */
   HitstopScale: /<hitstopScale:[ ]?(\d+)%>/i,
 };
 //endregion initialization
