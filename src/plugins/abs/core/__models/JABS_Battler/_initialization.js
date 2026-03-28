@@ -103,6 +103,13 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
   this._alertDuration = battlerCoreData.alertDuration();
 
   /**
+   * The explicit guardian engagement range for this battler.
+   * Null when not tagged; guardian falls back to the largest ward pursuit in that case.
+   * @type {number|null}
+   */
+  this._guardRange = battlerCoreData.guardRange();
+
+  /**
    * The `JABS_EnemyAI` of this battler.
    * Only utilized by AI (duh).
    * @type {JABS_EnemyAI}
@@ -152,6 +159,14 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
    * @type {boolean}
    */
   this._inanimate = battlerCoreData.isInanimate();
+
+  /**
+   * The structural coordination role for this battler.
+   * Enemies read from core data (which reflects event-comment overrides with database fallback).
+   * Actors and the player default to an empty role.
+   * @type {JABS_BattlerRole}
+   */
+  this._battlerRole = battlerCoreData.battlerRole();
 };
 
 /**

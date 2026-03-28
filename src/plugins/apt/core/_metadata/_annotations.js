@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 APT] A plugin that grants the ability to learn by gaining points.
+ * [v1.0.3 APT] A plugin that grants the ability to learn by gaining points.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -92,6 +92,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Raised minimum J-ABS version requirement to 4.6.0.
  * - 1.0.2
  *    Updated to be more extensible for extensions.
  *    Fixed issue with parsing inputs for aptitude progresses.

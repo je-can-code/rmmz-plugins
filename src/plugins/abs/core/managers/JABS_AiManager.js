@@ -95,13 +95,12 @@ class JABS_AiManager
    */
   static getLeaderFollowers(leaderBattler)
   {
-    // if we're not able to lead, then you have no followers.
-    if (!leaderBattler.getAiMode().leader) return [];
+    // if we're not a leader role, there are no followers.
+    if (!leaderBattler.getBattlerRole().leader) return [];
 
     // determine all nearby battlers of the same team.
     const nearbyBattlers = this.getAlliedBattlersWithinRange(leaderBattler, leaderBattler.getPursuitRadius());
 
-    // the filter function for determining if a battler is a follower to this leader.
     /**
      * @param {JABS_Battler} battler
      */
@@ -110,16 +109,15 @@ class JABS_AiManager
       // actors are not considered for leader/follower.
       if (battler.isActor()) return false;
 
-      // grab the ai of the nearby battler.
-      const {
-        follower,
-        leader
-      } = battler.getAiMode();
+      const { follower, leader, solo } = battler.getBattlerRole();
+
+      // solo battlers never participate in coordination.
+      if (solo) return false;
 
       // check if they can become a follower to the designated leader.
       const canLead = !battler.hasLeader() || (leaderBattler.getUuid() === battler.getLeader());
 
-      // if i am a follower, not a leader, and can be lead, then lead me.
+      // if they are a follower, not a leader, and can be led, then lead them.
       return (follower && !leader && canLead);
     };
 
@@ -821,6 +819,12 @@ class JABS_AiManager
       // if we are no longer engaged due to removing dead aggros, then stop.
       if (!battler.isEngaged()) return;
 
+      // guardian role: override the current target if a nearby ward is under attack.
+      if (battler.getBattlerRole().guardian)
+      {
+        this.applyGuardianTargeting(battler);
+      }
+
       // don't try to idle while engaged.
       battler.setIdle(false);
 
@@ -844,10 +848,88 @@ class JABS_AiManager
     }
     else
     {
+      // guardian role: proactively engage if a nearby ward is under attack while idle.
+      if (battler.getBattlerRole().guardian)
+      {
+        this.applyGuardianTargeting(battler);
+      }
+
       // the battler is not engaged, instead just idle about.
       this.aiPhase0(battler);
     }
   }
+
+  //region guardian
+  /**
+   * Applies guardian-role targeting for the given battler.
+   * If a nearby allied ward is under attack, this guardian redirects its focus to that attacker.
+   * When not yet engaged, the guardian will engage the attacker directly.
+   * Falls through silently when no ward attacker is found.
+   * @param {JABS_Battler} battler The guardian battler to retarget.
+   */
+  static applyGuardianTargeting(battler)
+  {
+    const attacker = this.getGuardianWardAttacker(battler);
+
+    // no one is threatening a nearby ward; nothing to do.
+    if (!attacker) return;
+
+    // if the guardian isn't yet engaged, engage the attacker.
+    if (battler.isEngaged() === false)
+    {
+      battler.engageTarget(attacker);
+      return;
+    }
+
+    // guardian is already engaged; redirect to the ward's attacker.
+    // only show the anger balloon when the target is actually changing.
+    if (battler.getTarget() !== attacker)
+    {
+      battler.showBalloon(J.ABS.Balloons.Anger);
+    }
+
+    battler.setTarget(attacker);
+  }
+
+  /**
+   * Scans for the first opposing battler that is currently targeting a ward-role ally
+   * within this guardian's sight range.
+   * @param {JABS_Battler} guardian The guardian battler performing the scan.
+   * @returns {JABS_Battler|null} The attacker of the nearest ward, or null if none is found.
+   */
+  static getGuardianWardAttacker(guardian)
+  {
+    // use explicit guard range if available; otherwise limit the scan to the guardian's sight radius.
+    const guardRange = guardian.getGuardRange();
+    const scanRange = guardRange !== null ? guardRange : guardian.getSightRadius();
+
+    // gather allied battlers within scan range and filter to those with the ward role.
+    const nearbyWards = this.getAlliedBattlersWithinRange(guardian, scanRange)
+      .filter(ally => ally.getBattlerRole().ward);
+
+    // no wards nearby means nothing to protect.
+    if (nearbyWards.length === 0) return null;
+
+    // gather all opposing battlers once to avoid repeated calls.
+    const enemies = this.getOpposingBattlers(guardian);
+
+    // find the first enemy whose current target is one of the nearby wards.
+    for (const ward of nearbyWards)
+    {
+      const wardUuid = ward.getUuid();
+      const attacker = enemies.find(enemy =>
+      {
+        const enemyTarget = enemy.getTarget();
+        return enemyTarget && enemyTarget.getUuid() === wardUuid;
+      });
+
+      if (attacker) return attacker;
+    }
+
+    // no ward is currently being attacked.
+    return null;
+  }
+  //endregion guardian
 
   //endregion update loop
 
@@ -1111,14 +1193,69 @@ class JABS_AiManager
     // check if the distance is invalid.
     if (distance === null) return true;
 
+    // guardian role: effective pursuit respects <guardRange> or the max ward pursuit fallback.
+    // this is evaluated before the hard cap since guard ranges can exceed it intentionally.
+    if (battler.getBattlerRole().guardian)
+    {
+      return distance > this.getGuardianEffectivePursuitRadius(battler);
+    }
+
     // check if the distance arbitrarily is too great.
     if (distance > 20) return true;
 
     // check if the distance is outside of the pursuit radius of this battler.
     if (battler.getPursuitRadius() < distance) return true;
 
+    // sentinel role: disengage once the target leaves the sentinel's home sight radius.
+    if (battler.getBattlerRole().sentinel && this.hasSentinelTargetExceededHomeRange(battler)) return true;
+
     // do not disengage.
     return false;
+  }
+
+  /**
+   * Computes the effective pursuit radius for a guardian-role battler.
+   * If the guardian has an explicit `<guardRange:N>` tag, that value is used directly.
+   * Otherwise, the result is the larger of the guardian's own pursuit radius and the greatest
+   * pursuit radius among all allied ward-role battlers currently on the map.
+   * @param {JABS_Battler} guardian The guardian battler to evaluate.
+   * @returns {number} The effective pursuit radius the guardian should honor.
+   */
+  static getGuardianEffectivePursuitRadius(guardian)
+  {
+    // explicit tag takes priority over any calculated fallback.
+    const guardRange = guardian.getGuardRange();
+    if (guardRange !== null) return guardRange;
+
+    // fallback: use the guardian's own pursuit or the largest ward pursuit, whichever is greater.
+    const allAllies = this.getAlliedBattlers(guardian);
+    const maxWardPursuit = allAllies
+      .filter(ally => ally.getBattlerRole().ward)
+      .reduce((max, ward) => Math.max(max, ward.getPursuitRadius()), 0);
+
+    return Math.max(guardian.getPursuitRadius(), maxWardPursuit);
+  }
+
+  /**
+   * Determines whether or not a sentinel battler's current target has left the sentinel's home range.
+   * Sentinels hold their home position and refuse to pursue targets that escape that zone.
+   * Pursuit radius is used (not sight) so the sentinel stays engaged while the target retreats
+   * within normal chase distance, matching standard engage/disengage semantics anchored to home.
+   * @param {JABS_Battler} battler The sentinel battler to evaluate.
+   * @returns {boolean} True if the target is beyond the sentinel's home pursuit radius, false otherwise.
+   */
+  static hasSentinelTargetExceededHomeRange(battler)
+  {
+    const target = battler.getTarget();
+
+    // no target means nothing to chase; treat as exceeded to trigger disengage.
+    if (!target) return true;
+
+    // measure how far the target is from this sentinel's home coordinates.
+    const distanceFromHome = target.distanceToPoint(battler.getHomeX(), battler.getHomeY());
+
+    // disengage when the target has left the home pursuit zone.
+    return distanceFromHome > battler.getPursuitRadius();
   }
 
   /**
@@ -1302,12 +1439,43 @@ class JABS_AiManager
 
   /**
    * The enemy battler decides what action to take.
-   * Based on it's AI traits, it will make a decision on an action to take.
+   * Coordination roles are resolved here before delegating to the AI's skill selection.
    * @param {JABS_Battler} battler The enemy battler deciding the action.
    */
   static decideEnemyAiPhase2Action(battler)
   {
-    // use the battler's AI to decide the action.
+    const role = battler.getBattlerRole();
+
+    // solo battlers skip all coordination and go straight to skill selection.
+    // leaders coordinate their followers before deciding their own action.
+    if (role.leader && !role.solo)
+    {
+      battler.getAiMode().decideActionsForFollowers(battler);
+    }
+
+    // followers defer to their leader; if no leader is ready they basic attack.
+    if (role.follower && !role.leader && !role.solo)
+    {
+      const followerSkillId = battler.getAiMode().decideFollowerAi(battler);
+      if (!this.isSkillIdValid(followerSkillId))
+      {
+        this.cancelActionSetup(battler);
+        return;
+      }
+
+      const followerSkill = battler.getSkill(followerSkillId);
+      if (!followerSkill)
+      {
+        this.cancelActionSetup(battler);
+        return;
+      }
+
+      const followerCooldownKey = this.buildEnemyCooldownType(followerSkill);
+      this.setupActionForNextPhase(battler, followerSkillId, followerCooldownKey);
+      return;
+    }
+
+    // use the battler's AI to decide the skill.
     const decidedSkillId = battler
       .getAiMode()
       .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
@@ -1497,7 +1665,13 @@ class JABS_AiManager
       // get closer to the target so we can execute the skill.
       this.phase2MoveCloser(battler);
     }
-    // the battler is close enough.
+    // within proximity; check lateral axis alignment for narrow directional hitboxes.
+    else if (this.needsAxisAlignment(battler))
+    {
+      // step laterally so the target falls within the skill's effective hitbox path.
+      this.phase2AlignOnAxis(battler);
+    }
+    // the battler is close enough and aligned.
     else
     {
       // flag this battler as in-position to execute.
@@ -1564,6 +1738,106 @@ class JABS_AiManager
     {
       // move towards the target instead.
       battler.smartMoveTowardTarget();
+    }
+  }
+
+  /**
+   * Determines whether this battler needs to step laterally to align with the target
+   * along the axis the decided skill's hitbox travels.
+   * Only applies to narrow directional shapes: {@link J.ABS.Shapes.Line},
+   * {@link J.ABS.Shapes.Wall}, and {@link J.ABS.Shapes.Arc} with a narrow degree sweep.
+   * @param {JABS_Battler} battler The battler to check.
+   * @returns {boolean} True if a lateral alignment step is required before firing.
+   */
+  static needsAxisAlignment(battler)
+  {
+    // grab the decided action.
+    const [ action, ] = battler.getDecidedAction();
+
+    // only narrow directional hitboxes require lateral alignment.
+    const shape = action.getShape();
+    const isNarrowShape = (
+      shape === J.ABS.Shapes.Line ||
+      shape === J.ABS.Shapes.Wall ||
+      shape === J.ABS.Shapes.Arc
+    );
+
+    // self-targeting and wide shapes do not benefit from alignment.
+    if (isNarrowShape === false) return false;
+
+    // grab the relevant target (ally or enemy).
+    const target = battler.getAllyTarget() ?? battler.getTarget();
+    if (!target) return false;
+
+    const bx = battler.getX();
+    const by = battler.getY();
+    const tx = target.getX();
+    const ty = target.getY();
+
+    // derive the perpendicular misalignment based on the dominant approach axis.
+    const absDx = Math.abs(tx - bx);
+    const absDy = Math.abs(ty - by);
+    const misalignment = (absDx >= absDy)
+      ? Math.abs(ty - by)
+      : Math.abs(tx - bx);
+
+    // compute the effective half-width tolerance for the shape.
+    let tolerance;
+    if (shape === J.ABS.Shapes.Arc)
+    {
+      // chord half-width at the arc's outer edge: range * sin(halfAngle).
+      // the half-angle is clamped to 90 degrees so arcs >= 180 degrees always use the
+      // full radius as tolerance, matching the geometric widest-point behavior for wide sweeps.
+      const degrees = action.getDegrees();
+      const clampedHalfRad = Math.min(degrees / 2, 90) * (Math.PI / 180);
+      tolerance = action.getRange() * Math.sin(clampedHalfRad);
+    }
+    else
+    {
+      // line and wall use the physical tile half-thickness as their tolerance.
+      tolerance = action.getThicknessTiles() / 2;
+    }
+
+    // alignment is needed when the lateral gap exceeds the shape's effective half-width.
+    return misalignment > tolerance;
+  }
+
+  /**
+   * Steps this battler one tile laterally toward the axis shared with its target,
+   * so the decided skill's narrow hitbox will cover the target when fired.
+   * Falls back to setting in-position if the lateral tile is not passable.
+   * @param {JABS_Battler} battler The battler to align.
+   */
+  static phase2AlignOnAxis(battler)
+  {
+    // grab the relevant target (ally or enemy).
+    const target = battler.getAllyTarget() ?? battler.getTarget();
+
+    const bx = battler.getX();
+    const by = battler.getY();
+    const tx = target.getX();
+    const ty = target.getY();
+
+    const absDx = Math.abs(tx - bx);
+    const absDy = Math.abs(ty - by);
+    const character = battler.getCharacter();
+
+    // for a horizontal approach, slide along Y to match the target's row;
+    // for a vertical approach, slide along X to match the target's column.
+    const alignX = (absDx >= absDy) ? bx : tx;
+    const alignY = (absDx >= absDy) ? ty : by;
+
+    // verify the lateral step is passable before committing.
+    const direction = character.findDirectionTo(alignX, alignY);
+    if (character.canPass(character.x, character.y, direction))
+    {
+      // step toward the aligned position.
+      battler.smartMoveTowardCoordinates(alignX, alignY);
+    }
+    else
+    {
+      // tile is blocked; fire from current position rather than stalling indefinitely.
+      battler.setInPosition(true);
     }
   }
 

@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.5.0';
+J.ABS.Metadata.Version = '4.6.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -670,7 +670,7 @@ J.ABS.RegExp = {
   // jabs core ailment functionalities.
   Paralyzed: /<paralyzed>/gi,
   Rooted: /<rooted>/gi,
-  Disarmed: /<disabled>/gi,
+  Disabled: /<disabled>/gi,
   Muted: /<muted>/gi,
 
   // aggro-related.
@@ -701,6 +701,7 @@ J.ABS.RegExp = {
   TeamId: /<teamId:[ ]?(\d+)>/g,
   Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   Pursuit: /<pursuit:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
+  GuardRange: /<guardRange:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   MoveSpeed: /<moveSpeed:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   PrepareTime: /<prepare:[ ]?(\d+)>/i,
 
@@ -717,8 +718,22 @@ J.ABS.RegExp = {
   AiTraitExecutor: /<aiTrait:[ ]?executor>/i,
   AiTraitReckless: /<aiTrait:[ ]?reckless>/i,
   AiTraitHealer: /<aiTrait:[ ]?healer>/i,
+  AiTraitCleanser: /<aiTrait:[ ]?cleanser>/i,
+  AiTraitBuffer: /<aiTrait:[ ]?buffer>/i,
+  AiTraitTactical: /<aiTrait:[ ]?tactical>/i,
+  AiTraitBerserker: /<aiTrait:[ ]?berserker>/i,
+
+  // legacy coordination traits (backward compat aliases for jabsRole).
   AiTraitFollower: /<aiTrait:[ ]?follower>/i,
   AiTraitLeader: /<aiTrait:[ ]?leader>/i,
+
+  // battler roles — structural position in group coordination.
+  AiRoleLeader: /<aiRole:[ ]?leader>/i,
+  AiRoleFollower: /<aiRole:[ ]?follower>/i,
+  AiRoleGuardian: /<aiRole:[ ]?guardian>/i,
+  AiRoleWard: /<aiRole:[ ]?ward>/i,
+  AiRoleSolo: /<aiRole:[ ]?solo>/i,
+  AiRoleSentinel: /<aiRole:[ ]?sentinel>/i,
 
   // miscellaneous combat configurables.
   ConfigNoIdle: /<jabsConfig:[ ]?noIdle>/i,

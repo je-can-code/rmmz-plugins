@@ -34,19 +34,37 @@ class JABS_ActionOptions
   #terrainDamage = false;
 
   /**
+   * The per-projectile spawn offset along the X axis, in tiles, relative to the caster's
+   * fire-time position. Used by multi-projectile volleys for parallel lane separation.
+   * @type {number}
+   */
+  #spawnOffsetX = 0;
+
+  /**
+   * The per-projectile spawn offset along the Y axis, in tiles, relative to the caster's
+   * fire-time position. Used by multi-projectile volleys for parallel lane separation.
+   * @type {number}
+   */
+  #spawnOffsetY = 0;
+
+  /**
    * Constructor.<br/>
    * Use the {@link JABS_ActionOptionsBuilder} to fluently and properly build these.
    * @param {boolean} isRetaliation Whether or not the action is a retaliation of another battler.
    * @param {string} cooldownKey The cooldown's key associated with the action being executed.
    * @param {JABS_Location} location The location of the target of this action, and where it will originate.
    * @param {boolean} terrainDamage Whether or not the action is a result of terrain damage.
+   * @param {number} spawnOffsetX The X spawn offset in tiles relative to caster fire-time position.
+   * @param {number} spawnOffsetY The Y spawn offset in tiles relative to caster fire-time position.
    */
-  constructor(isRetaliation, cooldownKey, location, terrainDamage)
+  constructor(isRetaliation, cooldownKey, location, terrainDamage, spawnOffsetX = 0, spawnOffsetY = 0)
   {
     this.#isRetaliation = isRetaliation;
     this.#cooldownKey = cooldownKey;
     this.#location = location;
     this.#terrainDamage = terrainDamage;
+    this.#spawnOffsetX = spawnOffsetX;
+    this.#spawnOffsetY = spawnOffsetY;
   }
 
   /**
@@ -88,6 +106,26 @@ class JABS_ActionOptions
   isTerrainDamage()
   {
     return this.#terrainDamage;
+  }
+
+  /**
+   * The per-projectile spawn offset along the X axis in tiles, relative to the caster's
+   * fire-time position.
+   * @returns {number}
+   */
+  getSpawnOffsetX()
+  {
+    return this.#spawnOffsetX;
+  }
+
+  /**
+   * The per-projectile spawn offset along the Y axis in tiles, relative to the caster's
+   * fire-time position.
+   * @returns {number}
+   */
+  getSpawnOffsetY()
+  {
+    return this.#spawnOffsetY;
   }
 
   /**

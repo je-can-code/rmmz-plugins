@@ -16,7 +16,7 @@ var J = J || {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.5.0';
+  const requiredJabsVersion = '4.6.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -36,7 +36,7 @@ J.ABS.EXT.INPUT = {};
  */
 J.ABS.EXT.INPUT = {};
 J.ABS.EXT.INPUT.Metadata = {};
-J.ABS.EXT.INPUT.Metadata.Version = '2.2.0';
+J.ABS.EXT.INPUT.Metadata.Version = '2.2.1';
 J.ABS.EXT.INPUT.Metadata.Name = `J-ABS-InputManager`;
 
 /**

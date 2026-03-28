@@ -21,22 +21,16 @@ class JABS_ActionSpawner
     actionOptions
   )
   {
-    // resolve the caster’s current position as the base origin.
-    const originX = caster.getX();
-    const originY = caster.getY();
-
     // build a per-direction tally for how many projectiles each spoke will spawn.
     const countsByDir = this.buildProjectileCountsByDirection(projectileDirections);
 
     // precompute the lateral offset arrays for each direction based on counts.
     const offsetsByDir = this.buildOffsetsByDirection(countsByDir);
 
-    // build all actions from directions using per-spoke offsets and origin.
+    // build all actions from directions using per-spoke offsets.
     const actions = this.buildActionsForDirections(
       caster,
       projectileDirections,
-      originX,
-      originY,
       action,
       actionOptions,
       offsetsByDir
@@ -200,8 +194,6 @@ class JABS_ActionSpawner
    * Builds a collection of `JABS_Action` instances for a list of directions using per-spoke offsets.
    * @param {JABS_Battler} caster The battler spawning the actions.
    * @param {number[]} projectileDirections The flat list of directions to translate into actions.
-   * @param {number} originX The caster’s origin x (tiles).
-   * @param {number} originY The caster’s origin y (tiles).
    * @param {Game_Action} action The game action payload shared across projectiles.
    * @param {JABS_ActionOptions} actionOptions The base options to clone per projectile.
    * @param {Object.<number, number[]>} offsetsByDir The per-direction lateral offsets array.
@@ -210,8 +202,6 @@ class JABS_ActionSpawner
   static buildActionsForDirections(
     caster,
     projectileDirections,
-    originX,
-    originY,
     action,
     actionOptions,
     offsetsByDir
@@ -247,26 +237,17 @@ class JABS_ActionSpawner
       // translate lateral offset into dx/dy for the given facing.
       const delta = this.offsetToDelta(projectileDirection, lateral);
 
-      // compute the per-projectile spawn location in tiles.
-      const spawnX = originX + delta[0];
-      const spawnY = originY + delta[1];
-
-      // construct a location for this projectile; also capture direction for clarity.
-      const perActionLocation = JABS_Location.Builder()
-        .setX(spawnX)
-        .setY(spawnY)
-        .setDirection(projectileDirection)
-        .build();
-
-      // clone/compose a new options instance per projectile to avoid shared state.
+      // clone/compose a new options instance per projectile, storing only the lateral delta.
+      // the absolute spawn position is resolved at fire time by applying this offset to the
+      // caster's current coordinates in JABS_Engine.buildActionEventData.
       const perActionOptions = JABS_ActionOptions.Builder()
         .setIsRetaliation(actionOptions.isActionRetaliation())
         .setCooldownKey(actionOptions.getCooldownKey())
-        .setLocation(perActionLocation)
+        .setSpawnOffset(delta[0], delta[1])
         .setIsTerrainDamage(actionOptions.isTerrainDamage())
         .build();
 
-      // build and return the action bound to this projectile’s setup.
+      // build and return the action bound to this projectile's setup.
       return JABS_Action.Builder()
         .setCaster(caster)
         .setGameAction(action)

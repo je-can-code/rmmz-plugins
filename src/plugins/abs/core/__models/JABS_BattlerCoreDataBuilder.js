@@ -27,6 +27,13 @@ class JABS_BattlerCoreDataBuilder
   #battlerAi = new JABS_AI();
 
   /**
+   * The structural coordination role of this battler.
+   * @type {JABS_BattlerRole}
+   * @private
+   */
+  #battlerRole = new JABS_BattlerRole();
+
+  /**
    * The sight range of this battler.
    * @type {number}
    * @private
@@ -60,6 +67,13 @@ class JABS_BattlerCoreDataBuilder
    * @private
    */
   #alertDuration = J.ABS.Metadata.DefaultEnemyAlertDuration;
+
+  /**
+   * The explicit guardian engagement range, or null to use the ward-pursuit fallback.
+   * @type {number|null}
+   * @private
+   */
+  #guardRange = null;
 
   /**
    * Whether or not this battler is allowed to idle about.
@@ -127,6 +141,7 @@ class JABS_BattlerCoreDataBuilder
       battlerId: this.#battlerId,
       teamId: this.#teamId,
       battlerAI: this.#battlerAi,
+      battlerRole: this.#battlerRole,
 
       // configure sight and alert battler data.
       sightRange: this.#sightRange,
@@ -134,6 +149,7 @@ class JABS_BattlerCoreDataBuilder
       pursuitRange: this.#pursuitRange,
       alertedPursuitBoost: this.#alertedPursuitBoost,
       alertDuration: this.#alertDuration,
+      guardRange: this.#guardRange,
 
       // configure on-the-map settings.
       canIdle: this.#canIdle,
@@ -252,6 +268,17 @@ class JABS_BattlerCoreDataBuilder
   }
 
   /**
+   * Sets the structural coordination role of this core data.
+   * @param {JABS_BattlerRole} battlerRole The role of this battler.
+   * @returns {this} This builder for fluent-building.
+   */
+  setBattlerRole(battlerRole)
+  {
+    this.#battlerRole = battlerRole;
+    return this;
+  }
+
+  /**
    * Sets the sight range of this core data.
    * @param {number} sightRange The sight range of this battler.
    * @returns {this} This builder for fluent-building.
@@ -303,6 +330,18 @@ class JABS_BattlerCoreDataBuilder
   setAlertDuration(alertDuration)
   {
     this.#alertDuration = alertDuration;
+    return this;
+  }
+
+  /**
+   * Sets the explicit guardian engagement range for this core data.
+   * Pass null to use the default ward-pursuit fallback behavior.
+   * @param {number|null} guardRange The guard range, or null for fallback.
+   * @returns {this} This builder for fluent-building.
+   */
+  setGuardRange(guardRange)
+  {
+    this.#guardRange = guardRange;
     return this;
   }
 

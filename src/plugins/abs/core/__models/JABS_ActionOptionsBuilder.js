@@ -29,6 +29,18 @@ class JABS_ActionOptionsBuilder
   #isTerrainDamage = false;
 
   /**
+   * The per-projectile spawn offset along the X axis in tiles.
+   * @type {number}
+   */
+  #spawnOffsetX = 0;
+
+  /**
+   * The per-projectile spawn offset along the Y axis in tiles.
+   * @type {number}
+   */
+  #spawnOffsetY = 0;
+
+  /**
    * Builds a new instance of the options based on the built parameters.
    * @returns {JABS_ActionOptions}
    */
@@ -43,7 +55,9 @@ class JABS_ActionOptionsBuilder
       this.#isRetaliation,
       this.#cooldownKey,
       JABS_Location.Clone(locationToClone),
-      this.#isTerrainDamage);
+      this.#isTerrainDamage,
+      this.#spawnOffsetX,
+      this.#spawnOffsetY);
 
     // clear out the previous data.
     this.clear();
@@ -62,6 +76,8 @@ class JABS_ActionOptionsBuilder
     this.#cooldownKey = J.ABS.Globals.GlobalCooldownKey;
     this.#sourceLocation = null;
     this.#isTerrainDamage = false;
+    this.#spawnOffsetX = 0;
+    this.#spawnOffsetY = 0;
   }
 
   /**
@@ -104,6 +120,20 @@ class JABS_ActionOptionsBuilder
   setIsTerrainDamage(isTerrainDamage)
   {
     this.#isTerrainDamage = isTerrainDamage;
+    return this;
+  }
+
+  /**
+   * Sets the per-projectile spawn offset deltas relative to the caster's fire-time position.
+   * Used by multi-projectile volleys to position parallel lanes without freezing a decision-time origin.
+   * @param {number} dx The X offset in tiles.
+   * @param {number} dy The Y offset in tiles.
+   * @returns {JABS_ActionOptionsBuilder}
+   */
+  setSpawnOffset(dx, dy)
+  {
+    this.#spawnOffsetX = dx;
+    this.#spawnOffsetY = dy;
     return this;
   }
 }
