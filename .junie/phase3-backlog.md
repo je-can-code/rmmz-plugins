@@ -14,6 +14,9 @@ All work below is done and merged:
 - `JABS_EnemyAI` rewritten: switch(this) bug fixed, 4 new traits added (cleanser, buffer, tactical, berserker), coordination decoupled
 - `JABS_AllyAI` de-duplicated against base class, two bugs fixed
 - `JABS_AiManager` coordination routing moved out of AI into manager
+- Sentinel role behavior implemented: sentinels disengage when their target leaves their home sight radius
+- Guardian role behavior implemented: guardians retarget to protect nearby ward-role allies under attack
+- Ward role is passive; no behavioral code runs on wards directly
 
 ---
 
@@ -52,14 +55,6 @@ All work below is done and merged:
 ---
 
 ## Feature Work
-
-### Sentinel role — pursuit range enforcement
-- **Context:** `JABS_BattlerRole.sentinel` is now parsed and stored but the actual pursuit-distance-from-home clamping is not yet implemented. When an enemy with `<jabsRole: sentinel>` is engaged, it should disengage rather than chase beyond its home radius.
-- **Work:** Add a `isOutOfSentinelRange()` check to the disengage evaluation path in `JABS_AiManager`; compare current position vs `_homeX`/`_homeY` using the battler's normal sight radius.
-
-### Guardian role — ward targeting logic
-- **Context:** `JABS_BattlerRole.guardian` is parsed and stored. Guardians should intercept aggro directed at the nearest battler with `JABS_BattlerRole.ward`. The actual retargeting logic is not yet wired.
-- **Work:** When a guardian battler selects a target, scan for nearby ward-role battlers on the same team; if any have an attacker, steal that attacker as this guardian's target.
 
 ### Ally dodge-skill AI
 - **File:** `src/plugins/abs/ext/allyai/managers/JABS_AiManager.js` (line 443)

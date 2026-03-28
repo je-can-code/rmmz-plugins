@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.6.0 JABS] Enables combat to be carried out on the map.
+ * [v4.7.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -46,6 +46,10 @@
  * JABS lives at the top instead of the bottom like the rest of my plugins.
  *
  * CHANGELOG:
+ * - 4.7.0
+ *    Implemented sentinel role behavior: sentinels disengage when their target leaves their home sight radius.
+ *    Implemented guardian role behavior: guardians retarget to protect nearby ward-role allies under attack.
+ *    Ward role is passive; no behavioral code runs on wards directly.
  * - 4.6.0
  *    Fixed `JABS_EnemyAI#decideAction` using `switch (this)` against boolean traits, which never matched and forced generic AI for all enemies since 2023.
  *    Fixed undefined `defensive` reference in healer follower skill filtering.
