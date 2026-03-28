@@ -165,6 +165,15 @@ JABS_Battler.prototype.initFromNotes = function()
    * @type {number}
    */
   this._prepareMax = this.getPrepareTime();
+
+  /**
+   * The structural coordination role for this battler.
+   * Actors and the player receive an empty default role.
+   * @type {JABS_BattlerRole}
+   */
+  this._battlerRole = this.isEnemy()
+    ? this.getBattler().enemy().jabsBattlerRole
+    : new JABS_BattlerRole();
 };
 
 /**

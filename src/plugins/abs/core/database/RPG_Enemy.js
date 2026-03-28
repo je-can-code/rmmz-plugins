@@ -110,21 +110,43 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAlertedPursuitBoost', {
 /**
  * The compiled {@link JABS_EnemyAI}.<br>
  * This defines how this battler's AI will be controlled.
+ * Coordination roles (leader/follower) are handled separately via {@link #jabsBattlerRole}.
  * @type {JABS_EnemyAI}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBattlerAi', {
   get: function()
   {
-    // extract the AI traits out.
     const careful = this.jabsAiTraitCareful;
     const executor = this.jabsAiTraitExecutor;
     const reckless = this.jabsAiTraitReckless;
     const healer = this.jabsAiTraitHealer;
-    const follower = this.jabsAiTraitFollower;
-    const leader = this.jabsAiTraitLeader;
+    const cleanser = this.jabsAiTraitCleanser;
+    const buffer = this.jabsAiTraitBuffer;
+    const tactical = this.jabsAiTraitTactical;
+    const berserker = this.jabsAiTraitBerserker;
 
-    // return the compiled battler AI.
-    return new JABS_EnemyAI(careful, executor, reckless, healer, follower, leader);
+    return new JABS_EnemyAI(careful, executor, reckless, healer, cleanser, buffer, tactical, berserker);
+  },
+});
+
+/**
+ * The compiled {@link JABS_BattlerRole}.<br>
+ * This defines this battler's structural coordination role on the battlefield.
+ * Supports both the new {@code <jabsRole:>} tag and the legacy {@code <aiTrait: leader/follower>} tags.
+ * @type {JABS_BattlerRole}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBattlerRole', {
+  get: function()
+  {
+    // check new jabsRole tags first, then fall back to legacy aiTrait tags.
+    const leader = this.jabsRoleLeader || this.jabsAiTraitLeader;
+    const follower = this.jabsRoleFollower || this.jabsAiTraitFollower;
+    const guardian = this.jabsRoleGuardian;
+    const ward = this.jabsRoleWard;
+    const solo = this.jabsRoleSolo;
+    const sentinel = this.jabsRoleSentinel;
+
+    return new JABS_BattlerRole(leader, follower, guardian, ward, solo, sentinel);
   },
 });
 
@@ -188,6 +210,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitHealer', {
 /**
  * The JABS AI trait of follower.
  * This boolean decides whether or not this battler has this AI trait.
+ * @deprecated Use {@code <jabsRole: follower>} instead. Supported as a backward-compatible alias.
  * @type {boolean}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitFollower', {
@@ -202,6 +225,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitFollower', {
 /**
  * The JABS AI trait of leader.
  * This boolean decides whether or not this battler has this AI trait.
+ * @deprecated Use {@code <jabsRole: leader>} instead. Supported as a backward-compatible alias.
  * @type {boolean}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitLeader', {
@@ -211,6 +235,140 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitLeader', {
   },
 });
 //endregion ai:leader
+
+//region ai:cleanser
+/**
+ * The JABS AI trait of cleanser.
+ * This boolean decides whether or not this battler has this AI trait.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitCleanser', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiTraitCleanser, true);
+  },
+});
+//endregion ai:cleanser
+
+//region ai:buffer
+/**
+ * The JABS AI trait of buffer.
+ * This boolean decides whether or not this battler has this AI trait.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBuffer', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiTraitBuffer, true);
+  },
+});
+//endregion ai:buffer
+
+//region ai:tactical
+/**
+ * The JABS AI trait of tactical.
+ * This boolean decides whether or not this battler has this AI trait.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitTactical', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiTraitTactical, true);
+  },
+});
+//endregion ai:tactical
+
+//region ai:berserker
+/**
+ * The JABS AI trait of berserker.
+ * This boolean decides whether or not this battler has this AI trait.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBerserker', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.AiTraitBerserker, true);
+  },
+});
+//endregion ai:berserker
+
+//region role:leader
+/**
+ * The JABS role of leader.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleLeader', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleLeader, true);
+  },
+});
+//endregion role:leader
+
+//region role:follower
+/**
+ * The JABS role of follower.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleFollower', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleFollower, true);
+  },
+});
+//endregion role:follower
+
+//region role:guardian
+/**
+ * The JABS role of guardian.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleGuardian', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleGuardian, true);
+  },
+});
+//endregion role:guardian
+
+//region role:ward
+/**
+ * The JABS role of ward.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleWard', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleWard, true);
+  },
+});
+//endregion role:ward
+
+//region role:solo
+/**
+ * The JABS role of solo.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleSolo', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleSolo, true);
+  },
+});
+//endregion role:solo
+
+//region role:sentinel
+/**
+ * The JABS role of sentinel.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRoleSentinel', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsRoleSentinel, true);
+  },
+});
+//endregion role:sentinel
 
 //endregion ai
 

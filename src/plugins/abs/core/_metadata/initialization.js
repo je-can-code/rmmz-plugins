@@ -717,8 +717,22 @@ J.ABS.RegExp = {
   AiTraitExecutor: /<aiTrait:[ ]?executor>/i,
   AiTraitReckless: /<aiTrait:[ ]?reckless>/i,
   AiTraitHealer: /<aiTrait:[ ]?healer>/i,
+  AiTraitCleanser: /<aiTrait:[ ]?cleanser>/i,
+  AiTraitBuffer: /<aiTrait:[ ]?buffer>/i,
+  AiTraitTactical: /<aiTrait:[ ]?tactical>/i,
+  AiTraitBerserker: /<aiTrait:[ ]?berserker>/i,
+
+  // legacy coordination traits (backward compat aliases for jabsRole).
   AiTraitFollower: /<aiTrait:[ ]?follower>/i,
   AiTraitLeader: /<aiTrait:[ ]?leader>/i,
+
+  // battler roles — structural position in group coordination.
+  JabsRoleLeader: /<jabsRole:[ ]?leader>/i,
+  JabsRoleFollower: /<jabsRole:[ ]?follower>/i,
+  JabsRoleGuardian: /<jabsRole:[ ]?guardian>/i,
+  JabsRoleWard: /<jabsRole:[ ]?ward>/i,
+  JabsRoleSolo: /<jabsRole:[ ]?solo>/i,
+  JabsRoleSentinel: /<jabsRole:[ ]?sentinel>/i,
 
   // miscellaneous combat configurables.
   ConfigNoIdle: /<jabsConfig:[ ]?noIdle>/i,

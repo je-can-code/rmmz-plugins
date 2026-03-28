@@ -95,13 +95,12 @@ class JABS_AiManager
    */
   static getLeaderFollowers(leaderBattler)
   {
-    // if we're not able to lead, then you have no followers.
-    if (!leaderBattler.getAiMode().leader) return [];
+    // if we're not a leader role, there are no followers.
+    if (!leaderBattler.getBattlerRole().leader) return [];
 
     // determine all nearby battlers of the same team.
     const nearbyBattlers = this.getAlliedBattlersWithinRange(leaderBattler, leaderBattler.getPursuitRadius());
 
-    // the filter function for determining if a battler is a follower to this leader.
     /**
      * @param {JABS_Battler} battler
      */
@@ -110,16 +109,15 @@ class JABS_AiManager
       // actors are not considered for leader/follower.
       if (battler.isActor()) return false;
 
-      // grab the ai of the nearby battler.
-      const {
-        follower,
-        leader
-      } = battler.getAiMode();
+      const { follower, leader, solo } = battler.getBattlerRole();
+
+      // solo battlers never participate in coordination.
+      if (solo) return false;
 
       // check if they can become a follower to the designated leader.
       const canLead = !battler.hasLeader() || (leaderBattler.getUuid() === battler.getLeader());
 
-      // if i am a follower, not a leader, and can be lead, then lead me.
+      // if they are a follower, not a leader, and can be led, then lead them.
       return (follower && !leader && canLead);
     };
 
@@ -1302,12 +1300,43 @@ class JABS_AiManager
 
   /**
    * The enemy battler decides what action to take.
-   * Based on it's AI traits, it will make a decision on an action to take.
+   * Coordination roles are resolved here before delegating to the AI's skill selection.
    * @param {JABS_Battler} battler The enemy battler deciding the action.
    */
   static decideEnemyAiPhase2Action(battler)
   {
-    // use the battler's AI to decide the action.
+    const role = battler.getBattlerRole();
+
+    // solo battlers skip all coordination and go straight to skill selection.
+    // leaders coordinate their followers before deciding their own action.
+    if (role.leader && !role.solo)
+    {
+      battler.getAiMode().decideActionsForFollowers(battler);
+    }
+
+    // followers defer to their leader; if no leader is ready they basic attack.
+    if (role.follower && !role.leader && !role.solo)
+    {
+      const followerSkillId = battler.getAiMode().decideFollowerAi(battler);
+      if (!this.isSkillIdValid(followerSkillId))
+      {
+        this.cancelActionSetup(battler);
+        return;
+      }
+
+      const followerSkill = battler.getSkill(followerSkillId);
+      if (!followerSkill)
+      {
+        this.cancelActionSetup(battler);
+        return;
+      }
+
+      const followerCooldownKey = this.buildEnemyCooldownType(followerSkill);
+      this.setupActionForNextPhase(battler, followerSkillId, followerCooldownKey);
+      return;
+    }
+
+    // use the battler's AI to decide the skill.
     const decidedSkillId = battler
       .getAiMode()
       .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
