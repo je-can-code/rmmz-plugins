@@ -50,7 +50,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsMuted', {
 Object.defineProperty(RPG_State.prototype, 'jabsDisarmed', {
   get: function()
   {
-    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Disarmed, true);
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Disabled, true);
   },
 });
 //endregion disarmed

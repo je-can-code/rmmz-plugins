@@ -4,7 +4,7 @@
  * Roles define how a battler relates to and coordinates with other battlers,
  * distinct from AI traits which govern individual skill-selection decisions.
  *
- * Assigned via the {@code <jabsRole: X>} notetag family. The legacy
+ * Assigned via the {@code <aiRole: X>} notetag family. The legacy
  * {@code <aiTrait: leader>} and {@code <aiTrait: follower>} tags are
  * supported as backward-compatible aliases.
  */

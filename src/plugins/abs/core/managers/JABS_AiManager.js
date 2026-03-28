@@ -899,8 +899,12 @@ class JABS_AiManager
    */
   static getGuardianWardAttacker(guardian)
   {
-    // gather allied battlers within sight range and filter to those with the ward role.
-    const nearbyWards = this.getAlliedBattlersWithinRange(guardian, guardian.getSightRadius())
+    // use explicit guard range if available; otherwise limit the scan to the guardian's sight radius.
+    const guardRange = guardian.getGuardRange();
+    const scanRange = guardRange !== null ? guardRange : guardian.getSightRadius();
+
+    // gather allied battlers within scan range and filter to those with the ward role.
+    const nearbyWards = this.getAlliedBattlersWithinRange(guardian, scanRange)
       .filter(ally => ally.getBattlerRole().ward);
 
     // no wards nearby means nothing to protect.
@@ -1189,6 +1193,13 @@ class JABS_AiManager
     // check if the distance is invalid.
     if (distance === null) return true;
 
+    // guardian role: effective pursuit respects <guardRange> or the max ward pursuit fallback.
+    // this is evaluated before the hard cap since guard ranges can exceed it intentionally.
+    if (battler.getBattlerRole().guardian)
+    {
+      return distance > this.getGuardianEffectivePursuitRadius(battler);
+    }
+
     // check if the distance arbitrarily is too great.
     if (distance > 20) return true;
 
@@ -1200,6 +1211,29 @@ class JABS_AiManager
 
     // do not disengage.
     return false;
+  }
+
+  /**
+   * Computes the effective pursuit radius for a guardian-role battler.
+   * If the guardian has an explicit `<guardRange:N>` tag, that value is used directly.
+   * Otherwise, the result is the larger of the guardian's own pursuit radius and the greatest
+   * pursuit radius among all allied ward-role battlers currently on the map.
+   * @param {JABS_Battler} guardian The guardian battler to evaluate.
+   * @returns {number} The effective pursuit radius the guardian should honor.
+   */
+  static getGuardianEffectivePursuitRadius(guardian)
+  {
+    // explicit tag takes priority over any calculated fallback.
+    const guardRange = guardian.getGuardRange();
+    if (guardRange !== null) return guardRange;
+
+    // fallback: use the guardian's own pursuit or the largest ward pursuit, whichever is greater.
+    const allAllies = this.getAlliedBattlers(guardian);
+    const maxWardPursuit = allAllies
+      .filter(ally => ally.getBattlerRole().ward)
+      .reduce((max, ward) => Math.max(max, ward.getPursuitRadius()), 0);
+
+    return Math.max(guardian.getPursuitRadius(), maxWardPursuit);
   }
 
   /**

@@ -242,6 +242,7 @@ Game_Event.prototype.parseEnemyComments = function()
   const pursuitRange = this.getPursuitRangeOverrides() ?? enemyBattler.pursuitRange();
   const alertedPursuitBoost = this.getAlertedPursuitBoostOverrides() ?? enemyBattler.alertedPursuitBoost();
   const alertDuration = this.getAlertDurationOverrides() ?? enemyBattler.alertDuration();
+  const guardRange = this.getGuardRangeOverrides() ?? enemyBattler.guardRange();
   let canIdle = this.getCanIdleOverrides() ?? enemyBattler.canIdle();
   let showHpBar = this.getShowHpBarOverrides() ?? enemyBattler.showHpBar();
   let showBattlerName = this.getShowBattlerNameOverrides() ?? enemyBattler.showBattlerName();
@@ -271,6 +272,7 @@ Game_Event.prototype.parseEnemyComments = function()
     .setPursuitRange(pursuitRange)
     .setAlertedPursuitBoost(alertedPursuitBoost)
     .setAlertDuration(alertDuration)
+    .setGuardRange(guardRange)
     .setCanIdle(canIdle)
     .setShowHpBar(showHpBar)
     .setShowBattlerName(showBattlerName)
@@ -543,6 +545,37 @@ Game_Event.prototype.getPursuitRangeOverrides = function()
 };
 
 /**
+ * Parses out the guard range from a list of event commands.
+ * Only relevant for guardian-role battlers; null signals the ward-pursuit fallback.
+ * @returns {number|null} The found guard range, or null if not found.
+ */
+Game_Event.prototype.getGuardRangeOverrides = function()
+{
+  // guard range is null by default.
+  let guardRange = null;
+
+  // check all the valid event commands to see if we have an override for this.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.GuardRange.exec(comment);
+
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
+
+      // parse the value out of the regex capture group.
+      guardRange = parseInt(regexResult[1]);
+    });
+
+  // return what we found.
+  return guardRange;
+};
+
+/**
  * Parses out the alerted pursuit boost from a list of event commands.
  * @returns {number|null} The found alerted pursuit boost range, or null if not found.
  */
@@ -780,7 +813,7 @@ Game_Event.prototype.getShowBattlerNameOverrides = function()
 
 /**
  * Parses out the battler role from event comments.
- * Supports both the {@code <jabsRole:>} tag family and the legacy
+ * Supports the {@code <aiRole:>} tag family and the legacy
  * {@code <aiTrait: leader>} / {@code <aiTrait: follower>} aliases.
  * @returns {JABS_BattlerRole|null} The constructed role, or null if no role tags were found.
  */
@@ -802,38 +835,38 @@ Game_Event.prototype.getBattlerRoleOverrides = function()
       // shorthand the comment into a variable.
       const [ comment, ] = command.parameters;
 
-      // check the jabsRole tag family first.
-      if (J.ABS.RegExp.JabsRoleLeader.test(comment))
+      // check the aiRole tag family.
+      if (J.ABS.RegExp.AiRoleLeader.test(comment))
       {
         leader = true;
         found = true;
       }
 
-      if (J.ABS.RegExp.JabsRoleFollower.test(comment))
+      if (J.ABS.RegExp.AiRoleFollower.test(comment))
       {
         follower = true;
         found = true;
       }
 
-      if (J.ABS.RegExp.JabsRoleGuardian.test(comment))
+      if (J.ABS.RegExp.AiRoleGuardian.test(comment))
       {
         guardian = true;
         found = true;
       }
 
-      if (J.ABS.RegExp.JabsRoleWard.test(comment))
+      if (J.ABS.RegExp.AiRoleWard.test(comment))
       {
         ward = true;
         found = true;
       }
 
-      if (J.ABS.RegExp.JabsRoleSolo.test(comment))
+      if (J.ABS.RegExp.AiRoleSolo.test(comment))
       {
         solo = true;
         found = true;
       }
 
-      if (J.ABS.RegExp.JabsRoleSentinel.test(comment))
+      if (J.ABS.RegExp.AiRoleSentinel.test(comment))
       {
         sentinel = true;
         found = true;

@@ -235,6 +235,22 @@ Game_Enemy.prototype.pursuitRange = function()
 };
 
 /**
+ * Gets the enemy's guard range from their notes.
+ * When set, overrides the default fallback behavior for guardian-role battlers,
+ * defining how far they will scan for threatened wards and pursue attackers.
+ * Returns null when not defined, signaling the guardian to use the ward-pursuit fallback.
+ * @returns {number|null}
+ */
+Game_Enemy.prototype.guardRange = function()
+{
+  // grab the reference data for this battler.
+  const referenceData = this.databaseData();
+
+  // return the parsed value, or null if not tagged.
+  return referenceData.jabsGuardRange;
+};
+
+/**
  * Gets the enemy's boost to pursuit range when alerted from their notes.
  * This will be overwritten by values provided from an event.
  * @returns {number}

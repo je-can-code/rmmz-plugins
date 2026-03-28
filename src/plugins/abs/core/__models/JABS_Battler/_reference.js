@@ -741,6 +741,17 @@ JABS_Battler.prototype.getPursuitRadius = function()
 };
 
 /**
+ * Gets the explicit guard range for this battler, if tagged.
+ * Only relevant for guardian-role enemies; actors always return null.
+ * When null, the guardian falls back to the largest pursuit radius among allied wards.
+ * @returns {number|null}
+ */
+JABS_Battler.prototype.getGuardRange = function()
+{
+  return this._guardRange;
+};
+
+/**
  * Sets whether or not this battler is engaged.
  * @param {boolean} isEngaged Whether or not this battler is engaged.
  */

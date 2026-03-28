@@ -103,6 +103,13 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
   this._alertDuration = battlerCoreData.alertDuration();
 
   /**
+   * The explicit guardian engagement range for this battler.
+   * Null when not tagged; guardian falls back to the largest ward pursuit in that case.
+   * @type {number|null}
+   */
+  this._guardRange = battlerCoreData.guardRange();
+
+  /**
    * The `JABS_EnemyAI` of this battler.
    * Only utilized by AI (duh).
    * @type {JABS_EnemyAI}

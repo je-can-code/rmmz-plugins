@@ -69,6 +69,13 @@ class JABS_BattlerCoreDataBuilder
   #alertDuration = J.ABS.Metadata.DefaultEnemyAlertDuration;
 
   /**
+   * The explicit guardian engagement range, or null to use the ward-pursuit fallback.
+   * @type {number|null}
+   * @private
+   */
+  #guardRange = null;
+
+  /**
    * Whether or not this battler is allowed to idle about.
    * @type {boolean}
    * @private
@@ -142,6 +149,7 @@ class JABS_BattlerCoreDataBuilder
       pursuitRange: this.#pursuitRange,
       alertedPursuitBoost: this.#alertedPursuitBoost,
       alertDuration: this.#alertDuration,
+      guardRange: this.#guardRange,
 
       // configure on-the-map settings.
       canIdle: this.#canIdle,
@@ -322,6 +330,18 @@ class JABS_BattlerCoreDataBuilder
   setAlertDuration(alertDuration)
   {
     this.#alertDuration = alertDuration;
+    return this;
+  }
+
+  /**
+   * Sets the explicit guardian engagement range for this core data.
+   * Pass null to use the default ward-pursuit fallback behavior.
+   * @param {number|null} guardRange The guard range, or null for fallback.
+   * @returns {this} This builder for fluent-building.
+   */
+  setGuardRange(guardRange)
+  {
+    this.#guardRange = guardRange;
     return this;
   }
 

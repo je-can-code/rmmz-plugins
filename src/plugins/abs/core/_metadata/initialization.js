@@ -670,7 +670,7 @@ J.ABS.RegExp = {
   // jabs core ailment functionalities.
   Paralyzed: /<paralyzed>/gi,
   Rooted: /<rooted>/gi,
-  Disarmed: /<disabled>/gi,
+  Disabled: /<disabled>/gi,
   Muted: /<muted>/gi,
 
   // aggro-related.
@@ -701,6 +701,7 @@ J.ABS.RegExp = {
   TeamId: /<teamId:[ ]?(\d+)>/g,
   Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   Pursuit: /<pursuit:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
+  GuardRange: /<guardRange:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   MoveSpeed: /<moveSpeed:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   PrepareTime: /<prepare:[ ]?(\d+)>/i,
 
@@ -727,12 +728,12 @@ J.ABS.RegExp = {
   AiTraitLeader: /<aiTrait:[ ]?leader>/i,
 
   // battler roles — structural position in group coordination.
-  JabsRoleLeader: /<jabsRole:[ ]?leader>/i,
-  JabsRoleFollower: /<jabsRole:[ ]?follower>/i,
-  JabsRoleGuardian: /<jabsRole:[ ]?guardian>/i,
-  JabsRoleWard: /<jabsRole:[ ]?ward>/i,
-  JabsRoleSolo: /<jabsRole:[ ]?solo>/i,
-  JabsRoleSentinel: /<jabsRole:[ ]?sentinel>/i,
+  AiRoleLeader: /<aiRole:[ ]?leader>/i,
+  AiRoleFollower: /<aiRole:[ ]?follower>/i,
+  AiRoleGuardian: /<aiRole:[ ]?guardian>/i,
+  AiRoleWard: /<aiRole:[ ]?ward>/i,
+  AiRoleSolo: /<aiRole:[ ]?solo>/i,
+  AiRoleSentinel: /<aiRole:[ ]?sentinel>/i,
 
   // miscellaneous combat configurables.
   ConfigNoIdle: /<jabsConfig:[ ]?noIdle>/i,
