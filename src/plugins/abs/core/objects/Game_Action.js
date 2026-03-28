@@ -334,10 +334,13 @@ Game_Action.prototype.onParry = function(jabsBattler)
   jabsBattler.getBattler()
     .gainTp(guardSkillTp);
 
-  // play the parry animation.
-  const parryAnimationId = 122;
-  jabsBattler.getCharacter()
-    .requestAnimation(parryAnimationId);
+  // play the parry animation (0 = disabled via plugin parameters).
+  const parryAnimationId = J.ABS.Metadata.ParryCharacterAnimationId;
+  if (parryAnimationId > 0)
+  {
+    jabsBattler.getCharacter()
+      .requestAnimation(parryAnimationId);
+  }
 };
 
 /**

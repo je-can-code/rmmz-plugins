@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.6.0';
+J.ABS.Metadata.Version = '4.7.1';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -172,6 +172,14 @@ J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxO
 // disengage configurations.
 J.ABS.Metadata.ShowDisengageBalloon = (J.ABS.PluginParameters['showDisengageBalloon'] === 'true');
 J.ABS.Metadata.DisengageBalloonId = Number(J.ABS.PluginParameters['disengageBalloonId']) || 7;
+
+// guard / parry visuals.
+const parryCharacterAnimationRaw = J.ABS.PluginParameters['parryCharacterAnimationId'];
+const parryCharacterAnimationParsed = Number(parryCharacterAnimationRaw);
+J.ABS.Metadata.ParryCharacterAnimationId = (Number.isFinite(parryCharacterAnimationParsed)
+  && parryCharacterAnimationParsed >= 0)
+  ? Math.floor(parryCharacterAnimationParsed)
+  : 122;
 
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
