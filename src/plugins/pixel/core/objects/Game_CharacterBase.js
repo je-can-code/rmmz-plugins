@@ -1347,6 +1347,64 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
     }
   };
 
+  // When pressing a cardinal into a blocked wall while slightly off the tile grid,
+  // nudge the perpendicular axis toward the nearest tile center by up to one frame's
+  // distance and retry. This lets the character slip into corridors ("wall-slide").
+  // If the nudge doesn't open a passage, the nudge is fully reverted.
+  const tryWallSlide = (blockedDir) =>
+  {
+    const isHorizontal = (
+      blockedDir === J.PIXEL.Directions.LEFT ||
+      blockedDir === J.PIXEL.Directions.RIGHT
+    );
+
+    if (isHorizontal)
+    {
+      // Nudge Y toward the nearest tile-center row.
+      const targetY = Math.round(this._y);
+      const residual = targetY - this._y;
+
+      // Already centered; nothing to nudge.
+      if (Math.abs(residual) < 0.001) return 0;
+
+      // Apply the nudge clamped to one frame's travel.
+      const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
+      this._y += nudge;
+
+      // Re-check horizontal passability from the nudged position.
+      if (this.canPassStraight(blockedDir, straightDistance))
+      {
+        // Commit the nudge and execute the move.
+        this._realY = this._y;
+        return doStraightMove(blockedDir);
+      }
+
+      // Nudge did not open a passage; revert.
+      this._y -= nudge;
+      return 0;
+    }
+    else
+    {
+      // Nudge X toward the nearest tile-center column.
+      const targetX = Math.round(this._x);
+      const residual = targetX - this._x;
+
+      if (Math.abs(residual) < 0.001) return 0;
+
+      const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
+      this._x += nudge;
+
+      if (this.canPassStraight(blockedDir, straightDistance))
+      {
+        this._realX = this._x;
+        return doStraightMove(blockedDir);
+      }
+
+      this._x -= nudge;
+      return 0;
+    }
+  };
+
   // Handles straight inputs using a switch with shared execution and gentle re-centering.
   const handleStraight = (cardinalDir) =>
   {
@@ -1355,27 +1413,23 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
     {
       case J.PIXEL.Directions.DOWN:
       {
-        // Down if passable.
         if (canDown()) return doStraightMove(J.PIXEL.Directions.DOWN);
-        return 0;
+        return tryWallSlide(J.PIXEL.Directions.DOWN);
       }
       case J.PIXEL.Directions.UP:
       {
-        // Up if passable.
         if (canUp()) return doStraightMove(J.PIXEL.Directions.UP);
-        return 0;
+        return tryWallSlide(J.PIXEL.Directions.UP);
       }
       case J.PIXEL.Directions.LEFT:
       {
-        // Left if passable.
         if (canLeft()) return doStraightMove(J.PIXEL.Directions.LEFT);
-        return 0;
+        return tryWallSlide(J.PIXEL.Directions.LEFT);
       }
       case J.PIXEL.Directions.RIGHT:
       {
-        // Right if passable.
         if (canRight()) return doStraightMove(J.PIXEL.Directions.RIGHT);
-        return 0;
+        return tryWallSlide(J.PIXEL.Directions.RIGHT);
       }
       default:
       {
@@ -2549,7 +2603,10 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   this._y += finalDy;
 
   // post-overlap guard: if we ended up inside a solid tile, roll back.
-  if (this.isOverlappingSolidTiles(this._x, this._y, radius))
+  if (this.isThrough() === false && this.isOverlappingSolidTiles(
+    this._x + this.getCollisionPivotX(),
+    this._y + this.getCollisionPivotY(),
+    radius))
   {
     // restore the previous position.
     this._x = prevX;
