@@ -16,7 +16,7 @@ var J = J || {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.5.0';
+  const requiredJabsVersion = '4.6.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -38,7 +38,7 @@ J.APT.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.APT.Metadata = new JAptitude_PluginMetadata('J-Aptitude', '1.0.2');
+J.APT.Metadata = new JAptitude_PluginMetadata('J-Aptitude', '1.0.3');
 
 /**
  * A collection of all aliased methods for this plugin.

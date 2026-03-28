@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 CYCLE] An adapter to accommodate Cyclone-Movement in JABS.
+ * [v1.0.1 CYCLE] An adapter to accommodate Cyclone-Movement in JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -18,5 +18,11 @@
  * This plugin requires JABS.
  * This plugin requires Cyclone-Movement.
  * This plugin has no plugin parameter configuration.
+ * ----------------------------------------------------------------------------
+ * CHANGELOG:
+ * - 1.0.1
+ *    Raised minimum J-ABS version requirement to 4.6.0.
+ * - 1.0.0
+ *    Initial release.
  * ----------------------------------------------------------------------------
  */
