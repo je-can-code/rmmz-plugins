@@ -2358,8 +2358,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 
   // When pressing a cardinal into a blocked wall while slightly off the tile grid,
   // nudge the perpendicular axis toward the nearest tile center by up to one frame's
-  // distance and retry. This lets the character slip into corridors ("wall-slide").
-  // If the nudge doesn't open a passage, the nudge is fully reverted.
+  // distance and always commit the nudge. Over multiple frames the character drifts
+  // into alignment with the nearest passable corridor ("wall-slide"). The horizontal
+  // or vertical move in the blocked direction is only attempted once the nudged
+  // position actually passes the straight-passability check.
   const tryWallSlide = (blockedDir) =>
   {
     const isHorizontal = (
@@ -2376,20 +2378,21 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       // Already centered; nothing to nudge.
       if (Math.abs(residual) < 0.001) return 0;
 
-      // Apply the nudge clamped to one frame's travel.
+      // Apply and ALWAYS commit the nudge so it accumulates across frames.
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
       this._y += nudge;
+      this._realY = this._y;
 
       // Re-check horizontal passability from the nudged position.
       if (this.canPassStraight(blockedDir, straightDistance))
       {
-        // Commit the nudge and execute the move.
-        this._realY = this._y;
+        // Nudge opened a corridor; execute the horizontal move.
         return doStraightMove(blockedDir);
       }
 
-      // Nudge did not open a passage; revert.
-      this._y -= nudge;
+      // Corridor still blocked; nudge was kept for next frame's drift.
+      // Signal that we moved (the Y drift) so the walk animation plays.
+      this.setMovedThisFrame(true);
       return 0;
     }
     else
@@ -2402,14 +2405,14 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
       this._x += nudge;
+      this._realX = this._x;
 
       if (this.canPassStraight(blockedDir, straightDistance))
       {
-        this._realX = this._x;
         return doStraightMove(blockedDir);
       }
 
-      this._x -= nudge;
+      this.setMovedThisFrame(true);
       return 0;
     }
   };
