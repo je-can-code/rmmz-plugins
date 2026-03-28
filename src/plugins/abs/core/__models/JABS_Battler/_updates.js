@@ -491,9 +491,18 @@ JABS_Battler.prototype.shouldEngage = function(target, distance)
 {
   // check if we're in range of sight with the target.
   const isInSightRange = this.inSightRange(target, distance);
+  if (isInSightRange === false) return false;
 
-  // return the findings.
-  return isInSightRange;
+  // sentinels only pick up targets within their home territory; this mirrors the
+  // leash check in hasSentinelTargetExceededHomeRange so engage and leash use the
+  // same reference point and never produce an immediate engage-then-disengage cycle.
+  if (this.getBattlerRole().sentinel)
+  {
+    const distanceFromHome = target.distanceToPoint(this.getHomeX(), this.getHomeY());
+    if (distanceFromHome > this.getSightRadius()) return false;
+  }
+
+  return true;
 };
 //endregion update engagement
 

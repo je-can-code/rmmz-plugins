@@ -1205,8 +1205,10 @@ class JABS_AiManager
   /**
    * Determines whether or not a sentinel battler's current target has left the sentinel's home range.
    * Sentinels hold their home position and refuse to pursue targets that escape that zone.
+   * Pursuit radius is used (not sight) so the sentinel stays engaged while the target retreats
+   * within normal chase distance, matching standard engage/disengage semantics anchored to home.
    * @param {JABS_Battler} battler The sentinel battler to evaluate.
-   * @returns {boolean} True if the target is beyond the sentinel's home sight radius, false otherwise.
+   * @returns {boolean} True if the target is beyond the sentinel's home pursuit radius, false otherwise.
    */
   static hasSentinelTargetExceededHomeRange(battler)
   {
@@ -1218,8 +1220,8 @@ class JABS_AiManager
     // measure how far the target is from this sentinel's home coordinates.
     const distanceFromHome = target.distanceToPoint(battler.getHomeX(), battler.getHomeY());
 
-    // disengage when the target has left the home sight zone.
-    return distanceFromHome > battler.getSightRadius();
+    // disengage when the target has left the home pursuit zone.
+    return distanceFromHome > battler.getPursuitRadius();
   }
 
   /**
