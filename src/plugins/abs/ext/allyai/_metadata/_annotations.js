@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.1 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v2.1.1 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -90,7 +90,8 @@
  * ----------------------------------------------------------------------------
  * BATTLE MEMORIES:
  * Additionally, in the modes of "Variety" and "Full Force", there is an extra
- * functionality to be considered called "battle memories"- unique to ally ai.
+ * functionality to be considered called "battle memories". The data type is
+ * defined in J-ABS core and is primarily used by ally AI in those modes.
  * Battle Memories are effectively a snapshot recollection of your ally using
  * a skill against the enemy. The ally remembers the damage dealt, and the
  * level of effectiveness (elemental efficacy) versus a given target with a
@@ -115,6 +116,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.1
+ *    Raised minimum J-ABS version to 4.7.0.
+ * - 2.1.0
+ *    Raised minimum J-ABS version to 4.6.0.
+ *    Delegates cleanse/heal/buff support logic to shared `JABS_AI` base methods (same behavior, less duplication).
+ *    Fixed `aiComboChanceModifier` using `getMode().key` when `getMode()` already returns the mode key string.
+ *    Fixed `bestFitHealingAllSkill` calling `bestFitHealingOneSkill` with no arguments on multi-heal fallback.
+ *    Battle memory helpers now live on `JABS_AI`; `JABS_BattleMemory` class moved to J-ABS core.
  * - 2.0.1
  *    Consumed `RPGManager` update.
  * - 2.0.0

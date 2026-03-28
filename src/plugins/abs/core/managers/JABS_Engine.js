@@ -1427,27 +1427,14 @@ class JABS_Engine
     // this aligns with AABB/collision using `screenY() - (th / 2)` for origin.
     let spawnY = (y ?? caster.getY());
 
-    // if per-action options provided an explicit location, honor it (for any action type).
+    // apply per-projectile lateral offset if present; defaults are 0 so single-projectile
+    // skills are unaffected. for multi-projectile volleys, the delta was stored at decision
+    // time and is applied here against the caster's fire-time position.
     const options = action.getActionOptions();
     if (options)
     {
-      // retrieve the target location from the options.
-      const loc = options.getTargetLocation();
-
-      // if a concrete tile coordinate is present, override the spawn.
-      if (loc)
-      {
-        const lx = loc.getX();
-        const ly = loc.getY();
-
-        // respect only when both coordinates are defined.
-        if (lx !== null && ly !== null)
-        {
-          // assign the explicit location into the spawn position.
-          spawnX = lx;
-          spawnY = ly;
-        }
-      }
+      spawnX += options.getSpawnOffsetX();
+      spawnY += options.getSpawnOffsetY();
     }
 
     // assign the spawn coordinates to the action event.

@@ -16,11 +16,13 @@ JABS_BattlerCoreData.prototype.constructor = JABS_BattlerCoreData;
  * @param {number} battlerId This enemy id.
  * @param {number} teamId This battler's team id.
  * @param {JABS_EnemyAI} battlerAI This battler's converted AI.
+ * @param {JABS_BattlerRole} battlerRole This battler's structural coordination role.
  * @param {number} sightRange The sight range.
  * @param {number} alertedSightBoost The boost to sight range while alerted.
  * @param {number} pursuitRange The pursuit range.
  * @param {number} alertedPursuitBoost The boost to pursuit range while alerted.
  * @param {number} alertDuration The duration in frames of how long to remain alerted.
+ * @param {number|null} guardRange The explicit guardian engagement range, or null to use the ward-pursuit fallback.
  * @param {boolean} canIdle Whether or not this battler can idle.
  * @param {boolean} showHpBar Whether or not to show the hp bar.
  * @param {boolean} showBattlerName Whether or not to show the battler's name.
@@ -31,11 +33,13 @@ JABS_BattlerCoreData.prototype.initialize = function({
                                                        battlerId,
                                                        teamId,
                                                        battlerAI,
+                                                       battlerRole,
                                                        sightRange,
                                                        alertedSightBoost,
                                                        pursuitRange,
                                                        alertedPursuitBoost,
                                                        alertDuration,
+                                                       guardRange,
                                                        canIdle,
                                                        showHpBar,
                                                        showBattlerName,
@@ -60,6 +64,12 @@ JABS_BattlerCoreData.prototype.initialize = function({
    * @type {JABS_EnemyAI}
    */
   this._battlerAI = battlerAI;
+
+  /**
+   * The structural coordination role of this battler.
+   * @type {JABS_BattlerRole}
+   */
+  this._battlerRole = battlerRole ?? new JABS_BattlerRole();
 
   /**
    * The base range that this enemy can and engage targets within.
@@ -90,6 +100,13 @@ JABS_BattlerCoreData.prototype.initialize = function({
    * @type {number}
    */
   this._alertDuration = alertDuration;
+
+  /**
+   * The explicit engagement range for guardian-role battlers.
+   * When null, the guardian falls back to the largest ward pursuit radius among its allies.
+   * @type {number|null}
+   */
+  this._guardRange = guardRange ?? null;
 
   /**
    * Whether or not this battler will move around while idle.
@@ -164,6 +181,15 @@ JABS_BattlerCoreData.prototype.ai = function()
 };
 
 /**
+ * Gets this battler's structural coordination role.
+ * @returns {JABS_BattlerRole}
+ */
+JABS_BattlerCoreData.prototype.battlerRole = function()
+{
+  return this._battlerRole;
+};
+
+/**
  * Gets the base range that this enemy can engage targets within.
  * @returns {number}
  */
@@ -206,6 +232,16 @@ JABS_BattlerCoreData.prototype.alertedPursuitBoost = function()
 JABS_BattlerCoreData.prototype.alertDuration = function()
 {
   return this._alertDuration;
+};
+
+/**
+ * Gets the explicit guardian engagement range.
+ * When null, the guardian falls back to the largest ward pursuit radius.
+ * @returns {number|null}
+ */
+JABS_BattlerCoreData.prototype.guardRange = function()
+{
+  return this._guardRange;
 };
 
 /**

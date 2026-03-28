@@ -13,4 +13,8 @@
  * interpreted by RMMZ to be converted into on-the-map field-based encounters
  * leveraging JABS combat.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
  */

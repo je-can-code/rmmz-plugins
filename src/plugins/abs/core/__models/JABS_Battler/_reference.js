@@ -405,7 +405,7 @@ JABS_Battler.prototype.clearLeaderData = function()
 JABS_Battler.prototype.hasFollowers = function()
 {
   // if you're not a leader, you can't have followers.
-  if (!this.getAiMode().leader) return false;
+  if (!this.getBattlerRole().leader) return false;
 
   return this._followers.length > 0;
 };
@@ -738,6 +738,17 @@ JABS_Battler.prototype.getPursuitRadius = function()
   }
 
   return pursuit;
+};
+
+/**
+ * Gets the explicit guard range for this battler, if tagged.
+ * Only relevant for guardian-role enemies; actors always return null.
+ * When null, the guardian falls back to the largest pursuit radius among allied wards.
+ * @returns {number|null}
+ */
+JABS_Battler.prototype.getGuardRange = function()
+{
+  return this._guardRange;
 };
 
 /**
@@ -1223,6 +1234,16 @@ JABS_Battler.prototype.getY = function()
 JABS_Battler.prototype.getAiMode = function()
 {
   return this._aiMode;
+};
+
+/**
+ * Gets the structural coordination role of this battler.
+ * Enemies read from their notetags; actors and the player return a default empty role.
+ * @returns {JABS_BattlerRole}
+ */
+JABS_Battler.prototype.getBattlerRole = function()
+{
+  return this._battlerRole;
 };
 
 /**

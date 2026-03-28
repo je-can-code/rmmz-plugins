@@ -16,7 +16,7 @@ var J = J || {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.5.0';
+  const requiredJabsVersion = '4.6.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -42,7 +42,7 @@ J.ABS.EXT.SPEED.Metadata = {
   /**
    * The version of this plugin.
    */
-  Version: '1.0.1',
+  Version: '1.0.2',
 };
 
 /**
