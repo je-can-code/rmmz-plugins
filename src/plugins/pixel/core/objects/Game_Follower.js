@@ -155,4 +155,15 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
   J.PIXEL.Aliased.Game_Follower.get("moveDiagonally")
     .call(this, horz, vert);
 };
+
+/**
+ * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Anchors the follower's collision center near their feet to match the player's
+ * depth-biased collision feel. Keeps the follower train visually consistent.
+ * @returns {number} The Y pivot offset in tile units.
+ */
+Game_Follower.prototype.getCollisionPivotY = function()
+{
+  return 0.75;
+};
 //endregion Game_Follower

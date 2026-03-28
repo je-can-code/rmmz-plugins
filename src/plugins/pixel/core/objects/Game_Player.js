@@ -499,4 +499,17 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
     follower.stopPixelMoving();
   });
 };
+
+/**
+ * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Anchors the player's collision center near their feet rather than the tile center.
+ * This gives the implied top-down perspective its natural depth feel: the player can
+ * slide closer to objects from below (approaching northward) and is gently blocked
+ * sooner from above (approaching southward), matching visual depth expectations.
+ * @returns {number} The Y pivot offset in tile units.
+ */
+Game_Player.prototype.getCollisionPivotY = function()
+{
+  return 0.75;
+};
 //endregion Game_Player

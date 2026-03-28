@@ -3665,6 +3665,18 @@ Game_Event.prototype.isCollidedWithEvents = function(x, y)
   return colliders.length > 0;
 };
 
+/**
+ * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Anchors NPC and enemy event collision near their feet for natural depth feel.
+ * JABS action events (projectiles) are flagged as through and bypass tile collision
+ * entirely, so this override does not affect them.
+ * @returns {number} The Y pivot offset in tile units.
+ */
+Game_Event.prototype.getCollisionPivotY = function()
+{
+  return 0.75;
+};
+
 //endregion Game_Event
 
 //region Game_Follower
@@ -3823,6 +3835,17 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
   // Perform original logic.
   J.PIXEL.Aliased.Game_Follower.get("moveDiagonally")
     .call(this, horz, vert);
+};
+
+/**
+ * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Anchors the follower's collision center near their feet to match the player's
+ * depth-biased collision feel. Keeps the follower train visually consistent.
+ * @returns {number} The Y pivot offset in tile units.
+ */
+Game_Follower.prototype.getCollisionPivotY = function()
+{
+  return 0.75;
 };
 //endregion Game_Follower
 
@@ -4345,6 +4368,19 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
     // Otherwise, stop pixel moving to prevent residual drift.
     follower.stopPixelMoving();
   });
+};
+
+/**
+ * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Anchors the player's collision center near their feet rather than the tile center.
+ * This gives the implied top-down perspective its natural depth feel: the player can
+ * slide closer to objects from below (approaching northward) and is gently blocked
+ * sooner from above (approaching southward), matching visual depth expectations.
+ * @returns {number} The Y pivot offset in tile units.
+ */
+Game_Player.prototype.getCollisionPivotY = function()
+{
+  return 0.75;
 };
 //endregion Game_Player
 
