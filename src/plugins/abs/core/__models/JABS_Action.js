@@ -1272,6 +1272,26 @@ class JABS_Action
   }
 
   /**
+   * Gets the hitbox thickness in tiles for this JABS action.
+   * Applies to {@link J.ABS.Shapes.Line} and {@link J.ABS.Shapes.Wall} shapes.
+   * @returns {number} The thickness in tiles; defaults to 1 if not tagged.
+   */
+  getThicknessTiles()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.Thickness, true) ?? 1;
+  }
+
+  /**
+   * Gets the arc sweep in degrees for this JABS action.
+   * Applies to {@link J.ABS.Shapes.Arc} shapes.
+   * @returns {number} The degrees sweep; defaults to 180 if not tagged.
+   */
+  getDegrees()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.Degrees, true) ?? 180;
+  }
+
+  /**
    * Gets the knockback of this action.
    * @returns {number|null}
    */

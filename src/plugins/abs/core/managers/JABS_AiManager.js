@@ -1629,7 +1629,13 @@ class JABS_AiManager
       // get closer to the target so we can execute the skill.
       this.phase2MoveCloser(battler);
     }
-    // the battler is close enough.
+    // within proximity; check lateral axis alignment for narrow directional hitboxes.
+    else if (this.needsAxisAlignment(battler))
+    {
+      // step laterally so the target falls within the skill's effective hitbox path.
+      this.phase2AlignOnAxis(battler);
+    }
+    // the battler is close enough and aligned.
     else
     {
       // flag this battler as in-position to execute.
@@ -1696,6 +1702,104 @@ class JABS_AiManager
     {
       // move towards the target instead.
       battler.smartMoveTowardTarget();
+    }
+  }
+
+  /**
+   * Determines whether this battler needs to step laterally to align with the target
+   * along the axis the decided skill's hitbox travels.
+   * Only applies to narrow directional shapes: {@link J.ABS.Shapes.Line},
+   * {@link J.ABS.Shapes.Wall}, and {@link J.ABS.Shapes.Arc} with a narrow degree sweep.
+   * @param {JABS_Battler} battler The battler to check.
+   * @returns {boolean} True if a lateral alignment step is required before firing.
+   */
+  static needsAxisAlignment(battler)
+  {
+    // grab the decided action.
+    const [ action, ] = battler.getDecidedAction();
+
+    // only narrow directional hitboxes require lateral alignment.
+    const shape = action.getShape();
+    const isNarrowShape = (
+      shape === J.ABS.Shapes.Line ||
+      shape === J.ABS.Shapes.Wall ||
+      shape === J.ABS.Shapes.Arc
+    );
+
+    // self-targeting and wide shapes do not benefit from alignment.
+    if (isNarrowShape === false) return false;
+
+    // grab the relevant target (ally or enemy).
+    const target = battler.getAllyTarget() ?? battler.getTarget();
+    if (!target) return false;
+
+    const bx = battler.getX();
+    const by = battler.getY();
+    const tx = target.getX();
+    const ty = target.getY();
+
+    // derive the perpendicular misalignment based on the dominant approach axis.
+    const absDx = Math.abs(tx - bx);
+    const absDy = Math.abs(ty - by);
+    const misalignment = (absDx >= absDy)
+      ? Math.abs(ty - by)
+      : Math.abs(tx - bx);
+
+    // compute the effective half-width tolerance for the shape.
+    let tolerance;
+    if (shape === J.ABS.Shapes.Arc)
+    {
+      // cone half-width at proximity distance: proximity * tan(halfAngle).
+      // at the default 180 degrees, tan(90) = Infinity so alignment never fires for untagged arcs.
+      const halfAngleRad = (action.getDegrees() / 2) * (Math.PI / 180);
+      tolerance = action.getProximity() * Math.tan(halfAngleRad);
+    }
+    else
+    {
+      // line and wall use the physical tile half-thickness as their tolerance.
+      tolerance = action.getThicknessTiles() / 2;
+    }
+
+    // alignment is needed when the lateral gap exceeds the shape's effective half-width.
+    return misalignment > tolerance;
+  }
+
+  /**
+   * Steps this battler one tile laterally toward the axis shared with its target,
+   * so the decided skill's narrow hitbox will cover the target when fired.
+   * Falls back to setting in-position if the lateral tile is not passable.
+   * @param {JABS_Battler} battler The battler to align.
+   */
+  static phase2AlignOnAxis(battler)
+  {
+    // grab the relevant target (ally or enemy).
+    const target = battler.getAllyTarget() ?? battler.getTarget();
+
+    const bx = battler.getX();
+    const by = battler.getY();
+    const tx = target.getX();
+    const ty = target.getY();
+
+    const absDx = Math.abs(tx - bx);
+    const absDy = Math.abs(ty - by);
+    const character = battler.getCharacter();
+
+    // for a horizontal approach, slide along Y to match the target's row;
+    // for a vertical approach, slide along X to match the target's column.
+    const alignX = (absDx >= absDy) ? bx : tx;
+    const alignY = (absDx >= absDy) ? ty : by;
+
+    // verify the lateral step is passable before committing.
+    const direction = character.findDirectionTo(alignX, alignY);
+    if (character.canPass(character.x, character.y, direction))
+    {
+      // step toward the aligned position.
+      battler.smartMoveTowardCoordinates(alignX, alignY);
+    }
+    else
+    {
+      // tile is blocked; fire from current position rather than stalling indefinitely.
+      battler.setInPosition(true);
     }
   }
 
