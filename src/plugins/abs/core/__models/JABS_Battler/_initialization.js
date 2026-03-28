@@ -152,6 +152,14 @@ JABS_Battler.prototype.initCoreData = function(battlerCoreData)
    * @type {boolean}
    */
   this._inanimate = battlerCoreData.isInanimate();
+
+  /**
+   * The structural coordination role for this battler.
+   * Enemies read from core data (which reflects event-comment overrides with database fallback).
+   * Actors and the player default to an empty role.
+   * @type {JABS_BattlerRole}
+   */
+  this._battlerRole = battlerCoreData.battlerRole();
 };
 
 /**
@@ -165,15 +173,6 @@ JABS_Battler.prototype.initFromNotes = function()
    * @type {number}
    */
   this._prepareMax = this.getPrepareTime();
-
-  /**
-   * The structural coordination role for this battler.
-   * Actors and the player receive an empty default role.
-   * @type {JABS_BattlerRole}
-   */
-  this._battlerRole = this.isEnemy()
-    ? this.getBattler().enemy().jabsBattlerRole
-    : new JABS_BattlerRole();
 };
 
 /**

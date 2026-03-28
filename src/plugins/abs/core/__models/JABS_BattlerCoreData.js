@@ -16,6 +16,7 @@ JABS_BattlerCoreData.prototype.constructor = JABS_BattlerCoreData;
  * @param {number} battlerId This enemy id.
  * @param {number} teamId This battler's team id.
  * @param {JABS_EnemyAI} battlerAI This battler's converted AI.
+ * @param {JABS_BattlerRole} battlerRole This battler's structural coordination role.
  * @param {number} sightRange The sight range.
  * @param {number} alertedSightBoost The boost to sight range while alerted.
  * @param {number} pursuitRange The pursuit range.
@@ -31,6 +32,7 @@ JABS_BattlerCoreData.prototype.initialize = function({
                                                        battlerId,
                                                        teamId,
                                                        battlerAI,
+                                                       battlerRole,
                                                        sightRange,
                                                        alertedSightBoost,
                                                        pursuitRange,
@@ -60,6 +62,12 @@ JABS_BattlerCoreData.prototype.initialize = function({
    * @type {JABS_EnemyAI}
    */
   this._battlerAI = battlerAI;
+
+  /**
+   * The structural coordination role of this battler.
+   * @type {JABS_BattlerRole}
+   */
+  this._battlerRole = battlerRole ?? new JABS_BattlerRole();
 
   /**
    * The base range that this enemy can and engage targets within.
@@ -161,6 +169,15 @@ JABS_BattlerCoreData.prototype.team = function()
 JABS_BattlerCoreData.prototype.ai = function()
 {
   return this._battlerAI;
+};
+
+/**
+ * Gets this battler's structural coordination role.
+ * @returns {JABS_BattlerRole}
+ */
+JABS_BattlerCoreData.prototype.battlerRole = function()
+{
+  return this._battlerRole;
 };
 
 /**

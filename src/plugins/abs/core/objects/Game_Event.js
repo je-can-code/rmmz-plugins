@@ -236,6 +236,7 @@ Game_Event.prototype.parseEnemyComments = function()
   // determine the event-page overrides for the various core battler data.
   let teamId = this.getTeamIdOverrides() ?? enemyBattler.teamId();
   const ai = this.getBattlerAiOverrides() ?? enemyBattler.ai();
+  const battlerRole = this.getBattlerRoleOverrides() ?? enemyBattler.jabsBattlerRole;
   const sightRange = this.getSightRangeOverrides() ?? enemyBattler.sightRange();
   const alertedSightBoost = this.getAlertedSightBoostOverrides() ?? enemyBattler.alertedSightBoost();
   const pursuitRange = this.getPursuitRangeOverrides() ?? enemyBattler.pursuitRange();
@@ -263,6 +264,7 @@ Game_Event.prototype.parseEnemyComments = function()
   const battlerCoreData = JABS_BattlerCoreData.Builder()
     .setBattlerId(battlerId)
     .setBattlerAi(ai)
+    .setBattlerRole(battlerRole)
     .setTeamId(teamId)
     .setSightRange(sightRange)
     .setAlertedSightBoost(alertedSightBoost)
@@ -385,8 +387,10 @@ Game_Event.prototype.getBattlerAiOverrides = function()
   let executor = false;
   let reckless = false;
   let healer = false;
-  let follower = false;
-  let leader = false;
+  let cleanser = false;
+  let buffer = false;
+  let tactical = false;
+  let berserker = false;
 
   // check all the valid event commands to see if we have any ai traits.
   this.getValidCommentCommands()
@@ -398,48 +402,54 @@ Game_Event.prototype.getBattlerAiOverrides = function()
       // check if this battler has the "careful" ai trait.
       if (J.ABS.RegExp.AiTraitCareful.test(comment))
       {
-        // parse the value out of the regex capture group.
         careful = true;
       }
 
       // check if this battler has the "executor" ai trait.
       if (J.ABS.RegExp.AiTraitExecutor.test(comment))
       {
-        // parse the value out of the regex capture group.
         executor = true;
       }
 
       // check if this battler has the "reckless" ai trait.
       if (J.ABS.RegExp.AiTraitReckless.test(comment))
       {
-        // parse the value out of the regex capture group.
         reckless = true;
       }
 
       // check if this battler has the "healer" ai trait.
       if (J.ABS.RegExp.AiTraitHealer.test(comment))
       {
-        // parse the value out of the regex capture group.
         healer = true;
       }
 
-      // check if this battler has the "follower" ai trait.
-      if (J.ABS.RegExp.AiTraitFollower.test(comment))
+      // check if this battler has the "cleanser" ai trait.
+      if (J.ABS.RegExp.AiTraitCleanser.test(comment))
       {
-        // parse the value out of the regex capture group.
-        follower = true;
+        cleanser = true;
       }
 
-      // check if this battler has the "leader" ai trait.
-      if (J.ABS.RegExp.AiTraitLeader.test(comment))
+      // check if this battler has the "buffer" ai trait.
+      if (J.ABS.RegExp.AiTraitBuffer.test(comment))
       {
-        // if the value is present, then it must be
-        leader = true;
+        buffer = true;
+      }
+
+      // check if this battler has the "tactical" ai trait.
+      if (J.ABS.RegExp.AiTraitTactical.test(comment))
+      {
+        tactical = true;
+      }
+
+      // check if this battler has the "berserker" ai trait.
+      if (J.ABS.RegExp.AiTraitBerserker.test(comment))
+      {
+        berserker = true;
       }
     });
 
   // return the overridden battler ai.
-  return new JABS_EnemyAI(careful, executor, reckless, healer, follower, leader);
+  return new JABS_EnemyAI(careful, executor, reckless, healer, cleanser, buffer, tactical, berserker);
 };
 
 /**
@@ -766,6 +776,87 @@ Game_Event.prototype.getShowBattlerNameOverrides = function()
 
   // return the truth.
   return showBattlerName;
+};
+
+/**
+ * Parses out the battler role from event comments.
+ * Supports both the {@code <jabsRole:>} tag family and the legacy
+ * {@code <aiTrait: leader>} / {@code <aiTrait: follower>} aliases.
+ * @returns {JABS_BattlerRole|null} The constructed role, or null if no role tags were found.
+ */
+Game_Event.prototype.getBattlerRoleOverrides = function()
+{
+  // track whether any role tag was encountered at all.
+  let found = false;
+  let leader = false;
+  let follower = false;
+  let guardian = false;
+  let ward = false;
+  let solo = false;
+  let sentinel = false;
+
+  // check all the valid event commands to see if we have any role tags.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check the jabsRole tag family first.
+      if (J.ABS.RegExp.JabsRoleLeader.test(comment))
+      {
+        leader = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.JabsRoleFollower.test(comment))
+      {
+        follower = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.JabsRoleGuardian.test(comment))
+      {
+        guardian = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.JabsRoleWard.test(comment))
+      {
+        ward = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.JabsRoleSolo.test(comment))
+      {
+        solo = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.JabsRoleSentinel.test(comment))
+      {
+        sentinel = true;
+        found = true;
+      }
+
+      // also honor the legacy aiTrait:leader and aiTrait:follower aliases.
+      if (J.ABS.RegExp.AiTraitLeader.test(comment))
+      {
+        leader = true;
+        found = true;
+      }
+
+      if (J.ABS.RegExp.AiTraitFollower.test(comment))
+      {
+        follower = true;
+        found = true;
+      }
+    });
+
+  // return null when no role tags were present so the caller can fall back to the database.
+  if (found === false) return null;
+
+  return new JABS_BattlerRole(leader, follower, guardian, ward, solo, sentinel);
 };
 //endregion overrides
 

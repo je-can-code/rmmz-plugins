@@ -27,6 +27,13 @@ class JABS_BattlerCoreDataBuilder
   #battlerAi = new JABS_AI();
 
   /**
+   * The structural coordination role of this battler.
+   * @type {JABS_BattlerRole}
+   * @private
+   */
+  #battlerRole = new JABS_BattlerRole();
+
+  /**
    * The sight range of this battler.
    * @type {number}
    * @private
@@ -127,6 +134,7 @@ class JABS_BattlerCoreDataBuilder
       battlerId: this.#battlerId,
       teamId: this.#teamId,
       battlerAI: this.#battlerAi,
+      battlerRole: this.#battlerRole,
 
       // configure sight and alert battler data.
       sightRange: this.#sightRange,
@@ -248,6 +256,17 @@ class JABS_BattlerCoreDataBuilder
   setBattlerAi(battlerAi)
   {
     this.#battlerAi = battlerAi;
+    return this;
+  }
+
+  /**
+   * Sets the structural coordination role of this core data.
+   * @param {JABS_BattlerRole} battlerRole The role of this battler.
+   * @returns {this} This builder for fluent-building.
+   */
+  setBattlerRole(battlerRole)
+  {
+    this.#battlerRole = battlerRole;
     return this;
   }
 
