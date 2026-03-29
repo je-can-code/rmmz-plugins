@@ -1170,13 +1170,12 @@ class JABS_AiManager
     // check if the battler is "close".
     this.maintainSafeDistance(battler);
 
-    // check if we should turn towards the target.
-    // NOTE: this prevents 100% always facing the target, preventing perma-parry.
-    if (Math.randomInt(100) < 70)
-    {
-      // turn towards the target.
-      battler.turnTowardTarget();
-    }
+    // always turn toward the target during movement.
+    // with pixel movement, moveStraight is called every frame and setDirection
+    // keeps facing current regardless; a random non-turn here is cosmetically
+    // misleading without meaningful gameplay effect. the anti-parry roll has
+    // been moved to execution time where it actually controls fire direction.
+    battler.turnTowardTarget();
   }
 
   /**
@@ -1398,8 +1397,13 @@ class JABS_AiManager
    */
   static executeAiPhase2Action(battler)
   {
-    // face the target to execute the action.
+    // face the target and re-orient the volley to the fresh facing.
+    // anti-parry protection is provided by cast time: the enemy commits a
+    // direction when the cast begins, giving the player the cast window to
+    // read the angle and dodge or parry. skills with zero cast time fire
+    // instantly and are not intended to be parried.
     battler.turnTowardTarget();
+    this.restampActionDirections(battler);
 
     // destructure the primary action from the decided actions.
     const [ action, ] = battler.getDecidedAction();
@@ -1426,6 +1430,40 @@ class JABS_AiManager
 
     // start the cast timer.
     battler.setCastCountdown(action.getCastTime());
+  }
+
+  /**
+   * Re-orients the decided action volley to the battler's current facing direction.
+   * The spoke pattern (formation + count) is re-derived from the primary action's
+   * skill and rotated around the fresh facing so the volley reflects the actual
+   * target position at fire time, not the position captured at decision time.
+   * @param {JABS_Battler} battler The battler whose decided actions should be re-stamped.
+   */
+  static restampActionDirections(battler)
+  {
+    // grab the decided actions; nothing to do if empty.
+    const decidedActions = battler.getDecidedAction();
+    if (!decidedActions || decidedActions.length === 0) return;
+
+    // derive formation and count from the primary action's skill.
+    const [ primaryAction ] = decidedActions;
+    const skill = battler.getSkill(primaryAction.getBaseSkill().id);
+    const formation = $jabsEngine.resolveProjectileFormationForSkill(skill);
+    const projectileCount = $jabsEngine.resolveProjectileCountForSkill(skill);
+
+    // compute spoke directions from the fresh facing.
+    const freshFacing = battler.getCharacter().direction();
+    const freshDirections = $jabsEngine.determineActionDirections(freshFacing, formation, projectileCount);
+
+    // stamp each action with its corresponding fresh spoke direction.
+    decidedActions.forEach((action, index) =>
+    {
+      // only stamp if a direction exists for this spoke index.
+      if (freshDirections[index] !== undefined)
+      {
+        action.setFacing(freshDirections[index]);
+      }
+    });
   }
 
   /**

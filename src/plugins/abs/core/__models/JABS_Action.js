@@ -505,6 +505,17 @@ class JABS_Action
   }
 
   /**
+   * Overrides the facing direction stored on this action.
+   * Used to re-orient a volley at execution time after alignment movement
+   * has shifted the caster's position relative to the target.
+   * @param {2|4|6|8|1|3|7|9} direction The new facing direction.
+   */
+  setFacing(direction)
+  {
+    this._facing = direction;
+  }
+
+  /**
    * Whether or not this action was a result of terrain damage.
    * @returns {boolean}
    */
