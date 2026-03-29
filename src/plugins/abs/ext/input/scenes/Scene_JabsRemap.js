@@ -695,37 +695,94 @@ class Scene_JabsRemap
 
   /**
    * Ensures at most one logical action holds a given symbol across the mapping.
-   * Last occurrence wins in iteration order.
+   * The first key visited in {@link JABS_Button.assignableInputs} / {@link JABS_Button.allButtons}
+   * order keeps the symbol; later duplicates are cleared.
    * @param {Object<string, string[]>} mapping The mapping to sanitize.
    */
   sanitizeMappingUnique(mapping)
   {
-    // track the first owner of each symbol while scanning.
     const ownerBySymbol = {};
-
-    // first pass: record the first time we see a symbol and clear dups on the fly.
-    Object.keys(mapping)
-      .forEach(button =>
+    const visit = button =>
+    {
+      const list = mapping[button] || [];
+      if (list.length === 0)
       {
-        // get the list for this button (we treat only the first binding in UI).
-        const list = mapping[button] || [];
+        return;
+      }
+      const [ symbol ] = list;
+      if (!ownerBySymbol[symbol])
+      {
+        ownerBySymbol[symbol] = button;
+        return;
+      }
+      mapping[button] = [];
+    };
 
-        // if empty, continue.
-        if (list.length === 0) return;
+    const seen = new Set();
+    const assignable = JABS_Button.assignableInputs();
+    for (let i = 0; i < assignable.length; i++)
+    {
+      const button = assignable[i];
+      if (Object.prototype.hasOwnProperty.call(mapping, button))
+      {
+        visit(button);
+        seen.add(button);
+      }
+    }
 
-        // read the primary symbol.
-        const [ symbol ] = list;
+    const all = JABS_Button.allButtons();
+    for (let i = 0; i < all.length; i++)
+    {
+      const button = all[i];
+      if (seen.has(button))
+      {
+        continue;
+      }
+      if (Object.prototype.hasOwnProperty.call(mapping, button))
+      {
+        visit(button);
+        seen.add(button);
+      }
+    }
 
-        // if we’ve not seen it, mark ownership and continue.
-        if (!ownerBySymbol[symbol])
-        {
-          ownerBySymbol[symbol] = button;
-          return;
-        }
+    const keys = Object.keys(mapping);
+    for (let i = 0; i < keys.length; i++)
+    {
+      const button = keys[i];
+      if (seen.has(button))
+      {
+        continue;
+      }
+      visit(button);
+    }
+  }
 
-        // otherwise another action already owns it; unbind here.
-        mapping[button] = [];
-      });
+  /**
+   * Copies a controller-style mapping into {@link Input} namespace `JABS` so saves and registry UIs match gameplay.
+   * @param {Object<string, string|string[]>} mapping Logical JABS keys to physical symbol(s).
+   */
+  syncJabsInputRegistryFromControllerMapping(mapping)
+  {
+    const keys = Object.keys(mapping);
+    for (let i = 0; i < keys.length; i++)
+    {
+      const logicalKey = keys[i];
+      const raw = mapping[logicalKey];
+      let arr;
+      if (Array.isArray(raw))
+      {
+        arr = raw.slice(0);
+      }
+      else if (raw)
+      {
+        arr = [ raw ];
+      }
+      else
+      {
+        arr = [];
+      }
+      Input.setBindings('JABS', logicalKey, arr);
+    }
   }
 
   /**
@@ -752,6 +809,9 @@ class Scene_JabsRemap
 
       // persist the mapping into the system for saves.
       $gameSystem.setJabsInputConfig(key, mapping);
+
+      // keep the Input 'JABS' namespace aligned with the controller (snapshots + any registry readers).
+      this.syncJabsInputRegistryFromControllerMapping(mapping);
     }
 
     // commit any staged external (registry-backed) edits now that Apply was chosen.
@@ -780,9 +840,9 @@ class Scene_JabsRemap
     // replace the pending mapping with defaults.
     this._state()._pendingByKey[key] = defaults;
 
-    // refresh the actions to reflect defaults.
+    // refresh the actions list with pending JABS + staged external rows.
     this.getActionsWindow()
-      .setMapping(this._state()._pendingByKey[key]);
+      .setMapping(this.buildDisplayMapping());
 
     // flip back to the remap window.
     this.onActionsCancel();
@@ -871,9 +931,8 @@ class Scene_JabsRemap
       // stage an empty binding array for this external action.
       this.setPendingExternalBinding(cmd.ext.ns, cmd.ext.key, []);
 
-      // refresh to reflect the staged clear.
       this.getActionsWindow()
-        .refresh();
+        .setMapping(this.buildDisplayMapping());
       return;
     }
 
@@ -883,7 +942,7 @@ class Scene_JabsRemap
     const pending = this.currentPendingMapping();
     pending[button] = [];
     this.getActionsWindow()
-      .setMapping(pending);
+      .setMapping(this.buildDisplayMapping());
   }
 
   /**
@@ -898,9 +957,11 @@ class Scene_JabsRemap
     // set the capture flag.
     this._state()._isCapturing = true;
 
-    // show the capture prompt overlay.
+    // show the capture prompt overlay (humanized label for JABS logical keys).
+    const promptLabel = this.getActionsWindow()
+      .humanizeButton(button);
     this.getPromptWindow()
-      .startPrompt(button);
+      .startPrompt(promptLabel);
 
     // deactivate normal windows while capturing.
     this.getCommandWindow()
@@ -1142,12 +1203,8 @@ class Scene_JabsRemap
       return;
     }
 
-    // resolve and assign with conflict handling.
+    // resolve and assign with conflict handling (also refreshes the actions window mapping).
     this.assignWithConflictResolution(this._state()._capturingButton, captured);
-
-    // reflect the updated combined mapping (controller pending + external staged).
-    this.getActionsWindow()
-      .setMapping(this.buildDisplayMapping());
 
     // end the capture flow.
     this.endCapture();
