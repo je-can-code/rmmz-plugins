@@ -39,7 +39,7 @@ Game_Event.prototype.isCollidedWithEvents = function(x, y)
  */
 Game_Event.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 
 //endregion Game_Event

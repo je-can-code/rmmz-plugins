@@ -164,6 +164,6 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
  */
 Game_Follower.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 //endregion Game_Follower

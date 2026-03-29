@@ -361,8 +361,8 @@ Sprite_PixelCollisionOverlay.prototype._drawPlayerHitbox = function()
   const cx = $gamePlayer.x + $gamePlayer.getCollisionPivotX();
   const cy = $gamePlayer.y + $gamePlayer.getCollisionPivotY();
 
-  // Get the collision radius from the character base extension.
-  const radius = $gamePlayer.getCollisionRadius();
+  // Get the effective (pivot-clamped) collision radius.
+  const radius = $gamePlayer.getEffectiveRadius();
 
   // Build the hitbox from the radius.
   const hb = $gamePlayer._pixelHitbox(radius);

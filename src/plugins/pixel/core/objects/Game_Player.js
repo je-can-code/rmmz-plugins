@@ -510,6 +510,6 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
  */
 Game_Player.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 //endregion Game_Player

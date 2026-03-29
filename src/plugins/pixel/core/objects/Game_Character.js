@@ -14,16 +14,8 @@ Game_Character.pixelRepeatableMoveCommandCodes = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 J.PIXEL.Aliased.Game_Character.set('processMoveCommand', Game_Character.prototype.processMoveCommand);
 Game_Character.prototype.processMoveCommand = function(command)
 {
-  // when processing move routes, we are never pressing the move input.
+  // move route commands are never triggered by held player input.
   this.setMovePressed(false);
-
-  // check if an event is manipulating movement.
-  if ($gameMap.isEventRunning())
-  {
-    // round the x,y coordinates to move correctly.
-    this._x = Math.round(this.x);
-    this._y = Math.round(this.y);
-  }
 
   // perform the original logic.
   J.PIXEL.Aliased.Game_Character.get('processMoveCommand')

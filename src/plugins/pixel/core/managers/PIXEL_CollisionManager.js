@@ -71,6 +71,23 @@ class PIXEL_CollisionManager
       // Loop over all integer tiles horizontally.
       for (let x = 0; x < $dataMap.width; x++)
       {
+        // Check whether each adjacent tile can move INTO this tile.
+        // A tile that cannot be entered from any direction (e.g. a deny-region tile)
+        // must be treated as fully solid so that AABB overlap checks catch it.
+        const canEnterFromBelow = $gameMap.isPassable(x, y + 1, J.PIXEL.Directions.UP);
+        const canEnterFromAbove = $gameMap.isPassable(x, y - 1, J.PIXEL.Directions.DOWN);
+        const canEnterFromLeft  = $gameMap.isPassable(x - 1, y, J.PIXEL.Directions.RIGHT);
+        const canEnterFromRight = $gameMap.isPassable(x + 1, y, J.PIXEL.Directions.LEFT);
+
+        const canBeEntered = canEnterFromBelow || canEnterFromAbove || canEnterFromLeft || canEnterFromRight;
+
+        // If this tile is unreachable from every direction, mark it completely solid.
+        if (canBeEntered === false)
+        {
+          this._fillTile(x, y, this.Codes.Solid);
+          continue;
+        }
+
         // Determine whether moving down is allowed from this tile.
         const passDown = $gameMap.isPassable(x, y, J.PIXEL.Directions.DOWN);
 

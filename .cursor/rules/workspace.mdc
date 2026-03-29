@@ -17,7 +17,7 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 
 ## Author & Style
 
-- **No emojis** in code or responses unless explicitly requested.
+- **Emojis are allowed and encouraged** in responses and conversation. Never use them in code, comments, or commit messages.
 - **No unnecessary comments** that just restate the code. Comments explain *why*, not *what*.
 - Always read `rmmz-plugins/.junie/guidelines.md` before working in `rmmz-plugins` — it is the authoritative style reference.
 
@@ -62,6 +62,8 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 - **Package manager**: Bun everywhere. Never suggest `npm` or `yarn`.
 - **GitHub CLI**: `gh` is installed at `~/.local/bin/gh` and authenticated as `je-can-code`. Use it for all PR operations. Write PR bodies to a temp file and pass via `--body-file` to avoid heredoc quoting issues.
 - **Git credential helper**: configured via `gh auth setup-git` — `git push` works without GUI prompts.
+- **PR commits: stage everything.** When creating a PR commit, always stage and commit ALL modified/untracked files that belong to the changeset — including built output in `project/js/plugins/`. Never leave straggler files behind.
+- **Build & copy: always use `bun run hotfix`.** Never copy built plugin files manually. If `hotfix` fails for an unrelated reason, investigate and fix the root cause — do not fall back to manual copies.
 
 ## Known Future Work (do not tackle without checking first)
 

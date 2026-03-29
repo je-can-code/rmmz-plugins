@@ -5983,6 +5983,13 @@ JABS_Battler.prototype.executeDodgeMovement = function()
   const character = this.getCharacter();
   const direction = this.getDodgeDirection();
 
+  // #region agent log
+  if (this.getDodgeSteps() % 10 === 0)
+  {
+    fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:'H-C',location:'_updates.js:executeDodgeMovement',message:'dodge step fired',data:{stepsRemaining:this.getDodgeSteps(),distancePerFrame:character.distancePerFrame(),realMoveSpeed:character.realMoveSpeed(),dodgeModifier:character.dodgeModifier ? character.dodgeModifier() : null,frame:Graphics.frameCount},timestamp:Date.now()})}).catch(()=>{});
+  }
+  // #endregion agent log
+
   // move the character based on their direction.
   if (character.isDiagonalDirection(direction))
   {

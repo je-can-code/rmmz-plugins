@@ -330,6 +330,23 @@ class PIXEL_CollisionManager
       // Loop over all integer tiles horizontally.
       for (let x = 0; x < $dataMap.width; x++)
       {
+        // Check whether each adjacent tile can move INTO this tile.
+        // A tile that cannot be entered from any direction (e.g. a deny-region tile)
+        // must be treated as fully solid so that AABB overlap checks catch it.
+        const canEnterFromBelow = $gameMap.isPassable(x, y + 1, J.PIXEL.Directions.UP);
+        const canEnterFromAbove = $gameMap.isPassable(x, y - 1, J.PIXEL.Directions.DOWN);
+        const canEnterFromLeft  = $gameMap.isPassable(x - 1, y, J.PIXEL.Directions.RIGHT);
+        const canEnterFromRight = $gameMap.isPassable(x + 1, y, J.PIXEL.Directions.LEFT);
+
+        const canBeEntered = canEnterFromBelow || canEnterFromAbove || canEnterFromLeft || canEnterFromRight;
+
+        // If this tile is unreachable from every direction, mark it completely solid.
+        if (canBeEntered === false)
+        {
+          this._fillTile(x, y, this.Codes.Solid);
+          continue;
+        }
+
         // Determine whether moving down is allowed from this tile.
         const passDown = $gameMap.isPassable(x, y, J.PIXEL.Directions.DOWN);
 
@@ -877,16 +894,8 @@ Game_Character.pixelRepeatableMoveCommandCodes = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 J.PIXEL.Aliased.Game_Character.set('processMoveCommand', Game_Character.prototype.processMoveCommand);
 Game_Character.prototype.processMoveCommand = function(command)
 {
-  // when processing move routes, we are never pressing the move input.
+  // move route commands are never triggered by held player input.
   this.setMovePressed(false);
-
-  // check if an event is manipulating movement.
-  if ($gameMap.isEventRunning())
-  {
-    // round the x,y coordinates to move correctly.
-    this._x = Math.round(this.x);
-    this._y = Math.round(this.y);
-  }
 
   // perform the original logic.
   J.PIXEL.Aliased.Game_Character.get('processMoveCommand')
@@ -1187,15 +1196,8 @@ Game_CharacterBase.prototype.decrementRepeatMoveCount = function()
  */
 Game_CharacterBase.prototype.pixelRepeatCountForRoute = function()
 {
-  // ensure the manager is initialized before reading.
-  if (PIXEL_CollisionManager.collisionStepCount === undefined)
-  {
-    // initialize with defaults.
-    PIXEL_CollisionManager.initConfig();
-  }
-
-  // each route command repeats once per subcell to cover one full tile.
-  return PIXEL_CollisionManager.collisionStepCount;
+  // repeat enough frames to cover exactly one full tile at this character's speed.
+  return Math.ceil(1.0 / this.distancePerFrame());
 };
 
 /**
@@ -1684,7 +1686,7 @@ Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
   }
 
   // Acquire the collision radius in tile units for AABB evaluation.
-  const radius = this.getCollisionRadius();
+  const radius = this.getEffectiveRadius();
 
   // If we ended up overlapping solid tiles after this step, revert the move.
   // Through characters (e.g. JABS action events) bypass this check entirely.
@@ -1881,7 +1883,7 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
   const subCount = this._pixelCollisionSubCount(distance);
 
   // Update cached radius-based hitbox.
-  const radius = this.getCollisionRadius();
+  const radius = this.getEffectiveRadius();
 
   // Compute hitbox metrics relative to center.
   const hitbox = this._pixelHitbox(radius);
@@ -2093,6 +2095,18 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
     // Face the direction of travel.
     this.setDirection(direction);
   }
+
+  // #region agent log
+  if (Graphics.frameCount % 120 === 0)
+  {
+    const isPlayer = $gamePlayer && this === $gamePlayer;
+    const isAction = J.ABS && this.isJabsAction && this.isJabsAction();
+    if (isPlayer || isAction)
+    {
+      fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:isPlayer?'H-A/H-B':'H-D',location:'Game_CharacterBase.js:moveStraight',message:isPlayer?'player moveStraight speed':'action event moveStraight speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),isDashing:isPlayer?this.isDashing():null,moveSpeed:this._moveSpeed,isAction},timestamp:Date.now()})}).catch(()=>{});
+    }
+  }
+  // #endregion agent log
 };
 
 /**
@@ -2129,6 +2143,13 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
  */
 Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 {
+  // #region agent log
+  if ($gamePlayer && this === $gamePlayer && Graphics.frameCount % 120 === 0)
+  {
+    fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:'H-A/H-B',location:'Game_CharacterBase.js:pixelMoveByInput',message:'player movement speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),moveSpeed:this._moveSpeed,isDashing:this.isDashing(),isDodging:this.isDodging()},timestamp:Date.now()})}).catch(()=>{});
+  }
+  // #endregion agent log
+
   // Establish a local variable for the direction.
   let innerDirection = direction;
 
@@ -2381,6 +2402,8 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       blockedDir === J.PIXEL.Directions.RIGHT
     );
 
+    const radius = this.getEffectiveRadius();
+
     if (isHorizontal)
     {
       // Nudge Y toward the nearest tile-center row.
@@ -2390,9 +2413,20 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       // Already centered; nothing to nudge.
       if (Math.abs(residual) < 0.001) return 0;
 
-      // Apply and ALWAYS commit the nudge so it accumulates across frames.
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
-      this._y += nudge;
+      const nudgedY = this._y + nudge;
+
+      // Reject the nudge if the new Y position would overlap a solid tile.
+      if (this.isOverlappingSolidTiles(
+        this._x + this.getCollisionPivotX(),
+        nudgedY + this.getCollisionPivotY(),
+        radius))
+      {
+        return 0;
+      }
+
+      // Commit the nudge so it accumulates across frames.
+      this._y = nudgedY;
       this._realY = this._y;
 
       // Re-check horizontal passability from the nudged position.
@@ -2416,7 +2450,19 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       if (Math.abs(residual) < 0.001) return 0;
 
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
-      this._x += nudge;
+      const nudgedX = this._x + nudge;
+
+      // Reject the nudge if the new X position would overlap a solid tile.
+      if (this.isOverlappingSolidTiles(
+        nudgedX + this.getCollisionPivotX(),
+        this._y + this.getCollisionPivotY(),
+        radius))
+      {
+        return 0;
+      }
+
+      // Commit the nudge.
+      this._x = nudgedX;
       this._realX = this._x;
 
       if (this.canPassStraight(blockedDir, straightDistance))
@@ -2521,7 +2567,7 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   const diagStep = this.diagonalDistancePerFrame();
 
   // Update radius and hitbox metrics.
-  const radius = this.getCollisionRadius();
+  const radius = this.getEffectiveRadius();
 
   // Build the hitbox for collision sampling.
   const hitbox = this._pixelHitbox(radius);
@@ -2804,7 +2850,7 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
   }
 
   // Reject if a character occupies the diagonal landing point.
-  const radius = this.getCollisionRadius();
+  const radius = this.getEffectiveRadius();
   return this.isCharacterCollisionAt(nx, ny, radius) === false;
 };
 
@@ -2928,8 +2974,8 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     // Acquire candidate center in true fractional tile space.
     const cy = ch.y;
 
-    // Candidate half-extents in tiles; use the character's configured radius.
-    const cr = ch.getCollisionRadius();
+    // Candidate half-extents in tiles; use the character's effective (clamped) radius.
+    const cr = ch.getEffectiveRadius();
 
     // Candidate half width in tile units.
     const chw = cr;
@@ -2958,6 +3004,23 @@ Game_CharacterBase.prototype.getCollisionRadius = function()
 {
   // Return a sensible default radius in tile units for this character.
   return 0.3;
+};
+
+/**
+ * Gets the effective collision radius, clamped so the hitbox never extends past the
+ * tile boundary below the character. Enforces the invariant:
+ *   pivotY + effectiveRadius < 1.0
+ * This prevents the hitbox from bleeding into the tile below, which would cause false
+ * solid-overlap detections against deny-region tiles and similar boundary conditions.
+ * @returns {number} The clamped collision radius in tile units.
+ */
+Game_CharacterBase.prototype.getEffectiveRadius = function()
+{
+  // The maximum downward extent before bleeding into the tile below.
+  const maxRadius = 1.0 - this.getCollisionPivotY() - 1e-6;
+
+  // Return the smaller of the configured radius and the safe maximum.
+  return Math.min(this.getCollisionRadius(), maxRadius);
 };
 
 /**
@@ -3176,16 +3239,12 @@ Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, 
   // Tiny epsilon for seam bias into box interior.
   const eps = 1e-7;
 
-  // Current left/right integer column indices.
-  const curLeftIdx = Math.floor((px0 + hb.hx) * count + eps);
-  const curRightIdx = Math.floor((px0 + hb.hx + hb.w) * count - eps);
-
-  // Destination left/right integer column indices.
+  // Current and destination left integer column indices (the leading edge when moving left).
+  const curLeftIdx  = Math.floor((px0 + hb.hx) * count + eps);
   const destLeftIdx = Math.floor((px1 + hb.hx) * count + eps);
-  const destRightIdx = Math.floor((px1 + hb.hx + hb.w) * count - eps);
 
-  // Determine if we truly cross the seam to the left (entering destRightIdx).
-  const crossed = (destRightIdx === curLeftIdx - 1);
+  // True leftward crossing: destination left edge exactly one column left of current left edge.
+  const crossed = (destLeftIdx === curLeftIdx - 1);
   if (crossed === false)
   {
     // No seam entry; nothing to validate.
@@ -3198,7 +3257,7 @@ Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, 
 
   // Convert seam columns back to fractional for sampling.
   const curColX  = curLeftIdx / count;
-  const destColX = destRightIdx / count;
+  const destColX = destLeftIdx / count;
 
   // Iterate all overlapped rows on that column transition.
   for (let row = firstRowIdx; row <= lastRowIdx; row++)
@@ -3243,14 +3302,12 @@ Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb,
   // Epsilon for inward bias.
   const eps = 1e-7;
 
-  // Current right integer column index (last covered).
-  const curRightIdx = Math.floor((px0 + hb.hx + hb.w) * count - eps);
+  // Current and destination right integer column indices (the leading edge when moving right).
+  const curRightIdx  = Math.floor((px0 + hb.hx + hb.w) * count - eps);
+  const destRightIdx = Math.floor((px1 + hb.hx + hb.w) * count + eps);
 
-  // Destination left integer column index (first covered).
-  const destLeftIdx = Math.floor((px1 + hb.hx) * count + eps);
-
-  // True rightward seam crossing occurs when dest-left is exactly one beyond cur-right.
-  const crossed = (destLeftIdx === curRightIdx + 1);
+  // True rightward crossing: destination right edge exactly one column right of current right edge.
+  const crossed = (destRightIdx === curRightIdx + 1);
   if (crossed === false)
   {
     // Did not enter a new subcolumn; nothing to validate.
@@ -3263,7 +3320,7 @@ Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb,
 
   // Convert to fractional for sampling.
   const curColX  = curRightIdx / count;
-  const destColX = destLeftIdx / count;
+  const destColX = destRightIdx / count;
 
   // Iterate all overlapped rows on that column transition.
   for (let row = firstRowIdx; row <= lastRowIdx; row++)
@@ -3308,16 +3365,12 @@ Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, co
   // Epsilon for inward bias.
   const eps = 1e-7;
 
-  // Current top/bottom integer row indices.
-  const curTopIdx    = Math.floor((py0 + hb.hy) * count + eps);
-  const curBottomIdx = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+  // Current and destination top integer row indices (the leading edge when moving up).
+  const curTopIdx  = Math.floor((py0 + hb.hy) * count + eps);
+  const destTopIdx = Math.floor((py1 + hb.hy) * count + eps);
 
-  // Destination top/bottom integer row indices.
-  const destTopIdx    = Math.floor((py1 + hb.hy) * count + eps);
-  const destBottomIdx = Math.floor((py1 + hb.hy + hb.h) * count - eps);
-
-  // True upward crossing: destination bottom exactly one above current top.
-  const crossed = (destBottomIdx === curTopIdx - 1);
+  // True upward crossing: destination top edge exactly one row above current top edge.
+  const crossed = (destTopIdx === curTopIdx - 1);
   if (crossed === false)
   {
     // No seam entry; nothing to validate.
@@ -3330,7 +3383,7 @@ Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, co
 
   // Convert seam rows to fractional for sampling.
   const curRowY  = curTopIdx / count;
-  const destRowY = destBottomIdx / count;
+  const destRowY = destTopIdx / count;
 
   // Iterate all overlapped columns on that row transition.
   for (let col = firstColIdx; col <= lastColIdx; col++)
@@ -3375,14 +3428,12 @@ Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, 
   // Epsilon for inward bias.
   const eps = 1e-7;
 
-  // Current bottom integer row index.
-  const curBottomIdx = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+  // Current and destination bottom integer row indices (the leading edge when moving down).
+  const curBottomIdx  = Math.floor((py0 + hb.hy + hb.h) * count - eps);
+  const destBottomIdx = Math.floor((py1 + hb.hy + hb.h) * count + eps);
 
-  // Destination top integer row index.
-  const destTopIdx   = Math.floor((py1 + hb.hy) * count + eps);
-
-  // True downward crossing: destination top exactly one below current bottom.
-  const crossed = (destTopIdx === curBottomIdx + 1);
+  // True downward crossing: destination bottom edge exactly one row below current bottom edge.
+  const crossed = (destBottomIdx === curBottomIdx + 1);
   if (crossed === false)
   {
     // No seam entry; nothing to validate.
@@ -3394,8 +3445,8 @@ Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, 
   const lastColIdx  = Math.floor((px + hb.hx + hb.w) * count - eps);
 
   // Convert seam rows to fractional for sampling.
-  const curRowY  = curBottomIdx / count;
-  const destRowY = destTopIdx   / count;
+  const curRowY  = curBottomIdx  / count;
+  const destRowY = destBottomIdx / count;
 
   // Iterate all overlapped columns on that row transition.
   for (let col = firstColIdx; col <= lastColIdx; col++)
@@ -3585,7 +3636,7 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   const prevY = this._y;
 
   // acquire the collision radius for AABB evaluation.
-  const radius = this.getCollisionRadius();
+  const radius = this.getEffectiveRadius();
 
   // determine the nearest 8-direction for per-axis collision probing.
   const horzDir = (dx > 0)
@@ -3746,7 +3797,7 @@ Game_Event.prototype.isCollidedWithEvents = function(x, y)
  */
 Game_Event.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 
 //endregion Game_Event
@@ -3917,7 +3968,7 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
  */
 Game_Follower.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 //endregion Game_Follower
 
@@ -4452,7 +4503,7 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
  */
 Game_Player.prototype.getCollisionPivotY = function()
 {
-  return 0.75;
+  return 0.70;
 };
 //endregion Game_Player
 
@@ -4820,8 +4871,8 @@ Sprite_PixelCollisionOverlay.prototype._drawPlayerHitbox = function()
   const cx = $gamePlayer.x + $gamePlayer.getCollisionPivotX();
   const cy = $gamePlayer.y + $gamePlayer.getCollisionPivotY();
 
-  // Get the collision radius from the character base extension.
-  const radius = $gamePlayer.getCollisionRadius();
+  // Get the effective (pivot-clamped) collision radius.
+  const radius = $gamePlayer.getEffectiveRadius();
 
   // Build the hitbox from the radius.
   const hb = $gamePlayer._pixelHitbox(radius);
