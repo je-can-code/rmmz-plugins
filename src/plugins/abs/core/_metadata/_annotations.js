@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.7.0 JABS] Enables combat to be carried out on the map.
+ * [v4.7.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,18 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.7.1
+ *    Added plugin parameter "Parry Map Animation Id" for the database
+ *    animation played on successful parry (default 122; 0 disables).
+ *    Fixed Sprite_MapCastGauge gauge track being shortened by skill name width;
+ *    track now always occupies the full bitmap width.
+ *    Fixed enemy projectile fire direction baked at decision time rather than
+ *    execution time; added restampActionDirections to re-orient volleys to the
+ *    battler's facing at the moment of firing.
+ *    Fixed hasInteractableEventInFront using raw fractional player coordinates
+ *    with eventsXy, which always returned no match; coordinates are now rounded
+ *    to the nearest tile before the look-ahead is computed.
+ *    Removed obsolete J.ABS.EXT.CYCLE guard from hasInteractableEventInFront.
  * - 4.7.0
  *    Renamed battler role tag from <jabsRole: X> to <aiRole: X>.
  *    Fixed axis-alignment for AI using Line, Wall, and Arc hitboxes.
@@ -1913,6 +1925,18 @@
  * @text Disengage Balloon Id
  * @desc The id of the balloon to display when a battler disengages. Requires "Show Disengage Balloon" to be enabled.
  * @default 7
+ *
+ *
+ * @param guardParryVisualConfigs
+ * @text GUARD / PARRY VISUALS
+ *
+ * @param parryCharacterAnimationId
+ * @parent guardParryVisualConfigs
+ * @type number
+ * @min 0
+ * @text Parry Map Animation Id
+ * @desc Database animation id played on the map character when a parry succeeds. Use 0 to skip the effect.
+ * @default 122
  *
  *
  * @param quickmenuConfigs

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 DIAG] Enables diagonal movement.
+ * [v1.1.3 DIAG] Enables diagonal movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -77,6 +77,10 @@
  *   this.seekTarget();
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.3
+ *    Removed obsolete J.ABS.EXT.CYCLE / CycloneMovement guards from the
+ *    moveStraight and moveDiagonally overrides; diagonal logic now runs
+ *    unconditionally since Cyclone Movement is no longer supported.
  * - 1.1.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.1.1
