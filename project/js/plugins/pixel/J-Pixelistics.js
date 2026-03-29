@@ -2001,6 +2001,18 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
     probeY = y1;
   }
 
+  // AABB consistency guard: even when no subcell seam was crossed (player is very close
+  // to a wall), ensure the final probe AABB does not overlap a solid tile. This matches
+  // the post-move check in movePixelDistance and prevents canPassStraight from returning
+  // true when the step destination physically overlaps impassable terrain.
+  if (this.isThrough() === false && this.isOverlappingSolidTiles(
+    probeX + this.getCollisionPivotX(),
+    probeY + this.getCollisionPivotY(),
+    radius))
+  {
+    return false;
+  }
+
   // Finally, apply character-vs-character collision at the final landing point.
   const characterBlocked = this.isCharacterCollisionAt(probeX, probeY, radius);
 
