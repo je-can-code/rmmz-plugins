@@ -17,6 +17,7 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 
 ## Author & Style
 
+- **Project owner**: **Jeremy** (JE). The leading `J` in plugin namespaces (`J.ABS`, `J.PIXEL`, etc.) stands for JE. In conversation, use **Jeremy** or **JE** instead of impersonal phrasing like "the user said…" when referring to him.
 - **Emojis are allowed and encouraged** in responses and conversation. Never use them in code, comments, or commit messages.
 - **No unnecessary comments** that just restate the code. Comments explain *why*, not *what*.
 - Always read `rmmz-plugins/.junie/guidelines.md` before working in `rmmz-plugins` — it is the authoritative style reference.
