@@ -104,7 +104,7 @@ class JABS_EnemyAI
    * @param {JABS_Battler} user The battler of the AI deciding a skill.
    * @param {JABS_Battler} target The target battler to decide an action against.
    * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
-   * @returns {number|null} The skill id chosen to use, or null if none were valid choices for this AI.
+   * @returns {number[]} Exactly one skill id, or empty when no valid choice exists.
    */
   decideAction(user, target, availableSkills)
   {
@@ -128,23 +128,23 @@ class JABS_EnemyAI
       console.warn('a battler with the "reckless" trait was found with no skills.', user);
     }
 
-    // support layer — each method falls through (returns 0/null) when nothing is needed.
+    // support layer — each method returns [] when nothing is needed for that trait.
     if (cleanser)
     {
-      const id = this.decideCleanserAction(user, usableSkills);
-      if (id) return id;
+      const picked = this.decideCleanserAction(user, usableSkills);
+      if (picked.length) return picked;
     }
 
     if (healer)
     {
-      const id = this.decideHealerAction(user, usableSkills);
-      if (id) return id;
+      const picked = this.decideHealerAction(user, usableSkills);
+      if (picked.length) return picked;
     }
 
     if (buffer)
     {
-      const id = this.decideBufferAction(user, usableSkills);
-      if (id) return id;
+      const picked = this.decideBufferAction(user, usableSkills);
+      if (picked.length) return picked;
     }
 
     // berserker overrides normal attack strategy at low HP.
@@ -165,21 +165,32 @@ class JABS_EnemyAI
 
   //region support wrappers
   /**
+   * Wraps a base support helper result (0 means none) as a uniform skill-id list.
+   * @param {number} skillId The skill id from {@link JABS_AI} support methods, or 0.
+   * @returns {number[]}
+   */
+  wrapSupportSkillId(skillId)
+  {
+    if (!skillId) return [];
+    return [ skillId ];
+  }
+
+  /**
    * Handles the combo check and delegates to {@link #decideCleansing} from the base class.
    * @param {JABS_Battler} user The battler choosing the skill.
    * @param {number[]} usableSkills The currently available skills.
-   * @returns {number} A skill id if cleansing is warranted, or 0 if not.
+   * @returns {number[]} One skill id if cleansing is warranted, or empty if not.
    */
   decideCleanserAction(user, usableSkills)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return 0;
+    if (!usableSkills.length) return [];
 
-    return this.decideCleansing(user, usableSkills);
+    return this.wrapSupportSkillId(this.decideCleansing(user, usableSkills));
   }
 
   /**
@@ -187,38 +198,38 @@ class JABS_EnemyAI
    * The healing threshold is widened when the healer is reckless.
    * @param {JABS_Battler} user The battler choosing the skill.
    * @param {number[]} usableSkills The currently available skills.
-   * @returns {number} A skill id if healing is warranted, or 0 if not.
+   * @returns {number[]} One skill id if healing is warranted, or empty if not.
    */
   decideHealerAction(user, usableSkills)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return 0;
+    if (!usableSkills.length) return [];
 
     // reckless healers treat a wider threshold as "low".
     const threshold = this.reckless ? 0.9 : 0.6;
-    return this.decideHealing(user, usableSkills, threshold);
+    return this.wrapSupportSkillId(this.decideHealing(user, usableSkills, threshold));
   }
 
   /**
    * Handles the combo check and delegates to {@link #decideBuffing} from the base class.
    * @param {JABS_Battler} user The battler choosing the skill.
    * @param {number[]} usableSkills The currently available skills.
-   * @returns {number} A skill id if buffing is warranted, or 0 if not.
+   * @returns {number[]} One skill id if buffing is warranted, or empty if not.
    */
   decideBufferAction(user, usableSkills)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return 0;
+    if (!usableSkills.length) return [];
 
-    return this.decideBuffing(user, usableSkills);
+    return this.wrapSupportSkillId(this.decideBuffing(user, usableSkills));
   }
   //endregion support wrappers
 
@@ -229,19 +240,20 @@ class JABS_EnemyAI
    * @param {JABS_Battler} user The battler choosing the skill.
    * @param {number[]} usableSkills The currently available skills.
    * @param {JABS_Battler} target The current target.
-   * @returns {number}
+   * @returns {number[]}
    */
   decideBerserkerAction(user, usableSkills, target)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return user.getEnemyBasicAttack();
+    if (!usableSkills.length) return [ user.getEnemyBasicAttack() ];
 
     const strongestSkillId = this.determineStrongestSkill(usableSkills, user, target);
-    return strongestSkillId || user.getEnemyBasicAttack();
+    if (strongestSkillId) return [ strongestSkillId ];
+    return [ user.getEnemyBasicAttack() ];
   }
 
   /**
@@ -260,16 +272,16 @@ class JABS_EnemyAI
    * Applies careful/executor/tactical filters in sequence, then calls memory-influenced selection.
    * @param {JABS_Battler} user The battler to decide the skill for.
    * @param {number[]} usableSkills The available skills to use.
-   * @returns {number}
+   * @returns {number[]}
    */
   decideAttackAction(user, usableSkills)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return null;
+    if (!usableSkills.length) return [];
 
     const target = user.getTarget();
     let filtered = usableSkills;
@@ -292,7 +304,7 @@ class JABS_EnemyAI
       filtered = this.filterForTacticalSkills(filtered, user, target);
     }
 
-    return this.decideFromNoneToManySkills(user, filtered);
+    return [ this.decideFromNoneToManySkills(user, filtered) ];
   }
 
   /**
@@ -322,18 +334,18 @@ class JABS_EnemyAI
    * RNG decides this AI-controlled battler's fate.
    * @param {JABS_Battler} user The battler of the AI deciding the action.
    * @param {number[]} usableSkills The possible skills this AI can choose from.
-   * @returns {number} The decided skill id.
+   * @returns {number[]}
    */
   decideGenericAction(user, usableSkills)
   {
     if (this.shouldFollowWithCombo(user))
     {
-      return this.followWithCombo(user);
+      return [ this.followWithCombo(user) ];
     }
 
     if (!usableSkills.length)
     {
-      return user.getEnemyBasicAttack();
+      return [ user.getEnemyBasicAttack() ];
     }
 
     const randomIndex = Math.randomInt(usableSkills.length);
@@ -342,10 +354,10 @@ class JABS_EnemyAI
     // 50% chance of just using the basic attack instead.
     if (Math.randomInt(2) === 0)
     {
-      return user.getEnemyBasicAttack();
+      return [ user.getEnemyBasicAttack() ];
     }
 
-    return randomSkillId;
+    return [ randomSkillId ];
   }
   //endregion attack actions
 
@@ -374,11 +386,11 @@ class JABS_EnemyAI
       follower.setLeader(leader.getUuid());
     }
 
-    const decidedFollowerSkillId = this.decideActionForFollower(leader, follower);
+    const decidedFollowerPicks = this.decideActionForFollower(leader, follower);
 
-    if (this.isSkillIdValid(decidedFollowerSkillId))
+    if (decidedFollowerPicks.length && this.isSkillIdValid(decidedFollowerPicks[0]))
     {
-      follower.setLeaderDecidedAction(decidedFollowerSkillId);
+      follower.setLeaderDecidedAction(decidedFollowerPicks[0]);
     }
   }
 
@@ -410,19 +422,19 @@ class JABS_EnemyAI
    * Decides an action for the designated follower based on the leader's AI traits.
    * @param {JABS_Battler} leaderBattler The leader deciding the action.
    * @param {JABS_Battler} followerBattler The follower executing the decided action.
-   * @returns {number} The skill id for the follower to perform.
+   * @returns {number[]}
    */
   decideActionForFollower(leaderBattler, followerBattler)
   {
     if (this.shouldFollowWithCombo(followerBattler))
     {
-      return this.followWithCombo(followerBattler);
+      return [ this.followWithCombo(followerBattler) ];
     }
 
     const basicAttackSkillId = followerBattler.getEnemyBasicAttack();
     let skillsToUse = followerBattler.getSkillIdsFromEnemy();
 
-    if (!skillsToUse.length) return basicAttackSkillId;
+    if (!skillsToUse.length) return [ basicAttackSkillId ];
 
     const { healer, careful, executor } = this;
 
@@ -439,19 +451,19 @@ class JABS_EnemyAI
       skillsToUse = this.decideAttackAction(leaderBattler, skillsToUse);
     }
 
-    if (!skillsToUse || (Array.isArray(skillsToUse) && skillsToUse.length === 0))
+    if (skillsToUse.length === 0)
     {
-      return basicAttackSkillId;
+      return [ basicAttackSkillId ];
     }
 
-    const chosenSkillId = Array.isArray(skillsToUse) ? skillsToUse.at(0) : skillsToUse;
+    const chosenSkillId = skillsToUse.at(0);
 
     const followerGameBattler = followerBattler.getBattler();
     const skill = followerGameBattler.skill(chosenSkillId);
 
-    if (!followerGameBattler.canPaySkillCost(skill)) return basicAttackSkillId;
+    if (!followerGameBattler.canPaySkillCost(skill)) return [ basicAttackSkillId ];
 
-    return chosenSkillId;
+    return [ chosenSkillId ];
   }
 
   /**
@@ -621,7 +633,8 @@ class JABS_EnemyAI
       bestSkillId = biggestHealSkill;
     }
 
-    return bestSkillId;
+    if (!bestSkillId) return [];
+    return [ bestSkillId ];
   }
   //endregion leader
 
@@ -630,7 +643,7 @@ class JABS_EnemyAI
    * Handles how a follower decides its next action while engaged.
    * If a leader is ready, waits for their directive. Otherwise basic attacks.
    * @param {JABS_Battler} battler The follower battler deciding an action.
-   * @returns {number|null}
+   * @returns {number[]}
    */
   decideFollowerAi(battler)
   {
@@ -658,7 +671,7 @@ class JABS_EnemyAI
   /**
    * Allows the leader to decide this follower's next action.
    * @param {JABS_Battler} battler The follower deferring to a leader.
-   * @returns {number|null}
+   * @returns {number[]}
    */
   decideFollowerAiByLeader(battler)
   {
@@ -666,24 +679,24 @@ class JABS_EnemyAI
 
     const leaderDecidedSkillId = battler.getNextLeaderDecidedAction();
 
-    if (!this.isSkillIdValid(leaderDecidedSkillId)) return null;
+    if (!this.isSkillIdValid(leaderDecidedSkillId)) return [];
 
-    return leaderDecidedSkillId;
+    return [ leaderDecidedSkillId ];
   }
 
   /**
    * Allows the follower to decide their own next action.
    * Followers with no leader always basic attack.
    * @param {JABS_Battler} battler The follower deciding for themselves.
-   * @returns {number|null}
+   * @returns {number[]}
    */
   decideFollowerAiBySelf(battler)
   {
     const basicAttackSkillId = battler.getEnemyBasicAttack();
 
-    if (!this.isSkillIdValid(basicAttackSkillId)) return null;
+    if (!this.isSkillIdValid(basicAttackSkillId)) return [];
 
-    return basicAttackSkillId;
+    return [ basicAttackSkillId ];
   }
   //endregion follower
 
