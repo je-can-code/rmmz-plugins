@@ -349,20 +349,20 @@ JABS_Battler.prototype.initIdleInfo = function()
    * Null when the battler has no current wander target.
    * @type {{x: number, y: number}|null}
    */
-  this._pixelIdleDest = null;
+  this._pixelIdleDest ??= null;
 
   /**
    * The number of frames remaining before this battler picks a new wander destination.
    * @type {number}
    */
-  this._pixelIdleWait = 0;
+  this._pixelIdleWait ??= 0;
 
   /**
    * The number of consecutive frames this battler has been unable to reach its
    * current wander destination. Used to detect and escape stuck states.
    * @type {number}
    */
-  this._pixelIdleStuckFrames = 0;
+  this._pixelIdleStuckFrames ??= 0;
 };
 
 /**
@@ -396,6 +396,11 @@ JABS_Battler.pixelIdleStuckLimit = 90;
  */
 JABS_Battler.prototype.updatePixelIdleWander = function()
 {
+  // ensure properties are present (handles pre-plugin saves).
+  this._pixelIdleDest ??= null;
+  this._pixelIdleWait ??= 0;
+  this._pixelIdleStuckFrames ??= 0;
+
   // waiting — tick down and hold position.
   if (this._pixelIdleWait > 0)
   {

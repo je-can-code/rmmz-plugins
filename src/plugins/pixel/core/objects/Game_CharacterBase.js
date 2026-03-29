@@ -17,6 +17,8 @@ Game_CharacterBase.prototype.initMembers = function()
 
 /**
  * Initializes the new members related to this plugin.
+ * Uses ??= so that pre-existing values on a loaded save are never overwritten,
+ * making this method safe to call defensively at any point.
  */
 Game_CharacterBase.prototype.initPixelMovementMembers = function()
 {
@@ -26,70 +28,93 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
   this._j ||= {};
 
   /**
+   * The pixel movement namespace, scoped under _j to avoid collisions
+   * with properties introduced by other plugins.
+   */
+  this._j._pixel ||= {};
+
+  /**
    * The collection for tracking the {@link Point} coordinates for all members.
    * This is managed in a first-in-first-out (FIFO) style.
    * @type {Point[]}
    */
-  this._j._positionalRecords = [];
+  this._j._pixel._positionalRecords ??= [];
 
   /**
    * Whether or not one of the directional inputs are being held down.
    * @type {boolean} True if at least one direction is being held, false otherwise.
    */
-  this._j._movePressing = false;
+  this._j._pixel._movePressing ??= false;
 
   /**
    * The move distance for tracking steps.
    * @type {number}
    */
-  this._j._moveDistance = 0;
+  this._j._pixel._moveDistance ??= 0;
 
   /**
    * The number of steps this character has taken.
    * @type {number}
    */
-  this._j._pixelSteps = 0;
+  this._j._pixel._steps ??= 0;
 
   /**
    * Cooldown frames after a pixel move before another can be issued.
    * Prevents AllyAI from pushing every single frame.
    * @type {number}
    */
-  this._j._pixelMoveCooldown = 0;
+  this._j._pixel._moveCooldown ??= 0;
 
   /**
    * Whether a pixel-route repeat is currently active for this character.
    * Used to repeat a single move-route command multiple times to cover the intended distance.
    * @type {boolean}
    */
-  this._j._repeatMoveActive = false;
+  this._j._pixel._repeatMoveActive ??= false;
 
   /**
    * How many remaining repeat-ticks are left for the current route command.
    * @type {number}
    */
-  this._j._repeatMoveCount = 0;
+  this._j._pixel._repeatMoveCount ??= 0;
 
   /**
    * Flag indicating whether a pixel step occurred this frame.
    * Used to preserve walk animation even when render coords snap each update.
    * @type {boolean}
    */
-  this._j._movedThisFrame = false;
+  this._j._pixel._movedThisFrame ??= false;
 
   /**
    * The cached direction for the micro-route (if any).
    * @type {number}
    */
-  this._j._mrDir = 0;
+  this._j._pixel._mrDir ??= 0;
 
   /**
    * The remaining frames to apply the cached micro-route direction.
    * @type {number}
    */
-  this._j._mrFrames = 0;
+  this._j._pixel._mrFrames ??= 0;
 };
 //endregion init
+
+/**
+ * Returns the pixel movement state namespace for this character.
+ * If the namespace is absent — for example when loading a save created before
+ * this plugin was installed — it is initialized on demand so that no individual
+ * getter or setter needs its own defensive guard.
+ * @returns {object} The `this._j._pixel` state object.
+ */
+Game_CharacterBase.prototype._pixelState = function()
+{
+  if (!this._j || !this._j._pixel)
+  {
+    this.initPixelMovementMembers();
+  }
+
+  return this._j._pixel;
+};
 
 //region properties
 /**
@@ -99,7 +124,7 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
 Game_CharacterBase.prototype.getPixelMoveCooldown = function()
 {
   // Return the remaining cooldown frames for pixel movement.
-  return this._j._pixelMoveCooldown;
+  return this._pixelState()._moveCooldown;
 };
 
 /**
@@ -109,7 +134,7 @@ Game_CharacterBase.prototype.getPixelMoveCooldown = function()
 Game_CharacterBase.prototype.setPixelMoveCooldown = function(frames)
 {
   // Assign the new cooldown frame count for pixel movement.
-  this._j._pixelMoveCooldown = frames;
+  this._pixelState()._moveCooldown = frames;
 };
 
 /**
@@ -118,7 +143,7 @@ Game_CharacterBase.prototype.setPixelMoveCooldown = function(frames)
  */
 Game_CharacterBase.prototype.isRepeatMoveActive = function()
 {
-  return this._j._repeatMoveActive === true;
+  return this._pixelState()._repeatMoveActive === true;
 };
 
 /**
@@ -127,7 +152,7 @@ Game_CharacterBase.prototype.isRepeatMoveActive = function()
 Game_CharacterBase.prototype.beginRepeatMove = function()
 {
   // activate the repeat flag.
-  this._j._repeatMoveActive = true;
+  this._pixelState()._repeatMoveActive = true;
 };
 
 /**
@@ -136,7 +161,7 @@ Game_CharacterBase.prototype.beginRepeatMove = function()
 Game_CharacterBase.prototype.stopRepeatMove = function()
 {
   // deactivate the repeat flag.
-  this._j._repeatMoveActive = false;
+  this._pixelState()._repeatMoveActive = false;
 };
 
 /**
@@ -145,7 +170,7 @@ Game_CharacterBase.prototype.stopRepeatMove = function()
  */
 Game_CharacterBase.prototype.getRepeatMoveCount = function()
 {
-  return this._j._repeatMoveCount;
+  return this._pixelState()._repeatMoveCount;
 };
 
 /**
@@ -155,7 +180,7 @@ Game_CharacterBase.prototype.getRepeatMoveCount = function()
 Game_CharacterBase.prototype.setRepeatMoveCount = function(count)
 {
   // assign the new repeat count.
-  this._j._repeatMoveCount = count;
+  this._pixelState()._repeatMoveCount = count;
 };
 
 /**
@@ -212,7 +237,7 @@ Game_CharacterBase.prototype.isPixelOnCooldown = function()
 Game_CharacterBase.prototype.setMovedThisFrame = function(moved = true)
 {
   // Flag whether or not we moved this frame.
-  this._j._movedThisFrame = moved;
+  this._pixelState()._movedThisFrame = moved;
 };
 
 /**
@@ -222,7 +247,7 @@ Game_CharacterBase.prototype.setMovedThisFrame = function(moved = true)
 Game_CharacterBase.prototype.didMoveThisFrame = function()
 {
   // Return whether or not we moved this frame.
-  return this._j._movedThisFrame === true;
+  return this._pixelState()._movedThisFrame === true;
 };
 
 /**
@@ -231,7 +256,7 @@ Game_CharacterBase.prototype.didMoveThisFrame = function()
 Game_CharacterBase.prototype.clearMovedThisFrame = function()
 {
   // Reset the frame-based movement flag.
-  this._j._movedThisFrame = false;
+  this._pixelState()._movedThisFrame = false;
 };
 
 /**
@@ -241,7 +266,7 @@ Game_CharacterBase.prototype.clearMovedThisFrame = function()
 Game_CharacterBase.prototype.getMicroRouteDirection = function()
 {
   // Return the cached micro-route direction.
-  return this._j._mrDir;
+  return this._pixelState()._mrDir;
 };
 
 /**
@@ -251,7 +276,7 @@ Game_CharacterBase.prototype.getMicroRouteDirection = function()
 Game_CharacterBase.prototype.setMicroRouteDirection = function(newDirection)
 {
   // Assign the new cached micro-route direction.
-  this._j._mrDir = newDirection;
+  this._pixelState()._mrDir = newDirection;
 };
 
 /**
@@ -261,7 +286,7 @@ Game_CharacterBase.prototype.setMicroRouteDirection = function(newDirection)
 Game_CharacterBase.prototype.getMicroRouteFrames = function()
 {
   // Return how many frames remain for the cached micro-route.
-  return this._j._mrFrames;
+  return this._pixelState()._mrFrames;
 };
 
 /**
@@ -271,7 +296,7 @@ Game_CharacterBase.prototype.getMicroRouteFrames = function()
 Game_CharacterBase.prototype.setMicroRouteFrames = function(frames)
 {
   // Assign the remaining frames to apply the cached micro-route.
-  this._j._mrFrames = frames;
+  this._pixelState()._mrFrames = frames;
 };
 
 /**
@@ -315,7 +340,7 @@ Game_CharacterBase.prototype.isMicroRouting = function()
  */
 Game_CharacterBase.prototype.positionalRecords = function()
 {
-  return this._j._positionalRecords;
+  return this._pixelState()._positionalRecords;
 };
 
 /**
@@ -323,7 +348,7 @@ Game_CharacterBase.prototype.positionalRecords = function()
  */
 Game_CharacterBase.prototype.clearPositionalRecords = function()
 {
-  this._j._positionalRecords = [];
+  this._pixelState()._positionalRecords = [];
 };
 
 /**
@@ -426,7 +451,7 @@ Game_CharacterBase.prototype.update = function()
  */
 Game_CharacterBase.prototype.moveDistance = function()
 {
-  return this._j._moveDistance;
+  return this._pixelState()._moveDistance;
 };
 
 /**
@@ -436,7 +461,7 @@ Game_CharacterBase.prototype.moveDistance = function()
 Game_CharacterBase.prototype.modMoveDistance = function(distance)
 {
   // modify the move distance by the given amount.
-  this._j._moveDistance += distance;
+  this._pixelState()._moveDistance += distance;
 };
 
 /**
@@ -445,7 +470,7 @@ Game_CharacterBase.prototype.modMoveDistance = function(distance)
  */
 Game_CharacterBase.prototype.pixelSteps = function()
 {
-  return this._j._pixelSteps;
+  return this._pixelState()._steps;
 };
 
 /**
@@ -454,7 +479,7 @@ Game_CharacterBase.prototype.pixelSteps = function()
  */
 Game_CharacterBase.prototype.takePixelSteps = function(steps = 1)
 {
-  this._j._pixelSteps += steps;
+  this._pixelState()._steps += steps;
 };
 
 /**
@@ -462,7 +487,7 @@ Game_CharacterBase.prototype.takePixelSteps = function(steps = 1)
  */
 Game_CharacterBase.prototype.clearPixelSteps = function()
 {
-  this._j._pixelSteps = 0;
+  this._pixelState()._steps = 0;
 };
 
 /**
@@ -489,7 +514,7 @@ Game_CharacterBase.prototype.updatePixelStepping = function()
  */
 Game_CharacterBase.prototype.clearMoveDistance = function()
 {
-  this._j._moveDistance = 0;
+  this._pixelState()._moveDistance = 0;
 };
 
 /**
@@ -505,7 +530,7 @@ Game_CharacterBase.prototype.isMoving = function()
     .call(this);
 
   // Include pixel-step movement that occurred this frame.
-  const movedThisFrame = !!this._j._movedThisFrame;
+  const movedThisFrame = this.didMoveThisFrame();
 
   // Return whether we are moving per engine or because of a pixel step.
   return original || movedThisFrame;
@@ -517,7 +542,7 @@ Game_CharacterBase.prototype.isMoving = function()
  */
 Game_CharacterBase.prototype.isMovePressed = function()
 {
-  return this._j._movePressing;
+  return this._pixelState()._movePressing;
 };
 
 /**
@@ -526,7 +551,7 @@ Game_CharacterBase.prototype.isMovePressed = function()
  */
 Game_CharacterBase.prototype.setMovePressed = function(pressed)
 {
-  this._j._movePressing = pressed;
+  this._pixelState()._movePressing = pressed;
 };
 
 /**
