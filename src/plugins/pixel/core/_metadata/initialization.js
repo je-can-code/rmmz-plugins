@@ -18,7 +18,7 @@ J.PIXEL.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.Metadata = new JPixelistics_PluginMetadata('J-Pixelistics', '1.0.0');
+J.PIXEL.Metadata = new JPixelistics_PluginMetadata('J-Pixelistics', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.

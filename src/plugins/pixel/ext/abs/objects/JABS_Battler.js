@@ -1,11 +1,181 @@
 //region JABS_Battler
 /**
+ * Extends {@link #initIdleInfo}.<br/>
+ * Adds pixel-movement-aware idle destination and wait timer state.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('initIdleInfo', JABS_Battler.prototype.initIdleInfo);
+JABS_Battler.prototype.initIdleInfo = function()
+{
+  // perform original logic.
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('initIdleInfo').call(this);
+
+  /**
+   * The pixel-space destination this battler is currently wandering toward.
+   * Null when the battler has no current wander target.
+   * @type {{x: number, y: number}|null}
+   */
+  this._pixelIdleDest = null;
+
+  /**
+   * The number of frames remaining before this battler picks a new wander destination.
+   * @type {number}
+   */
+  this._pixelIdleWait = 0;
+
+  /**
+   * The number of consecutive frames this battler has been unable to reach its
+   * current wander destination. Used to detect and escape stuck states.
+   * @type {number}
+   */
+  this._pixelIdleStuckFrames = 0;
+};
+
+/**
+ * Overrides {@link #isHome}.<br/>
+ * Uses a distance-based check instead of integer tile equality, since pixel
+ * movement coordinates are fractional and exact equality is never satisfied.
+ * @returns {boolean} True if within half a tile of home, false otherwise.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('isHome', JABS_Battler.prototype.isHome);
+JABS_Battler.prototype.isHome = function()
+{
+  return this.distanceToHome() < 0.5;
+};
+
+/**
+ * The number of consecutive traveling frames allowed before a destination is
+ * abandoned. At 60 fps this is 1.5 seconds, which is enough time to cross the
+ * entire wander radius; if the battler hasn't arrived by then it is stuck.
+ * @type {number}
+ */
+JABS_Battler.pixelIdleStuckLimit = 90;
+
+/**
+ * Executes the pixel-aware idle wander state machine for one game frame.
+ *
+ * States:
+ *  - Waiting: decrement the wait timer; do not move.
+ *  - Traveling: move toward the current destination; on arrival, transition to Waiting.
+ *              Abandons the destination and enters Waiting if stuck for too long.
+ *  - Choosing: no destination and no wait; roll a new destination or wait if none found.
+ */
+JABS_Battler.prototype.updatePixelIdleWander = function()
+{
+  // waiting — tick down and hold position.
+  if (this._pixelIdleWait > 0)
+  {
+    this._pixelIdleWait--;
+    return;
+  }
+
+  // traveling — move toward the chosen destination.
+  if (this._pixelIdleDest !== null)
+  {
+    const { x, y } = this._pixelIdleDest;
+
+    // arrived when within a comfortable fraction of a tile.
+    const arrived = Math.hypot(this.getX() - x, this.getY() - y) < 0.25;
+
+    if (arrived === false)
+    {
+      // count consecutive frames spent trying to reach this destination.
+      this._pixelIdleStuckFrames++;
+
+      // if stuck too long, abandon the destination rather than twitching forever.
+      if (this._pixelIdleStuckFrames >= JABS_Battler.pixelIdleStuckLimit)
+      {
+        this._pixelIdleDest = null;
+        this._pixelIdleStuckFrames = 0;
+        this._pixelIdleWait = this._rollIdleWaitDuration();
+        return;
+      }
+
+      // keep moving toward the destination this frame.
+      this.smartMoveTowardCoordinates(x, y);
+      return;
+    }
+
+    // arrived — clear the destination and start the post-arrival wait.
+    this._pixelIdleDest = null;
+    this._pixelIdleStuckFrames = 0;
+    this._pixelIdleWait = this._rollIdleWaitDuration();
+    return;
+  }
+
+  // no destination and no wait — try to roll a valid wander point.
+  const dest = this._rollIdleDestination();
+
+  // if all candidates were impassable, wait a cycle before trying again.
+  if (dest === null)
+  {
+    this._pixelIdleWait = this._rollIdleWaitDuration();
+    return;
+  }
+
+  this._pixelIdleDest = dest;
+  this._pixelIdleStuckFrames = 0;
+};
+
+/**
+ * Rolls a random wait duration before this battler picks its next wander destination.
+ * Returns a random multiple of 30 frames between 30 and 300 (one to ten seconds at 30 fps).
+ * @returns {number} The number of frames to wait.
+ */
+JABS_Battler.prototype._rollIdleWaitDuration = function()
+{
+  // 4–10 inclusive, each unit = 30 frames; range is 2 to 5 seconds at 60 fps.
+  const multiplier = Math.randomInt(7) + 4;
+
+  return multiplier * 30;
+};
+
+/**
+ * Rolls a random wander destination within the configured idle wander radius of home.
+ * Retries up to five times to find a tile that is passable in at least one cardinal direction.
+ * Returns null if every candidate lands on impassable terrain.
+ * @returns {{x: number, y: number}|null} The chosen destination, or null if none found.
+ */
+JABS_Battler.prototype._rollIdleDestination = function()
+{
+  const homeX = this.getHomeX();
+  const homeY = this.getHomeY();
+  const range = J.PIXEL.EXT.ABS.Metadata.IdleWanderRadius;
+
+  for (let attempt = 0; attempt < 5; attempt++)
+  {
+    // random offset along each axis within [-range, range].
+    const dx = (Math.random() * range * 2) - range;
+    const dy = (Math.random() * range * 2) - range;
+
+    const destX = homeX + dx;
+    const destY = homeY + dy;
+
+    const tx = Math.round(destX);
+    const ty = Math.round(destY);
+
+    // accept the tile if it allows passage in any cardinal direction.
+    const walkable = $gameMap.isPassable(tx, ty, 2)
+      || $gameMap.isPassable(tx, ty, 4)
+      || $gameMap.isPassable(tx, ty, 6)
+      || $gameMap.isPassable(tx, ty, 8);
+
+    if (walkable)
+    {
+      return { x: destX, y: destY };
+    }
+  }
+
+  // all five candidates were impassable.
+  return null;
+};
+
+/**
  * Extends {@link #setDodgeSteps}.<br/>
  * Scales the step count by the pixel collision density so dodge distance
  * covers the same visual distance as it would in tile-locked movement.
  * @param {number} stepCount The number of steps to dodge.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_Battler.set('setDodgeSteps', JABS_Battler.prototype.setDodgeSteps);
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('setDodgeSteps', JABS_Battler.prototype.setDodgeSteps);
 JABS_Battler.prototype.setDodgeSteps = function(stepCount)
 {
   // ensure the collision manager is configured before reading its step count.
@@ -19,7 +189,7 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
   const scaledStepCount = stepCount * PIXEL_CollisionManager.collisionStepCount;
 
   // perform original logic with the scaled step count.
-  J.ABS.EXT.PIXEL.Aliased.JABS_Battler.get('setDodgeSteps')
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('setDodgeSteps')
     .call(this, scaledStepCount);
 };
 
@@ -28,14 +198,14 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
  * Rebuilds the pixel collision table when an enemy battler is defeated,
  * in case the enemy event occupied passability cells that are now vacated.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_Battler.set('destroy', JABS_Battler.prototype.destroy);
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('destroy', JABS_Battler.prototype.destroy);
 JABS_Battler.prototype.destroy = function()
 {
   // record whether the battler being destroyed is an enemy (not an actor).
   const isEnemy = this.getBattler().isActor() === false;
 
   // perform original logic.
-  J.ABS.EXT.PIXEL.Aliased.JABS_Battler.get('destroy')
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('destroy')
     .call(this);
 
   // if an enemy was destroyed, rebuild the collision table to free any blocked cells.

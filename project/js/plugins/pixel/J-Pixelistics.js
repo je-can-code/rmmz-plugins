@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
+ * [v1.0.1 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -42,6 +42,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Fixed getVectorInputAngle reading Input.dir8 (always 8-directional) even
+ *    when VectorMovementEnabled was true; now reads raw gamepad axis data via
+ *    navigator.getGamepads() to produce true arbitrary angles for analog sticks.
+ *    Keyboard and d-pad input still falls back to the 8-direction conversion.
  * - 1.0.0
  *    Initial migration from J-ABS-PixelMovement to standalone J-Pixelistics.
  *    Separated engine-facing movement logic from JABS-specific hooks.
@@ -185,7 +190,7 @@ J.PIXEL.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.Metadata = new JPixelistics_PluginMetadata('J-Pixelistics', '1.0.0');
+J.PIXEL.Metadata = new JPixelistics_PluginMetadata('J-Pixelistics', '1.0.1');
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -849,18 +854,6 @@ PIXEL_CollisionManager.Codes =
     // A top-right corner blocker; a single blocked subcell in that corner.
     CornerTopRight: 19,
   };
-
-/**
- * A tile-space anchor for collision sampling.
- * @type {number}
- */
-PIXEL_CollisionManager.AnchorX = 0;
-
-/**
- * A tile-space anchor for collision sampling.
- * @type {number}
- */
-PIXEL_CollisionManager.AnchorY = 0;
 
 /**
  * Global collision-lattice shift (in tiles) applied on the X axis inside the indexer.
@@ -1880,7 +1873,7 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
   }
 
   // Determine the collision subgrid resolution; avoid skipping edges at high speeds.
-  const subCount = this._pixelCollisionSubCount(distance);
+  const subCount = this._pixelCollisionSubCount();
 
   // Update cached radius-based hitbox.
   const radius = this.getEffectiveRadius();
@@ -2076,6 +2069,23 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
+ * Extends {@link Game_CharacterBase.canPass}.<br>
+ * Rounds fractional pixel coordinates to the nearest tile integer before delegating
+ * to the tile-based passability check. With pixel movement, `_x`/`_y` are fractional;
+ * the base RMMZ method uses them as array indices, so non-integer inputs produce
+ * incorrect results without this normalization.
+ * @param {number} x The x tile coordinate (may be fractional with pixel movement).
+ * @param {number} y The y tile coordinate (may be fractional with pixel movement).
+ * @param {2|4|6|8} d The direction to check passage toward.
+ * @returns {boolean} Whether passage is allowed from the nearest tile in direction d.
+ */
+J.PIXEL.Aliased.Game_CharacterBase.set('canPass', Game_CharacterBase.prototype.canPass);
+Game_CharacterBase.prototype.canPass = function(x, y, d)
+{
+  return J.PIXEL.Aliased.Game_CharacterBase.get('canPass').call(this, Math.round(x), Math.round(y), d);
+};
+
+/**
  * Moves straight in a given direction.
  * If there is an underlying diagonal direction, then move diagonally.
  * @param {number} direction The direction being moved.
@@ -2086,38 +2096,34 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
   // Evaluate pixel-aware straight passability including character collision.
   this.setMovementSuccess(this.canPassStraight(direction));
 
-  // If passable, perform a pixel-distance straight move and face that direction.
+  // Always face the attempted direction, matching rmmz default behavior.
+  // Enemies that are blocked must still update their facing so the projectile
+  // direction baked at decision-time reflects where they were trying to go.
+  this.setDirection(direction);
+
+  // If passable, perform a pixel-distance straight move.
   if (this.isMovementSucceeded())
   {
-    // Move by the per-frame straight distance in the chosen direction.
     this.movePixelDistance(direction, this.distancePerFrame());
-
-    // Face the direction of travel.
-    this.setDirection(direction);
   }
-
-  // #region agent log
-  if (Graphics.frameCount % 120 === 0)
+  else
   {
-    const isPlayer = $gamePlayer && this === $gamePlayer;
-    const isAction = J.ABS && this.isJabsAction && this.isJabsAction();
-    if (isPlayer || isAction)
-    {
-      fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:isPlayer?'H-A/H-B':'H-D',location:'Game_CharacterBase.js:moveStraight',message:isPlayer?'player moveStraight speed':'action event moveStraight speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),isDashing:isPlayer?this.isDashing():null,moveSpeed:this._moveSpeed,isAction},timestamp:Date.now()})}).catch(()=>{});
-    }
+    // notify any adjacent event triggers, matching rmmz default behavior.
+    this.checkEventTriggerTouchFront(direction);
   }
-  // #endregion agent log
 };
 
 /**
- * Moves diagonally in a given direction.
- * If there is an underlying diagonal direction, then move diagonally.
- * @param {number} direction The direction being moved.
+ * Extends {@link Game_CharacterBase.moveDiagonally}.<br>
+ * Evaluates pixel-aware diagonal passability and executes pixel-distance movement.
+ * Direction is updated unconditionally (matching rmmz default behavior) so that
+ * a blocked diagonal step still rotates the character away from a wall.
+ * @param {4|6} horz The horizontal component direction (4=left, 6=right).
+ * @param {2|8} vert The vertical component direction (2=down, 8=up).
  */
 J.PIXEL.Aliased.Game_CharacterBase.set('moveDiagonally', Game_CharacterBase.prototype.moveDiagonally);
 Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 {
-  // const [ horz, vert ] = this.getDiagonalDirections(direction);
   this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
 
   if (this.isMovementSucceeded())
@@ -2125,6 +2131,17 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
     const direction = this.directionFromHorzVert(horz, vert);
     this.movePixelDistance(direction, this.diagonalDistancePerFrame());
     this.setDirection(direction);
+  }
+
+  // rmmz updates direction unconditionally for diagonal moves: if the character
+  // is facing the reverse of a component direction, rotate toward that component.
+  if (this._direction === this.reverseDir(horz))
+  {
+    this.setDirection(horz);
+  }
+  if (this._direction === this.reverseDir(vert))
+  {
+    this.setDirection(vert);
   }
 };
 
@@ -2143,13 +2160,6 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
  */
 Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 {
-  // #region agent log
-  if ($gamePlayer && this === $gamePlayer && Graphics.frameCount % 120 === 0)
-  {
-    fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:'H-A/H-B',location:'Game_CharacterBase.js:pixelMoveByInput',message:'player movement speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),moveSpeed:this._moveSpeed,isDashing:this.isDashing(),isDodging:this.isDodging()},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion agent log
-
   // Establish a local variable for the direction.
   let innerDirection = direction;
 
@@ -2573,7 +2583,7 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   const hitbox = this._pixelHitbox(radius);
 
   // Determine the subgrid resolution.
-  const subCount = this._pixelCollisionSubCount(straightStep);
+  const subCount = this._pixelCollisionSubCount();
 
   // Initialize destination center X with current X.
   let nx = this._x;
@@ -2866,18 +2876,6 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
  */
 Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 0.35)
 {
-  // Choose the half-size (in tiles) for the probe AABB.
-  const halfW = radius;
-
-  // Choose the half-size (in tiles) for the probe AABB.
-  const halfH = radius;
-
-  // The probe center is the actual fractional coordinates in tile units.
-  const probeCx = px;
-
-  // The probe center is the actual fractional coordinates in tile units.
-  const probeCy = py;
-
   // Acquire the player reference.
   const player = $gamePlayer;
 
@@ -2977,14 +2975,8 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     // Candidate half-extents in tiles; use the character's effective (clamped) radius.
     const cr = ch.getEffectiveRadius();
 
-    // Candidate half width in tile units.
-    const chw = cr;
-
-    // Candidate half height in tile units.
-    const chh = cr;
-
     // Test AABB overlap.
-    if (aabbOverlap(probeCx, probeCy, halfW, halfH, cx, cy, chw, chh))
+    if (aabbOverlap(px, py, radius, radius, cx, cy, cr, cr))
     {
       // Overlap found; movement would collide.
       return true;
@@ -3080,10 +3072,9 @@ Game_CharacterBase.prototype._pixelHitbox = function(radius)
 
 /**
  * Returns the collision subgrid resolution from the plugin metadata.
- * @param {number} step The intended straight step size for this frame.
  * @returns {number} The collision subgrid count.
  */
-Game_CharacterBase.prototype._pixelCollisionSubCount = function(step)
+Game_CharacterBase.prototype._pixelCollisionSubCount = function()
 {
   if (PIXEL_CollisionManager.collisionStepCount === undefined)
   {
@@ -4063,9 +4054,8 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   const roundX = Math.round(x);
   const roundY = Math.round(y);
 
-  // TODO: does this actually need to round?
-  // determine the threshold for pixel movement regarding event triggering.
-  // within 1/3 of a tile triggers?
+  // rmmz touch events operate at integer tile coordinates, so rounding is required.
+  // trigger only when within 0.3 tiles of the tile center to prevent early/spurious fires.
   const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3;
 
   // check if the event was triggered with the threshold coordinates.
@@ -4154,7 +4144,9 @@ Game_Player.prototype.updateDashing = function()
 
 /**
  * Gets the analog input angle for the player in degrees, if vector movement is active.
- * Returns null if vector movement is disabled, or if no analog axis input is present.
+ * Reads raw gamepad axis data directly from the Gamepad API to preserve sub-45° precision.
+ * Falls back to keyboard/d-pad dir8-to-angle conversion when no analog stick is active.
+ * Returns null if vector movement is disabled or there is no directional input at all.
  * @returns {number|null} Angle in degrees (0=right, 90=down), or null if not applicable.
  */
 Game_Player.prototype.getVectorInputAngle = function()
@@ -4162,24 +4154,81 @@ Game_Player.prototype.getVectorInputAngle = function()
   // do not use vector movement if the parameter is disabled.
   if (J.PIXEL.Metadata.VectorMovementEnabled === false)
   {
-    // vector movement disabled.
     return null;
   }
 
-  // read analog stick axes (GamepadInput axes 0=horizontal, 1=vertical).
-  // RMMZ exposes gamepad axis data via Input._gamepadStates or compatible wrappers.
-  // Fall back to keyboard dir8 converted to an angle if no gamepad axis is present.
+  // try the raw analog stick first; it returns null when no gamepad is active or
+  // the stick is inside the dead zone.
+  const analogAngle = this._readGamepadAnalogAngle();
+
+  if (analogAngle !== null)
+  {
+    return analogAngle;
+  }
+
+  // fall back to keyboard / d-pad: convert the 8-direction code to a fixed angle.
   const rawDir8 = Input.dir8;
 
-  // if no input at all, no angle.
   if (rawDir8 === 0)
   {
-    // no input.
     return null;
   }
 
-  // derive angle from the 8-direction input code.
   return this.dir8ToAngle(rawDir8);
+};
+
+/**
+ * Reads the left analog stick from the first connected gamepad and returns the angle
+ * in degrees, or null if no gamepad is present or the stick is inside the dead zone.
+ *
+ * RMMZ's Input system discards raw axis floats before they reach Input.dir8, converting
+ * them to digital button states with a 0.5 threshold. To get true arbitrary angles we
+ * must bypass RMMZ and read navigator.getGamepads() directly.
+ *
+ * Dead zone of 0.15 (smaller than RMMZ's 0.5 threshold) filters joystick drift while
+ * still detecting gentle pushes before RMMZ's digital conversion fires.
+ *
+ * @returns {number|null} Angle in degrees (0=right, 90=down in RMMZ Y-down space), or null.
+ */
+Game_Player.prototype._readGamepadAnalogAngle = function()
+{
+  // Gamepad API is not available in all environments.
+  if (!navigator.getGamepads)
+  {
+    return null;
+  }
+
+  const gamepads = navigator.getGamepads();
+
+  if (!gamepads)
+  {
+    return null;
+  }
+
+  for (const gamepad of gamepads)
+  {
+    if (!gamepad || gamepad.connected === false)
+    {
+      continue;
+    }
+
+    const axisX = gamepad.axes[0];
+    const axisY = gamepad.axes[1];
+
+    // compute magnitude to apply a circular dead zone.
+    const magnitude = Math.sqrt(axisX * axisX + axisY * axisY);
+
+    if (magnitude < 0.15)
+    {
+      // stick is inside the dead zone; try the next gamepad.
+      continue;
+    }
+
+    // atan2 returns radians in [-π, π]; convert to degrees.
+    return Math.atan2(axisY, axisX) * 180 / Math.PI;
+  }
+
+  return null;
 };
 
 /**

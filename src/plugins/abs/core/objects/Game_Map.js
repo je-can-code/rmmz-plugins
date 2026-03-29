@@ -501,18 +501,13 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
 {
   const player = jabsBattler.getCharacter();
   const direction = player.direction();
-  const x1 = player.x;
-  const y1 = player.y;
-  let x2 = $gameMap.roundXWithDirection(x1, direction);
-  let y2 = $gameMap.roundYWithDirection(y1, direction);
 
-  // when using cyclone's movement plugin, rounding is necessary to accommodate interacting with events
-  // without actually executing your weapon attack.
-  if (J.ABS.EXT.CYCLE)
-  {
-    x2 = Math.round($gameMap.roundXWithDirection(x1, direction));
-    y2 = Math.round($gameMap.roundYWithDirection(y1, direction));
-  }
+  // player coordinates are fractional with pixel movement; round to the nearest tile
+  // before computing the look-ahead so eventsXy() can match event positions correctly.
+  const x1 = Math.round(player.x);
+  const y1 = Math.round(player.y);
+  const x2 = $gameMap.roundXWithDirection(x1, direction);
+  const y2 = $gameMap.roundYWithDirection(y1, direction);
 
   const triggers = [ 0, 1, 2 ];
 

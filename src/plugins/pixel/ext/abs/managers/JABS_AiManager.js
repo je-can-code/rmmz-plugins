@@ -1,10 +1,54 @@
 //region JABS_AiManager
 /**
+ * Overrides {@link #canMoveIdly}.<br/>
+ * With pixel-idle wander the timing is managed entirely by the destination/wait
+ * state machine on the battler. The external frame-gate and random roll are not needed.
+ * @param {JABS_Battler} battler The battler checking idle movement readiness.
+ * @returns {boolean} Always true; the battler's own state machine controls pacing.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('canMoveIdly', JABS_AiManager.canMoveIdly);
+JABS_AiManager.canMoveIdly = function(battler)
+{
+  return true;
+};
+
+/**
+ * Overrides {@link #moveIdly}.<br/>
+ * Delegates to the battler's pixel-aware idle wander state machine rather than
+ * calling the tile-step moveRandom, which only advances a single distancePerFrame pixel.
+ * @param {JABS_Battler} battler The battler moving idly.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('moveIdly', JABS_AiManager.moveIdly);
+JABS_AiManager.moveIdly = function(battler)
+{
+  battler.updatePixelIdleWander();
+};
+
+/**
+ * Overrides {@link #goHome}.<br/>
+ * Uses pixel-aware smart movement toward the home coordinates so the battler glides
+ * home smoothly instead of shuffling one distancePerFrame pixel at a time via moveStraight.
+ * @param {JABS_Battler} battler The battler returning to its home point.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('goHome', JABS_AiManager.goHome);
+JABS_AiManager.goHome = function(battler)
+{
+  // use pixel-aware movement rather than a tile-step moveStraight.
+  battler.smartMoveTowardCoordinates(battler.getHomeX(), battler.getHomeY());
+
+  // once close enough to home, transition to idle state.
+  if (battler.isHome())
+  {
+    battler.setIdle(true);
+  }
+};
+
+/**
  * Keeps allies within leash range of the leader, even during combat.
  * If beyond leash, snap back and clear movement to avoid drift.
  * @param {JABS_Battler} allyBattler The ally battler.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_AiManager.set("rubberbandAlly", JABS_AiManager.rubberbandAlly);
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("rubberbandAlly", JABS_AiManager.rubberbandAlly);
 JABS_AiManager.rubberbandAlly = function(allyBattler)
 {
   // Acquire characters and compute fractional distance.
@@ -28,7 +72,7 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
  * @param {number} desiredX The desired slot x (fractional center).
  * @param {number} desiredY The desired slot y (fractional center).
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
   // acquire the character once.
@@ -45,9 +89,6 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   {
     // use the configured formation tolerance if available.
     tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
-
-    // use the configured hysteresis if available.
-    hysteresis = 0.25;
   }
 
   // compute Euclidean distance to the target point using fractional coords.

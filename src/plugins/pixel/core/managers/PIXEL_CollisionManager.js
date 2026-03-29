@@ -592,18 +592,6 @@ PIXEL_CollisionManager.Codes =
   };
 
 /**
- * A tile-space anchor for collision sampling.
- * @type {number}
- */
-PIXEL_CollisionManager.AnchorX = 0;
-
-/**
- * A tile-space anchor for collision sampling.
- * @type {number}
- */
-PIXEL_CollisionManager.AnchorY = 0;
-
-/**
  * Global collision-lattice shift (in tiles) applied on the X axis inside the indexer.
  * Use +0.5 when character/world coords are edge-based but movement logic expects center alignment.
  * Flip to -0.5 if your incoming sample coords are already center-shifted elsewhere.

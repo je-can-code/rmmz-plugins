@@ -862,7 +862,7 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
   }
 
   // Determine the collision subgrid resolution; avoid skipping edges at high speeds.
-  const subCount = this._pixelCollisionSubCount(distance);
+  const subCount = this._pixelCollisionSubCount();
 
   // Update cached radius-based hitbox.
   const radius = this.getEffectiveRadius();
@@ -1058,6 +1058,23 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
+ * Extends {@link Game_CharacterBase.canPass}.<br>
+ * Rounds fractional pixel coordinates to the nearest tile integer before delegating
+ * to the tile-based passability check. With pixel movement, `_x`/`_y` are fractional;
+ * the base RMMZ method uses them as array indices, so non-integer inputs produce
+ * incorrect results without this normalization.
+ * @param {number} x The x tile coordinate (may be fractional with pixel movement).
+ * @param {number} y The y tile coordinate (may be fractional with pixel movement).
+ * @param {2|4|6|8} d The direction to check passage toward.
+ * @returns {boolean} Whether passage is allowed from the nearest tile in direction d.
+ */
+J.PIXEL.Aliased.Game_CharacterBase.set('canPass', Game_CharacterBase.prototype.canPass);
+Game_CharacterBase.prototype.canPass = function(x, y, d)
+{
+  return J.PIXEL.Aliased.Game_CharacterBase.get('canPass').call(this, Math.round(x), Math.round(y), d);
+};
+
+/**
  * Moves straight in a given direction.
  * If there is an underlying diagonal direction, then move diagonally.
  * @param {number} direction The direction being moved.
@@ -1068,38 +1085,34 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
   // Evaluate pixel-aware straight passability including character collision.
   this.setMovementSuccess(this.canPassStraight(direction));
 
-  // If passable, perform a pixel-distance straight move and face that direction.
+  // Always face the attempted direction, matching rmmz default behavior.
+  // Enemies that are blocked must still update their facing so the projectile
+  // direction baked at decision-time reflects where they were trying to go.
+  this.setDirection(direction);
+
+  // If passable, perform a pixel-distance straight move.
   if (this.isMovementSucceeded())
   {
-    // Move by the per-frame straight distance in the chosen direction.
     this.movePixelDistance(direction, this.distancePerFrame());
-
-    // Face the direction of travel.
-    this.setDirection(direction);
   }
-
-  // #region agent log
-  if (Graphics.frameCount % 120 === 0)
+  else
   {
-    const isPlayer = $gamePlayer && this === $gamePlayer;
-    const isAction = J.ABS && this.isJabsAction && this.isJabsAction();
-    if (isPlayer || isAction)
-    {
-      fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:isPlayer?'H-A/H-B':'H-D',location:'Game_CharacterBase.js:moveStraight',message:isPlayer?'player moveStraight speed':'action event moveStraight speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),isDashing:isPlayer?this.isDashing():null,moveSpeed:this._moveSpeed,isAction},timestamp:Date.now()})}).catch(()=>{});
-    }
+    // notify any adjacent event triggers, matching rmmz default behavior.
+    this.checkEventTriggerTouchFront(direction);
   }
-  // #endregion agent log
 };
 
 /**
- * Moves diagonally in a given direction.
- * If there is an underlying diagonal direction, then move diagonally.
- * @param {number} direction The direction being moved.
+ * Extends {@link Game_CharacterBase.moveDiagonally}.<br>
+ * Evaluates pixel-aware diagonal passability and executes pixel-distance movement.
+ * Direction is updated unconditionally (matching rmmz default behavior) so that
+ * a blocked diagonal step still rotates the character away from a wall.
+ * @param {4|6} horz The horizontal component direction (4=left, 6=right).
+ * @param {2|8} vert The vertical component direction (2=down, 8=up).
  */
 J.PIXEL.Aliased.Game_CharacterBase.set('moveDiagonally', Game_CharacterBase.prototype.moveDiagonally);
 Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 {
-  // const [ horz, vert ] = this.getDiagonalDirections(direction);
   this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
 
   if (this.isMovementSucceeded())
@@ -1107,6 +1120,17 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
     const direction = this.directionFromHorzVert(horz, vert);
     this.movePixelDistance(direction, this.diagonalDistancePerFrame());
     this.setDirection(direction);
+  }
+
+  // rmmz updates direction unconditionally for diagonal moves: if the character
+  // is facing the reverse of a component direction, rotate toward that component.
+  if (this._direction === this.reverseDir(horz))
+  {
+    this.setDirection(horz);
+  }
+  if (this._direction === this.reverseDir(vert))
+  {
+    this.setDirection(vert);
   }
 };
 
@@ -1125,13 +1149,6 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
  */
 Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
 {
-  // #region agent log
-  if ($gamePlayer && this === $gamePlayer && Graphics.frameCount % 120 === 0)
-  {
-    fetch('http://127.0.0.1:7857/ingest/2bd1aced-05ff-48e3-9b46-1d0919e2cceb', {method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'1d58a7'},body:JSON.stringify({sessionId:'1d58a7',runId:'run1',hypothesisId:'H-A/H-B',location:'Game_CharacterBase.js:pixelMoveByInput',message:'player movement speed',data:{realMoveSpeed:this.realMoveSpeed(),distancePerFrame:this.distancePerFrame(),moveSpeed:this._moveSpeed,isDashing:this.isDashing(),isDodging:this.isDodging()},timestamp:Date.now()})}).catch(()=>{});
-  }
-  // #endregion agent log
-
   // Establish a local variable for the direction.
   let innerDirection = direction;
 
@@ -1555,7 +1572,7 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   const hitbox = this._pixelHitbox(radius);
 
   // Determine the subgrid resolution.
-  const subCount = this._pixelCollisionSubCount(straightStep);
+  const subCount = this._pixelCollisionSubCount();
 
   // Initialize destination center X with current X.
   let nx = this._x;
@@ -1848,18 +1865,6 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
  */
 Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 0.35)
 {
-  // Choose the half-size (in tiles) for the probe AABB.
-  const halfW = radius;
-
-  // Choose the half-size (in tiles) for the probe AABB.
-  const halfH = radius;
-
-  // The probe center is the actual fractional coordinates in tile units.
-  const probeCx = px;
-
-  // The probe center is the actual fractional coordinates in tile units.
-  const probeCy = py;
-
   // Acquire the player reference.
   const player = $gamePlayer;
 
@@ -1959,14 +1964,8 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     // Candidate half-extents in tiles; use the character's effective (clamped) radius.
     const cr = ch.getEffectiveRadius();
 
-    // Candidate half width in tile units.
-    const chw = cr;
-
-    // Candidate half height in tile units.
-    const chh = cr;
-
     // Test AABB overlap.
-    if (aabbOverlap(probeCx, probeCy, halfW, halfH, cx, cy, chw, chh))
+    if (aabbOverlap(px, py, radius, radius, cx, cy, cr, cr))
     {
       // Overlap found; movement would collide.
       return true;
@@ -2062,10 +2061,9 @@ Game_CharacterBase.prototype._pixelHitbox = function(radius)
 
 /**
  * Returns the collision subgrid resolution from the plugin metadata.
- * @param {number} step The intended straight step size for this frame.
  * @returns {number} The collision subgrid count.
  */
-Game_CharacterBase.prototype._pixelCollisionSubCount = function(step)
+Game_CharacterBase.prototype._pixelCollisionSubCount = function()
 {
   if (PIXEL_CollisionManager.collisionStepCount === undefined)
   {

@@ -41,6 +41,24 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 - **Single quotes** for strings.
 - **No `import`/`export` anywhere in `rmmz-plugins` plugin source.** These files are concatenated by `combine.js` and loaded as plain JS by the RMMZ engine — there is no compilation step. Modules simply do not work here. (`src/build-tools` uses Node `require`/`import` normally since it runs in Node, not in the game.)
 - **No IIFEs**. Use object namespaces (`J.ABS`, `J.SKS`, etc.) and alias maps.
+
+### Namespace Convention
+
+Namespaces mirror the directory path and ownership chain. The rule is:
+**`J.<OWNER>.<EXT|other>.<CONSUMER>`** — the leftmost segment after `J` is the plugin that *owns and defines* the namespace; each segment to the right narrows scope.
+
+| Namespace | Meaning | Lives in |
+|---|---|---|
+| `J.ABS` | Core ABS plugin | `src/plugins/abs/core/` |
+| `J.ABS.EXT` | "ABS owns these; these are optional extensions of ABS" | defined in abs/core, consumed by abs/ext/* |
+| `J.ABS.EXT.ALLYAI` | Ally AI is an extension of J-ABS | `src/plugins/abs/ext/allyai/` |
+| `J.PIXEL` | Core Pixelistics plugin | `src/plugins/pixel/core/` |
+| `J.PIXEL.EXT` | "Pixelistics owns these; these are optional extensions of Pixelistics" | defined in pixel/core, consumed by pixel/ext/* |
+| `J.PIXEL.EXT.ABS` | ABS bridge is an extension of J-Pixelistics | `src/plugins/pixel/ext/abs/` |
+
+**The easy test:** ask "which plugin's directory does this file live in?" — that plugin owns the top-level namespace segment. A file in `pixel/ext/abs/` uses `J.PIXEL.EXT.ABS.*`, never `J.ABS.EXT.PIXEL.*` (which would mean "ABS owns this; Pixelistics is the consumer", the reverse relationship).
+
+**`J.ABS.EXT.PIXEL` is wrong for any file under `src/plugins/pixel/`.** That namespace belongs to a hypothetical ABS-owned pixel extension and must not be used in the Pixelistics tree.
 - **Prototype + alias pattern** for augmenting engine/other-plugin classes. `class extends` for new scene/window subclasses (unless serialized → prototype constructor).
 - **Serialized models** (saved to file via `JsonEx`): use prototype constructors with JSON-safe fields only. See `_models/` directories for examples.
 - **`//region` / `//endregion`** wrappers on every file; region name = filename.

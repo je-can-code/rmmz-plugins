@@ -76,7 +76,6 @@
     "build:jabs": "node ./src/build-tools/combine.js ./src/plugins/abs/core ./out/abs J-ABS.js",
     "build:jabs-allyai": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/allyai ./out/abs/ext J-ABS-AllyAI.js",
     "build:jabs-charge": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/charge ./out/abs/ext J-ABS-Charge.js",
-    "build:jabs-cycle": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/cycle ./out/abs/ext J-ABS-CycloneAdapter.js",
     "build:jabs-danger": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/danger ./out/abs/ext J-ABS-DangerIndicator.js",
     "build:jabs-diag": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/diag ./out/abs/ext J-ABS-Diagonals.js",
     "build:jabs-formula": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/formula ./out/abs/ext J-ABS-Formula.js",

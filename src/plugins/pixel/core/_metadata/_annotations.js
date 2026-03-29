@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
+ * [v1.0.1 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -42,6 +42,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Fixed getVectorInputAngle reading Input.dir8 (always 8-directional) even
+ *    when VectorMovementEnabled was true; now reads raw gamepad axis data via
+ *    navigator.getGamepads() to produce true arbitrary angles for analog sticks.
+ *    Keyboard and d-pad input still falls back to the 8-direction conversion.
  * - 1.0.0
  *    Initial migration from J-ABS-PixelMovement to standalone J-Pixelistics.
  *    Separated engine-facing movement logic from JABS-specific hooks.

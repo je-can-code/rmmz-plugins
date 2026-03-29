@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.1.0 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -34,12 +34,87 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added pixel-aware idle wander state machine: idle enemies now pick a
+ *    random destination within the configured wander radius, walk to it, wait
+ *    a random pause (2–5 seconds), then repeat. Replaces the old single
+ *    tile-step moveRandom behavior.
+ *    Added idleWanderRadius plugin parameter (default 1.5 tiles).
+ *    Added passability validation when rolling a wander destination; retries
+ *    up to five times before falling back to a wait cycle.
+ *    Added stuck detection: abandons an unreachable destination after 1.5s
+ *    and waits before picking a new one.
+ *    Fixed isHome using integer tile equality (always false with fractional
+ *    coordinates); now uses distanceToHome() < 0.5.
+ *    Fixed goHome using moveStraight (one pixel per frame); now delegates to
+ *    smartMoveTowardCoordinates for smooth pixel-aware return.
  * - 1.0.0
  *    Initial extraction from J-ABS-PixelMovement (abs/ext/pixel) into the
  *    dedicated J-Pixelistics extension layer.
  * ============================================================================
+ *
+ *
+ * @param idleConfigs
+ * @text IDLE MOVEMENT
+ *
+ * @param idleWanderRadius
+ * @parent idleConfigs
+ * @type number
+ * @decimals 2
+ * @min 0.50
+ * @max 10.00
+ * @text Idle Wander Radius
+ * @desc Distance in tiles from home an enemy may wander while idle. Default 1.5 gives a 3x3-tile area.
+ * @default 1.50
+ *
  */
 //endregion annotations
+
+
+//region plugin metadata
+/**
+ * Plugin metadata class for J-ABS-Pixelistics.
+ */
+class JAbsPixelistics_PluginMetadata
+  extends PluginMetadata
+{
+  /**
+   * Constructor.
+   * @param {string} name The plugin name.
+   * @param {string} version The plugin version.
+   */
+  constructor(name, version)
+  {
+    super(name, version);
+  }
+
+  /**
+   * Extends {@link #postInitialize}.<br>
+   * Includes translation of plugin parameters.
+   */
+  postInitialize()
+  {
+    // execute original logic.
+    super.postInitialize();
+
+    // initialize this plugin from configuration.
+    this.initializeMetadata();
+  }
+
+  /**
+   * Initializes the metadata associated with this plugin.
+   */
+  initializeMetadata()
+  {
+    /**
+     * The radius in tiles from home that an idle enemy may wander.
+     * A value of 1.5 produces a 3x3-tile wander area centered on the home point.
+     * @type {number}
+     */
+    this.IdleWanderRadius = parseFloat(this.parsedPluginParameters['idleWanderRadius']) || 1.50;
+  }
+}
+//endregion plugin metadata
 
 
 //region initialization
@@ -51,26 +126,26 @@ var J = J || {};
 //region metadata
 /**
  * The plugin umbrella that governs all things related to this plugin.
- * Nested under J.ABS.EXT to follow the extension convention.
+ * Nested under J.PIXEL.EXT to follow the extension convention:
+ * J.PIXEL owns this namespace; ABS is the consuming context.
  */
-J.ABS.EXT ||= {};
+J.PIXEL.EXT ||= {};
 
 /**
  * The extension namespace for J-ABS-Pixelistics.
- */
-J.ABS.EXT.PIXEL = {};
-
-/**
- * The metadata associated with this plugin.
- * Stored under J.PIXEL.EXT so this extension is discoverable from the pixel side as well.
+ * Sentinel: check `J.PIXEL.EXT.ABS` to detect whether this plugin is loaded.
  */
 J.PIXEL.EXT.ABS = {};
 
 /**
+ * The metadata associated with this plugin.
+ */
+J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.1.0');
+
+/**
  * A collection of all aliased methods for this plugin.
  */
-J.ABS.EXT.PIXEL.Aliased = {
-  Game_Event: new Map(),
+J.PIXEL.EXT.ABS.Aliased = {
   JABS_AiManager: new Map(),
   JABS_Battler: new Map(),
 };
@@ -80,11 +155,55 @@ J.ABS.EXT.PIXEL.Aliased = {
 
 //region JABS_AiManager
 /**
+ * Overrides {@link #canMoveIdly}.<br/>
+ * With pixel-idle wander the timing is managed entirely by the destination/wait
+ * state machine on the battler. The external frame-gate and random roll are not needed.
+ * @param {JABS_Battler} battler The battler checking idle movement readiness.
+ * @returns {boolean} Always true; the battler's own state machine controls pacing.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('canMoveIdly', JABS_AiManager.canMoveIdly);
+JABS_AiManager.canMoveIdly = function(battler)
+{
+  return true;
+};
+
+/**
+ * Overrides {@link #moveIdly}.<br/>
+ * Delegates to the battler's pixel-aware idle wander state machine rather than
+ * calling the tile-step moveRandom, which only advances a single distancePerFrame pixel.
+ * @param {JABS_Battler} battler The battler moving idly.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('moveIdly', JABS_AiManager.moveIdly);
+JABS_AiManager.moveIdly = function(battler)
+{
+  battler.updatePixelIdleWander();
+};
+
+/**
+ * Overrides {@link #goHome}.<br/>
+ * Uses pixel-aware smart movement toward the home coordinates so the battler glides
+ * home smoothly instead of shuffling one distancePerFrame pixel at a time via moveStraight.
+ * @param {JABS_Battler} battler The battler returning to its home point.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('goHome', JABS_AiManager.goHome);
+JABS_AiManager.goHome = function(battler)
+{
+  // use pixel-aware movement rather than a tile-step moveStraight.
+  battler.smartMoveTowardCoordinates(battler.getHomeX(), battler.getHomeY());
+
+  // once close enough to home, transition to idle state.
+  if (battler.isHome())
+  {
+    battler.setIdle(true);
+  }
+};
+
+/**
  * Keeps allies within leash range of the leader, even during combat.
  * If beyond leash, snap back and clear movement to avoid drift.
  * @param {JABS_Battler} allyBattler The ally battler.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_AiManager.set("rubberbandAlly", JABS_AiManager.rubberbandAlly);
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("rubberbandAlly", JABS_AiManager.rubberbandAlly);
 JABS_AiManager.rubberbandAlly = function(allyBattler)
 {
   // Acquire characters and compute fractional distance.
@@ -108,7 +227,7 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
  * @param {number} desiredX The desired slot x (fractional center).
  * @param {number} desiredY The desired slot y (fractional center).
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
+J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
   // acquire the character once.
@@ -125,9 +244,6 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   {
     // use the configured formation tolerance if available.
     tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
-
-    // use the configured hysteresis if available.
-    hysteresis = 0.25;
   }
 
   // compute Euclidean distance to the target point using fractional coords.
@@ -224,12 +340,182 @@ JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, toler
 
 //region JABS_Battler
 /**
+ * Extends {@link #initIdleInfo}.<br/>
+ * Adds pixel-movement-aware idle destination and wait timer state.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('initIdleInfo', JABS_Battler.prototype.initIdleInfo);
+JABS_Battler.prototype.initIdleInfo = function()
+{
+  // perform original logic.
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('initIdleInfo').call(this);
+
+  /**
+   * The pixel-space destination this battler is currently wandering toward.
+   * Null when the battler has no current wander target.
+   * @type {{x: number, y: number}|null}
+   */
+  this._pixelIdleDest = null;
+
+  /**
+   * The number of frames remaining before this battler picks a new wander destination.
+   * @type {number}
+   */
+  this._pixelIdleWait = 0;
+
+  /**
+   * The number of consecutive frames this battler has been unable to reach its
+   * current wander destination. Used to detect and escape stuck states.
+   * @type {number}
+   */
+  this._pixelIdleStuckFrames = 0;
+};
+
+/**
+ * Overrides {@link #isHome}.<br/>
+ * Uses a distance-based check instead of integer tile equality, since pixel
+ * movement coordinates are fractional and exact equality is never satisfied.
+ * @returns {boolean} True if within half a tile of home, false otherwise.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('isHome', JABS_Battler.prototype.isHome);
+JABS_Battler.prototype.isHome = function()
+{
+  return this.distanceToHome() < 0.5;
+};
+
+/**
+ * The number of consecutive traveling frames allowed before a destination is
+ * abandoned. At 60 fps this is 1.5 seconds, which is enough time to cross the
+ * entire wander radius; if the battler hasn't arrived by then it is stuck.
+ * @type {number}
+ */
+JABS_Battler.pixelIdleStuckLimit = 90;
+
+/**
+ * Executes the pixel-aware idle wander state machine for one game frame.
+ *
+ * States:
+ *  - Waiting: decrement the wait timer; do not move.
+ *  - Traveling: move toward the current destination; on arrival, transition to Waiting.
+ *              Abandons the destination and enters Waiting if stuck for too long.
+ *  - Choosing: no destination and no wait; roll a new destination or wait if none found.
+ */
+JABS_Battler.prototype.updatePixelIdleWander = function()
+{
+  // waiting — tick down and hold position.
+  if (this._pixelIdleWait > 0)
+  {
+    this._pixelIdleWait--;
+    return;
+  }
+
+  // traveling — move toward the chosen destination.
+  if (this._pixelIdleDest !== null)
+  {
+    const { x, y } = this._pixelIdleDest;
+
+    // arrived when within a comfortable fraction of a tile.
+    const arrived = Math.hypot(this.getX() - x, this.getY() - y) < 0.25;
+
+    if (arrived === false)
+    {
+      // count consecutive frames spent trying to reach this destination.
+      this._pixelIdleStuckFrames++;
+
+      // if stuck too long, abandon the destination rather than twitching forever.
+      if (this._pixelIdleStuckFrames >= JABS_Battler.pixelIdleStuckLimit)
+      {
+        this._pixelIdleDest = null;
+        this._pixelIdleStuckFrames = 0;
+        this._pixelIdleWait = this._rollIdleWaitDuration();
+        return;
+      }
+
+      // keep moving toward the destination this frame.
+      this.smartMoveTowardCoordinates(x, y);
+      return;
+    }
+
+    // arrived — clear the destination and start the post-arrival wait.
+    this._pixelIdleDest = null;
+    this._pixelIdleStuckFrames = 0;
+    this._pixelIdleWait = this._rollIdleWaitDuration();
+    return;
+  }
+
+  // no destination and no wait — try to roll a valid wander point.
+  const dest = this._rollIdleDestination();
+
+  // if all candidates were impassable, wait a cycle before trying again.
+  if (dest === null)
+  {
+    this._pixelIdleWait = this._rollIdleWaitDuration();
+    return;
+  }
+
+  this._pixelIdleDest = dest;
+  this._pixelIdleStuckFrames = 0;
+};
+
+/**
+ * Rolls a random wait duration before this battler picks its next wander destination.
+ * Returns a random multiple of 30 frames between 30 and 300 (one to ten seconds at 30 fps).
+ * @returns {number} The number of frames to wait.
+ */
+JABS_Battler.prototype._rollIdleWaitDuration = function()
+{
+  // 4–10 inclusive, each unit = 30 frames; range is 2 to 5 seconds at 60 fps.
+  const multiplier = Math.randomInt(7) + 4;
+
+  return multiplier * 30;
+};
+
+/**
+ * Rolls a random wander destination within the configured idle wander radius of home.
+ * Retries up to five times to find a tile that is passable in at least one cardinal direction.
+ * Returns null if every candidate lands on impassable terrain.
+ * @returns {{x: number, y: number}|null} The chosen destination, or null if none found.
+ */
+JABS_Battler.prototype._rollIdleDestination = function()
+{
+  const homeX = this.getHomeX();
+  const homeY = this.getHomeY();
+  const range = J.PIXEL.EXT.ABS.Metadata.IdleWanderRadius;
+
+  for (let attempt = 0; attempt < 5; attempt++)
+  {
+    // random offset along each axis within [-range, range].
+    const dx = (Math.random() * range * 2) - range;
+    const dy = (Math.random() * range * 2) - range;
+
+    const destX = homeX + dx;
+    const destY = homeY + dy;
+
+    const tx = Math.round(destX);
+    const ty = Math.round(destY);
+
+    // accept the tile if it allows passage in any cardinal direction.
+    const walkable = $gameMap.isPassable(tx, ty, 2)
+      || $gameMap.isPassable(tx, ty, 4)
+      || $gameMap.isPassable(tx, ty, 6)
+      || $gameMap.isPassable(tx, ty, 8);
+
+    if (walkable)
+    {
+      return { x: destX, y: destY };
+    }
+  }
+
+  // all five candidates were impassable.
+  return null;
+};
+
+/**
  * Extends {@link #setDodgeSteps}.<br/>
  * Scales the step count by the pixel collision density so dodge distance
  * covers the same visual distance as it would in tile-locked movement.
  * @param {number} stepCount The number of steps to dodge.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_Battler.set('setDodgeSteps', JABS_Battler.prototype.setDodgeSteps);
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('setDodgeSteps', JABS_Battler.prototype.setDodgeSteps);
 JABS_Battler.prototype.setDodgeSteps = function(stepCount)
 {
   // ensure the collision manager is configured before reading its step count.
@@ -243,7 +529,7 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
   const scaledStepCount = stepCount * PIXEL_CollisionManager.collisionStepCount;
 
   // perform original logic with the scaled step count.
-  J.ABS.EXT.PIXEL.Aliased.JABS_Battler.get('setDodgeSteps')
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('setDodgeSteps')
     .call(this, scaledStepCount);
 };
 
@@ -252,14 +538,14 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
  * Rebuilds the pixel collision table when an enemy battler is defeated,
  * in case the enemy event occupied passability cells that are now vacated.
  */
-J.ABS.EXT.PIXEL.Aliased.JABS_Battler.set('destroy', JABS_Battler.prototype.destroy);
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('destroy', JABS_Battler.prototype.destroy);
 JABS_Battler.prototype.destroy = function()
 {
   // record whether the battler being destroyed is an enemy (not an actor).
   const isEnemy = this.getBattler().isActor() === false;
 
   // perform original logic.
-  J.ABS.EXT.PIXEL.Aliased.JABS_Battler.get('destroy')
+  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('destroy')
     .call(this);
 
   // if an enemy was destroyed, rebuild the collision table to free any blocked cells.

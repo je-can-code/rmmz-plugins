@@ -70,9 +70,8 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   const roundX = Math.round(x);
   const roundY = Math.round(y);
 
-  // TODO: does this actually need to round?
-  // determine the threshold for pixel movement regarding event triggering.
-  // within 1/3 of a tile triggers?
+  // rmmz touch events operate at integer tile coordinates, so rounding is required.
+  // trigger only when within 0.3 tiles of the tile center to prevent early/spurious fires.
   const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3;
 
   // check if the event was triggered with the threshold coordinates.
@@ -161,7 +160,9 @@ Game_Player.prototype.updateDashing = function()
 
 /**
  * Gets the analog input angle for the player in degrees, if vector movement is active.
- * Returns null if vector movement is disabled, or if no analog axis input is present.
+ * Reads raw gamepad axis data directly from the Gamepad API to preserve sub-45° precision.
+ * Falls back to keyboard/d-pad dir8-to-angle conversion when no analog stick is active.
+ * Returns null if vector movement is disabled or there is no directional input at all.
  * @returns {number|null} Angle in degrees (0=right, 90=down), or null if not applicable.
  */
 Game_Player.prototype.getVectorInputAngle = function()
@@ -169,24 +170,81 @@ Game_Player.prototype.getVectorInputAngle = function()
   // do not use vector movement if the parameter is disabled.
   if (J.PIXEL.Metadata.VectorMovementEnabled === false)
   {
-    // vector movement disabled.
     return null;
   }
 
-  // read analog stick axes (GamepadInput axes 0=horizontal, 1=vertical).
-  // RMMZ exposes gamepad axis data via Input._gamepadStates or compatible wrappers.
-  // Fall back to keyboard dir8 converted to an angle if no gamepad axis is present.
+  // try the raw analog stick first; it returns null when no gamepad is active or
+  // the stick is inside the dead zone.
+  const analogAngle = this._readGamepadAnalogAngle();
+
+  if (analogAngle !== null)
+  {
+    return analogAngle;
+  }
+
+  // fall back to keyboard / d-pad: convert the 8-direction code to a fixed angle.
   const rawDir8 = Input.dir8;
 
-  // if no input at all, no angle.
   if (rawDir8 === 0)
   {
-    // no input.
     return null;
   }
 
-  // derive angle from the 8-direction input code.
   return this.dir8ToAngle(rawDir8);
+};
+
+/**
+ * Reads the left analog stick from the first connected gamepad and returns the angle
+ * in degrees, or null if no gamepad is present or the stick is inside the dead zone.
+ *
+ * RMMZ's Input system discards raw axis floats before they reach Input.dir8, converting
+ * them to digital button states with a 0.5 threshold. To get true arbitrary angles we
+ * must bypass RMMZ and read navigator.getGamepads() directly.
+ *
+ * Dead zone of 0.15 (smaller than RMMZ's 0.5 threshold) filters joystick drift while
+ * still detecting gentle pushes before RMMZ's digital conversion fires.
+ *
+ * @returns {number|null} Angle in degrees (0=right, 90=down in RMMZ Y-down space), or null.
+ */
+Game_Player.prototype._readGamepadAnalogAngle = function()
+{
+  // Gamepad API is not available in all environments.
+  if (!navigator.getGamepads)
+  {
+    return null;
+  }
+
+  const gamepads = navigator.getGamepads();
+
+  if (!gamepads)
+  {
+    return null;
+  }
+
+  for (const gamepad of gamepads)
+  {
+    if (!gamepad || gamepad.connected === false)
+    {
+      continue;
+    }
+
+    const axisX = gamepad.axes[0];
+    const axisY = gamepad.axes[1];
+
+    // compute magnitude to apply a circular dead zone.
+    const magnitude = Math.sqrt(axisX * axisX + axisY * axisY);
+
+    if (magnitude < 0.15)
+    {
+      // stick is inside the dead zone; try the next gamepad.
+      continue;
+    }
+
+    // atan2 returns radians in [-π, π]; convert to degrees.
+    return Math.atan2(axisY, axisX) * 180 / Math.PI;
+  }
+
+  return null;
 };
 
 /**

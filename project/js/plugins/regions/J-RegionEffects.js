@@ -316,13 +316,6 @@ Game_Map.prototype.refreshRegionEffects = function()
   this.refreshAllowRegionEffects();
   this.refreshDenyRegionEffects();
 
-  // check if using cyclone movement.
-  if (globalThis.CycloneMovement)
-  {
-    // refresh the collision after the region effects are refreshed.
-    CycloneMovement.setupCollision();
-  }
-
   // rebuild the pixel collision table after region effects are refreshed.
   if (globalThis.PIXEL_CollisionManager)
   {
