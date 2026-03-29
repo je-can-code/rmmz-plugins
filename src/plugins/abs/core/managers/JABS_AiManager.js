@@ -1494,13 +1494,14 @@ class JABS_AiManager
     // followers defer to their leader; if no leader is ready they basic attack.
     if (role.follower && !role.leader && !role.solo)
     {
-      const followerSkillId = battler.getAiMode().decideFollowerAi(battler);
-      if (!this.isSkillIdValid(followerSkillId))
+      const followerPicks = battler.getAiMode().decideFollowerAi(battler);
+      if (followerPicks.length === 0 || !this.isSkillIdValid(followerPicks[0]))
       {
         this.cancelActionSetup(battler);
         return;
       }
 
+      const followerSkillId = followerPicks[0];
       const followerSkill = battler.getSkill(followerSkillId);
       if (!followerSkill)
       {
@@ -1514,12 +1515,12 @@ class JABS_AiManager
     }
 
     // use the battler's AI to decide the skill.
-    const decidedSkillId = battler
+    const decidedPicks = battler
       .getAiMode()
       .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
 
     // validate the skill chosen.
-    if (!this.isSkillIdValid(decidedSkillId))
+    if (decidedPicks.length === 0 || !this.isSkillIdValid(decidedPicks[0]))
     {
       // cancel the setup.
       this.cancelActionSetup(battler);
@@ -1527,6 +1528,8 @@ class JABS_AiManager
       // stop processing.
       return;
     }
+
+    const decidedSkillId = decidedPicks[0];
 
     // construct the skill from the battler's perspective.
     const skill = battler.getSkill(decidedSkillId);

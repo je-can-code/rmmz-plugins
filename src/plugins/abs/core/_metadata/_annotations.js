@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.7.1 JABS] Enables combat to be carried out on the map.
+ * [v4.7.2 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,12 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.7.2
+ *    Unified enemy and ally AI skill decisions to return a skill-id array (empty or one id);
+ *    JABS_AiManager phase-2 paths read the first element after validation.
+ *    JABS_AI#decideAction stub now returns an empty array to match concrete AI classes.
+ *    Fixed filterSkillsHealerPriority returning a scalar on the final healing-priority path
+ *    instead of an array.
  * - 4.7.1
  *    Added plugin parameter "Parry Map Animation Id" for the database
  *    animation played on successful parry (default 122; 0 disables).

@@ -14,15 +14,16 @@ class JABS_AI
 
   /**
    * Decides an action based on this battler's AI, the target, and the given available skills.
+   * {@link JABS_EnemyAI} and {@link JABS_AllyAI} override this and return exactly zero or one skill id as a list.
    * @param {JABS_Battler} user The battler of the AI deciding a skill.
    * @param {JABS_Battler} target The target battler to decide an action against.
    * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
-   * @returns {number|null} The skill id chosen to use, or null if none were valid choices for this AI.
+   * @returns {number[]} Empty stub; subclasses return `[]` or `[skillId]`.
    */
   // eslint-disable-next-line no-unused-vars
   decideAction(user, target, availableSkills)
   {
-    return 0;
+    return [];
   }
 
   /**
