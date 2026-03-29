@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.7.2 JABS] Enables combat to be carried out on the map.
+ * [v4.7.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,7 +47,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
- * - 4.7.2
+ * - 4.7.1
+ *    Added plugin parameter "Parry Map Animation Id" for the database
+ *    animation played on successful parry (default 122; 0 disables).
  *    Fixed Sprite_MapCastGauge gauge track being shortened by skill name width;
  *    track now always occupies the full bitmap width.
  *    Fixed enemy projectile fire direction baked at decision time rather than
@@ -57,9 +59,6 @@
  *    with eventsXy, which always returned no match; coordinates are now rounded
  *    to the nearest tile before the look-ahead is computed.
  *    Removed obsolete J.ABS.EXT.CYCLE guard from hasInteractableEventInFront.
- * - 4.7.1
- *    Added plugin parameter "Parry Map Animation Id" for the database
- *    animation played on successful parry (default 122; 0 disables).
  * - 4.7.0
  *    Renamed battler role tag from <jabsRole: X> to <aiRole: X>.
  *    Fixed axis-alignment for AI using Line, Wall, and Arc hitboxes.

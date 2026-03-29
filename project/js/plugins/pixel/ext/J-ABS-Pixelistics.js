@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.0.0 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -34,23 +34,18 @@
  *
  * ============================================================================
  * CHANGELOG:
- * - 1.1.0
- *    Added pixel-aware idle wander state machine: idle enemies now pick a
- *    random destination within the configured wander radius, walk to it, wait
- *    a random pause (2–5 seconds), then repeat. Replaces the old single
- *    tile-step moveRandom behavior.
- *    Added idleWanderRadius plugin parameter (default 1.5 tiles).
- *    Added passability validation when rolling a wander destination; retries
- *    up to five times before falling back to a wait cycle.
- *    Added stuck detection: abandons an unreachable destination after 1.5s
- *    and waits before picking a new one.
- *    Fixed isHome using integer tile equality (always false with fractional
- *    coordinates); now uses distanceToHome() < 0.5.
- *    Fixed goHome using moveStraight (one pixel per frame); now delegates to
- *    smartMoveTowardCoordinates for smooth pixel-aware return.
  * - 1.0.0
- *    Initial extraction from J-ABS-PixelMovement (abs/ext/pixel) into the
- *    dedicated J-Pixelistics extension layer.
+ *    Initial release as the JABS integration layer for J-Pixelistics.
+ *    Pixel-aware idle wander state machine: idle enemies pick a random
+ *    passable destination within the configured wander radius, walk to it,
+ *    wait 2–5 seconds, then repeat.
+ *    idleWanderRadius plugin parameter (default 1.5 tiles).
+ *    Stuck detection: abandons unreachable destinations after 1.5s.
+ *    Dodge step count scaled by subcell density so dodge distance matches
+ *    the intended tile distance.
+ *    Collision table rebuilt when an enemy is defeated.
+ *    Smart pixel-aware movement for ally formation, retreating, and
+ *    returning to home point.
  * ============================================================================
  *
  *
@@ -140,7 +135,7 @@ J.PIXEL.EXT.ABS = {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.1.0');
+J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.0.0');
 
 /**
  * A collection of all aliased methods for this plugin.
