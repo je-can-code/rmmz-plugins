@@ -426,12 +426,12 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
   const currentlyEquippedSkillIds = validSkillSlots.map(skillSlot => skillSlot.id);
 
   // decide the action based on the ally ai mode currently assigned.
-  const decidedSkillId = jabsBattler
+  const decidedPicks = jabsBattler
     .getAllyAiMode()
     .decideAction(jabsBattler, jabsBattler.getTarget(), currentlyEquippedSkillIds);
 
   // validate the skill chosen.
-  if (!this.isSkillIdValid(decidedSkillId))
+  if (decidedPicks.length === 0 || !this.isSkillIdValid(decidedPicks[0]))
   {
     // cancel the setup.
     this.cancelActionSetup(jabsBattler);
@@ -439,6 +439,8 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
     // stop processing.
     return;
   }
+
+  const decidedSkillId = decidedPicks[0];
 
   // TODO: allow allies to use dodge skills, but code the AI to use it intelligently.
   // check if the skill id is actually a mobility skill.
