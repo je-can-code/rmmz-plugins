@@ -81,7 +81,8 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Package manager**: Bun everywhere. Never suggest `npm` or `yarn`.
 - **GitHub CLI**: `gh` is installed at `~/.local/bin/gh` and authenticated as `je-can-code`. Use it for all PR operations. Write PR bodies to a temp file and pass via `--body-file` to avoid heredoc quoting issues.
 - **Git credential helper**: configured via `gh auth setup-git` — `git push` works without GUI prompts.
-- **PR commits: stage everything.** When creating a PR commit, always stage and commit ALL modified/untracked files that belong to the changeset — including built output in `project/js/plugins/`. Never leave straggler files behind.
+- **Push everything in both repos.** When plugin work lands via `bun run hotfix`, commit and push **every** remaining local change in **`rmmz-plugins`** and **`ca`** on the branches you are using (including `chef-adventure/data/*.json`, `plugins.js`, and any other files the tools or editor touched). Nothing that belongs in git should stay uncommitted or unpushed in either repo. Session-only noise (e.g. `.cursor/debug-*.log`) stays out of git via `.gitignore`, not by leaving the branch “partial.”
+- **PR commits: full tree.** PR scope is explained in the PR description, not by omitting files from the commit. Include all built output under `rmmz-plugins/project/js/plugins/` that `hotfix` produced.
 - **Build & copy: always use `bun run hotfix`.** Never copy built plugin files manually. If `hotfix` fails for an unrelated reason, investigate and fix the root cause — do not fall back to manual copies.
 
 ## Known Future Work (do not tackle without checking first)

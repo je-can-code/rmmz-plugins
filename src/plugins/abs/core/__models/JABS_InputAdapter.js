@@ -284,6 +284,12 @@ class JABS_InputAdapter
     // check if we can sprint.
     if (!this.#canPerformSprint(jabsBattler)) return;
 
+    // dash and guard are mutually exclusive.
+    if (sprinting && jabsBattler.guarding())
+    {
+      jabsBattler.executeGuard(false, JABS_Button.Offhand);
+    }
+
     // perform the sprint.
     jabsBattler.getCharacter()._dashing = sprinting;
   }
@@ -359,6 +365,12 @@ class JABS_InputAdapter
   {
     // check if we can guard with the offhand slot.
     if (!this.#canPerformGuardBySlot(JABS_Button.Offhand, jabsBattler)) return;
+
+    // dash and guard are mutually exclusive; pivot-in-place guard wins over residual dash.
+    if (guarding)
+    {
+      jabsBattler.getCharacter()._dashing = false;
+    }
 
     // perform the guard skill in the offhand slot.
     jabsBattler.executeGuard(guarding, JABS_Button.Offhand);
