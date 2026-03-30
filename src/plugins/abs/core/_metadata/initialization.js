@@ -181,6 +181,24 @@ J.ABS.Metadata.ParryCharacterAnimationId = (Number.isFinite(parryCharacterAnimat
   ? Math.floor(parryCharacterAnimationParsed)
   : 122;
 
+const implicitParryDomRaw = J.ABS.PluginParameters['implicitParryDominanceMultiplier'];
+const implicitParryDomParsed = Number(implicitParryDomRaw);
+J.ABS.Metadata.ImplicitParryDominanceMultiplier = (Number.isFinite(implicitParryDomParsed) && implicitParryDomParsed > 1)
+  ? implicitParryDomParsed
+  : 2;
+
+const implicitParryBaselineFloorRaw = J.ABS.PluginParameters['implicitParryBaselineFloor'];
+const implicitParryBaselineFloorParsed = Number(implicitParryBaselineFloorRaw);
+J.ABS.Metadata.ImplicitParryBaselineFloor = (Number.isFinite(implicitParryBaselineFloorParsed) && implicitParryBaselineFloorParsed >= 0)
+  ? implicitParryBaselineFloorParsed
+  : 50;
+
+const implicitParryBaselinePerLevelRaw = J.ABS.PluginParameters['implicitParryBaselinePerLevel'];
+const implicitParryBaselinePerLevelParsed = Number(implicitParryBaselinePerLevelRaw);
+J.ABS.Metadata.ImplicitParryBaselinePerLevel = (Number.isFinite(implicitParryBaselinePerLevelParsed) && implicitParryBaselinePerLevelParsed >= 0)
+  ? implicitParryBaselinePerLevelParsed
+  : 0.25;
+
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
 J.ABS.Metadata.EquipDodgeSkillsText = J.ABS.PluginParameters['equipDodgeSkillsText'];

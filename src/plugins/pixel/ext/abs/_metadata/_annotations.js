@@ -46,6 +46,8 @@
  *    Collision table rebuilt when an enemy is defeated.
  *    Smart pixel-aware movement for ally formation, retreating, and
  *    returning to home point.
+ *    While the party leader is in pivot guard (one input: lock in place, guard
+ *    when eligible), player map movement and dash reassert are disabled.
  * ============================================================================
  *
  *
