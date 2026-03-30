@@ -1,6 +1,7 @@
 .idea/
 .vs/
 node_modules/
+.cursor/debug-*.log
 
 file*.rmmzsave
 out/

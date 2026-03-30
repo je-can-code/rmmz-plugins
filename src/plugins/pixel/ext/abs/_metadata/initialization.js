@@ -27,6 +27,7 @@ J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics
  * A collection of all aliased methods for this plugin.
  */
 J.PIXEL.EXT.ABS.Aliased = {
+  Game_Player: new Map(),
   JABS_AiManager: new Map(),
   JABS_Battler: new Map(),
 };
