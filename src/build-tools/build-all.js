@@ -33,7 +33,14 @@ import Logger, { LogStyle } from './logger.js';
 const start = performance.now();
 
 // don't recursively build everything, or start generating a bunch of empty directories.
-const ignoredKeys = [ 'plugin:', 'copy:', 'build:all', 'hotfix' ];
+const ignoredKeys = [
+  'plugin:',
+  'copy:',
+  'build:all',
+  'hotfix',
+  'test',
+  'clean:',
+];
 
 // extract the scripts section of our package.json.
 const { scripts } = pkg;
@@ -54,14 +61,20 @@ for (const key in scripts)
   const command = `npm run ${key}`;
 
   // capture the execution as a promise for parallelization.
-  const execution = new Promise(resolve =>
+  const execution = new Promise((resolve, reject) =>
   {
-    // eslint-disable-next-line no-unused-vars
-    const handleOutcome = (error, stdout, stderr) =>
+    const handleOutcome = (error, _stdout, stderr) =>
     {
       if (error)
       {
-        console.error(`exec error: ${error}`);
+        const stderrText = stderr === undefined || stderr === null ? '' : String(stderr).trim();
+        const snippet = stderrText.length > 0 ? stderrText.slice(0, 800) : '';
+        const lines = [`${command} failed: ${error.message}`];
+        if (snippet.length > 0)
+        {
+          lines.push(snippet);
+        }
+        reject(new Error(lines.join('\n')));
         return;
       }
 
@@ -70,19 +83,25 @@ for (const key in scripts)
 
     Logger.log(command, LogStyle.yellow);
 
-    // kick off the command.
-    const process = exec(command, handleOutcome);
+    const childProc = exec(command, handleOutcome);
 
-    // track the output and log it.
-    process.stdout.on('data', data => Logger.log(data));
+    childProc.stdout.on('data', data => Logger.log(data));
+    childProc.stderr.on('data', data => Logger.log(data));
   });
 
   // add the execution to the collection.
   executions.push(execution);
 }
 
-// wait for all the promises to finish.
-await Promise.all(executions);
+try
+{
+  await Promise.all(executions);
+}
+catch (err)
+{
+  console.error(err);
+  process.exit(1);
+}
 
 // capture the duration of this build-all execution in seconds.
 const durationSeconds = ((performance.now() - start) / 1000).toFixed(3);

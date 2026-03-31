@@ -118,26 +118,25 @@ Game_Actor.prototype.baseMaxLevel = function()
  */
 Game_Actor.prototype.paramBase = function(paramId)
 {
-  // TODO: use the calculated "getLevel()" instead after some sort of optimizations?
-  const level = this._level;
+  const rawLevel = Math.floor(this.getLevel());
+  const editorMax = J_LevelPluginMetadata.EditorMaxLevel;
 
-  // check if the level is still within database norms.
-  if (level <= J_LevelPluginMetadata.EditorMaxLevel)
+  if (rawLevel <= editorMax)
   {
-    // just return the regular database parameter.
-    return this.currentClass().params[paramId][level];
+    const row = this.currentClass().params[paramId];
+    const idx = Math.min(Math.max(rawLevel, 0), row.length - 1);
+    return row[idx];
   }
 
-  // check if the cache has already been built for beyond max data.
   if ($gameTemp.hasCachedBeyondMaxData() === false)
   {
-    // build it!
     $gameTemp.buildBeyondMaxData();
   }
 
-  // grab the beyond max data instead.
   const params = $gameTemp.getBeyondMaxData(this.currentClass().id);
-  return params[paramId][level];
+  const beyondRow = params[paramId];
+  const beyondIdx = Math.min(rawLevel, beyondRow.length - 1);
+  return beyondRow[beyondIdx];
 };
 
 /**

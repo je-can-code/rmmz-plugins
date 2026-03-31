@@ -1,5 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import fsp from 'node:fs/promises';
+import path from 'node:path';
 import Logger, { LogStyle } from './logger.js';
 
 /**
@@ -93,14 +94,8 @@ class Mirror
     // better resolve this path one, too.
     const resolvedDestination = path.resolve(destination);
 
-    // experimental folder mirroring isn't too shabby!
-    await fs.cp(
-      resolvedSource,
-      resolvedDestination,
-      { recursive: true },
-      this.#handleFileError
-    );
-    Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
+    await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, resolvedDestination);
+    Logger.logAnyway(`copied (excluding *.map) [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
   }
 
   /**
@@ -137,6 +132,61 @@ class Mirror
   #handleFileError(error)
   {
     if (error) throw error;
+  }
+
+  /**
+   * Mirrors the source directory contents into the destination, excluding sourcemap files.
+   * We keep sourcemaps local for dev/coverage and never ship them to game projects.
+   *
+   * @param {string} resolvedSource Absolute source path.
+   * @param {string} resolvedDestination Absolute destination path.
+   */
+  async #mirrorAllFilesExceptSourceMaps(resolvedSource, resolvedDestination)
+  {
+    const entries = await this.#listFilesRecursive(resolvedSource);
+
+    for (const absoluteFile of entries)
+    {
+      if (absoluteFile.endsWith('.map'))
+      {
+        continue;
+      }
+
+      const rel = path.relative(resolvedSource, absoluteFile);
+      const outFile = path.join(resolvedDestination, rel);
+      const outDir = path.dirname(outFile);
+      await fsp.mkdir(outDir, { recursive: true });
+      await fsp.copyFile(absoluteFile, outFile);
+    }
+  }
+
+  /**
+   * Recursively lists all files under a directory.
+   * @param {string} dir Absolute directory path.
+   * @returns {Promise<string[]>}
+   */
+  async #listFilesRecursive(dir)
+  {
+    /** @type {string[]} */
+    const results = [];
+    const dirents = await fsp.readdir(dir, { withFileTypes: true });
+
+    for (const dirent of dirents)
+    {
+      const full = path.join(dir, dirent.name);
+      if (dirent.isDirectory())
+      {
+        results.push(...await this.#listFilesRecursive(full));
+        continue;
+      }
+
+      if (dirent.isFile())
+      {
+        results.push(full);
+      }
+    }
+
+    return results;
   }
 }
 

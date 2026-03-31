@@ -41,24 +41,35 @@ Object.defineProperty(Game_Battler.prototype, "lvl", {
  */
 Game_Battler.prototype.getLevel = function()
 {
-  // grab all sources that a level can come from.
-  const sources = this.getLevelSources();
+  this._j ||= {};
+  this._j._level ||= {};
 
-  // get the default level for this battler.
-  let level = this.getBattlerBaseLevel();
+  const levelSlot = this._j._level;
 
-  // get the level balancer for this battler if available.
-  level += this.getLevelBalancer();
-
-  // iterate over each of the source database datas.
-  sources.forEach(rpgData =>
+  if (levelSlot._isComputingGetLevel === true)
   {
-    // add the level extracted from the data.
-    level += this.extractLevel(rpgData);
-  }, this);
+    return this.getBattlerBaseLevel() + this.getLevelBalancer();
+  }
 
-  // return the new amount.
-  return level;
+  levelSlot._isComputingGetLevel = true;
+
+  try
+  {
+    const sources = this.getLevelSources();
+    let level = this.getBattlerBaseLevel();
+    level += this.getLevelBalancer();
+
+    sources.forEach(rpgData =>
+    {
+      level += this.extractLevel(rpgData);
+    }, this);
+
+    return level;
+  }
+  finally
+  {
+    levelSlot._isComputingGetLevel = false;
+  }
 };
 
 /**
