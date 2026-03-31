@@ -597,11 +597,17 @@ class RPGManager
     // eslint-disable-next-line no-unused-vars
     const v = $gameVariables._data;
 
+    // build a non-global, non-sticky scanner so `/g` patterns do not carry lastIndex across lines.
+    const safeFlags = structure.flags
+      .replace('g', '')
+      .replace('y', '');
+    const scan = new RegExp(structure.source, safeFlags);
+
     // iterate over each valid line of the note.
     lines.forEach(line =>
     {
       // grab the regex execution result for this note line.
-      const result = structure.exec(line);
+      const result = scan.exec(line);
 
       // if there is no result, then skip.
       if (result === null) return;

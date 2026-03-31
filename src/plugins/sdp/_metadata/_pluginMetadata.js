@@ -62,7 +62,7 @@ class J_SdpPluginMetadata
       }
 
       // create the panel.
-      const panel = StatDistributionPanel.Builder
+      const panel = StatDistributionPanel.Builder()
         .name(parsedPanel.name)
         .key(parsedPanel.key)
         .iconIndex(parseInt(parsedPanel.iconIndex))

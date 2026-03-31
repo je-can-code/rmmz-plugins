@@ -35,6 +35,8 @@
 
 import { globSync } from 'glob';
 import * as fs from 'fs/promises';
+import path from 'node:path';
+import { SourceMapGenerator } from 'source-map';
 import Logger, { LogStyle } from './logger.js';
 
 // whether or not to include a timestamp of when this was bundled up.
@@ -81,10 +83,24 @@ async function main()
   }
 
   // concat the files into 1.
-  const bundledJs = files.join('\n\n');
+  const separator = '\n\n';
+  const bundledJs = files.join(separator);
+
+  // build the sourcemap for mapping out/ back to src/ files.
+  const bundleMap = buildSourceMap({
+    files,
+    filePaths,
+    outFilename: OUT_FILENAME,
+    separator,
+  });
+
+  // append sourcemap reference.
+  const mapBasename = `${OUT_FILENAME}.map`;
+  const bundledJsWithMapRef = `${bundledJs}\n\n//# sourceMappingURL=${mapBasename}\n`;
 
   // write the file to the designated location.
-  await fs.writeFile(filepathAndName, bundledJs, 'utf-8');
+  await fs.writeFile(filepathAndName, bundledJsWithMapRef, 'utf-8');
+  await fs.writeFile(`${filepathAndName}.map`, bundleMap, 'utf-8');
 
   Logger.log(`finished combining all files into 1.`, LogStyle.magenta);
   Logger.logAnyway(`Combiner™ has completed execution for ${OUT_FILENAME}.`, LogStyle.rainbow);
@@ -174,4 +190,60 @@ async function getFiles(filePaths)
 
   // returns all the found files.
   return files;
+}
+
+/**
+ * Builds a sourcemap that maps each generated line back to the original source file.
+ * Because this build is pure concatenation, we map line-to-line at column 0.
+ *
+ * @param {object} args
+ * @param {string[]} args.files The source file contents (in bundle order).
+ * @param {string[]} args.filePaths The absolute paths for {@link args.files}.
+ * @param {string} args.outFilename The output filename.
+ * @param {string} args.separator The separator used between files.
+ * @returns {string} The sourcemap json.
+ */
+function buildSourceMap(args)
+{
+  const {
+    files,
+    filePaths,
+    outFilename,
+    separator,
+  } = args;
+
+  const map = new SourceMapGenerator({ file: outFilename });
+
+  // the current 1-based line number in the generated output.
+  let generatedLine = 1;
+
+  for (let fileIndex = 0; fileIndex < files.length; fileIndex++)
+  {
+    const content = files[fileIndex];
+    const absolute = filePaths[fileIndex];
+    const repoRelative = path.relative(process.cwd(), absolute).replaceAll('\\', '/');
+
+    map.setSourceContent(repoRelative, content);
+
+    // count lines in this file; split preserves a 1:1 line mapping for sourcemaps.
+    const lines = content.split('\n');
+    for (let originalLine = 1; originalLine <= lines.length; originalLine++)
+    {
+      map.addMapping({
+        source: repoRelative,
+        original: { line: originalLine, column: 0 },
+        generated: { line: generatedLine, column: 0 },
+      });
+      generatedLine++;
+    }
+
+    // account for the separator between files, except after the last file.
+    if (fileIndex < files.length - 1)
+    {
+      const separatorLines = separator.split('\n').length - 1;
+      generatedLine += separatorLines;
+    }
+  }
+
+  return map.toString();
 }

@@ -1,0 +1,58 @@
+//region plugins/popups/game-character-textpops.test.js
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { loadPopupsPluginVm } from './popups-vm.js';
+
+describe('J-TextPops Game_Character integration (out/J-TextPops.js)', () =>
+{
+  let sandbox;
+
+  beforeAll(() =>
+  {
+    sandbox = { console };
+    loadPopupsPluginVm(sandbox);
+  });
+
+  afterAll(() =>
+  {
+    sandbox = null;
+  });
+
+  it('request/add/acknowledge flow tracks pops when not disabled', () =>
+  {
+    sandbox.J.ABS.Metadata.DisableTextPops = false;
+
+    const ch = new sandbox.Game_Character();
+    ch.initMembers();
+
+    expect(ch.hasTextPops()).toBe(false);
+    ch.requestTextPop();
+    expect(ch.hasTextPops()).toBe(true);
+
+    const popup = new sandbox.TextPopBuilder('x').build();
+    ch.addTextPop(popup);
+    expect(ch.getTextPops().length).toBe(1);
+
+    ch.acknowledgeTextPops();
+    expect(ch.hasTextPops()).toBe(false);
+
+    ch.emptyDamagePops();
+    expect(ch.getTextPops().length).toBe(0);
+  });
+
+  it('does not track pops when DisableTextPops is true', () =>
+  {
+    sandbox.J.ABS.Metadata.DisableTextPops = true;
+
+    const ch = new sandbox.Game_Character();
+    ch.initMembers();
+
+    ch.requestTextPop();
+    expect(ch.hasTextPops()).toBe(false);
+
+    const popup = new sandbox.TextPopBuilder('x').build();
+    ch.addTextPop(popup);
+    expect(ch.getTextPops().length).toBe(0);
+  });
+});
+//endregion plugins/popups/game-character-textpops.test.js
