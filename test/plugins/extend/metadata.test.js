@@ -1,0 +1,26 @@
+//region plugins/extend/metadata.test.js
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { loadSkillExtendPluginVm } from './extend-vm.js';
+
+describe('J-SkillExtend metadata (out/J-SkillExtend.js)', () =>
+{
+  let sandbox;
+
+  beforeAll(() =>
+  {
+    sandbox = { console };
+    loadSkillExtendPluginVm(sandbox);
+  });
+
+  afterAll(() =>
+  {
+    sandbox = null;
+  });
+
+  it('exposes plugin name on J.EXTEND.Metadata', () =>
+  {
+    expect(sandbox.J.EXTEND.Metadata.Name).toBe('J-SkillExtend');
+  });
+});
+//endregion plugins/extend/metadata.test.js
