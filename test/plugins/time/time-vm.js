@@ -33,7 +33,7 @@ export function loadTimePluginVm(sandbox)
  */
 export function makeGameTime(sandbox)
 {
-  sandbox.$gameTime = new sandbox.Game_Time();
-  return sandbox.$gameTime;
+  vm.runInContext('$gameTime = new Game_Time();', sandbox);
+  return vm.runInContext('$gameTime;', sandbox);
 }
 //endregion plugins/time/time-vm.js

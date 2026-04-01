@@ -8,7 +8,7 @@ class J_CraftingCreatePluginMetadata
   extends PluginMetadata
 {
   /**
-   * The path where the config for panels is located.
+   * Project-relative path to the crafting JSON configuration file.
    * @type {string}
    */
   static CONFIG_PATH = 'data/config.crafting.json';
@@ -91,7 +91,7 @@ class J_CraftingCreatePluginMetadata
    */
   static parseCategories(parsedCategoriesBlob)
   {
-    // a maping function for classify the categories of the configuration.
+    // a mapping function for classifying the categories of the configuration.
     const categoryMapper = mappableCategory =>
     {
       const {
@@ -129,7 +129,7 @@ class J_CraftingCreatePluginMetadata
     // execute original logic.
     super.postInitialize();
 
-    // initialize the panels from plugin configuration.
+    // initialize recipes and categories from external JSON configuration.
     this.initializeConfiguration();
 
     // initialize this plugin from configuration.
@@ -137,12 +137,30 @@ class J_CraftingCreatePluginMetadata
   }
 
   /**
-   * Initializes the SDPs that exist in the SDP configuration.
+   * Loads and classifies crafting recipes and categories from {@link J_CraftingCreatePluginMetadata.CONFIG_PATH}.
    */
   initializeConfiguration()
   {
-    // parse the files as an actual list of objects from the JSON configuration.
-    const parsedJson = JSON.parse(StorageManager.fsReadFile(J_CraftingCreatePluginMetadata.CONFIG_PATH));
+    const rawConfig = StorageManager.fsReadFile(J_CraftingCreatePluginMetadata.CONFIG_PATH);
+    if (rawConfig === null || rawConfig === '')
+    {
+      console.error('no crafting configuration was found in the /data directory of the project.');
+      console.error('Consider adding configuration using the J-MZ data editor, or hand-writing one.');
+      throw new Error('Crafting plugin is being used, but no config file is present.');
+    }
+
+    let parsedJson;
+    try
+    {
+      parsedJson = JSON.parse(rawConfig);
+    }
+    catch (e)
+    {
+      throw new Error(
+        `Failed to parse JSON at ${J_CraftingCreatePluginMetadata.CONFIG_PATH}: ${e.message}`,
+      );
+    }
+
     if (parsedJson === null)
     {
       console.error('no crafting configuration was found in the /data directory of the project.');
@@ -150,7 +168,6 @@ class J_CraftingCreatePluginMetadata
       throw new Error('Crafting plugin is being used, but no config file is present.');
     }
 
-    // class-ify over each panel.
     const classifiedCraftingConfig = J_CraftingCreatePluginMetadata.classify(parsedJson);
 
     /**
@@ -190,10 +207,6 @@ class J_CraftingCreatePluginMetadata
       - ${this.categories.length} categories
       from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
     }
-    else
-    {
-      console.log(`loaded from file ${J_CraftingCreatePluginMetadata.CONFIG_PATH}.`);
-    }
   }
 
   /**
@@ -206,7 +219,7 @@ class J_CraftingCreatePluginMetadata
      * in the menu.
      * @type {number}
      */
-    this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
+    this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
 
     /**
      * The name used for the command when visible in a menu.
@@ -218,7 +231,7 @@ class J_CraftingCreatePluginMetadata
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}
      */
-    this.commandIconIndex = parseInt(this.parsedPluginParameters['menu-icon']) ?? 0;
+    this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-icon'], 0);
   }
 
   /**

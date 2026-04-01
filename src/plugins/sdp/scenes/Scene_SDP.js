@@ -196,8 +196,8 @@ class Scene_SDP
     // grab the points rectangle for reference.
     const pointsRectangle = this.sdpPointsRectangle();
 
-    // arbitrarily define the width.
-    const width = 400;
+    // width shares the left ribbon with {@link #sdpPointsRectangle} (scaled up for larger menu fonts).
+    const width = 480;
 
     // determine the modifier of the height for fitting properly..
     const heightFit = (pointsRectangle.height + this.sdpHelpRectangle().height) + 8;
@@ -273,8 +273,8 @@ class Scene_SDP
    */
   sdpParameterListRectangle()
   {
-    // define the width of the list.
-    const width = 600;
+    // center column; narrowed when the left ribbon widens so the right column absorbs the difference.
+    const width = 720;
 
     // calculate the X for where the origin of the list window should be.
     const x = this.sdpListRectangle().width;
@@ -567,9 +567,9 @@ class Scene_SDP
    */
   sdpPointsRectangle()
   {
-    // the sdp points window sits in the upper-right-most corner.
-    const width = 400;
-    const height = 60;
+    // upper-left ribbon; width matches {@link #sdpListRectangle} for a single vertical stripe.
+    const width = 480;
+    const height = 72;
     const x = 0;
     const y = 0;
     return new Rectangle(x, y, width, height);

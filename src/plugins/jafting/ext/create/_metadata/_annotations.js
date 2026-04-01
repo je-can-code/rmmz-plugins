@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 JAFT-Create] An extension for JAFTING to enable recipe creation.
+ * [v1.0.3 JAFT-Create] An extension for JAFTING to enable recipe creation.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -134,6 +134,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Developer/debug helpers on J.JAFTING.EXT.CREATE.Debug and a plugin command to prep Creation test saves.
  * - 1.0.2
  *    Added flag for showing external file load info.
  * - 1.0.1
@@ -222,5 +224,15 @@
  * @command lock-all-recipes
  * @text Lock All Recipes
  * @desc Locks all implemented crafting recipes.
+ *
+ * @command debug-prepare-creation-testing
+ * @text DEBUG: Prepare Creation testing
+ * @desc Developer convenience: unlocks all JAFTING Creation entries, maxes DB item/weapon/armor stacks, grants gold (and SDP if linked), then multiplies ingredient/tool grants from config.
+ * @arg recipeStockMultiplier
+ * @type number
+ * @min 1
+ * @default 15
+ * @text Recipe stock multiplier
+ * @desc Each configured ingredient/tool quantity is multiplied by this before granting to the party.
  */
 //endregion annotations

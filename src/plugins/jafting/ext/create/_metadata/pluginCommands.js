@@ -92,4 +92,25 @@ PluginManager.registerCommand(J.JAFTING.EXT.CREATE.Metadata.name, "lock-all-reci
 {
   $gameParty.lockAllRecipes();
 });
+
+/**
+ * Developer-only convenience: see {@link J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest}.
+ */
+PluginManager.registerCommand(J.JAFTING.EXT.CREATE.Metadata.name, "debug-prepare-creation-testing", args =>
+{
+  const { recipeStockMultiplier } = args;
+  let mult = 15;
+
+  if (recipeStockMultiplier !== undefined && recipeStockMultiplier !== null && recipeStockMultiplier !== '')
+  {
+    const parsed = Number(recipeStockMultiplier);
+
+    if (Number.isFinite(parsed) && parsed >= 1)
+    {
+      mult = Math.floor(parsed);
+    }
+  }
+
+  J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest(mult);
+});
 //endregion plugin commands

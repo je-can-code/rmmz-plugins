@@ -25,7 +25,7 @@ Window_JaftingList.prototype.buildRefinementCommand = function()
 {
   return new WindowCommandBuilder(J.JAFTING.EXT.REFINE.Metadata.commandName)
     .setSymbol(Scene_JaftingRefine.KEY)
-    .setEnabled($gameSwitches.value(J.JAFTING.EXT.REFINE.Metadata.menuSwitchId))
+    .setEnabled(Scene_JaftingRefine.isRefineCommandEnabled())
     .addTextLine("Give your equipment a personal touch.")
     .addTextLine("Modify your equips with trait transferrence and reach for godlihood!")
     .setIconIndex(J.JAFTING.EXT.REFINE.Metadata.commandIconIndex)

@@ -1,7 +1,7 @@
-//region plugins/apt/apt-vm.js
+//region plugins/apt/core/apt-vm.js
 import vm from 'node:vm';
 
-import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
+import { evaluateShippedPlugin } from '../../../setup/shipped-plugin-vm.js';
 
 import { installAptEngineStubs } from './fixtures/engine-stubs.js';
 
@@ -18,6 +18,8 @@ globalThis.RPG_Skill = RPG_Skill;
 `;
 
 /**
+ * Loads {@link out/apt/J-Aptitude.js} (core) with J-Base and harness.
+ *
  * @param {object} sandbox
  */
 export function loadAptPluginVm(sandbox)
@@ -28,9 +30,16 @@ export function loadAptPluginVm(sandbox)
     afterHostGlobalsInstall(s)
     {
       installAptEngineStubs(s);
+
+      vm.runInContext(`
+globalThis.J = globalThis.J || {};
+globalThis.J.ABS = globalThis.J.ABS || {};
+globalThis.J.ABS.Metadata = globalThis.J.ABS.Metadata || {};
+globalThis.J.ABS.Metadata.Version = globalThis.J.ABS.Metadata.Version || '4.6.0';
+`, s);
     },
   });
 
   vm.runInContext(EXPOSE_APT_GLOBALS, sandbox);
 }
-//endregion plugins/apt/apt-vm.js
+//endregion plugins/apt/core/apt-vm.js

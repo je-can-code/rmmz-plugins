@@ -37,7 +37,7 @@ class J_CraftingRefinePluginMetadata
      * in the menu.
      * @type {number}
      */
-    this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
+    this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
 
     /**
      * The name used for the command when visible in a menu.
@@ -49,7 +49,7 @@ class J_CraftingRefinePluginMetadata
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}
      */
-    this.commandIconIndex = parseInt(this.parsedPluginParameters['menu-icon']) ?? 0;
+    this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-icon'], 0);
   }
 }
 

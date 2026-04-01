@@ -1,5 +1,5 @@
 //region engine-stubs
-import { installMinimalMenuUiStubs } from '../../../setup/install-minimal-menu-ui-stubs.js';
+import { installMinimalMenuUiStubs } from '../../../../setup/install-minimal-menu-ui-stubs.js';
 
 const noop = function()
 {
