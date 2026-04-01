@@ -1,4 +1,4 @@
-//region plugins/apt/metadata.test.js
+//region plugins/apt/core/metadata.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { DEFAULT_APT_PLUGIN_PARAMS } from './fixtures/engine-stubs.js';
@@ -27,4 +27,4 @@ describe('J-Aptitude metadata (out/apt/J-Aptitude.js)', () =>
     expect(sandbox.J.APT.Metadata.usingLevelThresholdLimit).toBe(false);
   });
 });
-//endregion plugins/apt/metadata.test.js
+//endregion plugins/apt/core/metadata.test.js

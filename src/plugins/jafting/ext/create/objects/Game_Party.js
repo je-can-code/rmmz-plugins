@@ -82,7 +82,6 @@ Game_Party.prototype.updateRecipesFromConfig = function()
     // check if we found a tracking.
     if (!foundTracking)
     {
-      console.log(`adding new recipe; ${recipe.key}`);
       // we didn't find one, so create and add a new tracking.
       const newTracking = new RecipeTracking(recipe.key, recipe.unlockedByDefault);
       trackings.push(newTracking);
@@ -111,7 +110,6 @@ Game_Party.prototype.updateCategoriesFromConfig = function()
     // check if we found a tracking.
     if (!found)
     {
-      console.log(`adding new category; ${category.name} : ${category.key}`);
       // we didn't find one, so create and add a new tracking.
       const newTracking = new CategoryTracking(category.key, category.unlockedByDefault);
       trackings.push(newTracking);

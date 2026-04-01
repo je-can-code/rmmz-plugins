@@ -1,22 +1,18 @@
 //region Scene_Jafting
 /**
  * Extends {@link #onRootJaftingSelection}.<br>
- * When JAFTING is selected, open the root JAFTING menu.
+ * When Refinement is chosen on the JAFTING hub, opens the Refinement scene.
  */
 J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting
   .set('onRootJaftingSelection', Scene_Jafting.prototype.onRootJaftingSelection);
 Scene_Jafting.prototype.onRootJaftingSelection = function()
 {
-  // grab which JAFTING mode was selected.
   const currentSelection = this.getRootJaftingKey();
 
-  // check if the current selection is create.
   if (currentSelection === Scene_JaftingRefine.KEY)
   {
-    // execute the monsterpedia.
     this.jaftingRefinementSelected();
   }
-  // the current selection is not create.
   else
   {
     // possibly activate other choices.
@@ -26,14 +22,12 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
 };
 
 /**
- * Switch to the jafting creation scene when selected from the root jafting list.
+ * Switch to the JAFTING Refinement scene from the hub list.
  */
 Scene_Jafting.prototype.jaftingRefinementSelected = function()
 {
-  // close the root jafting windows.
   this.closeRootJaftingWindows();
 
-  // call the creation scene.
   Scene_JaftingRefine.callScene();
 };
 //endregion Scene_Jafting

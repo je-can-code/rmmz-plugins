@@ -92,7 +92,7 @@ class Window_SdpList
         return command;
       }, this)
       .filter(command => command !== null)
-      .sort((a, b) => a.ext.key.localeCompare(b.ext.key));
+      //.sort((a, b) => a.ext.key.localeCompare(b.ext.key));
 
     commands.forEach(this.addBuiltCommand, this);
   }

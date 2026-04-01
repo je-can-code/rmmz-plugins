@@ -60,6 +60,18 @@ Game_Party.prototype.unlockSdp = function(key)
 };
 
 /**
+ * Unlocks every defined SDP panel for all actors returned by {@link Game_Actors#actors}
+ * (database actors with valid names). Intended for dev / testing.
+ */
+Game_Party.prototype.unlockAllSdpsForEveryone = function()
+{
+  J.SDP.Metadata.panelsMap.forEach((panel, key) =>
+  {
+    this.unlockSdp(key);
+  });
+};
+
+/**
  * Checks if a particular panel is unlocked for the whole party.
  * @param {string} key The key of the panel to check.
  * @returns {boolean} True if every actor has it unlocked, false otherwise.

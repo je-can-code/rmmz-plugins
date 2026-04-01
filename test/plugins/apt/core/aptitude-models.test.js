@@ -1,7 +1,7 @@
-//region plugins/apt/aptitude-models.test.js
+//region plugins/apt/core/aptitude-models.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
+import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
 
 import { loadAptPluginVm } from './apt-vm.js';
 
@@ -54,4 +54,4 @@ describe('J-Aptitude models and RPG_Base notes (out/apt/J-Aptitude.js)', () =>
     expect(list[0].requiredAp).toBe(40);
   });
 });
-//endregion plugins/apt/aptitude-models.test.js
+//endregion plugins/apt/core/aptitude-models.test.js

@@ -41,6 +41,7 @@ function ensureVmContext(sandbox)
  * @param {Record<string, string>} [options.jBasePluginParameterStrings] `PluginManager.parameters('J-Base')` shape.
  * @param {(sandbox: object) => void} [options.afterHostGlobalsInstall] Replace placeholder engine classes before J-Base.
  * @param {string[]} [options.preludeRepoRelativePaths] Optional extra scripts before the feature plugin.
+ * @param {string} [options.appendToPluginSource] Text appended to the plugin file before eval (same lexical scope as the bundle; use to export top-level `class` names to `globalThis` for tests).
  * @returns {object} The same sandbox reference after all scripts have run.
  */
 export function evaluateShippedPlugin(options)
@@ -52,6 +53,7 @@ export function evaluateShippedPlugin(options)
     loadJBase = true,
     jBasePluginParameterStrings = DEFAULT_J_BASE_PLUGIN_PARAMS,
     afterHostGlobalsInstall = null,
+    appendToPluginSource = '',
   } = options;
   const absolutePath = path.join(repoRoot, 'out', outFilename);
 
@@ -93,7 +95,7 @@ export function evaluateShippedPlugin(options)
     vm.runInContext(preludeCode, sandbox, { filename: preludeAbs });
   }
 
-  const code = fs.readFileSync(absolutePath, 'utf8');
+  const code = fs.readFileSync(absolutePath, 'utf8') + appendToPluginSource;
 
   vm.runInContext(code, sandbox, { filename: absolutePath });
 
@@ -112,11 +114,12 @@ export function evaluateShippedPlugin(options)
  * @param {object} options
  * @param {object} options.sandbox
  * @param {string} options.outFilename Basename under `out/` (e.g. `J-CriticalFactors.js`).
+ * @param {string} [options.appendToPluginSource] Appended before eval; see {@link evaluateShippedPlugin}.
  * @returns {object} The same sandbox reference.
  */
 export function appendShippedPluginToVm(options)
 {
-  const { sandbox, outFilename } = options;
+  const { sandbox, outFilename, appendToPluginSource = '' } = options;
   const absolutePath = path.join(repoRoot, 'out', outFilename);
 
   if (fs.existsSync(absolutePath) === false)
@@ -128,7 +131,7 @@ export function appendShippedPluginToVm(options)
 
   ensureVmContext(sandbox);
 
-  const code = fs.readFileSync(absolutePath, 'utf8');
+  const code = fs.readFileSync(absolutePath, 'utf8') + appendToPluginSource;
 
   vm.runInContext(code, sandbox, { filename: absolutePath });
 

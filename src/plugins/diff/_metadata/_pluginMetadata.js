@@ -3,7 +3,7 @@ class J_DiffPluginMetadata
   extends PluginMetadata
 {
   /**
-   * The path where the config for panels is located.
+   * Project-relative path to the difficulty JSON configuration file.
    * @type {string}
    */
   static CONFIG_PATH = 'data/config.difficulty.json';
@@ -157,7 +157,7 @@ class J_DiffPluginMetadata
     // execute original logic.
     super.postInitialize();
 
-    // initialize the panels from plugin configuration.
+    // load difficulty layers from external JSON configuration.
     this.initializeDifficulties();
 
     // initialize the other miscellaneous plugin configuration.
@@ -165,12 +165,30 @@ class J_DiffPluginMetadata
   }
 
   /**
-   * Initializes the SDPs that exist in the SDP configuration.
+   * Loads difficulty layers from {@link J_DiffPluginMetadata.CONFIG_PATH}.
    */
   initializeDifficulties()
   {
-    // parse the files as an actual list of objects from the JSON configuration.
-    const parsedDifficulties = JSON.parse(StorageManager.fsReadFile(J_DiffPluginMetadata.CONFIG_PATH));
+    const rawConfig = StorageManager.fsReadFile(J_DiffPluginMetadata.CONFIG_PATH);
+    if (rawConfig === null || rawConfig === '')
+    {
+      console.error('no Difficulty configuration was found in the /data directory of the project.');
+      console.error('Consider adding configuration using the J-MZ data editor, or hand-writing one.');
+      throw new Error('Difficulty plugin is being used, but no config file is present.');
+    }
+
+    let parsedDifficulties;
+    try
+    {
+      parsedDifficulties = JSON.parse(rawConfig);
+    }
+    catch (e)
+    {
+      throw new Error(
+        `Failed to parse JSON at ${J_DiffPluginMetadata.CONFIG_PATH}: ${e.message}`,
+      );
+    }
+
     if (parsedDifficulties === null)
     {
       console.error('no Difficulty configuration was found in the /data directory of the project.');
@@ -178,7 +196,6 @@ class J_DiffPluginMetadata
       throw new Error('Difficulty plugin is being used, but no config file is present.');
     }
 
-    // classify each difficulty.
     const classifiedMetadatas = J_DiffPluginMetadata.classifyDifficulties(parsedDifficulties);
 
     /**
@@ -193,10 +210,6 @@ class J_DiffPluginMetadata
       - ${this.allMetadatas.size} difficulty layers
       from file ${J_DiffPluginMetadata.CONFIG_PATH}.`);
     }
-    else
-    {
-      console.log(`loaded from file ${J_DiffPluginMetadata.CONFIG_PATH}.`);
-    }
   }
 
   initializeMetadata()
@@ -210,7 +223,7 @@ class J_DiffPluginMetadata
     /**
      * The default point max for allocating difficulty layers.
      */
-    this.initialPoints = parseInt(this.parsedPluginParameters['initialPoints'] || 0);
+    this.initialPoints = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['initialPoints'], 0);
 
     // update the default layer as well.
     const defaultLayer = DifficultyLayer.fromMetadata(this.allMetadatas.get(this.defaultKey));

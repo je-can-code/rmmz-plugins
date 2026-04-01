@@ -148,7 +148,6 @@ class CraftingComponent
         return false;
       default:
         console.error(`unsupported item type found: [${this.#type}]`);
-        console.log(this);
         throw new Error("The type of this component is unsupported.");
     }
   }

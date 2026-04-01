@@ -120,6 +120,27 @@ class Window_RecipeToolList
   }
 
   /**
+   * @returns {number}
+   */
+  recipeComponentRowTopInset()
+  {
+    return Window_RecipeIngredientList.recipeComponentRowTopInsetPx();
+  }
+
+  /**
+   * @param {number} index
+   * @returns {Rectangle}
+   */
+  itemLineRect(index)
+  {
+    const rect = Window_Selectable.prototype.itemLineRect.call(this, index);
+
+    rect.y += this.recipeComponentRowTopInset();
+
+    return rect;
+  }
+
+  /**
    * Overrides {@link #drawBackgroundRect}.<br>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.

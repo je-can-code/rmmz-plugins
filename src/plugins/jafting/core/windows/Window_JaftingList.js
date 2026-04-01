@@ -1,6 +1,6 @@
-//region Window_OmnipediaList
+//region Window_JaftingList
 /**
- * A window displaying the list of jafting types available.
+ * Root JAFTING hub list: commands registered by Creation, Refinement, and other extensions.
  */
 class Window_JaftingList
   extends Window_Command
@@ -16,11 +16,10 @@ class Window_JaftingList
 
   /**
    * Implements {@link #makeCommandList}.<br>
-   * Creates the command list of omnipedia entries available for this window.
+   * Builds the hub command list from {@link #buildCommands}.
    */
   makeCommandList()
   {
-    // grab all the omnipedia listings available.
     const commands = this.buildCommands();
 
     // add all the built commands.
@@ -28,8 +27,7 @@ class Window_JaftingList
   }
 
   /**
-   * Builds all commands for this command window.
-   * Adds all omnipedia commands to the list that are available.
+   * Returns hub commands from extensions; core does not add modes here by default.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
@@ -64,4 +62,4 @@ class Window_JaftingList
   }
 }
 
-//endregion Window_OmnipediaList
+//endregion Window_JaftingList
