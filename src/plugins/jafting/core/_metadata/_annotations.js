@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 JAFT] Enables the ability to craft items from recipes.
+ * [v2.0.0 JAFTING-Core] Root JAFTING menu; extensions provide Creation and Refinement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -21,7 +21,7 @@
  * the "Refinement" extension and place them below this one.
  * ============================================================================
  * ORGANIZATION:
- * Have you ever wanted to a menu that is has a single purpose, such as grant
+ * Have you ever wanted a menu that has a single purpose, such as granting
  * access to all the other crafting menus built to work with JAFTING? Well now
  * you can! Just drop this plugin above your other installed JAFTING extension
  * plugins, and voila! It works.

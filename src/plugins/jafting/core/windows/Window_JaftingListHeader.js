@@ -1,4 +1,4 @@
-//region Window_OmnipediaListHeader
+//region Window_JaftingListHeader
 class Window_JaftingListHeader
   extends Window_Base
 {
@@ -13,7 +13,7 @@ class Window_JaftingListHeader
 
   /**
    * Implements {@link Window_Base.drawContent}.<br>
-   * Draws a header and some detail for the omnipedia list header.
+   * Draws the JAFTING hub title and short description.
    */
   drawContent()
   {
@@ -81,4 +81,4 @@ class Window_JaftingListHeader
   }
 }
 
-//endregion Window_OmnipediaListHeader
+//endregion Window_JaftingListHeader

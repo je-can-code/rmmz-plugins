@@ -29,6 +29,16 @@ export function loadPopupsPluginVm(sandbox)
     },
   });
 
+  vm.runInContext(`
+globalThis.J = globalThis.J || {};
+globalThis.J.ABS = globalThis.J.ABS || {};
+globalThis.J.ABS.Metadata = globalThis.J.ABS.Metadata || {};
+if (globalThis.J.ABS.Metadata.DisableTextPops === undefined)
+{
+  globalThis.J.ABS.Metadata.DisableTextPops = false;
+}
+`, sandbox);
+
   vm.runInContext(EXPOSE_POPUPS_GLOBALS, sandbox);
 }
 //endregion plugins/popups/popups-vm.js

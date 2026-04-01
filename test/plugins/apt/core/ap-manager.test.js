@@ -1,7 +1,7 @@
-//region plugins/apt/ap-manager.test.js
+//region plugins/apt/core/ap-manager.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
+import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
 
 import { loadAptPluginVm } from './apt-vm.js';
 
@@ -99,4 +99,4 @@ describe('J-Aptitude ApManager (out/apt/J-Aptitude.js)', () =>
     expect(ApManager.canGainAp(actor, 1)).toBe(true);
   });
 });
-//endregion plugins/apt/ap-manager.test.js
+//endregion plugins/apt/core/ap-manager.test.js

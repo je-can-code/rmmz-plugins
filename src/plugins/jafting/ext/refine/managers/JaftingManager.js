@@ -668,6 +668,60 @@ class JaftingManager
       throw new Error("please stop crafting stuff that isn't valid.");
     }
   }
+
+  /**
+   * True when party inventory has at least one equip that the primary refinable list would allow as base
+   * (material type omitted, same enable rules as {@link Window_RefinableList} primary branch).
+   * @returns {boolean}
+   */
+  static partyHasEnterableRefinementBase()
+  {
+    let equips = $gameParty.equipItems();
+
+    if (equips.length === 0)
+    {
+      return false;
+    }
+
+    equips = equips.filter(equip => equip.atypeId !== 5);
+
+    for (let i = 0; i < equips.length; i++)
+    {
+      const equip = equips[i];
+
+      if (equip.jaftingUnrefinable)
+      {
+        continue;
+      }
+
+      const equipIsMaxRefined = (equip.jaftingMaxRefineCount === 0)
+        ? false
+        : equip.jaftingMaxRefineCount <= equip.jaftingRefinedCount;
+
+      if (equipIsMaxRefined)
+      {
+        continue;
+      }
+
+      const equipHasMaxTraits = equip.jaftingMaxTraitCount === 0
+        ? false
+        : equip.jaftingMaxTraitCount <= JaftingManager.parseTraits(equip).length;
+
+      if (equipHasMaxTraits)
+      {
+        continue;
+      }
+
+      if (equip.jaftingNotRefinementBase)
+      {
+        continue;
+      }
+
+      return true;
+    }
+
+    return false;
+  }
 }
 
 //endregion JaftingManager

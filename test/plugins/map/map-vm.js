@@ -27,6 +27,16 @@ export function loadMapPluginVm(sandbox)
     },
   });
 
+  vm.runInContext(`
+globalThis.J = globalThis.J || {};
+globalThis.J.ABS = globalThis.J.ABS || {};
+globalThis.J.ABS.EXT = globalThis.J.ABS.EXT || {};
+globalThis.J.ABS.EXT.INPUT = globalThis.J.ABS.EXT.INPUT || {};
+globalThis.J.ABS.EXT.INPUT.Symbols = globalThis.J.ABS.EXT.INPUT.Symbols || {};
+globalThis.J.ABS.EXT.INPUT.Symbols.DPadUp = globalThis.J.ABS.EXT.INPUT.Symbols.DPadUp || 'dpadUp';
+globalThis.J.ABS.EXT.INPUT.Symbols.DPadDown = globalThis.J.ABS.EXT.INPUT.Symbols.DPadDown || 'dpadDown';
+`, sandbox);
+
   vm.runInContext(EXPOSE_MAP_GLOBALS, sandbox);
 }
 //endregion plugins/map/map-vm.js
