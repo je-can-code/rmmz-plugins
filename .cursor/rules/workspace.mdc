@@ -81,7 +81,17 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Package manager**: Bun everywhere. Never suggest `npm` or `yarn`.
 - **GitHub CLI**: `gh` is installed at `~/.local/bin/gh` and authenticated as `je-can-code`. Use it for all PR operations. Write PR bodies to a temp file and pass via `--body-file` to avoid heredoc quoting issues.
 - **Git credential helper**: configured via `gh auth setup-git` — `git push` works without GUI prompts.
-- **Push everything in both repos.** When plugin work lands via `bun run hotfix`, commit and push **every** remaining local change in **`rmmz-plugins`** and **`ca`** on the branches you are using (including `chef-adventure/data/*.json`, `plugins.js`, and any other files the tools or editor touched). Nothing that belongs in git should stay uncommitted or unpushed in either repo. Session-only noise (e.g. `.cursor/debug-*.log`) stays out of git via `.gitignore`, not by leaving the branch “partial.”
+
+### Git: never push directly to `main`
+
+- **Do not** `git push` to `main` (or merge local work straight onto `main`) unless Jeremy **explicitly** says to in that session.
+- **Do** create a **feature branch** from `main` (or the current default), commit there, **`git push -u origin <branch>`**, and open a PR with `gh pr create` (or give Jeremy the branch name if he prefers to open it).
+- Applies to **all three repos** (`rmmz-plugins`, `ca`, `jmz-data-editor`) the same way.
+- If you already committed on `main` locally, **move the commit to a branch** before pushing (`git branch fix/…`, `git reset --hard origin/main` on `main`, checkout the branch and push that) rather than pushing `main`.
+
+### Push completeness (on a branch)
+
+- **Push everything in both repos** on your **feature branch**, not by bypassing PRs. When plugin work lands via `bun run hotfix`, commit and push **every** remaining local change in **`rmmz-plugins`** and **`ca`** on **that branch** (including `chef-adventure/data/*.json`, `plugins.js`, and any other files the tools or editor touched). Nothing that belongs in git should stay uncommitted or unpushed on the branch you are using. Session-only noise (e.g. `.cursor/debug-*.log`) stays out of git via `.gitignore`, not by leaving the branch “partial.”
 - **PR commits: full tree.** PR scope is explained in the PR description, not by omitting files from the commit. Include all built output under `rmmz-plugins/project/js/plugins/` that `hotfix` produced.
 - **Build & copy: always use `bun run hotfix`.** Never copy built plugin files manually. If `hotfix` fails for an unrelated reason, investigate and fix the root cause — do not fall back to manual copies.
 
