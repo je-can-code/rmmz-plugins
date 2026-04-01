@@ -24,7 +24,7 @@ J.JAFTING.EXT.REFINE = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.0.1');
+J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.0');
 
 
 /**
@@ -115,6 +115,21 @@ J.JAFTING.EXT.REFINE.Messages = {
    * Shown when a material is disabled because it has no traits to grant the base equip.
    */
   NoTransferableTraits: "No transferable traits.",
+
+  /**
+   * Step hint while choosing the refinement base (left list).
+   */
+  RefinementStepHintPickingBase: "Choose the equipment you want to improve. This item stays in your inventory and receives traits.",
+
+  /**
+   * Step hint while choosing the material (second list).
+   */
+  RefinementStepHintPickingMaterial: "Choose a donor item. Transferable traits merge into your base; the donor is consumed.",
+
+  /**
+   * Step hint on the confirmation prompt.
+   */
+  RefinementStepHintConfirming: "Confirm to apply refinement, or cancel to pick a different material.",
 };
 
 /**

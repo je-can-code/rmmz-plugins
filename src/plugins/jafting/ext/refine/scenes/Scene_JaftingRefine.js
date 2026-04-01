@@ -3,10 +3,35 @@ class Scene_JaftingRefine
   extends Scene_MenuBase
 {
   /**
+   * Whether Refinement can open: inventory includes at least one equip enterable as a refinement base.
+   * @returns {boolean}
+   */
+  static isAccessible()
+  {
+    return JaftingManager.partyHasEnterableRefinementBase();
+  }
+
+  /**
+   * Whether the JAFTING hub should show Refinement as selectable (menu switch plus content eligibility).
+   * @returns {boolean}
+   */
+  static isRefineCommandEnabled()
+  {
+    return $gameSwitches.value(J.JAFTING.EXT.REFINE.Metadata.menuSwitchId)
+      && Scene_JaftingRefine.isAccessible();
+  }
+
+  /**
    * Pushes this current scene onto the stack, forcing it into action.
    */
   static callScene()
   {
+    if (Scene_JaftingRefine.isAccessible() === false)
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
     SceneManager.push(this);
   }
 
@@ -42,14 +67,14 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Initialize all properties for our omnipedia.
+   * Initialize all properties for the Refinement scene.
    */
   initMembers()
   {
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 
-    // initialize the monsterpedia members.
+    // initialize the Refinement windows and state bucket.
     this.initPrimaryMembers();
   }
 
@@ -64,15 +89,13 @@ class Scene_JaftingRefine
     this._j ||= {};
 
     /**
-     * A grouping of all properties associated with the omnipedia.
+     * A grouping of all properties associated with this JAFTING scene.
      */
     this._j._crafting = {};
   }
 
   /**
-   * The primary properties of the scene are the initial properties associated with
-   * the main list containing all pedias unlocked by the player along with some subtext of
-   * what the pedia entails.
+   * Primary state for Refinement: base and material lists, details, confirmation, and selections.
    */
   initPrimaryMembers()
   {
@@ -81,6 +104,18 @@ class Scene_JaftingRefine
      * Refinement is a subcategory of the jafting system.
      */
     this._j._crafting._refine = {};
+
+    /**
+     * Phase tracking and atomic refine commit (keeps confirmation handler thin).
+     * @type {RefinementWorkflowSession}
+     */
+    this._j._crafting._refine._session = new RefinementWorkflowSession();
+
+    /**
+     * Explains the current refinement step above the left-hand lists.
+     * @type {Window_RefinementStepHint}
+     */
+    this._j._crafting._refine._refinementStepHint = null;
 
     /**
      * The window that shows the tertiary information about a refinable.
@@ -107,23 +142,36 @@ class Scene_JaftingRefine
     this._j._crafting._refine._refinementDetails = null;
 
     /**
-     * The window that shows the list of ingredients on the currently selected recipe.
-     * @type {Window_RecipeIngredientList}
+     * Confirms or cancels the pending refinement.
+     * @type {Window_RefinementConfirmation|null}
      */
     this._j._crafting._refine._confirmationPrompt = null;
 
-
     /**
-     * The window that shows the list of tools on the currently selected recipe.
-     * @type {Window_RecipeToolList}
+     * The base equip currently selected for refinement.
+     * @type {Game_Item|null}
      */
     this._j._crafting._refine._baseSelected = null;
 
     /**
-     * The window that shows the list of outputs on the currently selected recipe.
-     * @type {Window_RecipeOutputList}
+     * The material equip currently selected for refinement.
+     * @type {Game_Item|null}
      */
     this._j._crafting._refine._consumedSelected = null;
+
+    /**
+     * Lazily computed outer height for {@link Window_RefinementStepHint} (one text line).
+     * @type {number|undefined}
+     */
+    this._cachedRefinementStepHintHeight = undefined;
+  }
+
+  /**
+   * @returns {RefinementWorkflowSession}
+   */
+  refinementSession()
+  {
+    return this._j._crafting._refine._session;
   }
 
   getBaseSelected()
@@ -179,6 +227,7 @@ class Scene_JaftingRefine
   createAllWindows()
   {
     // create all the windows.
+    this.createRefinementStepHintWindow();
     this.createRefinementDescriptionWindow();
     this.createBaseRefinableListWindow();
     this.createConsumableRefinableListWindow();
@@ -193,15 +242,27 @@ class Scene_JaftingRefine
   {
     const listWindow = this.getBaseRefinableListWindow();
 
+    listWindow.refresh();
+
     // also update with the currently selected item, if one exists.
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText() ?? String.empty);
 
     const selected = listWindow.currentExt();
-    this.setBaseSelected(selected.data);
-
     const detailsWindow = this.getRefinementDetailsWindow();
-    detailsWindow.primaryEquip = selected?.data;
+
+    if (selected === undefined || selected === null)
+    {
+      this.setBaseSelected(null);
+      detailsWindow.primaryEquip = null;
+      this.refreshRefinementStepHint();
+      return;
+    }
+
+    this.setBaseSelected(selected.data);
+    detailsWindow.primaryEquip = selected.data;
+
+    this.refreshRefinementStepHint();
   }
 
   /**
@@ -228,6 +289,106 @@ class Scene_JaftingRefine
   }
 
   //endregion create
+
+  //region refinement step hint
+  /**
+   * @returns {number} Outer height for {@link Window_RefinementStepHint} (single menu line).
+   */
+  getRefinementStepHintHeight()
+  {
+    if (this._cachedRefinementStepHintHeight !== undefined)
+    {
+      return this._cachedRefinementStepHintHeight;
+    }
+
+    const probe = new Window_RefinementStepHint(new Rectangle(0, 0, 400, 48));
+    this._cachedRefinementStepHintHeight = probe.fittingHeight(1);
+    probe.destroy();
+
+    return this._cachedRefinementStepHintHeight;
+  }
+
+  /**
+   * @returns {number} Width shared by the left refinable lists (~10% wider than the original 350px column).
+   */
+  getBaseRefinableListColumnWidth()
+  {
+    return Math.round(350 * 1.1);
+  }
+
+  /**
+   * @returns {Rectangle}
+   */
+  getRefinementStepHintRectangle()
+  {
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const x = ox + Graphics.horizontalPadding;
+    const width = Graphics.boxWidth - Graphics.horizontalPadding * 2;
+    const height = this.getRefinementStepHintHeight();
+
+    return new Rectangle(x, oy, width, height);
+  }
+
+  /**
+   * Updates the step hint from {@link RefinementWorkflowSession#getPhase}.
+   */
+  refreshRefinementStepHint()
+  {
+    const hintWindow = this.getRefinementStepHintWindow();
+    const phase = this.refinementSession().getPhase();
+    let text = String.empty;
+
+    if (phase === RefinementWorkflowSession.Phase.PickingBase)
+    {
+      text = J.JAFTING.EXT.REFINE.Messages.RefinementStepHintPickingBase;
+    }
+    else if (phase === RefinementWorkflowSession.Phase.PickingMaterial)
+    {
+      text = J.JAFTING.EXT.REFINE.Messages.RefinementStepHintPickingMaterial;
+    }
+    else if (phase === RefinementWorkflowSession.Phase.Confirming)
+    {
+      text = J.JAFTING.EXT.REFINE.Messages.RefinementStepHintConfirming;
+    }
+
+    hintWindow.setText(text);
+  }
+
+  /**
+   * Creates the step hint window.
+   */
+  createRefinementStepHintWindow()
+  {
+    const window = this.buildRefinementStepHintWindow();
+
+    this.setRefinementStepHintWindow(window);
+    this.addWindow(window);
+  }
+
+  buildRefinementStepHintWindow()
+  {
+    const rectangle = this.getRefinementStepHintRectangle();
+
+    return new Window_RefinementStepHint(rectangle);
+  }
+
+  /**
+   * @returns {Window_RefinementStepHint}
+   */
+  getRefinementStepHintWindow()
+  {
+    return this._j._crafting._refine._refinementStepHint;
+  }
+
+  /**
+   * @param {Window_RefinementStepHint} someWindow
+   */
+  setRefinementStepHintWindow(someWindow)
+  {
+    this._j._crafting._refine._refinementStepHint = someWindow;
+  }
+
+  //endregion refinement step hint
 
   //region refinement description
   /**
@@ -263,22 +424,13 @@ class Scene_JaftingRefine
    */
   getRefinementDescriptionRectangle()
   {
-    // grab the rect for the recipe list this should be next to.
-    const listWindow = this.getBaseRefinableListRectangle();
-
-    // the description should live at the right side of the list.
-    const x = listWindow.width + Graphics.horizontalPadding;
-
-    // the window's origin coordinates are the box window's origin as well.
-    const [ _, y ] = Graphics.boxOrigin;
-
-    // define the width of the window.
-    const width = Graphics.boxWidth - listWindow.width - Graphics.horizontalPadding;
-
-    // define the height of the window.
+    const listRect = this.getBaseRefinableListRectangle();
+    const [ ox ] = Graphics.boxOrigin;
+    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
+    const y = listRect.y;
+    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = 100;
 
-    // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
 
@@ -346,17 +498,12 @@ class Scene_JaftingRefine
    */
   getBaseRefinableListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const [ x, y ] = Graphics.boxOrigin;
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const hintHeight = this.getRefinementStepHintHeight();
+    const width = this.getBaseRefinableListColumnWidth();
+    const height = Graphics.boxHeight - Graphics.verticalPadding - hintHeight;
 
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding);
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(ox, oy + hintHeight, width, height);
   }
 
   /**
@@ -386,6 +533,8 @@ class Scene_JaftingRefine
 
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText());
+
+    this.refreshRefinementStepHint();
   }
 
   deselectBaseRefinableListWindow()
@@ -418,6 +567,8 @@ class Scene_JaftingRefine
 
   onBaseRefinableListSelection()
   {
+    this.refinementSession().beginMaterialSelection();
+
     const baseRefinableListWindow = this.getBaseRefinableListWindow();
 
     const baseRefinable = baseRefinableListWindow.currentExt().data;
@@ -476,17 +627,7 @@ class Scene_JaftingRefine
    */
   getConsumableRefinableListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const [ x, y ] = Graphics.boxOrigin;
-
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding);
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return this.getBaseRefinableListRectangle();
   }
 
   /**
@@ -523,6 +664,7 @@ class Scene_JaftingRefine
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText());
 
+    this.refreshRefinementStepHint();
   }
 
   deselectConsumableRefinableListWindow()
@@ -549,6 +691,8 @@ class Scene_JaftingRefine
 
   onConsumableRefinableListCancel()
   {
+    this.refinementSession().returnToBaseSelection();
+
     this.deselectConsumableRefinableListWindow();
 
     this.selectBaseRefinableListWindow();
@@ -556,12 +700,13 @@ class Scene_JaftingRefine
 
   onConsumableRefinableListSelection()
   {
+    this.refinementSession().beginConfirmation();
+
     const listWindow = this.getConsumableRefinableListWindow();
 
     const consumedRefinable = listWindow.currentExt().data;
     this.setConsumedSelected(consumedRefinable);
 
-    //this.deselectConsumableRefinableListWindow();
     this.selectRefinementConfirmationWindow();
   }
 
@@ -601,19 +746,15 @@ class Scene_JaftingRefine
    */
   getRefinementDetailsRectangle()
   {
-    const widthReduction = this.getBaseRefinableListRectangle().width + Graphics.horizontalPadding;
-    const x = 0 + widthReduction;
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const listRect = this.getBaseRefinableListRectangle();
+    const descWindow = this.getRefinementDescriptionWindow();
 
-    const heightReduction = (this.getRefinementDescriptionWindow().height + Graphics.verticalPadding);
-    const y = 0 + heightReduction;
+    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
+    const y = listRect.y + descWindow.height + Graphics.verticalPadding;
+    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
+    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // define the width of the window.
-    const width = Graphics.boxWidth - widthReduction;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - heightReduction;
-
-    // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
 
@@ -679,17 +820,12 @@ class Scene_JaftingRefine
    */
   getRefinementConfirmationRectangle()
   {
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const width = this.getBaseRefinableListColumnWidth();
     const height = 120;
+    const x = ox + Math.floor((Graphics.boxWidth - width) / 2);
+    const y = oy + Math.floor((Graphics.boxHeight - height) / 2);
 
-    // define the window's origin coordinates.
-    const x = (Graphics.boxWidth - width) / 2;
-    const y = (Graphics.boxHeight - height) / 2;
-
-    // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
 
@@ -709,6 +845,8 @@ class Scene_JaftingRefine
     // reveal the window.
     listWindow.show();
     listWindow.activate();
+
+    this.refreshRefinementStepHint();
   }
 
   deselectRefinementConfirmationWindow()
@@ -731,31 +869,34 @@ class Scene_JaftingRefine
 
   onRefinementConfirmationCancel()
   {
+    this.refinementSession().returnToMaterialSelection();
+
     this.deselectRefinementConfirmationWindow();
     this.selectConsumableRefinableListWindow();
   }
 
   onRefinementConfirmationSelection()
   {
-    // remove the materials being refined.
-    $gameParty.gainItem(this.getBaseSelected(), -1);
-    $gameParty.gainItem(this.getConsumedSelected(), -1);
-
-    // generate the output.
     const detailsWindow = this.getRefinementDetailsWindow();
     const output = detailsWindow.outputEquip;
-    JaftingManager.createRefinedOutput(output);
+    const outcome = this.refinementSession().commitRefinement(
+      this.getBaseSelected(),
+      this.getConsumedSelected(),
+      output,
+    );
 
-    // clear the existing data from the details window.
+    if (outcome.ok === false)
+    {
+      return;
+    }
+
     detailsWindow.primaryEquip = null;
     detailsWindow.secondaryEquip = null;
 
-    // reselect the original window.
     this.deselectConsumableRefinableListWindow();
     this.deselectRefinementConfirmationWindow();
     this.selectBaseRefinableListWindow();
 
-    // clear the materials that were just used.
     this.setBaseSelected(null);
     this.setConsumedSelected(null);
 

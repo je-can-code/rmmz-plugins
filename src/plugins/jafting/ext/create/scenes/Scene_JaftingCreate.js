@@ -3,10 +3,50 @@ class Scene_JaftingCreate
   extends Scene_MenuBase
 {
   /**
+   * Whether Creation can open: at least one unlocked category has recipes the party may craft.
+   * @returns {boolean}
+   */
+  static isAccessible()
+  {
+    const categories = $gameParty.getUnlockedCategories();
+
+    if (categories.length === 0)
+    {
+      return false;
+    }
+
+    for (let i = 0; i < categories.length; i++)
+    {
+      if (categories[i].hasAnyRecipes())
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Whether the JAFTING hub should show Creation as selectable (menu switch plus content eligibility).
+   * @returns {boolean}
+   */
+  static isCreateCommandEnabled()
+  {
+    return $gameSwitches.value(J.JAFTING.EXT.CREATE.Metadata.menuSwitchId)
+      && Scene_JaftingCreate.isAccessible();
+  }
+
+  /**
    * Pushes this current scene onto the stack, forcing it into action.
    */
   static callScene()
   {
+    if (Scene_JaftingCreate.isAccessible() === false)
+    {
+      SoundManager.playBuzzer();
+      return;
+    }
+
     SceneManager.push(this);
   }
 
@@ -42,14 +82,14 @@ class Scene_JaftingCreate
   }
 
   /**
-   * Initialize all properties for our omnipedia.
+   * Initialize all properties for the Creation scene.
    */
   initMembers()
   {
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 
-    // initialize the monsterpedia members.
+    // initialize the Creation windows and state bucket.
     this.initPrimaryMembers();
   }
 
@@ -64,15 +104,13 @@ class Scene_JaftingCreate
     this._j ||= {};
 
     /**
-     * A grouping of all properties associated with the omnipedia.
+     * A grouping of all properties associated with this JAFTING scene.
      */
     this._j._crafting = {};
   }
 
   /**
-   * The primary properties of the scene are the initial properties associated with
-   * the main list containing all pedias unlocked by the player along with some subtext of
-   * what the pedia entails.
+   * Primary state for Creation: category and recipe lists, recipe detail panes, and related windows.
    */
   initPrimaryMembers()
   {
@@ -81,6 +119,12 @@ class Scene_JaftingCreate
      * Creation is a subcategory of the jafting system.
      */
     this._j._crafting._create = {};
+
+    /**
+     * Workflow state and craft attempts for this scene (keeps UI handlers thin).
+     * @type {CraftingCreationSession}
+     */
+    this._j._crafting._create._session = new CraftingCreationSession();
 
     /**
      * The window that shows the tertiary information about a recipe or category.
@@ -125,6 +169,14 @@ class Scene_JaftingCreate
     this._j._crafting._create._recipeOutputList = null;
   }
 
+  /**
+   * @returns {CraftingCreationSession}
+   */
+  craftingCreationSession()
+  {
+    return this._j._crafting._create._session;
+  }
+
   //endregion init
 
   //region create
@@ -147,6 +199,9 @@ class Scene_JaftingCreate
   {
     // create all our windows.
     this.createAllWindows();
+
+    // ensure category commands exist before configure reads help text (empty list is valid).
+    this.getCategoryListWindow().refresh();
 
     // configure window relations and such now that they are all created.
     this.configureAllWindows();
@@ -237,22 +292,13 @@ class Scene_JaftingCreate
    */
   getCreationDescriptionRectangle()
   {
-    // grab the rect for the recipe list this should be next to.
-    const listWindow = this.getRecipeListRectangle();
-
-    // the description should live at the right side of the list.
-    const x = listWindow.width + Graphics.horizontalPadding;
-
-    // the window's origin coordinates are the box window's origin as well.
-    const [ _, y ] = Graphics.boxOrigin;
-
-    // define the width of the window.
-    const width = Graphics.boxWidth - listWindow.width - Graphics.horizontalPadding;
-
-    // define the height of the window.
+    const listRect = this.getRecipeListRectangle();
+    const [ ox ] = Graphics.boxOrigin;
+    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
+    const y = listRect.y;
+    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = 100;
 
-    // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
 
@@ -321,8 +367,7 @@ class Scene_JaftingCreate
     // the window's origin coordinates are the box window's origin as well.
     const [ x, y ] = Graphics.boxOrigin;
 
-    // define the width of the window.
-    const width = 300;
+    const width = Math.round(300 * 1.1);
 
     // define the height of the window.
     const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
@@ -369,6 +414,8 @@ class Scene_JaftingCreate
 
     // the category key is also the symbol of the category commands.
     const currentCategory = categoryListWindow.currentSymbol();
+
+    this.craftingCreationSession().enterRecipeBrowsing(currentCategory);
 
     // grab the recipe list window.
     const recipeListWindow = this.getRecipeListWindow();
@@ -595,6 +642,8 @@ class Scene_JaftingCreate
 
   onRecipeListCancel()
   {
+    this.craftingCreationSession().returnToCategoryBrowsing();
+
     this.deselectRecipeListWindow();
 
     this.selectCategoryListWindow();
@@ -602,27 +651,19 @@ class Scene_JaftingCreate
 
   onRecipeListSelection()
   {
-    // craft the recipe.
-    this.craftSelection();
+    const recipe = this.getRecipeListWindow().currentExt();
+    const outcome = this.craftingCreationSession().tryCraftRecipe(recipe);
 
-    // refresh all the windows.
+    if (outcome.playedSuccessSound === true)
+    {
+      SoundManager.playShop();
+    }
+
     this.onRecipeListIndexChange();
 
-    // redirect to the recipe list again.
     const listWindow = this.getRecipeListWindow();
     listWindow.refresh();
     listWindow.activate();
-    console.log('recipe crafted:', listWindow.currentExt());
-  }
-
-  craftSelection()
-  {
-    const currentRecipe = this.getRecipeListWindow()
-      .currentExt();
-
-    currentRecipe.craft();
-
-    SoundManager.playShop();
   }
 
   //endregion recipe list
@@ -664,19 +705,15 @@ class Scene_JaftingCreate
    */
   getRecipeDetailsRectangle()
   {
-    const widthReduction = this.getRecipeListRectangle().width + Graphics.horizontalPadding;
-    const x = 0 + widthReduction;
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const listRect = this.getRecipeListRectangle();
+    const descWindow = this.getCreationDescriptionWindow();
 
-    const heightReduction = (this.getCreationDescriptionRectangle().height + Graphics.verticalPadding);
-    const y = 0 + heightReduction;
+    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
+    const y = listRect.y + descWindow.height + Graphics.verticalPadding;
+    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
+    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // define the width of the window.
-    const width = Graphics.boxWidth - widthReduction;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - heightReduction;
-
-    // build the rectangle to return.
     return new Rectangle(x, y, width, height);
   }
 
@@ -734,25 +771,34 @@ class Scene_JaftingCreate
   }
 
   /**
+   * Positions ingredient / tool / output lists in the first three quarters of {@link #getRecipeDetailsRectangle},
+   * below the header block drawn by {@link Window_RecipeDetails}.
+   * @returns {{ leftX: number, y: number, colW: number, remainder: number, height: number }}
+   */
+  getCreationLowerPanelLayout()
+  {
+    const detailsR = this.getRecipeDetailsRectangle();
+    const detailsWindow = this.getRecipeDetailsWindow();
+    const pad = detailsWindow.padding;
+    const innerW = detailsR.width - pad * 2;
+    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(innerW);
+    const leftX = detailsR.x + pad;
+    const rowInset = Window_RecipeIngredientList.recipeComponentRowTopInsetPx();
+    const listInnerTop = detailsR.y + pad + detailsWindow.componentListRowsInnerStartY() - rowInset;
+    const height = detailsR.y + detailsR.height - listInnerTop - pad;
+
+    return { leftX, y: listInnerTop, colW: cw, remainder, height };
+  }
+
+  /**
    * Gets the rectangle associated with this window.
    * @returns {Rectangle}
    */
   getRecipeIngredientListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const widthReduction = this.getRecipeListRectangle().right;
-    const x = 0 + widthReduction - 20;
+    const L = this.getCreationLowerPanelLayout();
 
-    const y = this.getCreationDescriptionRectangle().bottom + 70;
-
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - y - Graphics.verticalPadding;
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(L.leftX, L.y, L.colW, L.height);
   }
 
   /**
@@ -813,19 +859,10 @@ class Scene_JaftingCreate
    */
   getRecipeToolListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const x = this.getRecipeIngredientListRectangle().right - 20;
+    const L = this.getCreationLowerPanelLayout();
+    const x = L.leftX + L.colW;
 
-    const y = this.getCreationDescriptionRectangle().bottom + 70;
-
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - y - Graphics.verticalPadding;
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(x, L.y, L.colW, L.height);
   }
 
   /**
@@ -887,18 +924,11 @@ class Scene_JaftingCreate
    */
   getRecipeOutputListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const x = this.getRecipeToolListRectangle().right - 20;
-    const y = this.getCreationDescriptionRectangle().bottom + 70;
+    const L = this.getCreationLowerPanelLayout();
+    const x = L.leftX + L.colW * 2;
+    const w = L.colW + L.remainder;
 
-    // define the width of the window.
-    const width = 350;
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - y - Graphics.verticalPadding;
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(x, L.y, w, L.height);
   }
 
   /**

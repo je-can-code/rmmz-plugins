@@ -98,9 +98,22 @@ class Window_RefinementDetails
     this._resultingEquip = equip;
   }
 
-  lineHeight()
+  /**
+   * Width of each preview column (base / material / output) from {@link #innerWidth}.
+   * @returns {number}
+   */
+  refinementColumnWidth()
   {
-    return 32;
+    return Math.max(96, Math.floor(this.innerWidth / 3));
+  }
+
+  /**
+   * Max draw width for names and traits inside one column.
+   * @returns {number}
+   */
+  refinementColumnTextWidth()
+  {
+    return Math.max(64, this.refinementColumnWidth() - 12);
   }
 
   refresh()
@@ -130,20 +143,21 @@ class Window_RefinementDetails
    */
   drawRefinementHeaders()
   {
-    const columnWidth = 350;
+    const columnWidth = this.refinementColumnWidth();
+    const labelWidth = this.refinementColumnTextWidth();
     const ox = 0;
 
     this.modFontSize(6);
     this.toggleBold(true);
 
     const baseX = ox + (columnWidth * 0);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, 200);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, labelWidth);
 
     const consumableX = ox + (columnWidth * 1);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, 200);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, labelWidth);
 
     const outputX = ox + (columnWidth * 2);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, 200);
+    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, labelWidth);
 
     this.resetFontSettings();
   }
@@ -165,7 +179,7 @@ class Window_RefinementDetails
   {
     if (!this.secondaryEquip) return;
 
-    this.drawEquip(this.secondaryEquip, 350, "material");
+    this.drawEquip(this.secondaryEquip, this.refinementColumnWidth(), "material");
   }
 
   /**
@@ -191,12 +205,13 @@ class Window_RefinementDetails
   drawEquipTitle(equip, x, type)
   {
     const lh = this.lineHeight();
+    const textW = this.refinementColumnTextWidth();
 
     if (type === "output")
     {
       if (equip.jaftingRefinedCount === 0)
       {
-        this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name} +1\\C[0]`, x, lh * 1, 200);
+        this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name} +1\\C[0]`, x, lh * 1, textW);
       }
       else
       {
@@ -206,20 +221,20 @@ class Window_RefinementDetails
         {
           // if we found a +, then strip it out and add the suffix to it.
           const name = `${equip.name.slice(0, index)}${suffix}`;
-          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, 200);
+          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
         }
         else
         {
           // in cases where a refined equip is being used as a material for a never-before refined
           // equip, then there won't be any string manipulation for it's name.
           const name = `${equip.name} ${suffix}`;
-          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, 200);
+          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
         }
       }
     }
     else
     {
-      this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name}\\C[0]`, x, lh * 1, 200);
+      this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name}\\C[0]`, x, lh * 1, textW);
     }
   }
 
@@ -231,9 +246,11 @@ class Window_RefinementDetails
   drawEquipTraits(traits, x)
   {
     const lh = this.lineHeight();
+    const textW = this.refinementColumnTextWidth();
+
     if (!traits.length)
     {
-      this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, lh * 2, 250);
+      this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, lh * 2, textW);
       return;
     }
 
@@ -242,7 +259,7 @@ class Window_RefinementDetails
     traits.forEach((trait, index) =>
     {
       const y = (lh * 2) + (index * lh);
-      this.drawTextEx(`${trait.nameAndValue}`, x, y, 250);
+      this.drawTextEx(`${trait.nameAndValue}`, x, y, textW);
     });
   }
 
@@ -258,7 +275,7 @@ class Window_RefinementDetails
     const result = JaftingManager.determineRefinementOutput(this.primaryEquip, this.secondaryEquip);
 
     // render the projected merge results.
-    this.drawEquip(result, 700, "output");
+    this.drawEquip(result, this.refinementColumnWidth() * 2, "output");
 
     // assign it for ease of retrieving from the scene.
     this.outputEquip = result;

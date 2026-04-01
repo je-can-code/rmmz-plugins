@@ -24,7 +24,7 @@ class CraftingRecipe
   categoryKeys = [];
 
   /**
-   * The icon that will display in the type selection window next to this category.
+   * The icon index shown for this recipe in the JAFTING Creation UI.
    * @type {number}
    */
   iconIndex = -1;
@@ -36,8 +36,8 @@ class CraftingRecipe
   description = String.empty;
 
   /**
-   * The list of required tools not consumed but required to execute the recipe.
-   * @type {CraftingComponent[]}
+   * When true, this recipe is available without an explicit unlock step.
+   * @type {boolean}
    */
   unlockedByDefault = false;
 

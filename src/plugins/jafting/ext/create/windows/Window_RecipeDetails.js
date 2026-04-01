@@ -3,6 +3,20 @@ class Window_RecipeDetails
   extends Window_Base
 {
   /**
+   * Fourth-column divider is drawn this many pixels left of that column's origin; header rules must not extend past this.
+   */
+  static #DETAIL_DIVIDER_LEFT_OFFSET = 12;
+
+  /**
+   * Horizontal rule under each component header is inset this many pixels from each band edge (matches {@link #DETAIL_DIVIDER_LEFT_OFFSET} so column 3 rules never cross the divider).
+   */
+  static #COMPONENT_HEADER_RULE_SIDE_INSET = Window_RecipeDetails.#DETAIL_DIVIDER_LEFT_OFFSET;
+
+  static #COMPONENT_HEADER_RULE_GAP_BEFORE = 2;
+  static #COMPONENT_HEADER_RULE_HEIGHT = 3;
+  static #COMPONENT_HEADER_RULE_GAP_AFTER = 8;
+
+  /**
    * The currently selected recipe being detailed.
    * @type {CraftingRecipe}
    */
@@ -35,6 +49,67 @@ class Window_RecipeDetails
   }
 
   /**
+   * Same quarter split as {@link #detailsQuarterWidth}, for sibling list windows sized by scene layout.
+   * @param {number} innerWidth inner pixel width (typically window width minus padding on both sides).
+   * @returns {{ cw: number, remainder: number }} cw = floor division width; remainder = pixels to add to the 4th band.
+   */
+  static quarterWidthsFromInner(innerWidth)
+  {
+    const cw = Math.max(80, Math.floor(innerWidth / 4));
+    const remainder = innerWidth - cw * 4;
+
+    return { cw, remainder };
+  }
+
+  /**
+   * Inner Y where ingredient / tool / output list windows should start (below the tallest header band).
+   * Uses the same stacking rules as {@link #drawComponentHeaderColumn}.
+   * @returns {number}
+   */
+  componentListRowsInnerStartY()
+  {
+    const w = this.detailsQuarterWidth();
+    const ends = [
+      this.#componentHeaderColumnInnerEndY(w, 'Materials consumed when crafting this recipe.'),
+      this.#componentHeaderColumnInnerEndY(w, 'Materials required to craft this recipe.'),
+      this.#componentHeaderColumnInnerEndY(w, 'Materials generated when the recipe is crafted.'),
+    ];
+
+    return Math.max(ends[0], ends[1], ends[2]);
+  }
+
+  /**
+   * Width of each of the four bands (ingredients, tools, outputs, detail pane).
+   * @returns {number}
+   */
+  detailsQuarterWidth()
+  {
+    const { cw } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
+
+    return cw;
+  }
+
+  /**
+   * Width of the fourth band (detail pane), including remainder pixels from {@link #quarterWidthsFromInner}.
+   * @returns {number}
+   */
+  detailsFourthBandWidth()
+  {
+    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
+
+    return cw + remainder;
+  }
+
+  /**
+   * Max text width in the fourth (detail) column after margins.
+   * @returns {number}
+   */
+  detailsQuarterTextWidth()
+  {
+    return Math.max(56, this.detailsFourthBandWidth() - 10);
+  }
+
+  /**
    * Implements {@link Window_Base.drawContent}.<br>
    * Draws a the recipe details.
    */
@@ -42,28 +117,83 @@ class Window_RecipeDetails
   {
     if (!this.#canDrawContent()) return;
 
-    // define the origin x,y coordinates.
     const [ x, y ] = [ 0, 0 ];
+    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
+    const wDetail = cw + remainder;
 
-    // render the ingredients header text.
-    const ingredientsX = x;
-    const ingredientsY = y;
-    this.drawIngredientsHeader(ingredientsX, ingredientsY);
+    this.#drawComponentHeaderColumn(x + cw * 0, y, cw, 'INGREDIENTS', 'Materials consumed when crafting this recipe.');
+    this.#drawComponentHeaderColumn(x + cw * 1, y, cw, 'TOOLS', 'Materials required to craft this recipe.');
+    this.#drawComponentHeaderColumn(x + cw * 2, y, cw, 'OUTPUTS', 'Materials generated when the recipe is crafted.');
+    this.drawPrimaryOutput(x + cw * 3, y, wDetail);
+  }
 
-    // render the tools header text.
-    const toolsX = x + 330;
-    const toolsY = y;
-    this.drawToolsHeader(toolsX, toolsY);
+  /**
+   * Pixel height of one header band (title + wrapped subtext + rule + gap), for list alignment.
+   * @param {number} bandWidth
+   * @param {string} subtext
+   * @returns {number}
+   */
+  #componentHeaderColumnInnerEndY(bandWidth, subtext)
+  {
+    this.resetFontSettings();
 
-    // render the outputs header text.
-    const outputsX = x + 660;
-    const outputsY = y;
-    this.drawOutputsHeader(outputsX, outputsY);
+    let y = 0;
 
-    // render the primary output data.
-    const primaryOutputX = x + 990;
-    const primaryOutputY = y;
-    this.drawPrimaryOutput(primaryOutputX, primaryOutputY);
+    this.modFontSize(4);
+    this.toggleBold();
+    y += this.lineHeight();
+    this.toggleBold();
+
+    this.modFontSize(-12);
+    this.toggleItalics();
+    const subLh = this.lineHeight();
+    const usableW = Math.max(1, bandWidth - 4);
+    const roughLines = Math.max(1, Math.ceil(this.textWidth(subtext) / usableW));
+    const subLines = Math.min(3, Math.max(1, roughLines));
+    y += subLines * subLh;
+    this.toggleItalics();
+
+    const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
+    const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
+    const gapAfterRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_AFTER;
+
+    return y + gapBeforeRule + ruleH + gapAfterRule;
+  }
+
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} bandWidth
+   * @param {string} title
+   * @param {string} subtext
+   */
+  #drawComponentHeaderColumn(x, y, bandWidth, title, subtext)
+  {
+    this.resetFontSettings();
+
+    let cursor = y;
+
+    this.modFontSize(4);
+    this.toggleBold();
+    this.drawText(title, x, cursor, bandWidth, 'left');
+    cursor += this.lineHeight();
+    this.toggleBold();
+
+    this.modFontSize(-12);
+    this.toggleItalics();
+    this.drawText(subtext, x, cursor, bandWidth, Window_Base.TextAlignments.Left);
+    const subLh = this.lineHeight();
+    const usableW = Math.max(1, bandWidth - 4);
+    const roughLines = Math.max(1, Math.ceil(this.textWidth(subtext) / usableW));
+    const subLines = Math.min(3, Math.max(1, roughLines));
+    cursor += subLines * subLh;
+    this.toggleItalics();
+
+    const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
+    const inset = Window_RecipeDetails.#COMPONENT_HEADER_RULE_SIDE_INSET;
+    const ruleW = Math.max(1, bandWidth - inset * 2);
+    const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
+    this.drawHorizontalLine(x + inset, cursor + gapBeforeRule, ruleW, ruleH);
   }
 
   /**
@@ -80,112 +210,46 @@ class Window_RecipeDetails
   }
 
   /**
-   * Renders the ingredient list header information.
+   * @param {number} x
+   * @param {number} y
+   * @param {number} bandWidth width of the fourth (detail) column
    */
-  drawIngredientsHeader(x, y)
+  drawPrimaryOutput(x, y, bandWidth)
   {
-    // reset all the font stuff before we start.
     this.resetFontSettings();
 
-    // render the header text.
-    this.modFontSize(4);
-    this.toggleBold();
-    this.drawText('INGREDIENTS', x, y, 300, 'left');
-    this.toggleBold();
+    this.drawVerticalLine(x - Window_RecipeDetails.#DETAIL_DIVIDER_LEFT_OFFSET, y, this.innerHeight, 3);
 
-    // render the subtext.
-    this.modFontSize(-12);
-    this.toggleItalics();
-    const subtext = 'Materials consumed when crafting this recipe.';
-    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
-    this.toggleItalics();
-
-    this.drawHorizontalLine(x, y + 50, 300, 3);
-  }
-
-  /**
-   * Renders the tool list header information.
-   */
-  drawToolsHeader(x, y)
-  {
-    // reset all the font stuff before we start.
-    this.resetFontSettings();
-
-    // render the header text.
-    this.modFontSize(4);
-    this.toggleBold();
-    this.drawText('TOOLS', x, y, 300, 'left');
-    this.toggleBold();
-
-    // render the subtext.
-    this.modFontSize(-12);
-    this.toggleItalics();
-    const subtext = "Materials required to craft this recipe.";
-    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
-
-    this.drawHorizontalLine(x, y + 50, 300, 3);
-  }
-
-  /**
-   * Renders the output list header information.
-   */
-  drawOutputsHeader(x, y)
-  {
-    // reset all the font stuff before we start.
-    this.resetFontSettings();
-
-    // render the outputs header text.
-    this.modFontSize(4);
-    this.toggleBold();
-    this.drawText('OUTPUTS', x, y, 300, 'left');
-    this.toggleBold();
-
-    // render the subtext.
-    this.modFontSize(-12);
-    this.toggleItalics();
-    const subtext = "Materials generated when the recipe is crafted.";
-    this.drawText(subtext, x, y + 20, this.textWidth(subtext), Window_Base.TextAlignments.Left);
-
-    this.drawHorizontalLine(x, y + 50, 300, 3);
-  }
-
-  drawPrimaryOutput(x, y)
-  {
-    // reset all the font stuff before we start.
-    this.resetFontSettings();
-
-    // a nice vertical line is appreciated.
-    this.drawVerticalLine(x - 20, y, this.innerHeight, 3);
-
-    // shorthand the line height.
     const lh = this.lineHeight();
+    const textW = Math.max(48, bandWidth - 8);
 
     const proficiency = `Proficiency: ${this.#currentRecipe.getProficiency()}`;
-    this.drawText(proficiency, x, y, 200);
+    this.drawText(proficiency, x, y, textW);
 
-    // grab the component for the primary output of this recipe.
+    const bodyY = this.componentListRowsInnerStartY();
+
     const primaryOutput = this.#currentRecipe.outputs.at(0);
 
     switch (primaryOutput.getComponentType())
     {
       case (CraftingComponent.Types.Item):
-        this.drawPrimaryOutputItem(x, y);
+        this.drawPrimaryOutputItem(x, bodyY);
         break;
       case (CraftingComponent.Types.Weapon):
-        this.drawPrimaryOutputWeaponOrArmor(x, y);
+        this.drawPrimaryOutputWeaponOrArmor(x, bodyY);
         break;
       case (CraftingComponent.Types.Armor):
-        this.drawPrimaryOutputWeaponOrArmor(x, y);
+        this.drawPrimaryOutputWeaponOrArmor(x, bodyY);
         break;
       case (CraftingComponent.Types.Gold):
-        this.drawPrimaryOutputGold(x, y);
+        this.drawPrimaryOutputGold(x, bodyY);
         break;
       case (CraftingComponent.Types.SDP):
-        this.drawPrimaryOutputSdp(x, y);
+        this.drawPrimaryOutputSdp(x, bodyY);
         break;
     }
 
-    this.drawText(String.empty, x, y + (lh * 1), 300);
+    this.drawText(String.empty, x, bodyY + (lh * 1), bandWidth);
   }
 
   //region item output
@@ -268,8 +332,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
-    // render the message.
-    this.drawText(recoveryMessage.trim(), x + 40, y, 200);
+    this.drawText(recoveryMessage.trim(), x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
   drawMagiMessage(output, x, y)
@@ -326,8 +389,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
-    // render the message.
-    this.drawText(recoveryMessage.trim(), x + 40, y, 200);
+    this.drawText(recoveryMessage.trim(), x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
   drawTechMessage(output, x, y)
@@ -376,8 +438,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
-    // render the message.
-    this.drawText(recoveryMessage, x + 40, y, 200);
+    this.drawText(recoveryMessage, x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
   drawRevival(output, x, y)
@@ -429,13 +490,14 @@ class Window_RecipeDetails
 
       const foodStateText = `${foodState.name}`;
       const foodStateNameX = x + 40;
-      this.drawText(foodStateText, foodStateNameX, foodStateY, 200);
+      const nameCellW = this.detailsQuarterTextWidth() - 48;
+      this.drawText(foodStateText, foodStateNameX, foodStateY, nameCellW);
 
       const foodStateEffectChance = this.needsMasking
         ? "?"
         : `${foodStateEffect.value1 * 100}%`;
 
-      this.drawText(foodStateEffectChance, foodStateNameX, foodStateY, 160, 'right');
+      this.drawText(foodStateEffectChance, foodStateNameX, foodStateY, nameCellW, 'right');
     };
 
     foodStateEffects.forEach(forEacher, this);
@@ -471,7 +533,7 @@ class Window_RecipeDetails
     this.resetFontSettings();
 
     const leftX = x;
-    const rightX = x + 100;
+    const rightX = x + Math.max(72, Math.floor(this.detailsFourthBandWidth() / 2) - 8);
 
     // shorthand the line height.
     const lh = this.lineHeight() - 4;
@@ -558,7 +620,7 @@ class Window_RecipeDetails
         traitMessage = traitMessage.replace(/[A-Za-z0-9\-!?',.]/ig, "?");
       }
 
-      this.drawText(traitMessage, x, traitY);
+      this.drawText(traitMessage, x, traitY, this.detailsQuarterTextWidth());
     };
 
     output.traits.forEach(forEacher, this);
@@ -576,13 +638,13 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
-    // render the text.
-    this.drawText('Resource:', x, y + (lh * 1), 150);
+    const tw = this.detailsQuarterTextWidth();
+    this.drawText('Resource:', x, y + (lh * 1), tw);
 
     const resourceY = y + (lh * 2);
     this.drawIcon(IconManager.rewardParam(1), x, resourceY);
-    this.drawText('Gold', x, resourceY, 150);
-    this.drawText(`${output.quantity()}`, x, resourceY, 150, Window_Base.TextAlignments.Right);
+    this.drawText('Gold', x, resourceY, tw);
+    this.drawText(`${output.quantity()}`, x, resourceY, tw, Window_Base.TextAlignments.Right);
   }
 
   drawPrimaryOutputSdp(x, y)
@@ -594,13 +656,13 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
-    // render the text.
-    this.drawText('Resource:', x, y + (lh * 1), 150);
+    const tw = this.detailsQuarterTextWidth();
+    this.drawText('Resource:', x, y + (lh * 1), tw);
 
     const resourceY = y + (lh * 2);
     this.drawIcon(IconManager.rewardParam(4), x, resourceY);
-    this.drawText('SDP', x, resourceY, 150);
-    this.drawText(output.quantity(), x, resourceY, 150, Window_Base.TextAlignments.Right);
+    this.drawText('SDP', x, resourceY, tw);
+    this.drawText(output.quantity(), x, resourceY, tw, Window_Base.TextAlignments.Right);
   }
 
   //endregion resource output

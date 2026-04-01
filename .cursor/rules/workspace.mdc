@@ -64,7 +64,7 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Serialized models** (saved to file via `JsonEx`): use prototype constructors with JSON-safe fields only. See `_models/` directories for examples.
 - **`//region` / `//endregion`** wrappers on every file; region name = filename.
 - Use `RPGManager` methods for all notetag parsing. Never parse `note` strings manually.
-- Build tools: `bun run build:<plugin>` → `combine.js` concatenates source into `out/`. Built files are committed to `project/js/plugins/`.
+- Build tools: `combine.js` (via `bun run build:<plugin>`) concatenates source into `out/`. Built files are committed under `project/js/plugins/`. Per-plugin build scripts exist for tooling; they are **not** the agent’s default way to publish changes.
 - PR format: per-plugin `## \`J-PluginName\` [major/minor/patch] update` sections with bullet points. No generic Summary/Test Plan tables.
 
 ## jmz-data-editor Specific
@@ -83,7 +83,7 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Git credential helper**: configured via `gh auth setup-git` — `git push` works without GUI prompts.
 - **Push everything in both repos.** When plugin work lands via `bun run hotfix`, commit and push **every** remaining local change in **`rmmz-plugins`** and **`ca`** on the branches you are using (including `chef-adventure/data/*.json`, `plugins.js`, and any other files the tools or editor touched). Nothing that belongs in git should stay uncommitted or unpushed in either repo. Session-only noise (e.g. `.cursor/debug-*.log`) stays out of git via `.gitignore`, not by leaving the branch “partial.”
 - **PR commits: full tree.** PR scope is explained in the PR description, not by omitting files from the commit. Include all built output under `rmmz-plugins/project/js/plugins/` that `hotfix` produced.
-- **Build & copy: always use `bun run hotfix`.** Never copy built plugin files manually. If `hotfix` fails for an unrelated reason, investigate and fix the root cause — do not fall back to manual copies.
+- **Build & copy: always use `bun run hotfix`.** Do **not** run `bun run build:<plugin>` (e.g. `build:sdp`) plus manual `cp` to “save time” — full `hotfix` is already sub-second in practice, and single-plugin runs risk a partial `out/`, skipped destinations, and drift from what gets committed. Never copy built plugin files manually. If `hotfix` fails, fix the root cause — do not fall back to manual copies. (Exception: Jeremy explicitly asks for a one-off `build:<plugin>` only, with no expectation that artifacts are fully mirrored.)
 
 ## Known Future Work (do not tackle without checking first)
 

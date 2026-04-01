@@ -186,6 +186,30 @@ J.BASE.Helpers.satisfies = function(currentVersion, minimumVersion)
 };
 
 /**
+ * Parses a base-10 integer from plugin parameter values, using a fallback when missing or invalid.
+ *
+ * @param {string|number|undefined|null} value Raw plugin parameter value.
+ * @param {number} fallback Used when the value is empty or not a finite integer.
+ * @returns {number}
+ */
+J.BASE.Helpers.parsePluginInt = function(value, fallback)
+{
+  if (value === undefined || value === null || value === '')
+  {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(String(value), 10);
+
+  if (Number.isFinite(parsed))
+  {
+    return parsed;
+  }
+
+  return fallback;
+};
+
+/**
  * Generates a `uuid`- a universally unique identifier- for this battler.
  * @returns {string} The `uuid`.
  */
