@@ -259,7 +259,7 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     // show a shield damage popup for the amount absorbed (real + bonus).
     if (absorbed > 0)
     {
-      this.generateShieldDamagePop(target, absorbed);
+      this.onShieldDamageAbsorbed(target, absorbed);
     }
 
     // determine whether this shield broke on this application.
@@ -269,7 +269,7 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     if (brokeThisHit)
     {
       // show a popup indicating the shield broke.
-      this.generateShieldBreakPop(target);
+      this.onShieldBroken(target);
 
       // consume a stack, refill if stacks remain, or remove the state if none remain.
       shieldState.onShieldBreak();
@@ -356,49 +356,19 @@ Game_Action.prototype.isShieldRelevantToAction = function(shield, actionElements
 };
 
 /**
- * Generates a damage pop showing how much damage was mitigated by shields.
+ * Lifecycle event: shield mitigation occurred on the target.
+ * Extended by optional plugins (e.g. J-Popups-ABS) to surface map feedback.
  * @param {Game_Actor|Game_Enemy} target The battler doing the mitigating.
  * @param {number} value The amount of damage mitigated.
  */
-Game_Action.prototype.generateShieldDamagePop = function(target, value)
-{
-  // if we are not using popups, then don't do this.
-  if (!J.POPUPS) return;
-
-  // grab the character on the field.
-  const character = JABS_AiManager.getBattlerByUuid(target.getUuid())
-    .getCharacter();
-
-  // build the popup.
-  const textPop = new TextPopBuilder(`  -${Math.round(value)}`)
-    .isShieldDamage()
-    .build();
-
-  // add the popup to the character.
-  character.addTextPop(textPop);
-  character.requestTextPop();
-};
+// eslint-disable-next-line no-unused-vars
+Game_Action.prototype.onShieldDamageAbsorbed = function(target, value) {};
 
 /**
- * Generates a damage pop indicating a shield broke.
+ * Lifecycle event: a shield broke on the target.
+ * Extended by optional plugins (e.g. J-Popups-ABS) to surface map feedback.
  * @param {Game_Actor|Game_Enemy} target The battler with the shield breaking.
  */
-Game_Action.prototype.generateShieldBreakPop = function(target)
-{
-  // if we are not using popups, then don't do this.
-  if (!J.POPUPS) return;
-
-  // grab the character on the field.
-  const character = JABS_AiManager.getBattlerByUuid(target.getUuid())
-    .getCharacter();
-
-  // build the popup.
-  const textPop = new TextPopBuilder(`B R E A K`)
-    .isShieldBreak()
-    .build();
-
-  // add the popup to the character.
-  character.addTextPop(textPop);
-  character.requestTextPop();
-};
+// eslint-disable-next-line no-unused-vars
+Game_Action.prototype.onShieldBroken = function(target) {};
 //endregion Game_Action

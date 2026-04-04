@@ -12,6 +12,14 @@ says nothing about code quality, undefined references, or broken notetag
 annotations. Weave static analysis into the build pipeline so "built" actually
 means "validated".
 
+## Severity
+
+**Medium** (bad code ships silently today).
+
+## Gain
+
+**Very high** once CI enforces it; upfront cost to tune ESLint + validators. Unlocks consistent style (`style-optional-chaining-drift.md`) and fewer annotation wiring bugs.
+
 ## Proposed Additions
 
 ### 1. ESLint (or similar)
@@ -49,3 +57,5 @@ pipeline, or as a separate `lint` script that CI can run independently.
   warnings, not errors, until the signal/noise ratio is understood.
 - The TOCTOU race condition in the current build (`apt-typed` writing before
   its output dir exists) should be fixed as part of this work.
+- Add `no-restricted-syntax` (or equivalent) to **forbid optional chaining** in `src/plugins/**` to support `style-optional-chaining-drift.md` enforcement.
+- Annotation validation complements manual processes for `boolean-notetag-regex-audit.md` only indirectly; keep regex audit separate.

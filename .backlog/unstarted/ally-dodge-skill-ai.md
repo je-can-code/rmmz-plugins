@@ -13,6 +13,14 @@ area: feature
 
 Allies do not use dodge skills today. The AI should decide when dodging is appropriate (e.g. low HP, readable incoming threat).
 
+## Severity
+
+**Low** (feature gap); tuning mistakes could make allies dodge-spam — balance risk **medium**.
+
+## Gain
+
+**Medium-high** for combat feel; touches `src/plugins/abs/ext/allyai/managers/JABS_AiManager.js` and possibly `JABS_Battler` dodging.
+
 ## Work
 
 Add dodge-skill evaluation to the ally decision flow; exercise edge cases around timing and skill availability.

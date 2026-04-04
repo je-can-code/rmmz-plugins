@@ -362,44 +362,21 @@ JABS_Battler.prototype.applyToolToPlayer = function(toolId)
   gameAction.apply(battler);
 
   // display popup from item.
-  this.generatePopItem(gameAction, toolId);
+  this.onItemApplied(gameAction, toolId);
 
   // show tool animation.
   this.showAnimation($dataItems.at(toolId).animationId);
 };
 
 /**
- * Generates a popup based on the item used.
+ * Lifecycle event: an item was applied as a tool by this battler on a target.
+ * Extended by optional plugins (e.g. J-Popups-ABS) to surface map feedback.
  * @param {Game_Action} gameAction The action describing the tool's effect.
- * @param {number} itemId The target having the action applied against.
+ * @param {number} itemId The id of the item/tool used.
  * @param {JABS_Battler} target The target for calculating damage; defaults to self.
  */
-JABS_Battler.prototype.generatePopItem = function(
-  gameAction,
-  itemId,
-  target = this
-)
-{
-  // if we are not using popups, then don't do this.
-  if (!J.POPUPS) return;
-
-  // grab some shorthand variables for local use.
-  const character = this.getCharacter();
-  const toolData = $dataItems.at(itemId);
-
-  if (toolData.sdpKey !== String.empty)
-  {
-    $jabsEngine.generatePopItemBulk([ toolData ], character);
-    return;
-  }
-
-  // generate the textpop.
-  const itemPop = $jabsEngine.configureDamagePop(gameAction, toolData, this, target);
-
-  // add the pop to the target's tracking.
-  character.addTextPop(itemPop);
-  character.requestTextPop();
-};
+// eslint-disable-next-line no-unused-vars
+JABS_Battler.prototype.onItemApplied = function(gameAction, itemId, target = this) {};
 
 /**
  * Applies the effects of the tool against all allies on the team.
@@ -454,7 +431,7 @@ JABS_Battler.prototype.applyToolForOneOpponent = function(toolId)
   gameAction.apply(battler);
 
   // generate the text popup for the item usage on the target.
-  this.generatePopItem(gameAction, toolId, jabsBattler);
+  this.onItemApplied(gameAction, toolId, jabsBattler);
 };
 
 /**
@@ -475,9 +452,9 @@ JABS_Battler.prototype.applyToolForAllOpponents = function(toolId)
     // apply the effects against the battler.
     gameAction.apply(battler);
 
-    // generate the text popup for the item usage on the target.
-    this.generatePopItem(gameAction, toolId);
-  }, this);
+  // generate the text popup for the item usage on the target.
+  this.onItemApplied(gameAction, toolId, jabsBattler);
+}, this);
 };
 
 /**

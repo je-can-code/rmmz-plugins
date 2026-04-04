@@ -14,7 +14,16 @@ area: feature
 
 The freestyle bundle under JAFTING is not implemented as a real feature; it remains placeholder metadata and commands. Core, Creation, and Refinement are the supported JAFTING surfaces.
 
+## Severity
+
+**Low** until enabled in a project; placeholder scaffolding can confuse new contributors.
+
+## Gain
+
+**Feature-dependent.** Completing freestyle is high value for games that need it; removing dead trees is medium clarity win.
+
 ## Work
 
 - Replace template namespaces with real `J.JAFTING.EXT.FREESTYLE` (or remove the tree from shipping if the feature is abandoned).
 - Implement intended gameplay/UI behavior, or document and remove from `plugins.js` recommendations until ready.
+- If implemented, follow session/scene decomposition guidance in `jafting-heavy-scenes-decomposition.md`.

@@ -1,11 +1,3 @@
 //region Map_TextPop
-
-if (J.POPUPS)
-{
-  /**
-   * The popup type of "shield", for when a shield is damaged.
-   */
-  Map_TextPop.Types.Shield = 'shield';
-}
-
+// Shield Map_TextPop type additions live in J-Popups-ABS (popups/ext/abs).
 //endregion Map_TextPop

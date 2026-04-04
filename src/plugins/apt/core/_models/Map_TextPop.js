@@ -1,7 +1,3 @@
-if (J.POPUPS)
-{
-  /**
-   * The popup type of "ap", for displaying AP gain pops.
-   */
-  Map_TextPop.Types.Ap = 'ap';
-}
+//region Map_TextPop
+// Aptitude Map_TextPop type additions live in J-Popups-APT (popups/ext/apt).
+//endregion Map_TextPop

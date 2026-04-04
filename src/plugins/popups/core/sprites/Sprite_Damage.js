@@ -62,6 +62,18 @@ Sprite_Damage.prototype.initMembers = function()
    * @type {number}
    */
   this._j._popups._yVariance = 0;
+
+  /**
+   * Typography hint from {@link Map_TextPop#textAccent}.
+   * @type {string|null}
+   */
+  this._j._popups._textAccent = null;
+
+  /**
+   * Source popup for lifecycle events (read-only for observers).
+   * @type {Map_TextPop|null}
+   */
+  this._j._popups._sourcePopup = null;
 };
 
 /**
@@ -106,13 +118,7 @@ Sprite_Damage.prototype.setHealingFlag = function(isHealing)
  */
 Sprite_Damage.prototype.getXVariance = function()
 {
-  return this._j._popups._yVariance;
-  // check if this is a healing popup.
-  // return this.isHealing()
-  //   // if it is, return the Y variance instead.
-  //   ? (this._j._popups._yVariance - 48)
-  //   // otherwise, return the x variance as expected.
-  //   : this._j._popups._xVariance;
+  return this._j._popups._xVariance;
 };
 
 /**
@@ -130,13 +136,7 @@ Sprite_Damage.prototype.setXVariance = function(xVariance)
  */
 Sprite_Damage.prototype.getYVariance = function()
 {
-  return this._j._popups._xVariance;
-  // check if this is a healing popup.
-  // return this.isHealing()
-  //   // if it is, return the X variance instead.
-  //   ? this._j._popups._xVariance
-  //   // otherwise, return the y variance as expected.
-  //   : this._j._popups._yVariance;
+  return this._j._popups._yVariance;
 };
 
 /**
@@ -176,7 +176,7 @@ Sprite_Damage.prototype.setupMotionData = function(sprite)
   sprite.yf2 = 0;
   sprite.yf3 = 0;
   sprite.ex = false;
-  sprite.bounceMaxX = sprite.x + 260;
+  sprite.bounceMaxX = sprite.x + J.POPUPS.Layout.MotionBounceMaxExtra;
 };
 
 /**
@@ -185,28 +185,28 @@ Sprite_Damage.prototype.setupMotionData = function(sprite)
  */
 Sprite_Damage.prototype.createValue = function(value)
 {
-  // create a sprite of the designated size.
-  const w = 400;
+  const w = J.POPUPS.Layout.ValueBitmapWidth;
   const h = this.fontSize();
   const sprite = this.createChildSprite(w, h);
 
-  // setup the fontsize for the font.
   let fontSize = 20;
 
-  // check if this is a critical value.
   if (this._j._popups._isCritical)
   {
-    // critical values look bigger and bolder.
     fontSize += 12;
     sprite.bitmap.fontBold = true;
   }
-
-  // check if it was miss/evade/parry.
-  else if (value.includes("Missed") || value.includes("Evaded") || value.includes("Parry"))
+  else
   {
-    // miss/evade/parry are a bit smaller and italic for effect.
-    fontSize -= 6;
-    sprite.bitmap.fontItalic = true;
+    const accent = this._j._popups._textAccent;
+    const accentItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
+    const legacyItalic = value.includes('Missed') || value.includes('Evaded') || value.includes('Parry');
+
+    if (accentItalic || legacyItalic)
+    {
+      fontSize -= 6;
+      sprite.bitmap.fontItalic = true;
+    }
   }
 
   // assign the new size.
@@ -238,9 +238,9 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
   // blit the icon onto the sprite's bitmap directly.
   sprite.bitmap.blt(bitmap, sx, sy, pw, ph, 0, 0);
 
-  // scale down the icon to be only 75% of the size.
-  sprite.scale.x = 0.75;
-  sprite.scale.y = 0.75;
+  const iconScale = J.POPUPS.Layout.IconScale;
+  sprite.scale.x = iconScale;
+  sprite.scale.y = iconScale;
 
   // adjust the location a bit.
   sprite.x -= 180;
@@ -304,14 +304,13 @@ Sprite_Damage.prototype.updateNonDamageSpriteMotion = function(sprite)
  */
 Sprite_Damage.prototype.updateDamageSpriteMotion = function(sprite)
 {
-  // check if the damage sprite is a healing sprite.
   if (this.isHealing())
   {
-    //this.flyawayDamageSpriteMotion(sprite);
+    this.updateNonDamageSpriteMotion(sprite);
   }
   else
   {
-    //this.defaultDamageSpriteMotion(sprite);
+    this.defaultDamageSpriteMotion(sprite);
   }
 };
 

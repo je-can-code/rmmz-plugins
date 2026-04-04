@@ -16,18 +16,22 @@ class TextPopSpriteManager
   /**
    * Converts a `Map_TextPop` into a `Sprite_Damage`.
    * @param {Map_TextPop} popup The popup to convert.
+   * @param {{ x?: number, y?: number }} ringExtra Extra offset from {@link J.POPUPS.consumeLayoutRingOffset}.
    * @returns {Sprite_Damage} The converted sprite.
    */
-  static convert(popup)
+  static convert(popup, ringExtra = { x: 0, y: 0 })
   {
     // start by creating a blank damage sprite.
     const sprite = new Sprite_Damage();
 
+    const rx = ringExtra.x || 0;
+    const ry = ringExtra.y || 0;
+
     // add the x variance to the x coordinate for the base sprite.
-    sprite.setXVariance(popup.coordinateVariance[0]);
+    sprite.setXVariance(popup.coordinateVariance[0] + rx);
 
     // add the y variance to the y coordinate for the base sprite.
-    sprite.setYVariance(popup.coordinateVariance[1]);
+    sprite.setYVariance(popup.coordinateVariance[1] + ry);
 
     // check if there is an iconIndex present.
     if (popup.iconIndex > -1)
@@ -55,7 +59,9 @@ class TextPopSpriteManager
       sprite.setupCriticalEffect();
     }
 
-    // assign the text value to be displayed as the popup of the sprite.
+    sprite._j._popups._textAccent = popup.textAccent || null;
+    sprite._j._popups._sourcePopup = popup;
+
     sprite.createValue(popup.value);
 
     // return the constructed sprite for the popup.

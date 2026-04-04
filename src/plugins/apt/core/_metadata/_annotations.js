@@ -10,7 +10,6 @@
  * @orderAfter J-ABS
  * @orderAfter J-LevelMaster
  * @orderAfter J-Log
- * @orderAfter J-TextPops
  * @help
  * ============================================================================
  * OVERVIEW
@@ -21,7 +20,7 @@
  * - J-ABS; acquire points from enemy kills and skill executions.
  * - J-LevelMaster; considers level difference for an AP multiplier.
  * - J-Log; log all AP gained.
- * - J-TextPops; display popups for AP gained.
+ * - J-Popups (+ J-Popups-APT); display popups for AP gained.
  *
  * ----------------------------------------------------------------------------
  * DETAILS

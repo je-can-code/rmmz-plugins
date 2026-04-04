@@ -13,6 +13,14 @@ area: feature
 
 Bonus hits from equipment and states are pooled. Designers want hits that apply only to basic attacks, only to skills, or to all actions.
 
+## Severity
+
+**Medium** (designer-facing behavior; mistakes skew combat balance).
+
+## Gain
+
+**Medium-high** for games tuning strike vs skill cadence; implementation scoped to `JABS_Battler` reference/bonus resolution paths.
+
 ## Work
 
 Add distinct notetag (or param) variants; accumulate into three buckets; apply the correct bucket when resolving each action type.
