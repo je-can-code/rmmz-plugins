@@ -11,7 +11,6 @@
  * @orderAfter J-ABS
  * @orderAfter J-Elementalistics
  * @orderAfter J-HUD-Party
- * @orderAfter J-TextPops
  * @help
  * ============================================================================
  * OVERVIEW
@@ -23,7 +22,7 @@
  * - J-ABS; this plugin is an extension to JABS.
  * - J-Elementalistics; considers all elements for shield typing/bypassing.
  * - J-HUD-Party; the shield gauge will be rendered above the hp gauge.
- * - J-TextPops; shield damage popups will be generated.
+ * - J-Popups (+ J-Popups-ABS); shield damage popups will be generated.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:

@@ -33,8 +33,7 @@ Game_Character.prototype.initMembers = function()
  */
 Game_Character.prototype.hasTextPops = function()
 {
-  // don't do this if popups are disabled by JABS.
-  if (J.ABS && J.ABS.Metadata.DisableTextPops) return false;
+  if (J.POPUPS.Metadata.DisablePopups === true) return false;
 
   return this._j._textPopRequest;
 };
@@ -44,11 +43,10 @@ Game_Character.prototype.hasTextPops = function()
  */
 Game_Character.prototype.requestTextPop = function()
 {
-  // don't do this if popups are disabled by JABS.
-  if (J.ABS && J.ABS.Metadata.DisableTextPops) return;
+  if (J.POPUPS.Metadata.DisablePopups === true) return;
 
-  // assign the request.
   this._j._textPopRequest = true;
+  J.POPUPS.notifyPopupFlushRequested(this);
 };
 
 /**
@@ -65,11 +63,16 @@ Game_Character.prototype.acknowledgeTextPops = function()
  */
 Game_Character.prototype.addTextPop = function(textPop)
 {
-  // don't do this if popups are disabled by JABS.
-  if (J.ABS && J.ABS.Metadata.DisableTextPops) return;
+  if (J.POPUPS.Metadata.DisablePopups === true) return;
 
-  // add the text pop to the tracking.
+  if (J.POPUPS.isValidTextPopForQueue(textPop) === false)
+  {
+    console.warn(`[${J.POPUPS.Metadata.Name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`, textPop);
+    return;
+  }
+
   this._j._textPops.push(textPop);
+  J.POPUPS.notifyPopupQueued(this, textPop);
 };
 
 /**
@@ -88,7 +91,14 @@ Game_Character.prototype.emptyDamagePops = function()
 {
   const textPops = this.getTextPops();
 
-  // empty the contents of the array for all references to see.
   textPops.splice(0, textPops.length);
+};
+
+/**
+ * Preferred name for clearing the pending popup queue (same as emptyDamagePops).
+ */
+Game_Character.prototype.clearPendingTextPops = function()
+{
+  this.emptyDamagePops();
 };
 //endregion Game_Character

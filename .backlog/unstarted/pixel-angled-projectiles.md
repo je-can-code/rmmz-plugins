@@ -5,6 +5,14 @@ area: pixel/ext/abs
 
 # Angled Projectiles (J-ABS-Pixelistics Phase F)
 
+## Severity
+
+**Medium** (new movement path; edge cases in collision and cleanup).
+
+## Gain
+
+**High** for action feel; non-trivial integration with `JABS_Action` / routes — dedicated PR as noted.
+
 ## Summary
 
 Extend JABS projectiles to travel at arbitrary angles when `J-Pixelistics` is active,

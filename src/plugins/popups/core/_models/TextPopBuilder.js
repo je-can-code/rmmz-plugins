@@ -87,6 +87,20 @@ class TextPopBuilder
    */
   #yVariance = 0;
 
+  /**
+   * Optional typography hint forwarded to {@link Sprite_Damage.prototype.createValue}.
+   * @type {string|null}
+   * @private
+   */
+  #textAccent = null;
+
+  /**
+   * Layout ring for stacking offsets; only {@link Map_TextPop.LayoutRings} values are valid on build.
+   * @type {string}
+   * @private
+   */
+  #layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
+
   //endregion properties
 
   /**
@@ -114,6 +128,8 @@ class TextPopBuilder
       value: this.#makePopupValue(),
       coordinateVariance: this.#makeCoordinateVariance(),
       healing: this.#isHealing,
+      textAccent: this.#textAccent,
+      layoutRing: this.#layoutRing,
     });
 
     // clear out the just-built popup.
@@ -139,6 +155,8 @@ class TextPopBuilder
     this.#suffix = String.empty;
     this.#xVariance = 0;
     this.#yVariance = 0;
+    this.#textAccent = null;
+    this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
   }
 
   /**
@@ -149,15 +167,14 @@ class TextPopBuilder
    */
   #makePopupValue()
   {
-    // if there is a hyphen in the value, it was probably a healing effect.
-    if (this.#value.indexOf(`-`) !== -1)
+    let valuePart = this.#value;
+
+    if (valuePart.indexOf(`-`) !== -1)
     {
-      // remove the hyphen.
-      this.#value = this.#value.substring(1);
+      valuePart = valuePart.substring(1);
     }
 
-    // concatenate the prefix + value + suffix to make the value.
-    return `${this.#prefix}${this.#value}${this.#suffix}`;
+    return `${this.#prefix}${valuePart}${this.#suffix}`;
   }
 
   /**
@@ -248,6 +265,17 @@ class TextPopBuilder
   setHealing(isHealing = true)
   {
     this.#isHealing = isHealing;
+    return this;
+  }
+
+  /**
+   * Sets a typography hint for the value line (miss, evade, parry); avoids substring checks on localized text.
+   * @param {string|null} accent The accent key, or null to clear.
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  setTextAccent(accent)
+  {
+    this.#textAccent = accent;
     return this;
   }
 
@@ -348,6 +376,86 @@ class TextPopBuilder
 
   //endregion setters
 
+  //region layoutRings
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forEnemyDamageRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
+    this.setXVariance(Math.randomInt(10));
+    this.setYVariance(Math.randomInt(10));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forIncomingHealRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.IncomingHeal;
+    this.setXVariance(Math.randomInt(10));
+    this.setYVariance(Math.randomInt(10));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forSlipDamageRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.SlipDamage;
+    this.setXVariance(Math.randomInt(8));
+    this.setYVariance(Math.randomInt(8));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forRegenRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.Regen;
+    this.setXVariance(Math.randomInt(8));
+    this.setYVariance(Math.randomInt(8));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forRewardUpRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.RewardUp;
+    this.setXVariance(Math.randomInt(8));
+    this.setYVariance(Math.randomInt(8));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forLootDownRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.LootDown;
+    this.setXVariance(Math.randomInt(8));
+    this.setYVariance(Math.randomInt(8));
+    return this;
+  }
+
+  /**
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  forCenterFocusRing()
+  {
+    this.#layoutRing = Map_TextPop.LayoutRings.CenterFocus;
+    this.setXVariance(Math.randomInt(6));
+    this.setYVariance(Math.randomInt(6));
+    return this;
+  }
+
+  //endregion layoutRings
+
   //region presets
   /**
    * Changes the suffix based on elemental efficicacy associated with a damage pop.
@@ -429,28 +537,11 @@ class TextPopBuilder
       // if positive, it must be damage.
       if (!this.#isHealing)
       {
-        // set it to the hp damage color.
         this.setTextColorIndex(this.#textColors.hpDamage);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
       }
-      // if negative, it must be healing.
       else
       {
-        // set it to the hp healing color.
         this.setTextColorIndex(this.#textColors.hpHealing);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
-
-        // add a plus because we know its healing.
         this.setPrefix(`+`);
       }
     }
@@ -474,28 +565,11 @@ class TextPopBuilder
       // if positive, it must be damage.
       if (!this.#isHealing)
       {
-        // set it to the mp damage color.
         this.setTextColorIndex(this.#textColors.mpDamage);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
       }
-      // if negative, it must be healing.
       else
       {
-        // set it to the mp healing color.
         this.setTextColorIndex(this.#textColors.mpHealing);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
-
-        // add a plus because we know its healing.
         this.setPrefix(`+`);
       }
     }
@@ -519,28 +593,11 @@ class TextPopBuilder
       // if positive, it must be damage.
       if (!this.#isHealing)
       {
-        // set it to the tp damage color.
         this.setTextColorIndex(this.#textColors.tpDamage);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
       }
-      // if negative, it must be healing.
       else
       {
-        // set it to the tp healing color.
         this.setTextColorIndex(this.#textColors.tpHealing);
-
-        // randomize the variance a bit.
-        const rngX = Math.randomInt(48);
-        const rngY = Math.randomInt(48);
-        this.setXVariance(rngX);
-        this.setYVariance(rngY);
-
-        // add a plus because we know its healing.
         this.setPrefix(`+`);
       }
     }
@@ -564,11 +621,7 @@ class TextPopBuilder
     // set the icon to our experience icon.
     this.setIconIndex(125);
 
-    // add some x variance when working with experience.
-    this.setXVariance(-16);
-
-    // add some y variance when working with experience.
-    this.setYVariance(32);
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -589,11 +642,7 @@ class TextPopBuilder
     // set the icon to our experience icon.
     this.setIconIndex(2048);
 
-    // add some x variance when working with gold.
-    this.setXVariance(-8);
-
-    // add some y variance when working with gold.
-    this.setYVariance(48);
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -614,11 +663,7 @@ class TextPopBuilder
     // set the icon index to the learned skill's icon.
     this.setIconIndex(306);
 
-    // add no x variance when working with sdp points.
-    this.setXVariance(0);
-
-    // add some y variance when working with sdp points.
-    this.setYVariance(64);
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -626,22 +671,13 @@ class TextPopBuilder
 
   /**
    * Add some convenient defaults for configuring collected loot popups.
-   * @param {number} y The y coordinate.
    * @returns {TextPopBuilder} The builder, for fluent chaining.
    */
-  isLoot(y = 64)
+  isLoot()
   {
-    // set the popup type to be experience.
     this.setPopupType(Map_TextPop.Types.Item);
-
-    // set the text color to be system blue.
     this.setTextColorIndex(1);
-
-    // add some x variance when working with experience.
-    this.setXVariance(y);
-
-    // add some y variance when working with experience.
-    this.setYVariance(0);
+    this.forLootDownRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -661,6 +697,8 @@ class TextPopBuilder
 
     // set the icon index to our level up icon.
     this.setIconIndex(86);
+
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -682,8 +720,7 @@ class TextPopBuilder
     // set the icon index to the used skill's icon.
     this.setIconIndex(skillIconIndex);
 
-    // add some x variance when working with experience.
-    this.setYVariance(64);
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;
@@ -708,8 +745,7 @@ class TextPopBuilder
     // add a suffix to indicate the skill was learned.
     this.setSuffix(` LEARNED!`);
 
-    // add some y variance when working with experience.
-    this.setYVariance(32);
+    this.forRewardUpRing();
 
     // return the builder for fluent chaining.
     return this;

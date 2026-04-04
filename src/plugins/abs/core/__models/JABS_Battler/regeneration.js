@@ -283,8 +283,7 @@ JABS_Battler.prototype.processStateRegens = function(states)
       // flip the sign for the regen for properly creating pops.
       regen *= -1;
 
-      // generate the textpop.
-      this.generatePopSlip(regen, index);
+      this.onSlipRegenTick(regen, index);
     }
   });
 };
@@ -546,55 +545,11 @@ JABS_Battler.prototype.applySlipEffect = function(amount, type)
 };
 
 /**
- * Creates the slip popup on this battler.
- * @param {number} amount The slip pop amount.
- * @param {number} type The slip parameter: 0=hp, 1=mp, 2=tp.
+ * Hook after slip/regen math is applied; extensions may show pops or other feedback.
+ * @param {number} displayAmount Amount passed to popup builders after sign normalization.
+ * @param {0|1|2} type HP / MP / TP index.
  */
-JABS_Battler.prototype.generatePopSlip = function(amount, type)
+JABS_Battler.prototype.onSlipRegenTick = function(displayAmount, type)
 {
-  // if we are not using popups, then don't do this.
-  if (!J.POPUPS) return;
-
-  // gather shorthand variables for use.
-  const character = this.getCharacter();
-
-  // generate the textpop.
-  const slipPop = this.configureSlipPop(amount, type);
-
-  // add the pop to the target's tracking.
-  character.addTextPop(slipPop);
-  character.requestTextPop();
-};
-
-/**
- * Configures a popup based on the slip damage type and amount.
- * @param {number} amount The amount of the slip.
- * @param {0|1|2} type The slip parameter: 0=hp, 1=mp, 2=tp.
- * @returns {Map_TextPop}
- */
-JABS_Battler.prototype.configureSlipPop = function(amount, type)
-{
-  // lets take our time with this text pop building.
-  const textPopBuilder = new TextPopBuilder(amount);
-
-  // based on the hp/mp/tp type, we apply different visual effects.
-  switch (type)
-  {
-    // hp.
-    case 0:
-      textPopBuilder.isHpDamage();
-      break;
-    // mp.
-    case 1:
-      textPopBuilder.isMpDamage();
-      break;
-    // tp.
-    case 2:
-      textPopBuilder.isTpDamage();
-      break;
-  }
-
-  // build and return the popup.
-  return textPopBuilder.build();
 };
 //endregion regeneration

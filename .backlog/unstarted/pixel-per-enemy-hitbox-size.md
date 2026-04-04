@@ -5,6 +5,14 @@ area: pixel/ext/abs
 
 # Per-Enemy Hitbox Sizing (J-ABS-Pixelistics)
 
+## Severity
+
+**Low** (feature); incorrect radius → unfair hits.
+
+## Gain
+
+**Medium-high** for combat readability when paired with J-Pixelistics; scoped to `pixel/ext/abs` + enemy notes.
+
 ## Summary
 
 Allow individual enemies to define a custom collision radius via a notetag,

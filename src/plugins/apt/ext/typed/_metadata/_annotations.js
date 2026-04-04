@@ -11,7 +11,6 @@
  * @orderAfter J-ABS
  * @orderAfter J-Aptitude
  * @orderAfter J-Log
- * @orderAfter J-TextPops
  * @help
  * ============================================================================
  * OVERVIEW
@@ -22,7 +21,7 @@
  * Integrates with others of mine plugins:
  * - J-Base; to be honest this is just required for all my plugins.
  * - J-Log; log the type of AP gained.
- * - J-TextPops; updates popups for typed AP gained.
+ * - J-Popups (+ J-Popups-APT); updates popups for typed AP gained.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:

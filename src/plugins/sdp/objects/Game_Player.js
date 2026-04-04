@@ -14,8 +14,8 @@ Game_Player.prototype.useOnPickup = function(lootData)
     // unlock the SDP for the party.
     $gameParty.unlockSdp(lootData.sdpKey);
 
-    // generate a popup indicating we picked it up.
-    $jabsEngine.generateSdpUnlock(lootData.sdpKey, this);
+    // notify that an SDP panel was unlocked.
+    $jabsEngine.onSdpPanelUnlocked(lootData.sdpKey, this);
 
     // generate a log entry for unlocking it.
     $jabsEngine.createSdpUnlockLog(lootData.sdpKey);

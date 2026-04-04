@@ -52,9 +52,6 @@ if (J.ABS)
         // gain the applicable points.
         ApManager.gainAp(member, actualAp, 'on-kill');
 
-        // generate the popup.
-        this.generatePopAp(actualAp, jabsBattler.getCharacter());
-
         // create the log entry.
         this.createLogAp(actualAp, jabsBattler);
       });
@@ -80,26 +77,6 @@ if (J.ABS)
 
     // gain that AP!
     return true;
-  };
-
-  /**
-   * Generates a popup.
-   * @param {number} apPoints The amount to display.
-   * @param {Game_Character} character The character to show the popup on.
-   */
-  JABS_Engine.prototype.generatePopAp = function(apPoints, character)
-  {
-    // if we are not using popups, then don't do this.
-    if (!J.POPUPS) return;
-
-    // generate the textpop.
-    const apPop = new TextPopBuilder(apPoints)
-      .isAptitude()
-      .build();
-
-    // add the pop to the caster's tracking.
-    character.addTextPop(apPop);
-    character.requestTextPop();
   };
 
   /**

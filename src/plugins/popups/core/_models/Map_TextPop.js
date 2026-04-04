@@ -82,6 +82,20 @@ Map_TextPop.Types = {
 };
 
 /**
+ * Layout stream for ring stacking (orthogonal to {@link Map_TextPop.Types}).
+ * Set only via {@link TextPopBuilder} fluent helpers.
+ */
+Map_TextPop.LayoutRings = {
+  EnemyDamage: 'layout-enemy-damage',
+  IncomingHeal: 'layout-incoming-heal',
+  SlipDamage: 'layout-slip-damage',
+  Regen: 'layout-regen',
+  RewardUp: 'layout-reward-up',
+  LootDown: 'layout-loot-down',
+  CenterFocus: 'layout-center-focus',
+};
+
+/**
  * Builds the text pop based on the given parameters.
  */
 Map_TextPop.prototype.initialize = function({
@@ -92,6 +106,8 @@ Map_TextPop.prototype.initialize = function({
   critical,
   coordinateVariance,
   healing,
+  textAccent,
+  layoutRing,
 })
 {
   /**
@@ -137,5 +153,17 @@ Map_TextPop.prototype.initialize = function({
    * @type {boolean}
    */
   this.healing = healing;
+
+  /**
+   * Optional typography hint for the value line (e.g. miss, evade, parry).
+   * @type {string|null|undefined}
+   */
+  this.textAccent = textAccent;
+
+  /**
+   * Which layout ring advances for this pop (stacking); see {@link Map_TextPop.LayoutRings}.
+   * @type {string}
+   */
+  this.layoutRing = layoutRing;
 };
 //endregion Map_TextPop

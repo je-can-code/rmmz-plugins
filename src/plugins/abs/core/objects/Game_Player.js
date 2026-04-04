@@ -211,7 +211,7 @@ Game_Player.prototype.pickupLootCollection = function(lootCollected)
   });
 
   // generate all popups for the loot collected.
-  $jabsEngine.generatePopItemBulk(lootPickedUp, this);
+  $jabsEngine.onItemPickedUp(lootPickedUp, this);
 
   // oh yeah, and play a sound because you picked things up.
   SoundManager.playUseItem();
