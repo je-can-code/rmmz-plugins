@@ -1,4 +1,4 @@
-//region J_POPABS_Battler
+//region JABS_Battler
 /**
  * Extends {@link #onSlipRegenTick}.<br/>
  * Also shows a slip or regen popup on the battler's character.
@@ -36,4 +36,4 @@ JABS_Battler.prototype.onItemApplied = function(gameAction, itemId, target = thi
   // show the damage result popup on the caster's character.
   JABS_PopupManager.showItemAppliedPop(gameAction, toolData, this, target);
 };
-//endregion J_POPABS_Battler
+//endregion JABS_Battler

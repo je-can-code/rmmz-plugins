@@ -194,15 +194,14 @@ class Window_SkillDetail
     const actor = this._actor;
     const params = [];
 
-    /* TODO: add after implementing hp costs.
-    const hpName = TextManager.longParam(21);
-    const hpCost = parseFloat((skill.hpCost * actor.hcr).toFixed(2));
-    const hpColor = ColorManager.hpCostColor();
-    params.push(new JCMS_ParameterKvp(hpName, hpCost, hpColor));
-    */
-
     params.push(this.makeSkillTypeParam(skill));
     params.push(this.makeDividerParam());
+
+    if (J.RESOURCES)
+    {
+      params.push(this.makeHpCostParam(skill, actor));
+    }
+
     params.push(this.makeMpCostParam(skill, actor));
     params.push(this.makeTpCostParam(skill, actor));
 
@@ -497,6 +496,26 @@ class Window_SkillDetail
   }
 
   /**
+   * Makes the hp cost key value parameter.
+   * Requires J-Resources to be present.
+   * @param {RPG_Skill} skill The skill object.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeHpCostParam(skill, actor)
+  {
+    const hpName = TextManager.longParam(34);
+    let hpColor = ColorManager.hpCostColor();
+    const hpCost = parseFloat(actor.skillHpCost(skill).toFixed(2));
+    if (hpCost === 0)
+    {
+      hpColor = ColorManager.damageColor();
+    }
+
+    return new JCMS_ParameterKvp(hpName, hpCost, hpColor);
+  }
+
+  /**
    * Makes the mp cost key value parameter.
    * @param {RPG_Skill} skill The skill object.
    * @param {Game_Actor} actor The actor.
@@ -505,11 +524,12 @@ class Window_SkillDetail
   {
     const mpName = TextManager.longParam(22);
     let mpColor = ColorManager.mpCostColor();
-    const mpCost = parseFloat((skill.mpCost * actor.mcr).toFixed(2));
+    const mpCost = parseFloat(actor.skillMpCost(skill).toFixed(2));
     if (mpCost === 0)
     {
       mpColor = ColorManager.damageColor();
     }
+
     return new JCMS_ParameterKvp(mpName, mpCost, mpColor);
   }
 
@@ -522,7 +542,7 @@ class Window_SkillDetail
   {
     const tpName = TextManager.longParam(23);
     let tpColor = ColorManager.tpCostColor();
-    const tpCost = parseFloat((skill.tpCost * actor.tcr).toFixed(2));
+    const tpCost = parseFloat(actor.skillTpCost(skill).toFixed(2));
     if (tpCost === 0)
     {
       tpColor = ColorManager.damageColor();

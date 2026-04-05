@@ -135,7 +135,18 @@ Sprite_Character.prototype.createIncomingTextPops = function()
 Sprite_Character.prototype.createIncomingTextPop = function(popup)
 {
   const character = this.character();
-  const ringExtra = J.POPUPS.consumeLayoutRingOffset(character, popup.layoutRing);
+  
+  // motion is only for damage and healing.
+  const isMotionType = popup.popupType === Map_TextPop.Types.HpDamage ||
+                       popup.popupType === Map_TextPop.Types.MpDamage ||
+                       popup.popupType === Map_TextPop.Types.TpDamage ||
+                       popup.healing === true;
+
+  const useMotion = J.POPUPS.Layout.Motion.Enabled === true && isMotionType;
+
+  const ringExtra = useMotion
+    ? J.POPUPS.resolveMotionOffset(popup)
+    : J.POPUPS.consumeLayoutRingOffset(character, popup.layoutRing);
   const sprite = TextPopSpriteManager.convert(popup, ringExtra);
 
   if (sprite.isDamage())
@@ -242,7 +253,7 @@ Sprite_Character.prototype._removeTrackedPopSprite = function(sprite, index, buc
  */
 Sprite_Character.prototype.updateTextPopAnchorPosition = function(popSprite)
 {
-  const ox = J.POPUPS.Layout.AnchorOffsetX;
+  const ox = J.POPUPS.Layout.AnchorOffsetX + J.POPUPS.Layout.HorizontalOffset;
   popSprite.x = this.x + ox + popSprite.getXVariance();
   popSprite.y = this.y + popSprite.getYVariance();
 };

@@ -3,7 +3,7 @@
  * A class representing a RPG-relevant class from the database.
  */
 class RPG_Class
-  extends RPG_Base
+  extends RPG_Traited
 {
   //region properties
   /**
@@ -26,12 +26,6 @@ class RPG_Class
    */
   params = [ [ 1 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ], [ 0 ] ];
 
-  /**
-   * A collection of traits this class has.
-   * @type {RPG_Trait[]}
-   */
-  traits = [];
-
   //endregion properties
 
   /**
@@ -49,8 +43,6 @@ class RPG_Class
     this.learnings = classData.learnings
       .map(learning => new RPG_ClassLearning(learning));
     this.params = classData.params;
-    this.traits = classData.traits
-      .map(trait => new RPG_Trait(trait));
   }
 
   /**

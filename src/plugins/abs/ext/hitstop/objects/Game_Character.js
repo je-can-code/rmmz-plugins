@@ -88,46 +88,5 @@ Game_Character.prototype.update = function()
   // perform original logic.
   J.ABS.EXT.HITSTOP.Aliased.Game_Character.get('update')
     .call(this);
-
-  // after a normal update, if we just came out of hitstop, apply any queued knockback.
-  this.applyQueuedKnockbackIfAny();
-};
-
-/**
- * Applies any queued knockback after a hitstop release.
- */
-Game_Character.prototype.applyQueuedKnockbackIfAny = function()
-{
-  // grab the hitstop data for this character.
-  const data = this.getHitstopData();
-
-  // grab any queued knockback.
-  const vector = data.consumeQueuedKnockback();
-
-  // if a vector exists, attempt to move accordingly.
-  if (vector)
-  {
-    // attempt to move stepwise by vector (engine-level passability checks still apply when trying to move).
-    const {
-      x,
-      y
-    } = vector;
-
-    // apply X displacement (tilewise) one tile at a time.
-    for (let i = 0; i < Math.abs(x); i++)
-    {
-      // move left or right by one tile.
-      if (x < 0) this.moveStraight(4);
-      if (x > 0) this.moveStraight(6);
-    }
-
-    // apply Y displacement (tilewise) one tile at a time.
-    for (let i = 0; i < Math.abs(y); i++)
-    {
-      // move up or down by one tile.
-      if (y < 0) this.moveStraight(8);
-      if (y > 0) this.moveStraight(2);
-    }
-  }
 };
 //endregion Game_Character

@@ -167,16 +167,29 @@ Sprite_Damage.prototype.createChildSprite = function(width, height)
 Sprite_Damage.prototype.setupMotionData = function(sprite)
 {
   sprite.anchor.x = 0.5;
-  sprite.anchor.y = 1;
-  sprite.y = -40;
-  sprite.dy = 0;
-  sprite.zt = 0;
-  sprite.ry = sprite.y;
-  sprite.yf = 0;
-  sprite.yf2 = 0;
-  sprite.yf3 = 0;
-  sprite.ex = false;
-  sprite.bounceMaxX = sprite.x + J.POPUPS.Layout.MotionBounceMaxExtra;
+  sprite.anchor.y = 0.5;
+  
+  // motion is only for damage and healing.
+  const isMotionType = this.isDamage() || this.isHealing();
+
+  // if motion is enabled, initialize the variables needed for it.
+  if (J.POPUPS.Layout.Motion.Enabled === true && isMotionType)
+  {
+    sprite.y = 0; // children start at the parent's baseline.
+    sprite.dy = J.POPUPS.Layout.Motion.InitialJump; // starting jump.
+    sprite.zt = 0;
+    sprite.ry = sprite.y;
+    sprite.yf = 0;
+    sprite.yf2 = 0;
+    sprite.yf3 = 0;
+    sprite.ex = false;
+    sprite.bounceMaxX = sprite.x + J.POPUPS.Layout.Motion.MaxDrift;
+  }
+  else
+  {
+    // motion disabled: use the vertical offset baseline.
+    sprite.y = J.POPUPS.Layout.VerticalOffset;
+  }
 };
 
 /**
@@ -213,8 +226,9 @@ Sprite_Damage.prototype.createValue = function(value)
   sprite.bitmap.fontSize = fontSize;
 
   // draw the text.
-  sprite.bitmap.drawText(value, 32, 0, w, h, "left");
-  sprite.dy = 0;
+  // we center the text on the bitmap, and the bitmap is centered on the parent.
+  // using 0 y-offset to align with the icon's vertical center.
+  sprite.bitmap.drawText(value, 0, 0, w, h, "center");
 };
 
 /**
@@ -242,11 +256,45 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
   sprite.scale.x = iconScale;
   sprite.scale.y = iconScale;
 
-  // adjust the location a bit.
-  sprite.x -= 180;
-  sprite.bounceMaxX -= 180;
-  sprite.y += 15;
-  sprite.dy = 0;
+  // track the icon sprite.
+  this._j._popups._iconSprite = sprite;
+
+  // we want the icon to be vertically centered with the text.
+  // since both text and icon now use the same y-offset and anchor=0.5, they align automatically.
+  sprite.anchor.y = 0.5; 
+  
+  sprite.x = 0;
+};
+
+/**
+ * Repositions children to be side-by-side if both icon and text exist.
+ */
+Sprite_Damage.prototype.repositionChildren = function()
+{
+  const icon = this._j._popups._iconSprite;
+  // find the text sprite (it's the one with the large bitmap).
+  const text = this.children.find(child => child !== icon && child.bitmap && child.bitmap.width === J.POPUPS.Layout.ValueBitmapWidth);
+
+  if (icon && text)
+  {
+    const spacing = 4;
+    const iconWidth = ImageManager.iconWidth * J.POPUPS.Layout.IconScale;
+    
+    // measure the actual text width.
+    const textWidth = text.bitmap.measureTextWidth(this._j._popups._sourcePopup.value);
+    const totalWidth = iconWidth + spacing + textWidth;
+    
+    // the center of the group should be at x=0.
+    const startX = -(totalWidth / 2);
+    
+    // icon is on the left.
+    icon.x = startX + (iconWidth / 2);
+    
+    // text is on the right.
+    // since the text is drawn centered in a 400px bitmap, we just move the bitmap
+    // so that its center is at the correct spot for the text content.
+    text.x = startX + iconWidth + spacing + (textWidth / 2);
+  }
 };
 
 /**
@@ -267,16 +315,29 @@ Sprite_Damage.prototype.updateChild = function(sprite)
   // flashing always happens, sorry!
   sprite.setBlendColor(this._flashColor);
 
-  // check if we're working with damage or non-damage sprites.
-  if (this.isDamage())
+  // motion is only for damage and healing.
+  const isMotionType = this.isDamage() || this.isHealing();
+
+  // if motion is enabled, execute the designated motion style.
+  if (J.POPUPS.Layout.Motion.Enabled === true && isMotionType)
   {
-    // update damage sprites to be kinda bouncy.
-    this.updateDamageSpriteMotion(sprite);
-  }
-  else
-  {
-    // update non-damage sprites to be mostly motionless aside from a small bounce.
-    this.updateNonDamageSpriteMotion(sprite);
+    const style = J.POPUPS.Layout.Motion.Style;
+    switch (style)
+    {
+      case J.POPUPS.MotionStyles.Bounce:
+        if (this.isDamage())
+        {
+          this.updateDamageSpriteMotion(sprite);
+        }
+        else
+        {
+          this.updateNonDamageSpriteMotion(sprite);
+        }
+        break;
+      case J.POPUPS.MotionStyles.Flyaway:
+        this.flyawayDamageSpriteMotion(sprite);
+        break;
+    }
   }
 };
 
@@ -287,12 +348,24 @@ Sprite_Damage.prototype.updateChild = function(sprite)
  */
 Sprite_Damage.prototype.updateNonDamageSpriteMotion = function(sprite)
 {
-  sprite.dy += 0.5;
+  sprite.dy += J.POPUPS.Layout.Motion.Gravity;
   sprite.ry += sprite.dy;
   if (sprite.ry >= 0)
   {
     sprite.ry = 0;
     sprite.dy *= -0.6;
+  }
+
+  // determine the drift direction.
+  // healing drifts left, damage drifts right.
+  const drift = this.isHealing()
+    ? -J.POPUPS.Layout.Motion.DriftSpeed
+    : J.POPUPS.Layout.Motion.DriftSpeed;
+
+  // if we haven't reached the max drift yet, keep drifting.
+  if (Math.abs(sprite.x) < J.POPUPS.Layout.Motion.MaxDrift)
+  {
+    sprite.x += drift;
   }
 
   sprite.y = Math.round(sprite.ry);
@@ -321,7 +394,7 @@ Sprite_Damage.prototype.updateDamageSpriteMotion = function(sprite)
  */
 Sprite_Damage.prototype.defaultDamageSpriteMotion = function(sprite)
 {
-  sprite.dy += 0.1;
+  sprite.dy += J.POPUPS.Layout.Motion.Gravity;
   sprite.ry += sprite.dy;
   if (sprite.ry >= 0)
   {
@@ -329,9 +402,16 @@ Sprite_Damage.prototype.defaultDamageSpriteMotion = function(sprite)
     sprite.dy *= -0.8;
   }
 
-  if (sprite.x < sprite.bounceMaxX)
+  // determine the drift direction.
+  // healing drifts left, damage drifts right.
+  const drift = this.isHealing()
+    ? -J.POPUPS.Layout.Motion.DriftSpeed
+    : J.POPUPS.Layout.Motion.DriftSpeed;
+  
+  // if we haven't reached the max drift yet, keep drifting.
+  if (Math.abs(sprite.x) < J.POPUPS.Layout.Motion.MaxDrift)
   {
-    sprite.x -= -1.1;
+    sprite.x += drift;
   }
 
   sprite.y = Math.round(sprite.ry);
@@ -361,9 +441,10 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
  */
 Sprite_Damage.prototype.updateOpacity = function()
 {
-  if (this._duration < 60)
+  const baseDuration = J.POPUPS.Layout.BaseDuration;
+  if (this._duration < baseDuration)
   {
-    this.opacity = (255 * this._duration) / 60;
+    this.opacity = (255 * this._duration) / baseDuration;
   }
 };
 

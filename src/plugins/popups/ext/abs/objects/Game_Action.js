@@ -6,7 +6,6 @@
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onFormulaResourceDelta', Game_Action.prototype.onFormulaResourceDelta);
 Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resource)
 {
-  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onFormulaResourceDelta')
     .call(this, recipient, amount, resource);
 
@@ -44,11 +43,7 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
     textPopBuilder.forEnemyDamageRing();
   }
 
-  const pop = textPopBuilder.build();
-  const character = jabs.getCharacter();
-
-  character.addTextPop(pop);
-  character.requestTextPop();
+  TextPopManager.show(textPopBuilder.build(), jabs.getCharacter());
 };
 
 /**
@@ -58,7 +53,6 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onShieldDamageAbsorbed', Game_Action.prototype.onShieldDamageAbsorbed);
 Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
 {
-  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldDamageAbsorbed')
     .call(this, target, value);
 
@@ -68,10 +62,8 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
   const pop = new TextPopBuilder(`  -${Math.round(value)}`)
     .isShieldDamage()
     .build();
-  const character = jabsBattler.getCharacter();
 
-  character.addTextPop(pop);
-  character.requestTextPop();
+  TextPopManager.show(pop, jabsBattler.getCharacter());
 };
 
 /**
@@ -81,7 +73,6 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onShieldBroken', Game_Action.prototype.onShieldBroken);
 Game_Action.prototype.onShieldBroken = function(target)
 {
-  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldBroken')
     .call(this, target);
 
@@ -91,9 +82,7 @@ Game_Action.prototype.onShieldBroken = function(target)
   const pop = new TextPopBuilder(`B R E A K`)
     .isShieldBreak()
     .build();
-  const character = jabsBattler.getCharacter();
 
-  character.addTextPop(pop);
-  character.requestTextPop();
+  TextPopManager.show(pop, jabsBattler.getCharacter());
 };
 //endregion Game_Action

@@ -383,8 +383,8 @@ class TextPopBuilder
   forEnemyDamageRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
-    this.setXVariance(Math.randomInt(10));
-    this.setYVariance(Math.randomInt(10));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -394,8 +394,8 @@ class TextPopBuilder
   forIncomingHealRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.IncomingHeal;
-    this.setXVariance(Math.randomInt(10));
-    this.setYVariance(Math.randomInt(10));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -405,8 +405,8 @@ class TextPopBuilder
   forSlipDamageRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.SlipDamage;
-    this.setXVariance(Math.randomInt(8));
-    this.setYVariance(Math.randomInt(8));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -416,8 +416,8 @@ class TextPopBuilder
   forRegenRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.Regen;
-    this.setXVariance(Math.randomInt(8));
-    this.setYVariance(Math.randomInt(8));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -427,8 +427,8 @@ class TextPopBuilder
   forRewardUpRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.RewardUp;
-    this.setXVariance(Math.randomInt(8));
-    this.setYVariance(Math.randomInt(8));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -438,8 +438,8 @@ class TextPopBuilder
   forLootDownRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.LootDown;
-    this.setXVariance(Math.randomInt(8));
-    this.setYVariance(Math.randomInt(8));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -449,8 +449,8 @@ class TextPopBuilder
   forCenterFocusRing()
   {
     this.#layoutRing = Map_TextPop.LayoutRings.CenterFocus;
-    this.setXVariance(Math.randomInt(6));
-    this.setYVariance(Math.randomInt(6));
+    this.setXVariance(0);
+    this.setYVariance(0);
     return this;
   }
 
@@ -720,7 +720,7 @@ class TextPopBuilder
     // set the icon index to the used skill's icon.
     this.setIconIndex(skillIconIndex);
 
-    this.forRewardUpRing();
+    this.forCenterFocusRing();
 
     // return the builder for fluent chaining.
     return this;
