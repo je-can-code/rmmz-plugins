@@ -25,12 +25,6 @@ class JABS_HitstopData
     this._frames = 0;
 
     /**
-     * A queued knockback application to apply on release.
-     * @type {{ x:number, y:number }|null}
-     */
-    this._queuedKnockback = null;
-
-    /**
      * A short-lived map of actionUuid => remaining frames used to scale multi-hit decay.
      * This is per-character so decay is per-target per-action.
      * @type {Map<string, number>}
@@ -93,32 +87,6 @@ class JABS_HitstopData
   {
     // return whether or not the frames are still ticking.
     return this._frames > 0;
-  }
-
-  /**
-   * Queues a knockback vector to apply when hitstop ends.
-   * @param {{ x:number, y:number }} vector The vector to apply.
-   */
-  queueKnockback(vector)
-  {
-    // set the queued knockback vector.
-    this._queuedKnockback = vector;
-  }
-
-  /**
-   * Consumes and returns the queued knockback vector if present.
-   * @returns {{ x:number, y:number }|null}
-   */
-  consumeQueuedKnockback()
-  {
-    // capture the queued vector locally.
-    const out = this._queuedKnockback;
-
-    // clear the queued vector.
-    this._queuedKnockback = null;
-
-    // return the consumed vector.
-    return out;
   }
 
   /**

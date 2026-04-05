@@ -81,8 +81,7 @@ class Sprite_SkillCost
     switch (this.skillCostType())
     {
       case Sprite_SkillCost.Types.HP:
-        // TODO: implement HP costs.
-        return 0;
+        return leader.skillHpCost(ability);
       case Sprite_SkillCost.Types.MP:
         return ability.mpCost * leader.mcr;
       case Sprite_SkillCost.Types.TP:

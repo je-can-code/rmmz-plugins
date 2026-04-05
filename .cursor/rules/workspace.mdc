@@ -77,6 +77,7 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 
 ## Workflow
 
+- **NEVER push directly to `main` in any repo** (`rmmz-plugins`, `ca`, `jmz-data-editor`). All work must go through a feature branch and a PR. No exceptions.
 - **OS**: Bazzite Linux (immutable Fedora base). No `rpm-ostree` or `apt` without a reboot. Install user binaries to `~/.local/bin`.
 - **Package manager**: Bun everywhere. Never suggest `npm` or `yarn`.
 - **GitHub CLI**: `gh` is installed at `~/.local/bin/gh` and authenticated as `je-can-code`. Use it for all PR operations. Write PR bodies to a temp file and pass via `--body-file` to avoid heredoc quoting issues.

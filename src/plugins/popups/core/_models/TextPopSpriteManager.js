@@ -43,11 +43,11 @@ class TextPopSpriteManager
     // add duration bonus onto sprite.
     sprite.addDuration(this.#getDurationByPopupType(popup.popupType));
 
-    // designate whether or not its a damage popup.
-    sprite.setDamageFlag(this.#isDamageFlagByPopupType(popup.popupType));
-
     // set the healing flag to be what the popup designates.
     sprite.setHealingFlag(popup.healing);
+
+    // designate whether or not its a damage popup.
+    sprite.setDamageFlag(this.#isDamageFlagByPopupType(popup.popupType));
 
     // set the color of the damage for the sprite.
     sprite.setDamageColor(popup.textColorIndex);
@@ -63,6 +63,9 @@ class TextPopSpriteManager
     sprite._j._popups._sourcePopup = popup;
 
     sprite.createValue(popup.value);
+
+    // reposition children if both icon and text exist.
+    sprite.repositionChildren();
 
     // return the constructed sprite for the popup.
     return sprite;
