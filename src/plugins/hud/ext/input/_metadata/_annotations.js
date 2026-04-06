@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 HUD-INPUT] A HUD frame that displays your leader's buttons data.
+ * [v1.1.1 HUD-INPUT] A HUD frame that displays your leader's buttons data.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -31,6 +31,9 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.1.1
+ *    Wired HP skill cost into Sprite_SkillCost for display on action slots
+ *    (requires J-Resources).
  * - 1.1.0
  *    Changed input to reflect a switch-view diamond in the center.
  *    Retroactively added this changelog.

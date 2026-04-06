@@ -56,7 +56,7 @@ class JABS_HitstopManager
 
   /**
    * Applies hitstop to the attacker, target, and the delivering action event.
-   * Also handles multi-hit decay and knockback deferral.
+   * Also handles multi-hit decay.
    * @param {JABS_Action} action The action causing the hit.
    * @param {JABS_Battler} attacker The attacker.
    * @param {JABS_Battler} target The target.
@@ -110,9 +110,6 @@ class JABS_HitstopManager
 
     // trigger a tiny screen shake to sell the moment (player-centric, anti-spam).
     this.#applyMicroShake(frames, attacker, target, wasFirstInFlurry);
-
-    // capture knockback now and defer application until release.
-    this.#queueKnockbackIfAny(action, target);
   }
 
   //region internals
@@ -218,60 +215,6 @@ class JABS_HitstopManager
 
     // stamp cooldown.
     J.ABS.EXT.HITSTOP.Metadata.lastShakeFrame = now;
-  }
-
-  /**
-   * If the action is going to knock the target back, queue it for post-hitstop release.
-   * @param {JABS_Action} action The action.
-   * @param {JABS_Battler} target The target.
-   */
-  static #queueKnockbackIfAny(action, target)
-  {
-    // determine the knockback magnitude from the action.
-    const knockbackTiles = action.getKnockback();
-
-    // if there is no knockback, then nothing to do.
-    if (knockbackTiles === null || knockbackTiles === 0) return;
-
-    // locate the action sprite to derive direction.
-    const actionSprite = action.getActionSprite();
-
-    // if we lack a sprite, we cannot resolve a direction for vectoring.
-    if (!actionSprite) return;
-
-    // derive a simple vector in tile units based on direction.
-    const dir = actionSprite.direction();
-
-    // calculate a naive vector; JABS_Engine will still validate passability on apply.
-    let x = 0;
-    let y = 0;
-
-    // derive vector components from direction.
-    switch (dir)
-    {
-      case 2:
-        y += Math.ceil(knockbackTiles);
-        break;
-      case 4:
-        x -= Math.ceil(knockbackTiles);
-        break;
-      case 6:
-        x += Math.ceil(knockbackTiles);
-        break;
-      case 8:
-        y -= Math.ceil(knockbackTiles);
-        break;
-      default:
-        break;
-    }
-
-    // queue this vector on the target’s character to apply on release.
-    target.getCharacter()
-      .getHitstopData()
-      .queueKnockback({
-        x,
-        y
-      });
   }
 
   //endregion internals

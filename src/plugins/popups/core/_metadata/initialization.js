@@ -39,14 +39,139 @@ J.POPUPS.EventNames = {
 };
 
 /**
+ * A collection of all motion styles available for popups.
+ */
+J.POPUPS.MotionStyles = {
+  /**
+   * The default bounce motion.
+   */
+  Bounce: 'bounce',
+
+  /**
+   * A flyaway motion that floats up and fades out.
+   */
+  Flyaway: 'flyaway',
+};
+
+/**
  * Default layout offsets for anchoring popup sprites to {@link Sprite_Character}.
  */
 J.POPUPS.Layout = {
-  AnchorOffsetX: 150,
+  /**
+   * The horizontal offset from the character's center.
+   * @type {number}
+   */
+  AnchorOffsetX: 0,
+
+  /**
+   * The width of the bitmap used for damage values.
+   * @type {number}
+   */
   ValueBitmapWidth: 400,
+
+  /**
+   * The scale of the icons in the popups.
+   * @type {number}
+   */
   IconScale: 0.75,
-  MotionBounceMaxExtra: 260,
+
+  /**
+   * The horizontal distance between slots in a layout ring.
+   * @type {number}
+   */
+  RingStepX: 12,
+
+  /**
+   * The vertical distance between slots in a layout ring.
+   * @type {number}
+   */
+  RingStepY: 16,
+
+  /**
+   * The vertical baseline offset for all popups.
+   * @type {number}
+   */
+  VerticalOffset: -20,
+
+  /**
+   * The horizontal baseline offset for all popups.
+   * @type {number}
+   */
+  HorizontalOffset: -20,
+
+  /**
+   * The horizontal padding from the character's center for motion popups.
+   * @type {number}
+   */
+  PaddingX: 24,
+
+  /**
+   * The vertical padding from the character's center for motion popups.
+   * @type {number}
+   */
+  PaddingY: 0,
+
+  /**
+   * The number of frames of inactivity before a layout ring resets to its first slot.
+   * @type {number}
+   */
+  ResetDuration: 30,
+
+  /**
+   * The base duration in frames that a popup sprite remains visible.
+   * @type {number}
+   */
+  BaseDuration: 60,
+
+  /**
+   * Encapsulated motion-related settings.
+   */
+  Motion: {
+    /**
+     * Whether or not to enable motion for popups.
+     * If this is false, none of the other motion-related settings matter.
+     * @type {boolean}
+     */
+    Enabled: true,
+
+    /**
+     * The style of motion to use for popups.
+     * @type {string}
+     */
+    Style: J.POPUPS.MotionStyles.Bounce,
+
+    /**
+     * The initial vertical jump velocity for the bounce motion.
+     * Negative values go up.
+     * @type {number}
+     */
+    InitialJump: -2,
+
+    /**
+     * The gravity applied to the popup during motion.
+     * Higher values make it fall faster.
+     * @type {number}
+     */
+    Gravity: 0.10,
+
+    /**
+     * The horizontal drift speed during motion.
+     * @type {number}
+     */
+    DriftSpeed: 1.1,
+
+    /**
+     * The maximum horizontal distance a popup can drift during motion.
+     * @type {number}
+     */
+    MaxDrift: 200,
+  },
 };
+
+/**
+ * Per-character slot offsets for {@link Map_TextPop.LayoutRings}. Ephemeral (WeakMap; not saved).
+ */
+J.POPUPS._layoutRingState = new WeakMap();
 
 J.POPUPS.Helpers = {};
 J.POPUPS.Helpers.PopupEmitter = new J_EventEmitter();

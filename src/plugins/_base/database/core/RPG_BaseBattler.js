@@ -4,19 +4,13 @@
  * database data look like.
  */
 class RPG_BaseBattler
-  extends RPG_Base
+  extends RPG_Traited
 {
   /**
    * The name of the battler while in battle.
    * @type {string}
    */
   battlerName = String.empty;
-
-  /**
-   * The collection of traits this battler has.
-   * @type {RPG_Trait[]}
-   */
-  traits = [];
 
   /**
    * Constructor.
@@ -31,8 +25,6 @@ class RPG_BaseBattler
 
     // map core battler data onto this object.
     this.battlerName = battler.battlerName;
-    this.traits = battler.traits
-      .map(trait => new RPG_Trait(trait));
   }
 
   /**
