@@ -135,7 +135,6 @@
  */
 //endregion annotations
 
-
 //region plugin metadata
 class JResourcesAbs_PluginMetadata
   extends PluginMetadata
@@ -160,7 +159,6 @@ class JResourcesAbs_PluginMetadata
 }
 
 //endregion plugin metadata
-
 
 //region initialization
 /**
@@ -211,7 +209,6 @@ J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainPercent = /<when-hit-tp-gain:(\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainFormula = /<when-hit-tp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
 //endregion initialization
-
 
 //region JABS_Engine
 /**
