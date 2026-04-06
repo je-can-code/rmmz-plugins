@@ -44,4 +44,4 @@
  *    On-attack and when-hit gains from J-Resources-ABS are covered automatically.
  * ============================================================================
  */
-//endregion annotations
+//endregion annotations
