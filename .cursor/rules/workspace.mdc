@@ -22,6 +22,9 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 - **No unnecessary comments** that just restate the code. Comments explain *why*, not *what*.
 - Always read `rmmz-plugins/.junie/guidelines.md` before working in `rmmz-plugins` — it is the authoritative style reference.
 
+## ESLint Compliance
+- **Never violate ESLint rules.** `rmmz-plugins` enforces `eol-last: ["error", "never"]` — files must NOT end with a trailing newline. When using the `Write` tool, the final character of the `contents` string must be the last character of the file (no `\n` after the closing `//endregion` or final line). Always run `ReadLints` on newly written files to catch violations before committing.
+
 ## Universal Coding Style (all three projects)
 
 - **Allman braces**: opening `{` on its own line for functions, classes, and all blocks — including arrow functions.
