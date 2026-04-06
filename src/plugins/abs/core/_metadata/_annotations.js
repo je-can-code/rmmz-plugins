@@ -1892,13 +1892,6 @@
  * @decimals 2
  * @default 1.50
  *
- * @param disableTextPops
- * @parent miscConfigs
- * @type boolean
- * @text Disable Text Pops
- * @desc Whether or not to disable the text popups, including: damage, rewards, parry, etc.
- * @default false
- *
  * @param lootPickupDistance
  * @parent miscConfigs
  * @type number

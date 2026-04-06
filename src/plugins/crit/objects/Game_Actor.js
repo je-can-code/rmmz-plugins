@@ -95,7 +95,8 @@ Game_Actor.prototype.getNaturalGrowthsRegexForCrit = function()
     J.CRIT.RegExp.CritDamageReductionGrowthPlus,
     J.CRIT.RegExp.CritDamageReductionGrowthRate,
     J.CRIT.RegExp.CritDamageMultiplierGrowthPlus,
-    J.CRIT.RegExp.CritDamageMultiplierGrowthRate, ];
+    J.CRIT.RegExp.CritDamageMultiplierGrowthRate,
+  ];
 };
 
 /**
