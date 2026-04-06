@@ -6,8 +6,7 @@
 Game_Enemy.prototype.hcrSources = function()
 {
   return [
-    this.databaseData(),
-    ...this.allStates(),
+    this.databaseData(), ...this.allStates(),
   ];
 };
 //endregion Game_Enemy
