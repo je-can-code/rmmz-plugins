@@ -72,7 +72,7 @@ J.RESOURCES.Aliased.Game_Battler.set('onBattlerDataChange', Game_Battler.prototy
 Game_Battler.prototype.onBattlerDataChange = function()
 {
   // perform original logic.
-  J.NATURAL.Aliased.Game_Battler.get('onBattlerDataChange')
+  J.RESOURCES.Aliased.Game_Battler.get('onBattlerDataChange')
     .call(this);
 
   // also refresh the hrc.

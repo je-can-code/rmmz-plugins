@@ -1,10 +1,5 @@
 //region J_PopupLayoutRings
 /**
- * Per-character slot offsets for {@link Map_TextPop.LayoutRings}. Ephemeral (WeakMap; not saved).
- */
-J.POPUPS._layoutRingState = new WeakMap();
-
-/**
  * Step layout for each ring. Indices wrap at slotCount.
  */
 J.POPUPS.Layout.RingLayout = {};

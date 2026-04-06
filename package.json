@@ -54,7 +54,6 @@
     "build:otib": "node ./src/build-tools/combine.js ./src/plugins/otib ./out J-OneTimeItemBoost.js",
     "build:passive": "node ./src/build-tools/combine.js ./src/plugins/passive ./out J-Passive.js",
     "build:prof": "node ./src/build-tools/combine.js ./src/plugins/prof ./out J-Proficiency.js",
-    "build:resources": "node ./src/build-tools/combine.js ./src/plugins/resources ./out J-Resources.js",
     "build:sdp": "node ./src/build-tools/combine.js ./src/plugins/sdp ./out J-SDP.js",
     "build:sks": "node ./src/build-tools/combine.js ./src/plugins/sks ./out J-SkillSlots.js",
     "build:time": "node ./src/build-tools/combine.js ./src/plugins/time ./out J-TIME.js",
@@ -112,6 +111,9 @@
     
     "build:regions": "node ./src/build-tools/combine.js ./src/plugins/regions/core ./out/regions J-RegionEffects.js",
     "build:regions-states": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/states ./out/regions/ext J-Regions-States.js",
-    "build:regions-skills": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/skills ./out/regions/ext J-Regions-Skills.js"
+    "build:regions-skills": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/skills ./out/regions/ext J-Regions-Skills.js",
+
+    "build:resources": "node ./src/build-tools/combine.js ./src/plugins/resources/core ./out/resources J-Resources.js",
+    "build:resources-abs": "node ./src/build-tools/combine.js ./src/plugins/resources/ext/abs ./out/resources/ext J-Resources-ABS.js"
   }
 }

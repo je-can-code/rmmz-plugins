@@ -118,6 +118,9 @@ Game_Battler.prototype.gainTpFromResource = function(amount)
   // don't pop 0 gains.
   if (amount === 0) return;
 
+  // do nothing if we're not using JABS.
+  if (!J.ABS) return;
+
   // validate we have a battler.
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
   if (!jabsBattler) return;
