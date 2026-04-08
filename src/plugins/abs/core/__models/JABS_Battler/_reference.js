@@ -1576,34 +1576,6 @@ JABS_Battler.prototype.getAllSkillIdsFromEnemy = function()
 };
 
 /**
- * Gets the number of additional/bonus hits per basic attack.
- * Skills (such as magic) do not receive bonus hits at this time.
- * @param {RPG_Skill} skill The skill to consider regarding bonus hits.
- * @param {boolean} isBasicAttack True if this is a basic attack, false otherwise.
- * @returns {number} The number of bonus hits per attack.
- */
-JABS_Battler.prototype.getAdditionalHits = function(skill, isBasicAttack)
-{
-  let bonusHits = 0;
-  const battler = this.getBattler();
-  if (isBasicAttack)
-  {
-    // TODO: split "basic attack" bonus hits from "skill" and "all" bonus hits.
-    bonusHits += battler.getBonusHits();
-    if (skill.repeats > 1)
-    {
-      bonusHits += skill.repeats - 1;
-    }
-  }
-  else
-  {
-    // check for skills that may have non-pierce-related bonus hits?
-  }
-
-  return bonusHits;
-};
-
-/**
  * Forces a display of a emoji balloon above this battler's head.
  * @param {number} balloonId The id of the balloon to display on this character.
  */

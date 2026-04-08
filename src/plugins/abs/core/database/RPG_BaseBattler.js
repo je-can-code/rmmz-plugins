@@ -1,14 +1,36 @@
 //region RPG_BaseBattler
-//region bonusHits
+//region bonusHitsScopes
 /**
- * The number of additional bonus hits this battler adds to their basic attacks.
+ * Bonus hits per connection from this battler database note, applied to all JABS actions.
  * @type {number}
  */
-Object.defineProperty(RPG_BaseBattler.prototype, "jabsBonusHits", {
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBonusHitsScopeGlobal', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHits, true);
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeGlobal);
   },
 });
-//endregion bonusHits
+
+/**
+ * Bonus hits per connection from this battler database note, applied to basic attacks only.
+ * @type {number}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBonusHitsScopeBasic', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeBasic);
+  },
+});
+
+/**
+ * Bonus hits per connection from this battler database note, applied to non-basic skills only.
+ * @type {number}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBonusHitsScopeSkill', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeSkill);
+  },
+});
+//endregion bonusHitsScopes
 //endregion RPG_BaseBattler
