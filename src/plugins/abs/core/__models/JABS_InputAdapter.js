@@ -32,6 +32,18 @@ class JABS_InputAdapter
   }
 
   /**
+   * True when the battler-wide global cooldown timer should reject this skill attempt for the given battler.
+   * Delegates to {@link JABS_GlobalCooldown.isGlobalBlockingSkillId}; exempt and non-whitelisted skills never block here.
+   * @param {JABS_Battler} jabsBattler The battler performing the action.
+   * @param {number} skillId Skill database id for the attempted action.
+   * @returns {boolean} True when GCD is active and the skill is subject to it.
+   */
+  static #isGlobalCooldownBlockingSkill(jabsBattler, skillId)
+  {
+    return JABS_GlobalCooldown.isGlobalBlockingSkillId(jabsBattler, skillId);
+  }
+
+  /**
    * Checks whether or not any controllers have been registered with this input adapter.
    * @returns {boolean} True if we have at least one registered controller, false otherwise.
    */
@@ -86,6 +98,11 @@ class JABS_InputAdapter
 
     // if there are none, then do not perform.
     if (!actions || !actions.length) return false;
+
+    if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions[0].getBaseSkill().id))
+    {
+      return false;
+    }
 
     // if the player is casting, then do not perform.
     if (jabsBattler.isCasting()) return false;
@@ -143,6 +160,11 @@ class JABS_InputAdapter
 
     // if there are none, then do not perform.
     if (!actions || !actions.length) return false;
+
+    if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions[0].getBaseSkill().id))
+    {
+      return false;
+    }
 
     // if the player is casting, then do not perform.
     if (jabsBattler.isCasting()) return false;
@@ -267,7 +289,13 @@ class JABS_InputAdapter
     if (jabsBattler.isCasting()) return false;
 
     // if there is no action data for the skill, then do not perform.
-    if (jabsBattler.getAttackData(slot).length === 0) return false;
+    const combatActions = jabsBattler.getAttackData(slot);
+    if (combatActions.length === 0) return false;
+
+    if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, combatActions[0].getBaseSkill().id))
+    {
+      return false;
+    }
 
     // perform!
     return true;

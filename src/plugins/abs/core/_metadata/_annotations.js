@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.7.2 JABS] Enables combat to be carried out on the map.
+ * [v4.8.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.8.0
+ *    Optional global cooldown (GCD): plugin params, skill-type whitelist, notetags `noGlobalCooldown`/`ogcd`/`gcd`,
+ *    AI and input gating (dodge/tool exempt), HUD combo gauge shows GCD pressure, plugin command to stamp GCD.
  * - 4.7.2
  *    Unified enemy and ally AI skill decisions to return a skill-id array (empty or one id);
  *    JABS_AiManager phase-2 paths read the first element after validation.
@@ -655,6 +658,17 @@
  * shares the same ID as another slot.
  *    <uniqueCooldown>
  *
+ * GLOBAL COOLDOWN (GCD):
+ * Optional battler-wide lockout after using skills whose skill type id (stypeId)
+ * is listed in plugin param "Global Cooldown Skill Types" (number[]). Dodge and
+ * tool inputs never participate. Enable via "Enable Global Cooldown".
+ *    <noGlobalCooldown>
+ *    <ogcd>
+ *  Either tag marks an "oGCD" skill: it does not stamp GCD and is not blocked
+ *  by the global timer.
+ *    <gcd:FRAMES>
+ *  Overrides default GCD length for this skill when it triggers GCD.
+ *
  * ----------------------------------------------------------------------------
  * RADIUS:
  * How large the hitbox of this skill is, using tiles as measurement.
@@ -843,20 +857,33 @@
  *
  * ----------------------------------------------------------------------------
  * PIERCING:
- * Enables a skill to hit multiple targets multiple times, with an optional
- * delay between each hit.
+ * Defines how many collision "steps" (connections) the map action may
+ * complete before it ends, and the delay between those steps.
  *    <pierce:[TIMES,DELAY]>
- *  Where TIMES is the maximum number of times this skill can pierce.
- *  Where DELAY is the number of frames between each hit.
+ *  Where TIMES is the connection budget for this skill (including the first).
+ *  Where DELAY is the number of frames to wait before the next connection.
  *
  * NOTE ABOUT HIT FREQUENCY:
- * The most a skill can hit is once per frame. A DELAY of 0 means it
- * hits every frame it collides.
+ * The most a skill can register a new connection is once per frame. A DELAY
+ * of 0 means it can connect every frame its hitbox overlaps valid targets.
  *
- * NOTE ABOUT SKILL REPEATS:
- * The database "repeats" field is added on top of the TIMES value.
- * Omitting the tag and adding "5 repeats" in the database is equivalent
- * to having <pierce:[6,0]> on the skill.
+ * NOTE ABOUT DATABASE REPEATS:
+ * JABS does not read the RMMZ skill "repeats" field for pierce or for extra
+ * hits per connection. Use <pierce:[...]> and the bonus-hits tags below.
+ *
+ * ----------------------------------------------------------------------------
+ * PER-CONNECTION BONUS HITS (SKILL NOTE):
+ * Each time a pierce step resolves against targets, JABS runs the full
+ * battle-effect pipeline once per target, plus extra runs controlled by
+ * bonus-hit tags. This tag on the skill adds extra applications per target
+ * for that step (stacking with battler-side tags).
+ *    <bonus-hits:VAL>
+ *  Where VAL is a non-negative integer added to the per-connection bonus.
+ *
+ * PARRY VS GUARD:
+ * If a parry triggers on a target during the first application of a bundle,
+ * remaining applications in that bundle for that target are skipped. Guard
+ * still runs every application in the bundle with normal mitigation each time.
  *
  * ----------------------------------------------------------------------------
  * KNOCKBACK:
@@ -1078,6 +1105,18 @@
  * this equipment is knocked back by incoming hits:
  *    <knockbackResist:VAL>
  *  Where VAL is the number of knockback tiles to cancel.
+ *
+ * ----------------------------------------------------------------------------
+ * PER-CONNECTION BONUS HITS (ACTOR / CLASS / EQUIPMENT / STATES):
+ * These stack with <bonus-hits:VAL> on the executing skill. Place them on
+ * actor, class, weapons, armors, states, or enemy data as appropriate.
+ *    <bonus-hits-global:VAL>
+ * Adds VAL to the per-connection bonus for every JABS action.
+ *    <bonus-hits-basic:VAL>
+ * Adds VAL only when the action is a basic attack (mainhand/offhand for
+ * actors, or the enemy's designated basic attack skill).
+ *    <bonus-hits-skill:VAL>
+ * Adds VAL only for non-basic skills.
  *
  * HIDING ITEMS/SKILLS FROM ASSIGNMENT:
  * To prevent certain items or skills from appearing in the assignment
@@ -2037,6 +2076,31 @@
  * @desc The text that shows up in the JABS quickmenu for the "- unassigned -" command.
  * @default - unassigned -
  *
+ * @param globalCooldownConfigs
+ * @text GLOBAL COOLDOWN (GCD)
+ *
+ * @param enableGlobalCooldown
+ * @parent globalCooldownConfigs
+ * @type boolean
+ * @text Enable Global Cooldown
+ * @desc When true, whitelisted skill types stamp a battler-wide GCD and respect it on skill use (not dodge/tool).
+ * @default false
+ *
+ * @param globalCooldownFrames
+ * @parent globalCooldownConfigs
+ * @type number
+ * @min 1
+ * @text Default GCD Frames
+ * @desc Frames of global lockout after a GCD skill executes. Per-skill override: gcd notetag.
+ * @default 30
+ *
+ * @param globalCooldownSkillTypes
+ * @parent globalCooldownConfigs
+ * @type number[]
+ * @text Global Cooldown Skill Types
+ * @desc Skill type ids (stypeId, same order as Database Types). These types trigger and respect GCD. Empty = no type-based GCD.
+ * @default []
+ *
  *
  *
  *
@@ -2132,6 +2196,21 @@
  * @command Refresh JABS Menu
  * @text Refresh JABS Menu
  * @desc Refreshes the JABS menu in case there were any adjustments made to it.
+ *
+ * @command Apply Global Cooldown
+ * @text Apply global cooldown to actor
+ * @desc Sets the battler-wide GCD timer on a party actor that is on the map (leader or visible follower).
+ * @arg actorId
+ * @type actor
+ * @text Actor
+ * @desc Actor receiving the GCD. Must be the leader or a visible follower on the current map.
+ * @default 1
+ * @arg frames
+ * @type number
+ * @min 0
+ * @text Frames
+ * @desc GCD duration in frames. Use 0 to clear the global cooldown slot.
+ * @default 30
  *
  * @command Spawn Enemy
  * @text Spawn Enemy

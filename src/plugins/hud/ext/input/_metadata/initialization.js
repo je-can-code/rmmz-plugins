@@ -27,7 +27,7 @@ J.HUD.EXT.INPUT = {};
  */
 J.HUD.EXT.INPUT = {};
 J.HUD.EXT.INPUT.Metadata = {};
-J.HUD.EXT.INPUT.Metadata.Version = '1.1.0';
+J.HUD.EXT.INPUT.Metadata.Version = '1.1.2';
 J.HUD.EXT.INPUT.Metadata.Name = `J-HUD-InputFrame`;
 
 /**
