@@ -538,6 +538,20 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsPierceDelay', {
 });
 //endregion piercing
 
+//region bonusHitsSkillNote
+/**
+ * Extra per-connection bonus hits parsed from this skill note, additive with battler scope tags.
+ * When J-SkillExtend merges extension notes into this skill, matching tags on the extension contribute here too.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsBonusHitsFromSkillNote', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsSkillNote);
+  },
+});
+//endregion bonusHitsSkillNote
+
 //region ignoreParry
 /**
  * The percent of parry rating ignored by this skill.

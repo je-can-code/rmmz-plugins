@@ -246,32 +246,57 @@ class JABS_Action
     this._pierceDelay = new JABS_Timer(this._basePierceDelay);
 
     this._pierceDelay.setCurrentTime(this._pierceDelay.getMaxTime() - 1);
+
+    // extra full battle-effect applications per target per pierce tick, beyond the first.
+    this._hitsPerConnectionBonus = this.makeHitsPerConnectionBonus();
   }
 
   /**
-   * Combines from all available sources the bonus hits for this action.
+   * Builds the pierce-step budget from the skill only (connection count before the action ends).
    * @returns {number}
    */
   makePiercingCount()
   {
-    let pierceCount = this._baseSkill.jabsPierceCount;
+    return this._baseSkill.jabsPierceCount;
+  }
 
-    // handle skill extension bonuses.
-    if (J.EXTEND)
+  /**
+   * Sums battler-scoped and skill-note per-connection bonus hits for this action.
+   * @returns {number}
+   */
+  makeHitsPerConnectionBonus()
+  {
+    const gameBattler = this._caster.getBattler();
+    const isBasicAttack = this._caster.isSkillIdBasicAttack(this._baseSkill.id);
+
+    let bonusHits = gameBattler.getBonusHitsGlobal();
+
+    if (isBasicAttack)
     {
-      // check if there is an underlying item to parse repeats off of.
-      pierceCount += this._gameAction._item
-        // skill extensions borrow from the extended skill repeats instead.
-        ? this._gameAction._item._item.repeats - 1
-        // no extended skill, no bonus repeats.
-        : 0;
+      bonusHits += gameBattler.getBonusHitsBasic();
+    }
+    else
+    {
+      bonusHits += gameBattler.getBonusHitsSkill();
     }
 
-    // handle other bonus hits for basic attacks.
-    const isBasicAttack = [ JABS_Button.Mainhand, JABS_Button.Offhand ].includes(this.getCooldownType());
-    pierceCount += this._caster.getAdditionalHits(this._baseSkill, isBasicAttack);
+    bonusHits += this._baseSkill.jabsBonusHitsFromSkillNote;
 
-    return pierceCount;
+    if (bonusHits < 0)
+    {
+      return 0;
+    }
+
+    return bonusHits;
+  }
+
+  /**
+   * Gets the cached extra applications per target per pierce tick (beyond the first).
+   * @returns {number}
+   */
+  getHitsPerConnectionBonus()
+  {
+    return this._hitsPerConnectionBonus;
   }
 
   /**
@@ -1058,20 +1083,37 @@ class JABS_Action
   }
 
   /**
-   * Handles collision in the context of this action against in-range battlers.
+   * Applies battle effects to every collision target for this pierce tick.
+   * Runs `1 + getHitsPerConnectionBonus()` applications per target; stops early
+   * when the target is dead or when the first application is parried.
    */
   processCollision()
   {
-    // grab all available collision targets.
     const collisionTargets = $jabsEngine.getCollisionTargets(this);
 
-    // check if we have any collision targets.
     if (collisionTargets.length === 0) return;
 
-    // apply the battle effects of the action against each target.
-    collisionTargets.forEach(target => $jabsEngine.applyPrimaryBattleEffects(this, target), this);
+    const applicationsPerTarget = 1 + this.getHitsPerConnectionBonus();
 
-    // perform post-collision action things.
+    collisionTargets.forEach(function(target)
+    {
+      for (let hitIndex = 0; hitIndex < applicationsPerTarget; hitIndex++)
+      {
+        if (target.isDead())
+        {
+          break;
+        }
+
+        $jabsEngine.applyPrimaryBattleEffects(this, target);
+
+        const parried = target.getBattler().result().parried === true;
+        if (parried)
+        {
+          break;
+        }
+      }
+    }, this);
+
     this.onCollision();
   }
 

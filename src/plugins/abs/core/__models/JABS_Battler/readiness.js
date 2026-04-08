@@ -239,7 +239,7 @@ JABS_Battler.prototype.getPrepareTime = function()
 
 /**
  * Determines whether or not a skill can be executed based on restrictions or not.
- * This is used by AI.
+ * This is used by AI. Also enforces the battler-wide global cooldown: GCD-subject skills return false while the shared timer is active.
  * @param {number} chosenSkillId The skill id to be executed.
  * @returns {boolean} True if this skill can be executed, false otherwise.
  */
@@ -313,6 +313,11 @@ JABS_Battler.prototype.canExecuteSkill = function(chosenSkillId)
   if (!isCombo && !cooldown.isBaseReady())
   {
     // cooldown is not ready yet.
+    return false;
+  }
+
+  if (JABS_GlobalCooldown.isGlobalBlockingSkillId(this, chosenSkillId))
+  {
     return false;
   }
 

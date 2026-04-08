@@ -716,6 +716,7 @@ class Sprite_InputKeySlot
 
     // relocate the sprite.
     const sprite = this.getOrCreateInputKeyComboGaugeSprite(cooldownData, inputType);
+    sprite.setHudGcdMerge(this.jabsBattler(), this.skillSlot());
     sprite.show();
     sprite.move(x + 32, y + 32);
   }

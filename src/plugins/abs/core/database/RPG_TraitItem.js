@@ -1,14 +1,36 @@
-//region RPG_Traited
-//region bonusHits
+//region RPG_TraitItem
+//region bonusHitsScopes
 /**
- * A new property for retrieving the JABS bonusHits from this traited item.
+ * Bonus hits per connection from this traited object note, applied to all JABS actions.
  * @type {number}
  */
-Object.defineProperty(RPG_Traited.prototype, "jabsBonusHits", {
+Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeGlobal', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHits, true);
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeGlobal);
   },
 });
-//endregion bonusHits
-//endregion RPG_Traited
+
+/**
+ * Bonus hits per connection from this traited object note, applied to basic attacks only.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeBasic', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeBasic);
+  },
+});
+
+/**
+ * Bonus hits per connection from this traited object note, applied to non-basic skills only.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeSkill', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeSkill);
+  },
+});
+//endregion bonusHitsScopes
+//endregion RPG_TraitItem

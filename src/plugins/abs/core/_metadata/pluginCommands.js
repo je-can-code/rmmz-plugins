@@ -128,6 +128,24 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
 });
 
 /**
+ * Plugin command: forces the global cooldown counter on a party actor who is currently on the map as the player or a visible follower.
+ * Positive {@code frames} starts or refreshes GCD for that battler; zero or invalid clears it. Actors not represented on the map are skipped with a console warning.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.Name, "Apply Global Cooldown", args =>
+{
+  const { actorId, frames } = args;
+  const actor = $gameActors.actor(parseInt(actorId, 10));
+  const jabsBattler = JABS_GlobalCooldown.jabsBattlerForActor(actor);
+  if (!jabsBattler)
+  {
+    console.warn('Apply Global Cooldown: actor is not the leader or a visible follower on the map.');
+    return;
+  }
+  const n = parseInt(frames, 10);
+  jabsBattler.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, Number.isFinite(n) && n > 0 ? n : 0);
+});
+
+/**
  * Registers a plugin command for dynamically spawning an enemy onto the map.
  * The enemy spawned will be a clone from the enemy clone map.
  */

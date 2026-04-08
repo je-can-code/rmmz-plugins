@@ -1896,7 +1896,8 @@ class JABS_Engine
   }
 
   /**
-   * Applies cooldowns in regards to the player for the casted action.
+   * Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the battler-wide GCD.
+   * When global cooldown is enabled and the skill is subject to it, {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire until it elapses.
    * @param {JABS_Battler} caster The player.
    * @param {JABS_Action} action The JABS action to execute.
    */
@@ -1912,19 +1913,26 @@ class JABS_Engine
     {
       // if the skill is unique, only apply the cooldown to the slot assigned.
       caster.setCooldownCounter(cooldownType, cooldownValue);
-      return;
+    }
+    else
+    {
+      // if the skill is not unique, then the cooldown applies to all slots it is equipped to.
+      const equippedSkills = caster.getBattler()
+        .getAllEquippedSkills();
+      equippedSkills.forEach(skillSlot =>
+      {
+        if (skillSlot.id === skill.id)
+        {
+          caster.setCooldownCounter(skillSlot.key, cooldownValue);
+        }
+      });
     }
 
-    // if the skill is not unique, then the cooldown applies to all slots it is equipped to.
-    const equippedSkills = caster.getBattler()
-      .getAllEquippedSkills();
-    equippedSkills.forEach(skillSlot =>
+    if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
     {
-      if (skillSlot.id === skill.id)
-      {
-        caster.setCooldownCounter(skillSlot.key, cooldownValue);
-      }
-    });
+      const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
+      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, gcdFrames);
+    }
   }
 
   /**
