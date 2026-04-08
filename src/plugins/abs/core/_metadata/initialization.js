@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.7.2';
+J.ABS.Metadata.Version = '4.8.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -206,6 +206,50 @@ J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
 J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
 J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
 J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
+
+/**
+ * Global cooldown (GCD) plugin state: master switch, default duration in frames, and whitelist of skill {@code stypeId} values.
+ * {@link J.ABS.Metadata.GlobalCooldownSkillTypeSet} is built from {@code globalCooldownSkillTypes} as JSON array or comma-separated legacy text.
+ */
+// global cooldown (GCD) configurations.
+J.ABS.Metadata.EnableGlobalCooldown = J.ABS.PluginParameters['enableGlobalCooldown'] === 'true';
+J.ABS.Metadata.GlobalCooldownFrames = Number(J.ABS.PluginParameters['globalCooldownFrames']) || 30;
+(() =>
+{
+  const raw = J.ABS.PluginParameters['globalCooldownSkillTypes'] ?? '';
+  const set = new Set();
+  const ingest = v =>
+  {
+    const n = parseInt(String(v), 10);
+    if (Number.isFinite(n))
+    {
+      set.add(n);
+    }
+  };
+  const str = String(raw)
+    .trim();
+  if (str.startsWith('['))
+  {
+    try
+    {
+      const arr = JSON.parse(str);
+      if (Array.isArray(arr))
+      {
+        arr.forEach(ingest);
+      }
+    }
+    catch (e)
+    {
+      console.warn('J-ABS: globalCooldownSkillTypes JSON parse failed.', e);
+    }
+  }
+  else if (str.length)
+  {
+    str.split(',')
+      .forEach(part => ingest(part.trim()));
+  }
+  J.ABS.Metadata.GlobalCooldownSkillTypeSet = set;
+})();
 
 J.ABS.Metadata.HitboxStyles = {
   // Base defaults used for all shapes unless overridden below.
@@ -361,14 +405,9 @@ J.ABS.DefaultValues = {
 J.ABS.Globals = {};
 
 /**
- * The cooldown key that will be used for the "global" cooldown of a battler.<br/>
- * Battler cooldowns for both ally and enemy are bound to slots by their cooldown key.<br/>
- * The cooldown key is normally a dynamic value, but every battler also has a "global" cooldown slot as well that
- * is used when no other is defined. This "global" slot generally is not used to describe regular skills being used
- * but instead to describe exceptional events that block other skills while it remains on cooldown*.
- *
- * * TODO: implement the global cooldown blocking other cooldowns.
- * * TODO: alternatively, consider applying cooldowns against global to all slots on a battler.
+ * Cooldown key for the battler-wide global cooldown (GCD).<br/>
+ * When {@link J.ABS.Metadata.EnableGlobalCooldown} is on, executing a whitelisted skill stamps this timer;
+ * other GCD-subject skills cannot be used until it elapses. Dodge and tool inputs ignore GCD.
  * @type {'global'}
  */
 J.ABS.Globals.GlobalCooldownKey = 'global';
@@ -591,6 +630,10 @@ J.ABS.RegExp = {
   // post-execution-related.
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
+  // exempt from GCD stamp and block.
+  Ogcd: /<ogcd>/gi,
+  // optional per-skill GCD duration override in frames.
+  GlobalCooldownFrames: /<gcd:[ ]?(\d+)>/gi,
 
   // action size/shape/count related.
   SizeInPixels: /<size:[ ]?(\d+)>/gi,
@@ -609,6 +652,7 @@ J.ABS.RegExp = {
   Knockback: /<knockback:[ ]?(\d+)>/gi,
   DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)(?:,[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?))?])>/gi,
   Linger: /<linger:[ ]?(\d+)>/gi,
+  OnDefeatedTarget: /<onDefeatedTarget>/gi,
 
   // animation-related.
   SelfAnimationId: /<selfAnimationId:[ ]?(\d+)>/gi,
@@ -621,10 +665,7 @@ J.ABS.RegExp = {
   FreeCombo: /<freeCombo>/gi,
 
   // learning-related
-  ConfigAutoAssignSkills: /<autoAssignSkills>/gi,
   NoAutoAssign: /<noAutoAssign>/gi,
-  BlacklistAutoAssignSkillType: /<noAutoAssignType:[ ]?(\[[\d, ]+])>/gi,
-  ConfigAutoUpgradeSkills: /<autoUpgradeSkills>/gi,
   UpgradeOverSkill: /<upgradeOverSkill:[ ]?(\d+)>/i,
   NoSkillUpgrading: /<noUpgrade>/i,
   UpgradeOnlySkill: /<onlyUpgrade>/i,
@@ -635,7 +676,66 @@ J.ABS.RegExp = {
 
   // hits-related.
   Unparryable: /<unparryable>/gi,
-  BonusHits: /<bonusHits:[ ]?(\d+)>/gi,
+
+  /**
+   * Extra battle-effect applications per target per pierce tick, from the executing skill note only.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits:AMOUNT>
+   *
+   * Example:
+   *  <bonus-hits:2>
+   *
+   * Translation:
+   *  Adds 2 to per-connection bonus hits (3 total applies per target per tick with base 1).
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsSkillNote: /<bonus-hits:[ ]?(\d+)>/gi,
+
+  /**
+   * Bonus hits per connection from battler-side notes, applied to basic attacks only.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-basic:AMOUNT>
+   *
+   * Example:
+   *  <bonus-hits-basic:1>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeBasic: /<bonus-hits-basic:[ ]?(\d+)>/gi,
+
+  /**
+   * Bonus hits per connection from battler-side notes, applied to non-basic skills only.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-skill:AMOUNT>
+   *
+   * Example:
+   *  <bonus-hits-skill:1>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeSkill: /<bonus-hits-skill:[ ]?(\d+)>/gi,
+
+  /**
+   * Bonus hits per connection from battler-side notes, applied to all JABS actions.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-global:AMOUNT>
+   *
+   * Example:
+   *  <bonus-hits-global:1>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeGlobal: /<bonus-hits-global:[ ]?(\d+)>/gi,
+
   PiercingData: /<pierce:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // guarding-related.
@@ -651,11 +751,27 @@ J.ABS.RegExp = {
   InvincibleDodge: /<invincibleDodge>/gi,
   IFrames: /<iframes:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
-  // counter-related (on-chance-effect template)
-  Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
-  OnDefeatedTarget: /<onDefeatedTarget>/gi,
+  // visual metadata (per-skill; optional; sprites only; hitboxes unchanged).
+  VisOffset: /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisAnchor: /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi,
+  VisRotate: /<visRotate>/gi,
+  VisScale: /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi,
+  VisZ: /<visZ:[ ]?(-?\d+)>/gi,
+  VisDebug: /<visDebug>/gi,
+
+  // visual directional metadata (cardinals U/D/L/R; diagonals UR/UL/DR/DL).
+  VisOffsetU: /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetD: /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetL: /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetR: /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetUR: /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetUL: /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetDR: /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+  VisOffsetDL: /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+
+  // cast preview (skill-level).
+  NoCastPreviewSkill: /<noCastPreview>/gi,
+  CastPreviewWarnAt: /<castPreviewWarnAt:[ ]?(\d+)>/gi,
   //endregion ON SKILLS
 
   //region ON EQUIPS
@@ -771,75 +887,26 @@ J.ABS.RegExp = {
   ConfigNotInvincible: /<jabsConfig:[ ]?notInvincible>/i,
   ConfigNoName: /<jabsConfig:[ ]?noName>/i,
   ConfigShowName: /<jabsConfig:[ ]?showName>/i,
+
+  // cast preview (battler-level: all skills from this battler).
+  NoCastPreviewsBattler: /<noCastPreviews>/gi,
+
+  // counter-related (on-chance-effect)
+  OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   //endregion ON BATTLERS
+
+  //region ON BATTLERS OR STATES
+  Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  //endregion ON BATTLERS OR STATES
 
   //region ON ACTORS/CLASSES
   ConfigNoSwitch: /<noSwitch>/i,
+  ConfigAutoAssignSkills: /<autoAssignSkills>/gi,
+  ConfigAutoUpgradeSkills: /<autoUpgradeSkills>/gi,
+  BlacklistAutoAssignSkillType: /<noAutoAssignType:[ ]?(\[[\d, ]+])>/gi,
   //endregion ON ACTORS/CLASSES
 };
-
-//region visual metadata (new)
-/**
- * Visual customization for action sprites (per-skill).
- * All tags are optional and purely visual; physics/hitboxes remain unchanged.
- */
-// capture full [x, y].
-J.ABS.RegExp.VisOffset = /<visOffset:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// capture full [ax, ay].
-J.ABS.RegExp.VisAnchor = /<visAnchor:[ ]?(\[(?:0|1|0?\.\d+),[ ]?(?:0|1|0?\.\d+)])>/gi;
-// boolean.
-J.ABS.RegExp.VisRotate = /<visRotate>/gi;
-// capture full [sx, sy].
-J.ABS.RegExp.VisScale = /<visScale:[ ]?(\[-?\d+(?:\.\d+)?,[ ]?-?\d+(?:\.\d+)?])>/gi;
-// z-order override (number only).
-J.ABS.RegExp.VisZ = /<visZ:[ ]?(-?\d+)>/gi;
-// show visual center/debug gizmo.
-J.ABS.RegExp.VisDebug = /<visDebug>/gi;
-//endregion visual metadata (new)
-
-//region visual directional metadata (new)
-/**
- * Direction-relative visual offsets (per-skill).
- *
- * Cardinal: U/D/L/R
- * Optional diagonals: UR/UL/DR/DL
- */
-// [x, y].
-J.ABS.RegExp.VisOffsetU = /<visOffsetU:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetD = /<visOffsetD:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetL = /<visOffsetL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetR = /<visOffsetR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-
-// Optional diagonals for future use.
-// [x, y].
-J.ABS.RegExp.VisOffsetUR = /<visOffsetUR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetUL = /<visOffsetUL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetDR = /<visOffsetDR:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-// [x, y].
-J.ABS.RegExp.VisOffsetDL = /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi;
-//endregion visual directional metadata (new)
-
-//region cast preview tags
-/**
- * Skill-level: disable preview for this skill.
- */
-J.ABS.RegExp.NoCastPreviewSkill = /<noCastPreview>/gi;
-
-/**
- * Skill-level: delay the preview until the last N frames of the cast.
- */
-J.ABS.RegExp.CastPreviewWarnAt = /<castPreviewWarnAt:[ ]?(\d+)>/gi;
-
-/**
- * Battler-level: disable previews for all skills this battler will execute.
- */
-J.ABS.RegExp.NoCastPreviewsBattler = /<noCastPreviews>/gi;
-//endregion cast preview tags
 
 /**
  * A collection of all aliased methods for this plugin.

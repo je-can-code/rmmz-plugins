@@ -40,10 +40,22 @@ Game_Battler.prototype.initJabsMembers = function()
   this._j._abs._uuid = J.BASE.Helpers.shortUuid();
 
   /**
-   * The number of bonus hits this actor currently has.
+   * Cached per-connection bonus hits from `<bonus-hits-global:>` across battler-side sources.
    * @type {number}
    */
-  this._j._abs._bonusHits = 0;
+  this._j._abs._bonusHitsGlobal = 0;
+
+  /**
+   * Cached per-connection bonus hits from `<bonus-hits-basic:>` across battler-side sources.
+   * @type {number}
+   */
+  this._j._abs._bonusHitsBasic = 0;
+
+  /**
+   * Cached per-connection bonus hits from `<bonus-hits-skill:>` across battler-side sources.
+   * @type {number}
+   */
+  this._j._abs._bonusHitsSkill = 0;
 
   /**
    * All equipped skills on this battler.
@@ -755,29 +767,27 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
 
 //region JABS bonus hits
 /**
- * Updates the bonus hit count for this actor based on equipment.
- *
- * NOTE:
- * This is explicitly not using `this.getAllNotes()` so that we can
- * also parse out the repeats from all the relevant sources as well.
+ * Recomputes cached per-connection bonus hit totals from all {@link Game_Battler.getBonusHitsSources} collections.
  */
 Game_Battler.prototype.refreshBonusHits = function()
 {
-  // default to zero bonus hits.
-  let bonusHits = 0;
+  let bonusHitsGlobal = 0;
+  let bonusHitsBasic = 0;
+  let bonusHitsSkill = 0;
 
-  // collection of collections of sources from which bonus hits may reside.
   const sourceCollections = this.getBonusHitsSources();
 
-  // iterate over the source collections.
   sourceCollections.forEach(sourceCollection =>
   {
-    // add up all the bonus hits available.
-    bonusHits += this.getBonusHitsFromSources(sourceCollection);
+    const part = this.getBonusHitsFromSources(sourceCollection);
+    bonusHitsGlobal += part.global;
+    bonusHitsBasic += part.basic;
+    bonusHitsSkill += part.skill;
   });
 
-  // set the bonus hits to the total amount found everywhere.
-  this.setBonusHits(bonusHits);
+  this.setBonusHitsGlobal(bonusHitsGlobal);
+  this.setBonusHitsBasic(bonusHitsBasic);
+  this.setBonusHitsSkill(bonusHitsSkill);
 };
 
 /**
@@ -792,62 +802,80 @@ Game_Battler.prototype.getBonusHitsSources = function()
 };
 
 /**
- * Gets the bonus hits for this battler.
+ * Gets the cached global-scope per-connection bonus hits total for this battler.
  * @returns {number}
  */
-Game_Battler.prototype.getBonusHits = function()
+Game_Battler.prototype.getBonusHitsGlobal = function()
 {
-  return this._j._abs._bonusHits;
+  return this._j._abs._bonusHitsGlobal;
 };
 
 /**
- * Sets the bonus hits to the given value.
- * @param {number} bonusHits The new bonus hits value.
+ * Sets the cached global-scope per-connection bonus hits total.
+ * @param {number} value The new total.
  */
-Game_Battler.prototype.setBonusHits = function(bonusHits)
+Game_Battler.prototype.setBonusHitsGlobal = function(value)
 {
-  this._j._abs._bonusHits = bonusHits;
+  this._j._abs._bonusHitsGlobal = value;
 };
 
 /**
- * Extracts all bonus hits from a collection of traited sources.
- * @param {RPG_Traited[]|RPG_BaseBattler[]|RPG_Class[]|RPG_Skill[]} sources The collection to iterate over.
+ * Gets the cached basic-attack-scope per-connection bonus hits total for this battler.
  * @returns {number}
+ */
+Game_Battler.prototype.getBonusHitsBasic = function()
+{
+  return this._j._abs._bonusHitsBasic;
+};
+
+/**
+ * Sets the cached basic-attack-scope per-connection bonus hits total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setBonusHitsBasic = function(value)
+{
+  this._j._abs._bonusHitsBasic = value;
+};
+
+/**
+ * Gets the cached non-basic-skill-scope per-connection bonus hits total for this battler.
+ * @returns {number}
+ */
+Game_Battler.prototype.getBonusHitsSkill = function()
+{
+  return this._j._abs._bonusHitsSkill;
+};
+
+/**
+ * Sets the cached non-basic-skill-scope per-connection bonus hits total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setBonusHitsSkill = function(value)
+{
+  this._j._abs._bonusHitsSkill = value;
+};
+
+/**
+ * Sums scoped per-connection bonus hits from a collection of traited database rows.
+ * @param {RPG_Traited[]|RPG_BaseBattler[]|RPG_Class[]} sources Rows that may carry scoped bonus-hit notes.
+ * @returns {{ global: number, basic: number, skill: number }} Totals contributed by this collection.
  */
 Game_Battler.prototype.getBonusHitsFromSources = function(sources)
 {
-  // set this counter to zero.
-  let bonusHits = 0;
+  const totals = { global: 0, basic: 0, skill: 0 };
 
-  // reducer function for adding repeat traits up as bonus hits.
-  const addHitsReducer = (runningTotal, trait) => runningTotal + trait.value;
-
-  // filter function for getting only "attack repeats" traits off this item.
-  const isHitsTrait = trait => trait.code === J.BASE.Traits.ATTACK_REPEATS;
-
-  // foreach function for collecting bonus hits from the given source.
-  const collectBonusHitsForEacher = source =>
+  const collectFromSource = source =>
   {
-    // if the slot is empty, don't process it.
     if (!source) return;
 
-    // grab the bonus hits from
-    bonusHits += source.jabsBonusHits;
-
-    // stop processing if the source has no traits.
-    if (!source.traits) return;
-
-    // also grab from traits if applicable.
-    bonusHits += source.traits
-      .filter(isHitsTrait)
-      .reduce(addHitsReducer, 0);
+    totals.global += source.jabsBonusHitsScopeGlobal;
+    totals.basic += source.jabsBonusHitsScopeBasic;
+    totals.skill += source.jabsBonusHitsScopeSkill;
   };
 
-  // iterate over all equips.
-  sources.forEach(collectBonusHitsForEacher);
+  sources.forEach(collectFromSource);
 
-  // return the bonus hits from some traited sources.
-  return bonusHits;
+  return totals;
 };
 //endregion JABS bonus hits
 

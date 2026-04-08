@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.1 HUD-INPUT] A HUD frame that displays your leader's buttons data.
+ * [v1.1.2 HUD-INPUT] A HUD frame that displays your leader's buttons data.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -31,6 +31,9 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.1.2
+ *    Combo cooldown gauge merges J-ABS global cooldown (GCD) for GCD-subject
+ *    skill slots (not tool/dodge).
  * - 1.1.1
  *    Wired HP skill cost into Sprite_SkillCost for display on action slots
  *    (requires J-Resources).
