@@ -10,7 +10,10 @@ Game_Action.prototype.makeDamageValue = function(target, critical)
     .call(this, target, critical);
 
   // get the multiplier based on target and user levels.
-  const multiplier = LevelScaling.multiplier(this.subject().level, target.level);
+  const multiplier = LevelScaling.multiplier(
+    this.subject().level,
+    target.level,
+    LevelScaling.Scope.COMBAT);
 
   // return the product of these two values.
   return (baseDamage * multiplier);

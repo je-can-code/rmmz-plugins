@@ -41,6 +41,15 @@ class JPixelistics_PluginMetadata
     this.VectorMovementEnabled = (this.parsedPluginParameters['vectorMovementEnabled'] === 'true');
 
     /**
+     * Frames after map setup during which player/event touch triggers underfoot are ignored.
+     * @type {number}
+     */
+    this.FootTouchEventDelayFrames = J.BASE.Helpers.parsePluginInt(
+      this.parsedPluginParameters['footTouchEventDelayFrames'],
+      15
+    );
+
+    /**
      * The number of subcells per tile axis to use for collision resolution.
      * Valid values: 1, 2, or 4.
      * @type {number}

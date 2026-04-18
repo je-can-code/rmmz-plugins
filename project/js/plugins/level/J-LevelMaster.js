@@ -561,6 +561,11 @@ var J = J || {};
 J.LEVEL = {};
 
 /**
+ * The grouping for extensions of this plugin.
+ */
+J.LEVEL.EXT = {};
+
+/**
  * The `metadata` associated with this plugin, such as version.
  */
 J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.3.0');
@@ -1030,13 +1035,12 @@ Game_Actor.prototype.getLevelBalancer = function()
 
 //region Game_Battler
 /**
- * Generates the "level" property for all battlers, along with
- * a new function to calculate level retrieval.
+ * The level of this battler.
  *
  * This is the same as `battler.lvl`.
  * @returns {number}
  */
-Object.defineProperty(Game_Battler.prototype, "level", {
+Object.defineProperty(Game_Battler.prototype, 'level', {
   get()
   {
     // get the level from this battler.
@@ -1048,13 +1052,12 @@ Object.defineProperty(Game_Battler.prototype, "level", {
 });
 
 /**
- * Generates the "lvl" property for all battlers, along with
- * a new function to calculate level retrieval.
+ * The level of this battler.
  *
  * This is the same as `battler.level`.
  * @returns {number}
  */
-Object.defineProperty(Game_Battler.prototype, "lvl", {
+Object.defineProperty(Game_Battler.prototype, 'lvl', {
   get()
   {
     // get the level from this battler.
@@ -1777,10 +1780,7 @@ Game_Troop.prototype.expTotal = function()
 };
 
 /**
- * Determines the amount of experience gained based on the average battle party compared to
- * each defeated enemy.
- *
- * This method is used in place of the current `.reduce()` to find total experience.
+ * Determines the amount of experience gained based on the average battle party compared to each defeated enemy.
  * @returns {number} The scaled amount of EXP this enemy troop yielded.
  */
 Game_Troop.prototype.getScaledExpResult = function()
@@ -1800,7 +1800,8 @@ Game_Troop.prototype.getScaledExpResult = function()
     const expFactor = LevelScaling.multiplier(
       averageActorLevel,
       currentEnemy.level,
-      LevelScaling.Scope.REWARD);
+      LevelScaling.Scope.REWARD
+    );
 
     // multiply the factor against the experience amount to get the actual amount.
     const total = Math.round(expFactor * currentEnemy.exp());

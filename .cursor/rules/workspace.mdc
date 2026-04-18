@@ -90,6 +90,11 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **PR commits: full tree.** PR scope is explained in the PR description, not by omitting files from the commit. Include all built output under `rmmz-plugins/project/js/plugins/` that `hotfix` produced.
 - **Build & copy: always use `bun run hotfix`.** Do **not** run `bun run build:<plugin>` (e.g. `build:sdp`) plus manual `cp` to “save time” — full `hotfix` is already sub-second in practice, and single-plugin runs risk a partial `out/`, skipped destinations, and drift from what gets committed. Never copy built plugin files manually. If `hotfix` fails, fix the root cause — do not fall back to manual copies. (Exception: Jeremy explicitly asks for a one-off `build:<plugin>` only, with no expectation that artifacts are fully mirrored.)
 
+### Enemy decade normalization (Chef Adventure)
+
+- After every **applied** enemy-decade pass (e.g. `ca/chef-adventure/tools/normalize-decade-tiers.mjs ... --apply` on a 10-id strip), **in the same assistant turn** include markdown tables from `ca/chef-adventure/data/Enemies.json` **after** the write: **(1)** **Max HP anchors** — all tiers, columns **L1, L10, L20, L35, L55, L75, L100** (total = `params[0]` plus `mhpBuffPlus` at that level). **(2)** **Stat growth budget** — per tier, sum of the six linear `(a.level * k)` coefficients and each **k**. **(3)** **Budget distribution** — each stat as **% of that sum**. Match the layout style used for Reborn/Wisp summaries unless Jeremy asks otherwise.
+- **Skelly 131–140** is an exception: five **master/pet** pairs map to **virtual tiers 2, 4, 6, 8, 10** (not 1–10 by slot). Use `ca/chef-adventure/tools/apply-skelly-pair-decade.mjs` for that strip; still publish the same three tables for **all ten ids** (label **virtual tier** and **master** vs **pet**).
+
 ## Known Future Work (do not tackle without checking first)
 
 1. **`JsonEx` serialization registry** — `JsonEx` resolves classes via `window[className]`. Plan: add `J.register(constructor)` in J-Base and audit all serializable models. Tracked in `guidelines.md`.

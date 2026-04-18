@@ -140,6 +140,7 @@ J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
  */
 J.BASE.Aliased = {
   AudioManager: new Map(),
+  Bitmap: new Map(),
   DataManager: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),

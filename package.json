@@ -46,7 +46,6 @@
     "build:elem": "node ./src/build-tools/combine.js ./src/plugins/elem ./out J-Elementalistics.js",
     "build:escribe": "node ./src/build-tools/combine.js ./src/plugins/escribe ./out J-Escriptions.js",
     "build:extend": "node ./src/build-tools/combine.js ./src/plugins/extend ./out J-SkillExtend.js",
-    "build:level": "node ./src/build-tools/combine.js ./src/plugins/level ./out J-LevelMaster.js",
     "build:log": "node ./src/build-tools/combine.js ./src/plugins/log ./out J-Log.js",
     "build:map": "node ./src/build-tools/combine.js ./src/plugins/map ./out J-Map.js",
     "build:message": "node ./src/build-tools/combine.js ./src/plugins/message ./out J-MessageTextCodes.js",
@@ -92,9 +91,12 @@
     "build:jabs-tools": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/tools ./out/abs/ext J-ABS-Tools.js",
     "build:jabs-shield": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/shield ./out/abs/ext J-ABS-Shield.js",
     "build:jabs-star": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/star ./out/abs/ext J-ABS-Star.js",
-    
+
+    "build:level": "node ./src/build-tools/combine.js ./src/plugins/level/core ./out/level J-LevelMaster.js",
+    "build:level-flat": "node ./src/build-tools/combine.js ./src/plugins/level/ext/flat ./out/level/ext J-Level-Flat.js",
+
     "build:pixel": "node ./src/build-tools/combine.js ./src/plugins/pixel/core ./out/pixel J-Pixelistics.js",
-    "build:pixel-abs": "node ./src/build-tools/combine.js ./src/plugins/pixel/ext/abs ./out/pixel/ext J-ABS-Pixelistics.js",
+    "build:pixel-abs": "node ./src/build-tools/combine.js ./src/plugins/pixel/ext/abs ./out/pixel/ext J-Pixel-ABS.js",
     
     "build:popups": "node ./src/build-tools/combine.js ./src/plugins/popups/core ./out/popups J-Popups.js",
     "build:popups-abs": "node ./src/build-tools/combine.js ./src/plugins/popups/ext/abs ./out/popups/ext J-Popups-ABS.js",
