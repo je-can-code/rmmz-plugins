@@ -59,5 +59,17 @@ describe('J-LevelMaster LevelScaling (out/J-LevelMaster.js)', () =>
   {
     expect(sandbox.LevelScaling.calculate(-30)).toBe(0.1);
   });
+
+  it('uses reward clamp profile when scope is REWARD', () =>
+  {
+    sandbox.$gameSystem = new sandbox.Game_System();
+    sandbox.$gameSystem.initialize();
+    sandbox.$gameSystem.enableLevelScaling();
+    sandbox.J.LEVEL.Metadata.rewardMaximumMultiplier = 1.5;
+    const combatMul = sandbox.LevelScaling.multiplier(20, 10, sandbox.LevelScaling.Scope.COMBAT);
+    const rewardMul = sandbox.LevelScaling.multiplier(20, 10, sandbox.LevelScaling.Scope.REWARD);
+    expect(combatMul).toBe(1.9);
+    expect(rewardMul).toBe(1.5);
+  });
 });
 //endregion plugins/level/level-scaling.test.js

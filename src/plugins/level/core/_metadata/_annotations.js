@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.1 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.3.0 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -36,12 +36,15 @@
  *  - Start Enabled:
  *      The scaling functionality will be enabled when a newgame is started.
  *      Defaults to true.
- *  - Minimum Multiplier:
- *      The minimum amount a scaling multiplier can result in.
+ *  - Minimum Multiplier (Combat):
+ *      Clamp floor for damage and other combat uses of level scaling.
  *      Defaults to 0.1x.
- *  - Maximum Multiplier:
- *      The maximum amount a scaling multiplier can result in.
+ *  - Maximum Multiplier (Combat):
+ *      Clamp ceiling for combat scaling.
  *      Defaults to 2.0x.
+ *  - Minimum / Maximum Multiplier (Rewards):
+ *      Separate clamps for EXP and gold from level scaling. When blank, combat values are used.
+ *      Defaults to match combat.
  *  - Growth Multiplier:
  *      The amount the multiplier changes per level of difference.
  *      Defaults to 0.1x per level of difference.
@@ -294,6 +297,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added reward-specific min/max multipliers; LevelScaling.multiplier accepts combat vs reward scope.
  * - 1.2.1
  *    Fixed issue with level overrides not apply J-NATURAL growths.
  * - 1.2.0
@@ -326,16 +331,32 @@
  * @parent parentConfigScaling
  * @type number
  * @decimals 2
- * @text Minimum Multiplier
- * @desc The minimum amount the scaling multiplier can calculate to be.
+ * @text Minimum Multiplier (Combat)
+ * @desc Min for damage and parry. EXP/gold use reward params when set.
  * @default 0.10
  *
  * @param maxMultiplier
  * @parent parentConfigScaling
  * @type number
  * @decimals 2
- * @text Maximum Multiplier
- * @desc The maximum amount the scaling multiplier can be calculate to be.
+ * @text Maximum Multiplier (Combat)
+ * @desc Clamp ceiling for combat scaling.
+ * @default 2.00
+ *
+ * @param rewardMinMultiplier
+ * @parent parentConfigScaling
+ * @type number
+ * @decimals 2
+ * @text Minimum Multiplier (Rewards)
+ * @desc Min for scaled EXP/gold. Missing param uses combat minimum.
+ * @default 0.10
+ *
+ * @param rewardMaxMultiplier
+ * @parent parentConfigScaling
+ * @type number
+ * @decimals 2
+ * @text Maximum Multiplier (Rewards)
+ * @desc Max for scaled EXP/gold. Missing param uses combat maximum.
  * @default 2.00
  *
  * @param growthMultiplier

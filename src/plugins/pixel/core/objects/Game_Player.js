@@ -9,12 +9,38 @@ Game_Player.prototype.checkEventTriggerHere = function(triggers)
   // check if we can start an event at the current location.
   if (this.canStartLocalEvents())
   {
+    let effectiveTriggers = triggers;
+    if (($gameMap._pixelFootTouchTriggerCooldown || 0) > 0)
+    {
+      effectiveTriggers = triggers.filter(t => t !== 1 && t !== 2);
+      if (effectiveTriggers.length === 0)
+      {
+        return;
+      }
+    }
+
     // round the x,y coordinates.
     const roundX = Math.round(this.x);
     const roundY = Math.round(this.y);
 
     // start the event with the rounded coordinates.
-    this.startMapEvent(roundX, roundY, triggers, false);
+    this.startMapEvent(roundX, roundY, effectiveTriggers, false);
+  }
+};
+
+/**
+ * Extends {@link Game_Player.update}.<br>
+ * Ticks down the foot-touch trigger cooldown after all movement and trigger logic for the frame.
+ */
+J.PIXEL.Aliased.Game_Player.set('update', Game_Player.prototype.update);
+Game_Player.prototype.update = function(sceneActive)
+{
+  J.PIXEL.Aliased.Game_Player.get('update')
+    .call(this, sceneActive);
+
+  if ($gameMap._pixelFootTouchTriggerCooldown > 0)
+  {
+    $gameMap._pixelFootTouchTriggerCooldown--;
   }
 };
 

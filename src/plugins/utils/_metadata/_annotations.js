@@ -1,7 +1,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 UTIL] Various system utilities.
+ * [v1.1.4 UTIL] Various system utilities.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -15,8 +15,14 @@
  * - F6 toggles all sound on/off.
  * - autostart newgame on testplay (when plugin parameter enabled).
  * - pull up devtools window in background upon testplay (always).
+ * - $gameParty.removeInvalidItemsFromParty() strips junk bag rows and equipment
+ *   (missing DB rows, blank names, or names starting with "===").
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.4
+ *    Inventory purge is Game_Party.prototype.removeInvalidItemsFromParty (was J.UTILS.GameParty).
+ * - 1.1.3
+ *    Added helpers to purge invalid inventory after database ID shifts.
  * - 1.1.2
  *    Added debugging for helping diagnose recursive saved things.
  * - 1.1.1

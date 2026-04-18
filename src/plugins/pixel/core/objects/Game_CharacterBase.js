@@ -696,8 +696,8 @@ Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
   const radius = this.getEffectiveRadius();
 
   // If we ended up overlapping solid tiles after this step, revert the move.
-  // Through characters (e.g. JABS action events) bypass this check entirely.
-  if (this.isThrough() === false && this.isOverlappingSolidTiles(
+  // Through or playtest debug-through bypass this check entirely.
+  if (this.isThrough() === false && this.isDebugThrough() === false && this.isOverlappingSolidTiles(
     this._x + this.getCollisionPivotX(),
     this._y + this.getCollisionPivotY(),
     radius))
@@ -1014,7 +1014,7 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
   // to a wall), ensure the final probe AABB does not overlap a solid tile. This matches
   // the post-move check in movePixelDistance and prevents canPassStraight from returning
   // true when the step destination physically overlaps impassable terrain.
-  if (this.isThrough() === false && this.isOverlappingSolidTiles(
+  if (this.isThrough() === false && this.isDebugThrough() === false && this.isOverlappingSolidTiles(
     probeX + this.getCollisionPivotX(),
     probeY + this.getCollisionPivotY(),
     radius))
@@ -2683,7 +2683,7 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   this._y += finalDy;
 
   // post-overlap guard: if we ended up inside a solid tile, roll back.
-  if (this.isThrough() === false && this.isOverlappingSolidTiles(
+  if (this.isThrough() === false && this.isDebugThrough() === false && this.isOverlappingSolidTiles(
     this._x + this.getCollisionPivotX(),
     this._y + this.getCollisionPivotY(),
     radius))

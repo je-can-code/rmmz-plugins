@@ -993,18 +993,18 @@ JABS_Battler.prototype.isDead = function()
   const battler = this.getBattler();
 
   if (!battler)
-  // has no battler.
   {
+    // has no battler.
     return true;
   }
   else if (!JABS_AiManager.getBattlerByUuid(battler.getUuid()))
-  // battler isn't on the map.
   {
+    // battler isn't on the map.
     return true;
   }
   else if (battler.isDead() || this.isDying())
-  // battler is actually dead.
   {
+    // battler is actually dead.
     return true;
   }
   // battler is OK!

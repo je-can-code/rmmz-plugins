@@ -13,5 +13,8 @@ Game_Map.prototype.setup = function(mapId)
 
   // Build the PIXEL subcell collision table for this map.
   PIXEL_CollisionManager.setupCollision();
+
+  // suppress Player Touch / Event Touch underfoot briefly after load/transfer.
+  this._pixelFootTouchTriggerCooldown = J.PIXEL.Metadata.FootTouchEventDelayFrames;
 };
 //endregion Game_Map

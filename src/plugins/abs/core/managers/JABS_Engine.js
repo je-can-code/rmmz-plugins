@@ -1896,8 +1896,10 @@ class JABS_Engine
   }
 
   /**
-   * Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the battler-wide GCD.
-   * When global cooldown is enabled and the skill is subject to it, {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire until it elapses.
+   * Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the
+   * battler-wide GCD. When global cooldown is enabled and the skill is subject to it,
+   * {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire
+   * until it elapses.
    * @param {JABS_Battler} caster The player.
    * @param {JABS_Action} action The JABS action to execute.
    */
@@ -1981,7 +1983,7 @@ class JABS_Engine
     const {
       x: actionX,
       y: actionY
-    // extract coordinates.
+      // extract coordinates.
     } = actionEventData;
     // align position.
     actionEventSprite._realX = actionX;
@@ -2015,7 +2017,7 @@ class JABS_Engine
     const {
       characterIndex,
       characterName
-    // extract image data.
+      // extract image data.
     } = actionEventData.pages[pageIndex].image;
 
     // flag to add sprite.
@@ -2740,7 +2742,11 @@ class JABS_Engine
 
     if (J.LEVEL && J.LEVEL.Metadata.enabled)
     {
-      const levelMul = LevelScaling.multiplier(casterBattler.level, targetBattler.level);
+      const levelMul = LevelScaling.multiplier(
+        casterBattler.level,
+        targetBattler.level,
+        LevelScaling.Scope.COMBAT
+      );
       A *= levelMul;
     }
 
@@ -3715,7 +3721,7 @@ class JABS_Engine
     const {
       x: originCx,
       y: originCy
-    // unified origin.
+      // unified origin.
     } = JABS_Engine.getActionOriginPixels(action);
 
     // build the target’s AABB.
@@ -3747,7 +3753,7 @@ class JABS_Engine
     const {
       x: cx,
       y: cy
-    // action origin.
+      // action origin.
     } = JABS_Engine.getActionOriginPixels(action);
 
     // target’s AABB in pixels.
@@ -3820,7 +3826,7 @@ class JABS_Engine
     const {
       x: originCx,
       y: originCy
-    // unified origin.
+      // unified origin.
     } = JABS_Engine.getActionOriginPixels(action);
 
     // build action area rect centered at the corrected origin.
@@ -3865,7 +3871,7 @@ class JABS_Engine
     const {
       x: originCx,
       y: originCy
-    // unified origin.
+      // unified origin.
     } = JABS_Engine.getActionOriginPixels(action);
 
     // derive the front-half rectangle based on facing (anchored at corrected origin).
@@ -3956,7 +3962,7 @@ class JABS_Engine
     const {
       x: originCx,
       y: originCy
-    // unified origin.
+      // unified origin.
     } = JABS_Engine.getActionOriginPixels(action);
 
     // build the line-as-rect based on facing from origin.
@@ -4243,25 +4249,73 @@ class JABS_Engine
    */
   gainBasicRewards(enemy, actor)
   {
-    let experience = enemy.exp();
-    let gold = enemy.gold();
+    // identify the character who defeated the enemy.
     const actorCharacter = actor.getCharacter();
 
-    const levelMultiplier = this.getRewardScalingMultiplier(enemy, actor);
-    experience = Math.ceil(experience * levelMultiplier);
-    gold = Math.ceil(gold * levelMultiplier);
-
+    // determine and gain the experience.
+    const experience = this.determineExperienceGained(enemy, actor.getBattler());
     this.gainExperienceReward(experience, actorCharacter);
+
+    // determine and gain the gold.
+    const gold = this.determineGoldGained(enemy, actor.getBattler());
     this.gainGoldReward(gold, actorCharacter);
+
+    // TODO: extract this logging reference out of this plugin and into the J.LOG plugin.
     this.createRewardsLog(experience, gold, actor);
+  }
+
+  /**
+   * Determines how much experience the defeated enemy yielded.
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
+   */
+  determineExperienceGained(defeatedEnemy, victoriousActor)
+  {
+    // identify the amount the enemy yielded.
+    const experience = defeatedEnemy.exp();
+
+    // determine the scaling multiplier.
+    const rewardScalingMultiplier = this.getRewardScalingMultiplier(defeatedEnemy, victoriousActor);
+
+    // apply the reward scaling.
+    const scaledExperience = Math.ceil(experience * rewardScalingMultiplier);
+
+    // normalize it.
+    const normalizedExperience = Math.max(scaledExperience, 0);
+
+    // return the amount.
+    return normalizedExperience;
+  }
+
+  /**
+   * Determines how much gold the defeated enemy yielded.
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
+   */
+  determineGoldGained(defeatedEnemy, victoriousActor)
+  {
+    // identify the amount the enemy yielded.
+    const gold = defeatedEnemy.gold();
+
+    // determine the scaling multiplier.
+    const rewardScalingMultiplier = this.getRewardScalingMultiplier(defeatedEnemy, victoriousActor);
+
+    // apply the reward scaling.
+    const scaledGold = Math.ceil(gold * rewardScalingMultiplier);
+
+    // normalize it.
+    const normalizedGold = Math.max(scaledGold, 0);
+
+    // return the amount.
+    return normalizedGold;
   }
 
   /**
    * Gets the multiplier based on difference in level between attacker and
    * target to determine if the battle was "too easy" or "very hard", resulting
    * in reduced or increased numeric rewards (excludes loot drops).
-   * @param {Game_Battler} enemy The target battler that was defeated.
-   * @param {JABS_Battler} actor The map battler that defeated the target.
+   * @param {Game_Enemy} enemy The enemy that was defeated.
+   * @param {Game_Actor} actor The actor that defeated the target.
    */
   getRewardScalingMultiplier(enemy, actor)
   {
@@ -4274,7 +4328,11 @@ class JABS_Engine
       // calculate the reverse multiplier using scaling based on enemy and actor.
       // if the enemy is higher, then the rewards will be greater.
       // if the actor is higher, then the rewards will be lesser.
-      multiplier = LevelScaling.multiplier(enemy.level, actor.getBattler().level);
+      multiplier = LevelScaling.multiplier(
+        enemy.level,
+        actor.level,
+        LevelScaling.Scope.REWARD
+      );
     }
 
     // return the findings.
@@ -4291,13 +4349,8 @@ class JABS_Engine
     // don't do anything if the enemy didn't grant any experience.
     if (!experience) return;
 
-    const activeParty = $gameParty.battleMembers();
-    activeParty.forEach(member =>
-    {
-      const gainedExperience = experience * member.exr;
-      member.gainExp(gainedExperience);
-    });
-
+    $gameParty.battleMembers()
+      .forEach(member => member.gainExp(experience));
   }
 
   /**
@@ -4312,7 +4365,6 @@ class JABS_Engine
 
     // actually gain the gold.
     $gameParty.gainGold(gold);
-
   }
 
   /**
@@ -4397,7 +4449,9 @@ class JABS_Engine
    * @param {Game_Character} character The character who picked them up.
    */
   // eslint-disable-next-line no-unused-vars
-  onItemPickedUp(itemDataList, character) {}
+  onItemPickedUp(itemDataList, character)
+  {
+  }
 
   /**
    * Handles a level up for the leader while on the map.

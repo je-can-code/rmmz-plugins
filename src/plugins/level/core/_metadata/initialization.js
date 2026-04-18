@@ -9,9 +9,14 @@ var J = J || {};
 J.LEVEL = {};
 
 /**
+ * The grouping for extensions of this plugin.
+ */
+J.LEVEL.EXT = {};
+
+/**
  * The `metadata` associated with this plugin, such as version.
  */
-J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.2.1');
+J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.3.0');
 
 /**
  * All aliased methods for this plugin.
