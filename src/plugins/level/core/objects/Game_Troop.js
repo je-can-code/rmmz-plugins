@@ -22,10 +22,7 @@ Game_Troop.prototype.expTotal = function()
 };
 
 /**
- * Determines the amount of experience gained based on the average battle party compared to
- * each defeated enemy.
- *
- * This method is used in place of the current `.reduce()` to find total experience.
+ * Determines the amount of experience gained based on the average battle party compared to each defeated enemy.
  * @returns {number} The scaled amount of EXP this enemy troop yielded.
  */
 Game_Troop.prototype.getScaledExpResult = function()
@@ -42,7 +39,11 @@ Game_Troop.prototype.getScaledExpResult = function()
     // determine the experience factor for this defeated enemy level vs the average party level.
     // if the enemy is higher, then the rewards will be greater.
     // if the actor is higher, then the rewards will be lesser.
-    const expFactor = LevelScaling.multiplier(averageActorLevel, currentEnemy.level);
+    const expFactor = LevelScaling.multiplier(
+      averageActorLevel,
+      currentEnemy.level,
+      LevelScaling.Scope.REWARD
+    );
 
     // multiply the factor against the experience amount to get the actual amount.
     const total = Math.round(expFactor * currentEnemy.exp());

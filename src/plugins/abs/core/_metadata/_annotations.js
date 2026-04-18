@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.8.0 JABS] Enables combat to be carried out on the map.
+ * [v4.8.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,26 +47,33 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.8.1
+ *    Refactored gaining of rewards logic for other extensions.
+ *    Fixed issue where EXR was being calculated twice (oops!).
  * - 4.8.0
- *    Optional global cooldown (GCD): plugin params, skill-type whitelist, notetags `noGlobalCooldown`/`ogcd`/`gcd`,
- *    AI and input gating (dodge/tool exempt), HUD combo gauge shows GCD pressure, plugin command to stamp GCD.
+ *    Optional global cooldown (GCD): plugin params, skill-type whitelist,
+ *    notetags `noGlobalCooldown`/`ogcd`/`gcd`,
+ *    AI and input gating (dodge/tool exempt), HUD combo gauge shows GCD
+ *    pressure, plugin command to stamp GCD.
  * - 4.7.2
- *    Unified enemy and ally AI skill decisions to return a skill-id array (empty or one id);
+ *    Unified enemy and ally AI skill decisions to return a skill-id array
+ *    (empty or one id);
  *    JABS_AiManager phase-2 paths read the first element after validation.
- *    JABS_AI#decideAction stub now returns an empty array to match concrete AI classes.
- *    Fixed filterSkillsHealerPriority returning a scalar on the final healing-priority path
- *    instead of an array.
+ *    JABS_AI#decideAction stub now returns an empty array to match concrete AI
+ *    classes.
+ *    Fixed filterSkillsHealerPriority returning a scalar on the final
+ *    healing-priority path instead of an array.
  * - 4.7.1
  *    Added plugin parameter "Parry Map Animation Id" for the database
  *    animation played on successful parry (default 122; 0 disables).
- *    Fixed Sprite_MapCastGauge gauge track being shortened by skill name width;
- *    track now always occupies the full bitmap width.
+ *    Fixed Sprite_MapCastGauge gauge track being shortened by skill name
+ *    width; track now always occupies the full bitmap width.
  *    Fixed enemy projectile fire direction baked at decision time rather than
  *    execution time; added restampActionDirections to re-orient volleys to the
  *    battler's facing at the moment of firing.
  *    Fixed hasInteractableEventInFront using raw fractional player coordinates
- *    with eventsXy, which always returned no match; coordinates are now rounded
- *    to the nearest tile before the look-ahead is computed.
+ *    with eventsXy, which always returned no match; coordinates are now
+ *    rounded to the nearest tile before the look-ahead is computed.
  *    Removed obsolete J.ABS.EXT.CYCLE guard from hasInteractableEventInFront.
  * - 4.7.0
  *    Renamed battler role tag from <jabsRole: X> to <aiRole: X>.

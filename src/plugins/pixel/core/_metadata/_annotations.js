@@ -42,6 +42,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Optional foot-touch trigger delay after map setup (plugin parameter).
  * - 1.0.0
  *    Initial release as standalone J-Pixelistics.
  *    Sub-tile fractional-coordinate movement with AABB subcell collision grid.
@@ -89,6 +91,15 @@
  * @text Enable Vector (360°) Movement
  * @desc When true, the player can move at any angle via analog stick or mouse direction. Falls back to 8-dir if no analog input.
  * @default false
+ *
+ * @param footTouchEventDelayFrames
+ * @parent movementConfigs
+ * @type number
+ * @min 0
+ * @max 120
+ * @text Foot Touch Trigger Delay (frames)
+ * @desc After a map loads, suppress Player Touch / Event Touch on the tile under the player for this many frames (0 = off). Reduces spurious saves after load.
+ * @default 15
  *
  *
  * @param debugConfigs

@@ -11,7 +11,7 @@ J.UTILS = {};
 /**
  * The metadata associated with this plugin, such as name and version.
  */
-J.UTILS.Metadata = new J_UtilsPluginMetadata('J-SystemUtilities', '1.1.2');
+J.UTILS.Metadata = new J_UtilsPluginMetadata('J-SystemUtilities', '1.1.4');
 
 /**
  * A collection of all aliased methods for this plugin.

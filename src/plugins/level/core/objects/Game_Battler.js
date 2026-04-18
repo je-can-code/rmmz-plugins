@@ -1,12 +1,11 @@
 //region Game_Battler
 /**
- * Generates the "level" property for all battlers, along with
- * a new function to calculate level retrieval.
+ * The level of this battler.
  *
  * This is the same as `battler.lvl`.
  * @returns {number}
  */
-Object.defineProperty(Game_Battler.prototype, "level", {
+Object.defineProperty(Game_Battler.prototype, 'level', {
   get()
   {
     // get the level from this battler.
@@ -18,13 +17,12 @@ Object.defineProperty(Game_Battler.prototype, "level", {
 });
 
 /**
- * Generates the "lvl" property for all battlers, along with
- * a new function to calculate level retrieval.
+ * The level of this battler.
  *
  * This is the same as `battler.level`.
  * @returns {number}
  */
-Object.defineProperty(Game_Battler.prototype, "lvl", {
+Object.defineProperty(Game_Battler.prototype, 'lvl', {
   get()
   {
     // get the level from this battler.

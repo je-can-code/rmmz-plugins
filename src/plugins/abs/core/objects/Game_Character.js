@@ -412,6 +412,80 @@ Game_Character.prototype.isMovementSucceeded = function()
 
 /* eslint-disable */
 /**
+ * 8-direction step toward the goal using map wrap deltas only (no A*).
+ * Used for through-moving homing so J-Pixelistics is not asked to run subcell {@link #canPass}
+ * hundreds of times per frame inside path search.
+ *
+ * @param {number} goalX The x coordinate trying to be reached.
+ * @param {number} goalY The y coordinate trying to be reached.
+ * @returns {1|2|3|4|6|7|8|9|0} The direction decided.
+ */
+Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goalY)
+{
+  const deltaX2 = this.deltaXFrom(goalX);
+  const deltaY2 = this.deltaYFrom(goalY);
+  if (deltaX2 === 0 && deltaY2 === 0)
+  {
+    return 0;
+  }
+
+  if (Math.abs(deltaX2) > Math.abs(deltaY2))
+  {
+    if (deltaX2 > 0)
+    {
+      return deltaY2 === 0
+        ? 4
+        : deltaY2 > 0
+          ? 7
+          : 1;
+    }
+    else if (deltaX2 < 0)
+    {
+      return deltaY2 === 0
+        ? 6
+        : deltaY2 > 0
+          ? 9
+          : 3;
+    }
+    else
+    {
+      return deltaY2 === 0
+        ? 0
+        : deltaY2 > 0
+          ? 8
+          : 2;
+    }
+  }
+  else
+  {
+    if (deltaY2 > 0)
+    {
+      return deltaX2 === 0
+        ? 8
+        : deltaX2 > 0
+          ? 7
+          : 9;
+    }
+    else if (deltaY2 < 0)
+    {
+      return deltaX2 === 0
+        ? 2
+        : deltaX2 > 0
+          ? 1
+          : 3;
+    }
+    else
+    {
+      return deltaX2 === 0
+        ? 0
+        : deltaX2 > 0
+          ? 4
+          : 6;
+    }
+  }
+};
+
+/**
  * Intelligently determines the next step to take on a path to the destination `x,y`.
  * @param {number} goalX The `x` coordinate trying to be reached.
  * @param {number} goalY The `y` coordinate trying to be reached.
@@ -419,6 +493,11 @@ Game_Character.prototype.isMovementSucceeded = function()
  */
 Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
 {
+  if (this.isThrough() || this.isDebugThrough())
+  {
+    return this.findDiagonalDirectionToHeuristic(goalX, goalY);
+  }
+
   const searchLimit = this.searchLimit();
   const mapWidth = $gameMap.width();
   const nodeList = [];
@@ -426,18 +505,22 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
   const closedList = [];
   const start = {};
   let best = start;
-  let goaled = false;
 
-  if (this.x === goalX && this.y === goalY)
+  const startXi = Math.round(this.x);
+  const startYi = Math.round(this.y);
+  const goalXi = Math.round(goalX);
+  const goalYi = Math.round(goalY);
+
+  if (startXi === goalXi && startYi === goalYi)
   {
     return 0;
   }
 
   start.parent = null;
-  start.x = this.x;
-  start.y = this.y;
+  start.x = startXi;
+  start.y = startYi;
   start.g = 0;
-  start.f = $gameMap.distance(start.x, start.y, goalX, goalY);
+  start.f = $gameMap.distance(start.x, start.y, goalXi, goalYi);
   nodeList.push(start);
   openList.push(start.y * mapWidth + start.x);
 
@@ -462,10 +545,9 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     openList.splice(openList.indexOf(pos1), 1);
     closedList.push(pos1);
 
-    if (current.x === goalX && current.y === goalY)
+    if (current.x === goalXi && current.y === goalYi)
     {
       best = current;
-      goaled = true;
       break;
     }
 
@@ -535,7 +617,7 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
         neighbor.x = x2;
         neighbor.y = y2;
         neighbor.g = g2;
-        neighbor.f = g2 + $gameMap.distance(x2, y2, goalX, goalY);
+        neighbor.f = g2 + $gameMap.distance(x2, y2, goalXi, goalYi);
         if (!best || neighbor.f - neighbor.g < best.f - best.g)
         {
           best = neighbor;
@@ -578,62 +660,7 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     }
   }
 
-  const deltaX2 = this.deltaXFrom(goalX);
-  const deltaY2 = this.deltaYFrom(goalY);
-  if (Math.abs(deltaX2) > Math.abs(deltaY2))
-  {
-    if (deltaX2 > 0)
-    {
-      return deltaY2 === 0
-        ? 4
-        : deltaY2 > 0
-          ? 7
-          : 1;
-    }
-    else if (deltaX2 < 0)
-    {
-      return deltaY2 === 0
-        ? 6
-        : deltaY2 > 0
-          ? 9
-          : 3;
-    }
-    else
-    {
-      return deltaY2 === 0
-        ? 0
-        : deltaY2 > 0
-          ? 8
-          : 2;
-    }
-  }
-  else
-  {
-    if (deltaY2 > 0)
-    {
-      return deltaX2 === 0
-        ? 8
-        : deltaX2 > 0
-          ? 7
-          : 9;
-    }
-    else if (deltaY2 < 0)
-    {
-      return deltaX2 === 0
-        ? 2
-        : deltaX2 > 0
-          ? 1
-          : 3;
-    }
-    else
-    {
-      return deltaX2 === 0
-        ? 0
-        : deltaX2 > 0
-          ? 4
-          : 6;
-    }
-  }
+  return this.findDiagonalDirectionToHeuristic(goalX, goalY);
 };
 /* eslint-enable */
 //endregion Game_Character

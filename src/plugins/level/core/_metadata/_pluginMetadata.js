@@ -44,6 +44,36 @@ class J_LevelPluginMetadata
      */
     this.maximumMultiplier = Number(this.parsedPluginParameters['maxMultiplier']);
 
+    const rewardMinRaw = this.parsedPluginParameters['rewardMinMultiplier'];
+
+    /**
+     * The minimum multiplier for reward scaling (EXP / gold). Falls back to combat minimum when unset.
+     * @type {number}
+     */
+    this.rewardMinimumMultiplier = (rewardMinRaw === undefined || rewardMinRaw === '')
+      ? this.minimumMultiplier
+      : Number(rewardMinRaw);
+
+    if (Number.isFinite(this.rewardMinimumMultiplier) === false)
+    {
+      this.rewardMinimumMultiplier = this.minimumMultiplier;
+    }
+
+    const rewardMaxRaw = this.parsedPluginParameters['rewardMaxMultiplier'];
+
+    /**
+     * The maximum multiplier for reward scaling (EXP / gold). Falls back to combat maximum when unset.
+     * @type {number}
+     */
+    this.rewardMaximumMultiplier = (rewardMaxRaw === undefined || rewardMaxRaw === '')
+      ? this.maximumMultiplier
+      : Number(rewardMaxRaw);
+
+    if (Number.isFinite(this.rewardMaximumMultiplier) === false)
+    {
+      this.rewardMaximumMultiplier = this.maximumMultiplier;
+    }
+
     /**
      * The amount per level up or down that applies. This amount stacks additively.
      * @type {number}
