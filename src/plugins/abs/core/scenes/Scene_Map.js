@@ -110,12 +110,6 @@ Scene_Map.prototype.initJabsMenu = function()
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipDodgeWindow = null;
-
-  /**
-   * The help window for displaying information on the highlighted item.
-   * @type {Window_Help|null}
-   */
-  this._j._absMenu._helpWindow = null;
 };
 
 //region properties
@@ -135,7 +129,7 @@ Scene_Map.prototype.getJabsMenuFocus = function()
 Scene_Map.prototype.setJabsMenuFocus = function(focus)
 {
   this._j._absMenu._windowFocus = focus;
-}
+};
 
 /**
  * Gets the currently selected menu equip type being perused.
@@ -153,24 +147,6 @@ Scene_Map.prototype.getJabsMenuEquipType = function()
 Scene_Map.prototype.setJabsMenuEquipType = function(equipType)
 {
   this._j._absMenu._equipType = equipType;
-}
-
-/**
- * Gets the currently tracked JABS menu help window.
- * @returns {Window_AbsHelp|null}
- */
-Scene_Map.prototype.getJabsMenuHelpWindow = function()
-{
-  return this._j._absMenu._helpWindow;
-};
-
-/**
- * Sets the currently tracked JABS menu help window to the given window.
- * @param {Window_AbsHelp} window The help window to track.
- */
-Scene_Map.prototype.setJabsMenuHelpWindow = function(window)
-{
-  this._j._absMenu._helpWindow = window;
 };
 
 /**
@@ -321,9 +297,6 @@ Scene_Map.prototype.createAllWindows = function()
  */
 Scene_Map.prototype.createJabsAbsMenu = function()
 {
-  // the help window used by all menus.
-  this.createJabsAbsMenuHelpWindow();
-
   // the main window that forks into the other three.
   this.createJabsAbsMenuMainWindow();
 
@@ -337,63 +310,6 @@ Scene_Map.prototype.createJabsAbsMenu = function()
   this.createJabsAbsMenuEquipToolWindow();
   this.createJabsAbsMenuEquipDodgeWindow();
 };
-
-//region help
-/**
- * Creates a help window for use across all menus in the JABS menu.
- */
-Scene_Map.prototype.createJabsAbsMenuHelpWindow = function()
-{
-  // create the window.
-  const window = this.buildJabsMenuHelpWindow();
-
-  // update the tracker with the new window.
-  this.setJabsMenuHelpWindow(window);
-
-  // add the window to the scene manager's tracking.
-  this.addWindow(window);
-};
-
-/**
- * Sets up and defines the JABS menu help window.
- * @returns {Window_AbsHelp}
- */
-Scene_Map.prototype.buildJabsMenuHelpWindow = function()
-{
-  // define the rectangle of the window.
-  const rectangle = this.jabsMenuHelpWindowRectangle();
-
-  // create the window with the rectangle.
-  const window = new Window_AbsHelp(rectangle);
-
-  // close and hide the window by default upon creation.
-  window.close();
-  window.hide();
-
-  // return the built and configured window.
-  return window;
-};
-
-/**
- * Get the rectangle associated with the main list of the JABS menu.
- * @returns {Rectangle}
- */
-Scene_Map.prototype.jabsMenuHelpWindowRectangle = function()
-{
-  // the width is the full window.
-  const width = Graphics.boxWidth;
-
-  // define the height arbitrarily.
-  const height = 100;
-
-  // the x:y is the upper left.
-  const x = 0;
-  const y = 0;
-
-  // build the rectangle to return.
-  return new Rectangle(x, y, width, height);
-};
-//endregion help
 
 //region main menu
 /**
@@ -428,14 +344,11 @@ Scene_Map.prototype.buildJabsMenuMainWindow = function()
   const window = new Window_AbsMenu(rectangle);
 
   // assign functionality for each of the commands.
-  window.setHandler("skill-assign", this.commandSkill.bind(this));
-  window.setHandler("dodge-assign", this.commandDodge.bind(this));
-  window.setHandler("item-assign", this.commandItem.bind(this));
-  window.setHandler("main-menu", this.commandMenu.bind(this));
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Main));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsMenuHoverChange.bind(this);
+  window.setHandler('skill-assign', this.commandSkill.bind(this));
+  window.setHandler('dodge-assign', this.commandDodge.bind(this));
+  window.setHandler('item-assign', this.commandItem.bind(this));
+  window.setHandler('main-menu', this.commandMenu.bind(this));
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Main));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -485,7 +398,7 @@ Scene_Map.prototype.createJabsAbsSkillListWindow = function()
 
   // add the window to the scene manager's tracking.
   this.addWindow(window);
-}
+};
 
 /**
  * Sets up and defines the skill list of the JABS menu.
@@ -500,11 +413,8 @@ Scene_Map.prototype.buildJabsSkillListWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.SkillList);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, Window_AbsMenuSelect.SelectionTypes.SkillList));
-  window.setHandler("skill", this.commandEquipSkill.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsCombatSkillListHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, Window_AbsMenuSelect.SelectionTypes.SkillList));
+  window.setHandler('skill', this.commandEquipSkill.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -521,19 +431,19 @@ Scene_Map.prototype.buildJabsSkillListWindow = function()
 Scene_Map.prototype.jabsSkillListWindowRectangle = function()
 {
   // define the width arbitrarily.
-  const width = 400;
+  const width = Math.round(Graphics.boxWidth * 0.66);
 
   // the general height of a command item is this many pixels.
-  const commandHeight = 36;
+  const commandHeight = 72;
 
-  // the height should be 8 items tall.
-  const height = commandHeight * 8;
+  // the height should be 10 items tall.
+  const height = commandHeight * 10 + 40;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
 
   // define the y coordinate arbitrarily.
-  const y = 100;
+  const y = 0;
 
   // build the rectangle to return.
   return new Rectangle(x, y, width, height);
@@ -569,11 +479,8 @@ Scene_Map.prototype.buildJabsEquippedCombatSkillsWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.SkillEquip);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
-  window.setHandler("slot", this.commandAssign.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsEquippedCombatSkillsHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+  window.setHandler('slot', this.commandAssign.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -593,10 +500,10 @@ Scene_Map.prototype.jabsEquippedCombatSkillsWindowRectangle = function()
   const width = 400;
 
   // the general height of a command item is this many pixels.
-  const commandHeight = 36;
+  const commandHeight = 72;
 
-  // the height should be 5 items tall with some padding on top and bottom.
-  const height = (commandHeight * 5) + 20;
+  // the height should be 4 items tall with some padding on top and bottom.
+  const height = commandHeight * 4 + 24;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
@@ -641,11 +548,8 @@ Scene_Map.prototype.buildJabsToolListWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.ToolList);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, Window_AbsMenuSelect.SelectionTypes.ToolList));
-  window.setHandler("tool", this.commandEquipTool.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsToolListHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, Window_AbsMenuSelect.SelectionTypes.ToolList));
+  window.setHandler('tool', this.commandEquipTool.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -662,19 +566,19 @@ Scene_Map.prototype.buildJabsToolListWindow = function()
 Scene_Map.prototype.jabsToolListWindowRectangle = function()
 {
   // define the width arbitrarily.
-  const width = 400;
+  const width = Math.round(Graphics.boxWidth * 0.66);
 
   // the general height of a command item is this many pixels.
-  const commandHeight = 36;
+  const commandHeight = 72;
 
-  // the height should be 8 items tall.
-  const height = commandHeight * 8;
+  // the height should be 10 items tall with some padding on top and bottom.
+  const height = commandHeight * 10 + 40;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
 
   // define the y coordinate arbitrarily.
-  const y = 100;
+  const y = 0;
 
   // build the rectangle to return.
   return new Rectangle(x, y, width, height);
@@ -710,11 +614,8 @@ Scene_Map.prototype.buildJabsEquippedToolWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.ToolEquip);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
-  window.setHandler("slot", this.commandAssign.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsEquippedToolHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+  window.setHandler('slot', this.commandAssign.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -734,7 +635,7 @@ Scene_Map.prototype.jabsEquippedToolWindowRectangle = function()
   const width = 400;
 
   // the height should be just enough to fit the single tool in there.
-  const height = 70;
+  const height = 96;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
@@ -779,11 +680,8 @@ Scene_Map.prototype.buildJabsDodgeSkillListWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.DodgeList);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Dodge));
-  window.setHandler("dodge", this.commandEquipDodge.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsDodgeSkillListHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Dodge));
+  window.setHandler('dodge', this.commandEquipDodge.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -800,19 +698,19 @@ Scene_Map.prototype.buildJabsDodgeSkillListWindow = function()
 Scene_Map.prototype.jabsDodgeSkillListWindowRectangle = function()
 {
   // define the width arbitrarily.
-  const width = 400;
+  const width = Math.round(Graphics.boxWidth * 0.66);
 
   // the general height of a command item is this many pixels.
-  const commandHeight = 36;
+  const commandHeight = 72;
 
-  // the height should be 8 items tall.
-  const height = commandHeight * 8;
+  // the height should be 10 items tall with some padding on top and bottom.
+  const height = commandHeight * 10 + 40;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
 
   // define the y coordinate arbitrarily.
-  const y = 100;
+  const y = 0;
 
   // build the rectangle to return.
   return new Rectangle(x, y, width, height);
@@ -848,11 +746,8 @@ Scene_Map.prototype.buildJabsEquippedDodgeSkillWindow = function()
   const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.DodgeEquip);
 
   // assign functionality for each of the commands.
-  window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
-  window.setHandler("slot", this.commandAssign.bind(this));
-
-  // overwrite the onIndexChange hook with our local onHoverChange hook.
-  window.onIndexChange = this.onJabsEquippedDodgeSkillHoverChange.bind(this);
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+  window.setHandler('slot', this.commandAssign.bind(this));
 
   // close and hide the window by default upon creation.
   window.close();
@@ -872,7 +767,7 @@ Scene_Map.prototype.jabsEquippedDodgeSkillWindowRectangle = function()
   const width = 400;
 
   // the height should be just enough to fit the single dodge skill in there.
-  const height = 70;
+  const height = 96;
 
   // the x coordinate should push the window against the right side.
   const x = Graphics.boxWidth - width;
@@ -890,99 +785,6 @@ Scene_Map.prototype.jabsEquippedDodgeSkillWindowRectangle = function()
 //endregion create
 
 //region actions
-//region onHover
-Scene_Map.prototype.onJabsMenuHoverChange = function()
-{
-  // grab the main menu.
-  const menu = this.getJabsMainListWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsCombatSkillListHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsSkillListWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsEquippedCombatSkillsHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsEquippedCombatSkillsWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsToolListHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsToolListWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsEquippedToolHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsEquippedToolWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsDodgeSkillListHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsDodgeSkillListWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-
-Scene_Map.prototype.onJabsEquippedDodgeSkillHoverChange = function()
-{
-  // grab the menu.
-  const menu = this.getJabsDodgeSkillListWindow();
-
-  // extract the text out of the current selection.
-  const text = menu.currentHelpText();
-
-  // update the help window with some text.
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
-//endregion onHover
-
 //region command execution
 /**
  * Brings up the main menu.
@@ -1143,7 +945,7 @@ Scene_Map.prototype.commandAssign = function()
   const actor = $gameParty.leader();
 
   // initialize the skill and slot variables.
-  let nextActionSkill = 0
+  let nextActionSkill = 0;
   let equippedActionSlot = 0;
 
   // pivot on the currently perused equip type.
@@ -1179,26 +981,6 @@ Scene_Map.prototype.commandAssign = function()
   this.closeAbsWindow(JABS_MenuType.Assign);
 };
 //endregion command execution
-
-/**
- * Sets the item parsed in the JABS menu help window.
- * @param {RPG_BaseItem} item The item to parse into the help window.
- */
-Scene_Map.prototype.setJabsHelpItem = function(item)
-{
-  this.getJabsMenuHelpWindow()
-    .setItem(item);
-};
-
-/**
- * Sets the text of the JABS menu help window.
- * @param {string} text The text to put into the window.
- */
-Scene_Map.prototype.setJabsHelpText = function(text)
-{
-  this.getJabsMenuHelpWindow()
-    .setText(text);
-};
 //endregion actions
 
 //region update
@@ -1291,7 +1073,6 @@ Scene_Map.prototype.manageAbsMenu = function()
   switch (this.getJabsMenuFocus())
   {
     case JABS_MenuType.Main:
-      this.showJabsMenuHelpWindow();
       this.showJabsMainListWindow();
       break;
     case JABS_MenuType.Skill:
@@ -1329,32 +1110,6 @@ Scene_Map.prototype.callMenu = function()
 };
 
 //region show/hide
-//region help
-/**
- * Shows the JABS menu help window.
- */
-Scene_Map.prototype.showJabsMenuHelpWindow = function()
-{
-  // grab the window.
-  const window = this.getJabsMenuHelpWindow();
-
-  // show the window.
-  this.showJabsMenuWindow(window);
-};
-
-/**
- * Hides the JABS menu help window.
- */
-Scene_Map.prototype.hideJabsMenuHelpWindow = function()
-{
-  // grab the window.
-  const window = this.getJabsMenuHelpWindow();
-
-  // hide the window.
-  this.hideJabsMenuWindow(window);
-};
-//endregion help
-
 //region main
 /**
  * Shows the JABS menu main list window.
@@ -1364,8 +1119,17 @@ Scene_Map.prototype.showJabsMainListWindow = function()
   // grab the window.
   const window = this.getJabsMainListWindow();
 
+  // only when becoming visible so we do not fight the cursor every frame (manageAbsMenu runs per update).
+  const wasHidden = !window.visible;
+
   // show the window.
   this.showJabsMenuWindow(window);
+
+  // force-select the main menu.
+  if (wasHidden && window.maxItems() > 1)
+  {
+    window.forceSelect(0);
+  }
 };
 
 /**
@@ -1551,7 +1315,6 @@ Scene_Map.prototype.hideAllJabsWindows = function()
   this.hideJabsCombatSkillListWindow();
   this.hideJabsEquippedCombatSkillsWindow();
 
-  this.hideJabsMenuHelpWindow();
   this.hideJabsMainWindow();
 
   this.closeAbsMenu();
@@ -1559,7 +1322,7 @@ Scene_Map.prototype.hideAllJabsWindows = function()
 
 /**
  * Shows a JABS menu window.
- * @param {Window_AbsMenu|Window_AbsHelp|Window_AbsMenuSelect} window The window to show.
+ * @param {Window_AbsMenu|Window_AbsMenuSelect} window The window to show.
  */
 Scene_Map.prototype.showJabsMenuWindow = function(window)
 {
@@ -1571,7 +1334,7 @@ Scene_Map.prototype.showJabsMenuWindow = function(window)
 
 /**
  * Hides a JABS menu window.
- * @param {Window_AbsMenu|Window_AbsHelp|Window_AbsMenuSelect} window The window to hide.
+ * @param {Window_AbsMenu|Window_AbsMenuSelect} window The window to hide.
  */
 Scene_Map.prototype.hideJabsMenuWindow = function(window)
 {

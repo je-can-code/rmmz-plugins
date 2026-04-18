@@ -5,6 +5,16 @@
 // eslint-disable-next-line no-unused-vars
 class LevelScaling
 {
+  /**
+   * Which clamp profile {@link LevelScaling.multiplier} uses after the level-difference curve.
+   * @type {{ COMBAT: string, REWARD: string }}
+   */
+  static Scope =
+    {
+      COMBAT: 'combat',
+      REWARD: 'reward',
+    };
+
   //region properties
   /**
    * The default scaling multiplier.
@@ -12,41 +22,6 @@ class LevelScaling
    * @private
    */
   static #defaultScalingMultiplier = 1.0;
-
-  /**
-   * The minimum amount the multiplier can be.
-   * If after calculation it is lower, it will be raised to this amount.
-   * @type {number}
-   * @private
-   */
-  static #minimumMultiplier = J.LEVEL.Metadata.minimumMultiplier;
-
-  /**
-   * The maximum amount the multiplier can be.
-   * If after calculation it is higher, it will be lowered to this amount.
-   * @type {number}
-   */
-  static #maximumMultiplier = J.LEVEL.Metadata.maximumMultiplier;
-
-  /**
-   * The amount of growth per level of difference in the scaling multiplier.
-   * @type {number}
-   */
-  static #growthMultiplier = J.LEVEL.Metadata.growthMultiplier;
-
-  /**
-   * The upper threshold of invariance, effective the dead zone for ignoring
-   * level differences when they are not high enough.
-   * @type {number}
-   */
-  static #upperInvariance = J.LEVEL.Metadata.invariantUpperRange;
-
-  /**
-   * The lower threshold of invariance, effective the dead zone for ignoring
-   * level differences when they are not low enough.
-   * @type {number}
-   */
-  static #lowerInvariance = J.LEVEL.Metadata.invariantLowerRange;
 
   //endregion properties
 
@@ -65,9 +40,10 @@ class LevelScaling
    * This gives a multiplier in relation to the user.
    * @param {number} userLevel The level of the user, typically the actor.
    * @param {number} targetLevel The level of the target.
+   * @param {string} [scope] `LevelScaling.Scope.COMBAT` or `LevelScaling.Scope.REWARD`; combat when omitted.
    * @returns {number} A decimal representing the multiplier for the scaling.
    */
-  static multiplier(userLevel, targetLevel)
+  static multiplier(userLevel, targetLevel, scope = LevelScaling.Scope.COMBAT)
   {
     // if the scaling functionality is disabled, then just return 1x.
     if (!$gameSystem.isLevelScalingEnabled()) return this.#defaultScalingMultiplier;
@@ -79,7 +55,7 @@ class LevelScaling
     const levelDifference = userLevel - targetLevel;
 
     // return the calculated multiplier based on the given level difference.
-    return this.calculate(levelDifference);
+    return this.calculate(levelDifference, scope);
   }
 
   /**
@@ -99,31 +75,61 @@ class LevelScaling
   }
 
   /**
+   * Resolves min/max clamps for the given scope from live plugin metadata.
+   * @param {string} scope `LevelScaling.Scope.COMBAT` or `LevelScaling.Scope.REWARD`.
+   * @returns {{ min: number, max: number }}
+   */
+  static #clampsForScope(scope)
+  {
+    if (scope === LevelScaling.Scope.REWARD)
+    {
+      return {
+        min: J.LEVEL.Metadata.rewardMinimumMultiplier,
+        max: J.LEVEL.Metadata.rewardMaximumMultiplier,
+      };
+    }
+
+    return {
+      min: J.LEVEL.Metadata.minimumMultiplier,
+      max: J.LEVEL.Metadata.maximumMultiplier,
+    };
+  }
+
+  /**
    * Calculates the multiplier based on the given level difference.
    * @param {number} levelDifference The difference in levels between target and user.
+   * @param {string} [scope] `LevelScaling.Scope.COMBAT` or `LevelScaling.Scope.REWARD`; combat when omitted.
    * @returns {number}
    */
-  static calculate(levelDifference)
+  static calculate(levelDifference, scope = LevelScaling.Scope.COMBAT)
   {
     // grab the baseline for the multiplier.
     const base = this.#defaultScalingMultiplier;
 
     // grab the growth rate per level of difference.
-    const growth = this.#growthMultiplier;
+    const growth = J.LEVEL.Metadata.growthMultiplier;
 
     // check if the difference is within our invariance range.
-    if (levelDifference <= this.#upperInvariance && levelDifference >= this.#lowerInvariance) return base;
+    const upper = J.LEVEL.Metadata.invariantUpperRange;
+    const lower = J.LEVEL.Metadata.invariantLowerRange;
+
+    if (levelDifference <= upper && levelDifference >= lower) return base;
 
     // determine the level difference lesser the invariance range.
     const invariantDifference = levelDifference > 0
-      ? levelDifference - this.#upperInvariance
-      : levelDifference + this.#lowerInvariance;
+      ? levelDifference - upper
+      : levelDifference + lower;
 
     // calculate the multiplier.
     const result = base + (invariantDifference * growth);
 
     // clamp the multiplier within given thresholds, and return it.
-    return result.clamp(this.#minimumMultiplier, this.#maximumMultiplier);
+    const {
+      min,
+      max
+    } = this.#clampsForScope(scope);
+
+    return result.clamp(min, max);
   }
 }
 

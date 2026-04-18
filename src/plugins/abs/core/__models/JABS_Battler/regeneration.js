@@ -501,6 +501,8 @@ JABS_Battler.prototype.slipEval = function(formula, sourceBattler, afflictedBatt
     // check if the eval() produced garbage output despite not throwing.
     if (!Number.isFinite(result))
     {
+      console.warn('result was: ', result);
+
       // throw, and then catch to properly log in the next block.
       throw new Error('Invalid formula.');
     }

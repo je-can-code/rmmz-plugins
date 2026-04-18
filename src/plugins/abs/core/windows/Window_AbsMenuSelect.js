@@ -7,13 +7,13 @@ class Window_AbsMenuSelect
 {
   /* eslint-disable prefer-destructuring */
   static SelectionTypes = {
-    SkillList: "skill",
-    SkillEquip: "equip-skill",
-    ToolList: "tool",
-    ToolEquip: "equip-tool",
-    DodgeList: "dodge",
-    DodgeEquip: "equip-dodge",
-  }
+    SkillList: 'skill',
+    SkillEquip: 'equip-skill',
+    ToolList: 'tool',
+    ToolEquip: 'equip-tool',
+    DodgeList: 'dodge',
+    DodgeEquip: 'equip-dodge',
+  };
 
   /**
    * @constructor
@@ -92,9 +92,9 @@ class Window_AbsMenuSelect
 
     // build the clear slot command.
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
-      .setSymbol("skill")
+      .setSymbol('skill')
       .setColorIndex(16)
-      .setHelpText("Remove the existing combat skill from the slot.")
+      .setHelpText('Remove the existing combat skill from the slot.')
       .build();
 
     // add the clear slot command to the list.
@@ -113,10 +113,11 @@ class Window_AbsMenuSelect
 
       // build the command.
       const skillCommand = new WindowCommandBuilder(name)
-        .setSymbol("skill")
+        .setSymbol('skill')
         .setExtensionData(id)
         .setIconIndex(iconIndex)
         .setHelpText(description)
+        .setTextLines(description.split(/[\r\n]+/))
         .build();
 
       // add the built command to the list.
@@ -140,8 +141,8 @@ class Window_AbsMenuSelect
 
     // build the clear slot command.
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
-      .setSymbol("tool")
-      .setHelpText("Remove the existing tool from the slot.")
+      .setSymbol('tool')
+      .setHelpText('Remove the existing tool from the slot.')
       .setColorIndex(16)
       .build();
 
@@ -163,15 +164,16 @@ class Window_AbsMenuSelect
       const amount = tool.consumable
         ? $gameParty.numItems(tool)
           .padZero(3)
-        : "♾";
+        : '♾';
 
       // build the command.
       const toolCommand = new WindowCommandBuilder(name)
-        .setSymbol("tool")
+        .setSymbol('tool')
         .setExtensionData(id)
         .setIconIndex(iconIndex)
         .setHelpText(description)
         .setRightText(`x${amount}`)
+        .setTextLines(description.split(/[\r\n]+/))
         .build();
 
       // add the built command to the list.
@@ -199,9 +201,9 @@ class Window_AbsMenuSelect
 
     // build the clear slot command.
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
-      .setSymbol("dodge")
+      .setSymbol('dodge')
       .setColorIndex(16)
-      .setHelpText("Remove the existing dodge skill from the slot.")
+      .setHelpText('Remove the existing dodge skill from the slot.')
       .build();
 
     // add the clear slot command to the list.
@@ -225,10 +227,11 @@ class Window_AbsMenuSelect
 
       // build the command.
       const dodgeCommand = new WindowCommandBuilder(name)
-        .setSymbol("dodge")
+        .setSymbol('dodge')
         .setExtensionData(id)
         .setIconIndex(iconIndex)
         .setHelpText(description)
+        .setTextLines(description.split(/[\r\n]+/))
         .build();
 
       // add the built command to the list.
@@ -259,7 +262,7 @@ class Window_AbsMenuSelect
       // initialize the command variables.
       let name = `${skillSlot.key}: ${J.ABS.Metadata.UnassignedText}`;
       let iconIndex = 0;
-      let description = "An empty combat skill slot eagerly awaiting to be filled.";
+      let description = 'An empty combat skill slot eagerly awaiting to be filled.';
 
       // check if the skillslot has something in it.
       if (skillSlot.isUsable())
@@ -275,7 +278,7 @@ class Window_AbsMenuSelect
 
       // build the command.
       const command = new WindowCommandBuilder(name)
-        .setSymbol("slot")
+        .setSymbol('slot')
         .setExtensionData(skillSlot.key)
         .setIconIndex(iconIndex)
         .setHelpText(description)
@@ -317,7 +320,7 @@ class Window_AbsMenuSelect
       amount = equippedTool.consumable
         ? $gameParty.numItems(equippedTool)
           .padZero(3)
-        : "♾";
+        : '♾';
 
       // update the command variables with the equipped tool data.
       name = equippedTool.name;
@@ -327,7 +330,7 @@ class Window_AbsMenuSelect
 
     // build the command.
     const command = new WindowCommandBuilder(name)
-      .setSymbol("slot")
+      .setSymbol('slot')
       .setExtensionData(toolSkillSlot.key)
       .setIconIndex(iconIndex)
       .setHelpText(description)
@@ -368,7 +371,7 @@ class Window_AbsMenuSelect
 
     // build the command.
     const command = new WindowCommandBuilder(name)
-      .setSymbol("slot")
+      .setSymbol('slot')
       .setExtensionData(dodgeSkillSlot.key)
       .setIconIndex(iconIndex)
       .setHelpText(description)

@@ -1862,4 +1862,4 @@ Sprite_Character.prototype.getBattlerName = function()
 };
 //endregion Sprite_Character
 
-//# sourceMappingURL=J-LevelMaster.js.map
+//# sourceMappingURL=J-Level-Flat.js.map
