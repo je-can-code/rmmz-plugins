@@ -9,6 +9,11 @@ var J = J || {};
 J.PASSIVE = {};
 
 /**
+ * The plugin umbrella that governs all extensions related to this plugin.
+ */
+J.PASSIVE.EXT = {};
+
+/**
  * The `metadata` associated with this plugin, such as version.
  */
 J.PASSIVE.Metadata = {};
@@ -34,5 +39,6 @@ J.PASSIVE.Aliased.Game_Battler = new Map();
 J.PASSIVE.Aliased.Game_BattlerBase = new Map();
 J.PASSIVE.Aliased.Game_Enemy = new Map();
 J.PASSIVE.Aliased.Game_Party = new Map();
+J.PASSIVE.Aliased.JABS_AiManager = new Map();
 J.PASSIVE.Aliased.Window_MoreEquipData = new Map();
 //endregion Introduction

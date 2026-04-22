@@ -232,7 +232,7 @@ if (typeof Array.prototype.contains !== 'function')
 }
 
 /**
- * Merges {@link PluginManager.parameters} for {@link out/pixel/ext/J-ABS-Pixelistics.js} after core is loaded.
+ * Merges {@link PluginManager.parameters} for {@link out/pixel/ext/J-Pixel-ABS.js} after core is loaded.
  *
  * @param {object} sandbox
  * @param {Record<string, string>} [extParams]

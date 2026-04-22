@@ -11,7 +11,7 @@ import {
 
 export const PIXEL_CORE_OUT_FILENAME = 'pixel/J-Pixelistics.js';
 
-export const PIXEL_ABS_EXT_OUT_FILENAME = 'pixel/ext/J-ABS-Pixelistics.js';
+export const PIXEL_ABS_EXT_OUT_FILENAME = 'pixel/ext/J-Pixel-ABS.js';
 
 const EXPOSE_PIXEL_GLOBALS = `
 globalThis.PIXEL_CollisionManager = PIXEL_CollisionManager;
@@ -43,7 +43,7 @@ export function loadPixelCorePluginVm(sandbox, options = {})
 }
 
 /**
- * Loads {@link out/pixel/J-Pixelistics.js} then {@link out/pixel/ext/J-ABS-Pixelistics.js}.
+ * Loads {@link out/pixel/J-Pixelistics.js} then {@link out/pixel/ext/J-Pixel-ABS.js}.
  *
  * @param {object} sandbox
  * @param {object} [options]

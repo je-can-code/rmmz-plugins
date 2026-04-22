@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadPopupsPluginVm } from './popups-vm.js';
 
-describe('J-TextPops TextPopSpriteManager (out/J-TextPops.js)', () =>
+describe('J-Popups TextPopSpriteManager (out/popups/J-Popups.js)', () =>
 {
   let sandbox;
 

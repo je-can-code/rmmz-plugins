@@ -95,7 +95,7 @@ class Mirror
     const resolvedDestination = path.resolve(destination);
 
     await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, resolvedDestination);
-    Logger.logAnyway(`copied (excluding *.map) [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
+    Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
   }
 
   /**

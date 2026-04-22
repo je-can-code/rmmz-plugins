@@ -33,7 +33,7 @@ J.HUD.EXT.TARGET = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.HUD.EXT.TARGET.Metadata = {};
-J.HUD.EXT.TARGET.Metadata.Version = '1.0.0';
+J.HUD.EXT.TARGET.Metadata.Version = '1.0.1';
 J.HUD.EXT.TARGET.Metadata.Name = `J-HUD-TargetFrame`;
 
 /**

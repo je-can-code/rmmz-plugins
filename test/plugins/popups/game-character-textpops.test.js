@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadPopupsPluginVm } from './popups-vm.js';
 
-describe('J-TextPops Game_Character integration (out/J-TextPops.js)', () =>
+describe('J-Popups Game_Character integration (out/popups/J-Popups.js)', () =>
 {
   let sandbox;
 
@@ -42,7 +42,7 @@ describe('J-TextPops Game_Character integration (out/J-TextPops.js)', () =>
 
   it('does not track pops when DisableTextPops is true', () =>
   {
-    sandbox.J.ABS.Metadata.DisableTextPops = true;
+    sandbox.J.POPUPS.Metadata.DisablePopups = true;
 
     const ch = new sandbox.Game_Character();
     ch.initMembers();

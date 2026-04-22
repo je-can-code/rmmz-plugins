@@ -76,13 +76,14 @@ JABS_Battler.prototype.buildFramedTarget = function(battlerLastHit)
   // extract the target configuration.
   const targetConfiguration = battlerLastHit.buildFramedTargetConfiguration();
 
-  // create the new framed target for this battler.
+  // create the new framed target for this battler (tier name tint is layered by J-Passive-ABS when present).
   return new FramedTarget(
     battlerName,
     targetFrameText,
     targetFrameIcon,
     battlerLastHit.getBattler(),
-    targetConfiguration);
+    targetConfiguration,
+    String.empty);
 };
 
 /**

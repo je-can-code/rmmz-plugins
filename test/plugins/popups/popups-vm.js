@@ -5,7 +5,7 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installPopupsEngineStubs } from './fixtures/engine-stubs.js';
 
-export const POPUPS_OUT_FILENAME = 'J-TextPops.js';
+export const POPUPS_OUT_FILENAME = 'popups/J-Popups.js';
 
 const EXPOSE_POPUPS_GLOBALS = `
 globalThis.TextPopBuilder = TextPopBuilder;
@@ -14,7 +14,7 @@ globalThis.Map_TextPop = Map_TextPop;
 `;
 
 /**
- * Loads {@link out/J-TextPops.js} with J-Base and harness.
+ * Loads {@link out/popups/J-Popups.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */
@@ -29,16 +29,23 @@ export function loadPopupsPluginVm(sandbox)
     },
   });
 
-  vm.runInContext(`
-globalThis.J = globalThis.J || {};
-globalThis.J.ABS = globalThis.J.ABS || {};
-globalThis.J.ABS.Metadata = globalThis.J.ABS.Metadata || {};
-if (globalThis.J.ABS.Metadata.DisableTextPops === undefined)
-{
-  globalThis.J.ABS.Metadata.DisableTextPops = false;
-}
-`, sandbox);
-
   vm.runInContext(EXPOSE_POPUPS_GLOBALS, sandbox);
+
+  vm.runInContext(`
+(function()
+{
+  const prev = Sprite_Damage.prototype.repositionChildren;
+
+  Sprite_Damage.prototype.repositionChildren = function()
+  {
+    if (this.children === undefined || this.children === null)
+    {
+      this.children = [];
+    }
+
+    return prev.call(this);
+  };
+})();
+`, sandbox);
 }
 //endregion plugins/popups/popups-vm.js
