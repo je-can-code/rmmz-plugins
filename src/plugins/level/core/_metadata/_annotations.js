@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.3.0 LEVEL] Allows levels to have greater control and purpose.
+ * [v1.3.1 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -297,6 +297,8 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Updated battler name rendering support for compatibility.
  * - 1.3.0
  *    Added reward-specific min/max multipliers; LevelScaling.multiplier accepts combat vs reward scope.
  * - 1.2.1

@@ -13,7 +13,7 @@ J.MESSAGE = {};
  */
 J.MESSAGE.Metadata = {};
 J.MESSAGE.Metadata.Name = `J-MessageTextCodes`;
-J.MESSAGE.Metadata.Version = '1.2.0';
+J.MESSAGE.Metadata.Version = '1.2.1';
 
 /**
  * A collection of all base aliases.
