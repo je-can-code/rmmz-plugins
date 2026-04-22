@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 HUD-TARGET] A HUD frame that displays your battle target.
+ * [v1.0.1 HUD-TARGET] A HUD frame that displays your battle target.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -165,7 +165,7 @@
  * @min 0
  * @text Width
  * @desc The width in pixels of the target frame window.
- * @default 320
+ * @default 480
  *
  * @param targetFrameHeight
  * @parent targetFrameData
@@ -173,7 +173,7 @@
  * @min 0
  * @text Height
  * @desc The height in pixels of the target frame window.
- * @default 120
+ * @default 180
  *
  * @param targetFrameGauge
  * @text Target Frame Gauge
@@ -214,7 +214,7 @@
  * @type number
  * @min 0
  * @text Middleground Image X
- * @desc The x coordinate correction of the "current" gauge image, aka the middleground.
+ * @desc Horizontal position is set from the measured backdrop trough at runtime so HP/MP stay aligned; Y still uses this block.
  * @default 2
  *
  * @param middlegroundGaugeImageY
@@ -241,7 +241,7 @@
  * @type number
  * @min 0
  * @text Foreground Image X
- * @desc The x coordinate correction of the "current" gauge image, aka the foreground.
+ * @desc Horizontal position is set from the measured backdrop trough at runtime so HP/MP stay aligned; Y still uses this block.
  * @default 2
  *
  * @param foregroundGaugeImageY
@@ -380,4 +380,12 @@
  * @text Rotation
  * @desc The degree of rotation for the TP gauge. Between -360 and 360.
  * @default 270
+ *
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    Adjusted target frame defaults for better readability.
+ *    Improved gauge alignment logic for consistent HP/MP positioning.
+ * - 1.0.0
+ *    Initial release.
  */

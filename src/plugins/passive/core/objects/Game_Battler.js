@@ -34,6 +34,12 @@ Game_Battler.prototype.initPassiveStatesMembers = function()
    * @type {number[]|null}
    */
   this._j._passive._stateIds = [];
+
+  /**
+   * A group of all external sources that are associated with this battler's passive states.
+   * @type {RPG_BaseItem[]}
+   */
+  this._j._passive._externalStateSources = [];
 };
 
 /**
@@ -46,14 +52,82 @@ Game_Battler.prototype.getPassiveStateIds = function()
 };
 
 /**
- * Checks whether or not this battler currently has a given passive state applied.
- * @param {number} stateId The id of the state to check for.
- * @returns {boolean} True if this battler has the passive state applied, false otherwise.
+ * Gets all the external sources (as base items) for this battler.
+ * @returns {RPG_BaseItem[]}
  */
-Game_Battler.prototype.hasPassiveStateId = function(stateId)
+Game_Battler.prototype.passiveExternalStateSources = function()
 {
-  return this.getPassiveStateIds()
-    .includes(stateId);
+  return this._j._passive._externalStateSources;
+};
+
+/**
+ * Adds a collection of state ids to the external passive state ids list.
+ * @param {number[]} stateIds The ids of the external passive states.
+ * @param {boolean} deferRefresh Whether or not to defer refreshing the passive states.
+ */
+Game_Battler.prototype.addPassiveStateExternalSourceByStateIds = function(stateIds, deferRefresh = false)
+{
+  // convert the state ids to a base item.
+  const baseItem = this.buildSourceFromStateIds(stateIds);
+
+  // add the converted item to the list.
+  this.addPassiveStateExternalSource(baseItem, deferRefresh);
+};
+
+/**
+ * Adds a source to the external passive source list.
+ * @param {RPG_BaseItem} source The source to add.
+ * @param {boolean} deferRefresh Whether or not to defer refreshing the passive states.
+ */
+Game_Battler.prototype.addPassiveStateExternalSource = function(source, deferRefresh = false)
+{
+  // add the converted item to the list.
+  this._j._passive._externalStateSources.push(source);
+
+  // if we are not deferring refreshing, then do it now.
+  if (deferRefresh === true) return;
+
+  // also refresh the passive states.
+  this.refreshPassiveStates();
+};
+
+/**
+ * Clears all external passive state sources.
+ * @param {boolean} deferRefresh Whether or not to defer refreshing the passive states.
+ */
+Game_Battler.prototype.clearPassiveStateExternalSources = function(deferRefresh = false)
+{
+  // empty the external sources list.
+  this._j._passive._externalStateSources = [];
+
+  // if we're deferring the refresh, then don't do it.
+  if (deferRefresh === true) return;
+
+  // refresh the passive states.
+  this.refreshPassiveStates();
+};
+
+/**
+ * Builds a dummy base item that can be used to represent passive state ids.
+ *
+ * Note: these base items aren't real items from the database and shouldn't be used as such!
+ * @param {number[]} stateIds The passive state ids to add to the base item.
+ * @returns {RPG_BaseItem} The constructed base item.
+ */
+Game_Battler.prototype.buildSourceFromStateIds = function(stateIds)
+{
+  // build a fake base item.
+  const baseItem = {
+    id: -1,
+    meta: {},
+    name: String.empty,
+    note: `<passive:[${stateIds.join(',')}]>`,
+    description: String.empty,
+    iconIndex: 0,
+  };
+
+  // return the constructed base item.
+  return new RPG_BaseItem(baseItem, baseItem.id);
 };
 
 /**
@@ -257,7 +331,11 @@ Game_Battler.prototype.getPassiveStateSources = function()
     ...this.allStates(),
 
     // all skills available to this battler.
-    ...this.skills(), ];
+    ...this.skills(),
+
+    // add all sources from events.
+    ...this.passiveExternalStateSources(),
+  ];
 
   // return this collection of stuff.
   return battlerSources;

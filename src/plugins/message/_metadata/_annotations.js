@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 MESSAGE] Gives access to more message window functionality.
+ * [v1.2.1 MESSAGE] Gives access to more message window functionality.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -127,6 +127,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Added helper for applying text color to fragments.
  * - 1.2.0
  *    Embedded a modified version of HIME's choice conditionals into this.
  *      Said plugin was added and modified and extended for other purposes.

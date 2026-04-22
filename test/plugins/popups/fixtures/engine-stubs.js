@@ -6,13 +6,13 @@ const noop = function()
 };
 
 /**
- * Minimal globals so {@link out/J-TextPops.js} can evaluate after {@link out/J-Base.js}.
+ * Minimal globals so {@link out/popups/J-Popups.js} can evaluate after {@link out/J-Base.js}.
  *
  * @param {object} sandbox VM global object (after {@link installJBaseHostGlobals}).
  */
 export function installPopupsEngineStubs(sandbox)
 {
-  installPluginManagerWithParams(sandbox, 'J-TextPops', {});
+  installPluginManagerWithParams(sandbox, 'J-Popups', {});
 
   sandbox.J = sandbox.J || {};
   sandbox.J.ABS = sandbox.J.ABS || {
