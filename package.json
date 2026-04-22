@@ -24,11 +24,11 @@
   },
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
-    "test": "vitest run",
-    "test:verbose": "vitest run --silent=false",
+    "test": "bun run build:all && vitest run",
+    "test:verbose": "bun run build:all && vitest run --silent=false",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
-    "test:coverage:ui": "vitest run --coverage --coverage.reporter=html",
+    "test:coverage": "bun run build:all && vitest run --coverage",
+    "test:coverage:ui": "bun run build:all && vitest run --coverage --coverage.reporter=html",
     "hotfix": "npm run clean:out && npm run build:all && npm run copy:to-all",
     "clean:out": "node ./src/build-tools/obliterator.js ./out",
     "copy:to-test": "node ./src/build-tools/copy.js",
@@ -51,7 +51,6 @@
     "build:message": "node ./src/build-tools/combine.js ./src/plugins/message ./out J-MessageTextCodes.js",
     "build:natural": "node ./src/build-tools/combine.js ./src/plugins/natural ./out J-NaturalGrowth.js",
     "build:otib": "node ./src/build-tools/combine.js ./src/plugins/otib ./out J-OneTimeItemBoost.js",
-    "build:passive": "node ./src/build-tools/combine.js ./src/plugins/passive ./out J-Passive.js",
     "build:prof": "node ./src/build-tools/combine.js ./src/plugins/prof ./out J-Proficiency.js",
     "build:sdp": "node ./src/build-tools/combine.js ./src/plugins/sdp ./out J-SDP.js",
     "build:sks": "node ./src/build-tools/combine.js ./src/plugins/sks ./out J-SkillSlots.js",
@@ -94,6 +93,9 @@
 
     "build:level": "node ./src/build-tools/combine.js ./src/plugins/level/core ./out/level J-LevelMaster.js",
     "build:level-flat": "node ./src/build-tools/combine.js ./src/plugins/level/ext/flat ./out/level/ext J-Level-Flat.js",
+
+    "build:passive": "node ./src/build-tools/combine.js ./src/plugins/passive/core ./out/passive J-Passive.js",
+    "build:passive-abs": "node ./src/build-tools/combine.js ./src/plugins/passive/ext/abs ./out/passive/ext J-Passive-ABS.js",
 
     "build:pixel": "node ./src/build-tools/combine.js ./src/plugins/pixel/core ./out/pixel J-Pixelistics.js",
     "build:pixel-abs": "node ./src/build-tools/combine.js ./src/plugins/pixel/ext/abs ./out/pixel/ext J-Pixel-ABS.js",

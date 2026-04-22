@@ -5,10 +5,10 @@ import { evaluateShippedPlugin, clearRpgManagerCacheInVm } from '../../setup/shi
 
 import { installPassiveEngineStubs } from './fixtures/engine-stubs.js';
 
-export const PASSIVE_OUT_FILENAME = 'J-Passive.js';
+export const PASSIVE_OUT_FILENAME = 'passive/J-Passive.js';
 
 /**
- * Loads {@link out/J-Passive.js} with J-Base and harness.
+ * Loads {@link out/passive/J-Passive.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

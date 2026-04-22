@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadPopupsPluginVm } from './popups-vm.js';
 
-describe('J-TextPops metadata (out/J-TextPops.js)', () =>
+describe('J-Popups metadata (out/popups/J-Popups.js)', () =>
 {
   let sandbox;
 
@@ -20,8 +20,8 @@ describe('J-TextPops metadata (out/J-TextPops.js)', () =>
 
   it('initializes J.POPUPS metadata', () =>
   {
-    expect(sandbox.J.POPUPS.Metadata.Name).toBe('J-TextPops');
-    expect(sandbox.J.POPUPS.Metadata.Version).toBe('1.0.0');
+    expect(sandbox.J.POPUPS.Metadata.Name).toBe('J-Popups');
+    expect(sandbox.J.POPUPS.Metadata.Version).toBe('2.0.0');
   });
 });
 //endregion plugins/popups/metadata.test.js

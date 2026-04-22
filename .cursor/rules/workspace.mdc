@@ -18,9 +18,16 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 ## Author & Style
 
 - **Project owner**: **Jeremy** (JE). The leading `J` in plugin namespaces (`J.ABS`, `J.PIXEL`, etc.) stands for JE. In conversation, use **Jeremy** or **JE** instead of impersonal phrasing like "the user said…" when referring to him.
-- **Emojis are allowed and encouraged** in responses and conversation. Never use them in code, comments, or commit messages.
-- **No unnecessary comments** that just restate the code. Comments explain *why*, not *what*.
+- **Conversation with Jeremy**: Be warm, optimistic, and personable — show **character** in chat (humor and enthusiasm are welcome when they fit). Use **emoji liberally** in assistant responses to Jeremy; they add clarity and tone. **Never** put emoji in code, comments, or commit messages.
 - Always read `rmmz-plugins/.junie/guidelines.md` before working in `rmmz-plugins` — it is the authoritative style reference.
+
+### Inline comments & authorship (crucial — do not drop)
+
+Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same idea that made **BlizzABS** (RMXP, author Blizzard) readable to newcomers — a **voice-over** so someone opening the file can follow **intent**, control flow, and policy without reverse-engineering. That history is why “obvious” labels like “perform original logic.” or “grab the battler.” **matter**: they landmark alias chains, guards, and loops for humans reading the file.
+
+- **Never delete comments Jeremy wrote** unless he **explicitly** asks to remove a given comment or block (e.g. “please delete the note about X”). Do not trim them for “cleanliness,” “brevity,” or AI preference.
+- **When the assistant authors code in this workspace**, it acts as an extension of Jeremy’s authorship: use the **same inline voice** — what is happening, **why**, what we are trying to accomplish, and how non-obvious branches fit the design. Prefer substantive step and intent comments over bare code. Avoid comments that **only** restate an identifier in different words with no added insight.
+- This applies across **all three repos** when writing or editing code on Jeremy’s behalf, subject to each project’s syntax (e.g. `rmmz-plugins` plugin JS vs TypeScript elsewhere).
 
 ## ESLint Compliance
 - **Never violate ESLint rules.** `rmmz-plugins` enforces `eol-last: ["error", "never"]` — files must NOT end with a trailing newline. When using the `Write` tool, the final character of the `contents` string must be the last character of the file (no `\n` after the closing `//endregion` or final line). Always run `ReadLints` on newly written files to catch violations before committing.
@@ -45,6 +52,10 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 - **Single quotes** for strings.
 - **No `import`/`export` anywhere in `rmmz-plugins` plugin source.** These files are concatenated by `combine.js` and loaded as plain JS by the RMMZ engine — there is no compilation step. Modules simply do not work here. (`src/build-tools` uses Node `require`/`import` normally since it runs in Node, not in the game.)
 - **No IIFEs**. Use object namespaces (`J.ABS`, `J.SKS`, etc.) and alias maps.
+
+### Database objects at runtime (J-Base)
+
+- Vanilla MZ stores `$data*` as arrays of JSON blobs. **J-Base hydrates** those into **custom class instances** (see `src/plugins/_base/database/`, e.g. `RPG_BaseItem` extends `RPG_Base`). When working with `$data*` entries, `RPGManager`, notetag getters, or **`new RPG_BaseItem(...)`** / similar, assume **these hydrated models**, not stock engine-only prototypes or “plain JSON forever.” Synthetic rows should follow the same constructor patterns as real DB rows when they must participate in note parsing.
 
 ### Namespace Convention
 

@@ -224,7 +224,7 @@ export function installLevelEngineStubs(sandbox)
 
   sandbox.Sprite_Character.prototype.getBattlerName = function()
   {
-    return 'Slime';
+    return { name: 'Slime', colorHex: '#ffffff' };
   };
 
   sandbox.Sprite_Character.prototype.getBattler = function()

@@ -20,6 +20,18 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
 
   sandbox.__jBaseHostGlobalsInstalled = true;
 
+  // J-Base aliases Bitmap#drawText at parse time; NW.js provides Bitmap in the real player.
+  if (typeof sandbox.Bitmap !== 'function')
+  {
+    function Bitmap()
+    {
+    }
+
+    Bitmap.prototype.drawText = noop;
+    Bitmap.prototype._createBaseTexture = noop;
+    sandbox.Bitmap = Bitmap;
+  }
+
   sandbox.PluginManager = {
     parameters(name)
     {
@@ -78,6 +90,73 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
 
   class EventEmitter
   {
+    constructor()
+    {
+      /** @type {Map<string, Function[]>} */
+      this._jListeners = new Map();
+    }
+
+    emit(event, ...args)
+    {
+      const list = this._jListeners.get(event);
+      if (list === undefined || list.length === 0)
+      {
+        return false;
+      }
+
+      list.forEach(fn =>
+      {
+        fn(...args);
+      });
+
+      return true;
+    }
+
+    on(event, fn)
+    {
+      if (this._jListeners.has(event) === false)
+      {
+        this._jListeners.set(event, []);
+      }
+
+      this._jListeners.get(event)
+        .push(fn);
+
+      return this;
+    }
+
+    off(event, fn)
+    {
+      const list = this._jListeners.get(event);
+
+      if (list === undefined)
+      {
+        return this;
+      }
+
+      const idx = list.indexOf(fn);
+
+      if (idx >= 0)
+      {
+        list.splice(idx, 1);
+      }
+
+      return this;
+    }
+
+    removeAllListeners(event)
+    {
+      if (event === undefined)
+      {
+        this._jListeners.clear();
+      }
+      else
+      {
+        this._jListeners.delete(event);
+      }
+
+      return this;
+    }
   }
 
   function GraphicsCtor()

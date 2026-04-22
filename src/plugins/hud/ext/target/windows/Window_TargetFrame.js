@@ -63,6 +63,12 @@ class Window_TargetFrame
     this._j._name = String.empty;
 
     /**
+     * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx` (Passive-ABS tier stripe hex).
+     * @type {string|String.empty}
+     */
+    this._j._nameColorHex = String.empty;
+
+    /**
      * The second line associated with the target.
      * Optional.
      * @type {string}
@@ -259,6 +265,7 @@ class Window_TargetFrame
   {
     // assign the newly provided data.
     this._j._name = target.name;
+    this._j._nameColorHex = target.nameColorHex;
     this._j._text = target.text;
     this._j._icon = target.icon;
     this._j._battler = target.battler;
@@ -400,13 +407,54 @@ class Window_TargetFrame
     }
   }
 
+  /**
+   * Pixel width reserved for the level column (Lv.xxx).
+   * @returns {number}
+   */
+  targetFrameLevelColumnWidth()
+  {
+    return 96;
+  }
+
+  /**
+   * Max draw width for the name row so the level column does not overlap long tier names.
+   * @returns {number}
+   */
+  targetFrameNameLineInnerWidth()
+  {
+    const gap = 8;
+
+    const w = this.contentsWidth() - this.targetFrameLevelColumnWidth() - gap;
+
+    return Math.max(200, w);
+  }
+
+  /**
+   * X offset for the level text (right-hand column after the name).
+   * @param {number} baseX Content-relative base x.
+   * @returns {number}
+   */
+  targetFrameLevelDrawX(baseX)
+  {
+    return baseX + this.targetFrameNameLineInnerWidth() + 4;
+  }
+
+  /**
+   * Max width for subtext lines that span the window body.
+   * @returns {number}
+   */
+  targetFrameBodyTextWidth()
+  {
+    return Math.max(200, this.contentsWidth() - 8);
+  }
+
   drawContent(x, y)
   {
     // draw the name of the target.
     this.drawTargetName(x, y);
 
     // draw the level of the target.
-    this.drawTargetLevel(x + 220, y);
+    this.drawTargetLevel(this.targetFrameLevelDrawX(x), y);
 
     // draw the extra data for the target.
     this.drawTargetExtra(x, y + 24);
@@ -484,7 +532,29 @@ class Window_TargetFrame
       name = `\\*` + name;
     }
 
-    this.drawTextEx(name, x, y, 200);
+    const hex = this._j._nameColorHex;
+    const useHex = hex !== String.empty && hex.length > 0;
+
+    const w = this.targetFrameNameLineInnerWidth();
+
+    // `Window_Base#drawTextEx` begins with `resetFontSettings()`, which calls `resetTextColor()` and would wipe a
+    // tier tint applied before the call. Mirror the engine path but keep Passive-ABS `nameColorHex` after font setup.
+    this.contents.fontFace = $gameSystem.mainFontFace();
+    this.contents.fontSize = $gameSystem.mainFontSize();
+
+    if (useHex)
+    {
+      this.changeTextColor(hex);
+      this.changeOutlineColor(ColorManager.outlineColor());
+    }
+    else
+    {
+      this.resetFontSettings();
+    }
+
+    const textState = this.createTextState(name, x, y, w);
+    this.processAllText(textState);
+    this.resetTextColor();
   }
 
   /**
@@ -507,7 +577,7 @@ class Window_TargetFrame
       const levelString = `\\FS[14]Lv.${level.padZero(3)}`;
 
       // and draw it to the window.
-      this.drawTextEx(levelString, x, y, 200);
+      this.drawTextEx(levelString, x, y, this.targetFrameLevelColumnWidth());
     }
   }
 
@@ -538,7 +608,7 @@ class Window_TargetFrame
     if (!this.hasTargetText()) return;
 
     // draw the extra text.
-    this.drawTextEx(`\\FS[14]${this.targetText()}`, x, y, 200);
+    this.drawTextEx(`\\FS[14]${this.targetText()}`, x, y, this.targetFrameBodyTextWidth());
   }
 
   /**

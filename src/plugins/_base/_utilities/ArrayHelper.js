@@ -68,4 +68,15 @@ class ArrayHelper
     // no matches were found across both arrays.
     return false;
   }
+
+  /**
+   * Creates an array of numbers from a range, inclusive.
+   * @param {number} a The starting number of the range.
+   * @param {number} b The ending number of the range.
+   * @returns {number[]} An array of numbers from a to b, inclusive.
+   */
+  static rangeInclusive(a, b)
+  {
+    return Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  }
 }

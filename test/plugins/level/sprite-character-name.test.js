@@ -22,7 +22,9 @@ describe('J-LevelMaster Sprite_Character.getBattlerName (out/J-LevelMaster.js)',
   {
     const sprite = new sandbox.Sprite_Character();
 
-    expect(sprite.getBattlerName()).toBe('007 Slime');
+    const battlerName = sprite.getBattlerName();
+
+    expect(battlerName.name).toBe('007 Slime');
   });
 });
 //endregion plugins/level/sprite-character-name.test.js
