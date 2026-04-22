@@ -160,6 +160,36 @@ class RPGManager
     return success;
   }
 
+  /**
+   * A quick and re-usable means of rolling for chance using a weighted model against a map of (key=id,val=weight).
+   * @param {Map<any,number>} map The map of key-value pairs to choose from.
+   * @param {number} totalWeight The total weight of all values in the map.
+   * @returns {any|null} The chosen key or null if no valid choice is found.
+   */
+  static weightedMapChoice(map, totalWeight)
+  {
+    // if there is no total weight, then this doesn't work.
+    if (totalWeight <= 0) return null;
+
+    // bless me, RNGesus.
+    let r = Math.random() * totalWeight;
+
+    // iterate over each entry in the map.
+    for (const [ key, val ] of map)
+    {
+      // if the value is empty, then skip it.
+      if (val <= 0) continue;
+
+      // decrement the remaining weight.
+      r -= val;
+
+      // check if the random number is less than zero.
+      if (r < 0) return key;
+    }
+
+    // somehow, we didn't find anything, so return null.
+    return null;
+  }
   //endregion chance
 
   //region strings

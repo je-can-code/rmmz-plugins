@@ -76,7 +76,6 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [cross-plugin-prototype-hook-surface](unstarted/cross-plugin-prototype-hook-surface.md) | High maintainability | **High** | Inventory `JABS_Engine`, `Game_Action`, `Scene_Map`, `JABS_AiManager`, `Game_Unit`, etc. |
 | [database-rpg-skill-augmentation-chain](unstarted/database-rpg-skill-augmentation-chain.md) | Medium | Medium | Document / dedupe seven `RPG_Skill` augmentation chains. |
 | [enemy-elite-states-notetag-extension](unstarted/enemy-elite-states-notetag-extension.md) | Medium | **High** tuning | Tier stats on named enemies; elite/boss passive states as knobs; configurable enemy notetag + spawn wiring. |
-| [flat-exp-per-level-reward-system](unstarted/flat-exp-per-level-reward-system.md) | **High** (progression) | **Very high** | Flat EXP per level (e.g. 1000); baseline + DB bonus; delta switch; tier %; LevelMaster policy; JABS `gainBasicRewards`; retire reward `LevelScaling` overlap; data migration. |
 | [ext-star-completion](unstarted/ext-star-completion.md) | **High** if Star used | **High** feature unblock | Finish Star ABS flow (enemy spawn, missing map). |
 | [game-action-battler-uuid-refactor](unstarted/game-action-battler-uuid-refactor.md) | **High** if casual | **High** if done right | UUID vs id/index for `Game_Action` on map + saves. |
 | [game-character-action-sprite-lifecycle](unstarted/game-character-action-sprite-lifecycle.md) | Medium | Medium | Action-sprite flags: `Game_Character` vs `JABS_Action` / Popups. |

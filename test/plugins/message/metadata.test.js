@@ -21,7 +21,7 @@ describe('J-MessageTextCodes metadata (out/J-MessageTextCodes.js)', () =>
   it('initializes J.MESSAGE metadata and regex', () =>
   {
     expect(sandbox.J.MESSAGE.Metadata.Name).toBe('J-MessageTextCodes');
-    expect(sandbox.J.MESSAGE.Metadata.Version).toBe('1.2.0');
+    expect(sandbox.J.MESSAGE.Metadata.Version).toBe('1.2.1');
 
     expect(sandbox.J.MESSAGE.RegExp.LeaderChoiceConditional.test('<leaderChoiceCondition: 3>')).toBe(true);
     expect(sandbox.J.MESSAGE.RegExp.SwitchOffChoiceConditional.test('<switchOffChoiceCondition:2>')).toBe(true);

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.1 PASSIVE] Grants passive states from various database objects.
+ * [v2.0.2 PASSIVE] Grants passive states from various database objects.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -74,6 +74,24 @@
  * formula-based slip effects will use the afflicted battler as both the
  * source AND target battlers in the context of "a" and "b" in the formula.
  *
+ * ============================================================================
+ * EVENT PASSIVES (MAP EVENTS)
+ * Have you ever wanted a map event to force a spawned enemy to have specific
+ * passive state ids- without needing to create a duplicate enemy in the
+ * database? Well now you can! By applying the passive tag to an event comment,
+ * you too can inject passive states onto that spawned battler.
+ *
+ * TAG USAGE:
+ * - Events (Comment commands)
+ *
+ * TAG FORMAT:
+ *  <passive:[STATE_IDS]>
+ *    Where STATE_IDS is a comma-delimited list of state ids to be applied.
+ *
+ * TAG EXAMPLES:
+ *  <passive:[10,11]>
+ *    Applies passive states 10 and 11 to the battler spawned from this page.
+ *
  * TAG USAGE:
  * - Actors
  * - Classes
@@ -125,6 +143,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.2
+ *    Added support for passives driven by map events.
  * - 2.0.1
  *    Consumed `RPGManager` updates.
  * - 2.0.0

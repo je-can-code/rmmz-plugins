@@ -4,10 +4,10 @@ import vm from 'node:vm';
 import { installLevelEngineStubs } from './fixtures/engine-stubs.js';
 import { clearRpgManagerCacheInVm, evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const LEVEL_OUT_FILENAME = 'J-LevelMaster.js';
+export const LEVEL_OUT_FILENAME = 'level/J-LevelMaster.js';
 
 /**
- * Loads {@link out/J-LevelMaster.js} with J-Base and harness.
+ * Loads {@link out/level/J-LevelMaster.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */
