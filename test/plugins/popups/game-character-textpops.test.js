@@ -20,7 +20,7 @@ describe('J-Popups Game_Character integration (out/popups/J-Popups.js)', () =>
 
   it('request/add/acknowledge flow tracks pops when not disabled', () =>
   {
-    sandbox.J.ABS.Metadata.DisableTextPops = false;
+    sandbox.J.POPUPS.Metadata.DisablePopups = false;
 
     const ch = new sandbox.Game_Character();
     ch.initMembers();
