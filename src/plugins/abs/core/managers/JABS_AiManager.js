@@ -1451,8 +1451,8 @@ class JABS_AiManager
     const formation = $jabsEngine.resolveProjectileFormationForSkill(skill);
     const projectileCount = $jabsEngine.resolveProjectileCountForSkill(skill);
 
-    // compute spoke directions from the fresh facing.
-    const freshFacing = battler.getCharacter().direction();
+    // compute spoke directions from the fresh facing (same hook as initial spawn).
+    const freshFacing = battler.getProjectileSpawnBaseDirection();
     const freshDirections = $jabsEngine.determineActionDirections(freshFacing, formation, projectileCount);
 
     // stamp each action with its corresponding fresh spoke direction.

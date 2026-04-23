@@ -823,4 +823,39 @@ JABS_Battler.prototype.angleToDirection = function(angle)
   // Unknown sector; return 0.
   return 0;
 };
+
+/**
+ * Extends {@link JABS_Battler#getProjectileSpawnBaseDirection}.<br/>
+ * Uses analog / keyboard vector input for the party leader so projectile spokes
+ * match actual travel intent: {@link Game_CharacterBase#vectorMoveByAngle} keeps
+ * {@link Game_Character#direction} cardinal for 4-dir sprites, which would
+ * otherwise mis-aim line and formation projectiles.
+ * When {@link Game_CharacterBase#isDirectionFixed} is true (JABS strafe / hold facing),
+ * movement can disagree with sprite facing — fall back to map facing so shots do not
+ * emit opposite the way the character is drawn.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('getProjectileSpawnBaseDirection', JABS_Battler.prototype.getProjectileSpawnBaseDirection);
+JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
+{
+  const chr = this.getCharacter();
+
+  // party leader: prefer the true bearing while vector movement is active.
+  if (chr === $gamePlayer && typeof chr.getVectorInputAngle === 'function')
+  {
+    // strafe locks facing via direction fix — vector aim would track movement and look like backward fire.
+    if (typeof chr.isDirectionFixed === 'function' && chr.isDirectionFixed())
+    {
+      return J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('getProjectileSpawnBaseDirection').call(this);
+    }
+
+    const vectorAngle = chr.getVectorInputAngle();
+
+    if (vectorAngle !== null)
+    {
+      return this.angleToDirection(vectorAngle);
+    }
+  }
+
+  return J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('getProjectileSpawnBaseDirection').call(this);
+};
 //endregion JABS_Battler

@@ -1605,73 +1605,172 @@ class JABS_Engine
 
   /**
    * Rotates a canonical direction (defined relative to UP) to the provided facing.
-   * This uses the existing 45/90/180 rotation helpers to remain 8-dir correct.
+   * Composes 45° steps so cardinals and diagonals share one code path.
    * @param {number} canonicalDir The canonical direction (as-if facing were UP).
    * @param {number} facing The actual facing to rotate into.
    * @returns {number} The rotated direction code.
    */
-  // eslint-disable-next-line complexity
   rotateSpokeFromUpToFacing(canonicalDir, facing)
   {
-    // if already facing up, no rotation is required.
+    // no twist when already aligned with the canonical "up" forward axis.
     if (facing === J.ABS.Directions.UP)
     {
-      // return the canonical as-is.
       return canonicalDir;
     }
 
-    // map rotational steps from UP to the target facing using 90/180/270.
-    // we perform minimal rotations while preserving diagonals when needed.
-    switch (facing)
+    // clockwise order of 8-direction codes starting at UP (map space, Y-down).
+    const clockwiseFromUp = [
+      J.ABS.Directions.UP,
+      J.ABS.Directions.UPPERRIGHT,
+      J.ABS.Directions.RIGHT,
+      J.ABS.Directions.LOWERRIGHT,
+      J.ABS.Directions.DOWN,
+      J.ABS.Directions.LOWERLEFT,
+      J.ABS.Directions.LEFT,
+      J.ABS.Directions.UPPERLEFT,
+    ];
+
+    const steps = clockwiseFromUp.indexOf(facing);
+
+    // guard unknown facings so we never rotate into garbage.
+    if (steps === -1)
     {
-      case J.ABS.Directions.RIGHT:
+      return canonicalDir;
+    }
+
+    // each step is 45° clockwise; compose with the existing helper.
+    let rotated = canonicalDir;
+    for (let i = 0; i < steps; i++)
+    {
+      rotated = this.rotate45degrees(rotated, true);
+    }
+
+    return rotated;
+  }
+
+  /**
+   * Converts logical travel facing into a direction safe for RMMZ character sheet rows.
+   * {@link Sprite_Character#characterPatternY} uses `(direction - 2) / 2`, which only works for
+   * cardinals; diagonals yield fractional rows and corrupt `$` single-character sheets.
+   * @param {number} travelDir The JABS / map travel direction (1–9).
+   * @param {number} castedCardinal The caster's facing at fire time (expects 2/4/6/8).
+   * @returns {2|4|6|8} A cardinal for {@link Game_Character#setDirection} on action sprites.
+   */
+  actionTravelDirectionToSpritePatternDirection(travelDir, castedCardinal)
+  {
+    if (travelDir === 2 || travelDir === 4 || travelDir === 6 || travelDir === 8)
+    {
+      return travelDir;
+    }
+
+    const casted = castedCardinal;
+    const rev = d =>
+    {
+      if (d === 2) return 8;
+      if (d === 8) return 2;
+      if (d === 4) return 6;
+      if (d === 6) return 4;
+      return d;
+    };
+
+    if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9)
+    {
+      if (casted === 2 || casted === 4 || casted === 6 || casted === 8)
       {
-        // rotating from UP to RIGHT is a 90-degree clockwise rotation.
-        if (canonicalDir === J.ABS.Directions.UP) return J.ABS.Directions.RIGHT;
-        if (canonicalDir === J.ABS.Directions.RIGHT) return J.ABS.Directions.DOWN;
-        if (canonicalDir === J.ABS.Directions.DOWN) return J.ABS.Directions.LEFT;
-        if (canonicalDir === J.ABS.Directions.LEFT) return J.ABS.Directions.UP;
-        if (canonicalDir === J.ABS.Directions.UPPERRIGHT) return J.ABS.Directions.LOWERRIGHT;
-        if (canonicalDir === J.ABS.Directions.LOWERRIGHT) return J.ABS.Directions.LOWERLEFT;
-        if (canonicalDir === J.ABS.Directions.LOWERLEFT) return J.ABS.Directions.UPPERLEFT;
-        if (canonicalDir === J.ABS.Directions.UPPERLEFT) return J.ABS.Directions.UPPERRIGHT;
+        return casted;
+      }
+
+      return 2;
+    }
+
+    let result = casted;
+    switch (casted)
+    {
+      case 2:
+      {
+        switch (travelDir)
+        {
+          case 1:
+          case 3:
+            result = casted;
+            break;
+          case 7:
+          case 9:
+            result = rev(casted);
+            break;
+          default:
+            result = casted;
+            break;
+        }
         break;
       }
-      case J.ABS.Directions.DOWN:
+      case 4:
       {
-        // rotating from UP to DOWN is a 180-degree rotation.
-        if (canonicalDir === J.ABS.Directions.UP) return J.ABS.Directions.DOWN;
-        if (canonicalDir === J.ABS.Directions.RIGHT) return J.ABS.Directions.LEFT;
-        if (canonicalDir === J.ABS.Directions.DOWN) return J.ABS.Directions.UP;
-        if (canonicalDir === J.ABS.Directions.LEFT) return J.ABS.Directions.RIGHT;
-        if (canonicalDir === J.ABS.Directions.UPPERRIGHT) return J.ABS.Directions.LOWERLEFT;
-        if (canonicalDir === J.ABS.Directions.LOWERRIGHT) return J.ABS.Directions.UPPERLEFT;
-        if (canonicalDir === J.ABS.Directions.LOWERLEFT) return J.ABS.Directions.UPPERRIGHT;
-        if (canonicalDir === J.ABS.Directions.UPPERLEFT) return J.ABS.Directions.LOWERRIGHT;
+        switch (travelDir)
+        {
+          case 1:
+          case 7:
+            result = casted;
+            break;
+          case 3:
+          case 9:
+            result = rev(casted);
+            break;
+          default:
+            result = casted;
+            break;
+        }
         break;
       }
-      case J.ABS.Directions.LEFT:
+      case 6:
       {
-        // rotating from UP to LEFT is a 90-degree counter-clockwise rotation.
-        if (canonicalDir === J.ABS.Directions.UP) return J.ABS.Directions.LEFT;
-        if (canonicalDir === J.ABS.Directions.RIGHT) return J.ABS.Directions.UP;
-        if (canonicalDir === J.ABS.Directions.DOWN) return J.ABS.Directions.RIGHT;
-        if (canonicalDir === J.ABS.Directions.LEFT) return J.ABS.Directions.DOWN;
-        if (canonicalDir === J.ABS.Directions.UPPERRIGHT) return J.ABS.Directions.UPPERLEFT;
-        if (canonicalDir === J.ABS.Directions.LOWERRIGHT) return J.ABS.Directions.UPPERRIGHT;
-        if (canonicalDir === J.ABS.Directions.LOWERLEFT) return J.ABS.Directions.LOWERRIGHT;
-        if (canonicalDir === J.ABS.Directions.UPPERLEFT) return J.ABS.Directions.LOWERLEFT;
+        switch (travelDir)
+        {
+          case 3:
+          case 9:
+            result = casted;
+            break;
+          case 1:
+          case 7:
+            result = rev(casted);
+            break;
+          default:
+            result = casted;
+            break;
+        }
+        break;
+      }
+      case 8:
+      {
+        switch (travelDir)
+        {
+          case 7:
+          case 9:
+            result = casted;
+            break;
+          case 1:
+          case 3:
+            result = rev(casted);
+            break;
+          default:
+            result = casted;
+            break;
+        }
         break;
       }
       default:
       {
-        // for diagonals or unrecognized facings, fall back to canonical.
-        return canonicalDir;
+        result = casted;
+        break;
       }
     }
 
-    // default return if no case matched; return canonical.
-    return canonicalDir;
+    if (result === 2 || result === 4 || result === 6 || result === 8)
+    {
+      return result;
+    }
+
+    return 2;
   }
 
   /**
@@ -2030,12 +2129,16 @@ class JABS_Engine
     actionEventSprite._characterIndex = characterIndex;
     // get page.
     const pageData = actionEventData.pages[pageIndex];
+    // stamp synthetic note once from template event + this page so Comment `<vis*>` tags merge with skill notes later.
+    action.stampActionMapVisualNoteFromActionEvent(actionEventData, pageData);
     // frequency.
     actionEventSprite.setMoveFrequency(pageData.moveFrequency);
     // route.
     actionEventSprite.setMoveRoute(pageData.moveRoute);
-    // cast facing.
-    actionEventSprite.setCastedDirection($gamePlayer.direction());
+    // stamp which way the caster was facing at fire time (cardinal row hint for $ sheets).
+    actionEventSprite.setCastedDirection(action.getCaster()
+      .getCharacter()
+      .direction());
 
     this.applyActionToActionEventSprite(actionEventSprite, action);
 
@@ -2060,8 +2163,13 @@ class JABS_Engine
   {
     // wire action.
     actionEventSprite.setJabsAction(action);
-    // facing.
-    actionEventSprite.setDirection(action.direction());
+
+    // logical travel can be diagonal (8-dir projectiles), but RMMZ sprite framing
+    // only supports four rows — keep map facing cardinal for the bitmap slice.
+    const travel = action.direction();
+    const casted = actionEventSprite.getCastedDirection();
+    const patternDir = this.actionTravelDirectionToSpritePatternDirection(travel, casted);
+    actionEventSprite.setDirection(patternDir);
   }
 
   /**

@@ -48,6 +48,14 @@ class JABS_ActionOptions
   #spawnOffsetY = 0;
 
   /**
+   * Optional travel angle in degrees for map projectiles (0 = right, 90 = down, RMMZ Y-down).
+   * When null, movement follows the action event move route unchanged.
+   * Reserved for extensions (e.g. continuous-angle vector travel); v1 uses 8-dir via facing.
+   * @type {number|null}
+   */
+  #projectileTravelAngleDegrees = null;
+
+  /**
    * Constructor.<br/>
    * Use the {@link JABS_ActionOptionsBuilder} to fluently and properly build these.
    * @param {boolean} isRetaliation Whether or not the action is a retaliation of another battler.
@@ -56,8 +64,17 @@ class JABS_ActionOptions
    * @param {boolean} terrainDamage Whether or not the action is a result of terrain damage.
    * @param {number} spawnOffsetX The X spawn offset in tiles relative to caster fire-time position.
    * @param {number} spawnOffsetY The Y spawn offset in tiles relative to caster fire-time position.
+   * @param {number|null} projectileTravelAngleDegrees Optional vector angle for projectile motion.
    */
-  constructor(isRetaliation, cooldownKey, location, terrainDamage, spawnOffsetX = 0, spawnOffsetY = 0)
+  constructor(
+    isRetaliation,
+    cooldownKey,
+    location,
+    terrainDamage,
+    spawnOffsetX = 0,
+    spawnOffsetY = 0,
+    projectileTravelAngleDegrees = null
+  )
   {
     this.#isRetaliation = isRetaliation;
     this.#cooldownKey = cooldownKey;
@@ -65,6 +82,7 @@ class JABS_ActionOptions
     this.#terrainDamage = terrainDamage;
     this.#spawnOffsetX = spawnOffsetX;
     this.#spawnOffsetY = spawnOffsetY;
+    this.#projectileTravelAngleDegrees = projectileTravelAngleDegrees;
   }
 
   /**
@@ -126,6 +144,16 @@ class JABS_ActionOptions
   getSpawnOffsetY()
   {
     return this.#spawnOffsetY;
+  }
+
+  /**
+   * Optional projectile travel angle in degrees, when an extension replaces straight
+   * move-route steps with vector motion. Null keeps legacy route-driven movement.
+   * @returns {number|null}
+   */
+  getProjectileTravelAngleDegrees()
+  {
+    return this.#projectileTravelAngleDegrees;
   }
 
   /**

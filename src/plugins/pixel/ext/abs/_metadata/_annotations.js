@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.0.2 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -34,6 +34,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    While strafe (direction fix) is active on the leader, projectile base direction follows
+ *    sprite facing instead of movement vector — avoids firing opposite the drawn facing.
+ * - 1.0.1
+ *    Leader projectile aim uses vector / analog input (8-dir) so diagonals match movement.
+ *    Sprites stay 4-dir; load order remains J-Base → J-ABS → J-Pixelistics → this plugin.
  * - 1.0.0
  *    Initial release as the JABS integration layer for J-Pixelistics.
  *    Pixel-aware idle wander state machine: idle enemies pick a random
