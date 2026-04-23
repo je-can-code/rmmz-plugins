@@ -5,6 +5,134 @@
 class JABS_AiManager
 {
   /**
+   * Converts a dir8 code into a normalized unit vector in map space (RMMZ Y-down).
+   * @param {1|2|3|4|6|7|8|9} dir8 The direction code.
+   * @returns {{x: number, y: number}} The unit vector.
+   */
+  static dir8ToUnitVector(dir8)
+  {
+    let x = 0;
+    let y = 0;
+
+    switch (dir8)
+    {
+      case J.ABS.Directions.DOWN:
+        y = 1;
+        break;
+      case J.ABS.Directions.UP:
+        y = -1;
+        break;
+      case J.ABS.Directions.RIGHT:
+        x = 1;
+        break;
+      case J.ABS.Directions.LEFT:
+        x = -1;
+        break;
+      case J.ABS.Directions.LOWERRIGHT:
+        x = 1;
+        y = 1;
+        break;
+      case J.ABS.Directions.LOWERLEFT:
+        x = -1;
+        y = 1;
+        break;
+      case J.ABS.Directions.UPPERRIGHT:
+        x = 1;
+        y = -1;
+        break;
+      case J.ABS.Directions.UPPERLEFT:
+        x = -1;
+        y = -1;
+        break;
+      default:
+        y = 1;
+        break;
+    }
+
+    const len = Math.hypot(x, y);
+    return {
+      x: x / len,
+      y: y / len,
+    };
+  }
+
+  /**
+   * Converts an angle in degrees (0=right, 90=down) into an 8-direction code.
+   * @param {number} angleDegrees The angle in degrees (RMMZ Y-down).
+   * @returns {1|2|3|4|6|7|8|9} The closest dir8 code.
+   */
+  static angleToDir8(angleDegrees)
+  {
+    // normalize to [0, 360).
+    let a = angleDegrees % 360;
+    if (a < 0) a += 360;
+
+    // 8 sectors of 45°; add half-sector to round to nearest.
+    const idx = Math.floor((a + 22.5) / 45) % 8;
+    const dirs = [
+      J.ABS.Directions.RIGHT,       // 0°
+      J.ABS.Directions.LOWERRIGHT,  // 45°
+      J.ABS.Directions.DOWN,        // 90°
+      J.ABS.Directions.LOWERLEFT,   // 135°
+      J.ABS.Directions.LEFT,        // 180°
+      J.ABS.Directions.UPPERLEFT,   // 225°
+      J.ABS.Directions.UP,          // 270°
+      J.ABS.Directions.UPPERRIGHT,  // 315°
+    ];
+
+    return dirs[idx];
+  }
+
+  /**
+   * Derives a fire-time facing for AI volleys from caster→target, falling back to map facing when:
+   * - no target exists, or
+   * - the target vector is "behind" the battler's current facing (dot ≤ 0).
+   * @param {JABS_Battler} battler The battler firing.
+   * @returns {1|2|3|4|6|7|8|9} The derived dir8 facing.
+   */
+  static deriveFreshFacingForAi(battler)
+  {
+    // start from the conventional facing hook.
+    const fallbackFacing = battler.getProjectileSpawnBaseDirection();
+
+    // grab the relevant target (ally or enemy).
+    const target = battler.getAllyTarget() ?? battler.getTarget();
+    if (!target)
+    {
+      return fallbackFacing;
+    }
+
+    const bx = battler.getX();
+    const by = battler.getY();
+    const tx = target.getX();
+    const ty = target.getY();
+
+    // if overlapping, keep facing.
+    const dx = tx - bx;
+    const dy = ty - by;
+    if (dx === 0 && dy === 0)
+    {
+      return fallbackFacing;
+    }
+
+    // check if the target is generally in front; if behind, do not "snap-aim" through the body.
+    const fv = this.dir8ToUnitVector(fallbackFacing);
+    const tLen = Math.hypot(dx, dy);
+    const tvx = dx / tLen;
+    const tvy = dy / tLen;
+    const dot = (fv.x * tvx) + (fv.y * tvy);
+    if (dot <= 0)
+    {
+      return fallbackFacing;
+    }
+
+    // derive the RMMZ angle in degrees (0=right, 90=down).
+    const angleDegrees = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    return this.angleToDir8(angleDegrees);
+  }
+
+  /**
    * A collection of all battlers being managed by this manager.
    * @type {Map<string, JABS_Battler>}
    */
@@ -1451,8 +1579,8 @@ class JABS_AiManager
     const formation = $jabsEngine.resolveProjectileFormationForSkill(skill);
     const projectileCount = $jabsEngine.resolveProjectileCountForSkill(skill);
 
-    // compute spoke directions from the fresh facing (same hook as initial spawn).
-    const freshFacing = battler.getProjectileSpawnBaseDirection();
+    // compute spoke directions from the fresh facing (AI aims at its target when possible).
+    const freshFacing = this.deriveFreshFacingForAi(battler);
     const freshDirections = $jabsEngine.determineActionDirections(freshFacing, formation, projectileCount);
 
     // stamp each action with its corresponding fresh spoke direction.
