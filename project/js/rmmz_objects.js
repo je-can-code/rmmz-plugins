@@ -6225,7 +6225,7 @@ Game_Map.prototype.setupEvents = function() {
     this._events = [];
     this._commonEvents = [];
     for (const event of $dataMap.events.filter(event => !!event)) {
-        this._eventSources[event.id] = new Game_Event(this._mapId, event.id);
+        this._events[event.id] = new Game_Event(this._mapId, event.id);
     }
     for (const commonEvent of this.parallelCommonEvents()) {
         this._commonEvents.push(new Game_CommonEvent(commonEvent.id));
@@ -6234,15 +6234,15 @@ Game_Map.prototype.setupEvents = function() {
 };
 
 Game_Map.prototype.events = function() {
-    return this._eventSources.filter(event => !!event);
+    return this._events.filter(event => !!event);
 };
 
 Game_Map.prototype.event = function(eventId) {
-    return this._eventSources[eventId];
+    return this._events[eventId];
 };
 
 Game_Map.prototype.eraseEvent = function(eventId) {
-    this._eventSources[eventId].erase();
+    this._events[eventId].erase();
 };
 
 Game_Map.prototype.autorunCommonEvents = function() {
@@ -6813,8 +6813,8 @@ Game_Map.prototype.updateInterpreter = function() {
 };
 
 Game_Map.prototype.unlockEvent = function(eventId) {
-    if (this._eventSources[eventId]) {
-        this._eventSources[eventId].unlock();
+    if (this._events[eventId]) {
+        this._events[eventId].unlock();
     }
 };
 

@@ -107,8 +107,9 @@ JABS_Battler.prototype.createJabsActionFromSkill = function(
   const projectileCount = $jabsEngine.resolveProjectileCountForSkill(skill);
 
   // generate the spoke directions based on facing, formation, and count.
-  const facing = this.getCharacter()
-    .direction();
+  // use the battler hook so pixel vector aim can supply a true 8-dir base while
+  // the map character's direction() stays cardinal for sprite facing.
+  const facing = this.getProjectileSpawnBaseDirection();
   const projectileDirections = $jabsEngine.determineActionDirections(facing, formation, projectileCount);
 
   // calculate how many actions will be generated to accommodate the directions.
@@ -135,6 +136,19 @@ JABS_Battler.prototype.convertProjectileDirectionsToActions = function(
 {
   // delegate to the shared action spawner for volley construction.
   return JABS_ActionSpawner.buildVolley(this, projectileDirections, action, actionOptions);
+};
+
+/**
+ * Resolves the 8-direction base used when building projectile spokes for a skill.
+ * Defaults to the map character's {@link Game_CharacterBase#direction}; extensions
+ * (e.g. J-ABS-Pixelistics) may override to read analog / vector movement instead.
+ * @returns {number} A JABS direction code (2/4/6/8/1/3/7/9).
+ */
+JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
+{
+  // standard tile-facing is the historical source for line / formation forward.
+  return this.getCharacter()
+    .direction();
 };
 
 /**

@@ -148,6 +148,13 @@ class JABS_Action
      * @type {number}
      */
     this._onCastAnimationId = this.getBaseSkill().jabsOnCastAnimationId ?? 0;
+
+    /**
+     * Stable `{ note }` blob for {@link RPGManager} when action-map Comment lines carry `<vis*>` tags.
+     * Stamped once at spawn from the template event + resolved page; null when nothing to parse.
+     * @type {{ note: string }|null}
+     */
+    this._actionMapVisualNoteHolder = null;
   }
 
   /**
@@ -541,6 +548,77 @@ class JABS_Action
   }
 
   /**
+   * RMMZ 8-dir code (1–9 except 5) for directional `<visOffset*>` tag lookup via {@link RPG_Skill#getJabsVisOffsetFor}.
+   * Uses {@link #direction} — logical travel on {@link JABS_Action}, not {@link Game_Character#direction} on the action
+   * event (that can be a cardinal sprite-row stamp for `$` sheets).
+   * Collapsing diagonals to a nearest cardinal was wrong: ties picked one axis arbitrarily and skipped diagonal notes /
+   * the documented UR→U→R fallback chain in {@link RPG_Skill#getJabsVisOffsetFor}.
+   * @returns {1|2|3|4|6|7|8|9}
+   */
+  getDirectionForVisOffsetTags()
+  {
+    return this.direction();
+  }
+
+  /**
+   * Builds a synthetic multiline note from the action-map template event + active page so {@link RPGManager}
+   * can parse `<vis*>` tags (optional event-level `note` field on {@link rm.types.Event}, parsable Comment commands on that page).
+   * @param {rm.types.Event} eventData Raw event blob from `$actionMap`.
+   * @param {rm.types.EventPage} pageData The resolved page used for this spawn.
+   * @returns {string}
+   */
+  static collectSyntheticVisualNoteFromActionEventPage(eventData, pageData)
+  {
+    const lines = [];
+
+    if (eventData && eventData.note && String(eventData.note).trim())
+    {
+      lines.push(String(eventData.note).trim());
+    }
+
+    if (!pageData || !pageData.list || pageData.list.length === 0)
+    {
+      return lines.join('\n');
+    }
+
+    Game_Event.getValidCommentCommandsFromPage(pageData)
+      .forEach(command =>
+      {
+        const [ comment ] = command.parameters;
+
+        lines.push(comment);
+      });
+
+    return lines.join('\n');
+  }
+
+  /**
+   * Stamps {@link #_actionMapVisualNoteHolder} once from the template used to spawn this action’s map event.
+   * @param {rm.types.Event} eventData Raw event blob from `$actionMap`.
+   * @param {rm.types.EventPage} pageData The resolved page used for this spawn.
+   */
+  stampActionMapVisualNoteFromActionEvent(eventData, pageData)
+  {
+    const synthetic = JABS_Action.collectSyntheticVisualNoteFromActionEventPage(eventData, pageData);
+
+    if (!synthetic.length)
+    {
+      return;
+    }
+
+    this._actionMapVisualNoteHolder = { note: synthetic };
+  }
+
+  /**
+   * Holder passed to {@link RPGManager} for merged `<vis*>` tags from the action-map template (Comment lines).
+   * @returns {{ note: string }|null}
+   */
+  getActionMapVisualNoteHolder()
+  {
+    return this._actionMapVisualNoteHolder;
+  }
+
+  /**
    * Whether or not this action was a result of terrain damage.
    * @returns {boolean}
    */
@@ -807,7 +885,8 @@ class JABS_Action
 
     // check circle distance for each candidate relative to the action sprite.
     const targets = [];
-    const actionDirection = actionSprite.direction();
+    // circle collision ignores facing, but keep logical dir8 for parity with shaped actions.
+    const actionDirection = jabsAction.direction();
     candidates
       .filter(canActionConnectWithBattler, this)
       .forEach(battler =>
@@ -1175,8 +1254,8 @@ class JABS_Action
       originX = actionEvent.screenX();
       originY = actionEvent.screenY();
 
-      // derive facing from the action event.
-      facing = actionEvent.direction();
+      // derive facing from logical travel dir8 (map event direction may be cardinal for `$` sheet rows).
+      facing = this.direction();
     }
     else
     {

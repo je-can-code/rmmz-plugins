@@ -245,6 +245,7 @@ class JABS_ActionSpawner
         .setCooldownKey(actionOptions.getCooldownKey())
         .setSpawnOffset(delta[0], delta[1])
         .setIsTerrainDamage(actionOptions.isTerrainDamage())
+        .setProjectileTravelAngleDegrees(actionOptions.getProjectileTravelAngleDegrees())
         .build();
 
       // build and return the action bound to this projectile's setup.

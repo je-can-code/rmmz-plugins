@@ -97,7 +97,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.8.2';
+J.ABS.Metadata.Version = '4.8.3';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -275,9 +275,6 @@ J.ABS.Metadata.HitboxStyles = {
     square: {
       // darker orange.
       fillColor: 0xFFA64D,
-    },
-    frontsquare: {
-      fillAlpha: 0.28,
     },
     line: {
       lineWidth: 3,
@@ -548,11 +545,6 @@ J.ABS.Shapes = {
   Square: 'square',
 
   /**
-   *  A square in front of the target hitbox.
-   */
-  FrontSquare: 'frontsquare',
-
-  /**
    * A line from the target hitbox.
    */
   Line: 'line',
@@ -639,7 +631,7 @@ J.ABS.RegExp = {
   SizeInPixels: /<size:[ ]?(\d+)>/gi,
   Degrees: /<degrees:[ ]?(\d+)>/gi,
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
-  Shape: /<hitbox:[ ]?(circle|rhombus|square|frontsquare|line|arc|wall|cross)>/gi,
+  Shape: /<hitbox:[ ]?(circle|rhombus|square|line|arc|wall|cross)>/gi,
   Projectile: /<projectile:[ ]?(\d+)>/gi,
   ProjectileFormation: /<formation:[ ]?(line|spray|cross|xburst|nova)>/gi,
   Thickness: /<thickness:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
