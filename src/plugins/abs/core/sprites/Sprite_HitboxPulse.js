@@ -140,7 +140,6 @@ class Sprite_HitboxPulse
       }
 
       case J.ABS.Shapes.Square:
-      case J.ABS.Shapes.FrontSquare: // rotate/face externally; visual approximation here is square AABB
       case J.ABS.Shapes.Rhombus:     // approximation for pulse visualization
       case J.ABS.Shapes.Cross:       // approximation for pulse visualization
       case J.ABS.Shapes.Wall:        // approximation (wall uses Line in engine; see Line branch below if needed)

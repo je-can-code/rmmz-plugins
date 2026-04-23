@@ -1065,7 +1065,6 @@ Applicable to:
 `shape` is literally the shape of the hitbox for the collision of this action. This can be only one of a variety of different options:
 - `rhombus` : A diamond-like shape. More range means bigger diamond.
 - `square` : A square shape. Similar to `rhombus`, but rotated 45 degrees. More range means bigger square.
-- `frontsquare` : A `square` that is truncated to be only infront of the battler/action. More range means bigger square.
 - `line` : A 1-tile width line that stretches further based on range in a single direction.
 - `arc` : The most common shape: a `rhombus` truncated to be only infront of the battler/action. Often used for things like a sword slash. More range means a the arc reaches further.
 - `wall` : A 1-tile depth line that stretches to the left & right of the battler/action. More range means it stretches further left and right (not thicker, the `wall` will only ever have a distance of 1 infront of the battler/action).

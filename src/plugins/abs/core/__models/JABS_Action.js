@@ -885,7 +885,8 @@ class JABS_Action
 
     // check circle distance for each candidate relative to the action sprite.
     const targets = [];
-    const actionDirection = actionSprite.direction();
+    // circle collision ignores facing, but keep logical dir8 for parity with shaped actions.
+    const actionDirection = jabsAction.direction();
     candidates
       .filter(canActionConnectWithBattler, this)
       .forEach(battler =>
@@ -1253,8 +1254,8 @@ class JABS_Action
       originX = actionEvent.screenX();
       originY = actionEvent.screenY();
 
-      // derive facing from the action event.
-      facing = actionEvent.direction();
+      // derive facing from logical travel dir8 (map event direction may be cardinal for `$` sheet rows).
+      facing = this.direction();
     }
     else
     {
