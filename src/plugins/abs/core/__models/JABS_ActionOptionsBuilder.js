@@ -41,6 +41,12 @@ class JABS_ActionOptionsBuilder
   #spawnOffsetY = 0;
 
   /**
+   * Optional projectile travel angle in degrees (null = move route only).
+   * @type {number|null}
+   */
+  #projectileTravelAngleDegrees = null;
+
+  /**
    * Builds a new instance of the options based on the built parameters.
    * @returns {JABS_ActionOptions}
    */
@@ -57,7 +63,8 @@ class JABS_ActionOptionsBuilder
       JABS_Location.Clone(locationToClone),
       this.#isTerrainDamage,
       this.#spawnOffsetX,
-      this.#spawnOffsetY);
+      this.#spawnOffsetY,
+      this.#projectileTravelAngleDegrees);
 
     // clear out the previous data.
     this.clear();
@@ -78,6 +85,7 @@ class JABS_ActionOptionsBuilder
     this.#isTerrainDamage = false;
     this.#spawnOffsetX = 0;
     this.#spawnOffsetY = 0;
+    this.#projectileTravelAngleDegrees = null;
   }
 
   /**
@@ -134,6 +142,19 @@ class JABS_ActionOptionsBuilder
   {
     this.#spawnOffsetX = dx;
     this.#spawnOffsetY = dy;
+    return this;
+  }
+
+  /**
+   * Sets an optional projectile travel angle in degrees (RMMZ map space: 0 = right, 90 = down).
+   * Extensions may read this from {@link JABS_Action#getActionOptions} to drive vector motion;
+   * null preserves classic move-route movement.
+   * @param {number|null} degrees The angle, or null to clear.
+   * @returns {JABS_ActionOptionsBuilder}
+   */
+  setProjectileTravelAngleDegrees(degrees)
+  {
+    this.#projectileTravelAngleDegrees = degrees;
     return this;
   }
 }

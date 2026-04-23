@@ -26,7 +26,7 @@ Game_Event.prototype.initMembers = function()
   this._j._abs._initialDirection = 0;
 
   /**
-   * The direction the player was facing when the skill was executed.
+   * The caster's map facing when the skill was executed (cardinal row hint for action art).
    * Only applicable to action events.
    * @type {number}
    */

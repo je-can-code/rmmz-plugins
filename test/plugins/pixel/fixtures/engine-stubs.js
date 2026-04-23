@@ -350,9 +350,24 @@ globalThis.J.ABS.EXT = globalThis.J.ABS.EXT || {};
   {
     return 0;
   };
+  JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
+  {
+    return this.getCharacter()
+      .direction();
+  };
+
   JABS_Battler.prototype.getCharacter = function()
   {
-    return { x: 0, y: 0, jumpToPlayer: noop, stopPixelMoving: noop };
+    return {
+      x: 0,
+      y: 0,
+      jumpToPlayer: noop,
+      stopPixelMoving: noop,
+      direction()
+      {
+        return 2;
+      },
+    };
   };
   JABS_Battler.prototype.lockEngagement = noop;
   JABS_Battler.prototype.disengageTarget = noop;

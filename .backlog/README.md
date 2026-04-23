@@ -75,7 +75,6 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [ca-mods-boundary](unstarted/ca-mods-boundary.md) | Low–medium | Medium clarity | Policy for `__ca-mods` vs reusable plugins. |
 | [cross-plugin-prototype-hook-surface](unstarted/cross-plugin-prototype-hook-surface.md) | High maintainability | **High** | Inventory `JABS_Engine`, `Game_Action`, `Scene_Map`, `JABS_AiManager`, `Game_Unit`, etc. |
 | [database-rpg-skill-augmentation-chain](unstarted/database-rpg-skill-augmentation-chain.md) | Medium | Medium | Document / dedupe seven `RPG_Skill` augmentation chains. |
-| [enemy-elite-states-notetag-extension](unstarted/enemy-elite-states-notetag-extension.md) | Medium | **High** tuning | Tier stats on named enemies; elite/boss passive states as knobs; configurable enemy notetag + spawn wiring. |
 | [ext-star-completion](unstarted/ext-star-completion.md) | **High** if Star used | **High** feature unblock | Finish Star ABS flow (enemy spawn, missing map). |
 | [game-action-battler-uuid-refactor](unstarted/game-action-battler-uuid-refactor.md) | **High** if casual | **High** if done right | UUID vs id/index for `Game_Action` on map + saves. |
 | [game-character-action-sprite-lifecycle](unstarted/game-character-action-sprite-lifecycle.md) | Medium | Medium | Action-sprite flags: `Game_Character` vs `JABS_Action` / Popups. |
@@ -85,10 +84,12 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [jafting-heavy-scenes-decomposition](unstarted/jafting-heavy-scenes-decomposition.md) | Low player / medium dev | Medium | Split huge JAFTING scenes for complexity targets. |
 | [j-otib-rewrite](unstarted/j-otib-rewrite.md) | Low until OTIB matters | **High** after rewrite | Passive core+ext; OTIB ext + states + UI + optional DiaLog; defer legacy patches. |
 | [jsonex-j-register-serialization-registry](unstarted/jsonex-j-register-serialization-registry.md) | Medium–high long-term | **Very high** | `J.register` + `JsonEx` registry in J-Base. |
+| [pixel-8dir-projectile-aim](completed/pixel-8dir-projectile-aim.md) | Done | **High** feel | Pixelistics leader vector input aims projectiles in dir8; strafe-safe; action template `<vis*>` defaults merge with skills. |
 | [pixel-angled-projectiles](unstarted/pixel-angled-projectiles.md) | Medium | **High** feel | Angled projectiles with Pixelistics + JABS. |
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
 | [proficiency-actor-conditionals-map-todo](unstarted/proficiency-actor-conditionals-map-todo.md) | Medium large rosters | Low effort, clarity | Drop hardcoded actor 1–6 map in Proficiency metadata. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
+| [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
 | [sdp-plugin-revisit](unstarted/sdp-plugin-revisit.md) | Medium | **High** consistency | SDP hygiene: JSON helper, scenes, tests. |
 | [style-optional-chaining-drift](unstarted/style-optional-chaining-drift.md) | Low / medium style | Low effort | Remove `?.` drift; ESLint enforcement. |
 | [team-parameterization](unstarted/team-parameterization.md) | Medium multi-faction | **High** extensibility | Data-driven friendly/opposing teams. |

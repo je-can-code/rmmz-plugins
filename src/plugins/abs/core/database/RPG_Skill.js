@@ -933,6 +933,197 @@ RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
   // unknown direction: return default.
   return def || [ 0, 0 ];
 };
+
+/**
+ * Prefers skill note matches over action-map synthetic note (`holder`) for one array shaped tag pair.
+ * @param {RPG_Base} skill The owning skill instance.
+ * @param {RPG_Base|null} holder Object with `.note` from {@link JABS_Action#getActionMapVisualNoteHolder}, if any.
+ * @param {RegExp} regExp Same structures as skill visual tags.
+ * @returns {number[]|null}
+ */
+RPG_Skill.mergeJabsVisPairFromNotes = function(skill, holder, regExp)
+{
+  const sk = RPGManager.getArrayFromNotesByRegex(skill, regExp, true, true);
+  const ev = holder ? RPGManager.getArrayFromNotesByRegex(holder, regExp, true, true) : null;
+
+  if (sk !== null)
+  {
+    return sk;
+  }
+
+  if (ev !== null)
+  {
+    return ev;
+  }
+
+  return null;
+};
+
+/**
+ * Prefers skill over action-map synthetic note for one numeric tag.
+ * @param {RPG_Base} skill The owning skill instance.
+ * @param {RPG_Base|null} holder Synthetic note holder, if any.
+ * @param {RegExp} regExp Structured numeric tag regex.
+ * @returns {number|null}
+ */
+RPG_Skill.mergeJabsVisPairNumberFromNotes = function(skill, holder, regExp)
+{
+  const sk = RPGManager.getNumberFromNoteByRegex(skill, regExp, true);
+  const ev = holder ? RPGManager.getNumberFromNoteByRegex(holder, regExp, true) : null;
+
+  if (sk !== null)
+  {
+    return sk;
+  }
+
+  return ev;
+};
+
+/**
+ * Prefers skill over action-map synthetic note for boolean presence tags (`null` when absent on both sides).
+ * @param {RPG_Base} skill The owning skill instance.
+ * @param {RPG_Base|null} holder Synthetic note holder, if any.
+ * @param {RegExp} regExp Structured boolean regex.
+ * @returns {boolean|null}
+ */
+RPG_Skill.mergeJabsVisPairBoolFromNotes = function(skill, holder, regExp)
+{
+  const sk = RPGManager.checkForBooleanFromNoteByRegex(skill, regExp, true);
+  const ev = holder ? RPGManager.checkForBooleanFromNoteByRegex(holder, regExp, true) : null;
+
+  if (sk !== null)
+  {
+    return sk;
+  }
+
+  return ev;
+};
+
+/**
+ * Merged sprite anchor tags with tags on the action-map template ({@link RPG_Skill#jabsVisAnchor}); skill wins overlaps.
+ * @param {JABS_Action|null} jabsAction The executing action so we can read stamped synthetic notes.
+ * @returns {[number, number]|null}
+ */
+RPG_Skill.prototype.getJabsVisAnchorMergedForActionMap = function(jabsAction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+  const combined = RPG_Skill.mergeJabsVisPairFromNotes(this, holder, J.ABS.RegExp.VisAnchor);
+
+  if (combined === null)
+  {
+    return null;
+  }
+
+  const ax = Math.max(0, Math.min(1, combined[0]));
+  const ay = Math.max(0, Math.min(1, combined[1]));
+
+  return [ ax, ay ];
+};
+
+/**
+ * Merged `{@link #jabsVisZ}` with template notes.
+ * @param {JABS_Action|null} jabsAction Context action.
+ * @returns {number|null}
+ */
+RPG_Skill.prototype.getJabsVisZMergedForActionMap = function(jabsAction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+
+  return RPG_Skill.mergeJabsVisPairNumberFromNotes(this, holder, J.ABS.RegExp.VisZ);
+};
+
+/**
+ * Merged `{@link #jabsVisRotate}` with template notes (false when absent on both).
+ * @param {JABS_Action|null} jabsAction Context action.
+ * @returns {boolean}
+ */
+RPG_Skill.prototype.getJabsVisRotateMergedForActionMap = function(jabsAction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+  const merged = RPG_Skill.mergeJabsVisPairBoolFromNotes(this, holder, J.ABS.RegExp.VisRotate);
+
+  return merged !== null ? merged : false;
+};
+
+/**
+ * Merged `{@link #jabsVisScale}` with template notes.
+ * @param {JABS_Action|null} jabsAction Context action.
+ * @returns {[number, number]|null}
+ */
+RPG_Skill.prototype.getJabsVisScaleMergedForActionMap = function(jabsAction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+
+  return RPG_Skill.mergeJabsVisPairFromNotes(this, holder, J.ABS.RegExp.VisScale);
+};
+
+/**
+ * Merged `{@link #jabsVisDebug}` with template notes.
+ * @param {JABS_Action|null} jabsAction Context action.
+ * @returns {boolean}
+ */
+RPG_Skill.prototype.getJabsVisDebugMergedForActionMap = function(jabsAction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+  const merged = RPG_Skill.mergeJabsVisPairBoolFromNotes(this, holder, J.ABS.RegExp.VisDebug);
+
+  return merged !== null ? merged : false;
+};
+
+/**
+ * Same resolution as {@link #getJabsVisOffsetFor}, but each tag prefers the skill note over the stamped action-map synthetic note.
+ * @param {JABS_Action|null} jabsAction Context action.
+ * @param {number} direction RMMZ 8-dir travel code (1–9 except 5).
+ * @returns {[number, number]}
+ */
+// eslint-disable-next-line complexity
+RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, direction)
+{
+  const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
+
+  if (!holder)
+  {
+    return this.getJabsVisOffsetFor(direction);
+  }
+
+  const pick = RPG_Skill.mergeJabsVisPairFromNotes;
+
+  const defSkill = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
+  const defEv = RPGManager.getArrayFromNotesByRegex(holder, J.ABS.RegExp.VisOffset, true, true);
+  const defRaw = defSkill !== null ? defSkill : defEv;
+  const def = defRaw !== null ? defRaw : [ 0, 0 ];
+
+  const mergedU = pick(this, holder, J.ABS.RegExp.VisOffsetU);
+  const mergedD = pick(this, holder, J.ABS.RegExp.VisOffsetD);
+  const mergedL = pick(this, holder, J.ABS.RegExp.VisOffsetL);
+  const mergedR = pick(this, holder, J.ABS.RegExp.VisOffsetR);
+  const mergedUR = pick(this, holder, J.ABS.RegExp.VisOffsetUR);
+  const mergedUL = pick(this, holder, J.ABS.RegExp.VisOffsetUL);
+  const mergedDR = pick(this, holder, J.ABS.RegExp.VisOffsetDR);
+  const mergedDL = pick(this, holder, J.ABS.RegExp.VisOffsetDL);
+
+  switch (direction)
+  {
+    case 8:
+      return mergedU || def || [ 0, 0 ];
+    case 2:
+      return mergedD || def || [ 0, 0 ];
+    case 4:
+      return mergedL || def || [ 0, 0 ];
+    case 6:
+      return mergedR || def || [ 0, 0 ];
+    case 9:
+      return mergedUR || mergedU || mergedR || def || [ 0, 0 ];
+    case 7:
+      return mergedUL || mergedU || mergedL || def || [ 0, 0 ];
+    case 3:
+      return mergedDR || mergedD || mergedR || def || [ 0, 0 ];
+    case 1:
+      return mergedDL || mergedD || mergedL || def || [ 0, 0 ];
+  }
+
+  return def || [ 0, 0 ];
+};
 //endregion directional
 //endregion visual metadata
 //endregion RPG_Skill effects

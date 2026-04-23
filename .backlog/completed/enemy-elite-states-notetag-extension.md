@@ -1,14 +1,15 @@
 ---
-status: open
-area: feature
+status: done
+area: completed
 ---
 
 # Enemy elite / boss stat knobs via passive states + configurable notetag
 
 ## Source
 
+- `src/plugins/passive/ext/abs/` — **J-Passive-ABS** (`J.PASSIVE.EXT.ABS`): enemy note surface, affix pools / spawn wiring, tier presentation helpers.
+- `project/js/plugins/passive/ext/J-Passive-ABS.js` — built output.
 - Chef Adventure enemy design discussion (named vs tier HP, `Enemies.json` tuning).
-- Existing passive-state pipeline (plugin that applies states for arbitrary stat scaling — wire exact plugin path when implementation starts).
 
 ## Context
 
@@ -18,7 +19,7 @@ area: feature
 
 **Distinct enemy ids** remain valid for **drops, EXP, nameplate, map `<enemyId:n>`**, while stat punch-up lives in **states + tags**, not duplicated bespoke `mhpBuffPlus` hacks per `!` row.
 
-## Work
+## Work (original plan)
 
 1. **Document the split** in plugin or editor-facing terms: tier stats in `Enemy` data; visibility / difficulty spike from **states** (and optionally traits), not from drifting formulas between adjacent ids.
 
@@ -32,3 +33,8 @@ area: feature
 
 - Coordinate with **UI** anything that shows “database” max HP vs effective max HP after states.
 - Related hygiene: `JsonEx` / save compatibility if any custom battler state is serialized (usually standard `RPG_State` ids are fine).
+- **Data migration (work item 4)** remains a **game-side** follow-up where designers choose to align `!` rows and retire redundant row-level buff hacks.
+
+## Done
+
+Shipped as the more general **J-Passive-ABS** extension: configurable **enemy** notes drive passive **prefix/suffix** pools and chances (including opt-out tags), with ABS spawn integration and **tier stripe / HUD** presentation layered on the passive stack. The original “elite tier name enum on one tag” idea evolved into this **data-driven affix + state** model; it covers the same goal—**global knobs in states** wired at **spawn** with **enemy-level** configuration—without hard-coding only `strong` / `elite` / `boss` literals.
