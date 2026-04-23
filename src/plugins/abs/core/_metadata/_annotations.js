@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.8.2 JABS] Enables combat to be carried out on the map.
+ * [v4.8.4 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,19 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.8.4
+ *    Action-map template `<vis*>` tags: Comment lines (+ optional event `note` on the event) are stamped once at spawn
+ *    into a synthetic note on {@link JABS_Action}; {@link RPGManager} merges them with skill notes (skill wins on duplicate tags).
+ * - 4.8.3
+ *    Projectile formation rotation supports diagonal facings (45° steps).
+ *    New {@link JABS_Battler#getProjectileSpawnBaseDirection} hook for aim vs map facing.
+ *    Optional {@link JABS_ActionOptions#getProjectileTravelAngleDegrees} on action options
+ *    (builder API) reserved for vector-travel extensions; null preserves move-route motion.
+ *    Action sprites keep cardinal {@link Game_Character#direction} for RMMZ bitmap rows
+ *    while diagonal travel stays on {@link JABS_Action}; fixes `$` sheet tearing.
+ *    `<visOffset*>` uses {@link JABS_Action#getDirectionForVisOffsetTags} (full 8-dir travel,
+ *    not sprite-row direction on the action event). `<visRotate>` uses the same travel direction.
+ *    Cast stamp on action events records the caster's facing (not always the player).
  * - 4.8.2
  *    Added battler name model to support richer name rendering.
  * - 4.8.1
@@ -782,10 +795,6 @@
  * SQUARE:
  * An equal square. The <radius> defines the length of each side.
  *    <hitbox:square>
- *
- * FRONTSQUARE:
- * Like square, but the back half (behind the action) is omitted.
- *    <hitbox:frontsquare>
  *
  * LINE:
  * A single 1-tile-wide line. The <radius> defines the line's length.

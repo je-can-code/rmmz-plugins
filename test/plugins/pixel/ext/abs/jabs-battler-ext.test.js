@@ -81,5 +81,65 @@ describe('J-ABS-Pixelistics JABS_Battler extensions', () =>
 
     sandbox.PIXEL_CollisionManager.setupCollision = orig;
   });
+
+  it('getProjectileSpawnBaseDirection maps leader vector input to 8-dir', () =>
+  {
+    const fakePlayer = {
+      getVectorInputAngle()
+      {
+        return 45;
+      },
+    };
+    sandbox.$gamePlayer = fakePlayer;
+
+    const b = new sandbox.JABS_Battler();
+    b.getCharacter = () => fakePlayer;
+
+    expect(b.getProjectileSpawnBaseDirection()).toBe(sandbox.J.ABS.Directions.LOWERRIGHT);
+  });
+
+  it('getProjectileSpawnBaseDirection falls back when vector input is null', () =>
+  {
+    const fakePlayer = {
+      getVectorInputAngle()
+      {
+        return null;
+      },
+      direction()
+      {
+        return 8;
+      },
+    };
+    sandbox.$gamePlayer = fakePlayer;
+
+    const b = new sandbox.JABS_Battler();
+    b.getCharacter = () => fakePlayer;
+
+    expect(b.getProjectileSpawnBaseDirection()).toBe(8);
+  });
+
+  it('getProjectileSpawnBaseDirection uses facing when direction fix (strafe) is active, not movement vector', () =>
+  {
+    const fakePlayer = {
+      getVectorInputAngle()
+      {
+        return 180;
+      },
+      isDirectionFixed()
+      {
+        return true;
+      },
+      direction()
+      {
+        return 6;
+      },
+    };
+    sandbox.$gamePlayer = fakePlayer;
+
+    const b = new sandbox.JABS_Battler();
+    b.getCharacter = () => fakePlayer;
+
+    expect(b.getProjectileSpawnBaseDirection()).toBe(6);
+  });
 });
 //endregion plugins/pixel/ext/abs/jabs-battler-ext.test.js

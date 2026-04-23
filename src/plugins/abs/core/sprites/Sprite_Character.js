@@ -425,8 +425,9 @@ Sprite_Character.prototype.applyActionVisuals = function()
  */
 Sprite_Character.prototype.applyActionAnchor = function(skill)
 {
-  // resolve anchor override if defined.
-  const visAnchor = skill.jabsVisAnchor; // [ax, ay] or null
+  // resolve anchor override if defined (skill tags override action-map Comment tags).
+  const jabsAction = this.character().getJabsAction();
+  const visAnchor = skill.getJabsVisAnchorMergedForActionMap(jabsAction); // [ax, ay] or null
   if (!visAnchor) return;
 
   // destructure anchor components.
@@ -445,8 +446,9 @@ Sprite_Character.prototype.applyActionAnchor = function(skill)
  */
 Sprite_Character.prototype.applyActionZ = function(skill)
 {
-  // resolve z override (nullable).
-  const visZ = skill.jabsVisZ;
+  // resolve z override (nullable); merged with action-map template Comments when present.
+  const jabsAction = this.character().getJabsAction();
+  const visZ = skill.getJabsVisZMergedForActionMap(jabsAction);
   if (visZ === null) return;
 
   // assign z if provided.
@@ -460,17 +462,18 @@ Sprite_Character.prototype.applyActionZ = function(skill)
  */
 Sprite_Character.prototype.applyActionOffset = function(skill, jabsAction)
 {
-  // determine the current facing for this action.
-  const facing = jabsAction.direction(); // numeric 2/4/6/8 (+ diagonals 1/3/7/9).
+  // full travel direction — must match {@link RPG_Skill#getJabsVisOffsetFor} (8-dir including diagonals).
+  const facing = jabsAction.getDirectionForVisOffsetTags();
 
   // resolve the most-appropriate offset for the facing.
-  const [ offX, offY ] = skill.getJabsVisOffsetFor(facing);
+  const [ offX, offY ] = skill.getJabsVisOffsetForMergedActionMap(jabsAction, facing);
 
-  // add the offsets if any.
+  // assign from screen space so we never stack drift (parent already assigned x/y from screenX/Y).
   if (offX !== 0 || offY !== 0)
   {
-    this.x += offX; // nudge horizontally.
-    this.y += offY; // nudge vertically.
+    const ch = this.character();
+    this.x = ch.screenX() + offX;
+    this.y = ch.screenY() + offY;
   }
 };
 
@@ -482,11 +485,11 @@ Sprite_Character.prototype.applyActionOffset = function(skill, jabsAction)
  */
 Sprite_Character.prototype.applyActionRotation = function(skill, jabsAction)
 {
-  // if rotation not requested, do nothing.
-  if (!skill.jabsVisRotate) return;
+  // if rotation not requested, do nothing (merged with action-map Comments).
+  if (!skill.getJabsVisRotateMergedForActionMap(jabsAction)) return;
 
-  // compute radians from the action's direction.
-  const dir = jabsAction.direction(); // 2/4/6/8 (+ diagonals 1/3/7/9).
+  // same 8-dir travel as offset tags — see {@link JABS_Action#getDirectionForVisOffsetTags}.
+  const dir = jabsAction.direction();
   const radians = this.directionToRadians(dir);
 
   // only assign if different enough to matter.
@@ -544,8 +547,9 @@ Sprite_Character.prototype.directionToRadians = function(dir)
  */
 Sprite_Character.prototype.applyActionScale = function(skill)
 {
-  // resolve scale if present.
-  const visScale = skill.jabsVisScale; // [sx, sy] or null
+  // resolve scale if present (merged with action-map Comments).
+  const jabsAction = this.character().getJabsAction();
+  const visScale = skill.getJabsVisScaleMergedForActionMap(jabsAction); // [sx, sy] or null
   if (!visScale) return;
 
   // destructure components.
@@ -564,8 +568,10 @@ Sprite_Character.prototype.applyActionScale = function(skill)
  */
 Sprite_Character.prototype.applyActionDebug = function(skill)
 {
-  // if debugging is desired, ensure the gizmo is visible.
-  if (skill.jabsVisDebug)
+  const jabsAction = this.character().getJabsAction();
+
+  // if debugging is desired, ensure the gizmo is visible (merged with action-map Comments).
+  if (skill.getJabsVisDebugMergedForActionMap(jabsAction))
   {
     this._j._abs._visDebugGizmo ||= this.createJabsVisDebugGizmo(); // create once.
     if (!this.children.includes(this._j._abs._visDebugGizmo))
