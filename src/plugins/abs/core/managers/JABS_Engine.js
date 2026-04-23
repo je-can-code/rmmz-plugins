@@ -3606,7 +3606,7 @@ class JABS_Engine
 
   /**
    * Determines collision of a given shape vs coordinates.
-   * @param {number} facing The direction the caster is facing.
+   * @param {1|2|3|4|6|7|8|9} facing Logical dir8 travel direction for the action.
    * @param {Game_Event|Game_Player|Game_Character} targetCharacter The target being hit.
    * @param {Game_Event} actionEvent The action sprite against the target.
    * @param {number} range How big the collision shape is.
@@ -3635,10 +3635,6 @@ class JABS_Engine
         return this.collisionCross(targetCharacter, actionEvent, range);
 
       // shapes that require action direction.
-      case J.ABS.Shapes.FrontSquare:
-        // front-half of the full square selected by facing.
-        return this.collisionFrontSquare(targetCharacter, actionEvent, range, facing);
-
       case J.ABS.Shapes.Line:
         // directional bar extending outward from the origin.
         return this.collisionLine(targetCharacter, actionEvent, range, facing);
@@ -3931,87 +3927,6 @@ class JABS_Engine
   }
 
   /**
-   * A front-square collision (half of the full square) in pixel space.
-   * The half is chosen based on facing.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range The range in tiles.
-   * @param {2|4|6|8} facing The direction the action is facing.
-   * @returns {boolean}
-   */
-  collisionFrontSquare(target, action, range, facing)
-  {
-    // compute half-square dimensions in pixels.
-    // tile width.
-    const tw = $gameMap.tileWidth();
-    // tile height.
-    const th = $gameMap.tileHeight();
-
-    // total full-square tiles and derived pixel dimensions.
-    // full square tiles.
-    const fullTiles = (2 * range + 1);
-    // full width in px.
-    const fullW = fullTiles * tw;
-    // full height in px.
-    const fullH = fullTiles * th;
-
-    // centralized, corrected origin for action.
-    const {
-      x: originCx,
-      y: originCy
-      // unified origin.
-    } = JABS_Engine.getActionOriginPixels(action);
-
-    // derive the front-half rectangle based on facing (anchored at corrected origin).
-    // will be computed based on facing.
-    let actionRect;
-    switch (facing)
-    {
-      // 2 → bottom half from origin.
-      case J.ABS.Directions.DOWN:
-        actionRect = new JABS_Aabb(originCx - (fullW / 2), originCy, fullW, (fullH / 2) + (th / 2));
-        break;
-
-      // 8 → top half up from origin.
-      case J.ABS.Directions.UP:
-        actionRect = new JABS_Aabb(
-          originCx - (fullW / 2),
-          originCy - (fullH / 2) - (th / 2),
-          fullW,
-          (fullH / 2) + (th / 2)
-        );
-        break;
-
-      // 6 → right half from origin.
-      case J.ABS.Directions.RIGHT:
-        actionRect = new JABS_Aabb(originCx, originCy - (fullH / 2), (fullW / 2) + (tw / 2), fullH);
-        break;
-
-      // 4 → left half from origin.
-      case J.ABS.Directions.LEFT:
-        actionRect = new JABS_Aabb(
-          originCx - (fullW / 2) - (tw / 2),
-          originCy - (fullH / 2),
-          (fullW / 2) + (tw / 2),
-          fullH
-        );
-        break;
-
-      default:
-        console.warn(`unsupported facing direction: ${facing}`);
-        return false;
-    }
-
-    // build target AABB.
-    // target rect.
-    const targetRect = JABS_Engine.getBattlerAabbModel(target);
-
-    // test overlap.
-    // overlap?
-    return actionRect.intersectsRect(targetRect);
-  }
-
-  /**
    * A line-shaped collision approximated as a thin rectangle extending from the action origin.
    * Range in tiles is converted to pixels. Thickness defaults to one tile, or <thickness:N> tiles if provided.
    * @param {Game_Event|Game_Player|Game_Character} target The target.
@@ -4064,25 +3979,6 @@ class JABS_Engine
     const halfBreadth = Math.max(thicknessX, thicknessY) / 2;
 
     return this.collisionOrientedRectFromOrigin(targetRect, originCx, originCy, facing, lengthWithPad, halfBreadth);
-  }
-
-  /**
-   * Legacy arc/front-rhombus shim; routed to Euclidean sector (wedge) logic.
-   * Existing data with <hitbox:arc> or <hitbox:frontrhombus> should be migrated
-   * to <hitbox:circle> + <degrees:N>; while migrating, this keeps old tags functional.
-   * @param {Game_Event|Game_Player|Game_Character} target The target being hit.
-   * @param {Game_Event} action The action sprite against the target.
-   * @param {number} range The size in tiles.
-   * @param {2|4|6|8} facing The direction at time of cast.
-   * @returns {boolean} True if the sector overlaps the target.
-   */
-  collisionFrontRhombus(target, action, range, facing)
-  {
-    // prefer explicit degrees if present; otherwise legacy default 180°.
-    const degrees = this.getActionDegrees(action) ?? 180;
-
-    // perform the Euclidean sector collision instead of the tile front-diamond.
-    return this.collisionSector(target, action, range, facing, degrees);
   }
 
   /**

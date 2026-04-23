@@ -796,10 +796,6 @@
  * An equal square. The <radius> defines the length of each side.
  *    <hitbox:square>
  *
- * FRONTSQUARE:
- * Like square, but the back half (behind the action) is omitted.
- *    <hitbox:frontsquare>
- *
  * LINE:
  * A single 1-tile-wide line. The <radius> defines the line's length.
  *    <hitbox:line>
