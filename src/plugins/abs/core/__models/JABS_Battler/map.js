@@ -389,8 +389,8 @@ JABS_Battler.prototype.applyToolToPlayer = function(toolId)
  * @param {number} itemId The id of the item/tool used.
  * @param {JABS_Battler} target The target for calculating damage; defaults to self.
  */
-// eslint-disable-next-line no-unused-vars
-JABS_Battler.prototype.onItemApplied = function(gameAction, itemId, target = this) {};
+JABS_Battler.prototype.onItemApplied = function(gameAction, itemId, target = this) 
+{};
 
 /**
  * Applies the effects of the tool against all allies on the team.
@@ -466,9 +466,9 @@ JABS_Battler.prototype.applyToolForAllOpponents = function(toolId)
     // apply the effects against the battler.
     gameAction.apply(battler);
 
-  // generate the text popup for the item usage on the target.
-  this.onItemApplied(gameAction, toolId, jabsBattler);
-}, this);
+    // generate the text popup for the item usage on the target.
+    this.onItemApplied(gameAction, toolId, jabsBattler);
+  }, this);
 };
 
 /**
@@ -638,7 +638,6 @@ JABS_Battler.prototype.handleOnTargetDefeatSkills = function(victor)
  * Executes the post-defeat processing for a defeated battler.
  * @param {JABS_Battler} victor The battler that defeated this battler.
  */
-// eslint-disable-next-line no-unused-vars
 JABS_Battler.prototype.performPostdefeatEffects = function(victor)
 {
   // check if the defeated battler is an actor.

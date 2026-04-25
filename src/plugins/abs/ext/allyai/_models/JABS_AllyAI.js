@@ -263,8 +263,8 @@ JABS_AllyAI.prototype.decideVariety = function(usableSkills, user, target)
     return [ this.followWithCombo(user) ];
   }
 
-  // initialize the chosen skill id.
-  let chosenSkillId = 0;
+  // chosen in one of the branches below; validated before return.
+  let chosenSkillId;
 
   // locally capture the list of usable skills for modification.
   let tempAvailableSkills = usableSkills;
@@ -332,7 +332,7 @@ JABS_AllyAI.prototype.decideFullForce = function(usableSkills, user, target)
     return [ this.followWithCombo(user) ];
   }
 
-  let chosenSkillId = 0;
+  let chosenSkillId;
   let tempAvailableSkills = usableSkills;
 
   // determine the strongest skill available that this user can execute.

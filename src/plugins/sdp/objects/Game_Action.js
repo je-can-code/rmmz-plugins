@@ -19,6 +19,7 @@ Game_Action.prototype.applyGlobal = function()
  * Handles any SDP-related effects for this action.
  * @param {Game_Actor|Game_Enemy} target The target to apply the SDP-related effect to.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Action.prototype.applySdpUnlock = function(target)
 {
   // check if the SDP can be unlocked.

@@ -429,8 +429,8 @@ JABS_Battler.prototype.getChargingTiers = function(slot)
   // grab the underlying battler.
   const battler = this.getBattler();
 
-  // start with a default of 0.
-  let skillId = 0;
+  // resolved from last-used or equipped slot.
+  let skillId;
 
   // check if we have a
   if (this.getLastUsedSkillId())

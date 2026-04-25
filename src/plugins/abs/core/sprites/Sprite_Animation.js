@@ -63,7 +63,7 @@ Sprite_Animation.prototype.targetSpritePosition = function (sprite)
     return J.ABS.Aliased.Sprite_Animation.get('targetSpritePosition')
       .call(this, sprite);
   }
-  catch (e)
+  catch
   {
     // silently fail and return a neutral point to prevent console flooding.
     console.log("error happened with sprite targeting anyway: ", sprite);

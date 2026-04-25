@@ -52,6 +52,18 @@ export function installProfEngineStubs(sandbox, readProfConfig)
   Game_System.prototype.onAfterLoad = noop;
   sandbox.Game_System = Game_System;
 
+  if (typeof sandbox.Scene_Boot !== 'function')
+  {
+    function Scene_Boot()
+    {
+    }
+
+    Scene_Boot.prototype = {};
+    Scene_Boot.prototype.constructor = Scene_Boot;
+    Scene_Boot.prototype.onDatabaseLoaded = noop;
+    sandbox.Scene_Boot = Scene_Boot;
+  }
+
   Object.setPrototypeOf(sandbox.Game_Actor.prototype, sandbox.Game_Battler.prototype);
   sandbox.Game_Actor.prototype.constructor = sandbox.Game_Actor;
 

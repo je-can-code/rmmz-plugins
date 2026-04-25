@@ -317,8 +317,8 @@ Game_Enemy.prototype.canIdle = function()
   // check if we are disallowed from idling.
   const cannotIdle = referenceData.jabsConfigNoIdle;
 
-  // if we found a non-null value, return it.
-  if (cannotIdle !== null) return cannotIdle;
+  // prohibition tag present → not idle (invert presence to "can idle").
+  if (cannotIdle !== null) return !cannotIdle;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyCanIdle;
@@ -343,8 +343,8 @@ Game_Enemy.prototype.showHpBar = function()
   // check if we are disallowed from showing the hp bar.
   const noHpBar = referenceData.jabsConfigNoHpBar;
 
-  // if we found a non-null value, return it.
-  if (noHpBar !== null) return noHpBar;
+  // prohibition tag present → hide bar.
+  if (noHpBar !== null) return !noHpBar;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowHpBar;
@@ -369,8 +369,8 @@ Game_Enemy.prototype.showBattlerName = function()
   // check if we are disallowed from showing the battler's name.
   const noName = referenceData.jabsConfigNoName;
 
-  // if we found a non-null value, return it.
-  if (noName !== null) return noName;
+  // prohibition tag present → hide name.
+  if (noName !== null) return !noName;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowBattlerName;
@@ -395,8 +395,8 @@ Game_Enemy.prototype.isInvincible = function()
   // check if we are disabling invincibility.
   const notInvincible = referenceData.jabsConfigNotInvincible;
 
-  // if we found a non-null value, return it.
-  if (notInvincible !== null) return notInvincible;
+  // prohibition tag present → not invincible.
+  if (notInvincible !== null) return !notInvincible;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyIsInvincible;
@@ -412,17 +412,17 @@ Game_Enemy.prototype.isInanimate = function()
   // grab the reference data for this battler.
   const referenceData = this.databaseData();
 
-  // check if we are enabling invincibility.
+  // check if we are enabling inanimate (non-collidable) behavior.
   const isInanimate = referenceData.jabsConfigInanimate;
 
   // if we found a non-null value, return it.
   if (isInanimate !== null) return isInanimate;
 
-  // check if we are disabling invincibility.
+  // check if we are disabling inanimate behavior.
   const notInanimate = referenceData.jabsConfigNotInanimate;
 
-  // if we found a non-null value, return it.
-  if (notInanimate !== null) return notInanimate;
+  // prohibition tag present → animate (collidable / normal).
+  if (notInanimate !== null) return !notInanimate;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyIsInanimate;

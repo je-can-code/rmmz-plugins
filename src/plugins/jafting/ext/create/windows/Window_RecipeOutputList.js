@@ -89,7 +89,7 @@ class Window_RecipeOutputList
     const have = component.getHandledQuantity();
 
     // determine the subtext messages for the command.
-    let subTextLine = `(have: ${have})`;
+    const subTextLine = `(have: ${have})`;
 
     const possiblyMaskedOutput = this.needsMasking
       ? component.getName()
@@ -105,8 +105,8 @@ class Window_RecipeOutputList
       .setRightText(`+${component.quantity()}`)
       .addTextLine(subTextLine)
 
-      // TODO: when i/w/a rarity is implemented, add it here.
-      //.setColorIndex(rarityColorIndex)
+    // TODO: when i/w/a rarity is implemented, add it here.
+    //.setColorIndex(rarityColorIndex)
 
       .build();
 

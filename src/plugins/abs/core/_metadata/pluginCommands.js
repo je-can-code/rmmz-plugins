@@ -128,8 +128,10 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
 });
 
 /**
- * Plugin command: forces the global cooldown counter on a party actor who is currently on the map as the player or a visible follower.
- * Positive {@code frames} starts or refreshes GCD for that battler; zero or invalid clears it. Actors not represented on the map are skipped with a console warning.
+ * Plugin command: forces the global cooldown counter on a party actor who is currently on the map as
+ * the player or a visible follower.
+ * Positive {@code frames} starts or refreshes GCD for that battler; zero or invalid clears it. Actors
+ * not represented on the map are skipped with a console warning.
  */
 PluginManager.registerCommand(J.ABS.Metadata.Name, "Apply Global Cooldown", args =>
 {

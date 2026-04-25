@@ -1629,7 +1629,7 @@ class JABS_AiManager
         return;
       }
 
-      const followerSkillId = followerPicks[0];
+      const [followerSkillId] = followerPicks;
       const followerSkill = battler.getSkill(followerSkillId);
       if (!followerSkill)
       {
@@ -1657,7 +1657,7 @@ class JABS_AiManager
       return;
     }
 
-    const decidedSkillId = decidedPicks[0];
+    const [decidedSkillId] = decidedPicks;
 
     // construct the skill from the battler's perspective.
     const skill = battler.getSkill(decidedSkillId);

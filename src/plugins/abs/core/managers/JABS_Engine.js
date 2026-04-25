@@ -1518,7 +1518,7 @@ class JABS_Engine
   resolveFormationSpokes(facing, formation)
   {
     // initialize the canonical spokes as if facing were up.
-    let canonical = [];
+    let canonical;
 
     // choose spokes based on the provided formation constant.
     switch (formation)
@@ -1656,8 +1656,10 @@ class JABS_Engine
    * @param {number} castedCardinal The caster's facing at fire time (expects 2/4/6/8).
    * @returns {2|4|6|8} A cardinal for {@link Game_Character#setDirection} on action sprites.
    */
+  // eslint-disable-next-line complexity
   actionTravelDirectionToSpritePatternDirection(travelDir, castedCardinal)
   {
+    // TODO: reduce complexity via lookup matrix by castedCardinal+travelDir.
     if (travelDir === 2 || travelDir === 4 || travelDir === 6 || travelDir === 8)
     {
       return travelDir;
@@ -1683,7 +1685,7 @@ class JABS_Engine
       return 2;
     }
 
-    let result = casted;
+    let result;
     switch (casted)
     {
       case 2:
@@ -3975,7 +3977,8 @@ class JABS_Engine
     // forward length includes a small extra half-tile pad, matching cardinal behavior.
     const lengthWithPad = lengthPx + (Math.max(tw, th) / 2);
 
-    // thickness is expressed per-axis for cardinals; convert to a symmetric half-breadth in pixels for diagonal support.
+    // thickness is expressed per-axis for cardinals; convert to a symmetric half-breadth in pixels for
+    // diagonal support.
     const halfBreadth = Math.max(thicknessX, thicknessY) / 2;
 
     return this.collisionOrientedRectFromOrigin(targetRect, originCx, originCy, facing, lengthWithPad, halfBreadth);
@@ -4025,7 +4028,8 @@ class JABS_Engine
 
   /**
    * Collision helper: tests a target AABB against an oriented rectangle that starts at the origin and extends forward.
-   * This supports diagonal facings by projecting into the forward/perpendicular basis and padding by the target AABB extents.
+   * This supports diagonal facings by projecting into the forward/perpendicular basis and padding by the target AABB
+   * extents.
    * @param {JABS_Aabb} targetRect The target's AABB in pixel space.
    * @param {number} originCx Origin X in pixels.
    * @param {number} originCy Origin Y in pixels.
@@ -4370,6 +4374,7 @@ class JABS_Engine
    * @param {number} experience The experience to be gained as a reward.
    * @param {Game_Character} casterCharacter The character who defeated the target.
    */
+  // eslint-disable-next-line no-unused-vars
   gainExperienceReward(experience, casterCharacter)
   {
     // don't do anything if the enemy didn't grant any experience.
@@ -4384,6 +4389,7 @@ class JABS_Engine
    * @param {number} gold The gold to be gained as a reward.
    * @param {Game_Character} character The character who defeated the target.
    */
+  // eslint-disable-next-line no-unused-vars
   gainGoldReward(gold, character)
   {
     // don't do anything if the enemy didn't grant any gold.

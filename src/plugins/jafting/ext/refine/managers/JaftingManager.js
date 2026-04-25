@@ -61,10 +61,11 @@ class JaftingManager
    */
   static combineAllParameterTraits(traitList)
   {
-    traitList = this.combineBaseParameterTraits(traitList);
-    traitList = this.combineExParameterTraits(traitList);
-    traitList = this.combineSpParameterTraits(traitList);
-    return traitList;
+    return this.combineSpParameterTraits(
+      this.combineExParameterTraits(
+        this.combineBaseParameterTraits(traitList),
+      ),
+    );
   }
 
   /**
@@ -303,18 +304,20 @@ class JaftingManager
     });
 
     // handle lock/unlock skills types.
-    [ baseTraits, materialTraits ] = this.removeOppositeTrait(baseTraits, materialTraits, 41, 42);
+    let a = baseTraits;
+    let b = materialTraits;
+    [ a, b ] = this.removeOppositeTrait(a, b, 41, 42);
 
     // handle lock/unlock skills.
-    [ baseTraits, materialTraits ] = this.removeOppositeTrait(baseTraits, materialTraits, 43, 44);
+    [ a, b ] = this.removeOppositeTrait(a, b, 43, 44);
 
     // overwrite basic attack skill.
-    [ baseTraits, materialTraits ] = this.replaceTrait(baseTraits, materialTraits, 35);
+    [ a, b ] = this.replaceTrait(a, b, 35);
 
     // overwrite enable/disable of dual-wield (unique case!)
-    [ baseTraits, materialTraits ] = this.replaceTrait(baseTraits, materialTraits, 55);
+    [ a, b ] = this.replaceTrait(a, b, 55);
 
-    return [ baseTraits, materialTraits ];
+    return [ a, b ];
   }
 
   /**
@@ -408,10 +411,10 @@ class JaftingManager
     }
 
     // cleanup both our lists from any messy falsy traits.
-    baseTraitList = baseTraitList.filter(trait => !!trait);
-    materialTraitList = materialTraitList.filter(trait => !!trait);
+    const prunedBase = baseTraitList.filter(trait => !!trait);
+    const prunedMaterial = materialTraitList.filter(trait => !!trait);
 
-    return [ baseTraitList, materialTraitList ];
+    return [ prunedBase, prunedMaterial ];
   }
 
   /**
@@ -439,8 +442,8 @@ class JaftingManager
     }
 
     // cleanup both our lists from any removed traits.
-    baseTraitList = baseTraitList.filter(trait => !!trait);
-    return [ baseTraitList, materialTraitList ];
+    const prunedBase = baseTraitList.filter(trait => !!trait);
+    return [ prunedBase, materialTraitList ];
   }
 
   /**
@@ -452,12 +455,14 @@ class JaftingManager
   static #overwriteAllOverwritableTraits(baseTraits, materialTraits)
   {
     const overwritableCodes = [ 11, 12, 13, 32, 33, 34, 61 ];
+    let a = baseTraits;
+    let b = materialTraits;
     overwritableCodes.forEach(code =>
     {
-      [ baseTraits, materialTraits ] = this.#overwriteIfBetter(baseTraits, materialTraits, code);
+      [ a, b ] = this.#overwriteIfBetter(a, b, code);
     });
 
-    return [ baseTraits, materialTraits ];
+    return [ a, b ];
   }
 
   /**
@@ -478,7 +483,8 @@ class JaftingManager
       if (trait._code !== code) return false;
 
       // check if another version of the trait exists on the material.
-      const index = materialTraitList.findIndex(jaftingTrait => jaftingTrait._code === code && jaftingTrait._dataId === trait._dataId);
+      const index = materialTraitList.findIndex(jaftingTrait =>
+        jaftingTrait._code === code && jaftingTrait._dataId === trait._dataId);
       return index > -1;
     };
 
@@ -555,8 +561,10 @@ class JaftingManager
    * @param {JAFTING_Trait} jaftingTrait The new trait to be potentially transferred.
    * @returns {boolean}
    */
+  // eslint-disable-next-line complexity
   static #isTransferableTrait(output, jaftingTrait)
   {
+    // TODO: reduce complexity via Set of transferable codes + special-case branch(es).
     switch (jaftingTrait._code)
     {
       case 11: // elemental damage rate - stackable.

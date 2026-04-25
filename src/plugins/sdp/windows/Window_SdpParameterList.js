@@ -126,7 +126,7 @@ class Window_SdpParameterList
    * a parameter being smaller is an improvement..
    * @param {PanelParameter} panelParameter The id to translate.
    */
-  // eslint-disable-next-line complexity
+   
   #determineModifierData(panelParameter)
   {
     // a small helper function for calculating the next rank's value.

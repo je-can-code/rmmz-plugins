@@ -4,11 +4,12 @@
   "license": "AGPL-3.0-or-later",
   "author": "je-can-code",
   "devDependencies": {
-    "@babel/eslint-parser": "^7.22.10",
     "@babel/plugin-syntax-import-assertions": "^7.22.5",
+    "@eslint/js": "^10.0.1",
     "@vitest/coverage-istanbul": "^4.1.2",
     "@vitest/coverage-v8": "^4.1.2",
-    "eslint-plugin-jsdoc": "^46.4.6",
+    "eslint": "^10.2.1",
+    "eslint-plugin-jsdoc": "^62.9.0",
     "nodemon": "^3.0.1",
     "vitest": "^4.1.2"
   },
@@ -24,21 +25,20 @@
   },
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
+    "lint": "bunx eslint \"src/plugins/**/*.js\" \"src/build-tools/**/*.js\"",
     "test": "bun run build:all && vitest run",
     "test:verbose": "bun run build:all && vitest run --silent=false",
     "test:watch": "vitest",
     "test:coverage": "bun run build:all && vitest run --coverage",
     "test:coverage:ui": "bun run build:all && vitest run --coverage --coverage.reporter=html",
-    "hotfix": "npm run clean:out && npm run build:all && npm run copy:to-all",
+    "hotfix": "bun run lint && bun run clean:out && bun run build:all && bun run copy:to-all",
     "clean:out": "node ./src/build-tools/obliterator.js ./out",
     "copy:to-test": "node ./src/build-tools/copy.js",
     "copy:to-ca": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j",
     "copy:to-all": "node ./src/build-tools/copy.js ../ca/chef-adventure/js/plugins/j ./project/js/plugins",
-    
     "build:all": "node ./src/build-tools/build-all.js",
     "build:ca-mods": "node ./src/build-tools/combine.js ./src/plugins/__ca-mods ./out J-CA-Mods.js",
     "build:utils": "node ./src/build-tools/combine.js ./src/plugins/utils ./out J-SystemUtilities.js",
-    
     "build:base": "node ./src/build-tools/combine.js ./src/plugins/_base ./out J-Base.js",
     "build:crit": "node ./src/build-tools/combine.js ./src/plugins/crit ./out J-CriticalFactors.js",
     "build:diff": "node ./src/build-tools/combine.js ./src/plugins/diff ./out J-Difficulty.js",
@@ -55,26 +55,21 @@
     "build:sdp": "node ./src/build-tools/combine.js ./src/plugins/sdp ./out J-SDP.js",
     "build:sks": "node ./src/build-tools/combine.js ./src/plugins/sks ./out J-SkillSlots.js",
     "build:time": "node ./src/build-tools/combine.js ./src/plugins/time ./out J-TIME.js",
-    
     "build:apt": "node ./src/build-tools/combine.js ./src/plugins/apt/core ./out/apt J-Aptitude.js",
     "build:apt-typed": "node ./src/build-tools/combine.js ./src/plugins/apt/ext/typed ./out/apt J-Aptitude-Typed.js",
-
     "build:cms-equip": "node ./src/build-tools/combine.js ./src/plugins/cms/equip ./out/cms J-CMS-Equip.js",
     "build:cms-main": "node ./src/build-tools/combine.js ./src/plugins/cms/main ./out/cms J-CMS-Main.js",
     "build:cms-skill": "node ./src/build-tools/combine.js ./src/plugins/cms/skill ./out/cms J-CMS-Skill.js",
     "build:cms-status": "node ./src/build-tools/combine.js ./src/plugins/cms/status ./out/cms J-CMS-Status.js",
-    
     "build:hud": "node ./src/build-tools/combine.js ./src/plugins/hud/core ./out/hud J-HUD.js",
     "build:hud-input": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/input ./out/hud/ext J-HUD-InputFrame.js",
     "build:hud-party": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/party ./out/hud/ext J-HUD-PartyFrame.js",
     "build:hud-target": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/target ./out/hud/ext J-HUD-TargetFrame.js",
     "build:hud-boss": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/boss ./out/hud/ext J-HUD-BossFrame.js",
     "build:hud-quest": "node ./src/build-tools/combine.js ./src/plugins/hud/ext/quest ./out/hud/ext J-HUD-QuestFrame.js",
-    
     "build:jafting": "node ./src/build-tools/combine.js ./src/plugins/jafting/core ./out/jafting J-JAFTING.js",
     "build:jafting-create": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/create ./out/jafting/ext J-JAFTING-Creation.js",
     "build:jafting-refine": "node ./src/build-tools/combine.js ./src/plugins/jafting/ext/refine ./out/jafting/ext J-JAFTING-Refinement.js",
-    
     "build:jabs": "node ./src/build-tools/combine.js ./src/plugins/abs/core ./out/abs J-ABS.js",
     "build:jabs-allyai": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/allyai ./out/abs/ext J-ABS-AllyAI.js",
     "build:jabs-charge": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/charge ./out/abs/ext J-ABS-Charge.js",
@@ -83,40 +78,32 @@
     "build:jabs-formula": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/formula ./out/abs/ext J-ABS-Formula.js",
     "build:jabs-hitstop": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/hitstop ./out/abs/ext J-ABS-Hitstop.js",
     "build:jabs-input": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/input ./out/abs/ext J-ABS-InputManager.js",
-    "build:jabs-pixel": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/pixel ./out/abs/ext J-ABS-PixelMovement.js",
     "build:jabs-poses": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/poses ./out/abs/ext J-ABS-Poses.js",
     "build:jabs-speed": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/speed ./out/abs/ext J-ABS-Speed.js",
     "build:jabs-timing": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/timing ./out/abs/ext J-ABS-Timing.js",
     "build:jabs-tools": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/tools ./out/abs/ext J-ABS-Tools.js",
     "build:jabs-shield": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/shield ./out/abs/ext J-ABS-Shield.js",
     "build:jabs-star": "node ./src/build-tools/combine.js ./src/plugins/abs/ext/star ./out/abs/ext J-ABS-Star.js",
-
     "build:level": "node ./src/build-tools/combine.js ./src/plugins/level/core ./out/level J-LevelMaster.js",
     "build:level-flat": "node ./src/build-tools/combine.js ./src/plugins/level/ext/flat ./out/level/ext J-Level-Flat.js",
-
     "build:passive": "node ./src/build-tools/combine.js ./src/plugins/passive/core ./out/passive J-Passive.js",
     "build:passive-abs": "node ./src/build-tools/combine.js ./src/plugins/passive/ext/abs ./out/passive/ext J-Passive-ABS.js",
-
     "build:pixel": "node ./src/build-tools/combine.js ./src/plugins/pixel/core ./out/pixel J-Pixelistics.js",
     "build:pixel-abs": "node ./src/build-tools/combine.js ./src/plugins/pixel/ext/abs ./out/pixel/ext J-Pixel-ABS.js",
-    
     "build:popups": "node ./src/build-tools/combine.js ./src/plugins/popups/core ./out/popups J-Popups.js",
     "build:popups-abs": "node ./src/build-tools/combine.js ./src/plugins/popups/ext/abs ./out/popups/ext J-Popups-ABS.js",
     "build:popups-apt": "node ./src/build-tools/combine.js ./src/plugins/popups/ext/apt ./out/popups/ext J-Popups-APT.js",
     "build:popups-resources": "node ./src/build-tools/combine.js ./src/plugins/popups/ext/resources ./out/popups/ext J-Popups-Resources.js",
     "build:popups-sdp": "node ./src/build-tools/combine.js ./src/plugins/popups/ext/sdp ./out/popups/ext J-Popups-SDP.js",
-    
     "build:omni": "node ./src/build-tools/combine.js ./src/plugins/omni/core ./out/omni J-Omnipedia.js",
     "build:omni-monster": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/monster ./out/omni/ext J-Omni-Monsters.js",
     "build:omni-quest": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/quest ./out/omni/ext J-Omni-Questopedia.js",
     "build:omni-item": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/item ./out/omni/ext J-Omni-Itempedia.js",
     "build:omni-weapon": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/weapon ./out/omni/ext J-Omni-Weaponpedia.js",
     "build:omni-armor": "node ./src/build-tools/combine.js ./src/plugins/omni/ext/armor ./out/omni/ext J-Omni-Armorpedia.js",
-    
     "build:regions": "node ./src/build-tools/combine.js ./src/plugins/regions/core ./out/regions J-RegionEffects.js",
     "build:regions-states": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/states ./out/regions/ext J-Regions-States.js",
     "build:regions-skills": "node ./src/build-tools/combine.js ./src/plugins/regions/ext/skills ./out/regions/ext J-Regions-Skills.js",
-
     "build:resources": "node ./src/build-tools/combine.js ./src/plugins/resources/core ./out/resources J-Resources.js",
     "build:resources-abs": "node ./src/build-tools/combine.js ./src/plugins/resources/ext/abs ./out/resources/ext J-Resources-ABS.js"
   }

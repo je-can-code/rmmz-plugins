@@ -13,7 +13,7 @@ Object.defineProperty(RPG_UsableItem.prototype, 'jabsCooldown', {
 
 /**
  * A new property for retrieving the JABS uniqueCooldown from this skill.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_UsableItem.prototype, 'jabsUniqueCooldown', {
   get: function()

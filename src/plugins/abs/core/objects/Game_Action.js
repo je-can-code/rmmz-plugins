@@ -349,6 +349,7 @@ Game_Action.prototype.onParry = function(jabsBattler)
  * @param {number} originalDamage The original amount of damage.
  * @returns {number} The damage after reduction.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Action.prototype.calculateParryDamageReduction = function(jabsBattler, originalDamage)
 {
   // return the parry-modified damage.

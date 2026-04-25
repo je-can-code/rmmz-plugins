@@ -524,7 +524,7 @@ class JABS_EnemyAI
 
     if (healingTypeSkills.length < 2) return healingTypeSkills;
 
-    let bestSkillId = null;
+    let bestSkillId;
     let runningBiggestHealAll = 0;
     let runningBiggestHealOne = 0;
     let runningClosestFitHealAll = 0;

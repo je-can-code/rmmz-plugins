@@ -186,6 +186,7 @@ Game_Battler.prototype.eraseState = function(stateId)
  * An event hook fired when this battler has a state removed.
  * @param {number} stateId The state id being removed.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.onStateRemoval = function(stateId)
 {
   // flag this battler for needing a data update.
@@ -221,6 +222,7 @@ Game_Battler.prototype.addNewState = function(stateId)
  * An event hook fired when this battler has a state added.
  * @param {number} stateId The state id being added.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.onStateAdded = function(stateId)
 {
   // flag this battler for needing a data update.

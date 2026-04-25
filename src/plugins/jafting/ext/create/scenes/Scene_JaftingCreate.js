@@ -295,7 +295,7 @@ class Scene_JaftingCreate
     const listRect = this.getRecipeListRectangle();
     const [ ox ] = Graphics.boxOrigin;
     const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const y = listRect.y;
+    const {y} = listRect;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = 100;
 
@@ -525,7 +525,7 @@ class Scene_JaftingCreate
     const [ x, y ] = Graphics.boxOrigin;
 
     // define the width of the window.
-    const width = this.getCategoryListRectangle().width;
+    const {width} = this.getCategoryListRectangle();
 
     // define the height of the window.
     const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);

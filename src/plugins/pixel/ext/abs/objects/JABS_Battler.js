@@ -272,7 +272,7 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
     const cachedDirection = chr.getMicroRouteDirection();
 
     // Determine if the cached direction remains passable.
-    let cachedPassable = false;
+    let cachedPassable;
 
     // Check diagonal passability for diagonal directions.
     if (chr.isDiagonalDirection(cachedDirection))
@@ -834,7 +834,10 @@ JABS_Battler.prototype.angleToDirection = function(angle)
  * movement can disagree with sprite facing — fall back to map facing so shots do not
  * emit opposite the way the character is drawn.
  */
-J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('getProjectileSpawnBaseDirection', JABS_Battler.prototype.getProjectileSpawnBaseDirection);
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set(
+  'getProjectileSpawnBaseDirection',
+  JABS_Battler.prototype.getProjectileSpawnBaseDirection,
+);
 JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
 {
   const chr = this.getCharacter();

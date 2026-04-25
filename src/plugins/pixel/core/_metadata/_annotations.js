@@ -1,4 +1,3 @@
-/* eslint-disable max-len */
 //region annotations
 /*:
  * @target MZ
