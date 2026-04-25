@@ -131,9 +131,6 @@ Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = nu
  */
 Game_Event.prototype.getDataForCommandByRegex = function(command, structure, defaultValue = null, andParse = true)
 {
-  // initalize to the provided default.
-  let val = defaultValue;
-
   // shorthand the comment into a variable.
   const [ comment, ] = command.parameters;
 
@@ -147,7 +144,7 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
   if (!regexResult) return;
 
   // extract the regex capture group.
-  [ , val ] = regexResult;
+  const [ , val ] = regexResult;
 
   // if we did not find anything, return the default.
   if (val === defaultValue) return val;

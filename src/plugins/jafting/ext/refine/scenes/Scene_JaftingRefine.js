@@ -427,7 +427,7 @@ class Scene_JaftingRefine
     const listRect = this.getBaseRefinableListRectangle();
     const [ ox ] = Graphics.boxOrigin;
     const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const y = listRect.y;
+    const {y} = listRect;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = 100;
 

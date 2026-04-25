@@ -196,7 +196,7 @@ TrackedOmniQuest.prototype.isObjectiveInState = function(targetState, objectiveI
   const actualObjectiveId = this.getFallbackObjectiveId(objectiveId);
 
   // get either the objective of the id provided, or the immediate objective.
-  const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
+  const objective = this.objectives.find(o => o.id === actualObjectiveId);
 
   // validate we have an objective.
   if (objective)
@@ -221,7 +221,7 @@ TrackedOmniQuest.prototype.canExecuteObjectiveById = function(objectiveId = null
   const actualObjectiveId = this.getFallbackObjectiveId(objectiveId);
 
   // get either the objective of the id provided, or the immediate objective.
-  const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
+  const objective = this.objectives.find(o => o.id === actualObjectiveId);
 
   // validate the objective in question is in the state of active, regardless of the quest.
   return objective?.state === OmniObjective.States.Active;
@@ -405,7 +405,7 @@ TrackedOmniQuest.prototype.progressObjectives = function()
  */
 TrackedOmniQuest.prototype._fastForwardToNextObjective = function()
 {
-  let needsNextObjective = false;
+  let needsNextObjective;
   do
   {
     // identify the sequentially-next inactive objective in the quest.
@@ -436,7 +436,7 @@ TrackedOmniQuest.prototype._fastForwardToNextObjective = function()
       needsNextObjective = false;
     }
   }
-    // keep taking one objective while we have them- one must be active!
+  // keep taking one objective while we have them- one must be active!
   while (needsNextObjective);
 
   // check if there are any additional active objectives.
@@ -513,7 +513,7 @@ TrackedOmniQuest.prototype.changeTargetObjectiveState = function(objectiveId, ne
   const actualObjectiveId = this.getFallbackObjectiveId(objectiveId);
 
   // get either the objective of the id provided, or the immediate objective.
-  const objective = this.objectives.find(objective => objective.id === actualObjectiveId);
+  const objective = this.objectives.find(o => o.id === actualObjectiveId);
 
   // validate we have an objective to flag that isn't already the given state.
   if (objective && objective.state !== newState)

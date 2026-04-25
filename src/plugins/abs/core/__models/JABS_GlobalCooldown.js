@@ -81,7 +81,8 @@ class JABS_GlobalCooldown
 
   /**
    * Finds the map-driven {@link JABS_Battler} for a party actor (leader or visible follower).
-   * Used when only a {@link Game_Actor} id is known—e.g. plugin commands—because GCD state lives on the map entity, not the database actor alone.
+   * Used when only a {@link Game_Actor} id is known—e.g. plugin commands—because GCD state lives on the
+   * map entity, not the database actor alone.
    * @param {Game_Actor} actor Party member to resolve.
    * @returns {JABS_Battler|null} Wrapper when that actor is currently the player or a visible follower; otherwise null.
    */

@@ -22,6 +22,19 @@ export function loadProfPluginVm(sandbox)
     },
   });
 
+  // Mirror {@link Scene_Boot#onDatabaseLoaded}: load config into {@link J.PROF.Metadata} (tests do not boot scenes).
+  vm.runInContext(`
+    (function()
+    {
+      for (let i = 1; i <= 5; i++)
+      {
+        $dataActors[i] = { id: i };
+      }
+
+      J.PROF.Metadata.initializeProficiencies();
+    })();
+  `, sandbox);
+
   vm.runInContext(`
     globalThis.__profTestFixtures = {
       skillData(props)

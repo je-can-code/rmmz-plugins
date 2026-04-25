@@ -100,8 +100,8 @@ class Window_RecipeIngredientList
       .setIconIndex(component.getIconIndex())
       .setHelpText(component.getName())
 
-      // TODO: when i/w/a rarity is implemented, add it here.
-      //.setColorIndex(rarityColorIndex)
+    // TODO: when i/w/a rarity is implemented, add it here.
+    //.setColorIndex(rarityColorIndex)
 
       .setRightText(needQuantity)
       .setRightColorIndex(haveTextColor)

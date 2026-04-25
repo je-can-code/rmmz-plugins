@@ -440,7 +440,7 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
     return;
   }
 
-  const decidedSkillId = decidedPicks[0];
+  const [decidedSkillId] = decidedPicks;
 
   // TODO: allow allies to use dodge skills, but code the AI to use it intelligently.
   // check if the skill id is actually a mobility skill.

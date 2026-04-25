@@ -33,7 +33,8 @@ class JABS_InputAdapter
 
   /**
    * True when the battler-wide global cooldown timer should reject this skill attempt for the given battler.
-   * Delegates to {@link JABS_GlobalCooldown.isGlobalBlockingSkillId}; exempt and non-whitelisted skills never block here.
+   * Delegates to {@link JABS_GlobalCooldown.isGlobalBlockingSkillId}; exempt and non-whitelisted skills
+   * never block here.
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @param {number} skillId Skill database id for the attempted action.
    * @returns {boolean} True when GCD is active and the skill is subject to it.

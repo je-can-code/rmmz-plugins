@@ -2,6 +2,7 @@
 /**
  * OVERWRITE Fuck those autoshadows.
  */
+// eslint-disable-next-line no-unused-vars
 Tilemap.prototype._addShadow = function(layer, shadowBits, dx, dy)
 {
 };

@@ -296,7 +296,7 @@ class Window_AptitudeAggregateDetails
         .hasSkill(sourceProgress.skillId());
 
     // decide the right-side text content.
-    let rightText = '';
+    let rightText;
     if (learned === true)
     {
       // if learned from this source, show DONE.

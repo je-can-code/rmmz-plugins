@@ -80,7 +80,7 @@ J.JAFTING.EXT.CREATE.Debug.gainStockFromAllRecipes = function(multiplier)
     ? 10
     : Math.floor(multiplier);
 
-  const recipes = J.JAFTING.EXT.CREATE.Metadata.recipes;
+  const {recipes} = J.JAFTING.EXT.CREATE.Metadata;
 
   const feedComponent = component =>
   {

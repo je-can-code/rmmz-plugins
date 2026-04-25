@@ -35,15 +35,18 @@ class RPG_DropItem
     switch (letter.toLowerCase())
     {
       // "i" for "item".
-      case ('i' || 'item'):
+      case 'i':
+      case 'item':
         return this.Types.Item;
 
       // "w" for "weapon".
-      case ('w' || 'weapon'):
+      case 'w':
+      case 'weapon':
         return this.Types.Weapon;
 
       // "a" for "armor".
-      case ('a' || 'armor'):
+      case 'a':
+      case 'armor':
         return this.Types.Armor;
 
       // don't use this with invalid item types.
@@ -107,10 +110,10 @@ class RPG_DropItem
    * @param {rm.types.EnemyDropItem} enemyDropItem The drop item to parse.
    */
   constructor({
-                dataId,
-                denominator,
-                kind
-              })
+    dataId,
+    denominator,
+    kind
+  })
   {
     // map the enemy drop to this object.
     this.dataId = dataId;

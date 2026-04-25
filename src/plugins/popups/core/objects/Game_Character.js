@@ -67,7 +67,10 @@ Game_Character.prototype.addTextPop = function(textPop)
 
   if (J.POPUPS.isValidTextPopForQueue(textPop) === false)
   {
-    console.warn(`[${J.POPUPS.Metadata.Name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`, textPop);
+    console.warn(
+      `[${J.POPUPS.Metadata.Name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`,
+      textPop,
+    );
     return;
   }
 

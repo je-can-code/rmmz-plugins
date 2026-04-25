@@ -165,7 +165,6 @@ JABS_SkillSlotManager.prototype.setupEnemySlots = function(enemy)
  * @param {Game_Enemy} enemy The enemy to check.
  * @param {RPG_EnemyAction} action The action to check.
  */
-// eslint-disable-next-line no-unused-vars
 JABS_SkillSlotManager.prototype.filterActionSkills = function(enemy, action)
 {
   return true;
@@ -305,23 +304,22 @@ JABS_SkillSlotManager.prototype.setSlot = function(key, skillId, locked)
 /**
  * Gets the combo id of the given skill slot.
  * @param {string} key The skill slot key.
- * @returns {number}
+ * @returns {number} Pending combo skill id for the slot, or 0 when there is no combo or the key does not match a slot.
  */
 JABS_SkillSlotManager.prototype.getSlotComboId = function(key)
 {
+  // grab the slot once; callers treat 0 as "no combo" (see getSkillIdForAction, canExecuteSkill).
   const jabsSkillSlot = this.getSkillSlotByKey(key);
 
   if (!jabsSkillSlot)
   {
-    console.warn(key);
-    console.warn(this);
-    // TODO: fix this; but until fixed, use skillId#1 in place of the error.
+    // never return a real database skill id here — a bad key or desync must not execute skill #1 (or any arbitrary id).
+    console.warn(`[J-ABS] getSlotComboId: no skill slot for key "${key}". Returning 0 (no combo).`);
 
-    return 1;
+    return 0;
   }
 
-  return this.getSkillSlotByKey(key)
-    .getComboId();
+  return jabsSkillSlot.getComboId();
 };
 
 /**

@@ -79,6 +79,7 @@ Game_Battler.prototype.extractStrictElements = function(databaseObject)
  * Gets the element rate boost for this element for this battler.
  * @param {number} elementId The element id to check.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.elementRateBoost = function(elementId)
 {
   return 1;

@@ -7,6 +7,7 @@
  * @returns {boolean} Always true; the battler's own state machine controls pacing.
  */
 J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set('canMoveIdly', JABS_AiManager.canMoveIdly);
+// eslint-disable-next-line no-unused-vars
 JABS_AiManager.canMoveIdly = function(battler)
 {
   return true;
@@ -83,7 +84,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   let tolerance = 0.45;
 
   // extra ring outside tolerance for gentle throttling near target.
-  let hysteresis = 0.25;
+  const hysteresis = 0.25;
 
   if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
   {

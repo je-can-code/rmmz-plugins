@@ -41,10 +41,10 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
   if (validTargets.length !== this._targets.length)
   {
     // retrieve the first valid target.
-    const target = validTargets[0];
+    const [target] = validTargets;
 
     // calculate parent/grandparent relations.
-    const parent = target.parent;
+    const {parent} = target;
     const grandparent = parent
       ? parent.parent
       : null;

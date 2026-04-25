@@ -151,11 +151,9 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   const enabledActorEffects = new DifficultyBattlerEffects();
   const enabledEnemyEffects = new DifficultyBattlerEffects();
 
-  // destructure the direct values out.
-  let {
-    cost,
-    rewards
-  } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
+  // grab the default layer values; cost accumulates, rewards object is scaled in place.
+  const { cost: initialCost, rewards } = DifficultyLayer.fromLayer(J_DiffPluginMetadata.defaultLayer());
+  let cost = initialCost;
 
   // iterate over each difficulty layer and apply it multiplicatively to the running amounts.
   enabledDifficulties.forEach(layer =>

@@ -252,7 +252,7 @@ Game_Actor.prototype.modSdpPoints = function(points)
 Game_Actor.prototype.sdpMultiplier = function()
 {
   // initializing with base 100, representing 1x.
-  let multiplier = 100;
+  const multiplier = 100;
 
   // get all the objects to scan for possible sdp multipliers.
   const objectsToCheck = this.getAllNotes();

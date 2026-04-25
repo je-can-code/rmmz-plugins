@@ -15,7 +15,7 @@ Vitest + `test/` harnesses **already exist** (see `.junie/guidelines.md`: `bun r
 
 ## Gain
 
-**High over time, incremental effort.** Each new suite reduces regression risk for cross-plugin refactors (`cross-plugin-prototype-hook-surface.md`, `boolean-notetag-regex-audit.md`).
+**High over time, incremental effort.** Each new suite reduces regression risk for cross-plugin refactors (`cross-plugin-prototype-hook-surface.md`, completed `boolean-notetag-regex-audit.md`).
 
 ## Design status (resolved)
 
@@ -26,7 +26,7 @@ Vitest + `test/` harnesses **already exist** (see `.junie/guidelines.md`: `bun r
 
 - Add or extend coverage for: `PIXEL_CollisionManager` (if not already complete), new Popups core (`popups/core` models), JAFTING sessions post-refactor, and any plugin without a `*-vm.js` harness.
 - Build-tool scripts (`combine.js`, `copy.js`): optional pure-Node tests (mentioned in original scope).
-- **Boolean note audit** (`boolean-notetag-regex-audit.md`): add targeted `RPGManager` tests as fixes land.
+- **Boolean note audit** (completed: `.backlog/completed/boolean-notetag-regex-audit.md`): optional follow-up is extra targeted `RPGManager` / merge-path tests if desired.
 
 ## Prerequisites
 

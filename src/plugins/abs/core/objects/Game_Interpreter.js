@@ -48,9 +48,7 @@ Game_Interpreter.prototype.command201 = function(params)
     let y;
     if (params[0] === 0)
     {
-      mapId = params[1];
-      x = params[2];
-      y = params[3];
+      [, mapId, x, y] = params;
     }
     else
     {
@@ -117,7 +115,7 @@ Game_Interpreter.prototype.command301 = function(params)
     {
       case 0:
         // Direct designation
-        troopId = params[1];
+        [, troopId] = params;
         break;
       case 1:
         // Designation with a variable

@@ -109,4 +109,4 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 ## Known Future Work (do not tackle without checking first)
 
 1. **`JsonEx` serialization registry** — `JsonEx` resolves classes via `window[className]`. Plan: add `J.register(constructor)` in J-Base and audit all serializable models. Tracked in `guidelines.md`.
-2. **`checkForBooleanFromNoteByRegex` audit** — Any property that checks a negatively-named tag (hide/block/disable) without `nullIfEmpty: true` has inverted logic. A full sweep of all such properties is needed. Do not fix opportunistically; do it as a dedicated PR.
+2. **`checkForBooleanFromNoteByRegex` audit (done).** Outcome and deferrals: `.backlog/completed/boolean-notetag-regex-audit.md`. Do not re-open as drive-by edits; new call sites should follow the same patterns documented there.

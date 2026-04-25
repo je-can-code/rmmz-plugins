@@ -19,7 +19,7 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
 
   // grab some metadata about the event.
   const eventMetadata = $gameMap.event(this.eventId());
-  const currentPageCommands = !!eventMetadata
+  const currentPageCommands = eventMetadata
     ? eventMetadata.page().list
     : $dataCommonEvents.at(this._commonEventId).list;
 
