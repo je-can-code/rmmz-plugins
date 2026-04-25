@@ -120,6 +120,7 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
  * @param {number} direction The attempted move direction (ignored; uses current facing).
  * @returns {boolean} True if a touch trigger fired, false otherwise.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Player.prototype.checkEventTriggerTouchFront = function(direction)
 {
   // Round the base coordinates to the nearest tile for consistent tile addressing.
@@ -254,8 +255,7 @@ Game_Player.prototype._readGamepadAnalogAngle = function()
       continue;
     }
 
-    const axisX = gamepad.axes[0];
-    const axisY = gamepad.axes[1];
+    const [axisX, axisY] = gamepad.axes;
 
     // compute magnitude to apply a circular dead zone.
     const magnitude = Math.sqrt(axisX * axisX + axisY * axisY);

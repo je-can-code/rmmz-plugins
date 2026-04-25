@@ -4,6 +4,7 @@
  * @param {number} itemId The id of the item granting the boost.
  * @returns {boolean} True if already unlocked, false otherwise.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.isOtibUnlocked = function(itemId)
 {
   return false;
@@ -13,6 +14,7 @@ Game_Battler.prototype.isOtibUnlocked = function(itemId)
  * Unlocks the {@link OneTimeItemBoost} associated with the item's id.
  * @param {number} itemId The id of the item granting the boost.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.unlockOtib = function(itemId)
 {
 };

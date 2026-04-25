@@ -31,12 +31,13 @@ Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
  * Hide all the choices that don't meet the criteria.
  * @param {rm.types.EventCommand} params The event command parameters.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
 {
   // identify some event metadata.
   const currentCommand = this.currentCommand();
   const eventMetadata = $gameMap.event(this.eventId());
-  const currentPageCommands = !!eventMetadata
+  const currentPageCommands = eventMetadata
     ? eventMetadata.page().list
     : $dataCommonEvents.at(this._commonEventId).list;
 
@@ -102,7 +103,7 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
 {
   // grab some metadata about the event.
   const eventMetadata = $gameMap.event(this.eventId());
-  const currentPageCommands = !!eventMetadata
+  const currentPageCommands = eventMetadata
     ? eventMetadata.page().list
     : $dataCommonEvents.at(this._commonEventId).list;
 

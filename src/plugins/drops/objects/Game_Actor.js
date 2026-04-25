@@ -6,7 +6,7 @@
 Game_Actor.prototype.getDropMultiplierBonus = function()
 {
   // define the base multiplier.
-  let baseMultiplier = 0;
+  const baseMultiplier = 0;
 
   // grab all the notes.
   const objectsToCheck = this.getAllNotes();
@@ -28,7 +28,7 @@ Game_Actor.prototype.getDropMultiplierBonus = function()
 Game_Actor.prototype.getGoldMultiplier = function()
 {
   // define the base multiplier.
-  let baseMultiplier = 0;
+  const baseMultiplier = 0;
 
   // grab all the notes.
   const objectsToCheck = this.getAllNotes();

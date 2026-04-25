@@ -14,12 +14,11 @@
 J.BASE.Aliased.Bitmap.set('drawText', Bitmap.prototype.drawText);
 Bitmap.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align)
 {
-  if (align === undefined)
-  {
-    align = 'left';
-  }
+  const resolvedAlign = align === undefined
+    ? 'left'
+    : align;
 
   J.BASE.Aliased.Bitmap.get('drawText')
-    .call(this, text, x, y, maxWidth, lineHeight, align);
+    .call(this, text, x, y, maxWidth, lineHeight, resolvedAlign);
 };
 //endregion Bitmap

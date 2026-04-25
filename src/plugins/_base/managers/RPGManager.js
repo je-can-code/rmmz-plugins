@@ -616,7 +616,7 @@ class RPGManager
     let val = 0;
 
     // establish a variable to be used as "a" in the formula- the battler.
-    // eslint-disable-next-line no-unused-vars
+     
     const a = context;
 
     // establish a variable to be used as "b" in the formula- the base parameter value.

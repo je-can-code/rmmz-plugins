@@ -1,7 +1,9 @@
 //region TimeMapper
 /**
  * A class with several static mapping functions for parsing comments into {@link TimeConditional}s.
+ * Registered and referenced by time/initialization, not in-file.
  */
+// eslint-disable-next-line no-unused-vars
 class TimeMapper
 {
   constructor()
@@ -163,7 +165,7 @@ class TimeMapper
     const monthRangeStart = parseInt(startMonthRange);
     const monthRangeEnd = parseInt(endMonthRange);
     const fullDateRangeStart = [ 0, 0, 0, 1, monthRangeStart, currentTimeSnapshot.years ];
-    let monthRangeYearEnd = monthRangeEnd < monthRangeStart
+    const monthRangeYearEnd = monthRangeEnd < monthRangeStart
       ? currentTimeSnapshot.years + 1
       : currentTimeSnapshot.years;
     const fullDateRangeEnd = [ 59, 59, 23, 30, monthRangeEnd, monthRangeYearEnd ];

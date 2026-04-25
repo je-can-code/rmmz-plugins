@@ -22,7 +22,7 @@ Game_Event.prototype.getTargetFrameText = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const comment = command.parameters[0];
+    const [comment] = command.parameters;
 
     // check if any comment matches the structure.
     if (structure.test(comment))
@@ -59,7 +59,7 @@ Game_Event.prototype.getTargetFrameIcon = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const comment = command.parameters[0];
+    const [comment] = command.parameters;
 
     // check if any comment matches the structure.
     if (structure.test(comment))
@@ -96,7 +96,7 @@ Game_Event.prototype.canShowTargetFrame = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const line = command.parameters[0];
+    const [line] = command.parameters;
 
     // check if any line matches the structure.
     if (structure.test(line))
@@ -133,7 +133,7 @@ Game_Event.prototype.showTargetHpBar = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const line = command.parameters[0];
+    const [line] = command.parameters;
 
     // check if any line matches the structure.
     if (structure.test(line))
@@ -170,7 +170,7 @@ Game_Event.prototype.showTargetMpBar = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const line = command.parameters[0];
+    const [line] = command.parameters;
 
     // check if any line matches the structure.
     if (structure.test(line))
@@ -207,7 +207,7 @@ Game_Event.prototype.showTargetTpBar = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const line = command.parameters[0];
+    const [line] = command.parameters;
 
     // check if any line matches the structure.
     if (structure.test(line))
@@ -244,7 +244,7 @@ Game_Event.prototype.showTargetText = function()
   commentCommands.forEach(command =>
   {
     // shorthand the comment into a variable.
-    const line = command.parameters[0];
+    const [line] = command.parameters;
 
     // check if any line matches the structure.
     if (structure.test(line))

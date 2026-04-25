@@ -36,7 +36,7 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
   const item = this.item();
   if (item)
   {
-    id = item.id;
+    ({ id } = item);
   }
   this._skillDetailWindow.setActor(this._actor);
   this._skillDetailWindow.setSkillId(id);
@@ -70,6 +70,7 @@ Window_SkillList.prototype.maxCols = function()
  * @param {number} y The `y` coordinate.
  * @param {number} width The text width.
  */
+// eslint-disable-next-line no-unused-vars
 Window_SkillList.prototype.drawSkillCost = function(skill, x, y, width)
 {
 };

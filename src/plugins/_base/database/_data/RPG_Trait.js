@@ -66,8 +66,10 @@ class RPG_Trait
    * Gets the underlying name of the trait as text.
    * @return {string}
    */
+  // eslint-disable-next-line complexity
   textName()
   {
+    // TODO: reduce complexity via code->formatter table.
     switch (this.code)
     {
       // first tab.
@@ -143,8 +145,10 @@ class RPG_Trait
    * Gets the underlying value of the trait as text.
    * @return {*|string}
    */
+  // eslint-disable-next-line complexity
   textValue()
   {
+    // TODO: reduce complexity via code->formatter table.
     switch (this.code)
     {
       // first tab.

@@ -362,7 +362,8 @@ Game_Action.prototype.isShieldRelevantToAction = function(shield, actionElements
  * @param {number} value The amount of damage mitigated.
  */
 // eslint-disable-next-line no-unused-vars
-Game_Action.prototype.onShieldDamageAbsorbed = function(target, value) {};
+Game_Action.prototype.onShieldDamageAbsorbed = function(target, value) 
+{};
 
 /**
  * Lifecycle event: a shield broke on the target.
@@ -370,5 +371,6 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value) {};
  * @param {Game_Actor|Game_Enemy} target The battler with the shield breaking.
  */
 // eslint-disable-next-line no-unused-vars
-Game_Action.prototype.onShieldBroken = function(target) {};
+Game_Action.prototype.onShieldBroken = function(target) 
+{};
 //endregion Game_Action

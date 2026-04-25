@@ -177,8 +177,8 @@ class Window_AptitudeSourceDetails
     // advance y.
     y += this.lineHeight();
 
-    // default the description to an empty string.
-    let description = String.empty;
+    // filled per source kind below.
+    let description;
 
     // actors use their profile as the description.
     if (source.isActor())
@@ -303,7 +303,7 @@ class Window_AptitudeSourceDetails
         .hasSkill(skillId);
 
     // decide the right-side text content.
-    let rightText = '';
+    let rightText;
     if (learned === true)
     {
       // if learned from this source, show DONE.

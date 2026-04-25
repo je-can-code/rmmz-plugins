@@ -171,7 +171,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBattlerRole', {
 /**
  * The JABS AI trait of careful.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitCareful', {
   get: function()
@@ -185,7 +185,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitCareful', {
 /**
  * The JABS AI trait of executor.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitExecutor', {
   get: function()
@@ -199,7 +199,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitExecutor', {
 /**
  * The JABS AI trait of reckless.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitReckless', {
   get: function()
@@ -213,7 +213,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitReckless', {
 /**
  * The JABS AI trait of healer.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitHealer', {
   get: function()
@@ -228,7 +228,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitHealer', {
  * The JABS AI trait of follower.
  * This boolean decides whether or not this battler has this AI trait.
  * @deprecated Use {@code <aiRole: follower>} instead. Supported as a backward-compatible alias.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitFollower', {
   get: function()
@@ -243,7 +243,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitFollower', {
  * The JABS AI trait of leader.
  * This boolean decides whether or not this battler has this AI trait.
  * @deprecated Use {@code <aiRole: leader>} instead. Supported as a backward-compatible alias.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitLeader', {
   get: function()
@@ -257,7 +257,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitLeader', {
 /**
  * The JABS AI trait of cleanser.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitCleanser', {
   get: function()
@@ -271,7 +271,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitCleanser', {
 /**
  * The JABS AI trait of buffer.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBuffer', {
   get: function()
@@ -285,7 +285,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBuffer', {
 /**
  * The JABS AI trait of tactical.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitTactical', {
   get: function()
@@ -299,7 +299,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitTactical', {
 /**
  * The JABS AI trait of berserker.
  * This boolean decides whether or not this battler has this AI trait.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBerserker', {
   get: function()
@@ -312,7 +312,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiTraitBerserker', {
 //region role:leader
 /**
  * The AI role of leader.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleLeader', {
   get: function()
@@ -325,7 +325,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleLeader', {
 //region role:follower
 /**
  * The AI role of follower.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleFollower', {
   get: function()
@@ -338,7 +338,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleFollower', {
 //region role:guardian
 /**
  * The AI role of guardian.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleGuardian', {
   get: function()
@@ -351,7 +351,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleGuardian', {
 //region role:ward
 /**
  * The AI role of ward.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleWard', {
   get: function()
@@ -364,7 +364,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleWard', {
 //region role:solo
 /**
  * The AI role of solo.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleSolo', {
   get: function()
@@ -377,7 +377,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleSolo', {
 //region role:sentinel
 /**
  * The AI role of sentinel.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleSentinel', {
   get: function()
@@ -394,7 +394,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsAiRoleSentinel', {
 /**
  * The JABS config option for enabling idling.
  * This boolean decides whether or not this battler can idle while not engaged in combat.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigCanIdle', {
   get: function()
@@ -408,7 +408,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigCanIdle', {
 /**
  * The JABS config option for disabling idling.
  * This boolean decides whether or not this battler can idle while not engaged in combat.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoIdle', {
   get: function()
@@ -422,7 +422,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoIdle', {
 /**
  * The JABS config option for enabling showing the hp bar.
  * This boolean decides whether or not this battler will reveal its hp bar under its sprite.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowHpBar', {
   get: function()
@@ -436,7 +436,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowHpBar', {
 /**
  * The JABS config option for disabling showing the hp bar.
  * This boolean decides whether or not this battler will hide its hp bar under its sprite.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoHpBar', {
   get: function()
@@ -450,7 +450,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoHpBar', {
 /**
  * The JABS config option for enabling showing the battler's name.
  * This boolean decides whether or not this battler will reveal its name under its sprite.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowName', {
   get: function()
@@ -464,7 +464,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowName', {
 /**
  * The JABS config option for disabling showing the battler's name.
  * This boolean decides whether or not this battler will hide its name under its sprite.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoName', {
   get: function()
@@ -478,7 +478,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNoName', {
 /**
  * The JABS config option for enabling invincibility on this battler.
  * This boolean decides whether or not actions can collide with this battler.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigInvincible', {
   get: function()
@@ -492,7 +492,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigInvincible', {
 /**
  * The JABS config option for disabling invincibility on this battler.
  * This boolean decides whether or not actions cannot collide with this battler.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNotInvincible', {
   get: function()
@@ -506,7 +506,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNotInvincible', {
 /**
  * The JABS config option for enabling being inanimate for this battler.
  * This boolean decides whether or not to enable being inanimate
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigInanimate', {
   get: function()
@@ -520,7 +520,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigInanimate', {
 /**
  * The JABS config option for disabling being inanimate for this battler.
  * This boolean decides whether or not to disable being inanimate.
- * @returns {boolean|null}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigNotInanimate', {
   get: function()

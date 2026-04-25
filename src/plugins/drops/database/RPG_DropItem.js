@@ -5,7 +5,7 @@
 RPG_DropItem.prototype.toImplementation = function()
 {
   // define the source to pull the item from.
-  let source = [];
+  let source;
 
   // pivot on the kind of drop item this is.
   switch (this.kind)

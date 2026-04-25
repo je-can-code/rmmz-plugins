@@ -509,8 +509,10 @@ Game_Time.prototype.canUpdateTone = function()
  * be between -255 and 255.
  * @returns {[number, number, number, number]}
  */
+// eslint-disable-next-line complexity
 Game_Time.prototype.translateHourToTone = function()
 {
+  // TODO: reduce complexity via hour->phase/quarter table + interpolation.
   const hours = J.TIME.Metadata.UseRealTime
     ? new Date().getHours()
     : this._hours;
@@ -877,7 +879,7 @@ Game_Time.prototype.setTime = function(seconds, minutes, hours, days, months, ye
 Game_Time.prototype.jumpToTimeOfDay = function(targetTimeOfDayId)
 {
   const currentTimeOfDay = this.timeOfDay(this._hours);
-  let timeUntilTargetTimeOfDay = 0;
+  let timeUntilTargetTimeOfDay;
 
   if (currentTimeOfDay >= targetTimeOfDayId)
   {

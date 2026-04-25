@@ -900,7 +900,8 @@ class Sprite_FlowingGauge
    * @param {number} rectW The width of the scan rectangle.
    * @param {number} rectH The height of the scan rectangle.
    * @param {number} maxDarkSum Inclusive ceiling on r+g+b for a pixel to count as trough (caps sit above this).
-   * @returns {{minX:number,maxX:number}} Inclusive span of the best run in the same local x space as {@link measureBrightHorizontalExtent}.
+   * @returns {{minX:number,maxX:number}} Inclusive span of the best run in the same local x space as
+   * {@link measureBrightHorizontalExtent}.
    */
   measureLongestOpaqueDarkHorizontalRun(bitmap, rectX, rectY, rectW, rectH, maxDarkSum)
   {

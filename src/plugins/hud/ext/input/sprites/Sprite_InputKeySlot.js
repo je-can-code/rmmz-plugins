@@ -195,9 +195,6 @@ class Sprite_InputKeySlot
     // with no leader, we have no inputs to make a cache.
     if (!$gameParty.leader()) return;
 
-    // grab the leader and their battler for doing things.
-    const leader = $gameParty.leader();
-
     // TODO: implement.
   }
 

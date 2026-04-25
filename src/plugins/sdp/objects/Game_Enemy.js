@@ -121,7 +121,14 @@ Game_Enemy.prototype.findLoot = function(drop, itemsFound)
 /**
  * Dynamically generates a custom drop exclusive for picking up and unlocking an SDP without a backing item.
  * @param {RPG_DropItem} drop The SDP loot to build.
- * @returns {{name: string, iconIndex: number, description: string, itypeId: number, sdpKey: string, jabsUseOnPickup: boolean}}
+ * @returns {{
+ *   name: string,
+ *   iconIndex: number,
+ *   description: string,
+ *   itypeId: number,
+ *   sdpKey: string,
+ *   jabsUseOnPickup: boolean,
+ * }}
  */
 Game_Enemy.prototype.buildSdpLoot = function(drop)
 {

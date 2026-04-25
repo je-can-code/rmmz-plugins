@@ -148,8 +148,10 @@ Game_Event.filterCommentCommandsByChoiceTimeConditional = function(command)
  * @param {rm.types.EventCommand} commentCommand The comment command to parse into a conditional.
  * @returns {TimeConditional}
  */
+// eslint-disable-next-line complexity
 Game_Event.toTimeConditional = function(commentCommand)
 {
+  // TODO: reduce complexity via ordered [regex, mapper] handler table.
   // shorthand the comment into a variable.
   const [ comment, ] = commentCommand.parameters;
 
@@ -186,7 +188,7 @@ Game_Event.toTimeConditional = function(commentCommand)
       return TimeMapper.monthRangeToConditional(comment, J.TIME.RegExp.MonthRangePage);
     case J.TIME.RegExp.YearRangePage.test(comment):
       return TimeMapper.yearRangeToConditional(comment, J.TIME.RegExp.YearRangePage);
-    //endregion events
+      //endregion events
 
     //region choices
     // JUST FOR CHOICES:
@@ -218,7 +220,7 @@ Game_Event.toTimeConditional = function(commentCommand)
       return TimeMapper.monthRangeToConditional(comment, J.TIME.RegExp.MonthRangeChoice);
     case J.TIME.RegExp.YearRangeChoice.test(comment):
       return TimeMapper.yearRangeToConditional(comment, J.TIME.RegExp.YearRangeChoice);
-    //endregion choices
+      //endregion choices
 
     default:
       console.warn(`time conditional was not generated for an identified TIME tag; ${comment}`);

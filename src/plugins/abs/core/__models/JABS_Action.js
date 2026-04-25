@@ -561,8 +561,9 @@ class JABS_Action
   }
 
   /**
-   * Builds a synthetic multiline note from the action-map template event + active page so {@link RPGManager}
-   * can parse `<vis*>` tags (optional event-level `note` field on {@link rm.types.Event}, parsable Comment commands on that page).
+   * Builds a synthetic multiline note from the action-map template event + active page so
+   * {@link RPGManager} can parse `<vis*>` tags (optional event-level `note` on {@link rm.types.Event},
+   * parsable Comment commands on that page).
    * @param {rm.types.Event} eventData Raw event blob from `$actionMap`.
    * @param {rm.types.EventPage} pageData The resolved page used for this spawn.
    * @returns {string}
@@ -1242,10 +1243,9 @@ class JABS_Action
 
     // determine the origin/facing from either the action event (preferred) or the caster’s character as a fallback.
     // this allows sprite-less actions to still render a pulse anchored to the caster.
-    let originX = 0;
-    let originY = 0;
-    // default to down as a safe fallback.
-    let facing = 2;
+    let originX;
+    let originY;
+    let facing;
 
     // attempt to use the action event for origin and facing when present.
     if (actionEvent)

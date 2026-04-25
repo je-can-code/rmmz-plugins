@@ -273,9 +273,12 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(`\\C[8]Raw Damage\\C[0]`, 'n/a');
     }
 
+    /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
+    /* eslint-disable no-unused-vars */
     const a = actor;
     const b = $gameEnemies.enemy(1);
     const v = $gameVariables._data;
+    /* eslint-enable no-unused-vars */
     let p = 0;
     if (J.PROF)
     {
@@ -304,6 +307,7 @@ class Window_SkillDetail
    * @param {Game_Actor} actor The actor.
    * @returns {JCMS_ParameterKvp}
    */
+  // eslint-disable-next-line no-unused-vars
   makeHitsParam(skill, actor)
   {
     const value = (skill.repeats - 1) + skill.jabsPierceCount;
@@ -316,6 +320,7 @@ class Window_SkillDetail
    * @param {Game_Actor} actor The actor.
    * @returns {JCMS_ParameterKvp[]}
    */
+  // eslint-disable-next-line no-unused-vars
   makeAttackStates(skill, actor)
   {
     const stateEffects = skill.effects.filter(effect => effect.code === 21);
@@ -445,6 +450,7 @@ class Window_SkillDetail
    * @param {Game_Actor} actor The actor.
    * @returns {JCMS_ParameterKvp[]}
    */
+  // eslint-disable-next-line no-unused-vars
   makeAttackElementsList(skill, actor)
   {
     const elementParams = [];
@@ -568,7 +574,12 @@ class Window_SkillDetail
     {
       // base vanilla cost is the original skillMpCost result (pre-tag-extras, post-MCR).
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillMpCost').call(actor, skill);
-      const { flat: extraFlat, percent, calculatedPercent, formula } = ResourceCostManager.extraMpCostBreakdown(actor, skill);
+      const {
+        flat: extraFlat,
+        percent,
+        calculatedPercent,
+        formula,
+      } = ResourceCostManager.extraMpCostBreakdown(actor, skill);
       const combinedFlat = baseCost + extraFlat;
       const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
       const mpColor = hasAnyCost
@@ -598,7 +609,12 @@ class Window_SkillDetail
     {
       // base vanilla cost is the original skillTpCost result (pre-tag-extras, no rate in vanilla).
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost').call(actor, skill);
-      const { flat: extraFlat, percent, calculatedPercent, formula } = ResourceCostManager.extraTpCostBreakdown(actor, skill);
+      const {
+        flat: extraFlat,
+        percent,
+        calculatedPercent,
+        formula,
+      } = ResourceCostManager.extraTpCostBreakdown(actor, skill);
       const combinedFlat = baseCost + extraFlat;
       const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
       const tpColor = hasAnyCost

@@ -119,12 +119,15 @@ J.JAFTING.EXT.REFINE.Messages = {
   /**
    * Step hint while choosing the refinement base (left list).
    */
-  RefinementStepHintPickingBase: "Choose the equipment you want to improve. This item stays in your inventory and receives traits.",
+  RefinementStepHintPickingBase:
+    'Choose the equipment you want to improve. '
+    + 'This item stays in your inventory and receives traits.',
 
   /**
    * Step hint while choosing the material (second list).
    */
-  RefinementStepHintPickingMaterial: "Choose a donor item. Transferable traits merge into your base; the donor is consumed.",
+  RefinementStepHintPickingMaterial:
+    'Choose a donor item. Transferable traits merge into your base; the donor is consumed.',
 
   /**
    * Step hint on the confirmation prompt.

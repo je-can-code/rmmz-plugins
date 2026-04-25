@@ -65,12 +65,9 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [abs-game-event-page-null-handling](unstarted/abs-game-event-page-null-handling.md) | **High** if hit | **High** for small fix | Stop logging entire `$dataMap.events` / `$gameMap._events` on null `Game_Event#event()`; safe minimal logging. |
 | [abs-game-unit-inbattle-semantics](unstarted/abs-game-unit-inbattle-semantics.md) | Medium–high interop | Medium–high | `Game_Unit#inBattle` always true under ABS — document, narrow, or add explicit helper for plugins. |
 | [abs-global-cooldown-implementation](unstarted/abs-global-cooldown-implementation.md) | Low until used | Medium–high pacing | Implement global cooldown slot behavior promised in `J.ABS.Globals.GlobalCooldownKey` JSDoc. |
-| [abs-skill-slot-combo-fallback](unstarted/abs-skill-slot-combo-fallback.md) | **High** correctness | **High** trust | `getSlotComboId` must not silently return `1` when the slot key is missing. |
 | [abs-spriteset-refresh-character-sprites-hardening](unstarted/abs-spriteset-refresh-character-sprites-hardening.md) | Medium if broken | **High** confidence | Prove or fix `refreshAllCharacterSprites` (party cycle, allies, followers) per author TODO. |
 | [ally-dodge-skill-ai](unstarted/ally-dodge-skill-ai.md) | Low–medium (balance) | Medium–high combat feel | Allies never evaluate dodge skills; extend ally AI to use them with sane cooldowns. |
-| [boolean-notetag-regex-audit](unstarted/boolean-notetag-regex-audit.md) | **High** if wrong | **Very high** correctness | Dedicated sweep of `checkForBooleanFromNoteByRegex` + negatively named tags. |
-| [bonus-hit-type-split](unstarted/bonus-hit-type-split.md) | Medium (balance) | Medium–high for designers | Split bonus-hit pools for basic vs skill vs all actions. |
-| [build-tools-linting](unstarted/build-tools-linting.md) | Medium | **Very high** once CI enforces | ESLint, annotation validation, dead-code warnings, build sanity. |
+| [eslint-complexity-refactors](unstarted/eslint-complexity-refactors.md) | Low | Medium | Reduce/contain complexity hotspots (table-driven refactors) without behavior changes. |
 | [cached-actions-map](unstarted/cached-actions-map.md) | Low–medium | Medium perf / clarity | Wire `JABS_Engine.cachedActions` Map for O(1) live-action lookup. |
 | [ca-mods-boundary](unstarted/ca-mods-boundary.md) | Low–medium | Medium clarity | Policy for `__ca-mods` vs reusable plugins. |
 | [cross-plugin-prototype-hook-surface](unstarted/cross-plugin-prototype-hook-surface.md) | High maintainability | **High** | Inventory `JABS_Engine`, `Game_Action`, `Scene_Map`, `JABS_AiManager`, `Game_Unit`, etc. |
@@ -84,14 +81,11 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [jafting-heavy-scenes-decomposition](unstarted/jafting-heavy-scenes-decomposition.md) | Low player / medium dev | Medium | Split huge JAFTING scenes for complexity targets. |
 | [j-otib-rewrite](unstarted/j-otib-rewrite.md) | Low until OTIB matters | **High** after rewrite | Passive core+ext; OTIB ext + states + UI + optional DiaLog; defer legacy patches. |
 | [jsonex-j-register-serialization-registry](unstarted/jsonex-j-register-serialization-registry.md) | Medium–high long-term | **Very high** | `J.register` + `JsonEx` registry in J-Base. |
-| [pixel-8dir-projectile-aim](completed/pixel-8dir-projectile-aim.md) | Done | **High** feel | Pixelistics leader vector input aims projectiles in dir8; strafe-safe; action template `<vis*>` defaults merge with skills. |
 | [pixel-angled-projectiles](unstarted/pixel-angled-projectiles.md) | Medium | **High** feel | Angled projectiles with Pixelistics + JABS. |
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
-| [proficiency-actor-conditionals-map-todo](unstarted/proficiency-actor-conditionals-map-todo.md) | Medium large rosters | Low effort, clarity | Drop hardcoded actor 1–6 map in Proficiency metadata. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
 | [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
 | [sdp-plugin-revisit](unstarted/sdp-plugin-revisit.md) | Medium | **High** consistency | SDP hygiene: JSON helper, scenes, tests. |
-| [style-optional-chaining-drift](unstarted/style-optional-chaining-drift.md) | Low / medium style | Low effort | Remove `?.` drift; ESLint enforcement. |
 | [team-parameterization](unstarted/team-parameterization.md) | Medium multi-faction | **High** extensibility | Data-driven friendly/opposing teams. |
 | [textpop-builder-extension-placement](unstarted/textpop-builder-extension-placement.md) | Medium | Medium–high architecture | `TextPopBuilder` extensions under Popups ownership. |
 

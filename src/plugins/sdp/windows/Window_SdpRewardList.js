@@ -54,8 +54,8 @@ class Window_SdpRewardList
       } = panelReward;
 
       // determine the icon for the reward..
-      let rankText = String.empty;
-      let iconIndex = 0;
+      let rankText;
+      let iconIndex;
       switch (rankRequired)
       {
         case -1:
@@ -74,7 +74,7 @@ class Window_SdpRewardList
 
 
       // identify the right-aligned current and bonus amounts.
-      let parameterData = `Rank: ${rankText}`;
+      const parameterData = `Rank: ${rankText}`;
 
       // construct the command.
       const command = new WindowCommandBuilder(rewardName)
