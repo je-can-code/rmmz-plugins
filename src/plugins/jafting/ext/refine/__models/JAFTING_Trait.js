@@ -51,8 +51,10 @@ Object.defineProperty(JAFTING_Trait.prototype, "nameAndValue", {
  * @returns {string}
  */
 Object.defineProperty(JAFTING_Trait.prototype, "name", {
+  // eslint-disable-next-line complexity
   get()
   {
+    // TODO: reduce complexity via trait-code->name formatter table.
     switch (this._code)
     {
       // first tab.
@@ -131,8 +133,10 @@ Object.defineProperty(JAFTING_Trait.prototype, "name", {
  * @returns {string}
  */
 Object.defineProperty(JAFTING_Trait.prototype, "value", {
+  // eslint-disable-next-line complexity
   get()
   {
+    // TODO: reduce complexity via trait-code->value formatter table.
     switch (this._code)
     {
       // first tab.

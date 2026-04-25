@@ -172,6 +172,7 @@ ColorManager.elementColorIndex = function(elementId)
  * @param {number} skillTypeId The id to get the color for.
  * @returns {rm.types.Color}
  */
+// eslint-disable-next-line no-unused-vars
 ColorManager.skillType = function(skillTypeId)
 {
   return this.textColor(1);
@@ -182,6 +183,7 @@ ColorManager.skillType = function(skillTypeId)
  * @param {number} weaponTypeId The id to get the color for.
  * @returns {rm.types.Color}
  */
+// eslint-disable-next-line no-unused-vars
 ColorManager.weaponType = function(weaponTypeId)
 {
   return this.textColor(2);
@@ -192,6 +194,7 @@ ColorManager.weaponType = function(weaponTypeId)
  * @param {number} armorTypeId The id to get the color for.
  * @returns {rm.types.Color}
  */
+// eslint-disable-next-line no-unused-vars
 ColorManager.armorType = function(armorTypeId)
 {
   return this.textColor(3);
@@ -202,6 +205,7 @@ ColorManager.armorType = function(armorTypeId)
  * @param {number} equipTypeId The id to get the color for.
  * @returns {rm.types.Color}
  */
+// eslint-disable-next-line no-unused-vars
 ColorManager.equipType = function(equipTypeId)
 {
   return this.textColor(4);
@@ -262,7 +266,7 @@ ColorManager.parseHexStringToRgb = function(hexString)
   if (h.length === 3)
   {
     h = h.split('')
-      .map(function(ch)
+      .map((ch) =>
       {
         return ch + ch;
       })

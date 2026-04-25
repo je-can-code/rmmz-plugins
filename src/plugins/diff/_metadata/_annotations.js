@@ -1,5 +1,5 @@
 //region introduction
-/* eslint-disable */
+ 
 /*:
  * @target MZ
  * @plugindesc
@@ -107,4 +107,4 @@
  * @min -999999
  * @max 999999
  */
-/* eslint-enable */
+ 

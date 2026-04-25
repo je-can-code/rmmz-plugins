@@ -135,7 +135,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsDirect', {
 
 /**
  * A new property for retrieving the JABS directLock from this skill.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsDirectLock', {
   get: function()
@@ -332,7 +332,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsInvincibleDodge', {
  * Whether or not this skill has the "free combo" trait on it.
  * Skills with "free combo" can continuously be executed regardless of
  * the actual timing factor for combos.
- * @type {boolean|null}
+ * @type {boolean}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsFreeCombo', {
   get: function()
@@ -568,7 +568,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsIgnoreParry', {
 //region unparryable
 /**
  * Whether or not this skill is completely unparryable by the target.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsUnparryable', {
   get: function()
@@ -746,7 +746,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisZ', {
 /**
  * Rotate the visual to face direction/angle if present.
  * Example: <visRotate>
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisRotate', {
   get: function()
@@ -781,7 +781,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisScale', {
 /**
  * Optional: show a tiny debug cross at the visual origin.
  * Example: <visDebug>
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisDebug', {
   get: function()
@@ -1000,7 +1000,8 @@ RPG_Skill.mergeJabsVisPairBoolFromNotes = function(skill, holder, regExp)
 };
 
 /**
- * Merged sprite anchor tags with tags on the action-map template ({@link RPG_Skill#jabsVisAnchor}); skill wins overlaps.
+ * Merged sprite anchor tags with tags on the action-map template ({@link RPG_Skill#jabsVisAnchor});
+ * skill wins overlaps.
  * @param {JABS_Action|null} jabsAction The executing action so we can read stamped synthetic notes.
  * @returns {[number, number]|null}
  */
@@ -1071,7 +1072,8 @@ RPG_Skill.prototype.getJabsVisDebugMergedForActionMap = function(jabsAction)
 };
 
 /**
- * Same resolution as {@link #getJabsVisOffsetFor}, but each tag prefers the skill note over the stamped action-map synthetic note.
+ * Same resolution as {@link #getJabsVisOffsetFor}, but each tag prefers the skill note over the stamped
+ * action-map synthetic note.
  * @param {JABS_Action|null} jabsAction Context action.
  * @param {number} direction RMMZ 8-dir travel code (1–9 except 5).
  * @returns {[number, number]}

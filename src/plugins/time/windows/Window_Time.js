@@ -144,8 +144,8 @@ class Window_Time
     const seconds = this.time.seconds.padZero(2);
     const minutes = this.time.minutes.padZero(2);
     const hours = this.time.hours.padZero(2);
-    const timeOfDayName = this.time.timeOfDayName;
-    const timeOfDayIcon = this.time.timeOfDayIcon;
+    const {timeOfDayName} = this.time;
+    const {timeOfDayIcon} = this.time;
     const seasonName = this.time.seasonOfTheYearName;
     const seasonIcon = this.time.seasonOfTheYearIcon;
 

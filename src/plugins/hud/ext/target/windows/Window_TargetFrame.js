@@ -63,7 +63,8 @@ class Window_TargetFrame
     this._j._name = String.empty;
 
     /**
-     * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx` (Passive-ABS tier stripe hex).
+     * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx` (Passive-ABS tier stripe
+     * hex).
      * @type {string|String.empty}
      */
     this._j._nameColorHex = String.empty;

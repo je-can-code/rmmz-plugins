@@ -20,7 +20,6 @@ class JABS_AI
    * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
    * @returns {number[]} Empty stub; subclasses return `[]` or `[skillId]`.
    */
-  // eslint-disable-next-line no-unused-vars
   decideAction(user, target, availableSkills)
   {
     return [];

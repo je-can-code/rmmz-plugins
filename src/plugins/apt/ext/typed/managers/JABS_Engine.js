@@ -121,7 +121,8 @@ if (J.ABS)
    * @param {ApTypeKey} apTypeKey The typed key (domain + id) for labeling.
    */
   // eslint-disable-next-line no-unused-vars
-  JABS_Engine.prototype.onTypedApGained = function(apPoints, character, apTypeKey) {};
+  JABS_Engine.prototype.onTypedApGained = function(apPoints, character, apTypeKey) 
+  {};
 
   /**
    * Creates a typed AP log entry with icon + short label.

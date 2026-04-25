@@ -257,13 +257,16 @@ JABS_Battler.prototype.processStateRegens = function(states)
   }
 
   // iterate over the above regens.
-  regens.forEach((regen, index) =>
+  regens.forEach((rawRegen, index) =>
   {
     // if it wasn't modified, don't worry about it.
-    if (!regen)
+    if (!rawRegen)
     {
       return;
     }
+
+    // work on a local copy; the forEach value is the raw slip tick input.
+    let regen = rawRegen;
 
     // apply REC effects against all three regens.
     if (regen > 0)
@@ -477,8 +480,7 @@ JABS_Battler.prototype.calculateStateSlipFormula = function(formula, battler, st
  */
 JABS_Battler.prototype.slipEval = function(formula, sourceBattler, afflictedBattler, state)
 {
-  // variables for contextual eval().
-  /* eslint-disable no-unused-vars */
+  // variables for contextual eval() (RPG slip formula bindings: a, b, v, s).
   // the one who applied the state.
   const a = sourceBattler;
   // this battler, afflicted by the state.
@@ -487,12 +489,9 @@ JABS_Battler.prototype.slipEval = function(formula, sourceBattler, afflictedBatt
   const v = $gameVariables._data;
   // access to the state itself if you need it.
   const s = state;
-  /* eslint-enable no-unused-vars */
-
-  // initialize the result.
-  let result = 0;
 
   // add a safety net for people who write broken formulas.
+  let result;
   try
   {
     // eval() the formula and default to negative (because "slip" is negative).

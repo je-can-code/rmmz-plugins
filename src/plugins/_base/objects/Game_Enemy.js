@@ -51,6 +51,7 @@ Game_Enemy.prototype.setup = function(enemyId)
  * A hook for performing actions when an enemy is setup.
  * @param {number} enemyId The enemy's id.
  */
+// eslint-disable-next-line no-unused-vars
 Game_Enemy.prototype.onSetup = function(enemyId)
 {
   // flag this battler for needing a data update.
@@ -86,6 +87,7 @@ Game_Enemy.prototype.skills = function()
  * @param {RPG_EnemyAction} action The action being mapped to a skill.
  * @returns {boolean}
  */
+// eslint-disable-next-line no-unused-vars
 Game_Enemy.prototype.canMapActionToSkill = function(action)
 {
   return true;

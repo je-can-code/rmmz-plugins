@@ -57,7 +57,7 @@ Game_System.prototype.gainAllArmors = function(count = 1)
 Game_System.prototype.canGainEntry = function(entry)
 {
   // skip entries that are null.
-  if (entry == null) return false;
+  if (entry === undefined || entry === null) return false;
 
   // skip entries with empty names.
   if (entry.name.trim().length === 0) return false;

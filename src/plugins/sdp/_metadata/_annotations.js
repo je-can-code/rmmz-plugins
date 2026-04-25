@@ -1,5 +1,5 @@
 //region Introduction
-/* eslint-disable */
+ 
 /*:
  * @target MZ
  * @plugindesc
@@ -326,4 +326,4 @@
  * @min -99999999
  * @desc The number of points to modify by. Negative will remove points. Cannot go below 0.
  */
-/* eslint-enable */
+ 

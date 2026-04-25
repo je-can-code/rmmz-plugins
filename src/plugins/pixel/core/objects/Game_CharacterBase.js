@@ -871,8 +871,10 @@ Game_CharacterBase.prototype.moveDiagonal9UpRight = function(pixelDistance)
  * @param {number} distance The distance to move (in tiles, fractional).
  * @returns {boolean} True if movement is permitted this frame, false otherwise.
  */
+// eslint-disable-next-line complexity
 Game_CharacterBase.prototype.canPassStraight = function(direction, distance = this.distancePerFrame())
 {
+  // TODO: reduce complexity (collision kernel); extract pure helpers without changing semantics.
   // Acquire the current fractional center.
   const x0 = this._x;
 
@@ -1563,8 +1565,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
  * @param {2|8} vert The vertical leg.
  * @returns {boolean} True if diagonal is permitted.
  */
+// eslint-disable-next-line complexity
 Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
 {
+  // TODO: reduce complexity (collision kernel); extract pure helpers without changing semantics.
   // Snapshot current to restore after checks.
   const oldX = this._x;
 
@@ -2644,12 +2648,24 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   const radius = this.getEffectiveRadius();
 
   // determine the nearest 8-direction for per-axis collision probing.
-  const horzDir = (dx > 0)
-    ? J.PIXEL.Directions.RIGHT
-    : (dx < 0 ? J.PIXEL.Directions.LEFT : 0);
-  const vertDir = (dy > 0)
-    ? J.PIXEL.Directions.DOWN
-    : (dy < 0 ? J.PIXEL.Directions.UP : 0);
+  let horzDir = 0;
+  if (dx > 0)
+  {
+    horzDir = J.PIXEL.Directions.RIGHT;
+  }
+  else if (dx < 0)
+  {
+    horzDir = J.PIXEL.Directions.LEFT;
+  }
+  let vertDir = 0;
+  if (dy > 0)
+  {
+    vertDir = J.PIXEL.Directions.DOWN;
+  }
+  else if (dy < 0)
+  {
+    vertDir = J.PIXEL.Directions.UP;
+  }
 
   // probe horizontal component if non-zero.
   let canMoveX = (dx === 0);

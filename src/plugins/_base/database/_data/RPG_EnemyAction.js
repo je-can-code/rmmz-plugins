@@ -42,6 +42,7 @@ class RPG_EnemyAction
    * @param {RPG_EnemyAction} enemyAction The action to parse.
    * @param {number} index The index of the entry in the database.
    */
+  // eslint-disable-next-line no-unused-vars
   constructor(enemyAction, index)
   {
     this.conditionParam1 = enemyAction.conditionParam1;

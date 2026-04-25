@@ -3,12 +3,14 @@ class Window_RecipeDetails
   extends Window_Base
 {
   /**
-   * Fourth-column divider is drawn this many pixels left of that column's origin; header rules must not extend past this.
+   * Fourth-column divider is drawn this many pixels left of that column's origin; header rules must not extend past
+   * this.
    */
   static #DETAIL_DIVIDER_LEFT_OFFSET = 12;
 
   /**
-   * Horizontal rule under each component header is inset this many pixels from each band edge (matches {@link #DETAIL_DIVIDER_LEFT_OFFSET} so column 3 rules never cross the divider).
+   * Horizontal rule under each component header is inset this many pixels from each band edge (matches
+   * {@link #DETAIL_DIVIDER_LEFT_OFFSET} so column 3 rules never cross the divider).
    */
   static #COMPONENT_HEADER_RULE_SIDE_INSET = Window_RecipeDetails.#DETAIL_DIVIDER_LEFT_OFFSET;
 
@@ -203,7 +205,7 @@ class Window_RecipeDetails
   #canDrawContent()
   {
     // if there is no recipe, then we cannot draw its detail.
-    if (this.#currentRecipe == null) return false;
+    if (this.#currentRecipe === undefined || this.#currentRecipe === null) return false;
 
     // we can draw content!
     return true;

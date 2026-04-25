@@ -2,6 +2,7 @@
 /**
  * Plugin command for doing the thing.
  */
+// eslint-disable-next-line no-unused-vars
 PluginManager.registerCommand(J.ABS.EXT.FORMULA.Metadata.name, "do-the-thing", args =>
 {
   console.log('did the thing.');

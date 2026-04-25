@@ -354,8 +354,10 @@ class PIXEL_CollisionManager
    * @param {boolean} blockRight Whether the right edge is blocked.
    * @returns {number} The representative collision code.
    */
+  // eslint-disable-next-line complexity
   static _mergeSingleTile(blockUp, blockDown, blockLeft, blockRight)
   {
+    // TODO: reduce complexity via UDLR bitmask -> code lookup table.
     // If all edges are blocked, the tile is fully solid.
     if (blockUp && blockDown && blockLeft && blockRight)
     {
@@ -445,8 +447,10 @@ class PIXEL_CollisionManager
    * @param {2|4|6|8} d The entering direction.
    * @returns {boolean} True if passable, false otherwise.
    */
+  // eslint-disable-next-line complexity
   static isPositionPassable(px, py, d)
   {
+    // TODO: reduce complexity via code->predicate table (and shared direction helpers).
     // Apply the global lattice shift only for reads.
     const sx = px + this.GridShiftX;
     const sy = py + this.GridShiftY;

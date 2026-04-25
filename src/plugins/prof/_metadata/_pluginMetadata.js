@@ -42,13 +42,9 @@ class J_ProficiencyPluginMetadata
     super(name, version);
   }
 
-  postInitialize()
-  {
-    super.postInitialize();
-
-    this.initializeProficiencies();
-  }
-
+  /**
+   * Initializes the proficiencies from database and external data.
+   */
   initializeProficiencies()
   {
     const rawConfig = StorageManager.fsReadFile(J_ProficiencyPluginMetadata.CONFIG_PATH);
@@ -66,9 +62,7 @@ class J_ProficiencyPluginMetadata
     }
     catch (e)
     {
-      throw new Error(
-        `Failed to parse JSON at ${J_ProficiencyPluginMetadata.CONFIG_PATH}: ${e.message}`,
-      );
+      throw new Error(`Failed to parse JSON at ${J_ProficiencyPluginMetadata.CONFIG_PATH}: ${e.message}`,);
     }
 
     if (parsedConditionals === null)
@@ -91,23 +85,24 @@ class J_ProficiencyPluginMetadata
      * @type {Map<number, ProficiencyConditional[]>}
      */
     this.actorConditionalsMap = new Map();
-    // TODO: fix this!
-    [ 1, 2, 3, 4, 5, 6 ].forEach(actorId =>
-    {
-      this.actorConditionalsMap.set(actorId, Array.empty);
-    });
 
+    // iterate over the actors to initialize their conditional maps.
+    $dataActors.filter(actor => !!actor)
+      .forEach(actor => this.actorConditionalsMap.set(actor.id, Array.empty));
 
+    // iterate over the identified conditionals.
     this.conditionals.forEach(conditional =>
     {
+      // iterate over each conditional's actorId.
       conditional.actorIds.forEach(actorId =>
       {
+        // add the conditional to the actor's map.
         const data = this.actorConditionalsMap.get(actorId);
         data.push(conditional);
-        this.actorConditionalsMap.set(actorId, data);
       });
     });
 
+    // check if we're allowed to show the loading information before showing it.
     if (J.BASE.Metadata.ShowExternalFileLoadInfo)
     {
       console.log(`loaded:

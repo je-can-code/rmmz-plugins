@@ -807,9 +807,9 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function ()
         // if not frozen or is locked, follow the live resolver fallback.
         if (tx === null || ty === null || isLocked)
         {
-          const result = item.battler.resolveDirectActionTargetCoordinates(item.action);
-          tx = result[0];
-          ty = result[1];
+          const [resolvedX, resolvedY] = item.battler.resolveDirectActionTargetCoordinates(item.action);
+          tx = resolvedX;
+          ty = resolvedY;
         }
 
         // if we successfully resolved coords, convert them from tile to screen space.
@@ -913,6 +913,7 @@ Spriteset_Map.prototype.destroyCastPreviewSprite = function (sprite)
  * @param {string} shape The hitbox shape name.
  * @returns {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }}
  */
+// eslint-disable-next-line no-unused-vars
 Spriteset_Map.prototype.getCastPreviewStyleFor = function (shape)
 {
   // MVP: a distinct, more transparent red/orange than live hitboxes.

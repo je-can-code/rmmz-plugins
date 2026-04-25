@@ -21,11 +21,9 @@ class JABS_Shield
     // grab all the formulas that the
     const pointFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.ShieldPointsFormula);
 
-    // allows access to the attacker and target.
-    /* eslint-disable no-unused-vars */
+    // allows access to the attacker and target (RPG formula bindings for eval()).
     const a = attacker ?? target;
     const b = target;
-    /* eslint-enable no-unused-vars */
 
     /**
      * A safe reduce function that wears a diaper during evaluation.

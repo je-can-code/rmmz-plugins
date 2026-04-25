@@ -25,6 +25,7 @@ J.PROF.Aliased = {
   Game_System: new Map(),
 
   IconManager: new Map(),
+  Scene_Boot: new Map(),
   TextManager: new Map(),
 };
 

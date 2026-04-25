@@ -170,10 +170,21 @@ Game_Event.prototype.page = function()
       .call(this);
   }
 
-  console.log($dataMap.events);
-  console.log($gameMap._events);
-  console.warn(this);
-  console.warn('that thing happened again, you should probably look into this.');
+  // event data is gone (e.g. update after teardown). log only this event's own fields + stack — never dump whole
+  // maps (devtools cost).
+  const {stack} = new Error();
+  console.warn(
+    '[JABS] Game_Event#page: missing event data (race / teardown?).',
+    {
+      eventId: this._eventId,
+      pageIndex: this._pageIndex,
+      x: this.x(),
+      y: this.y(),
+      isJabsAction: this.isJabsAction(),
+      jabsActionUuid: this.getJabsActionUuid(),
+      stack,
+    },
+  );
 
   // return null because... something went awry.
   return null;

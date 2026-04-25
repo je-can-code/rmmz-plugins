@@ -3,7 +3,7 @@
 /**
  * Whether or not this state is also a JABS paralysis state.
  * Paralysis is the same as being rooted & muted & disarmed simultaneously.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsParalyzed', {
   get: function()
@@ -17,7 +17,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsParalyzed', {
 /**
  * Whether or not this state is also a JABS rooted state.
  * Rooted battlers are unable to move on the map.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsRooted', {
   get: function()
@@ -31,7 +31,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsRooted', {
 /**
  * Whether or not this state is also a JABS muted state.
  * Muted battlers are unable to use their combat skills.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsMuted', {
   get: function()
@@ -45,7 +45,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsMuted', {
 /**
  * Whether or not this state is also a JABS disarmed state.
  * Disarmed battlers are unable to use their basic attacks.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsDisarmed', {
   get: function()
@@ -60,7 +60,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsDisarmed', {
  * Whether or not this state is considered "negative" for the purpose
  * of AI action decision-making. Ally AI set to Support or enemy AI set
  * to Healing will attempt to remove "negative" states if possible.
- * @type {boolean}
+ * @type {boolean|null}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsNegative', {
   get: function()
@@ -241,6 +241,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateStacksApplied', {
  * Whether or not all stacks of a state will be removed upon duration expiration.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
  * If no value is defined on the state, the default from configuration will be used.
+ * @type {boolean}
  */
 Object.defineProperty(RPG_State.prototype, 'jabsLoseAllStacksAtOnce', {
   get: function()

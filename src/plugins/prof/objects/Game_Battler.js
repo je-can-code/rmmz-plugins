@@ -13,6 +13,7 @@ Game_Battler.prototype.skillProficiencies = function()
  * @param {number} skillId The id of the skill to get proficiency for.
  * @returns {SkillProficiency|null}
  */
+// eslint-disable-next-line no-unused-vars
 Game_Battler.prototype.skillProficiencyBySkillId = function(skillId)
 {
   return null;
