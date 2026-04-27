@@ -31,6 +31,7 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 
 ## ESLint Compliance
 - **Never violate ESLint rules.** `rmmz-plugins` enforces `eol-last: ["error", "never"]` — files must NOT end with a trailing newline. When using the `Write` tool, the final character of the `contents` string must be the last character of the file (no `\n` after the closing `//endregion` or final line). Always run `ReadLints` on newly written files to catch violations before committing.
+- **Always run `bun run lint` after code changes.** Jeremy’s terminal command `bunx eslint "src/plugins/**/*.js" "src/build-tools/**/*.js" "eslint.config.js"` is equivalent to the lint script; treat `bun run lint` as the default. All lint **errors** must be fixed. Lint **warnings** should be addressed or explicitly justified (e.g., suppressed with a targeted one-liner) depending on the concern and intent.
 
 ## Universal Coding Style (all three projects)
 
