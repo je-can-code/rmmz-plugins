@@ -103,7 +103,7 @@ class StatDistributionPanelBuilder
 
   rarity(rarity)
   {
-    this.#rarity = rarity;
+    this.#rarity = PanelRarity.normalizeRarityFromJson(rarity);
     return this;
   }
 

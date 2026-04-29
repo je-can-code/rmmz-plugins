@@ -45,7 +45,7 @@ class StatDistributionPanel
     this.iconIndex = iconIndex;
 
     /**
-     * Gets the color index representing this SDP's rarity.
+     * Panel rarity (**0–5**, Common..Godlike).
      * @type {number}
      */
     this.rarity = rarity;
@@ -75,19 +75,19 @@ class StatDistributionPanel
     this.maxRank = maxRank;
 
     /**
-     * The base cost to rank up this panel.
+     * Additive offset on top of the rarity default base SDP (see `config.sdp.json`; core curve lives in plugin params).
      * @type {number}
      */
     this.baseCost = baseCost;
 
     /**
-     * The flat amount per rank that the cost will grow.
+     * Additive offset on the rarity default exponential coefficient (**flat** term before `mult ** step`).
      * @type {number}
      */
     this.flatGrowthCost = flatGrowthCost;
 
     /**
-     * The multiplicative amount per rank that the cost will grow.
+     * Multiplier applied to the rarity default **mult** (keep **1.0** for “use defaults only”).
      * @type {number}
      */
     this.multGrowthCost = multGrowthCost;
@@ -107,6 +107,11 @@ class StatDistributionPanel
 
   /**
    * Calculates the cost of SDP points to rank this panel up.
+   *
+   * Combines plugin-parameter rarity defaults with per-panel offsets from
+   * **J.SDP.Metadata.resolveEffectiveRankUpCostParts** — effective cost is
+   * `base + floor(flat * mult^(currentRank + 1))` with resolved **base**, **flat**, and **mult**.
+   *
    * @param {number} currentRank The current ranking of this panel for a given actor.
    * @returns {number}
    */
@@ -118,8 +123,14 @@ class StatDistributionPanel
     }
     else
     {
-      const growth = Math.floor(this.multGrowthCost * (this.flatGrowthCost * (currentRank + 1)));
-      return this.baseCost + growth;
+      const rankExponent = currentRank + 1;
+
+      const parts = J.SDP.Metadata.resolveEffectiveRankUpCostParts(this);
+
+      // Use ** here; Vitest stubs global Math (Math.pow may be missing) while ** stays native.
+      const growth = Math.floor(parts.flatGrowthCost * (parts.multGrowthCost ** rankExponent));
+
+      return parts.baseCost + growth;
     }
   }
 
@@ -219,34 +230,36 @@ class StatDistributionPanel
   }
 
   /**
-   * Gets the rarity, aka the color index of the rarity of this panel.
+   * Window text color index for SDP chrome for this panel's rarity.
+   *
    * @returns {number}
    */
   getPanelRarityColorIndex()
   {
-    return this.rarity;
+    return PanelRarity.rarityIndexToColorIndex(this.rarity);
   }
 
   /**
    * Gets the text associated with the rarity of this panel.
+   *
    * @returns {string}
    */
   getPanelRarityText()
   {
     switch (this.rarity)
     {
-      case 0:
-        return "Common";
-      case 3:
-        return "Magical";
-      case 23:
-        return "Rare";
-      case 31:
-        return "Epic";
-      case 20:
-        return "Legendary";
-      case 25:
-        return "Godlike";
+      case PanelRarity.RARITY_COMMON:
+        return PanelRarity.Common;
+      case PanelRarity.RARITY_MAGICAL:
+        return PanelRarity.Magical;
+      case PanelRarity.RARITY_RARE:
+        return PanelRarity.Rare;
+      case PanelRarity.RARITY_EPIC:
+        return PanelRarity.Epic;
+      case PanelRarity.RARITY_LEGENDARY:
+        return PanelRarity.Legendary;
+      case PanelRarity.RARITY_GODLIKE:
+        return PanelRarity.Godlike;
       default:
         return `unknown rarity: [ ${this.rarity} ]`;
     }

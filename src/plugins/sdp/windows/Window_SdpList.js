@@ -6,13 +6,18 @@ class Window_SdpList
   extends Window_Command
 {
   /**
-   * The currently selected actor. Used for comparing points to cost to see if
-   * the panel in the list window should be enabled or disabled.
+   * The currently selected actor for listing unlocked panels and drawing ranks/costs.
    * @type {Game_Actor}
    */
   currentActor = null;
 
   filterNoMaxedPanels = false;
+
+  /**
+   * The queued cart levels by panel key.
+   * @type {Map<string, number>}
+   */
+  cart = new Map();
 
   /**
    * @constructor
@@ -30,6 +35,16 @@ class Window_SdpList
   setActor(actor)
   {
     this.currentActor = actor;
+    this.refresh();
+  }
+
+  /**
+   * Sets the cart map to show queued levels in the list.
+   * @param {Map<string, number>} cart The cart mapping.
+   */
+  setCart(cart)
+  {
+    this.cart = cart;
     this.refresh();
   }
 
@@ -91,8 +106,7 @@ class Window_SdpList
         // add the command.
         return command;
       }, this)
-      .filter(command => command !== null)
-      //.sort((a, b) => a.ext.key.localeCompare(b.ext.key));
+      .filter(command => command !== null);
 
     commands.forEach(this.addBuiltCommand, this);
   }
@@ -105,14 +119,14 @@ class Window_SdpList
   makeCommand(panel)
   {
     const actor = this.currentActor;
-    const points = actor.getSdpPoints();
     const {
       name,
       key,
       iconIndex,
-      rarity: colorIndex,
       maxRank
     } = panel;
+
+    const colorIndex = panel.getPanelRarityColorIndex();
 
     // get the ranking for a given panel by its key.
     const panelRanking = actor.getSdpByKey(key);
@@ -130,29 +144,157 @@ class Window_SdpList
       return null;
     }
 
-    // check if we have enough points to rank up this panel.
-    const hasEnoughPoints = panel.rankUpCost(currentRank) <= points;
-
-    // determine whether or not the command is enabled.
-    const enabled = hasEnoughPoints && !isMaxRank;
-
-    // build the right text out.
-    const rightText = isMaxRank
-      ? "DONE"
-      : `${currentRank} / ${maxRank}`;
+    // keep rows selectable even when the wallet cannot afford the next rank alone — cart totals and
+    // queued levels change continuously; disabling by snapshot points goes stale quickly.
+    const enabled = !isMaxRank;
 
     // construct the SDP command.
     const command = new WindowCommandBuilder(name)
       .setSymbol(key)
       .setEnabled(enabled)
+      // keep the panel as the ext; the scene expects `currentExt()` to be the panel.
       .setExtensionData(panel)
       .setIconIndex(iconIndex)
       .setColorIndex(colorIndex)
-      .setRightText(rightText)
       .build();
 
     return command;
   }
+
+  /**
+   * OVERWRITE Renders SDP list rows with styled padded ranks.
+   * @param {number} index The command index.
+   */
+  drawItem(index)
+  {
+    // handles the setup that occurs before each item drawn.
+    this.preDrawItem(index);
+
+    // grab the rectangle for the line item.
+    const {
+      x: rectX,
+      y: rectY,
+      width: rectWidth
+    } = this.itemLineRect(index);
+
+    // identify the icon for this command.
+    const commandIcon = this.commandIcon(index);
+    if (commandIcon)
+    {
+      this.drawIcon(commandIcon, rectX + 4, rectY);
+    }
+
+    // render the command name.
+    const commandNameX = rectX + 40;
+    this.drawTextEx(this.buildCommandName(index), commandNameX, rectY, rectWidth);
+
+    // draw the rank block on the right.
+    this.drawRankDetails(index, rectX, rectY, rectWidth);
+  }
+
+  /**
+   * Draws the rank block flush right (`CC / MM`). With cart, the left number becomes a preview
+   * (`min(max, current + queued)`) in palette **24** (power-up) — no extra ` +NN` column.
+   * @param {number} index The command index.
+   * @param {number} x The row x.
+   * @param {number} y The row y.
+   * @param {number} width The row width.
+   */
+  drawRankDetails(index, x, y, width)
+  {
+    const command = this.commandEntryAt(index);
+    const panel = command
+      ? command.ext
+      : null;
+    if (!panel)
+    {
+      return;
+    }
+
+    const actor = this.currentActor;
+    const {
+      key,
+      maxRank,
+    } = panel;
+    const { currentRank } = actor.getSdpByKey(key);
+    const isMaxRank = maxRank <= currentRank;
+    const cartLevels = this.cart.get(key) ?? 0;
+
+    const pad = 12;
+    const rightEdge = x + width - pad;
+
+    // maxed panels just say DONE.
+    if (isMaxRank)
+    {
+      const done = 'DONE';
+      const doneW = this.textWidth(done);
+      this.drawText(done, rightEdge - doneW, y, doneW, Window_Base.TextAlignments.Left);
+      return;
+    }
+
+    // `CC / MM` — anchor from the right edge first so columns stay fixed.
+    const rankW = this.textWidth('00');
+    const slashText = ' / ';
+    const slashW = this.textWidth(slashText);
+
+    const maxX = rightEdge - rankW;
+    const slashX = maxX - slashW;
+    const curX = slashX - rankW;
+
+    // with cart levels, the left column shows **preview rank** (capped) in “power up” green; no separate +NN column.
+    const hasCart = cartLevels > 0;
+    const previewCurrent = Math.min(maxRank, currentRank + cartLevels);
+    const currentColor = hasCart
+      ? 24
+      : 0;
+
+    this.drawStyledZeroPaddedNumber(
+      curX,
+      y,
+      hasCart
+        ? previewCurrent
+        : currentRank,
+      rankW,
+      2,
+      8,
+      currentColor);
+    this.drawText(slashText, slashX, y, slashW, Window_Base.TextAlignments.Left);
+    this.drawStyledZeroPaddedNumber(maxX, y, maxRank, rankW, 2, 8, 0);
+  }
+
+  //region cart
+  /**
+   * OVERWRITE Enables tab-switching via left input (controller-first).
+   */
+  cursorLeft(wrap)
+  {
+    // if the scene is listening for cart-dec, then do that instead of noop'ing on a single-column list.
+    if (this.isHandled('cart-dec'))
+    {
+      this.callHandler('cart-dec');
+      return;
+    }
+
+    // perform original logic.
+    Window_Selectable.prototype.cursorLeft.call(this, wrap);
+  }
+
+  /**
+   * OVERWRITE Enables tab-switching via right input (controller-first).
+   */
+  cursorRight(wrap)
+  {
+    // if the scene is listening for cart-inc, then do that instead of noop'ing on a single-column list.
+    if (this.isHandled('cart-inc'))
+    {
+      this.callHandler('cart-inc');
+      return;
+    }
+
+    // perform original logic.
+    Window_Selectable.prototype.cursorRight.call(this, wrap);
+  }
+  //endregion cart
 }
 
 //endregion Window_SdpList

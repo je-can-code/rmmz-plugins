@@ -5,7 +5,7 @@
  */
 TextManager.sdpPoints = function()
 {
-  return 'SDPs';
+  return J.SDP.Metadata.sdpPointsDisplayName;
 };
 
 /**

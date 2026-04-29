@@ -23,8 +23,8 @@ describe('J-SDP metadata panels (out/J-SDP.js)', () =>
     const panel = sandbox.J.SDP.Metadata.panelsMap.get('vitest_panel');
     expect(panel).toBeDefined();
     expect(panel.maxRank).toBe(3);
-    expect(panel.baseCost).toBe(1);
-    expect(panel.flatGrowthCost).toBe(1);
+    expect(panel.baseCost).toBe(0);
+    expect(panel.flatGrowthCost).toBe(0);
     expect(panel.multGrowthCost).toBe(1);
     expect(panel.panelParameters.length).toBe(1);
     expect(panel.panelParameters[0].parameterId).toBe(0);
@@ -32,8 +32,11 @@ describe('J-SDP metadata panels (out/J-SDP.js)', () =>
     expect(panel.panelParameters[0].isFlat).toBe(true);
     expect(panel.panelParameters[0].isCore).toBe(true);
 
-    const growth0 = Math.floor(1 * (1 * 1));
-    expect(panel.rankUpCost(0)).toBe(1 + growth0);
+    const flat = 70;
+    const mult = 1.06;
+    expect(panel.rankUpCost(0)).toBe(Math.floor(flat * (mult ** 1)));
+    expect(panel.rankUpCost(1)).toBe(Math.floor(flat * (mult ** 2)));
+    expect(panel.rankUpCost(2)).toBe(Math.floor(flat * (mult ** 3)));
     expect(panel.rankUpCost(3)).toBe(0);
   });
 

@@ -1,6 +1,6 @@
 //region Window_SdpPoints
 /**
- * The SDP window containing the amount of SDP points a given actor has.
+ * The SDP window containing the menu actor identity.
  */
 class Window_SdpPoints
   extends Window_Base
@@ -34,40 +34,28 @@ class Window_SdpPoints
   }
 
   /**
-   * Draws the SDP icon and number of points this actor has.
+   * Draws the face + actor name of the menu actor.
    */
   drawPoints()
   {
-    this.drawSdpIcon();
-    this.drawSdpPoints();
     this.drawSdpFace();
+    this.drawActorName();
   }
 
   /**
-   * Draws the "SDP icon" representing points.
+   * Draws the menu actor name (wallet moved to the cart).
    */
-  drawSdpIcon()
-  {
-    const x = 200;
-    const y = 2;
-    const iconIndex = J.SDP.Metadata.sdpIconIndex;
-    this.drawIcon(iconIndex, x, y);
-  }
-
-  /**
-   * Draws the SDP points the actor currently has.
-   */
-  drawSdpPoints()
+  drawActorName()
   {
     // don't draw the points if the actor is unavailable.
     if (!this._actor) return;
 
-    const points = this._actor.getSdpPoints();
-    const x = 240;
+    const actorName = this._actor.name();
+    const x = 140;
     const y = 0;
-    const textWidth = 300;
+    const textWidth = this.innerWidth - x;
     const alignment = 'left';
-    this.drawText(points, x, y, textWidth, alignment);
+    this.drawText(actorName, x, y, textWidth, alignment);
   }
 
   /**
