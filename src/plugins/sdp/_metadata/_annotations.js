@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.2 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * [v3.0.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -40,7 +40,8 @@
  * Each SDP has the following:
  * - 1+ parameters (of the 27 available in RMMZ) with flat/percent growth.
  * - A fixed rank max.
- * - A relatively customizable formula to determine cost to rank up.
+ * - Rank-up costs driven by **rarity defaults** (plugin parameters) plus optional **per-panel offsets**
+ *   in `config.sdp.json` (`baseCost`, `flatGrowthCost`, `multGrowthCost` — usually **0 / 0 / 1.0**).
  * - Customizable name/icon/description1/description2.
  * - Rank up rewards for any/every/max rank, which can be most anything.
  *
@@ -197,6 +198,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.0
+ *    BREAKING: Rank-up cost spine is defined per **rarity** in plugin parameters; each panel’s `baseCost`,
+ *    `flatGrowthCost`, and `multGrowthCost` in `config.sdp.json` are **offsets / scale** (defaults **0 / 0 / 1.0**).
+ *    Retune plugin defaults or panel overrides when migrating from v2.x absolute triples.
  * - 2.1.2
  *    Consumed `RPGManager` updates.
  * - 2.1.1
@@ -278,6 +283,27 @@
  * Use the context menu to easily select an index.
  * @default 2563
  *
+ * @param sdpUnitSingular
+ * @parent SDPconfigs
+ * @type string
+ * @text Unit name (singular)
+ * @desc Player-facing word for one rankable entry (panel, node, junction, etc.).
+ * @default panel
+ *
+ * @param sdpUnitPlural
+ * @parent SDPconfigs
+ * @type string
+ * @text Unit name (plural)
+ * @desc Plural form for counts in confirmations (panels, nodes, …).
+ * @default panels
+ *
+ * @param sdpPointsDisplayName
+ * @parent SDPconfigs
+ * @type string
+ * @text Points name (short)
+ * @desc Currency label in SDP UI (confirmation “Remaining …”, cart wallet header, TextManager.sdpPoints).
+ * @default SDP
+ *
  *
  * @param JABSconfigs
  * @text JABS-ONLY CONFIG
@@ -288,6 +314,143 @@
  * @type boolean
  * @desc If ON, then show in both JABS quick menu and main menu, otherwise only JABS quick menu.
  * @default false
+ *
+ *
+ * @param sdpPanelCostDefaults
+ * @text Panel rank-up defaults (by rarity)
+ * @desc Core base / flat coefficient / exponential base (**mult**) per rarity. Panel JSON adds offsets on top.
+ *
+ * @param sdpDefaultCommonBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Common · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultCommonFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Common · Flat coefficient
+ * @default 70
+ *
+ * @param sdpDefaultCommonMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Common · Mult base
+ * @default 1.06
+ *
+ * @param sdpDefaultMagicalBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Magical · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultMagicalFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Magical · Flat coefficient
+ * @default 235
+ *
+ * @param sdpDefaultMagicalMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Magical · Mult base
+ * @default 1.06
+ *
+ * @param sdpDefaultRareBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Rare · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultRareFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Rare · Flat coefficient
+ * @default 1180
+ *
+ * @param sdpDefaultRareMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Rare · Mult base
+ * @default 1.06
+ *
+ * @param sdpDefaultEpicBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Epic · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultEpicFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Epic · Flat coefficient
+ * @default 4320
+ *
+ * @param sdpDefaultEpicMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Epic · Mult base
+ * @default 1.06
+ *
+ * @param sdpDefaultLegendaryBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Legendary · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultLegendaryFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Legendary · Flat coefficient
+ * @default 11900
+ *
+ * @param sdpDefaultLegendaryMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Legendary · Mult base
+ * @default 1.06
+ *
+ * @param sdpDefaultGodlikeBase
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min -999999
+ * @text Godlike · Base SDP
+ * @default 0
+ *
+ * @param sdpDefaultGodlikeFlat
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @min 0
+ * @text Godlike · Flat coefficient
+ * @default 30500
+ *
+ * @param sdpDefaultGodlikeMult
+ * @parent sdpPanelCostDefaults
+ * @type number
+ * @decimals 2
+ * @min 1.00
+ * @text Godlike · Mult base
+ * @default 1.06
  *
  * @command Call SDP Menu
  * @text Access the SDP Menu
