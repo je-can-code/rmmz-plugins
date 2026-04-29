@@ -30,8 +30,8 @@ Each plugin repeats the same structure: read file → null/empty guard with dupl
 1. Add a small J-Base API (name TBD) that returns parsed JSON or throws a single consistent `Error` type/message shape.
 2. Migrate one plugin as reference (Difficulty or Proficiency are smallest), then batch the rest.
 3. Align log lines where `J.BASE.Metadata.ShowExternalFileLoadInfo` is used (Difficulty already does; others may not).
-4. Cross-link `sdp-plugin-revisit.md` when SDP is migrated.
+4. Cross-link `../completed/sdp-plugin-revisit.md` when SDP JSON load is migrated (scene modernization already landed in rmmz-plugins#45).
 
 ## Notes
 
-- Merges with the “external JSON / parsePluginInt / error surfacing” bullets in `sdp-plugin-revisit.md` — that item becomes mostly “SDP-specific data vs UI” once loading is centralized.
+- Merges with the “external JSON / parsePluginInt / error surfacing” bullets in `../completed/sdp-plugin-revisit.md` — remaining work is mostly “SDP-specific data vs UI” once loading is centralized.
