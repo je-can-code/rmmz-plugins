@@ -18,7 +18,27 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
     sandbox = null;
   });
 
-  it('rankUpCost uses base, flat, and multiplicative growth; max rank returns 0', () =>
+  it('maps panel rarity (0–5) to window color indices for SDP chrome', () =>
+  {
+    const { PanelRarity } = sandbox;
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_COMMON)).toBe(0);
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_MAGICAL)).toBe(PanelRarity.WindowColorMagical);
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_RARE)).toBe(PanelRarity.WindowColorRare);
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_EPIC)).toBe(PanelRarity.WindowColorEpic);
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_LEGENDARY)).toBe(PanelRarity.WindowColorLegendary);
+    expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_GODLIKE)).toBe(PanelRarity.WindowColorGodlike);
+  });
+
+  it('normalizeRarityFromJson coerces labels and alternate integer encodings to 0–5', () =>
+  {
+    const { PanelRarity } = sandbox;
+    expect(PanelRarity.normalizeRarityFromJson(PanelRarity.WindowColorRare)).toBe(PanelRarity.RARITY_RARE);
+    expect(PanelRarity.normalizeRarityFromJson(PanelRarity.WindowColorEpic)).toBe(PanelRarity.RARITY_EPIC);
+    expect(PanelRarity.normalizeRarityFromJson(6)).toBe(PanelRarity.RARITY_COMMON);
+    expect(PanelRarity.normalizeRarityFromJson('Rare')).toBe(PanelRarity.RARITY_RARE);
+  });
+
+  it('rankUpCost adds exponential growth (flat * mult^(rank+1)); max rank returns 0', () =>
   {
     const { PanelParameter, StatDistributionPanel } = sandbox;
     const param = new PanelParameter(0, 5, true, false);
@@ -30,19 +50,19 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
       .unlockedByDefault(true)
       .description('')
       .flavorText('')
-      .maxRank(3)
+      .maxRank(4)
       .baseCost(10)
-      .flatGrowth(2)
-      .multGrowth(1.5)
+      .flatGrowth(5)
+      .multGrowth(2)
       .parameters([ param ])
       .rewards([])
       .build();
 
-    const growth0 = Math.floor(1.5 * (2 * 1));
-    expect(panel.rankUpCost(0)).toBe(10 + growth0);
-    const growth1 = Math.floor(1.5 * (2 * 2));
-    expect(panel.rankUpCost(1)).toBe(10 + growth1);
-    expect(panel.rankUpCost(3)).toBe(0);
+    expect(panel.rankUpCost(0)).toBe(10 + Math.floor(5 * Math.pow(2, 1)));
+    expect(panel.rankUpCost(1)).toBe(10 + Math.floor(5 * Math.pow(2, 2)));
+    expect(panel.rankUpCost(2)).toBe(10 + Math.floor(5 * Math.pow(2, 3)));
+    expect(panel.rankUpCost(3)).toBe(10 + Math.floor(5 * Math.pow(2, 4)));
+    expect(panel.rankUpCost(4)).toBe(0);
   });
 
   it('calculateBonusByRank handles flat and percent; fractional divides by 100', () =>
@@ -104,9 +124,9 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
     expect(panel.getPanelRewardsByRank(2).map(x => x.rewardName)).toEqual([ 'B' ]);
   });
 
-  it('getPanelRarityText covers known rarity indices', () =>
+  it('getPanelRarityText matches panel rarity and JSON loader normalization', () =>
   {
-    const { PanelParameter, StatDistributionPanel } = sandbox;
+    const { PanelParameter, PanelRarity, StatDistributionPanel } = sandbox;
     const mk = rarity =>
     {
       return StatDistributionPanel.Builder()
@@ -127,8 +147,12 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
     };
 
     expect(mk(0).getPanelRarityText()).toBe('Common');
-    expect(mk(23).getPanelRarityText()).toBe('Rare');
-    expect(mk(99).getPanelRarityText()).toContain('unknown rarity');
+    expect(mk(PanelRarity.RARITY_EPIC).getPanelRarityText()).toBe('Epic');
+    expect(mk(PanelRarity.WindowColorRare).getPanelRarityText()).toBe('Rare');
+    expect(mk(PanelRarity.WindowColorRare).rarity).toBe(PanelRarity.RARITY_RARE);
+
+    expect(mk(99).rarity).toBe(PanelRarity.RARITY_COMMON);
+    expect(mk(99).getPanelRarityText()).toBe('Common');
   });
 });
 //endregion plugins/sdp/sdp-panel-math.test.js

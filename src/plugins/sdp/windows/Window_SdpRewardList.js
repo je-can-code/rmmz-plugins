@@ -45,6 +45,17 @@ class Window_SdpRewardList
     const commands = [];
 
     if (!this.panelRewards) return commands;
+    if (this.panelRewards.length === 0)
+    {
+      const command = new WindowCommandBuilder('No rewards.')
+        .setSymbol('no-rewards')
+        .setEnabled(false)
+        .setColorIndex(8)
+        .build();
+
+      commands.push(command);
+      return commands;
+    }
 
     this.panelRewards.forEach(panelReward =>
     {
@@ -53,41 +64,113 @@ class Window_SdpRewardList
         rankRequired
       } = panelReward;
 
-      // determine the icon for the reward..
-      let rankText;
       let iconIndex;
       switch (rankRequired)
       {
         case -1:
           iconIndex = 75;
-          rankText = 'EACH';
           break;
         case 0:
           iconIndex = 73;
-          rankText = 'MAX';
           break;
         default:
           iconIndex = 86;
-          rankText = rankRequired.padZero(3);
           break;
       }
-
-
-      // identify the right-aligned current and bonus amounts.
-      const parameterData = `Rank: ${rankText}`;
 
       // construct the command.
       const command = new WindowCommandBuilder(rewardName)
         .setSymbol(rewardName)
         .setIconIndex(iconIndex)
-        .setRightText(parameterData)
-        .setExtensionData(panelReward)
+        .setExtensionData({
+          panelReward,
+          rankRequired,
+        })
         .build();
 
       commands.push(command);
     });
 
     return commands;
+  }
+
+  /**
+   * OVERWRITE Renders reward rows with styled padded ranks.
+   * @param {number} index The command index.
+   */
+  drawItem(index)
+  {
+    // handles the setup that occurs before each item drawn.
+    this.preDrawItem(index);
+
+    // grab the rectangle for the line item.
+    const {
+      x: rectX,
+      y: rectY,
+      width: rectWidth
+    } = this.itemLineRect(index);
+
+    // identify the icon for this command.
+    const commandIcon = this.commandIcon(index);
+    if (commandIcon)
+    {
+      this.drawIcon(commandIcon, rectX + 4, rectY);
+    }
+
+    // render the reward name.
+    const commandNameX = rectX + 40;
+    this.drawTextEx(this.buildCommandName(index), commandNameX, rectY, rectWidth);
+
+    // draw the rank requirement block on the right.
+    this.drawRewardRankRequirement(index, rectX, rectY, rectWidth);
+  }
+
+  /**
+   * Draws the reward rank requirement on the right side.
+   * @param {number} index The command index.
+   * @param {number} x The row x.
+   * @param {number} y The row y.
+   * @param {number} width The row width.
+   */
+  drawRewardRankRequirement(index, x, y, width)
+  {
+    const command = this.commandEntryAt(index);
+    const ext = command
+      ? command.ext
+      : null;
+    if (!ext)
+    {
+      return;
+    }
+
+    const { rankRequired } = ext;
+
+    const pad = 12;
+    const rightEdge = x + width - pad;
+
+    const label = 'Rank: ';
+    const labelW = this.textWidth(label);
+
+    // draw the label just left of the value.
+    let valueText = String.empty;
+    if (rankRequired === -1) valueText = 'EACH';
+    else if (rankRequired === 0) valueText = 'MAX';
+
+    if (valueText)
+    {
+      const valueW = this.textWidth(valueText);
+      const valueX = rightEdge - valueW;
+      const labelX = valueX - labelW;
+      this.drawText(label, labelX, y, labelW, Window_Base.TextAlignments.Left);
+      this.drawText(valueText, valueX, y, valueW, Window_Base.TextAlignments.Left);
+      return;
+    }
+
+    const valueW = this.textWidth('00');
+    const valueX = rightEdge - valueW;
+    const labelX = valueX - labelW;
+    this.drawText(label, labelX, y, labelW, Window_Base.TextAlignments.Left);
+    this.drawStyledZeroPaddedNumber(valueX, y, rankRequired, valueW, 2, 8, 0);
   }
 }
 

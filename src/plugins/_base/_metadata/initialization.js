@@ -151,6 +151,7 @@ J.BASE.Aliased = {
   Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
+  Scene_MenuBase: new Map(),
   SoundManager: new Map(),
   Window_Base: new Map(),
   Window_Command: {},
