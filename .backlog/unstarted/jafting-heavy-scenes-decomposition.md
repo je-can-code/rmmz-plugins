@@ -21,7 +21,7 @@ area: code-quality
 
 ## Context
 
-JAFTING already moved workflow state into models (`CraftingCreationSession`, `RefinementWorkflowSession`, `JaftingManager`). Scenes still contain substantial orchestration and UI wiring. SDP `Scene_SDP.js` and related windows were called out in `sdp-plugin-revisit.md` as a parallel hygiene target.
+JAFTING already moved workflow state into models (`CraftingCreationSession`, `RefinementWorkflowSession`, `JaftingManager`). Scenes still contain substantial orchestration and UI wiring. SDP `Scene_SDP.js` and related windows were called out in `../completed/sdp-plugin-revisit.md` as a parallel hygiene target.
 
 ## Work
 
@@ -32,5 +32,5 @@ JAFTING already moved workflow state into models (`CraftingCreationSession`, `Re
 
 ## Notes
 
-- Complements `sdp-plugin-revisit.md` (menu/scene fat).
+- Complements `../completed/sdp-plugin-revisit.md` (menu/scene fat).
 - `jafting-freestyle-implementation.md` remains a separate feature; do not block freestyle on this refactor.

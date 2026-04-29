@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: code-quality
 ---
 
@@ -34,10 +34,18 @@ J-SDP (Stat Distribution Panel) predates recent monorepo hygiene work on externa
 
 Track as a milestone PR or series: (1) load/helper alignment, (2) scene/window decomposition if still “fat,” (3) tests + help text.
 
-## Status
+## Summary
 
-Unstarted — scheduled as follow-up after JAFTING orchestration work; can parallelize JSON helper migration with other plugins.
+This revisit is **closed for the modernization track**: SDP scene flow, cart/checkout UX, metadata params, modal dimmer integration via J-Base (`Window_Dimmer`), and expanded Vitest coverage landed together. Centralized external JSON loading remains the separate **j-base-external-json-config-loader** backlog item.
+
+## What shipped
+
+- **Scene / windows:** Header, cart, controls hint, confirmation copy and layout; list preview ranks; rank-data window retired in favor of the new layout.
+- **J-Base:** `Scene_Base` modal dimmer as `Window_Dimmer` before anchor windows; lazy init after `$gameSystem`.
+- **Metadata / tests:** New plugin parameters (unit labels, points display name); `TextManager.sdpPoints`; SDP tests and fixtures updated.
 
 ## Notes
 
-- See also `jafting-heavy-scenes-decomposition.md` for the same “large scene” treatment pattern.
+- Primary PR: `je-can-code/rmmz-plugins#45`; Chef Adventure mirror: `je-can-code/ca#38`.
+- See also `jafting-heavy-scenes-decomposition.md` for the same “large scene” treatment pattern on JAFTING (still open).
+- JSON file I/O DRY: follow `../unstarted/j-base-external-json-config-loader.md` when that helper exists.
