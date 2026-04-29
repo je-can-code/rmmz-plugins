@@ -104,11 +104,96 @@ class J_SdpPluginMetadata
     // execute original logic.
     super.postInitialize();
 
+    // load rarity-based rank-up cost defaults before panels (rankUpCost resolves against these).
+    this.initializePanelCostDefaultsByRarity();
+
     // initialize the panels from plugin configuration.
     this.initializePanels();
 
     // initialize the other miscellaneous plugin configuration.
     this.initializeMetadata();
+  }
+
+  /**
+   * Parses plugin parameters into six rarity rows (**Common..Godlike**) used as the core rank-up cost spine.
+   * Panel JSON fields layer additive / multiplicative offsets on top — see resolveEffectiveRankUpCostParts.
+   */
+  initializePanelCostDefaultsByRarity()
+  {
+    const { parsedPluginParameters: p } = this;
+
+    /**
+     * One rarity tier: base SDP, exponential coefficient, and growth base (**mult**).
+     * @type {{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }}
+     */
+    const row = (baseKey, flatKey, multKey, fbBase, fbFlat, fbMult) =>
+    {
+      return {
+        baseCost: J.BASE.Helpers.parsePluginInt(p[baseKey], fbBase),
+        flatGrowthCost: J.BASE.Helpers.parsePluginInt(p[flatKey], fbFlat),
+        multGrowthCost: J_SdpPluginMetadata.#parsePositiveFloatOr(p[multKey], fbMult),
+      };
+    };
+
+    /**
+     * Indexed **0–5** matching {@link PanelRarity} Common..Godlike.
+     * @type {Array<{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }>}
+     */
+    this.panelCostDefaultsByRarity =
+      [
+        row('sdpDefaultCommonBase', 'sdpDefaultCommonFlat', 'sdpDefaultCommonMult', 0, 70, 1.06),
+        row('sdpDefaultMagicalBase', 'sdpDefaultMagicalFlat', 'sdpDefaultMagicalMult', 0, 235, 1.06),
+        row('sdpDefaultRareBase', 'sdpDefaultRareFlat', 'sdpDefaultRareMult', 0, 1180, 1.06),
+        row('sdpDefaultEpicBase', 'sdpDefaultEpicFlat', 'sdpDefaultEpicMult', 0, 4320, 1.06),
+        row('sdpDefaultLegendaryBase', 'sdpDefaultLegendaryFlat', 'sdpDefaultLegendaryMult', 0, 11900, 1.06),
+        row('sdpDefaultGodlikeBase', 'sdpDefaultGodlikeFlat', 'sdpDefaultGodlikeMult', 0, 30500, 1.06),
+      ];
+  }
+
+  /**
+   * @param {string|number|undefined|null} value
+   * @param {number} fallback
+   * @returns {number}
+   */
+  static #parsePositiveFloatOr(value, fallback)
+  {
+    if (value === undefined || value === null || value === '')
+    {
+      return fallback;
+    }
+
+    const parsed = Number.parseFloat(String(value));
+
+    if (Number.isFinite(parsed) && parsed > 0)
+    {
+      return parsed;
+    }
+
+    return fallback;
+  }
+
+  /**
+   * Effective rank-up cost knobs after combining rarity defaults with per-panel overrides from `config.sdp.json`.
+   *
+   * @param {StatDistributionPanel} panel
+   * @returns {{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }}
+   */
+  resolveEffectiveRankUpCostParts(panel)
+  {
+    const rarityIndex = PanelRarity.normalizeRarityFromJson(panel.rarity);
+    const row = this.panelCostDefaultsByRarity[rarityIndex];
+    const scale = panel.multGrowthCost;
+
+    // zero or negative panel scale would collapse growth; treat as neutral **1.0** so rarity **mult** still applies.
+    const safeScale = (scale > 0)
+      ? scale
+      : 1.0;
+
+    return {
+      baseCost: row.baseCost + panel.baseCost,
+      flatGrowthCost: row.flatGrowthCost + panel.flatGrowthCost,
+      multGrowthCost: row.multGrowthCost * safeScale,
+    };
   }
 
   /**
@@ -188,6 +273,24 @@ class J_SdpPluginMetadata
      * @type {boolean}
      */
     this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === 'true';
+
+    /**
+     * Singular player-facing name for one SDP row (confirmation copy, future labels).
+     * @type {string}
+     */
+    this.unitSingular = this.parsedPluginParameters['sdpUnitSingular'] ?? 'panel';
+
+    /**
+     * Plural player-facing name for counts such as “4 upgrades on 2 …”.
+     * @type {string}
+     */
+    this.unitPlural = this.parsedPluginParameters['sdpUnitPlural'] ?? 'panels';
+
+    /**
+     * Short label for spendable currency (“Remaining …”, cart wallet chip, {@link TextManager#sdpPoints}).
+     * @type {string}
+     */
+    this.sdpPointsDisplayName = this.parsedPluginParameters['sdpPointsDisplayName'] ?? 'SDP';
   }
 
   /**

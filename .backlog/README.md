@@ -85,7 +85,6 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
 | [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
-| [sdp-plugin-revisit](unstarted/sdp-plugin-revisit.md) | Medium | **High** consistency | SDP hygiene: JSON helper, scenes, tests. |
 | [team-parameterization](unstarted/team-parameterization.md) | Medium multi-faction | **High** extensibility | Data-driven friendly/opposing teams. |
 | [textpop-builder-extension-placement](unstarted/textpop-builder-extension-placement.md) | Medium | Medium–high architecture | `TextPopBuilder` extensions under Popups ownership. |
 

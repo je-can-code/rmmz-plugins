@@ -27,6 +27,22 @@ export function loadSdpPanelModelsOnlyVm(sandbox)
 
   const bundle = [
     `String.empty = '';`,
+    `
+    globalThis.J = {
+      SDP: {
+        Metadata: {
+          resolveEffectiveRankUpCostParts(panel)
+          {
+            return {
+              baseCost: panel.baseCost,
+              flatGrowthCost: panel.flatGrowthCost,
+              multGrowthCost: panel.multGrowthCost,
+            };
+          },
+        },
+      },
+    };
+    `,
     readSdpModelSource('PanelParameter.js'),
     readSdpModelSource('PanelRankupReward.js'),
     readSdpModelSource('PanelRarity.js'),

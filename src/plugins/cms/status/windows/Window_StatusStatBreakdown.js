@@ -1187,7 +1187,7 @@ class Window_StatusStatBreakdown
         // extract panel visuals and parameter data.
         const { name } = panel;
         const iconIndex = panel.iconIndex | 0;  // guarantee a concrete icon index
-        const rarity = panel.rarity | 0;        // guarantee a concrete color index
+        const rarity = panel.getPanelRarityColorIndex();
         const { isFlat } = pp;
         const { perRank } = pp;
         const curRank = ranking.currentRank;
@@ -1268,7 +1268,7 @@ class Window_StatusStatBreakdown
         // visuals and data.
         const { name } = panel;
         const iconIndex = panel.iconIndex | 0;
-        const rarity = panel.rarity | 0;
+        const rarity = panel.getPanelRarityColorIndex();
         const { isFlat } = pp;
         const { perRank } = pp;
         const curRank = ranking.currentRank;

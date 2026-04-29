@@ -95,7 +95,7 @@ Game_Actor.prototype.getAllSdpRankings = function()
 };
 
 /**
- * Gets the total number of SDP ranks this actor has.
+ * Sum of all panel current ranks for this actor (convenience for menus / reporting).
  * @returns {number}
  */
 Game_Actor.prototype.getTotalSdpRanks = function()

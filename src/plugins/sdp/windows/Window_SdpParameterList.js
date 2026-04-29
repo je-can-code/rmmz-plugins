@@ -121,12 +121,6 @@ class Window_SdpParameterList
     return command;
   }
 
-  /**
-   * Translates a parameter id into an object with its name, value, iconIndex, and whether or not
-   * a parameter being smaller is an improvement..
-   * @param {PanelParameter} panelParameter The id to translate.
-   */
-   
   #determineModifierData(panelParameter)
   {
     // a small helper function for calculating the next rank's value.
