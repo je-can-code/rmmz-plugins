@@ -2431,7 +2431,7 @@ class JABS_Engine
     const attacker = action.getCaster();
 
     // don't aggro your allies against you! That's dumb.
-    if (attacker.isSameTeam(target.getTeam())) return;
+    if (JABS_TeamRules.isFriendly(attacker.getTeam(), target.getTeam())) return;
 
     // grab the result on the target, from the action executed.
     const result = target.getBattler()
@@ -2570,7 +2570,7 @@ class JABS_Engine
     this.triggerAlert(caster, target);
 
     // if the attacker and the target are the same team, then don't set that as "last hit".
-    if ((caster.isSameTeam(target.getTeam())) === false)
+    if (JABS_TeamRules.isOpposed(caster.getTeam(), target.getTeam()))
     {
       caster.setBattlerLastHit(target);
 
@@ -2960,7 +2960,7 @@ class JABS_Engine
     if (attacker.isInanimate()) return false;
 
     // cannot alert your own allies.
-    if (attacker.isSameTeam(battler.getTeam())) return false;
+    if (JABS_TeamRules.isFriendly(attacker.getTeam(), battler.getTeam())) return false;
 
     // cannot alert the player.
     if (battler.isPlayer()) return false;
@@ -2996,8 +2996,7 @@ class JABS_Engine
     if (action.isRetaliation()) return;
 
     // do not retaliate against being targeted by battlers of the same team.
-    if (action.getCaster()
-      .isSameTeam(targetBattler.getTeam()))
+    if (JABS_TeamRules.isFriendly(action.getCaster().getTeam(), targetBattler.getTeam()))
     {
       return;
     }

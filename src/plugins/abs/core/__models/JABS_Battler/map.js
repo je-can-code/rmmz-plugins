@@ -47,8 +47,8 @@ JABS_Battler.prototype.isWithinScope = function(
 
   const targetIsSelf = (user.getUuid() === target.getUuid() || (action.getAction()
     .isForUser()));
-  const actionIsSameTeam = user.getTeam() === this.getTeam();
-  const targetIsOpponent = !user.isSameTeam(this.getTeam());
+  const actionIsSameTeam = JABS_TeamRules.isFriendly(user.getTeam(), this.getTeam());
+  const targetIsOpponent = JABS_TeamRules.isOpposed(user.getTeam(), this.getTeam());
 
   // scope is for 1 target, and we already found one.
   if (scopeSingle && alreadyHitOne)
