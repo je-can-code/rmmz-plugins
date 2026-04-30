@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.8.4 JABS] Enables combat to be carried out on the map.
+ * [v4.9.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.9.0
+ *    Team rules are now data-driven via required `data/config.jabs.json`
+ *    (root `{ teams: [...] }` with per-team `opposes` lists).
  * - 4.8.4
  *    Action-map template `<vis*>` tags: Comment lines (+ optional event `note` on the event) are stamped once at spawn
  *    into a synthetic note on {@link JABS_Action}; {@link RPGManager} merges them with skill notes (skill wins on duplicate tags).
@@ -505,21 +508,30 @@
  *
  * ============================================================================
  * TEAMS:
- * By default, enemies are assigned team 1 and allied battlers are team 0.
- * Because they are on different teams, they can damage each other. If your
- * game needs more than "good guys and bad guys", you can reassign teams.
+ * JABS teams are now fully data-driven.
  *
- * NOTE: Team relationships (allies between teams, neutral factions, etc.)
- * are not deeply supported, but you can still redefine team ids to make
- * enemies fight each other.
+ * Team relationships (friendly vs opposing) are defined in an external file:
+ *  - `data/config.jabs.json`
  *
- * Default teams:
- * - 0 is for the player/allies.
- * - 1 is for enemies/monsters.
- * - 2 is for "neutral", aka inanimate objects.
+ * This file is REQUIRED. If it is missing or invalid, JABS will error on boot.
  *
+ * The root shape is an object with a `teams` array:
+ *  {
+ *    "teams": [
+ *      { "id": 0, "name": "Allies", "opposes": [ 1, 2 ] },
+ *      { "id": 1, "name": "Enemies", "opposes": [ 0, 2 ] },
+ *      { "id": 2, "name": "Neutral", "opposes": [ 0, 1 ] }
+ *    ]
+ *  }
+ *
+ * Default team assignment (unchanged):
+ * - Actors and party battlers are team 0.
+ * - Enemies are team 1 (unless overridden).
+ * - Inanimate battlers are team 2.
+ *
+ * Assigning a team id is still done via notes/event comments:
  *    <teamId:TEAM>
- *  Where TEAM is the numeric id to assign.
+ * Where TEAM is the numeric id to assign to the battler.
  *
  * ============================================================================
  * CIRCUMSTANTIAL CONFIG OPTIONS:

@@ -398,8 +398,8 @@ class JABS_AiManager
       // neutral battlers are never an opposition.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
 
-      // check if the selected battler is not the same team as the target battler's team.
-      const isOpposingTeam = !selectedBattler.isSameTeam(battler.getTeam());
+      // check if the selected battler is opposed to the target battler's team.
+      const isOpposingTeam = JABS_TeamRules.isOpposed(selectedBattler.getTeam(), battler.getTeam());
 
       // return what we found.
       return isOpposingTeam;
@@ -424,8 +424,8 @@ class JABS_AiManager
       // neutral battlers are never an ally.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
 
-      // check if the selected battler is the same team as the target battler's team.
-      const isSameTeam = selectedBattler.isSameTeam(battler.getTeam());
+      // check if the selected battler is friendly with the target battler's team.
+      const isSameTeam = JABS_TeamRules.isFriendly(selectedBattler.getTeam(), battler.getTeam());
 
       // return what we found.
       return isSameTeam;
