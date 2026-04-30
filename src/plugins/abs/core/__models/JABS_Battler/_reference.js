@@ -515,8 +515,8 @@ JABS_Battler.prototype.isSameTeam = function(targetTeam)
  */
 JABS_Battler.prototype.isFriendlyTeam = function(targetTeam)
 {
-  // TODO: parameterize in objects what are "opposing" teams.
-  return [ this.getTeam() ].includes(targetTeam);
+  // friendly is decided by the centralized team rules.
+  return JABS_TeamRules.isFriendly(this.getTeam(), targetTeam);
 };
 
 /**
@@ -526,9 +526,8 @@ JABS_Battler.prototype.isFriendlyTeam = function(targetTeam)
  */
 JABS_Battler.prototype.isOpposingTeam = function(targetTeam)
 {
-  // TODO: parameterize in objects what are "friendly" teams.
-  return !(targetTeam === this.getTeam());
-  //return [].includes(targetTeam);
+  // opposition is decided by the centralized team rules.
+  return JABS_TeamRules.isOpposed(this.getTeam(), targetTeam);
 };
 
 /**
