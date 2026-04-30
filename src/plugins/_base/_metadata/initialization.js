@@ -142,6 +142,7 @@ J.BASE.Aliased = {
   AudioManager: new Map(),
   Bitmap: new Map(),
   DataManager: new Map(),
+  JsonEx: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),
   Game_Battler: new Map(),
@@ -325,7 +326,8 @@ Object.defineProperty(
   {
     value: "",
     writable: false
-  });
+  }
+);
 
 /**
  * Extends the global javascript {@link Array} object.

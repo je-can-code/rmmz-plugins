@@ -145,6 +145,6 @@ class JABS_HitstopData
   }
 }
 
-window.JABS_HitstopData = JABS_HitstopData;
+SerializableRegistry.register(JABS_HitstopData);
 
 //endregion JABS_HitstopData
