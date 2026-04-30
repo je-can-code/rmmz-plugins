@@ -32,6 +32,89 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
     sandbox.Bitmap = Bitmap;
   }
 
+  // JsonEx is an engine global used for deep copying and save/load serialization.
+  // J-Base extends JsonEx in core/JsonEx.js at parse time.
+  if (typeof sandbox.JsonEx !== 'function')
+  {
+    function JsonEx()
+    {
+      throw new Error('This is a static class');
+    }
+
+    JsonEx.maxDepth = 100;
+
+    JsonEx.stringify = function(object)
+    {
+      return JSON.stringify(this._encode(object, 0));
+    };
+
+    JsonEx.parse = function(json)
+    {
+      return this._decode(JSON.parse(json));
+    };
+
+    JsonEx.makeDeepCopy = function(object)
+    {
+      return this.parse(this.stringify(object));
+    };
+
+    JsonEx._encode = function(value, depth)
+    {
+      if (depth >= this.maxDepth)
+      {
+        throw new Error('Object too deep');
+      }
+
+      const type = Object.prototype.toString.call(value);
+      if (type === '[object Object]' || type === '[object Array]')
+      {
+        const constructorName = value.constructor.name;
+        if (constructorName !== 'Object' && constructorName !== 'Array')
+        {
+          value['@'] = constructorName;
+        }
+
+        Object.keys(value).forEach(key =>
+        {
+          value[key] = this._encode(value[key], depth + 1);
+        });
+      }
+
+      return value;
+    };
+
+    JsonEx._decode = function(value)
+    {
+      const type = Object.prototype.toString.call(value);
+      if (type === '[object Object]' || type === '[object Array]')
+      {
+        if (value['@'])
+        {
+          const constructor = sandbox.window[value['@']];
+          if (constructor)
+          {
+            Object.setPrototypeOf(value, constructor.prototype);
+          }
+        }
+
+        Object.keys(value).forEach(key =>
+        {
+          value[key] = this._decode(value[key]);
+        });
+      }
+
+      return value;
+    };
+
+    sandbox.JsonEx = JsonEx;
+  }
+
+  // emulate the browser global object for lookups like `window[className]`.
+  if (sandbox.window === undefined)
+  {
+    sandbox.window = sandbox;
+  }
+
   sandbox.PluginManager = {
     parameters(name)
     {
