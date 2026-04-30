@@ -89,6 +89,53 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
     };
   });
 };
+
+/**
+ * Loads external JABS configuration from the project filesystem.
+ *
+ * This is the entry point for JABS moving configuration out of notes and into a centralized JSON blob.
+ * The root blob must be an object; team configuration is extracted from the {@code teams} property.
+ *
+ * External configuration is required for team rules; missing or invalid configuration will throw.
+ * @param {string=} configPath The project-relative path to the external config.
+ * @returns {object} The parsed root blob.
+ */
+J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
+{
+  // validate that the parsed blob matches our expected root shape.
+  const validate = parsedConfig =>
+  {
+    // the root must be an object.
+    if (parsedConfig === null || typeof parsedConfig !== 'object')
+    {
+      throw new Error('config root must be an object.');
+    }
+
+    // teams must exist and be an array.
+    const { teams } = parsedConfig;
+    if (Array.isArray(teams) === false)
+    {
+      throw new Error('config root must contain a "teams" array.');
+    }
+  };
+
+  // load and validate the external config.
+  const parsedConfig = ExternalJsonConfigLoader.load(
+    configPath,
+    ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName('J-ABS')
+      .configName('external configuration')
+      .validator(validate)
+      .build()
+  );
+
+  // assign the external config and extracted teams into metadata.
+  J.ABS.Metadata.ExternalConfig = parsedConfig;
+  J.ABS.Metadata.Teams = parsedConfig.teams;
+
+  // return the parsed root blob.
+  return parsedConfig;
+};
 //endregion helpers
 
 //region metadata
@@ -97,7 +144,7 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.8.3';
+J.ABS.Metadata.Version = '4.9.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -134,6 +181,9 @@ J.ABS.Metadata.DefaultEnemyIsInanimate = Boolean(J.ABS.PluginParameters['default
 // custom data configurations.
 J.ABS.Metadata.UseElementalIcons = J.ABS.PluginParameters['useElementalIcons'] === 'true';
 J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['elementalIconData']);
+
+// external data configurations.
+J.ABS.Helpers.loadExternalConfig();
 
 // action decided configurations.
 J.ABS.Metadata.AttackDecidedAnimationId = Number(J.ABS.PluginParameters['attackDecidedAnimationId']);

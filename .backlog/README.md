@@ -64,7 +64,6 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [abs-facing-validation-dry](unstarted/abs-facing-validation-dry.md) | Low–medium | Medium DRY | One helper for unsupported facing / dir8 validation shared by `JABS_Engine` and `Spriteset_Map`. |
 | [abs-game-event-page-null-handling](unstarted/abs-game-event-page-null-handling.md) | **High** if hit | **High** for small fix | Stop logging entire `$dataMap.events` / `$gameMap._events` on null `Game_Event#event()`; safe minimal logging. |
 | [abs-game-unit-inbattle-semantics](unstarted/abs-game-unit-inbattle-semantics.md) | Medium–high interop | Medium–high | `Game_Unit#inBattle` always true under ABS — document, narrow, or add explicit helper for plugins. |
-| [abs-global-cooldown-implementation](unstarted/abs-global-cooldown-implementation.md) | Low until used | Medium–high pacing | Implement global cooldown slot behavior promised in `J.ABS.Globals.GlobalCooldownKey` JSDoc. |
 | [abs-spriteset-refresh-character-sprites-hardening](unstarted/abs-spriteset-refresh-character-sprites-hardening.md) | Medium if broken | **High** confidence | Prove or fix `refreshAllCharacterSprites` (party cycle, allies, followers) per author TODO. |
 | [ally-dodge-skill-ai](unstarted/ally-dodge-skill-ai.md) | Low–medium (balance) | Medium–high combat feel | Allies never evaluate dodge skills; extend ally AI to use them with sane cooldowns. |
 | [eslint-complexity-refactors](unstarted/eslint-complexity-refactors.md) | Low | Medium | Reduce/contain complexity hotspots (table-driven refactors) without behavior changes. |
@@ -85,7 +84,7 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
 | [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
-| [team-parameterization](unstarted/team-parameterization.md) | Medium multi-faction | **High** extensibility | Data-driven friendly/opposing teams. |
+| [team-overlays](unstarted/team-overlays.md) | Low today, high later | Medium–high | Optional overlay layer for charms/summons/auras without changing primary team id. |
 | [textpop-builder-extension-placement](unstarted/textpop-builder-extension-placement.md) | Medium | Medium–high architecture | `TextPopBuilder` extensions under Popups ownership. |
 
 **Completed** items: move to [`completed/`](completed/) and delete their row from the table above.
