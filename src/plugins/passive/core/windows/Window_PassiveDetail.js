@@ -707,7 +707,7 @@ class Window_PassiveDetail
     dmgInTraits.forEach(rawTrait =>
     {
       const trait = new RPG_Trait(rawTrait);
-      this.drawDetailRow(IconManager.element(trait._dataId), 'Dmg In', trait.textValue(), true);
+      this.drawDetailRow(IconManager.element(trait.dataId), 'Dmg In', trait.textValue(), true);
     });
 
     // attack element — element icon identifies which element is added to basic attacks.
@@ -715,7 +715,7 @@ class Window_PassiveDetail
     {
       const trait = new RPG_Trait(rawTrait);
       this.drawDetailRow(
-        IconManager.element(trait._dataId), 'Atk Element', TextManager.element(trait._dataId));
+        IconManager.element(trait.dataId), 'Atk Element', TextManager.element(trait.dataId));
     });
 
     // J-ELEM boost and absorbed element rows — icon and label already resolved.
