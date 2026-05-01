@@ -22,6 +22,7 @@ J.PASSIVE.EXT.ABS.Aliased.JABS_AiManager = new Map();
 J.PASSIVE.EXT.ABS.Aliased.JABS_Battler = new Map();
 J.PASSIVE.EXT.ABS.Aliased.Scene_Boot = new Map();
 J.PASSIVE.EXT.ABS.Aliased.Sprite_Character = new Map();
+J.PASSIVE.EXT.ABS.Aliased.Window_PassiveDetail = new Map();
 
 /**
  * All regular expressions used by this plugin.

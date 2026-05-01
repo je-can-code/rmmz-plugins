@@ -75,8 +75,8 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 **The easy test:** ask "which plugin's directory does this file live in?" — that plugin owns the top-level namespace segment. A file in `pixel/ext/abs/` uses `J.PIXEL.EXT.ABS.*`, never `J.ABS.EXT.PIXEL.*` (which would mean "ABS owns this; Pixelistics is the consumer", the reverse relationship).
 
 **`J.ABS.EXT.PIXEL` is wrong for any file under `src/plugins/pixel/`.** That namespace belongs to a hypothetical ABS-owned pixel extension and must not be used in the Pixelistics tree.
-- **Prototype + alias pattern** for augmenting engine/other-plugin classes. `class extends` for new scene/window subclasses (unless serialized → prototype constructor).
-- **Serialized models** (saved to file via `JsonEx`): use prototype constructors with JSON-safe fields only. See `_models/` directories for examples.
+- **Prototype + alias pattern** for augmenting engine/other-plugin classes. `class extends` for new scene/window subclasses.
+- **Serialized models** (saved to file via `JsonEx`): use `class` syntax with JSON-safe fields and call `SerializableRegistry.register(ClassName)` at the bottom of the model file (after the closing `}`, before `//endregion`). This is **mandatory** — without registration, `JsonEx` cannot restore class instances on load, so any prototype methods added to the model will silently break after a save/load cycle. See `src/plugins/_base/core/SerializableRegistry.js` and `JABS_HitstopData.js` for the reference pattern.
 - **`//region` / `//endregion`** wrappers on every file; region name = filename.
 - Use `RPGManager` methods for all notetag parsing. Never parse `note` strings manually.
 - Build tools: `combine.js` (via `bun run build:<plugin>`) concatenates source into `out/`. Built files are committed under `project/js/plugins/`. Per-plugin build scripts exist for tooling; they are **not** the agent’s default way to publish changes.
@@ -109,5 +109,5 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 
 ## Known Future Work (do not tackle without checking first)
 
-1. **`JsonEx` serialization registry** — `JsonEx` resolves classes via `window[className]`. Plan: add `J.register(constructor)` in J-Base and audit all serializable models. Tracked in `guidelines.md`.
+1. **`JsonEx` serialization registry (done)** — `SerializableRegistry` now lives in `src/plugins/_base/core/SerializableRegistry.js`. Every `class`-syntax model that gets saved via `JsonEx` must call `SerializableRegistry.register(ClassName)` at the bottom of its file. The registry audit of existing models is ongoing; new models must always register.
 2. **`checkForBooleanFromNoteByRegex` audit (done).** Outcome and deferrals: `.backlog/completed/boolean-notetag-regex-audit.md`. Do not re-open as drive-by edits; new call sites should follow the same patterns documented there.

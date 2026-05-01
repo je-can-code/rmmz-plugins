@@ -48,6 +48,8 @@ J.CRIT.Aliased = {
   IconManager: new Map(),
   TextManager: new Map(),
   Window_SDP_Details: new Map(),
+
+  Scene_Boot: new Map(),
 };
 
 /**

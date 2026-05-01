@@ -84,6 +84,46 @@ Game_BattlerBase.isRegenLongParamId = function(longParamId)
 };
 
 /**
+ * Gets the sum of deltas above the 1.0 neutral baseline for all traits matching the given
+ * code and dataId.  Each trait value is treated as `1.0 + delta`; this method isolates
+ * the delta portion and sums them additively.
+ *
+ * Intended for use with multiplicative-baseline trait families (sparams) where the default
+ * {@link Game_BattlerBase#traitsPi} produces unintuitive compound values when stacking.
+ *
+ * @param {number} code The trait code (e.g. {@link Game_BattlerBase.TRAIT_SPARAM}).
+ * @param {number} id The dataId that further identifies the specific trait.
+ * @returns {number} The sum of `(value - 1.0)` for all matching traits.
+ */
+Game_BattlerBase.prototype.traitsDeltaSum = function(code, id)
+{
+  return this.traitsWithId(code, id)
+    .map(trait => trait.value - 1.0)
+    .reduce((total, delta) => total + delta, 0.0);
+};
+
+/**
+ * Overrides {@link Game_BattlerBase#sparam}.<br>
+ * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
+ *
+ * RMMZ stores sparam trait values as multipliers (1.0 = baseline, 1.5 = +50%).
+ * The default engine multiplies them together, so two +50% traits compound to ×2.25 instead
+ * of the intuitive ×2.0. This override subtracts the 1.0 baseline from each trait value,
+ * sums the deltas, then restores the 1.0 baseline — giving linear, predictable stacking
+ * while keeping the 1.0 return value that engine healing/cost/damage formulas expect.
+ *
+ * @param {number} sparamId The sparam index (0–9).
+ * @returns {number} The additively aggregated sparam value.
+ */
+J.BASE.Aliased.Game_BattlerBase.set('sparam', Game_BattlerBase.prototype.sparam);
+Game_BattlerBase.prototype.sparam = function(sparamId)
+{
+  // additive delta stacking: sum deltas above the 1.0 baseline, then restore the baseline.
+  // replaces the default traitsPi which compounded 1.5×1.5 into 2.25 instead of 2.0.
+  return 1.0 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_SPARAM, sparamId);
+};
+
+/**
  * Gets the maximum tp/tech for this battler.
  */
 Object.defineProperty(Game_BattlerBase.prototype, "mtp", {
