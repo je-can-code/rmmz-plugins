@@ -88,6 +88,7 @@
     "build:level-flat": "node ./src/build-tools/combine.js ./src/plugins/level/ext/flat ./out/level/ext J-Level-Flat.js",
     "build:passive": "node ./src/build-tools/combine.js ./src/plugins/passive/core ./out/passive J-Passive.js",
     "build:passive-abs": "node ./src/build-tools/combine.js ./src/plugins/passive/ext/abs ./out/passive/ext J-Passive-ABS.js",
+    "build:passive-otib": "node ./src/build-tools/combine.js ./src/plugins/passive/ext/otib ./out/passive/ext J-Passive-OTIB.js",
     "build:pixel": "node ./src/build-tools/combine.js ./src/plugins/pixel/core ./out/pixel J-Pixelistics.js",
     "build:pixel-abs": "node ./src/build-tools/combine.js ./src/plugins/pixel/ext/abs ./out/pixel/ext J-Pixel-ABS.js",
     "build:popups": "node ./src/build-tools/combine.js ./src/plugins/popups/core ./out/popups J-Popups.js",

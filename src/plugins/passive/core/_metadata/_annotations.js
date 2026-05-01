@@ -6,7 +6,19 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
+ * @base J-Drops
+ * @base J-Crit
+ * @base J-SDP
+ * @base J-Prof
+ * @base J-Natural
+ * @base J-ELEM
  * @orderAfter J-Base
+ * @orderAfter J-Drops
+ * @orderAfter J-Crit
+ * @orderAfter J-SDP
+ * @orderAfter J-Prof
+ * @orderAfter J-Natural
+ * @orderAfter J-ELEM
  * @help
  * ============================================================================
  * OVERVIEW

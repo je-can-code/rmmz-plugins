@@ -143,6 +143,7 @@ J.BASE.Aliased = {
   Bitmap: new Map(),
   DataManager: new Map(),
   JsonEx: new Map(),
+  Game_BattlerBase: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),
   Game_Battler: new Map(),

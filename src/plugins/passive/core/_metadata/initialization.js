@@ -21,6 +21,19 @@ J.PASSIVE.Metadata.Name = `J-Passive`;
 J.PASSIVE.Metadata.Version = '2.0.2';
 
 /**
+ * The label shown for the Passives command in the main menu.
+ * @type {string}
+ */
+J.PASSIVE.Metadata.commandName = 'Passives';
+
+/**
+ * The icon index shown beside the Passives command in the main menu.
+ * Set to 0 for no icon; update this to any IconManager-registered index.
+ * @type {number}
+ */
+J.PASSIVE.Metadata.commandIconIndex = 0;
+
+/**
  * All regular expressions used by this plugin.
  */
 J.PASSIVE.RegExp = {};
@@ -40,5 +53,7 @@ J.PASSIVE.Aliased.Game_BattlerBase = new Map();
 J.PASSIVE.Aliased.Game_Enemy = new Map();
 J.PASSIVE.Aliased.Game_Party = new Map();
 J.PASSIVE.Aliased.JABS_AiManager = new Map();
+J.PASSIVE.Aliased.Scene_Menu = new Map();
+J.PASSIVE.Aliased.Window_MenuCommand = new Map();
 J.PASSIVE.Aliased.Window_MoreEquipData = new Map();
 //endregion Introduction

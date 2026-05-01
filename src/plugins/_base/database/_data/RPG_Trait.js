@@ -153,39 +153,45 @@ class RPG_Trait
     {
       // first tab.
       case 11:
+        // positive = resistance (takes less damage), negative = weakness (takes more).
+        // use Math.abs to prevent double-signing when the calc result is already negative.
         const calculatedElementalRate = Math.round(100 - (this.value * 100));
-        return `${calculatedElementalRate > 0
-          ? "-"
-          : "+"}${calculatedElementalRate}%`;
+        return `${calculatedElementalRate > 0 ? "-" : "+"}${Math.abs(calculatedElementalRate)}%`;
       case 12:
+        // positive = more susceptible, negative = less susceptible.
         const calculatedDebuffRate = Math.round((this.value * 100) - 100);
-        return `${calculatedDebuffRate > 0
-          ? "+"
-          : "-"}${calculatedDebuffRate}%`;
+        return `${calculatedDebuffRate >= 0 ? "+" : "-"}${Math.abs(calculatedDebuffRate)}%`;
       case 13:
+        // positive = more resistant (state less likely to land), negative = more susceptible.
         const calculatedStateRate = Math.round(100 - (this.value * 100));
-        return `${calculatedStateRate > 0
-          ? "+"
-          : "-"}${calculatedStateRate}%`;
+        return `${calculatedStateRate > 0 ? "+" : "-"}${Math.abs(calculatedStateRate)}%`;
       case 14:
         return $dataStates[this.dataId].name;
 
       // second tab.
       case 21:
         const calculatedBParam = Math.round((this.value * 100) - 100);
-        return `${calculatedBParam >= 0
-          ? "+"
-          : ""}${calculatedBParam}%`;
+        return `${calculatedBParam >= 0 ? "+" : ""}${calculatedBParam}%`;
       case 22:
-        const calculatedXParam = Math.round((this.value * 100));
-        return `${calculatedXParam >= 0
-          ? "+"
-          : ""}${calculatedXParam}%`;
+      {
+        const calculatedXParam = Math.round(this.value * 100);
+
+        // accuracy (hit, dataId 0): xparam base is 0, so value*100 IS the flat integer JABS reads.
+        // same math as the standard xparam formula — only the percent sign is omitted.
+        if (this.dataId === 0) return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}`;
+
+        return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}%`;
+      }
       case 23:
+      {
         const calculatedSParam = Math.round((this.value * 100) - 100);
-        return `${calculatedSParam >= 0
-          ? "+"
-          : ""}${calculatedSParam}%`;
+
+        // parry (grd, dataId 1): sparam base is 1.0, so (value*100)-100 IS the flat integer JABS reads.
+        // same math as the standard sparam formula — only the percent sign is omitted.
+        if (this.dataId === 1) return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}`;
+
+        return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}%`;
+      }
 
       // third tab.
       case 31:
@@ -193,13 +199,9 @@ class RPG_Trait
       case 32:
         return `${(this.value * 100)}%`;
       case 33:
-        return `${this.value > 0
-          ? "+"
-          : "-"}${this.value}`;
+        return `${this.value >= 0 ? "+" : "-"}${Math.abs(this.value)}`;
       case 34:
-        return `${this.value > 0
-          ? "+"
-          : "-"}${this.value}`;
+        return `${this.value >= 0 ? "+" : "-"}${Math.abs(this.value)}`;
       case 35:
         return `${$dataSkills[this.value].name}`;
 
