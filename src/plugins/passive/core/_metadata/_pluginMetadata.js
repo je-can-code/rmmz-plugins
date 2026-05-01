@@ -34,8 +34,7 @@ class JPassive_PluginMetadata
      * Configured via plugin parameter "menuSwitch".
      * @type {number}
      */
-    this.menuSwitchId = J.BASE.Helpers.parsePluginInt(
-      this.parsedPluginParameters['menuSwitch'], 0);
+    this.menuSwitchId = parseInt(this.parsedPluginParameters['menuSwitch']);
 
     /**
      * The label shown for the Passives command in the main menu.
@@ -49,8 +48,7 @@ class JPassive_PluginMetadata
      * Configured via plugin parameter "menuCommandIcon".
      * @type {number}
      */
-    this.commandIconIndex = J.BASE.Helpers.parsePluginInt(
-      this.parsedPluginParameters['menuCommandIcon'], 191);
+    this.commandIconIndex = parseInt(this.parsedPluginParameters['menuCommandIcon']);
   }
 }
 //endregion plugin metadata
