@@ -19,6 +19,25 @@
  * @orderAfter J-Prof
  * @orderAfter J-Natural
  * @orderAfter J-ELEM
+ *
+ * @param menuSettings
+ * @text Menu Settings
+ *
+ * @param menuCommandName
+ * @parent menuSettings
+ * @type string
+ * @text Menu Name
+ * @desc The text shown as the Passives command in the main menu.
+ * @default Passives
+ *
+ * @param menuCommandIcon
+ * @parent menuSettings
+ * @type number
+ * @text Menu Icon
+ * @desc The icon index shown beside the Passives command in the menu.
+ * Use the context menu to easily select an index.
+ * @default 191
+ *
  * @help
  * ============================================================================
  * OVERVIEW

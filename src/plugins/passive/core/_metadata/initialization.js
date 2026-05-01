@@ -14,24 +14,10 @@ J.PASSIVE = {};
 J.PASSIVE.EXT = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The `metadata` associated with this plugin, such as version and plugin parameter values.
+ * @type {JPassive_PluginMetadata}
  */
-J.PASSIVE.Metadata = {};
-J.PASSIVE.Metadata.Name = `J-Passive`;
-J.PASSIVE.Metadata.Version = '2.0.2';
-
-/**
- * The label shown for the Passives command in the main menu.
- * @type {string}
- */
-J.PASSIVE.Metadata.commandName = 'Passives';
-
-/**
- * The icon index shown beside the Passives command in the main menu.
- * Set to 0 for no icon; update this to any IconManager-registered index.
- * @type {number}
- */
-J.PASSIVE.Metadata.commandIconIndex = 0;
+J.PASSIVE.Metadata = new JPassive_PluginMetadata('J-Passive', '2.0.2');
 
 /**
  * All regular expressions used by this plugin.
