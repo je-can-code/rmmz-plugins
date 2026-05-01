@@ -37,5 +37,7 @@ J.DROPS.RegExp.GoldMultiplier = /<goldMultiplier:[ ]?(-?\d+)>/i;
 J.DROPS.Aliased = {
   Game_Enemy: new Map(),
   RPG_Enemy: new Map(),
+
+  Scene_Boot: new Map(),
 };
 //endregion Introduction

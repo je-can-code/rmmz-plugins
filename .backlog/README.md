@@ -82,6 +82,7 @@ Summary of every open item in [`unstarted/`](unstarted/): **severity**, **gain**
 | [jsonex-j-register-serialization-registry](unstarted/jsonex-j-register-serialization-registry.md) | Medium–high long-term | **Very high** | `J.register` + `JsonEx` registry in J-Base. |
 | [pixel-angled-projectiles](unstarted/pixel-angled-projectiles.md) | Medium | **High** feel | Angled projectiles with Pixelistics + JABS. |
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
+| [popups-combat-session-merge-coalesce](unstarted/popups-combat-session-merge-coalesce.md) | Medium | High UX polish | Merge combo hits + accumulate slip/regen pops; optional ally chip demotion. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
 | [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
 | [team-overlays](unstarted/team-overlays.md) | Low today, high later | Medium–high | Optional overlay layer for charms/summons/auras without changing primary team id. |

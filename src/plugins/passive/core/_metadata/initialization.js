@@ -14,11 +14,10 @@ J.PASSIVE = {};
 J.PASSIVE.EXT = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The `metadata` associated with this plugin, such as version and plugin parameter values.
+ * @type {JPassive_PluginMetadata}
  */
-J.PASSIVE.Metadata = {};
-J.PASSIVE.Metadata.Name = `J-Passive`;
-J.PASSIVE.Metadata.Version = '2.0.2';
+J.PASSIVE.Metadata = new JPassive_PluginMetadata('J-Passive', '2.1.0');
 
 /**
  * All regular expressions used by this plugin.
@@ -40,5 +39,7 @@ J.PASSIVE.Aliased.Game_BattlerBase = new Map();
 J.PASSIVE.Aliased.Game_Enemy = new Map();
 J.PASSIVE.Aliased.Game_Party = new Map();
 J.PASSIVE.Aliased.JABS_AiManager = new Map();
+J.PASSIVE.Aliased.Scene_Menu = new Map();
+J.PASSIVE.Aliased.Window_MenuCommand = new Map();
 J.PASSIVE.Aliased.Window_MoreEquipData = new Map();
 //endregion Introduction
