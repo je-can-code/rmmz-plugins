@@ -93,14 +93,15 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
 
   // percent-based values are already a plain number; formula-based values are evaluated
   // against the current actor so the player sees an actual quantity, not raw code.
-  // TraitManager derives the display name and icon from the sign of the value:
-  // negative = drain/poison, positive = regen.
+  // In JABS slip convention, negative values are healing and positive values are damage.
+  // TraitManager.slipName/slipIcon handle direction via sign; the displayed value is
+  // always shown as a positive magnitude so regen reads as "+55 / 5s" not "-55 / 5s".
   if (slipHpPct)
   {
     rows.push({
       icon:  TraitManager.slipIcon('hp', slipHpPct),
       label: TraitManager.slipName('hp', slipHpPct),
-      value: `${slipHpPct}% / 5s`,
+      value: `+${Math.abs(slipHpPct)}% / 5s`,
     });
   }
   else if (slipHpForm)
@@ -109,7 +110,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('hp', Number(hpEval)),
       label: TraitManager.slipName('hp', Number(hpEval)),
-      value: `${hpEval} / 5s`,
+      value: `+${Math.abs(Number(hpEval))} / 5s`,
     });
   }
 
@@ -118,7 +119,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('mp', slipMpPct),
       label: TraitManager.slipName('mp', slipMpPct),
-      value: `${slipMpPct}% / 5s`,
+      value: `+${Math.abs(slipMpPct)}% / 5s`,
     });
   }
   else if (slipMpForm)
@@ -127,7 +128,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('mp', Number(mpEval)),
       label: TraitManager.slipName('mp', Number(mpEval)),
-      value: `${mpEval} / 5s`,
+      value: `+${Math.abs(Number(mpEval))} / 5s`,
     });
   }
 
@@ -136,7 +137,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('tp', slipTpPct),
       label: TraitManager.slipName('tp', slipTpPct),
-      value: `${slipTpPct}% / 5s`,
+      value: `+${Math.abs(slipTpPct)}% / 5s`,
     });
   }
   else if (slipTpForm)
@@ -145,7 +146,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('tp', Number(tpEval)),
       label: TraitManager.slipName('tp', Number(tpEval)),
-      value: `${tpEval} / 5s`,
+      value: `+${Math.abs(Number(tpEval))} / 5s`,
     });
   }
 
