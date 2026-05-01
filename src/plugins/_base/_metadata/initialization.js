@@ -13,7 +13,7 @@ J.BASE = {};
  */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '3.0.1';
+J.BASE.Metadata.Version = '3.1.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -143,6 +143,7 @@ J.BASE.Aliased = {
   Bitmap: new Map(),
   DataManager: new Map(),
   JsonEx: new Map(),
+  Game_BattlerBase: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),
   Game_Battler: new Map(),

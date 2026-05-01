@@ -35,7 +35,7 @@ J.EXTEND.Metadata.Name = `J-SkillExtend`;
 /**
  * The version of this plugin.
  */
-J.EXTEND.Metadata.Version = '1.2.0';
+J.EXTEND.Metadata.Version = '1.2.1';
 
 /**
  * A collection of all aliased methods for this plugin.

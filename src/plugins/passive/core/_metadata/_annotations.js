@@ -6,7 +6,20 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
+ * @base J-DropsControl
+ * @base J-CriticalFactors
+ * @base J-SDP
+ * @base J-Proficiency
+ * @base J-NaturalGrowth
+ * @base J-Elementalistics
  * @orderAfter J-Base
+ * @orderAfter J-DropsControl
+ * @orderAfter J-CriticalFactors
+ * @orderAfter J-SDP
+ * @orderAfter J-Proficiency
+ * @orderAfter J-NaturalGrowth
+ * @orderAfter J-Elementalistics
+ *
  * @help
  * ============================================================================
  * OVERVIEW
@@ -143,6 +156,21 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Added Scene_Passive viewer scene with actor ribbon, state list, and semantic detail window.
+ *    Detail window uses a three-column layout with labeled sections: Combat, Parameters,
+ *    Elements, Ailments, Skills, Equip, Properties, and Rewards.
+ *    Parameters section color-codes values green/red; "lower is better" sparams (PDR, MDR,
+ *    MCR, TCR, FDR) use inverted color so reductions display green.
+ *    Elements section uses element icons as identifiers throughout; Dmg In color is inverted.
+ *    J-Natural buff/growth rows display with stat icons, +sign prefix, and /lv suffix.
+ *    Formulas evaluate to current numeric values against the viewing actor.
+ *    Added Passives command to the main menu with configurable name, icon, and switch.
+ *    Added J.PASSIVE.EXT.OTIB — item-to-state passive unlock system with optional DiaLog
+ *    integration.
+ *    Added J.PASSIVE.EXT.ABS — aliases detail window sections to inject JABS-specific
+ *    content: slip effects, shield, stacking, resource gains (J-Resources-ABS), and JABS
+ *    modifier/timing rows.
  * - 2.0.2
  *    Added support for passives driven by map events.
  * - 2.0.1
@@ -156,5 +184,29 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
+ *
+ * @param menuSettings
+ * @text Menu Settings
+ *
+ * @param menuSwitch
+ * @parent menuSettings
+ * @type switch
+ * @text Menu Switch ID
+ * @desc The switch that controls whether the Passives command appears in the menu.
+ * @default 108
+ *
+ * @param menuCommandName
+ * @parent menuSettings
+ * @type string
+ * @text Menu Name
+ * @desc The text shown as the Passives command in the main menu.
+ * @default Passives
+ *
+ * @param menuCommandIcon
+ * @parent menuSettings
+ * @type number
+ * @text Menu Icon
+ * @desc The icon index shown beside the Passives command in the menu.
+ * @default 191
  */
 //endregion Introduction
