@@ -152,6 +152,11 @@
  * target. This happens regardless the outcome of the skill.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed extendEffects to deduplicate addState effects by state ID when merging overlays.
+ *    When an extension defines a state application, any prior entry for that state ID is
+ *    replaced rather than concatenated — last extension wins per state. Multiple entries for
+ *    the same state within a single extension are preserved for intentional stack effects.
  * - 1.2.0
  *    Implement caching for skill extensions by caster.
  *    Consume `RPGManager` updates.

@@ -156,6 +156,21 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Added Scene_Passive viewer scene with actor ribbon, state list, and semantic detail window.
+ *    Detail window uses a three-column layout with labeled sections: Combat, Parameters,
+ *    Elements, Ailments, Skills, Equip, Properties, and Rewards.
+ *    Parameters section color-codes values green/red; "lower is better" sparams (PDR, MDR,
+ *    MCR, TCR, FDR) use inverted color so reductions display green.
+ *    Elements section uses element icons as identifiers throughout; Dmg In color is inverted.
+ *    J-Natural buff/growth rows display with stat icons, +sign prefix, and /lv suffix.
+ *    Formulas evaluate to current numeric values against the viewing actor.
+ *    Added Passives command to the main menu with configurable name, icon, and switch.
+ *    Added J.PASSIVE.EXT.OTIB — item-to-state passive unlock system with optional DiaLog
+ *    integration.
+ *    Added J.PASSIVE.EXT.ABS — aliases detail window sections to inject JABS-specific
+ *    content: slip effects, shield, stacking, resource gains (J-Resources-ABS), and JABS
+ *    modifier/timing rows.
  * - 2.0.2
  *    Added support for passives driven by map events.
  * - 2.0.1

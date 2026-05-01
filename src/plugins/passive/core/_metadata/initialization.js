@@ -17,7 +17,7 @@ J.PASSIVE.EXT = {};
  * The `metadata` associated with this plugin, such as version and plugin parameter values.
  * @type {JPassive_PluginMetadata}
  */
-J.PASSIVE.Metadata = new JPassive_PluginMetadata('J-Passive', '2.0.2');
+J.PASSIVE.Metadata = new JPassive_PluginMetadata('J-Passive', '2.1.0');
 
 /**
  * All regular expressions used by this plugin.
