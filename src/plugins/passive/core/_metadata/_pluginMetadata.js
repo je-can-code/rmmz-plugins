@@ -29,6 +29,15 @@ class JPassive_PluginMetadata
   initializeMetadata()
   {
     /**
+     * The id of a switch that controls whether the Passives command is visible in the menu.
+     * A value of 0 means always show, regardless of switch state.
+     * Configured via plugin parameter "menuSwitch".
+     * @type {number}
+     */
+    this.menuSwitchId = J.BASE.Helpers.parsePluginInt(
+      this.parsedPluginParameters['menuSwitch'], 0);
+
+    /**
      * The label shown for the Passives command in the main menu.
      * Configured via plugin parameter "menuCommandName".
      * @type {string}

@@ -23,6 +23,14 @@
  * @param menuSettings
  * @text Menu Settings
  *
+ * @param menuSwitch
+ * @parent menuSettings
+ * @type switch
+ * @text Menu Switch ID
+ * @desc The switch that controls whether the Passives command appears in the menu.
+ * Set to 0 (None) to always show the command regardless of switch state.
+ * @default 0
+ *
  * @param menuCommandName
  * @parent menuSettings
  * @type string
