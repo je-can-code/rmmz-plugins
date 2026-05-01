@@ -9,6 +9,32 @@ TextManager.maxTp = function()
 };
 
 /**
+ * Gets the "current resource" name for a given parameter id.
+ * This is the shorter, in-world name for the living resource itself
+ * as opposed to the stat-cap name (e.g. "Life" vs "Max Life").
+ * Use this when describing resource recovery rather than a stat modifier.
+ *
+ * Supported ids:
+ *  0  → HP  ("Life")
+ *  1  → MP  ("Magi")
+ *  30 → TP  ("Tech")
+ * @param {number} paramId The resource param id (0, 1, or 30).
+ * @returns {string} The in-world resource name.
+ */
+TextManager.resource = function(paramId)
+{
+  switch (paramId)
+  {
+    case  0: return "Life";
+    case  1: return "Magi";
+    case 30: return "Tech";
+  }
+
+  console.warn(`TextManager.resource: unrecognized paramId [${paramId}].`);
+  return String.empty;
+};
+
+/**
  * Gets the name of the reward parameter.
  * @param {number} paramId The paramId to get the reward text for.
  * @returns {string}
@@ -413,9 +439,9 @@ TextManager.xparam = function(xParamId)
     case 7:
       return "HP Regen"; //J.Param.HRG_text;
     case 8:
-      return "MP Regen"; //J.Param.MRG_text;
+      return "MP Rejuv"; //J.Param.MRG_text;
     case 9:
-      return "TP Regen"; //J.Param.TRG_text;
+      return "TP Restore"; //J.Param.TRG_text;
   }
 };
 
