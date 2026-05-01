@@ -10,6 +10,9 @@ Window_MenuCommand.prototype.makeCommandList = function()
   J.PASSIVE.Aliased.Window_MenuCommand.get('makeCommandList')
     .call(this);
 
+  // if the guard switch prevents the command, skip it.
+  if (!this.canAddPassivesCommand()) return;
+
   // build and insert the Passives command.
   const command = new WindowCommandBuilder(J.PASSIVE.Metadata.commandName)
     .setSymbol('passive-menu')
@@ -27,5 +30,19 @@ Window_MenuCommand.prototype.makeCommandList = function()
   {
     this.addBuiltCommand(command);
   }
+};
+
+/**
+ * Determines whether the Passives command should be added to the menu.
+ * When no switch is configured (id 0), the command is always shown.
+ * @returns {boolean}
+ */
+Window_MenuCommand.prototype.canAddPassivesCommand = function()
+{
+  // switch id of 0 means "always show"; no switch check needed.
+  if (!J.PASSIVE.Metadata.menuSwitchId) return true;
+
+  // defer to the configured switch.
+  return $gameSwitches.value(J.PASSIVE.Metadata.menuSwitchId);
 };
 //endregion Window_MenuCommand
