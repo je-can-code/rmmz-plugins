@@ -1,7 +1,7 @@
 {
   "name": "plugin-dev-utilities",
   "type": "module",
-  "license": "AGPL-3.0-or-later",
+  "license": "MIT",
   "author": "je-can-code",
   "devDependencies": {
     "@babel/plugin-syntax-import-assertions": "^7.22.5",
