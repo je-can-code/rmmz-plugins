@@ -59,13 +59,6 @@ class RPG_State
   message4 = String.empty;
 
   /**
-   * The type of message this is.
-   * (unsure)
-   * @type {number}
-   */
-  messageType = 1;
-
-  /**
    * The minimum number of turns this state will persist.
    * Requires `restriction` to not be 0 to be leveraged.
    * @type {number}
@@ -154,7 +147,6 @@ class RPG_State
     this.message2 = state.message2;
     this.message3 = state.message3;
     this.message4 = state.message4;
-    this.messageType = state.messageType;
     this.minTurns = state.minTurns;
     this.motion = state.motion;
     this.overlay = state.overlay;
