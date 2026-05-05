@@ -19,12 +19,6 @@ class RPG_Skill
   message2 = String.empty;
 
   /**
-   * The type of message for this skill.
-   * @type {number}
-   */
-  messageType = 0;
-
-  /**
    * The amount of MP required to execute this skill.
    * @type {number}
    */
@@ -80,7 +74,6 @@ class RPG_Skill
     // map the data.
     this.message1 = skill.message1;
     this.message2 = skill.message2;
-    this.messageType = skill.messageType;
     this.mpCost = skill.mpCost;
     this.requiredWtypeId1 = skill.requiredWtypeId1;
     this.requiredWtypeId2 = skill.requiredWtypeId2;
