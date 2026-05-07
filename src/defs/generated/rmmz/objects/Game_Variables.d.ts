@@ -33,11 +33,11 @@ interface Game_Variables
    * @param variableId The variableId parameter.
    * @param value The value parameter.
    */
-  setValue(variableId: number, value: number): void;
+  setValue(variableId: unknown, value: unknown): void;
   /**
    * Gets value.
    * @param variableId The variableId parameter.
    * @returns The result.
    */
-  value(variableId: number): number;
+  value(variableId: unknown): number;
 }

@@ -10,27 +10,27 @@ interface Game_Follower extends Game_Character
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Game_Follower#initialize}.<br/>
    * Written in: {@link Game_Follower#initialize}.<br/>
    * Read in: {@link Game_Follower#actor}.<br/>
    */
-  _memberIndex: number;
+  _memberIndex: unknown;
   /**
    * Gets actor.
    * @returns The result.
    */
-  actor(): Game_Actor;
+  actor(): unknown;
   /**
    * Performs chase character.
    * @param character The character parameter.
    */
-  chaseCharacter(character: Game_Character): void;
+  chaseCharacter(character: unknown): void;
   /**
    * Initializes initialize.
    * @param memberIndex The memberIndex parameter.
    */
-  initialize(memberIndex: number): void;
+  initialize(memberIndex: unknown): void;
   /**
    * Determines whether gathered.
    * @returns True if gathered; false otherwise.

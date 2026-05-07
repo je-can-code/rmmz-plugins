@@ -31,7 +31,7 @@ interface Sprite_Clickable extends Sprite
    * @param y The y parameter.
    * @returns The result.
    */
-  hitTest(x: number, y: number): boolean;
+  hitTest(x: unknown, y: unknown): unknown;
   /**
    * Initializes initialize.
    */

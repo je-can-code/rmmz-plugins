@@ -325,12 +325,12 @@ interface WebAudio
    * Performs create source node.
    * @param index The index parameter.
    */
-  _createSourceNode(index: number): void;
+  _createSourceNode(index: unknown): void;
   /**
    * Performs decode audio data.
    * @param arrayBuffer The arrayBuffer parameter.
    */
-  _decodeAudioData(arrayBuffer: ArrayBuffer): void;
+  _decodeAudioData(arrayBuffer: unknown): void;
   /**
    * Performs destroy decoder.
    */
@@ -339,7 +339,7 @@ interface WebAudio
    * Performs on decode.
    * @param buffer The buffer parameter.
    */
-  _onDecode(buffer: AudioBuffer): void;
+  _onDecode(buffer: unknown): void;
   /**
    * Performs on error.
    */
@@ -348,12 +348,12 @@ interface WebAudio
    * Performs on fetch.
    * @param response The response parameter.
    */
-  _onFetch(response: Response): void;
+  _onFetch(response: unknown): void;
   /**
    * Performs on fetch process.
    * @param value The value parameter.
    */
-  _onFetchProcess(value: Uint8Array): void;
+  _onFetchProcess(value: unknown): void;
   /**
    * Performs on load.
    */
@@ -362,31 +362,31 @@ interface WebAudio
    * Performs on xhr load.
    * @param xhr The xhr parameter.
    */
-  _onXhrLoad(xhr: XMLHttpRequest): void;
+  _onXhrLoad(xhr: unknown): void;
   /**
    * Gets read four characters.
    * @param view The view parameter.
    * @param index The index parameter.
    * @returns The result.
    */
-  _readFourCharacters(view: DataView, index: number): string;
+  _readFourCharacters(view: unknown, index: unknown): unknown;
   /**
    * Performs read loop comments.
    * @param arrayBuffer The arrayBuffer parameter.
    */
-  _readLoopComments(arrayBuffer: ArrayBuffer): void;
+  _readLoopComments(arrayBuffer: unknown): void;
   /**
    * Performs read meta data.
    * @param view The view parameter.
    * @param index The index parameter.
    * @param size The size parameter.
    */
-  _readMetaData(view: DataView, index: number, size: number): void;
+  _readMetaData(view: unknown, index: unknown, size: unknown): void;
   /**
    * Gets readable buffer.
    * @returns The result.
    */
-  _readableBuffer(): ArrayBuffer;
+  _readableBuffer(): unknown;
   /**
    * Gets real url.
    * @returns The result.
@@ -417,7 +417,7 @@ interface WebAudio
    * Performs start fetching.
    * @param url The url parameter.
    */
-  _startFetching(url: string): void;
+  _startFetching(url: unknown): void;
   /**
    * Tries to load the audio again.
    */
@@ -426,17 +426,17 @@ interface WebAudio
    * Performs start playing.
    * @param offset The offset parameter.
    */
-  _startPlaying(offset: number): void;
+  _startPlaying(offset: unknown): void;
   /**
    * Performs start source node.
    * @param index The index parameter.
    */
-  _startSourceNode(index: number): void;
+  _startSourceNode(index: unknown): void;
   /**
    * Performs start xhr loading.
    * @param url The url parameter.
    */
-  _startXhrLoading(url: string): void;
+  _startXhrLoading(url: unknown): void;
   /**
    * Performs stop source node.
    */
@@ -457,12 +457,12 @@ interface WebAudio
    * Adds a callback function that will be called when the audio data is loaded.
    * @param listner The callback function.
    */
-  addLoadListener(listner: () => void): void;
+  addLoadListener(listner: (...args: unknown[]) => unknown): void;
   /**
    * Adds a callback function that will be called when the playback is stopped.
    * @param listner The callback function.
    */
-  addStopListener(listner: () => void): void;
+  addStopListener(listner: (...args: unknown[]) => unknown): void;
   /**
    * Clears the audio data.
    */
@@ -505,12 +505,12 @@ interface WebAudio
    * The pan of the audio.
    * @returns The result.
    */
-  get pan(): number;
+  get pan(): unknown;
   /**
    * The pitch of the audio.
    * @returns The result.
    */
-  get pitch(): number;
+  get pitch(): unknown;
   /**
    * Plays the audio.
    * @param loop Whether the audio data play in a loop.
@@ -539,7 +539,7 @@ interface WebAudio
    * The volume of the audio.
    * @returns The result.
    */
-  get volume(): number;
+  get volume(): unknown;
 }
 declare namespace WebAudio
 {
@@ -560,12 +560,12 @@ declare namespace WebAudio
    * Performs fade in.
    * @param duration The duration parameter.
    */
-  function _fadeIn(duration: number): void;
+  function _fadeIn(duration: unknown): void;
   /**
    * Performs fade out.
    * @param duration The duration parameter.
    */
-  function _fadeOut(duration: number): void;
+  function _fadeOut(duration: unknown): void;
   /**
    * Performs on hide.
    */

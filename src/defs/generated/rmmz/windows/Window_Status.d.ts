@@ -10,12 +10,12 @@ interface Window_Status extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_Status#initialize}.<br/>
    * Written in: {@link Window_Status#initialize}, {@link Window_Status#setActor}.<br/>
    * Read in: {@link Window_Status#drawBasicInfo}, {@link Window_Status#drawBlock1}, {@link Window_Status#drawBlock2}, {@link Window_Status#expNextValue}, {@link Window_Status#expTotalValue}, {@link Window_Status#refresh}, {@link Window_Status#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Gets block1 y.
    * @returns The result.
@@ -25,13 +25,13 @@ interface Window_Status extends Window_StatusBase
    * Gets block2 y.
    * @returns The result.
    */
-  block2Y(): number;
+  block2Y(): unknown;
   /**
    * Performs draw basic info.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawBasicInfo(x: number, y: number): void;
+  drawBasicInfo(x: unknown, y: unknown): void;
   /**
    * Performs draw block1.
    */
@@ -45,7 +45,7 @@ interface Window_Status extends Window_StatusBase
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawExpInfo(x: number, y: number): void;
+  drawExpInfo(x: unknown, y: unknown): void;
   /**
    * Gets exp next value.
    * @returns The result.
@@ -60,7 +60,7 @@ interface Window_Status extends Window_StatusBase
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs refresh.
    */
@@ -69,5 +69,5 @@ interface Window_Status extends Window_StatusBase
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
 }

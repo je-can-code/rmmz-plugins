@@ -131,7 +131,7 @@ class RPG_State
   /**
    * Constructor.
    * Maps the state's properties into this object.
-   * @param {rm.types.State} state The underlying state object.
+   * @param {RPG_State} state The underlying state object.
    * @param {number} index The index of the state in the database.
    */
   constructor(state, index)

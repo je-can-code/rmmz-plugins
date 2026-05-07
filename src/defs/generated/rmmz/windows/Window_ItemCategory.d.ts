@@ -10,17 +10,17 @@ interface Window_ItemCategory extends Window_HorzCommand
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_ItemCategory#setItemWindow}.<br/>
    * Read in: {@link Window_ItemCategory#update}.<br/>
    */
-  _itemWindow: Window_Base;
+  _itemWindow: unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Creates command list.
    */
@@ -35,7 +35,7 @@ interface Window_ItemCategory extends Window_HorzCommand
    * @param name The name parameter.
    * @returns The result.
    */
-  needsCommand(name: string): boolean;
+  needsCommand(name: unknown): boolean;
   /**
    * Gets needs selection.
    * @returns The result.
@@ -45,7 +45,7 @@ interface Window_ItemCategory extends Window_HorzCommand
    * Sets item window.
    * @param itemWindow The itemWindow parameter.
    */
-  setItemWindow(itemWindow: Window_Base): void;
+  setItemWindow(itemWindow: unknown): void;
   /**
    * Performs update.
    */

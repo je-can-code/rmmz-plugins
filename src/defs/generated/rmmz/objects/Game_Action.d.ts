@@ -10,12 +10,12 @@ interface Game_Action
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `boolean`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Game_Action#initialize}.<br/>
    * Written in: {@link Game_Action#initialize}.<br/>
    * Read in: {@link Game_Action#isValid}, {@link Game_Action#makeTargets}, {@link Game_Action#prepare}.<br/>
    */
-  _forcing: boolean;
+  _forcing: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -56,56 +56,59 @@ interface Game_Action
    * Performs apply.
    * @param target The target parameter.
    */
-  apply(target: Game_Battler): void;
+  apply(target: unknown): void;
   /**
-   * Performs apply critical.
+   * Gets apply critical.
    * @param damage The damage parameter.
+   * @returns The result.
    */
-  applyCritical(damage: number): void;
+  applyCritical(damage: unknown): unknown;
   /**
    * Performs apply global.
    */
   applyGlobal(): void;
   /**
-   * Performs apply guard.
+   * Gets apply guard.
    * @param damage The damage parameter.
    * @param target The target parameter.
+   * @returns The result.
    */
-  applyGuard(damage: number, target: Game_Battler): void;
+  applyGuard(damage: unknown, target: unknown): unknown;
   /**
    * Performs apply item effect.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  applyItemEffect(target: Game_Battler, effect: object): void;
+  applyItemEffect(target: unknown, effect: unknown): void;
   /**
    * Performs apply item user effect.
    */
   applyItemUserEffect(): void;
   /**
-   * Performs apply variance.
+   * Gets apply variance.
    * @param damage The damage parameter.
    * @param variance The variance parameter.
+   * @returns The result.
    */
-  applyVariance(damage: number, variance: number): void;
+  applyVariance(damage: unknown, variance: unknown): unknown;
   /**
    * Gets calc element rate.
    * @param target The target parameter.
    * @returns The result.
    */
-  calcElementRate(target: Game_Battler): number;
+  calcElementRate(target: unknown): unknown;
   /**
    * Gets check damage type.
    * @param list The list parameter.
    * @returns The result.
    */
-  checkDamageType(list: number[]): boolean;
+  checkDamageType(list: unknown): unknown;
   /**
    * Gets check item scope.
    * @param list The list parameter.
    * @returns The result.
    */
-  checkItemScope(list: number[]): boolean;
+  checkItemScope(list: unknown): unknown;
   /**
    * Performs clear.
    */
@@ -114,7 +117,7 @@ interface Game_Action
    * Gets confusion target.
    * @returns The result.
    */
-  confusionTarget(): Game_Battler | null;
+  confusionTarget(): unknown;
   /**
    * Performs decide random target.
    */
@@ -125,69 +128,69 @@ interface Game_Action
    * @param elements The elements parameter.
    * @returns The result.
    */
-  elementsMaxRate(target: Game_Battler, elements: number[]): number;
+  elementsMaxRate(target: unknown, elements: unknown): number;
   /**
    * Gets eval damage formula.
    * @param target The target parameter.
    * @returns The result.
    */
-  evalDamageFormula(target: Game_Battler): number | unknown | number;
+  evalDamageFormula(target: unknown): number | unknown | number;
   /**
    * Gets evaluate.
    * @returns The result.
    */
-  evaluate(): number;
+  evaluate(): unknown;
   /**
    * Gets evaluate with target.
    * @param target The target parameter.
    * @returns The result.
    */
-  evaluateWithTarget(target: Game_Battler): number;
+  evaluateWithTarget(target: unknown): unknown;
   /**
    * Performs execute damage.
    * @param target The target parameter.
    * @param value The value parameter.
    */
-  executeDamage(target: Game_Battler, value: number): void;
+  executeDamage(target: unknown, value: unknown): void;
   /**
    * Performs execute hp damage.
    * @param target The target parameter.
    * @param value The value parameter.
    */
-  executeHpDamage(target: Game_Battler, value: number): void;
+  executeHpDamage(target: unknown, value: unknown): void;
   /**
    * Performs execute mp damage.
    * @param target The target parameter.
    * @param value The value parameter.
    */
-  executeMpDamage(target: Game_Battler, value: number): void;
+  executeMpDamage(target: unknown, value: unknown): void;
   /**
    * Gets friends unit.
    * @returns The result.
    */
-  friendsUnit(): Game_Unit;
+  friendsUnit(): unknown;
   /**
    * Performs gain drained hp.
    * @param value The value parameter.
    */
-  gainDrainedHp(value: number): void;
+  gainDrainedHp(value: unknown): void;
   /**
    * Performs gain drained mp.
    * @param value The value parameter.
    */
-  gainDrainedMp(value: number): void;
+  gainDrainedMp(value: unknown): void;
   /**
    * Determines whether item any valid effects.
    * @param target The target parameter.
    * @returns True if item any valid effects; false otherwise.
    */
-  hasItemAnyValidEffects(target: Game_Battler): boolean;
+  hasItemAnyValidEffects(target: unknown): boolean;
   /**
    * Initializes initialize.
    * @param subject The subject parameter.
    * @param forcing The forcing parameter.
    */
-  initialize(subject: Game_Battler, forcing: boolean): void;
+  initialize(subject: unknown, forcing: unknown): void;
   /**
    * Determines whether attack.
    * @returns True if attack; false otherwise.
@@ -317,49 +320,49 @@ interface Game_Action
    * Gets item.
    * @returns The result.
    */
-  item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  item(): unknown;
   /**
    * Gets item cnt.
    * @param target The target parameter.
    * @returns The result.
    */
-  itemCnt(target: Game_Battler): number;
+  itemCnt(target: unknown): number;
   /**
    * Gets item cri.
    * @param target The target parameter.
    * @returns The result.
    */
-  itemCri(target: Game_Battler): number;
+  itemCri(target: unknown): number;
   /**
    * Performs item effect add attack state.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectAddAttackState(target: Game_Battler, effect: object): void;
+  itemEffectAddAttackState(target: unknown, effect: unknown): void;
   /**
    * Performs item effect add buff.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectAddBuff(target: Game_Battler, effect: object): void;
+  itemEffectAddBuff(target: unknown, effect: unknown): void;
   /**
    * Performs item effect add debuff.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectAddDebuff(target: Game_Battler, effect: object): void;
+  itemEffectAddDebuff(target: unknown, effect: unknown): void;
   /**
    * Performs item effect add normal state.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectAddNormalState(target: Game_Battler, effect: object): void;
+  itemEffectAddNormalState(target: unknown, effect: unknown): void;
   /**
    * Performs item effect add state.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectAddState(target: Game_Battler, effect: object): void;
+  itemEffectAddState(target: unknown, effect: unknown): void;
   /**
    * Performs item effect common event.
    */
@@ -369,110 +372,110 @@ interface Game_Action
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectGainTp(target: Game_Battler, effect: object): void;
+  itemEffectGainTp(target: unknown, effect: unknown): void;
   /**
    * Performs item effect grow.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectGrow(target: Game_Battler, effect: object): void;
+  itemEffectGrow(target: unknown, effect: unknown): void;
   /**
    * Performs item effect learn skill.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectLearnSkill(target: Game_Battler, effect: object): void;
+  itemEffectLearnSkill(target: unknown, effect: unknown): void;
   /**
    * Performs item effect recover hp.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectRecoverHp(target: Game_Battler, effect: object): void;
+  itemEffectRecoverHp(target: unknown, effect: unknown): void;
   /**
    * Performs item effect recover mp.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectRecoverMp(target: Game_Battler, effect: object): void;
+  itemEffectRecoverMp(target: unknown, effect: unknown): void;
   /**
    * Performs item effect remove buff.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectRemoveBuff(target: Game_Battler, effect: object): void;
+  itemEffectRemoveBuff(target: unknown, effect: unknown): void;
   /**
    * Performs item effect remove debuff.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectRemoveDebuff(target: Game_Battler, effect: object): void;
+  itemEffectRemoveDebuff(target: unknown, effect: unknown): void;
   /**
    * Performs item effect remove state.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectRemoveState(target: Game_Battler, effect: object): void;
+  itemEffectRemoveState(target: unknown, effect: unknown): void;
   /**
    * Performs item effect special.
    * @param target The target parameter.
    * @param effect The effect parameter.
    */
-  itemEffectSpecial(target: Game_Battler, effect: object): void;
+  itemEffectSpecial(target: unknown, effect: unknown): void;
   /**
    * Gets item eva.
    * @param target The target parameter.
    * @returns The result.
    */
-  itemEva(target: Game_Battler): number;
+  itemEva(target: unknown): number;
   /**
    * Gets item hit.
    * @returns The result.
    */
-  itemHit(): number;
+  itemHit(): unknown;
   /**
    * Gets item mrf.
    * @param target The target parameter.
    * @returns The result.
    */
-  itemMrf(target: Game_Battler): number;
+  itemMrf(target: unknown): number;
   /**
    * Gets item target candidates.
    * @returns The result.
    */
-  itemTargetCandidates(): Game_Battler[];
+  itemTargetCandidates(): unknown[];
   /**
    * Gets luk effect rate.
    * @param target The target parameter.
    * @returns The result.
    */
-  lukEffectRate(target: Game_Battler): number;
+  lukEffectRate(target: unknown): unknown;
   /**
    * Creates damage value.
    * @param target The target parameter.
    * @param critical The critical parameter.
    * @returns The result.
    */
-  makeDamageValue(target: Game_Battler, critical: boolean): number;
+  makeDamageValue(target: unknown, critical: unknown): unknown;
   /**
    * Creates success.
    * @param target The target parameter.
    */
-  makeSuccess(target: Game_Battler): void;
+  makeSuccess(target: unknown): void;
   /**
    * Creates targets.
    * @returns The result.
    */
-  makeTargets(): Game_Battler[];
+  makeTargets(): unknown;
   /**
    * Gets needs selection.
    * @returns The result.
    */
-  needsSelection(): boolean;
+  needsSelection(): unknown;
   /**
    * Gets num repeats.
    * @returns The result.
    */
-  numRepeats(): number;
+  numRepeats(): unknown;
   /**
    * Gets num targets.
    * @returns The result.
@@ -482,7 +485,7 @@ interface Game_Action
    * Gets opponents unit.
    * @returns The result.
    */
-  opponentsUnit(): Game_Unit;
+  opponentsUnit(): unknown;
   /**
    * Performs prepare.
    */
@@ -492,13 +495,13 @@ interface Game_Action
    * @param unit The unit parameter.
    * @returns The result.
    */
-  randomTargets(unit: Game_Unit): Game_Battler[];
+  randomTargets(unit: unknown): unknown;
   /**
    * Gets repeat targets.
    * @param targets The targets parameter.
    * @returns The result.
    */
-  repeatTargets(targets: Game_Battler[]): Game_Battler[];
+  repeatTargets(targets: unknown): unknown;
   /**
    * Sets attack.
    */
@@ -511,7 +514,7 @@ interface Game_Action
    * Sets enemy action.
    * @param action The action parameter.
    */
-  setEnemyAction(action: Game_Action): void;
+  setEnemyAction(action: unknown): void;
   /**
    * Sets guard.
    */
@@ -520,89 +523,89 @@ interface Game_Action
    * Sets item.
    * @param itemId The itemId parameter.
    */
-  setItem(itemId: number): void;
+  setItem(itemId: unknown): void;
   /**
    * Sets item object.
    * @param object The object parameter.
    */
-  setItemObject(object: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setItemObject(object: unknown): void;
   /**
    * Sets skill.
    * @param skillId The skillId parameter.
    */
-  setSkill(skillId: number): void;
+  setSkill(skillId: unknown): void;
   /**
    * Sets subject.
    * @param subject The subject parameter.
    */
-  setSubject(subject: Game_Battler): void;
+  setSubject(subject: unknown): void;
   /**
    * Sets target.
    * @param targetIndex The targetIndex parameter.
    */
-  setTarget(targetIndex: number): void;
+  setTarget(targetIndex: unknown): void;
   /**
    * Gets speed.
    * @returns The result.
    */
-  speed(): number;
+  speed(): unknown;
   /**
    * Gets subject.
    * @returns The result.
    */
-  subject(): Game_Battler;
+  subject(): unknown;
   /**
    * Gets targets for alive.
    * @param unit The unit parameter.
    * @returns The result.
    */
-  targetsForAlive(unit: Game_Unit): Game_Battler[];
+  targetsForAlive(unit: unknown): unknown[];
   /**
    * Gets targets for dead.
    * @param unit The unit parameter.
    * @returns The result.
    */
-  targetsForDead(unit: Game_Unit): Game_Battler[];
+  targetsForDead(unit: unknown): unknown[];
   /**
    * Gets targets for dead and alive.
    * @param unit The unit parameter.
    * @returns The result.
    */
-  targetsForDeadAndAlive(unit: Game_Unit): Game_Battler[];
+  targetsForDeadAndAlive(unit: unknown): unknown[];
   /**
    * Gets targets for everyone.
    * @returns The result.
    */
-  targetsForEveryone(): Game_Battler[];
+  targetsForEveryone(): unknown;
   /**
    * Gets targets for friends.
    * @returns The result.
    */
-  targetsForFriends(): Game_Battler[];
+  targetsForFriends(): unknown[];
   /**
    * Gets targets for opponents.
    * @returns The result.
    */
-  targetsForOpponents(): Game_Battler[];
+  targetsForOpponents(): unknown;
   /**
    * Gets test apply.
    * @param target The target parameter.
    * @returns The result.
    */
-  testApply(target: Game_Battler): boolean;
+  testApply(target: unknown): boolean;
   /**
    * Gets test item effect.
    * @param target The target parameter.
    * @param effect The effect parameter.
    * @returns The result.
    */
-  testItemEffect(target: Game_Battler, effect: object): boolean;
+  testItemEffect(target: unknown, effect: unknown): boolean;
   /**
    * Gets test life and death.
    * @param target The target parameter.
    * @returns The result.
    */
-  testLifeAndDeath(target: Game_Battler): boolean;
+  testLifeAndDeath(target: unknown): boolean;
   /**
    * Updates last subject.
    */
@@ -611,7 +614,7 @@ interface Game_Action
    * Updates last target.
    * @param target The target parameter.
    */
-  updateLastTarget(target: Game_Battler): void;
+  updateLastTarget(target: unknown): void;
   /**
    * Updates last used.
    */

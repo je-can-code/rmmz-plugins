@@ -40,12 +40,12 @@ interface Window_NumberInput extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_NumberInput#setMessageWindow}.<br/>
    * Read in: {@link Window_NumberInput#processOk}, {@link Window_NumberInput#updatePlacement}.<br/>
    */
-  _messageWindow: Window_Base;
+  _messageWindow: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -64,12 +64,12 @@ interface Window_NumberInput extends Window_Selectable
    * Gets button y.
    * @returns The result.
    */
-  buttonY(): number;
+  buttonY(): unknown;
   /**
    * Performs change digit.
    * @param up The up parameter.
    */
-  changeDigit(up: boolean): void;
+  changeDigit(up: unknown): void;
   /**
    * Creates buttons.
    */
@@ -78,7 +78,7 @@ interface Window_NumberInput extends Window_Selectable
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Initializes initialize.
    */
@@ -113,7 +113,7 @@ interface Window_NumberInput extends Window_Selectable
    * @param index The index parameter.
    * @returns The result.
    */
-  itemRect(index: number): Rectangle;
+  itemRect(index: unknown): unknown;
   /**
    * Gets item width.
    * @returns The result.
@@ -123,12 +123,12 @@ interface Window_NumberInput extends Window_Selectable
    * Gets max cols.
    * @returns The result.
    */
-  maxCols(): number;
+  maxCols(): unknown;
   /**
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Performs on button down.
    */
@@ -157,7 +157,7 @@ interface Window_NumberInput extends Window_Selectable
    * Sets message window.
    * @param messageWindow The messageWindow parameter.
    */
-  setMessageWindow(messageWindow: Window_Base): void;
+  setMessageWindow(messageWindow: unknown): void;
   /**
    * Performs start.
    */
@@ -166,7 +166,7 @@ interface Window_NumberInput extends Window_Selectable
    * Gets total button width.
    * @returns The result.
    */
-  totalButtonWidth(): number;
+  totalButtonWidth(): unknown;
   /**
    * Performs update.
    */
@@ -179,10 +179,10 @@ interface Window_NumberInput extends Window_Selectable
    * Gets window height.
    * @returns The result.
    */
-  windowHeight(): number;
+  windowHeight(): unknown;
   /**
    * Gets window width.
    * @returns The result.
    */
-  windowWidth(): number;
+  windowWidth(): unknown;
 }

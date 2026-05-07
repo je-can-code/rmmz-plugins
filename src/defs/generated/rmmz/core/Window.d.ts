@@ -243,7 +243,7 @@ interface Window extends PIXI.Container
    * Gets make cursor alpha.
    * @returns The result.
    */
-  _makeCursorAlpha(): number;
+  _makeCursorAlpha(): unknown;
   /**
    * Performs on windowskin load.
    */
@@ -279,7 +279,7 @@ interface Window extends PIXI.Container
    * @param drect The drect parameter.
    * @param m The m parameter.
    */
-  _setRectPartsGeometry(sprite: Sprite, srect: Rectangle, drect: Rectangle, m: number): void;
+  _setRectPartsGeometry(sprite: unknown, srect: unknown, drect: unknown, m: unknown): void;
   /**
    * Performs update arrows.
    */
@@ -352,12 +352,12 @@ interface Window extends PIXI.Container
    * Draws the window shape into PIXI.Graphics object. Used by WindowLayer.
    * @param graphics The graphics parameter.
    */
-  drawShape(graphics: object): void;
+  drawShape(graphics: unknown): void;
   /**
    * The height of the window in pixels.
    * @returns The result.
    */
-  get height(): number;
+  get height(): unknown;
   /**
    * The window in the game.
    */
@@ -416,7 +416,7 @@ interface Window extends PIXI.Container
    * The opacity of the window without contents (0 to 255).
    * @returns The result.
    */
-  get opacity(): number;
+  get opacity(): unknown;
   /**
    * The openness of the window (0 to 255).
    * @returns The result.
@@ -454,7 +454,7 @@ interface Window extends PIXI.Container
    * The width of the window in pixels.
    * @returns The result.
    */
-  get width(): number;
+  get width(): unknown;
   /**
    * The image used as a window skin.
    * @returns The result.

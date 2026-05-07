@@ -10,12 +10,12 @@ interface Game_System
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_System#initialize}.<br/>
    * Written in: {@link Game_System#initialize}, {@link Game_System#setBattleBgm}.<br/>
    * Read in: {@link Game_System#battleBgm}.<br/>
    */
-  _battleBgm: null | { name: string; pan: number; pitch: number; volume: number };
+  _battleBgm: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Game_System
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_System#initialize}.<br/>
    * Written in: {@link Game_System#initialize}, {@link Game_System#setDefeatMe}.<br/>
    * Read in: {@link Game_System#defeatMe}.<br/>
    */
-  _defeatMe: null | { name: string; pan: number; pitch: number; volume: number };
+  _defeatMe: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -145,12 +145,12 @@ interface Game_System
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_System#initialize}.<br/>
    * Written in: {@link Game_System#initialize}, {@link Game_System#setVictoryMe}.<br/>
    * Read in: {@link Game_System#victoryMe}.<br/>
    */
-  _victoryMe: null | { name: string; pan: number; pitch: number; volume: number };
+  _victoryMe: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -172,27 +172,27 @@ interface Game_System
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | [number, number, number, number]`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_System#initialize}.<br/>
    * Written in: {@link Game_System#initialize}, {@link Game_System#setWindowTone}.<br/>
    * Read in: {@link Game_System#windowTone}.<br/>
    */
-  _windowTone: null | [number, number, number, number];
+  _windowTone: null;
   /**
    * Gets battle bgm.
    * @returns The result.
    */
-  battleBgm(): { name: string; pan: number; pitch: number; volume: number };
+  battleBgm(): unknown;
   /**
    * Gets battle count.
    * @returns The result.
    */
-  battleCount(): number;
+  battleCount(): unknown;
   /**
    * Gets defeat me.
    * @returns The result.
    */
-  defeatMe(): { name: string; pan: number; pitch: number; volume: number };
+  defeatMe(): unknown;
   /**
    * Performs disable encounter.
    */
@@ -229,7 +229,7 @@ interface Game_System
    * Gets escape count.
    * @returns The result.
    */
-  escapeCount(): number;
+  escapeCount(): unknown;
   /**
    * Initializes initialize.
    */
@@ -303,7 +303,7 @@ interface Game_System
    * Gets main font size.
    * @returns The result.
    */
-  mainFontSize(): number;
+  mainFontSize(): unknown;
   /**
    * Gets number font face.
    * @returns The result.
@@ -333,7 +333,7 @@ interface Game_System
    * Gets playtime.
    * @returns The result.
    */
-  playtime(): number;
+  playtime(): unknown;
   /**
    * Gets playtime text.
    * @returns The result.
@@ -355,7 +355,7 @@ interface Game_System
    * Gets save count.
    * @returns The result.
    */
-  saveCount(): number;
+  saveCount(): unknown;
   /**
    * Performs save walking bgm.
    */
@@ -373,47 +373,47 @@ interface Game_System
    * Sets battle bgm.
    * @param value The value parameter.
    */
-  setBattleBgm(value: { name: string; pan: number; pitch: number; volume: number }): void;
+  setBattleBgm(value: unknown): void;
   /**
    * Sets defeat me.
    * @param value The value parameter.
    */
-  setDefeatMe(value: { name: string; pan: number; pitch: number; volume: number }): void;
+  setDefeatMe(value: unknown): void;
   /**
    * Sets savefile id.
    * @param savefileId The savefileId parameter.
    */
-  setSavefileId(savefileId: number): void;
+  setSavefileId(savefileId: unknown): void;
   /**
    * Sets victory me.
    * @param value The value parameter.
    */
-  setVictoryMe(value: { name: string; pan: number; pitch: number; volume: number }): void;
+  setVictoryMe(value: unknown): void;
   /**
    * Sets window tone.
    * @param value The value parameter.
    */
-  setWindowTone(value: [number, number, number, number]): void;
+  setWindowTone(value: unknown): void;
   /**
    * Gets version id.
    * @returns The result.
    */
-  versionId(): number;
+  versionId(): unknown;
   /**
    * Gets victory me.
    * @returns The result.
    */
-  victoryMe(): { name: string; pan: number; pitch: number; volume: number };
+  victoryMe(): unknown;
   /**
    * Gets win count.
    * @returns The result.
    */
-  winCount(): number;
+  winCount(): unknown;
   /**
    * Gets window opacity.
    * @returns The result.
    */
-  windowOpacity(): number;
+  windowOpacity(): unknown;
   /**
    * Gets window padding.
    * @returns The result.
@@ -423,5 +423,5 @@ interface Game_System
    * Gets window tone.
    * @returns The result.
    */
-  windowTone(): [number, number, number, number];
+  windowTone(): unknown;
 }

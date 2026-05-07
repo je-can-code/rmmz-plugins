@@ -10,21 +10,21 @@ interface Game_Map
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_Map#initialize}.<br/>
    * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.<br/>
    * Read in: {@link Game_Map#battleback1Name}.<br/>
    */
-  _battleback1Name: null | string;
+  _battleback1Name: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_Map#initialize}.<br/>
    * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.<br/>
    * Read in: {@link Game_Map#battleback2Name}.<br/>
    */
-  _battleback2Name: null | string;
+  _battleback2Name: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -234,25 +234,25 @@ interface Game_Map
    * @param x The x parameter.
    * @returns The result.
    */
-  adjustX(x: number): number;
+  adjustX(x: unknown): unknown;
   /**
    * Gets adjust y.
    * @param y The y parameter.
    * @returns The result.
    */
-  adjustY(y: number): number;
+  adjustY(y: unknown): unknown;
   /**
    * Gets airship.
    * @returns The result.
    */
-  airship(): Game_Vehicle;
+  airship(): unknown;
   /**
    * Gets all tiles.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  allTiles(x: number, y: number): number[];
+  allTiles(x: unknown, y: unknown): unknown;
   /**
    * Performs autoplay.
    */
@@ -261,7 +261,7 @@ interface Game_Map
    * Gets autorun common events.
    * @returns The result.
    */
-  autorunCommonEvents(): object[];
+  autorunCommonEvents(): unknown;
   /**
    * Gets autotile type.
    * @param x The x parameter.
@@ -269,45 +269,45 @@ interface Game_Map
    * @param z The z parameter.
    * @returns The result.
    */
-  autotileType(x: number, y: number, z: number): number;
+  autotileType(x: unknown, y: unknown, z: unknown): number;
   /**
    * Gets battleback1 name.
    * @returns The result.
    */
-  battleback1Name(): string;
+  battleback1Name(): unknown;
   /**
    * Gets battleback2 name.
    * @returns The result.
    */
-  battleback2Name(): string;
+  battleback2Name(): unknown;
   /**
    * Gets boat.
    * @returns The result.
    */
-  boat(): Game_Vehicle;
+  boat(): unknown;
   /**
    * Gets bush depth.
    * @returns The result.
    */
-  bushDepth(): number;
+  bushDepth(): unknown;
   /**
    * Gets canvas to map x.
    * @param x The x parameter.
    * @returns The result.
    */
-  canvasToMapX(x: number): number;
+  canvasToMapX(x: unknown): unknown;
   /**
    * Gets canvas to map y.
    * @param y The y parameter.
    * @returns The result.
    */
-  canvasToMapY(y: number): number;
+  canvasToMapY(y: unknown): unknown;
   /**
    * Performs change battleback.
    * @param battleback1Name The battleback1Name parameter.
    * @param battleback2Name The battleback2Name parameter.
    */
-  changeBattleback(battleback1Name: string, battleback2Name: string): void;
+  changeBattleback(battleback1Name: unknown, battleback2Name: unknown): void;
   /**
    * Performs change parallax.
    * @param name The name parameter.
@@ -316,12 +316,12 @@ interface Game_Map
    * @param sx The sx parameter.
    * @param sy The sy parameter.
    */
-  changeParallax(name: string, loopX: boolean, loopY: boolean, sx: number, sy: number): void;
+  changeParallax(name: unknown, loopX: unknown, loopY: unknown, sx: unknown, sy: unknown): void;
   /**
    * Performs change tileset.
    * @param tilesetId The tilesetId parameter.
    */
-  changeTileset(tilesetId: number): void;
+  changeTileset(tilesetId: unknown): void;
   /**
    * Gets check layered tiles flags.
    * @param x The x parameter.
@@ -329,7 +329,7 @@ interface Game_Map
    * @param bit The bit parameter.
    * @returns The result.
    */
-  checkLayeredTilesFlags(x: number, y: number, bit: number): boolean;
+  checkLayeredTilesFlags(x: unknown, y: unknown, bit: unknown): unknown;
   /**
    * Gets check passage.
    * @param x The x parameter.
@@ -337,7 +337,7 @@ interface Game_Map
    * @param bit The bit parameter.
    * @returns The result.
    */
-  checkPassage(x: number, y: number, bit: number): boolean;
+  checkPassage(x: unknown, y: unknown, bit: unknown): boolean;
   /**
    * Creates vehicles.
    */
@@ -346,21 +346,21 @@ interface Game_Map
    * Gets data.
    * @returns The result.
    */
-  data(): number[];
+  data(): unknown;
   /**
    * Gets delta x.
    * @param x1 The x1 parameter.
    * @param x2 The x2 parameter.
    * @returns The result.
    */
-  deltaX(x1: number, x2: number): number;
+  deltaX(x1: unknown, x2: unknown): unknown;
   /**
    * Gets delta y.
    * @param y1 The y1 parameter.
    * @param y2 The y2 parameter.
    * @returns The result.
    */
-  deltaY(y1: number, y2: number): number;
+  deltaY(y1: unknown, y2: unknown): unknown;
   /**
    * Performs disable name display.
    */
@@ -369,17 +369,17 @@ interface Game_Map
    * Gets display name.
    * @returns The result.
    */
-  displayName(): string;
+  displayName(): unknown;
   /**
    * Gets display x.
    * @returns The result.
    */
-  displayX(): number;
+  displayX(): unknown;
   /**
    * Gets display y.
    * @returns The result.
    */
-  displayY(): number;
+  displayY(): unknown;
   /**
    * Gets distance.
    * @param x1 The x1 parameter.
@@ -388,13 +388,13 @@ interface Game_Map
    * @param y2 The y2 parameter.
    * @returns The result.
    */
-  distance(x1: number, y1: number, x2: number, y2: number): number;
+  distance(x1: unknown, y1: unknown, x2: unknown, y2: unknown): unknown;
   /**
    * Performs do scroll.
    * @param direction The direction parameter.
    * @param distance The distance parameter.
    */
-  doScroll(direction: number, distance: number): void;
+  doScroll(direction: unknown, distance: unknown): void;
   /**
    * Performs enable name display.
    */
@@ -403,54 +403,54 @@ interface Game_Map
    * Gets encounter list.
    * @returns The result.
    */
-  encounterList(): object[];
+  encounterList(): unknown;
   /**
    * Gets encounter step.
    * @returns The result.
    */
-  encounterStep(): number;
+  encounterStep(): unknown;
   /**
    * Performs erase event.
    * @param eventId The eventId parameter.
    */
-  eraseEvent(eventId: number): void;
+  eraseEvent(eventId: unknown): void;
   /**
    * Gets event.
    * @param eventId The eventId parameter.
    * @returns The result.
    */
-  event(eventId: number): Game_Event | undefined;
+  event(eventId: unknown): Game_Event | undefined;
   /**
    * Gets event id xy.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  eventIdXy(x: number, y: number): number;
+  eventIdXy(x: unknown, y: unknown): number;
   /**
    * Gets events.
    * @returns The result.
    */
-  events(): Game_Event[];
+  events(): unknown;
   /**
    * Gets events xy.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  eventsXy(x: number, y: number): Game_Event[];
+  eventsXy(x: unknown, y: unknown): unknown;
   /**
    * Gets events xy nt.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  eventsXyNt(x: number, y: number): Game_Event[];
+  eventsXyNt(x: unknown, y: unknown): unknown;
   /**
    * Gets height.
    * @returns The result.
    */
-  height(): number;
+  height(): unknown;
   /**
    * Initializes initialize.
    */
@@ -461,7 +461,7 @@ interface Game_Map
    * @param y The y parameter.
    * @returns True if airship land ok; false otherwise.
    */
-  isAirshipLandOk(x: number, y: number): boolean;
+  isAirshipLandOk(x: unknown, y: unknown): boolean;
   /**
    * Determines whether any event starting.
    * @returns True if any event starting; false otherwise.
@@ -473,28 +473,28 @@ interface Game_Map
    * @param y The y parameter.
    * @returns True if boat passable; false otherwise.
    */
-  isBoatPassable(x: number, y: number): boolean;
+  isBoatPassable(x: unknown, y: unknown): boolean;
   /**
    * Determines whether bush.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if bush; false otherwise.
    */
-  isBush(x: number, y: number): boolean;
+  isBush(x: unknown, y: unknown): boolean;
   /**
    * Determines whether counter.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if counter; false otherwise.
    */
-  isCounter(x: number, y: number): boolean;
+  isCounter(x: unknown, y: unknown): boolean;
   /**
    * Determines whether damage floor.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if damage floor; false otherwise.
    */
-  isDamageFloor(x: number, y: number): boolean;
+  isDamageFloor(x: unknown, y: unknown): boolean;
   /**
    * Determines whether dash disabled.
    * @returns True if dash disabled; false otherwise.
@@ -511,7 +511,7 @@ interface Game_Map
    * @param y The y parameter.
    * @returns True if ladder; false otherwise.
    */
-  isLadder(x: number, y: number): boolean;
+  isLadder(x: unknown, y: unknown): boolean;
   /**
    * Determines whether loop horizontal.
    * @returns True if loop horizontal; false otherwise.
@@ -539,7 +539,7 @@ interface Game_Map
    * @param d The d parameter.
    * @returns True if passable; false otherwise.
    */
-  isPassable(x: number, y: number, d: number): boolean;
+  isPassable(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether scrolling.
    * @returns True if scrolling; false otherwise.
@@ -551,31 +551,31 @@ interface Game_Map
    * @param y The y parameter.
    * @returns True if ship passable; false otherwise.
    */
-  isShipPassable(x: number, y: number): boolean;
+  isShipPassable(x: unknown, y: unknown): boolean;
   /**
    * Determines whether valid.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if valid; false otherwise.
    */
-  isValid(x: number, y: number): boolean;
+  isValid(x: unknown, y: unknown): boolean;
   /**
    * Gets layered tiles.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  layeredTiles(x: number, y: number): number[];
+  layeredTiles(x: unknown, y: unknown): unknown;
   /**
    * Gets map id.
    * @returns The result.
    */
-  mapId(): number;
+  mapId(): unknown;
   /**
    * Gets parallax name.
    * @returns The result.
    */
-  parallaxName(): string;
+  parallaxName(): unknown;
   /**
    * Gets parallax ox.
    * @returns The result.
@@ -590,7 +590,7 @@ interface Game_Map
    * Gets parallel common events.
    * @returns The result.
    */
-  parallelCommonEvents(): object[];
+  parallelCommonEvents(): unknown;
   /**
    * Performs referesh vehicles.
    */
@@ -613,7 +613,7 @@ interface Game_Map
    * @param y The y parameter.
    * @returns The result.
    */
-  regionId(x: number, y: number): number;
+  regionId(x: unknown, y: unknown): number;
   /**
    * Performs request refresh.
    */
@@ -623,73 +623,73 @@ interface Game_Map
    * @param x The x parameter.
    * @returns The result.
    */
-  roundX(x: number): number;
+  roundX(x: unknown): unknown;
   /**
    * Gets round xwith direction.
    * @param x The x parameter.
    * @param d The d parameter.
    * @returns The result.
    */
-  roundXWithDirection(x: number, d: number): number;
+  roundXWithDirection(x: unknown, d: unknown): unknown;
   /**
    * Gets round y.
    * @param y The y parameter.
    * @returns The result.
    */
-  roundY(y: number): number;
+  roundY(y: unknown): unknown;
   /**
    * Gets round ywith direction.
    * @param y The y parameter.
    * @param d The d parameter.
    * @returns The result.
    */
-  roundYWithDirection(y: number, d: number): number;
+  roundYWithDirection(y: unknown, d: unknown): unknown;
   /**
    * Gets screen tile x.
    * @returns The result.
    */
-  screenTileX(): number;
+  screenTileX(): unknown;
   /**
    * Gets screen tile y.
    * @returns The result.
    */
-  screenTileY(): number;
+  screenTileY(): unknown;
   /**
    * Gets scroll distance.
    * @returns The result.
    */
-  scrollDistance(): number;
+  scrollDistance(): unknown;
   /**
    * Performs scroll down.
    * @param distance The distance parameter.
    */
-  scrollDown(distance: number): void;
+  scrollDown(distance: unknown): void;
   /**
    * Performs scroll left.
    * @param distance The distance parameter.
    */
-  scrollLeft(distance: number): void;
+  scrollLeft(distance: unknown): void;
   /**
    * Performs scroll right.
    * @param distance The distance parameter.
    */
-  scrollRight(distance: number): void;
+  scrollRight(distance: unknown): void;
   /**
    * Performs scroll up.
    * @param distance The distance parameter.
    */
-  scrollUp(distance: number): void;
+  scrollUp(distance: unknown): void;
   /**
    * Sets display pos.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setDisplayPos(x: number, y: number): void;
+  setDisplayPos(x: unknown, y: unknown): void;
   /**
    * Performs setup.
    * @param mapId The mapId parameter.
    */
-  setup(mapId: number): void;
+  setup(mapId: unknown): void;
   /**
    * Gets setup autorun common event.
    * @returns The result.
@@ -730,33 +730,33 @@ interface Game_Map
    * Gets ship.
    * @returns The result.
    */
-  ship(): Game_Vehicle;
+  ship(): unknown;
   /**
    * Performs start scroll.
    * @param direction The direction parameter.
    * @param distance The distance parameter.
    * @param speed The speed parameter.
    */
-  startScroll(direction: number, distance: number, speed: number): void;
+  startScroll(direction: unknown, distance: unknown, speed: unknown): void;
   /**
    * Gets terrain tag.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  terrainTag(x: number, y: number): number;
+  terrainTag(x: unknown, y: unknown): unknown;
   /**
    * Gets tile events xy.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  tileEventsXy(x: number, y: number): Game_Event[];
+  tileEventsXy(x: unknown, y: unknown): unknown;
   /**
    * Gets tile height.
    * @returns The result.
    */
-  tileHeight(): number;
+  tileHeight(): unknown;
   /**
    * Gets tile id.
    * @param x The x parameter.
@@ -764,7 +764,7 @@ interface Game_Map
    * @param z The z parameter.
    * @returns The result.
    */
-  tileId(x: number, y: number, z: number): number;
+  tileId(x: unknown, y: unknown, z: unknown): number;
   /**
    * Gets tile width.
    * @returns The result.
@@ -774,27 +774,27 @@ interface Game_Map
    * Gets tileset.
    * @returns The result.
    */
-  tileset(): object | undefined;
+  tileset(): unknown;
   /**
    * Gets tileset flags.
    * @returns The result.
    */
-  tilesetFlags(): number[];
+  tilesetFlags(): unknown[];
   /**
    * Gets tileset id.
    * @returns The result.
    */
-  tilesetId(): number;
+  tilesetId(): unknown;
   /**
    * Performs unlock event.
    * @param eventId The eventId parameter.
    */
-  unlockEvent(eventId: number): void;
+  unlockEvent(eventId: unknown): void;
   /**
    * Performs update.
    * @param sceneActive The sceneActive parameter.
    */
-  update(sceneActive: boolean): void;
+  update(sceneActive: unknown): void;
   /**
    * Updates events.
    */
@@ -820,29 +820,29 @@ interface Game_Map
    * @param _type The type parameter.
    * @returns The result.
    */
-  vehicle(_type: number | string): Game_Vehicle | null;
+  vehicle(_type: unknown): Game_Vehicle | null;
   /**
    * Gets vehicles.
    * @returns The result.
    */
-  vehicles(): Game_Vehicle[];
+  vehicles(): unknown;
   /**
    * Gets width.
    * @returns The result.
    */
-  width(): number;
+  width(): unknown;
   /**
    * Gets x with direction.
    * @param x The x parameter.
    * @param d The d parameter.
    * @returns The result.
    */
-  xWithDirection(x: number, d: number): number;
+  xWithDirection(x: unknown, d: unknown): unknown;
   /**
    * Gets y with direction.
    * @param y The y parameter.
    * @param d The d parameter.
    * @returns The result.
    */
-  yWithDirection(y: number, d: number): number;
+  yWithDirection(y: unknown, d: unknown): unknown;
 }

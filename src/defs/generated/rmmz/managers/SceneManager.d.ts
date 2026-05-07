@@ -101,7 +101,7 @@ declare namespace SceneManager
    * Gets background bitmap.
    * @returns The result.
    */
-  function backgroundBitmap(): Bitmap | null;
+  function backgroundBitmap(): unknown;
   /**
    * Performs catch exception.
    * @param e The e parameter.
@@ -111,17 +111,17 @@ declare namespace SceneManager
    * Performs catch load error.
    * @param e The e parameter.
    */
-  function catchLoadError(e: Event): void;
+  function catchLoadError(e: unknown): void;
   /**
    * Performs catch normal error.
    * @param e The e parameter.
    */
-  function catchNormalError(e: Event): void;
+  function catchNormalError(e: unknown): void;
   /**
    * Performs catch unknown error.
    * @param e The e parameter.
    */
-  function catchUnknownError(e: Event): void;
+  function catchUnknownError(e: unknown): void;
   /**
    * Performs change scene.
    */
@@ -143,7 +143,7 @@ declare namespace SceneManager
    * @param deltaTime The deltaTime parameter.
    * @returns The result.
    */
-  function determineRepeatNumber(deltaTime: number): number;
+  function determineRepeatNumber(deltaTime: unknown): number;
   /**
    * Performs exit.
    */
@@ -152,7 +152,7 @@ declare namespace SceneManager
    * Performs goto.
    * @param sceneClass The sceneClass parameter.
    */
-  function goto(sceneClass: new () => Scene_Base): void;
+  function goto(sceneClass: unknown): void;
   /**
    * Initializes audio.
    */
@@ -188,13 +188,13 @@ declare namespace SceneManager
    * @param sceneClass The sceneClass parameter.
    * @returns True if next scene; false otherwise.
    */
-  function isNextScene(sceneClass: new () => Scene_Base): boolean;
+  function isNextScene(sceneClass: unknown): boolean;
   /**
    * Determines whether previous scene.
    * @param sceneClass The sceneClass parameter.
    * @returns True if previous scene; false otherwise.
    */
-  function isPreviousScene(sceneClass: new () => Scene_Base): boolean;
+  function isPreviousScene(sceneClass: unknown): boolean;
   /**
    * Determines whether scene changing.
    * @returns True if scene changing; false otherwise.
@@ -208,17 +208,17 @@ declare namespace SceneManager
    * Performs on error.
    * @param event The event parameter.
    */
-  function onError(event: ErrorEvent): void;
+  function onError(event: unknown): void;
   /**
    * Performs on key down.
    * @param event The event parameter.
    */
-  function onKeyDown(event: KeyboardEvent): void;
+  function onKeyDown(event: unknown): void;
   /**
    * Performs on reject.
    * @param event The event parameter.
    */
-  function onReject(event: PromiseRejectionEvent): void;
+  function onReject(event: unknown): void;
   /**
    * Performs on scene create.
    */
@@ -247,7 +247,7 @@ declare namespace SceneManager
    * Performs push.
    * @param sceneClass The sceneClass parameter.
    */
-  function push(sceneClass: new () => Scene_Base): void;
+  function push(sceneClass: unknown): void;
   /**
    * Performs reload game.
    */
@@ -260,7 +260,7 @@ declare namespace SceneManager
    * Performs run.
    * @param sceneClass The sceneClass parameter.
    */
-  function run(sceneClass: new () => Scene_Base): void;
+  function run(sceneClass: unknown): void;
   /**
    * Performs setup event handlers.
    */
@@ -273,7 +273,7 @@ declare namespace SceneManager
    * Gets snap.
    * @returns The result.
    */
-  function snap(): Bitmap;
+  function snap(): unknown;
   /**
    * Performs snap for background.
    */
@@ -290,7 +290,7 @@ declare namespace SceneManager
    * Performs update.
    * @param deltaTime The deltaTime parameter.
    */
-  function update(deltaTime: number): void;
+  function update(deltaTime: unknown): void;
   /**
    * Updates effekseer.
    */

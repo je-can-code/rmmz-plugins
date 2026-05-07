@@ -19,12 +19,12 @@ interface Sprite_StateOverlay extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#setup}.<br/>
    * Read in: {@link Sprite_StateOverlay#updatePattern}.<br/>
    */
-  _battler: null | Game_Battler;
+  _battler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -64,7 +64,7 @@ interface Sprite_StateOverlay extends Sprite
    * Performs setup.
    * @param battler The battler parameter.
    */
-  setup(battler: Game_Battler): void;
+  setup(battler: unknown): void;
   /**
    * Performs update.
    */

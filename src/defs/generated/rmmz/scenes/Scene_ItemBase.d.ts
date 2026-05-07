@@ -31,9 +31,9 @@ interface Scene_ItemBase extends Scene_MenuBase
   applyItem(): void;
   /**
    * Determines whether use.
-   * @returns True if use; false otherwise.
+   * @returns The result.
    */
-  canUse(): boolean;
+  canUse(): unknown;
   /**
    * Performs check common event.
    */
@@ -77,12 +77,12 @@ interface Scene_ItemBase extends Scene_MenuBase
    * Gets item.
    * @returns The result.
    */
-  item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  item(): unknown;
   /**
    * Gets item target actors.
    * @returns The result.
    */
-  itemTargetActors(): Game_Actor[];
+  itemTargetActors(): unknown[];
   /**
    * Performs on actor cancel.
    */

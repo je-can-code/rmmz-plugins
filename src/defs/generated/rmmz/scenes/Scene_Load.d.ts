@@ -20,17 +20,17 @@ interface Scene_Load extends Scene_File
    * Performs execute load.
    * @param savefileId The savefileId parameter.
    */
-  executeLoad(savefileId: number): void;
+  executeLoad(savefileId: unknown): void;
   /**
    * Gets first savefile id.
    * @returns The result.
    */
-  firstSavefileId(): number;
+  firstSavefileId(): unknown;
   /**
    * Gets help window text.
    * @returns The result.
    */
-  helpWindowText(): string;
+  helpWindowText(): unknown;
   /**
    * Initializes initialize.
    */

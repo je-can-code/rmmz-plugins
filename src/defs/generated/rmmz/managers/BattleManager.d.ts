@@ -10,12 +10,12 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Action`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.<br/>
    * Read in: {@link BattleManager#checkSubstitute}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#startAction}.<br/>
    */
-  _action: null | Game_Action;
+  _action: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -32,12 +32,12 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#forceAction}, {@link BattleManager#initMembers}, {@link BattleManager#processForcedAction}.<br/>
    * Read in: {@link BattleManager#isActionForced}, {@link BattleManager#processForcedAction}.<br/>
    */
-  _actionForcedBattler: null | Game_Battler;
+  _actionForcedBattler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -95,12 +95,12 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | () => void`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setEventCallback}.<br/>
    * Read in: {@link BattleManager#endBattle}.<br/>
    */
-  _eventCallback: null | () => void;
+  _eventCallback: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -113,7 +113,7 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_BattleLog`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setLogWindow}.<br/>
    * Read in: {@link BattleManager#applySubstitute}, {@link BattleManager#displayBattlerStatus}, {@link BattleManager#endAction}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeCounterAttack}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#isBusy}, {@link BattleManager#processAbort}, {@link BattleManager#startAction}, {@link BattleManager#startTurn}.<br/>
@@ -122,7 +122,7 @@ interface BattleManager
    * - `clear()`: {@link BattleManager#processAbort}.<br/>
    * - `push()`: {@link BattleManager#invokeAction}.<br/>
    */
-  _logWindow: null | Window_BattleLog;
+  _logWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -171,12 +171,12 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Spriteset_Battle`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setSpriteset}.<br/>
    * Read in: {@link BattleManager#isBusy}.<br/>
    */
-  _spriteset: null | Spriteset_Battle;
+  _spriteset: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -198,7 +198,7 @@ interface BattleManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `unknown[] | Game_Battler[]`.<br/>
+   * Type: `unknown[]`.<br/>
    * Initialized in: {@link BattleManager#initMembers}.<br/>
    * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.<br/>
    * Read in: {@link BattleManager#updateAction}.<br/>
@@ -206,7 +206,7 @@ interface BattleManager
    * Consumed by:<br/>
    * - `shift()`: {@link BattleManager#updateAction}.<br/>
    */
-  _targets: unknown[] | Game_Battler[];
+  _targets: unknown[];
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -228,28 +228,28 @@ declare namespace BattleManager
    * Gets actor.
    * @returns The result.
    */
-  function actor(): Game_Actor | null;
+  function actor(): unknown;
   /**
    * Gets all battle members.
    * @returns The result.
    */
-  function allBattleMembers(): Game_Battler[];
+  function allBattleMembers(): unknown;
   /**
    * Gets apply substitute.
    * @param target The target parameter.
    * @returns The result.
    */
-  function applySubstitute(target: Game_Battler): Game_Battler;
+  function applySubstitute(target: unknown): unknown;
   /**
    * Determines whether escape.
-   * @returns True if escape; false otherwise.
+   * @returns The result.
    */
-  function canEscape(): boolean;
+  function canEscape(): unknown;
   /**
    * Determines whether lose.
-   * @returns True if lose; false otherwise.
+   * @returns The result.
    */
-  function canLose(): boolean;
+  function canLose(): unknown;
   /**
    * Performs cancel actor input.
    */
@@ -258,7 +258,7 @@ declare namespace BattleManager
    * Performs change current actor.
    * @param forward The forward parameter.
    */
-  function changeCurrentActor(forward: boolean): void;
+  function changeCurrentActor(forward: unknown): void;
   /**
    * Gets check abort.
    * @returns The result.
@@ -274,7 +274,7 @@ declare namespace BattleManager
    * @param target The target parameter.
    * @returns The result.
    */
-  function checkSubstitute(target: Game_Battler): boolean;
+  function checkSubstitute(target: unknown): boolean;
   /**
    * Performs check tpb input close.
    */
@@ -292,7 +292,7 @@ declare namespace BattleManager
    * @param battler The battler parameter.
    * @param current The current parameter.
    */
-  function displayBattlerStatus(battler: Game_Battler, current: boolean): void;
+  function displayBattlerStatus(battler: unknown, current: unknown): void;
   /**
    * Performs display defeat message.
    */
@@ -341,12 +341,12 @@ declare namespace BattleManager
    * Performs end battle.
    * @param result The result parameter.
    */
-  function endBattle(result: number): void;
+  function endBattle(result: unknown): void;
   /**
    * Performs end battler actions.
    * @param battler The battler parameter.
    */
-  function endBattlerActions(battler: Game_Battler): void;
+  function endBattlerActions(battler: unknown): void;
   /**
    * Performs end turn.
    */
@@ -359,7 +359,7 @@ declare namespace BattleManager
    * Performs force action.
    * @param battler The battler parameter.
    */
-  function forceAction(battler: Game_Battler): void;
+  function forceAction(battler: unknown): void;
   /**
    * Performs gain drop items.
    */
@@ -380,7 +380,7 @@ declare namespace BattleManager
    * Gets next subject.
    * @returns The result.
    */
-  function getNextSubject(): null | Game_Battler;
+  function getNextSubject(): unknown;
   /**
    * Initializes members.
    */
@@ -389,31 +389,31 @@ declare namespace BattleManager
    * Gets inputting action.
    * @returns The result.
    */
-  function inputtingAction(): Game_Action | null;
+  function inputtingAction(): null;
   /**
    * Performs invoke action.
    * @param subject The subject parameter.
    * @param target The target parameter.
    */
-  function invokeAction(subject: Game_Battler, target: Game_Battler): void;
+  function invokeAction(subject: unknown, target: unknown): void;
   /**
    * Performs invoke counter attack.
    * @param subject The subject parameter.
    * @param target The target parameter.
    */
-  function invokeCounterAttack(subject: Game_Battler, target: Game_Battler): void;
+  function invokeCounterAttack(subject: unknown, target: unknown): void;
   /**
    * Performs invoke magic reflection.
    * @param subject The subject parameter.
    * @param target The target parameter.
    */
-  function invokeMagicReflection(subject: Game_Battler, target: Game_Battler): void;
+  function invokeMagicReflection(subject: unknown, target: unknown): void;
   /**
    * Performs invoke normal action.
    * @param subject The subject parameter.
    * @param target The target parameter.
    */
-  function invokeNormalAction(subject: Game_Battler, target: Game_Battler): void;
+  function invokeNormalAction(subject: unknown, target: unknown): void;
   /**
    * Determines whether aborting.
    * @returns True if aborting; false otherwise.
@@ -532,7 +532,7 @@ declare namespace BattleManager
    * Gets process escape.
    * @returns The result.
    */
-  function processEscape(): boolean;
+  function processEscape(): unknown;
   /**
    * Performs process forced action.
    */
@@ -553,12 +553,12 @@ declare namespace BattleManager
    * Gets rate preemptive.
    * @returns The result.
    */
-  function ratePreemptive(): number;
+  function ratePreemptive(): unknown;
   /**
    * Gets rate surprise.
    * @returns The result.
    */
-  function rateSurprise(): number;
+  function rateSurprise(): unknown;
   /**
    * Performs replay bgm and bgs.
    */
@@ -587,29 +587,29 @@ declare namespace BattleManager
    * Sets battle test.
    * @param battleTest The battleTest parameter.
    */
-  function setBattleTest(battleTest: boolean): void;
+  function setBattleTest(battleTest: unknown): void;
   /**
    * Sets event callback.
    * @param callback The callback parameter.
    */
-  function setEventCallback(callback: () => void): void;
+  function setEventCallback(callback: unknown): void;
   /**
    * Sets log window.
    * @param logWindow The logWindow parameter.
    */
-  function setLogWindow(logWindow: Window_BattleLog): void;
+  function setLogWindow(logWindow: unknown): void;
   /**
    * Sets spriteset.
    * @param spriteset The spriteset parameter.
    */
-  function setSpriteset(spriteset: Spriteset_Battle): void;
+  function setSpriteset(spriteset: unknown): void;
   /**
    * Performs setup.
    * @param troopId The troopId parameter.
    * @param canEscape The canEscape parameter.
    * @param canLose The canLose parameter.
    */
-  function setup(troopId: number, canEscape: boolean, canLose: boolean): void;
+  function setup(troopId: unknown, canEscape: unknown, canLose: unknown): void;
   /**
    * Performs start action.
    */
@@ -634,7 +634,7 @@ declare namespace BattleManager
    * Performs update.
    * @param timeActive The timeActive parameter.
    */
-  function update(timeActive: boolean): void;
+  function update(timeActive: unknown): void;
   /**
    * Updates action.
    */
@@ -661,7 +661,7 @@ declare namespace BattleManager
    * Updates phase.
    * @param timeActive The timeActive parameter.
    */
-  function updatePhase(timeActive: boolean): void;
+  function updatePhase(timeActive: unknown): void;
   /**
    * Updates start.
    */
@@ -674,7 +674,7 @@ declare namespace BattleManager
    * Updates tpb battler.
    * @param battler The battler parameter.
    */
-  function updateTpbBattler(battler: Game_Battler): void;
+  function updateTpbBattler(battler: unknown): void;
   /**
    * Updates tpb input.
    */
@@ -683,7 +683,7 @@ declare namespace BattleManager
    * Updates turn.
    * @param timeActive The timeActive parameter.
    */
-  function updateTurn(timeActive: boolean): void;
+  function updateTurn(timeActive: unknown): void;
   /**
    * Updates turn end.
    */

@@ -16,12 +16,12 @@ interface Window_Gold extends Window_Selectable
    * Gets currency unit.
    * @returns The result.
    */
-  currencyUnit(): string;
+  currencyUnit(): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs open.
    */
@@ -34,5 +34,5 @@ interface Window_Gold extends Window_Selectable
    * Gets value.
    * @returns The result.
    */
-  value(): number;
+  value(): unknown;
 }

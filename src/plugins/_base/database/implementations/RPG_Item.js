@@ -35,7 +35,7 @@ class RPG_Item
 
   /**
    * Constructor.
-   * @param {rm.types.Item} item The item to parse.
+   * @param {RPG_Item} item The item to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(item, index)

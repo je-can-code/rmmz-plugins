@@ -44,37 +44,37 @@ interface Window_ShopBuy extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `[number, number, number?, number?][]`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_ShopBuy#setupGoods}.<br/>
    * Read in: {@link Window_ShopBuy#makeItemList}.<br/>
    */
-  _shopGoods: [number, number, number?, number?][];
+  _shopGoods: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_ShopBuy#setStatusWindow}.<br/>
    * Read in: {@link Window_ShopBuy#updateHelp}.<br/>
    */
-  _statusWindow: Window_Base;
+  _statusWindow: unknown;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Gets goods to item.
    * @param goods The goods parameter.
    * @returns The result.
    */
-  goodsToItem(goods: [number, number, number?, number?]): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  goodsToItem(goods: unknown): null;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether current item enabled.
    * @returns True if current item enabled; false otherwise.
@@ -85,18 +85,18 @@ interface Window_ShopBuy extends Window_Selectable
    * @param item The item parameter.
    * @returns True if enabled; false otherwise.
    */
-  isEnabled(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isEnabled(item: unknown): boolean;
   /**
    * Gets item.
    * @returns The result.
    */
-  item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  item(): unknown;
   /**
    * Gets item at.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemAt(index: number): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  itemAt(index: unknown): null;
   /**
    * Creates item list.
    */
@@ -111,7 +111,7 @@ interface Window_ShopBuy extends Window_Selectable
    * @param item The item parameter.
    * @returns The result.
    */
-  price(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): number;
+  price(item: unknown): number;
   /**
    * Gets price width.
    * @returns The result.
@@ -125,17 +125,17 @@ interface Window_ShopBuy extends Window_Selectable
    * Sets money.
    * @param money The money parameter.
    */
-  setMoney(money: number): void;
+  setMoney(money: unknown): void;
   /**
    * Sets status window.
    * @param statusWindow The statusWindow parameter.
    */
-  setStatusWindow(statusWindow: Window_Base): void;
+  setStatusWindow(statusWindow: unknown): void;
   /**
    * Performs setup goods.
    * @param shopGoods The shopGoods parameter.
    */
-  setupGoods(shopGoods: [number, number, number?, number?][]): void;
+  setupGoods(shopGoods: unknown): void;
   /**
    * Updates help.
    */

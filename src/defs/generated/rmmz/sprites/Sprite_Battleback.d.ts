@@ -16,12 +16,12 @@ interface Sprite_Battleback extends TilingSprite
    * @param z The z parameter.
    * @returns The result.
    */
-  autotileType(z: number): number;
+  autotileType(z: unknown): unknown;
   /**
    * Gets battleback1 bitmap.
    * @returns The result.
    */
-  battleback1Bitmap(): Bitmap;
+  battleback1Bitmap(): unknown;
   /**
    * Gets battleback1 name.
    * @returns The result.
@@ -31,7 +31,7 @@ interface Sprite_Battleback extends TilingSprite
    * Gets battleback2 bitmap.
    * @returns The result.
    */
-  battleback2Bitmap(): Bitmap;
+  battleback2Bitmap(): unknown;
   /**
    * Gets battleback2 name.
    * @returns The result.
@@ -51,27 +51,27 @@ interface Sprite_Battleback extends TilingSprite
    * Initializes initialize.
    * @param _type The type parameter.
    */
-  initialize(_type: number): void;
+  initialize(_type: unknown): void;
   /**
    * Gets normal battleback1 name.
    * @returns The result.
    */
-  normalBattleback1Name(): string;
+  normalBattleback1Name(): unknown;
   /**
    * Gets normal battleback2 name.
    * @returns The result.
    */
-  normalBattleback2Name(): string;
+  normalBattleback2Name(): unknown;
   /**
    * Gets overworld battleback1 name.
    * @returns The result.
    */
-  overworldBattleback1Name(): string;
+  overworldBattleback1Name(): unknown;
   /**
    * Gets overworld battleback2 name.
    * @returns The result.
    */
-  overworldBattleback2Name(): string;
+  overworldBattleback2Name(): unknown;
   /**
    * Gets ship battleback1 name.
    * @returns The result.
@@ -87,11 +87,11 @@ interface Sprite_Battleback extends TilingSprite
    * @param _type The type parameter.
    * @returns The result.
    */
-  terrainBattleback1Name(_type: number): string | null;
+  terrainBattleback1Name(_type: unknown): string | null;
   /**
    * Gets terrain battleback2 name.
    * @param _type The type parameter.
    * @returns The result.
    */
-  terrainBattleback2Name(_type: number): string;
+  terrainBattleback2Name(_type: unknown): string;
 }

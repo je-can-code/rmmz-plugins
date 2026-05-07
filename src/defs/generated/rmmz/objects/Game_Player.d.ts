@@ -128,12 +128,12 @@ interface Game_Player extends Game_Character
    * Gets are followers gathered.
    * @returns The result.
    */
-  areFollowersGathered(): boolean;
+  areFollowersGathered(): unknown;
   /**
    * Gets are followers gathering.
    * @returns The result.
    */
-  areFollowersGathering(): boolean;
+  areFollowersGathering(): unknown;
   /**
    * Determines whether encounter.
    * @returns True if encounter; false otherwise.
@@ -150,37 +150,38 @@ interface Game_Player extends Game_Character
    */
   canStartLocalEvents(): boolean;
   /**
-   * Performs center.
+   * Gets center.
    * @param x The x parameter.
    * @param y The y parameter.
+   * @returns The result.
    */
-  center(x: number, y: number): void;
+  center(x: unknown, y: unknown): unknown;
   /**
    * Gets center x.
    * @returns The result.
    */
-  centerX(): number;
+  centerX(): unknown;
   /**
    * Gets center y.
    * @returns The result.
    */
-  centerY(): number;
+  centerY(): unknown;
   /**
    * Performs check event trigger here.
    * @param triggers The triggers parameter.
    */
-  checkEventTriggerHere(triggers: number[]): void;
+  checkEventTriggerHere(triggers: unknown): void;
   /**
    * Performs check event trigger there.
    * @param triggers The triggers parameter.
    */
-  checkEventTriggerThere(triggers: number[]): void;
+  checkEventTriggerThere(triggers: unknown): void;
   /**
    * Performs check event trigger touch.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  checkEventTriggerTouch(x: number, y: number): void;
+  checkEventTriggerTouch(x: unknown, y: unknown): void;
   /**
    * Clears transfer info.
    */
@@ -189,7 +190,7 @@ interface Game_Player extends Game_Character
    * Gets encounter progress value.
    * @returns The result.
    */
-  encounterProgressValue(): number;
+  encounterProgressValue(): unknown;
   /**
    * Gets execute encounter.
    * @returns The result.
@@ -199,17 +200,17 @@ interface Game_Player extends Game_Character
    * Performs execute move.
    * @param direction The direction parameter.
    */
-  executeMove(direction: number): void;
+  executeMove(direction: unknown): void;
   /**
    * Gets fade type.
    * @returns The result.
    */
-  fadeType(): number;
+  fadeType(): unknown;
   /**
    * Gets followers.
    * @returns The result.
    */
-  followers(): Game_Followers;
+  followers(): unknown;
   /**
    * Performs force move forward.
    */
@@ -222,22 +223,22 @@ interface Game_Player extends Game_Character
    * Gets input direction.
    * @returns The result.
    */
-  getInputDirection(): number;
+  getInputDirection(): unknown;
   /**
    * Gets off vehicle.
    * @returns The result.
    */
-  getOffVehicle(): boolean;
+  getOffVehicle(): unknown;
   /**
    * Gets on off vehicle.
    * @returns The result.
    */
-  getOnOffVehicle(): boolean;
+  getOnOffVehicle(): unknown;
   /**
    * Gets on vehicle.
    * @returns The result.
    */
-  getOnVehicle(): boolean;
+  getOnVehicle(): unknown;
   /**
    * Performs hide followers.
    */
@@ -260,7 +261,7 @@ interface Game_Player extends Game_Character
    * @param y The y parameter.
    * @returns True if collided; false otherwise.
    */
-  isCollided(x: number, y: number): boolean;
+  isCollided(x: unknown, y: unknown): boolean;
   /**
    * Determines whether dash button pressed.
    * @returns True if dash button pressed; false otherwise.
@@ -303,7 +304,7 @@ interface Game_Player extends Game_Character
    * @param d The d parameter.
    * @returns True if map passable; false otherwise.
    */
-  isMapPassable(x: number, y: number, d: number): boolean;
+  isMapPassable(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether normal.
    * @returns True if normal; false otherwise.
@@ -329,13 +330,13 @@ interface Game_Player extends Game_Character
    * @param xPlus The xPlus parameter.
    * @param yPlus The yPlus parameter.
    */
-  jump(xPlus: number, yPlus: number): void;
+  jump(xPlus: unknown, yPlus: unknown): void;
   /**
    * Performs locate.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  locate(x: number, y: number): void;
+  locate(x: unknown, y: unknown): void;
   /**
    * Creates encounter count.
    */
@@ -350,7 +351,7 @@ interface Game_Player extends Game_Character
    * @param encounter The encounter parameter.
    * @returns The result.
    */
-  meetsEncounterConditions(encounter: object): boolean;
+  meetsEncounterConditions(encounter: unknown): boolean;
   /**
    * Performs move by input.
    */
@@ -360,17 +361,17 @@ interface Game_Player extends Game_Character
    * @param horz The horz parameter.
    * @param vert The vert parameter.
    */
-  moveDiagonally(horz: number, vert: number): void;
+  moveDiagonally(horz: unknown, vert: unknown): void;
   /**
    * Performs move straight.
    * @param d The d parameter.
    */
-  moveStraight(d: number): void;
+  moveStraight(d: unknown): void;
   /**
    * Gets new map id.
    * @returns The result.
    */
-  newMapId(): number;
+  newMapId(): unknown;
   /**
    * Performs perform transfer.
    */
@@ -391,7 +392,7 @@ interface Game_Player extends Game_Character
    * @param d The d parameter.
    * @param fadeType The fadeType parameter.
    */
-  reserveTransfer(mapId: number, x: number, y: number, d: number, fadeType: number): void;
+  reserveTransfer(mapId: unknown, x: unknown, y: unknown, d: unknown, fadeType: unknown): void;
   /**
    * Performs setup for new game.
    */
@@ -407,7 +408,7 @@ interface Game_Player extends Game_Character
    * @param triggers The triggers parameter.
    * @param normal The normal parameter.
    */
-  startMapEvent(x: number, y: number, triggers: number[], normal: boolean): void;
+  startMapEvent(x: unknown, y: unknown, triggers: unknown, normal: unknown): void;
   /**
    * Gets trigger action.
    * @returns The result.
@@ -429,26 +430,26 @@ interface Game_Player extends Game_Character
    * @param y1 The y1 parameter.
    * @returns The result.
    */
-  triggerTouchActionD1(x1: number, y1: number): boolean;
+  triggerTouchActionD1(x1: unknown, y1: unknown): boolean;
   /**
    * Gets trigger touch action d2.
    * @param x2 The x2 parameter.
    * @param y2 The y2 parameter.
    * @returns The result.
    */
-  triggerTouchActionD2(x2: number, y2: number): boolean;
+  triggerTouchActionD2(x2: unknown, y2: unknown): boolean;
   /**
    * Gets trigger touch action d3.
    * @param x2 The x2 parameter.
    * @param y2 The y2 parameter.
    * @returns The result.
    */
-  triggerTouchActionD3(x2: number, y2: number): boolean;
+  triggerTouchActionD3(x2: unknown, y2: unknown): unknown;
   /**
    * Performs update.
    * @param sceneActive The sceneActive parameter.
    */
-  update(sceneActive: boolean): void;
+  update(sceneActive: unknown): void;
   /**
    * Updates dashing.
    */
@@ -462,13 +463,13 @@ interface Game_Player extends Game_Character
    * @param wasMoving The wasMoving parameter.
    * @param sceneActive The sceneActive parameter.
    */
-  updateNonmoving(wasMoving: boolean, sceneActive: boolean): void;
+  updateNonmoving(wasMoving: unknown, sceneActive: unknown): void;
   /**
    * Updates scroll.
    * @param lastScrolledX The lastScrolledX parameter.
    * @param lastScrolledY The lastScrolledY parameter.
    */
-  updateScroll(lastScrolledX: number, lastScrolledY: number): void;
+  updateScroll(lastScrolledX: unknown, lastScrolledY: unknown): void;
   /**
    * Updates vehicle.
    */
@@ -485,5 +486,5 @@ interface Game_Player extends Game_Character
    * Gets vehicle.
    * @returns The result.
    */
-  vehicle(): Game_Vehicle | null;
+  vehicle(): unknown;
 }

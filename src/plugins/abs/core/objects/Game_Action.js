@@ -477,7 +477,7 @@ Game_Action.prototype.applyPercentDamageReduction = function(baseDamage, jabsBat
  * Adds a conditional check to see if adding state-related effects is allowed
  * against the target.
  * @param {Game_Battler} target The target battler potentially being afflicted.
- * @param {rm.types.Effect} effect The effect being applied to the target.
+ * @param {RPG_UsableEffect} effect The effect being applied to the target.
  */
 J.ABS.Aliased.Game_Action.set('itemEffectAddState', Game_Action.prototype.itemEffectAddState);
 Game_Action.prototype.itemEffectAddState = function(target, effect)
@@ -497,7 +497,7 @@ Game_Action.prototype.itemEffectAddState = function(target, effect)
  *
  * By default, if an action is parried, then its states are not applied to the target.
  * @param {Game_Battler} target The target battler potentially being afflicted.
- * @param {rm.types.Effect} effect The effect being applied to the target.
+ * @param {RPG_UsableEffect} effect The effect being applied to the target.
  */
 // eslint-disable-next-line no-unused-vars
 Game_Action.prototype.canItemEffectAddState = function(target, effect)
@@ -520,7 +520,7 @@ Game_Action.prototype.canItemEffectAddState = function(target, effect)
  * It was frustrating that this needed an entire replacement just to
  * inject the battler.
  * @param {Game_Battler} target The target.
- * @param {rm.types.Effect} effect The potential effect to add.
+ * @param {RPG_UsableEffect} effect The potential effect to add.
  */
 Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 {
@@ -552,7 +552,7 @@ Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
  *
  * Passes the attacker as another data point to the application of state.
  * @param {Game_Battler} target The target.
- * @param {rm.types.Effect} effect The potential effect to add.
+ * @param {RPG_UsableEffect} effect The potential effect to add.
  */
 Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 {

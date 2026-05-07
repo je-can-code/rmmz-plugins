@@ -10,12 +10,12 @@ interface Sprite_Name extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#setup}.<br/>
    * Read in: {@link Sprite_Name#name}, {@link Sprite_Name#textColor}.<br/>
    */
-  _battler: null | Game_Battler;
+  _battler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -52,17 +52,17 @@ interface Sprite_Name extends Sprite
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Gets font face.
    * @returns The result.
    */
-  fontFace(): string;
+  fontFace(): unknown;
   /**
    * Gets font size.
    * @returns The result.
    */
-  fontSize(): number;
+  fontSize(): unknown;
   /**
    * Initializes members.
    */
@@ -80,7 +80,7 @@ interface Sprite_Name extends Sprite
    * Gets outline color.
    * @returns The result.
    */
-  outlineColor(): string;
+  outlineColor(): unknown;
   /**
    * Gets outline width.
    * @returns The result.
@@ -94,7 +94,7 @@ interface Sprite_Name extends Sprite
    * Performs setup.
    * @param battler The battler parameter.
    */
-  setup(battler: Game_Battler): void;
+  setup(battler: unknown): void;
   /**
    * Performs setup font.
    */
@@ -103,7 +103,7 @@ interface Sprite_Name extends Sprite
    * Gets text color.
    * @returns The result.
    */
-  textColor(): string;
+  textColor(): unknown;
   /**
    * Performs update.
    */

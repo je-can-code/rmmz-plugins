@@ -55,12 +55,12 @@ interface Input
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Input#clear}, {@link Input#update}.<br/>
    * Read in: {@link Input#isLongPressed}, {@link Input#isRepeated}, {@link Input#isTriggered}, {@link Input#update}.<br/>
    */
-  _latestButton: null | string;
+  _latestButton: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -91,12 +91,12 @@ interface Input
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Input#clear}, {@link Input#update}, {@link Input#virtualClick}.<br/>
    * Read in: {@link Input#update}.<br/>
    */
-  _virtualButton: null | string;
+  _virtualButton: null;
 }
 declare function Input(): never;
 declare namespace Input
@@ -106,24 +106,24 @@ declare namespace Input
    * @param keyName The keyName parameter.
    * @returns The result.
    */
-  function _isEscapeCompatible(keyName: string): boolean;
+  function _isEscapeCompatible(keyName: unknown): boolean;
   /**
    * Gets make numpad direction.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  function _makeNumpadDirection(x: number, y: number): number;
+  function _makeNumpadDirection(x: unknown, y: unknown): number;
   /**
    * The time of the last input in milliseconds.
    * @param event The event parameter.
    */
-  function _onKeyDown(event: KeyboardEvent): void;
+  function _onKeyDown(event: unknown): void;
   /**
    * Performs on key up.
    * @param event The event parameter.
    */
-  function _onKeyUp(event: KeyboardEvent): void;
+  function _onKeyUp(event: unknown): void;
   /**
    * Performs on lost focus.
    */
@@ -141,17 +141,17 @@ declare namespace Input
    * @param keyCode The keyCode parameter.
    * @returns The result.
    */
-  function _shouldPreventDefault(keyCode: number): boolean;
+  function _shouldPreventDefault(keyCode: unknown): boolean;
   /**
    * Gets sign x.
    * @returns The result.
    */
-  function _signX(): number;
+  function _signX(): unknown;
   /**
    * Gets sign y.
    * @returns The result.
    */
-  function _signY(): number;
+  function _signY(): unknown;
   /**
    * Performs update direction.
    */
@@ -160,7 +160,7 @@ declare namespace Input
    * Performs update gamepad state.
    * @param gamepad The gamepad parameter.
    */
-  function _updateGamepadState(gamepad: Gamepad): void;
+  function _updateGamepadState(gamepad: unknown): void;
   /**
    * Clears all the input data.
    */
@@ -216,7 +216,7 @@ declare namespace Input
    * The time of the last input in milliseconds.
    * @param buttonName The buttonName parameter.
    */
-  function virtualClick(buttonName: string): void;
+  function virtualClick(buttonName: unknown): void;
   /**
    * Engine static constant.
    */

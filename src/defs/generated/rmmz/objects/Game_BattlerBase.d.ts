@@ -102,28 +102,28 @@ interface Game_BattlerBase
    * Gets action plus set.
    * @returns The result.
    */
-  actionPlusSet(): number[];
+  actionPlusSet(): unknown;
   /**
    * Adds new state.
    * @param stateId The stateId parameter.
    */
-  addNewState(stateId: number): void;
+  addNewState(stateId: unknown): void;
   /**
    * Adds param.
    * @param paramId The paramId parameter.
    * @param value The value parameter.
    */
-  addParam(paramId: number, value: number): void;
+  addParam(paramId: unknown, value: unknown): void;
   /**
    * Gets added skill types.
    * @returns The result.
    */
-  addedSkillTypes(): number[];
+  addedSkillTypes(): unknown;
   /**
    * Gets added skills.
    * @returns The result.
    */
-  addedSkills(): number[];
+  addedSkills(): unknown;
   /**
    * Gets agi.
    * @returns The result.
@@ -133,12 +133,12 @@ interface Game_BattlerBase
    * Gets all icons.
    * @returns The result.
    */
-  allIcons(): number[];
+  allIcons(): unknown;
   /**
    * Gets all traits.
    * @returns The result.
    */
-  allTraits(): object[];
+  allTraits(): unknown;
   /**
    * Performs appear.
    */
@@ -152,7 +152,7 @@ interface Game_BattlerBase
    * Gets attack elements.
    * @returns The result.
    */
-  attackElements(): number[];
+  attackElements(): unknown;
   /**
    * Gets attack skill id.
    * @returns The result.
@@ -162,74 +162,74 @@ interface Game_BattlerBase
    * Gets attack speed.
    * @returns The result.
    */
-  attackSpeed(): number;
+  attackSpeed(): unknown;
   /**
    * Gets attack states.
    * @returns The result.
    */
-  attackStates(): number[];
+  attackStates(): unknown;
   /**
    * Gets attack states rate.
    * @param stateId The stateId parameter.
    * @returns The result.
    */
-  attackStatesRate(stateId: number): number;
+  attackStatesRate(stateId: unknown): unknown;
   /**
    * Gets attack times add.
    * @returns The result.
    */
-  attackTimesAdd(): number;
+  attackTimesAdd(): unknown;
   /**
    * Gets buff.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  buff(paramId: number): number;
+  buff(paramId: unknown): unknown;
   /**
    * Gets buff icon index.
    * @param buffLevel The buffLevel parameter.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  buffIconIndex(buffLevel: number, paramId: number): number;
+  buffIconIndex(buffLevel: unknown, paramId: unknown): number;
   /**
    * Gets buff icons.
    * @returns The result.
    */
-  buffIcons(): number[];
+  buffIcons(): unknown;
   /**
    * Gets buff length.
    * @returns The result.
    */
-  buffLength(): number;
+  buffLength(): unknown;
   /**
    * Determines whether attack.
-   * @returns True if attack; false otherwise.
+   * @returns The result.
    */
-  canAttack(): boolean;
+  canAttack(): unknown;
   /**
    * Determines whether equip.
    * @param item The item parameter.
    * @returns True if equip; false otherwise.
    */
-  canEquip(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  canEquip(item: unknown): boolean;
   /**
    * Determines whether equip armor.
    * @param item The item parameter.
    * @returns True if equip armor; false otherwise.
    */
-  canEquipArmor(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  canEquipArmor(item: unknown): boolean;
   /**
    * Determines whether equip weapon.
    * @param item The item parameter.
    * @returns True if equip weapon; false otherwise.
    */
-  canEquipWeapon(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  canEquipWeapon(item: unknown): boolean;
   /**
    * Determines whether guard.
-   * @returns True if guard; false otherwise.
+   * @returns The result.
    */
-  canGuard(): boolean;
+  canGuard(): unknown;
   /**
    * Determines whether input.
    * @returns True if input; false otherwise.
@@ -245,13 +245,13 @@ interface Game_BattlerBase
    * @param skill The skill parameter.
    * @returns True if pay skill cost; false otherwise.
    */
-  canPaySkillCost(skill: RPG_Skill): boolean;
+  canPaySkillCost(skill: unknown): boolean;
   /**
    * Determines whether use.
    * @param item The item parameter.
    * @returns True if use; false otherwise.
    */
-  canUse(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  canUse(item: unknown): boolean;
   /**
    * Gets cev.
    * @returns The result.
@@ -299,12 +299,12 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  debuffRate(paramId: number): number;
+  debuffRate(paramId: unknown): unknown;
   /**
    * Performs decrease buff.
    * @param paramId The paramId parameter.
    */
-  decreaseBuff(paramId: number): void;
+  decreaseBuff(paramId: unknown): void;
   /**
    * Gets def.
    * @returns The result.
@@ -319,17 +319,17 @@ interface Game_BattlerBase
    * @param elementId The elementId parameter.
    * @returns The result.
    */
-  elementRate(elementId: number): number;
+  elementRate(elementId: unknown): unknown;
   /**
    * Performs erase buff.
    * @param paramId The paramId parameter.
    */
-  eraseBuff(paramId: number): void;
+  eraseBuff(paramId: unknown): void;
   /**
    * Performs erase state.
    * @param stateId The stateId parameter.
    */
-  eraseState(stateId: number): void;
+  eraseState(stateId: unknown): void;
   /**
    * Gets eva.
    * @returns The result.
@@ -373,7 +373,7 @@ interface Game_BattlerBase
    * Gets hp rate.
    * @returns The result.
    */
-  hpRate(): number;
+  hpRate(): unknown;
   /**
    * Gets hrg.
    * @returns The result.
@@ -383,7 +383,7 @@ interface Game_BattlerBase
    * Performs increase buff.
    * @param paramId The paramId parameter.
    */
-  increaseBuff(paramId: number): void;
+  increaseBuff(paramId: unknown): void;
   /**
    * Initializes members.
    */
@@ -417,19 +417,19 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @returns True if buff affected; false otherwise.
    */
-  isBuffAffected(paramId: number): boolean;
+  isBuffAffected(paramId: unknown): boolean;
   /**
    * Determines whether buff expired.
    * @param paramId The paramId parameter.
    * @returns True if buff expired; false otherwise.
    */
-  isBuffExpired(paramId: number): boolean;
+  isBuffExpired(paramId: unknown): boolean;
   /**
    * Determines whether buff or debuff affected.
    * @param paramId The paramId parameter.
    * @returns True if buff or debuff affected; false otherwise.
    */
-  isBuffOrDebuffAffected(paramId: number): boolean;
+  isBuffOrDebuffAffected(paramId: unknown): boolean;
   /**
    * Determines whether confused.
    * @returns True if confused; false otherwise.
@@ -450,7 +450,7 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @returns True if debuff affected; false otherwise.
    */
-  isDebuffAffected(paramId: number): boolean;
+  isDebuffAffected(paramId: unknown): boolean;
   /**
    * Determines whether dual wield.
    * @returns True if dual wield; false otherwise.
@@ -471,25 +471,25 @@ interface Game_BattlerBase
    * @param atypeId The atypeId parameter.
    * @returns True if equip atype ok; false otherwise.
    */
-  isEquipAtypeOk(atypeId: number): boolean;
+  isEquipAtypeOk(atypeId: unknown): boolean;
   /**
    * Determines whether equip type locked.
    * @param etypeId The etypeId parameter.
    * @returns True if equip type locked; false otherwise.
    */
-  isEquipTypeLocked(etypeId: number): boolean;
+  isEquipTypeLocked(etypeId: unknown): boolean;
   /**
    * Determines whether equip type sealed.
    * @param etypeId The etypeId parameter.
    * @returns True if equip type sealed; false otherwise.
    */
-  isEquipTypeSealed(etypeId: number): boolean;
+  isEquipTypeSealed(etypeId: unknown): boolean;
   /**
    * Determines whether equip wtype ok.
    * @param wtypeId The wtypeId parameter.
    * @returns True if equip wtype ok; false otherwise.
    */
-  isEquipWtypeOk(wtypeId: number): boolean;
+  isEquipWtypeOk(wtypeId: unknown): boolean;
   /**
    * Determines whether guard.
    * @returns True if guard; false otherwise.
@@ -505,19 +505,19 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @returns True if max buff affected; false otherwise.
    */
-  isMaxBuffAffected(paramId: number): boolean;
+  isMaxBuffAffected(paramId: unknown): boolean;
   /**
    * Determines whether max debuff affected.
    * @param paramId The paramId parameter.
    * @returns True if max debuff affected; false otherwise.
    */
-  isMaxDebuffAffected(paramId: number): boolean;
+  isMaxDebuffAffected(paramId: unknown): boolean;
   /**
    * Determines whether occasion ok.
    * @param item The item parameter.
    * @returns True if occasion ok; false otherwise.
    */
-  isOccasionOk(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isOccasionOk(item: unknown): boolean;
   /**
    * Determines whether preserve tp.
    * @returns True if preserve tp; false otherwise.
@@ -533,13 +533,13 @@ interface Game_BattlerBase
    * @param skillId The skillId parameter.
    * @returns True if skill sealed; false otherwise.
    */
-  isSkillSealed(skillId: number): boolean;
+  isSkillSealed(skillId: unknown): boolean;
   /**
    * Determines whether skill type sealed.
    * @param stypeId The stypeId parameter.
    * @returns True if skill type sealed; false otherwise.
    */
-  isSkillTypeSealed(stypeId: number): boolean;
+  isSkillTypeSealed(stypeId: unknown): boolean;
   /**
    * Determines whether skill wtype ok.
    * @returns True if skill wtype ok; false otherwise.
@@ -550,19 +550,19 @@ interface Game_BattlerBase
    * @param stateId The stateId parameter.
    * @returns True if state affected; false otherwise.
    */
-  isStateAffected(stateId: number): boolean;
+  isStateAffected(stateId: unknown): boolean;
   /**
    * Determines whether state expired.
    * @param stateId The stateId parameter.
    * @returns True if state expired; false otherwise.
    */
-  isStateExpired(stateId: number): boolean;
+  isStateExpired(stateId: unknown): boolean;
   /**
    * Determines whether state resist.
    * @param stateId The stateId parameter.
    * @returns True if state resist; false otherwise.
    */
-  isStateResist(stateId: number): boolean;
+  isStateResist(stateId: unknown): boolean;
   /**
    * Determines whether substitute.
    * @returns True if substitute; false otherwise.
@@ -603,19 +603,19 @@ interface Game_BattlerBase
    * @param item The item parameter.
    * @returns The result.
    */
-  meetsItemConditions(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  meetsItemConditions(item: unknown): unknown;
   /**
    * Gets meets skill conditions.
    * @param skill The skill parameter.
    * @returns The result.
    */
-  meetsSkillConditions(skill: RPG_Skill): boolean;
+  meetsSkillConditions(skill: unknown): boolean;
   /**
    * Gets meets usable item conditions.
    * @param item The item parameter.
    * @returns The result.
    */
-  meetsUsableItemConditions(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  meetsUsableItemConditions(item: unknown): unknown;
   /**
    * Gets mev.
    * @returns The result.
@@ -665,13 +665,13 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @param turns The turns parameter.
    */
-  overwriteBuffTurns(paramId: number, turns: number): void;
+  overwriteBuffTurns(paramId: unknown, turns: unknown): void;
   /**
    * Gets param.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  param(paramId: number): number;
+  param(paramId: unknown): unknown;
   /**
    * Gets param base.
    * @returns The result.
@@ -682,47 +682,47 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramBasePlus(paramId: number): number;
+  paramBasePlus(paramId: unknown): unknown;
   /**
    * Gets param buff rate.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramBuffRate(paramId: number): number;
+  paramBuffRate(paramId: unknown): unknown;
   /**
    * Gets param max.
    * @returns The result.
    */
-  paramMax(): number;
+  paramMax(): unknown;
   /**
    * Gets param min.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramMin(paramId: number): number;
+  paramMin(paramId: unknown): number;
   /**
    * Gets param plus.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramPlus(paramId: number): number;
+  paramPlus(paramId: unknown): unknown;
   /**
    * Gets param rate.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramRate(paramId: number): number;
+  paramRate(paramId: unknown): unknown;
   /**
    * Gets party ability.
    * @param abilityId The abilityId parameter.
    * @returns The result.
    */
-  partyAbility(abilityId: number): boolean;
+  partyAbility(abilityId: unknown): unknown;
   /**
    * Performs pay skill cost.
    * @param skill The skill parameter.
    */
-  paySkillCost(skill: RPG_Skill): void;
+  paySkillCost(skill: unknown): void;
   /**
    * Gets pdr.
    * @returns The result.
@@ -750,12 +750,12 @@ interface Game_BattlerBase
    * Clears state counts.
    * @param stateId The stateId parameter.
    */
-  resetStateCounts(stateId: number): void;
+  resetStateCounts(stateId: unknown): void;
   /**
    * Gets restriction.
    * @returns The result.
    */
-  restriction(): number;
+  restriction(): unknown;
   /**
    * Performs revive.
    */
@@ -764,29 +764,29 @@ interface Game_BattlerBase
    * Sets hp.
    * @param hp The hp parameter.
    */
-  setHp(hp: number): void;
+  setHp(hp: unknown): void;
   /**
    * Sets mp.
    * @param mp The mp parameter.
    */
-  setMp(mp: number): void;
+  setMp(mp: unknown): void;
   /**
    * Sets tp.
    * @param tp The tp parameter.
    */
-  setTp(tp: number): void;
+  setTp(tp: unknown): void;
   /**
    * Gets skill mp cost.
    * @param skill The skill parameter.
    * @returns The result.
    */
-  skillMpCost(skill: RPG_Skill): number;
+  skillMpCost(skill: unknown): unknown;
   /**
    * Gets skill tp cost.
    * @param skill The skill parameter.
    * @returns The result.
    */
-  skillTpCost(skill: RPG_Skill): number;
+  skillTpCost(skill: unknown): unknown;
   /**
    * Gets slot type.
    * @returns The result.
@@ -801,18 +801,18 @@ interface Game_BattlerBase
    * @param sparamId The sparamId parameter.
    * @returns The result.
    */
-  sparam(sparamId: number): number;
+  sparam(sparamId: unknown): unknown;
   /**
    * Gets special flag.
    * @param flagId The flagId parameter.
    * @returns The result.
    */
-  specialFlag(flagId: number): number;
+  specialFlag(flagId: unknown): unknown;
   /**
    * Gets state icons.
    * @returns The result.
    */
-  stateIcons(): number[];
+  stateIcons(): unknown;
   /**
    * Gets state motion index.
    * @returns The result.
@@ -828,17 +828,17 @@ interface Game_BattlerBase
    * @param stateId The stateId parameter.
    * @returns The result.
    */
-  stateRate(stateId: number): number;
+  stateRate(stateId: unknown): unknown;
   /**
    * Gets state resist set.
    * @returns The result.
    */
-  stateResistSet(): number[];
+  stateResistSet(): unknown;
   /**
    * Gets states.
    * @returns The result.
    */
-  states(): RPG_State[];
+  states(): unknown;
   /**
    * Gets tcr.
    * @returns The result.
@@ -858,51 +858,51 @@ interface Game_BattlerBase
    * Gets tp rate.
    * @returns The result.
    */
-  tpRate(): number;
+  tpRate(): unknown;
   /**
    * Gets trait objects.
    * @returns The result.
    */
-  traitObjects(): RPG_State[];
+  traitObjects(): unknown;
   /**
    * Gets traits.
    * @param code The code parameter.
    * @returns The result.
    */
-  traits(code: number): object[];
+  traits(code: unknown): unknown;
   /**
    * Gets traits pi.
    * @param code The code parameter.
    * @param id The id parameter.
    * @returns The result.
    */
-  traitsPi(code: number, id: number): number;
+  traitsPi(code: unknown, id: unknown): unknown;
   /**
    * Gets traits set.
    * @param code The code parameter.
    * @returns The result.
    */
-  traitsSet(code: number): number[];
+  traitsSet(code: unknown): unknown;
   /**
    * Gets traits sum.
    * @param code The code parameter.
    * @param id The id parameter.
    * @returns The result.
    */
-  traitsSum(code: number, id: number): number;
+  traitsSum(code: unknown, id: unknown): unknown;
   /**
    * Gets traits sum all.
    * @param code The code parameter.
    * @returns The result.
    */
-  traitsSumAll(code: number): number;
+  traitsSumAll(code: unknown): unknown;
   /**
    * Gets traits with id.
    * @param code The code parameter.
    * @param id The id parameter.
    * @returns The result.
    */
-  traitsWithId(code: number, id: number): object[];
+  traitsWithId(code: unknown, id: unknown): unknown;
   /**
    * Gets trg.
    * @returns The result.
@@ -921,7 +921,7 @@ interface Game_BattlerBase
    * @param xparamId The xparamId parameter.
    * @returns The result.
    */
-  xparam(xparamId: number): number;
+  xparam(xparamId: unknown): unknown;
 }
 declare namespace Game_BattlerBase
 {

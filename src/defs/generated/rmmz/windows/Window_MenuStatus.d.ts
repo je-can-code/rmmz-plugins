@@ -30,37 +30,37 @@ interface Window_MenuStatus extends Window_StatusBase
    * @param index The index parameter.
    * @returns The result.
    */
-  actor(index: number): Game_Actor | undefined;
+  actor(index: unknown): unknown;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Performs draw item image.
    * @param index The index parameter.
    */
-  drawItemImage(index: number): void;
+  drawItemImage(index: unknown): void;
   /**
    * Performs draw item status.
    * @param index The index parameter.
    */
-  drawItemStatus(index: number): void;
+  drawItemStatus(index: unknown): void;
   /**
    * Performs draw pending item background.
    * @param index The index parameter.
    */
-  drawPendingItemBackground(index: number): void;
+  drawPendingItemBackground(index: unknown): void;
   /**
    * Gets formation mode.
    * @returns The result.
    */
-  formationMode(): boolean;
+  formationMode(): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether current item enabled.
    * @returns True if current item enabled; false otherwise.
@@ -70,12 +70,12 @@ interface Window_MenuStatus extends Window_StatusBase
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Gets num visible rows.
    * @returns The result.
@@ -85,7 +85,7 @@ interface Window_MenuStatus extends Window_StatusBase
    * Gets pending index.
    * @returns The result.
    */
-  pendingIndex(): number;
+  pendingIndex(): unknown;
   /**
    * Performs process ok.
    */
@@ -98,10 +98,10 @@ interface Window_MenuStatus extends Window_StatusBase
    * Sets formation mode.
    * @param formationMode The formationMode parameter.
    */
-  setFormationMode(formationMode: boolean): void;
+  setFormationMode(formationMode: unknown): void;
   /**
    * Sets pending index.
    * @param index The index parameter.
    */
-  setPendingIndex(index: number): void;
+  setPendingIndex(index: unknown): void;
 }

@@ -11,7 +11,7 @@ declare global
    * Makes a shallow copy of the array.
    * @returns The result.
    */
-  clone(): any[];
+  clone(): unknown[];
   /**
    * Checks whether the array contains a given element.
    * @param element The element to search for.
@@ -23,13 +23,13 @@ declare global
    * @param array The array to compare to.
    * @returns The result.
    */
-  equals(array: any[]): boolean;
+  equals(array: unknown[]): boolean;
   /**
    * Removes a given element from the array (in place).
    * @param element The element to remove.
    * @returns The result.
    */
-  remove(element: any): any[];
+  remove(element: any): unknown[];
   }
 
   interface Number

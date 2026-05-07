@@ -22,21 +22,21 @@ interface Window_StatusBase extends Window_Selectable
    * @param index The index parameter.
    * @returns The result.
    */
-  actorSlotName(actor: Game_Actor, index: number): string;
+  actorSlotName(actor: unknown, index: unknown): unknown;
   /**
    * Creates inner sprite.
    * @param key The key parameter.
    * @param spriteClass The spriteClass parameter.
    * @returns The result.
    */
-  createInnerSprite(key: string, spriteClass: new () => Sprite): Sprite;
+  createInnerSprite(key: unknown, spriteClass: unknown): unknown;
   /**
    * Performs draw actor character.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawActorCharacter(actor: Game_Actor, x: number, y: number): void;
+  drawActorCharacter(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs draw actor class.
    * @param actor The actor parameter.
@@ -44,7 +44,7 @@ interface Window_StatusBase extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawActorClass(actor: Game_Actor, x: number, y: number, width: number): void;
+  drawActorClass(actor: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw actor face.
    * @param actor The actor parameter.
@@ -53,7 +53,7 @@ interface Window_StatusBase extends Window_Selectable
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  drawActorFace(actor: Game_Actor, x: number, y: number, width: number, height: number): void;
+  drawActorFace(actor: unknown, x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Performs draw actor icons.
    * @param actor The actor parameter.
@@ -61,14 +61,14 @@ interface Window_StatusBase extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawActorIcons(actor: Game_Actor, x: number, y: number, width: number): void;
+  drawActorIcons(actor: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw actor level.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawActorLevel(actor: Game_Actor, x: number, y: number): void;
+  drawActorLevel(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs draw actor name.
    * @param actor The actor parameter.
@@ -76,7 +76,7 @@ interface Window_StatusBase extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawActorName(actor: Game_Actor, x: number, y: number, width: number): void;
+  drawActorName(actor: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw actor nickname.
    * @param actor The actor parameter.
@@ -84,14 +84,14 @@ interface Window_StatusBase extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawActorNickname(actor: Game_Actor, x: number, y: number, width: number): void;
+  drawActorNickname(actor: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw actor simple status.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawActorSimpleStatus(actor: Game_Actor, x: number, y: number): void;
+  drawActorSimpleStatus(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Gets gauge line height.
    * @returns The result.
@@ -105,7 +105,7 @@ interface Window_StatusBase extends Window_Selectable
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs load face images.
    */
@@ -116,14 +116,14 @@ interface Window_StatusBase extends Window_Selectable
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  placeActorName(actor: Game_Actor, x: number, y: number): void;
+  placeActorName(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs place basic gauges.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  placeBasicGauges(actor: Game_Actor, x: number, y: number): void;
+  placeBasicGauges(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs place gauge.
    * @param actor The actor parameter.
@@ -131,21 +131,21 @@ interface Window_StatusBase extends Window_Selectable
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  placeGauge(actor: Game_Actor, _type: string, x: number, y: number): void;
+  placeGauge(actor: unknown, _type: unknown, x: unknown, y: unknown): void;
   /**
    * Performs place state icon.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  placeStateIcon(actor: Game_Actor, x: number, y: number): void;
+  placeStateIcon(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs place time gauge.
    * @param actor The actor parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  placeTimeGauge(actor: Game_Actor, x: number, y: number): void;
+  placeTimeGauge(actor: unknown, x: unknown, y: unknown): void;
   /**
    * Performs refresh.
    */

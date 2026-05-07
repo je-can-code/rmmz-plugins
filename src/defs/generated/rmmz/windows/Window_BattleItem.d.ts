@@ -16,12 +16,12 @@ interface Window_BattleItem extends Window_ItemList
    * @param item The item parameter.
    * @returns The result.
    */
-  includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  includes(item: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs show.
    */

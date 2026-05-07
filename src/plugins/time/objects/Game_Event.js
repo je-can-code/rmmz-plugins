@@ -33,7 +33,7 @@ Game_Event.prototype.meetsConditions = function(page)
 
 /**
  * Filters the comment commands to only TIME conditionals- should any exist in the collection.
- * @param {rm.types.EventCommand[]} commentCommandList The comment commands to potentially convert to conditionals.
+ * @param {RPG_EventListCommand[]} commentCommandList The comment commands to potentially convert to conditionals.
  * @returns {TimeConditional[]}
  */
 Game_Event.toTimeConditionals = function(commentCommandList)
@@ -51,7 +51,7 @@ Game_Event.toTimeConditionals = function(commentCommandList)
 
 /**
  * A filter function for only including comment event commands relevant to TIME.
- * @param {rm.types.EventCommand} command The command being evaluated.
+ * @param {RPG_EventListCommand} command The command being evaluated.
  * @returns {boolean}
  */
 Game_Event.filterCommentCommandsByEventTimeConditional = function(command)
@@ -98,7 +98,7 @@ Game_Event.filterCommentCommandsByEventTimeConditional = function(command)
 
 /**
  * A filter function for only including comment event commands relevant to TIME.
- * @param {rm.types.EventCommand} command The command being evaluated.
+ * @param {RPG_EventListCommand} command The command being evaluated.
  * @returns {boolean}
  */
 Game_Event.filterCommentCommandsByChoiceTimeConditional = function(command)
@@ -145,7 +145,7 @@ Game_Event.filterCommentCommandsByChoiceTimeConditional = function(command)
 
 /**
  * Converts a known comment event command into a conditional for TIME control.
- * @param {rm.types.EventCommand} commentCommand The comment command to parse into a conditional.
+ * @param {RPG_EventListCommand} commentCommand The comment command to parse into a conditional.
  * @returns {TimeConditional}
  */
 // eslint-disable-next-line complexity

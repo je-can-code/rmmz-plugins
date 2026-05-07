@@ -10,12 +10,12 @@ interface Sprite_Actor extends Sprite_Battler
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Game_Battler`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Actor#setBattler}.<br/>
    * Read in: {@link Sprite_Actor#refreshMotion}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#setupMotion}, {@link Sprite_Actor#setupWeaponAnimation}, {@link Sprite_Actor#shouldStepForward}, {@link Sprite_Actor#startEntryMotion}, {@link Sprite_Actor#update}, {@link Sprite_Actor#updateBitmap}, {@link Sprite_Actor#updateMain}, {@link Sprite_Actor#updateMotion}, {@link Sprite_Actor#updateShadow}, {@link Sprite_Actor#updateTargetPosition}.<br/>
    */
-  _actor: Game_Battler;
+  _actor: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -108,12 +108,12 @@ interface Sprite_Actor extends Sprite_Battler
    * Gets damage offset x.
    * @returns The result.
    */
-  damageOffsetX(): number;
+  damageOffsetX(): unknown;
   /**
    * Gets damage offset y.
    * @returns The result.
    */
-  damageOffsetY(): number;
+  damageOffsetY(): unknown;
   /**
    * Initializes members.
    */
@@ -122,12 +122,12 @@ interface Sprite_Actor extends Sprite_Battler
    * Initializes initialize.
    * @param battler The battler parameter.
    */
-  initialize(battler: Game_Battler): void;
+  initialize(battler: unknown): void;
   /**
    * Gets main sprite.
    * @returns The result.
    */
-  mainSprite(): Sprite;
+  mainSprite(): unknown;
   /**
    * Gets motion speed.
    * @returns The result.
@@ -153,12 +153,12 @@ interface Sprite_Actor extends Sprite_Battler
    * Sets actor home.
    * @param index The index parameter.
    */
-  setActorHome(index: number): void;
+  setActorHome(index: unknown): void;
   /**
    * Sets battler.
    * @param battler The battler parameter.
    */
-  setBattler(battler: Game_Battler): void;
+  setBattler(battler: unknown): void;
   /**
    * Performs setup motion.
    */
@@ -171,7 +171,7 @@ interface Sprite_Actor extends Sprite_Battler
    * Gets should step forward.
    * @returns The result.
    */
-  shouldStepForward(): boolean;
+  shouldStepForward(): unknown;
   /**
    * Performs start entry motion.
    */
@@ -180,7 +180,7 @@ interface Sprite_Actor extends Sprite_Battler
    * Performs start motion.
    * @param motionType The motionType parameter.
    */
-  startMotion(motionType: number): void;
+  startMotion(motionType: unknown): void;
   /**
    * Performs step back.
    */

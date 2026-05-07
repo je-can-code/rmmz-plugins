@@ -10,21 +10,21 @@ interface Window_EquipStatus extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_EquipStatus#initialize}.<br/>
    * Written in: {@link Window_EquipStatus#initialize}, {@link Window_EquipStatus#setActor}.<br/>
    * Read in: {@link Window_EquipStatus#drawCurrentParam}, {@link Window_EquipStatus#drawItem}, {@link Window_EquipStatus#drawNewParam}, {@link Window_EquipStatus#refresh}, {@link Window_EquipStatus#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_EquipStatus#initialize}.<br/>
    * Written in: {@link Window_EquipStatus#initialize}, {@link Window_EquipStatus#setTempActor}.<br/>
    * Read in: {@link Window_EquipStatus#drawItem}, {@link Window_EquipStatus#drawNewParam}, {@link Window_EquipStatus#setTempActor}.<br/>
    */
-  _tempActor: null | Game_Actor;
+  _tempActor: null;
   /**
    * Gets col spacing.
    * @returns The result.
@@ -40,39 +40,39 @@ interface Window_EquipStatus extends Window_StatusBase
    * @param y The y parameter.
    * @param paramId The paramId parameter.
    */
-  drawCurrentParam(x: number, y: number, paramId: number): void;
+  drawCurrentParam(x: unknown, y: unknown, paramId: unknown): void;
   /**
    * Performs draw item.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param paramId The paramId parameter.
    */
-  drawItem(x: number, y: number, paramId: number): void;
+  drawItem(x: unknown, y: unknown, paramId: unknown): void;
   /**
    * Performs draw new param.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param paramId The paramId parameter.
    */
-  drawNewParam(x: number, y: number, paramId: number): void;
+  drawNewParam(x: unknown, y: unknown, paramId: unknown): void;
   /**
    * Performs draw param name.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param paramId The paramId parameter.
    */
-  drawParamName(x: number, y: number, paramId: number): void;
+  drawParamName(x: unknown, y: unknown, paramId: unknown): void;
   /**
    * Performs draw right arrow.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawRightArrow(x: number, y: number): void;
+  drawRightArrow(x: unknown, y: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets param width.
    * @returns The result.
@@ -82,13 +82,13 @@ interface Window_EquipStatus extends Window_StatusBase
    * Gets param x.
    * @returns The result.
    */
-  paramX(): number;
+  paramX(): unknown;
   /**
    * Gets param y.
    * @param index The index parameter.
    * @returns The result.
    */
-  paramY(index: number): number;
+  paramY(index: unknown): unknown;
   /**
    * Performs refresh.
    */
@@ -102,10 +102,10 @@ interface Window_EquipStatus extends Window_StatusBase
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
   /**
    * Sets temp actor.
    * @param tempActor The tempActor parameter.
    */
-  setTempActor(tempActor: Game_Actor): void;
+  setTempActor(tempActor: unknown): void;
 }

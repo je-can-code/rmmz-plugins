@@ -10,12 +10,12 @@ interface Window_NameEdit extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_NameEdit#initialize}.<br/>
    * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.<br/>
    * Read in: {@link Window_NameEdit#refresh}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -60,7 +60,7 @@ interface Window_NameEdit extends Window_StatusBase
    * @param ch The ch parameter.
    * @returns The result.
    */
-  add(ch: string): boolean;
+  add(ch: unknown): boolean;
   /**
    * Gets back.
    * @returns The result.
@@ -70,17 +70,17 @@ interface Window_NameEdit extends Window_StatusBase
    * Gets char width.
    * @returns The result.
    */
-  charWidth(): number;
+  charWidth(): unknown;
   /**
    * Performs draw char.
    * @param index The index parameter.
    */
-  drawChar(index: number): void;
+  drawChar(index: unknown): void;
   /**
    * Performs draw underline.
    * @param index The index parameter.
    */
-  drawUnderline(index: number): void;
+  drawUnderline(index: unknown): void;
   /**
    * Gets face width.
    * @returns The result.
@@ -90,23 +90,23 @@ interface Window_NameEdit extends Window_StatusBase
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets item rect.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemRect(index: number): Rectangle;
+  itemRect(index: unknown): Rectangle;
   /**
    * Gets left.
    * @returns The result.
    */
-  left(): number;
+  left(): unknown;
   /**
    * Gets name.
    * @returns The result.
    */
-  name(): string;
+  name(): unknown;
   /**
    * Performs refresh.
    */
@@ -121,16 +121,16 @@ interface Window_NameEdit extends Window_StatusBase
    * @param actor The actor parameter.
    * @param maxLength The maxLength parameter.
    */
-  setup(actor: Game_Actor, maxLength: number): void;
+  setup(actor: unknown, maxLength: unknown): void;
   /**
    * Gets underline color.
    * @returns The result.
    */
-  underlineColor(): string;
+  underlineColor(): unknown;
   /**
    * Gets underline rect.
    * @param index The index parameter.
    * @returns The result.
    */
-  underlineRect(index: number): Rectangle;
+  underlineRect(index: unknown): unknown;
 }

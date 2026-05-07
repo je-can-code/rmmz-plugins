@@ -213,12 +213,12 @@ interface Scene_Map extends Scene_Message
    * Gets needs fade in.
    * @returns The result.
    */
-  needsFadeIn(): boolean;
+  needsFadeIn(): unknown;
   /**
    * Gets needs slow fade out.
    * @returns The result.
    */
-  needsSlowFadeOut(): boolean;
+  needsSlowFadeOut(): unknown;
   /**
    * Performs on map loaded.
    */
@@ -260,7 +260,7 @@ interface Scene_Map extends Scene_Message
    * Performs start flash for encounter.
    * @param duration The duration parameter.
    */
-  startFlashForEncounter(duration: number): void;
+  startFlashForEncounter(duration: unknown): void;
   /**
    * Performs stop.
    */

@@ -1,7 +1,7 @@
 //region Game_Event
 /**
  * A filter function for only including comment event commands relevant to choice conditionals.
- * @param {rm.types.EventCommand} command The command being evaluated.
+ * @param {RPG_EventListCommand} command The command being evaluated.
  * @returns {boolean}
  */
 Game_Event.filterCommentCommandsForBasicConditionals = function(command)
@@ -27,7 +27,7 @@ Game_Event.filterCommentCommandsForBasicConditionals = function(command)
 
 /**
  * Converts a known comment event command into a conditional for basic control.
- * @param {rm.types.EventCommand} commentCommand The comment command to parse into a conditional.
+ * @param {RPG_EventListCommand} commentCommand The comment command to parse into a conditional.
  * @returns {BasicChoiceConditional}
  */
 Game_Event.toBasicConditional = function(commentCommand)

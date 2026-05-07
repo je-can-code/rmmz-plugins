@@ -7,7 +7,7 @@ class JABS_Engine
 {
   /**
    * The events array of the enemy cloning map.
-   * @type {rm.types.Event[]|null}
+   * @type {RPG_MapEvent[]|null}
    */
   static #enemyCloneList = null;
 
@@ -126,7 +126,7 @@ class JABS_Engine
   //region static
   /**
    * Gets the collection of enemy clone events currently tracked.
-   * @returns {rm.types.Event[]}
+   * @returns {RPG_MapEvent[]}
    */
   static getEnemyCloneList()
   {
@@ -135,7 +135,7 @@ class JABS_Engine
 
   /**
    * Sets the enemy clone collection to the given collection.
-   * @param {rm.types.Event[]} enemies The enemy events from the enemy clone map.
+   * @param {RPG_MapEvent[]} enemies The enemy events from the enemy clone map.
    */
   static setEnemyCloneList(enemies)
   {
@@ -241,7 +241,7 @@ class JABS_Engine
 
     /**
      * A collection of the metadata of all action-type events.
-     * @type {rm.types.Event[]}
+     * @type {RPG_MapEvent[]}
      */
     this._activeActions = isMapTransfer
       ? Array.empty
@@ -278,7 +278,7 @@ class JABS_Engine
    * Adds a new JABS action to this battle map for tracking.
    * The additional metadata is optional, omitted when executing direct actions.
    * @param {JABS_Action} actionEvent The JABS action to add.
-   * @param {rm.types.Event} actionEventData The event metadata, if anything.
+   * @param {RPG_MapEvent} actionEventData The event metadata, if anything.
    */
   addActionEvent(actionEvent, actionEventData)
   {
@@ -300,7 +300,7 @@ class JABS_Engine
    * This is used when a given event has an underlying action associated with it and
    * we want that action data.
    * @param {string} uuid The `uuid` to find.
-   * @returns {rm.types.Event} The event associated with the `uuid`.
+   * @returns {RPG_MapEvent} The event associated with the `uuid`.
    */
   event(uuid)
   {
@@ -1411,7 +1411,7 @@ class JABS_Engine
    * @param {JABS_Action} action The JABS action to execute.
    * @param {number|null} x The target's `x` coordinate, if applicable.
    * @param {number|null} y The target's `y` coordinate, if applicable.
-   * @returns {rm.types.Event}
+   * @returns {RPG_MapEvent}
    */
   buildActionEventData(caster, action, x, y)
   {
@@ -2040,7 +2040,7 @@ class JABS_Engine
 
   /**
    * Creates a new JABS action and adds it to the map and tracking.
-   * @param {rm.types.Event} actionEventData An object representing the data of a `Game_Event`.
+   * @param {RPG_MapEvent} actionEventData An object representing the data of a `Game_Event`.
    * @param {JABS_Action} action An object representing the data of a `Game_Event`.
    */
   addJabsActionToMap(actionEventData, action)

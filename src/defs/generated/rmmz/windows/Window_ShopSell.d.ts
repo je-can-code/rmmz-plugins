@@ -11,11 +11,11 @@ interface Window_ShopSell extends Window_ItemList
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether enabled.
    * @param item The item parameter.
    * @returns True if enabled; false otherwise.
    */
-  isEnabled(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isEnabled(item: unknown): boolean;
 }

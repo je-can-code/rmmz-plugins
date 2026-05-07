@@ -27,7 +27,7 @@ interface Window_Command extends Window_Selectable
    * @param enabled The enabled parameter.
    * @param ext The ext parameter.
    */
-  addCommand(name: string, _symbol: string, enabled?: boolean, ext?: object | string | number | boolean | null): void;
+  addCommand(name: unknown, _symbol: unknown, enabled?: unknown, ext?: unknown): void;
   /**
    * Performs call ok handler.
    */
@@ -41,56 +41,56 @@ interface Window_Command extends Window_Selectable
    * @param index The index parameter.
    * @returns The result.
    */
-  commandName(index: number): string;
+  commandName(index: unknown): unknown;
   /**
    * Gets command symbol.
    * @param index The index parameter.
    * @returns The result.
    */
-  commandSymbol(index: number): string;
+  commandSymbol(index: unknown): unknown;
   /**
    * Gets current data.
    * @returns The result.
    */
-  currentData(): { name: string; symbol: string; enabled: boolean; ext: object | string | number | boolean | null } | null;
+  currentData(): null;
   /**
    * Gets current ext.
    * @returns The result.
    */
-  currentExt(): object | string | number | boolean | null | null;
+  currentExt(): null;
   /**
    * Gets current symbol.
    * @returns The result.
    */
-  currentSymbol(): string | null;
+  currentSymbol(): null;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Gets find ext.
    * @param ext The ext parameter.
    * @returns The result.
    */
-  findExt(ext: object | string | number | boolean | null): number;
+  findExt(ext: unknown): unknown;
   /**
    * Gets find symbol.
    * @param _symbol The symbol parameter.
    * @returns The result.
    */
-  findSymbol(_symbol: string): number;
+  findSymbol(_symbol: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether command enabled.
    * @param index The index parameter.
    * @returns True if command enabled; false otherwise.
    */
-  isCommandEnabled(index: number): boolean;
+  isCommandEnabled(index: unknown): boolean;
   /**
    * Determines whether current item enabled.
    * @returns True if current item enabled; false otherwise.
@@ -114,7 +114,7 @@ interface Window_Command extends Window_Selectable
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Performs refresh.
    */
@@ -123,10 +123,10 @@ interface Window_Command extends Window_Selectable
    * Performs select ext.
    * @param ext The ext parameter.
    */
-  selectExt(ext: object | string | number | boolean | null): void;
+  selectExt(ext: unknown): void;
   /**
    * Performs select symbol.
    * @param _symbol The symbol parameter.
    */
-  selectSymbol(_symbol: string): void;
+  selectSymbol(_symbol: unknown): void;
 }

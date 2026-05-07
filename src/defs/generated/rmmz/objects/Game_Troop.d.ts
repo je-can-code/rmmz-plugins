@@ -75,12 +75,12 @@ interface Game_Troop extends Game_Unit
    * Gets enemy names.
    * @returns The result.
    */
-  enemyNames(): string[];
+  enemyNames(): unknown;
   /**
    * Gets exp total.
    * @returns The result.
    */
-  expTotal(): number;
+  expTotal(): unknown;
   /**
    * Gets gold rate.
    * @returns The result.
@@ -90,7 +90,7 @@ interface Game_Troop extends Game_Unit
    * Gets gold total.
    * @returns The result.
    */
-  goldTotal(): number;
+  goldTotal(): unknown;
   /**
    * Performs increase turn.
    */
@@ -113,12 +113,12 @@ interface Game_Troop extends Game_Unit
    * Gets letter table.
    * @returns The result.
    */
-  letterTable(): string[][];
+  letterTable(): unknown;
   /**
    * Creates drop items.
    * @returns The result.
    */
-  makeDropItems(): RPG_Item[];
+  makeDropItems(): unknown;
   /**
    * Creates unique names.
    */
@@ -128,17 +128,17 @@ interface Game_Troop extends Game_Unit
    * @param page The page parameter.
    * @returns The result.
    */
-  meetsConditions(page: object): boolean;
+  meetsConditions(page: unknown): boolean;
   /**
    * Gets members.
    * @returns The result.
    */
-  members(): Game_Enemy[];
+  members(): unknown;
   /**
    * Performs setup.
    * @param troopId The troopId parameter.
    */
-  setup(troopId: number): void;
+  setup(troopId: unknown): void;
   /**
    * Performs setup battle event.
    */
@@ -147,12 +147,12 @@ interface Game_Troop extends Game_Unit
    * Gets troop.
    * @returns The result.
    */
-  troop(): object;
+  troop(): unknown;
   /**
    * Gets turn count.
    * @returns The result.
    */
-  turnCount(): number;
+  turnCount(): unknown;
   /**
    * Updates interpreter.
    */

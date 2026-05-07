@@ -40,7 +40,7 @@ class RPG_SkillDamage
   /**
    * Constructor.
    * Maps the skill's damage properties into this object.
-   * @param {rm.types.Damage} damage The original damage object to map.
+   * @param {RPG_SkillDamage} damage The original damage object to map.
    */
   constructor(damage)
   {

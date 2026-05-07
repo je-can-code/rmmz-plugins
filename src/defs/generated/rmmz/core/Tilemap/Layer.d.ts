@@ -132,7 +132,7 @@ declare namespace Tilemap
      * @param w The w parameter.
      * @param h The h parameter.
      */
-    addRect(setNumber: number, sx: number, sy: number, dx: number, dy: number, w: number, h: number): void;
+    addRect(setNumber: unknown, sx: unknown, sy: unknown, dx: unknown, dy: unknown, w: unknown, h: unknown): void;
     /**
      * Performs clear.
      */
@@ -154,17 +154,17 @@ declare namespace Tilemap
      * Performs render.
      * @param renderer The renderer parameter.
      */
-    render(renderer: PIXI.Renderer): void;
+    render(renderer: unknown): void;
     /**
      * Sets bitmaps.
      * @param bitmaps The bitmaps parameter.
      */
-    setBitmaps(bitmaps: Array<Bitmap | null>): void;
+    setBitmaps(bitmaps: unknown): void;
     /**
      * Gets size.
      * @returns The result.
      */
-    size(): number;
+    size(): unknown;
   }
 
   export namespace Layer

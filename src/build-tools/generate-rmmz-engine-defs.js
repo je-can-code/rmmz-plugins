@@ -23,6 +23,7 @@ import {
   inferExprType,
   mergeInstancePropRhsObservations,
   parseJsdocBlock,
+  refineInstanceBackingFieldTs,
 } from './rmmz-defs-infer.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -290,15 +291,17 @@ function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
 
 /**
  * @param {ClassEntry} entry
+ * @param {string} classPath
  * @returns {Map<string, string>}
  */
-function finalizeInstancePropTs(entry)
+function finalizeInstancePropTs(entry, classPath)
 {
   /** @type {Map<string, string>} */
   const out = new Map();
   for (const [name, arr] of entry.instancePropertyBuckets)
   {
-    out.set(name, mergeInstancePropRhsObservations(arr));
+    const merged = mergeInstancePropRhsObservations(arr);
+    out.set(name, refineInstanceBackingFieldTs(classPath, name, merged));
   }
   return out;
 }
@@ -333,11 +336,12 @@ function instancePropDocStarLine(indent, body)
 /**
  * @param {ClassEntry} entry
  * @param {string} indent
+ * @param {string} classPath
  * @returns {string}
  */
-function formatInstancePropsBlock(entry, indent)
+function formatInstancePropsBlock(entry, indent, classPath)
 {
-  const merged = finalizeInstancePropTs(entry);
+  const merged = finalizeInstancePropTs(entry, classPath);
   if (merged.size === 0)
   {
     return '';
@@ -1387,7 +1391,7 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
   if (hasInstance)
   {
     parts.push(`interface ${name}${extendsClause}\n{\n`);
-    parts.push(formatInstancePropsBlock(entry, '  '));
+    parts.push(formatInstancePropsBlock(entry, '  ', pathStr));
     for (const m of [...entry.instanceMethods.keys()].sort())
     {
       parts.push(`${formatMethod(m, entry.instanceMethods.get(m), '  ')}\n`);
@@ -1578,7 +1582,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
       `declare namespace ${parentNs}\n{\n`,
       `  export interface ${shortName}${nestedExtends}\n  {\n`,
     ];
-    lines.push(formatInstancePropsBlock(entry, '    '));
+    lines.push(formatInstancePropsBlock(entry, '    ', pathStr));
     for (const m of [...entry.instanceMethods.keys()].sort())
     {
       lines.push(`${formatMethod(m, entry.instanceMethods.get(m), '    ')}\n`);

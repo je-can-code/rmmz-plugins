@@ -10,12 +10,12 @@ interface Sprite_Animation extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | object`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
    * Read in: {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#processSoundTimings}, {@link Sprite_Animation#setViewport}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#targetSpritePosition}, {@link Sprite_Animation#updateEffectGeometry}.<br/>
    */
-  _animation: null | object;
+  _animation: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -100,12 +100,12 @@ interface Sprite_Animation extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Sprite_Animation`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
    * Read in: {@link Sprite_Animation#canStart}.<br/>
    */
-  _previous: null | Sprite_Animation;
+  _previous: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -118,7 +118,7 @@ interface Sprite_Animation extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `unknown[] | Sprite[]`.<br/>
+   * Type: `unknown[]`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
    * Read in: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#updateFlash}.<br/>
@@ -126,7 +126,7 @@ interface Sprite_Animation extends Sprite
    * Consumed by:<br/>
    * - `.length`: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}.<br/>
    */
-  _targets: unknown[] | Sprite[];
+  _targets: unknown[];
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -140,7 +140,7 @@ interface Sprite_Animation extends Sprite
    * Performs render.
    * @param renderer The renderer parameter.
    */
-  _render(renderer: PIXI.Renderer): void;
+  _render(renderer: unknown): void;
   /**
    * Determines whether start.
    * @returns True if start; false otherwise.
@@ -154,7 +154,7 @@ interface Sprite_Animation extends Sprite
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Initializes members.
    */
@@ -172,12 +172,12 @@ interface Sprite_Animation extends Sprite
    * Performs on after render.
    * @param renderer The renderer parameter.
    */
-  onAfterRender(renderer: PIXI.Renderer): void;
+  onAfterRender(renderer: unknown): void;
   /**
    * Performs on before render.
    * @param renderer The renderer parameter.
    */
-  onBeforeRender(renderer: PIXI.Renderer): void;
+  onBeforeRender(renderer: unknown): void;
   /**
    * Performs process flash timings.
    */
@@ -190,7 +190,7 @@ interface Sprite_Animation extends Sprite
    * Clears viewport.
    * @param renderer The renderer parameter.
    */
-  resetViewport(renderer: PIXI.Renderer): void;
+  resetViewport(renderer: unknown): void;
   /**
    * Sets camera matrix.
    */
@@ -199,19 +199,19 @@ interface Sprite_Animation extends Sprite
    * Sets projection matrix.
    * @param renderer The renderer parameter.
    */
-  setProjectionMatrix(renderer: PIXI.Renderer): void;
+  setProjectionMatrix(renderer: unknown): void;
   /**
    * Sets rotation.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param z The z parameter.
    */
-  setRotation(x: number, y: number, z: number): void;
+  setRotation(x: unknown, y: unknown, z: unknown): void;
   /**
    * Sets viewport.
    * @param renderer The renderer parameter.
    */
-  setViewport(renderer: PIXI.Renderer): void;
+  setViewport(renderer: unknown): void;
   /**
    * Performs setup.
    * @param targets The targets parameter.
@@ -220,7 +220,7 @@ interface Sprite_Animation extends Sprite
    * @param delay The delay parameter.
    * @param previous The previous parameter.
    */
-  setup(targets: Sprite[], animation: object, mirror: boolean, delay: number, previous: Sprite_Animation | null): void;
+  setup(targets: unknown, animation: unknown, mirror: unknown, delay: unknown, previous: unknown): void;
   /**
    * Gets should wait for previous.
    * @returns The result.
@@ -231,13 +231,13 @@ interface Sprite_Animation extends Sprite
    * @param renderer The renderer parameter.
    * @returns The result.
    */
-  targetPosition(renderer: PIXI.Renderer): Point;
+  targetPosition(renderer: unknown): unknown;
   /**
    * Gets target sprite position.
    * @param sprite The sprite parameter.
    * @returns The result.
    */
-  targetSpritePosition(sprite: Sprite): Point;
+  targetSpritePosition(sprite: unknown): unknown;
   /**
    * Performs update.
    */

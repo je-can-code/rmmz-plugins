@@ -218,14 +218,14 @@ interface Game_Screen
    * Gets brightness.
    * @returns The result.
    */
-  brightness(): number;
+  brightness(): unknown;
   /**
    * Performs change weather.
    * @param _type The type parameter.
    * @param power The power parameter.
    * @param duration The duration parameter.
    */
-  changeWeather(_type: string, power: number, duration: number): void;
+  changeWeather(_type: unknown, power: unknown, duration: unknown): void;
   /**
    * Performs clear.
    */
@@ -266,12 +266,12 @@ interface Game_Screen
    * Performs erase picture.
    * @param pictureId The pictureId parameter.
    */
-  erasePicture(pictureId: number): void;
+  erasePicture(pictureId: unknown): void;
   /**
    * Gets flash color.
    * @returns The result.
    */
-  flashColor(): [number, number, number, number];
+  flashColor(): unknown;
   /**
    * Initializes initialize.
    */
@@ -294,7 +294,7 @@ interface Game_Screen
    * @param duration The duration parameter.
    * @param easingType The easingType parameter.
    */
-  movePicture(pictureId: number, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number, duration: number, easingType: number): void;
+  movePicture(pictureId: unknown, origin: unknown, x: unknown, y: unknown, scaleX: unknown, scaleY: unknown, opacity: unknown, blendMode: unknown, duration: unknown, easingType: unknown): void;
   /**
    * Performs on battle start.
    */
@@ -304,31 +304,31 @@ interface Game_Screen
    * @param pictureId The pictureId parameter.
    * @returns The result.
    */
-  picture(pictureId: number): Game_Picture | null | undefined;
+  picture(pictureId: unknown): unknown;
   /**
    * Gets real picture id.
    * @param pictureId The pictureId parameter.
    * @returns The result.
    */
-  realPictureId(pictureId: number): number;
+  realPictureId(pictureId: unknown): unknown;
   /**
    * Performs rotate picture.
    * @param pictureId The pictureId parameter.
    * @param speed The speed parameter.
    */
-  rotatePicture(pictureId: number, speed: number): void;
+  rotatePicture(pictureId: unknown, speed: unknown): void;
   /**
    * Sets zoom.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param scale The scale parameter.
    */
-  setZoom(x: number, y: number, scale: number): void;
+  setZoom(x: unknown, y: unknown, scale: unknown): void;
   /**
    * Gets shake.
    * @returns The result.
    */
-  shake(): number;
+  shake(): unknown;
   /**
    * Performs show picture.
    * @param pictureId The pictureId parameter.
@@ -341,23 +341,23 @@ interface Game_Screen
    * @param opacity The opacity parameter.
    * @param blendMode The blendMode parameter.
    */
-  showPicture(pictureId: number, name: string, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number): void;
+  showPicture(pictureId: unknown, name: unknown, origin: unknown, x: unknown, y: unknown, scaleX: unknown, scaleY: unknown, opacity: unknown, blendMode: unknown): void;
   /**
    * Performs start fade in.
    * @param duration The duration parameter.
    */
-  startFadeIn(duration: number): void;
+  startFadeIn(duration: unknown): void;
   /**
    * Performs start fade out.
    * @param duration The duration parameter.
    */
-  startFadeOut(duration: number): void;
+  startFadeOut(duration: unknown): void;
   /**
    * Performs start flash.
    * @param color The color parameter.
    * @param duration The duration parameter.
    */
-  startFlash(color: [number, number, number, number], duration: number): void;
+  startFlash(color: unknown, duration: unknown): void;
   /**
    * Performs start flash for damage.
    */
@@ -368,13 +368,13 @@ interface Game_Screen
    * @param speed The speed parameter.
    * @param duration The duration parameter.
    */
-  startShake(power: number, speed: number, duration: number): void;
+  startShake(power: unknown, speed: unknown, duration: unknown): void;
   /**
    * Performs start tint.
    * @param tone The tone parameter.
    * @param duration The duration parameter.
    */
-  startTint(tone: [number, number, number, number], duration: number): void;
+  startTint(tone: unknown, duration: unknown): void;
   /**
    * Performs start zoom.
    * @param x The x parameter.
@@ -382,19 +382,19 @@ interface Game_Screen
    * @param scale The scale parameter.
    * @param duration The duration parameter.
    */
-  startZoom(x: number, y: number, scale: number, duration: number): void;
+  startZoom(x: unknown, y: unknown, scale: unknown, duration: unknown): void;
   /**
    * Performs tint picture.
    * @param pictureId The pictureId parameter.
    * @param tone The tone parameter.
    * @param duration The duration parameter.
    */
-  tintPicture(pictureId: number, tone: [number, number, number, number], duration: number): void;
+  tintPicture(pictureId: unknown, tone: unknown, duration: unknown): void;
   /**
    * Gets tone.
    * @returns The result.
    */
-  tone(): [number, number, number, number];
+  tone(): unknown;
   /**
    * Performs update.
    */
@@ -435,25 +435,25 @@ interface Game_Screen
    * Gets weather power.
    * @returns The result.
    */
-  weatherPower(): number;
+  weatherPower(): unknown;
   /**
    * Gets weather type.
    * @returns The result.
    */
-  weatherType(): string;
+  weatherType(): unknown;
   /**
    * Gets zoom scale.
    * @returns The result.
    */
-  zoomScale(): number;
+  zoomScale(): unknown;
   /**
    * Gets zoom x.
    * @returns The result.
    */
-  zoomX(): number;
+  zoomX(): unknown;
   /**
    * Gets zoom y.
    * @returns The result.
    */
-  zoomY(): number;
+  zoomY(): unknown;
 }

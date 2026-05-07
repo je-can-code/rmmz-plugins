@@ -20,20 +20,20 @@ interface Window_Options extends Window_Command
    * @param value The value parameter.
    * @returns The result.
    */
-  booleanStatusText(value: boolean): string;
+  booleanStatusText(value: unknown): string;
   /**
    * Performs change value.
    * @param _symbol The symbol parameter.
    * @param value The value parameter.
    */
-  changeValue(_symbol: string, value: boolean | number): void;
+  changeValue(_symbol: unknown, value: unknown): void;
   /**
    * Performs change volume.
    * @param _symbol The symbol parameter.
    * @param forward The forward parameter.
    * @param wrap The wrap parameter.
    */
-  changeVolume(_symbol: string, forward: boolean, wrap: boolean): void;
+  changeVolume(_symbol: unknown, forward: unknown, wrap: unknown): void;
   /**
    * Performs cursor left.
    */
@@ -46,24 +46,24 @@ interface Window_Options extends Window_Command
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Gets config value.
    * @param _symbol The symbol parameter.
    * @returns The result.
    */
-  getConfigValue(_symbol: string): boolean | number;
+  getConfigValue(_symbol: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether volume symbol.
    * @param _symbol The symbol parameter.
    * @returns True if volume symbol; false otherwise.
    */
-  isVolumeSymbol(_symbol: string): boolean;
+  isVolumeSymbol(_symbol: unknown): boolean;
   /**
    * Creates command list.
    */
@@ -77,13 +77,13 @@ interface Window_Options extends Window_Command
    * @param _symbol The symbol parameter.
    * @param volume The volume parameter.
    */
-  setConfigValue(_symbol: string, volume: boolean | number): void;
+  setConfigValue(_symbol: unknown, volume: unknown): void;
   /**
    * Gets status text.
    * @param index The index parameter.
    * @returns The result.
    */
-  statusText(index: number): string;
+  statusText(index: unknown): unknown;
   /**
    * Gets status width.
    * @returns The result.
@@ -99,5 +99,5 @@ interface Window_Options extends Window_Command
    * @param value The value parameter.
    * @returns The result.
    */
-  volumeStatusText(value: number): string;
+  volumeStatusText(value: unknown): string;
 }

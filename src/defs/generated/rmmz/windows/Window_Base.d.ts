@@ -43,40 +43,38 @@ interface Window_Base extends Window
    * @param n The n parameter.
    * @returns The result.
    */
-  actorName(n: number): string;
+  actorName(n: unknown): string;
   /**
    * Gets base text rect.
    * @returns The result.
    */
-  baseTextRect(): Rectangle;
+  baseTextRect(): unknown;
   /**
    * Gets calc text height.
    * @param textState The textState parameter.
    * @returns The result.
    */
-  calcTextHeight(textState: object): number;
+  calcTextHeight(textState: RPG_TextState): unknown;
   /**
-   * Gets change outline color.
+   * Performs change outline color.
    * @param color The color parameter.
-   * @returns The result.
    */
-  changeOutlineColor(color: string): string;
+  changeOutlineColor(color: unknown): void;
   /**
    * Performs change paint opacity.
    * @param enabled The enabled parameter.
    */
-  changePaintOpacity(enabled: boolean): void;
+  changePaintOpacity(enabled: unknown): void;
   /**
-   * Gets change text color.
+   * Performs change text color.
    * @param color The color parameter.
-   * @returns The result.
    */
-  changeTextColor(color: string): string;
+  changeTextColor(color: unknown): void;
   /**
    * Performs check rect object.
    * @param rect The rect parameter.
    */
-  checkRectObject(rect: Rectangle): void;
+  checkRectObject(rect: unknown): void;
   /**
    * Performs close.
    */
@@ -85,18 +83,18 @@ interface Window_Base extends Window
    * Gets contents height.
    * @returns The result.
    */
-  contentsHeight(): number;
+  contentsHeight(): unknown;
   /**
    * Gets contents width.
    * @returns The result.
    */
-  contentsWidth(): number;
+  contentsWidth(): unknown;
   /**
    * Gets convert escape characters.
    * @param text The text parameter.
    * @returns The result.
    */
-  convertEscapeCharacters(text: string): string;
+  convertEscapeCharacters(text: unknown): unknown;
   /**
    * Creates contents.
    */
@@ -110,7 +108,7 @@ interface Window_Base extends Window
    * @param rtl The rtl parameter.
    * @returns The result.
    */
-  createTextBuffer(rtl: boolean): string;
+  createTextBuffer(rtl: unknown): string;
   /**
    * Creates text state.
    * @param text The text parameter.
@@ -119,7 +117,7 @@ interface Window_Base extends Window
    * @param width The width parameter.
    * @returns The result.
    */
-  createTextState(text: string, x: number, y: number, width: number): object;
+  createTextState(text: unknown, x: unknown, y: unknown, width: unknown): RPG_TextState;
   /**
    * Performs deactivate.
    */
@@ -128,7 +126,7 @@ interface Window_Base extends Window
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Performs destroy contents.
    */
@@ -140,7 +138,7 @@ interface Window_Base extends Window
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawCharacter(characterName: string, characterIndex: number, x: number, y: number): void;
+  drawCharacter(characterName: unknown, characterIndex: unknown, x: unknown, y: unknown): void;
   /**
    * Performs draw currency value.
    * @param value The value parameter.
@@ -149,7 +147,7 @@ interface Window_Base extends Window
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawCurrencyValue(value: number, unit: string, x: number, y: number, width: number): void;
+  drawCurrencyValue(value: unknown, unit: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw face.
    * @param faceName The faceName parameter.
@@ -159,14 +157,14 @@ interface Window_Base extends Window
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  drawFace(faceName: string, faceIndex: number, x: number, y: number, width: number, height: number): void;
+  drawFace(faceName: unknown, faceIndex: unknown, x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Performs draw icon.
    * @param iconIndex The iconIndex parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawIcon(iconIndex: number, x: number, y: number): void;
+  drawIcon(iconIndex: unknown, x: unknown, y: unknown): void;
   /**
    * Performs draw item name.
    * @param item The item parameter.
@@ -174,7 +172,7 @@ interface Window_Base extends Window
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawItemName(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, x: number, y: number, width: number): void;
+  drawItemName(item: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw rect.
    * @param x The x parameter.
@@ -182,7 +180,7 @@ interface Window_Base extends Window
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  drawRect(x: number, y: number, width: number, height: number): void;
+  drawRect(x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Performs draw text.
    * @param text The text parameter.
@@ -191,7 +189,7 @@ interface Window_Base extends Window
    * @param maxWidth The maxWidth parameter.
    * @param align The align parameter.
    */
-  drawText(text: string, x: number, y: number, maxWidth: number, align: string): void;
+  drawText(text: unknown, x: unknown, y: unknown, maxWidth: unknown, align: unknown): void;
   /**
    * Gets draw text ex.
    * @param text The text parameter.
@@ -200,18 +198,18 @@ interface Window_Base extends Window
    * @param width The width parameter.
    * @returns The result.
    */
-  drawTextEx(text: string, x: number, y: number, width: number): number;
+  drawTextEx(text: unknown, x: unknown, y: unknown, width: unknown): number;
   /**
    * Gets fitting height.
    * @param numLines The numLines parameter.
    * @returns The result.
    */
-  fittingHeight(numLines: number): number;
+  fittingHeight(numLines: unknown): unknown;
   /**
    * Performs flush text state.
    * @param textState The textState parameter.
    */
-  flushTextState(textState: object): void;
+  flushTextState(textState: RPG_TextState): void;
   /**
    * Performs hide.
    */
@@ -224,7 +222,7 @@ interface Window_Base extends Window
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether closing.
    * @returns True if closing; false otherwise.
@@ -239,7 +237,7 @@ interface Window_Base extends Window
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets item padding.
    * @returns The result.
@@ -249,7 +247,7 @@ interface Window_Base extends Window
    * Gets item width.
    * @returns The result.
    */
-  itemWidth(): number;
+  itemWidth(): unknown;
   /**
    * Gets line height.
    * @returns The result.
@@ -272,19 +270,19 @@ interface Window_Base extends Window
    * @param line The line parameter.
    * @returns The result.
    */
-  maxFontSizeInLine(line: string): number;
+  maxFontSizeInLine(line: unknown): unknown;
   /**
    * Gets obtain escape code.
    * @param textState The textState parameter.
    * @returns The result.
    */
-  obtainEscapeCode(textState: object): string;
+  obtainEscapeCode(textState: RPG_TextState): string;
   /**
    * Gets obtain escape param.
    * @param textState The textState parameter.
    * @returns The result.
    */
-  obtainEscapeParam(textState: object): number | string;
+  obtainEscapeParam(textState: RPG_TextState): number | string;
   /**
    * Performs open.
    */
@@ -294,7 +292,7 @@ interface Window_Base extends Window
    * @param n The n parameter.
    * @returns The result.
    */
-  partyMemberName(n: number): string;
+  partyMemberName(n: unknown): string;
   /**
    * Performs play buzzer sound.
    */
@@ -311,40 +309,40 @@ interface Window_Base extends Window
    * Performs process all text.
    * @param textState The textState parameter.
    */
-  processAllText(textState: object): void;
+  processAllText(textState: RPG_TextState): void;
   /**
    * Performs process character.
    * @param textState The textState parameter.
    */
-  processCharacter(textState: object): void;
+  processCharacter(textState: RPG_TextState): void;
   /**
    * Performs process color change.
    * @param colorIndex The colorIndex parameter.
    */
-  processColorChange(colorIndex: number): void;
+  processColorChange(colorIndex: unknown): void;
   /**
    * Performs process control character.
    * @param textState The textState parameter.
    * @param c The c parameter.
    */
-  processControlCharacter(textState: object, c: string): void;
+  processControlCharacter(textState: RPG_TextState, c: unknown): void;
   /**
    * Performs process draw icon.
    * @param iconIndex The iconIndex parameter.
    * @param textState The textState parameter.
    */
-  processDrawIcon(iconIndex: number, textState: object): void;
+  processDrawIcon(iconIndex: unknown, textState: RPG_TextState): void;
   /**
    * Performs process escape character.
    * @param code The code parameter.
    * @param textState The textState parameter.
    */
-  processEscapeCharacter(code: string, textState: object): void;
+  processEscapeCharacter(code: unknown, textState: RPG_TextState): void;
   /**
    * Performs process new line.
    * @param textState The textState parameter.
    */
-  processNewLine(textState: object): void;
+  processNewLine(textState: RPG_TextState): void;
   /**
    * Performs refresh dimmer bitmap.
    */
@@ -361,7 +359,7 @@ interface Window_Base extends Window
    * Sets background type.
    * @param _type The type parameter.
    */
-  setBackgroundType(_type: number): void;
+  setBackgroundType(_type: unknown): void;
   /**
    * Performs show.
    */
@@ -374,19 +372,19 @@ interface Window_Base extends Window
    * Gets system color.
    * @returns The result.
    */
-  systemColor(): string;
+  systemColor(): unknown;
   /**
    * Gets text size ex.
    * @param text The text parameter.
    * @returns The result.
    */
-  textSizeEx(text: string): object;
+  textSizeEx(text: unknown): { width: number; height: number };
   /**
    * Gets text width.
    * @param text The text parameter.
    * @returns The result.
    */
-  textWidth(text: string): number;
+  textWidth(text: unknown): unknown;
   /**
    * Gets translucent opacity.
    * @returns The result.

@@ -100,12 +100,12 @@ interface Graphics
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | () => void`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Graphics#initialize}.<br/>
    * Written in: {@link Graphics#initialize}, {@link Graphics#setTickHandler}.<br/>
    * Read in: {@link Graphics#_onTick}.<br/>
    */
-  _tickHandler: null | () => void;
+  _tickHandler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -145,7 +145,7 @@ declare namespace Graphics
    * Performs center element.
    * @param element The element parameter.
    */
-  function _centerElement(element: HTMLElement): void;
+  function _centerElement(element: unknown): void;
   /**
    * Performs clear canvas filter.
    */
@@ -182,7 +182,7 @@ declare namespace Graphics
    * Gets default stretch mode.
    * @returns The result.
    */
-  function _defaultStretchMode(): boolean;
+  function _defaultStretchMode(): unknown;
   /**
    * Performs disable context menu.
    */
@@ -191,24 +191,24 @@ declare namespace Graphics
    * Gets is full screen.
    * @returns The result.
    */
-  function _isFullScreen(): boolean;
+  function _isFullScreen(): unknown;
   /**
    * Gets make error html.
    * @param name The name parameter.
    * @param message The message parameter.
    * @returns The result.
    */
-  function _makeErrorHtml(name: string, message: string): string;
+  function _makeErrorHtml(name: unknown, message: unknown): unknown;
   /**
    * Performs on key down.
    * @param event The event parameter.
    */
-  function _onKeyDown(event: KeyboardEvent): void;
+  function _onKeyDown(event: unknown): void;
   /**
    * The default zoom scale of the game screen.
    * @param deltaTime The deltaTime parameter.
    */
-  function _onTick(deltaTime: number): void;
+  function _onTick(deltaTime: unknown): void;
   /**
    * Performs on window resize.
    */
@@ -229,12 +229,12 @@ declare namespace Graphics
    * Gets stretch height.
    * @returns The result.
    */
-  function _stretchHeight(): number;
+  function _stretchHeight(): unknown;
   /**
    * Gets stretch width.
    * @returns The result.
    */
-  function _stretchWidth(): number;
+  function _stretchWidth(): unknown;
   /**
    * Performs switch fpscounter.
    */
@@ -295,7 +295,7 @@ declare namespace Graphics
    * The height of the game screen.
    * @returns The result.
    */
-  get height(): number;
+  get height(): unknown;
   /**
    * Hides the game screen.
    */
@@ -330,7 +330,7 @@ declare namespace Graphics
    * @param message The message of the error.
    * @param error The error parameter.
    */
-  function printError(name: string, message: string, error?: Error): void;
+  function printError(name: string, message: string, error?: unknown): void;
   /**
    * Changes the size of the game screen.
    * @param width The width of the game screen.
@@ -346,12 +346,12 @@ declare namespace Graphics
    * Register a handler for tick events.
    * @param handler The listener function to be added for updates.
    */
-  function setTickHandler(handler: () => void): void;
+  function setTickHandler(handler: (...args: unknown[]) => unknown): void;
   /**
    * Displays a button to try to reload resources.
    * @param retry The callback function to be called when the button
    */
-  function showRetryButton(retry: () => void): void;
+  function showRetryButton(retry: (...args: unknown[]) => unknown): void;
   /**
    * Shows the game screen.
    */
@@ -372,5 +372,5 @@ declare namespace Graphics
    * The width of the game screen.
    * @returns The result.
    */
-  get width(): number;
+  get width(): unknown;
 }

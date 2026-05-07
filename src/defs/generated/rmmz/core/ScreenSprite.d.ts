@@ -55,7 +55,7 @@ interface ScreenSprite extends PIXI.Container
    * The opacity of the sprite (0 to 255).
    * @returns The result.
    */
-  get opacity(): number;
+  get opacity(): unknown;
   /**
    * Sets black to the color of the screen sprite.
    */

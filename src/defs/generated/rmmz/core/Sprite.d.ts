@@ -118,7 +118,7 @@ interface Sprite extends PIXI.Sprite
    * Sets the color tone for the sprite.
    * @param bitmapLoaded The bitmapLoaded parameter.
    */
-  _onBitmapLoad(bitmapLoaded: Bitmap): void;
+  _onBitmapLoad(bitmapLoaded: unknown): void;
   /**
    * Performs refresh.
    */
@@ -136,7 +136,7 @@ interface Sprite extends PIXI.Sprite
    * The blend mode to be applied to the sprite.
    * @returns The result.
    */
-  get blendMode(): number;
+  get blendMode(): unknown;
   /**
    * Destroys the sprite.
    */
@@ -145,17 +145,17 @@ interface Sprite extends PIXI.Sprite
    * Gets the blend color for the sprite.
    * @returns The result.
    */
-  getBlendColor(): [number, number, number, number];
+  getBlendColor(): unknown[];
   /**
    * Gets the color tone for the sprite.
    * @returns The result.
    */
-  getColorTone(): [number, number, number, number];
+  getColorTone(): unknown[];
   /**
    * The height of the sprite without the scale.
    * @returns The result.
    */
-  get height(): number;
+  get height(): unknown;
   /**
    * Makes the sprite "hidden".
    */
@@ -175,17 +175,17 @@ interface Sprite extends PIXI.Sprite
    * The opacity of the sprite (0 to 255).
    * @returns The result.
    */
-  get opacity(): number;
+  get opacity(): unknown;
   /**
    * Sets the blend color for the sprite.
    * @param color The blend color [r, g, b, a].
    */
-  setBlendColor(color: [number, number, number, number]): void;
+  setBlendColor(color: unknown[]): void;
   /**
    * Sets the color tone for the sprite.
    * @param tone The color tone [r, g, b, gray].
    */
-  setColorTone(tone: [number, number, number, number]): void;
+  setColorTone(tone: unknown[]): void;
   /**
    * Sets the rectagle of the bitmap that the sprite displays.
    * @param x The x coordinate of the frame.
@@ -215,5 +215,5 @@ interface Sprite extends PIXI.Sprite
    * The width of the sprite without the scale.
    * @returns The result.
    */
-  get width(): number;
+  get width(): unknown;
 }

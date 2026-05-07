@@ -46,12 +46,12 @@ interface Window_ScrollText extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Rectangle`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Window_ScrollText#initialize}.<br/>
    * Written in: {@link Window_ScrollText#initialize}.<br/>
    * Read in: {@link Window_ScrollText#updatePlacement}.<br/>
    */
-  _reservedRect: Rectangle;
+  _reservedRect: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -84,7 +84,7 @@ interface Window_ScrollText extends Window_Base
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether fast forward.
    * @returns True if fast forward; false otherwise.
@@ -98,7 +98,7 @@ interface Window_ScrollText extends Window_Base
    * Gets scroll speed.
    * @returns The result.
    */
-  scrollSpeed(): number;
+  scrollSpeed(): unknown;
   /**
    * Performs start message.
    */

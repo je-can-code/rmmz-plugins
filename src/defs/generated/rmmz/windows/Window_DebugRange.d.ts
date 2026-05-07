@@ -10,12 +10,12 @@ interface Window_DebugRange extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_DebugRange#setEditWindow}.<br/>
    * Read in: {@link Window_DebugRange#update}.<br/>
    */
-  _editWindow: Window_Base;
+  _editWindow: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -38,12 +38,12 @@ interface Window_DebugRange extends Window_Selectable
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether cancel triggered.
    * @returns True if cancel triggered; false otherwise.
@@ -54,18 +54,18 @@ interface Window_DebugRange extends Window_Selectable
    * @param index The index parameter.
    * @returns True if switch mode; false otherwise.
    */
-  isSwitchMode(index: number): boolean;
+  isSwitchMode(index: unknown): boolean;
   /**
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Gets mode.
    * @param index The index parameter.
    * @returns The result.
    */
-  mode(index: number): string;
+  mode(index: unknown): string;
   /**
    * Performs process cancel.
    */
@@ -74,13 +74,13 @@ interface Window_DebugRange extends Window_Selectable
    * Sets edit window.
    * @param editWindow The editWindow parameter.
    */
-  setEditWindow(editWindow: Window_Base): void;
+  setEditWindow(editWindow: unknown): void;
   /**
    * Gets top id.
    * @param index The index parameter.
    * @returns The result.
    */
-  topId(index: number): number;
+  topId(index: unknown): unknown;
   /**
    * Performs update.
    */

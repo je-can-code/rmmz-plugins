@@ -85,7 +85,7 @@ interface Scene_Status extends Scene_MenuBase
    * Gets profile height.
    * @returns The result.
    */
-  profileHeight(): number;
+  profileHeight(): unknown;
   /**
    * Gets profile window rect.
    * @returns The result.
@@ -108,7 +108,7 @@ interface Scene_Status extends Scene_MenuBase
    * Gets status params height.
    * @returns The result.
    */
-  statusParamsHeight(): number;
+  statusParamsHeight(): unknown;
   /**
    * Gets status params width.
    * @returns The result.

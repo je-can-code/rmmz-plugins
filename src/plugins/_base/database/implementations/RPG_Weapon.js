@@ -29,7 +29,7 @@ class RPG_Weapon
 
   /**
    * Constructor.
-   * @param {rm.types.Weapon} weapon The weapon to parse.
+   * @param {RPG_Weapon} weapon The weapon to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(weapon, index)

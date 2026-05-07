@@ -89,12 +89,12 @@ interface Spriteset_Base extends Sprite
    * @param target The target parameter.
    * @returns The result.
    */
-  animationShouldMirror(target: Game_Battler): boolean;
+  animationShouldMirror(target: unknown): unknown;
   /**
    * Creates animation.
    * @param request The request parameter.
    */
-  createAnimation(request: object): void;
+  createAnimation(request: unknown): void;
   /**
    * Creates animation sprite.
    * @param targets The targets parameter.
@@ -102,7 +102,7 @@ interface Spriteset_Base extends Sprite
    * @param mirror The mirror parameter.
    * @param delay The delay parameter.
    */
-  createAnimationSprite(targets: Game_Battler[], animation: object, mirror: boolean, delay: number): void;
+  createAnimationSprite(targets: unknown, animation: unknown, mirror: unknown, delay: unknown): void;
   /**
    * Creates base filters.
    */
@@ -135,7 +135,7 @@ interface Spriteset_Base extends Sprite
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Gets find target sprite.
    * @returns The result.
@@ -150,7 +150,7 @@ interface Spriteset_Base extends Sprite
    * @param animation The animation parameter.
    * @returns True if animation for each; false otherwise.
    */
-  isAnimationForEach(animation: object): boolean;
+  isAnimationForEach(animation: unknown): boolean;
   /**
    * Determines whether animation playing.
    * @returns True if animation playing; false otherwise.
@@ -161,12 +161,12 @@ interface Spriteset_Base extends Sprite
    * @param animation The animation parameter.
    * @returns True if mvanimation; false otherwise.
    */
-  isMVAnimation(animation: object): boolean;
+  isMVAnimation(animation: unknown): boolean;
   /**
    * Gets last animation sprite.
    * @returns The result.
    */
-  lastAnimationSprite(): Sprite | undefined;
+  lastAnimationSprite(): unknown;
   /**
    * Performs load system images.
    */
@@ -176,7 +176,7 @@ interface Spriteset_Base extends Sprite
    * @param targets The targets parameter.
    * @returns The result.
    */
-  makeTargetSprites(targets: Game_Battler[]): Sprite[];
+  makeTargetSprites(targets: unknown): unknown;
   /**
    * Gets picture container rect.
    * @returns The result.
@@ -194,7 +194,7 @@ interface Spriteset_Base extends Sprite
    * Removes animation.
    * @param sprite The sprite parameter.
    */
-  removeAnimation(sprite: Sprite): void;
+  removeAnimation(sprite: unknown): void;
   /**
    * Performs update.
    */

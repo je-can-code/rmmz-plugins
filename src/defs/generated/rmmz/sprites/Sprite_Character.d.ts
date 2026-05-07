@@ -28,12 +28,12 @@ interface Sprite_Character extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Character`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Character#initMembers}, {@link Sprite_Character#setCharacter}.<br/>
    * Read in: {@link Sprite_Character#characterBlockX}, {@link Sprite_Character#characterBlockY}, {@link Sprite_Character#characterPatternX}, {@link Sprite_Character#characterPatternY}, {@link Sprite_Character#checkCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#isObjectCharacter}, {@link Sprite_Character#isTile}, {@link Sprite_Character#updateBitmap}, {@link Sprite_Character#updateOther}, {@link Sprite_Character#updatePosition}, {@link Sprite_Character#updateVisibility}.<br/>
    */
-  _character: null | Game_Character;
+  _character: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -111,18 +111,18 @@ interface Sprite_Character extends Sprite
    * Gets character pattern x.
    * @returns The result.
    */
-  characterPatternX(): number;
+  characterPatternX(): unknown;
   /**
    * Gets character pattern y.
    * @returns The result.
    */
-  characterPatternY(): number;
+  characterPatternY(): unknown;
   /**
    * Gets check character.
    * @param character The character parameter.
    * @returns The result.
    */
-  checkCharacter(character: Game_Character): boolean;
+  checkCharacter(character: unknown): boolean;
   /**
    * Creates half body sprites.
    */
@@ -135,7 +135,7 @@ interface Sprite_Character extends Sprite
    * Initializes initialize.
    * @param character The character parameter.
    */
-  initialize(character: Game_Character): void;
+  initialize(character: unknown): void;
   /**
    * Determines whether empty character.
    * @returns True if empty character; false otherwise.
@@ -160,17 +160,17 @@ interface Sprite_Character extends Sprite
    * Gets pattern height.
    * @returns The result.
    */
-  patternHeight(): number;
+  patternHeight(): unknown;
   /**
    * Gets pattern width.
    * @returns The result.
    */
-  patternWidth(): number;
+  patternWidth(): unknown;
   /**
    * Sets character.
    * @param character The character parameter.
    */
-  setCharacter(character: Game_Character): void;
+  setCharacter(character: unknown): void;
   /**
    * Sets character bitmap.
    */
@@ -184,7 +184,7 @@ interface Sprite_Character extends Sprite
    * @param tileId The tileId parameter.
    * @returns The result.
    */
-  tilesetBitmap(tileId: number): Bitmap;
+  tilesetBitmap(tileId: unknown): unknown;
   /**
    * Performs update.
    */

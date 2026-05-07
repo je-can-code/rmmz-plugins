@@ -23,7 +23,7 @@ class RPG_Armor
 
   /**
    * Constructor.
-   * @param {rm.types.Armor} armor The armor to parse.
+   * @param {RPG_Armor} armor The armor to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(armor, index)

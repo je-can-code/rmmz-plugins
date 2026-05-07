@@ -115,12 +115,12 @@ interface Scene_Battle extends Scene_Message
    * Gets actor window rect.
    * @returns The result.
    */
-  actorWindowRect(): Rectangle;
+  actorWindowRect(): unknown;
   /**
    * Gets button area top.
    * @returns The result.
    */
-  buttonAreaTop(): number;
+  buttonAreaTop(): unknown;
   /**
    * Performs change input window.
    */
@@ -230,12 +230,12 @@ interface Scene_Battle extends Scene_Message
    * Gets help area bottom.
    * @returns The result.
    */
-  helpAreaBottom(): number;
+  helpAreaBottom(): unknown;
   /**
    * Gets help area height.
    * @returns The result.
    */
-  helpAreaHeight(): number;
+  helpAreaHeight(): unknown;
   /**
    * Gets help area top.
    * @returns The result.
@@ -268,7 +268,7 @@ interface Scene_Battle extends Scene_Message
    * Gets item window rect.
    * @returns The result.
    */
-  itemWindowRect(): Rectangle;
+  itemWindowRect(): unknown;
   /**
    * Gets log window rect.
    * @returns The result.
@@ -283,7 +283,7 @@ interface Scene_Battle extends Scene_Message
    * Gets needs slow fade out.
    * @returns The result.
    */
-  needsSlowFadeOut(): boolean;
+  needsSlowFadeOut(): unknown;
   /**
    * Performs on actor cancel.
    */
@@ -337,7 +337,7 @@ interface Scene_Battle extends Scene_Message
    * Gets should autosave.
    * @returns The result.
    */
-  shouldAutosave(): boolean;
+  shouldAutosave(): unknown;
   /**
    * Gets should open status window.
    * @returns The result.
@@ -377,7 +377,7 @@ interface Scene_Battle extends Scene_Message
    * Gets status window x.
    * @returns The result.
    */
-  statusWindowX(): number;
+  statusWindowX(): unknown;
   /**
    * Performs stop.
    */
@@ -422,5 +422,5 @@ interface Scene_Battle extends Scene_Message
    * Gets window area height.
    * @returns The result.
    */
-  windowAreaHeight(): number;
+  windowAreaHeight(): unknown;
 }

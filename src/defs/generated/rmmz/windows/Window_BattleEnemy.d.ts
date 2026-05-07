@@ -23,12 +23,12 @@ interface Window_BattleEnemy extends Window_Selectable
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Gets enemy.
    * @returns The result.
    */
-  enemy(): Game_Enemy;
+  enemy(): unknown;
   /**
    * Gets enemy index.
    * @returns The result.
@@ -42,7 +42,7 @@ interface Window_BattleEnemy extends Window_Selectable
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets max cols.
    * @returns The result.
@@ -52,7 +52,7 @@ interface Window_BattleEnemy extends Window_Selectable
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Performs process touch.
    */
@@ -65,7 +65,7 @@ interface Window_BattleEnemy extends Window_Selectable
    * Performs select.
    * @param index The index parameter.
    */
-  select(index: number): void;
+  select(index: unknown): void;
   /**
    * Performs show.
    */

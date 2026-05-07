@@ -56,12 +56,12 @@ interface Game_Enemy extends Game_Battler
    * Gets battler hue.
    * @returns The result.
    */
-  battlerHue(): number;
+  battlerHue(): unknown;
   /**
    * Gets battler name.
    * @returns The result.
    */
-  battlerName(): string;
+  battlerName(): unknown;
   /**
    * Gets drop item rate.
    * @returns The result.
@@ -71,32 +71,32 @@ interface Game_Enemy extends Game_Battler
    * Gets enemy.
    * @returns The result.
    */
-  enemy(): RPG_Enemy;
+  enemy(): unknown;
   /**
    * Gets enemy id.
    * @returns The result.
    */
-  enemyId(): number;
+  enemyId(): unknown;
   /**
    * Gets exp.
    * @returns The result.
    */
-  exp(): number;
+  exp(): unknown;
   /**
    * Gets friends unit.
    * @returns The result.
    */
-  friendsUnit(): Game_Troop;
+  friendsUnit(): unknown;
   /**
    * Gets gold.
    * @returns The result.
    */
-  gold(): number;
+  gold(): unknown;
   /**
    * Gets index.
    * @returns The result.
    */
-  index(): number;
+  index(): unknown;
   /**
    * Initializes members.
    */
@@ -107,13 +107,13 @@ interface Game_Enemy extends Game_Battler
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  initialize(enemyId: number, x: number, y: number): void;
+  initialize(enemyId: unknown, x: unknown, y: unknown): void;
   /**
    * Determines whether action valid.
    * @param action The action parameter.
    * @returns True if action valid; false otherwise.
    */
-  isActionValid(action: object): boolean;
+  isActionValid(action: unknown): boolean;
   /**
    * Determines whether battle member.
    * @returns True if battle member; false otherwise.
@@ -140,7 +140,7 @@ interface Game_Enemy extends Game_Battler
    * @param dataId The dataId parameter.
    * @returns The result.
    */
-  itemObject(kind: number, dataId: number): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  itemObject(kind: unknown, dataId: unknown): null;
   /**
    * Creates actions.
    */
@@ -149,52 +149,52 @@ interface Game_Enemy extends Game_Battler
    * Creates drop items.
    * @returns The result.
    */
-  makeDropItems(): Array<RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null>;
+  makeDropItems(): unknown;
   /**
    * Gets meets condition.
    * @param action The action parameter.
    * @returns The result.
    */
-  meetsCondition(action: object): boolean;
+  meetsCondition(action: unknown): boolean;
   /**
    * Gets meets hp condition.
    * @param param1 The param1 parameter.
    * @param param2 The param2 parameter.
    * @returns The result.
    */
-  meetsHpCondition(param1: number, param2: number): boolean;
+  meetsHpCondition(param1: unknown, param2: unknown): boolean;
   /**
    * Gets meets mp condition.
    * @param param1 The param1 parameter.
    * @param param2 The param2 parameter.
    * @returns The result.
    */
-  meetsMpCondition(param1: number, param2: number): boolean;
+  meetsMpCondition(param1: unknown, param2: unknown): boolean;
   /**
    * Gets meets party level condition.
    * @param param The param parameter.
    * @returns The result.
    */
-  meetsPartyLevelCondition(param: number): boolean;
+  meetsPartyLevelCondition(param: unknown): boolean;
   /**
    * Gets meets state condition.
    * @param param The param parameter.
    * @returns The result.
    */
-  meetsStateCondition(param: number): boolean;
+  meetsStateCondition(param: unknown): unknown;
   /**
    * Gets meets switch condition.
    * @param param The param parameter.
    * @returns The result.
    */
-  meetsSwitchCondition(param: number): boolean;
+  meetsSwitchCondition(param: unknown): unknown;
   /**
    * Gets meets turn condition.
    * @param param1 The param1 parameter.
    * @param param2 The param2 parameter.
    * @returns The result.
    */
-  meetsTurnCondition(param1: number, param2: number): boolean;
+  meetsTurnCondition(param1: unknown, param2: unknown): boolean;
   /**
    * Gets name.
    * @returns The result.
@@ -204,23 +204,23 @@ interface Game_Enemy extends Game_Battler
    * Gets opponents unit.
    * @returns The result.
    */
-  opponentsUnit(): Game_Party;
+  opponentsUnit(): unknown;
   /**
    * Gets original name.
    * @returns The result.
    */
-  originalName(): string;
+  originalName(): unknown;
   /**
    * Gets param base.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramBase(paramId: number): number;
+  paramBase(paramId: unknown): unknown;
   /**
    * Performs perform action.
    * @param action The action parameter.
    */
-  performAction(action: Game_Action): void;
+  performAction(action: unknown): void;
   /**
    * Performs perform action end.
    */
@@ -229,7 +229,7 @@ interface Game_Enemy extends Game_Battler
    * Performs perform action start.
    * @param action The action parameter.
    */
-  performActionStart(action: Game_Action): void;
+  performActionStart(action: unknown): void;
   /**
    * Performs perform collapse.
    */
@@ -242,49 +242,49 @@ interface Game_Enemy extends Game_Battler
    * Gets screen x.
    * @returns The result.
    */
-  screenX(): number;
+  screenX(): unknown;
   /**
    * Gets screen y.
    * @returns The result.
    */
-  screenY(): number;
+  screenY(): unknown;
   /**
    * Gets select action.
    * @param actionList The actionList parameter.
    * @param ratingZero The ratingZero parameter.
    * @returns The result.
    */
-  selectAction(actionList: object[], ratingZero: number): object | null;
+  selectAction(actionList: unknown, ratingZero: unknown): unknown;
   /**
    * Performs select all actions.
    * @param actionList The actionList parameter.
    */
-  selectAllActions(actionList: object[]): void;
+  selectAllActions(actionList: unknown): void;
   /**
    * Sets letter.
    * @param letter The letter parameter.
    */
-  setLetter(letter: string): void;
+  setLetter(letter: unknown): void;
   /**
    * Sets plural.
    * @param plural The plural parameter.
    */
-  setPlural(plural: boolean): void;
+  setPlural(plural: unknown): void;
   /**
    * Performs setup.
    * @param enemyId The enemyId parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setup(enemyId: number, x: number, y: number): void;
+  setup(enemyId: unknown, x: unknown, y: unknown): void;
   /**
    * Gets trait objects.
    * @returns The result.
    */
-  traitObjects(): object[];
+  traitObjects(): unknown;
   /**
    * Performs transform.
    * @param enemyId The enemyId parameter.
    */
-  transform(enemyId: number): void;
+  transform(enemyId: unknown): void;
 }
