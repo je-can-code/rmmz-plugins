@@ -140,6 +140,16 @@ declare namespace AudioManager
    */
   function audioFileExt(): string;
   /**
+   * Gets bgm volume.
+   * @returns The result.
+   */
+  get bgmVolume(): unknown;
+  /**
+   * Gets bgs volume.
+   * @returns The result.
+   */
+  get bgsVolume(): unknown;
+  /**
    * Performs check errors.
    */
   function checkErrors(): void;
@@ -208,6 +218,11 @@ declare namespace AudioManager
    */
   function makeEmptyAudioObject(): object;
   /**
+   * Gets me volume.
+   * @returns The result.
+   */
+  get meVolume(): unknown;
+  /**
    * Performs play bgm.
    * @param bgm The bgm parameter.
    * @param pos The pos parameter.
@@ -254,6 +269,11 @@ declare namespace AudioManager
    * @returns The result.
    */
   function saveBgs(): object;
+  /**
+   * Gets se volume.
+   * @returns The result.
+   */
+  get seVolume(): unknown;
   /**
    * Performs stop all.
    */

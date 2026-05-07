@@ -128,6 +128,16 @@ interface Sprite extends PIXI.Sprite
    */
   _updateColorFilter(): void;
   /**
+   * The image for the sprite.
+   * @returns The result.
+   */
+  get bitmap(): unknown;
+  /**
+   * The blend mode to be applied to the sprite.
+   * @returns The result.
+   */
+  get blendMode(): number;
+  /**
    * Destroys the sprite.
    */
   destroy(): void;
@@ -141,6 +151,11 @@ interface Sprite extends PIXI.Sprite
    * @returns The result.
    */
   getColorTone(): [number, number, number, number];
+  /**
+   * The height of the sprite without the scale.
+   * @returns The result.
+   */
+  get height(): number;
   /**
    * Makes the sprite "hidden".
    */
@@ -156,6 +171,11 @@ interface Sprite extends PIXI.Sprite
    * @param y The y coordinate of the sprite.
    */
   move(x: number, y: number): void;
+  /**
+   * The opacity of the sprite (0 to 255).
+   * @returns The result.
+   */
+  get opacity(): number;
   /**
    * Sets the blend color for the sprite.
    * @param color The blend color [r, g, b, a].
@@ -191,4 +211,9 @@ interface Sprite extends PIXI.Sprite
    * Reflects the "hidden" state of the sprite to the visible state.
    */
   updateVisibility(): void;
+  /**
+   * The width of the sprite without the scale.
+   * @returns The result.
+   */
+  get width(): number;
 }

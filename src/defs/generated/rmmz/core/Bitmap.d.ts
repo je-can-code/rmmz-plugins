@@ -168,6 +168,11 @@ interface Bitmap
    */
   addLoadListener(listner: () => void): void;
   /**
+   * The base texture that holds the image.
+   * @returns The result.
+   */
+  get baseTexture(): unknown;
+  /**
    * Performs a block transfer.
    * @param source The bitmap to draw.
    * @param sx The x coordinate in the source.
@@ -181,6 +186,11 @@ interface Bitmap
    */
   blt(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
   /**
+   * The bitmap canvas.
+   * @returns The result.
+   */
+  get canvas(): unknown;
+  /**
    * Clears the entire bitmap.
    */
   clear(): void;
@@ -192,6 +202,11 @@ interface Bitmap
    * @param height The height of the rectangle to clear.
    */
   clearRect(x: number, y: number, width: number, height: number): void;
+  /**
+   * The 2d context of the bitmap canvas.
+   * @returns The result.
+   */
+  get context(): unknown;
   /**
    * Destroys the bitmap.
    */
@@ -254,6 +269,16 @@ interface Bitmap
    */
   gradientFillRect(x: number, y: number, width: number, height: number, color1: string, color2: string, vertical: boolean): void;
   /**
+   * The height of the bitmap.
+   * @returns The result.
+   */
+  get height(): number;
+  /**
+   * The bitmap image.
+   * @returns The result.
+   */
+  get image(): unknown;
+  /**
    * The basic object that represents an image.
    * @param width The width of the bitmap.
    * @param height The height of the bitmap.
@@ -276,6 +301,16 @@ interface Bitmap
    */
   measureTextWidth(text: string): number;
   /**
+   * The opacity of the drawing object in the range (0, 255).
+   * @returns The result.
+   */
+  get paintOpacity(): unknown;
+  /**
+   * The rectangle of the bitmap.
+   * @returns The result.
+   */
+  get rect(): Rectangle;
+  /**
    * Resizes the bitmap.
    * @param width The new width of the bitmap.
    * @param height The new height of the bitmap.
@@ -286,6 +321,11 @@ interface Bitmap
    */
   retry(): void;
   /**
+   * Whether the smooth scaling is applied.
+   * @returns The result.
+   */
+  get smooth(): unknown;
+  /**
    * Draws the specified rectangular frame.
    * @param x The x coordinate for the upper-left corner.
    * @param y The y coordinate for the upper-left corner.
@@ -294,6 +334,16 @@ interface Bitmap
    * @param color The color of the rectangle in CSS format.
    */
   strokeRect(x: number, y: number, width: number, height: number, color: string): void;
+  /**
+   * The url of the image file.
+   * @returns The result.
+   */
+  get url(): unknown;
+  /**
+   * The width of the bitmap.
+   * @returns The result.
+   */
+  get width(): number;
 }
 declare namespace Bitmap
 {

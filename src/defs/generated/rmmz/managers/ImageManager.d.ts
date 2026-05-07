@@ -43,6 +43,16 @@ declare namespace ImageManager
    */
   function clear(): void;
   /**
+   * Gets face height.
+   * @returns The result.
+   */
+  get faceHeight(): unknown;
+  /**
+   * Gets face width.
+   * @returns The result.
+   */
+  get faceWidth(): unknown;
+  /**
    * Gets face size.
    * @returns The result.
    */
@@ -52,6 +62,16 @@ declare namespace ImageManager
    * @returns The result.
    */
   function getIconSize(): number;
+  /**
+   * Gets icon height.
+   * @returns The result.
+   */
+  get iconHeight(): unknown;
+  /**
+   * Gets icon width.
+   * @returns The result.
+   */
+  get iconWidth(): unknown;
   /**
    * Determines whether big character.
    * @param filename The filename parameter.

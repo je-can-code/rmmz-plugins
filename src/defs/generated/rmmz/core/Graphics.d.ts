@@ -268,6 +268,21 @@ declare namespace Graphics
    */
   function _updateVideo(): void;
   /**
+   * The PIXI.Application object.
+   * @returns The result.
+   */
+  get app(): unknown;
+  /**
+   * The default zoom scale of the game screen.
+   * @returns The result.
+   */
+  get defaultScale(): unknown;
+  /**
+   * The context object of Effekseer.
+   * @returns The result.
+   */
+  get effekseer(): unknown;
+  /**
    * Erases the loading spinner.
    * @returns The result.
    */
@@ -276,6 +291,11 @@ declare namespace Graphics
    * Erases the loading error text.
    */
   function eraseError(): void;
+  /**
+   * The height of the game screen.
+   * @returns The result.
+   */
+  get height(): number;
   /**
    * Hides the game screen.
    */
@@ -348,4 +368,9 @@ declare namespace Graphics
    * Stops the game loop.
    */
   function stopGameLoop(): void;
+  /**
+   * The width of the game screen.
+   * @returns The result.
+   */
+  get width(): number;
 }

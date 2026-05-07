@@ -756,4 +756,14 @@ interface Game_CharacterBase
    * Updates stop.
    */
   updateStop(): void;
+  /**
+   * Gets x.
+   * @returns The result.
+   */
+  get x(): number;
+  /**
+   * Gets y.
+   * @returns The result.
+   */
+  get y(): number;
 }

@@ -325,6 +325,26 @@ interface Window extends PIXI.Container
    */
   addInnerChild(child: object): object;
   /**
+   * The opacity of the window background (0 to 255).
+   * @returns The result.
+   */
+  get backOpacity(): unknown;
+  /**
+   * The bitmap used for the window contents.
+   * @returns The result.
+   */
+  get contents(): unknown;
+  /**
+   * The bitmap used for the window contents background.
+   * @returns The result.
+   */
+  get contentsBack(): unknown;
+  /**
+   * The opacity of the window contents (0 to 255).
+   * @returns The result.
+   */
+  get contentsOpacity(): unknown;
+  /**
    * Destroys the window.
    */
   destroy(): void;
@@ -334,9 +354,29 @@ interface Window extends PIXI.Container
    */
   drawShape(graphics: object): void;
   /**
+   * The height of the window in pixels.
+   * @returns The result.
+   */
+  get height(): number;
+  /**
    * The window in the game.
    */
   initialize(): void;
+  /**
+   * The height of the content area in pixels.
+   * @returns The result.
+   */
+  get innerHeight(): unknown;
+  /**
+   * The rectangle of the content area.
+   * @returns The result.
+   */
+  get innerRect(): Rectangle;
+  /**
+   * The width of the content area in pixels.
+   * @returns The result.
+   */
+  get innerWidth(): unknown;
   /**
    * Checks whether the window is completely closed (openness == 0).
    * @returns True if closed; false otherwise.
@@ -347,6 +387,11 @@ interface Window extends PIXI.Container
    * @returns True if open; false otherwise.
    */
   isOpen(): boolean;
+  /**
+   * The size of the margin for the window background.
+   * @returns The result.
+   */
+  get margin(): unknown;
   /**
    * Sets the x, y, width, and height all at once.
    * @param x The x coordinate of the window.
@@ -367,6 +412,21 @@ interface Window extends PIXI.Container
    * @param y The amount of vertical movement.
    */
   moveInnerChildrenBy(x: number, y: number): void;
+  /**
+   * The opacity of the window without contents (0 to 255).
+   * @returns The result.
+   */
+  get opacity(): number;
+  /**
+   * The openness of the window (0 to 255).
+   * @returns The result.
+   */
+  get openness(): unknown;
+  /**
+   * The size of the padding between the frame and contents.
+   * @returns The result.
+   */
+  get padding(): unknown;
   /**
    * Sets the position of the command cursor.
    * @param x The x coordinate of the cursor.
@@ -390,4 +450,14 @@ interface Window extends PIXI.Container
    * Updates the transform on all children of this container for rendering.
    */
   updateTransform(): void;
+  /**
+   * The width of the window in pixels.
+   * @returns The result.
+   */
+  get width(): number;
+  /**
+   * The image used as a window skin.
+   * @returns The result.
+   */
+  get windowskin(): unknown;
 }

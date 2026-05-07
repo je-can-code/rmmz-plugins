@@ -166,6 +166,21 @@ declare namespace Input
    */
   function clear(): void;
   /**
+   * The time of the last input in milliseconds.
+   * @returns The result.
+   */
+  get date(): unknown;
+  /**
+   * The four direction value as a number of the numpad, or 0 for neutral.
+   * @returns The result.
+   */
+  get dir4(): unknown;
+  /**
+   * The eight direction value as a number of the numpad, or 0 for neutral.
+   * @returns The result.
+   */
+  get dir8(): unknown;
+  /**
    * Initializes the input system.
    */
   function initialize(): void;

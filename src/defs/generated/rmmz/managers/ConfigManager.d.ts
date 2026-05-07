@@ -26,6 +26,16 @@ declare namespace ConfigManager
    */
   function applyData(config: object): void;
   /**
+   * Gets bgm volume.
+   * @returns The result.
+   */
+  get bgmVolume(): unknown;
+  /**
+   * Gets bgs volume.
+   * @returns The result.
+   */
+  get bgsVolume(): unknown;
+  /**
    * Determines whether loaded.
    * @returns True if loaded; false otherwise.
    */
@@ -39,6 +49,11 @@ declare namespace ConfigManager
    * @returns The result.
    */
   function makeData(): { alwaysDash: boolean; commandRemember: boolean; touchUI: boolean; bgmVolume: number; bgsVolume: number; meVolume: number; seVolume: number };
+  /**
+   * Gets me volume.
+   * @returns The result.
+   */
+  get meVolume(): unknown;
   /**
    * Gets read flag.
    * @param config The config parameter.
@@ -58,6 +73,11 @@ declare namespace ConfigManager
    * Performs save.
    */
   function save(): void;
+  /**
+   * Gets se volume.
+   * @returns The result.
+   */
+  get seVolume(): unknown;
   /**
    * Engine static constant.
    */

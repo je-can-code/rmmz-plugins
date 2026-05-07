@@ -92,7 +92,89 @@ function fallbackMethodDoc(memberName, returnTs)
 }
 
 /**
- * @typedef {{ paramsTs: string, returnTs: string, docBlock?: string }} MethodSig
+ * `Object.defineProperties` often appears before `prototype.param` in source order, so return inference
+ * can be `unknown`. Recover MZ-shaped getters from the getter body alone.
+ *
+ * @param {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression} getterFn
+ * @param {string} preliminaryTs
+ * @returns {string}
+ */
+function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
+{
+  if (preliminaryTs !== 'unknown')
+  {
+    return preliminaryTs;
+  }
+  const body = getterFn.body;
+  if (!body || body.type !== 'BlockStatement')
+  {
+    return preliminaryTs;
+  }
+  /** @type {import('acorn').ReturnStatement[]} */
+  const rets = [];
+  for (const st of body.body)
+  {
+    if (st.type === 'ReturnStatement')
+    {
+      rets.push(st);
+    }
+  }
+  if (rets.length !== 1)
+  {
+    return preliminaryTs;
+  }
+  const arg = rets[0].argument;
+  if (!arg)
+  {
+    return preliminaryTs;
+  }
+  if (arg.type === 'MemberExpression' && !arg.computed)
+  {
+    if (
+      arg.object.type === 'ThisExpression'
+      && arg.property.type === 'Identifier'
+    )
+    {
+      const field = arg.property.name;
+      if (field === '_hp' || field === '_mp' || field === '_tp')
+      {
+        return 'number';
+      }
+    }
+    const ch = memberChain(arg);
+    if (ch === '$dataSystem.currencyUnit')
+    {
+      return 'string';
+    }
+  }
+  if (arg.type !== 'CallExpression' || arg.callee.type !== 'MemberExpression' || arg.callee.computed)
+  {
+    return preliminaryTs;
+  }
+  if (arg.callee.object.type !== 'ThisExpression' || arg.callee.property.type !== 'Identifier')
+  {
+    return preliminaryTs;
+  }
+  const m = arg.callee.property.name;
+  if (
+    m === 'param'
+    || m === 'paramMax'
+    || m === 'paramMin'
+    || m === 'paramPlus'
+    || m === 'paramBase'
+    || m === 'paramRate'
+    || m === 'paramBuffRate'
+    || m === 'xparam'
+    || m === 'sparam'
+  )
+  {
+    return 'number';
+  }
+  return preliminaryTs;
+}
+
+/**
+ * @typedef {{ paramsTs: string, returnTs: string, docBlock?: string, isGetter?: boolean }} MethodSig
  * @typedef {{
  *   instanceMethods: Map<string, MethodSig>,
  *   staticMethods: Map<string, MethodSig>,
@@ -755,8 +837,309 @@ function extractFromFile(enginePath, stem)
     }
   }
 
+  /**
+   * @param {import('acorn').Property} prop
+   * @returns {string | null}
+   */
+  function definePropsKeyName(prop)
+  {
+    if (prop.type !== 'Property' || prop.computed)
+    {
+      return null;
+    }
+    if (prop.key.type === 'Identifier')
+    {
+      return prop.key.name;
+    }
+    if (prop.key.type === 'Literal' && typeof prop.key.value === 'string')
+    {
+      return prop.key.value;
+    }
+    return null;
+  }
+
+  /**
+   * @param {import('acorn').ObjectExpression} descObj
+   * @returns {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression | null}
+   */
+  function findGetterInDescriptor(descObj)
+  {
+    if (descObj.type !== 'ObjectExpression')
+    {
+      return null;
+    }
+    for (const p of descObj.properties)
+    {
+      if (p.type !== 'Property' || p.computed)
+      {
+        continue;
+      }
+      const kn = p.key.type === 'Identifier' ? p.key.name : null;
+      if (kn !== 'get')
+      {
+        continue;
+      }
+      if (p.value.type === 'FunctionExpression' || p.value.type === 'ArrowFunctionExpression')
+      {
+        return p.value;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @param {import('acorn').Expression} valueNode
+   * @returns {string | null}
+   */
+  function returnTsFromTextManagerGetterFactory(valueNode)
+  {
+    if (valueNode.type !== 'CallExpression')
+    {
+      return null;
+    }
+    const c = valueNode.callee;
+    if (c.type !== 'MemberExpression' || c.computed || c.property.type !== 'Identifier')
+    {
+      return null;
+    }
+    if (c.property.name !== 'getter')
+    {
+      return null;
+    }
+    const owner = memberChain(c.object);
+    if (owner !== 'TextManager')
+    {
+      return null;
+    }
+    return 'string';
+  }
+
+  /**
+   * @param {import('acorn').ObjectExpression} propsObj
+   * @param {string} assigningClassPath
+   * @param {'instance' | 'static'} kind
+   * @param {import('acorn').SourceLocation | null | undefined} stmtLoc
+   * @returns {void}
+   */
+  function absorbDefinePropertiesDescriptors(propsObj, assigningClassPath, kind, stmtLoc)
+  {
+    const entry = ensureClass(assigningClassPath);
+    const loc = stmtLoc;
+    for (const prop of propsObj.properties)
+    {
+      if (prop.type !== 'Property' || prop.computed)
+      {
+        continue;
+      }
+      const name = definePropsKeyName(prop);
+      if (name === null)
+      {
+        continue;
+      }
+      const inferCtx = {
+        role: kind === 'instance' ? 'instance' : 'static',
+        assigningClassPath,
+        methodName: name,
+        engineSourceFile,
+      };
+      if (prop.value.type === 'ObjectExpression')
+      {
+        const getterFn = findGetterInDescriptor(prop.value);
+        if (getterFn)
+        {
+          const sig = buildMethodSignature(getterFn, src, lineStarts, loc, inferCtx);
+          const returnTs = refineDefinePropertyGetterReturn(getterFn, sig.returnTs);
+          const payload = {
+            paramsTs: '',
+            returnTs,
+            docBlock: sig.docBlock,
+            isGetter: true,
+          };
+          if (kind === 'instance')
+          {
+            entry.instanceMethods.set(name, payload);
+          }
+          else
+          {
+            entry.staticMethods.set(name, payload);
+          }
+        }
+        continue;
+      }
+      const factoryTs = returnTsFromTextManagerGetterFactory(prop.value);
+      if (factoryTs !== null && kind === 'static')
+      {
+        entry.staticMethods.set(name,
+          {
+            paramsTs: '',
+            returnTs: factoryTs,
+            docBlock: fallbackDoc('Localized UI string from `$dataSystem.terms` (TextManager.getter factory).'),
+            isGetter: true,
+          });
+      }
+    }
+  }
+
+  /**
+   * @param {import('acorn').ExpressionStatement} stmt
+   * @returns {void}
+   */
+  function tryConsumeObjectDefineProperties(stmt)
+  {
+    if (stmt.type !== 'ExpressionStatement')
+    {
+      return;
+    }
+    const ex = stmt.expression;
+    if (ex.type !== 'CallExpression' || ex.arguments.length < 2)
+    {
+      return;
+    }
+    const callee = ex.callee;
+    if (callee.type !== 'MemberExpression' || callee.computed)
+    {
+      return;
+    }
+    if (callee.object.type !== 'Identifier' || callee.object.name !== 'Object')
+    {
+      return;
+    }
+    if (callee.property.type !== 'Identifier' || callee.property.name !== 'defineProperties')
+    {
+      return;
+    }
+    const target = ex.arguments[0];
+    const propsObj = ex.arguments[1];
+    if (!propsObj || propsObj.type !== 'ObjectExpression')
+    {
+      return;
+    }
+    if (
+      target.type === 'MemberExpression'
+      && !target.computed
+      && target.property.type === 'Identifier'
+      && target.property.name === 'prototype'
+    )
+    {
+      const clsPath = memberChain(target.object);
+      if (clsPath === null)
+      {
+        return;
+      }
+      absorbDefinePropertiesDescriptors(propsObj, clsPath, 'instance', stmt.loc);
+      return;
+    }
+    if (target.type === 'Identifier')
+    {
+      absorbDefinePropertiesDescriptors(propsObj, target.name, 'static', stmt.loc);
+    }
+  }
+
+  /**
+   * @param {import('acorn').ExpressionStatement} stmt
+   * @returns {void}
+   */
+  function tryConsumeObjectDefineProperty(stmt)
+  {
+    if (stmt.type !== 'ExpressionStatement')
+    {
+      return;
+    }
+    const ex = stmt.expression;
+    if (ex.type !== 'CallExpression' || ex.arguments.length < 3)
+    {
+      return;
+    }
+    const callee = ex.callee;
+    if (
+      callee.type !== 'MemberExpression'
+      || callee.computed
+      || callee.object.type !== 'Identifier'
+      || callee.object.name !== 'Object'
+      || callee.property.type !== 'Identifier'
+      || callee.property.name !== 'defineProperty'
+    )
+    {
+      return;
+    }
+    const target = ex.arguments[0];
+    const keyArg = ex.arguments[1];
+    const desc = ex.arguments[2];
+    if (!desc || desc.type !== 'ObjectExpression')
+    {
+      return;
+    }
+    const getterFn = findGetterInDescriptor(desc);
+    if (!getterFn)
+    {
+      return;
+    }
+    let name = null;
+    if (keyArg.type === 'Literal' && typeof keyArg.value === 'string')
+    {
+      name = keyArg.value;
+    }
+    else if (keyArg.type === 'Identifier')
+    {
+      name = keyArg.name;
+    }
+    if (name === null)
+    {
+      return;
+    }
+    let clsPath = null;
+    let kind = 'instance';
+    if (
+      target.type === 'MemberExpression'
+      && !target.computed
+      && target.property.type === 'Identifier'
+      && target.property.name === 'prototype'
+    )
+    {
+      clsPath = memberChain(target.object);
+      kind = 'instance';
+    }
+    else if (target.type === 'Identifier')
+    {
+      clsPath = target.name;
+      kind = 'static';
+    }
+    if (clsPath === null)
+    {
+      return;
+    }
+    const inferCtx = {
+      role: kind === 'instance' ? 'instance' : 'static',
+      assigningClassPath: clsPath,
+      methodName: name,
+      engineSourceFile,
+    };
+    const sig = buildMethodSignature(getterFn, src, lineStarts, stmt.loc, inferCtx);
+    const returnTs = refineDefinePropertyGetterReturn(getterFn, sig.returnTs);
+    const entry = ensureClass(clsPath);
+    const payload = {
+      paramsTs: '',
+      returnTs,
+      docBlock: sig.docBlock,
+      isGetter: true,
+    };
+    if (kind === 'instance')
+    {
+      entry.instanceMethods.set(name, payload);
+    }
+    else
+    {
+      entry.staticMethods.set(name, payload);
+    }
+  }
+
   walkStatementTree(ast, (stmt) =>
   {
+    if (stmt.type === 'ExpressionStatement')
+    {
+      tryConsumeObjectDefineProperty(stmt);
+      tryConsumeObjectDefineProperties(stmt);
+    }
     if (stmt.type === 'FunctionDeclaration' && stmt.id)
     {
       const idName = stmt.id.name;
@@ -918,6 +1301,10 @@ function formatMethod(name, sig, indent = '  ')
     const innerLines = sig.docBlock.split('\n').map(l => `${indent}${l}`).join('\n');
     docPart = `${indent}/**\n${innerLines}\n${indent} */\n`;
   }
+  if (sig.isGetter === true)
+  {
+    return `${docPart}${indent}get ${name}(): ${sig.returnTs};`;
+  }
   if (!sig.paramsTs || sig.paramsTs.length === 0)
   {
     return `${docPart}${indent}${name}(): ${sig.returnTs};`;
@@ -941,6 +1328,10 @@ function formatNamespaceStaticFn(name, sig, indent = '  ')
   {
     const innerLines = sig.docBlock.split('\n').map(l => `${indent}${l}`).join('\n');
     docPart = `${indent}/**\n${innerLines}\n${indent} */\n`;
+  }
+  if (sig.isGetter === true)
+  {
+    return `${docPart}${indent}get ${name}(): ${sig.returnTs};`;
   }
   const paramsInner = sig.paramsTs && sig.paramsTs.length > 0 ? sig.paramsTs : '';
   return `${docPart}${indent}function ${name}(${paramsInner}): ${sig.returnTs};`;

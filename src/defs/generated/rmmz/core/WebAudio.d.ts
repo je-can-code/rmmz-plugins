@@ -502,6 +502,16 @@ interface WebAudio
    */
   isReady(): boolean;
   /**
+   * The pan of the audio.
+   * @returns The result.
+   */
+  get pan(): number;
+  /**
+   * The pitch of the audio.
+   * @returns The result.
+   */
+  get pitch(): number;
+  /**
    * Plays the audio.
    * @param loop Whether the audio data play in a loop.
    * @param offset The start position to play in seconds.
@@ -520,6 +530,16 @@ interface WebAudio
    * Stops the audio.
    */
   stop(): void;
+  /**
+   * The url of the audio file.
+   * @returns The result.
+   */
+  get url(): unknown;
+  /**
+   * The volume of the audio.
+   * @returns The result.
+   */
+  get volume(): number;
 }
 declare namespace WebAudio
 {

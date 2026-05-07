@@ -220,6 +220,11 @@ declare namespace TouchInput
    */
   function clear(): void;
   /**
+   * The time of the last input in milliseconds.
+   * @returns The result.
+   */
+  get date(): unknown;
+  /**
    * Initializes the touch system.
    */
   function initialize(): void;
@@ -272,6 +277,26 @@ declare namespace TouchInput
    * Updates the touch data.
    */
   function update(): void;
+  /**
+   * The horizontal scroll amount.
+   * @returns The result.
+   */
+  get wheelX(): unknown;
+  /**
+   * The vertical scroll amount.
+   * @returns The result.
+   */
+  get wheelY(): unknown;
+  /**
+   * The x coordinate on the canvas area of the latest touch event.
+   * @returns The result.
+   */
+  get x(): number;
+  /**
+   * The y coordinate on the canvas area of the latest touch event.
+   * @returns The result.
+   */
+  get y(): number;
   /**
    * Engine static constant.
    */

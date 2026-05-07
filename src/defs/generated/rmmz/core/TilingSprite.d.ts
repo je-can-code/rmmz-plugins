@@ -65,6 +65,11 @@ interface TilingSprite extends PIXI.TilingSprite
    */
   _refresh(): void;
   /**
+   * The image for the tiling sprite.
+   * @returns The result.
+   */
+  get bitmap(): unknown;
+  /**
    * Destroys the tiling sprite.
    */
   destroy(): void;
@@ -81,6 +86,11 @@ interface TilingSprite extends PIXI.TilingSprite
    * @param height The height of the tiling sprite.
    */
   move(x: number, y: number, width: number, height: number): void;
+  /**
+   * The opacity of the tiling sprite (0 to 255).
+   * @returns The result.
+   */
+  get opacity(): number;
   /**
    * Specifies the region of the image that the tiling sprite will use.
    * @param x The x coordinate of the frame.

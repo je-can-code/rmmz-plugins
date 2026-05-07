@@ -547,6 +547,11 @@ interface Game_Actor extends Game_Battler
    */
   learnSkill(skillId: number): void;
   /**
+   * Gets level.
+   * @returns The result.
+   */
+  get level(): unknown;
+  /**
    * Performs level down.
    */
   levelDown(): void;

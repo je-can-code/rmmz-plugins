@@ -249,6 +249,11 @@ interface Tilemap extends PIXI.Container
    */
   destroy(): void;
   /**
+   * The height of the tilemap.
+   * @returns The result.
+   */
+  get height(): number;
+  /**
    * The tilemap which displays 2D tile-based game map.
    */
   initialize(): void;
@@ -281,6 +286,11 @@ interface Tilemap extends PIXI.Container
    * Updates the transform on all children of this container for rendering.
    */
   updateTransform(): void;
+  /**
+   * The width of the tilemap.
+   * @returns The result.
+   */
+  get width(): number;
 }
 declare namespace Tilemap
 {

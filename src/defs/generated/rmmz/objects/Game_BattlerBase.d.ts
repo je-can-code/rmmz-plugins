@@ -125,6 +125,11 @@ interface Game_BattlerBase
    */
   addedSkills(): number[];
   /**
+   * Gets agi.
+   * @returns The result.
+   */
+  get agi(): number;
+  /**
    * Gets all icons.
    * @returns The result.
    */
@@ -138,6 +143,11 @@ interface Game_BattlerBase
    * Performs appear.
    */
   appear(): void;
+  /**
+   * Gets atk.
+   * @returns The result.
+   */
+  get atk(): number;
   /**
    * Gets attack elements.
    * @returns The result.
@@ -243,6 +253,11 @@ interface Game_BattlerBase
    */
   canUse(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
   /**
+   * Gets cev.
+   * @returns The result.
+   */
+  get cev(): number;
+  /**
    * Clears buffs.
    */
   clearBuffs(): void;
@@ -255,6 +270,11 @@ interface Game_BattlerBase
    */
   clearStates(): void;
   /**
+   * Gets cnt.
+   * @returns The result.
+   */
+  get cnt(): number;
+  /**
    * Gets collapse type.
    * @returns The result.
    */
@@ -264,6 +284,11 @@ interface Game_BattlerBase
    * @returns The result.
    */
   confusionLevel(): number;
+  /**
+   * Gets cri.
+   * @returns The result.
+   */
+  get cri(): number;
   /**
    * Gets death state id.
    * @returns The result.
@@ -280,6 +305,11 @@ interface Game_BattlerBase
    * @param paramId The paramId parameter.
    */
   decreaseBuff(paramId: number): void;
+  /**
+   * Gets def.
+   * @returns The result.
+   */
+  get def(): number;
   /**
    * Performs die.
    */
@@ -301,6 +331,26 @@ interface Game_BattlerBase
    */
   eraseState(stateId: number): void;
   /**
+   * Gets eva.
+   * @returns The result.
+   */
+  get eva(): number;
+  /**
+   * Gets exr.
+   * @returns The result.
+   */
+  get exr(): number;
+  /**
+   * Gets fdr.
+   * @returns The result.
+   */
+  get fdr(): number;
+  /**
+   * Gets grd.
+   * @returns The result.
+   */
+  get grd(): number;
+  /**
    * Gets guard skill id.
    * @returns The result.
    */
@@ -310,10 +360,25 @@ interface Game_BattlerBase
    */
   hide(): void;
   /**
+   * Gets hit.
+   * @returns The result.
+   */
+  get hit(): number;
+  /**
+   * Gets hp.
+   * @returns The result.
+   */
+  get hp(): number;
+  /**
    * Gets hp rate.
    * @returns The result.
    */
   hpRate(): number;
+  /**
+   * Gets hrg.
+   * @returns The result.
+   */
+  get hrg(): number;
   /**
    * Performs increase buff.
    * @param paramId The paramId parameter.
@@ -504,10 +569,35 @@ interface Game_BattlerBase
    */
   isSubstitute(): boolean;
   /**
+   * Gets luk.
+   * @returns The result.
+   */
+  get luk(): number;
+  /**
+   * Gets mat.
+   * @returns The result.
+   */
+  get mat(): number;
+  /**
    * Gets max tp.
    * @returns The result.
    */
   maxTp(): number;
+  /**
+   * Gets mcr.
+   * @returns The result.
+   */
+  get mcr(): number;
+  /**
+   * Gets mdf.
+   * @returns The result.
+   */
+  get mdf(): number;
+  /**
+   * Gets mdr.
+   * @returns The result.
+   */
+  get mdr(): number;
   /**
    * Gets meets item conditions.
    * @param item The item parameter.
@@ -527,15 +617,45 @@ interface Game_BattlerBase
    */
   meetsUsableItemConditions(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
   /**
+   * Gets mev.
+   * @returns The result.
+   */
+  get mev(): number;
+  /**
+   * Gets mhp.
+   * @returns The result.
+   */
+  get mhp(): number;
+  /**
+   * Gets mmp.
+   * @returns The result.
+   */
+  get mmp(): number;
+  /**
    * Gets most important state text.
    * @returns The result.
    */
   mostImportantStateText(): string;
   /**
+   * Gets mp.
+   * @returns The result.
+   */
+  get mp(): number;
+  /**
    * Gets mp rate.
    * @returns The result.
    */
   mpRate(): number;
+  /**
+   * Gets mrf.
+   * @returns The result.
+   */
+  get mrf(): number;
+  /**
+   * Gets mrg.
+   * @returns The result.
+   */
+  get mrg(): number;
   /**
    * Performs on restrict.
    */
@@ -603,6 +723,21 @@ interface Game_BattlerBase
    * @param skill The skill parameter.
    */
   paySkillCost(skill: RPG_Skill): void;
+  /**
+   * Gets pdr.
+   * @returns The result.
+   */
+  get pdr(): number;
+  /**
+   * Gets pha.
+   * @returns The result.
+   */
+  get pha(): number;
+  /**
+   * Gets rec.
+   * @returns The result.
+   */
+  get rec(): number;
   /**
    * Performs recover all.
    */
@@ -705,6 +840,21 @@ interface Game_BattlerBase
    */
   states(): RPG_State[];
   /**
+   * Gets tcr.
+   * @returns The result.
+   */
+  get tcr(): number;
+  /**
+   * Gets tgr.
+   * @returns The result.
+   */
+  get tgr(): number;
+  /**
+   * Gets tp.
+   * @returns The result.
+   */
+  get tp(): number;
+  /**
    * Gets tp rate.
    * @returns The result.
    */
@@ -753,6 +903,11 @@ interface Game_BattlerBase
    * @returns The result.
    */
   traitsWithId(code: number, id: number): object[];
+  /**
+   * Gets trg.
+   * @returns The result.
+   */
+  get trg(): number;
   /**
    * Updates buff turns.
    */
