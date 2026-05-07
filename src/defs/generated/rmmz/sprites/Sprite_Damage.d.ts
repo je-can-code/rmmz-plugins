@@ -8,28 +8,127 @@
 interface Sprite_Damage
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Damage#initialize}.
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setup}.
+   * Read in: {@link Sprite_Damage#damageColor}.
    */
   _colorType: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Damage#initialize}.
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#update}.
+   * Read in: {@link Sprite_Damage#isPlaying}, {@link Sprite_Damage#update}, {@link Sprite_Damage#updateOpacity}.
+   */
   _duration: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number[]`.
+   * Initialized in: {@link Sprite_Damage#initialize}.
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}.
+   * Read in: {@link Sprite_Damage#updateChild}, {@link Sprite_Damage#updateFlash}.
+   */
   _flashColor: number[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Damage#initialize}.
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}, {@link Sprite_Damage#updateFlash}.
+   * Read in: {@link Sprite_Damage#updateFlash}.
+   */
   _flashDuration: number;
+  /**
+   * Creates bitmap.
+   * @param width The width parameter.
+   * @param height The height parameter.
+   * @returns The result.
+   */
   createBitmap(width: number, height: number): Bitmap;
+  /**
+   * Creates child sprite.
+   * @param width The width parameter.
+   * @param height The height parameter.
+   * @returns The result.
+   */
   createChildSprite(width: number, height: number): Sprite;
+  /**
+   * Creates digits.
+   * @param value The value parameter.
+   */
   createDigits(value: number): void;
+  /**
+   * Creates miss.
+   */
   createMiss(): void;
+  /**
+   * Gets damage color.
+   * @returns The result.
+   */
   damageColor(): number;
+  /**
+   * Performs destroy.
+   * @param options The options parameter.
+   */
   destroy(options: object): void;
+  /**
+   * Gets font face.
+   * @returns The result.
+   */
   fontFace(): string;
+  /**
+   * Gets font size.
+   * @returns The result.
+   */
   fontSize(): number;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether playing.
+   * @returns True if playing; false otherwise.
+   */
   isPlaying(): boolean;
+  /**
+   * Gets outline color.
+   * @returns The result.
+   */
   outlineColor(): string;
+  /**
+   * Gets outline width.
+   * @returns The result.
+   */
   outlineWidth(): number;
+  /**
+   * Performs setup.
+   * @param target The target parameter.
+   */
   setup(target: Game_Battler): void;
+  /**
+   * Performs setup critical effect.
+   */
   setupCriticalEffect(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates child.
+   * @param sprite The sprite parameter.
+   */
   updateChild(sprite: Sprite): void;
+  /**
+   * Updates flash.
+   */
   updateFlash(): void;
+  /**
+   * Updates opacity.
+   */
   updateOpacity(): void;
 }

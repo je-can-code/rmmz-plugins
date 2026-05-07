@@ -8,12 +8,36 @@
 interface Game_Variables
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: none.
+   * Written in: {@link Game_Variables#clear}.
+   * Read in: {@link Game_Variables#setValue}, {@link Game_Variables#value}.
    */
   _data: unknown[];
+  /**
+   * Performs clear.
+   */
   clear(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs on change.
+   */
   onChange(): void;
+  /**
+   * Sets value.
+   * @param variableId The variableId parameter.
+   * @param value The value parameter.
+   */
   setValue(variableId: number, value: number): void;
+  /**
+   * Gets value.
+   * @param variableId The variableId parameter.
+   * @returns The result.
+   */
   value(variableId: number): number;
 }

@@ -8,42 +8,159 @@
 interface Bitmap
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | PIXI.BaseTexture`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#destroy}, {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#_updateScaleMode}, {@link Bitmap#blt}, {@link Bitmap#clearRect}, {@link Bitmap#destroy}, {@link Bitmap#drawCircle}, {@link Bitmap#drawText}, {@link Bitmap#fillRect}, {@link Bitmap#gradientFillRect}, {@link Bitmap#strokeRect}.
    */
   _baseTexture: null | PIXI.BaseTexture;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#_ensureCanvas}.
+   */
   _canvas: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_ensureCanvas}.
+   */
   _context: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Image`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_ensureCanvas}, {@link Bitmap#_onLoad}, {@link Bitmap#_onXhrLoad}, {@link Bitmap#_startLoading}.
+   */
   _image: null | Image;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_callLoadListeners}, {@link Bitmap#addLoadListener}.
+   *
+   * Consumed by:
+   * - `.length`: {@link Bitmap#_callLoadListeners}.
+   * - `push()`: {@link Bitmap#addLoadListener}.
+   * - `shift()`: {@link Bitmap#_callLoadListeners}.
+   */
   _loadListeners: unknown[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#_onError}, {@link Bitmap#_onLoad}, {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#isError}, {@link Bitmap#isReady}.
+   */
   _loadingState: string;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#initialize}.
+   * Read in: none.
+   */
   _paintOpacity: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_updateScaleMode}.
+   */
   _smooth: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Bitmap#initialize}.
+   * Written in: {@link Bitmap#initialize}.
+   * Read in: {@link Bitmap#_startDecrypting}, {@link Bitmap#_startLoading}.
+   */
   _url: string;
+  /**
+   * Performs call load listeners.
+   */
   _callLoadListeners(): void;
+  /**
+   * Performs create base texture.
+   * @param source The source parameter.
+   */
   _createBaseTexture(source: object): void;
   /**
    * Tries to load the image again.
+   * @param width The width parameter.
+   * @param height The height parameter.
    */
   _createCanvas(width: number, height: number): void;
+  /**
+   * Performs destroy canvas.
+   */
   _destroyCanvas(): void;
   /**
    * Tries to load the image again.
+   * @param text The text parameter.
+   * @param tx The tx parameter.
+   * @param ty The ty parameter.
+   * @param maxWidth The maxWidth parameter.
    */
   _drawTextBody(text: string, tx: number, ty: number, maxWidth: number): void;
   /**
    * Tries to load the image again.
+   * @param text The text parameter.
+   * @param tx The tx parameter.
+   * @param ty The ty parameter.
+   * @param maxWidth The maxWidth parameter.
    */
   _drawTextOutline(text: string, tx: number, ty: number, maxWidth: number): void;
+  /**
+   * Performs ensure canvas.
+   */
   _ensureCanvas(): void;
   /**
    * Tries to load the image again.
+   * @returns The result.
    */
   _makeFontNameText(): string;
+  /**
+   * Performs on error.
+   */
   _onError(): void;
+  /**
+   * Performs on load.
+   */
   _onLoad(): void;
+  /**
+   * Performs on xhr load.
+   * @param xhr The xhr parameter.
+   */
   _onXhrLoad(xhr: XMLHttpRequest): void;
+  /**
+   * Performs start decrypting.
+   */
   _startDecrypting(): void;
+  /**
+   * Performs start loading.
+   */
   _startLoading(): void;
+  /**
+   * Performs update scale mode.
+   */
   _updateScaleMode(): void;
   /**
    * Adds a callback function that will be called when the bitmap is loaded.
@@ -59,6 +176,8 @@ interface Bitmap
    * @param sh The height of the source image.
    * @param dx The x coordinate in the destination.
    * @param dy The y coordinate in the destination.
+   * @param dw The dw parameter.
+   * @param dh The dh parameter.
    */
   blt(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
   /**
@@ -113,12 +232,14 @@ interface Bitmap
    * Returns alpha pixel value at the specified point.
    * @param x The x coordinate of the pixel in the bitmap.
    * @param y The y coordinate of the pixel in the bitmap.
+   * @returns The result.
    */
   getAlphaPixel(x: number, y: number): string;
   /**
    * Returns pixel color at the specified point.
    * @param x The x coordinate of the pixel in the bitmap.
    * @param y The y coordinate of the pixel in the bitmap.
+   * @returns The result.
    */
   getPixel(x: number, y: number): string;
   /**
@@ -140,15 +261,18 @@ interface Bitmap
   initialize(width: number, height: number): void;
   /**
    * Checks whether a loading error has occurred.
+   * @returns True if error; false otherwise.
    */
   isError(): boolean;
   /**
    * Checks whether the bitmap is ready to render.
+   * @returns True if ready; false otherwise.
    */
   isReady(): boolean;
   /**
    * Returns the width of the specified text.
    * @param text The text to be measured.
+   * @returns The result.
    */
   measureTextWidth(text: string): number;
   /**
@@ -176,11 +300,13 @@ declare namespace Bitmap
   /**
    * Loads a image file.
    * @param url The image url of the texture.
+   * @returns The result.
    */
   function load(url: string): Bitmap;
   /**
    * Takes a snapshot of the game screen.
    * @param stage The stage object.
+   * @returns The result.
    */
   function snap(stage: Stage): Bitmap;
 }

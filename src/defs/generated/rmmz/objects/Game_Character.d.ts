@@ -8,46 +8,207 @@
 interface Game_Character
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | object`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
+   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#processRouteEnd}, {@link Game_Character#updateRoutineMove}.
    */
   _moveRoute: null | object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}.
+   * Read in: {@link Game_Character#isMoveRouteForcing}, {@link Game_Character#processRouteEnd}, {@link Game_Character#setMoveRoute}, {@link Game_Character#updateStop}.
+   */
   _moveRouteForcing: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
+   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#updateRoutineMove}.
+   */
   _moveRouteIndex: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | object`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
+   * Read in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#restoreMoveRoute}.
+   */
   _originalMoveRoute: null | object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#setMoveRoute}.
+   * Read in: {@link Game_Character#restoreMoveRoute}.
+   */
   _originalMoveRouteIndex: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processMoveCommand}, {@link Game_Character#updateRoutineMove}.
+   * Read in: {@link Game_Character#updateRoutineMove}.
+   */
   _waitCount: number;
+  /**
+   * Performs advance move route index.
+   */
   advanceMoveRouteIndex(): void;
+  /**
+   * Gets delta xfrom.
+   * @param x The x parameter.
+   * @returns The result.
+   */
   deltaXFrom(x: number): number;
+  /**
+   * Gets delta yfrom.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   deltaYFrom(y: number): number;
+  /**
+   * Gets find direction to.
+   * @param goalX The goalX parameter.
+   * @param goalY The goalY parameter.
+   * @returns The result.
+   */
   findDirectionTo(goalX: number, goalY: number): number;
+  /**
+   * Performs force move route.
+   * @param moveRoute The moveRoute parameter.
+   */
   forceMoveRoute(moveRoute: object): void;
+  /**
+   * Initializes members.
+   */
   initMembers(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether move route forcing.
+   * @returns True if move route forcing; false otherwise.
+   */
   isMoveRouteForcing(): boolean;
+  /**
+   * Performs memorize move route.
+   */
   memorizeMoveRoute(): void;
+  /**
+   * Performs move away from character.
+   * @param character The character parameter.
+   */
   moveAwayFromCharacter(character: Game_Character): void;
+  /**
+   * Performs move away from player.
+   */
   moveAwayFromPlayer(): void;
+  /**
+   * Performs move backward.
+   */
   moveBackward(): void;
+  /**
+   * Performs move forward.
+   */
   moveForward(): void;
+  /**
+   * Performs move random.
+   */
   moveRandom(): void;
+  /**
+   * Performs move toward character.
+   * @param character The character parameter.
+   */
   moveTowardCharacter(character: Game_Character): void;
+  /**
+   * Performs move toward player.
+   */
   moveTowardPlayer(): void;
+  /**
+   * Performs process move command.
+   * @param command The command parameter.
+   */
   processMoveCommand(command: object): void;
+  /**
+   * Performs process route end.
+   */
   processRouteEnd(): void;
+  /**
+   * Performs restore move route.
+   */
   restoreMoveRoute(): void;
+  /**
+   * Gets search limit.
+   * @returns The result.
+   */
   searchLimit(): number;
+  /**
+   * Sets move route.
+   * @param moveRoute The moveRoute parameter.
+   */
   setMoveRoute(moveRoute: object): void;
+  /**
+   * Performs swap.
+   * @param character The character parameter.
+   */
   swap(character: Game_Character): void;
+  /**
+   * Performs turn180.
+   */
   turn180(): void;
+  /**
+   * Performs turn away from character.
+   * @param character The character parameter.
+   */
   turnAwayFromCharacter(character: Game_Character): void;
+  /**
+   * Performs turn away from player.
+   */
   turnAwayFromPlayer(): void;
+  /**
+   * Performs turn left90.
+   */
   turnLeft90(): void;
+  /**
+   * Performs turn random.
+   */
   turnRandom(): void;
+  /**
+   * Performs turn right90.
+   */
   turnRight90(): void;
+  /**
+   * Performs turn right or left90.
+   */
   turnRightOrLeft90(): void;
+  /**
+   * Performs turn toward character.
+   * @param character The character parameter.
+   */
   turnTowardCharacter(character: Game_Character): void;
+  /**
+   * Performs turn toward player.
+   */
   turnTowardPlayer(): void;
+  /**
+   * Updates routine move.
+   */
   updateRoutineMove(): void;
+  /**
+   * Updates stop.
+   */
   updateStop(): void;
 }
 declare namespace Game_Character

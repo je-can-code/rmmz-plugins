@@ -7,7 +7,17 @@
  */
 interface Window_BattleSkill
 {
+  /**
+   * Performs hide.
+   */
   hide(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs show.
+   */
   show(): void;
 }

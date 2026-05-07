@@ -8,11 +8,40 @@
 interface ScreenSprite
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link ScreenSprite#initialize}.
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
+   * Read in: {@link ScreenSprite#setColor}.
    */
   _blue: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `PIXI.Graphics`.
+   * Initialized in: {@link ScreenSprite#initialize}.
+   * Written in: {@link ScreenSprite#initialize}.
+   * Read in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
+   */
   _graphics: PIXI.Graphics;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link ScreenSprite#initialize}.
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
+   * Read in: {@link ScreenSprite#setColor}.
+   */
   _green: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link ScreenSprite#initialize}.
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
+   * Read in: {@link ScreenSprite#setColor}.
+   */
   _red: number;
   /**
    * Destroys the screen sprite.

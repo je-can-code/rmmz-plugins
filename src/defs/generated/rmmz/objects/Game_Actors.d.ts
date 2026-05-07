@@ -8,9 +8,22 @@
 interface Game_Actors
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: {@link Game_Actors#initialize}.
+   * Written in: {@link Game_Actors#initialize}.
+   * Read in: {@link Game_Actors#actor}.
    */
   _data: unknown[];
+  /**
+   * Gets actor.
+   * @param actorId The actorId parameter.
+   * @returns The result.
+   */
   actor(actorId: number): Game_Actor | null;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
 }

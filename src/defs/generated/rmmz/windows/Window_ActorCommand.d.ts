@@ -8,17 +8,55 @@
 interface Window_ActorCommand
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Actor`.
+   * Initialized in: {@link Window_ActorCommand#initialize}.
+   * Written in: {@link Window_ActorCommand#initialize}, {@link Window_ActorCommand#setup}.
+   * Read in: {@link Window_ActorCommand#actor}, {@link Window_ActorCommand#addAttackCommand}, {@link Window_ActorCommand#addGuardCommand}, {@link Window_ActorCommand#addSkillCommands}, {@link Window_ActorCommand#makeCommandList}, {@link Window_ActorCommand#processOk}, {@link Window_ActorCommand#selectLast}.
    */
   _actor: null | Game_Actor;
+  /**
+   * Gets actor.
+   * @returns The result.
+   */
   actor(): Game_Actor | undefined;
+  /**
+   * Adds attack command.
+   */
   addAttackCommand(): void;
+  /**
+   * Adds guard command.
+   */
   addGuardCommand(): void;
+  /**
+   * Adds item command.
+   */
   addItemCommand(): void;
+  /**
+   * Adds skill commands.
+   */
   addSkillCommands(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Performs process ok.
+   */
   processOk(): void;
+  /**
+   * Performs select last.
+   */
   selectLast(): void;
+  /**
+   * Performs setup.
+   * @param actor The actor parameter.
+   */
   setup(actor: Game_Actor): void;
 }

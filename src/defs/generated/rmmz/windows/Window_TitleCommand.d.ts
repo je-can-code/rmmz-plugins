@@ -8,16 +8,41 @@
 interface Window_TitleCommand
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: module init.
+   * Written in: module init, {@link Window_TitleCommand#initCommandPosition}.
+   * Read in: none.
    */
   _lastCommandSymbol: null;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Determines whether continue enabled.
+   * @returns True if continue enabled; false otherwise.
+   */
   isContinueEnabled(): boolean;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Performs process ok.
+   */
   processOk(): void;
+  /**
+   * Performs select last.
+   */
   selectLast(): void;
 }
 declare namespace Window_TitleCommand
 {
+  /**
+   * Initializes command position.
+   */
   function initCommandPosition(): void;
 }

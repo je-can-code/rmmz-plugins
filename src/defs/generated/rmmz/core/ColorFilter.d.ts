@@ -9,6 +9,7 @@ interface ColorFilter
 {
   /**
    * Sets the brightness.
+   * @returns The result.
    */
   _fragmentSrc(): string;
   /**

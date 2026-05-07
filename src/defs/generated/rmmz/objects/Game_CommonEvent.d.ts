@@ -8,14 +8,49 @@
 interface Game_CommonEvent
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_CommonEvent#initialize}.
+   * Written in: {@link Game_CommonEvent#initialize}.
+   * Read in: {@link Game_CommonEvent#event}.
    */
   _commonEventId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `Game_Interpreter | null`.
+   * Initialized in: none.
+   * Written in: {@link Game_CommonEvent#refresh}.
+   * Read in: {@link Game_CommonEvent#refresh}, {@link Game_CommonEvent#update}.
+   */
   _interpreter: Game_Interpreter | null;
+  /**
+   * Gets event.
+   * @returns The result.
+   */
   event(): object;
+  /**
+   * Initializes initialize.
+   * @param commonEventId The commonEventId parameter.
+   */
   initialize(commonEventId: number): void;
+  /**
+   * Determines whether active.
+   * @returns True if active; false otherwise.
+   */
   isActive(): boolean;
+  /**
+   * Gets list.
+   * @returns The result.
+   */
   list(): Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

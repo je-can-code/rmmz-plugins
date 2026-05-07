@@ -8,16 +8,58 @@
 interface Game_Timer
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Timer#initialize}.
+   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#update}.
+   * Read in: {@link Game_Timer#frames}, {@link Game_Timer#seconds}, {@link Game_Timer#update}.
    */
   _frames: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Game_Timer#initialize}.
+   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#stop}.
+   * Read in: {@link Game_Timer#isWorking}, {@link Game_Timer#update}.
+   */
   _working: boolean;
+  /**
+   * Gets frames.
+   * @returns The result.
+   */
   frames(): number;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether working.
+   * @returns True if working; false otherwise.
+   */
   isWorking(): boolean;
+  /**
+   * Performs on expire.
+   */
   onExpire(): void;
+  /**
+   * Gets seconds.
+   * @returns The result.
+   */
   seconds(): number;
+  /**
+   * Performs start.
+   * @param count The count parameter.
+   */
   start(count: number): void;
+  /**
+   * Performs stop.
+   */
   stop(): void;
+  /**
+   * Performs update.
+   * @param sceneActive The sceneActive parameter.
+   */
   update(sceneActive: boolean): void;
 }

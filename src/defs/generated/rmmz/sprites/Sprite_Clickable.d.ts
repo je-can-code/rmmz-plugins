@@ -8,19 +8,71 @@
 interface Sprite_Clickable
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Sprite_Clickable#initialize}.
+   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.
+   * Read in: {@link Sprite_Clickable#processTouch}.
    */
   _hovered: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Sprite_Clickable#initialize}.
+   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.
+   * Read in: {@link Sprite_Clickable#isPressed}, {@link Sprite_Clickable#processTouch}.
+   */
   _pressed: boolean;
+  /**
+   * Gets hit test.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   hitTest(x: number, y: number): boolean;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether being touched.
+   * @returns True if being touched; false otherwise.
+   */
   isBeingTouched(): boolean;
+  /**
+   * Determines whether click enabled.
+   * @returns True if click enabled; false otherwise.
+   */
   isClickEnabled(): boolean;
+  /**
+   * Determines whether pressed.
+   * @returns True if pressed; false otherwise.
+   */
   isPressed(): boolean;
+  /**
+   * Performs on click.
+   */
   onClick(): void;
+  /**
+   * Performs on mouse enter.
+   */
   onMouseEnter(): void;
+  /**
+   * Performs on mouse exit.
+   */
   onMouseExit(): void;
+  /**
+   * Performs on press.
+   */
   onPress(): void;
+  /**
+   * Performs process touch.
+   */
   processTouch(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

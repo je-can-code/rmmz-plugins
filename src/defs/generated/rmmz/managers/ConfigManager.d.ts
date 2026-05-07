@@ -8,19 +8,55 @@
 interface ConfigManager
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: module init.
+   * Written in: module init, {@link ConfigManager#load}.
+   * Read in: {@link ConfigManager#isLoaded}.
    */
   _isLoaded: boolean;
 }
 declare function ConfigManager(): never;
 declare namespace ConfigManager
 {
+  /**
+   * Performs apply data.
+   * @param config The config parameter.
+   */
   function applyData(config: object): void;
+  /**
+   * Determines whether loaded.
+   * @returns True if loaded; false otherwise.
+   */
   function isLoaded(): boolean;
+  /**
+   * Performs load.
+   */
   function load(): void;
+  /**
+   * Creates data.
+   * @returns The result.
+   */
   function makeData(): { alwaysDash: boolean; commandRemember: boolean; touchUI: boolean; bgmVolume: number; bgsVolume: number; meVolume: number; seVolume: number };
+  /**
+   * Gets read flag.
+   * @param config The config parameter.
+   * @param name The name parameter.
+   * @param defaultValue The defaultValue parameter.
+   * @returns The result.
+   */
   function readFlag(config: object, name: string, defaultValue: boolean): boolean;
+  /**
+   * Gets read volume.
+   * @param config The config parameter.
+   * @param name The name parameter.
+   * @returns The result.
+   */
   function readVolume(config: object, name: string): number;
+  /**
+   * Performs save.
+   */
   function save(): void;
   const alwaysDash: false;
   const commandRemember: false;

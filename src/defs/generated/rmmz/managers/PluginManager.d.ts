@@ -8,24 +8,107 @@
 interface PluginManager
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `object`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link PluginManager#callCommand}, {@link PluginManager#registerCommand}.
    */
   _commands: object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link PluginManager#checkErrors}, {@link PluginManager#onError}.
+   *
+   * Consumed by:
+   * - `push()`: {@link PluginManager#onError}.
+   * - `shift()`: {@link PluginManager#checkErrors}.
+   */
   _errorUrls: unknown[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `object`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link PluginManager#parameters}, {@link PluginManager#setParameters}.
+   */
   _parameters: object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link PluginManager#setup}.
+   *
+   * Consumed by:
+   * - `push()`: {@link PluginManager#setup}.
+   */
   _scripts: unknown[];
 }
 declare function PluginManager(): never;
 declare namespace PluginManager
 {
+  /**
+   * Performs call command.
+   * @param self The self parameter.
+   * @param pluginName The pluginName parameter.
+   * @param commandName The commandName parameter.
+   * @param args The args parameter.
+   */
   function callCommand(self: object, pluginName: string, commandName: string, args: string): void;
+  /**
+   * Performs check errors.
+   */
   function checkErrors(): void;
+  /**
+   * Performs load script.
+   * @param filename The filename parameter.
+   */
   function loadScript(filename: string): void;
+  /**
+   * Creates url.
+   * @param filename The filename parameter.
+   * @returns The result.
+   */
   function makeUrl(filename: string): string;
+  /**
+   * Performs on error.
+   * @param e The e parameter.
+   */
   function onError(e: Event): void;
+  /**
+   * Gets parameters.
+   * @param name The name parameter.
+   * @returns The result.
+   */
   function parameters(name: string): object;
+  /**
+   * Performs register command.
+   * @param pluginName The pluginName parameter.
+   * @param commandName The commandName parameter.
+   * @param func The func parameter.
+   */
   function registerCommand(pluginName: string, commandName: string, func: (args: string) => void): void;
+  /**
+   * Sets parameters.
+   * @param name The name parameter.
+   * @param parameters The parameters parameter.
+   */
   function setParameters(name: string, parameters: object): void;
+  /**
+   * Performs setup.
+   * @param plugins The plugins parameter.
+   */
   function setup(plugins: object[]): void;
+  /**
+   * Performs throw load error.
+   * @param url The url parameter.
+   */
   function throwLoadError(url: string): void;
 }

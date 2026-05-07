@@ -8,21 +8,88 @@
 interface Window_EquipItem
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Actor`.
+   * Initialized in: {@link Window_EquipItem#initialize}.
+   * Written in: {@link Window_EquipItem#initialize}, {@link Window_EquipItem#setActor}.
+   * Read in: {@link Window_EquipItem#etypeId}, {@link Window_EquipItem#includes}, {@link Window_EquipItem#setActor}, {@link Window_EquipItem#updateHelp}.
    */
   _actor: null | Game_Actor;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Window_EquipItem#initialize}.
+   * Written in: {@link Window_EquipItem#initialize}, {@link Window_EquipItem#setSlotId}.
+   * Read in: {@link Window_EquipItem#etypeId}, {@link Window_EquipItem#setSlotId}, {@link Window_EquipItem#updateHelp}.
+   */
   _slotId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_EquipItem#setStatusWindow}.
+   * Read in: {@link Window_EquipItem#updateHelp}.
+   */
   _statusWindow: Window_Base;
+  /**
+   * Gets col spacing.
+   * @returns The result.
+   */
   colSpacing(): number;
+  /**
+   * Gets etype id.
+   * @returns The result.
+   */
   etypeId(): number;
+  /**
+   * Gets includes.
+   * @param item The item parameter.
+   * @returns The result.
+   */
   includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Determines whether enabled.
+   * @returns True if enabled; false otherwise.
+   */
   isEnabled(): boolean;
+  /**
+   * Gets max cols.
+   * @returns The result.
+   */
   maxCols(): number;
+  /**
+   * Performs play ok sound.
+   */
   playOkSound(): void;
+  /**
+   * Performs select last.
+   */
   selectLast(): void;
+  /**
+   * Sets actor.
+   * @param actor The actor parameter.
+   */
   setActor(actor: Game_Actor): void;
+  /**
+   * Sets slot id.
+   * @param slotId The slotId parameter.
+   */
   setSlotId(slotId: number): void;
+  /**
+   * Sets status window.
+   * @param statusWindow The statusWindow parameter.
+   */
   setStatusWindow(statusWindow: Window_Base): void;
+  /**
+   * Updates help.
+   */
   updateHelp(): void;
 }

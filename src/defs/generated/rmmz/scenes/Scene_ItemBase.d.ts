@@ -8,27 +8,100 @@
 interface Scene_ItemBase
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Window_MenuActor`.
+   * Initialized in: none.
+   * Written in: {@link Scene_ItemBase#createActorWindow}.
+   * Read in: {@link Scene_ItemBase#createActorWindow}, {@link Scene_ItemBase#determineItem}, {@link Scene_ItemBase#hideActorWindow}, {@link Scene_ItemBase#isActorWindowActive}, {@link Scene_ItemBase#itemTargetActors}, {@link Scene_ItemBase#showActorWindow}, {@link Scene_ItemBase#useItem}.
    */
   _actorWindow: Window_MenuActor;
+  /**
+   * Performs activate item window.
+   */
   activateItemWindow(): void;
+  /**
+   * Gets actor window rect.
+   * @returns The result.
+   */
   actorWindowRect(): Rectangle;
+  /**
+   * Performs apply item.
+   */
   applyItem(): void;
+  /**
+   * Determines whether use.
+   * @returns True if use; false otherwise.
+   */
   canUse(): boolean;
+  /**
+   * Performs check common event.
+   */
   checkCommonEvent(): void;
+  /**
+   * Performs create.
+   */
   create(): void;
+  /**
+   * Creates actor window.
+   */
   createActorWindow(): void;
+  /**
+   * Performs determine item.
+   */
   determineItem(): void;
+  /**
+   * Performs hide actor window.
+   */
   hideActorWindow(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether actor window active.
+   * @returns True if actor window active; false otherwise.
+   */
   isActorWindowActive(): boolean;
+  /**
+   * Determines whether cursor left.
+   * @returns True if cursor left; false otherwise.
+   */
   isCursorLeft(): boolean;
+  /**
+   * Determines whether item effects valid.
+   * @returns True if item effects valid; false otherwise.
+   */
   isItemEffectsValid(): boolean;
+  /**
+   * Gets item.
+   * @returns The result.
+   */
   item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  /**
+   * Gets item target actors.
+   * @returns The result.
+   */
   itemTargetActors(): Game_Actor[];
+  /**
+   * Performs on actor cancel.
+   */
   onActorCancel(): void;
+  /**
+   * Performs on actor ok.
+   */
   onActorOk(): void;
+  /**
+   * Performs show actor window.
+   */
   showActorWindow(): void;
+  /**
+   * Performs use item.
+   */
   useItem(): void;
+  /**
+   * Gets user.
+   * @returns The result.
+   */
   user(): null;
 }

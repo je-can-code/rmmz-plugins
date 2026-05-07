@@ -8,9 +8,35 @@
 declare function TextManager(): never;
 declare namespace TextManager
 {
+  /**
+   * Gets basic.
+   * @param basicId The basicId parameter.
+   * @returns The result.
+   */
   function basic(basicId: number): string;
+  /**
+   * Gets command.
+   * @param commandId The commandId parameter.
+   * @returns The result.
+   */
   function command(commandId: number): string;
+  /**
+   * Gets getter.
+   * @param method The method parameter.
+   * @param param The param parameter.
+   * @returns The result.
+   */
   function getter(method: string, param: number | string): object;
+  /**
+   * Gets message.
+   * @param messageId The messageId parameter.
+   * @returns The result.
+   */
   function message(messageId: number): string;
+  /**
+   * Gets param.
+   * @param paramId The paramId parameter.
+   * @returns The result.
+   */
   function param(paramId: number): string;
 }

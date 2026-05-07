@@ -8,11 +8,31 @@
 interface Window_ShopCommand
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Window_ShopCommand#setPurchaseOnly}.
+   * Read in: {@link Window_ShopCommand#makeCommandList}.
    */
   _purchaseOnly: boolean;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Gets max cols.
+   * @returns The result.
+   */
   maxCols(): number;
+  /**
+   * Sets purchase only.
+   * @param purchaseOnly The purchaseOnly parameter.
+   */
   setPurchaseOnly(purchaseOnly: boolean): void;
 }

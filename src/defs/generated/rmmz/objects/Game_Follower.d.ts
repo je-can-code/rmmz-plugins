@@ -8,14 +8,45 @@
 interface Game_Follower
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Follower#initialize}.
+   * Written in: {@link Game_Follower#initialize}.
+   * Read in: {@link Game_Follower#actor}.
    */
   _memberIndex: number;
+  /**
+   * Gets actor.
+   * @returns The result.
+   */
   actor(): Game_Actor;
+  /**
+   * Performs chase character.
+   * @param character The character parameter.
+   */
   chaseCharacter(character: Game_Character): void;
+  /**
+   * Initializes initialize.
+   * @param memberIndex The memberIndex parameter.
+   */
   initialize(memberIndex: number): void;
+  /**
+   * Determines whether gathered.
+   * @returns True if gathered; false otherwise.
+   */
   isGathered(): boolean;
+  /**
+   * Determines whether visible.
+   * @returns True if visible; false otherwise.
+   */
   isVisible(): boolean;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

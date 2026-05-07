@@ -8,63 +8,331 @@
 interface Window_Message
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updateBackground}.
+   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updateBackground}.
    */
   _background: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setChoiceListWindow}.
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   */
   _choiceListWindow: null | Window_Base;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setEventItemWindow}.
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   */
   _eventItemWindow: null | Window_Base;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#loadMessageFace}, {@link Window_Message#updateLoading}.
+   * Read in: {@link Window_Message#updateLoading}.
+   */
   _faceBitmap: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setGoldWindow}.
+   * Read in: {@link Window_Message#processEscapeCharacter}, {@link Window_Message#terminateMessage}, {@link Window_Message#updatePlacement}.
+   */
   _goldWindow: null | Window_Base;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}, {@link Window_Message#processNewLine}.
+   * Read in: {@link Window_Message#shouldBreakHere}.
+   */
   _lineShowFast: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNameBoxWindow}.
+   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#synchronizeNameBox}, {@link Window_Message#updateSpeakerName}.
+   */
   _nameBoxWindow: null | Window_Base;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNumberInputWindow}.
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   */
   _numberInputWindow: null | Window_Base;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}.
+   * Read in: {@link Window_Message#onEndOfText}.
+   */
   _pauseSkip: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updatePlacement}.
+   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updatePlacement}.
+   */
   _positionType: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#updateShowFast}.
+   * Read in: {@link Window_Message#shouldBreakHere}.
+   */
   _showFast: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | object`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#onEndOfText}, {@link Window_Message#startMessage}.
+   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#updateInput}, {@link Window_Message#updateMessage}.
+   */
   _textState: null | object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Window_Message#cancelWait}, {@link Window_Message#initMembers}, {@link Window_Message#startWait}, {@link Window_Message#updateWait}.
+   * Read in: {@link Window_Message#isWaiting}, {@link Window_Message#updateWait}.
+   */
   _waitCount: number;
+  /**
+   * Gets are settings changed.
+   * @returns The result.
+   */
   areSettingsChanged(): boolean;
+  /**
+   * Determines whether break here.
+   * @param textState The textState parameter.
+   * @returns True if break here; false otherwise.
+   */
   canBreakHere(textState: object): boolean;
+  /**
+   * Determines whether start.
+   * @returns True if start; false otherwise.
+   */
   canStart(): boolean;
+  /**
+   * Performs cancel wait.
+   */
   cancelWait(): void;
+  /**
+   * Performs check to not close.
+   */
   checkToNotClose(): void;
+  /**
+   * Clears flags.
+   */
   clearFlags(): void;
+  /**
+   * Gets does continue.
+   * @returns The result.
+   */
   doesContinue(): boolean;
+  /**
+   * Performs draw message face.
+   */
   drawMessageFace(): void;
+  /**
+   * Initializes members.
+   */
   initMembers(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Determines whether any sub window active.
+   * @returns True if any sub window active; false otherwise.
+   */
   isAnySubWindowActive(): boolean;
+  /**
+   * Determines whether end of text.
+   * @param textState The textState parameter.
+   * @returns True if end of text; false otherwise.
+   */
   isEndOfText(textState: object): boolean;
+  /**
+   * Determines whether triggered.
+   * @returns True if triggered; false otherwise.
+   */
   isTriggered(): boolean;
+  /**
+   * Determines whether waiting.
+   * @returns True if waiting; false otherwise.
+   */
   isWaiting(): boolean;
+  /**
+   * Performs load message face.
+   */
   loadMessageFace(): void;
+  /**
+   * Gets needs new page.
+   * @param textState The textState parameter.
+   * @returns The result.
+   */
   needsNewPage(textState: object): boolean;
+  /**
+   * Gets new line x.
+   * @param textState The textState parameter.
+   * @returns The result.
+   */
   newLineX(textState: object): number;
+  /**
+   * Performs new page.
+   * @param textState The textState parameter.
+   */
   newPage(textState: object): void;
+  /**
+   * Performs on end of text.
+   */
   onEndOfText(): void;
+  /**
+   * Performs process control character.
+   * @param textState The textState parameter.
+   * @param c The c parameter.
+   */
   processControlCharacter(textState: object, c: string): void;
+  /**
+   * Performs process escape character.
+   * @param code The code parameter.
+   * @param textState The textState parameter.
+   */
   processEscapeCharacter(code: string, textState: object): void;
+  /**
+   * Performs process new line.
+   * @param textState The textState parameter.
+   */
   processNewLine(textState: object): void;
+  /**
+   * Performs process new page.
+   * @param textState The textState parameter.
+   */
   processNewPage(textState: object): void;
+  /**
+   * Sets choice list window.
+   * @param choiceListWindow The choiceListWindow parameter.
+   */
   setChoiceListWindow(choiceListWindow: Window_Base): void;
+  /**
+   * Sets event item window.
+   * @param eventItemWindow The eventItemWindow parameter.
+   */
   setEventItemWindow(eventItemWindow: Window_Base): void;
+  /**
+   * Sets gold window.
+   * @param goldWindow The goldWindow parameter.
+   */
   setGoldWindow(goldWindow: Window_Base): void;
+  /**
+   * Sets name box window.
+   * @param nameBoxWindow The nameBoxWindow parameter.
+   */
   setNameBoxWindow(nameBoxWindow: Window_Base): void;
+  /**
+   * Sets number input window.
+   * @param numberInputWindow The numberInputWindow parameter.
+   */
   setNumberInputWindow(numberInputWindow: Window_Base): void;
+  /**
+   * Gets should break here.
+   * @param textState The textState parameter.
+   * @returns The result.
+   */
   shouldBreakHere(textState: object): boolean;
+  /**
+   * Gets start input.
+   * @returns The result.
+   */
   startInput(): boolean;
+  /**
+   * Performs start message.
+   */
   startMessage(): void;
+  /**
+   * Performs start pause.
+   */
   startPause(): void;
+  /**
+   * Performs start wait.
+   * @param count The count parameter.
+   */
   startWait(count: number): void;
+  /**
+   * Performs synchronize name box.
+   */
   synchronizeNameBox(): void;
+  /**
+   * Performs terminate message.
+   */
   terminateMessage(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates background.
+   */
   updateBackground(): void;
+  /**
+   * Updates input.
+   * @returns The result.
+   */
   updateInput(): boolean;
+  /**
+   * Updates loading.
+   * @returns The result.
+   */
   updateLoading(): boolean;
+  /**
+   * Updates message.
+   * @returns The result.
+   */
   updateMessage(): boolean;
+  /**
+   * Updates placement.
+   */
   updatePlacement(): void;
+  /**
+   * Updates show fast.
+   */
   updateShowFast(): void;
+  /**
+   * Updates speaker name.
+   */
   updateSpeakerName(): void;
+  /**
+   * Updates wait.
+   * @returns The result.
+   */
   updateWait(): boolean;
 }

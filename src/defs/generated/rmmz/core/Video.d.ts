@@ -8,10 +8,31 @@
 interface Video
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: {@link Video#initialize}.
+   * Written in: {@link Video#_createElement}, {@link Video#initialize}.
+   * Read in: {@link Video#_createElement}, {@link Video#_isVisible}, {@link Video#_onError}, {@link Video#_onLoad}, {@link Video#_onUserGesture}, {@link Video#_updateVisibility}, {@link Video#play}, {@link Video#resize}, {@link Video#setVolume}.
    */
   _element: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Video#initialize}.
+   * Written in: {@link Video#_onLoad}, {@link Video#initialize}, {@link Video#play}.
+   * Read in: {@link Video#isPlaying}.
+   */
   _loading: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Video#initialize}.
+   * Written in: {@link Video#initialize}, {@link Video#setVolume}.
+   * Read in: {@link Video#_onLoad}, {@link Video#setVolume}.
+   */
   _volume: number;
 }
 declare function Video(): never;
@@ -21,15 +42,35 @@ declare namespace Video
    * Sets the volume for videos.
    */
   function _createElement(): void;
+  /**
+   * Gets is visible.
+   * @returns The result.
+   */
   function _isVisible(): boolean;
+  /**
+   * Performs on end.
+   */
   function _onEnd(): void;
+  /**
+   * Performs on error.
+   */
   function _onError(): void;
   /**
    * Sets the volume for videos.
    */
   function _onLoad(): void;
+  /**
+   * Performs on user gesture.
+   */
   function _onUserGesture(): void;
+  /**
+   * Performs setup event handlers.
+   */
   function _setupEventHandlers(): void;
+  /**
+   * Performs update visibility.
+   * @param videoVisible The videoVisible parameter.
+   */
   function _updateVisibility(videoVisible: boolean): void;
   /**
    * Initializes the video system.
@@ -39,6 +80,7 @@ declare namespace Video
   function initialize(width: number, height: number): void;
   /**
    * Checks whether the video is playing.
+   * @returns True if playing; false otherwise.
    */
   function isPlaying(): boolean;
   /**

@@ -8,15 +8,49 @@
 interface Window_MapName
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Window_MapName#initialize}.
+   * Written in: {@link Window_MapName#close}, {@link Window_MapName#initialize}, {@link Window_MapName#open}, {@link Window_MapName#update}.
+   * Read in: {@link Window_MapName#update}.
    */
   _showCount: number;
+  /**
+   * Performs close.
+   */
   close(): void;
+  /**
+   * Performs draw background.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param width The width parameter.
+   * @param height The height parameter.
+   */
   drawBackground(x: number, y: number, width: number, height: number): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs open.
+   */
   open(): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates fade in.
+   */
   updateFadeIn(): void;
+  /**
+   * Updates fade out.
+   */
   updateFadeOut(): void;
 }

@@ -7,7 +7,17 @@
  */
 interface Window_PartyCommand
 {
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Performs setup.
+   */
   setup(): void;
 }

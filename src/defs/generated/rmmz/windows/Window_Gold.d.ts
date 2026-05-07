@@ -7,10 +7,32 @@
  */
 interface Window_Gold
 {
+  /**
+   * Gets col spacing.
+   * @returns The result.
+   */
   colSpacing(): number;
+  /**
+   * Gets currency unit.
+   * @returns The result.
+   */
   currencyUnit(): string;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs open.
+   */
   open(): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Gets value.
+   * @returns The result.
+   */
   value(): number;
 }

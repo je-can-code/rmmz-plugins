@@ -7,6 +7,13 @@
  */
 interface Window_GameEnd
 {
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
 }

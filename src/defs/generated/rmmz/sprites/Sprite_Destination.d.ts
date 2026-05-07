@@ -8,13 +8,37 @@
 interface Sprite_Destination
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Destination#initialize}.
+   * Written in: {@link Sprite_Destination#initialize}, {@link Sprite_Destination#update}, {@link Sprite_Destination#updateAnimation}.
+   * Read in: {@link Sprite_Destination#updateAnimation}.
    */
   _frameCount: number;
+  /**
+   * Creates bitmap.
+   */
   createBitmap(): void;
+  /**
+   * Performs destroy.
+   * @param options The options parameter.
+   */
   destroy(options: object): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates animation.
+   */
   updateAnimation(): void;
+  /**
+   * Updates position.
+   */
   updatePosition(): void;
 }

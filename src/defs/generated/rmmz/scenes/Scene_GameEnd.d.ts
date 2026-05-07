@@ -8,14 +8,41 @@
 interface Scene_GameEnd
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Window_GameEnd`.
+   * Initialized in: none.
+   * Written in: {@link Scene_GameEnd#createCommandWindow}.
+   * Read in: {@link Scene_GameEnd#createCommandWindow}, {@link Scene_GameEnd#stop}.
    */
   _commandWindow: Window_GameEnd;
+  /**
+   * Performs command to title.
+   */
   commandToTitle(): void;
+  /**
+   * Gets command window rect.
+   * @returns The result.
+   */
   commandWindowRect(): Rectangle;
+  /**
+   * Performs create.
+   */
   create(): void;
+  /**
+   * Creates background.
+   */
   createBackground(): void;
+  /**
+   * Creates command window.
+   */
   createCommandWindow(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs stop.
+   */
   stop(): void;
 }

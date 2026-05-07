@@ -8,10 +8,26 @@
 interface Window_SkillStatus
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Actor`.
+   * Initialized in: {@link Window_SkillStatus#initialize}.
+   * Written in: {@link Window_SkillStatus#initialize}, {@link Window_SkillStatus#setActor}.
+   * Read in: {@link Window_SkillStatus#refresh}, {@link Window_SkillStatus#setActor}.
    */
   _actor: null | Game_Actor;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Sets actor.
+   * @param actor The actor parameter.
+   */
   setActor(actor: Game_Actor): void;
 }

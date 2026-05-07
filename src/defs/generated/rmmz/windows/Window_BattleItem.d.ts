@@ -7,8 +7,23 @@
  */
 interface Window_BattleItem
 {
+  /**
+   * Performs hide.
+   */
   hide(): void;
+  /**
+   * Gets includes.
+   * @param item The item parameter.
+   * @returns The result.
+   */
   includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs show.
+   */
   show(): void;
 }

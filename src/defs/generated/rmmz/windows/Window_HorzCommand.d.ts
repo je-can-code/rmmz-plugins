@@ -7,7 +7,19 @@
  */
 interface Window_HorzCommand
 {
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Gets item text align.
+   * @returns The result.
+   */
   itemTextAlign(): string;
+  /**
+   * Gets max cols.
+   * @returns The result.
+   */
   maxCols(): number;
 }

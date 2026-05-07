@@ -8,19 +8,78 @@
 interface Sprite_StateIcon
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#update}.
+   * Read in: {@link Sprite_StateIcon#update}.
    */
   _animationCount: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.
+   * Read in: {@link Sprite_StateIcon#updateIcon}.
+   */
   _animationIndex: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Battler`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}.
+   * Read in: {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#shouldDisplay}, {@link Sprite_StateIcon#updateIcon}.
+   */
   _battler: null | Game_Battler;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.
+   * Read in: {@link Sprite_StateIcon#updateFrame}.
+   */
   _iconIndex: number;
+  /**
+   * Gets animation wait.
+   * @returns The result.
+   */
   animationWait(): number;
+  /**
+   * Initializes members.
+   */
   initMembers(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs load bitmap.
+   */
   loadBitmap(): void;
+  /**
+   * Performs setup.
+   * @param battler The battler parameter.
+   */
   setup(battler: Game_Battler): void;
+  /**
+   * Gets should display.
+   * @returns The result.
+   */
   shouldDisplay(): boolean;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates frame.
+   */
   updateFrame(): void;
+  /**
+   * Updates icon.
+   */
   updateIcon(): void;
 }

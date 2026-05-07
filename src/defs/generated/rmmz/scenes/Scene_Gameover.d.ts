@@ -8,18 +8,57 @@
 interface Scene_Gameover
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Sprite`.
+   * Initialized in: none.
+   * Written in: {@link Scene_Gameover#createBackground}.
+   * Read in: {@link Scene_Gameover#adjustBackground}, {@link Scene_Gameover#createBackground}.
    */
   _backSprite: Sprite;
+  /**
+   * Performs adjust background.
+   */
   adjustBackground(): void;
+  /**
+   * Performs create.
+   */
   create(): void;
+  /**
+   * Creates background.
+   */
   createBackground(): void;
+  /**
+   * Performs goto title.
+   */
   gotoTitle(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether triggered.
+   * @returns True if triggered; false otherwise.
+   */
   isTriggered(): boolean;
+  /**
+   * Performs play gameover music.
+   */
   playGameoverMusic(): void;
+  /**
+   * Performs start.
+   */
   start(): void;
+  /**
+   * Performs stop.
+   */
   stop(): void;
+  /**
+   * Performs terminate.
+   */
   terminate(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

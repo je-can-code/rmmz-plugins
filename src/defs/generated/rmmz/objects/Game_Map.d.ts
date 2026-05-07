@@ -8,141 +8,841 @@
 interface Game_Map
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | string`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.
+   * Read in: {@link Game_Map#battleback1Name}.
    */
   _battleback1Name: null | string;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | string`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.
+   * Read in: {@link Game_Map#battleback2Name}.
+   */
   _battleback2Name: null | string;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.
+   * Read in: {@link Game_Map#refresh}, {@link Game_Map#setupEvents}, {@link Game_Map#updateEvents}.
+   *
+   * Consumed by:
+   * - `push()`: {@link Game_Map#setupEvents}.
+   */
   _commonEvents: unknown[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.
+   * Read in: {@link Game_Map#adjustX}, {@link Game_Map#canvasToMapX}, {@link Game_Map#displayX}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.
+   */
   _displayX: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.
+   * Read in: {@link Game_Map#adjustY}, {@link Game_Map#canvasToMapY}, {@link Game_Map#displayY}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.
+   */
   _displayY: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.
+   * Read in: {@link Game_Map#eraseEvent}, {@link Game_Map#event}, {@link Game_Map#events}, {@link Game_Map#setupEvents}, {@link Game_Map#unlockEvent}.
+   */
   _events: unknown[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `Game_Interpreter`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}.
+   * Read in: {@link Game_Map#isEventRunning}, {@link Game_Map#setupAutorunCommonEvent}, {@link Game_Map#setupStartingEvent}, {@link Game_Map#setupStartingMapEvent}, {@link Game_Map#setupTestEvent}, {@link Game_Map#updateInterpreter}.
+   *
+   * Consumed by:
+   * - `clear()`: {@link Game_Map#updateInterpreter}.
+   */
   _interpreter: Game_Interpreter;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setup}.
+   * Read in: {@link Game_Map#mapId}, {@link Game_Map#setupEvents}.
+   */
   _mapId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#disableNameDisplay}, {@link Game_Map#enableNameDisplay}, {@link Game_Map#initialize}.
+   * Read in: {@link Game_Map#isNameDisplayEnabled}.
+   */
   _nameDisplay: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Game_Map#refresh}, {@link Game_Map#requestRefresh}, {@link Game_Map#setup}.
+   * Read in: {@link Game_Map#refreshIfNeeded}.
+   */
   _needsRefresh: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOx}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#updateParallax}.
+   */
   _parallaxLoopX: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOy}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#updateParallax}.
+   */
   _parallaxLoopY: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxName}, {@link Game_Map#setupParallax}.
+   */
   _parallaxName: string;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#updateParallax}.
+   */
   _parallaxSx: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#updateParallax}.
+   */
   _parallaxSy: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.
+   * Read in: {@link Game_Map#parallaxOx}.
+   */
   _parallaxX: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.
+   * Read in: {@link Game_Map#parallaxOy}.
+   */
   _parallaxY: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
+   * Read in: {@link Game_Map#parallaxOx}, {@link Game_Map#parallaxOy}.
+   */
   _parallaxZero: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.
+   * Read in: {@link Game_Map#updateScroll}.
+   */
   _scrollDirection: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}, {@link Game_Map#updateScroll}.
+   * Read in: {@link Game_Map#isScrolling}.
+   */
   _scrollRest: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.
+   * Read in: {@link Game_Map#scrollDistance}.
+   */
   _scrollSpeed: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: none.
+   * Written in: {@link Game_Map#refreshTileEvents}.
+   * Read in: {@link Game_Map#tileEventsXy}.
+   */
   _tileEvents: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#changeTileset}, {@link Game_Map#initialize}, {@link Game_Map#setup}.
+   * Read in: {@link Game_Map#tileset}, {@link Game_Map#tilesetId}.
+   */
   _tilesetId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: {@link Game_Map#initialize}.
+   * Written in: {@link Game_Map#createVehicles}, {@link Game_Map#initialize}.
+   * Read in: {@link Game_Map#airship}, {@link Game_Map#boat}, {@link Game_Map#createVehicles}, {@link Game_Map#refereshVehicles}, {@link Game_Map#ship}, {@link Game_Map#updateVehicles}, {@link Game_Map#vehicles}.
+   */
   _vehicles: unknown[];
+  /**
+   * Gets adjust x.
+   * @param x The x parameter.
+   * @returns The result.
+   */
   adjustX(x: number): number;
+  /**
+   * Gets adjust y.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   adjustY(y: number): number;
+  /**
+   * Gets airship.
+   * @returns The result.
+   */
   airship(): Game_Vehicle;
+  /**
+   * Gets all tiles.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   allTiles(x: number, y: number): number[];
+  /**
+   * Performs autoplay.
+   */
   autoplay(): void;
+  /**
+   * Gets autorun common events.
+   * @returns The result.
+   */
   autorunCommonEvents(): object[];
+  /**
+   * Gets autotile type.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param z The z parameter.
+   * @returns The result.
+   */
   autotileType(x: number, y: number, z: number): number;
+  /**
+   * Gets battleback1 name.
+   * @returns The result.
+   */
   battleback1Name(): string;
+  /**
+   * Gets battleback2 name.
+   * @returns The result.
+   */
   battleback2Name(): string;
+  /**
+   * Gets boat.
+   * @returns The result.
+   */
   boat(): Game_Vehicle;
+  /**
+   * Gets bush depth.
+   * @returns The result.
+   */
   bushDepth(): number;
+  /**
+   * Gets canvas to map x.
+   * @param x The x parameter.
+   * @returns The result.
+   */
   canvasToMapX(x: number): number;
+  /**
+   * Gets canvas to map y.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   canvasToMapY(y: number): number;
+  /**
+   * Performs change battleback.
+   * @param battleback1Name The battleback1Name parameter.
+   * @param battleback2Name The battleback2Name parameter.
+   */
   changeBattleback(battleback1Name: string, battleback2Name: string): void;
+  /**
+   * Performs change parallax.
+   * @param name The name parameter.
+   * @param loopX The loopX parameter.
+   * @param loopY The loopY parameter.
+   * @param sx The sx parameter.
+   * @param sy The sy parameter.
+   */
   changeParallax(name: string, loopX: boolean, loopY: boolean, sx: number, sy: number): void;
+  /**
+   * Performs change tileset.
+   * @param tilesetId The tilesetId parameter.
+   */
   changeTileset(tilesetId: number): void;
+  /**
+   * Gets check layered tiles flags.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param bit The bit parameter.
+   * @returns The result.
+   */
   checkLayeredTilesFlags(x: number, y: number, bit: number): boolean;
+  /**
+   * Gets check passage.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param bit The bit parameter.
+   * @returns The result.
+   */
   checkPassage(x: number, y: number, bit: number): boolean;
+  /**
+   * Creates vehicles.
+   */
   createVehicles(): void;
+  /**
+   * Gets data.
+   * @returns The result.
+   */
   data(): number[];
+  /**
+   * Gets delta x.
+   * @param x1 The x1 parameter.
+   * @param x2 The x2 parameter.
+   * @returns The result.
+   */
   deltaX(x1: number, x2: number): number;
+  /**
+   * Gets delta y.
+   * @param y1 The y1 parameter.
+   * @param y2 The y2 parameter.
+   * @returns The result.
+   */
   deltaY(y1: number, y2: number): number;
+  /**
+   * Performs disable name display.
+   */
   disableNameDisplay(): void;
+  /**
+   * Gets display name.
+   * @returns The result.
+   */
   displayName(): string;
+  /**
+   * Gets display x.
+   * @returns The result.
+   */
   displayX(): number;
+  /**
+   * Gets display y.
+   * @returns The result.
+   */
   displayY(): number;
+  /**
+   * Gets distance.
+   * @param x1 The x1 parameter.
+   * @param y1 The y1 parameter.
+   * @param x2 The x2 parameter.
+   * @param y2 The y2 parameter.
+   * @returns The result.
+   */
   distance(x1: number, y1: number, x2: number, y2: number): number;
+  /**
+   * Performs do scroll.
+   * @param direction The direction parameter.
+   * @param distance The distance parameter.
+   */
   doScroll(direction: number, distance: number): void;
+  /**
+   * Performs enable name display.
+   */
   enableNameDisplay(): void;
+  /**
+   * Gets encounter list.
+   * @returns The result.
+   */
   encounterList(): object[];
+  /**
+   * Gets encounter step.
+   * @returns The result.
+   */
   encounterStep(): number;
+  /**
+   * Performs erase event.
+   * @param eventId The eventId parameter.
+   */
   eraseEvent(eventId: number): void;
+  /**
+   * Gets event.
+   * @param eventId The eventId parameter.
+   * @returns The result.
+   */
   event(eventId: number): Game_Event | undefined;
+  /**
+   * Gets event id xy.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   eventIdXy(x: number, y: number): number;
+  /**
+   * Gets events.
+   * @returns The result.
+   */
   events(): Game_Event[];
+  /**
+   * Gets events xy.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   eventsXy(x: number, y: number): Game_Event[];
+  /**
+   * Gets events xy nt.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   eventsXyNt(x: number, y: number): Game_Event[];
+  /**
+   * Gets height.
+   * @returns The result.
+   */
   height(): number;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether airship land ok.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if airship land ok; false otherwise.
+   */
   isAirshipLandOk(x: number, y: number): boolean;
+  /**
+   * Determines whether any event starting.
+   * @returns True if any event starting; false otherwise.
+   */
   isAnyEventStarting(): boolean;
+  /**
+   * Determines whether boat passable.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if boat passable; false otherwise.
+   */
   isBoatPassable(x: number, y: number): boolean;
+  /**
+   * Determines whether bush.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if bush; false otherwise.
+   */
   isBush(x: number, y: number): boolean;
+  /**
+   * Determines whether counter.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if counter; false otherwise.
+   */
   isCounter(x: number, y: number): boolean;
+  /**
+   * Determines whether damage floor.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if damage floor; false otherwise.
+   */
   isDamageFloor(x: number, y: number): boolean;
+  /**
+   * Determines whether dash disabled.
+   * @returns True if dash disabled; false otherwise.
+   */
   isDashDisabled(): boolean;
+  /**
+   * Determines whether event running.
+   * @returns True if event running; false otherwise.
+   */
   isEventRunning(): boolean;
+  /**
+   * Determines whether ladder.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if ladder; false otherwise.
+   */
   isLadder(x: number, y: number): boolean;
+  /**
+   * Determines whether loop horizontal.
+   * @returns True if loop horizontal; false otherwise.
+   */
   isLoopHorizontal(): boolean;
+  /**
+   * Determines whether loop vertical.
+   * @returns True if loop vertical; false otherwise.
+   */
   isLoopVertical(): boolean;
+  /**
+   * Determines whether name display enabled.
+   * @returns True if name display enabled; false otherwise.
+   */
   isNameDisplayEnabled(): boolean;
+  /**
+   * Determines whether overworld.
+   * @returns True if overworld; false otherwise.
+   */
   isOverworld(): boolean;
+  /**
+   * Determines whether passable.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param d The d parameter.
+   * @returns True if passable; false otherwise.
+   */
   isPassable(x: number, y: number, d: number): boolean;
+  /**
+   * Determines whether scrolling.
+   * @returns True if scrolling; false otherwise.
+   */
   isScrolling(): boolean;
+  /**
+   * Determines whether ship passable.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if ship passable; false otherwise.
+   */
   isShipPassable(x: number, y: number): boolean;
+  /**
+   * Determines whether valid.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns True if valid; false otherwise.
+   */
   isValid(x: number, y: number): boolean;
+  /**
+   * Gets layered tiles.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   layeredTiles(x: number, y: number): number[];
+  /**
+   * Gets map id.
+   * @returns The result.
+   */
   mapId(): number;
+  /**
+   * Gets parallax name.
+   * @returns The result.
+   */
   parallaxName(): string;
+  /**
+   * Gets parallax ox.
+   * @returns The result.
+   */
   parallaxOx(): number;
+  /**
+   * Gets parallax oy.
+   * @returns The result.
+   */
   parallaxOy(): number;
+  /**
+   * Gets parallel common events.
+   * @returns The result.
+   */
   parallelCommonEvents(): object[];
+  /**
+   * Performs referesh vehicles.
+   */
   refereshVehicles(): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Performs refresh if needed.
+   */
   refreshIfNeeded(): void;
+  /**
+   * Performs refresh tile events.
+   */
   refreshTileEvents(): void;
+  /**
+   * Gets region id.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   regionId(x: number, y: number): number;
+  /**
+   * Performs request refresh.
+   */
   requestRefresh(): void;
+  /**
+   * Gets round x.
+   * @param x The x parameter.
+   * @returns The result.
+   */
   roundX(x: number): number;
+  /**
+   * Gets round xwith direction.
+   * @param x The x parameter.
+   * @param d The d parameter.
+   * @returns The result.
+   */
   roundXWithDirection(x: number, d: number): number;
+  /**
+   * Gets round y.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   roundY(y: number): number;
+  /**
+   * Gets round ywith direction.
+   * @param y The y parameter.
+   * @param d The d parameter.
+   * @returns The result.
+   */
   roundYWithDirection(y: number, d: number): number;
+  /**
+   * Gets screen tile x.
+   * @returns The result.
+   */
   screenTileX(): number;
+  /**
+   * Gets screen tile y.
+   * @returns The result.
+   */
   screenTileY(): number;
+  /**
+   * Gets scroll distance.
+   * @returns The result.
+   */
   scrollDistance(): number;
+  /**
+   * Performs scroll down.
+   * @param distance The distance parameter.
+   */
   scrollDown(distance: number): void;
+  /**
+   * Performs scroll left.
+   * @param distance The distance parameter.
+   */
   scrollLeft(distance: number): void;
+  /**
+   * Performs scroll right.
+   * @param distance The distance parameter.
+   */
   scrollRight(distance: number): void;
+  /**
+   * Performs scroll up.
+   * @param distance The distance parameter.
+   */
   scrollUp(distance: number): void;
+  /**
+   * Sets display pos.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   */
   setDisplayPos(x: number, y: number): void;
+  /**
+   * Performs setup.
+   * @param mapId The mapId parameter.
+   */
   setup(mapId: number): void;
+  /**
+   * Gets setup autorun common event.
+   * @returns The result.
+   */
   setupAutorunCommonEvent(): boolean;
+  /**
+   * Performs setup battleback.
+   */
   setupBattleback(): void;
+  /**
+   * Performs setup events.
+   */
   setupEvents(): void;
+  /**
+   * Performs setup parallax.
+   */
   setupParallax(): void;
+  /**
+   * Performs setup scroll.
+   */
   setupScroll(): void;
+  /**
+   * Gets setup starting event.
+   * @returns The result.
+   */
   setupStartingEvent(): boolean;
+  /**
+   * Gets setup starting map event.
+   * @returns The result.
+   */
   setupStartingMapEvent(): boolean;
+  /**
+   * Gets setup test event.
+   * @returns The result.
+   */
   setupTestEvent(): boolean;
+  /**
+   * Gets ship.
+   * @returns The result.
+   */
   ship(): Game_Vehicle;
+  /**
+   * Performs start scroll.
+   * @param direction The direction parameter.
+   * @param distance The distance parameter.
+   * @param speed The speed parameter.
+   */
   startScroll(direction: number, distance: number, speed: number): void;
+  /**
+   * Gets terrain tag.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   terrainTag(x: number, y: number): number;
+  /**
+   * Gets tile events xy.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @returns The result.
+   */
   tileEventsXy(x: number, y: number): Game_Event[];
+  /**
+   * Gets tile height.
+   * @returns The result.
+   */
   tileHeight(): number;
+  /**
+   * Gets tile id.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param z The z parameter.
+   * @returns The result.
+   */
   tileId(x: number, y: number, z: number): number;
+  /**
+   * Gets tile width.
+   * @returns The result.
+   */
   tileWidth(): number;
+  /**
+   * Gets tileset.
+   * @returns The result.
+   */
   tileset(): object | undefined;
+  /**
+   * Gets tileset flags.
+   * @returns The result.
+   */
   tilesetFlags(): number[];
+  /**
+   * Gets tileset id.
+   * @returns The result.
+   */
   tilesetId(): number;
+  /**
+   * Performs unlock event.
+   * @param eventId The eventId parameter.
+   */
   unlockEvent(eventId: number): void;
+  /**
+   * Performs update.
+   * @param sceneActive The sceneActive parameter.
+   */
   update(sceneActive: boolean): void;
+  /**
+   * Updates events.
+   */
   updateEvents(): void;
+  /**
+   * Updates interpreter.
+   */
   updateInterpreter(): void;
+  /**
+   * Updates parallax.
+   */
   updateParallax(): void;
+  /**
+   * Updates scroll.
+   */
   updateScroll(): void;
+  /**
+   * Updates vehicles.
+   */
   updateVehicles(): void;
+  /**
+   * Gets vehicle.
+   * @param _type The type parameter.
+   * @returns The result.
+   */
   vehicle(_type: number | string): Game_Vehicle | null;
+  /**
+   * Gets vehicles.
+   * @returns The result.
+   */
   vehicles(): Game_Vehicle[];
+  /**
+   * Gets width.
+   * @returns The result.
+   */
   width(): number;
+  /**
+   * Gets x with direction.
+   * @param x The x parameter.
+   * @param d The d parameter.
+   * @returns The result.
+   */
   xWithDirection(x: number, d: number): number;
+  /**
+   * Gets y with direction.
+   * @param y The y parameter.
+   * @param d The d parameter.
+   * @returns The result.
+   */
   yWithDirection(y: number, d: number): number;
 }

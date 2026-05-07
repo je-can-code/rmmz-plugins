@@ -7,12 +7,40 @@
  */
 interface Scene_Save
 {
+  /**
+   * Performs execute save.
+   * @param savefileId The savefileId parameter.
+   */
   executeSave(savefileId: number): void;
+  /**
+   * Gets first savefile id.
+   * @returns The result.
+   */
   firstSavefileId(): number;
+  /**
+   * Gets help window text.
+   * @returns The result.
+   */
   helpWindowText(): string;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Gets mode.
+   * @returns The result.
+   */
   mode(): string;
+  /**
+   * Performs on save failure.
+   */
   onSaveFailure(): void;
+  /**
+   * Performs on save success.
+   */
   onSaveSuccess(): void;
+  /**
+   * Performs on savefile ok.
+   */
   onSavefileOk(): void;
 }

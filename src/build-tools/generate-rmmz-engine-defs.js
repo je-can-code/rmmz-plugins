@@ -18,6 +18,7 @@ import {
   buildLineStarts,
   buildMethodSignature,
   collectThisUnderscorePropsFromFunction,
+  collectThisUnderscoreUsageFromFunction,
   extractLeadingJsdoc,
   inferExprType,
   mergeInstancePropRhsObservations,
@@ -74,6 +75,12 @@ const BUILTIN_RECEIVERS = new Set([
  *   staticMethods: Map<string, MethodSig>,
  *   literalStatics: Map<string, string>,
  *   instancePropertyBuckets: Map<string, string[]>,
+ *   instancePropertyUsage: Map<string, {
+ *     initializedIn: Set<string>,
+ *     writtenIn: Set<string>,
+ *     readIn: Set<string>,
+ *     consumedBy: Map<string, Set<string>>,
+ *   }>,
  * }} ClassEntry
  */
 
@@ -128,6 +135,55 @@ function absorbInstanceProps(entry, propMap)
 
 /**
  * @param {ClassEntry} entry
+ * @param {Map<string, { reads: Set<string>, writes: Set<string>, consumes: Set<string> }>} usageMap
+ * @param {string} methodName
+ * @param {boolean} isInitializer
+ * @returns {void}
+ */
+function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
+{
+  if (usageMap.size === 0)
+  {
+    return;
+  }
+  for (const [prop, usage] of usageMap)
+  {
+    let meta = entry.instancePropertyUsage.get(prop);
+    if (!meta)
+    {
+      meta = {
+        initializedIn: new Set(),
+        writtenIn: new Set(),
+        readIn: new Set(),
+        consumedBy: new Map(),
+      };
+      entry.instancePropertyUsage.set(prop, meta);
+    }
+
+    const methodKey = methodName;
+    if (isInitializer && usage.writes.size > 0)
+    {
+      meta.initializedIn.add(methodKey);
+    }
+    if (usage.writes.size > 0)
+    {
+      meta.writtenIn.add(methodKey);
+    }
+    if (usage.reads.size > 0)
+    {
+      meta.readIn.add(methodKey);
+    }
+    for (const pat of usage.consumes)
+    {
+      const bucket = meta.consumedBy.get(pat) ?? new Set();
+      bucket.add(methodKey);
+      meta.consumedBy.set(pat, bucket);
+    }
+  }
+}
+
+/**
+ * @param {ClassEntry} entry
  * @returns {Map<string, string>}
  */
 function finalizeInstancePropTs(entry)
@@ -164,15 +220,71 @@ function formatInstancePropsBlock(entry, indent)
   {
     return '';
   }
-  const header =
-    `${indent}/**\n`
-    + `${indent} * Instance fields inferred from \`this._*\` assignments across vanilla engine sources.\n`
-    + `${indent} */\n`;
-  const lines = [header];
-  for (const name of [...merged.keys()].sort())
+  /** @type {string[]} */
+  const lines = [];
+  for (const propName of [...merged.keys()].sort())
   {
-    lines.push(`${indent}${name}: ${merged.get(name)};\n`);
+    const ts = merged.get(propName);
+    const meta = entry.instancePropertyUsage.get(propName);
+
+    /** @type {string[]} */
+    const doc = [];
+    doc.push(`${indent}/**\n`);
+    doc.push(`${indent} * Inferred engine backing field.\n`);
+    doc.push(`${indent} *\n`);
+    doc.push(`${indent} * Type: \`${ts}\`.\n`);
+
+    if (meta)
+    {
+      const init = [...meta.initializedIn].sort();
+      const written = [...meta.writtenIn].sort();
+      const read = [...meta.readIn].sort();
+
+      /**
+       * @param {string[]} methods
+       * @returns {string}
+       */
+      function methodLinks(methods)
+      {
+        if (methods.length === 0)
+        {
+          return 'none';
+        }
+        return methods.map((m) =>
+        {
+          if (m === '<constructor>')
+          {
+            return 'constructor';
+          }
+          if (m === '<module-init>')
+          {
+            return 'module init';
+          }
+          return `{@link ${m}}`;
+        }).join(', ');
+      }
+
+      doc.push(`${indent} * Initialized in: ${methodLinks(init)}.\n`);
+      doc.push(`${indent} * Written in: ${methodLinks(written)}.\n`);
+      doc.push(`${indent} * Read in: ${methodLinks(read)}.\n`);
+
+      const consumeKeys = [...meta.consumedBy.keys()].sort();
+      if (consumeKeys.length > 0)
+      {
+        doc.push(`${indent} *\n`);
+        doc.push(`${indent} * Consumed by:\n`);
+        for (const k of consumeKeys)
+        {
+          const methods = [...(meta.consumedBy.get(k) ?? new Set())].sort();
+          doc.push(`${indent} * - \`${k}\`: ${methodLinks(methods)}.\n`);
+        }
+      }
+    }
+    doc.push(`${indent} */\n`);
+    lines.push(doc.join(''));
+    lines.push(`${indent}${propName}: ${ts};\n`);
   }
+
   return lines.join('');
 }
 
@@ -313,6 +425,7 @@ function extractFromFile(enginePath, stem)
         staticMethods: new Map(),
         literalStatics: new Map(),
         instancePropertyBuckets: new Map(),
+        instancePropertyUsage: new Map(),
       };
       classes.set(pathStr, e);
     }
@@ -432,6 +545,12 @@ function extractFromFile(enginePath, stem)
         };
         fn.instanceMethods.set(prop, buildMethodSignature(right, src, lineStarts, loc, inferCtx));
         absorbInstanceProps(fn, collectThisUnderscorePropsFromFunction(right, inferCtx));
+        absorbInstancePropUsage(
+          fn,
+          collectThisUnderscoreUsageFromFunction(right),
+          `${clsPath}#${prop}`,
+          prop === 'initialize',
+        );
       }
       else
       {
@@ -498,6 +617,12 @@ function extractFromFile(enginePath, stem)
         rhsTs = inferExprType(right, inferCtx);
       }
       absorbInstanceProps(ensureClass(parentPath), new Map([[last, rhsTs ?? 'unknown']]));
+      absorbInstancePropUsage(
+        ensureClass(parentPath),
+        new Map([[last, { reads: new Set(), writes: new Set(['=']), consumes: new Set() }]]),
+        '<module-init>',
+        true,
+      );
       return;
     }
 
@@ -553,6 +678,12 @@ function extractFromFile(enginePath, stem)
             engineSourceFile,
           }),
       );
+      absorbInstancePropUsage(
+        staticOwner,
+        collectThisUnderscoreUsageFromFunction(right),
+        `${parentPath}#${last}`,
+        last === 'initMembers' || last === 'initialize',
+      );
       return;
     }
   }
@@ -574,6 +705,12 @@ function extractFromFile(enginePath, stem)
         absorbInstanceProps(
           ensureClass(idName),
           collectThisUnderscorePropsFromFunction(stmt, ctorInferCtx),
+        );
+        absorbInstancePropUsage(
+          ensureClass(idName),
+          collectThisUnderscoreUsageFromFunction(stmt),
+          '<constructor>',
+          true,
         );
       }
     }

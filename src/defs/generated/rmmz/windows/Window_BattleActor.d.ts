@@ -7,9 +7,26 @@
  */
 interface Window_BattleActor
 {
+  /**
+   * Performs hide.
+   */
   hide(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs process touch.
+   */
   processTouch(): void;
+  /**
+   * Performs select.
+   * @param index The index parameter.
+   */
   select(index: number): void;
+  /**
+   * Performs show.
+   */
   show(): void;
 }

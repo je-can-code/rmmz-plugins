@@ -8,47 +8,225 @@
 interface Window_ShopNumber
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: none.
+   * Written in: {@link Window_ShopNumber#createButtons}.
+   * Read in: {@link Window_ShopNumber#createButtons}, {@link Window_ShopNumber#placeButtons}, {@link Window_ShopNumber#totalButtonWidth}.
+   *
+   * Consumed by:
+   * - `push()`: {@link Window_ShopNumber#createButtons}.
    */
   _buttons: unknown[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#initialize}.
+   * Read in: none.
+   */
   _canRepeat: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setCurrencyUnit}.
+   * Read in: {@link Window_ShopNumber#drawTotalPrice}.
+   */
   _currencyUnit: string;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
+   * Read in: {@link Window_ShopNumber#drawCurrentItemName}.
+   */
   _item: null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
+   * Read in: {@link Window_ShopNumber#changeNumber}.
+   */
   _max: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
+   * Read in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#drawNumber}, {@link Window_ShopNumber#drawTotalPrice}, {@link Window_ShopNumber#number}.
+   */
   _number: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Window_ShopNumber#initialize}.
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
+   * Read in: {@link Window_ShopNumber#drawTotalPrice}.
+   */
   _price: number;
+  /**
+   * Gets button spacing.
+   * @returns The result.
+   */
   buttonSpacing(): number;
+  /**
+   * Gets button y.
+   * @returns The result.
+   */
   buttonY(): number;
+  /**
+   * Performs change number.
+   * @param amount The amount parameter.
+   */
   changeNumber(amount: number): void;
+  /**
+   * Creates buttons.
+   */
   createButtons(): void;
+  /**
+   * Gets cursor width.
+   * @returns The result.
+   */
   cursorWidth(): number;
+  /**
+   * Gets cursor x.
+   * @returns The result.
+   */
   cursorX(): number;
+  /**
+   * Performs draw current item name.
+   */
   drawCurrentItemName(): void;
+  /**
+   * Performs draw horz line.
+   */
   drawHorzLine(): void;
+  /**
+   * Performs draw multiplication sign.
+   */
   drawMultiplicationSign(): void;
+  /**
+   * Performs draw number.
+   */
   drawNumber(): void;
+  /**
+   * Performs draw total price.
+   */
   drawTotalPrice(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Determines whether scroll enabled.
+   * @returns True if scroll enabled; false otherwise.
+   */
   isScrollEnabled(): boolean;
+  /**
+   * Determines whether touch ok enabled.
+   * @returns True if touch ok enabled; false otherwise.
+   */
   isTouchOkEnabled(): boolean;
+  /**
+   * Gets item name y.
+   * @returns The result.
+   */
   itemNameY(): number;
+  /**
+   * Gets item rect.
+   * @returns The result.
+   */
   itemRect(): Rectangle;
+  /**
+   * Gets max digits.
+   * @returns The result.
+   */
   maxDigits(): number;
+  /**
+   * Gets multiplication sign.
+   * @returns The result.
+   */
   multiplicationSign(): string;
+  /**
+   * Gets multiplication sign x.
+   * @returns The result.
+   */
   multiplicationSignX(): number;
+  /**
+   * Gets number.
+   * @returns The result.
+   */
   number(): number;
+  /**
+   * Performs on button down.
+   */
   onButtonDown(): void;
+  /**
+   * Performs on button down2.
+   */
   onButtonDown2(): void;
+  /**
+   * Performs on button ok.
+   */
   onButtonOk(): void;
+  /**
+   * Performs on button up.
+   */
   onButtonUp(): void;
+  /**
+   * Performs on button up2.
+   */
   onButtonUp2(): void;
+  /**
+   * Performs place buttons.
+   */
   placeButtons(): void;
+  /**
+   * Performs play ok sound.
+   */
   playOkSound(): void;
+  /**
+   * Performs process number change.
+   */
   processNumberChange(): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Sets currency unit.
+   * @param currencyUnit The currencyUnit parameter.
+   */
   setCurrencyUnit(currencyUnit: string): void;
+  /**
+   * Performs setup.
+   * @param item The item parameter.
+   * @param max The max parameter.
+   * @param price The price parameter.
+   */
   setup(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, max: number, price: number): void;
+  /**
+   * Gets total button width.
+   * @returns The result.
+   */
   totalButtonWidth(): number;
+  /**
+   * Gets total price y.
+   * @returns The result.
+   */
   totalPriceY(): number;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

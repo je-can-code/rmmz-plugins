@@ -10,25 +10,33 @@ declare namespace JsonEx
 {
   /**
    * Makes a deep copy of the specified object.
+   * @param value The value parameter.
+   * @returns The result.
    */
   function _decode(value: object): object;
   /**
    * Makes a deep copy of the specified object.
+   * @param value The value parameter.
+   * @param depth The depth parameter.
+   * @returns The result.
    */
   function _encode(value: object, depth: number): object;
   /**
    * Makes a deep copy of the specified object.
    * @param object The object to be copied.
+   * @returns The result.
    */
   function makeDeepCopy(object: object): object;
   /**
    * Parses a JSON string and reconstructs the corresponding object.
    * @param json The JSON string.
+   * @returns The result.
    */
   function parse(json: string): object;
   /**
    * Converts an object to a JSON string with object information.
    * @param object The object to be converted.
+   * @returns The result.
    */
   function stringify(object: object): string;
   const maxDepth: 100;

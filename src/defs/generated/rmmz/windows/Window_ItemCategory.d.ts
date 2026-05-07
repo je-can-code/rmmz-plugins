@@ -8,14 +8,46 @@
 interface Window_ItemCategory
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_ItemCategory#setItemWindow}.
+   * Read in: {@link Window_ItemCategory#update}.
    */
   _itemWindow: Window_Base;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Gets max cols.
+   * @returns The result.
+   */
   maxCols(): number;
+  /**
+   * Gets needs command.
+   * @param name The name parameter.
+   * @returns The result.
+   */
   needsCommand(name: string): boolean;
+  /**
+   * Gets needs selection.
+   * @returns The result.
+   */
   needsSelection(): boolean;
+  /**
+   * Sets item window.
+   * @param itemWindow The itemWindow parameter.
+   */
   setItemWindow(itemWindow: Window_Base): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

@@ -8,18 +8,63 @@
 interface Sprite_Picture
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Picture#initialize}.
+   * Written in: {@link Sprite_Picture#initialize}.
+   * Read in: {@link Sprite_Picture#picture}.
    */
   _pictureId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Sprite_Picture#initialize}.
+   * Written in: {@link Sprite_Picture#initialize}, {@link Sprite_Picture#updateBitmap}.
+   * Read in: {@link Sprite_Picture#loadBitmap}, {@link Sprite_Picture#updateBitmap}.
+   */
   _pictureName: string;
+  /**
+   * Initializes initialize.
+   * @param pictureId The pictureId parameter.
+   */
   initialize(pictureId: number): void;
+  /**
+   * Performs load bitmap.
+   */
   loadBitmap(): void;
+  /**
+   * Gets picture.
+   * @returns The result.
+   */
   picture(): Game_Picture | null;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates bitmap.
+   */
   updateBitmap(): void;
+  /**
+   * Updates origin.
+   */
   updateOrigin(): void;
+  /**
+   * Updates other.
+   */
   updateOther(): void;
+  /**
+   * Updates position.
+   */
   updatePosition(): void;
+  /**
+   * Updates scale.
+   */
   updateScale(): void;
+  /**
+   * Updates tone.
+   */
   updateTone(): void;
 }

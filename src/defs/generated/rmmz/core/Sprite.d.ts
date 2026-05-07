@@ -8,19 +8,107 @@
 interface Sprite
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}.
+   * Read in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}.
    */
   _bitmap: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number[]`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setBlendColor}.
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getBlendColor}, {@link Sprite#setBlendColor}.
+   */
   _blendColor: number[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}.
+   * Read in: none.
+   */
   _blendMode: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | ColorFilter`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#_createColorFilter}, {@link Sprite#initialize}.
+   * Read in: {@link Sprite#_createColorFilter}, {@link Sprite#_updateColorFilter}.
+   */
   _colorFilter: null | ColorFilter;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number[]`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setColorTone}.
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getColorTone}, {@link Sprite#setColorTone}.
+   */
   _colorTone: number[];
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: none.
+   */
   _counter: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: none.
+   */
   _emptyBaseTexture: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}.
+   * Read in: {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}, {@link Sprite#setFrame}.
+   */
   _frame: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#hide}, {@link Sprite#initialize}, {@link Sprite#show}.
+   * Read in: {@link Sprite#updateVisibility}.
+   */
   _hidden: boolean;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite#initialize}.
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setHue}.
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#setHue}.
+   */
   _hue: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `boolean`.
+   * Initialized in: none.
+   * Written in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#setFrame}.
+   * Read in: {@link Sprite#_onBitmapLoad}.
+   */
   _refreshFrame: boolean;
+  /**
+   * Performs create color filter.
+   */
   _createColorFilter(): void;
   /**
    * Sets the color tone for the sprite.
@@ -28,9 +116,16 @@ interface Sprite
   _onBitmapChange(): void;
   /**
    * Sets the color tone for the sprite.
+   * @param bitmapLoaded The bitmapLoaded parameter.
    */
   _onBitmapLoad(bitmapLoaded: Bitmap): void;
+  /**
+   * Performs refresh.
+   */
   _refresh(): void;
+  /**
+   * Performs update color filter.
+   */
   _updateColorFilter(): void;
   /**
    * Destroys the sprite.
@@ -38,10 +133,12 @@ interface Sprite
   destroy(): void;
   /**
    * Gets the blend color for the sprite.
+   * @returns The result.
    */
   getBlendColor(): [number, number, number, number];
   /**
    * Gets the color tone for the sprite.
+   * @returns The result.
    */
   getColorTone(): [number, number, number, number];
   /**

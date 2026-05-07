@@ -8,12 +8,49 @@
 interface TilingSprite
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: {@link TilingSprite#initialize}.
+   * Written in: {@link TilingSprite#initialize}.
+   * Read in: {@link TilingSprite#_onBitmapChange}, {@link TilingSprite#_onBitmapLoad}, {@link TilingSprite#_refresh}.
    */
   _bitmap: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: none.
+   */
   _emptyBaseTexture: null;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `unknown`.
+   * Initialized in: {@link TilingSprite#initialize}.
+   * Written in: {@link TilingSprite#initialize}.
+   * Read in: {@link TilingSprite#_refresh}, {@link TilingSprite#setFrame}.
+   */
   _frame: unknown;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link TilingSprite#initialize}.
+   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.
+   * Read in: none.
+   */
   _height: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link TilingSprite#initialize}.
+   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.
+   * Read in: none.
+   */
   _width: number;
   /**
    * Updates the transform on all children of this container for rendering.

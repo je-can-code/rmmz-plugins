@@ -8,17 +8,53 @@
 interface FontManager
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `object`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link FontManager#isReady}, {@link FontManager#load}, {@link FontManager#startLoading}.
    */
   _states: object;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `object`.
+   * Initialized in: module init.
+   * Written in: module init.
+   * Read in: {@link FontManager#load}, {@link FontManager#startLoading}, {@link FontManager#throwLoadError}.
+   */
   _urls: object;
 }
 declare function FontManager(): never;
 declare namespace FontManager
 {
+  /**
+   * Determines whether ready.
+   * @returns True if ready; false otherwise.
+   */
   function isReady(): boolean;
+  /**
+   * Performs load.
+   * @param family The family parameter.
+   * @param filename The filename parameter.
+   */
   function load(family: string, filename: string): void;
+  /**
+   * Creates url.
+   * @param filename The filename parameter.
+   * @returns The result.
+   */
   function makeUrl(filename: string): string;
+  /**
+   * Performs start loading.
+   * @param family The family parameter.
+   * @param url The url parameter.
+   */
   function startLoading(family: string, url: string): void;
+  /**
+   * Performs throw load error.
+   * @param family The family parameter.
+   */
   function throwLoadError(family: string): void;
 }

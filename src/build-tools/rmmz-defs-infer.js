@@ -5825,6 +5825,220 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
 }
 
 /**
+ * A single function's observation of `this._*` usage.
+ * - `reads`: `this._x` used as an expression/condition.
+ * - `writes`: `this._x = ...`, `this._x += ...`, `this._x++`, etc.
+ * - `consumes`: common patterns on the property (shift/pop/length/etc).
+ *
+ * @typedef {{
+ *  reads: Set<string>,
+ *  writes: Set<string>,
+ *  consumes: Set<string>,
+ * }} ThisUnderscoreUsage
+ */
+
+/**
+ * Collect read/write/consume usage for `this._*` within one function.
+ *
+ * @param {import('acorn').FunctionDeclaration |
+ *   import('acorn').FunctionExpression |
+ *   import('acorn').ArrowFunctionExpression} funcNode
+ * @returns {Map<string, ThisUnderscoreUsage>}
+ */
+export function collectThisUnderscoreUsageFromFunction(funcNode)
+{
+  /** @type {Map<string, ThisUnderscoreUsage>} */
+  const out = new Map();
+
+  /**
+   * @param {string} propName
+   * @returns {ThisUnderscoreUsage}
+   */
+  function ensure(propName)
+  {
+    let cur = out.get(propName);
+    if (!cur)
+    {
+      cur = {
+        reads: new Set(),
+        writes: new Set(),
+        consumes: new Set(),
+      };
+      out.set(propName, cur);
+    }
+    return cur;
+  }
+
+  /**
+   * @param {import('acorn').AnyNode | null | undefined} node
+   * @param {import('acorn').AnyNode | null} parent
+   * @returns {void}
+   */
+  function walk(node, parent)
+  {
+    if (!node || typeof node !== 'object')
+    {
+      return;
+    }
+
+    // `this._prop` direct member.
+    if (
+      node.type === 'MemberExpression'
+      && !node.computed
+      && node.object.type === 'ThisExpression'
+      && node.property.type === 'Identifier'
+    )
+    {
+      const propName = node.property.name;
+      if (propName.startsWith('_'))
+      {
+        const usage = ensure(propName);
+
+        // LHS sites are writes (not reads).
+        if (
+          parent
+          && parent.type === 'AssignmentExpression'
+          && /** @type {*} */ (parent).left === node
+        )
+        {
+          usage.writes.add('assign');
+        }
+        else if (
+          parent
+          && parent.type === 'UpdateExpression'
+          && /** @type {*} */ (parent).argument === node
+        )
+        {
+          usage.writes.add('update');
+        }
+        else
+        {
+          usage.reads.add('read');
+        }
+      }
+    }
+
+    // Write operators on `this._prop` (captures `=`, `+=`, `||=`, etc).
+    if (node.type === 'AssignmentExpression')
+    {
+      const left = node.left;
+      if (
+        left.type === 'MemberExpression'
+        && !left.computed
+        && left.object.type === 'ThisExpression'
+        && left.property.type === 'Identifier'
+      )
+      {
+        const propName = left.property.name;
+        if (propName.startsWith('_'))
+        {
+          ensure(propName).writes.add(node.operator);
+        }
+      }
+    }
+    if (node.type === 'UpdateExpression')
+    {
+      const arg = node.argument;
+      if (
+        arg.type === 'MemberExpression'
+        && !arg.computed
+        && arg.object.type === 'ThisExpression'
+        && arg.property.type === 'Identifier'
+      )
+      {
+        const propName = arg.property.name;
+        if (propName.startsWith('_'))
+        {
+          ensure(propName).writes.add(node.operator);
+        }
+      }
+    }
+
+    // Consumption patterns: `this._queue.shift()` etc.
+    if (
+      node.type === 'CallExpression'
+      && node.callee
+      && node.callee.type === 'MemberExpression'
+      && !node.callee.computed
+    )
+    {
+      const callee = node.callee;
+      if (
+        callee.object.type === 'MemberExpression'
+        && !callee.object.computed
+        && callee.object.object.type === 'ThisExpression'
+        && callee.object.property.type === 'Identifier'
+        && callee.property.type === 'Identifier'
+      )
+      {
+        const propName = callee.object.property.name;
+        if (propName.startsWith('_'))
+        {
+          const op = callee.property.name;
+          if (['shift', 'pop', 'push', 'unshift', 'splice', 'sort', 'reverse', 'clear'].includes(op))
+          {
+            ensure(propName).consumes.add(`${op}()`);
+          }
+        }
+      }
+    }
+
+    // `.length` checks.
+    if (
+      node.type === 'MemberExpression'
+      && !node.computed
+      && node.property.type === 'Identifier'
+      && node.property.name === 'length'
+    )
+    {
+      if (
+        node.object.type === 'MemberExpression'
+        && !node.object.computed
+        && node.object.object.type === 'ThisExpression'
+        && node.object.property.type === 'Identifier'
+      )
+      {
+        const propName = node.object.property.name;
+        if (propName.startsWith('_'))
+        {
+          ensure(propName).consumes.add('.length');
+        }
+      }
+    }
+
+    // Recurse into children (skip loc/range metadata).
+    for (const key of Object.keys(node))
+    {
+      if (key === 'loc' || key === 'range' || key === 'start' || key === 'end')
+      {
+        continue;
+      }
+      const child = /** @type {*} */ (node)[key];
+      if (Array.isArray(child))
+      {
+        for (let i = 0; i < child.length; i++)
+        {
+          walk(child[i], node);
+        }
+      }
+      else if (child && typeof child === 'object')
+      {
+        walk(child, node);
+      }
+    }
+  }
+
+  const body = funcNode.body;
+  if (!body || body.type !== 'BlockStatement')
+  {
+    return out;
+  }
+
+  walk(body, null);
+  return out;
+}
+
+/**
  * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode
  * @param {InferContext} ctx
  * @returns {string}
@@ -5916,7 +6130,7 @@ export function buildMethodSignature(funcNode, src, lineStarts, stmtLoc, inferCt
 
   returnTs = refineReturnTsByMethodName(returnTs, inferCtx);
 
-  const docBlock = buildMethodDocStarLines(jd, funcNode);
+  const docBlock = buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs);
 
   return { paramsTs, returnTs, docBlock };
 }
@@ -5960,14 +6174,95 @@ function collectFormalParamNames(funcNode)
  * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode
  * @returns {string}
  */
-function buildMethodDocStarLines(jd, funcNode)
+function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
 {
   /** @type {string[]} */
   const starLines = [];
 
+  /**
+   * @param {string} methodName
+   * @returns {string}
+   */
+  function methodNameToWords(methodName)
+  {
+    return methodName
+      .replace(/^_+/, '')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/_/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  /**
+   * @param {string} raw
+   * @returns {string}
+   */
+  function titleFromName(raw)
+  {
+    const w = methodNameToWords(raw);
+    if (!w)
+    {
+      return 'this action';
+    }
+    return w;
+  }
+
   if (jd.summary && jd.summary.trim().length > 0)
   {
     starLines.push(` * ${escapeDocStarText(jd.summary.trim())}`);
+  }
+  else if (inferCtx && inferCtx.methodName)
+  {
+    const m = inferCtx.methodName;
+    const words = titleFromName(m);
+
+    if (/^is[A-Z]/.test(m) || /^can[A-Z]/.test(m) || /^has[A-Z]/.test(m))
+    {
+      starLines.push(` * Determines whether ${escapeDocStarText(words.replace(/^(is|can|has) /, ''))}.`);
+    }
+    else if (/^get[A-Z]/.test(m))
+    {
+      starLines.push(` * Gets ${escapeDocStarText(words.replace(/^get /, ''))}.`);
+    }
+    else if (/^set[A-Z]/.test(m))
+    {
+      starLines.push(` * Sets ${escapeDocStarText(words.replace(/^set /, ''))}.`);
+    }
+    else if (/^clear[A-Z]/.test(m) || /^reset[A-Z]/.test(m))
+    {
+      starLines.push(` * Clears ${escapeDocStarText(words.replace(/^(clear|reset) /, ''))}.`);
+    }
+    else if (/^add[A-Z]/.test(m))
+    {
+      starLines.push(` * Adds ${escapeDocStarText(words.replace(/^add /, ''))}.`);
+    }
+    else if (/^remove[A-Z]/.test(m))
+    {
+      starLines.push(` * Removes ${escapeDocStarText(words.replace(/^remove /, ''))}.`);
+    }
+    else if (/^update[A-Z]/.test(m))
+    {
+      starLines.push(` * Updates ${escapeDocStarText(words.replace(/^update /, ''))}.`);
+    }
+    else if (/^make[A-Z]/.test(m) || /^create[A-Z]/.test(m))
+    {
+      starLines.push(` * Creates ${escapeDocStarText(words.replace(/^(make|create) /, ''))}.`);
+    }
+    else if (/^init[A-Z]/.test(m) || m === 'initialize')
+    {
+      starLines.push(` * Initializes ${escapeDocStarText(words.replace(/^(init|initialize) /, ''))}.`);
+    }
+    else
+    {
+      if (returnTs && returnTs !== 'void')
+      {
+        starLines.push(` * Gets ${escapeDocStarText(words)}.`);
+      }
+      else
+      {
+        starLines.push(` * Performs ${escapeDocStarText(words)}.`);
+      }
+    }
   }
 
   const names = collectFormalParamNames(funcNode);
@@ -5977,6 +6272,29 @@ function buildMethodDocStarLines(jd, funcNode)
     if (prose && prose.trim().length > 0)
     {
       starLines.push(` * @param ${safeParam(pname)} ${escapeDocStarText(prose.trim())}`);
+    }
+    else
+    {
+      starLines.push(` * @param ${safeParam(pname)} ${escapeDocStarText(`The ${pname} parameter.`)}`);
+    }
+  }
+
+  if (jd.returnsDescription && jd.returnsDescription.trim().length > 0)
+  {
+    starLines.push(` * @returns ${escapeDocStarText(jd.returnsDescription.trim())}`);
+  }
+  else if (returnTs && returnTs !== 'void')
+  {
+    const m = inferCtx && inferCtx.methodName ? inferCtx.methodName : '';
+    const boolPrefix = /^is[A-Z]/.test(m) || /^can[A-Z]/.test(m) || /^has[A-Z]/.test(m);
+    if (m && boolPrefix && returnTs === 'boolean')
+    {
+      const words = titleFromName(m).replace(/^(is|can|has) /, '');
+      starLines.push(` * @returns True if ${escapeDocStarText(words)}; false otherwise.`);
+    }
+    else
+    {
+      starLines.push(' * @returns The result.');
     }
   }
 

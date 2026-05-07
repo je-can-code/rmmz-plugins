@@ -7,7 +7,18 @@
  */
 interface Window_EquipCommand
 {
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Gets max cols.
+   * @returns The result.
+   */
   maxCols(): number;
 }

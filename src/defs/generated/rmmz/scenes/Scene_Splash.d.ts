@@ -8,20 +8,71 @@
 interface Scene_Splash
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Sprite`.
+   * Initialized in: none.
+   * Written in: {@link Scene_Splash#createBackground}.
+   * Read in: {@link Scene_Splash#adjustBackground}, {@link Scene_Splash#createBackground}.
    */
   _backSprite: Sprite;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Scene_Splash#checkSkip}, {@link Scene_Splash#initWaitCount}, {@link Scene_Splash#updateWaitCount}.
+   * Read in: {@link Scene_Splash#updateWaitCount}.
+   */
   _waitCount: number;
+  /**
+   * Performs adjust background.
+   */
   adjustBackground(): void;
+  /**
+   * Performs check skip.
+   */
   checkSkip(): void;
+  /**
+   * Performs create.
+   */
   create(): void;
+  /**
+   * Creates background.
+   */
   createBackground(): void;
+  /**
+   * Performs goto title.
+   */
   gotoTitle(): void;
+  /**
+   * Initializes wait count.
+   */
   initWaitCount(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether enabled.
+   * @returns True if enabled; false otherwise.
+   */
   isEnabled(): boolean;
+  /**
+   * Performs start.
+   */
   start(): void;
+  /**
+   * Performs stop.
+   */
   stop(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates wait count.
+   * @returns The result.
+   */
   updateWaitCount(): boolean;
 }

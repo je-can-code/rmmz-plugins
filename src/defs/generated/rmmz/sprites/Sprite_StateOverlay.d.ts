@@ -8,18 +8,73 @@
 interface Sprite_StateOverlay
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#update}.
+   * Read in: {@link Sprite_StateOverlay#update}.
    */
   _animationCount: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Battler`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#setup}.
+   * Read in: {@link Sprite_StateOverlay#updatePattern}.
+   */
   _battler: null | Game_Battler;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.
+   * Read in: {@link Sprite_StateOverlay#updateFrame}.
+   */
   _overlayIndex: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.
+   * Read in: {@link Sprite_StateOverlay#updateFrame}.
+   */
   _pattern: number;
+  /**
+   * Gets animation wait.
+   * @returns The result.
+   */
   animationWait(): number;
+  /**
+   * Initializes members.
+   */
   initMembers(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs load bitmap.
+   */
   loadBitmap(): void;
+  /**
+   * Performs setup.
+   * @param battler The battler parameter.
+   */
   setup(battler: Game_Battler): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates frame.
+   */
   updateFrame(): void;
+  /**
+   * Updates pattern.
+   */
   updatePattern(): void;
 }

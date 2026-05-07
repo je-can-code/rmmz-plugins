@@ -8,12 +8,36 @@
 interface Game_Switches
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `unknown[]`.
+   * Initialized in: none.
+   * Written in: {@link Game_Switches#clear}.
+   * Read in: {@link Game_Switches#setValue}, {@link Game_Switches#value}.
    */
   _data: unknown[];
+  /**
+   * Performs clear.
+   */
   clear(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Performs on change.
+   */
   onChange(): void;
+  /**
+   * Sets value.
+   * @param switchId The switchId parameter.
+   * @param value The value parameter.
+   */
   setValue(switchId: number, value: boolean): void;
+  /**
+   * Gets value.
+   * @param switchId The switchId parameter.
+   * @returns The result.
+   */
   value(switchId: number): boolean;
 }

@@ -8,12 +8,35 @@
 interface Window_Help
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `string`.
+   * Initialized in: {@link Window_Help#initialize}.
+   * Written in: {@link Window_Help#initialize}, {@link Window_Help#setText}.
+   * Read in: {@link Window_Help#refresh}, {@link Window_Help#setText}.
    */
   _text: string;
+  /**
+   * Performs clear.
+   */
   clear(): void;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Performs refresh.
+   */
   refresh(): void;
+  /**
+   * Sets item.
+   * @param item The item parameter.
+   */
   setItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  /**
+   * Sets text.
+   * @param text The text parameter.
+   */
   setText(text: string): void;
 }

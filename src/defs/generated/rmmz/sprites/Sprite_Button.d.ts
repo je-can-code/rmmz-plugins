@@ -8,24 +8,108 @@
 interface Sprite_Button
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: {@link Sprite_Button#initialize}.
+   * Written in: {@link Sprite_Button#initialize}.
+   * Read in: {@link Sprite_Button#buttonData}, {@link Sprite_Button#onClick}.
    */
   _buttonType: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | () => void`.
+   * Initialized in: {@link Sprite_Button#initialize}.
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setClickHandler}.
+   * Read in: {@link Sprite_Button#onClick}.
+   */
   _clickHandler: null | () => void;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Rectangle`.
+   * Initialized in: {@link Sprite_Button#initialize}.
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setColdFrame}.
+   * Read in: {@link Sprite_Button#updateFrame}.
+   */
   _coldFrame: null | Rectangle;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Rectangle`.
+   * Initialized in: {@link Sprite_Button#initialize}.
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setHotFrame}.
+   * Read in: {@link Sprite_Button#updateFrame}.
+   */
   _hotFrame: null | Rectangle;
+  /**
+   * Gets block height.
+   * @returns The result.
+   */
   blockHeight(): number;
+  /**
+   * Gets block width.
+   * @returns The result.
+   */
   blockWidth(): number;
+  /**
+   * Gets button data.
+   * @returns The result.
+   */
   buttonData(): object;
+  /**
+   * Performs check bitmap.
+   */
   checkBitmap(): void;
+  /**
+   * Initializes initialize.
+   * @param buttonType The buttonType parameter.
+   */
   initialize(buttonType: number): void;
+  /**
+   * Performs load button image.
+   */
   loadButtonImage(): void;
+  /**
+   * Performs on click.
+   */
   onClick(): void;
+  /**
+   * Sets click handler.
+   * @param method The method parameter.
+   */
   setClickHandler(method: () => void): void;
+  /**
+   * Sets cold frame.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param width The width parameter.
+   * @param height The height parameter.
+   */
   setColdFrame(x: number, y: number, width: number, height: number): void;
+  /**
+   * Sets hot frame.
+   * @param x The x parameter.
+   * @param y The y parameter.
+   * @param width The width parameter.
+   * @param height The height parameter.
+   */
   setHotFrame(x: number, y: number, width: number, height: number): void;
+  /**
+   * Performs setup frames.
+   */
   setupFrames(): void;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates frame.
+   */
   updateFrame(): void;
+  /**
+   * Updates opacity.
+   */
   updateOpacity(): void;
 }

@@ -8,20 +8,80 @@
 interface Sprite_Balloon
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.
+   * Read in: {@link Sprite_Balloon#updateFrame}.
    */
   _balloonId: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `number`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}, {@link Sprite_Balloon#update}.
+   * Read in: {@link Sprite_Balloon#frameIndex}, {@link Sprite_Balloon#isPlaying}, {@link Sprite_Balloon#update}.
+   */
   _duration: number;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `null | Sprite`.
+   * Initialized in: none.
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.
+   * Read in: {@link Sprite_Balloon#updatePosition}.
+   */
   _target: null | Sprite;
+  /**
+   * Gets frame index.
+   * @returns The result.
+   */
   frameIndex(): number;
+  /**
+   * Initializes members.
+   */
   initMembers(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Determines whether playing.
+   * @returns True if playing; false otherwise.
+   */
   isPlaying(): boolean;
+  /**
+   * Performs load bitmap.
+   */
   loadBitmap(): void;
+  /**
+   * Performs setup.
+   * @param targetSprite The targetSprite parameter.
+   * @param balloonId The balloonId parameter.
+   */
   setup(targetSprite: Sprite, balloonId: number): void;
+  /**
+   * Gets speed.
+   * @returns The result.
+   */
   speed(): number;
+  /**
+   * Performs update.
+   */
   update(): void;
+  /**
+   * Updates frame.
+   */
   updateFrame(): void;
+  /**
+   * Updates position.
+   */
   updatePosition(): void;
+  /**
+   * Gets wait time.
+   * @returns The result.
+   */
   waitTime(): number;
 }

@@ -8,14 +8,48 @@
 interface Window_SkillType
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `null | Game_Actor`.
+   * Initialized in: {@link Window_SkillType#initialize}.
+   * Written in: {@link Window_SkillType#initialize}, {@link Window_SkillType#setActor}.
+   * Read in: {@link Window_SkillType#makeCommandList}, {@link Window_SkillType#selectLast}, {@link Window_SkillType#setActor}.
    */
   _actor: null | Game_Actor;
+  /**
+   * Inferred engine backing field.
+   *
+   * Type: `Window_Base`.
+   * Initialized in: none.
+   * Written in: {@link Window_SkillType#setSkillWindow}.
+   * Read in: {@link Window_SkillType#update}.
+   */
   _skillWindow: Window_Base;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
   initialize(rect: Rectangle): void;
+  /**
+   * Creates command list.
+   */
   makeCommandList(): void;
+  /**
+   * Performs select last.
+   */
   selectLast(): void;
+  /**
+   * Sets actor.
+   * @param actor The actor parameter.
+   */
   setActor(actor: Game_Actor): void;
+  /**
+   * Sets skill window.
+   * @param skillWindow The skillWindow parameter.
+   */
   setSkillWindow(skillWindow: Window_Base): void;
+  /**
+   * Performs update.
+   */
   update(): void;
 }

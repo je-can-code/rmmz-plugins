@@ -8,14 +8,43 @@
 interface Scene_Options
 {
   /**
-   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   * Inferred engine backing field.
+   *
+   * Type: `Window_Options`.
+   * Initialized in: none.
+   * Written in: {@link Scene_Options#createOptionsWindow}.
+   * Read in: {@link Scene_Options#createOptionsWindow}.
    */
   _optionsWindow: Window_Options;
+  /**
+   * Performs create.
+   */
   create(): void;
+  /**
+   * Creates options window.
+   */
   createOptionsWindow(): void;
+  /**
+   * Initializes initialize.
+   */
   initialize(): void;
+  /**
+   * Gets max commands.
+   * @returns The result.
+   */
   maxCommands(): number;
+  /**
+   * Gets max visible commands.
+   * @returns The result.
+   */
   maxVisibleCommands(): number;
+  /**
+   * Gets options window rect.
+   * @returns The result.
+   */
   optionsWindowRect(): Rectangle;
+  /**
+   * Performs terminate.
+   */
   terminate(): void;
 }
