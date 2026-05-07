@@ -69,6 +69,29 @@ const BUILTIN_RECEIVERS = new Set([
 ]);
 
 /**
+ * Minimal fallback docs when a member has no source JSDoc and no body to infer prose from.
+ *
+ * @param {string} summary
+ * @returns {string}
+ */
+function fallbackDoc(summary)
+{
+  return ` * ${summary}`;
+}
+
+/**
+ * @param {string} memberName
+ * @param {string} returnTs
+ * @returns {string}
+ */
+function fallbackMethodDoc(memberName, returnTs)
+{
+  const isGetLike = returnTs && returnTs !== 'void' && returnTs !== 'never';
+  const verb = isGetLike ? 'Gets' : 'Performs';
+  return fallbackDoc(`${verb} ${memberName}.`);
+}
+
+/**
  * @typedef {{ paramsTs: string, returnTs: string, docBlock?: string }} MethodSig
  * @typedef {{
  *   instanceMethods: Map<string, MethodSig>,
@@ -522,7 +545,7 @@ function extractFromFile(enginePath, stem)
           }
           else
           {
-            bucket.set(prop, { paramsTs: '', returnTs: 'unknown' });
+            bucket.set(prop, { paramsTs: '', returnTs: 'unknown', docBlock: fallbackMethodDoc(prop, 'unknown') });
           }
         }
         builtinProto.set(root, bucket);
@@ -554,7 +577,12 @@ function extractFromFile(enginePath, stem)
       }
       else
       {
-        fn.instanceMethods.set(prop, { paramsTs: '', returnTs: 'unknown' });
+        fn.instanceMethods.set(prop,
+          {
+            paramsTs: '',
+            returnTs: 'unknown',
+            docBlock: fallbackMethodDoc(prop, 'unknown'),
+          });
       }
       return;
     }
@@ -843,7 +871,12 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
     }
     for (const c of [...entry.literalStatics.keys()].sort())
     {
-      parts.push(`  const ${c}: ${entry.literalStatics.get(c)};\n`);
+      parts.push(
+        `  /**\n`
+        + `   * Engine static constant.\n`
+        + `   */\n`
+        + `  const ${c}: ${entry.literalStatics.get(c)};\n`,
+      );
     }
     parts.push('}\n');
   }
@@ -993,6 +1026,7 @@ function emitBundle(bundle)
     const shortName = segments[segments.length - 1];
     const hdr = `/**\n * Generated from ${sourceLabel}\n * Class: ${pathStr}\n */\n\n`;
 
+    const hasStatic = entry.staticMethods.size > 0 || entry.literalStatics.size > 0;
     const lines = [
       hdr,
       `declare namespace ${parentNs}\n{\n`,
@@ -1003,7 +1037,29 @@ function emitBundle(bundle)
     {
       lines.push(`${formatMethod(m, entry.instanceMethods.get(m), '    ')}\n`);
     }
-    lines.push('  }\n}\n');
+    lines.push('  }\n');
+
+    if (hasStatic)
+    {
+      lines.push(`\n  export namespace ${shortName}\n  {\n`);
+      for (const s of [...entry.staticMethods.keys()].sort())
+      {
+        const sig = entry.staticMethods.get(s);
+        lines.push(`${formatNamespaceStaticFn(s, sig, '    ')}\n`);
+      }
+      for (const c of [...entry.literalStatics.keys()].sort())
+      {
+        lines.push(
+          `    /**\n`
+          + `     * Engine static constant.\n`
+          + `     */\n`
+          + `    const ${c}: ${entry.literalStatics.get(c)};\n`,
+        );
+      }
+      lines.push('  }\n');
+    }
+
+    lines.push('}\n');
     write(pathForClassDecl(segments), lines.join(''));
   }
 

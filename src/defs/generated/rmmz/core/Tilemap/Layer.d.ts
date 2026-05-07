@@ -166,4 +166,16 @@ declare namespace Tilemap
      */
     size(): number;
   }
+
+  export namespace Layer
+  {
+    /**
+     * Engine static constant.
+     */
+    const MAX_GL_TEXTURES: 3;
+    /**
+     * Engine static constant.
+     */
+    const MAX_SIZE: 16000;
+  }
 }

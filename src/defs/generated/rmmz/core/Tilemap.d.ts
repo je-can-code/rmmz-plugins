@@ -418,14 +418,44 @@ declare namespace Tilemap
    * @returns The result.
    */
   function makeAutotileId(kind: number, shape: number): number;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_A1: 2048;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_A2: 2816;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_A3: 4352;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_A4: 5888;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_A5: 1536;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_B: 0;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_C: 256;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_D: 512;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_E: 768;
+  /**
+   * Engine static constant.
+   */
   const TILE_ID_MAX: 8192;
 }

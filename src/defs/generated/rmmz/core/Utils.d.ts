@@ -152,6 +152,12 @@ declare namespace Utils
    * @param key The encryption key.
    */
   function setEncryptionInfo(hasImages: boolean, hasAudio: boolean, key: string): void;
+  /**
+   * Engine static constant.
+   */
   const RPGMAKER_NAME: "MZ";
+  /**
+   * Engine static constant.
+   */
   const RPGMAKER_VERSION: "1.10.0";
 }

@@ -88,6 +88,12 @@ interface Window_DebugRange
 }
 declare namespace Window_DebugRange
 {
+  /**
+   * Engine static constant.
+   */
   const lastIndex: 0;
+  /**
+   * Engine static constant.
+   */
   const lastTopRow: 0;
 }

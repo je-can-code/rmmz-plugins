@@ -58,7 +58,16 @@ declare namespace ConfigManager
    * Performs save.
    */
   function save(): void;
+  /**
+   * Engine static constant.
+   */
   const alwaysDash: false;
+  /**
+   * Engine static constant.
+   */
   const commandRemember: false;
+  /**
+   * Engine static constant.
+   */
   const touchUI: true;
 }

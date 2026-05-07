@@ -459,10 +459,28 @@ interface Game_Party
 }
 declare namespace Game_Party
 {
+  /**
+   * Engine static constant.
+   */
   const ABILITY_CANCEL_SURPRISE: 2;
+  /**
+   * Engine static constant.
+   */
   const ABILITY_DROP_ITEM_DOUBLE: 5;
+  /**
+   * Engine static constant.
+   */
   const ABILITY_ENCOUNTER_HALF: 0;
+  /**
+   * Engine static constant.
+   */
   const ABILITY_ENCOUNTER_NONE: 1;
+  /**
+   * Engine static constant.
+   */
   const ABILITY_GOLD_DOUBLE: 4;
+  /**
+   * Engine static constant.
+   */
   const ABILITY_RAISE_PREEMPTIVE: 3;
 }

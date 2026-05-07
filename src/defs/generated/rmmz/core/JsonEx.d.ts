@@ -39,5 +39,8 @@ declare namespace JsonEx
    * @returns The result.
    */
   function stringify(object: object): string;
+  /**
+   * Engine static constant.
+   */
   const maxDepth: 100;
 }

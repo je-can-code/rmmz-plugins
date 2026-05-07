@@ -272,7 +272,16 @@ declare namespace TouchInput
    * Updates the touch data.
    */
   function update(): void;
+  /**
+   * Engine static constant.
+   */
   const keyRepeatInterval: 6;
+  /**
+   * Engine static constant.
+   */
   const keyRepeatWait: 24;
+  /**
+   * Engine static constant.
+   */
   const moveThreshold: 10;
 }

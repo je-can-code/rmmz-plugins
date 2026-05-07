@@ -619,21 +619,72 @@ interface Game_Action
 }
 declare namespace Game_Action
 {
+  /**
+   * Engine static constant.
+   */
   const EFFECT_ADD_BUFF: 31;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_ADD_DEBUFF: 32;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_ADD_STATE: 21;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_COMMON_EVENT: 44;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_GAIN_TP: 13;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_GROW: 42;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_LEARN_SKILL: 43;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_RECOVER_HP: 11;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_RECOVER_MP: 12;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_REMOVE_BUFF: 33;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_REMOVE_DEBUFF: 34;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_REMOVE_STATE: 22;
+  /**
+   * Engine static constant.
+   */
   const EFFECT_SPECIAL: 41;
+  /**
+   * Engine static constant.
+   */
   const HITTYPE_CERTAIN: 0;
+  /**
+   * Engine static constant.
+   */
   const HITTYPE_MAGICAL: 2;
+  /**
+   * Engine static constant.
+   */
   const HITTYPE_PHYSICAL: 1;
+  /**
+   * Engine static constant.
+   */
   const SPECIAL_EFFECT_ESCAPE: 0;
 }

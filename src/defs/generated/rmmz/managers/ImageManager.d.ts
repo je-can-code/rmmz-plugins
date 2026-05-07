@@ -177,8 +177,20 @@ declare namespace ImageManager
    * @param bitmap The bitmap parameter.
    */
   function throwLoadError(bitmap: Bitmap): void;
+  /**
+   * Engine static constant.
+   */
   const standardFaceHeight: 144;
+  /**
+   * Engine static constant.
+   */
   const standardFaceWidth: 144;
+  /**
+   * Engine static constant.
+   */
   const standardIconHeight: 32;
+  /**
+   * Engine static constant.
+   */
   const standardIconWidth: 32;
 }

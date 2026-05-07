@@ -213,50 +213,188 @@ interface Game_Character
 }
 declare namespace Game_Character
 {
+  /**
+   * Engine static constant.
+   */
   const ROUTE_CHANGE_BLEND_MODE: 43;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_CHANGE_FREQ: 30;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_CHANGE_IMAGE: 41;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_CHANGE_OPACITY: 42;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_CHANGE_SPEED: 29;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_DIR_FIX_OFF: 36;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_DIR_FIX_ON: 35;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_END: 0;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_JUMP: 14;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_AWAY: 11;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_BACKWARD: 13;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_DOWN: 1;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_FORWARD: 12;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_LEFT: 2;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_LOWER_L: 5;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_LOWER_R: 6;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_RANDOM: 9;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_RIGHT: 3;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_TOWARD: 10;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_UP: 4;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_UPPER_L: 7;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_MOVE_UPPER_R: 8;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_PLAY_SE: 44;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_SCRIPT: 45;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_STEP_ANIME_OFF: 34;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_STEP_ANIME_ON: 33;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_SWITCH_OFF: 28;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_SWITCH_ON: 27;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_THROUGH_OFF: 38;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_THROUGH_ON: 37;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TRANSPARENT_OFF: 40;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TRANSPARENT_ON: 39;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_180D: 22;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_90D_L: 21;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_90D_R: 20;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_90D_R_L: 23;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_AWAY: 26;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_DOWN: 16;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_LEFT: 17;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_RANDOM: 24;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_RIGHT: 18;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_TOWARD: 25;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_TURN_UP: 19;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_WAIT: 15;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_WALK_ANIME_OFF: 32;
+  /**
+   * Engine static constant.
+   */
   const ROUTE_WALK_ANIME_ON: 31;
 }

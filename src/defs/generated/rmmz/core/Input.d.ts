@@ -202,6 +202,12 @@ declare namespace Input
    * @param buttonName The buttonName parameter.
    */
   function virtualClick(buttonName: string): void;
+  /**
+   * Engine static constant.
+   */
   const keyRepeatInterval: 6;
+  /**
+   * Engine static constant.
+   */
   const keyRepeatWait: 24;
 }

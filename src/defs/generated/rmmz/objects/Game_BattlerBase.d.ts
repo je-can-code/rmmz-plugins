@@ -770,35 +770,128 @@ interface Game_BattlerBase
 }
 declare namespace Game_BattlerBase
 {
+  /**
+   * Engine static constant.
+   */
   const FLAG_ID_AUTO_BATTLE: 0;
+  /**
+   * Engine static constant.
+   */
   const FLAG_ID_GUARD: 1;
+  /**
+   * Engine static constant.
+   */
   const FLAG_ID_PRESERVE_TP: 3;
+  /**
+   * Engine static constant.
+   */
   const FLAG_ID_SUBSTITUTE: 2;
+  /**
+   * Engine static constant.
+   */
   const ICON_BUFF_START: 32;
+  /**
+   * Engine static constant.
+   */
   const ICON_DEBUFF_START: 48;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ACTION_PLUS: 61;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ATTACK_ELEMENT: 31;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ATTACK_SKILL: 35;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ATTACK_SPEED: 33;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ATTACK_STATE: 32;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ATTACK_TIMES: 34;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_COLLAPSE_TYPE: 63;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_DEBUFF_RATE: 12;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_ELEMENT_RATE: 11;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_EQUIP_ATYPE: 52;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_EQUIP_LOCK: 53;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_EQUIP_SEAL: 54;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_EQUIP_WTYPE: 51;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_PARAM: 21;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_PARTY_ABILITY: 64;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_SKILL_ADD: 43;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_SKILL_SEAL: 44;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_SLOT_TYPE: 55;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_SPARAM: 23;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_SPECIAL_FLAG: 62;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_STATE_RATE: 13;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_STATE_RESIST: 14;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_STYPE_ADD: 41;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_STYPE_SEAL: 42;
+  /**
+   * Engine static constant.
+   */
   const TRAIT_XPARAM: 22;
 }
