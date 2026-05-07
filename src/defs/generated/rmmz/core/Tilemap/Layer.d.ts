@@ -5,7 +5,7 @@
 
 declare namespace Tilemap
 {
-  export interface Layer
+  export interface Layer extends PIXI.Container
   {
     /**
      * Inferred engine backing field.

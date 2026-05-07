@@ -5,7 +5,7 @@
  * Do not hand-edit; regenerate with bun run defs:generate.
  * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
  */
-interface Game_Battler
+interface Game_Battler extends Game_BattlerBase
 {
   /**
    * Inferred engine backing field.

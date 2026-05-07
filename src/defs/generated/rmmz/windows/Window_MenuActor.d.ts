@@ -5,7 +5,7 @@
  * Do not hand-edit; regenerate with bun run defs:generate.
  * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
  */
-interface Window_MenuActor
+interface Window_MenuActor extends Window_MenuStatus
 {
   /**
    * Initializes initialize.

@@ -5,7 +5,7 @@
  * Do not hand-edit; regenerate with bun run defs:generate.
  * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
  */
-interface Spriteset_Base
+interface Spriteset_Base extends Sprite
 {
   /**
    * Inferred engine backing field.

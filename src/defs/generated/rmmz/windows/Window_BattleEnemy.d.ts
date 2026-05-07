@@ -5,7 +5,7 @@
  * Do not hand-edit; regenerate with bun run defs:generate.
  * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
  */
-interface Window_BattleEnemy
+interface Window_BattleEnemy extends Window_Selectable
 {
   /**
    * Inferred engine backing field.

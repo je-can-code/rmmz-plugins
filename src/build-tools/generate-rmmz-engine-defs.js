@@ -104,6 +104,7 @@ function fallbackMethodDoc(memberName, returnTs)
  *     readIn: Set<string>,
  *     consumedBy: Map<string, Set<string>>,
  *   }>,
+ *   extendsBase: string | null,
  * }} ClassEntry
  */
 
@@ -449,6 +450,7 @@ function extractFromFile(enginePath, stem)
         literalStatics: new Map(),
         instancePropertyBuckets: new Map(),
         instancePropertyUsage: new Map(),
+        extendsBase: null,
       };
       classes.set(pathStr, e);
     }
@@ -485,6 +487,43 @@ function extractFromFile(enginePath, stem)
 
     const left = node.left;
     const right = node.right;
+
+    // -------------------------------------------------------------------------
+    // Prototype inheritance: Child.prototype = Object.create(Parent.prototype)
+    // -------------------------------------------------------------------------
+    if (
+      left.type === 'MemberExpression'
+      && !left.computed
+      && left.property.type === 'Identifier'
+      && left.property.name === 'prototype'
+      && right.type === 'CallExpression'
+      && right.callee.type === 'MemberExpression'
+      && !right.callee.computed
+      && right.callee.object.type === 'Identifier'
+      && right.callee.object.name === 'Object'
+      && right.callee.property.type === 'Identifier'
+      && right.callee.property.name === 'create'
+      && right.arguments.length >= 1
+    )
+    {
+      const arg0 = right.arguments[0];
+      if (
+        arg0
+        && arg0.type === 'MemberExpression'
+        && !arg0.computed
+        && arg0.property.type === 'Identifier'
+        && arg0.property.name === 'prototype'
+      )
+      {
+        const childPath = memberChain(left.object);
+        const parentPath = memberChain(arg0.object);
+        if (childPath !== null && parentPath !== null)
+        {
+          ensureClass(childPath).extendsBase = parentPath;
+        }
+      }
+      return;
+    }
 
     // -------------------------------------------------------------------------
     // Global identifiers: $gameParty = ...
@@ -773,6 +812,99 @@ function pathForClassDecl(segments)
 }
 
 /**
+ * Relative fragment path for a logical class path (e.g. `Game_Actor` → `objects/Game_Actor.d.ts`).
+ *
+ * @param {string} stem
+ * @param {string} classPathStr
+ * @returns {string}
+ */
+function fragmentPathForClass(stem, classPathStr)
+{
+  const segments = classPathStr.split('.');
+  return path.join(stem, pathForClassDecl(segments)).replace(/\\/g, '/');
+}
+
+/**
+ * Topological order so each `extends` parent fragment precedes the child (TS needs the base type in scope).
+ *
+ * @param {string[]} refs
+ * @param {Map<string, string>} extendsGraph child class path → parent class path
+ * @param {Map<string, string>} classStem class path → stem dir
+ * @returns {string[]}
+ */
+function topoSortRefsByExtends(refs, extendsGraph, classStem)
+{
+  const refSet = new Set(refs);
+  /** @type {Map<string, Set<string>>} */
+  const adj = new Map();
+  /** @type {Map<string, number>} */
+  const indeg = new Map();
+  for (const r of refs)
+  {
+    indeg.set(r, 0);
+    adj.set(r, new Set());
+  }
+  for (const [child, parent] of extendsGraph)
+  {
+    const cs = classStem.get(child);
+    const ps = classStem.get(parent);
+    if (cs === undefined || ps === undefined)
+    {
+      continue;
+    }
+    const childFile = fragmentPathForClass(cs, child);
+    const parentFile = fragmentPathForClass(ps, parent);
+    if (!refSet.has(childFile) || !refSet.has(parentFile) || childFile === parentFile)
+    {
+      continue;
+    }
+    const outs = adj.get(parentFile);
+    if (outs && !outs.has(childFile))
+    {
+      outs.add(childFile);
+      indeg.set(childFile, (indeg.get(childFile) ?? 0) + 1);
+    }
+  }
+  /** @type {string[]} */
+  const q = [...refs].filter((r) => (indeg.get(r) ?? 0) === 0).sort();
+  /** @type {string[]} */
+  const out = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+  while (q.length > 0)
+  {
+    const n = /** @type {string} */ (q.shift());
+    if (seen.has(n))
+    {
+      continue;
+    }
+    seen.add(n);
+    out.push(n);
+    const nexts = [...(adj.get(n) ?? new Set())].sort();
+    for (const v of nexts)
+    {
+      indeg.set(v, (indeg.get(v) ?? 1) - 1);
+      if (indeg.get(v) === 0)
+      {
+        q.push(v);
+        q.sort();
+      }
+    }
+  }
+  if (out.length < refs.length)
+  {
+    for (const r of [...refs].sort())
+    {
+      if (!seen.has(r))
+      {
+        out.push(r);
+      }
+    }
+  }
+  return out;
+}
+
+/**
  * @param {MethodSig} sig
  * @param {string} indent
  * @returns {string}
@@ -843,10 +975,11 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
   const hasInstance = entryHasInstanceSurface(entry);
   const hasStatic = entry.staticMethods.size > 0 || entry.literalStatics.size > 0;
   const parts = [];
+  const extendsClause = entry.extendsBase ? ` extends ${entry.extendsBase}` : '';
 
   if (hasInstance)
   {
-    parts.push(`interface ${name}\n{\n`);
+    parts.push(`interface ${name}${extendsClause}\n{\n`);
     parts.push(formatInstancePropsBlock(entry, '  '));
     for (const m of [...entry.instanceMethods.keys()].sort())
     {
@@ -893,7 +1026,12 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
  * @param {ExtractResult} bundle
  * @returns {string[]}
  */
-function emitBundle(bundle)
+/**
+ * @param {ExtractResult} bundle
+ * @param {Map<string, string>} classStemOut class path (e.g. `Game_Actor`) → stem (`objects`)
+ * @param {Map<string, string>} extendsGraphOut child class path → parent class path from `Object.create`
+ */
+function emitBundle(bundle, classStemOut, extendsGraphOut)
 {
   const {
     stem,
@@ -1025,12 +1163,13 @@ function emitBundle(bundle)
     const parentNs = segments.slice(0, -1).join('.');
     const shortName = segments[segments.length - 1];
     const hdr = `/**\n * Generated from ${sourceLabel}\n * Class: ${pathStr}\n */\n\n`;
+    const nestedExtends = entry.extendsBase ? ` extends ${entry.extendsBase}` : '';
 
     const hasStatic = entry.staticMethods.size > 0 || entry.literalStatics.size > 0;
     const lines = [
       hdr,
       `declare namespace ${parentNs}\n{\n`,
-      `  export interface ${shortName}\n  {\n`,
+      `  export interface ${shortName}${nestedExtends}\n  {\n`,
     ];
     lines.push(formatInstancePropsBlock(entry, '    '));
     for (const m of [...entry.instanceMethods.keys()].sort())
@@ -1065,6 +1204,15 @@ function emitBundle(bundle)
 
   // Namespaces like Graphics.FPSCounter do not emit parent static-only here if parent emitted above.
 
+  for (const [pathStr, entry] of classes)
+  {
+    classStemOut.set(pathStr, stem);
+    if (entry.extendsBase !== null && entry.extendsBase.length > 0)
+    {
+      extendsGraphOut.set(pathStr, entry.extendsBase);
+    }
+  }
+
   return written;
 }
 
@@ -1091,6 +1239,10 @@ function main()
 
   /** @type {string[]} */
   const allRefs = [];
+  /** @type {Map<string, string>} */
+  const classStemMeta = new Map();
+  /** @type {Map<string, string>} */
+  const extendsGraph = new Map();
 
   for (const { file, stem } of ENGINE_SOURCE_FILES)
   {
@@ -1100,11 +1252,11 @@ function main()
       throw new Error(`Missing engine file: ${enginePath}`);
     }
     const bundle = extractFromFile(enginePath, stem);
-    const written = emitBundle(bundle);
+    const written = emitBundle(bundle, classStemMeta, extendsGraph);
     allRefs.push(...written.sort());
   }
 
-  const uniq = [...new Set(allRefs)].sort();
+  const uniq = topoSortRefsByExtends([...new Set(allRefs)], extendsGraph, classStemMeta);
   const indexLines = [
     '/**',
     ' * RPG Maker MZ engine declarations generated from project/js/rmmz_*.js',

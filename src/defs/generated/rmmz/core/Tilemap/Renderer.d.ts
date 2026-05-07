@@ -5,7 +5,7 @@
 
 declare namespace Tilemap
 {
-  export interface Renderer
+  export interface Renderer extends PIXI.ObjectRenderer
   {
     /**
      * Inferred engine backing field.

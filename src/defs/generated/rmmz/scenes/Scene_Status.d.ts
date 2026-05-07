@@ -5,7 +5,7 @@
  * Do not hand-edit; regenerate with bun run defs:generate.
  * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
  */
-interface Scene_Status
+interface Scene_Status extends Scene_MenuBase
 {
   /**
    * Inferred engine backing field.

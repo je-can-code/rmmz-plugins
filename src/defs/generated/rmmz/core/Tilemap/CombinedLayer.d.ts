@@ -5,7 +5,7 @@
 
 declare namespace Tilemap
 {
-  export interface CombinedLayer
+  export interface CombinedLayer extends PIXI.Container
   {
     /**
      * Adds rect.
