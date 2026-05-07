@@ -1,0 +1,148 @@
+/**
+ * Generated from project/js/rmmz_objects.js
+ * Class: Game_Map
+ * Instance/static typings merge with the engine constructor + prototype in project/js.
+ * Do not hand-edit; regenerate with bun run defs:generate.
+ * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
+ */
+interface Game_Map
+{
+  /**
+   * Instance fields inferred from `this._*` assignments across vanilla engine sources.
+   */
+  _battleback1Name: null | string;
+  _battleback2Name: null | string;
+  _commonEvents: unknown[];
+  _displayX: number;
+  _displayY: number;
+  _events: unknown[];
+  _interpreter: Game_Interpreter;
+  _mapId: number;
+  _nameDisplay: boolean;
+  _needsRefresh: boolean;
+  _parallaxLoopX: boolean;
+  _parallaxLoopY: boolean;
+  _parallaxName: string;
+  _parallaxSx: number;
+  _parallaxSy: number;
+  _parallaxX: number;
+  _parallaxY: number;
+  _parallaxZero: boolean;
+  _scrollDirection: number;
+  _scrollRest: number;
+  _scrollSpeed: number;
+  _tileEvents: unknown;
+  _tilesetId: number;
+  _vehicles: unknown[];
+  adjustX(x: number): number;
+  adjustY(y: number): number;
+  airship(): Game_Vehicle;
+  allTiles(x: number, y: number): number[];
+  autoplay(): void;
+  autorunCommonEvents(): object[];
+  autotileType(x: number, y: number, z: number): number;
+  battleback1Name(): string;
+  battleback2Name(): string;
+  boat(): Game_Vehicle;
+  bushDepth(): number;
+  canvasToMapX(x: number): number;
+  canvasToMapY(y: number): number;
+  changeBattleback(battleback1Name: string, battleback2Name: string): void;
+  changeParallax(name: string, loopX: boolean, loopY: boolean, sx: number, sy: number): void;
+  changeTileset(tilesetId: number): void;
+  checkLayeredTilesFlags(x: number, y: number, bit: number): boolean;
+  checkPassage(x: number, y: number, bit: number): boolean;
+  createVehicles(): void;
+  data(): number[];
+  deltaX(x1: number, x2: number): number;
+  deltaY(y1: number, y2: number): number;
+  disableNameDisplay(): void;
+  displayName(): string;
+  displayX(): number;
+  displayY(): number;
+  distance(x1: number, y1: number, x2: number, y2: number): number;
+  doScroll(direction: number, distance: number): void;
+  enableNameDisplay(): void;
+  encounterList(): object[];
+  encounterStep(): number;
+  eraseEvent(eventId: number): void;
+  event(eventId: number): Game_Event | undefined;
+  eventIdXy(x: number, y: number): number;
+  events(): Game_Event[];
+  eventsXy(x: number, y: number): Game_Event[];
+  eventsXyNt(x: number, y: number): Game_Event[];
+  height(): number;
+  initialize(): void;
+  isAirshipLandOk(x: number, y: number): boolean;
+  isAnyEventStarting(): boolean;
+  isBoatPassable(x: number, y: number): boolean;
+  isBush(x: number, y: number): boolean;
+  isCounter(x: number, y: number): boolean;
+  isDamageFloor(x: number, y: number): boolean;
+  isDashDisabled(): boolean;
+  isEventRunning(): boolean;
+  isLadder(x: number, y: number): boolean;
+  isLoopHorizontal(): boolean;
+  isLoopVertical(): boolean;
+  isNameDisplayEnabled(): boolean;
+  isOverworld(): boolean;
+  isPassable(x: number, y: number, d: number): boolean;
+  isScrolling(): boolean;
+  isShipPassable(x: number, y: number): boolean;
+  isValid(x: number, y: number): boolean;
+  layeredTiles(x: number, y: number): number[];
+  mapId(): number;
+  parallaxName(): string;
+  parallaxOx(): number;
+  parallaxOy(): number;
+  parallelCommonEvents(): object[];
+  refereshVehicles(): void;
+  refresh(): void;
+  refreshIfNeeded(): void;
+  refreshTileEvents(): void;
+  regionId(x: number, y: number): number;
+  requestRefresh(): void;
+  roundX(x: number): number;
+  roundXWithDirection(x: number, d: number): number;
+  roundY(y: number): number;
+  roundYWithDirection(y: number, d: number): number;
+  screenTileX(): number;
+  screenTileY(): number;
+  scrollDistance(): number;
+  scrollDown(distance: number): void;
+  scrollLeft(distance: number): void;
+  scrollRight(distance: number): void;
+  scrollUp(distance: number): void;
+  setDisplayPos(x: number, y: number): void;
+  setup(mapId: number): void;
+  setupAutorunCommonEvent(): boolean;
+  setupBattleback(): void;
+  setupEvents(): void;
+  setupParallax(): void;
+  setupScroll(): void;
+  setupStartingEvent(): boolean;
+  setupStartingMapEvent(): boolean;
+  setupTestEvent(): boolean;
+  ship(): Game_Vehicle;
+  startScroll(direction: number, distance: number, speed: number): void;
+  terrainTag(x: number, y: number): number;
+  tileEventsXy(x: number, y: number): Game_Event[];
+  tileHeight(): number;
+  tileId(x: number, y: number, z: number): number;
+  tileWidth(): number;
+  tileset(): object | undefined;
+  tilesetFlags(): number[];
+  tilesetId(): number;
+  unlockEvent(eventId: number): void;
+  update(sceneActive: boolean): void;
+  updateEvents(): void;
+  updateInterpreter(): void;
+  updateParallax(): void;
+  updateScroll(): void;
+  updateVehicles(): void;
+  vehicle(_type: number | string): Game_Vehicle | null;
+  vehicles(): Game_Vehicle[];
+  width(): number;
+  xWithDirection(x: number, d: number): number;
+  yWithDirection(y: number, d: number): number;
+}

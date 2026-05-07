@@ -1,5 +1,5 @@
 ---
-status: completed
+status: done
 area: architecture
 ---
 
