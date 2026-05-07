@@ -1,9 +1,13 @@
 ---
-status: open
+status: deferred
 area: architecture
 ---
 
 # `Game_Action` battler identity (UUID vs reference)
+
+## Schedule
+
+Explicitly **deferred** — not slated for near-term execution; revisit when save/map identity work is worth the churn.
 
 ## Source
 

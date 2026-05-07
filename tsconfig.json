@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "target": "ESNext",
+    "module": "commonjs"
+  },
+  "exclude": [
+    "**/node_modules/**",
+    "./out/**"
+  ],
+  "include": [
+    "./src/defs/*.d.ts",
+    "./src/defs/**/*.d.ts",
+    "./src/plugins/**/*.js",
+    "./project/js/*.js"
+  ]
+}

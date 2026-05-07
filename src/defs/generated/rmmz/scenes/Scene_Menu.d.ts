@@ -1,0 +1,121 @@
+/**
+ * Generated from project/js/rmmz_scenes.js
+ * Class: Scene_Menu
+ * Instance/static typings merge with the engine constructor + prototype in project/js.
+ * Do not hand-edit; regenerate with bun run defs:generate.
+ * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
+ */
+interface Scene_Menu extends Scene_MenuBase
+{
+  /**
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createCommandWindow}.<br/>
+   * Read in: {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#onPersonalOk}.<br/>
+   */
+  _commandWindow: unknown;
+  /**
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Gold`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createGoldWindow}.<br/>
+   * Read in: {@link Scene_Menu#createGoldWindow}.<br/>
+   */
+  _goldWindow: Window_Gold;
+  /**
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_MenuStatus`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Menu#commandFormation}, {@link Scene_Menu#commandPersonal}, {@link Scene_Menu#createStatusWindow}, {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onFormationOk}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#start}.<br/>
+   */
+  _statusWindow: Window_MenuStatus;
+  /**
+   * Performs command formation.
+   */
+  commandFormation(): void;
+  /**
+   * Performs command game end.
+   */
+  commandGameEnd(): void;
+  /**
+   * Performs command item.
+   */
+  commandItem(): void;
+  /**
+   * Performs command options.
+   */
+  commandOptions(): void;
+  /**
+   * Performs command personal.
+   */
+  commandPersonal(): void;
+  /**
+   * Performs command save.
+   */
+  commandSave(): void;
+  /**
+   * Gets command window rect.
+   * @returns The result.
+   */
+  commandWindowRect(): Rectangle;
+  /**
+   * Performs create.
+   */
+  create(): void;
+  /**
+   * Creates command window.
+   */
+  createCommandWindow(): void;
+  /**
+   * Creates gold window.
+   */
+  createGoldWindow(): void;
+  /**
+   * Creates status window.
+   */
+  createStatusWindow(): void;
+  /**
+   * Gets gold window rect.
+   * @returns The result.
+   */
+  goldWindowRect(): Rectangle;
+  /**
+   * Gets help area height.
+   * @returns The result.
+   */
+  helpAreaHeight(): number;
+  /**
+   * Initializes initialize.
+   */
+  initialize(): void;
+  /**
+   * Performs on formation cancel.
+   */
+  onFormationCancel(): void;
+  /**
+   * Performs on formation ok.
+   */
+  onFormationOk(): void;
+  /**
+   * Performs on personal cancel.
+   */
+  onPersonalCancel(): void;
+  /**
+   * Performs on personal ok.
+   */
+  onPersonalOk(): void;
+  /**
+   * Performs start.
+   */
+  start(): void;
+  /**
+   * Gets status window rect.
+   * @returns The result.
+   */
+  statusWindowRect(): Rectangle;
+}
