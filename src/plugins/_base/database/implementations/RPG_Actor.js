@@ -75,7 +75,7 @@ class RPG_Actor
 
   /**
    * Constructor.
-   * @param {rm.types.Actor} actor The actor to parse.
+   * @param {RPG_Actor} actor The actor to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(actor, index)
@@ -89,7 +89,7 @@ class RPG_Actor
 
   /**
    * Maps the data from the JSON to this object.
-   * @param {rm.types.Actor} actor The actor to parse.
+   * @param {RPG_Actor} actor The actor to parse.
    */
   initMembers(actor)
   {

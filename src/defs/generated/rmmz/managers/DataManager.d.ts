@@ -59,7 +59,7 @@ declare namespace DataManager
    * Gets earliest savefile id.
    * @returns The result.
    */
-  function earliestSavefileId(): number;
+  function earliestSavefileId(): unknown | number;
   /**
    * Gets empty savefile id.
    * @returns The result.
@@ -69,17 +69,17 @@ declare namespace DataManager
    * Performs extract array metadata.
    * @param array The array parameter.
    */
-  function extractArrayMetadata(array: object[]): void;
+  function extractArrayMetadata(array: unknown): void;
   /**
    * Performs extract metadata.
    * @param data The data parameter.
    */
-  function extractMetadata(data: { note: string }): void;
+  function extractMetadata(data: unknown): void;
   /**
    * Performs extract save contents.
    * @param contents The contents parameter.
    */
-  function extractSaveContents(contents: object): void;
+  function extractSaveContents(contents: unknown): void;
   /**
    * Determines whether any savefile exists.
    * @returns True if any savefile exists; false otherwise.
@@ -90,7 +90,7 @@ declare namespace DataManager
    * @param item The item parameter.
    * @returns True if armor; false otherwise.
    */
-  function isArmor(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  function isArmor(item: unknown): boolean;
   /**
    * Determines whether battle test.
    * @returns True if battle test; false otherwise.
@@ -116,7 +116,7 @@ declare namespace DataManager
    * @param item The item parameter.
    * @returns True if item; false otherwise.
    */
-  function isItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  function isItem(item: unknown): boolean;
   /**
    * Determines whether map loaded.
    * @returns True if map loaded; false otherwise.
@@ -127,13 +127,13 @@ declare namespace DataManager
    * @param object The object parameter.
    * @returns True if map object; false otherwise.
    */
-  function isMapObject(object: object): boolean;
+  function isMapObject(object: unknown): boolean;
   /**
    * Determines whether skill.
    * @param item The item parameter.
    * @returns True if skill; false otherwise.
    */
-  function isSkill(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  function isSkill(item: unknown): boolean;
   /**
    * Determines whether title skip.
    * @returns True if title skip; false otherwise.
@@ -144,12 +144,12 @@ declare namespace DataManager
    * @param item The item parameter.
    * @returns True if weapon; false otherwise.
    */
-  function isWeapon(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  function isWeapon(item: unknown): boolean;
   /**
    * Gets latest savefile id.
    * @returns The result.
    */
-  function latestSavefileId(): number;
+  function latestSavefileId(): unknown | number;
   /**
    * Performs load all savefile images.
    */
@@ -159,7 +159,7 @@ declare namespace DataManager
    * @param name The name parameter.
    * @param src The src parameter.
    */
-  function loadDataFile(name: string, src: string): void;
+  function loadDataFile(name: unknown, src: unknown): void;
   /**
    * Performs load database.
    */
@@ -169,7 +169,7 @@ declare namespace DataManager
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  function loadGame(savefileId: number): Promise<number>;
+  function loadGame(savefileId: unknown): unknown;
   /**
    * Performs load global info.
    */
@@ -178,12 +178,12 @@ declare namespace DataManager
    * Performs load map data.
    * @param mapId The mapId parameter.
    */
-  function loadMapData(mapId: number): void;
+  function loadMapData(mapId: unknown): void;
   /**
    * Performs load savefile images.
    * @param info The info parameter.
    */
-  function loadSavefileImages(info: object): void;
+  function loadSavefileImages(info: unknown): void;
   /**
    * Creates empty map.
    */
@@ -192,18 +192,18 @@ declare namespace DataManager
    * Creates save contents.
    * @returns The result.
    */
-  function makeSaveContents(): object;
+  function makeSaveContents(): unknown;
   /**
    * Creates savefile info.
    * @returns The result.
    */
-  function makeSavefileInfo(): object;
+  function makeSavefileInfo(): unknown;
   /**
    * Creates savename.
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  function makeSavename(savefileId: number): string;
+  function makeSavename(savefileId: unknown): unknown;
   /**
    * Gets max savefiles.
    * @returns The result.
@@ -213,14 +213,14 @@ declare namespace DataManager
    * Performs on load.
    * @param object The object parameter.
    */
-  function onLoad(object: object): void;
+  function onLoad(object: unknown): void;
   /**
    * Performs on xhr error.
    * @param name The name parameter.
    * @param src The src parameter.
    * @param url The url parameter.
    */
-  function onXhrError(name: string, src: string, url: string): void;
+  function onXhrError(name: unknown, src: unknown, url: unknown): void;
   /**
    * Performs on xhr load.
    * @param xhr The xhr parameter.
@@ -228,7 +228,7 @@ declare namespace DataManager
    * @param src The src parameter.
    * @param url The url parameter.
    */
-  function onXhrLoad(xhr: XMLHttpRequest, name: string, src: string, url: string): void;
+  function onXhrLoad(xhr: unknown, name: unknown, src: unknown, url: unknown): void;
   /**
    * Removes invalid global info.
    */
@@ -238,7 +238,7 @@ declare namespace DataManager
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  function saveGame(savefileId: number): Promise<number>;
+  function saveGame(savefileId: unknown): unknown;
   /**
    * Performs save global info.
    */
@@ -248,13 +248,13 @@ declare namespace DataManager
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  function savefileExists(savefileId: number): boolean;
+  function savefileExists(savefileId: unknown): unknown;
   /**
    * Gets savefile info.
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  function savefileInfo(savefileId: number): object | null;
+  function savefileInfo(savefileId: unknown): null;
   /**
    * Performs select savefile for new game.
    */

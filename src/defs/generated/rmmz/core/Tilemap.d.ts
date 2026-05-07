@@ -10,12 +10,12 @@ interface Tilemap extends PIXI.Container
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `unknown[] | Array<Bitmap | null>`.<br/>
+   * Type: `unknown[]`.<br/>
    * Initialized in: {@link Tilemap#initialize}.<br/>
    * Written in: {@link Tilemap#initialize}, {@link Tilemap#setBitmaps}.<br/>
    * Read in: {@link Tilemap#_updateBitmaps}, {@link Tilemap#isReady}, {@link Tilemap#setBitmaps}.<br/>
    */
-  _bitmaps: unknown[] | Array<Bitmap | null>;
+  _bitmaps: unknown[];
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -67,12 +67,12 @@ interface Tilemap extends PIXI.Container
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number[]`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Tilemap#initialize}.<br/>
    * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.<br/>
    * Read in: {@link Tilemap#_readMapData}.<br/>
    */
-  _mapData: null | number[];
+  _mapData: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -144,7 +144,7 @@ interface Tilemap extends PIXI.Container
    * @param startX The startX parameter.
    * @param startY The startY parameter.
    */
-  _addAllSpots(startX: number, startY: number): void;
+  _addAllSpots(startX: unknown, startY: unknown): void;
   /**
    * Performs add autotile.
    * @param layer The layer parameter.
@@ -152,7 +152,7 @@ interface Tilemap extends PIXI.Container
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addAutotile(layer: number, tileId: number, dx: number, dy: number): void;
+  _addAutotile(layer: unknown, tileId: unknown, dx: unknown, dy: unknown): void;
   /**
    * Performs add normal tile.
    * @param layer The layer parameter.
@@ -160,7 +160,7 @@ interface Tilemap extends PIXI.Container
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addNormalTile(layer: number, tileId: number, dx: number, dy: number): void;
+  _addNormalTile(layer: unknown, tileId: unknown, dx: unknown, dy: unknown): void;
   /**
    * Performs add shadow.
    * @param layer The layer parameter.
@@ -168,7 +168,7 @@ interface Tilemap extends PIXI.Container
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addShadow(layer: number, shadowBits: number, dx: number, dy: number): void;
+  _addShadow(layer: unknown, shadowBits: unknown, dx: unknown, dy: unknown): void;
   /**
    * Performs add spot.
    * @param startX The startX parameter.
@@ -176,14 +176,14 @@ interface Tilemap extends PIXI.Container
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  _addSpot(startX: number, startY: number, x: number, y: number): void;
+  _addSpot(startX: unknown, startY: unknown, x: unknown, y: unknown): void;
   /**
    * Performs add spot tile.
    * @param tileId The tileId parameter.
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addSpotTile(tileId: number, dx: number, dy: number): void;
+  _addSpotTile(tileId: unknown, dx: unknown, dy: unknown): void;
   /**
    * Performs add table edge.
    * @param layer The layer parameter.
@@ -191,7 +191,7 @@ interface Tilemap extends PIXI.Container
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addTableEdge(layer: number, tileId: number, dx: number, dy: number): void;
+  _addTableEdge(layer: unknown, tileId: unknown, dx: unknown, dy: unknown): void;
   /**
    * Performs add tile.
    * @param layer The layer parameter.
@@ -199,14 +199,14 @@ interface Tilemap extends PIXI.Container
    * @param dx The dx parameter.
    * @param dy The dy parameter.
    */
-  _addTile(layer: number, tileId: number, dx: number, dy: number): void;
+  _addTile(layer: unknown, tileId: unknown, dx: unknown, dy: unknown): void;
   /**
    * Gets compare child order.
    * @param a The a parameter.
    * @param b The b parameter.
    * @returns The result.
    */
-  _compareChildOrder(a: object, b: object): number;
+  _compareChildOrder(a: unknown, b: unknown): unknown;
   /**
    * Performs create layers.
    */
@@ -216,7 +216,7 @@ interface Tilemap extends PIXI.Container
    * @param tileId The tileId parameter.
    * @returns The result.
    */
-  _isHigherTile(tileId: number): number;
+  _isHigherTile(tileId: unknown): unknown;
   /**
    * Gets is overpass position.
    * @returns The result.
@@ -227,7 +227,7 @@ interface Tilemap extends PIXI.Container
    * @param tileId The tileId parameter.
    * @returns The result.
    */
-  _isTableTile(tileId: number): number;
+  _isTableTile(tileId: unknown): unknown;
   /**
    * Gets read map data.
    * @param x The x parameter.
@@ -235,7 +235,7 @@ interface Tilemap extends PIXI.Container
    * @param z The z parameter.
    * @returns The result.
    */
-  _readMapData(x: number, y: number, z: number): number;
+  _readMapData(x: unknown, y: unknown, z: unknown): number;
   /**
    * Performs sort children.
    */
@@ -252,7 +252,7 @@ interface Tilemap extends PIXI.Container
    * The height of the tilemap.
    * @returns The result.
    */
-  get height(): number;
+  get height(): unknown;
   /**
    * The tilemap which displays 2D tile-based game map.
    */
@@ -270,14 +270,14 @@ interface Tilemap extends PIXI.Container
    * Sets the bitmaps used as a tileset.
    * @param bitmaps The array of the tileset bitmaps.
    */
-  setBitmaps(bitmaps: Array<Bitmap | null>): void;
+  setBitmaps(bitmaps: unknown[]): void;
   /**
    * Sets the tilemap data.
    * @param width The width of the map in number of tiles.
    * @param height The height of the map in number of tiles.
    * @param data The one dimensional array for the map data.
    */
-  setData(width: number, height: number, data: number[]): void;
+  setData(width: number, height: number, data: unknown[]): void;
   /**
    * Updates the tilemap for each frame.
    */
@@ -290,7 +290,7 @@ interface Tilemap extends PIXI.Container
    * The width of the tilemap.
    * @returns The result.
    */
-  get width(): number;
+  get width(): unknown;
 }
 declare namespace Tilemap
 {
@@ -299,135 +299,135 @@ declare namespace Tilemap
    * @param tileId The tileId parameter.
    * @returns The result.
    */
-  function getAutotileKind(tileId: number): number;
+  function getAutotileKind(tileId: unknown): unknown;
   /**
    * Gets autotile shape.
    * @param tileId The tileId parameter.
    * @returns The result.
    */
-  function getAutotileShape(tileId: number): number;
+  function getAutotileShape(tileId: unknown): unknown;
   /**
    * Determines whether autotile.
    * @param tileId The tileId parameter.
    * @returns True if autotile; false otherwise.
    */
-  function isAutotile(tileId: number): boolean;
+  function isAutotile(tileId: unknown): boolean;
   /**
    * Determines whether floor type autotile.
    * @param tileId The tileId parameter.
    * @returns True if floor type autotile; false otherwise.
    */
-  function isFloorTypeAutotile(tileId: number): boolean;
+  function isFloorTypeAutotile(tileId: unknown): boolean;
   /**
    * Determines whether ground tile.
    * @param tileId The tileId parameter.
    * @returns True if ground tile; false otherwise.
    */
-  function isGroundTile(tileId: number): boolean;
+  function isGroundTile(tileId: unknown): boolean;
   /**
    * Determines whether roof tile.
    * @param tileId The tileId parameter.
    * @returns True if roof tile; false otherwise.
    */
-  function isRoofTile(tileId: number): boolean;
+  function isRoofTile(tileId: unknown): boolean;
   /**
    * Determines whether same kind tile.
    * @param tileID1 The tileID1 parameter.
    * @param tileID2 The tileID2 parameter.
    * @returns True if same kind tile; false otherwise.
    */
-  function isSameKindTile(tileID1: number, tileID2: number): boolean;
+  function isSameKindTile(tileID1: unknown, tileID2: unknown): boolean;
   /**
    * Determines whether shadowing tile.
    * @param tileId The tileId parameter.
    * @returns True if shadowing tile; false otherwise.
    */
-  function isShadowingTile(tileId: number): boolean;
+  function isShadowingTile(tileId: unknown): boolean;
   /**
    * Determines whether tile a1.
    * @param tileId The tileId parameter.
    * @returns True if tile a1; false otherwise.
    */
-  function isTileA1(tileId: number): boolean;
+  function isTileA1(tileId: unknown): boolean;
   /**
    * Determines whether tile a2.
    * @param tileId The tileId parameter.
    * @returns True if tile a2; false otherwise.
    */
-  function isTileA2(tileId: number): boolean;
+  function isTileA2(tileId: unknown): boolean;
   /**
    * Determines whether tile a3.
    * @param tileId The tileId parameter.
    * @returns True if tile a3; false otherwise.
    */
-  function isTileA3(tileId: number): boolean;
+  function isTileA3(tileId: unknown): boolean;
   /**
    * Determines whether tile a4.
    * @param tileId The tileId parameter.
    * @returns True if tile a4; false otherwise.
    */
-  function isTileA4(tileId: number): boolean;
+  function isTileA4(tileId: unknown): boolean;
   /**
    * Determines whether tile a5.
    * @param tileId The tileId parameter.
    * @returns True if tile a5; false otherwise.
    */
-  function isTileA5(tileId: number): boolean;
+  function isTileA5(tileId: unknown): boolean;
   /**
    * Determines whether visible tile.
    * @param tileId The tileId parameter.
    * @returns True if visible tile; false otherwise.
    */
-  function isVisibleTile(tileId: number): boolean;
+  function isVisibleTile(tileId: unknown): boolean;
   /**
    * Determines whether wall side tile.
    * @param tileId The tileId parameter.
    * @returns True if wall side tile; false otherwise.
    */
-  function isWallSideTile(tileId: number): boolean;
+  function isWallSideTile(tileId: unknown): boolean;
   /**
    * Determines whether wall tile.
    * @param tileId The tileId parameter.
    * @returns True if wall tile; false otherwise.
    */
-  function isWallTile(tileId: number): boolean;
+  function isWallTile(tileId: unknown): boolean;
   /**
    * Determines whether wall top tile.
    * @param tileId The tileId parameter.
    * @returns True if wall top tile; false otherwise.
    */
-  function isWallTopTile(tileId: number): boolean;
+  function isWallTopTile(tileId: unknown): boolean;
   /**
    * Determines whether wall type autotile.
    * @param tileId The tileId parameter.
    * @returns True if wall type autotile; false otherwise.
    */
-  function isWallTypeAutotile(tileId: number): boolean;
+  function isWallTypeAutotile(tileId: unknown): boolean;
   /**
    * Determines whether water tile.
    * @param tileId The tileId parameter.
    * @returns True if water tile; false otherwise.
    */
-  function isWaterTile(tileId: number): boolean;
+  function isWaterTile(tileId: unknown): boolean;
   /**
    * Determines whether waterfall tile.
    * @param tileId The tileId parameter.
    * @returns True if waterfall tile; false otherwise.
    */
-  function isWaterfallTile(tileId: number): boolean;
+  function isWaterfallTile(tileId: unknown): boolean;
   /**
    * Determines whether waterfall type autotile.
    * @param tileId The tileId parameter.
    * @returns True if waterfall type autotile; false otherwise.
    */
-  function isWaterfallTypeAutotile(tileId: number): boolean;
+  function isWaterfallTypeAutotile(tileId: unknown): boolean;
   /**
    * Creates autotile id.
    * @param kind The kind parameter.
    * @param shape The shape parameter.
    * @returns The result.
    */
-  function makeAutotileId(kind: number, shape: number): number;
+  function makeAutotileId(kind: unknown, shape: unknown): unknown;
   /**
    * Engine static constant.
    */

@@ -27,7 +27,7 @@ class RPG_ClassLearning
 
   /**
    * Constructor.
-   * @param {rm.types.ClassLearning} learning The class learning to parse.
+   * @param {RPG_ClassLearning} learning The class learning to parse.
    */
   constructor(learning)
   {

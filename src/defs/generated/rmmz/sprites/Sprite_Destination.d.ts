@@ -24,7 +24,7 @@ interface Sprite_Destination extends Sprite
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Initializes initialize.
    */

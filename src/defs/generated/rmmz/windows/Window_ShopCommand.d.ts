@@ -10,17 +10,17 @@ interface Window_ShopCommand extends Window_HorzCommand
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `boolean`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_ShopCommand#setPurchaseOnly}.<br/>
    * Read in: {@link Window_ShopCommand#makeCommandList}.<br/>
    */
-  _purchaseOnly: boolean;
+  _purchaseOnly: unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Creates command list.
    */
@@ -34,5 +34,5 @@ interface Window_ShopCommand extends Window_HorzCommand
    * Sets purchase only.
    * @param purchaseOnly The purchaseOnly parameter.
    */
-  setPurchaseOnly(purchaseOnly: boolean): void;
+  setPurchaseOnly(purchaseOnly: unknown): void;
 }

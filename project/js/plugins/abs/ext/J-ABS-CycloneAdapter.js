@@ -329,7 +329,7 @@ Game_Character.prototype.startRepeatingMovement = function(command)
 
 /**
  * Determines whether or not this character can repeat the given command.
- * @param {rm.types.EventCommand} command The event command to potentially repeat.
+ * @param {RPG_EventListCommand} command The event command to potentially repeat.
  * @returns {boolean} True if we should repeat the command, false otherwise.
  */
 Game_Character.prototype.canStartRepeatingMovement = function(command)

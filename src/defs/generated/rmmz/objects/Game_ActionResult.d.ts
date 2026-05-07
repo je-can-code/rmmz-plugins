@@ -11,7 +11,7 @@ interface Game_ActionResult
    * Gets added state objects.
    * @returns The result.
    */
-  addedStateObjects(): RPG_State[];
+  addedStateObjects(): unknown;
   /**
    * Performs clear.
    */
@@ -25,19 +25,19 @@ interface Game_ActionResult
    * @param paramId The paramId parameter.
    * @returns True if buff added; false otherwise.
    */
-  isBuffAdded(paramId: number): boolean;
+  isBuffAdded(paramId: unknown): boolean;
   /**
    * Determines whether buff removed.
    * @param paramId The paramId parameter.
    * @returns True if buff removed; false otherwise.
    */
-  isBuffRemoved(paramId: number): boolean;
+  isBuffRemoved(paramId: unknown): boolean;
   /**
    * Determines whether debuff added.
    * @param paramId The paramId parameter.
    * @returns True if debuff added; false otherwise.
    */
-  isDebuffAdded(paramId: number): boolean;
+  isDebuffAdded(paramId: unknown): boolean;
   /**
    * Determines whether hit.
    * @returns True if hit; false otherwise.
@@ -48,13 +48,13 @@ interface Game_ActionResult
    * @param stateId The stateId parameter.
    * @returns True if state added; false otherwise.
    */
-  isStateAdded(stateId: number): boolean;
+  isStateAdded(stateId: unknown): boolean;
   /**
    * Determines whether state removed.
    * @param stateId The stateId parameter.
    * @returns True if state removed; false otherwise.
    */
-  isStateRemoved(stateId: number): boolean;
+  isStateRemoved(stateId: unknown): boolean;
   /**
    * Determines whether status affected.
    * @returns True if status affected; false otherwise.
@@ -64,30 +64,30 @@ interface Game_ActionResult
    * Performs push added buff.
    * @param paramId The paramId parameter.
    */
-  pushAddedBuff(paramId: number): void;
+  pushAddedBuff(paramId: unknown): void;
   /**
    * Performs push added debuff.
    * @param paramId The paramId parameter.
    */
-  pushAddedDebuff(paramId: number): void;
+  pushAddedDebuff(paramId: unknown): void;
   /**
    * Performs push added state.
    * @param stateId The stateId parameter.
    */
-  pushAddedState(stateId: number): void;
+  pushAddedState(stateId: unknown): void;
   /**
    * Performs push removed buff.
    * @param paramId The paramId parameter.
    */
-  pushRemovedBuff(paramId: number): void;
+  pushRemovedBuff(paramId: unknown): void;
   /**
    * Performs push removed state.
    * @param stateId The stateId parameter.
    */
-  pushRemovedState(stateId: number): void;
+  pushRemovedState(stateId: unknown): void;
   /**
    * Gets removed state objects.
    * @returns The result.
    */
-  removedStateObjects(): RPG_State[];
+  removedStateObjects(): unknown;
 }

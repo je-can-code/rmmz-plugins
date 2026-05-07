@@ -10,12 +10,12 @@ interface Game_CommonEvent
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Game_CommonEvent#initialize}.<br/>
    * Written in: {@link Game_CommonEvent#initialize}.<br/>
    * Read in: {@link Game_CommonEvent#event}.<br/>
    */
-  _commonEventId: number;
+  _commonEventId: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -29,12 +29,12 @@ interface Game_CommonEvent
    * Gets event.
    * @returns The result.
    */
-  event(): object;
+  event(): unknown;
   /**
    * Initializes initialize.
    * @param commonEventId The commonEventId parameter.
    */
-  initialize(commonEventId: number): void;
+  initialize(commonEventId: unknown): void;
   /**
    * Determines whether active.
    * @returns True if active; false otherwise.
@@ -44,7 +44,7 @@ interface Game_CommonEvent
    * Gets list.
    * @returns The result.
    */
-  list(): Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>;
+  list(): unknown;
   /**
    * Performs refresh.
    */

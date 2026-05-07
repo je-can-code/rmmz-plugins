@@ -112,7 +112,7 @@ interface Spriteset_Map extends Spriteset_Base
    * Creates balloon.
    * @param request The request parameter.
    */
-  createBalloon(request: object): void;
+  createBalloon(request: unknown): void;
   /**
    * Creates characters.
    */
@@ -145,13 +145,13 @@ interface Spriteset_Map extends Spriteset_Base
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Gets find target sprite.
    * @param target The target parameter.
    * @returns The result.
    */
-  findTargetSprite(target: Game_Character): Sprite_Character | undefined;
+  findTargetSprite(target: unknown): unknown;
   /**
    * Performs hide characters.
    */
@@ -180,7 +180,7 @@ interface Spriteset_Map extends Spriteset_Base
    * Removes balloon.
    * @param sprite The sprite parameter.
    */
-  removeBalloon(sprite: Sprite): void;
+  removeBalloon(sprite: unknown): void;
   /**
    * Performs update.
    */

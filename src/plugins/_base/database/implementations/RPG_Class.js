@@ -30,7 +30,7 @@ class RPG_Class
 
   /**
    * Constructor.
-   * @param {rm.types.RPGClass} classData The class data to parse.
+   * @param {RPG_Class} classData The class data to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(classData, index)

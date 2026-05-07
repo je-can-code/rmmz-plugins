@@ -132,7 +132,7 @@ interface Window_Scrollable extends Window_Base
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether scroll enabled.
    * @returns True if scroll enabled; false otherwise.
@@ -157,12 +157,12 @@ interface Window_Scrollable extends Window_Base
    * Gets max scroll x.
    * @returns The result.
    */
-  maxScrollX(): number;
+  maxScrollX(): unknown;
   /**
    * Gets max scroll y.
    * @returns The result.
    */
-  maxScrollY(): number;
+  maxScrollY(): unknown;
   /**
    * Performs on touch scroll.
    */
@@ -179,12 +179,12 @@ interface Window_Scrollable extends Window_Base
    * Gets overall height.
    * @returns The result.
    */
-  overallHeight(): number;
+  overallHeight(): unknown;
   /**
    * Gets overall width.
    * @returns The result.
    */
-  overallWidth(): number;
+  overallWidth(): unknown;
   /**
    * Performs paint.
    */
@@ -201,72 +201,72 @@ interface Window_Scrollable extends Window_Base
    * Gets scroll base x.
    * @returns The result.
    */
-  scrollBaseX(): number;
+  scrollBaseX(): unknown;
   /**
    * Gets scroll base y.
    * @returns The result.
    */
-  scrollBaseY(): number;
+  scrollBaseY(): unknown;
   /**
    * Gets scroll block height.
    * @returns The result.
    */
-  scrollBlockHeight(): number;
+  scrollBlockHeight(): unknown;
   /**
    * Gets scroll block width.
    * @returns The result.
    */
-  scrollBlockWidth(): number;
+  scrollBlockWidth(): unknown;
   /**
    * Performs scroll by.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  scrollBy(x: number, y: number): void;
+  scrollBy(x: unknown, y: unknown): void;
   /**
    * Performs scroll to.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  scrollTo(x: number, y: number): void;
+  scrollTo(x: unknown, y: unknown): void;
   /**
    * Gets scroll x.
    * @returns The result.
    */
-  scrollX(): number;
+  scrollX(): unknown;
   /**
    * Gets scroll y.
    * @returns The result.
    */
-  scrollY(): number;
+  scrollY(): unknown;
   /**
    * Sets scroll accel.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setScrollAccel(x: number, y: number): void;
+  setScrollAccel(x: unknown, y: unknown): void;
   /**
    * Performs smooth scroll by.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  smoothScrollBy(x: number, y: number): void;
+  smoothScrollBy(x: unknown, y: unknown): void;
   /**
    * Performs smooth scroll down.
    * @param n The n parameter.
    */
-  smoothScrollDown(n: number): void;
+  smoothScrollDown(n: unknown): void;
   /**
    * Performs smooth scroll to.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  smoothScrollTo(x: number, y: number): void;
+  smoothScrollTo(x: unknown, y: unknown): void;
   /**
    * Performs smooth scroll up.
    * @param n The n parameter.
    */
-  smoothScrollUp(n: number): void;
+  smoothScrollUp(n: unknown): void;
   /**
    * Performs update.
    */
@@ -288,7 +288,7 @@ interface Window_Scrollable extends Window_Base
    * @param baseX The baseX parameter.
    * @param baseY The baseY parameter.
    */
-  updateScrollBase(baseX: number, baseY: number): void;
+  updateScrollBase(baseX: unknown, baseY: unknown): void;
   /**
    * Updates smooth scroll.
    */

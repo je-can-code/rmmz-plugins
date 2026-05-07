@@ -60,7 +60,7 @@ interface Sprite_Weapon extends Sprite
    * Performs setup.
    * @param weaponImageId The weaponImageId parameter.
    */
-  setup(weaponImageId: number): void;
+  setup(weaponImageId: unknown): void;
   /**
    * Performs update.
    */

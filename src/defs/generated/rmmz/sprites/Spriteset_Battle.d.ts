@@ -101,14 +101,14 @@ interface Spriteset_Battle extends Spriteset_Base
    * Gets battler sprites.
    * @returns The result.
    */
-  battlerSprites(): Sprite[];
+  battlerSprites(): unknown;
   /**
    * Gets compare enemy sprite.
    * @param a The a parameter.
    * @param b The b parameter.
    * @returns The result.
    */
-  compareEnemySprite(a: Sprite_Enemy, b: Sprite_Enemy): number;
+  compareEnemySprite(a: unknown, b: unknown): unknown;
   /**
    * Creates actors.
    */
@@ -138,7 +138,7 @@ interface Spriteset_Battle extends Spriteset_Base
    * @param target The target parameter.
    * @returns The result.
    */
-  findTargetSprite(target: Game_Battler): Sprite | undefined;
+  findTargetSprite(target: unknown): unknown;
   /**
    * Initializes initialize.
    */

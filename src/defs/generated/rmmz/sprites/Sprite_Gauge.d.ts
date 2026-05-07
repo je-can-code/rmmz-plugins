@@ -10,12 +10,12 @@ interface Sprite_Gauge extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}.<br/>
    * Read in: {@link Sprite_Gauge#currentMaxValue}, {@link Sprite_Gauge#currentValue}, {@link Sprite_Gauge#isValid}, {@link Sprite_Gauge#updateFlashing}, {@link Sprite_Gauge#valueColor}.<br/>
    */
-  _battler: null | Game_Battler;
+  _battler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -37,12 +37,12 @@ interface Sprite_Gauge extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
-  _maxValue: number;
+  _maxValue: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -55,30 +55,30 @@ interface Sprite_Gauge extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
-  _targetMaxValue: number;
+  _targetMaxValue: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
-  _targetValue: number;
+  _targetValue: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    */
-  _value: number;
+  _value: unknown;
   /**
    * Gets bitmap height.
    * @returns The result.
@@ -102,12 +102,12 @@ interface Sprite_Gauge extends Sprite
    * Gets current value.
    * @returns The result.
    */
-  currentValue(): number;
+  currentValue(): unknown;
   /**
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Performs draw gauge.
    */
@@ -119,7 +119,7 @@ interface Sprite_Gauge extends Sprite
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  drawGaugeRect(x: number, y: number, width: number, height: number): void;
+  drawGaugeRect(x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Performs draw label.
    */
@@ -142,17 +142,17 @@ interface Sprite_Gauge extends Sprite
    * Gets gauge back color.
    * @returns The result.
    */
-  gaugeBackColor(): number;
+  gaugeBackColor(): unknown;
   /**
    * Gets gauge color1.
    * @returns The result.
    */
-  gaugeColor1(): number;
+  gaugeColor1(): unknown;
   /**
    * Gets gauge color2.
    * @returns The result.
    */
-  gaugeColor2(): number;
+  gaugeColor2(): unknown;
   /**
    * Gets gauge height.
    * @returns The result.
@@ -190,17 +190,17 @@ interface Sprite_Gauge extends Sprite
    * Gets label color.
    * @returns The result.
    */
-  labelColor(): string;
+  labelColor(): unknown;
   /**
    * Gets label font face.
    * @returns The result.
    */
-  labelFontFace(): string;
+  labelFontFace(): unknown;
   /**
    * Gets label font size.
    * @returns The result.
    */
-  labelFontSize(): number;
+  labelFontSize(): unknown;
   /**
    * Gets label opacity.
    * @returns The result.
@@ -210,7 +210,7 @@ interface Sprite_Gauge extends Sprite
    * Gets label outline color.
    * @returns The result.
    */
-  labelOutlineColor(): number;
+  labelOutlineColor(): unknown;
   /**
    * Gets label outline width.
    * @returns The result.
@@ -225,7 +225,7 @@ interface Sprite_Gauge extends Sprite
    * Gets measure label width.
    * @returns The result.
    */
-  measureLabelWidth(): number;
+  measureLabelWidth(): unknown;
   /**
    * Performs redraw.
    */
@@ -235,7 +235,7 @@ interface Sprite_Gauge extends Sprite
    * @param battler The battler parameter.
    * @param statusType The statusType parameter.
    */
-  setup(battler: Game_Battler, statusType: string): void;
+  setup(battler: unknown, statusType: unknown): void;
   /**
    * Performs setup label font.
    */
@@ -275,22 +275,22 @@ interface Sprite_Gauge extends Sprite
    * @param value The value parameter.
    * @param maxValue The maxValue parameter.
    */
-  updateTargetValue(value: number, maxValue: number): void;
+  updateTargetValue(value: unknown, maxValue: unknown): void;
   /**
    * Gets value color.
    * @returns The result.
    */
-  valueColor(): number;
+  valueColor(): unknown;
   /**
    * Gets value font face.
    * @returns The result.
    */
-  valueFontFace(): string;
+  valueFontFace(): unknown;
   /**
    * Gets value font size.
    * @returns The result.
    */
-  valueFontSize(): number;
+  valueFontSize(): unknown;
   /**
    * Gets value outline color.
    * @returns The result.

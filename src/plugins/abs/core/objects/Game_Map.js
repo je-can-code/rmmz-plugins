@@ -156,13 +156,13 @@ Game_Map.prototype.expiredActionEvents = function()
 
 /**
  * Gets all action events that have reached their expiration and need removal.
- * @returns {rm.types.Event[]} All relevant action metadatas.
+ * @returns {RPG_MapEvent[]} All relevant action metadatas.
  */
 Game_Map.prototype.actionEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving action metadatas from the datamap.
   /**
-   * @param {rm.types.Event} metadata
+   * @param {RPG_MapEvent} metadata
    */
   const filtering = metadata =>
   {
@@ -246,13 +246,13 @@ Game_Map.prototype.expiredLootEvents = function()
 
 /**
  * Gets all loot event metadatas that bear the same `uuid` as requested.
- * @returns {rm.types.Event[]} All relevant loot metadatas.
+ * @returns {RPG_MapEvent[]} All relevant loot metadatas.
  */
 Game_Map.prototype.lootEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving loot metadatas from the datamap.
   /**
-   * @param {rm.types.Event} metadata
+   * @param {RPG_MapEvent} metadata
    */
   const filtering = metadata =>
   {

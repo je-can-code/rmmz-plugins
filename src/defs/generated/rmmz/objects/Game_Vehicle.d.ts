@@ -19,12 +19,12 @@ interface Game_Vehicle extends Game_Character
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#setBgm}.<br/>
    * Read in: {@link Game_Vehicle#playBgm}.<br/>
    */
-  _bgm: null | { name: string; pan: number; pitch: number; volume: number };
+  _bgm: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Game_Vehicle extends Game_Character
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number | string`.<br/>
+   * Type: `string`.<br/>
    * Initialized in: {@link Game_Vehicle#initialize}.<br/>
    * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#initialize}.<br/>
    * Read in: {@link Game_Vehicle#isAirship}, {@link Game_Vehicle#isBoat}, {@link Game_Vehicle#isShip}.<br/>
    */
-  _type: number | string;
+  _type: string;
   /**
    * Determines whether move.
    * @returns True if move; false otherwise.
@@ -77,7 +77,7 @@ interface Game_Vehicle extends Game_Character
    * Initializes initialize.
    * @param _type The type parameter.
    */
-  initialize(_type: number): void;
+  initialize(_type: unknown): void;
   /**
    * Determines whether airship.
    * @returns True if airship; false otherwise.
@@ -100,7 +100,7 @@ interface Game_Vehicle extends Game_Character
    * @param d The d parameter.
    * @returns True if land ok; false otherwise.
    */
-  isLandOk(x: number, y: number, d: number): boolean;
+  isLandOk(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether lowest.
    * @returns True if lowest; false otherwise.
@@ -113,7 +113,7 @@ interface Game_Vehicle extends Game_Character
    * @param d The d parameter.
    * @returns True if map passable; false otherwise.
    */
-  isMapPassable(x: number, y: number, d: number): boolean;
+  isMapPassable(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether ship.
    * @returns True if ship; false otherwise.
@@ -143,7 +143,7 @@ interface Game_Vehicle extends Game_Character
    * @param y The y parameter.
    * @returns The result.
    */
-  pos(x: number, y: number): boolean;
+  pos(x: unknown, y: unknown): boolean;
   /**
    * Performs refresh.
    */
@@ -156,34 +156,34 @@ interface Game_Vehicle extends Game_Character
    * Gets screen y.
    * @returns The result.
    */
-  screenY(): number;
+  screenY(): unknown;
   /**
    * Sets bgm.
    * @param bgm The bgm parameter.
    */
-  setBgm(bgm: { name: string; pan: number; pitch: number; volume: number }): void;
+  setBgm(bgm: unknown): void;
   /**
    * Sets location.
    * @param mapId The mapId parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setLocation(mapId: number, x: number, y: number): void;
+  setLocation(mapId: unknown, x: unknown, y: unknown): void;
   /**
    * Gets shadow opacity.
    * @returns The result.
    */
-  shadowOpacity(): number;
+  shadowOpacity(): unknown;
   /**
    * Gets shadow x.
    * @returns The result.
    */
-  shadowX(): number;
+  shadowX(): unknown;
   /**
    * Gets shadow y.
    * @returns The result.
    */
-  shadowY(): number;
+  shadowY(): unknown;
   /**
    * Performs sync with player.
    */

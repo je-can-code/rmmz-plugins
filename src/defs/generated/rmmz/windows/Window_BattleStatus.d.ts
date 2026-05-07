@@ -21,34 +21,34 @@ interface Window_BattleStatus extends Window_StatusBase
    * @param index The index parameter.
    * @returns The result.
    */
-  actor(index: number): Game_Actor | undefined;
+  actor(index: unknown): unknown;
   /**
    * Gets basic gauges x.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  basicGaugesX(rect: Rectangle): number;
+  basicGaugesX(rect: unknown): unknown;
   /**
    * Gets basic gauges y.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  basicGaugesY(rect: Rectangle): number;
+  basicGaugesY(rect: unknown): unknown;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Performs draw item image.
    * @param index The index parameter.
    */
-  drawItemImage(index: number): void;
+  drawItemImage(index: unknown): void;
   /**
    * Performs draw item status.
    * @param index The index parameter.
    */
-  drawItemStatus(index: number): void;
+  drawItemStatus(index: unknown): void;
   /**
    * Gets extra height.
    * @returns The result.
@@ -59,17 +59,17 @@ interface Window_BattleStatus extends Window_StatusBase
    * @param index The index parameter.
    * @returns The result.
    */
-  faceRect(index: number): Rectangle;
+  faceRect(index: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets max cols.
    * @returns The result.
@@ -79,19 +79,19 @@ interface Window_BattleStatus extends Window_StatusBase
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Gets name x.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  nameX(rect: Rectangle): number;
+  nameX(rect: unknown): unknown;
   /**
    * Gets name y.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  nameY(rect: Rectangle): number;
+  nameY(rect: unknown): unknown;
   /**
    * Performs perform party refresh.
    */
@@ -109,19 +109,19 @@ interface Window_BattleStatus extends Window_StatusBase
    * Performs select actor.
    * @param actor The actor parameter.
    */
-  selectActor(actor: Game_Actor): void;
+  selectActor(actor: unknown): void;
   /**
    * Gets state icon x.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  stateIconX(rect: Rectangle): number;
+  stateIconX(rect: unknown): unknown;
   /**
    * Gets state icon y.
    * @param rect The rect parameter.
    * @returns The result.
    */
-  stateIconY(rect: Rectangle): number;
+  stateIconY(rect: unknown): unknown;
   /**
    * Performs update.
    */

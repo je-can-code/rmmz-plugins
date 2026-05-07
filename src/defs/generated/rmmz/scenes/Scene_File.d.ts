@@ -70,7 +70,7 @@ interface Scene_File extends Scene_MenuBase
    * @param savefileId The savefileId parameter.
    * @returns True if savefile enabled; false otherwise.
    */
-  isSavefileEnabled(savefileId: number): boolean;
+  isSavefileEnabled(savefileId: unknown): boolean;
   /**
    * Gets list window rect.
    * @returns The result.
@@ -85,7 +85,7 @@ interface Scene_File extends Scene_MenuBase
    * Gets needs autosave.
    * @returns The result.
    */
-  needsAutosave(): boolean;
+  needsAutosave(): unknown;
   /**
    * Performs on savefile ok.
    */
@@ -94,7 +94,7 @@ interface Scene_File extends Scene_MenuBase
    * Gets savefile id.
    * @returns The result.
    */
-  savefileId(): number;
+  savefileId(): unknown;
   /**
    * Performs start.
    */

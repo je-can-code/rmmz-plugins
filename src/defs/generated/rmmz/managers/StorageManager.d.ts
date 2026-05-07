@@ -34,35 +34,35 @@ declare namespace StorageManager
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function exists(saveName: string): boolean;
+  function exists(saveName: unknown): unknown;
   /**
    * Gets file directory path.
    * @returns The result.
    */
-  function fileDirectoryPath(): string;
+  function fileDirectoryPath(): unknown;
   /**
    * Gets file path.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function filePath(saveName: string): string;
+  function filePath(saveName: unknown): string;
   /**
    * Gets forage exists.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function forageExists(saveName: string): boolean;
+  function forageExists(saveName: unknown): unknown;
   /**
    * Gets forage key.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function forageKey(saveName: string): string;
+  function forageKey(saveName: unknown): string;
   /**
    * Gets forage keys updated.
    * @returns The result.
    */
-  function forageKeysUpdated(): boolean;
+  function forageKeysUpdated(): unknown;
   /**
    * Gets forage test key.
    * @returns The result.
@@ -72,30 +72,30 @@ declare namespace StorageManager
    * Performs fs mkdir.
    * @param path The path parameter.
    */
-  function fsMkdir(path: string): void;
+  function fsMkdir(path: unknown): void;
   /**
    * Gets fs read file.
    * @param path The path parameter.
    * @returns The result.
    */
-  function fsReadFile(path: string): string | null;
+  function fsReadFile(path: unknown): null;
   /**
    * Performs fs rename.
    * @param oldPath The oldPath parameter.
    * @param newPath The newPath parameter.
    */
-  function fsRename(oldPath: string, newPath: string): void;
+  function fsRename(oldPath: unknown, newPath: unknown): void;
   /**
    * Performs fs unlink.
    * @param path The path parameter.
    */
-  function fsUnlink(path: string): void;
+  function fsUnlink(path: unknown): void;
   /**
    * Performs fs write file.
    * @param path The path parameter.
    * @param data The data parameter.
    */
-  function fsWriteFile(path: string, data: string): void;
+  function fsWriteFile(path: unknown, data: unknown): void;
   /**
    * Determines whether local mode.
    * @returns True if local mode; false otherwise.
@@ -106,103 +106,103 @@ declare namespace StorageManager
    * @param json The json parameter.
    * @returns The result.
    */
-  function jsonToObject(json: string): Promise<object>;
+  function jsonToObject(json: unknown): Promise;
   /**
    * Gets json to zip.
    * @param json The json parameter.
    * @returns The result.
    */
-  function jsonToZip(json: string): Promise<string>;
+  function jsonToZip(json: unknown): Promise;
   /**
    * Gets load from forage.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function loadFromForage(saveName: string): Promise<string>;
+  function loadFromForage(saveName: unknown): unknown;
   /**
    * Gets load from local file.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function loadFromLocalFile(saveName: string): Promise<string>;
+  function loadFromLocalFile(saveName: unknown): Promise;
   /**
    * Gets load object.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function loadObject(saveName: string): Promise<object>;
+  function loadObject(saveName: unknown): unknown;
   /**
    * Gets load zip.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function loadZip(saveName: string): Promise<string>;
+  function loadZip(saveName: unknown): unknown;
   /**
    * Gets local file exists.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function localFileExists(saveName: string): boolean;
+  function localFileExists(saveName: unknown): unknown;
   /**
    * Gets object to json.
    * @param object The object parameter.
    * @returns The result.
    */
-  function objectToJson(object: object): Promise<string>;
+  function objectToJson(object: unknown): Promise;
   /**
    * Gets remove.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function remove(saveName: string): void | Promise<number>;
+  function remove(saveName: unknown): unknown;
   /**
    * Removes forage.
    * @param saveName The saveName parameter.
    * @returns The result.
    */
-  function removeForage(saveName: string): Promise<number>;
+  function removeForage(saveName: unknown): unknown;
   /**
    * Removes local file.
    * @param saveName The saveName parameter.
    */
-  function removeLocalFile(saveName: string): void;
+  function removeLocalFile(saveName: unknown): void;
   /**
    * Gets save object.
    * @param saveName The saveName parameter.
    * @param object The object parameter.
    * @returns The result.
    */
-  function saveObject(saveName: string, object: object): Promise<void>;
+  function saveObject(saveName: unknown, object: unknown): unknown;
   /**
    * Gets save to forage.
    * @param saveName The saveName parameter.
    * @param zip The zip parameter.
    * @returns The result.
    */
-  function saveToForage(saveName: string, zip: string): Promise<void>;
+  function saveToForage(saveName: unknown, zip: unknown): unknown;
   /**
    * Gets save to local file.
    * @param saveName The saveName parameter.
    * @param zip The zip parameter.
    * @returns The result.
    */
-  function saveToLocalFile(saveName: string, zip: string): Promise<void>;
+  function saveToLocalFile(saveName: unknown, zip: unknown): Promise;
   /**
    * Gets save zip.
    * @param saveName The saveName parameter.
    * @param zip The zip parameter.
    * @returns The result.
    */
-  function saveZip(saveName: string, zip: string): Promise<void>;
+  function saveZip(saveName: unknown, zip: unknown): unknown;
   /**
    * Updates forage keys.
    * @returns The result.
    */
-  function updateForageKeys(): Promise<number>;
+  function updateForageKeys(): unknown;
   /**
    * Gets zip to json.
    * @param zip The zip parameter.
    * @returns The result.
    */
-  function zipToJson(zip: string): Promise<string>;
+  function zipToJson(zip: unknown): Promise;
 }

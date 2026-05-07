@@ -52,12 +52,12 @@ interface Window_BattleLog extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Spriteset_Battle`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_BattleLog#initialize}.<br/>
    * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#setSpriteset}.<br/>
    * Read in: {@link Window_BattleLog#updateWaitMode}.<br/>
    */
-  _spriteset: null | Spriteset_Battle;
+  _spriteset: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -80,7 +80,7 @@ interface Window_BattleLog extends Window_Base
    * Adds text.
    * @param text The text parameter.
    */
-  addText(text: string): void;
+  addText(text: unknown): void;
   /**
    * Gets back color.
    * @returns The result.
@@ -109,123 +109,123 @@ interface Window_BattleLog extends Window_Base
    * @param subject The subject parameter.
    * @param item The item parameter.
    */
-  displayAction(subject: Game_Battler, item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  displayAction(subject: unknown, item: unknown): void;
   /**
    * Performs display action results.
    * @param subject The subject parameter.
    * @param target The target parameter.
    */
-  displayActionResults(subject: Game_Battler, target: Game_Battler): void;
+  displayActionResults(subject: unknown, target: unknown): void;
   /**
    * Performs display added states.
    * @param target The target parameter.
    */
-  displayAddedStates(target: Game_Battler): void;
+  displayAddedStates(target: unknown): void;
   /**
    * Performs display affected status.
    * @param target The target parameter.
    */
-  displayAffectedStatus(target: Game_Battler): void;
+  displayAffectedStatus(target: unknown): void;
   /**
    * Performs display auto affected status.
    * @param target The target parameter.
    */
-  displayAutoAffectedStatus(target: Game_Battler): void;
+  displayAutoAffectedStatus(target: unknown): void;
   /**
    * Performs display buffs.
    * @param target The target parameter.
    * @param buffs The buffs parameter.
    * @param fmt The fmt parameter.
    */
-  displayBuffs(target: Game_Battler, buffs: object[], fmt: string): void;
+  displayBuffs(target: unknown, buffs: unknown, fmt: unknown): void;
   /**
    * Performs display changed buffs.
    * @param target The target parameter.
    */
-  displayChangedBuffs(target: Game_Battler): void;
+  displayChangedBuffs(target: unknown): void;
   /**
    * Performs display changed states.
    * @param target The target parameter.
    */
-  displayChangedStates(target: Game_Battler): void;
+  displayChangedStates(target: unknown): void;
   /**
    * Performs display counter.
    * @param target The target parameter.
    */
-  displayCounter(target: Game_Battler): void;
+  displayCounter(target: unknown): void;
   /**
    * Performs display critical.
    * @param target The target parameter.
    */
-  displayCritical(target: Game_Battler): void;
+  displayCritical(target: unknown): void;
   /**
    * Performs display current state.
    * @param subject The subject parameter.
    */
-  displayCurrentState(subject: Game_Battler): void;
+  displayCurrentState(subject: unknown): void;
   /**
    * Performs display damage.
    * @param target The target parameter.
    */
-  displayDamage(target: Game_Battler): void;
+  displayDamage(target: unknown): void;
   /**
    * Performs display evasion.
    * @param target The target parameter.
    */
-  displayEvasion(target: Game_Battler): void;
+  displayEvasion(target: unknown): void;
   /**
    * Performs display failure.
    * @param target The target parameter.
    */
-  displayFailure(target: Game_Battler): void;
+  displayFailure(target: unknown): void;
   /**
    * Performs display hp damage.
    * @param target The target parameter.
    */
-  displayHpDamage(target: Game_Battler): void;
+  displayHpDamage(target: unknown): void;
   /**
    * Performs display item message.
    * @param fmt The fmt parameter.
    * @param subject The subject parameter.
    * @param item The item parameter.
    */
-  displayItemMessage(fmt: string, subject: Game_Battler, item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  displayItemMessage(fmt: unknown, subject: unknown, item: unknown): void;
   /**
    * Performs display miss.
    * @param target The target parameter.
    */
-  displayMiss(target: Game_Battler): void;
+  displayMiss(target: unknown): void;
   /**
    * Performs display mp damage.
    * @param target The target parameter.
    */
-  displayMpDamage(target: Game_Battler): void;
+  displayMpDamage(target: unknown): void;
   /**
    * Performs display reflection.
    * @param target The target parameter.
    */
-  displayReflection(target: Game_Battler): void;
+  displayReflection(target: unknown): void;
   /**
    * Performs display regeneration.
    * @param subject The subject parameter.
    */
-  displayRegeneration(subject: Game_Battler): void;
+  displayRegeneration(subject: unknown): void;
   /**
    * Performs display removed states.
    * @param target The target parameter.
    */
-  displayRemovedStates(target: Game_Battler): void;
+  displayRemovedStates(target: unknown): void;
   /**
    * Performs display substitute.
    * @param substitute The substitute parameter.
    * @param target The target parameter.
    */
-  displaySubstitute(substitute: Game_Battler, target: Game_Battler): void;
+  displaySubstitute(substitute: unknown, target: unknown): void;
   /**
    * Performs display tp damage.
    * @param target The target parameter.
    */
-  displayTpDamage(target: Game_Battler): void;
+  displayTpDamage(target: unknown): void;
   /**
    * Performs draw background.
    */
@@ -234,17 +234,17 @@ interface Window_BattleLog extends Window_Base
    * Performs draw line text.
    * @param index The index parameter.
    */
-  drawLineText(index: number): void;
+  drawLineText(index: unknown): void;
   /**
    * Performs end action.
    * @param subject The subject parameter.
    */
-  endAction(subject: Game_Battler): void;
+  endAction(subject: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether busy.
    * @returns True if busy; false otherwise.
@@ -260,25 +260,25 @@ interface Window_BattleLog extends Window_Base
    * @param index The index parameter.
    * @returns The result.
    */
-  lineRect(index: number): Rectangle;
+  lineRect(index: unknown): Rectangle;
   /**
    * Creates hp damage text.
    * @param target The target parameter.
    * @returns The result.
    */
-  makeHpDamageText(target: Game_Battler): string;
+  makeHpDamageText(target: unknown): unknown;
   /**
    * Creates mp damage text.
    * @param target The target parameter.
    * @returns The result.
    */
-  makeMpDamageText(target: Game_Battler): string;
+  makeMpDamageText(target: unknown): string;
   /**
    * Creates tp damage text.
    * @param target The target parameter.
    * @returns The result.
    */
-  makeTpDamageText(target: Game_Battler): string;
+  makeTpDamageText(target: unknown): string;
   /**
    * Gets max lines.
    * @returns The result.
@@ -293,70 +293,70 @@ interface Window_BattleLog extends Window_Base
    * Gets num lines.
    * @returns The result.
    */
-  numLines(): number;
+  numLines(): unknown;
   /**
    * Performs perform action.
    * @param subject The subject parameter.
    * @param action The action parameter.
    */
-  performAction(subject: Game_Battler, action: Game_Action): void;
+  performAction(subject: unknown, action: unknown): void;
   /**
    * Performs perform action end.
    * @param subject The subject parameter.
    */
-  performActionEnd(subject: Game_Battler): void;
+  performActionEnd(subject: unknown): void;
   /**
    * Performs perform action start.
    * @param subject The subject parameter.
    * @param action The action parameter.
    */
-  performActionStart(subject: Game_Battler, action: Game_Action): void;
+  performActionStart(subject: unknown, action: unknown): void;
   /**
    * Performs perform collapse.
    * @param target The target parameter.
    */
-  performCollapse(target: Game_Battler): void;
+  performCollapse(target: unknown): void;
   /**
    * Performs perform counter.
    * @param target The target parameter.
    */
-  performCounter(target: Game_Battler): void;
+  performCounter(target: unknown): void;
   /**
    * Performs perform damage.
    * @param target The target parameter.
    */
-  performDamage(target: Game_Battler): void;
+  performDamage(target: unknown): void;
   /**
    * Performs perform evasion.
    * @param target The target parameter.
    */
-  performEvasion(target: Game_Battler): void;
+  performEvasion(target: unknown): void;
   /**
    * Performs perform magic evasion.
    * @param target The target parameter.
    */
-  performMagicEvasion(target: Game_Battler): void;
+  performMagicEvasion(target: unknown): void;
   /**
    * Performs perform miss.
    * @param target The target parameter.
    */
-  performMiss(target: Game_Battler): void;
+  performMiss(target: unknown): void;
   /**
    * Performs perform recovery.
    * @param target The target parameter.
    */
-  performRecovery(target: Game_Battler): void;
+  performRecovery(target: unknown): void;
   /**
    * Performs perform reflection.
    * @param target The target parameter.
    */
-  performReflection(target: Game_Battler): void;
+  performReflection(target: unknown): void;
   /**
    * Performs perform substitute.
    * @param substitute The substitute parameter.
    * @param target The target parameter.
    */
-  performSubstitute(substitute: Game_Battler, target: Game_Battler): void;
+  performSubstitute(substitute: unknown, target: unknown): void;
   /**
    * Performs pop base line.
    */
@@ -365,12 +365,12 @@ interface Window_BattleLog extends Window_Base
    * Performs popup damage.
    * @param target The target parameter.
    */
-  popupDamage(target: Game_Battler): void;
+  popupDamage(target: unknown): void;
   /**
    * Performs push.
    * @param methodName The methodName parameter.
    */
-  push(methodName: string): void;
+  push(methodName: unknown): void;
   /**
    * Performs push base line.
    */
@@ -383,31 +383,31 @@ interface Window_BattleLog extends Window_Base
    * Sets spriteset.
    * @param spriteset The spriteset parameter.
    */
-  setSpriteset(spriteset: Spriteset_Battle): void;
+  setSpriteset(spriteset: unknown): void;
   /**
    * Sets wait mode.
    * @param waitMode The waitMode parameter.
    */
-  setWaitMode(waitMode: string): void;
+  setWaitMode(waitMode: unknown): void;
   /**
    * Performs show actor attack animation.
    * @param subject The subject parameter.
    * @param targets The targets parameter.
    */
-  showActorAttackAnimation(subject: Game_Battler, targets: Game_Battler[]): void;
+  showActorAttackAnimation(subject: unknown, targets: unknown): void;
   /**
    * Performs show animation.
    * @param subject The subject parameter.
    * @param targets The targets parameter.
    * @param animationId The animationId parameter.
    */
-  showAnimation(subject: Game_Battler, targets: Game_Battler[], animationId: number): void;
+  showAnimation(subject: unknown, targets: unknown, animationId: unknown): void;
   /**
    * Performs show attack animation.
    * @param subject The subject parameter.
    * @param targets The targets parameter.
    */
-  showAttackAnimation(subject: Game_Battler, targets: Game_Battler[]): void;
+  showAttackAnimation(subject: unknown, targets: unknown): void;
   /**
    * Performs show enemy attack animation.
    */
@@ -418,14 +418,14 @@ interface Window_BattleLog extends Window_Base
    * @param animationId The animationId parameter.
    * @param mirror The mirror parameter.
    */
-  showNormalAnimation(targets: Game_Battler[], animationId: number, mirror: boolean): void;
+  showNormalAnimation(targets: unknown, animationId: unknown, mirror: unknown): void;
   /**
    * Performs start action.
    * @param subject The subject parameter.
    * @param action The action parameter.
    * @param targets The targets parameter.
    */
-  startAction(subject: Game_Battler, action: Game_Action, targets: Game_Battler[]): void;
+  startAction(subject: unknown, action: unknown, targets: unknown): void;
   /**
    * Performs start turn.
    */
@@ -438,7 +438,7 @@ interface Window_BattleLog extends Window_Base
    * Updates wait.
    * @returns The result.
    */
-  updateWait(): boolean;
+  updateWait(): unknown;
   /**
    * Updates wait count.
    * @returns The result.
@@ -448,7 +448,7 @@ interface Window_BattleLog extends Window_Base
    * Updates wait mode.
    * @returns The result.
    */
-  updateWaitMode(): boolean;
+  updateWaitMode(): unknown;
   /**
    * Performs wait.
    */

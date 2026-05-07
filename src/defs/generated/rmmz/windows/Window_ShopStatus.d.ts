@@ -10,12 +10,12 @@ interface Window_ShopStatus extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_ShopStatus#initialize}.<br/>
    * Written in: {@link Window_ShopStatus#initialize}, {@link Window_ShopStatus#setItem}.<br/>
    * Read in: {@link Window_ShopStatus#drawActorEquipInfo}, {@link Window_ShopStatus#drawActorParamChange}, {@link Window_ShopStatus#drawPossession}, {@link Window_ShopStatus#isEquipItem}, {@link Window_ShopStatus#paramId}, {@link Window_ShopStatus#refresh}.<br/>
    */
-  _item: null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor;
+  _item: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -35,14 +35,14 @@ interface Window_ShopStatus extends Window_StatusBase
    * @param etypeId The etypeId parameter.
    * @returns The result.
    */
-  currentEquippedItem(actor: Game_Actor, etypeId: number): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  currentEquippedItem(actor: unknown, etypeId: unknown): unknown;
   /**
    * Performs draw actor equip info.
    * @param x The x parameter.
    * @param y The y parameter.
    * @param actor The actor parameter.
    */
-  drawActorEquipInfo(x: number, y: number, actor: Game_Actor): void;
+  drawActorEquipInfo(x: unknown, y: unknown, actor: unknown): void;
   /**
    * Performs draw actor param change.
    * @param x The x parameter.
@@ -50,24 +50,24 @@ interface Window_ShopStatus extends Window_StatusBase
    * @param actor The actor parameter.
    * @param item1 The item1 parameter.
    */
-  drawActorParamChange(x: number, y: number, actor: Game_Actor, item1: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  drawActorParamChange(x: unknown, y: unknown, actor: unknown, item1: unknown): void;
   /**
    * Performs draw equip info.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawEquipInfo(x: number, y: number): void;
+  drawEquipInfo(x: unknown, y: unknown): void;
   /**
    * Performs draw possession.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawPossession(x: number, y: number): void;
+  drawPossession(x: unknown, y: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether equip item.
    * @returns True if equip item; false otherwise.
@@ -87,7 +87,7 @@ interface Window_ShopStatus extends Window_StatusBase
    * Gets max pages.
    * @returns The result.
    */
-  maxPages(): number;
+  maxPages(): unknown;
   /**
    * Gets page size.
    * @returns The result.
@@ -106,12 +106,12 @@ interface Window_ShopStatus extends Window_StatusBase
    * Sets item.
    * @param item The item parameter.
    */
-  setItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setItem(item: unknown): void;
   /**
    * Gets status members.
    * @returns The result.
    */
-  statusMembers(): Game_Actor[];
+  statusMembers(): unknown;
   /**
    * Performs update.
    */

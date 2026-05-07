@@ -1,7 +1,7 @@
 //region Game_Event
 /**
  * Gets all valid-shaped comment event commands.
- * @returns {rm.types.EventCommand[]}
+ * @returns {RPG_EventListCommand[]}
  */
 Game_Event.prototype.getValidCommentCommands = function()
 {
@@ -15,7 +15,7 @@ Game_Event.prototype.getValidCommentCommands = function()
 
 /**
  * Gets all valid-shaped comment event commands from a designated page.
- * @param {rm.types.Page} page The event page to parse comments from.
+ * @param {RPG_MapEventPage} page The event page to parse comments from.
  */
 Game_Event.getValidCommentCommandsFromPage = function(page)
 {
@@ -31,7 +31,7 @@ Game_Event.getValidCommentCommandsFromPage = function(page)
 
 /**
  * Filters out event commands that are not comments intended for regex parsing.
- * @param {rm.types.EventCommand} command The command to evaluate.
+ * @param {RPG_EventListCommand} command The command to evaluate.
  * @returns {boolean}
  */
 Game_Event.filterInvalidEventCommand = function(command)
@@ -123,7 +123,7 @@ Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = nu
 /**
  * Extracts a value out of an event's comments based on the provided structure.
  * If there are multiple matches in the comments, only the last one will be returned.
- * @param {rm.types.EventCommand} command The command in question.
+ * @param {RPG_EventListCommand} command The command in question.
  * @param {RegExp} structure The regex to find values for.
  * @param {any=} defaultValue The default value to start with; defaults to null.
  * @param {boolean=} andParse Whether or not to parse the results; defaults to true.
@@ -158,7 +158,7 @@ Game_Event.prototype.getDataForCommandByRegex = function(command, structure, def
 
 /**
  * Gets the current page's event command list if it is present, or an empty array if it isn't.
- * @returns {rm.types.EventCommand[]}
+ * @returns {RPG_EventListCommand[]}
  */
 Game_Event.prototype.getEventCommandList = function()
 {

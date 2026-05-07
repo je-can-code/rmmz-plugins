@@ -109,48 +109,48 @@ interface Game_Picture
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
    * Read in: {@link Game_Picture#updateMove}.<br/>
    */
-  _targetOpacity: number;
+  _targetOpacity: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
    * Read in: {@link Game_Picture#updateMove}.<br/>
    */
-  _targetScaleX: number;
+  _targetScaleX: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
    * Read in: {@link Game_Picture#updateMove}.<br/>
    */
-  _targetScaleY: number;
+  _targetScaleY: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
    * Read in: {@link Game_Picture#updateMove}.<br/>
    */
-  _targetX: number;
+  _targetX: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
    * Read in: {@link Game_Picture#updateMove}.<br/>
    */
-  _targetY: number;
+  _targetY: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -209,46 +209,46 @@ interface Game_Picture
    * Gets angle.
    * @returns The result.
    */
-  angle(): number;
+  angle(): unknown;
   /**
    * Gets apply easing.
    * @param current The current parameter.
    * @param target The target parameter.
    * @returns The result.
    */
-  applyEasing(current: number, target: number): number;
+  applyEasing(current: unknown, target: unknown): unknown;
   /**
    * Gets blend mode.
    * @returns The result.
    */
-  blendMode(): number;
+  blendMode(): unknown;
   /**
    * Gets calc easing.
    * @param t The t parameter.
    * @returns The result.
    */
-  calcEasing(t: number): number;
+  calcEasing(t: unknown): unknown;
   /**
    * Gets ease in.
    * @param t The t parameter.
    * @param exponent The exponent parameter.
    * @returns The result.
    */
-  easeIn(t: number, exponent: number): number;
+  easeIn(t: unknown, exponent: unknown): unknown;
   /**
    * Gets ease in out.
    * @param t The t parameter.
    * @param exponent The exponent parameter.
    * @returns The result.
    */
-  easeInOut(t: number, exponent: number): number;
+  easeInOut(t: unknown, exponent: unknown): unknown;
   /**
    * Gets ease out.
    * @param t The t parameter.
    * @param exponent The exponent parameter.
    * @returns The result.
    */
-  easeOut(t: number, exponent: number): number;
+  easeOut(t: unknown, exponent: unknown): unknown;
   /**
    * Initializes basic.
    */
@@ -281,37 +281,37 @@ interface Game_Picture
    * @param duration The duration parameter.
    * @param easingType The easingType parameter.
    */
-  move(origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number, duration: number, easingType: number): void;
+  move(origin: unknown, x: unknown, y: unknown, scaleX: unknown, scaleY: unknown, opacity: unknown, blendMode: unknown, duration: unknown, easingType: unknown): void;
   /**
    * Gets name.
    * @returns The result.
    */
-  name(): string;
+  name(): unknown;
   /**
    * Gets opacity.
    * @returns The result.
    */
-  opacity(): number;
+  opacity(): unknown;
   /**
    * Gets origin.
    * @returns The result.
    */
-  origin(): number;
+  origin(): unknown;
   /**
    * Performs rotate.
    * @param speed The speed parameter.
    */
-  rotate(speed: number): void;
+  rotate(speed: unknown): void;
   /**
    * Gets scale x.
    * @returns The result.
    */
-  scaleX(): number;
+  scaleX(): unknown;
   /**
    * Gets scale y.
    * @returns The result.
    */
-  scaleY(): number;
+  scaleY(): unknown;
   /**
    * Performs show.
    * @param name The name parameter.
@@ -323,18 +323,18 @@ interface Game_Picture
    * @param opacity The opacity parameter.
    * @param blendMode The blendMode parameter.
    */
-  show(name: string, origin: number, x: number, y: number, scaleX: number, scaleY: number, opacity: number, blendMode: number): void;
+  show(name: unknown, origin: unknown, x: unknown, y: unknown, scaleX: unknown, scaleY: unknown, opacity: unknown, blendMode: unknown): void;
   /**
    * Performs tint.
    * @param tone The tone parameter.
    * @param duration The duration parameter.
    */
-  tint(tone: [number, number, number, number], duration: number): void;
+  tint(tone: unknown, duration: unknown): void;
   /**
    * Gets tone.
    * @returns The result.
    */
-  tone(): [number, number, number, number] | null;
+  tone(): unknown;
   /**
    * Performs update.
    */
@@ -355,10 +355,10 @@ interface Game_Picture
    * Gets x.
    * @returns The result.
    */
-  x(): number;
+  x(): unknown;
   /**
    * Gets y.
    * @returns The result.
    */
-  y(): number;
+  y(): unknown;
 }

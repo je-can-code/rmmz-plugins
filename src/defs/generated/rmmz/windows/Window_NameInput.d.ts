@@ -10,12 +10,12 @@ interface Window_NameInput extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_NameInput#initialize}.<br/>
    * Written in: {@link Window_NameInput#initialize}, {@link Window_NameInput#setEditWindow}.<br/>
    * Read in: {@link Window_NameInput#onNameAdd}, {@link Window_NameInput#onNameOk}, {@link Window_NameInput#processBack}.<br/>
    */
-  _editWindow: null | Window_Base;
+  _editWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -43,12 +43,12 @@ interface Window_NameInput extends Window_Selectable
    * Performs cursor down.
    * @param wrap The wrap parameter.
    */
-  cursorDown(wrap: boolean): void;
+  cursorDown(wrap: unknown): void;
   /**
    * Performs cursor left.
    * @param wrap The wrap parameter.
    */
-  cursorLeft(wrap: boolean): void;
+  cursorLeft(wrap: unknown): void;
   /**
    * Performs cursor pagedown.
    */
@@ -61,17 +61,17 @@ interface Window_NameInput extends Window_Selectable
    * Performs cursor right.
    * @param wrap The wrap parameter.
    */
-  cursorRight(wrap: boolean): void;
+  cursorRight(wrap: unknown): void;
   /**
    * Performs cursor up.
    * @param wrap The wrap parameter.
    */
-  cursorUp(wrap: boolean): void;
+  cursorUp(wrap: unknown): void;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Gets group spacing.
    * @returns The result.
@@ -81,7 +81,7 @@ interface Window_NameInput extends Window_Selectable
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether cancel enabled.
    * @returns True if cancel enabled; false otherwise.
@@ -107,12 +107,12 @@ interface Window_NameInput extends Window_Selectable
    * @param index The index parameter.
    * @returns The result.
    */
-  itemRect(index: number): Rectangle;
+  itemRect(index: unknown): Rectangle;
   /**
    * Gets item width.
    * @returns The result.
    */
-  itemWidth(): number;
+  itemWidth(): unknown;
   /**
    * Gets max cols.
    * @returns The result.
@@ -159,12 +159,12 @@ interface Window_NameInput extends Window_Selectable
    * Sets edit window.
    * @param editWindow The editWindow parameter.
    */
-  setEditWindow(editWindow: Window_Base): void;
+  setEditWindow(editWindow: unknown): void;
   /**
    * Gets table.
    * @returns The result.
    */
-  table(): string[][];
+  table(): unknown[];
   /**
    * Updates cursor.
    */

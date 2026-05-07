@@ -10,12 +10,12 @@ interface Sprite_AnimationMV extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | object`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.<br/>
    * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#loadBitmaps}, {@link Sprite_AnimationMV#setup}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateFrame}, {@link Sprite_AnimationMV#updatePosition}.<br/>
    */
-  _animation: null | object;
+  _animation: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -149,7 +149,7 @@ interface Sprite_AnimationMV extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `unknown[] | Sprite[]`.<br/>
+   * Type: `unknown[]`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.<br/>
    * Read in: {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startHiding}, {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updateFlash}, {@link Sprite_AnimationMV#updateHiding}, {@link Sprite_AnimationMV#updatePosition}.<br/>
@@ -157,17 +157,17 @@ interface Sprite_AnimationMV extends Sprite
    * Consumed by:<br/>
    * - `.length`: {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updatePosition}.<br/>
    */
-  _targets: unknown[] | Sprite[];
+  _targets: unknown[];
   /**
    * Gets absolute x.
    * @returns The result.
    */
-  absoluteX(): number;
+  absoluteX(): unknown;
   /**
    * Gets absolute y.
    * @returns The result.
    */
-  absoluteY(): number;
+  absoluteY(): unknown;
   /**
    * Creates cell sprites.
    */
@@ -180,7 +180,7 @@ interface Sprite_AnimationMV extends Sprite
    * Gets current frame index.
    * @returns The result.
    */
-  currentFrameIndex(): number;
+  currentFrameIndex(): unknown;
   /**
    * Initializes members.
    */
@@ -211,7 +211,7 @@ interface Sprite_AnimationMV extends Sprite
    * Performs process timing data.
    * @param timing The timing parameter.
    */
-  processTimingData(timing: number): void;
+  processTimingData(timing: unknown): void;
   /**
    * Performs setup.
    * @param targets The targets parameter.
@@ -219,7 +219,7 @@ interface Sprite_AnimationMV extends Sprite
    * @param mirror The mirror parameter.
    * @param delay The delay parameter.
    */
-  setup(targets: Sprite[], animation: object, mirror: boolean, delay: number): void;
+  setup(targets: unknown, animation: unknown, mirror: unknown, delay: unknown): void;
   /**
    * Performs setup duration.
    */
@@ -233,18 +233,18 @@ interface Sprite_AnimationMV extends Sprite
    * @param color The color parameter.
    * @param duration The duration parameter.
    */
-  startFlash(color: [number, number, number, number], duration: number): void;
+  startFlash(color: unknown, duration: unknown): void;
   /**
    * Performs start hiding.
    * @param duration The duration parameter.
    */
-  startHiding(duration: number): void;
+  startHiding(duration: unknown): void;
   /**
    * Performs start screen flash.
    * @param color The color parameter.
    * @param duration The duration parameter.
    */
-  startScreenFlash(color: [number, number, number, number], duration: number): void;
+  startScreenFlash(color: unknown, duration: unknown): void;
   /**
    * Performs update.
    */
@@ -253,13 +253,13 @@ interface Sprite_AnimationMV extends Sprite
    * Updates all cell sprites.
    * @param frame The frame parameter.
    */
-  updateAllCellSprites(frame: number[][]): void;
+  updateAllCellSprites(frame: unknown): void;
   /**
    * Updates cell sprite.
    * @param sprite The sprite parameter.
    * @param cell The cell parameter.
    */
-  updateCellSprite(sprite: Sprite, cell: number[]): void;
+  updateCellSprite(sprite: unknown, cell: unknown): void;
   /**
    * Updates flash.
    */

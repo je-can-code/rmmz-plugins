@@ -27,12 +27,12 @@ interface Window_MapName extends Window_Base
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  drawBackground(x: number, y: number, width: number, height: number): void;
+  drawBackground(x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs open.
    */

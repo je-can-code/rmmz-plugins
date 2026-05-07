@@ -55,12 +55,12 @@ interface Scene_Base extends Stage
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number | boolean`.<br/>
+   * Type: `number`.<br/>
    * Initialized in: {@link Scene_Base#initialize}.<br/>
    * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}.<br/>
    * Read in: {@link Scene_Base#updateColorFilter}.<br/>
    */
-  _fadeWhite: number | boolean;
+  _fadeWhite: number;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -83,12 +83,12 @@ interface Scene_Base extends Stage
    * Adds window.
    * @param window The window parameter.
    */
-  addWindow(window: Window_Base): void;
+  addWindow(window: unknown): void;
   /**
    * Gets button area bottom.
    * @returns The result.
    */
-  buttonAreaBottom(): number;
+  buttonAreaBottom(): unknown;
   /**
    * Gets button area height.
    * @returns The result.
@@ -103,19 +103,19 @@ interface Scene_Base extends Stage
    * Gets button y.
    * @returns The result.
    */
-  buttonY(): number;
+  buttonY(): unknown;
   /**
    * Gets calc window height.
    * @param numLines The numLines parameter.
    * @param selectable The selectable parameter.
    * @returns The result.
    */
-  calcWindowHeight(numLines: number, selectable: boolean): number;
+  calcWindowHeight(numLines: unknown, selectable: unknown): unknown;
   /**
    * Performs center sprite.
    * @param sprite The sprite parameter.
    */
-  centerSprite(sprite: Sprite): void;
+  centerSprite(sprite: unknown): void;
   /**
    * Performs check gameover.
    */
@@ -219,12 +219,12 @@ interface Scene_Base extends Stage
    * Performs scale sprite.
    * @param sprite The sprite parameter.
    */
-  scaleSprite(sprite: Sprite): void;
+  scaleSprite(sprite: unknown): void;
   /**
    * Gets slow fade speed.
    * @returns The result.
    */
-  slowFadeSpeed(): number;
+  slowFadeSpeed(): unknown;
   /**
    * Performs start.
    */
@@ -234,13 +234,13 @@ interface Scene_Base extends Stage
    * @param duration The duration parameter.
    * @param white The white parameter.
    */
-  startFadeIn(duration: number, white: boolean): void;
+  startFadeIn(duration: unknown, white: unknown): void;
   /**
    * Performs start fade out.
    * @param duration The duration parameter.
    * @param white The white parameter.
    */
-  startFadeOut(duration: number, white: boolean): void;
+  startFadeOut(duration: unknown, white: unknown): void;
   /**
    * Performs stop.
    */

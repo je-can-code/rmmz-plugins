@@ -74,7 +74,7 @@ interface Scene_MenuBase extends Scene_Base
    * Gets actor.
    * @returns The result.
    */
-  actor(): Game_Actor;
+  actor(): unknown;
   /**
    * Gets are page buttons enabled.
    * @returns The result.
@@ -108,12 +108,12 @@ interface Scene_MenuBase extends Scene_Base
    * Gets help area bottom.
    * @returns The result.
    */
-  helpAreaBottom(): number;
+  helpAreaBottom(): unknown;
   /**
    * Gets help area height.
    * @returns The result.
    */
-  helpAreaHeight(): number;
+  helpAreaHeight(): unknown;
   /**
    * Gets help area top.
    * @returns The result.
@@ -132,12 +132,12 @@ interface Scene_MenuBase extends Scene_Base
    * Gets main area bottom.
    * @returns The result.
    */
-  mainAreaBottom(): number;
+  mainAreaBottom(): unknown;
   /**
    * Gets main area height.
    * @returns The result.
    */
-  mainAreaHeight(): number;
+  mainAreaHeight(): unknown;
   /**
    * Gets main area top.
    * @returns The result.
@@ -169,7 +169,7 @@ interface Scene_MenuBase extends Scene_Base
    * Sets background opacity.
    * @param opacity The opacity parameter.
    */
-  setBackgroundOpacity(opacity: number): void;
+  setBackgroundOpacity(opacity: unknown): void;
   /**
    * Performs update.
    */

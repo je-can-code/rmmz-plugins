@@ -55,12 +55,12 @@ interface Scene_Shop extends Scene_MenuBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `[number, number, number?, number?][]`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Scene_Shop#prepare}.<br/>
    * Read in: {@link Scene_Shop#createBuyWindow}.<br/>
    */
-  _goods: [number, number, number?, number?][];
+  _goods: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -82,12 +82,12 @@ interface Scene_Shop extends Scene_MenuBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `boolean`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Scene_Shop#prepare}.<br/>
    * Read in: {@link Scene_Shop#createCommandWindow}.<br/>
    */
-  _purchaseOnly: boolean;
+  _purchaseOnly: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -123,7 +123,7 @@ interface Scene_Shop extends Scene_MenuBase
    * Gets buying price.
    * @returns The result.
    */
-  buyingPrice(): number;
+  buyingPrice(): unknown;
   /**
    * Gets category window rect.
    * @returns The result.
@@ -182,17 +182,17 @@ interface Scene_Shop extends Scene_MenuBase
    * Gets currency unit.
    * @returns The result.
    */
-  currencyUnit(): string;
+  currencyUnit(): unknown;
   /**
    * Performs do buy.
    * @param _number The number parameter.
    */
-  doBuy(_number: number): void;
+  doBuy(_number: unknown): void;
   /**
    * Performs do sell.
    * @param _number The number parameter.
    */
-  doSell(_number: number): void;
+  doSell(_number: unknown): void;
   /**
    * Gets dummy window rect.
    * @returns The result.
@@ -215,17 +215,17 @@ interface Scene_Shop extends Scene_MenuBase
    * Gets max buy.
    * @returns The result.
    */
-  maxBuy(): number;
+  maxBuy(): unknown;
   /**
    * Gets max sell.
    * @returns The result.
    */
-  maxSell(): number;
+  maxSell(): unknown;
   /**
    * Gets money.
    * @returns The result.
    */
-  money(): number;
+  money(): unknown;
   /**
    * Gets number window rect.
    * @returns The result.
@@ -268,7 +268,7 @@ interface Scene_Shop extends Scene_MenuBase
    * @param goods The goods parameter.
    * @param purchaseOnly The purchaseOnly parameter.
    */
-  prepare(goods: [number, number, number?, number?][], purchaseOnly: boolean): void;
+  prepare(goods: unknown, purchaseOnly: unknown): void;
   /**
    * Gets sell window rect.
    * @returns The result.
@@ -278,7 +278,7 @@ interface Scene_Shop extends Scene_MenuBase
    * Gets selling price.
    * @returns The result.
    */
-  sellingPrice(): number;
+  sellingPrice(): unknown;
   /**
    * Gets status width.
    * @returns The result.

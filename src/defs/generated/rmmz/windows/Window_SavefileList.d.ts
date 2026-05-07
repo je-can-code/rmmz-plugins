@@ -19,30 +19,30 @@ interface Window_SavefileList extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_SavefileList#initialize}.<br/>
    * Written in: {@link Window_SavefileList#initialize}, {@link Window_SavefileList#setMode}.<br/>
    * Read in: {@link Window_SavefileList#isEnabled}.<br/>
    */
-  _mode: null | string;
+  _mode: null;
   /**
    * Performs draw contents.
    * @param info The info parameter.
    * @param rect The rect parameter.
    */
-  drawContents(info: object, rect: Rectangle): void;
+  drawContents(info: unknown, rect: unknown): void;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Performs draw party characters.
    * @param info The info parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawPartyCharacters(info: object, x: number, y: number): void;
+  drawPartyCharacters(info: unknown, x: unknown, y: unknown): void;
   /**
    * Performs draw playtime.
    * @param info The info parameter.
@@ -50,41 +50,41 @@ interface Window_SavefileList extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawPlaytime(info: object, x: number, y: number, width: number): void;
+  drawPlaytime(info: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Performs draw title.
    * @param savefileId The savefileId parameter.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  drawTitle(savefileId: number, x: number, y: number): void;
+  drawTitle(savefileId: unknown, x: unknown, y: unknown): void;
   /**
    * Gets index to savefile id.
    * @param index The index parameter.
    * @returns The result.
    */
-  indexToSavefileId(index: number): number;
+  indexToSavefileId(index: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether enabled.
    * @param savefileId The savefileId parameter.
    * @returns True if enabled; false otherwise.
    */
-  isEnabled(savefileId: number): boolean;
+  isEnabled(savefileId: unknown): boolean;
   /**
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets max items.
    * @returns The result.
    */
-  maxItems(): number;
+  maxItems(): unknown;
   /**
    * Gets num visible rows.
    * @returns The result.
@@ -98,22 +98,22 @@ interface Window_SavefileList extends Window_Selectable
    * Gets savefile id.
    * @returns The result.
    */
-  savefileId(): number;
+  savefileId(): unknown;
   /**
    * Gets savefile id to index.
    * @param savefileId The savefileId parameter.
    * @returns The result.
    */
-  savefileIdToIndex(savefileId: number): number;
+  savefileIdToIndex(savefileId: unknown): unknown;
   /**
    * Performs select savefile.
    * @param savefileId The savefileId parameter.
    */
-  selectSavefile(savefileId: number): void;
+  selectSavefile(savefileId: unknown): void;
   /**
    * Sets mode.
    * @param mode The mode parameter.
    * @param autosave The autosave parameter.
    */
-  setMode(mode: string, autosave: boolean): void;
+  setMode(mode: unknown, autosave: unknown): void;
 }

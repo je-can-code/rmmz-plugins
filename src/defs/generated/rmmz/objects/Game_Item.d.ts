@@ -29,7 +29,7 @@ interface Game_Item
    * Initializes initialize.
    * @param item The item parameter.
    */
-  initialize(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  initialize(item: unknown): void;
   /**
    * Determines whether armor.
    * @returns True if armor; false otherwise.
@@ -69,7 +69,7 @@ interface Game_Item
    * Gets item id.
    * @returns The result.
    */
-  itemId(): number;
+  itemId(): unknown;
   /**
    * Gets object.
    * @returns The result.
@@ -80,10 +80,10 @@ interface Game_Item
    * @param isWeapon The isWeapon parameter.
    * @param itemId The itemId parameter.
    */
-  setEquip(isWeapon: boolean, itemId: number): void;
+  setEquip(isWeapon: unknown, itemId: unknown): void;
   /**
    * Sets object.
    * @param item The item parameter.
    */
-  setObject(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setObject(item: unknown): void;
 }

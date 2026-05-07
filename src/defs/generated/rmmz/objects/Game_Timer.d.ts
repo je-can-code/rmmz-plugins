@@ -29,7 +29,7 @@ interface Game_Timer
    * Gets frames.
    * @returns The result.
    */
-  frames(): number;
+  frames(): unknown;
   /**
    * Initializes initialize.
    */
@@ -47,12 +47,12 @@ interface Game_Timer
    * Gets seconds.
    * @returns The result.
    */
-  seconds(): number;
+  seconds(): unknown;
   /**
    * Performs start.
    * @param count The count parameter.
    */
-  start(count: number): void;
+  start(count: unknown): void;
   /**
    * Performs stop.
    */
@@ -61,5 +61,5 @@ interface Game_Timer
    * Performs update.
    * @param sceneActive The sceneActive parameter.
    */
-  update(sceneActive: boolean): void;
+  update(sceneActive: unknown): void;
 }

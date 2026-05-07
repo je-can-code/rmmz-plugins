@@ -11,7 +11,7 @@ interface Window_MenuActor extends Window_MenuStatus
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs process ok.
    */
@@ -20,7 +20,7 @@ interface Window_MenuActor extends Window_MenuStatus
    * Performs select for item.
    * @param item The item parameter.
    */
-  selectForItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  selectForItem(item: unknown): void;
   /**
    * Performs select last.
    */

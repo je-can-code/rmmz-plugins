@@ -49,19 +49,19 @@ interface Sprite_Damage extends Sprite
    * @param height The height parameter.
    * @returns The result.
    */
-  createBitmap(width: number, height: number): Bitmap;
+  createBitmap(width: unknown, height: unknown): unknown;
   /**
    * Creates child sprite.
    * @param width The width parameter.
    * @param height The height parameter.
    * @returns The result.
    */
-  createChildSprite(width: number, height: number): Sprite;
+  createChildSprite(width: unknown, height: unknown): unknown;
   /**
    * Creates digits.
    * @param value The value parameter.
    */
-  createDigits(value: number): void;
+  createDigits(value: unknown): void;
   /**
    * Creates miss.
    */
@@ -70,22 +70,22 @@ interface Sprite_Damage extends Sprite
    * Gets damage color.
    * @returns The result.
    */
-  damageColor(): number;
+  damageColor(): unknown;
   /**
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Gets font face.
    * @returns The result.
    */
-  fontFace(): string;
+  fontFace(): unknown;
   /**
    * Gets font size.
    * @returns The result.
    */
-  fontSize(): number;
+  fontSize(): unknown;
   /**
    * Initializes initialize.
    */
@@ -109,7 +109,7 @@ interface Sprite_Damage extends Sprite
    * Performs setup.
    * @param target The target parameter.
    */
-  setup(target: Game_Battler): void;
+  setup(target: unknown): void;
   /**
    * Performs setup critical effect.
    */
@@ -122,7 +122,7 @@ interface Sprite_Damage extends Sprite
    * Updates child.
    * @param sprite The sprite parameter.
    */
-  updateChild(sprite: Sprite): void;
+  updateChild(sprite: unknown): void;
   /**
    * Updates flash.
    */

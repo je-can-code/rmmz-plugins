@@ -19,7 +19,7 @@ Game_Interpreter.prototype.setupChoices = function(params)
 
 /**
  * A hook for evaluating visibility of choices programmatically.
- * @param {rm.types.EventCommand[]} params The choices parameters being setup.
+ * @param {RPG_EventListCommand[]} params The choices parameters being setup.
  */
 Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
 {
@@ -29,7 +29,7 @@ Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params)
 
 /**
  * Hide all the choices that don't meet the criteria.
- * @param {rm.types.EventCommand} params The event command parameters.
+ * @param {RPG_EventListCommand} params The event command parameters.
  */
 // eslint-disable-next-line no-unused-vars
 Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)

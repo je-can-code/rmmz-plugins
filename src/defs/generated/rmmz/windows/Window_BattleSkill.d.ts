@@ -15,7 +15,7 @@ interface Window_BattleSkill extends Window_SkillList
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs show.
    */

@@ -61,7 +61,7 @@ declare namespace TextManager
    * @param basicId The basicId parameter.
    * @returns The result.
    */
-  function basic(basicId: number): string;
+  function basic(basicId: unknown): string;
   /**
    * Localized UI string from `$dataSystem.terms` (TextManager.getter factory).
    */
@@ -95,7 +95,7 @@ declare namespace TextManager
    * @param commandId The commandId parameter.
    * @returns The result.
    */
-  function command(commandId: number): string;
+  function command(commandId: unknown): string;
   /**
    * Localized UI string from `$dataSystem.terms` (TextManager.getter factory).
    */
@@ -223,7 +223,7 @@ declare namespace TextManager
    * @param param The param parameter.
    * @returns The result.
    */
-  function getter(method: string, param: number | string): object;
+  function getter(method: unknown, param: unknown): object;
   /**
    * Localized UI string from `$dataSystem.terms` (TextManager.getter factory).
    */
@@ -277,7 +277,7 @@ declare namespace TextManager
    * @param messageId The messageId parameter.
    * @returns The result.
    */
-  function message(messageId: number): string;
+  function message(messageId: unknown): string;
   /**
    * Localized UI string from `$dataSystem.terms` (TextManager.getter factory).
    */
@@ -319,7 +319,7 @@ declare namespace TextManager
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  function param(paramId: number): string;
+  function param(paramId: unknown): string;
   /**
    * Localized UI string from `$dataSystem.terms` (TextManager.getter factory).
    */

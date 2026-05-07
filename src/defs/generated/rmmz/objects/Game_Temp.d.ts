@@ -50,21 +50,21 @@ interface Game_Temp
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_Temp#initialize}.<br/>
    * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.<br/>
    * Read in: {@link Game_Temp#destinationX}, {@link Game_Temp#isDestinationValid}.<br/>
    */
-  _destinationX: null | number;
+  _destinationX: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_Temp#initialize}.<br/>
    * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.<br/>
    * Read in: {@link Game_Temp#destinationY}.<br/>
    */
-  _destinationY: null | number;
+  _destinationY: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -104,12 +104,12 @@ interface Game_Temp
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_CharacterBase`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Game_Temp#initialize}.<br/>
    * Written in: {@link Game_Temp#clearTouchState}, {@link Game_Temp#initialize}, {@link Game_Temp#setTouchState}.<br/>
    * Read in: {@link Game_Temp#touchTarget}.<br/>
    */
-  _touchTarget: null | Game_CharacterBase;
+  _touchTarget: null;
   /**
    * Clears battle refresh request.
    */
@@ -130,12 +130,12 @@ interface Game_Temp
    * Gets destination x.
    * @returns The result.
    */
-  destinationX(): number | null;
+  destinationX(): unknown;
   /**
    * Gets destination y.
    * @returns The result.
    */
-  destinationY(): number | null;
+  destinationY(): unknown;
   /**
    * Initializes initialize.
    */
@@ -165,20 +165,20 @@ interface Game_Temp
    * @param _type The type parameter.
    * @returns The result.
    */
-  lastActionData(_type: number): number;
+  lastActionData(_type: unknown): number;
   /**
    * Performs request animation.
    * @param targets The targets parameter.
    * @param animationId The animationId parameter.
    * @param mirror The mirror parameter.
    */
-  requestAnimation(targets: Game_CharacterBase[], animationId: number, mirror?: boolean): void;
+  requestAnimation(targets: unknown, animationId: unknown, mirror?: unknown): void;
   /**
    * Performs request balloon.
    * @param target The target parameter.
    * @param balloonId The balloonId parameter.
    */
-  requestBalloon(target: Game_CharacterBase, balloonId: number): void;
+  requestBalloon(target: unknown, balloonId: unknown): void;
   /**
    * Performs request battle refresh.
    */
@@ -187,78 +187,78 @@ interface Game_Temp
    * Performs reserve common event.
    * @param commonEventId The commonEventId parameter.
    */
-  reserveCommonEvent(commonEventId: number): void;
+  reserveCommonEvent(commonEventId: unknown): void;
   /**
    * Gets retrieve animation.
    * @returns The result.
    */
-  retrieveAnimation(): object | undefined;
+  retrieveAnimation(): unknown;
   /**
    * Gets retrieve balloon.
    * @returns The result.
    */
-  retrieveBalloon(): object | undefined;
+  retrieveBalloon(): unknown;
   /**
    * Gets retrieve common event.
    * @returns The result.
    */
-  retrieveCommonEvent(): object | null | undefined;
+  retrieveCommonEvent(): unknown;
   /**
    * Sets destination.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setDestination(x: number, y: number): void;
+  setDestination(x: unknown, y: unknown): void;
   /**
    * Sets last action data.
    * @param _type The type parameter.
    * @param value The value parameter.
    */
-  setLastActionData(_type: number, value: number): void;
+  setLastActionData(_type: unknown, value: unknown): void;
   /**
    * Sets last subject actor id.
    * @param actorID The actorID parameter.
    */
-  setLastSubjectActorId(actorID: number): void;
+  setLastSubjectActorId(actorID: unknown): void;
   /**
    * Sets last subject enemy index.
    * @param enemyIndex The enemyIndex parameter.
    */
-  setLastSubjectEnemyIndex(enemyIndex: number): void;
+  setLastSubjectEnemyIndex(enemyIndex: unknown): void;
   /**
    * Sets last target actor id.
    * @param actorID The actorID parameter.
    */
-  setLastTargetActorId(actorID: number): void;
+  setLastTargetActorId(actorID: unknown): void;
   /**
    * Sets last target enemy index.
    * @param enemyIndex The enemyIndex parameter.
    */
-  setLastTargetEnemyIndex(enemyIndex: number): void;
+  setLastTargetEnemyIndex(enemyIndex: unknown): void;
   /**
    * Sets last used item id.
    * @param itemID The itemID parameter.
    */
-  setLastUsedItemId(itemID: number): void;
+  setLastUsedItemId(itemID: unknown): void;
   /**
    * Sets last used skill id.
    * @param skillID The skillID parameter.
    */
-  setLastUsedSkillId(skillID: number): void;
+  setLastUsedSkillId(skillID: unknown): void;
   /**
    * Sets touch state.
    * @param target The target parameter.
    * @param state The state parameter.
    */
-  setTouchState(target: Game_CharacterBase | null, state: string): void;
+  setTouchState(target: unknown, state: unknown): void;
   /**
    * Gets touch state.
    * @returns The result.
    */
-  touchState(): string;
+  touchState(): unknown;
   /**
    * Gets touch target.
    * @returns The result.
    */
-  touchTarget(): Game_CharacterBase | null;
+  touchTarget(): unknown;
 }

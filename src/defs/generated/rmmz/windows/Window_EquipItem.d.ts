@@ -10,12 +10,12 @@ interface Window_EquipItem extends Window_ItemList
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_EquipItem#initialize}.<br/>
    * Written in: {@link Window_EquipItem#initialize}, {@link Window_EquipItem#setActor}.<br/>
    * Read in: {@link Window_EquipItem#etypeId}, {@link Window_EquipItem#includes}, {@link Window_EquipItem#setActor}, {@link Window_EquipItem#updateHelp}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -28,12 +28,12 @@ interface Window_EquipItem extends Window_ItemList
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_EquipItem#setStatusWindow}.<br/>
    * Read in: {@link Window_EquipItem#updateHelp}.<br/>
    */
-  _statusWindow: Window_Base;
+  _statusWindow: unknown;
   /**
    * Gets col spacing.
    * @returns The result.
@@ -49,12 +49,12 @@ interface Window_EquipItem extends Window_ItemList
    * @param item The item parameter.
    * @returns The result.
    */
-  includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  includes(item: unknown): boolean;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether enabled.
    * @returns True if enabled; false otherwise.
@@ -77,17 +77,17 @@ interface Window_EquipItem extends Window_ItemList
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
   /**
    * Sets slot id.
    * @param slotId The slotId parameter.
    */
-  setSlotId(slotId: number): void;
+  setSlotId(slotId: unknown): void;
   /**
    * Sets status window.
    * @param statusWindow The statusWindow parameter.
    */
-  setStatusWindow(statusWindow: Window_Base): void;
+  setStatusWindow(statusWindow: unknown): void;
   /**
    * Updates help.
    */

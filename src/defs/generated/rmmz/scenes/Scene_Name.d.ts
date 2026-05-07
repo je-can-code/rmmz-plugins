@@ -19,12 +19,12 @@ interface Scene_Name extends Scene_MenuBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Scene_Name#prepare}.<br/>
    * Read in: {@link Scene_Name#create}.<br/>
    */
-  _actorId: number;
+  _actorId: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Scene_Name extends Scene_MenuBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Scene_Name#prepare}.<br/>
    * Read in: {@link Scene_Name#createEditWindow}.<br/>
    */
-  _maxLength: number;
+  _maxLength: unknown;
   /**
    * Performs create.
    */
@@ -87,7 +87,7 @@ interface Scene_Name extends Scene_MenuBase
    * @param actorId The actorId parameter.
    * @param maxLength The maxLength parameter.
    */
-  prepare(actorId: number, maxLength: number): void;
+  prepare(actorId: unknown, maxLength: unknown): void;
   /**
    * Performs start.
    */

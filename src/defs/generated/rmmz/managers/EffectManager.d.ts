@@ -51,18 +51,18 @@ declare namespace EffectManager
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function load(filename: string): null;
+  function load(filename: unknown): null;
   /**
    * Creates url.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function makeUrl(filename: string): string;
+  function makeUrl(filename: unknown): string;
   /**
    * Performs on error.
    * @param url The url parameter.
    */
-  function onError(url: string): void;
+  function onError(url: unknown): void;
   /**
    * Performs on load.
    */
@@ -72,10 +72,10 @@ declare namespace EffectManager
    * @param url The url parameter.
    * @returns The result.
    */
-  function startLoading(url: string): object;
+  function startLoading(url: unknown): unknown;
   /**
    * Performs throw load error.
    * @param url The url parameter.
    */
-  function throwLoadError(url: string): void;
+  function throwLoadError(url: unknown): void;
 }

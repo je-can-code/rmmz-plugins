@@ -33,11 +33,11 @@ interface Game_SelfSwitches
    * @param key The key parameter.
    * @param value The value parameter.
    */
-  setValue(key: string, value: boolean): void;
+  setValue(key: unknown, value: unknown): void;
   /**
    * Gets value.
    * @param key The key parameter.
    * @returns The result.
    */
-  value(key: string): boolean;
+  value(key: unknown): boolean;
 }
