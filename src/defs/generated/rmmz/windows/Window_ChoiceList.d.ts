@@ -8,39 +8,39 @@
 interface Window_ChoiceList extends Window_Command
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ChoiceList#initialize}.
-   * Written in: {@link Window_ChoiceList#initialize}, {@link Window_ChoiceList#updateBackground}.
-   * Read in: {@link Window_ChoiceList#updateBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ChoiceList#initialize}.<br/>
+   * Written in: {@link Window_ChoiceList#initialize}, {@link Window_ChoiceList#updateBackground}.<br/>
+   * Read in: {@link Window_ChoiceList#updateBackground}.<br/>
    */
   _background: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_ChoiceList#initialize}.
-   * Written in: {@link Window_ChoiceList#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_ChoiceList#initialize}.<br/>
+   * Written in: {@link Window_ChoiceList#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Window_ChoiceList#createCancelButton}.
-   * Read in: {@link Window_ChoiceList#createCancelButton}, {@link Window_ChoiceList#placeCancelButton}, {@link Window_ChoiceList#updateCancelButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ChoiceList#createCancelButton}.<br/>
+   * Read in: {@link Window_ChoiceList#createCancelButton}, {@link Window_ChoiceList#placeCancelButton}, {@link Window_ChoiceList#updateCancelButton}.<br/>
    */
   _cancelButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_ChoiceList#setMessageWindow}.
-   * Read in: {@link Window_ChoiceList#callCancelHandler}, {@link Window_ChoiceList#callOkHandler}, {@link Window_ChoiceList#maxLines}, {@link Window_ChoiceList#windowY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ChoiceList#setMessageWindow}.<br/>
+   * Read in: {@link Window_ChoiceList#callCancelHandler}, {@link Window_ChoiceList#callOkHandler}, {@link Window_ChoiceList#maxLines}, {@link Window_ChoiceList#windowY}.<br/>
    */
   _messageWindow: Window_Base;
   /**

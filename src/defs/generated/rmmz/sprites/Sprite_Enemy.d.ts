@@ -8,75 +8,75 @@
 interface Sprite_Enemy extends Sprite_Battler
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#startAppear}, {@link Sprite_Enemy#startBossCollapse}, {@link Sprite_Enemy#startCollapse}, {@link Sprite_Enemy#startDisappear}, {@link Sprite_Enemy#startInstantCollapse}.
-   * Read in: {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#setupEffect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#startAppear}, {@link Sprite_Enemy#startBossCollapse}, {@link Sprite_Enemy#startCollapse}, {@link Sprite_Enemy#startDisappear}, {@link Sprite_Enemy#startInstantCollapse}.<br/>
+   * Read in: {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#setupEffect}.<br/>
    */
   _appeared: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#updateBitmap}.
-   * Read in: {@link Sprite_Enemy#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Enemy#updateBitmap}.<br/>
    */
   _battlerHue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#updateBitmap}.
-   * Read in: {@link Sprite_Enemy#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Enemy#updateBitmap}.<br/>
    */
   _battlerName: null | string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#startAppear}, {@link Sprite_Enemy#startBlink}, {@link Sprite_Enemy#startBossCollapse}, {@link Sprite_Enemy#startCollapse}, {@link Sprite_Enemy#startDisappear}, {@link Sprite_Enemy#startInstantCollapse}, {@link Sprite_Enemy#startWhiten}, {@link Sprite_Enemy#updateEffect}.
-   * Read in: {@link Sprite_Enemy#updateAppear}, {@link Sprite_Enemy#updateBlink}, {@link Sprite_Enemy#updateBossCollapse}, {@link Sprite_Enemy#updateCollapse}, {@link Sprite_Enemy#updateDisappear}, {@link Sprite_Enemy#updateEffect}, {@link Sprite_Enemy#updateFrame}, {@link Sprite_Enemy#updateWhiten}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#startAppear}, {@link Sprite_Enemy#startBlink}, {@link Sprite_Enemy#startBossCollapse}, {@link Sprite_Enemy#startCollapse}, {@link Sprite_Enemy#startDisappear}, {@link Sprite_Enemy#startInstantCollapse}, {@link Sprite_Enemy#startWhiten}, {@link Sprite_Enemy#updateEffect}.<br/>
+   * Read in: {@link Sprite_Enemy#updateAppear}, {@link Sprite_Enemy#updateBlink}, {@link Sprite_Enemy#updateBossCollapse}, {@link Sprite_Enemy#updateCollapse}, {@link Sprite_Enemy#updateDisappear}, {@link Sprite_Enemy#updateEffect}, {@link Sprite_Enemy#updateFrame}, {@link Sprite_Enemy#updateWhiten}.<br/>
    */
   _effectDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}.
-   * Read in: {@link Sprite_Enemy#isEffecting}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}, {@link Sprite_Enemy#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}.<br/>
+   * Read in: {@link Sprite_Enemy#isEffecting}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}, {@link Sprite_Enemy#updateFrame}.<br/>
    */
   _effectType: null | number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#setBattler}.
-   * Read in: {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#setupEffect}, {@link Sprite_Enemy#update}, {@link Sprite_Enemy#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#setBattler}.<br/>
+   * Read in: {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#setupEffect}, {@link Sprite_Enemy#update}, {@link Sprite_Enemy#updateBitmap}.<br/>
    */
   _enemy: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#revertToNormal}, {@link Sprite_Enemy#updateBossCollapse}.
-   * Read in: {@link Sprite_Enemy#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#revertToNormal}, {@link Sprite_Enemy#updateBossCollapse}.<br/>
+   * Read in: {@link Sprite_Enemy#updatePosition}.<br/>
    */
   _shake: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_StateIcon`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Enemy#createStateIconSprite}.
-   * Read in: {@link Sprite_Enemy#createStateIconSprite}, {@link Sprite_Enemy#setBattler}, {@link Sprite_Enemy#updateStateSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_StateIcon`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Enemy#createStateIconSprite}.<br/>
+   * Read in: {@link Sprite_Enemy#createStateIconSprite}, {@link Sprite_Enemy#setBattler}, {@link Sprite_Enemy#updateStateSprite}.<br/>
    */
   _stateIconSprite: Sprite_StateIcon;
   /**

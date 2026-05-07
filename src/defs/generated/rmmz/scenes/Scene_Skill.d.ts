@@ -8,30 +8,30 @@
 interface Scene_Skill extends Scene_ItemBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_SkillList`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Skill#createItemWindow}.
-   * Read in: {@link Scene_Skill#commandSkill}, {@link Scene_Skill#createItemWindow}, {@link Scene_Skill#onActorChange}, {@link Scene_Skill#onItemCancel}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#useItem}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_SkillList`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Skill#createItemWindow}.<br/>
+   * Read in: {@link Scene_Skill#commandSkill}, {@link Scene_Skill#createItemWindow}, {@link Scene_Skill#onActorChange}, {@link Scene_Skill#onItemCancel}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#useItem}.<br/>
    */
   _itemWindow: Window_SkillList;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_SkillType`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Skill#createSkillTypeWindow}.
-   * Read in: {@link Scene_Skill#createItemWindow}, {@link Scene_Skill#createSkillTypeWindow}, {@link Scene_Skill#onActorChange}, {@link Scene_Skill#onItemCancel}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#statusWindowRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_SkillType`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Skill#createSkillTypeWindow}.<br/>
+   * Read in: {@link Scene_Skill#createItemWindow}, {@link Scene_Skill#createSkillTypeWindow}, {@link Scene_Skill#onActorChange}, {@link Scene_Skill#onItemCancel}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#statusWindowRect}.<br/>
    */
   _skillTypeWindow: Window_SkillType;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_SkillStatus`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Skill#createStatusWindow}.
-   * Read in: {@link Scene_Skill#createStatusWindow}, {@link Scene_Skill#itemWindowRect}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#useItem}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_SkillStatus`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Skill#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Skill#createStatusWindow}, {@link Scene_Skill#itemWindowRect}, {@link Scene_Skill#refreshActor}, {@link Scene_Skill#useItem}.<br/>
    */
   _statusWindow: Window_SkillStatus;
   /**

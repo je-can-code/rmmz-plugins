@@ -8,12 +8,12 @@
 interface Window_ItemCategory extends Window_HorzCommand
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_ItemCategory#setItemWindow}.
-   * Read in: {@link Window_ItemCategory#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ItemCategory#setItemWindow}.<br/>
+   * Read in: {@link Window_ItemCategory#update}.<br/>
    */
   _itemWindow: Window_Base;
   /**

@@ -8,15 +8,15 @@
 interface Window_BattleEnemy extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_BattleEnemy#initialize}.
-   * Written in: {@link Window_BattleEnemy#initialize}, {@link Window_BattleEnemy#refresh}.
-   * Read in: {@link Window_BattleEnemy#drawItem}, {@link Window_BattleEnemy#enemy}, {@link Window_BattleEnemy#maxItems}, {@link Window_BattleEnemy#processTouch}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_BattleEnemy#maxItems}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_BattleEnemy#initialize}.<br/>
+   * Written in: {@link Window_BattleEnemy#initialize}, {@link Window_BattleEnemy#refresh}.<br/>
+   * Read in: {@link Window_BattleEnemy#drawItem}, {@link Window_BattleEnemy#enemy}, {@link Window_BattleEnemy#maxItems}, {@link Window_BattleEnemy#processTouch}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_BattleEnemy#maxItems}.<br/>
    */
   _enemies: unknown[];
   /**

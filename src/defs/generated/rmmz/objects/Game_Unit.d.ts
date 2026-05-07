@@ -8,12 +8,12 @@
 interface Game_Unit
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Unit#initialize}.
-   * Written in: {@link Game_Unit#initialize}, {@link Game_Unit#onBattleEnd}, {@link Game_Unit#onBattleStart}.
-   * Read in: {@link Game_Unit#inBattle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Unit#initialize}.<br/>
+   * Written in: {@link Game_Unit#initialize}, {@link Game_Unit#onBattleEnd}, {@link Game_Unit#onBattleStart}.<br/>
+   * Read in: {@link Game_Unit#inBattle}.<br/>
    */
   _inBattle: boolean;
   /**

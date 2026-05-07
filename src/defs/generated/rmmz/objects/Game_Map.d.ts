@@ -8,225 +8,225 @@
 interface Game_Map
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.
-   * Read in: {@link Game_Map#battleback1Name}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.<br/>
+   * Read in: {@link Game_Map#battleback1Name}.<br/>
    */
   _battleback1Name: null | string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.
-   * Read in: {@link Game_Map#battleback2Name}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeBattleback}, {@link Game_Map#initialize}, {@link Game_Map#setupBattleback}.<br/>
+   * Read in: {@link Game_Map#battleback2Name}.<br/>
    */
   _battleback2Name: null | string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.
-   * Read in: {@link Game_Map#refresh}, {@link Game_Map#setupEvents}, {@link Game_Map#updateEvents}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_Map#setupEvents}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.<br/>
+   * Read in: {@link Game_Map#refresh}, {@link Game_Map#setupEvents}, {@link Game_Map#updateEvents}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_Map#setupEvents}.<br/>
    */
   _commonEvents: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.
-   * Read in: {@link Game_Map#adjustX}, {@link Game_Map#canvasToMapX}, {@link Game_Map#displayX}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.<br/>
+   * Read in: {@link Game_Map#adjustX}, {@link Game_Map#canvasToMapX}, {@link Game_Map#displayX}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.<br/>
    */
   _displayX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.
-   * Read in: {@link Game_Map#adjustY}, {@link Game_Map#canvasToMapY}, {@link Game_Map#displayY}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setup}.<br/>
+   * Read in: {@link Game_Map#adjustY}, {@link Game_Map#canvasToMapY}, {@link Game_Map#displayY}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#updateScroll}.<br/>
    */
   _displayY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.
-   * Read in: {@link Game_Map#eraseEvent}, {@link Game_Map#event}, {@link Game_Map#events}, {@link Game_Map#setupEvents}, {@link Game_Map#unlockEvent}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupEvents}.<br/>
+   * Read in: {@link Game_Map#eraseEvent}, {@link Game_Map#event}, {@link Game_Map#events}, {@link Game_Map#setupEvents}, {@link Game_Map#unlockEvent}.<br/>
    */
   _events: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Interpreter`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}.
-   * Read in: {@link Game_Map#isEventRunning}, {@link Game_Map#setupAutorunCommonEvent}, {@link Game_Map#setupStartingEvent}, {@link Game_Map#setupStartingMapEvent}, {@link Game_Map#setupTestEvent}, {@link Game_Map#updateInterpreter}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link Game_Map#updateInterpreter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Interpreter`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}.<br/>
+   * Read in: {@link Game_Map#isEventRunning}, {@link Game_Map#setupAutorunCommonEvent}, {@link Game_Map#setupStartingEvent}, {@link Game_Map#setupStartingMapEvent}, {@link Game_Map#setupTestEvent}, {@link Game_Map#updateInterpreter}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link Game_Map#updateInterpreter}.<br/>
    */
   _interpreter: Game_Interpreter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setup}.
-   * Read in: {@link Game_Map#mapId}, {@link Game_Map#setupEvents}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setup}.<br/>
+   * Read in: {@link Game_Map#mapId}, {@link Game_Map#setupEvents}.<br/>
    */
   _mapId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#disableNameDisplay}, {@link Game_Map#enableNameDisplay}, {@link Game_Map#initialize}.
-   * Read in: {@link Game_Map#isNameDisplayEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#disableNameDisplay}, {@link Game_Map#enableNameDisplay}, {@link Game_Map#initialize}.<br/>
+   * Read in: {@link Game_Map#isNameDisplayEnabled}.<br/>
    */
   _nameDisplay: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Map#refresh}, {@link Game_Map#requestRefresh}, {@link Game_Map#setup}.
-   * Read in: {@link Game_Map#refreshIfNeeded}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Map#refresh}, {@link Game_Map#requestRefresh}, {@link Game_Map#setup}.<br/>
+   * Read in: {@link Game_Map#refreshIfNeeded}.<br/>
    */
   _needsRefresh: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOx}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOx}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#updateParallax}.<br/>
    */
   _parallaxLoopX: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOy}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxOy}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#updateParallax}.<br/>
    */
   _parallaxLoopY: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxName}, {@link Game_Map#setupParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#changeParallax}, {@link Game_Map#parallaxName}, {@link Game_Map#setupParallax}.<br/>
    */
   _parallaxName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#updateParallax}.<br/>
    */
   _parallaxSx: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#updateParallax}.<br/>
    */
   _parallaxSy: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.
-   * Read in: {@link Game_Map#parallaxOx}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollLeft}, {@link Game_Map#scrollRight}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.<br/>
+   * Read in: {@link Game_Map#parallaxOx}.<br/>
    */
   _parallaxX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.
-   * Read in: {@link Game_Map#parallaxOy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#scrollDown}, {@link Game_Map#scrollUp}, {@link Game_Map#setDisplayPos}, {@link Game_Map#setupParallax}, {@link Game_Map#updateParallax}.<br/>
+   * Read in: {@link Game_Map#parallaxOy}.<br/>
    */
   _parallaxY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.
-   * Read in: {@link Game_Map#parallaxOx}, {@link Game_Map#parallaxOy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeParallax}, {@link Game_Map#initialize}, {@link Game_Map#setupParallax}.<br/>
+   * Read in: {@link Game_Map#parallaxOx}, {@link Game_Map#parallaxOy}.<br/>
    */
   _parallaxZero: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.
-   * Read in: {@link Game_Map#updateScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.<br/>
+   * Read in: {@link Game_Map#updateScroll}.<br/>
    */
   _scrollDirection: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}, {@link Game_Map#updateScroll}.
-   * Read in: {@link Game_Map#isScrolling}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}, {@link Game_Map#updateScroll}.<br/>
+   * Read in: {@link Game_Map#isScrolling}.<br/>
    */
   _scrollRest: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.
-   * Read in: {@link Game_Map#scrollDistance}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#initialize}, {@link Game_Map#setupScroll}, {@link Game_Map#startScroll}.<br/>
+   * Read in: {@link Game_Map#scrollDistance}.<br/>
    */
   _scrollSpeed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Game_Map#refreshTileEvents}.
-   * Read in: {@link Game_Map#tileEventsXy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Map#refreshTileEvents}.<br/>
+   * Read in: {@link Game_Map#tileEventsXy}.<br/>
    */
   _tileEvents: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#changeTileset}, {@link Game_Map#initialize}, {@link Game_Map#setup}.
-   * Read in: {@link Game_Map#tileset}, {@link Game_Map#tilesetId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#changeTileset}, {@link Game_Map#initialize}, {@link Game_Map#setup}.<br/>
+   * Read in: {@link Game_Map#tileset}, {@link Game_Map#tilesetId}.<br/>
    */
   _tilesetId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Map#initialize}.
-   * Written in: {@link Game_Map#createVehicles}, {@link Game_Map#initialize}.
-   * Read in: {@link Game_Map#airship}, {@link Game_Map#boat}, {@link Game_Map#createVehicles}, {@link Game_Map#refereshVehicles}, {@link Game_Map#ship}, {@link Game_Map#updateVehicles}, {@link Game_Map#vehicles}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Map#initialize}.<br/>
+   * Written in: {@link Game_Map#createVehicles}, {@link Game_Map#initialize}.<br/>
+   * Read in: {@link Game_Map#airship}, {@link Game_Map#boat}, {@link Game_Map#createVehicles}, {@link Game_Map#refereshVehicles}, {@link Game_Map#ship}, {@link Game_Map#updateVehicles}, {@link Game_Map#vehicles}.<br/>
    */
   _vehicles: unknown[];
   /**

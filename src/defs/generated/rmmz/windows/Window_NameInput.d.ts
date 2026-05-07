@@ -8,30 +8,30 @@
 interface Window_NameInput extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: {@link Window_NameInput#initialize}.
-   * Written in: {@link Window_NameInput#initialize}, {@link Window_NameInput#setEditWindow}.
-   * Read in: {@link Window_NameInput#onNameAdd}, {@link Window_NameInput#onNameOk}, {@link Window_NameInput#processBack}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: {@link Window_NameInput#initialize}.<br/>
+   * Written in: {@link Window_NameInput#initialize}, {@link Window_NameInput#setEditWindow}.<br/>
+   * Read in: {@link Window_NameInput#onNameAdd}, {@link Window_NameInput#onNameOk}, {@link Window_NameInput#processBack}.<br/>
    */
   _editWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NameInput#initialize}.
-   * Written in: {@link Window_NameInput#cursorDown}, {@link Window_NameInput#cursorLeft}, {@link Window_NameInput#cursorRight}, {@link Window_NameInput#cursorUp}, {@link Window_NameInput#initialize}, {@link Window_NameInput#processJump}.
-   * Read in: {@link Window_NameInput#character}, {@link Window_NameInput#cursorDown}, {@link Window_NameInput#cursorLeft}, {@link Window_NameInput#cursorRight}, {@link Window_NameInput#cursorUp}, {@link Window_NameInput#isOk}, {@link Window_NameInput#isPageChange}, {@link Window_NameInput#processJump}, {@link Window_NameInput#updateCursor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NameInput#initialize}.<br/>
+   * Written in: {@link Window_NameInput#cursorDown}, {@link Window_NameInput#cursorLeft}, {@link Window_NameInput#cursorRight}, {@link Window_NameInput#cursorUp}, {@link Window_NameInput#initialize}, {@link Window_NameInput#processJump}.<br/>
+   * Read in: {@link Window_NameInput#character}, {@link Window_NameInput#cursorDown}, {@link Window_NameInput#cursorLeft}, {@link Window_NameInput#cursorRight}, {@link Window_NameInput#cursorUp}, {@link Window_NameInput#isOk}, {@link Window_NameInput#isPageChange}, {@link Window_NameInput#processJump}, {@link Window_NameInput#updateCursor}.<br/>
    */
   _index: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NameInput#initialize}.
-   * Written in: {@link Window_NameInput#cursorPagedown}, {@link Window_NameInput#cursorPageup}, {@link Window_NameInput#initialize}.
-   * Read in: {@link Window_NameInput#character}, {@link Window_NameInput#cursorPagedown}, {@link Window_NameInput#cursorPageup}, {@link Window_NameInput#drawItem}, {@link Window_NameInput#processCursorMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NameInput#initialize}.<br/>
+   * Written in: {@link Window_NameInput#cursorPagedown}, {@link Window_NameInput#cursorPageup}, {@link Window_NameInput#initialize}.<br/>
+   * Read in: {@link Window_NameInput#character}, {@link Window_NameInput#cursorPagedown}, {@link Window_NameInput#cursorPageup}, {@link Window_NameInput#drawItem}, {@link Window_NameInput#processCursorMove}.<br/>
    */
   _page: number;
   /**

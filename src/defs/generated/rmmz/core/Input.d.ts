@@ -8,93 +8,93 @@
 interface Input
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}.
-   * Read in: {@link Input#_onKeyDown}, {@link Input#_onKeyUp}, {@link Input#_updateGamepadState}, {@link Input#isPressed}, {@link Input#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}.<br/>
+   * Read in: {@link Input#_onKeyDown}, {@link Input#_onKeyUp}, {@link Input#_updateGamepadState}, {@link Input#isPressed}, {@link Input#update}.<br/>
    */
   _currentState: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}, {@link Input#update}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}, {@link Input#update}.<br/>
+   * Read in: none.<br/>
    */
   _date: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.<br/>
+   * Read in: none.<br/>
    */
   _dir4: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.<br/>
+   * Read in: none.<br/>
    */
   _dir8: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}.
-   * Read in: {@link Input#_updateGamepadState}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}.<br/>
+   * Read in: {@link Input#_updateGamepadState}.<br/>
    */
   _gamepadStates: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}, {@link Input#update}.
-   * Read in: {@link Input#isLongPressed}, {@link Input#isRepeated}, {@link Input#isTriggered}, {@link Input#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}, {@link Input#update}.<br/>
+   * Read in: {@link Input#isLongPressed}, {@link Input#isRepeated}, {@link Input#isTriggered}, {@link Input#update}.<br/>
    */
   _latestButton: null | string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.
-   * Read in: {@link Input#_updateDirection}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#_updateDirection}, {@link Input#clear}.<br/>
+   * Read in: {@link Input#_updateDirection}.<br/>
    */
   _preferredAxis: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}, {@link Input#update}.
-   * Read in: {@link Input#isLongPressed}, {@link Input#isRepeated}, {@link Input#isTriggered}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}, {@link Input#update}.<br/>
+   * Read in: {@link Input#isLongPressed}, {@link Input#isRepeated}, {@link Input#isTriggered}.<br/>
    */
   _pressedTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}.
-   * Read in: {@link Input#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}.<br/>
+   * Read in: {@link Input#update}.<br/>
    */
   _previousState: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: none.
-   * Written in: {@link Input#clear}, {@link Input#update}, {@link Input#virtualClick}.
-   * Read in: {@link Input#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Input#clear}, {@link Input#update}, {@link Input#virtualClick}.<br/>
+   * Read in: {@link Input#update}.<br/>
    */
   _virtualButton: null | string;
 }

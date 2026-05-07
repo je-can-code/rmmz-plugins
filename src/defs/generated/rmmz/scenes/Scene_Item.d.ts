@@ -8,21 +8,21 @@
 interface Scene_Item extends Scene_ItemBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ItemCategory`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Item#createCategoryWindow}.
-   * Read in: {@link Scene_Item#createCategoryWindow}, {@link Scene_Item#createItemWindow}, {@link Scene_Item#itemWindowRect}, {@link Scene_Item#onItemCancel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ItemCategory`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Item#createCategoryWindow}.<br/>
+   * Read in: {@link Scene_Item#createCategoryWindow}, {@link Scene_Item#createItemWindow}, {@link Scene_Item#itemWindowRect}, {@link Scene_Item#onItemCancel}.<br/>
    */
   _categoryWindow: Window_ItemCategory;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ItemList`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Item#createItemWindow}.
-   * Read in: {@link Scene_Item#createItemWindow}, {@link Scene_Item#onCategoryOk}, {@link Scene_Item#onItemCancel}, {@link Scene_Item#useItem}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ItemList`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Item#createItemWindow}.<br/>
+   * Read in: {@link Scene_Item#createItemWindow}, {@link Scene_Item#onCategoryOk}, {@link Scene_Item#onItemCancel}, {@link Scene_Item#useItem}.<br/>
    */
   _itemWindow: Window_ItemList;
   /**

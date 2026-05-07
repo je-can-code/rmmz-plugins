@@ -8,21 +8,21 @@
 interface Window_MenuStatus extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_MenuStatus#initialize}.
-   * Written in: {@link Window_MenuStatus#initialize}, {@link Window_MenuStatus#setFormationMode}.
-   * Read in: {@link Window_MenuStatus#formationMode}, {@link Window_MenuStatus#isCurrentItemEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_MenuStatus#initialize}.<br/>
+   * Written in: {@link Window_MenuStatus#initialize}, {@link Window_MenuStatus#setFormationMode}.<br/>
+   * Read in: {@link Window_MenuStatus#formationMode}, {@link Window_MenuStatus#isCurrentItemEnabled}.<br/>
    */
   _formationMode: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_MenuStatus#initialize}.
-   * Written in: {@link Window_MenuStatus#initialize}, {@link Window_MenuStatus#setPendingIndex}.
-   * Read in: {@link Window_MenuStatus#drawPendingItemBackground}, {@link Window_MenuStatus#pendingIndex}, {@link Window_MenuStatus#setPendingIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_MenuStatus#initialize}.<br/>
+   * Written in: {@link Window_MenuStatus#initialize}, {@link Window_MenuStatus#setPendingIndex}.<br/>
+   * Read in: {@link Window_MenuStatus#drawPendingItemBackground}, {@link Window_MenuStatus#pendingIndex}, {@link Window_MenuStatus#setPendingIndex}.<br/>
    */
   _pendingIndex: number;
   /**

@@ -8,48 +8,48 @@
 interface TilingSprite extends PIXI.TilingSprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link TilingSprite#initialize}.
-   * Written in: {@link TilingSprite#initialize}.
-   * Read in: {@link TilingSprite#_onBitmapChange}, {@link TilingSprite#_onBitmapLoad}, {@link TilingSprite#_refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link TilingSprite#initialize}.<br/>
+   * Written in: {@link TilingSprite#initialize}.<br/>
+   * Read in: {@link TilingSprite#_onBitmapChange}, {@link TilingSprite#_onBitmapLoad}, {@link TilingSprite#_refresh}.<br/>
    */
   _bitmap: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: none.<br/>
    */
   _emptyBaseTexture: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link TilingSprite#initialize}.
-   * Written in: {@link TilingSprite#initialize}.
-   * Read in: {@link TilingSprite#_refresh}, {@link TilingSprite#setFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link TilingSprite#initialize}.<br/>
+   * Written in: {@link TilingSprite#initialize}.<br/>
+   * Read in: {@link TilingSprite#_refresh}, {@link TilingSprite#setFrame}.<br/>
    */
   _frame: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link TilingSprite#initialize}.
-   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link TilingSprite#initialize}.<br/>
+   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.<br/>
+   * Read in: none.<br/>
    */
   _height: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link TilingSprite#initialize}.
-   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link TilingSprite#initialize}.<br/>
+   * Written in: {@link TilingSprite#initialize}, {@link TilingSprite#move}.<br/>
+   * Read in: none.<br/>
    */
   _width: number;
   /**

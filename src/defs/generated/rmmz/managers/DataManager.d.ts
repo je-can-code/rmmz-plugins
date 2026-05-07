@@ -8,35 +8,35 @@
 interface DataManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link DataManager#isDatabaseLoaded}, {@link DataManager#loadDatabase}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link DataManager#isDatabaseLoaded}, {@link DataManager#loadDatabase}.<br/>
    */
   _databaseFiles: object[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link DataManager#checkError}, {@link DataManager#onXhrError}.
-   *
-   * Consumed by:
-   * - `.length`: {@link DataManager#checkError}.
-   * - `push()`: {@link DataManager#onXhrError}.
-   * - `shift()`: {@link DataManager#checkError}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link DataManager#checkError}, {@link DataManager#onXhrError}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link DataManager#checkError}.<br/>
+   * - `push()`: {@link DataManager#onXhrError}.<br/>
+   * - `shift()`: {@link DataManager#checkError}.<br/>
    */
   _errors: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init, {@link DataManager#loadGlobalInfo}.
-   * Read in: {@link DataManager#earliestSavefileId}, {@link DataManager#emptySavefileId}, {@link DataManager#isAnySavefileExists}, {@link DataManager#isGlobalInfoLoaded}, {@link DataManager#latestSavefileId}, {@link DataManager#loadAllSavefileImages}, {@link DataManager#removeInvalidGlobalInfo}, {@link DataManager#saveGame}, {@link DataManager#saveGlobalInfo}, {@link DataManager#savefileInfo}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link DataManager#loadGlobalInfo}.<br/>
+   * Read in: {@link DataManager#earliestSavefileId}, {@link DataManager#emptySavefileId}, {@link DataManager#isAnySavefileExists}, {@link DataManager#isGlobalInfoLoaded}, {@link DataManager#latestSavefileId}, {@link DataManager#loadAllSavefileImages}, {@link DataManager#removeInvalidGlobalInfo}, {@link DataManager#saveGame}, {@link DataManager#saveGlobalInfo}, {@link DataManager#savefileInfo}.<br/>
    */
   _globalInfo: null | unknown[];
 }

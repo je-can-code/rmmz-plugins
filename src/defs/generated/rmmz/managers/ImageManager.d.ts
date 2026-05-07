@@ -8,30 +8,30 @@
 interface ImageManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init, {@link ImageManager#clear}.
-   * Read in: {@link ImageManager#clear}, {@link ImageManager#isReady}, {@link ImageManager#loadBitmapFromUrl}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link ImageManager#clear}.<br/>
+   * Read in: {@link ImageManager#clear}, {@link ImageManager#isReady}, {@link ImageManager#loadBitmapFromUrl}.<br/>
    */
   _cache: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Bitmap`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link ImageManager#loadBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Bitmap`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link ImageManager#loadBitmap}.<br/>
    */
   _emptyBitmap: Bitmap;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link ImageManager#isReady}, {@link ImageManager#loadBitmapFromUrl}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link ImageManager#isReady}, {@link ImageManager#loadBitmapFromUrl}.<br/>
    */
   _system: object;
 }

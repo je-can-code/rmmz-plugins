@@ -8,12 +8,12 @@
 interface Game_Actors
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Actors#initialize}.
-   * Written in: {@link Game_Actors#initialize}.
-   * Read in: {@link Game_Actors#actor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Actors#initialize}.<br/>
+   * Written in: {@link Game_Actors#initialize}.<br/>
+   * Read in: {@link Game_Actors#actor}.<br/>
    */
   _data: unknown[];
   /**

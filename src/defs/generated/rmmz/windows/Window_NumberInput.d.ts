@@ -8,51 +8,51 @@
 interface Window_NumberInput extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Window_NumberInput#createButtons}.
-   * Read in: {@link Window_NumberInput#createButtons}, {@link Window_NumberInput#placeButtons}, {@link Window_NumberInput#totalButtonWidth}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Window_NumberInput#createButtons}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_NumberInput#createButtons}.<br/>
+   * Read in: {@link Window_NumberInput#createButtons}, {@link Window_NumberInput#placeButtons}, {@link Window_NumberInput#totalButtonWidth}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Window_NumberInput#createButtons}.<br/>
    */
   _buttons: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_NumberInput#initialize}.
-   * Written in: {@link Window_NumberInput#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_NumberInput#initialize}.<br/>
+   * Written in: {@link Window_NumberInput#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NumberInput#initialize}.
-   * Written in: {@link Window_NumberInput#initialize}, {@link Window_NumberInput#start}.
-   * Read in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#drawItem}, {@link Window_NumberInput#maxCols}, {@link Window_NumberInput#maxItems}, {@link Window_NumberInput#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NumberInput#initialize}.<br/>
+   * Written in: {@link Window_NumberInput#initialize}, {@link Window_NumberInput#start}.<br/>
+   * Read in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#drawItem}, {@link Window_NumberInput#maxCols}, {@link Window_NumberInput#maxItems}, {@link Window_NumberInput#start}.<br/>
    */
   _maxDigits: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_NumberInput#setMessageWindow}.
-   * Read in: {@link Window_NumberInput#processOk}, {@link Window_NumberInput#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_NumberInput#setMessageWindow}.<br/>
+   * Read in: {@link Window_NumberInput#processOk}, {@link Window_NumberInput#updatePlacement}.<br/>
    */
   _messageWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NumberInput#initialize}.
-   * Written in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#initialize}, {@link Window_NumberInput#start}.
-   * Read in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#drawItem}, {@link Window_NumberInput#processOk}, {@link Window_NumberInput#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NumberInput#initialize}.<br/>
+   * Written in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#initialize}, {@link Window_NumberInput#start}.<br/>
+   * Read in: {@link Window_NumberInput#changeDigit}, {@link Window_NumberInput#drawItem}, {@link Window_NumberInput#processOk}, {@link Window_NumberInput#start}.<br/>
    */
   _number: number;
   /**

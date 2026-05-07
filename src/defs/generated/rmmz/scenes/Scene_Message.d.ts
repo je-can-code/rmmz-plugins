@@ -8,66 +8,66 @@
 interface Scene_Message extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ChoiceList`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createChoiceListWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createChoiceListWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ChoiceList`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createChoiceListWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createChoiceListWindow}.<br/>
    */
   _choiceListWindow: Window_ChoiceList;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_EventItem`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createEventItemWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createEventItemWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_EventItem`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createEventItemWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createEventItemWindow}.<br/>
    */
   _eventItemWindow: Window_EventItem;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Gold`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createGoldWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createGoldWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Gold`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createGoldWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createGoldWindow}.<br/>
    */
   _goldWindow: Window_Gold;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Message`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createMessageWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#cancelMessageWait}, {@link Scene_Message#createMessageWindow}, {@link Scene_Message#isMessageWindowClosing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Message`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createMessageWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#cancelMessageWait}, {@link Scene_Message#createMessageWindow}, {@link Scene_Message#isMessageWindowClosing}.<br/>
    */
   _messageWindow: Window_Message;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_NameBox`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createNameBoxWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createNameBoxWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_NameBox`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createNameBoxWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createNameBoxWindow}.<br/>
    */
   _nameBoxWindow: Window_NameBox;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_NumberInput`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createNumberInputWindow}.
-   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createNumberInputWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_NumberInput`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createNumberInputWindow}.<br/>
+   * Read in: {@link Scene_Message#associateWindows}, {@link Scene_Message#createNumberInputWindow}.<br/>
    */
   _numberInputWindow: Window_NumberInput;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ScrollText`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Message#createScrollTextWindow}.
-   * Read in: {@link Scene_Message#createScrollTextWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ScrollText`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Message#createScrollTextWindow}.<br/>
+   * Read in: {@link Scene_Message#createScrollTextWindow}.<br/>
    */
   _scrollTextWindow: Window_ScrollText;
   /**

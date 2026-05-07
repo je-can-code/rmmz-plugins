@@ -8,46 +8,46 @@
 interface PluginManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link PluginManager#callCommand}, {@link PluginManager#registerCommand}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link PluginManager#callCommand}, {@link PluginManager#registerCommand}.<br/>
    */
   _commands: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link PluginManager#checkErrors}, {@link PluginManager#onError}.
-   *
-   * Consumed by:
-   * - `push()`: {@link PluginManager#onError}.
-   * - `shift()`: {@link PluginManager#checkErrors}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link PluginManager#checkErrors}, {@link PluginManager#onError}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link PluginManager#onError}.<br/>
+   * - `shift()`: {@link PluginManager#checkErrors}.<br/>
    */
   _errorUrls: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link PluginManager#parameters}, {@link PluginManager#setParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link PluginManager#parameters}, {@link PluginManager#setParameters}.<br/>
    */
   _parameters: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link PluginManager#setup}.
-   *
-   * Consumed by:
-   * - `push()`: {@link PluginManager#setup}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link PluginManager#setup}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link PluginManager#setup}.<br/>
    */
   _scripts: unknown[];
 }

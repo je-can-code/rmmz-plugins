@@ -8,135 +8,135 @@
 interface Tilemap extends PIXI.Container
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[] | Array<Bitmap | null>`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setBitmaps}.
-   * Read in: {@link Tilemap#_updateBitmaps}, {@link Tilemap#isReady}, {@link Tilemap#setBitmaps}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[] | Array<Bitmap | null>`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setBitmaps}.<br/>
+   * Read in: {@link Tilemap#_updateBitmaps}, {@link Tilemap#isReady}, {@link Tilemap#setBitmaps}.<br/>
    */
   _bitmaps: unknown[] | Array<Bitmap | null>;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _height: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#updateTransform}.
-   * Read in: {@link Tilemap#updateTransform}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#updateTransform}.<br/>
+   * Read in: {@link Tilemap#updateTransform}.<br/>
    */
   _lastAnimationFrame: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#updateTransform}.
-   * Read in: {@link Tilemap#updateTransform}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#updateTransform}.<br/>
+   * Read in: {@link Tilemap#updateTransform}.<br/>
    */
   _lastStartX: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#updateTransform}.
-   * Read in: {@link Tilemap#updateTransform}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#updateTransform}.<br/>
+   * Read in: {@link Tilemap#updateTransform}.<br/>
    */
   _lastStartY: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Tilemap.CombinedLayer`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#_createLayers}.
-   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#_addSpot}, {@link Tilemap#_addSpotTile}, {@link Tilemap#_createLayers}, {@link Tilemap#_updateBitmaps}, {@link Tilemap#updateTransform}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link Tilemap#_addAllSpots}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Tilemap.CombinedLayer`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#_createLayers}.<br/>
+   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#_addSpot}, {@link Tilemap#_addSpotTile}, {@link Tilemap#_createLayers}, {@link Tilemap#_updateBitmaps}, {@link Tilemap#updateTransform}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link Tilemap#_addAllSpots}.<br/>
    */
   _lowerLayer: Tilemap.CombinedLayer;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number[]`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.
-   * Read in: {@link Tilemap#_readMapData}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number[]`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.<br/>
+   * Read in: {@link Tilemap#_readMapData}.<br/>
    */
   _mapData: null | number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.
-   * Read in: {@link Tilemap#_readMapData}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.<br/>
+   * Read in: {@link Tilemap#_readMapData}.<br/>
    */
   _mapHeight: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.
-   * Read in: {@link Tilemap#_readMapData}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}, {@link Tilemap#setData}.<br/>
+   * Read in: {@link Tilemap#_readMapData}.<br/>
    */
   _mapWidth: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}.
-   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#updateTransform}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}.<br/>
+   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#updateTransform}.<br/>
    */
   _margin: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#_updateBitmaps}, {@link Tilemap#setBitmaps}.
-   * Read in: {@link Tilemap#_updateBitmaps}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#_updateBitmaps}, {@link Tilemap#setBitmaps}.<br/>
+   * Read in: {@link Tilemap#_updateBitmaps}.<br/>
    */
   _needsBitmapsUpdate: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#_createLayers}, {@link Tilemap#_updateBitmaps}, {@link Tilemap#refresh}, {@link Tilemap#updateTransform}.
-   * Read in: {@link Tilemap#updateTransform}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#_createLayers}, {@link Tilemap#_updateBitmaps}, {@link Tilemap#refresh}, {@link Tilemap#updateTransform}.<br/>
+   * Read in: {@link Tilemap#updateTransform}.<br/>
    */
   _needsRepaint: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Tilemap.CombinedLayer`.
-   * Initialized in: none.
-   * Written in: {@link Tilemap#_createLayers}.
-   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#_addSpot}, {@link Tilemap#_addSpotTile}, {@link Tilemap#_createLayers}, {@link Tilemap#updateTransform}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link Tilemap#_addAllSpots}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Tilemap.CombinedLayer`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Tilemap#_createLayers}.<br/>
+   * Read in: {@link Tilemap#_addAllSpots}, {@link Tilemap#_addSpot}, {@link Tilemap#_addSpotTile}, {@link Tilemap#_createLayers}, {@link Tilemap#updateTransform}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link Tilemap#_addAllSpots}.<br/>
    */
   _upperLayer: Tilemap.CombinedLayer;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Tilemap#initialize}.
-   * Written in: {@link Tilemap#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Tilemap#initialize}.<br/>
+   * Written in: {@link Tilemap#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _width: unknown;
   /**

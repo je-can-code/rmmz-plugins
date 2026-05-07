@@ -8,55 +8,55 @@
 interface Window_ShopBuy extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopBuy#makeItemList}.
-   * Read in: {@link Window_ShopBuy#isCurrentItemEnabled}, {@link Window_ShopBuy#itemAt}, {@link Window_ShopBuy#makeItemList}, {@link Window_ShopBuy#maxItems}, {@link Window_ShopBuy#price}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_ShopBuy#maxItems}.
-   * - `push()`: {@link Window_ShopBuy#makeItemList}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopBuy#makeItemList}.<br/>
+   * Read in: {@link Window_ShopBuy#isCurrentItemEnabled}, {@link Window_ShopBuy#itemAt}, {@link Window_ShopBuy#makeItemList}, {@link Window_ShopBuy#maxItems}, {@link Window_ShopBuy#price}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_ShopBuy#maxItems}.<br/>
+   * - `push()`: {@link Window_ShopBuy#makeItemList}.<br/>
    */
   _data: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ShopBuy#initialize}.
-   * Written in: {@link Window_ShopBuy#initialize}, {@link Window_ShopBuy#setMoney}.
-   * Read in: {@link Window_ShopBuy#isEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ShopBuy#initialize}.<br/>
+   * Written in: {@link Window_ShopBuy#initialize}, {@link Window_ShopBuy#setMoney}.<br/>
+   * Read in: {@link Window_ShopBuy#isEnabled}.<br/>
    */
   _money: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopBuy#makeItemList}.
-   * Read in: {@link Window_ShopBuy#makeItemList}, {@link Window_ShopBuy#price}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Window_ShopBuy#makeItemList}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopBuy#makeItemList}.<br/>
+   * Read in: {@link Window_ShopBuy#makeItemList}, {@link Window_ShopBuy#price}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Window_ShopBuy#makeItemList}.<br/>
    */
   _price: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `[number, number, number?, number?][]`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopBuy#setupGoods}.
-   * Read in: {@link Window_ShopBuy#makeItemList}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `[number, number, number?, number?][]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopBuy#setupGoods}.<br/>
+   * Read in: {@link Window_ShopBuy#makeItemList}.<br/>
    */
   _shopGoods: [number, number, number?, number?][];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopBuy#setStatusWindow}.
-   * Read in: {@link Window_ShopBuy#updateHelp}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopBuy#setStatusWindow}.<br/>
+   * Read in: {@link Window_ShopBuy#updateHelp}.<br/>
    */
   _statusWindow: Window_Base;
   /**

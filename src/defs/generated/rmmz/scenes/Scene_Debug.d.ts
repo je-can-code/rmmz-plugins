@@ -8,30 +8,30 @@
 interface Scene_Debug extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Debug#createDebugHelpWindow}.
-   * Read in: {@link Scene_Debug#createDebugHelpWindow}, {@link Scene_Debug#refreshHelpWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Debug#createDebugHelpWindow}.<br/>
+   * Read in: {@link Scene_Debug#createDebugHelpWindow}, {@link Scene_Debug#refreshHelpWindow}.<br/>
    */
   _debugHelpWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_DebugEdit`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Debug#createEditWindow}.
-   * Read in: {@link Scene_Debug#createEditWindow}, {@link Scene_Debug#debugHelpWindowRect}, {@link Scene_Debug#onEditCancel}, {@link Scene_Debug#onRangeOk}, {@link Scene_Debug#refreshHelpWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_DebugEdit`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Debug#createEditWindow}.<br/>
+   * Read in: {@link Scene_Debug#createEditWindow}, {@link Scene_Debug#debugHelpWindowRect}, {@link Scene_Debug#onEditCancel}, {@link Scene_Debug#onRangeOk}, {@link Scene_Debug#refreshHelpWindow}.<br/>
    */
   _editWindow: Window_DebugEdit;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_DebugRange`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Debug#createRangeWindow}.
-   * Read in: {@link Scene_Debug#createEditWindow}, {@link Scene_Debug#createRangeWindow}, {@link Scene_Debug#editWindowRect}, {@link Scene_Debug#helpText}, {@link Scene_Debug#onEditCancel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_DebugRange`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Debug#createRangeWindow}.<br/>
+   * Read in: {@link Scene_Debug#createEditWindow}, {@link Scene_Debug#createRangeWindow}, {@link Scene_Debug#editWindowRect}, {@link Scene_Debug#helpText}, {@link Scene_Debug#onEditCancel}.<br/>
    */
   _rangeWindow: Window_DebugRange;
   /**

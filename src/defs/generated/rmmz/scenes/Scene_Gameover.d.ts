@@ -8,12 +8,12 @@
 interface Scene_Gameover extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Gameover#createBackground}.
-   * Read in: {@link Scene_Gameover#adjustBackground}, {@link Scene_Gameover#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Gameover#createBackground}.<br/>
+   * Read in: {@link Scene_Gameover#adjustBackground}, {@link Scene_Gameover#createBackground}.<br/>
    */
   _backSprite: Sprite;
   /**

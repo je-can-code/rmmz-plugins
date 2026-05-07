@@ -8,21 +8,21 @@
 interface Scene_File extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Help`.
-   * Initialized in: none.
-   * Written in: {@link Scene_File#createHelpWindow}.
-   * Read in: {@link Scene_File#create}, {@link Scene_File#createHelpWindow}, {@link Scene_File#listWindowRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Help`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_File#createHelpWindow}.<br/>
+   * Read in: {@link Scene_File#create}, {@link Scene_File#createHelpWindow}, {@link Scene_File#listWindowRect}.<br/>
    */
   _helpWindow: Window_Help;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_SavefileList`.
-   * Initialized in: none.
-   * Written in: {@link Scene_File#createListWindow}.
-   * Read in: {@link Scene_File#activateListWindow}, {@link Scene_File#createListWindow}, {@link Scene_File#isSavefileEnabled}, {@link Scene_File#savefileId}, {@link Scene_File#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_SavefileList`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_File#createListWindow}.<br/>
+   * Read in: {@link Scene_File#activateListWindow}, {@link Scene_File#createListWindow}, {@link Scene_File#isSavefileEnabled}, {@link Scene_File#savefileId}, {@link Scene_File#start}.<br/>
    */
   _listWindow: Window_SavefileList;
   /**

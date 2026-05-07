@@ -8,84 +8,84 @@
 interface Sprite_Actor extends Sprite_Battler
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#setBattler}.
-   * Read in: {@link Sprite_Actor#refreshMotion}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#setupMotion}, {@link Sprite_Actor#setupWeaponAnimation}, {@link Sprite_Actor#shouldStepForward}, {@link Sprite_Actor#startEntryMotion}, {@link Sprite_Actor#update}, {@link Sprite_Actor#updateBitmap}, {@link Sprite_Actor#updateMain}, {@link Sprite_Actor#updateMotion}, {@link Sprite_Actor#updateShadow}, {@link Sprite_Actor#updateTargetPosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#setBattler}.<br/>
+   * Read in: {@link Sprite_Actor#refreshMotion}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#setupMotion}, {@link Sprite_Actor#setupWeaponAnimation}, {@link Sprite_Actor#shouldStepForward}, {@link Sprite_Actor#startEntryMotion}, {@link Sprite_Actor#update}, {@link Sprite_Actor#updateBitmap}, {@link Sprite_Actor#updateMain}, {@link Sprite_Actor#updateMotion}, {@link Sprite_Actor#updateShadow}, {@link Sprite_Actor#updateTargetPosition}.<br/>
    */
   _actor: Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#updateBitmap}.
-   * Read in: {@link Sprite_Actor#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Actor#updateBitmap}.<br/>
    */
   _battlerName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#createMainSprite}.
-   * Read in: {@link Sprite_Actor#createMainSprite}, {@link Sprite_Actor#mainSprite}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#updateBitmap}, {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#createMainSprite}.<br/>
+   * Read in: {@link Sprite_Actor#createMainSprite}, {@link Sprite_Actor#mainSprite}, {@link Sprite_Actor#setBattler}, {@link Sprite_Actor#updateBitmap}, {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMove}.<br/>
    */
   _mainSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}.
-   * Read in: {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMotionCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}.<br/>
+   * Read in: {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMotionCount}.<br/>
    */
   _motion: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateMotionCount}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateMotionCount}.<br/>
+   * Read in: none.<br/>
    */
   _motionCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateMotionCount}.
-   * Read in: {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMotionCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#initMembers}, {@link Sprite_Actor#startMotion}, {@link Sprite_Actor#updateMotionCount}.<br/>
+   * Read in: {@link Sprite_Actor#updateFrame}, {@link Sprite_Actor#updateMotionCount}.<br/>
    */
   _pattern: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#createShadowSprite}.
-   * Read in: {@link Sprite_Actor#createShadowSprite}, {@link Sprite_Actor#updateShadow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#createShadowSprite}.<br/>
+   * Read in: {@link Sprite_Actor#createShadowSprite}, {@link Sprite_Actor#updateShadow}.<br/>
    */
   _shadowSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_StateOverlay`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#createStateSprite}.
-   * Read in: {@link Sprite_Actor#createStateSprite}, {@link Sprite_Actor#setBattler}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_StateOverlay`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#createStateSprite}.<br/>
+   * Read in: {@link Sprite_Actor#createStateSprite}, {@link Sprite_Actor#setBattler}.<br/>
    */
   _stateSprite: Sprite_StateOverlay;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Weapon`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Actor#createWeaponSprite}.
-   * Read in: {@link Sprite_Actor#createWeaponSprite}, {@link Sprite_Actor#setupWeaponAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Weapon`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Actor#createWeaponSprite}.<br/>
+   * Read in: {@link Sprite_Actor#createWeaponSprite}, {@link Sprite_Actor#setupWeaponAnimation}.<br/>
    */
   _weaponSprite: Sprite_Weapon;
   /**

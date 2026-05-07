@@ -8,126 +8,126 @@
 interface AudioManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#playBgm}, {@link AudioManager#stopBgm}.
-   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeInBgm}, {@link AudioManager#fadeOutBgm}, {@link AudioManager#isCurrentBgm}, {@link AudioManager#playBgm}, {@link AudioManager#playMe}, {@link AudioManager#replayBgm}, {@link AudioManager#saveBgm}, {@link AudioManager#stopBgm}, {@link AudioManager#stopMe}, {@link AudioManager#updateBgmParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#playBgm}, {@link AudioManager#stopBgm}.<br/>
+   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeInBgm}, {@link AudioManager#fadeOutBgm}, {@link AudioManager#isCurrentBgm}, {@link AudioManager#playBgm}, {@link AudioManager#playMe}, {@link AudioManager#replayBgm}, {@link AudioManager#saveBgm}, {@link AudioManager#stopBgm}, {@link AudioManager#stopMe}, {@link AudioManager#updateBgmParameters}.<br/>
    */
   _bgmBuffer: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#updateBgmParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#updateBgmParameters}.<br/>
    */
   _bgmVolume: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#playBgs}, {@link AudioManager#stopBgs}.
-   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeInBgs}, {@link AudioManager#fadeOutBgs}, {@link AudioManager#isCurrentBgs}, {@link AudioManager#playBgs}, {@link AudioManager#replayBgs}, {@link AudioManager#saveBgs}, {@link AudioManager#stopBgs}, {@link AudioManager#updateBgsParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#playBgs}, {@link AudioManager#stopBgs}.<br/>
+   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeInBgs}, {@link AudioManager#fadeOutBgs}, {@link AudioManager#isCurrentBgs}, {@link AudioManager#playBgs}, {@link AudioManager#replayBgs}, {@link AudioManager#saveBgs}, {@link AudioManager#stopBgs}, {@link AudioManager#updateBgsParameters}.<br/>
    */
   _bgsBuffer: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#updateBgsParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#updateBgsParameters}.<br/>
    */
   _bgsVolume: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#fadeOutBgm}, {@link AudioManager#stopBgm}, {@link AudioManager#updateCurrentBgm}.
-   * Read in: {@link AudioManager#fadeInBgm}, {@link AudioManager#fadeOutBgm}, {@link AudioManager#isCurrentBgm}, {@link AudioManager#playMe}, {@link AudioManager#saveBgm}, {@link AudioManager#stopMe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#fadeOutBgm}, {@link AudioManager#stopBgm}, {@link AudioManager#updateCurrentBgm}.<br/>
+   * Read in: {@link AudioManager#fadeInBgm}, {@link AudioManager#fadeOutBgm}, {@link AudioManager#isCurrentBgm}, {@link AudioManager#playMe}, {@link AudioManager#saveBgm}, {@link AudioManager#stopMe}.<br/>
    */
   _currentBgm: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#fadeOutBgs}, {@link AudioManager#stopBgs}, {@link AudioManager#updateCurrentBgs}.
-   * Read in: {@link AudioManager#fadeInBgs}, {@link AudioManager#fadeOutBgs}, {@link AudioManager#isCurrentBgs}, {@link AudioManager#saveBgs}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#fadeOutBgs}, {@link AudioManager#stopBgs}, {@link AudioManager#updateCurrentBgs}.<br/>
+   * Read in: {@link AudioManager#fadeInBgs}, {@link AudioManager#fadeOutBgs}, {@link AudioManager#isCurrentBgs}, {@link AudioManager#saveBgs}.<br/>
    */
   _currentBgs: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#playMe}, {@link AudioManager#stopMe}.
-   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeOutMe}, {@link AudioManager#playBgm}, {@link AudioManager#playMe}, {@link AudioManager#stopMe}, {@link AudioManager#updateMeParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#playMe}, {@link AudioManager#stopMe}.<br/>
+   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#fadeOutMe}, {@link AudioManager#playBgm}, {@link AudioManager#playMe}, {@link AudioManager#stopMe}, {@link AudioManager#updateMeParameters}.<br/>
    */
   _meBuffer: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#updateMeParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#updateMeParameters}.<br/>
    */
   _meVolume: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `"audio/"`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#createBuffer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `"audio/"`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#createBuffer}.<br/>
    */
   _path: "audio/";
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#replayBgm}, {@link AudioManager#replayBgs}, {@link AudioManager#stopMe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#replayBgm}, {@link AudioManager#replayBgs}, {@link AudioManager#stopMe}.<br/>
    */
   _replayFadeTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init, {@link AudioManager#cleanupSe}, {@link AudioManager#stopSe}.
-   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#cleanupSe}, {@link AudioManager#playSe}, {@link AudioManager#stopSe}.
-   *
-   * Consumed by:
-   * - `push()`: {@link AudioManager#playSe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link AudioManager#cleanupSe}, {@link AudioManager#stopSe}.<br/>
+   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#cleanupSe}, {@link AudioManager#playSe}, {@link AudioManager#stopSe}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link AudioManager#playSe}.<br/>
    */
   _seBuffers: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#updateSeParameters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#updateSeParameters}.<br/>
    */
   _seVolume: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#isStaticSe}, {@link AudioManager#loadStaticSe}, {@link AudioManager#playStaticSe}.
-   *
-   * Consumed by:
-   * - `push()`: {@link AudioManager#loadStaticSe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link AudioManager#checkErrors}, {@link AudioManager#isStaticSe}, {@link AudioManager#loadStaticSe}, {@link AudioManager#playStaticSe}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link AudioManager#loadStaticSe}.<br/>
    */
   _staticBuffers: unknown[];
 }

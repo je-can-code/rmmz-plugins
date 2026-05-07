@@ -8,21 +8,21 @@
 interface FontManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link FontManager#isReady}, {@link FontManager#load}, {@link FontManager#startLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link FontManager#isReady}, {@link FontManager#load}, {@link FontManager#startLoading}.<br/>
    */
   _states: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link FontManager#load}, {@link FontManager#startLoading}, {@link FontManager#throwLoadError}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link FontManager#load}, {@link FontManager#startLoading}, {@link FontManager#throwLoadError}.<br/>
    */
   _urls: object;
 }

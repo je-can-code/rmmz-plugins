@@ -8,21 +8,21 @@
 interface Window_ShopStatus extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.
-   * Initialized in: {@link Window_ShopStatus#initialize}.
-   * Written in: {@link Window_ShopStatus#initialize}, {@link Window_ShopStatus#setItem}.
-   * Read in: {@link Window_ShopStatus#drawActorEquipInfo}, {@link Window_ShopStatus#drawActorParamChange}, {@link Window_ShopStatus#drawPossession}, {@link Window_ShopStatus#isEquipItem}, {@link Window_ShopStatus#paramId}, {@link Window_ShopStatus#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.<br/>
+   * Initialized in: {@link Window_ShopStatus#initialize}.<br/>
+   * Written in: {@link Window_ShopStatus#initialize}, {@link Window_ShopStatus#setItem}.<br/>
+   * Read in: {@link Window_ShopStatus#drawActorEquipInfo}, {@link Window_ShopStatus#drawActorParamChange}, {@link Window_ShopStatus#drawPossession}, {@link Window_ShopStatus#isEquipItem}, {@link Window_ShopStatus#paramId}, {@link Window_ShopStatus#refresh}.<br/>
    */
   _item: null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ShopStatus#initialize}.
-   * Written in: {@link Window_ShopStatus#changePage}, {@link Window_ShopStatus#initialize}.
-   * Read in: {@link Window_ShopStatus#changePage}, {@link Window_ShopStatus#statusMembers}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ShopStatus#initialize}.<br/>
+   * Written in: {@link Window_ShopStatus#changePage}, {@link Window_ShopStatus#initialize}.<br/>
+   * Read in: {@link Window_ShopStatus#changePage}, {@link Window_ShopStatus#statusMembers}.<br/>
    */
   _pageIndex: number;
   /**

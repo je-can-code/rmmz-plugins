@@ -8,120 +8,120 @@
 interface Graphics
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | PIXI.Application`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createEffekseerContext}, {@link Graphics#_createPixiApp}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_canRender}, {@link Graphics#_createEffekseerContext}, {@link Graphics#_createPixiApp}, {@link Graphics#_onTick}, {@link Graphics#initialize}, {@link Graphics#resize}, {@link Graphics#setStage}, {@link Graphics#startGameLoop}, {@link Graphics#stopGameLoop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | PIXI.Application`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createEffekseerContext}, {@link Graphics#_createPixiApp}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_canRender}, {@link Graphics#_createEffekseerContext}, {@link Graphics#_createPixiApp}, {@link Graphics#_onTick}, {@link Graphics#initialize}, {@link Graphics#resize}, {@link Graphics#setStage}, {@link Graphics#startGameLoop}, {@link Graphics#stopGameLoop}.<br/>
    */
   _app: null | PIXI.Application;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createCanvas}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_applyCanvasFilter}, {@link Graphics#_clearCanvasFilter}, {@link Graphics#_createCanvas}, {@link Graphics#_createPixiApp}, {@link Graphics#_updateCanvas}, {@link Graphics#hideScreen}, {@link Graphics#pageToCanvasX}, {@link Graphics#pageToCanvasY}, {@link Graphics#showScreen}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createCanvas}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_applyCanvasFilter}, {@link Graphics#_clearCanvasFilter}, {@link Graphics#_createCanvas}, {@link Graphics#_createPixiApp}, {@link Graphics#_updateCanvas}, {@link Graphics#hideScreen}, {@link Graphics#pageToCanvasX}, {@link Graphics#pageToCanvasY}, {@link Graphics#showScreen}.<br/>
    */
   _canvas: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_updateRealScale}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_updateRealScale}.<br/>
    */
   _defaultScale: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createEffekseerContext}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_createEffekseerContext}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createEffekseerContext}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_createEffekseerContext}.<br/>
    */
   _effekseer: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createErrorPrinter}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_createErrorPrinter}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#eraseError}, {@link Graphics#printError}, {@link Graphics#showRetryButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createErrorPrinter}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_createErrorPrinter}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#eraseError}, {@link Graphics#printError}, {@link Graphics#showRetryButton}.<br/>
    */
   _errorPrinter: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Graphics.FPSCounter`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createFPSCounter}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_onTick}, {@link Graphics#_switchFPSCounter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Graphics.FPSCounter`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createFPSCounter}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_onTick}, {@link Graphics#_switchFPSCounter}.<br/>
    */
   _fpsCounter: null | Graphics.FPSCounter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#initialize}, {@link Graphics#resize}.
-   * Read in: {@link Graphics#_updateCanvas}, {@link Graphics#_updateRealScale}, {@link Graphics#_updateVideo}, {@link Graphics#initialize}, {@link Graphics#isInsideCanvas}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#initialize}, {@link Graphics#resize}.<br/>
+   * Read in: {@link Graphics#_updateCanvas}, {@link Graphics#_updateRealScale}, {@link Graphics#_updateVideo}, {@link Graphics#initialize}, {@link Graphics#isInsideCanvas}.<br/>
    */
   _height: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_createLoadingSpinner}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#endLoading}, {@link Graphics#startLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_createLoadingSpinner}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#endLoading}, {@link Graphics#startLoading}.<br/>
    */
   _loadingSpinner: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_updateRealScale}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_centerElement}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#_updateVideo}, {@link Graphics#pageToCanvasX}, {@link Graphics#pageToCanvasY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_updateRealScale}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_centerElement}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#_updateVideo}, {@link Graphics#pageToCanvasX}, {@link Graphics#pageToCanvasY}.<br/>
    */
   _realScale: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#_switchStretchMode}, {@link Graphics#initialize}.
-   * Read in: {@link Graphics#_switchStretchMode}, {@link Graphics#_updateRealScale}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#_switchStretchMode}, {@link Graphics#initialize}.<br/>
+   * Read in: {@link Graphics#_switchStretchMode}, {@link Graphics#_updateRealScale}.<br/>
    */
   _stretchEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | () => void`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#initialize}, {@link Graphics#setTickHandler}.
-   * Read in: {@link Graphics#_onTick}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | () => void`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#initialize}, {@link Graphics#setTickHandler}.<br/>
+   * Read in: {@link Graphics#_onTick}.<br/>
    */
   _tickHandler: null | () => void;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#initialize}, {@link Graphics#printError}.
-   * Read in: {@link Graphics#eraseError}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#initialize}, {@link Graphics#printError}.<br/>
+   * Read in: {@link Graphics#eraseError}.<br/>
    */
   _wasLoading: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Graphics#initialize}.
-   * Written in: {@link Graphics#initialize}, {@link Graphics#resize}.
-   * Read in: {@link Graphics#_updateCanvas}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#_updateRealScale}, {@link Graphics#_updateVideo}, {@link Graphics#initialize}, {@link Graphics#isInsideCanvas}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Graphics#initialize}.<br/>
+   * Written in: {@link Graphics#initialize}, {@link Graphics#resize}.<br/>
+   * Read in: {@link Graphics#_updateCanvas}, {@link Graphics#_updateErrorPrinter}, {@link Graphics#_updateRealScale}, {@link Graphics#_updateVideo}, {@link Graphics#initialize}, {@link Graphics#isInsideCanvas}.<br/>
    */
   _width: number;
 }

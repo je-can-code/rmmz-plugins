@@ -8,39 +8,39 @@
 interface Sprite_StateOverlay extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#update}.
-   * Read in: {@link Sprite_StateOverlay#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#update}.<br/>
+   * Read in: {@link Sprite_StateOverlay#update}.<br/>
    */
   _animationCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#setup}.
-   * Read in: {@link Sprite_StateOverlay#updatePattern}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#setup}.<br/>
+   * Read in: {@link Sprite_StateOverlay#updatePattern}.<br/>
    */
   _battler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.
-   * Read in: {@link Sprite_StateOverlay#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.<br/>
+   * Read in: {@link Sprite_StateOverlay#updateFrame}.<br/>
    */
   _overlayIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.
-   * Read in: {@link Sprite_StateOverlay#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateOverlay#initMembers}, {@link Sprite_StateOverlay#updatePattern}.<br/>
+   * Read in: {@link Sprite_StateOverlay#updateFrame}.<br/>
    */
   _pattern: number;
   /**

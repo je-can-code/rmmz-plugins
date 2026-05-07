@@ -8,21 +8,21 @@
 interface Game_Timer
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Timer#initialize}.
-   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#update}.
-   * Read in: {@link Game_Timer#frames}, {@link Game_Timer#seconds}, {@link Game_Timer#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Timer#initialize}.<br/>
+   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#update}.<br/>
+   * Read in: {@link Game_Timer#frames}, {@link Game_Timer#seconds}, {@link Game_Timer#update}.<br/>
    */
   _frames: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Timer#initialize}.
-   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#stop}.
-   * Read in: {@link Game_Timer#isWorking}, {@link Game_Timer#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Timer#initialize}.<br/>
+   * Written in: {@link Game_Timer#initialize}, {@link Game_Timer#start}, {@link Game_Timer#stop}.<br/>
+   * Read in: {@link Game_Timer#isWorking}, {@link Game_Timer#update}.<br/>
    */
   _working: boolean;
   /**

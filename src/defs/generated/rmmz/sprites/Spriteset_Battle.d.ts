@@ -8,88 +8,88 @@
 interface Spriteset_Battle extends Spriteset_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createActors}.
-   * Read in: {@link Spriteset_Battle#battlerSprites}, {@link Spriteset_Battle#createActors}, {@link Spriteset_Battle#updateActors}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Spriteset_Battle#updateActors}.
-   * - `push()`: {@link Spriteset_Battle#createActors}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createActors}.<br/>
+   * Read in: {@link Spriteset_Battle#battlerSprites}, {@link Spriteset_Battle#createActors}, {@link Spriteset_Battle#updateActors}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Spriteset_Battle#updateActors}.<br/>
+   * - `push()`: {@link Spriteset_Battle#createActors}.<br/>
    */
   _actorSprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Battleback`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBattleback}.
-   * Read in: {@link Spriteset_Battle#createBattleback}, {@link Spriteset_Battle#updateBattleback}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Battleback`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBattleback}.<br/>
+   * Read in: {@link Spriteset_Battle#createBattleback}, {@link Spriteset_Battle#updateBattleback}.<br/>
    */
   _back1Sprite: Sprite_Battleback;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Battleback`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBattleback}.
-   * Read in: {@link Spriteset_Battle#createBattleback}, {@link Spriteset_Battle#updateBattleback}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Battleback`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBattleback}.<br/>
+   * Read in: {@link Spriteset_Battle#createBattleback}, {@link Spriteset_Battle#updateBattleback}.<br/>
    */
   _back2Sprite: Sprite_Battleback;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `PIXI.filters.BlurFilter`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBackground}.
-   * Read in: {@link Spriteset_Battle#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `PIXI.filters.BlurFilter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBackground}.<br/>
+   * Read in: {@link Spriteset_Battle#createBackground}.<br/>
    */
   _backgroundFilter: PIXI.filters.BlurFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBackground}.
-   * Read in: {@link Spriteset_Battle#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBackground}.<br/>
+   * Read in: {@link Spriteset_Battle#createBackground}.<br/>
    */
   _backgroundSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBattleField}.
-   * Read in: {@link Spriteset_Battle#createActors}, {@link Spriteset_Battle#createBattleField}, {@link Spriteset_Battle#createEnemies}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBattleField}.<br/>
+   * Read in: {@link Spriteset_Battle#createActors}, {@link Spriteset_Battle#createBattleField}, {@link Spriteset_Battle#createEnemies}.<br/>
    */
   _battleField: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Spriteset_Battle#initialize}.
-   * Written in: {@link Spriteset_Battle#initialize}, {@link Spriteset_Battle#updateBattleback}.
-   * Read in: {@link Spriteset_Battle#updateBattleback}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Spriteset_Battle#initialize}.<br/>
+   * Written in: {@link Spriteset_Battle#initialize}, {@link Spriteset_Battle#updateBattleback}.<br/>
+   * Read in: {@link Spriteset_Battle#updateBattleback}.<br/>
    */
   _battlebackLocated: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createBattleField}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createBattleField}.<br/>
+   * Read in: none.<br/>
    */
   _effectsContainer: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Battle#createEnemies}.
-   * Read in: {@link Spriteset_Battle#battlerSprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Battle#createEnemies}.<br/>
+   * Read in: {@link Spriteset_Battle#battlerSprites}.<br/>
    */
   _enemySprites: unknown;
   /**

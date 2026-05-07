@@ -8,154 +8,154 @@
 interface Sprite_AnimationMV extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.
-   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#loadBitmaps}, {@link Sprite_AnimationMV#setup}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateFrame}, {@link Sprite_AnimationMV#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.<br/>
+   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#loadBitmaps}, {@link Sprite_AnimationMV#setup}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateFrame}, {@link Sprite_AnimationMV#updatePosition}.<br/>
    */
   _animation: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.
-   * Read in: {@link Sprite_AnimationMV#isReady}, {@link Sprite_AnimationMV#updateCellSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.<br/>
+   * Read in: {@link Sprite_AnimationMV#isReady}, {@link Sprite_AnimationMV#updateCellSprite}.<br/>
    */
   _bitmap1: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.
-   * Read in: {@link Sprite_AnimationMV#isReady}, {@link Sprite_AnimationMV#updateCellSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.<br/>
+   * Read in: {@link Sprite_AnimationMV#isReady}, {@link Sprite_AnimationMV#updateCellSprite}.<br/>
    */
   _bitmap2: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#createCellSprites}, {@link Sprite_AnimationMV#initMembers}.
-   * Read in: {@link Sprite_AnimationMV#createCellSprites}, {@link Sprite_AnimationMV#updateAllCellSprites}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Sprite_AnimationMV#updateAllCellSprites}.
-   * - `push()`: {@link Sprite_AnimationMV#createCellSprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#createCellSprites}, {@link Sprite_AnimationMV#initMembers}.<br/>
+   * Read in: {@link Sprite_AnimationMV#createCellSprites}, {@link Sprite_AnimationMV#updateAllCellSprites}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Sprite_AnimationMV#updateAllCellSprites}.<br/>
+   * - `push()`: {@link Sprite_AnimationMV#createCellSprites}.<br/>
    */
   _cellSprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}, {@link Sprite_AnimationMV#updateMain}.
-   * Read in: {@link Sprite_AnimationMV#updateMain}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}, {@link Sprite_AnimationMV#updateMain}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateMain}.<br/>
    */
   _delay: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateMain}.
-   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#isPlaying}, {@link Sprite_AnimationMV#updateFrame}, {@link Sprite_AnimationMV#updateMain}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateMain}.<br/>
+   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#isPlaying}, {@link Sprite_AnimationMV#updateFrame}, {@link Sprite_AnimationMV#updateMain}.<br/>
    */
   _duration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#startFlash}.
-   * Read in: {@link Sprite_AnimationMV#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#startFlash}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateFlash}.<br/>
    */
   _flashColor: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startFlash}, {@link Sprite_AnimationMV#updateFlash}.
-   * Read in: {@link Sprite_AnimationMV#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startFlash}, {@link Sprite_AnimationMV#updateFlash}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateFlash}.<br/>
    */
   _flashDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startHiding}, {@link Sprite_AnimationMV#updateHiding}.
-   * Read in: {@link Sprite_AnimationMV#updateHiding}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startHiding}, {@link Sprite_AnimationMV#updateHiding}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateHiding}.<br/>
    */
   _hidingDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.
-   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.<br/>
    */
   _hue1: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.
-   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#loadBitmaps}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.<br/>
    */
   _hue2: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.
-   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateCellSprite}.<br/>
    */
   _mirror: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setupRate}.
-   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#processTimingData}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateMain}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setupRate}.<br/>
+   * Read in: {@link Sprite_AnimationMV#currentFrameIndex}, {@link Sprite_AnimationMV#processTimingData}, {@link Sprite_AnimationMV#setupDuration}, {@link Sprite_AnimationMV#updateMain}.<br/>
    */
   _rate: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startScreenFlash}, {@link Sprite_AnimationMV#updateScreenFlash}.
-   * Read in: {@link Sprite_AnimationMV#updateScreenFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startScreenFlash}, {@link Sprite_AnimationMV#updateScreenFlash}.<br/>
+   * Read in: {@link Sprite_AnimationMV#updateScreenFlash}.<br/>
    */
   _screenFlashDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | ScreenSprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#createScreenFlashSprite}, {@link Sprite_AnimationMV#initMembers}.
-   * Read in: {@link Sprite_AnimationMV#createScreenFlashSprite}, {@link Sprite_AnimationMV#startScreenFlash}, {@link Sprite_AnimationMV#updateScreenFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | ScreenSprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#createScreenFlashSprite}, {@link Sprite_AnimationMV#initMembers}.<br/>
+   * Read in: {@link Sprite_AnimationMV#createScreenFlashSprite}, {@link Sprite_AnimationMV#startScreenFlash}, {@link Sprite_AnimationMV#updateScreenFlash}.<br/>
    */
   _screenFlashSprite: null | ScreenSprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[] | Sprite[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.
-   * Read in: {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startHiding}, {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updateFlash}, {@link Sprite_AnimationMV#updateHiding}, {@link Sprite_AnimationMV#updatePosition}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[] | Sprite[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_AnimationMV#initMembers}, {@link Sprite_AnimationMV#setup}.<br/>
+   * Read in: {@link Sprite_AnimationMV#onEnd}, {@link Sprite_AnimationMV#startHiding}, {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updateFlash}, {@link Sprite_AnimationMV#updateHiding}, {@link Sprite_AnimationMV#updatePosition}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Sprite_AnimationMV#updateAllCellSprites}, {@link Sprite_AnimationMV#updatePosition}.<br/>
    */
   _targets: unknown[] | Sprite[];
   /**

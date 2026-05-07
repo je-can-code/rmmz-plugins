@@ -8,33 +8,33 @@
 interface Window_SkillList extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_SkillList#initialize}.
-   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#setActor}.
-   * Read in: {@link Window_SkillList#drawSkillCost}, {@link Window_SkillList#isEnabled}, {@link Window_SkillList#makeItemList}, {@link Window_SkillList#selectLast}, {@link Window_SkillList#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_SkillList#initialize}.<br/>
+   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#setActor}.<br/>
+   * Read in: {@link Window_SkillList#drawSkillCost}, {@link Window_SkillList#isEnabled}, {@link Window_SkillList#makeItemList}, {@link Window_SkillList#selectLast}, {@link Window_SkillList#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_SkillList#initialize}.
-   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#makeItemList}.
-   * Read in: {@link Window_SkillList#isCurrentItemEnabled}, {@link Window_SkillList#itemAt}, {@link Window_SkillList#maxItems}, {@link Window_SkillList#selectLast}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_SkillList#maxItems}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_SkillList#initialize}.<br/>
+   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#makeItemList}.<br/>
+   * Read in: {@link Window_SkillList#isCurrentItemEnabled}, {@link Window_SkillList#itemAt}, {@link Window_SkillList#maxItems}, {@link Window_SkillList#selectLast}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_SkillList#maxItems}.<br/>
    */
   _data: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_SkillList#initialize}.
-   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#setStypeId}.
-   * Read in: {@link Window_SkillList#includes}, {@link Window_SkillList#setStypeId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_SkillList#initialize}.<br/>
+   * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#setStypeId}.<br/>
+   * Read in: {@link Window_SkillList#includes}, {@link Window_SkillList#setStypeId}.<br/>
    */
   _stypeId: number;
   /**

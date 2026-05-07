@@ -8,21 +8,21 @@
 interface Window_NameBox extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_NameBox#setMessageWindow}.
-   * Read in: {@link Window_NameBox#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_NameBox#setMessageWindow}.<br/>
+   * Read in: {@link Window_NameBox#updatePlacement}.<br/>
    */
   _messageWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_NameBox#initialize}.
-   * Written in: {@link Window_NameBox#initialize}, {@link Window_NameBox#setName}.
-   * Read in: {@link Window_NameBox#refresh}, {@link Window_NameBox#setName}, {@link Window_NameBox#windowWidth}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_NameBox#initialize}.<br/>
+   * Written in: {@link Window_NameBox#initialize}, {@link Window_NameBox#setName}.<br/>
+   * Read in: {@link Window_NameBox#refresh}, {@link Window_NameBox#setName}, {@link Window_NameBox#windowWidth}.<br/>
    */
   _name: string;
   /**

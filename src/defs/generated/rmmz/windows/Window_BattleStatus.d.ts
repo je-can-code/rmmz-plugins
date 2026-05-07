@@ -8,12 +8,12 @@
 interface Window_BattleStatus extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_BattleStatus#initialize}.
-   * Written in: {@link Window_BattleStatus#initialize}, {@link Window_BattleStatus#performPartyRefresh}, {@link Window_BattleStatus#preparePartyRefresh}.
-   * Read in: {@link Window_BattleStatus#performPartyRefresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_BattleStatus#initialize}.<br/>
+   * Written in: {@link Window_BattleStatus#initialize}, {@link Window_BattleStatus#performPartyRefresh}, {@link Window_BattleStatus#preparePartyRefresh}.<br/>
+   * Read in: {@link Window_BattleStatus#performPartyRefresh}.<br/>
    */
   _bitmapsReady: number;
   /**

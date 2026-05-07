@@ -8,30 +8,30 @@
 interface Scene_Menu extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Menu#createCommandWindow}.
-   * Read in: {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#onPersonalOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createCommandWindow}.<br/>
+   * Read in: {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#onPersonalOk}.<br/>
    */
   _commandWindow: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Gold`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Menu#createGoldWindow}.
-   * Read in: {@link Scene_Menu#createGoldWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Gold`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createGoldWindow}.<br/>
+   * Read in: {@link Scene_Menu#createGoldWindow}.<br/>
    */
   _goldWindow: Window_Gold;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_MenuStatus`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Menu#createStatusWindow}.
-   * Read in: {@link Scene_Menu#commandFormation}, {@link Scene_Menu#commandPersonal}, {@link Scene_Menu#createStatusWindow}, {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onFormationOk}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_MenuStatus`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Menu#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Menu#commandFormation}, {@link Scene_Menu#commandPersonal}, {@link Scene_Menu#createStatusWindow}, {@link Scene_Menu#onFormationCancel}, {@link Scene_Menu#onFormationOk}, {@link Scene_Menu#onPersonalCancel}, {@link Scene_Menu#start}.<br/>
    */
   _statusWindow: Window_MenuStatus;
   /**

@@ -8,21 +8,21 @@
 interface Window_SkillType extends Window_Command
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_SkillType#initialize}.
-   * Written in: {@link Window_SkillType#initialize}, {@link Window_SkillType#setActor}.
-   * Read in: {@link Window_SkillType#makeCommandList}, {@link Window_SkillType#selectLast}, {@link Window_SkillType#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_SkillType#initialize}.<br/>
+   * Written in: {@link Window_SkillType#initialize}, {@link Window_SkillType#setActor}.<br/>
+   * Read in: {@link Window_SkillType#makeCommandList}, {@link Window_SkillType#selectLast}, {@link Window_SkillType#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_SkillType#setSkillWindow}.
-   * Read in: {@link Window_SkillType#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_SkillType#setSkillWindow}.<br/>
+   * Read in: {@link Window_SkillType#update}.<br/>
    */
   _skillWindow: Window_Base;
   /**

@@ -8,30 +8,30 @@
 interface Window_Base extends Window
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Base#initialize}.
-   * Written in: {@link Window_Base#close}, {@link Window_Base#initialize}, {@link Window_Base#open}, {@link Window_Base#updateClose}.
-   * Read in: {@link Window_Base#isClosing}, {@link Window_Base#updateClose}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Base#initialize}.<br/>
+   * Written in: {@link Window_Base#close}, {@link Window_Base#initialize}, {@link Window_Base#open}, {@link Window_Base#updateClose}.<br/>
+   * Read in: {@link Window_Base#isClosing}, {@link Window_Base#updateClose}.<br/>
    */
   _closing: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window_Base#initialize}.
-   * Written in: {@link Window_Base#createDimmerSprite}, {@link Window_Base#initialize}.
-   * Read in: {@link Window_Base#createDimmerSprite}, {@link Window_Base#destroy}, {@link Window_Base#hideBackgroundDimmer}, {@link Window_Base#refreshDimmerBitmap}, {@link Window_Base#showBackgroundDimmer}, {@link Window_Base#updateBackgroundDimmer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window_Base#initialize}.<br/>
+   * Written in: {@link Window_Base#createDimmerSprite}, {@link Window_Base#initialize}.<br/>
+   * Read in: {@link Window_Base#createDimmerSprite}, {@link Window_Base#destroy}, {@link Window_Base#hideBackgroundDimmer}, {@link Window_Base#refreshDimmerBitmap}, {@link Window_Base#showBackgroundDimmer}, {@link Window_Base#updateBackgroundDimmer}.<br/>
    */
   _dimmerSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Base#initialize}.
-   * Written in: {@link Window_Base#close}, {@link Window_Base#initialize}, {@link Window_Base#open}, {@link Window_Base#updateOpen}.
-   * Read in: {@link Window_Base#isOpening}, {@link Window_Base#updateOpen}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Base#initialize}.<br/>
+   * Written in: {@link Window_Base#close}, {@link Window_Base#initialize}, {@link Window_Base#open}, {@link Window_Base#updateOpen}.<br/>
+   * Read in: {@link Window_Base#isOpening}, {@link Window_Base#updateOpen}.<br/>
    */
   _opening: boolean;
   /**

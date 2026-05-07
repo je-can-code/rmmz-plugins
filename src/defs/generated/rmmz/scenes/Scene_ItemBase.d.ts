@@ -8,12 +8,12 @@
 interface Scene_ItemBase extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_MenuActor`.
-   * Initialized in: none.
-   * Written in: {@link Scene_ItemBase#createActorWindow}.
-   * Read in: {@link Scene_ItemBase#createActorWindow}, {@link Scene_ItemBase#determineItem}, {@link Scene_ItemBase#hideActorWindow}, {@link Scene_ItemBase#isActorWindowActive}, {@link Scene_ItemBase#itemTargetActors}, {@link Scene_ItemBase#showActorWindow}, {@link Scene_ItemBase#useItem}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_MenuActor`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_ItemBase#createActorWindow}.<br/>
+   * Read in: {@link Scene_ItemBase#createActorWindow}, {@link Scene_ItemBase#determineItem}, {@link Scene_ItemBase#hideActorWindow}, {@link Scene_ItemBase#isActorWindowActive}, {@link Scene_ItemBase#itemTargetActors}, {@link Scene_ItemBase#showActorWindow}, {@link Scene_ItemBase#useItem}.<br/>
    */
   _actorWindow: Window_MenuActor;
   /**

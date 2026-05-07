@@ -8,66 +8,66 @@
 interface Window_ScrollText extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}.
-   * Read in: {@link Window_ScrollText#contentsHeight}, {@link Window_ScrollText#updateMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}.<br/>
+   * Read in: {@link Window_ScrollText#contentsHeight}, {@link Window_ScrollText#updateMessage}.<br/>
    */
   _allTextHeight: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}.
-   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#updateMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}.<br/>
+   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#updateMessage}.<br/>
    */
   _blockHeight: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#updateMessage}.
-   * Read in: {@link Window_ScrollText#updateMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#updateMessage}.<br/>
+   * Read in: {@link Window_ScrollText#updateMessage}.<br/>
    */
   _blockIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}.
-   * Read in: {@link Window_ScrollText#contentsHeight}, {@link Window_ScrollText#startMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}.<br/>
+   * Read in: {@link Window_ScrollText#contentsHeight}, {@link Window_ScrollText#startMessage}.<br/>
    */
   _maxBitmapHeight: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Rectangle`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}.
-   * Read in: {@link Window_ScrollText#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Rectangle`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}.<br/>
+   * Read in: {@link Window_ScrollText#updatePlacement}.<br/>
    */
   _reservedRect: Rectangle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#updateMessage}.
-   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#updateMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#updateMessage}.<br/>
+   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#updateMessage}.<br/>
    */
   _scrollY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string | null`.
-   * Initialized in: {@link Window_ScrollText#initialize}.
-   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#terminateMessage}.
-   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string | null`.<br/>
+   * Initialized in: {@link Window_ScrollText#initialize}.<br/>
+   * Written in: {@link Window_ScrollText#initialize}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#terminateMessage}.<br/>
+   * Read in: {@link Window_ScrollText#refresh}, {@link Window_ScrollText#startMessage}, {@link Window_ScrollText#update}.<br/>
    */
   _text: string | null;
   /**

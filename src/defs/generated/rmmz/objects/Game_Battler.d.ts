@@ -8,164 +8,164 @@
 interface Game_Battler extends Game_BattlerBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#setActionState}.
-   * Read in: {@link Game_Battler#isActing}, {@link Game_Battler#isInputting}, {@link Game_Battler#isUndecided}, {@link Game_Battler#isWaiting}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#setActionState}.<br/>
+   * Read in: {@link Game_Battler#isActing}, {@link Game_Battler#isInputting}, {@link Game_Battler#isUndecided}, {@link Game_Battler#isWaiting}.<br/>
    */
   _actionState: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#clearActions}, {@link Game_Battler#initMembers}, {@link Game_Battler#makeActions}.
-   * Read in: {@link Game_Battler#action}, {@link Game_Battler#currentAction}, {@link Game_Battler#forceAction}, {@link Game_Battler#isChanting}, {@link Game_Battler#isGuardWaiting}, {@link Game_Battler#makeActions}, {@link Game_Battler#makeSpeed}, {@link Game_Battler#numActions}, {@link Game_Battler#removeCurrentAction}, {@link Game_Battler#setAction}, {@link Game_Battler#tpbRequiredCastTime}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Battler#numActions}.
-   * - `push()`: {@link Game_Battler#forceAction}, {@link Game_Battler#makeActions}.
-   * - `shift()`: {@link Game_Battler#removeCurrentAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#clearActions}, {@link Game_Battler#initMembers}, {@link Game_Battler#makeActions}.<br/>
+   * Read in: {@link Game_Battler#action}, {@link Game_Battler#currentAction}, {@link Game_Battler#forceAction}, {@link Game_Battler#isChanting}, {@link Game_Battler#isGuardWaiting}, {@link Game_Battler#makeActions}, {@link Game_Battler#makeSpeed}, {@link Game_Battler#numActions}, {@link Game_Battler#removeCurrentAction}, {@link Game_Battler#setAction}, {@link Game_Battler#tpbRequiredCastTime}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Battler#numActions}.<br/>
+   * - `push()`: {@link Game_Battler#forceAction}, {@link Game_Battler#makeActions}.<br/>
+   * - `shift()`: {@link Game_Battler#removeCurrentAction}.<br/>
    */
   _actions: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#clearDamagePopup}, {@link Game_Battler#initMembers}, {@link Game_Battler#startDamagePopup}.
-   * Read in: {@link Game_Battler#isDamagePopupRequested}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#clearDamagePopup}, {@link Game_Battler#initMembers}, {@link Game_Battler#startDamagePopup}.<br/>
+   * Read in: {@link Game_Battler#isDamagePopupRequested}.<br/>
    */
   _damagePopup: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#clearEffect}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestEffect}.
-   * Read in: {@link Game_Battler#effectType}, {@link Game_Battler#isEffectRequested}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#clearEffect}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestEffect}.<br/>
+   * Read in: {@link Game_Battler#effectType}, {@link Game_Battler#isEffectRequested}.<br/>
    */
   _effectType: null | number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#setLastTarget}.
-   * Read in: {@link Game_Battler#forceAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#setLastTarget}.<br/>
+   * Read in: {@link Game_Battler#forceAction}.<br/>
    */
   _lastTargetIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#cancelMotionRefresh}, {@link Game_Battler#clearMotion}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestMotionRefresh}.
-   * Read in: {@link Game_Battler#isMotionRefreshRequested}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#cancelMotionRefresh}, {@link Game_Battler#clearMotion}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestMotionRefresh}.<br/>
+   * Read in: {@link Game_Battler#isMotionRefreshRequested}.<br/>
    */
   _motionRefresh: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#clearMotion}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestMotion}.
-   * Read in: {@link Game_Battler#isMotionRequested}, {@link Game_Battler#motionType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#clearMotion}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestMotion}.<br/>
+   * Read in: {@link Game_Battler#isMotionRequested}, {@link Game_Battler#motionType}.<br/>
    */
   _motionType: null | number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_ActionResult`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}.
-   * Read in: {@link Game_Battler#addBuff}, {@link Game_Battler#addDebuff}, {@link Game_Battler#addState}, {@link Game_Battler#clearResult}, {@link Game_Battler#gainHp}, {@link Game_Battler#gainMp}, {@link Game_Battler#gainTp}, {@link Game_Battler#removeBuff}, {@link Game_Battler#removeState}, {@link Game_Battler#result}, {@link Game_Battler#shouldPopupDamage}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link Game_Battler#clearResult}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_ActionResult`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}.<br/>
+   * Read in: {@link Game_Battler#addBuff}, {@link Game_Battler#addDebuff}, {@link Game_Battler#addState}, {@link Game_Battler#clearResult}, {@link Game_Battler#gainHp}, {@link Game_Battler#gainMp}, {@link Game_Battler#gainTp}, {@link Game_Battler#removeBuff}, {@link Game_Battler#removeState}, {@link Game_Battler#result}, {@link Game_Battler#shouldPopupDamage}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link Game_Battler#clearResult}.<br/>
    */
   _result: Game_ActionResult;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#deselect}, {@link Game_Battler#initMembers}, {@link Game_Battler#select}.
-   * Read in: {@link Game_Battler#isSelected}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#deselect}, {@link Game_Battler#initMembers}, {@link Game_Battler#select}.<br/>
+   * Read in: {@link Game_Battler#isSelected}.<br/>
    */
   _selected: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#makeSpeed}.
-   * Read in: {@link Game_Battler#speed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#makeSpeed}.<br/>
+   * Read in: {@link Game_Battler#speed}.<br/>
    */
   _speed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#startTpbCasting}, {@link Game_Battler#updateTpbCastTime}.
-   * Read in: {@link Game_Battler#updateTpbCastTime}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#startTpbCasting}, {@link Game_Battler#updateTpbCastTime}.<br/>
+   * Read in: {@link Game_Battler#updateTpbCastTime}.<br/>
    */
   _tpbCastTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#applyTpbPenalty}, {@link Game_Battler#clearTpbChargeTime}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbChargeTime}, {@link Game_Battler#updateTpbChargeTime}.
-   * Read in: {@link Game_Battler#tpbChargeTime}, {@link Game_Battler#updateTpbChargeTime}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#applyTpbPenalty}, {@link Game_Battler#clearTpbChargeTime}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbChargeTime}, {@link Game_Battler#updateTpbChargeTime}.<br/>
+   * Read in: {@link Game_Battler#tpbChargeTime}, {@link Game_Battler#updateTpbChargeTime}.<br/>
    */
   _tpbChargeTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#onTpbTimeout}, {@link Game_Battler#startTpbTurn}, {@link Game_Battler#updateTpbIdleTime}.
-   * Read in: {@link Game_Battler#isTpbTimeout}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#onTpbTimeout}, {@link Game_Battler#startTpbTurn}, {@link Game_Battler#updateTpbIdleTime}.<br/>
+   * Read in: {@link Game_Battler#isTpbTimeout}.<br/>
    */
   _tpbIdleTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#applyTpbPenalty}, {@link Game_Battler#clearTpbChargeTime}, {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbChargeTime}, {@link Game_Battler#startTpbAction}, {@link Game_Battler#startTpbCasting}, {@link Game_Battler#updateTpbCastTime}.
-   * Read in: {@link Game_Battler#isTpbCharged}, {@link Game_Battler#isTpbReady}, {@link Game_Battler#updateTpbCastTime}, {@link Game_Battler#updateTpbChargeTime}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#applyTpbPenalty}, {@link Game_Battler#clearTpbChargeTime}, {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbChargeTime}, {@link Game_Battler#startTpbAction}, {@link Game_Battler#startTpbCasting}, {@link Game_Battler#updateTpbCastTime}.<br/>
+   * Read in: {@link Game_Battler#isTpbCharged}, {@link Game_Battler#isTpbReady}, {@link Game_Battler#updateTpbCastTime}, {@link Game_Battler#updateTpbChargeTime}.<br/>
    */
   _tpbState: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#startTpbTurn}.
-   * Read in: {@link Game_Battler#turnCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#startTpbTurn}.<br/>
+   * Read in: {@link Game_Battler#turnCount}.<br/>
    */
   _tpbTurnCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#onTpbTimeout}, {@link Game_Battler#startTpbTurn}.
-   * Read in: {@link Game_Battler#isTpbTurnEnd}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#finishTpbCharge}, {@link Game_Battler#initMembers}, {@link Game_Battler#initTpbTurn}, {@link Game_Battler#onTpbTimeout}, {@link Game_Battler#startTpbTurn}.<br/>
+   * Read in: {@link Game_Battler#isTpbTurnEnd}.<br/>
    */
   _tpbTurnEnd: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Battler#clearWeaponAnimation}, {@link Game_Battler#initMembers}, {@link Game_Battler#startWeaponAnimation}.
-   * Read in: {@link Game_Battler#isWeaponAnimationRequested}, {@link Game_Battler#weaponImageId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Battler#clearWeaponAnimation}, {@link Game_Battler#initMembers}, {@link Game_Battler#startWeaponAnimation}.<br/>
+   * Read in: {@link Game_Battler#isWeaponAnimationRequested}, {@link Game_Battler#weaponImageId}.<br/>
    */
   _weaponImageId: number;
   /**

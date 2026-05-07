@@ -8,106 +8,106 @@
 interface Game_Temp
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#initialize}.
-   * Read in: {@link Game_Temp#requestAnimation}, {@link Game_Temp#retrieveAnimation}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_Temp#requestAnimation}.
-   * - `shift()`: {@link Game_Temp#retrieveAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#initialize}.<br/>
+   * Read in: {@link Game_Temp#requestAnimation}, {@link Game_Temp#retrieveAnimation}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_Temp#requestAnimation}.<br/>
+   * - `shift()`: {@link Game_Temp#retrieveAnimation}.<br/>
    */
   _animationQueue: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#initialize}.
-   * Read in: {@link Game_Temp#requestBalloon}, {@link Game_Temp#retrieveBalloon}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_Temp#requestBalloon}.
-   * - `shift()`: {@link Game_Temp#retrieveBalloon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#initialize}.<br/>
+   * Read in: {@link Game_Temp#requestBalloon}, {@link Game_Temp#retrieveBalloon}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_Temp#requestBalloon}.<br/>
+   * - `shift()`: {@link Game_Temp#retrieveBalloon}.<br/>
    */
   _balloonQueue: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#initialize}.
-   * Read in: {@link Game_Temp#clearCommonEventReservation}, {@link Game_Temp#isCommonEventReserved}, {@link Game_Temp#reserveCommonEvent}, {@link Game_Temp#retrieveCommonEvent}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Temp#clearCommonEventReservation}, {@link Game_Temp#isCommonEventReserved}.
-   * - `push()`: {@link Game_Temp#reserveCommonEvent}.
-   * - `shift()`: {@link Game_Temp#retrieveCommonEvent}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#initialize}.<br/>
+   * Read in: {@link Game_Temp#clearCommonEventReservation}, {@link Game_Temp#isCommonEventReserved}, {@link Game_Temp#reserveCommonEvent}, {@link Game_Temp#retrieveCommonEvent}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Temp#clearCommonEventReservation}, {@link Game_Temp#isCommonEventReserved}.<br/>
+   * - `push()`: {@link Game_Temp#reserveCommonEvent}.<br/>
+   * - `shift()`: {@link Game_Temp#retrieveCommonEvent}.<br/>
    */
   _commonEventQueue: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.
-   * Read in: {@link Game_Temp#destinationX}, {@link Game_Temp#isDestinationValid}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.<br/>
+   * Read in: {@link Game_Temp#destinationX}, {@link Game_Temp#isDestinationValid}.<br/>
    */
   _destinationX: null | number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.
-   * Read in: {@link Game_Temp#destinationY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#clearDestination}, {@link Game_Temp#initialize}, {@link Game_Temp#setDestination}.<br/>
+   * Read in: {@link Game_Temp#destinationY}.<br/>
    */
   _destinationY: null | number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#initialize}.
-   * Read in: {@link Game_Temp#isPlaytest}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#initialize}.<br/>
+   * Read in: {@link Game_Temp#isPlaytest}.<br/>
    */
   _isPlaytest: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#initialize}.
-   * Read in: {@link Game_Temp#lastActionData}, {@link Game_Temp#setLastActionData}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#initialize}.<br/>
+   * Read in: {@link Game_Temp#lastActionData}, {@link Game_Temp#setLastActionData}.<br/>
    */
   _lastActionData: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#clearBattleRefreshRequest}, {@link Game_Temp#initialize}, {@link Game_Temp#requestBattleRefresh}.
-   * Read in: {@link Game_Temp#isBattleRefreshRequested}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#clearBattleRefreshRequest}, {@link Game_Temp#initialize}, {@link Game_Temp#requestBattleRefresh}.<br/>
+   * Read in: {@link Game_Temp#isBattleRefreshRequested}.<br/>
    */
   _needsBattleRefresh: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#clearTouchState}, {@link Game_Temp#initialize}, {@link Game_Temp#setTouchState}.
-   * Read in: {@link Game_Temp#touchState}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#clearTouchState}, {@link Game_Temp#initialize}, {@link Game_Temp#setTouchState}.<br/>
+   * Read in: {@link Game_Temp#touchState}.<br/>
    */
   _touchState: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_CharacterBase`.
-   * Initialized in: {@link Game_Temp#initialize}.
-   * Written in: {@link Game_Temp#clearTouchState}, {@link Game_Temp#initialize}, {@link Game_Temp#setTouchState}.
-   * Read in: {@link Game_Temp#touchTarget}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_CharacterBase`.<br/>
+   * Initialized in: {@link Game_Temp#initialize}.<br/>
+   * Written in: {@link Game_Temp#clearTouchState}, {@link Game_Temp#initialize}, {@link Game_Temp#setTouchState}.<br/>
+   * Read in: {@link Game_Temp#touchTarget}.<br/>
    */
   _touchTarget: null | Game_CharacterBase;
   /**

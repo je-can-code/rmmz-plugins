@@ -8,30 +8,30 @@
 interface Sprite_Weapon extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#update}.
-   * Read in: {@link Sprite_Weapon#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#update}.<br/>
+   * Read in: {@link Sprite_Weapon#update}.<br/>
    */
   _animationCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#updatePattern}.
-   * Read in: {@link Sprite_Weapon#updateFrame}, {@link Sprite_Weapon#updatePattern}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#updatePattern}.<br/>
+   * Read in: {@link Sprite_Weapon#updateFrame}, {@link Sprite_Weapon#updatePattern}.<br/>
    */
   _pattern: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#updatePattern}.
-   * Read in: {@link Sprite_Weapon#isPlaying}, {@link Sprite_Weapon#loadBitmap}, {@link Sprite_Weapon#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Weapon#initMembers}, {@link Sprite_Weapon#setup}, {@link Sprite_Weapon#updatePattern}.<br/>
+   * Read in: {@link Sprite_Weapon#isPlaying}, {@link Sprite_Weapon#loadBitmap}, {@link Sprite_Weapon#updateFrame}.<br/>
    */
   _weaponImageId: number;
   /**

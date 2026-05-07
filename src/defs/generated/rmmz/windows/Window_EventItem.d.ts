@@ -8,30 +8,30 @@
 interface Window_EventItem extends Window_ItemList
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_EventItem#initialize}.
-   * Written in: {@link Window_EventItem#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_EventItem#initialize}.<br/>
+   * Written in: {@link Window_EventItem#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Window_EventItem#createCancelButton}.
-   * Read in: {@link Window_EventItem#createCancelButton}, {@link Window_EventItem#placeCancelButton}, {@link Window_EventItem#updateCancelButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_EventItem#createCancelButton}.<br/>
+   * Read in: {@link Window_EventItem#createCancelButton}, {@link Window_EventItem#placeCancelButton}, {@link Window_EventItem#updateCancelButton}.<br/>
    */
   _cancelButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_EventItem#setMessageWindow}.
-   * Read in: {@link Window_EventItem#onCancel}, {@link Window_EventItem#onOk}, {@link Window_EventItem#placeCancelButton}, {@link Window_EventItem#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_EventItem#setMessageWindow}.<br/>
+   * Read in: {@link Window_EventItem#onCancel}, {@link Window_EventItem#onOk}, {@link Window_EventItem#placeCancelButton}, {@link Window_EventItem#updatePlacement}.<br/>
    */
   _messageWindow: Window_Base;
   /**

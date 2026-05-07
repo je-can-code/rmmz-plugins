@@ -8,102 +8,102 @@
 interface Sprite extends PIXI.Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}.
-   * Read in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}.<br/>
+   * Read in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}.<br/>
    */
   _bitmap: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}, {@link Sprite#setBlendColor}.
-   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getBlendColor}, {@link Sprite#setBlendColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setBlendColor}.<br/>
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getBlendColor}, {@link Sprite#setBlendColor}.<br/>
    */
   _blendColor: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _blendMode: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | ColorFilter`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#_createColorFilter}, {@link Sprite#initialize}.
-   * Read in: {@link Sprite#_createColorFilter}, {@link Sprite#_updateColorFilter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | ColorFilter`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#_createColorFilter}, {@link Sprite#initialize}.<br/>
+   * Read in: {@link Sprite#_createColorFilter}, {@link Sprite#_updateColorFilter}.<br/>
    */
   _colorFilter: null | ColorFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}, {@link Sprite#setColorTone}.
-   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getColorTone}, {@link Sprite#setColorTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setColorTone}.<br/>
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#getColorTone}, {@link Sprite#setColorTone}.<br/>
    */
   _colorTone: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: none.<br/>
    */
   _counter: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: none.<br/>
    */
   _emptyBaseTexture: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}.
-   * Read in: {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}, {@link Sprite#setFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}.<br/>
+   * Read in: {@link Sprite#_onBitmapLoad}, {@link Sprite#_refresh}, {@link Sprite#setFrame}.<br/>
    */
   _frame: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#hide}, {@link Sprite#initialize}, {@link Sprite#show}.
-   * Read in: {@link Sprite#updateVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#hide}, {@link Sprite#initialize}, {@link Sprite#show}.<br/>
+   * Read in: {@link Sprite#updateVisibility}.<br/>
    */
   _hidden: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite#initialize}.
-   * Written in: {@link Sprite#initialize}, {@link Sprite#setHue}.
-   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#setHue}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite#initialize}.<br/>
+   * Written in: {@link Sprite#initialize}, {@link Sprite#setHue}.<br/>
+   * Read in: {@link Sprite#_updateColorFilter}, {@link Sprite#setHue}.<br/>
    */
   _hue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#setFrame}.
-   * Read in: {@link Sprite#_onBitmapLoad}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite#_onBitmapChange}, {@link Sprite#_onBitmapLoad}, {@link Sprite#setFrame}.<br/>
+   * Read in: {@link Sprite#_onBitmapLoad}.<br/>
    */
   _refreshFrame: boolean;
   /**

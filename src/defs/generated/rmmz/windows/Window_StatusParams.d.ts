@@ -8,12 +8,12 @@
 interface Window_StatusParams extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_StatusParams#initialize}.
-   * Written in: {@link Window_StatusParams#initialize}, {@link Window_StatusParams#setActor}.
-   * Read in: {@link Window_StatusParams#drawItem}, {@link Window_StatusParams#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_StatusParams#initialize}.<br/>
+   * Written in: {@link Window_StatusParams#initialize}, {@link Window_StatusParams#setActor}.<br/>
+   * Read in: {@link Window_StatusParams#drawItem}, {@link Window_StatusParams#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**

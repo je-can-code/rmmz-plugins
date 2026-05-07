@@ -8,39 +8,39 @@
 interface ScreenSprite extends PIXI.Container
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link ScreenSprite#initialize}.
-   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
-   * Read in: {@link ScreenSprite#setColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link ScreenSprite#initialize}.<br/>
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.<br/>
+   * Read in: {@link ScreenSprite#setColor}.<br/>
    */
   _blue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `PIXI.Graphics`.
-   * Initialized in: {@link ScreenSprite#initialize}.
-   * Written in: {@link ScreenSprite#initialize}.
-   * Read in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `PIXI.Graphics`.<br/>
+   * Initialized in: {@link ScreenSprite#initialize}.<br/>
+   * Written in: {@link ScreenSprite#initialize}.<br/>
+   * Read in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.<br/>
    */
   _graphics: PIXI.Graphics;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link ScreenSprite#initialize}.
-   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
-   * Read in: {@link ScreenSprite#setColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link ScreenSprite#initialize}.<br/>
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.<br/>
+   * Read in: {@link ScreenSprite#setColor}.<br/>
    */
   _green: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link ScreenSprite#initialize}.
-   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.
-   * Read in: {@link ScreenSprite#setColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link ScreenSprite#initialize}.<br/>
+   * Written in: {@link ScreenSprite#initialize}, {@link ScreenSprite#setColor}.<br/>
+   * Read in: {@link ScreenSprite#setColor}.<br/>
    */
   _red: number;
   /**

@@ -8,97 +8,97 @@
 interface Sprite_Battler extends Sprite_Clickable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setBattler}.
-   * Read in: {@link Sprite_Battler#checkBattler}, {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#onClick}, {@link Sprite_Battler#onMouseEnter}, {@link Sprite_Battler#onPress}, {@link Sprite_Battler#setupDamagePopup}, {@link Sprite_Battler#update}, {@link Sprite_Battler#updateMain}, {@link Sprite_Battler#updateSelectionEffect}, {@link Sprite_Battler#updateVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setBattler}.<br/>
+   * Read in: {@link Sprite_Battler#checkBattler}, {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#onClick}, {@link Sprite_Battler#onMouseEnter}, {@link Sprite_Battler#onPress}, {@link Sprite_Battler#setupDamagePopup}, {@link Sprite_Battler#update}, {@link Sprite_Battler#updateMain}, {@link Sprite_Battler#updateSelectionEffect}, {@link Sprite_Battler#updateVisibility}.<br/>
    */
   _battler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}.
-   * Read in: {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#destroyDamageSprite}, {@link Sprite_Battler#updateDamagePopup}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#updateDamagePopup}.
-   * - `push()`: {@link Sprite_Battler#createDamageSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}.<br/>
+   * Read in: {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#destroyDamageSprite}, {@link Sprite_Battler#updateDamagePopup}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#updateDamagePopup}.<br/>
+   * - `push()`: {@link Sprite_Battler#createDamageSprite}.<br/>
    */
   _damages: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setHome}.
-   * Read in: {@link Sprite_Battler#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setHome}.<br/>
+   * Read in: {@link Sprite_Battler#updatePosition}.<br/>
    */
   _homeX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setHome}.
-   * Read in: {@link Sprite_Battler#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setHome}.<br/>
+   * Read in: {@link Sprite_Battler#updatePosition}.<br/>
    */
   _homeY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.
-   * Read in: {@link Sprite_Battler#isMoving}, {@link Sprite_Battler#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
+   * Read in: {@link Sprite_Battler#isMoving}, {@link Sprite_Battler#updateMove}.<br/>
    */
   _movementDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.
-   * Read in: {@link Sprite_Battler#inHomePosition}, {@link Sprite_Battler#updateMove}, {@link Sprite_Battler#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
+   * Read in: {@link Sprite_Battler#inHomePosition}, {@link Sprite_Battler#updateMove}, {@link Sprite_Battler#updatePosition}.<br/>
    */
   _offsetX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.
-   * Read in: {@link Sprite_Battler#inHomePosition}, {@link Sprite_Battler#updateMove}, {@link Sprite_Battler#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
+   * Read in: {@link Sprite_Battler#inHomePosition}, {@link Sprite_Battler#updateMove}, {@link Sprite_Battler#updatePosition}.<br/>
    */
   _offsetY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#updateSelectionEffect}.
-   * Read in: {@link Sprite_Battler#updateSelectionEffect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#updateSelectionEffect}.<br/>
+   * Read in: {@link Sprite_Battler#updateSelectionEffect}.<br/>
    */
   _selectionEffectCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.
-   * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.<br/>
+   * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
    */
   _targetOffsetX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.
-   * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.<br/>
+   * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
    */
   _targetOffsetY: number;
   /**

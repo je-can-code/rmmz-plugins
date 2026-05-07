@@ -8,48 +8,48 @@
 interface Game_Action
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Action#initialize}.
-   * Written in: {@link Game_Action#initialize}.
-   * Read in: {@link Game_Action#isValid}, {@link Game_Action#makeTargets}, {@link Game_Action#prepare}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Action#initialize}.<br/>
+   * Written in: {@link Game_Action#initialize}.<br/>
+   * Read in: {@link Game_Action#isValid}, {@link Game_Action#makeTargets}, {@link Game_Action#prepare}.<br/>
    */
   _forcing: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Item`.
-   * Initialized in: none.
-   * Written in: {@link Game_Action#clear}.
-   * Read in: {@link Game_Action#isItem}, {@link Game_Action#isSkill}, {@link Game_Action#item}, {@link Game_Action#setItem}, {@link Game_Action#setItemObject}, {@link Game_Action#setSkill}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Item`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Action#clear}.<br/>
+   * Read in: {@link Game_Action#isItem}, {@link Game_Action#isSkill}, {@link Game_Action#item}, {@link Game_Action#setItem}, {@link Game_Action#setItemObject}, {@link Game_Action#setSkill}.<br/>
    */
   _item: Game_Item;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Action#initialize}.
-   * Written in: {@link Game_Action#initialize}, {@link Game_Action#setSubject}.
-   * Read in: {@link Game_Action#subject}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Action#initialize}.<br/>
+   * Written in: {@link Game_Action#initialize}, {@link Game_Action#setSubject}.<br/>
+   * Read in: {@link Game_Action#subject}.<br/>
    */
   _subjectActorId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Action#initialize}.
-   * Written in: {@link Game_Action#initialize}, {@link Game_Action#setSubject}.
-   * Read in: {@link Game_Action#subject}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Action#initialize}.<br/>
+   * Written in: {@link Game_Action#initialize}, {@link Game_Action#setSubject}.<br/>
+   * Read in: {@link Game_Action#subject}.<br/>
    */
   _subjectEnemyIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Action#clear}, {@link Game_Action#decideRandomTarget}, {@link Game_Action#evaluate}, {@link Game_Action#setTarget}.
-   * Read in: {@link Game_Action#targetsForAlive}, {@link Game_Action#targetsForDead}, {@link Game_Action#targetsForDeadAndAlive}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Action#clear}, {@link Game_Action#decideRandomTarget}, {@link Game_Action#evaluate}, {@link Game_Action#setTarget}.<br/>
+   * Read in: {@link Game_Action#targetsForAlive}, {@link Game_Action#targetsForDead}, {@link Game_Action#targetsForDeadAndAlive}.<br/>
    */
   _targetIndex: number;
   /**

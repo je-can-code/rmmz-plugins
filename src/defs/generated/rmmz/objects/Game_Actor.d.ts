@@ -8,178 +8,178 @@
 interface Game_Actor extends Game_Battler
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#clearActions}, {@link Game_Actor#initMembers}, {@link Game_Actor#selectNextCommand}, {@link Game_Actor#selectPreviousCommand}.
-   * Read in: {@link Game_Actor#inputtingAction}, {@link Game_Actor#selectNextCommand}, {@link Game_Actor#selectPreviousCommand}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#clearActions}, {@link Game_Actor#initMembers}, {@link Game_Actor#selectNextCommand}, {@link Game_Actor#selectPreviousCommand}.<br/>
+   * Read in: {@link Game_Actor#inputtingAction}, {@link Game_Actor#selectNextCommand}, {@link Game_Actor#selectPreviousCommand}.<br/>
    */
   _actionInputIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#actor}, {@link Game_Actor#actorId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#actor}, {@link Game_Actor#actorId}.<br/>
    */
   _actorId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setBattlerImage}.
-   * Read in: {@link Game_Actor#battlerName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setBattlerImage}.<br/>
+   * Read in: {@link Game_Actor#battlerName}.<br/>
    */
   _battlerName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setCharacterImage}.
-   * Read in: {@link Game_Actor#characterIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setCharacterImage}.<br/>
+   * Read in: {@link Game_Actor#characterIndex}.<br/>
    */
   _characterIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setCharacterImage}.
-   * Read in: {@link Game_Actor#characterName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setCharacterImage}.<br/>
+   * Read in: {@link Game_Actor#characterName}.<br/>
    */
   _characterName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#changeClass}, {@link Game_Actor#initMembers}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#changeClass}, {@link Game_Actor#changeExp}, {@link Game_Actor#currentClass}, {@link Game_Actor#currentExp}, {@link Game_Actor#initExp}, {@link Game_Actor#isClass}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#changeClass}, {@link Game_Actor#initMembers}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#changeClass}, {@link Game_Actor#changeExp}, {@link Game_Actor#currentClass}, {@link Game_Actor#currentExp}, {@link Game_Actor#initExp}, {@link Game_Actor#isClass}.<br/>
    */
   _classId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initEquips}, {@link Game_Actor#initMembers}.
-   * Read in: {@link Game_Actor#changeEquip}, {@link Game_Actor#discardEquip}, {@link Game_Actor#equips}, {@link Game_Actor#forceChangeEquip}, {@link Game_Actor#initEquips}, {@link Game_Actor#releaseUnequippableItems}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initEquips}, {@link Game_Actor#initMembers}.<br/>
+   * Read in: {@link Game_Actor#changeEquip}, {@link Game_Actor#discardEquip}, {@link Game_Actor#equips}, {@link Game_Actor#forceChangeEquip}, {@link Game_Actor#initEquips}, {@link Game_Actor#releaseUnequippableItems}.<br/>
    */
   _equips: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}.
-   * Read in: {@link Game_Actor#changeClass}, {@link Game_Actor#changeExp}, {@link Game_Actor#currentExp}, {@link Game_Actor#initExp}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}.<br/>
+   * Read in: {@link Game_Actor#changeClass}, {@link Game_Actor#changeExp}, {@link Game_Actor#currentExp}, {@link Game_Actor#initExp}.<br/>
    */
   _exp: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setFaceImage}.
-   * Read in: {@link Game_Actor#faceIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setFaceImage}.<br/>
+   * Read in: {@link Game_Actor#faceIndex}.<br/>
    */
   _faceIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setFaceImage}.
-   * Read in: {@link Game_Actor#faceName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initImages}, {@link Game_Actor#initMembers}, {@link Game_Actor#setFaceImage}.<br/>
+   * Read in: {@link Game_Actor#faceName}.<br/>
    */
   _faceName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Item`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}.
-   * Read in: {@link Game_Actor#lastBattleSkill}, {@link Game_Actor#setLastBattleSkill}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Item`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}.<br/>
+   * Read in: {@link Game_Actor#lastBattleSkill}, {@link Game_Actor#setLastBattleSkill}.<br/>
    */
   _lastBattleSkill: Game_Item;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setLastCommandSymbol}.
-   * Read in: {@link Game_Actor#lastCommandSymbol}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setLastCommandSymbol}.<br/>
+   * Read in: {@link Game_Actor#lastCommandSymbol}.<br/>
    */
   _lastCommandSymbol: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Item`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}.
-   * Read in: {@link Game_Actor#lastMenuSkill}, {@link Game_Actor#setLastMenuSkill}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Item`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}.<br/>
+   * Read in: {@link Game_Actor#lastMenuSkill}, {@link Game_Actor#setLastMenuSkill}.<br/>
    */
   _lastMenuSkill: Game_Item;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#changeClass}, {@link Game_Actor#initMembers}, {@link Game_Actor#levelDown}, {@link Game_Actor#levelUp}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#changeExp}, {@link Game_Actor#currentLevelExp}, {@link Game_Actor#displayLevelUp}, {@link Game_Actor#initSkills}, {@link Game_Actor#isMaxLevel}, {@link Game_Actor#levelUp}, {@link Game_Actor#nextLevelExp}, {@link Game_Actor#paramBase}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#changeClass}, {@link Game_Actor#initMembers}, {@link Game_Actor#levelDown}, {@link Game_Actor#levelUp}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#changeExp}, {@link Game_Actor#currentLevelExp}, {@link Game_Actor#displayLevelUp}, {@link Game_Actor#initSkills}, {@link Game_Actor#isMaxLevel}, {@link Game_Actor#levelUp}, {@link Game_Actor#nextLevelExp}, {@link Game_Actor#paramBase}.<br/>
    */
   _level: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setName}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#displayLevelUp}, {@link Game_Actor#name}, {@link Game_Actor#showAddedStates}, {@link Game_Actor#showRemovedStates}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setName}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#displayLevelUp}, {@link Game_Actor#name}, {@link Game_Actor#showAddedStates}, {@link Game_Actor#showRemovedStates}.<br/>
    */
   _name: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setNickname}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#nickname}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#setNickname}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#nickname}.<br/>
    */
   _nickname: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#setProfile}, {@link Game_Actor#setup}.
-   * Read in: {@link Game_Actor#profile}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#setProfile}, {@link Game_Actor#setup}.<br/>
+   * Read in: {@link Game_Actor#profile}.<br/>
    */
   _profile: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#initSkills}.
-   * Read in: {@link Game_Actor#forgetSkill}, {@link Game_Actor#isLearnedSkill}, {@link Game_Actor#learnSkill}, {@link Game_Actor#skills}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_Actor#learnSkill}.
-   * - `sort()`: {@link Game_Actor#learnSkill}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#initMembers}, {@link Game_Actor#initSkills}.<br/>
+   * Read in: {@link Game_Actor#forgetSkill}, {@link Game_Actor#isLearnedSkill}, {@link Game_Actor#learnSkill}, {@link Game_Actor#skills}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_Actor#learnSkill}.<br/>
+   * - `sort()`: {@link Game_Actor#learnSkill}.<br/>
    */
   _skills: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Actor#clearStates}.
-   * Read in: {@link Game_Actor#eraseState}, {@link Game_Actor#resetStateCounts}, {@link Game_Actor#updateStateSteps}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Actor#clearStates}.<br/>
+   * Read in: {@link Game_Actor#eraseState}, {@link Game_Actor#resetStateCounts}, {@link Game_Actor#updateStateSteps}.<br/>
    */
   _stateSteps: object;
   /**

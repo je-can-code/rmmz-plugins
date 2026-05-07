@@ -8,71 +8,71 @@
 interface Weather extends PIXI.Container
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `ScreenSprite`.
-   * Initialized in: none.
-   * Written in: {@link Weather#_createDimmer}.
-   * Read in: {@link Weather#_createDimmer}, {@link Weather#_updateDimmer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `ScreenSprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Weather#_createDimmer}.<br/>
+   * Read in: {@link Weather#_createDimmer}, {@link Weather#_updateDimmer}.<br/>
    */
   _dimmerSprite: ScreenSprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Weather#initialize}.
-   * Written in: {@link Weather#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Weather#initialize}.<br/>
+   * Written in: {@link Weather#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _height: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Bitmap`.
-   * Initialized in: none.
-   * Written in: {@link Weather#_createBitmaps}.
-   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateRainSprite}, {@link Weather#destroy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Bitmap`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Weather#_createBitmaps}.<br/>
+   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateRainSprite}, {@link Weather#destroy}.<br/>
    */
   _rainBitmap: Bitmap;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Bitmap`.
-   * Initialized in: none.
-   * Written in: {@link Weather#_createBitmaps}.
-   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateSnowSprite}, {@link Weather#destroy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Bitmap`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Weather#_createBitmaps}.<br/>
+   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateSnowSprite}, {@link Weather#destroy}.<br/>
    */
   _snowBitmap: Bitmap;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Weather#initialize}.
-   * Written in: {@link Weather#initialize}.
-   * Read in: {@link Weather#_addSprite}, {@link Weather#_removeSprite}, {@link Weather#_updateAllSprites}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Weather#_updateAllSprites}.
-   * - `pop()`: {@link Weather#_removeSprite}.
-   * - `push()`: {@link Weather#_addSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Weather#initialize}.<br/>
+   * Written in: {@link Weather#initialize}.<br/>
+   * Read in: {@link Weather#_addSprite}, {@link Weather#_removeSprite}, {@link Weather#_updateAllSprites}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Weather#_updateAllSprites}.<br/>
+   * - `pop()`: {@link Weather#_removeSprite}.<br/>
+   * - `push()`: {@link Weather#_addSprite}.<br/>
    */
   _sprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Bitmap`.
-   * Initialized in: none.
-   * Written in: {@link Weather#_createBitmaps}.
-   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateStormSprite}, {@link Weather#destroy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Bitmap`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Weather#_createBitmaps}.<br/>
+   * Read in: {@link Weather#_createBitmaps}, {@link Weather#_updateStormSprite}, {@link Weather#destroy}.<br/>
    */
   _stormBitmap: Bitmap;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Weather#initialize}.
-   * Written in: {@link Weather#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Weather#initialize}.<br/>
+   * Written in: {@link Weather#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _width: unknown;
   /**

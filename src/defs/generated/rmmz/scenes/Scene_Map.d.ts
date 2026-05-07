@@ -8,93 +8,93 @@
 interface Scene_Map extends Scene_Message
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Map#initialize}.
-   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#startEncounterEffect}, {@link Scene_Map#updateEncounterEffect}.
-   * Read in: {@link Scene_Map#isBusy}, {@link Scene_Map#updateEncounterEffect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Map#initialize}.<br/>
+   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#startEncounterEffect}, {@link Scene_Map#updateEncounterEffect}.<br/>
+   * Read in: {@link Scene_Map#isBusy}, {@link Scene_Map#updateEncounterEffect}.<br/>
    */
   _encounterEffectDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Map#create}.
-   * Read in: {@link Scene_Map#shouldAutosave}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Map#create}.<br/>
+   * Read in: {@link Scene_Map#shouldAutosave}.<br/>
    */
   _lastMapWasNull: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Map#initialize}.
-   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#isReady}.
-   * Read in: {@link Scene_Map#isReady}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Map#initialize}.<br/>
+   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#isReady}.<br/>
+   * Read in: {@link Scene_Map#isReady}.<br/>
    */
   _mapLoaded: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_MapName`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Map#createMapNameWindow}.
-   * Read in: {@link Scene_Map#callMenu}, {@link Scene_Map#createMapNameWindow}, {@link Scene_Map#launchBattle}, {@link Scene_Map#onTransferEnd}, {@link Scene_Map#stop}, {@link Scene_Map#terminate}, {@link Scene_Map#updateMapNameWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_MapName`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Map#createMapNameWindow}.<br/>
+   * Read in: {@link Scene_Map#callMenu}, {@link Scene_Map#createMapNameWindow}, {@link Scene_Map#launchBattle}, {@link Scene_Map#onTransferEnd}, {@link Scene_Map#stop}, {@link Scene_Map#terminate}, {@link Scene_Map#updateMapNameWindow}.<br/>
    */
   _mapNameWindow: Window_MapName;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Map#createMenuButton}.
-   * Read in: {@link Scene_Map#createMenuButton}, {@link Scene_Map#hideMenuButton}, {@link Scene_Map#isAnyButtonPressed}, {@link Scene_Map#updateMenuButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Map#createMenuButton}.<br/>
+   * Read in: {@link Scene_Map#createMenuButton}, {@link Scene_Map#hideMenuButton}, {@link Scene_Map#isAnyButtonPressed}, {@link Scene_Map#updateMenuButton}.<br/>
    */
   _menuButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Map#initialize}.
-   * Written in: {@link Scene_Map#hideMenuButton}, {@link Scene_Map#initialize}, {@link Scene_Map#updateMenuButton}.
-   * Read in: {@link Scene_Map#updateMenuButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Map#initialize}.<br/>
+   * Written in: {@link Scene_Map#hideMenuButton}, {@link Scene_Map#initialize}, {@link Scene_Map#updateMenuButton}.<br/>
+   * Read in: {@link Scene_Map#updateMenuButton}.<br/>
    */
   _menuEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Spriteset_Map`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Map#createSpriteset}.
-   * Read in: {@link Scene_Map#createSpriteset}, {@link Scene_Map#startEncounterEffect}, {@link Scene_Map#terminate}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Spriteset_Map`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Map#createSpriteset}.<br/>
+   * Read in: {@link Scene_Map#createSpriteset}, {@link Scene_Map#startEncounterEffect}, {@link Scene_Map#terminate}.<br/>
    */
   _spriteset: Spriteset_Map;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Map#initialize}.
-   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#processMapTouch}, {@link Scene_Map#updateDestination}.
-   * Read in: {@link Scene_Map#processMapTouch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Map#initialize}.<br/>
+   * Written in: {@link Scene_Map#initialize}, {@link Scene_Map#processMapTouch}, {@link Scene_Map#updateDestination}.<br/>
+   * Read in: {@link Scene_Map#processMapTouch}.<br/>
    */
   _touchCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Map#create}.
-   * Read in: {@link Scene_Map#create}, {@link Scene_Map#onMapLoaded}, {@link Scene_Map#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Map#create}.<br/>
+   * Read in: {@link Scene_Map#create}, {@link Scene_Map#onMapLoaded}, {@link Scene_Map#start}.<br/>
    */
   _transfer: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Map#initialize}.
-   * Written in: {@link Scene_Map#callMenu}, {@link Scene_Map#initialize}, {@link Scene_Map#updateWaitCount}.
-   * Read in: {@link Scene_Map#isBusy}, {@link Scene_Map#updateWaitCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Map#initialize}.<br/>
+   * Written in: {@link Scene_Map#callMenu}, {@link Scene_Map#initialize}, {@link Scene_Map#updateWaitCount}.<br/>
+   * Read in: {@link Scene_Map#isBusy}, {@link Scene_Map#updateWaitCount}.<br/>
    */
   _waitCount: number;
   /**

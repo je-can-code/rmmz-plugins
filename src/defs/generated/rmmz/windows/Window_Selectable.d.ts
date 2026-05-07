@@ -8,69 +8,69 @@
 interface Window_Selectable extends Window_Scrollable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}.
-   * Read in: {@link Window_Selectable#isOkTriggered}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}.<br/>
+   * Read in: {@link Window_Selectable#isOkTriggered}.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setCursorAll}.
-   * Read in: {@link Window_Selectable#cursorAll}, {@link Window_Selectable#ensureCursorVisible}, {@link Window_Selectable#isCursorMovable}, {@link Window_Selectable#isTouchOkEnabled}, {@link Window_Selectable#refreshCursor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setCursorAll}.<br/>
+   * Read in: {@link Window_Selectable#cursorAll}, {@link Window_Selectable#ensureCursorVisible}, {@link Window_Selectable#isCursorMovable}, {@link Window_Selectable#isTouchOkEnabled}, {@link Window_Selectable#refreshCursor}.<br/>
    */
   _cursorAll: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setCursorFixed}.
-   * Read in: {@link Window_Selectable#cursorFixed}, {@link Window_Selectable#isCursorMovable}, {@link Window_Selectable#isTouchOkEnabled}, {@link Window_Selectable#onTouchOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setCursorFixed}.<br/>
+   * Read in: {@link Window_Selectable#cursorFixed}, {@link Window_Selectable#isCursorMovable}, {@link Window_Selectable#isTouchOkEnabled}, {@link Window_Selectable#onTouchOk}.<br/>
    */
   _cursorFixed: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#onTouchSelect}.
-   * Read in: {@link Window_Selectable#isTouchOkEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#onTouchSelect}.<br/>
+   * Read in: {@link Window_Selectable#isTouchOkEnabled}.<br/>
    */
   _doubleTouch: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}.
-   * Read in: {@link Window_Selectable#callHandler}, {@link Window_Selectable#isHandled}, {@link Window_Selectable#setHandler}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}.<br/>
+   * Read in: {@link Window_Selectable#callHandler}, {@link Window_Selectable#isHandled}, {@link Window_Selectable#setHandler}.<br/>
    */
   _handlers: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setHelpWindow}.
-   * Read in: {@link Window_Selectable#callUpdateHelp}, {@link Window_Selectable#hideHelpWindow}, {@link Window_Selectable#setHelpWindowItem}, {@link Window_Selectable#showHelpWindow}, {@link Window_Selectable#updateHelp}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link Window_Selectable#updateHelp}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setHelpWindow}.<br/>
+   * Read in: {@link Window_Selectable#callUpdateHelp}, {@link Window_Selectable#hideHelpWindow}, {@link Window_Selectable#setHelpWindowItem}, {@link Window_Selectable#showHelpWindow}, {@link Window_Selectable#updateHelp}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link Window_Selectable#updateHelp}.<br/>
    */
   _helpWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_Selectable#initialize}.
-   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#select}.
-   * Read in: {@link Window_Selectable#index}, {@link Window_Selectable#reselect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_Selectable#initialize}.<br/>
+   * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#select}.<br/>
+   * Read in: {@link Window_Selectable#index}, {@link Window_Selectable#reselect}.<br/>
    */
   _index: number;
   /**

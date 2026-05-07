@@ -8,66 +8,66 @@
 interface Scene_MenuBase extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#updateActor}.
-   * Read in: {@link Scene_MenuBase#actor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#updateActor}.<br/>
+   * Read in: {@link Scene_MenuBase#actor}.<br/>
    */
   _actor: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `PIXI.filters.BlurFilter`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createBackground}.
-   * Read in: {@link Scene_MenuBase#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `PIXI.filters.BlurFilter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createBackground}.<br/>
+   * Read in: {@link Scene_MenuBase#createBackground}.<br/>
    */
   _backgroundFilter: PIXI.filters.BlurFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createBackground}.
-   * Read in: {@link Scene_MenuBase#createBackground}, {@link Scene_MenuBase#setBackgroundOpacity}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createBackground}.<br/>
+   * Read in: {@link Scene_MenuBase#createBackground}, {@link Scene_MenuBase#setBackgroundOpacity}.<br/>
    */
   _backgroundSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createCancelButton}.
-   * Read in: {@link Scene_MenuBase#createCancelButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createCancelButton}.<br/>
+   * Read in: {@link Scene_MenuBase#createCancelButton}.<br/>
    */
   _cancelButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Help`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createHelpWindow}.
-   * Read in: {@link Scene_MenuBase#createHelpWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Help`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createHelpWindow}.<br/>
+   * Read in: {@link Scene_MenuBase#createHelpWindow}.<br/>
    */
   _helpWindow: Window_Help;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createPageButtons}.
-   * Read in: {@link Scene_MenuBase#createPageButtons}, {@link Scene_MenuBase#updatePageButtons}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createPageButtons}.<br/>
+   * Read in: {@link Scene_MenuBase#createPageButtons}, {@link Scene_MenuBase#updatePageButtons}.<br/>
    */
   _pagedownButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Scene_MenuBase#createPageButtons}.
-   * Read in: {@link Scene_MenuBase#createPageButtons}, {@link Scene_MenuBase#updatePageButtons}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_MenuBase#createPageButtons}.<br/>
+   * Read in: {@link Scene_MenuBase#createPageButtons}, {@link Scene_MenuBase#updatePageButtons}.<br/>
    */
   _pageupButton: Sprite_Button;
   /**

@@ -8,212 +8,212 @@
 interface BattleManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Action`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.
-   * Read in: {@link BattleManager#checkSubstitute}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#startAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Action`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.<br/>
+   * Read in: {@link BattleManager#checkSubstitute}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#startAction}.<br/>
    */
   _action: null | Game_Action;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeActionOrders}.
-   * Read in: {@link BattleManager#forceAction}, {@link BattleManager#getNextSubject}, {@link BattleManager#updateTpbBattler}.
-   *
-   * Consumed by:
-   * - `push()`: {@link BattleManager#updateTpbBattler}.
-   * - `shift()`: {@link BattleManager#getNextSubject}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeActionOrders}.<br/>
+   * Read in: {@link BattleManager#forceAction}, {@link BattleManager#getNextSubject}, {@link BattleManager#updateTpbBattler}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link BattleManager#updateTpbBattler}.<br/>
+   * - `shift()`: {@link BattleManager#getNextSubject}.<br/>
    */
   _actionBattlers: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#forceAction}, {@link BattleManager#initMembers}, {@link BattleManager#processForcedAction}.
-   * Read in: {@link BattleManager#isActionForced}, {@link BattleManager#processForcedAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#forceAction}, {@link BattleManager#initMembers}, {@link BattleManager#processForcedAction}.<br/>
+   * Read in: {@link BattleManager#isActionForced}, {@link BattleManager#processForcedAction}.<br/>
    */
   _actionForcedBattler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setBattleTest}.
-   * Read in: {@link BattleManager#isBattleTest}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setBattleTest}.<br/>
+   * Read in: {@link BattleManager#isBattleTest}.<br/>
    */
   _battleTest: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setup}.
-   * Read in: {@link BattleManager#canEscape}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setup}.<br/>
+   * Read in: {@link BattleManager#canEscape}.<br/>
    */
   _canEscape: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setup}.
-   * Read in: {@link BattleManager#canLose}, {@link BattleManager#processDefeat}, {@link BattleManager#updateBattleEnd}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setup}.<br/>
+   * Read in: {@link BattleManager#canLose}, {@link BattleManager#processDefeat}, {@link BattleManager#updateBattleEnd}.<br/>
    */
   _canLose: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#changeCurrentActor}, {@link BattleManager#checkTpbInputClose}, {@link BattleManager#initMembers}, {@link BattleManager#startInput}.
-   * Read in: {@link BattleManager#actor}, {@link BattleManager#cancelActorInput}, {@link BattleManager#changeCurrentActor}, {@link BattleManager#finishActorInput}, {@link BattleManager#inputtingAction}, {@link BattleManager#needsActorInputCancel}, {@link BattleManager#selectNextActor}, {@link BattleManager#selectNextCommand}, {@link BattleManager#selectPreviousActor}, {@link BattleManager#selectPreviousCommand}, {@link BattleManager#startActorInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#changeCurrentActor}, {@link BattleManager#checkTpbInputClose}, {@link BattleManager#initMembers}, {@link BattleManager#startInput}.<br/>
+   * Read in: {@link BattleManager#actor}, {@link BattleManager#cancelActorInput}, {@link BattleManager#changeCurrentActor}, {@link BattleManager#finishActorInput}, {@link BattleManager#inputtingAction}, {@link BattleManager#needsActorInputCancel}, {@link BattleManager#selectNextActor}, {@link BattleManager#selectNextCommand}, {@link BattleManager#selectPreviousActor}, {@link BattleManager#selectPreviousCommand}, {@link BattleManager#startActorInput}.<br/>
    */
   _currentActor: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeEscapeRatio}, {@link BattleManager#onEscapeFailure}.
-   * Read in: {@link BattleManager#processEscape}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeEscapeRatio}, {@link BattleManager#onEscapeFailure}.<br/>
+   * Read in: {@link BattleManager#processEscape}.<br/>
    */
   _escapeRatio: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#onEscapeSuccess}, {@link BattleManager#processPartyEscape}.
-   * Read in: {@link BattleManager#endBattle}, {@link BattleManager#isEscaped}, {@link BattleManager#updateBattleEnd}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#onEscapeSuccess}, {@link BattleManager#processPartyEscape}.<br/>
+   * Read in: {@link BattleManager#endBattle}, {@link BattleManager#isEscaped}, {@link BattleManager#updateBattleEnd}.<br/>
    */
   _escaped: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | () => void`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setEventCallback}.
-   * Read in: {@link BattleManager#endBattle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | () => void`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setEventCallback}.<br/>
+   * Read in: {@link BattleManager#endBattle}.<br/>
    */
   _eventCallback: null | () => void;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#checkTpbInputClose}, {@link BattleManager#checkTpbInputOpen}, {@link BattleManager#endBattle}, {@link BattleManager#initMembers}, {@link BattleManager#selectPreviousActor}, {@link BattleManager#startActorInput}, {@link BattleManager#startInput}, {@link BattleManager#startTurn}.
-   * Read in: {@link BattleManager#isInputting}, {@link BattleManager#updateTpbInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#checkTpbInputClose}, {@link BattleManager#checkTpbInputOpen}, {@link BattleManager#endBattle}, {@link BattleManager#initMembers}, {@link BattleManager#selectPreviousActor}, {@link BattleManager#startActorInput}, {@link BattleManager#startInput}, {@link BattleManager#startTurn}.<br/>
+   * Read in: {@link BattleManager#isInputting}, {@link BattleManager#updateTpbInput}.<br/>
    */
   _inputting: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_BattleLog`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setLogWindow}.
-   * Read in: {@link BattleManager#applySubstitute}, {@link BattleManager#displayBattlerStatus}, {@link BattleManager#endAction}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeCounterAttack}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#isBusy}, {@link BattleManager#processAbort}, {@link BattleManager#startAction}, {@link BattleManager#startTurn}.
-   *
-   * Consumed by:
-   * - `clear()`: {@link BattleManager#processAbort}.
-   * - `push()`: {@link BattleManager#invokeAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_BattleLog`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setLogWindow}.<br/>
+   * Read in: {@link BattleManager#applySubstitute}, {@link BattleManager#displayBattlerStatus}, {@link BattleManager#endAction}, {@link BattleManager#invokeAction}, {@link BattleManager#invokeCounterAttack}, {@link BattleManager#invokeMagicReflection}, {@link BattleManager#invokeNormalAction}, {@link BattleManager#isBusy}, {@link BattleManager#processAbort}, {@link BattleManager#startAction}, {@link BattleManager#startTurn}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `clear()`: {@link BattleManager#processAbort}.<br/>
+   * - `push()`: {@link BattleManager#invokeAction}.<br/>
    */
   _logWindow: null | Window_BattleLog;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#saveBgmAndBgs}.
-   * Read in: {@link BattleManager#replayBgmAndBgs}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#saveBgmAndBgs}.<br/>
+   * Read in: {@link BattleManager#replayBgmAndBgs}.<br/>
    */
   _mapBgm: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#saveBgmAndBgs}.
-   * Read in: {@link BattleManager#replayBgmAndBgs}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#saveBgmAndBgs}.<br/>
+   * Read in: {@link BattleManager#replayBgmAndBgs}.<br/>
    */
   _mapBgs: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#abort}, {@link BattleManager#endAction}, {@link BattleManager#endBattle}, {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#startAction}, {@link BattleManager#startBattle}, {@link BattleManager#startInput}, {@link BattleManager#startTurn}, {@link BattleManager#updateBattleEnd}, {@link BattleManager#updateStart}, {@link BattleManager#updateTurnEnd}.
-   * Read in: {@link BattleManager#checkBattleEnd}, {@link BattleManager#isAborting}, {@link BattleManager#isBattleEnd}, {@link BattleManager#isInTurn}, {@link BattleManager#isTpbMainPhase}, {@link BattleManager#isTurnEnd}, {@link BattleManager#updateEvent}, {@link BattleManager#updatePhase}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#abort}, {@link BattleManager#endAction}, {@link BattleManager#endBattle}, {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#startAction}, {@link BattleManager#startBattle}, {@link BattleManager#startInput}, {@link BattleManager#startTurn}, {@link BattleManager#updateBattleEnd}, {@link BattleManager#updateStart}, {@link BattleManager#updateTurnEnd}.<br/>
+   * Read in: {@link BattleManager#checkBattleEnd}, {@link BattleManager#isAborting}, {@link BattleManager#isBattleEnd}, {@link BattleManager#isInTurn}, {@link BattleManager#isTpbMainPhase}, {@link BattleManager#isTurnEnd}, {@link BattleManager#updateEvent}, {@link BattleManager#updatePhase}.<br/>
    */
   _phase: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#onEncounter}.
-   * Read in: {@link BattleManager#displayStartMessages}, {@link BattleManager#makeActionOrders}, {@link BattleManager#onEncounter}, {@link BattleManager#processEscape}, {@link BattleManager#startBattle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#onEncounter}.<br/>
+   * Read in: {@link BattleManager#displayStartMessages}, {@link BattleManager#makeActionOrders}, {@link BattleManager#onEncounter}, {@link BattleManager#processEscape}, {@link BattleManager#startBattle}.<br/>
    */
   _preemptive: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeRewards}.
-   * Read in: {@link BattleManager#displayDropItems}, {@link BattleManager#displayExp}, {@link BattleManager#displayGold}, {@link BattleManager#gainDropItems}, {@link BattleManager#gainExp}, {@link BattleManager#gainGold}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#makeRewards}.<br/>
+   * Read in: {@link BattleManager#displayDropItems}, {@link BattleManager#displayExp}, {@link BattleManager#displayGold}, {@link BattleManager#gainDropItems}, {@link BattleManager#gainExp}, {@link BattleManager#gainGold}.<br/>
    */
   _rewards: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Spriteset_Battle`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setSpriteset}.
-   * Read in: {@link BattleManager#isBusy}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Spriteset_Battle`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#setSpriteset}.<br/>
+   * Read in: {@link BattleManager#isBusy}.<br/>
    */
   _spriteset: null | Spriteset_Battle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#endAction}, {@link BattleManager#initMembers}, {@link BattleManager#processForcedAction}, {@link BattleManager#processTurn}, {@link BattleManager#updateTurn}.
-   * Read in: {@link BattleManager#endAction}, {@link BattleManager#processForcedAction}, {@link BattleManager#processTurn}, {@link BattleManager#startAction}, {@link BattleManager#updateAction}, {@link BattleManager#updateTurn}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#endAction}, {@link BattleManager#initMembers}, {@link BattleManager#processForcedAction}, {@link BattleManager#processTurn}, {@link BattleManager#updateTurn}.<br/>
+   * Read in: {@link BattleManager#endAction}, {@link BattleManager#processForcedAction}, {@link BattleManager#processTurn}, {@link BattleManager#startAction}, {@link BattleManager#updateAction}, {@link BattleManager#updateTurn}.<br/>
    */
   _subject: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#onEncounter}.
-   * Read in: {@link BattleManager#displayStartMessages}, {@link BattleManager#makeActionOrders}, {@link BattleManager#startBattle}, {@link BattleManager#startInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#endTurn}, {@link BattleManager#initMembers}, {@link BattleManager#onEncounter}.<br/>
+   * Read in: {@link BattleManager#displayStartMessages}, {@link BattleManager#makeActionOrders}, {@link BattleManager#startBattle}, {@link BattleManager#startInput}.<br/>
    */
   _surprise: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[] | Game_Battler[]`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.
-   * Read in: {@link BattleManager#updateAction}.
-   *
-   * Consumed by:
-   * - `shift()`: {@link BattleManager#updateAction}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[] | Game_Battler[]`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#initMembers}, {@link BattleManager#startAction}.<br/>
+   * Read in: {@link BattleManager#updateAction}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `shift()`: {@link BattleManager#updateAction}.<br/>
    */
   _targets: unknown[] | Game_Battler[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link BattleManager#initMembers}.
-   * Written in: {@link BattleManager#checkTpbInputOpen}, {@link BattleManager#initMembers}.
-   * Read in: {@link BattleManager#checkTpbInputOpen}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link BattleManager#initMembers}.<br/>
+   * Written in: {@link BattleManager#checkTpbInputOpen}, {@link BattleManager#initMembers}.<br/>
+   * Read in: {@link BattleManager#checkTpbInputOpen}.<br/>
    */
   _tpbNeedsPartyCommand: boolean;
 }

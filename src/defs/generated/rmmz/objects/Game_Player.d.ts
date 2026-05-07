@@ -8,120 +8,120 @@
 interface Game_Player extends Game_Character
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#updateDashing}.
-   * Read in: {@link Game_Player#isDashing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#updateDashing}.<br/>
+   * Read in: {@link Game_Player#isDashing}.<br/>
    */
   _dashing: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#makeEncounterCount}, {@link Game_Player#updateEncounterCount}.
-   * Read in: {@link Game_Player#executeEncounter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#makeEncounterCount}, {@link Game_Player#updateEncounterCount}.<br/>
+   * Read in: {@link Game_Player#executeEncounter}.<br/>
    */
   _encounterCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#fadeType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#fadeType}.<br/>
    */
   _fadeType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Followers`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#initMembers}.
-   * Read in: {@link Game_Player#areFollowersGathered}, {@link Game_Player#areFollowersGathering}, {@link Game_Player#followers}, {@link Game_Player#gatherFollowers}, {@link Game_Player#getOffVehicle}, {@link Game_Player#hideFollowers}, {@link Game_Player#isCollided}, {@link Game_Player#jump}, {@link Game_Player#locate}, {@link Game_Player#moveDiagonally}, {@link Game_Player#moveStraight}, {@link Game_Player#refresh}, {@link Game_Player#showFollowers}, {@link Game_Player#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Followers`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#initMembers}.<br/>
+   * Read in: {@link Game_Player#areFollowersGathered}, {@link Game_Player#areFollowersGathering}, {@link Game_Player#followers}, {@link Game_Player#gatherFollowers}, {@link Game_Player#getOffVehicle}, {@link Game_Player#hideFollowers}, {@link Game_Player#isCollided}, {@link Game_Player#jump}, {@link Game_Player#locate}, {@link Game_Player#moveDiagonally}, {@link Game_Player#moveStraight}, {@link Game_Player#refresh}, {@link Game_Player#showFollowers}, {@link Game_Player#update}.<br/>
    */
   _followers: Game_Followers;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#performTransfer}, {@link Game_Player#requestMapReload}.
-   * Read in: {@link Game_Player#performTransfer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#initMembers}, {@link Game_Player#performTransfer}, {@link Game_Player#requestMapReload}.<br/>
+   * Read in: {@link Game_Player#performTransfer}.<br/>
    */
   _needsMapReload: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#performTransfer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#performTransfer}.<br/>
    */
   _newDirection: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#newMapId}, {@link Game_Player#performTransfer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#newMapId}, {@link Game_Player#performTransfer}.<br/>
    */
   _newMapId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#performTransfer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#performTransfer}.<br/>
    */
   _newX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#performTransfer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#performTransfer}.<br/>
    */
   _newY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.
-   * Read in: {@link Game_Player#isTransferring}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#clearTransferInfo}, {@link Game_Player#initMembers}, {@link Game_Player#reserveTransfer}.<br/>
+   * Read in: {@link Game_Player#isTransferring}.<br/>
    */
   _transferring: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#getOffVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOff}.
-   * Read in: {@link Game_Player#canMove}, {@link Game_Player#getOffVehicle}, {@link Game_Player#isStopping}, {@link Game_Player#updateVehicle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#getOffVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOff}.<br/>
+   * Read in: {@link Game_Player#canMove}, {@link Game_Player#getOffVehicle}, {@link Game_Player#isStopping}, {@link Game_Player#updateVehicle}.<br/>
    */
   _vehicleGettingOff: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#getOnVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOn}.
-   * Read in: {@link Game_Player#canMove}, {@link Game_Player#getOnVehicle}, {@link Game_Player#isStopping}, {@link Game_Player#updateVehicle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#getOnVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOn}.<br/>
+   * Read in: {@link Game_Player#canMove}, {@link Game_Player#getOnVehicle}, {@link Game_Player#isStopping}, {@link Game_Player#updateVehicle}.<br/>
    */
   _vehicleGettingOn: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Player#getOnVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOff}.
-   * Read in: {@link Game_Player#isInAirship}, {@link Game_Player#isInBoat}, {@link Game_Player#isInShip}, {@link Game_Player#isNormal}, {@link Game_Player#vehicle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Player#getOnVehicle}, {@link Game_Player#initMembers}, {@link Game_Player#updateVehicleGetOff}.<br/>
+   * Read in: {@link Game_Player#isInAirship}, {@link Game_Player#isInBoat}, {@link Game_Player#isInShip}, {@link Game_Player#isNormal}, {@link Game_Player#vehicle}.<br/>
    */
   _vehicleType: string;
   /**

@@ -8,39 +8,39 @@
 interface Scene_Equip extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_EquipCommand`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Equip#createCommandWindow}.
-   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createCommandWindow}, {@link Scene_Equip#onActorChange}, {@link Scene_Equip#onSlotCancel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_EquipCommand`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Equip#createCommandWindow}.<br/>
+   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createCommandWindow}, {@link Scene_Equip#onActorChange}, {@link Scene_Equip#onSlotCancel}.<br/>
    */
   _commandWindow: Window_EquipCommand;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_EquipItem`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Equip#createItemWindow}.
-   * Read in: {@link Scene_Equip#arePageButtonsEnabled}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#executeEquipChange}, {@link Scene_Equip#hideItemWindow}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#onSlotOk}, {@link Scene_Equip#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_EquipItem`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Equip#createItemWindow}.<br/>
+   * Read in: {@link Scene_Equip#arePageButtonsEnabled}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#executeEquipChange}, {@link Scene_Equip#hideItemWindow}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#onSlotOk}, {@link Scene_Equip#refreshActor}.<br/>
    */
   _itemWindow: Window_EquipItem;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_EquipSlot`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Equip#createSlotWindow}.
-   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandEquip}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#createSlotWindow}, {@link Scene_Equip#executeEquipChange}, {@link Scene_Equip#hideItemWindow}, {@link Scene_Equip#onActorChange}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#onSlotCancel}, {@link Scene_Equip#onSlotOk}, {@link Scene_Equip#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_EquipSlot`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Equip#createSlotWindow}.<br/>
+   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandEquip}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#createSlotWindow}, {@link Scene_Equip#executeEquipChange}, {@link Scene_Equip#hideItemWindow}, {@link Scene_Equip#onActorChange}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#onSlotCancel}, {@link Scene_Equip#onSlotOk}, {@link Scene_Equip#refreshActor}.<br/>
    */
   _slotWindow: Window_EquipSlot;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_EquipStatus`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Equip#createStatusWindow}.
-   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#createSlotWindow}, {@link Scene_Equip#createStatusWindow}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_EquipStatus`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Equip#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Equip#commandClear}, {@link Scene_Equip#commandOptimize}, {@link Scene_Equip#createItemWindow}, {@link Scene_Equip#createSlotWindow}, {@link Scene_Equip#createStatusWindow}, {@link Scene_Equip#onItemOk}, {@link Scene_Equip#refreshActor}.<br/>
    */
   _statusWindow: Window_EquipStatus;
   /**

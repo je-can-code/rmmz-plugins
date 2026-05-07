@@ -8,12 +8,12 @@
 interface Game_SelfSwitches
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_SelfSwitches#clear}.
-   * Read in: {@link Game_SelfSwitches#setValue}, {@link Game_SelfSwitches#value}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_SelfSwitches#clear}.<br/>
+   * Read in: {@link Game_SelfSwitches#setValue}, {@link Game_SelfSwitches#value}.<br/>
    */
   _data: object;
   /**

@@ -8,48 +8,48 @@
 interface Scene_Name extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Name#create}.
-   * Read in: {@link Scene_Name#createEditWindow}, {@link Scene_Name#onInputOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Name#create}.<br/>
+   * Read in: {@link Scene_Name#createEditWindow}, {@link Scene_Name#onInputOk}.<br/>
    */
   _actor: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Name#prepare}.
-   * Read in: {@link Scene_Name#create}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Name#prepare}.<br/>
+   * Read in: {@link Scene_Name#create}.<br/>
    */
   _actorId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_NameEdit`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Name#createEditWindow}.
-   * Read in: {@link Scene_Name#createEditWindow}, {@link Scene_Name#createInputWindow}, {@link Scene_Name#inputWindowRect}, {@link Scene_Name#onInputOk}, {@link Scene_Name#start}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_NameEdit`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Name#createEditWindow}.<br/>
+   * Read in: {@link Scene_Name#createEditWindow}, {@link Scene_Name#createInputWindow}, {@link Scene_Name#inputWindowRect}, {@link Scene_Name#onInputOk}, {@link Scene_Name#start}.<br/>
    */
   _editWindow: Window_NameEdit;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_NameInput`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Name#createInputWindow}.
-   * Read in: {@link Scene_Name#createInputWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_NameInput`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Name#createInputWindow}.<br/>
+   * Read in: {@link Scene_Name#createInputWindow}.<br/>
    */
   _inputWindow: Window_NameInput;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Name#prepare}.
-   * Read in: {@link Scene_Name#createEditWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Name#prepare}.<br/>
+   * Read in: {@link Scene_Name#createEditWindow}.<br/>
    */
   _maxLength: number;
   /**

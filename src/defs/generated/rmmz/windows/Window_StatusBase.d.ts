@@ -8,12 +8,12 @@
 interface Window_StatusBase extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: {@link Window_StatusBase#initialize}.
-   * Written in: {@link Window_StatusBase#initialize}.
-   * Read in: {@link Window_StatusBase#createInnerSprite}, {@link Window_StatusBase#hideAdditionalSprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: {@link Window_StatusBase#initialize}.<br/>
+   * Written in: {@link Window_StatusBase#initialize}.<br/>
+   * Read in: {@link Window_StatusBase#createInnerSprite}, {@link Window_StatusBase#hideAdditionalSprites}.<br/>
    */
   _additionalSprites: object;
   /**

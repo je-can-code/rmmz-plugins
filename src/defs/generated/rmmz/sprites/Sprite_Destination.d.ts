@@ -8,12 +8,12 @@
 interface Sprite_Destination extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Destination#initialize}.
-   * Written in: {@link Sprite_Destination#initialize}, {@link Sprite_Destination#update}, {@link Sprite_Destination#updateAnimation}.
-   * Read in: {@link Sprite_Destination#updateAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Destination#initialize}.<br/>
+   * Written in: {@link Sprite_Destination#initialize}, {@link Sprite_Destination#update}, {@link Sprite_Destination#updateAnimation}.<br/>
+   * Read in: {@link Sprite_Destination#updateAnimation}.<br/>
    */
   _frameCount: number;
   /**

@@ -8,21 +8,21 @@
 interface Window_MenuCommand extends Window_Command
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_MenuCommand#initialize}.
-   * Written in: {@link Window_MenuCommand#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_MenuCommand#initialize}.<br/>
+   * Written in: {@link Window_MenuCommand#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link Window_MenuCommand#initCommandPosition}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link Window_MenuCommand#initCommandPosition}.<br/>
+   * Read in: none.<br/>
    */
   _lastCommandSymbol: null;
   /**

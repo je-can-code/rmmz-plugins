@@ -8,89 +8,89 @@
 interface Bitmap
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | PIXI.BaseTexture`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#destroy}, {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#_updateScaleMode}, {@link Bitmap#blt}, {@link Bitmap#clearRect}, {@link Bitmap#destroy}, {@link Bitmap#drawCircle}, {@link Bitmap#drawText}, {@link Bitmap#fillRect}, {@link Bitmap#gradientFillRect}, {@link Bitmap#strokeRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | PIXI.BaseTexture`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#destroy}, {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_createBaseTexture}, {@link Bitmap#_updateScaleMode}, {@link Bitmap#blt}, {@link Bitmap#clearRect}, {@link Bitmap#destroy}, {@link Bitmap#drawCircle}, {@link Bitmap#drawText}, {@link Bitmap#fillRect}, {@link Bitmap#gradientFillRect}, {@link Bitmap#strokeRect}.<br/>
    */
   _baseTexture: null | PIXI.BaseTexture;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#_ensureCanvas}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_createCanvas}, {@link Bitmap#_destroyCanvas}, {@link Bitmap#_ensureCanvas}.<br/>
    */
   _canvas: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_ensureCanvas}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#_createCanvas}, {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_ensureCanvas}.<br/>
    */
   _context: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Image`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_ensureCanvas}, {@link Bitmap#_onLoad}, {@link Bitmap#_onXhrLoad}, {@link Bitmap#_startLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Image`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_ensureCanvas}, {@link Bitmap#_onLoad}, {@link Bitmap#_onXhrLoad}, {@link Bitmap#_startLoading}.<br/>
    */
   _image: null | Image;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_callLoadListeners}, {@link Bitmap#addLoadListener}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Bitmap#_callLoadListeners}.
-   * - `push()`: {@link Bitmap#addLoadListener}.
-   * - `shift()`: {@link Bitmap#_callLoadListeners}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_callLoadListeners}, {@link Bitmap#addLoadListener}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Bitmap#_callLoadListeners}.<br/>
+   * - `push()`: {@link Bitmap#addLoadListener}.<br/>
+   * - `shift()`: {@link Bitmap#_callLoadListeners}.<br/>
    */
   _loadListeners: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#_onError}, {@link Bitmap#_onLoad}, {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#isError}, {@link Bitmap#isReady}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#_onError}, {@link Bitmap#_onLoad}, {@link Bitmap#_startLoading}, {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#isError}, {@link Bitmap#isReady}.<br/>
    */
   _loadingState: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _paintOpacity: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_updateScaleMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_updateScaleMode}.<br/>
    */
   _smooth: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Bitmap#initialize}.
-   * Written in: {@link Bitmap#initialize}.
-   * Read in: {@link Bitmap#_startDecrypting}, {@link Bitmap#_startLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Bitmap#initialize}.<br/>
+   * Written in: {@link Bitmap#initialize}.<br/>
+   * Read in: {@link Bitmap#_startDecrypting}, {@link Bitmap#_startLoading}.<br/>
    */
   _url: string;
   /**

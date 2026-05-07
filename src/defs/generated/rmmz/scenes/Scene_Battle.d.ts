@@ -8,102 +8,102 @@
 interface Scene_Battle extends Scene_Message
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createActorCommandWindow}.
-   * Read in: {@link Scene_Battle#closeCommandWindows}, {@link Scene_Battle#commandItem}, {@link Scene_Battle#commandSkill}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#needsInputWindowChange}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#stop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createActorCommandWindow}.<br/>
+   * Read in: {@link Scene_Battle#closeCommandWindows}, {@link Scene_Battle#commandItem}, {@link Scene_Battle#commandSkill}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#needsInputWindowChange}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#stop}.<br/>
    */
   _actorCommandWindow: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_BattleActor`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createActorWindow}.
-   * Read in: {@link Scene_Battle#createActorWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onActorOk}, {@link Scene_Battle#startActorSelection}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_BattleActor`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createActorWindow}.<br/>
+   * Read in: {@link Scene_Battle#createActorWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onActorOk}, {@link Scene_Battle#startActorSelection}.<br/>
    */
   _actorWindow: Window_BattleActor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Button`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createCancelButton}.
-   * Read in: {@link Scene_Battle#createCancelButton}, {@link Scene_Battle#updateCancelButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Button`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createCancelButton}.<br/>
+   * Read in: {@link Scene_Battle#createCancelButton}, {@link Scene_Battle#updateCancelButton}.<br/>
    */
   _cancelButton: Sprite_Button;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_BattleEnemy`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createEnemyWindow}.
-   * Read in: {@link Scene_Battle#createEnemyWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onEnemyOk}, {@link Scene_Battle#startEnemySelection}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_BattleEnemy`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createEnemyWindow}.<br/>
+   * Read in: {@link Scene_Battle#createEnemyWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onEnemyOk}, {@link Scene_Battle#startEnemySelection}.<br/>
    */
   _enemyWindow: Window_BattleEnemy;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Help`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createHelpWindow}.
-   * Read in: {@link Scene_Battle#createHelpWindow}, {@link Scene_Battle#createItemWindow}, {@link Scene_Battle#createSkillWindow}, {@link Scene_Battle#updateLogWindowVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Help`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createHelpWindow}.<br/>
+   * Read in: {@link Scene_Battle#createHelpWindow}, {@link Scene_Battle#createItemWindow}, {@link Scene_Battle#createSkillWindow}, {@link Scene_Battle#updateLogWindowVisibility}.<br/>
    */
   _helpWindow: Window_Help;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_BattleItem`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createItemWindow}.
-   * Read in: {@link Scene_Battle#commandItem}, {@link Scene_Battle#createItemWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#isTimeActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onItemOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_BattleItem`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createItemWindow}.<br/>
+   * Read in: {@link Scene_Battle#commandItem}, {@link Scene_Battle#createItemWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#isTimeActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onItemOk}.<br/>
    */
   _itemWindow: Window_BattleItem;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_BattleLog`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createLogWindow}.
-   * Read in: {@link Scene_Battle#createDisplayObjects}, {@link Scene_Battle#createLogWindow}, {@link Scene_Battle#updateLogWindowVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_BattleLog`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createLogWindow}.<br/>
+   * Read in: {@link Scene_Battle#createDisplayObjects}, {@link Scene_Battle#createLogWindow}, {@link Scene_Battle#updateLogWindowVisibility}.<br/>
    */
   _logWindow: Window_BattleLog;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createPartyCommandWindow}.
-   * Read in: {@link Scene_Battle#closeCommandWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#statusWindowX}, {@link Scene_Battle#stop}, {@link Scene_Battle#updateCancelButton}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createPartyCommandWindow}.<br/>
+   * Read in: {@link Scene_Battle#closeCommandWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#statusWindowX}, {@link Scene_Battle#stop}, {@link Scene_Battle#updateCancelButton}.<br/>
    */
   _partyCommandWindow: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_BattleSkill`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createSkillWindow}.
-   * Read in: {@link Scene_Battle#commandSkill}, {@link Scene_Battle#createSkillWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#isTimeActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#onSkillOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_BattleSkill`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createSkillWindow}.<br/>
+   * Read in: {@link Scene_Battle#commandSkill}, {@link Scene_Battle#createSkillWindow}, {@link Scene_Battle#hideSubInputWindows}, {@link Scene_Battle#isAnyInputWindowActive}, {@link Scene_Battle#isTimeActive}, {@link Scene_Battle#onActorCancel}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#onSkillOk}.<br/>
    */
   _skillWindow: Window_BattleSkill;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Spriteset_Battle`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createSpriteset}.
-   * Read in: {@link Scene_Battle#createDisplayObjects}, {@link Scene_Battle#createSpriteset}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Spriteset_Battle`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createSpriteset}.<br/>
+   * Read in: {@link Scene_Battle#createDisplayObjects}, {@link Scene_Battle#createSpriteset}.<br/>
    */
   _spriteset: Spriteset_Battle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Battle#createStatusWindow}.
-   * Read in: {@link Scene_Battle#commandItem}, {@link Scene_Battle#commandSkill}, {@link Scene_Battle#endCommandSelection}, {@link Scene_Battle#enemyWindowRect}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#start}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startEnemySelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#stop}, {@link Scene_Battle#updateStatusWindowPosition}, {@link Scene_Battle#updateStatusWindowVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Battle#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Battle#commandItem}, {@link Scene_Battle#commandSkill}, {@link Scene_Battle#endCommandSelection}, {@link Scene_Battle#enemyWindowRect}, {@link Scene_Battle#onEnemyCancel}, {@link Scene_Battle#onItemCancel}, {@link Scene_Battle#onSkillCancel}, {@link Scene_Battle#start}, {@link Scene_Battle#startActorCommandSelection}, {@link Scene_Battle#startEnemySelection}, {@link Scene_Battle#startPartyCommandSelection}, {@link Scene_Battle#stop}, {@link Scene_Battle#updateStatusWindowPosition}, {@link Scene_Battle#updateStatusWindowVisibility}.<br/>
    */
   _statusWindow: unknown;
   /**

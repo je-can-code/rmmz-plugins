@@ -8,12 +8,12 @@
 interface ConfigManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: module init.
-   * Written in: module init, {@link ConfigManager#load}.
-   * Read in: {@link ConfigManager#isLoaded}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link ConfigManager#load}.<br/>
+   * Read in: {@link ConfigManager#isLoaded}.<br/>
    */
   _isLoaded: boolean;
 }

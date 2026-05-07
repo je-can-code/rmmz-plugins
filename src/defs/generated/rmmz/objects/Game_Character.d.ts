@@ -8,57 +8,57 @@
 interface Game_Character extends Game_CharacterBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
-   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#processRouteEnd}, {@link Game_Character#updateRoutineMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
+   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#processRouteEnd}, {@link Game_Character#updateRoutineMove}.<br/>
    */
   _moveRoute: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}.
-   * Read in: {@link Game_Character#isMoveRouteForcing}, {@link Game_Character#processRouteEnd}, {@link Game_Character#setMoveRoute}, {@link Game_Character#updateStop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}.<br/>
+   * Read in: {@link Game_Character#isMoveRouteForcing}, {@link Game_Character#processRouteEnd}, {@link Game_Character#setMoveRoute}, {@link Game_Character#updateStop}.<br/>
    */
   _moveRouteForcing: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
-   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#updateRoutineMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processRouteEnd}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
+   * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#updateRoutineMove}.<br/>
    */
   _moveRouteIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.
-   * Read in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#restoreMoveRoute}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
+   * Read in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#restoreMoveRoute}.<br/>
    */
   _originalMoveRoute: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#setMoveRoute}.
-   * Read in: {@link Game_Character#restoreMoveRoute}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
+   * Read in: {@link Game_Character#restoreMoveRoute}.<br/>
    */
   _originalMoveRouteIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processMoveCommand}, {@link Game_Character#updateRoutineMove}.
-   * Read in: {@link Game_Character#updateRoutineMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#processMoveCommand}, {@link Game_Character#updateRoutineMove}.<br/>
+   * Read in: {@link Game_Character#updateRoutineMove}.<br/>
    */
   _waitCount: number;
   /**

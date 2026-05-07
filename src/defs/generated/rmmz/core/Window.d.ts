@@ -8,195 +8,195 @@
 interface Window extends PIXI.Container
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}, {@link Window#update}.
-   * Read in: {@link Window#_makeCursorAlpha}, {@link Window#_updatePauseSign}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}, {@link Window#update}.<br/>
+   * Read in: {@link Window#_makeCursorAlpha}, {@link Window#_updatePauseSign}.<br/>
    */
   _animationCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createBackSprite}, {@link Window#initialize}.
-   * Read in: {@link Window#_createBackSprite}, {@link Window#_refreshBack}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createBackSprite}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createBackSprite}, {@link Window#_refreshBack}.<br/>
    */
   _backSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Window#_createClientArea}.
-   * Read in: {@link Window#_createClientArea}, {@link Window#_createContentsBackSprite}, {@link Window#_createContentsSprite}, {@link Window#_createCursorSprite}, {@link Window#_updateClientArea}, {@link Window#_updateFilterArea}, {@link Window#addInnerChild}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window#_createClientArea}.<br/>
+   * Read in: {@link Window#_createClientArea}, {@link Window#_createContentsBackSprite}, {@link Window#_createContentsSprite}, {@link Window#_createCursorSprite}, {@link Window#_updateClientArea}, {@link Window#_updateFilterArea}, {@link Window#addInnerChild}.<br/>
    */
   _clientArea: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[] | unknown[]`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}, {@link Window#setTone}.
-   * Read in: {@link Window#_refreshBack}, {@link Window#setTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[] | unknown[]`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}, {@link Window#setTone}.<br/>
+   * Read in: {@link Window#_refreshBack}, {@link Window#setTone}.<br/>
    */
   _colorTone: number[] | unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | PIXI.Container`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createContainer}, {@link Window#initialize}.
-   * Read in: {@link Window#_createBackSprite}, {@link Window#_createContainer}, {@link Window#_createFrameSprite}, {@link Window#addChildToBack}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | PIXI.Container`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createContainer}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createBackSprite}, {@link Window#_createContainer}, {@link Window#_createFrameSprite}, {@link Window#addChildToBack}.<br/>
    */
   _container: null | PIXI.Container;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createContentsBackSprite}, {@link Window#initialize}.
-   * Read in: {@link Window#_createContentsBackSprite}, {@link Window#_updateContentsBack}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createContentsBackSprite}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createContentsBackSprite}, {@link Window#_updateContentsBack}.<br/>
    */
   _contentsBackSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createContentsSprite}, {@link Window#initialize}.
-   * Read in: {@link Window#_createContentsSprite}, {@link Window#_updateContents}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createContentsSprite}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createContentsSprite}, {@link Window#_updateContents}.<br/>
    */
   _contentsSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Rectangle`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#_refreshCursor}, {@link Window#_updateCursor}, {@link Window#moveCursorBy}, {@link Window#setCursorRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Rectangle`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_refreshCursor}, {@link Window#_updateCursor}, {@link Window#moveCursorBy}, {@link Window#setCursorRect}.<br/>
    */
   _cursorRect: Rectangle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createCursorSprite}, {@link Window#initialize}.
-   * Read in: {@link Window#_createCursorSprite}, {@link Window#_refreshCursor}, {@link Window#_updateCursor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createCursorSprite}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createCursorSprite}, {@link Window#_refreshCursor}, {@link Window#_updateCursor}.<br/>
    */
   _cursorSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createArrowSprites}, {@link Window#initialize}.
-   * Read in: {@link Window#_createArrowSprites}, {@link Window#_refreshArrows}, {@link Window#_updateArrows}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createArrowSprites}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createArrowSprites}, {@link Window#_refreshArrows}, {@link Window#_updateArrows}.<br/>
    */
   _downArrowSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createFrameSprite}, {@link Window#initialize}.
-   * Read in: {@link Window#_createFrameSprite}, {@link Window#_refreshFrame}, {@link Window#_updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createFrameSprite}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createFrameSprite}, {@link Window#_refreshFrame}, {@link Window#_updateFrame}.<br/>
    */
   _frameSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}, {@link Window#move}.
-   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}, {@link Window#move}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}, {@link Window#move}.<br/>
+   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}, {@link Window#move}.<br/>
    */
   _height: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#addInnerChild}, {@link Window#moveInnerChildrenBy}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Window#addInnerChild}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#addInnerChild}, {@link Window#moveInnerChildrenBy}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Window#addInnerChild}.<br/>
    */
   _innerChildren: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _isWindow: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#_refreshBack}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_refreshBack}.<br/>
    */
   _margin: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#drawShape}, {@link Window#isClosed}, {@link Window#isOpen}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#drawShape}, {@link Window#isClosed}, {@link Window#isOpen}.<br/>
    */
   _openness: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#_createClientArea}, {@link Window#_updateClientArea}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createClientArea}, {@link Window#_updateClientArea}.<br/>
    */
   _padding: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createPauseSignSprites}, {@link Window#initialize}.
-   * Read in: {@link Window#_createPauseSignSprites}, {@link Window#_refreshPauseSign}, {@link Window#_updatePauseSign}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createPauseSignSprites}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createPauseSignSprites}, {@link Window#_refreshPauseSign}, {@link Window#_updatePauseSign}.<br/>
    */
   _pauseSignSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#_createArrowSprites}, {@link Window#initialize}.
-   * Read in: {@link Window#_createArrowSprites}, {@link Window#_refreshArrows}, {@link Window#_updateArrows}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#_createArrowSprites}, {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_createArrowSprites}, {@link Window#_refreshArrows}, {@link Window#_updateArrows}.<br/>
    */
   _upArrowSprite: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}, {@link Window#move}.
-   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}, {@link Window#move}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}, {@link Window#move}.<br/>
+   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}, {@link Window#move}.<br/>
    */
   _width: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Window#initialize}.
-   * Written in: {@link Window#initialize}.
-   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshCursor}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Window#initialize}.<br/>
+   * Written in: {@link Window#initialize}.<br/>
+   * Read in: {@link Window#_refreshArrows}, {@link Window#_refreshBack}, {@link Window#_refreshCursor}, {@link Window#_refreshFrame}, {@link Window#_refreshPauseSign}.<br/>
    */
   _windowskin: null;
   /**

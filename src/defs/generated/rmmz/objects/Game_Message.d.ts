@@ -8,181 +8,181 @@
 interface Game_Message
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setBackground}.
-   * Read in: {@link Game_Message#background}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setBackground}.<br/>
+   * Read in: {@link Game_Message#background}.<br/>
    */
   _background: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoiceBackground}.
-   * Read in: {@link Game_Message#choiceBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoiceBackground}.<br/>
+   * Read in: {@link Game_Message#choiceBackground}.<br/>
    */
   _choiceBackground: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | (n: number) => void`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#onChoice}, {@link Game_Message#setChoiceCallback}.
-   * Read in: {@link Game_Message#onChoice}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | (n: number) => void`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#onChoice}, {@link Game_Message#setChoiceCallback}.<br/>
+   * Read in: {@link Game_Message#onChoice}.<br/>
    */
   _choiceCallback: null | (n: number) => void;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.
-   * Read in: {@link Game_Message#choiceCancelType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.<br/>
+   * Read in: {@link Game_Message#choiceCancelType}.<br/>
    */
   _choiceCancelType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.
-   * Read in: {@link Game_Message#choiceDefaultType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.<br/>
+   * Read in: {@link Game_Message#choiceDefaultType}.<br/>
    */
   _choiceDefaultType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoicePositionType}.
-   * Read in: {@link Game_Message#choicePositionType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoicePositionType}.<br/>
+   * Read in: {@link Game_Message#choicePositionType}.<br/>
    */
   _choicePositionType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[] | string[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.
-   * Read in: {@link Game_Message#choices}, {@link Game_Message#isChoice}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Message#isChoice}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[] | string[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.<br/>
+   * Read in: {@link Game_Message#choices}, {@link Game_Message#isChoice}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Message#isChoice}.<br/>
    */
   _choices: unknown[] | string[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setFaceImage}.
-   * Read in: {@link Game_Message#faceIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setFaceImage}.<br/>
+   * Read in: {@link Game_Message#faceIndex}.<br/>
    */
   _faceIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setFaceImage}.
-   * Read in: {@link Game_Message#faceName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setFaceImage}.<br/>
+   * Read in: {@link Game_Message#faceName}.<br/>
    */
   _faceName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setItemChoice}.
-   * Read in: {@link Game_Message#itemChoiceItypeId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setItemChoice}.<br/>
+   * Read in: {@link Game_Message#itemChoiceItypeId}.<br/>
    */
   _itemChoiceItypeId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setItemChoice}.
-   * Read in: {@link Game_Message#isItemChoice}, {@link Game_Message#itemChoiceVariableId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setItemChoice}.<br/>
+   * Read in: {@link Game_Message#isItemChoice}, {@link Game_Message#itemChoiceVariableId}.<br/>
    */
   _itemChoiceVariableId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setNumberInput}.
-   * Read in: {@link Game_Message#numInputMaxDigits}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setNumberInput}.<br/>
+   * Read in: {@link Game_Message#numInputMaxDigits}.<br/>
    */
   _numInputMaxDigits: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setNumberInput}.
-   * Read in: {@link Game_Message#isNumberInput}, {@link Game_Message#numInputVariableId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setNumberInput}.<br/>
+   * Read in: {@link Game_Message#isNumberInput}, {@link Game_Message#numInputVariableId}.<br/>
    */
   _numInputVariableId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setPositionType}.
-   * Read in: {@link Game_Message#positionType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setPositionType}.<br/>
+   * Read in: {@link Game_Message#positionType}.<br/>
    */
   _positionType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.
-   * Read in: {@link Game_Message#scrollMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.<br/>
+   * Read in: {@link Game_Message#scrollMode}.<br/>
    */
   _scrollMode: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.
-   * Read in: {@link Game_Message#scrollNoFast}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.<br/>
+   * Read in: {@link Game_Message#scrollNoFast}.<br/>
    */
   _scrollNoFast: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.
-   * Read in: {@link Game_Message#scrollSpeed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setScroll}.<br/>
+   * Read in: {@link Game_Message#scrollSpeed}.<br/>
    */
   _scrollSpeed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}, {@link Game_Message#setSpeakerName}.
-   * Read in: {@link Game_Message#speakerName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}, {@link Game_Message#setSpeakerName}.<br/>
+   * Read in: {@link Game_Message#speakerName}.<br/>
    */
   _speakerName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Message#clear}.
-   * Read in: {@link Game_Message#add}, {@link Game_Message#allText}, {@link Game_Message#hasText}, {@link Game_Message#newPage}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Message#hasText}, {@link Game_Message#newPage}.
-   * - `push()`: {@link Game_Message#add}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Message#clear}.<br/>
+   * Read in: {@link Game_Message#add}, {@link Game_Message#allText}, {@link Game_Message#hasText}, {@link Game_Message#newPage}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Message#hasText}, {@link Game_Message#newPage}.<br/>
+   * - `push()`: {@link Game_Message#add}.<br/>
    */
   _texts: unknown[];
   /**

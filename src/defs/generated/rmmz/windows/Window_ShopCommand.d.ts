@@ -8,12 +8,12 @@
 interface Window_ShopCommand extends Window_HorzCommand
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopCommand#setPurchaseOnly}.
-   * Read in: {@link Window_ShopCommand#makeCommandList}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopCommand#setPurchaseOnly}.<br/>
+   * Read in: {@link Window_ShopCommand#makeCommandList}.<br/>
    */
   _purchaseOnly: boolean;
   /**

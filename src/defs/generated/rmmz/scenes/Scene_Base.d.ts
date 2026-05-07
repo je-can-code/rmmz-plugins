@@ -8,75 +8,75 @@
 interface Scene_Base extends Stage
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#start}, {@link Scene_Base#stop}.
-   * Read in: {@link Scene_Base#isActive}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#start}, {@link Scene_Base#stop}.<br/>
+   * Read in: {@link Scene_Base#isActive}.<br/>
    */
   _active: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `ColorFilter`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Base#createColorFilter}.
-   * Read in: {@link Scene_Base#createColorFilter}, {@link Scene_Base#updateColorFilter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `ColorFilter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Base#createColorFilter}.<br/>
+   * Read in: {@link Scene_Base#createColorFilter}, {@link Scene_Base#updateColorFilter}.<br/>
    */
   _colorFilter: ColorFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}, {@link Scene_Base#updateFade}.
-   * Read in: {@link Scene_Base#isFading}, {@link Scene_Base#updateFade}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}, {@link Scene_Base#updateFade}.<br/>
+   * Read in: {@link Scene_Base#isFading}, {@link Scene_Base#updateFade}.<br/>
    */
   _fadeDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}, {@link Scene_Base#updateFade}.
-   * Read in: {@link Scene_Base#updateColorFilter}, {@link Scene_Base#updateFade}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}, {@link Scene_Base#updateFade}.<br/>
+   * Read in: {@link Scene_Base#updateColorFilter}, {@link Scene_Base#updateFade}.<br/>
    */
   _fadeOpacity: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}.
-   * Read in: {@link Scene_Base#updateFade}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}.<br/>
+   * Read in: {@link Scene_Base#updateFade}.<br/>
    */
   _fadeSign: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number | boolean`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}.
-   * Read in: {@link Scene_Base#updateColorFilter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number | boolean`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#startFadeIn}, {@link Scene_Base#startFadeOut}.<br/>
+   * Read in: {@link Scene_Base#updateColorFilter}.<br/>
    */
   _fadeWhite: number | boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Base#initialize}.
-   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#start}.
-   * Read in: {@link Scene_Base#isStarted}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Base#initialize}.<br/>
+   * Written in: {@link Scene_Base#initialize}, {@link Scene_Base#start}.<br/>
+   * Read in: {@link Scene_Base#isStarted}.<br/>
    */
   _started: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `WindowLayer`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Base#createWindowLayer}.
-   * Read in: {@link Scene_Base#addWindow}, {@link Scene_Base#createWindowLayer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `WindowLayer`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Base#createWindowLayer}.<br/>
+   * Read in: {@link Scene_Base#addWindow}, {@link Scene_Base#createWindowLayer}.<br/>
    */
   _windowLayer: WindowLayer;
   /**

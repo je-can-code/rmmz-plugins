@@ -8,34 +8,34 @@
 interface Game_Followers
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Followers#initialize}.
-   * Written in: {@link Game_Followers#initialize}, {@link Game_Followers#setup}.
-   * Read in: {@link Game_Followers#data}, {@link Game_Followers#follower}, {@link Game_Followers#jumpAll}, {@link Game_Followers#refresh}, {@link Game_Followers#reverseData}, {@link Game_Followers#setup}, {@link Game_Followers#synchronize}, {@link Game_Followers#update}, {@link Game_Followers#updateMove}, {@link Game_Followers#visibleFollowers}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Followers#updateMove}.
-   * - `push()`: {@link Game_Followers#setup}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Followers#initialize}.<br/>
+   * Written in: {@link Game_Followers#initialize}, {@link Game_Followers#setup}.<br/>
+   * Read in: {@link Game_Followers#data}, {@link Game_Followers#follower}, {@link Game_Followers#jumpAll}, {@link Game_Followers#refresh}, {@link Game_Followers#reverseData}, {@link Game_Followers#setup}, {@link Game_Followers#synchronize}, {@link Game_Followers#update}, {@link Game_Followers#updateMove}, {@link Game_Followers#visibleFollowers}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Followers#updateMove}.<br/>
+   * - `push()`: {@link Game_Followers#setup}.<br/>
    */
   _data: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Followers#initialize}.
-   * Written in: {@link Game_Followers#gather}, {@link Game_Followers#initialize}, {@link Game_Followers#update}.
-   * Read in: {@link Game_Followers#areGathering}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Followers#initialize}.<br/>
+   * Written in: {@link Game_Followers#gather}, {@link Game_Followers#initialize}, {@link Game_Followers#update}.<br/>
+   * Read in: {@link Game_Followers#areGathering}.<br/>
    */
   _gathering: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_Followers#initialize}.
-   * Written in: {@link Game_Followers#hide}, {@link Game_Followers#initialize}, {@link Game_Followers#show}.
-   * Read in: {@link Game_Followers#isVisible}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_Followers#initialize}.<br/>
+   * Written in: {@link Game_Followers#hide}, {@link Game_Followers#initialize}, {@link Game_Followers#show}.<br/>
+   * Read in: {@link Game_Followers#isVisible}.<br/>
    */
   _visible: boolean;
   /**

@@ -8,51 +8,51 @@
 interface Window_NameEdit extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_NameEdit#initialize}.
-   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.
-   * Read in: {@link Window_NameEdit#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_NameEdit#initialize}.<br/>
+   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.<br/>
+   * Read in: {@link Window_NameEdit#refresh}.<br/>
    */
   _actor: null | Game_Actor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NameEdit#initialize}.
-   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.
-   * Read in: {@link Window_NameEdit#restoreDefault}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NameEdit#initialize}.<br/>
+   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.<br/>
+   * Read in: {@link Window_NameEdit#restoreDefault}.<br/>
    */
   _defaultName: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NameEdit#initialize}.
-   * Written in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#initialize}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.
-   * Read in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NameEdit#initialize}.<br/>
+   * Written in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#initialize}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.<br/>
+   * Read in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#refresh}.<br/>
    */
   _index: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_NameEdit#initialize}.
-   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.
-   * Read in: {@link Window_NameEdit#add}, {@link Window_NameEdit#left}, {@link Window_NameEdit#refresh}, {@link Window_NameEdit#setup}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_NameEdit#initialize}.<br/>
+   * Written in: {@link Window_NameEdit#initialize}, {@link Window_NameEdit#setup}.<br/>
+   * Read in: {@link Window_NameEdit#add}, {@link Window_NameEdit#left}, {@link Window_NameEdit#refresh}, {@link Window_NameEdit#setup}.<br/>
    */
   _maxLength: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_NameEdit#initialize}.
-   * Written in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#initialize}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.
-   * Read in: {@link Window_NameEdit#back}, {@link Window_NameEdit#drawChar}, {@link Window_NameEdit#name}, {@link Window_NameEdit#refresh}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_NameEdit#refresh}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_NameEdit#initialize}.<br/>
+   * Written in: {@link Window_NameEdit#add}, {@link Window_NameEdit#back}, {@link Window_NameEdit#initialize}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.<br/>
+   * Read in: {@link Window_NameEdit#back}, {@link Window_NameEdit#drawChar}, {@link Window_NameEdit#name}, {@link Window_NameEdit#refresh}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_NameEdit#refresh}, {@link Window_NameEdit#restoreDefault}, {@link Window_NameEdit#setup}.<br/>
    */
   _name: string;
   /**

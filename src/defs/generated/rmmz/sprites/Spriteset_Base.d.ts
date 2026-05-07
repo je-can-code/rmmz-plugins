@@ -8,70 +8,70 @@
 interface Spriteset_Base extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Spriteset_Base#initialize}.
-   * Written in: {@link Spriteset_Base#initialize}.
-   * Read in: {@link Spriteset_Base#createAnimationSprite}, {@link Spriteset_Base#isAnimationPlaying}, {@link Spriteset_Base#lastAnimationSprite}, {@link Spriteset_Base#removeAllAnimations}, {@link Spriteset_Base#removeAnimation}, {@link Spriteset_Base#updateAnimations}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Spriteset_Base#isAnimationPlaying}, {@link Spriteset_Base#lastAnimationSprite}.
-   * - `push()`: {@link Spriteset_Base#createAnimationSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Spriteset_Base#initialize}.<br/>
+   * Written in: {@link Spriteset_Base#initialize}.<br/>
+   * Read in: {@link Spriteset_Base#createAnimationSprite}, {@link Spriteset_Base#isAnimationPlaying}, {@link Spriteset_Base#lastAnimationSprite}, {@link Spriteset_Base#removeAllAnimations}, {@link Spriteset_Base#removeAnimation}, {@link Spriteset_Base#updateAnimations}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Spriteset_Base#isAnimationPlaying}, {@link Spriteset_Base#lastAnimationSprite}.<br/>
+   * - `push()`: {@link Spriteset_Base#createAnimationSprite}.<br/>
    */
   _animationSprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `ColorFilter`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createBaseFilters}.
-   * Read in: {@link Spriteset_Base#createBaseFilters}, {@link Spriteset_Base#updateBaseFilters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `ColorFilter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createBaseFilters}.<br/>
+   * Read in: {@link Spriteset_Base#createBaseFilters}, {@link Spriteset_Base#updateBaseFilters}.<br/>
    */
   _baseColorFilter: ColorFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createBaseSprite}.
-   * Read in: {@link Spriteset_Base#createBaseFilters}, {@link Spriteset_Base#createBaseSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createBaseSprite}.<br/>
+   * Read in: {@link Spriteset_Base#createBaseFilters}, {@link Spriteset_Base#createBaseSprite}.<br/>
    */
   _baseSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `ScreenSprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createBaseSprite}.
-   * Read in: {@link Spriteset_Base#createBaseSprite}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `ScreenSprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createBaseSprite}.<br/>
+   * Read in: {@link Spriteset_Base#createBaseSprite}.<br/>
    */
   _blackScreen: ScreenSprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `ColorFilter`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createOverallFilters}.
-   * Read in: {@link Spriteset_Base#createOverallFilters}, {@link Spriteset_Base#updateOverallFilters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `ColorFilter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createOverallFilters}.<br/>
+   * Read in: {@link Spriteset_Base#createOverallFilters}, {@link Spriteset_Base#updateOverallFilters}.<br/>
    */
   _overallColorFilter: ColorFilter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createPictures}.
-   * Read in: {@link Spriteset_Base#createPictures}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createPictures}.<br/>
+   * Read in: {@link Spriteset_Base#createPictures}.<br/>
    */
   _pictureContainer: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Timer`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Base#createTimer}.
-   * Read in: {@link Spriteset_Base#createTimer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Timer`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Base#createTimer}.<br/>
+   * Read in: {@link Spriteset_Base#createTimer}.<br/>
    */
   _timerSprite: Sprite_Timer;
   /**

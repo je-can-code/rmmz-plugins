@@ -8,12 +8,12 @@
 interface Game_Follower extends Game_Character
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Follower#initialize}.
-   * Written in: {@link Game_Follower#initialize}.
-   * Read in: {@link Game_Follower#actor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Follower#initialize}.<br/>
+   * Written in: {@link Game_Follower#initialize}.<br/>
+   * Read in: {@link Game_Follower#actor}.<br/>
    */
   _memberIndex: number;
   /**

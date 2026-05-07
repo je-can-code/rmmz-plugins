@@ -8,16 +8,16 @@
 interface Window_Command extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Window_Command#clearCommandList}.
-   * Read in: {@link Window_Command#addCommand}, {@link Window_Command#commandName}, {@link Window_Command#commandSymbol}, {@link Window_Command#currentData}, {@link Window_Command#findExt}, {@link Window_Command#findSymbol}, {@link Window_Command#isCommandEnabled}, {@link Window_Command#maxItems}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_Command#maxItems}.
-   * - `push()`: {@link Window_Command#addCommand}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Command#clearCommandList}.<br/>
+   * Read in: {@link Window_Command#addCommand}, {@link Window_Command#commandName}, {@link Window_Command#commandSymbol}, {@link Window_Command#currentData}, {@link Window_Command#findExt}, {@link Window_Command#findSymbol}, {@link Window_Command#isCommandEnabled}, {@link Window_Command#maxItems}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_Command#maxItems}.<br/>
+   * - `push()`: {@link Window_Command#addCommand}.<br/>
    */
   _list: unknown[];
   /**

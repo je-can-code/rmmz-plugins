@@ -8,12 +8,12 @@
 interface Window_StatusEquip extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_StatusEquip#initialize}.
-   * Written in: {@link Window_StatusEquip#initialize}, {@link Window_StatusEquip#setActor}.
-   * Read in: {@link Window_StatusEquip#drawItem}, {@link Window_StatusEquip#maxItems}, {@link Window_StatusEquip#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_StatusEquip#initialize}.<br/>
+   * Written in: {@link Window_StatusEquip#initialize}, {@link Window_StatusEquip#setActor}.<br/>
+   * Read in: {@link Window_StatusEquip#drawItem}, {@link Window_StatusEquip#maxItems}, {@link Window_StatusEquip#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**

@@ -8,201 +8,201 @@
 interface Game_Picture
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initRotation}, {@link Game_Picture#updateRotation}.
-   * Read in: {@link Game_Picture#angle}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initRotation}, {@link Game_Picture#updateRotation}.<br/>
+   * Read in: {@link Game_Picture#angle}.<br/>
    */
   _angle: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#move}, {@link Game_Picture#show}.
-   * Read in: {@link Game_Picture#blendMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#move}, {@link Game_Picture#show}.<br/>
+   * Read in: {@link Game_Picture#blendMode}.<br/>
    */
   _blendMode: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#applyEasing}, {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#applyEasing}, {@link Game_Picture#updateMove}.<br/>
    */
   _duration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#calcEasing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#calcEasing}.<br/>
    */
   _easingExponent: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#calcEasing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#calcEasing}.<br/>
    */
   _easingType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}.
-   * Read in: {@link Game_Picture#name}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}.<br/>
+   * Read in: {@link Game_Picture#name}.<br/>
    */
   _name: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#opacity}, {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#opacity}, {@link Game_Picture#updateMove}.<br/>
    */
   _opacity: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#move}, {@link Game_Picture#show}.
-   * Read in: {@link Game_Picture#origin}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#move}, {@link Game_Picture#show}.<br/>
+   * Read in: {@link Game_Picture#origin}.<br/>
    */
   _origin: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initRotation}, {@link Game_Picture#rotate}.
-   * Read in: {@link Game_Picture#updateRotation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initRotation}, {@link Game_Picture#rotate}.<br/>
+   * Read in: {@link Game_Picture#updateRotation}.<br/>
    */
   _rotationSpeed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#scaleX}, {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#scaleX}, {@link Game_Picture#updateMove}.<br/>
    */
   _scaleX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#scaleY}, {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#scaleY}, {@link Game_Picture#updateMove}.<br/>
    */
   _scaleY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#updateMove}.<br/>
    */
   _targetOpacity: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#updateMove}.<br/>
    */
   _targetScaleX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#updateMove}.<br/>
    */
   _targetScaleY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#updateMove}.<br/>
    */
   _targetX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#updateMove}.<br/>
    */
   _targetY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}.
-   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#tone}, {@link Game_Picture#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}.<br/>
+   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#tone}, {@link Game_Picture#updateTone}.<br/>
    */
   _tone: null | number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.
-   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.<br/>
+   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.<br/>
    */
   _toneDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}.
-   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTone}, {@link Game_Picture#tint}.<br/>
+   * Read in: {@link Game_Picture#tint}, {@link Game_Picture#updateTone}.<br/>
    */
   _toneTarget: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.
-   * Read in: {@link Game_Picture#applyEasing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initTarget}, {@link Game_Picture#move}.<br/>
+   * Read in: {@link Game_Picture#applyEasing}.<br/>
    */
   _wholeDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#updateMove}, {@link Game_Picture#x}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#updateMove}, {@link Game_Picture#x}.<br/>
    */
   _x: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.
-   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#updateMove}, {@link Game_Picture#y}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Picture#initBasic}, {@link Game_Picture#show}, {@link Game_Picture#updateMove}.<br/>
+   * Read in: {@link Game_Picture#initTarget}, {@link Game_Picture#updateMove}, {@link Game_Picture#y}.<br/>
    */
   _y: number;
   /**

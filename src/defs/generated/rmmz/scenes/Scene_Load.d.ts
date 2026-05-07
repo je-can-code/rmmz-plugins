@@ -8,12 +8,12 @@
 interface Scene_Load extends Scene_File
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Load#initialize}.
-   * Written in: {@link Scene_Load#initialize}, {@link Scene_Load#onLoadSuccess}.
-   * Read in: {@link Scene_Load#terminate}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Load#initialize}.<br/>
+   * Written in: {@link Scene_Load#initialize}, {@link Scene_Load#onLoadSuccess}.<br/>
+   * Read in: {@link Scene_Load#terminate}.<br/>
    */
   _loadSuccess: boolean;
   /**

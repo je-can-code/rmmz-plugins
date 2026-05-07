@@ -8,48 +8,48 @@
 interface Game_Enemy extends Game_Battler
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}, {@link Game_Enemy#transform}.
-   * Read in: {@link Game_Enemy#enemy}, {@link Game_Enemy#enemyId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}, {@link Game_Enemy#transform}.<br/>
+   * Read in: {@link Game_Enemy#enemy}, {@link Game_Enemy#enemyId}.<br/>
    */
   _enemyId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setLetter}, {@link Game_Enemy#transform}.
-   * Read in: {@link Game_Enemy#isLetterEmpty}, {@link Game_Enemy#name}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setLetter}, {@link Game_Enemy#transform}.<br/>
+   * Read in: {@link Game_Enemy#isLetterEmpty}, {@link Game_Enemy#name}.<br/>
    */
   _letter: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setPlural}, {@link Game_Enemy#transform}.
-   * Read in: {@link Game_Enemy#name}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setPlural}, {@link Game_Enemy#transform}.<br/>
+   * Read in: {@link Game_Enemy#name}.<br/>
    */
   _plural: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}.
-   * Read in: {@link Game_Enemy#screenX}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}.<br/>
+   * Read in: {@link Game_Enemy#screenX}.<br/>
    */
   _screenX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}.
-   * Read in: {@link Game_Enemy#screenY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Enemy#initMembers}, {@link Game_Enemy#setup}.<br/>
+   * Read in: {@link Game_Enemy#screenY}.<br/>
    */
   _screenY: number;
   /**

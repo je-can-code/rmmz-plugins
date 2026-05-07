@@ -8,88 +8,88 @@
 interface Game_Party extends Game_Unit
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setupStartingMembers}.
-   * Read in: {@link Game_Party#addActor}, {@link Game_Party#allMembers}, {@link Game_Party#exists}, {@link Game_Party#removeActor}, {@link Game_Party#removeInvalidMembers}, {@link Game_Party#setupStartingMembers}, {@link Game_Party#swapOrder}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Party#exists}.
-   * - `push()`: {@link Game_Party#addActor}, {@link Game_Party#setupStartingMembers}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setupStartingMembers}.<br/>
+   * Read in: {@link Game_Party#addActor}, {@link Game_Party#allMembers}, {@link Game_Party#exists}, {@link Game_Party#removeActor}, {@link Game_Party#removeInvalidMembers}, {@link Game_Party#setupStartingMembers}, {@link Game_Party#swapOrder}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Party#exists}.<br/>
+   * - `push()`: {@link Game_Party#addActor}, {@link Game_Party#setupStartingMembers}.<br/>
    */
   _actors: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Party#initAllItems}.
-   * Read in: {@link Game_Party#armors}, {@link Game_Party#itemContainer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Party#initAllItems}.<br/>
+   * Read in: {@link Game_Party#armors}, {@link Game_Party#itemContainer}.<br/>
    */
   _armors: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#gainGold}, {@link Game_Party#initialize}.
-   * Read in: {@link Game_Party#gainGold}, {@link Game_Party#gold}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#gainGold}, {@link Game_Party#initialize}.<br/>
+   * Read in: {@link Game_Party#gainGold}, {@link Game_Party#gold}.<br/>
    */
   _gold: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Party#initAllItems}.
-   * Read in: {@link Game_Party#itemContainer}, {@link Game_Party#items}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Party#initAllItems}.<br/>
+   * Read in: {@link Game_Party#itemContainer}, {@link Game_Party#items}.<br/>
    */
   _items: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Item`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#initialize}.
-   * Read in: {@link Game_Party#lastItem}, {@link Game_Party#setLastItem}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Item`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#initialize}.<br/>
+   * Read in: {@link Game_Party#lastItem}, {@link Game_Party#setLastItem}.<br/>
    */
   _lastItem: Game_Item;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setMenuActor}.
-   * Read in: {@link Game_Party#menuActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setMenuActor}.<br/>
+   * Read in: {@link Game_Party#menuActor}.<br/>
    */
   _menuActorId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#increaseSteps}, {@link Game_Party#initialize}.
-   * Read in: {@link Game_Party#steps}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#increaseSteps}, {@link Game_Party#initialize}.<br/>
+   * Read in: {@link Game_Party#steps}.<br/>
    */
   _steps: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Party#initialize}.
-   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setTargetActor}.
-   * Read in: {@link Game_Party#targetActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Party#initialize}.<br/>
+   * Written in: {@link Game_Party#initialize}, {@link Game_Party#setTargetActor}.<br/>
+   * Read in: {@link Game_Party#targetActor}.<br/>
    */
   _targetActorId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_Party#initAllItems}.
-   * Read in: {@link Game_Party#itemContainer}, {@link Game_Party#weapons}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Party#initAllItems}.<br/>
+   * Read in: {@link Game_Party#itemContainer}, {@link Game_Party#weapons}.<br/>
    */
   _weapons: object;
   /**

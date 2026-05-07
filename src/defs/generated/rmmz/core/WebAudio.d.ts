@@ -8,293 +8,293 @@
 interface WebAudio
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createAllSourceNodes}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_onDecode}, {@link WebAudio#_refreshSourceNode}, {@link WebAudio#_startSourceNode}, {@link WebAudio#isReady}.
-   *
-   * Consumed by:
-   * - `.length`: {@link WebAudio#_createAllSourceNodes}, {@link WebAudio#_refreshSourceNode}, {@link WebAudio#isReady}.
-   * - `push()`: {@link WebAudio#_onDecode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createAllSourceNodes}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_onDecode}, {@link WebAudio#_refreshSourceNode}, {@link WebAudio#_startSourceNode}, {@link WebAudio#isReady}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link WebAudio#_createAllSourceNodes}, {@link WebAudio#_refreshSourceNode}, {@link WebAudio#isReady}.<br/>
+   * - `push()`: {@link WebAudio#_onDecode}.<br/>
    */
   _buffers: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | AudioContext`.
-   * Initialized in: {@link WebAudio#initialize}.
-   * Written in: {@link WebAudio#_createContext}, {@link WebAudio#initialize}.
-   * Read in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#_currentTime}, {@link WebAudio#_onUserGesture}, {@link WebAudio#initialize}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | AudioContext`.<br/>
+   * Initialized in: {@link WebAudio#initialize}.<br/>
+   * Written in: {@link WebAudio#_createContext}, {@link WebAudio#initialize}.<br/>
+   * Read in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#_currentTime}, {@link WebAudio#_onUserGesture}, {@link WebAudio#initialize}.<br/>
    */
   _context: null | AudioContext;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Uint8Array`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onError}, {@link WebAudio#_onFetch}, {@link WebAudio#_onXhrLoad}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_readableBuffer}, {@link WebAudio#_updateBufferOnFetch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Uint8Array`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onError}, {@link WebAudio#_onFetch}, {@link WebAudio#_onXhrLoad}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_readableBuffer}, {@link WebAudio#_updateBufferOnFetch}.<br/>
    */
   _data: null | Uint8Array;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | VorbisDecoder`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_createDecoder}, {@link WebAudio#_destroyDecoder}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_decodeAudioData}, {@link WebAudio#_destroyDecoder}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | VorbisDecoder`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_createDecoder}, {@link WebAudio#_destroyDecoder}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_decodeAudioData}, {@link WebAudio#_destroyDecoder}.<br/>
    */
   _decoder: null | VorbisDecoder;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_removeEndTimer}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_removeEndTimer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_removeEndTimer}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_removeEndTimer}.<br/>
    */
   _endTimer: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetchProcess}.
-   *
-   * Consumed by:
-   * - `push()`: {@link WebAudio#_onFetchProcess}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetchProcess}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link WebAudio#_onFetchProcess}.<br/>
    */
   _fetchedData: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetchProcess}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetch}, {@link WebAudio#_updateBufferOnFetch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetchProcess}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_concatenateFetchedData}, {@link WebAudio#_onFetch}, {@link WebAudio#_updateBufferOnFetch}.<br/>
    */
   _fetchedSize: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_createGainNode}, {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#_createSourceNode}, {@link WebAudio#fadeIn}, {@link WebAudio#fadeOut}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_createGainNode}, {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#_createSourceNode}, {@link WebAudio#fadeIn}, {@link WebAudio#fadeOut}.<br/>
    */
   _gainNode: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onError}, {@link WebAudio#_startLoading}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#isError}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onError}, {@link WebAudio#_startLoading}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#isError}.<br/>
    */
   _isError: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onFetch}, {@link WebAudio#_onXhrLoad}, {@link WebAudio#_startLoading}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_decodeAudioData}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onFetch}, {@link WebAudio#_onXhrLoad}, {@link WebAudio#_startLoading}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_decodeAudioData}.<br/>
    */
   _isLoaded: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}, {@link WebAudio#fadeOut}, {@link WebAudio#play}, {@link WebAudio#stop}.
-   * Read in: {@link WebAudio#_refreshSourceNode}, {@link WebAudio#isPlaying}, {@link WebAudio#retry}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}, {@link WebAudio#fadeOut}, {@link WebAudio#play}, {@link WebAudio#stop}.<br/>
+   * Read in: {@link WebAudio#_refreshSourceNode}, {@link WebAudio#isPlaying}, {@link WebAudio#retry}.<br/>
    */
   _isPlaying: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_startLoading}, {@link WebAudio#_updateBufferOnFetch}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_updateBufferOnFetch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_startLoading}, {@link WebAudio#_updateBufferOnFetch}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_updateBufferOnFetch}.<br/>
    */
   _lastUpdateTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}, {@link WebAudio#fadeOut}, {@link WebAudio#stop}.
-   * Read in: {@link WebAudio#_onLoad}, {@link WebAudio#addLoadListener}.
-   *
-   * Consumed by:
-   * - `.length`: {@link WebAudio#_onLoad}.
-   * - `push()`: {@link WebAudio#addLoadListener}.
-   * - `shift()`: {@link WebAudio#_onLoad}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}, {@link WebAudio#fadeOut}, {@link WebAudio#stop}.<br/>
+   * Read in: {@link WebAudio#_onLoad}, {@link WebAudio#addLoadListener}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link WebAudio#_onLoad}.<br/>
+   * - `push()`: {@link WebAudio#addLoadListener}.<br/>
+   * - `shift()`: {@link WebAudio#_onLoad}.<br/>
    */
   _loadListeners: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}, {@link WebAudio#play}.
-   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_startSourceNode}, {@link WebAudio#retry}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}, {@link WebAudio#play}.<br/>
+   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_startSourceNode}, {@link WebAudio#retry}.<br/>
    */
   _loop: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_readMetaData}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_onDecode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_readMetaData}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_onDecode}.<br/>
    */
   _loopLength: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.<br/>
    */
   _loopLengthTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_readMetaData}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_onDecode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_readMetaData}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_onDecode}.<br/>
    */
   _loopStart: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.<br/>
    */
   _loopStartTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link WebAudio#initialize}.
-   * Written in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#initialize}.
-   * Read in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#_fadeIn}, {@link WebAudio#_fadeOut}, {@link WebAudio#_resetVolume}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link WebAudio#initialize}.<br/>
+   * Written in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#initialize}.<br/>
+   * Read in: {@link WebAudio#_createMasterGainNode}, {@link WebAudio#_fadeIn}, {@link WebAudio#_fadeOut}, {@link WebAudio#_resetVolume}.<br/>
    */
   _masterGainNode: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link WebAudio#initialize}.
-   * Written in: {@link WebAudio#initialize}, {@link WebAudio#setMasterVolume}.
-   * Read in: {@link WebAudio#_fadeIn}, {@link WebAudio#_fadeOut}, {@link WebAudio#_resetVolume}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link WebAudio#initialize}.<br/>
+   * Written in: {@link WebAudio#initialize}, {@link WebAudio#setMasterVolume}.<br/>
+   * Read in: {@link WebAudio#_fadeIn}, {@link WebAudio#_fadeOut}, {@link WebAudio#_resetVolume}.<br/>
    */
   _masterVolume: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_updatePanner}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_updatePanner}.<br/>
    */
   _pan: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_createPannerNode}, {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#_createPannerNode}, {@link WebAudio#_updatePanner}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_createPannerNode}, {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#_createPannerNode}, {@link WebAudio#_updatePanner}.<br/>
    */
   _pannerNode: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_startPlaying}, {@link WebAudio#_startSourceNode}, {@link WebAudio#seek}.<br/>
    */
   _pitch: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_readLoopComments}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_onDecode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_readLoopComments}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_onDecode}.<br/>
    */
   _sampleRate: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_onDecode}, {@link WebAudio#_onError}, {@link WebAudio#_removeNodes}, {@link WebAudio#_startAllSourceNodes}, {@link WebAudio#_startSourceNode}, {@link WebAudio#_stopSourceNode}.
-   *
-   * Consumed by:
-   * - `.length`: {@link WebAudio#_createEndTimer}, {@link WebAudio#_onDecode}, {@link WebAudio#_onError}, {@link WebAudio#_removeNodes}, {@link WebAudio#_startAllSourceNodes}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_removeNodes}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_createSourceNode}, {@link WebAudio#_onDecode}, {@link WebAudio#_onError}, {@link WebAudio#_removeNodes}, {@link WebAudio#_startAllSourceNodes}, {@link WebAudio#_startSourceNode}, {@link WebAudio#_stopSourceNode}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link WebAudio#_createEndTimer}, {@link WebAudio#_onDecode}, {@link WebAudio#_onError}, {@link WebAudio#_removeNodes}, {@link WebAudio#_startAllSourceNodes}.<br/>
    */
   _sourceNodes: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_startPlaying}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#seek}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_startPlaying}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#seek}.<br/>
    */
   _startTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#addStopListener}, {@link WebAudio#stop}.
-   *
-   * Consumed by:
-   * - `.length`: {@link WebAudio#stop}.
-   * - `push()`: {@link WebAudio#addStopListener}.
-   * - `shift()`: {@link WebAudio#stop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#addStopListener}, {@link WebAudio#stop}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link WebAudio#stop}.<br/>
+   * - `push()`: {@link WebAudio#addStopListener}.<br/>
+   * - `shift()`: {@link WebAudio#stop}.<br/>
    */
   _stopListeners: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_onDecode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#_onDecode}, {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createEndTimer}, {@link WebAudio#_onDecode}.<br/>
    */
   _totalTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link WebAudio#initialize}.
-   * Written in: {@link WebAudio#initialize}.
-   * Read in: {@link WebAudio#_realUrl}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link WebAudio#initialize}.<br/>
+   * Written in: {@link WebAudio#initialize}.<br/>
+   * Read in: {@link WebAudio#_realUrl}.<br/>
    */
   _url: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link WebAudio#clear}.
-   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#fadeIn}, {@link WebAudio#fadeOut}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link WebAudio#clear}.<br/>
+   * Read in: {@link WebAudio#_createGainNode}, {@link WebAudio#fadeIn}, {@link WebAudio#fadeOut}.<br/>
    */
   _volume: number;
   /**

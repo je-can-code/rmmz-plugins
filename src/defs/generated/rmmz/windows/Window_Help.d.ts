@@ -8,12 +8,12 @@
 interface Window_Help extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_Help#initialize}.
-   * Written in: {@link Window_Help#initialize}, {@link Window_Help#setText}.
-   * Read in: {@link Window_Help#refresh}, {@link Window_Help#setText}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_Help#initialize}.<br/>
+   * Written in: {@link Window_Help#initialize}, {@link Window_Help#setText}.<br/>
+   * Read in: {@link Window_Help#refresh}, {@link Window_Help#setText}.<br/>
    */
   _text: string;
   /**

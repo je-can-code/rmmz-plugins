@@ -8,69 +8,69 @@
 interface Window_ShopNumber extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Window_ShopNumber#createButtons}.
-   * Read in: {@link Window_ShopNumber#createButtons}, {@link Window_ShopNumber#placeButtons}, {@link Window_ShopNumber#totalButtonWidth}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Window_ShopNumber#createButtons}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_ShopNumber#createButtons}.<br/>
+   * Read in: {@link Window_ShopNumber#createButtons}, {@link Window_ShopNumber#placeButtons}, {@link Window_ShopNumber#totalButtonWidth}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Window_ShopNumber#createButtons}.<br/>
    */
   _buttons: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _canRepeat: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setCurrencyUnit}.
-   * Read in: {@link Window_ShopNumber#drawTotalPrice}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setCurrencyUnit}.<br/>
+   * Read in: {@link Window_ShopNumber#drawTotalPrice}.<br/>
    */
   _currencyUnit: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
-   * Read in: {@link Window_ShopNumber#drawCurrentItemName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.<br/>
+   * Read in: {@link Window_ShopNumber#drawCurrentItemName}.<br/>
    */
   _item: null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
-   * Read in: {@link Window_ShopNumber#changeNumber}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.<br/>
+   * Read in: {@link Window_ShopNumber#changeNumber}.<br/>
    */
   _max: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
-   * Read in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#drawNumber}, {@link Window_ShopNumber#drawTotalPrice}, {@link Window_ShopNumber#number}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.<br/>
+   * Read in: {@link Window_ShopNumber#changeNumber}, {@link Window_ShopNumber#drawNumber}, {@link Window_ShopNumber#drawTotalPrice}, {@link Window_ShopNumber#number}.<br/>
    */
   _number: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_ShopNumber#initialize}.
-   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.
-   * Read in: {@link Window_ShopNumber#drawTotalPrice}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
+   * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.<br/>
+   * Read in: {@link Window_ShopNumber#drawTotalPrice}.<br/>
    */
   _price: number;
   /**

@@ -8,102 +8,102 @@
 interface Scene_Shop extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ShopBuy`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createBuyWindow}.
-   * Read in: {@link Scene_Shop#activateBuyWindow}, {@link Scene_Shop#buyingPrice}, {@link Scene_Shop#createBuyWindow}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onBuyOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ShopBuy`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createBuyWindow}.<br/>
+   * Read in: {@link Scene_Shop#activateBuyWindow}, {@link Scene_Shop#buyingPrice}, {@link Scene_Shop#createBuyWindow}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onBuyOk}.<br/>
    */
   _buyWindow: Window_ShopBuy;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ItemCategory`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createCategoryWindow}.
-   * Read in: {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createCategoryWindow}, {@link Scene_Shop#createSellWindow}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#sellWindowRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ItemCategory`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createCategoryWindow}.<br/>
+   * Read in: {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createCategoryWindow}, {@link Scene_Shop#createSellWindow}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#sellWindowRect}.<br/>
    */
   _categoryWindow: Window_ItemCategory;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ShopCommand`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createCommandWindow}.
-   * Read in: {@link Scene_Shop#createCommandWindow}, {@link Scene_Shop#dummyWindowRect}, {@link Scene_Shop#endNumberInput}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#sellWindowRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ShopCommand`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createCommandWindow}.<br/>
+   * Read in: {@link Scene_Shop#createCommandWindow}, {@link Scene_Shop#dummyWindowRect}, {@link Scene_Shop#endNumberInput}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#sellWindowRect}.<br/>
    */
   _commandWindow: Window_ShopCommand;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createDummyWindow}.
-   * Read in: {@link Scene_Shop#buyWindowRect}, {@link Scene_Shop#categoryWindowRect}, {@link Scene_Shop#commandBuy}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createDummyWindow}, {@link Scene_Shop#numberWindowRect}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#statusWindowRect}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createDummyWindow}.<br/>
+   * Read in: {@link Scene_Shop#buyWindowRect}, {@link Scene_Shop#categoryWindowRect}, {@link Scene_Shop#commandBuy}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createDummyWindow}, {@link Scene_Shop#numberWindowRect}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#statusWindowRect}.<br/>
    */
   _dummyWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Gold`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createGoldWindow}.
-   * Read in: {@link Scene_Shop#commandWindowRect}, {@link Scene_Shop#createGoldWindow}, {@link Scene_Shop#currencyUnit}, {@link Scene_Shop#money}, {@link Scene_Shop#onNumberOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Gold`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createGoldWindow}.<br/>
+   * Read in: {@link Scene_Shop#commandWindowRect}, {@link Scene_Shop#createGoldWindow}, {@link Scene_Shop#currencyUnit}, {@link Scene_Shop#money}, {@link Scene_Shop#onNumberOk}.<br/>
    */
   _goldWindow: Window_Gold;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `[number, number, number?, number?][]`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#prepare}.
-   * Read in: {@link Scene_Shop#createBuyWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `[number, number, number?, number?][]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#prepare}.<br/>
+   * Read in: {@link Scene_Shop#createBuyWindow}.<br/>
    */
   _goods: [number, number, number?, number?][];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#prepare}.
-   * Read in: {@link Scene_Shop#buyingPrice}, {@link Scene_Shop#doBuy}, {@link Scene_Shop#doSell}, {@link Scene_Shop#maxBuy}, {@link Scene_Shop#maxSell}, {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#sellingPrice}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#prepare}.<br/>
+   * Read in: {@link Scene_Shop#buyingPrice}, {@link Scene_Shop#doBuy}, {@link Scene_Shop#doSell}, {@link Scene_Shop#maxBuy}, {@link Scene_Shop#maxSell}, {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onSellOk}, {@link Scene_Shop#sellingPrice}.<br/>
    */
   _item: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ShopNumber`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createNumberWindow}.
-   * Read in: {@link Scene_Shop#createNumberWindow}, {@link Scene_Shop#endNumberInput}, {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#onSellOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ShopNumber`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createNumberWindow}.<br/>
+   * Read in: {@link Scene_Shop#createNumberWindow}, {@link Scene_Shop#endNumberInput}, {@link Scene_Shop#onBuyOk}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#onSellOk}.<br/>
    */
   _numberWindow: Window_ShopNumber;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#prepare}.
-   * Read in: {@link Scene_Shop#createCommandWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#prepare}.<br/>
+   * Read in: {@link Scene_Shop#createCommandWindow}.<br/>
    */
   _purchaseOnly: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ShopSell`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createSellWindow}.
-   * Read in: {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createSellWindow}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onCategoryOk}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ShopSell`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createSellWindow}.<br/>
+   * Read in: {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#commandSell}, {@link Scene_Shop#createSellWindow}, {@link Scene_Shop#onCategoryCancel}, {@link Scene_Shop#onCategoryOk}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}.<br/>
    */
   _sellWindow: Window_ShopSell;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_ShopStatus`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Shop#createStatusWindow}.
-   * Read in: {@link Scene_Shop#activateBuyWindow}, {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#createBuyWindow}, {@link Scene_Shop#createStatusWindow}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_ShopStatus`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Shop#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Shop#activateBuyWindow}, {@link Scene_Shop#activateSellWindow}, {@link Scene_Shop#createBuyWindow}, {@link Scene_Shop#createStatusWindow}, {@link Scene_Shop#onBuyCancel}, {@link Scene_Shop#onNumberOk}, {@link Scene_Shop#onSellCancel}, {@link Scene_Shop#onSellOk}.<br/>
    */
   _statusWindow: Window_ShopStatus;
   /**

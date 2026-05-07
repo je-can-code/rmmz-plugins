@@ -8,21 +8,21 @@
 interface Sprite_Clickable extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Sprite_Clickable#initialize}.
-   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.
-   * Read in: {@link Sprite_Clickable#processTouch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Sprite_Clickable#initialize}.<br/>
+   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.<br/>
+   * Read in: {@link Sprite_Clickable#processTouch}.<br/>
    */
   _hovered: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Sprite_Clickable#initialize}.
-   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.
-   * Read in: {@link Sprite_Clickable#isPressed}, {@link Sprite_Clickable#processTouch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Sprite_Clickable#initialize}.<br/>
+   * Written in: {@link Sprite_Clickable#initialize}, {@link Sprite_Clickable#processTouch}.<br/>
+   * Read in: {@link Sprite_Clickable#isPressed}, {@link Sprite_Clickable#processTouch}.<br/>
    */
   _pressed: boolean;
   /**

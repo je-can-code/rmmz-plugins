@@ -8,12 +8,12 @@
 interface Scene_Boot extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Scene_Boot#initialize}.
-   * Written in: {@link Scene_Boot#initialize}, {@link Scene_Boot#isReady}.
-   * Read in: {@link Scene_Boot#isReady}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Scene_Boot#initialize}.<br/>
+   * Written in: {@link Scene_Boot#initialize}, {@link Scene_Boot#isReady}.<br/>
+   * Read in: {@link Scene_Boot#isReady}.<br/>
    */
   _databaseLoaded: boolean;
   /**

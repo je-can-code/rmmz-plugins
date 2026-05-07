@@ -8,25 +8,25 @@
 interface EffectManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: module init.
-   * Written in: module init, {@link EffectManager#clear}.
-   * Read in: {@link EffectManager#clear}, {@link EffectManager#isReady}, {@link EffectManager#load}, {@link EffectManager#startLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link EffectManager#clear}.<br/>
+   * Read in: {@link EffectManager#clear}, {@link EffectManager#isReady}, {@link EffectManager#load}, {@link EffectManager#startLoading}.<br/>
    */
   _cache: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init.
-   * Read in: {@link EffectManager#checkErrors}, {@link EffectManager#onError}.
-   *
-   * Consumed by:
-   * - `push()`: {@link EffectManager#onError}.
-   * - `shift()`: {@link EffectManager#checkErrors}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init.<br/>
+   * Read in: {@link EffectManager#checkErrors}, {@link EffectManager#onError}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link EffectManager#onError}.<br/>
+   * - `shift()`: {@link EffectManager#checkErrors}.<br/>
    */
   _errorUrls: unknown[];
 }

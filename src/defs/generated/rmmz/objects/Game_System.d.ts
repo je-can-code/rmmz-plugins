@@ -8,174 +8,174 @@
 interface Game_System
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#setBattleBgm}.
-   * Read in: {@link Game_System#battleBgm}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#setBattleBgm}.<br/>
+   * Read in: {@link Game_System#battleBgm}.<br/>
    */
   _battleBgm: null | { name: string; pan: number; pitch: number; volume: number };
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleStart}.
-   * Read in: {@link Game_System#battleCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleStart}.<br/>
+   * Read in: {@link Game_System#battleCount}.<br/>
    */
   _battleCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.
-   * Read in: {@link Game_System#onAfterLoad}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.<br/>
+   * Read in: {@link Game_System#onAfterLoad}.<br/>
    */
   _bgmOnSave: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.
-   * Read in: {@link Game_System#onAfterLoad}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.<br/>
+   * Read in: {@link Game_System#onAfterLoad}.<br/>
    */
   _bgsOnSave: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#setDefeatMe}.
-   * Read in: {@link Game_System#defeatMe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#setDefeatMe}.<br/>
+   * Read in: {@link Game_System#defeatMe}.<br/>
    */
   _defeatMe: null | { name: string; pan: number; pitch: number; volume: number };
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#disableEncounter}, {@link Game_System#enableEncounter}, {@link Game_System#initialize}.
-   * Read in: {@link Game_System#isEncounterEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#disableEncounter}, {@link Game_System#enableEncounter}, {@link Game_System#initialize}.<br/>
+   * Read in: {@link Game_System#isEncounterEnabled}.<br/>
    */
   _encounterEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleEscape}.
-   * Read in: {@link Game_System#escapeCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleEscape}.<br/>
+   * Read in: {@link Game_System#escapeCount}.<br/>
    */
   _escapeCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#disableFormation}, {@link Game_System#enableFormation}, {@link Game_System#initialize}.
-   * Read in: {@link Game_System#isFormationEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#disableFormation}, {@link Game_System#enableFormation}, {@link Game_System#initialize}.<br/>
+   * Read in: {@link Game_System#isFormationEnabled}.<br/>
    */
   _formationEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.
-   * Read in: {@link Game_System#onAfterLoad}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.<br/>
+   * Read in: {@link Game_System#onAfterLoad}.<br/>
    */
   _framesOnSave: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#disableMenu}, {@link Game_System#enableMenu}, {@link Game_System#initialize}.
-   * Read in: {@link Game_System#isMenuEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#disableMenu}, {@link Game_System#enableMenu}, {@link Game_System#initialize}.<br/>
+   * Read in: {@link Game_System#isMenuEnabled}.<br/>
    */
   _menuEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.
-   * Read in: {@link Game_System#saveCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.<br/>
+   * Read in: {@link Game_System#saveCount}.<br/>
    */
   _saveCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#disableSave}, {@link Game_System#enableSave}, {@link Game_System#initialize}.
-   * Read in: {@link Game_System#isSaveEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#disableSave}, {@link Game_System#enableSave}, {@link Game_System#initialize}.<br/>
+   * Read in: {@link Game_System#isSaveEnabled}.<br/>
    */
   _saveEnabled: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#saveBgm}.
-   * Read in: {@link Game_System#replayBgm}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#saveBgm}.<br/>
+   * Read in: {@link Game_System#replayBgm}.<br/>
    */
   _savedBgm: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#setSavefileId}.
-   * Read in: {@link Game_System#savefileId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#setSavefileId}.<br/>
+   * Read in: {@link Game_System#savefileId}.<br/>
    */
   _savefileId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.
-   * Read in: {@link Game_System#versionId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBeforeSave}.<br/>
+   * Read in: {@link Game_System#versionId}.<br/>
    */
   _versionId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#setVictoryMe}.
-   * Read in: {@link Game_System#victoryMe}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#setVictoryMe}.<br/>
+   * Read in: {@link Game_System#victoryMe}.<br/>
    */
   _victoryMe: null | { name: string; pan: number; pitch: number; volume: number };
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#saveWalkingBgm}, {@link Game_System#saveWalkingBgm2}.
-   * Read in: {@link Game_System#replayWalkingBgm}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#saveWalkingBgm}, {@link Game_System#saveWalkingBgm2}.<br/>
+   * Read in: {@link Game_System#replayWalkingBgm}.<br/>
    */
   _walkingBgm: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleWin}.
-   * Read in: {@link Game_System#winCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#onBattleWin}.<br/>
+   * Read in: {@link Game_System#winCount}.<br/>
    */
   _winCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | [number, number, number, number]`.
-   * Initialized in: {@link Game_System#initialize}.
-   * Written in: {@link Game_System#initialize}, {@link Game_System#setWindowTone}.
-   * Read in: {@link Game_System#windowTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | [number, number, number, number]`.<br/>
+   * Initialized in: {@link Game_System#initialize}.<br/>
+   * Written in: {@link Game_System#initialize}, {@link Game_System#setWindowTone}.<br/>
+   * Read in: {@link Game_System#windowTone}.<br/>
    */
   _windowTone: null | [number, number, number, number];
   /**

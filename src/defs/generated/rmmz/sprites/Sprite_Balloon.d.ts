@@ -8,30 +8,30 @@
 interface Sprite_Balloon extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.
-   * Read in: {@link Sprite_Balloon#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.<br/>
+   * Read in: {@link Sprite_Balloon#updateFrame}.<br/>
    */
   _balloonId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}, {@link Sprite_Balloon#update}.
-   * Read in: {@link Sprite_Balloon#frameIndex}, {@link Sprite_Balloon#isPlaying}, {@link Sprite_Balloon#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}, {@link Sprite_Balloon#update}.<br/>
+   * Read in: {@link Sprite_Balloon#frameIndex}, {@link Sprite_Balloon#isPlaying}, {@link Sprite_Balloon#update}.<br/>
    */
   _duration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.
-   * Read in: {@link Sprite_Balloon#updatePosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.<br/>
+   * Read in: {@link Sprite_Balloon#updatePosition}.<br/>
    */
   _target: null | Sprite;
   /**

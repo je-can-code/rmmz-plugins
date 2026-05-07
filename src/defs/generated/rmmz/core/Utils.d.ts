@@ -8,30 +8,30 @@
 interface Utils
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Utils#setEncryptionInfo}.
-   * Read in: {@link Utils#decryptArrayBuffer}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Utils#setEncryptionInfo}.<br/>
+   * Read in: {@link Utils#decryptArrayBuffer}.<br/>
    */
   _encryptionKey: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Utils#setEncryptionInfo}.
-   * Read in: {@link Utils#hasEncryptedAudio}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Utils#setEncryptionInfo}.<br/>
+   * Read in: {@link Utils#hasEncryptedAudio}.<br/>
    */
   _hasEncryptedAudio: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Utils#setEncryptionInfo}.
-   * Read in: {@link Utils#hasEncryptedImages}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Utils#setEncryptionInfo}.<br/>
+   * Read in: {@link Utils#hasEncryptedImages}.<br/>
    */
   _hasEncryptedImages: unknown;
 }

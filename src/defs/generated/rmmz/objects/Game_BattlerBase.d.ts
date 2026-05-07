@@ -8,94 +8,94 @@
 interface Game_BattlerBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#clearBuffs}.
-   * Read in: {@link Game_BattlerBase#eraseBuff}, {@link Game_BattlerBase#isBuffExpired}, {@link Game_BattlerBase#overwriteBuffTurns}, {@link Game_BattlerBase#updateBuffTurns}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_BattlerBase#updateBuffTurns}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#clearBuffs}.<br/>
+   * Read in: {@link Game_BattlerBase#eraseBuff}, {@link Game_BattlerBase#isBuffExpired}, {@link Game_BattlerBase#overwriteBuffTurns}, {@link Game_BattlerBase#updateBuffTurns}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_BattlerBase#updateBuffTurns}.<br/>
    */
   _buffTurns: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#clearBuffs}.
-   * Read in: {@link Game_BattlerBase#buff}, {@link Game_BattlerBase#buffIcons}, {@link Game_BattlerBase#buffLength}, {@link Game_BattlerBase#decreaseBuff}, {@link Game_BattlerBase#eraseBuff}, {@link Game_BattlerBase#increaseBuff}, {@link Game_BattlerBase#isBuffAffected}, {@link Game_BattlerBase#isBuffOrDebuffAffected}, {@link Game_BattlerBase#isDebuffAffected}, {@link Game_BattlerBase#isMaxBuffAffected}, {@link Game_BattlerBase#isMaxDebuffAffected}, {@link Game_BattlerBase#paramBuffRate}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_BattlerBase#buffIcons}, {@link Game_BattlerBase#buffLength}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#clearBuffs}.<br/>
+   * Read in: {@link Game_BattlerBase#buff}, {@link Game_BattlerBase#buffIcons}, {@link Game_BattlerBase#buffLength}, {@link Game_BattlerBase#decreaseBuff}, {@link Game_BattlerBase#eraseBuff}, {@link Game_BattlerBase#increaseBuff}, {@link Game_BattlerBase#isBuffAffected}, {@link Game_BattlerBase#isBuffOrDebuffAffected}, {@link Game_BattlerBase#isDebuffAffected}, {@link Game_BattlerBase#isMaxBuffAffected}, {@link Game_BattlerBase#isMaxDebuffAffected}, {@link Game_BattlerBase#paramBuffRate}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_BattlerBase#buffIcons}, {@link Game_BattlerBase#buffLength}.<br/>
    */
   _buffs: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#appear}, {@link Game_BattlerBase#hide}, {@link Game_BattlerBase#initMembers}.
-   * Read in: {@link Game_BattlerBase#isHidden}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#appear}, {@link Game_BattlerBase#hide}, {@link Game_BattlerBase#initMembers}.<br/>
+   * Read in: {@link Game_BattlerBase#isHidden}.<br/>
    */
   _hidden: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#die}, {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#recoverAll}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#revive}, {@link Game_BattlerBase#setHp}.
-   * Read in: {@link Game_BattlerBase#isDying}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#revive}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#die}, {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#recoverAll}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#revive}, {@link Game_BattlerBase#setHp}.<br/>
+   * Read in: {@link Game_BattlerBase#isDying}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#revive}.<br/>
    */
   _hp: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#paySkillCost}, {@link Game_BattlerBase#recoverAll}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#setMp}.
-   * Read in: {@link Game_BattlerBase#canPaySkillCost}, {@link Game_BattlerBase#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#paySkillCost}, {@link Game_BattlerBase#recoverAll}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#setMp}.<br/>
+   * Read in: {@link Game_BattlerBase#canPaySkillCost}, {@link Game_BattlerBase#refresh}.<br/>
    */
   _mp: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#clearParamPlus}.
-   * Read in: {@link Game_BattlerBase#addParam}, {@link Game_BattlerBase#paramPlus}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#clearParamPlus}.<br/>
+   * Read in: {@link Game_BattlerBase#addParam}, {@link Game_BattlerBase#paramPlus}.<br/>
    */
   _paramPlus: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#clearStates}.
-   * Read in: {@link Game_BattlerBase#eraseState}, {@link Game_BattlerBase#isStateExpired}, {@link Game_BattlerBase#resetStateCounts}, {@link Game_BattlerBase#updateStateTurns}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#clearStates}.<br/>
+   * Read in: {@link Game_BattlerBase#eraseState}, {@link Game_BattlerBase#isStateExpired}, {@link Game_BattlerBase#resetStateCounts}, {@link Game_BattlerBase#updateStateTurns}.<br/>
    */
   _stateTurns: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#clearStates}.
-   * Read in: {@link Game_BattlerBase#addNewState}, {@link Game_BattlerBase#eraseState}, {@link Game_BattlerBase#isStateAffected}, {@link Game_BattlerBase#sortStates}, {@link Game_BattlerBase#states}, {@link Game_BattlerBase#updateStateTurns}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_BattlerBase#addNewState}.
-   * - `sort()`: {@link Game_BattlerBase#sortStates}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#clearStates}.<br/>
+   * Read in: {@link Game_BattlerBase#addNewState}, {@link Game_BattlerBase#eraseState}, {@link Game_BattlerBase#isStateAffected}, {@link Game_BattlerBase#sortStates}, {@link Game_BattlerBase#states}, {@link Game_BattlerBase#updateStateTurns}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_BattlerBase#addNewState}.<br/>
+   * - `sort()`: {@link Game_BattlerBase#sortStates}.<br/>
    */
   _states: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#paySkillCost}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#setTp}.
-   * Read in: {@link Game_BattlerBase#canPaySkillCost}, {@link Game_BattlerBase#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_BattlerBase#initMembers}, {@link Game_BattlerBase#paySkillCost}, {@link Game_BattlerBase#refresh}, {@link Game_BattlerBase#setTp}.<br/>
+   * Read in: {@link Game_BattlerBase#canPaySkillCost}, {@link Game_BattlerBase#refresh}.<br/>
    */
   _tp: number;
   /**

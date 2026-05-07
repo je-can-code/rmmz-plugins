@@ -8,135 +8,135 @@
 interface Game_Interpreter
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `object`.
-   * Initialized in: {@link Game_Interpreter#initialize}.
-   * Written in: {@link Game_Interpreter#initialize}.
-   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command301}, {@link Game_Interpreter#command402}, {@link Game_Interpreter#command403}, {@link Game_Interpreter#command411}, {@link Game_Interpreter#command601}, {@link Game_Interpreter#command602}, {@link Game_Interpreter#command603}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#setupChoices}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `object`.<br/>
+   * Initialized in: {@link Game_Interpreter#initialize}.<br/>
+   * Written in: {@link Game_Interpreter#initialize}.<br/>
+   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command301}, {@link Game_Interpreter#command402}, {@link Game_Interpreter#command403}, {@link Game_Interpreter#command411}, {@link Game_Interpreter#command601}, {@link Game_Interpreter#command602}, {@link Game_Interpreter#command603}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#setupChoices}.<br/>
    */
   _branch: object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command205}, {@link Game_Interpreter#command212}, {@link Game_Interpreter#command213}.
-   * Read in: {@link Game_Interpreter#command205}, {@link Game_Interpreter#command212}, {@link Game_Interpreter#command213}, {@link Game_Interpreter#updateWaitMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command205}, {@link Game_Interpreter#command212}, {@link Game_Interpreter#command213}.<br/>
+   * Read in: {@link Game_Interpreter#command205}, {@link Game_Interpreter#command212}, {@link Game_Interpreter#command213}, {@link Game_Interpreter#updateWaitMode}.<br/>
    */
   _characterId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Interpreter`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setupChild}, {@link Game_Interpreter#updateChild}.
-   * Read in: {@link Game_Interpreter#setupChild}, {@link Game_Interpreter#updateChild}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Interpreter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setupChild}, {@link Game_Interpreter#updateChild}.<br/>
+   * Read in: {@link Game_Interpreter#setupChild}, {@link Game_Interpreter#updateChild}.<br/>
    */
   _childInterpreter: null | Game_Interpreter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string | unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command108}, {@link Game_Interpreter#terminate}.
-   * Read in: {@link Game_Interpreter#command108}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Game_Interpreter#command108}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string | unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command108}, {@link Game_Interpreter#terminate}.<br/>
+   * Read in: {@link Game_Interpreter#command108}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Game_Interpreter#command108}.<br/>
    */
   _comments: string | unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Interpreter#initialize}.
-   * Written in: {@link Game_Interpreter#initialize}.
-   * Read in: {@link Game_Interpreter#checkOverflow}, {@link Game_Interpreter#setupChild}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Interpreter#initialize}.<br/>
+   * Written in: {@link Game_Interpreter#initialize}.<br/>
+   * Read in: {@link Game_Interpreter#checkOverflow}, {@link Game_Interpreter#setupChild}.<br/>
    */
   _depth: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}.
-   * Read in: {@link Game_Interpreter#character}, {@link Game_Interpreter#command111}, {@link Game_Interpreter#command117}, {@link Game_Interpreter#command123}, {@link Game_Interpreter#command214}, {@link Game_Interpreter#eventId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}.<br/>
+   * Read in: {@link Game_Interpreter#character}, {@link Game_Interpreter#command111}, {@link Game_Interpreter#command117}, {@link Game_Interpreter#command123}, {@link Game_Interpreter#command214}, {@link Game_Interpreter#eventId}.<br/>
    */
   _eventId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Interpreter#initialize}.
-   * Written in: {@link Game_Interpreter#checkFreeze}, {@link Game_Interpreter#initialize}.
-   * Read in: {@link Game_Interpreter#checkFreeze}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Interpreter#initialize}.<br/>
+   * Written in: {@link Game_Interpreter#checkFreeze}, {@link Game_Interpreter#initialize}.<br/>
+   * Read in: {@link Game_Interpreter#checkFreeze}.<br/>
    */
   _frameCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Interpreter#initialize}.
-   * Written in: {@link Game_Interpreter#checkFreeze}, {@link Game_Interpreter#initialize}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Interpreter#initialize}.<br/>
+   * Written in: {@link Game_Interpreter#checkFreeze}, {@link Game_Interpreter#initialize}.<br/>
+   * Read in: none.<br/>
    */
   _freezeChecker: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Interpreter#initialize}.
-   * Written in: {@link Game_Interpreter#executeCommand}, {@link Game_Interpreter#initialize}.
-   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command301}, {@link Game_Interpreter#command402}, {@link Game_Interpreter#command403}, {@link Game_Interpreter#command411}, {@link Game_Interpreter#command413}, {@link Game_Interpreter#command601}, {@link Game_Interpreter#command602}, {@link Game_Interpreter#command603}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#setupChoices}, {@link Game_Interpreter#skipBranch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Interpreter#initialize}.<br/>
+   * Written in: {@link Game_Interpreter#executeCommand}, {@link Game_Interpreter#initialize}.<br/>
+   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command301}, {@link Game_Interpreter#command402}, {@link Game_Interpreter#command403}, {@link Game_Interpreter#command411}, {@link Game_Interpreter#command413}, {@link Game_Interpreter#command601}, {@link Game_Interpreter#command602}, {@link Game_Interpreter#command603}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#setupChoices}, {@link Game_Interpreter#skipBranch}.<br/>
    */
   _indent: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command101}, {@link Game_Interpreter#command105}, {@link Game_Interpreter#command108}, {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command302}, {@link Game_Interpreter#command355}, {@link Game_Interpreter#command413}, {@link Game_Interpreter#executeCommand}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#skipBranch}.
-   * Read in: {@link Game_Interpreter#command113}, {@link Game_Interpreter#currentCommand}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#nextEventCode}, {@link Game_Interpreter#skipBranch}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#command101}, {@link Game_Interpreter#command105}, {@link Game_Interpreter#command108}, {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command302}, {@link Game_Interpreter#command355}, {@link Game_Interpreter#command413}, {@link Game_Interpreter#executeCommand}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#skipBranch}.<br/>
+   * Read in: {@link Game_Interpreter#command113}, {@link Game_Interpreter#currentCommand}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#nextEventCode}, {@link Game_Interpreter#skipBranch}.<br/>
    */
   _index: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}, {@link Game_Interpreter#terminate}.
-   * Read in: {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command119}, {@link Game_Interpreter#currentCommand}, {@link Game_Interpreter#isRunning}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#loadImages}, {@link Game_Interpreter#nextEventCode}, {@link Game_Interpreter#skipBranch}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command119}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}, {@link Game_Interpreter#terminate}.<br/>
+   * Read in: {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command119}, {@link Game_Interpreter#currentCommand}, {@link Game_Interpreter#isRunning}, {@link Game_Interpreter#jumpTo}, {@link Game_Interpreter#loadImages}, {@link Game_Interpreter#nextEventCode}, {@link Game_Interpreter#skipBranch}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Game_Interpreter#command113}, {@link Game_Interpreter#command115}, {@link Game_Interpreter#command119}.<br/>
    */
   _list: null | Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}.
-   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command123}, {@link Game_Interpreter#isOnCurrentMap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setup}.<br/>
+   * Read in: {@link Game_Interpreter#command111}, {@link Game_Interpreter#command123}, {@link Game_Interpreter#isOnCurrentMap}.<br/>
    */
   _mapId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#updateWaitCount}, {@link Game_Interpreter#wait}.
-   * Read in: {@link Game_Interpreter#updateWaitCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#updateWaitCount}, {@link Game_Interpreter#wait}.<br/>
+   * Read in: {@link Game_Interpreter#updateWaitCount}.<br/>
    */
   _waitCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setWaitMode}, {@link Game_Interpreter#updateWaitMode}.
-   * Read in: {@link Game_Interpreter#updateWaitMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Interpreter#clear}, {@link Game_Interpreter#setWaitMode}, {@link Game_Interpreter#updateWaitMode}.<br/>
+   * Read in: {@link Game_Interpreter#updateWaitMode}.<br/>
    */
   _waitMode: string;
   /**

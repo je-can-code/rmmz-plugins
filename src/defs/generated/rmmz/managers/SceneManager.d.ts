@@ -8,89 +8,89 @@
 interface SceneManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#snapForBackground}.
-   * Read in: {@link SceneManager#backgroundBitmap}, {@link SceneManager#snapForBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#snapForBackground}.<br/>
+   * Read in: {@link SceneManager#backgroundBitmap}, {@link SceneManager#snapForBackground}.<br/>
    */
   _backgroundBitmap: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#determineRepeatNumber}.
-   * Read in: {@link SceneManager#determineRepeatNumber}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#determineRepeatNumber}.<br/>
+   * Read in: {@link SceneManager#determineRepeatNumber}.<br/>
    */
   _elapsedTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#exit}.
-   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#isSceneChanging}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#exit}.<br/>
+   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#isSceneChanging}.<br/>
    */
   _exiting: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | sceneClass`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#changeScene}, {@link SceneManager#goto}.
-   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#isNextScene}, {@link SceneManager#isSceneChanging}, {@link SceneManager#prepareNextScene}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | sceneClass`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#changeScene}, {@link SceneManager#goto}.<br/>
+   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#isNextScene}, {@link SceneManager#isSceneChanging}, {@link SceneManager#prepareNextScene}.<br/>
    */
   _nextScene: null | sceneClass;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#onSceneTerminate}.
-   * Read in: {@link SceneManager#isPreviousScene}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#onSceneTerminate}.<br/>
+   * Read in: {@link SceneManager#isPreviousScene}.<br/>
    */
   _previousClass: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#onBeforeSceneStart}, {@link SceneManager#onSceneTerminate}.
-   * Read in: {@link SceneManager#onBeforeSceneStart}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#onBeforeSceneStart}, {@link SceneManager#onSceneTerminate}.<br/>
+   * Read in: {@link SceneManager#onBeforeSceneStart}.<br/>
    */
   _previousScene: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#changeScene}.
-   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#goto}, {@link SceneManager#isCurrentSceneBusy}, {@link SceneManager#onSceneStart}, {@link SceneManager#onSceneTerminate}, {@link SceneManager#push}, {@link SceneManager#snap}, {@link SceneManager#updateScene}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#changeScene}.<br/>
+   * Read in: {@link SceneManager#changeScene}, {@link SceneManager#goto}, {@link SceneManager#isCurrentSceneBusy}, {@link SceneManager#onSceneStart}, {@link SceneManager#onSceneTerminate}, {@link SceneManager#push}, {@link SceneManager#snap}, {@link SceneManager#updateScene}.<br/>
    */
   _scene: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#determineRepeatNumber}.
-   * Read in: {@link SceneManager#determineRepeatNumber}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#determineRepeatNumber}.<br/>
+   * Read in: {@link SceneManager#determineRepeatNumber}.<br/>
    */
   _smoothDeltaTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init, {@link SceneManager#clearStack}.
-   * Read in: {@link SceneManager#pop}, {@link SceneManager#push}.
-   *
-   * Consumed by:
-   * - `.length`: {@link SceneManager#pop}.
-   * - `pop()`: {@link SceneManager#pop}.
-   * - `push()`: {@link SceneManager#push}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link SceneManager#clearStack}.<br/>
+   * Read in: {@link SceneManager#pop}, {@link SceneManager#push}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link SceneManager#pop}.<br/>
+   * - `pop()`: {@link SceneManager#pop}.<br/>
+   * - `push()`: {@link SceneManager#push}.<br/>
    */
   _stack: unknown[];
 }

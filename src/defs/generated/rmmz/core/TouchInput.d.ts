@@ -8,111 +8,111 @@
 interface TouchInput
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.
-   * Read in: {@link TouchInput#isClicked}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.<br/>
+   * Read in: {@link TouchInput#isClicked}.<br/>
    */
   _clicked: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.
-   * Read in: {@link TouchInput#isCancelled}, {@link TouchInput#isHovered}, {@link TouchInput#isMoved}, {@link TouchInput#isReleased}, {@link TouchInput#isRepeated}, {@link TouchInput#isTriggered}, {@link TouchInput#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.<br/>
+   * Read in: {@link TouchInput#isCancelled}, {@link TouchInput#isHovered}, {@link TouchInput#isMoved}, {@link TouchInput#isReleased}, {@link TouchInput#isRepeated}, {@link TouchInput#isTriggered}, {@link TouchInput#update}.<br/>
    */
   _currentState: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: none.<br/>
    */
   _date: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onLeftButtonDown}, {@link TouchInput#_onMouseUp}, {@link TouchInput#clear}.
-   * Read in: {@link TouchInput#_onMouseMove}, {@link TouchInput#isPressed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onLeftButtonDown}, {@link TouchInput#_onMouseUp}, {@link TouchInput#clear}.<br/>
+   * Read in: {@link TouchInput#_onMouseMove}, {@link TouchInput#isPressed}.<br/>
    */
   _mousePressed: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onMove}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: {@link TouchInput#_onMove}, {@link TouchInput#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onMove}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: {@link TouchInput#_onMove}, {@link TouchInput#update}.<br/>
    */
   _moved: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.
-   * Read in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#_onWheel}, {@link TouchInput#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#clear}, {@link TouchInput#update}.<br/>
+   * Read in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#_onWheel}, {@link TouchInput#update}.<br/>
    */
   _newState: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onLeftButtonDown}, {@link TouchInput#_onTouchStart}, {@link TouchInput#clear}, {@link TouchInput#update}.
-   * Read in: {@link TouchInput#isLongPressed}, {@link TouchInput#isRepeated}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onLeftButtonDown}, {@link TouchInput#_onTouchStart}, {@link TouchInput#clear}, {@link TouchInput#update}.<br/>
+   * Read in: {@link TouchInput#isLongPressed}, {@link TouchInput#isRepeated}.<br/>
    */
   _pressedTime: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onTouchCancel}, {@link TouchInput#_onTouchEnd}, {@link TouchInput#_onTouchStart}, {@link TouchInput#clear}.
-   * Read in: {@link TouchInput#isPressed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onTouchCancel}, {@link TouchInput#_onTouchEnd}, {@link TouchInput#_onTouchStart}, {@link TouchInput#clear}.<br/>
+   * Read in: {@link TouchInput#isPressed}.<br/>
    */
   _screenPressed: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: {@link TouchInput#_onMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: {@link TouchInput#_onMove}.<br/>
    */
   _triggerX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: {@link TouchInput#_onMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: {@link TouchInput#_onMove}.<br/>
    */
   _triggerY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: none.<br/>
    */
   _x: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link TouchInput#_onCancel}, {@link TouchInput#_onHover}, {@link TouchInput#_onMove}, {@link TouchInput#_onRelease}, {@link TouchInput#_onTrigger}, {@link TouchInput#clear}.<br/>
+   * Read in: none.<br/>
    */
   _y: number;
 }

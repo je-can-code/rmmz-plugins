@@ -8,30 +8,30 @@
 interface Window_EquipSlot extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_EquipSlot#initialize}.
-   * Written in: {@link Window_EquipSlot#initialize}, {@link Window_EquipSlot#setActor}.
-   * Read in: {@link Window_EquipSlot#drawItem}, {@link Window_EquipSlot#isEnabled}, {@link Window_EquipSlot#itemAt}, {@link Window_EquipSlot#maxItems}, {@link Window_EquipSlot#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_EquipSlot#initialize}.<br/>
+   * Written in: {@link Window_EquipSlot#initialize}, {@link Window_EquipSlot#setActor}.<br/>
+   * Read in: {@link Window_EquipSlot#drawItem}, {@link Window_EquipSlot#isEnabled}, {@link Window_EquipSlot#itemAt}, {@link Window_EquipSlot#maxItems}, {@link Window_EquipSlot#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_EquipSlot#setItemWindow}.
-   * Read in: {@link Window_EquipSlot#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_EquipSlot#setItemWindow}.<br/>
+   * Read in: {@link Window_EquipSlot#update}.<br/>
    */
   _itemWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_EquipSlot#setStatusWindow}.
-   * Read in: {@link Window_EquipSlot#updateHelp}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_EquipSlot#setStatusWindow}.<br/>
+   * Read in: {@link Window_EquipSlot#updateHelp}.<br/>
    */
   _statusWindow: Window_Base;
   /**

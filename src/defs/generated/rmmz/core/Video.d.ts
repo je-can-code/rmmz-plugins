@@ -8,30 +8,30 @@
 interface Video
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: {@link Video#initialize}.
-   * Written in: {@link Video#_createElement}, {@link Video#initialize}.
-   * Read in: {@link Video#_createElement}, {@link Video#_isVisible}, {@link Video#_onError}, {@link Video#_onLoad}, {@link Video#_onUserGesture}, {@link Video#_updateVisibility}, {@link Video#play}, {@link Video#resize}, {@link Video#setVolume}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: {@link Video#initialize}.<br/>
+   * Written in: {@link Video#_createElement}, {@link Video#initialize}.<br/>
+   * Read in: {@link Video#_createElement}, {@link Video#_isVisible}, {@link Video#_onError}, {@link Video#_onLoad}, {@link Video#_onUserGesture}, {@link Video#_updateVisibility}, {@link Video#play}, {@link Video#resize}, {@link Video#setVolume}.<br/>
    */
   _element: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Video#initialize}.
-   * Written in: {@link Video#_onLoad}, {@link Video#initialize}, {@link Video#play}.
-   * Read in: {@link Video#isPlaying}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Video#initialize}.<br/>
+   * Written in: {@link Video#_onLoad}, {@link Video#initialize}, {@link Video#play}.<br/>
+   * Read in: {@link Video#isPlaying}.<br/>
    */
   _loading: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Video#initialize}.
-   * Written in: {@link Video#initialize}, {@link Video#setVolume}.
-   * Read in: {@link Video#_onLoad}, {@link Video#setVolume}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Video#initialize}.<br/>
+   * Written in: {@link Video#initialize}, {@link Video#setVolume}.<br/>
+   * Read in: {@link Video#_onLoad}, {@link Video#setVolume}.<br/>
    */
   _volume: number;
 }

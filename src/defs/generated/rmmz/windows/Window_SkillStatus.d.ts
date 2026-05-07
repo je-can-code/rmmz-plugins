@@ -8,12 +8,12 @@
 interface Window_SkillStatus extends Window_StatusBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_SkillStatus#initialize}.
-   * Written in: {@link Window_SkillStatus#initialize}, {@link Window_SkillStatus#setActor}.
-   * Read in: {@link Window_SkillStatus#refresh}, {@link Window_SkillStatus#setActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_SkillStatus#initialize}.<br/>
+   * Written in: {@link Window_SkillStatus#initialize}, {@link Window_SkillStatus#setActor}.<br/>
+   * Read in: {@link Window_SkillStatus#refresh}, {@link Window_SkillStatus#setActor}.<br/>
    */
   _actor: null | Game_Actor;
   /**

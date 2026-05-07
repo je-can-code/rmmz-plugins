@@ -8,39 +8,39 @@
 interface Sprite_StateIcon extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#update}.
-   * Read in: {@link Sprite_StateIcon#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#update}.<br/>
+   * Read in: {@link Sprite_StateIcon#update}.<br/>
    */
   _animationCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.
-   * Read in: {@link Sprite_StateIcon#updateIcon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.<br/>
+   * Read in: {@link Sprite_StateIcon#updateIcon}.<br/>
    */
   _animationIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}.
-   * Read in: {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#shouldDisplay}, {@link Sprite_StateIcon#updateIcon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#setup}.<br/>
+   * Read in: {@link Sprite_StateIcon#setup}, {@link Sprite_StateIcon#shouldDisplay}, {@link Sprite_StateIcon#updateIcon}.<br/>
    */
   _battler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.
-   * Read in: {@link Sprite_StateIcon#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_StateIcon#initMembers}, {@link Sprite_StateIcon#updateIcon}.<br/>
+   * Read in: {@link Sprite_StateIcon#updateFrame}.<br/>
    */
   _iconIndex: number;
   /**

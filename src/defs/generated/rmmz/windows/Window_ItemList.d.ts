@@ -8,25 +8,25 @@
 interface Window_ItemList extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_ItemList#initialize}.
-   * Written in: {@link Window_ItemList#initialize}, {@link Window_ItemList#setCategory}.
-   * Read in: {@link Window_ItemList#includes}, {@link Window_ItemList#needsNumber}, {@link Window_ItemList#setCategory}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_ItemList#initialize}.<br/>
+   * Written in: {@link Window_ItemList#initialize}, {@link Window_ItemList#setCategory}.<br/>
+   * Read in: {@link Window_ItemList#includes}, {@link Window_ItemList#needsNumber}, {@link Window_ItemList#setCategory}.<br/>
    */
   _category: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_ItemList#initialize}.
-   * Written in: {@link Window_ItemList#initialize}, {@link Window_ItemList#makeItemList}.
-   * Read in: {@link Window_ItemList#itemAt}, {@link Window_ItemList#makeItemList}, {@link Window_ItemList#maxItems}, {@link Window_ItemList#selectLast}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_ItemList#maxItems}.
-   * - `push()`: {@link Window_ItemList#makeItemList}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_ItemList#initialize}.<br/>
+   * Written in: {@link Window_ItemList#initialize}, {@link Window_ItemList#makeItemList}.<br/>
+   * Read in: {@link Window_ItemList#itemAt}, {@link Window_ItemList#makeItemList}, {@link Window_ItemList#maxItems}, {@link Window_ItemList#selectLast}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_ItemList#maxItems}.<br/>
+   * - `push()`: {@link Window_ItemList#makeItemList}.<br/>
    */
   _data: unknown[];
   /**

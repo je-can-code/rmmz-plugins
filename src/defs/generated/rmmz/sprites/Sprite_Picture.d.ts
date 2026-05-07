@@ -8,21 +8,21 @@
 interface Sprite_Picture extends Sprite_Clickable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Picture#initialize}.
-   * Written in: {@link Sprite_Picture#initialize}.
-   * Read in: {@link Sprite_Picture#picture}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Picture#initialize}.<br/>
+   * Written in: {@link Sprite_Picture#initialize}.<br/>
+   * Read in: {@link Sprite_Picture#picture}.<br/>
    */
   _pictureId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Sprite_Picture#initialize}.
-   * Written in: {@link Sprite_Picture#initialize}, {@link Sprite_Picture#updateBitmap}.
-   * Read in: {@link Sprite_Picture#loadBitmap}, {@link Sprite_Picture#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Sprite_Picture#initialize}.<br/>
+   * Written in: {@link Sprite_Picture#initialize}, {@link Sprite_Picture#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Picture#loadBitmap}, {@link Sprite_Picture#updateBitmap}.<br/>
    */
   _pictureName: string;
   /**

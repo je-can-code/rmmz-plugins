@@ -8,12 +8,12 @@
 interface Game_Variables
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Variables#clear}.
-   * Read in: {@link Game_Variables#setValue}, {@link Game_Variables#value}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Variables#clear}.<br/>
+   * Read in: {@link Game_Variables#setValue}, {@link Game_Variables#value}.<br/>
    */
   _data: unknown[];
   /**

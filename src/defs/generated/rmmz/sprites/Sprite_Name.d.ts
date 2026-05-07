@@ -8,30 +8,30 @@
 interface Sprite_Name extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#setup}.
-   * Read in: {@link Sprite_Name#name}, {@link Sprite_Name#textColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#setup}.<br/>
+   * Read in: {@link Sprite_Name#name}, {@link Sprite_Name#textColor}.<br/>
    */
   _battler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#updateBitmap}.
-   * Read in: {@link Sprite_Name#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Name#updateBitmap}.<br/>
    */
   _name: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#updateBitmap}.
-   * Read in: {@link Sprite_Name#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Name#initMembers}, {@link Sprite_Name#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Name#updateBitmap}.<br/>
    */
   _textColor: string;
   /**

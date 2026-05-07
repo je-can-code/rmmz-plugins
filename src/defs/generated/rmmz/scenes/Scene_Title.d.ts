@@ -8,39 +8,39 @@
 interface Scene_Title extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Title#createBackground}.
-   * Read in: {@link Scene_Title#adjustBackground}, {@link Scene_Title#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Title#createBackground}.<br/>
+   * Read in: {@link Scene_Title#adjustBackground}, {@link Scene_Title#createBackground}.<br/>
    */
   _backSprite1: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Title#createBackground}.
-   * Read in: {@link Scene_Title#adjustBackground}, {@link Scene_Title#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Title#createBackground}.<br/>
+   * Read in: {@link Scene_Title#adjustBackground}, {@link Scene_Title#createBackground}.<br/>
    */
   _backSprite2: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_TitleCommand`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Title#createCommandWindow}.
-   * Read in: {@link Scene_Title#commandContinue}, {@link Scene_Title#commandNewGame}, {@link Scene_Title#commandOptions}, {@link Scene_Title#createCommandWindow}, {@link Scene_Title#isBusy}, {@link Scene_Title#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_TitleCommand`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Title#createCommandWindow}.<br/>
+   * Read in: {@link Scene_Title#commandContinue}, {@link Scene_Title#commandNewGame}, {@link Scene_Title#commandOptions}, {@link Scene_Title#createCommandWindow}, {@link Scene_Title#isBusy}, {@link Scene_Title#update}.<br/>
    */
   _commandWindow: Window_TitleCommand;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Title#createForeground}.
-   * Read in: {@link Scene_Title#createForeground}, {@link Scene_Title#drawGameTitle}, {@link Scene_Title#terminate}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Title#createForeground}.<br/>
+   * Read in: {@link Scene_Title#createForeground}, {@link Scene_Title#drawGameTitle}, {@link Scene_Title#terminate}.<br/>
    */
   _gameTitleSprite: Sprite;
   /**

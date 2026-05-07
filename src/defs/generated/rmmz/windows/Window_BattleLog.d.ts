@@ -8,72 +8,72 @@
 interface Window_BattleLog extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#clear}, {@link Window_BattleLog#initialize}.
-   * Read in: {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#waitForNewLine}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_BattleLog#waitForNewLine}.
-   * - `pop()`: {@link Window_BattleLog#popBaseLine}.
-   * - `push()`: {@link Window_BattleLog#pushBaseLine}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#clear}, {@link Window_BattleLog#initialize}.<br/>
+   * Read in: {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#waitForNewLine}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_BattleLog#waitForNewLine}.<br/>
+   * - `pop()`: {@link Window_BattleLog#popBaseLine}.<br/>
+   * - `push()`: {@link Window_BattleLog#pushBaseLine}.<br/>
    */
   _baseLineStack: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#clear}, {@link Window_BattleLog#initialize}.
-   * Read in: {@link Window_BattleLog#addText}, {@link Window_BattleLog#drawLineText}, {@link Window_BattleLog#numLines}, {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#refresh}, {@link Window_BattleLog#waitForNewLine}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_BattleLog#numLines}, {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#refresh}, {@link Window_BattleLog#waitForNewLine}.
-   * - `pop()`: {@link Window_BattleLog#popBaseLine}.
-   * - `push()`: {@link Window_BattleLog#addText}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#clear}, {@link Window_BattleLog#initialize}.<br/>
+   * Read in: {@link Window_BattleLog#addText}, {@link Window_BattleLog#drawLineText}, {@link Window_BattleLog#numLines}, {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#refresh}, {@link Window_BattleLog#waitForNewLine}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_BattleLog#numLines}, {@link Window_BattleLog#popBaseLine}, {@link Window_BattleLog#pushBaseLine}, {@link Window_BattleLog#refresh}, {@link Window_BattleLog#waitForNewLine}.<br/>
+   * - `pop()`: {@link Window_BattleLog#popBaseLine}.<br/>
+   * - `push()`: {@link Window_BattleLog#addText}.<br/>
    */
   _lines: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#initialize}.
-   * Read in: {@link Window_BattleLog#callNextMethod}, {@link Window_BattleLog#displayAction}, {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#push}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Window_BattleLog#callNextMethod}, {@link Window_BattleLog#displayAction}, {@link Window_BattleLog#isBusy}.
-   * - `push()`: {@link Window_BattleLog#push}.
-   * - `shift()`: {@link Window_BattleLog#callNextMethod}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#initialize}.<br/>
+   * Read in: {@link Window_BattleLog#callNextMethod}, {@link Window_BattleLog#displayAction}, {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#push}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Window_BattleLog#callNextMethod}, {@link Window_BattleLog#displayAction}, {@link Window_BattleLog#isBusy}.<br/>
+   * - `push()`: {@link Window_BattleLog#push}.<br/>
+   * - `shift()`: {@link Window_BattleLog#callNextMethod}.<br/>
    */
   _methods: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Spriteset_Battle`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#setSpriteset}.
-   * Read in: {@link Window_BattleLog#updateWaitMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Spriteset_Battle`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#setSpriteset}.<br/>
+   * Read in: {@link Window_BattleLog#updateWaitMode}.<br/>
    */
   _spriteset: null | Spriteset_Battle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#updateWaitCount}, {@link Window_BattleLog#wait}.
-   * Read in: {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#updateWaitCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#updateWaitCount}, {@link Window_BattleLog#wait}.<br/>
+   * Read in: {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#updateWaitCount}.<br/>
    */
   _waitCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Window_BattleLog#initialize}.
-   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#setWaitMode}, {@link Window_BattleLog#updateWaitMode}.
-   * Read in: {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#updateWaitMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Window_BattleLog#initialize}.<br/>
+   * Written in: {@link Window_BattleLog#initialize}, {@link Window_BattleLog#setWaitMode}, {@link Window_BattleLog#updateWaitMode}.<br/>
+   * Read in: {@link Window_BattleLog#isBusy}, {@link Window_BattleLog#updateWaitMode}.<br/>
    */
   _waitMode: string;
   /**

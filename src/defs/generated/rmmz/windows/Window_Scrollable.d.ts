@@ -8,120 +8,120 @@
 interface Window_Scrollable extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#setScrollAccel}, {@link Window_Scrollable#updateScrollAccel}.
-   * Read in: {@link Window_Scrollable#updateScrollAccel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#setScrollAccel}, {@link Window_Scrollable#updateScrollAccel}.<br/>
+   * Read in: {@link Window_Scrollable#updateScrollAccel}.<br/>
    */
   _scrollAccelX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#setScrollAccel}, {@link Window_Scrollable#updateScrollAccel}.
-   * Read in: {@link Window_Scrollable#updateScrollAccel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#setScrollAccel}, {@link Window_Scrollable#updateScrollAccel}.<br/>
+   * Read in: {@link Window_Scrollable#updateScrollAccel}.<br/>
    */
   _scrollAccelY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_Scrollable#initialize}.
-   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#updateScrollBase}.
-   * Read in: {@link Window_Scrollable#scrollBaseX}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateScrollBase}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_Scrollable#initialize}.<br/>
+   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#updateScrollBase}.<br/>
+   * Read in: {@link Window_Scrollable#scrollBaseX}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateScrollBase}.<br/>
    */
   _scrollBaseX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_Scrollable#initialize}.
-   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#updateScrollBase}.
-   * Read in: {@link Window_Scrollable#scrollBaseY}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateScrollBase}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_Scrollable#initialize}.<br/>
+   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#updateScrollBase}.<br/>
+   * Read in: {@link Window_Scrollable#scrollBaseY}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateScrollBase}.<br/>
    */
   _scrollBaseY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollTo}, {@link Window_Scrollable#updateSmoothScroll}.
-   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollTo}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
+   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
    */
   _scrollDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScrollStart}.
-   * Read in: {@link Window_Scrollable#onTouchScrollEnd}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScrollStart}.<br/>
+   * Read in: {@link Window_Scrollable#onTouchScrollEnd}.<br/>
    */
   _scrollLastCursorVisible: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScroll}, {@link Window_Scrollable#onTouchScrollStart}.
-   * Read in: {@link Window_Scrollable#onTouchScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScroll}, {@link Window_Scrollable#onTouchScrollStart}.<br/>
+   * Read in: {@link Window_Scrollable#onTouchScroll}.<br/>
    */
   _scrollLastTouchX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScroll}, {@link Window_Scrollable#onTouchScrollStart}.
-   * Read in: {@link Window_Scrollable#onTouchScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScroll}, {@link Window_Scrollable#onTouchScrollStart}.<br/>
+   * Read in: {@link Window_Scrollable#onTouchScroll}.<br/>
    */
   _scrollLastTouchY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#smoothScrollTo}.
-   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#smoothScrollTo}.<br/>
+   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
    */
   _scrollTargetX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#smoothScrollTo}.
-   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#smoothScrollTo}.<br/>
+   * Read in: {@link Window_Scrollable#smoothScrollBy}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
    */
   _scrollTargetY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScrollEnd}, {@link Window_Scrollable#onTouchScrollStart}.
-   * Read in: {@link Window_Scrollable#processTouchScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Scrollable#clearScrollStatus}, {@link Window_Scrollable#onTouchScrollEnd}, {@link Window_Scrollable#onTouchScrollStart}.<br/>
+   * Read in: {@link Window_Scrollable#processTouchScroll}.<br/>
    */
   _scrollTouching: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_Scrollable#initialize}.
-   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#scrollTo}.
-   * Read in: {@link Window_Scrollable#scrollBy}, {@link Window_Scrollable#scrollTo}, {@link Window_Scrollable#scrollX}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateSmoothScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_Scrollable#initialize}.<br/>
+   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#scrollTo}.<br/>
+   * Read in: {@link Window_Scrollable#scrollBy}, {@link Window_Scrollable#scrollTo}, {@link Window_Scrollable#scrollX}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
    */
   _scrollX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_Scrollable#initialize}.
-   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#scrollTo}.
-   * Read in: {@link Window_Scrollable#scrollBy}, {@link Window_Scrollable#scrollTo}, {@link Window_Scrollable#scrollY}, {@link Window_Scrollable#updateArrows}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateSmoothScroll}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_Scrollable#initialize}.<br/>
+   * Written in: {@link Window_Scrollable#initialize}, {@link Window_Scrollable#scrollTo}.<br/>
+   * Read in: {@link Window_Scrollable#scrollBy}, {@link Window_Scrollable#scrollTo}, {@link Window_Scrollable#scrollY}, {@link Window_Scrollable#updateArrows}, {@link Window_Scrollable#updateOrigin}, {@link Window_Scrollable#updateSmoothScroll}.<br/>
    */
   _scrollY: number;
   /**

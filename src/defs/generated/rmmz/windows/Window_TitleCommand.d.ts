@@ -8,12 +8,12 @@
 interface Window_TitleCommand extends Window_Command
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: module init.
-   * Written in: module init, {@link Window_TitleCommand#initCommandPosition}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link Window_TitleCommand#initCommandPosition}.<br/>
+   * Read in: none.<br/>
    */
   _lastCommandSymbol: null;
   /**

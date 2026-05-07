@@ -315,6 +315,22 @@ function entryHasInstanceSurface(entry)
 }
 
 /**
+ * VS Code / TS hovers collapse multi-line JSDoc into one paragraph unless we force breaks.
+ *
+ * @param {string} indent
+ * @param {string} body Text after the leading ` * ` (empty = blank spacer line).
+ * @returns {string}
+ */
+function instancePropDocStarLine(indent, body)
+{
+  if (body === '')
+  {
+    return `${indent} *<br/>\n`;
+  }
+  return `${indent} * ${body}<br/>\n`;
+}
+
+/**
  * @param {ClassEntry} entry
  * @param {string} indent
  * @returns {string}
@@ -336,9 +352,9 @@ function formatInstancePropsBlock(entry, indent)
     /** @type {string[]} */
     const doc = [];
     doc.push(`${indent}/**\n`);
-    doc.push(`${indent} * Inferred engine backing field.\n`);
-    doc.push(`${indent} *\n`);
-    doc.push(`${indent} * Type: \`${ts}\`.\n`);
+    doc.push(instancePropDocStarLine(indent, 'Inferred engine backing field.'));
+    doc.push(instancePropDocStarLine(indent, ''));
+    doc.push(instancePropDocStarLine(indent, `Type: \`${ts}\`.`));
 
     if (meta)
     {
@@ -370,19 +386,19 @@ function formatInstancePropsBlock(entry, indent)
         }).join(', ');
       }
 
-      doc.push(`${indent} * Initialized in: ${methodLinks(init)}.\n`);
-      doc.push(`${indent} * Written in: ${methodLinks(written)}.\n`);
-      doc.push(`${indent} * Read in: ${methodLinks(read)}.\n`);
+      doc.push(instancePropDocStarLine(indent, `Initialized in: ${methodLinks(init)}.`));
+      doc.push(instancePropDocStarLine(indent, `Written in: ${methodLinks(written)}.`));
+      doc.push(instancePropDocStarLine(indent, `Read in: ${methodLinks(read)}.`));
 
       const consumeKeys = [...meta.consumedBy.keys()].sort();
       if (consumeKeys.length > 0)
       {
-        doc.push(`${indent} *\n`);
-        doc.push(`${indent} * Consumed by:\n`);
+        doc.push(instancePropDocStarLine(indent, ''));
+        doc.push(instancePropDocStarLine(indent, 'Consumed by:'));
         for (const k of consumeKeys)
         {
           const methods = [...(meta.consumedBy.get(k) ?? new Set())].sort();
-          doc.push(`${indent} * - \`${k}\`: ${methodLinks(methods)}.\n`);
+          doc.push(instancePropDocStarLine(indent, `- \`${k}\`: ${methodLinks(methods)}.`));
         }
       }
     }

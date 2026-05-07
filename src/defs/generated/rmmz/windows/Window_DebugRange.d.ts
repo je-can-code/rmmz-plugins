@@ -8,30 +8,30 @@
 interface Window_DebugRange extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_DebugRange#setEditWindow}.
-   * Read in: {@link Window_DebugRange#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_DebugRange#setEditWindow}.<br/>
+   * Read in: {@link Window_DebugRange#update}.<br/>
    */
   _editWindow: Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Window_DebugRange#initialize}.
-   * Written in: {@link Window_DebugRange#initialize}.
-   * Read in: {@link Window_DebugRange#isSwitchMode}, {@link Window_DebugRange#maxItems}, {@link Window_DebugRange#topId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Window_DebugRange#initialize}.<br/>
+   * Written in: {@link Window_DebugRange#initialize}.<br/>
+   * Read in: {@link Window_DebugRange#isSwitchMode}, {@link Window_DebugRange#maxItems}, {@link Window_DebugRange#topId}.<br/>
    */
   _maxSwitches: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: {@link Window_DebugRange#initialize}.
-   * Written in: {@link Window_DebugRange#initialize}.
-   * Read in: {@link Window_DebugRange#maxItems}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: {@link Window_DebugRange#initialize}.<br/>
+   * Written in: {@link Window_DebugRange#initialize}.<br/>
+   * Read in: {@link Window_DebugRange#maxItems}.<br/>
    */
   _maxVariables: unknown;
   /**

@@ -8,12 +8,12 @@
 interface ColorManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link ColorManager#loadWindowskin}.
-   * Read in: {@link ColorManager#pendingColor}, {@link ColorManager#textColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link ColorManager#loadWindowskin}.<br/>
+   * Read in: {@link ColorManager#pendingColor}, {@link ColorManager#textColor}.<br/>
    */
   _windowskin: unknown;
 }

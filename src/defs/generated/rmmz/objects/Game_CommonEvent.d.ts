@@ -8,21 +8,21 @@
 interface Game_CommonEvent
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_CommonEvent#initialize}.
-   * Written in: {@link Game_CommonEvent#initialize}.
-   * Read in: {@link Game_CommonEvent#event}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_CommonEvent#initialize}.<br/>
+   * Written in: {@link Game_CommonEvent#initialize}.<br/>
+   * Read in: {@link Game_CommonEvent#event}.<br/>
    */
   _commonEventId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Game_Interpreter | null`.
-   * Initialized in: none.
-   * Written in: {@link Game_CommonEvent#refresh}.
-   * Read in: {@link Game_CommonEvent#refresh}, {@link Game_CommonEvent#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Game_Interpreter | null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CommonEvent#refresh}.<br/>
+   * Read in: {@link Game_CommonEvent#refresh}, {@link Game_CommonEvent#update}.<br/>
    */
   _interpreter: Game_Interpreter | null;
   /**

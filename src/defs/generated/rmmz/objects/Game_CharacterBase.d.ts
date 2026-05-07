@@ -8,273 +8,273 @@
 interface Game_CharacterBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#straighten}, {@link Game_CharacterBase#updateAnimation}, {@link Game_CharacterBase#updateAnimationCount}.
-   * Read in: {@link Game_CharacterBase#updateAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#straighten}, {@link Game_CharacterBase#updateAnimation}, {@link Game_CharacterBase#updateAnimationCount}.<br/>
+   * Read in: {@link Game_CharacterBase#updateAnimation}.<br/>
    */
   _animationCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}.<br/>
+   * Read in: none.<br/>
    */
   _animationId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#endAnimation}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#startAnimation}.
-   * Read in: {@link Game_CharacterBase#isAnimationPlaying}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#endAnimation}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#startAnimation}.<br/>
+   * Read in: {@link Game_CharacterBase#isAnimationPlaying}.<br/>
    */
   _animationPlaying: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}.<br/>
+   * Read in: none.<br/>
    */
   _balloonId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#endBalloon}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#startBalloon}.
-   * Read in: {@link Game_CharacterBase#isBalloonPlaying}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#endBalloon}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#startBalloon}.<br/>
+   * Read in: {@link Game_CharacterBase#isBalloonPlaying}.<br/>
    */
   _balloonPlaying: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setBlendMode}.
-   * Read in: {@link Game_CharacterBase#blendMode}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setBlendMode}.<br/>
+   * Read in: {@link Game_CharacterBase#blendMode}.<br/>
    */
   _blendMode: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#refreshBushDepth}.
-   * Read in: {@link Game_CharacterBase#bushDepth}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#refreshBushDepth}.<br/>
+   * Read in: {@link Game_CharacterBase#bushDepth}.<br/>
    */
   _bushDepth: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.
-   * Read in: {@link Game_CharacterBase#characterIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.<br/>
+   * Read in: {@link Game_CharacterBase#characterIndex}.<br/>
    */
   _characterIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.
-   * Read in: {@link Game_CharacterBase#characterName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.<br/>
+   * Read in: {@link Game_CharacterBase#characterName}.<br/>
    */
   _characterName: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setDirection}.
-   * Read in: {@link Game_CharacterBase#direction}, {@link Game_CharacterBase#moveDiagonally}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setDirection}.<br/>
+   * Read in: {@link Game_CharacterBase#direction}, {@link Game_CharacterBase#moveDiagonally}.<br/>
    */
   _direction: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setDirectionFix}.
-   * Read in: {@link Game_CharacterBase#isDirectionFixed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setDirectionFix}.<br/>
+   * Read in: {@link Game_CharacterBase#isDirectionFixed}.<br/>
    */
   _directionFix: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.
-   * Read in: {@link Game_CharacterBase#isObjectCharacter}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.<br/>
+   * Read in: {@link Game_CharacterBase#isObjectCharacter}.<br/>
    */
   _isObjectCharacter: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#updateJump}.
-   * Read in: {@link Game_CharacterBase#isJumping}, {@link Game_CharacterBase#jumpHeight}, {@link Game_CharacterBase#updateJump}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#updateJump}.<br/>
+   * Read in: {@link Game_CharacterBase#isJumping}, {@link Game_CharacterBase#jumpHeight}, {@link Game_CharacterBase#updateJump}.<br/>
    */
   _jumpCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}.
-   * Read in: {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#jumpHeight}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}.<br/>
+   * Read in: {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#jumpHeight}.<br/>
    */
   _jumpPeak: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMoveFrequency}.
-   * Read in: {@link Game_CharacterBase#moveFrequency}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMoveFrequency}.<br/>
+   * Read in: {@link Game_CharacterBase#moveFrequency}.<br/>
    */
   _moveFrequency: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMoveSpeed}.
-   * Read in: {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveSpeed}, {@link Game_CharacterBase#realMoveSpeed}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMoveSpeed}.<br/>
+   * Read in: {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveSpeed}, {@link Game_CharacterBase#realMoveSpeed}.<br/>
    */
   _moveSpeed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMovementSuccess}.
-   * Read in: {@link Game_CharacterBase#isMovementSucceeded}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setMovementSuccess}.<br/>
+   * Read in: {@link Game_CharacterBase#isMovementSucceeded}.<br/>
    */
   _movementSuccess: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setOpacity}.
-   * Read in: {@link Game_CharacterBase#opacity}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setOpacity}.<br/>
+   * Read in: {@link Game_CharacterBase#opacity}.<br/>
    */
   _opacity: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number | string`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setPattern}, {@link Game_CharacterBase#straighten}, {@link Game_CharacterBase#updatePattern}.
-   * Read in: {@link Game_CharacterBase#pattern}, {@link Game_CharacterBase#updatePattern}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number | string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setPattern}, {@link Game_CharacterBase#straighten}, {@link Game_CharacterBase#updatePattern}.<br/>
+   * Read in: {@link Game_CharacterBase#pattern}, {@link Game_CharacterBase#updatePattern}.<br/>
    */
   _pattern: number | string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setPriorityType}.
-   * Read in: {@link Game_CharacterBase#isNormalPriority}, {@link Game_CharacterBase#isTile}, {@link Game_CharacterBase#screenZ}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setPriorityType}.<br/>
+   * Read in: {@link Game_CharacterBase#isNormalPriority}, {@link Game_CharacterBase#isTile}, {@link Game_CharacterBase#screenZ}.<br/>
    */
   _priorityType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
-   * Read in: {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#scrolledX}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
+   * Read in: {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#scrolledX}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
    */
   _realX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
-   * Read in: {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#scrolledY}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
+   * Read in: {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#scrolledY}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
    */
   _realY: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setStepAnime}.
-   * Read in: {@link Game_CharacterBase#hasStepAnime}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setStepAnime}.<br/>
+   * Read in: {@link Game_CharacterBase#hasStepAnime}.<br/>
    */
   _stepAnime: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#resetStopCount}, {@link Game_CharacterBase#updateStop}.
-   * Read in: {@link Game_CharacterBase#checkStop}, {@link Game_CharacterBase#updatePattern}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#resetStopCount}, {@link Game_CharacterBase#updateStop}.<br/>
+   * Read in: {@link Game_CharacterBase#checkStop}, {@link Game_CharacterBase#updatePattern}.<br/>
    */
   _stopCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setThrough}.
-   * Read in: {@link Game_CharacterBase#isThrough}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setThrough}.<br/>
+   * Read in: {@link Game_CharacterBase#isThrough}.<br/>
    */
   _through: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.
-   * Read in: {@link Game_CharacterBase#isTile}, {@link Game_CharacterBase#tileId}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setImage}, {@link Game_CharacterBase#setTileImage}.<br/>
+   * Read in: {@link Game_CharacterBase#isTile}, {@link Game_CharacterBase#tileId}.<br/>
    */
   _tileId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setTransparent}.
-   * Read in: {@link Game_CharacterBase#isTransparent}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setTransparent}.<br/>
+   * Read in: {@link Game_CharacterBase#isTransparent}.<br/>
    */
   _transparent: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setWalkAnime}.
-   * Read in: {@link Game_CharacterBase#hasWalkAnime}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setWalkAnime}.<br/>
+   * Read in: {@link Game_CharacterBase#hasWalkAnime}.<br/>
    */
   _walkAnime: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}.
-   * Read in: {@link Game_CharacterBase#checkEventTriggerTouchFront}, {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#isOnBush}, {@link Game_CharacterBase#isOnLadder}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#pos}, {@link Game_CharacterBase#regionId}, {@link Game_CharacterBase#terrainTag}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}.<br/>
+   * Read in: {@link Game_CharacterBase#checkEventTriggerTouchFront}, {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#isOnBush}, {@link Game_CharacterBase#isOnLadder}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#pos}, {@link Game_CharacterBase#regionId}, {@link Game_CharacterBase#terrainTag}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
    */
   _x: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}.
-   * Read in: {@link Game_CharacterBase#checkEventTriggerTouchFront}, {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#isOnBush}, {@link Game_CharacterBase#isOnLadder}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#pos}, {@link Game_CharacterBase#regionId}, {@link Game_CharacterBase#terrainTag}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_CharacterBase#copyPosition}, {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#jump}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#setPosition}, {@link Game_CharacterBase#updateJump}.<br/>
+   * Read in: {@link Game_CharacterBase#checkEventTriggerTouchFront}, {@link Game_CharacterBase#isMoving}, {@link Game_CharacterBase#isOnBush}, {@link Game_CharacterBase#isOnLadder}, {@link Game_CharacterBase#moveDiagonally}, {@link Game_CharacterBase#moveStraight}, {@link Game_CharacterBase#pos}, {@link Game_CharacterBase#regionId}, {@link Game_CharacterBase#terrainTag}, {@link Game_CharacterBase#updateJump}, {@link Game_CharacterBase#updateMove}.<br/>
    */
   _y: number;
   /**

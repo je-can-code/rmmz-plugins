@@ -8,21 +8,21 @@
 interface Game_Item
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: {@link Game_Item#initialize}.
-   * Written in: {@link Game_Item#initialize}, {@link Game_Item#setEquip}, {@link Game_Item#setObject}.
-   * Read in: {@link Game_Item#isArmor}, {@link Game_Item#isItem}, {@link Game_Item#isNull}, {@link Game_Item#isSkill}, {@link Game_Item#isWeapon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: {@link Game_Item#initialize}.<br/>
+   * Written in: {@link Game_Item#initialize}, {@link Game_Item#setEquip}, {@link Game_Item#setObject}.<br/>
+   * Read in: {@link Game_Item#isArmor}, {@link Game_Item#isItem}, {@link Game_Item#isNull}, {@link Game_Item#isSkill}, {@link Game_Item#isWeapon}.<br/>
    */
   _dataClass: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Item#initialize}.
-   * Written in: {@link Game_Item#initialize}, {@link Game_Item#setEquip}, {@link Game_Item#setObject}.
-   * Read in: {@link Game_Item#itemId}, {@link Game_Item#object}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Item#initialize}.<br/>
+   * Written in: {@link Game_Item#initialize}, {@link Game_Item#setEquip}, {@link Game_Item#setObject}.<br/>
+   * Read in: {@link Game_Item#itemId}, {@link Game_Item#object}.<br/>
    */
   _itemId: number;
   /**

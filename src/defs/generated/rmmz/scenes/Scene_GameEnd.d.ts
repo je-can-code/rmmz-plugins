@@ -8,12 +8,12 @@
 interface Scene_GameEnd extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_GameEnd`.
-   * Initialized in: none.
-   * Written in: {@link Scene_GameEnd#createCommandWindow}.
-   * Read in: {@link Scene_GameEnd#createCommandWindow}, {@link Scene_GameEnd#stop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_GameEnd`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_GameEnd#createCommandWindow}.<br/>
+   * Read in: {@link Scene_GameEnd#createCommandWindow}, {@link Scene_GameEnd#stop}.<br/>
    */
   _commandWindow: Window_GameEnd;
   /**

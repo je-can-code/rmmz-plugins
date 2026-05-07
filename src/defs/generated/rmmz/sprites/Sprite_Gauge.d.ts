@@ -8,75 +8,75 @@
 interface Sprite_Gauge extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Battler`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}.
-   * Read in: {@link Sprite_Gauge#currentMaxValue}, {@link Sprite_Gauge#currentValue}, {@link Sprite_Gauge#isValid}, {@link Sprite_Gauge#updateFlashing}, {@link Sprite_Gauge#valueColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Battler`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}.<br/>
+   * Read in: {@link Sprite_Gauge#currentMaxValue}, {@link Sprite_Gauge#currentValue}, {@link Sprite_Gauge#isValid}, {@link Sprite_Gauge#updateFlashing}, {@link Sprite_Gauge#valueColor}.<br/>
    */
   _battler: null | Game_Battler;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.
-   * Read in: {@link Sprite_Gauge#updateGaugeAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
+   * Read in: {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
   _duration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateFlashing}.
-   * Read in: {@link Sprite_Gauge#updateFlashing}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateFlashing}.<br/>
+   * Read in: {@link Sprite_Gauge#updateFlashing}.<br/>
    */
   _flashingCount: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.
-   * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
+   * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
   _maxValue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}.
-   * Read in: {@link Sprite_Gauge#currentMaxValue}, {@link Sprite_Gauge#currentValue}, {@link Sprite_Gauge#gaugeColor1}, {@link Sprite_Gauge#gaugeColor2}, {@link Sprite_Gauge#gaugeX}, {@link Sprite_Gauge#isValid}, {@link Sprite_Gauge#label}, {@link Sprite_Gauge#redraw}, {@link Sprite_Gauge#smoothness}, {@link Sprite_Gauge#updateFlashing}, {@link Sprite_Gauge#valueColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}.<br/>
+   * Read in: {@link Sprite_Gauge#currentMaxValue}, {@link Sprite_Gauge#currentValue}, {@link Sprite_Gauge#gaugeColor1}, {@link Sprite_Gauge#gaugeColor2}, {@link Sprite_Gauge#gaugeX}, {@link Sprite_Gauge#isValid}, {@link Sprite_Gauge#label}, {@link Sprite_Gauge#redraw}, {@link Sprite_Gauge#smoothness}, {@link Sprite_Gauge#updateFlashing}, {@link Sprite_Gauge#valueColor}.<br/>
    */
   _statusType: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.
-   * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.<br/>
+   * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
   _targetMaxValue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.
-   * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#updateTargetValue}.<br/>
+   * Read in: {@link Sprite_Gauge#updateBitmap}, {@link Sprite_Gauge#updateGaugeAnimation}.<br/>
    */
   _targetValue: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.
-   * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Gauge#initMembers}, {@link Sprite_Gauge#setup}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
+   * Read in: {@link Sprite_Gauge#gaugeRate}, {@link Sprite_Gauge#updateGaugeAnimation}, {@link Sprite_Gauge#updateTargetValue}.<br/>
    */
   _value: number;
   /**

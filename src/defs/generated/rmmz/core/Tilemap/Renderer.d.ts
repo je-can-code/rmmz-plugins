@@ -8,42 +8,42 @@ declare namespace Tilemap
   export interface Renderer extends PIXI.ObjectRenderer
   {
     /**
-     * Inferred engine backing field.
-     *
-     * Type: `Uint8Array`.
-     * Initialized in: {@link Tilemap.Renderer#initialize}.
-     * Written in: {@link Tilemap.Renderer#initialize}.
-     * Read in: {@link Tilemap.Renderer#updateTextures}.
+     * Inferred engine backing field.<br/>
+     *<br/>
+     * Type: `Uint8Array`.<br/>
+     * Initialized in: {@link Tilemap.Renderer#initialize}.<br/>
+     * Written in: {@link Tilemap.Renderer#initialize}.<br/>
+     * Read in: {@link Tilemap.Renderer#updateTextures}.<br/>
      */
     _clearBuffer: Uint8Array;
     /**
-     * Inferred engine backing field.
-     *
-     * Type: `unknown[]`.
-     * Initialized in: {@link Tilemap.Renderer#initialize}.
-     * Written in: {@link Tilemap.Renderer#contextChange}, {@link Tilemap.Renderer#initialize}.
-     * Read in: none.
+     * Inferred engine backing field.<br/>
+     *<br/>
+     * Type: `unknown[]`.<br/>
+     * Initialized in: {@link Tilemap.Renderer#initialize}.<br/>
+     * Written in: {@link Tilemap.Renderer#contextChange}, {@link Tilemap.Renderer#initialize}.<br/>
+     * Read in: none.<br/>
      */
     _images: unknown[];
     /**
-     * Inferred engine backing field.
-     *
-     * Type: `unknown[]`.
-     * Initialized in: {@link Tilemap.Renderer#initialize}.
-     * Written in: {@link Tilemap.Renderer#_destroyInternalTextures}, {@link Tilemap.Renderer#initialize}.
-     * Read in: {@link Tilemap.Renderer#_createInternalTextures}, {@link Tilemap.Renderer#_destroyInternalTextures}, {@link Tilemap.Renderer#bindTextures}, {@link Tilemap.Renderer#updateTextures}.
-     *
-     * Consumed by:
-     * - `push()`: {@link Tilemap.Renderer#_createInternalTextures}.
+     * Inferred engine backing field.<br/>
+     *<br/>
+     * Type: `unknown[]`.<br/>
+     * Initialized in: {@link Tilemap.Renderer#initialize}.<br/>
+     * Written in: {@link Tilemap.Renderer#_destroyInternalTextures}, {@link Tilemap.Renderer#initialize}.<br/>
+     * Read in: {@link Tilemap.Renderer#_createInternalTextures}, {@link Tilemap.Renderer#_destroyInternalTextures}, {@link Tilemap.Renderer#bindTextures}, {@link Tilemap.Renderer#updateTextures}.<br/>
+     *<br/>
+     * Consumed by:<br/>
+     * - `push()`: {@link Tilemap.Renderer#_createInternalTextures}.<br/>
      */
     _internalTextures: unknown[];
     /**
-     * Inferred engine backing field.
-     *
-     * Type: `null`.
-     * Initialized in: {@link Tilemap.Renderer#initialize}.
-     * Written in: {@link Tilemap.Renderer#contextChange}, {@link Tilemap.Renderer#destroy}, {@link Tilemap.Renderer#initialize}.
-     * Read in: {@link Tilemap.Renderer#destroy}, {@link Tilemap.Renderer#getShader}.
+     * Inferred engine backing field.<br/>
+     *<br/>
+     * Type: `null`.<br/>
+     * Initialized in: {@link Tilemap.Renderer#initialize}.<br/>
+     * Written in: {@link Tilemap.Renderer#contextChange}, {@link Tilemap.Renderer#destroy}, {@link Tilemap.Renderer#initialize}.<br/>
+     * Read in: {@link Tilemap.Renderer#destroy}, {@link Tilemap.Renderer#getShader}.<br/>
      */
     _shader: null;
     /**

@@ -8,12 +8,12 @@
 interface Sprite_Timer extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Timer#initialize}.
-   * Written in: {@link Sprite_Timer#initialize}, {@link Sprite_Timer#updateBitmap}.
-   * Read in: {@link Sprite_Timer#timerText}, {@link Sprite_Timer#updateBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Timer#initialize}.<br/>
+   * Written in: {@link Sprite_Timer#initialize}, {@link Sprite_Timer#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Timer#timerText}, {@link Sprite_Timer#updateBitmap}.<br/>
    */
   _seconds: number;
   /**

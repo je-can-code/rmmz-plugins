@@ -8,21 +8,21 @@
 interface Window_SavefileList extends Window_Selectable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: {@link Window_SavefileList#initialize}.
-   * Written in: {@link Window_SavefileList#initialize}, {@link Window_SavefileList#setMode}.
-   * Read in: {@link Window_SavefileList#indexToSavefileId}, {@link Window_SavefileList#maxItems}, {@link Window_SavefileList#savefileIdToIndex}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: {@link Window_SavefileList#initialize}.<br/>
+   * Written in: {@link Window_SavefileList#initialize}, {@link Window_SavefileList#setMode}.<br/>
+   * Read in: {@link Window_SavefileList#indexToSavefileId}, {@link Window_SavefileList#maxItems}, {@link Window_SavefileList#savefileIdToIndex}.<br/>
    */
   _autosave: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | string`.
-   * Initialized in: {@link Window_SavefileList#initialize}.
-   * Written in: {@link Window_SavefileList#initialize}, {@link Window_SavefileList#setMode}.
-   * Read in: {@link Window_SavefileList#isEnabled}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | string`.<br/>
+   * Initialized in: {@link Window_SavefileList#initialize}.<br/>
+   * Written in: {@link Window_SavefileList#initialize}, {@link Window_SavefileList#setMode}.<br/>
+   * Read in: {@link Window_SavefileList#isEnabled}.<br/>
    */
   _mode: null | string;
   /**

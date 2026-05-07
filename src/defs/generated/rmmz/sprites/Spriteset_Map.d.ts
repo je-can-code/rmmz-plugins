@@ -8,99 +8,99 @@
 interface Spriteset_Map extends Spriteset_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: {@link Spriteset_Map#initialize}.
-   * Written in: {@link Spriteset_Map#initialize}.
-   * Read in: {@link Spriteset_Map#createBalloon}, {@link Spriteset_Map#removeAllBalloons}, {@link Spriteset_Map#removeBalloon}, {@link Spriteset_Map#updateBalloons}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Spriteset_Map#createBalloon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: {@link Spriteset_Map#initialize}.<br/>
+   * Written in: {@link Spriteset_Map#initialize}.<br/>
+   * Read in: {@link Spriteset_Map#createBalloon}, {@link Spriteset_Map#removeAllBalloons}, {@link Spriteset_Map#removeBalloon}, {@link Spriteset_Map#updateBalloons}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Spriteset_Map#createBalloon}.<br/>
    */
   _balloonSprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createCharacters}.
-   * Read in: {@link Spriteset_Map#createCharacters}, {@link Spriteset_Map#findTargetSprite}, {@link Spriteset_Map#hideCharacters}.
-   *
-   * Consumed by:
-   * - `push()`: {@link Spriteset_Map#createCharacters}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createCharacters}.<br/>
+   * Read in: {@link Spriteset_Map#createCharacters}, {@link Spriteset_Map#findTargetSprite}, {@link Spriteset_Map#hideCharacters}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `push()`: {@link Spriteset_Map#createCharacters}.<br/>
    */
   _characterSprites: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite_Destination`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createDestination}.
-   * Read in: {@link Spriteset_Map#createDestination}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite_Destination`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createDestination}.<br/>
+   * Read in: {@link Spriteset_Map#createDestination}.<br/>
    */
   _destinationSprite: Sprite_Destination;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createTilemap}.
-   * Read in: {@link Spriteset_Map#createBalloon}, {@link Spriteset_Map#removeBalloon}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createTilemap}.<br/>
+   * Read in: {@link Spriteset_Map#createBalloon}, {@link Spriteset_Map#removeBalloon}.<br/>
    */
   _effectsContainer: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `TilingSprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createParallax}.
-   * Read in: {@link Spriteset_Map#createParallax}, {@link Spriteset_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `TilingSprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createParallax}.<br/>
+   * Read in: {@link Spriteset_Map#createParallax}, {@link Spriteset_Map#updateParallax}.<br/>
    */
   _parallax: TilingSprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#updateParallax}.
-   * Read in: {@link Spriteset_Map#updateParallax}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#updateParallax}.<br/>
+   * Read in: {@link Spriteset_Map#updateParallax}.<br/>
    */
   _parallaxName: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createShadow}.
-   * Read in: {@link Spriteset_Map#createShadow}, {@link Spriteset_Map#updateShadow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createShadow}.<br/>
+   * Read in: {@link Spriteset_Map#createShadow}, {@link Spriteset_Map#updateShadow}.<br/>
    */
   _shadowSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createTilemap}.
-   * Read in: {@link Spriteset_Map#createCharacters}, {@link Spriteset_Map#createDestination}, {@link Spriteset_Map#createShadow}, {@link Spriteset_Map#loadTileset}, {@link Spriteset_Map#updateTilemap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createTilemap}.<br/>
+   * Read in: {@link Spriteset_Map#createCharacters}, {@link Spriteset_Map#createDestination}, {@link Spriteset_Map#createShadow}, {@link Spriteset_Map#loadTileset}, {@link Spriteset_Map#updateTilemap}.<br/>
    */
   _tilemap: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#loadTileset}.
-   * Read in: {@link Spriteset_Map#loadTileset}, {@link Spriteset_Map#updateTileset}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#loadTileset}.<br/>
+   * Read in: {@link Spriteset_Map#loadTileset}, {@link Spriteset_Map#updateTileset}.<br/>
    */
   _tileset: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Weather`.
-   * Initialized in: none.
-   * Written in: {@link Spriteset_Map#createWeather}.
-   * Read in: {@link Spriteset_Map#createWeather}, {@link Spriteset_Map#updateWeather}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Weather`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Spriteset_Map#createWeather}.<br/>
+   * Read in: {@link Spriteset_Map#createWeather}, {@link Spriteset_Map#updateWeather}.<br/>
    */
   _weather: Weather;
   /**

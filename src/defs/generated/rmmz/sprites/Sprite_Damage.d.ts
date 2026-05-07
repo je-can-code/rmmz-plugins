@@ -8,39 +8,39 @@
 interface Sprite_Damage extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Damage#initialize}.
-   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setup}.
-   * Read in: {@link Sprite_Damage#damageColor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Damage#initialize}.<br/>
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setup}.<br/>
+   * Read in: {@link Sprite_Damage#damageColor}.<br/>
    */
   _colorType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Damage#initialize}.
-   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#update}.
-   * Read in: {@link Sprite_Damage#isPlaying}, {@link Sprite_Damage#update}, {@link Sprite_Damage#updateOpacity}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Damage#initialize}.<br/>
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#update}.<br/>
+   * Read in: {@link Sprite_Damage#isPlaying}, {@link Sprite_Damage#update}, {@link Sprite_Damage#updateOpacity}.<br/>
    */
   _duration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: {@link Sprite_Damage#initialize}.
-   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}.
-   * Read in: {@link Sprite_Damage#updateChild}, {@link Sprite_Damage#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: {@link Sprite_Damage#initialize}.<br/>
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}.<br/>
+   * Read in: {@link Sprite_Damage#updateChild}, {@link Sprite_Damage#updateFlash}.<br/>
    */
   _flashColor: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Damage#initialize}.
-   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}, {@link Sprite_Damage#updateFlash}.
-   * Read in: {@link Sprite_Damage#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Damage#initialize}.<br/>
+   * Written in: {@link Sprite_Damage#initialize}, {@link Sprite_Damage#setupCriticalEffect}, {@link Sprite_Damage#updateFlash}.<br/>
+   * Read in: {@link Sprite_Damage#updateFlash}.<br/>
    */
   _flashDuration: number;
   /**

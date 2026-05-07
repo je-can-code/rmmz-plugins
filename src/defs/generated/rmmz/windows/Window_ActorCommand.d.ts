@@ -8,12 +8,12 @@
 interface Window_ActorCommand extends Window_Command
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Actor`.
-   * Initialized in: {@link Window_ActorCommand#initialize}.
-   * Written in: {@link Window_ActorCommand#initialize}, {@link Window_ActorCommand#setup}.
-   * Read in: {@link Window_ActorCommand#actor}, {@link Window_ActorCommand#addAttackCommand}, {@link Window_ActorCommand#addGuardCommand}, {@link Window_ActorCommand#addSkillCommands}, {@link Window_ActorCommand#makeCommandList}, {@link Window_ActorCommand#processOk}, {@link Window_ActorCommand#selectLast}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Actor`.<br/>
+   * Initialized in: {@link Window_ActorCommand#initialize}.<br/>
+   * Written in: {@link Window_ActorCommand#initialize}, {@link Window_ActorCommand#setup}.<br/>
+   * Read in: {@link Window_ActorCommand#actor}, {@link Window_ActorCommand#addAttackCommand}, {@link Window_ActorCommand#addGuardCommand}, {@link Window_ActorCommand#addSkillCommands}, {@link Window_ActorCommand#makeCommandList}, {@link Window_ActorCommand#processOk}, {@link Window_ActorCommand#selectLast}.<br/>
    */
   _actor: null | Game_Actor;
   /**

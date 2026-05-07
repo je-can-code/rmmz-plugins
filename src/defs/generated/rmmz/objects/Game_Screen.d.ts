@@ -8,210 +8,210 @@
 interface Game_Screen
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#updateFadeIn}, {@link Game_Screen#updateFadeOut}.
-   * Read in: {@link Game_Screen#brightness}, {@link Game_Screen#updateFadeIn}, {@link Game_Screen#updateFadeOut}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#updateFadeIn}, {@link Game_Screen#updateFadeOut}.<br/>
+   * Read in: {@link Game_Screen#brightness}, {@link Game_Screen#updateFadeIn}, {@link Game_Screen#updateFadeOut}.<br/>
    */
   _brightness: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#startFadeIn}, {@link Game_Screen#startFadeOut}, {@link Game_Screen#updateFadeIn}.
-   * Read in: {@link Game_Screen#updateFadeIn}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#startFadeIn}, {@link Game_Screen#startFadeOut}, {@link Game_Screen#updateFadeIn}.<br/>
+   * Read in: {@link Game_Screen#updateFadeIn}.<br/>
    */
   _fadeInDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#startFadeIn}, {@link Game_Screen#startFadeOut}, {@link Game_Screen#updateFadeOut}.
-   * Read in: {@link Game_Screen#updateFadeOut}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearFade}, {@link Game_Screen#startFadeIn}, {@link Game_Screen#startFadeOut}, {@link Game_Screen#updateFadeOut}.<br/>
+   * Read in: {@link Game_Screen#updateFadeOut}.<br/>
    */
   _fadeOutDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearFlash}, {@link Game_Screen#startFlash}.
-   * Read in: {@link Game_Screen#flashColor}, {@link Game_Screen#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearFlash}, {@link Game_Screen#startFlash}.<br/>
+   * Read in: {@link Game_Screen#flashColor}, {@link Game_Screen#updateFlash}.<br/>
    */
   _flashColor: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearFlash}, {@link Game_Screen#startFlash}, {@link Game_Screen#updateFlash}.
-   * Read in: {@link Game_Screen#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearFlash}, {@link Game_Screen#startFlash}, {@link Game_Screen#updateFlash}.<br/>
+   * Read in: {@link Game_Screen#updateFlash}.<br/>
    */
   _flashDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearPictures}, {@link Game_Screen#eraseBattlePictures}.
-   * Read in: {@link Game_Screen#eraseBattlePictures}, {@link Game_Screen#erasePicture}, {@link Game_Screen#picture}, {@link Game_Screen#showPicture}, {@link Game_Screen#updatePictures}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearPictures}, {@link Game_Screen#eraseBattlePictures}.<br/>
+   * Read in: {@link Game_Screen#eraseBattlePictures}, {@link Game_Screen#erasePicture}, {@link Game_Screen#picture}, {@link Game_Screen#showPicture}, {@link Game_Screen#updatePictures}.<br/>
    */
   _pictures: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#updateShake}.
-   * Read in: {@link Game_Screen#shake}, {@link Game_Screen#updateShake}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#updateShake}.<br/>
+   * Read in: {@link Game_Screen#shake}, {@link Game_Screen#updateShake}.<br/>
    */
   _shake: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#updateShake}.
-   * Read in: {@link Game_Screen#updateShake}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#updateShake}.<br/>
+   * Read in: {@link Game_Screen#updateShake}.<br/>
    */
   _shakeDirection: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}, {@link Game_Screen#updateShake}.
-   * Read in: {@link Game_Screen#updateShake}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}, {@link Game_Screen#updateShake}.<br/>
+   * Read in: {@link Game_Screen#updateShake}.<br/>
    */
   _shakeDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}.
-   * Read in: {@link Game_Screen#updateShake}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}.<br/>
+   * Read in: {@link Game_Screen#updateShake}.<br/>
    */
   _shakePower: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}.
-   * Read in: {@link Game_Screen#updateShake}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearShake}, {@link Game_Screen#startShake}.<br/>
+   * Read in: {@link Game_Screen#updateShake}.<br/>
    */
   _shakeSpeed: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}.
-   * Read in: {@link Game_Screen#tone}, {@link Game_Screen#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}.<br/>
+   * Read in: {@link Game_Screen#tone}, {@link Game_Screen#updateTone}.<br/>
    */
   _tone: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.
-   * Read in: {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.<br/>
+   * Read in: {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.<br/>
    */
   _toneDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}.
-   * Read in: {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearTone}, {@link Game_Screen#startTint}.<br/>
+   * Read in: {@link Game_Screen#startTint}, {@link Game_Screen#updateTone}.<br/>
    */
   _toneTarget: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.
-   * Read in: {@link Game_Screen#updateWeather}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.<br/>
+   * Read in: {@link Game_Screen#updateWeather}.<br/>
    */
   _weatherDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.
-   * Read in: {@link Game_Screen#updateWeather}, {@link Game_Screen#weatherPower}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.<br/>
+   * Read in: {@link Game_Screen#updateWeather}, {@link Game_Screen#weatherPower}.<br/>
    */
   _weatherPower: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}.
-   * Read in: {@link Game_Screen#changeWeather}, {@link Game_Screen#updateWeather}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}.<br/>
+   * Read in: {@link Game_Screen#changeWeather}, {@link Game_Screen#updateWeather}.<br/>
    */
   _weatherPowerTarget: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `string`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.
-   * Read in: {@link Game_Screen#weatherType}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `string`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#changeWeather}, {@link Game_Screen#clearWeather}, {@link Game_Screen#updateWeather}.<br/>
+   * Read in: {@link Game_Screen#weatherType}.<br/>
    */
   _weatherType: string;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#startZoom}, {@link Game_Screen#updateZoom}.
-   * Read in: {@link Game_Screen#updateZoom}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#startZoom}, {@link Game_Screen#updateZoom}.<br/>
+   * Read in: {@link Game_Screen#updateZoom}.<br/>
    */
   _zoomDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#updateZoom}.
-   * Read in: {@link Game_Screen#updateZoom}, {@link Game_Screen#zoomScale}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#updateZoom}.<br/>
+   * Read in: {@link Game_Screen#updateZoom}, {@link Game_Screen#zoomScale}.<br/>
    */
   _zoomScale: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#startZoom}.
-   * Read in: {@link Game_Screen#updateZoom}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#startZoom}.<br/>
+   * Read in: {@link Game_Screen#updateZoom}.<br/>
    */
   _zoomScaleTarget: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#startZoom}.
-   * Read in: {@link Game_Screen#zoomX}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#startZoom}.<br/>
+   * Read in: {@link Game_Screen#zoomX}.<br/>
    */
   _zoomX: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#startZoom}.
-   * Read in: {@link Game_Screen#zoomY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Screen#clearZoom}, {@link Game_Screen#setZoom}, {@link Game_Screen#startZoom}.<br/>
+   * Read in: {@link Game_Screen#zoomY}.<br/>
    */
   _zoomY: number;
   /**

@@ -8,48 +8,48 @@
 interface Game_Vehicle extends Game_Character
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#updateAirshipAltitude}.
-   * Read in: {@link Game_Vehicle#isHighest}, {@link Game_Vehicle#isLowest}, {@link Game_Vehicle#screenY}, {@link Game_Vehicle#shadowOpacity}, {@link Game_Vehicle#shadowY}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#updateAirshipAltitude}.<br/>
+   * Read in: {@link Game_Vehicle#isHighest}, {@link Game_Vehicle#isLowest}, {@link Game_Vehicle#screenY}, {@link Game_Vehicle#shadowOpacity}, {@link Game_Vehicle#shadowY}.<br/>
    */
   _altitude: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.
-   * Initialized in: none.
-   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#setBgm}.
-   * Read in: {@link Game_Vehicle#playBgm}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | { name: string; pan: number; pitch: number; volume: number }`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#setBgm}.<br/>
+   * Read in: {@link Game_Vehicle#playBgm}.<br/>
    */
   _bgm: null | { name: string; pan: number; pitch: number; volume: number };
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Vehicle#getOff}, {@link Game_Vehicle#getOn}, {@link Game_Vehicle#initMembers}.
-   * Read in: {@link Game_Vehicle#refresh}, {@link Game_Vehicle#updateAirshipAltitude}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Vehicle#getOff}, {@link Game_Vehicle#getOn}, {@link Game_Vehicle#initMembers}.<br/>
+   * Read in: {@link Game_Vehicle#refresh}, {@link Game_Vehicle#updateAirshipAltitude}.<br/>
    */
   _driving: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#loadSystemSettings}, {@link Game_Vehicle#refresh}, {@link Game_Vehicle#setLocation}.
-   * Read in: {@link Game_Vehicle#pos}, {@link Game_Vehicle#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#loadSystemSettings}, {@link Game_Vehicle#refresh}, {@link Game_Vehicle#setLocation}.<br/>
+   * Read in: {@link Game_Vehicle#pos}, {@link Game_Vehicle#refresh}.<br/>
    */
   _mapId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number | string`.
-   * Initialized in: {@link Game_Vehicle#initialize}.
-   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#initialize}.
-   * Read in: {@link Game_Vehicle#isAirship}, {@link Game_Vehicle#isBoat}, {@link Game_Vehicle#isShip}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number | string`.<br/>
+   * Initialized in: {@link Game_Vehicle#initialize}.<br/>
+   * Written in: {@link Game_Vehicle#initMembers}, {@link Game_Vehicle#initialize}.<br/>
+   * Read in: {@link Game_Vehicle#isAirship}, {@link Game_Vehicle#isBoat}, {@link Game_Vehicle#isShip}.<br/>
    */
   _type: number | string;
   /**

@@ -8,39 +8,39 @@
 interface Sprite_Button extends Sprite_Clickable
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Sprite_Button#initialize}.
-   * Written in: {@link Sprite_Button#initialize}.
-   * Read in: {@link Sprite_Button#buttonData}, {@link Sprite_Button#onClick}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Sprite_Button#initialize}.<br/>
+   * Written in: {@link Sprite_Button#initialize}.<br/>
+   * Read in: {@link Sprite_Button#buttonData}, {@link Sprite_Button#onClick}.<br/>
    */
   _buttonType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | () => void`.
-   * Initialized in: {@link Sprite_Button#initialize}.
-   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setClickHandler}.
-   * Read in: {@link Sprite_Button#onClick}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | () => void`.<br/>
+   * Initialized in: {@link Sprite_Button#initialize}.<br/>
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setClickHandler}.<br/>
+   * Read in: {@link Sprite_Button#onClick}.<br/>
    */
   _clickHandler: null | () => void;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Rectangle`.
-   * Initialized in: {@link Sprite_Button#initialize}.
-   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setColdFrame}.
-   * Read in: {@link Sprite_Button#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Rectangle`.<br/>
+   * Initialized in: {@link Sprite_Button#initialize}.<br/>
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setColdFrame}.<br/>
+   * Read in: {@link Sprite_Button#updateFrame}.<br/>
    */
   _coldFrame: null | Rectangle;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Rectangle`.
-   * Initialized in: {@link Sprite_Button#initialize}.
-   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setHotFrame}.
-   * Read in: {@link Sprite_Button#updateFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Rectangle`.<br/>
+   * Initialized in: {@link Sprite_Button#initialize}.<br/>
+   * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setHotFrame}.<br/>
+   * Read in: {@link Sprite_Button#updateFrame}.<br/>
    */
   _hotFrame: null | Rectangle;
   /**

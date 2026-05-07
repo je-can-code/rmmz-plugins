@@ -8,132 +8,132 @@
 interface Sprite_Animation extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#processSoundTimings}, {@link Sprite_Animation#setViewport}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#targetSpritePosition}, {@link Sprite_Animation#updateEffectGeometry}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#processSoundTimings}, {@link Sprite_Animation#setViewport}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#targetSpritePosition}, {@link Sprite_Animation#updateEffectGeometry}.<br/>
    */
   _animation: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}, {@link Sprite_Animation#update}.
-   * Read in: {@link Sprite_Animation#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}, {@link Sprite_Animation#update}.<br/>
+   * Read in: {@link Sprite_Animation#update}.<br/>
    */
   _delay: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#update}.<br/>
    */
   _effect: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#processFlashTimings}.
-   * Read in: {@link Sprite_Animation#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#processFlashTimings}.<br/>
+   * Read in: {@link Sprite_Animation#updateFlash}.<br/>
    */
   _flashColor: number[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#updateFlash}.
-   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#updateFlash}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#updateFlash}.<br/>
+   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#updateFlash}.<br/>
    */
   _flashDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#updateMain}.
-   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#processSoundTimings}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#updateMain}.<br/>
+   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#processFlashTimings}, {@link Sprite_Animation#processSoundTimings}.<br/>
    */
   _frameIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#update}.
-   * Read in: {@link Sprite_Animation#_render}, {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#destroy}, {@link Sprite_Animation#setRotation}, {@link Sprite_Animation#updateEffectGeometry}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#update}.<br/>
+   * Read in: {@link Sprite_Animation#_render}, {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#destroy}, {@link Sprite_Animation#setRotation}, {@link Sprite_Animation#updateEffectGeometry}.<br/>
    */
   _handle: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#setup}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#setup}.<br/>
    */
   _maxTimingFrames: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#setProjectionMatrix}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#setProjectionMatrix}.<br/>
    */
   _mirror: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#isPlaying}, {@link Sprite_Animation#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#checkEnd}, {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#isPlaying}, {@link Sprite_Animation#update}.<br/>
    */
   _playing: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite_Animation`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#canStart}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite_Animation`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#canStart}.<br/>
    */
   _previous: null | Sprite_Animation;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#update}.
-   * Read in: {@link Sprite_Animation#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#destroy}, {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#update}.<br/>
+   * Read in: {@link Sprite_Animation#update}.<br/>
    */
   _started: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[] | Sprite[]`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.
-   * Read in: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#updateFlash}.
-   *
-   * Consumed by:
-   * - `.length`: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[] | Sprite[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}, {@link Sprite_Animation#setup}.<br/>
+   * Read in: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}, {@link Sprite_Animation#updateFlash}.<br/>
+   *<br/>
+   * Consumed by:<br/>
+   * - `.length`: {@link Sprite_Animation#_render}, {@link Sprite_Animation#targetPosition}.<br/>
    */
   _targets: unknown[] | Sprite[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Animation#initMembers}.
-   * Read in: {@link Sprite_Animation#setProjectionMatrix}, {@link Sprite_Animation#setViewport}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Animation#initMembers}.<br/>
+   * Read in: {@link Sprite_Animation#setProjectionMatrix}, {@link Sprite_Animation#setViewport}.<br/>
    */
   _viewportSize: number;
   /**

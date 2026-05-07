@@ -8,21 +8,21 @@
 interface StorageManager
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: module init.
-   * Written in: module init, {@link StorageManager#updateForageKeys}.
-   * Read in: {@link StorageManager#forageExists}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link StorageManager#updateForageKeys}.<br/>
+   * Read in: {@link StorageManager#forageExists}.<br/>
    */
   _forageKeys: unknown[];
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: module init.
-   * Written in: module init, {@link StorageManager#updateForageKeys}.
-   * Read in: {@link StorageManager#forageKeysUpdated}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: module init.<br/>
+   * Written in: module init, {@link StorageManager#updateForageKeys}.<br/>
+   * Read in: {@link StorageManager#forageKeysUpdated}.<br/>
    */
   _forageKeysUpdated: boolean;
 }

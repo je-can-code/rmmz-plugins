@@ -8,39 +8,39 @@
 interface Scene_Status extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Help`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Status#createProfileWindow}.
-   * Read in: {@link Scene_Status#createProfileWindow}, {@link Scene_Status#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Help`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Status#createProfileWindow}.<br/>
+   * Read in: {@link Scene_Status#createProfileWindow}, {@link Scene_Status#refreshActor}.<br/>
    */
   _profileWindow: Window_Help;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_StatusEquip`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Status#createStatusEquipWindow}.
-   * Read in: {@link Scene_Status#createStatusEquipWindow}, {@link Scene_Status#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_StatusEquip`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Status#createStatusEquipWindow}.<br/>
+   * Read in: {@link Scene_Status#createStatusEquipWindow}, {@link Scene_Status#refreshActor}.<br/>
    */
   _statusEquipWindow: Window_StatusEquip;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_StatusParams`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Status#createStatusParamsWindow}.
-   * Read in: {@link Scene_Status#createStatusParamsWindow}, {@link Scene_Status#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_StatusParams`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Status#createStatusParamsWindow}.<br/>
+   * Read in: {@link Scene_Status#createStatusParamsWindow}, {@link Scene_Status#refreshActor}.<br/>
    */
   _statusParamsWindow: Window_StatusParams;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Status`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Status#createStatusWindow}.
-   * Read in: {@link Scene_Status#createStatusWindow}, {@link Scene_Status#onActorChange}, {@link Scene_Status#refreshActor}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Status`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Status#createStatusWindow}.<br/>
+   * Read in: {@link Scene_Status#createStatusWindow}, {@link Scene_Status#onActorChange}, {@link Scene_Status#refreshActor}.<br/>
    */
   _statusWindow: Window_Status;
   /**

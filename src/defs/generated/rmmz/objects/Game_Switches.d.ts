@@ -8,12 +8,12 @@
 interface Game_Switches
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown[]`.
-   * Initialized in: none.
-   * Written in: {@link Game_Switches#clear}.
-   * Read in: {@link Game_Switches#setValue}, {@link Game_Switches#value}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown[]`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Switches#clear}.<br/>
+   * Read in: {@link Game_Switches#setValue}, {@link Game_Switches#value}.<br/>
    */
   _data: unknown[];
   /**

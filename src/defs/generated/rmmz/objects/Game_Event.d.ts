@@ -8,111 +8,111 @@
 interface Game_Event extends Game_Character
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#erase}, {@link Game_Event#initMembers}.
-   * Read in: {@link Game_Event#refresh}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#erase}, {@link Game_Event#initMembers}.<br/>
+   * Read in: {@link Game_Event#refresh}.<br/>
    */
   _erased: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Event#initialize}.
-   * Written in: {@link Game_Event#initialize}.
-   * Read in: {@link Game_Event#event}, {@link Game_Event#eventId}, {@link Game_Event#meetsConditions}, {@link Game_Event#updateParallel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Event#initialize}.<br/>
+   * Written in: {@link Game_Event#initialize}.<br/>
+   * Read in: {@link Game_Event#event}, {@link Game_Event#eventId}, {@link Game_Event#meetsConditions}, {@link Game_Event#updateParallel}.<br/>
    */
   _eventId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Interpreter`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#updateParallel}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Interpreter`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#updateParallel}.<br/>
    */
   _interpreter: null | Game_Interpreter;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#lock}, {@link Game_Event#unlock}.
-   * Read in: {@link Game_Event#lock}, {@link Game_Event#unlock}, {@link Game_Event#updateSelfMovement}, {@link Game_Event#updateStop}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#lock}, {@link Game_Event#unlock}.<br/>
+   * Read in: {@link Game_Event#lock}, {@link Game_Event#unlock}, {@link Game_Event#updateSelfMovement}, {@link Game_Event#updateStop}.<br/>
    */
   _locked: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Game_Event#initialize}.
-   * Written in: {@link Game_Event#initialize}.
-   * Read in: {@link Game_Event#meetsConditions}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Game_Event#initialize}.<br/>
+   * Written in: {@link Game_Event#initialize}.<br/>
+   * Read in: {@link Game_Event#meetsConditions}.<br/>
    */
   _mapId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#updateSelfMovement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#updateSelfMovement}.<br/>
    */
   _moveType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#setupPageSettings}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#setupPageSettings}.<br/>
    */
   _originalDirection: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#isOriginalPattern}, {@link Game_Event#resetPattern}, {@link Game_Event#setupPageSettings}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#isOriginalPattern}, {@link Game_Event#resetPattern}, {@link Game_Event#setupPageSettings}.<br/>
    */
   _originalPattern: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#refresh}.
-   * Read in: {@link Game_Event#page}, {@link Game_Event#refresh}, {@link Game_Event#setupPage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#initMembers}, {@link Game_Event#refresh}.<br/>
+   * Read in: {@link Game_Event#page}, {@link Game_Event#refresh}, {@link Game_Event#setupPage}.<br/>
    */
   _pageIndex: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#forceMoveRoute}, {@link Game_Event#initMembers}, {@link Game_Event#locate}, {@link Game_Event#lock}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#unlock}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#forceMoveRoute}, {@link Game_Event#initMembers}, {@link Game_Event#locate}, {@link Game_Event#lock}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#unlock}.<br/>
    */
   _prelockDirection: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#clearStartingFlag}, {@link Game_Event#initMembers}, {@link Game_Event#start}.
-   * Read in: {@link Game_Event#isStarting}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#clearStartingFlag}, {@link Game_Event#initMembers}, {@link Game_Event#start}.<br/>
+   * Read in: {@link Game_Event#isStarting}.<br/>
    */
   _starting: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number | null`.
-   * Initialized in: none.
-   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.
-   * Read in: {@link Game_Event#checkEventTriggerAuto}, {@link Game_Event#checkEventTriggerTouch}, {@link Game_Event#isTriggerIn}, {@link Game_Event#setupPageSettings}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number | null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Game_Event#clearPageSettings}, {@link Game_Event#initMembers}, {@link Game_Event#setupPageSettings}.<br/>
+   * Read in: {@link Game_Event#checkEventTriggerAuto}, {@link Game_Event#checkEventTriggerTouch}, {@link Game_Event#isTriggerIn}, {@link Game_Event#setupPageSettings}.<br/>
    */
   _trigger: number | null;
   /**

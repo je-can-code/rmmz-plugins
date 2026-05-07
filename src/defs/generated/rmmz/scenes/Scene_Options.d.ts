@@ -8,12 +8,12 @@
 interface Scene_Options extends Scene_MenuBase
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Window_Options`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Options#createOptionsWindow}.
-   * Read in: {@link Scene_Options#createOptionsWindow}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Window_Options`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Options#createOptionsWindow}.<br/>
+   * Read in: {@link Scene_Options#createOptionsWindow}.<br/>
    */
   _optionsWindow: Window_Options;
   /**

@@ -8,120 +8,120 @@
 interface Window_Message extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updateBackground}.
-   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updateBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updateBackground}.<br/>
+   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updateBackground}.<br/>
    */
   _background: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setChoiceListWindow}.
-   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setChoiceListWindow}.<br/>
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
   _choiceListWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setEventItemWindow}.
-   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setEventItemWindow}.<br/>
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
   _eventItemWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#loadMessageFace}, {@link Window_Message#updateLoading}.
-   * Read in: {@link Window_Message#updateLoading}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#loadMessageFace}, {@link Window_Message#updateLoading}.<br/>
+   * Read in: {@link Window_Message#updateLoading}.<br/>
    */
   _faceBitmap: null;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setGoldWindow}.
-   * Read in: {@link Window_Message#processEscapeCharacter}, {@link Window_Message#terminateMessage}, {@link Window_Message#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setGoldWindow}.<br/>
+   * Read in: {@link Window_Message#processEscapeCharacter}, {@link Window_Message#terminateMessage}, {@link Window_Message#updatePlacement}.<br/>
    */
   _goldWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}, {@link Window_Message#processNewLine}.
-   * Read in: {@link Window_Message#shouldBreakHere}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}, {@link Window_Message#processNewLine}.<br/>
+   * Read in: {@link Window_Message#shouldBreakHere}.<br/>
    */
   _lineShowFast: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNameBoxWindow}.
-   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#synchronizeNameBox}, {@link Window_Message#updateSpeakerName}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNameBoxWindow}.<br/>
+   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#synchronizeNameBox}, {@link Window_Message#updateSpeakerName}.<br/>
    */
   _nameBoxWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Window_Base`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNumberInputWindow}.
-   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Window_Base`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNumberInputWindow}.<br/>
+   * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
   _numberInputWindow: null | Window_Base;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}.
-   * Read in: {@link Window_Message#onEndOfText}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#processEscapeCharacter}.<br/>
+   * Read in: {@link Window_Message#onEndOfText}.<br/>
    */
   _pauseSkip: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updatePlacement}.
-   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updatePlacement}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#updatePlacement}.<br/>
+   * Read in: {@link Window_Message#areSettingsChanged}, {@link Window_Message#updatePlacement}.<br/>
    */
   _positionType: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `boolean`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#updateShowFast}.
-   * Read in: {@link Window_Message#shouldBreakHere}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `boolean`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#clearFlags}, {@link Window_Message#updateShowFast}.<br/>
+   * Read in: {@link Window_Message#shouldBreakHere}.<br/>
    */
   _showFast: boolean;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | object`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#onEndOfText}, {@link Window_Message#startMessage}.
-   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#updateInput}, {@link Window_Message#updateMessage}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | object`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#initMembers}, {@link Window_Message#onEndOfText}, {@link Window_Message#startMessage}.<br/>
+   * Read in: {@link Window_Message#startMessage}, {@link Window_Message#updateInput}, {@link Window_Message#updateMessage}.<br/>
    */
   _textState: null | object;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Window_Message#cancelWait}, {@link Window_Message#initMembers}, {@link Window_Message#startWait}, {@link Window_Message#updateWait}.
-   * Read in: {@link Window_Message#isWaiting}, {@link Window_Message#updateWait}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Window_Message#cancelWait}, {@link Window_Message#initMembers}, {@link Window_Message#startWait}, {@link Window_Message#updateWait}.<br/>
+   * Read in: {@link Window_Message#isWaiting}, {@link Window_Message#updateWait}.<br/>
    */
   _waitCount: number;
   /**

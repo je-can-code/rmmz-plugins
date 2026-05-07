@@ -8,93 +8,93 @@
 interface Sprite_Character extends Sprite
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#initMembers}.
-   * Read in: none.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#initMembers}.<br/>
+   * Read in: none.<br/>
    */
   _balloonDuration: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#updateOther}.
-   * Read in: {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#updateOther}.<br/>
+   * Read in: {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.<br/>
    */
   _bushDepth: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Game_Character`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#initMembers}, {@link Sprite_Character#setCharacter}.
-   * Read in: {@link Sprite_Character#characterBlockX}, {@link Sprite_Character#characterBlockY}, {@link Sprite_Character#characterPatternX}, {@link Sprite_Character#characterPatternY}, {@link Sprite_Character#checkCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#isObjectCharacter}, {@link Sprite_Character#isTile}, {@link Sprite_Character#updateBitmap}, {@link Sprite_Character#updateOther}, {@link Sprite_Character#updatePosition}, {@link Sprite_Character#updateVisibility}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Game_Character`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#initMembers}, {@link Sprite_Character#setCharacter}.<br/>
+   * Read in: {@link Sprite_Character#characterBlockX}, {@link Sprite_Character#characterBlockY}, {@link Sprite_Character#characterPatternX}, {@link Sprite_Character#characterPatternY}, {@link Sprite_Character#checkCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#isObjectCharacter}, {@link Sprite_Character#isTile}, {@link Sprite_Character#updateBitmap}, {@link Sprite_Character#updateOther}, {@link Sprite_Character#updatePosition}, {@link Sprite_Character#updateVisibility}.<br/>
    */
   _character: null | Game_Character;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#updateBitmap}.
-   * Read in: {@link Sprite_Character#isImageChanged}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Character#isImageChanged}.<br/>
    */
   _characterIndex: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#updateBitmap}.
-   * Read in: {@link Sprite_Character#isEmptyCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#setCharacterBitmap}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Character#isEmptyCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#setCharacterBitmap}.<br/>
    */
   _characterName: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#setCharacterBitmap}.
-   * Read in: {@link Sprite_Character#characterBlockX}, {@link Sprite_Character#characterBlockY}, {@link Sprite_Character#patternHeight}, {@link Sprite_Character#patternWidth}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#setCharacterBitmap}.<br/>
+   * Read in: {@link Sprite_Character#characterBlockX}, {@link Sprite_Character#characterBlockY}, {@link Sprite_Character#patternHeight}, {@link Sprite_Character#patternWidth}.<br/>
    */
   _isBigCharacter: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#initMembers}.
-   * Read in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#initMembers}.<br/>
+   * Read in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.<br/>
    */
   _lowerBody: null | Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `unknown`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#updateBitmap}.
-   * Read in: {@link Sprite_Character#isEmptyCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#patternHeight}, {@link Sprite_Character#patternWidth}, {@link Sprite_Character#setTileBitmap}, {@link Sprite_Character#updateBitmap}, {@link Sprite_Character#updateFrame}, {@link Sprite_Character#updateTileFrame}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `unknown`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Character#isEmptyCharacter}, {@link Sprite_Character#isImageChanged}, {@link Sprite_Character#patternHeight}, {@link Sprite_Character#patternWidth}, {@link Sprite_Character#setTileBitmap}, {@link Sprite_Character#updateBitmap}, {@link Sprite_Character#updateFrame}, {@link Sprite_Character#updateTileFrame}.<br/>
    */
   _tileId: unknown;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#initMembers}, {@link Sprite_Character#updateBitmap}.
-   * Read in: {@link Sprite_Character#isImageChanged}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#initMembers}, {@link Sprite_Character#updateBitmap}.<br/>
+   * Read in: {@link Sprite_Character#isImageChanged}.<br/>
    */
   _tilesetId: number;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `null | Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#initMembers}.
-   * Read in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `null | Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#initMembers}.<br/>
+   * Read in: {@link Sprite_Character#createHalfBodySprites}, {@link Sprite_Character#updateCharacterFrame}, {@link Sprite_Character#updateHalfBodySprites}.<br/>
    */
   _upperBody: null | Sprite;
   /**

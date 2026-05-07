@@ -8,12 +8,12 @@
 interface Window_MapName extends Window_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: {@link Window_MapName#initialize}.
-   * Written in: {@link Window_MapName#close}, {@link Window_MapName#initialize}, {@link Window_MapName#open}, {@link Window_MapName#update}.
-   * Read in: {@link Window_MapName#update}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: {@link Window_MapName#initialize}.<br/>
+   * Written in: {@link Window_MapName#close}, {@link Window_MapName#initialize}, {@link Window_MapName#open}, {@link Window_MapName#update}.<br/>
+   * Read in: {@link Window_MapName#update}.<br/>
    */
   _showCount: number;
   /**

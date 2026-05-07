@@ -8,21 +8,21 @@
 interface Scene_Splash extends Scene_Base
 {
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `Sprite`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Splash#createBackground}.
-   * Read in: {@link Scene_Splash#adjustBackground}, {@link Scene_Splash#createBackground}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `Sprite`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Splash#createBackground}.<br/>
+   * Read in: {@link Scene_Splash#adjustBackground}, {@link Scene_Splash#createBackground}.<br/>
    */
   _backSprite: Sprite;
   /**
-   * Inferred engine backing field.
-   *
-   * Type: `number`.
-   * Initialized in: none.
-   * Written in: {@link Scene_Splash#checkSkip}, {@link Scene_Splash#initWaitCount}, {@link Scene_Splash#updateWaitCount}.
-   * Read in: {@link Scene_Splash#updateWaitCount}.
+   * Inferred engine backing field.<br/>
+   *<br/>
+   * Type: `number`.<br/>
+   * Initialized in: none.<br/>
+   * Written in: {@link Scene_Splash#checkSkip}, {@link Scene_Splash#initWaitCount}, {@link Scene_Splash#updateWaitCount}.<br/>
+   * Read in: {@link Scene_Splash#updateWaitCount}.<br/>
    */
   _waitCount: number;
   /**
