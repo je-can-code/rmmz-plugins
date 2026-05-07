@@ -1,9 +1,13 @@
 ---
-status: open
+status: deferred
 area: architecture
 ---
 
 # Map and tame cross-plugin prototype hook surfaces (JABS_Engine, Game_Action, Scene_Map, JABS_AiManager)
+
+## Schedule
+
+Explicitly **deferred** — documentation / inventory pass postponed until bandwidth allows.
 
 ## Severity
 

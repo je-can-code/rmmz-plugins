@@ -1,9 +1,13 @@
 ---
-status: open
+status: deferred
 area: ext-star
 ---
 
 # `ext/star` completion
+
+## Schedule
+
+Explicitly **deferred** — pick up when Star ABS is actively in scope again.
 
 ## Source
 

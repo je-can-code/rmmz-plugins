@@ -1,0 +1,103 @@
+/**
+ * Generated from project/js/rmmz_windows.js
+ * Class: Window_Options
+ * Instance/static typings merge with the engine constructor + prototype in project/js.
+ * Do not hand-edit; regenerate with bun run defs:generate.
+ * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.
+ */
+interface Window_Options extends Window_Command
+{
+  /**
+   * Adds general options.
+   */
+  addGeneralOptions(): void;
+  /**
+   * Adds volume options.
+   */
+  addVolumeOptions(): void;
+  /**
+   * Gets boolean status text.
+   * @param value The value parameter.
+   * @returns The result.
+   */
+  booleanStatusText(value: boolean): string;
+  /**
+   * Performs change value.
+   * @param _symbol The symbol parameter.
+   * @param value The value parameter.
+   */
+  changeValue(_symbol: string, value: boolean | number): void;
+  /**
+   * Performs change volume.
+   * @param _symbol The symbol parameter.
+   * @param forward The forward parameter.
+   * @param wrap The wrap parameter.
+   */
+  changeVolume(_symbol: string, forward: boolean, wrap: boolean): void;
+  /**
+   * Performs cursor left.
+   */
+  cursorLeft(): void;
+  /**
+   * Performs cursor right.
+   */
+  cursorRight(): void;
+  /**
+   * Performs draw item.
+   * @param index The index parameter.
+   */
+  drawItem(index: number): void;
+  /**
+   * Gets config value.
+   * @param _symbol The symbol parameter.
+   * @returns The result.
+   */
+  getConfigValue(_symbol: string): boolean | number;
+  /**
+   * Initializes initialize.
+   * @param rect The rect parameter.
+   */
+  initialize(rect: Rectangle): void;
+  /**
+   * Determines whether volume symbol.
+   * @param _symbol The symbol parameter.
+   * @returns True if volume symbol; false otherwise.
+   */
+  isVolumeSymbol(_symbol: string): boolean;
+  /**
+   * Creates command list.
+   */
+  makeCommandList(): void;
+  /**
+   * Performs process ok.
+   */
+  processOk(): void;
+  /**
+   * Sets config value.
+   * @param _symbol The symbol parameter.
+   * @param volume The volume parameter.
+   */
+  setConfigValue(_symbol: string, volume: boolean | number): void;
+  /**
+   * Gets status text.
+   * @param index The index parameter.
+   * @returns The result.
+   */
+  statusText(index: number): string;
+  /**
+   * Gets status width.
+   * @returns The result.
+   */
+  statusWidth(): number;
+  /**
+   * Gets volume offset.
+   * @returns The result.
+   */
+  volumeOffset(): number;
+  /**
+   * Gets volume status text.
+   * @param value The value parameter.
+   * @returns The result.
+   */
+  volumeStatusText(value: number): string;
+}
