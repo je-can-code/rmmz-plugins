@@ -28,12 +28,12 @@ interface Window_EventItem extends Window_ItemList
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_EventItem#setMessageWindow}.<br/>
    * Read in: {@link Window_EventItem#onCancel}, {@link Window_EventItem#onOk}, {@link Window_EventItem#placeCancelButton}, {@link Window_EventItem#updatePlacement}.<br/>
    */
-  _messageWindow: Window_Base;
+  _messageWindow: unknown;
   /**
    * Creates cancel button.
    */
@@ -43,12 +43,12 @@ interface Window_EventItem extends Window_ItemList
    * @param item The item parameter.
    * @returns The result.
    */
-  includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  includes(item: unknown): boolean;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether enabled.
    * @returns True if enabled; false otherwise.
@@ -75,7 +75,7 @@ interface Window_EventItem extends Window_ItemList
    * Sets message window.
    * @param messageWindow The messageWindow parameter.
    */
-  setMessageWindow(messageWindow: Window_Base): void;
+  setMessageWindow(messageWindow: unknown): void;
   /**
    * Performs start.
    */

@@ -28,12 +28,12 @@ interface Game_Message
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | (n: number) => void`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Message#clear}, {@link Game_Message#onChoice}, {@link Game_Message#setChoiceCallback}.<br/>
    * Read in: {@link Game_Message#onChoice}.<br/>
    */
-  _choiceCallback: null | (n: number) => void;
+  _choiceCallback: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -64,7 +64,7 @@ interface Game_Message
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `unknown[] | string[]`.<br/>
+   * Type: `unknown[]`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Message#clear}, {@link Game_Message#setChoices}.<br/>
    * Read in: {@link Game_Message#choices}, {@link Game_Message#isChoice}.<br/>
@@ -72,7 +72,7 @@ interface Game_Message
    * Consumed by:<br/>
    * - `.length`: {@link Game_Message#isChoice}.<br/>
    */
-  _choices: unknown[] | string[];
+  _choices: unknown[];
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -189,42 +189,42 @@ interface Game_Message
    * Performs add.
    * @param text The text parameter.
    */
-  add(text: string): void;
+  add(text: unknown): void;
   /**
    * Gets all text.
    * @returns The result.
    */
-  allText(): string;
+  allText(): unknown;
   /**
    * Gets background.
    * @returns The result.
    */
-  background(): number;
+  background(): unknown;
   /**
    * Gets choice background.
    * @returns The result.
    */
-  choiceBackground(): number;
+  choiceBackground(): unknown;
   /**
    * Gets choice cancel type.
    * @returns The result.
    */
-  choiceCancelType(): number;
+  choiceCancelType(): unknown;
   /**
    * Gets choice default type.
    * @returns The result.
    */
-  choiceDefaultType(): number;
+  choiceDefaultType(): unknown;
   /**
    * Gets choice position type.
    * @returns The result.
    */
-  choicePositionType(): number;
+  choicePositionType(): unknown;
   /**
    * Gets choices.
    * @returns The result.
    */
-  choices(): string[];
+  choices(): unknown;
   /**
    * Performs clear.
    */
@@ -233,12 +233,12 @@ interface Game_Message
    * Gets face index.
    * @returns The result.
    */
-  faceIndex(): number;
+  faceIndex(): unknown;
   /**
    * Gets face name.
    * @returns The result.
    */
-  faceName(): string;
+  faceName(): unknown;
   /**
    * Determines whether text.
    * @returns True if text; false otherwise.
@@ -277,12 +277,12 @@ interface Game_Message
    * Gets item choice itype id.
    * @returns The result.
    */
-  itemChoiceItypeId(): number;
+  itemChoiceItypeId(): unknown;
   /**
    * Gets item choice variable id.
    * @returns The result.
    */
-  itemChoiceVariableId(): number;
+  itemChoiceVariableId(): unknown;
   /**
    * Performs new page.
    */
@@ -291,101 +291,101 @@ interface Game_Message
    * Gets num input max digits.
    * @returns The result.
    */
-  numInputMaxDigits(): number;
+  numInputMaxDigits(): unknown;
   /**
    * Gets num input variable id.
    * @returns The result.
    */
-  numInputVariableId(): number;
+  numInputVariableId(): unknown;
   /**
    * Performs on choice.
    * @param n The n parameter.
    */
-  onChoice(n: number): void;
+  onChoice(n: unknown): void;
   /**
    * Gets position type.
    * @returns The result.
    */
-  positionType(): number;
+  positionType(): unknown;
   /**
    * Gets scroll mode.
    * @returns The result.
    */
-  scrollMode(): boolean;
+  scrollMode(): unknown;
   /**
    * Gets scroll no fast.
    * @returns The result.
    */
-  scrollNoFast(): boolean;
+  scrollNoFast(): unknown;
   /**
    * Gets scroll speed.
    * @returns The result.
    */
-  scrollSpeed(): number;
+  scrollSpeed(): unknown;
   /**
    * Sets background.
    * @param background The background parameter.
    */
-  setBackground(background: number): void;
+  setBackground(background: unknown): void;
   /**
    * Sets choice background.
    * @param background The background parameter.
    */
-  setChoiceBackground(background: number): void;
+  setChoiceBackground(background: unknown): void;
   /**
    * Sets choice callback.
    * @param callback The callback parameter.
    */
-  setChoiceCallback(callback: (n: number) => void): void;
+  setChoiceCallback(callback: unknown): void;
   /**
    * Sets choice position type.
    * @param positionType The positionType parameter.
    */
-  setChoicePositionType(positionType: number): void;
+  setChoicePositionType(positionType: unknown): void;
   /**
    * Sets choices.
    * @param choices The choices parameter.
    * @param defaultType The defaultType parameter.
    * @param cancelType The cancelType parameter.
    */
-  setChoices(choices: string[], defaultType: number, cancelType: number): void;
+  setChoices(choices: unknown, defaultType: unknown, cancelType: unknown): void;
   /**
    * Sets face image.
    * @param faceName The faceName parameter.
    * @param faceIndex The faceIndex parameter.
    */
-  setFaceImage(faceName: string, faceIndex: number): void;
+  setFaceImage(faceName: unknown, faceIndex: unknown): void;
   /**
    * Sets item choice.
    * @param variableId The variableId parameter.
    * @param itemType The itemType parameter.
    */
-  setItemChoice(variableId: number, itemType: number): void;
+  setItemChoice(variableId: unknown, itemType: unknown): void;
   /**
    * Sets number input.
    * @param variableId The variableId parameter.
    * @param maxDigits The maxDigits parameter.
    */
-  setNumberInput(variableId: number, maxDigits: number): void;
+  setNumberInput(variableId: unknown, maxDigits: unknown): void;
   /**
    * Sets position type.
    * @param positionType The positionType parameter.
    */
-  setPositionType(positionType: number): void;
+  setPositionType(positionType: unknown): void;
   /**
    * Sets scroll.
    * @param speed The speed parameter.
    * @param noFast The noFast parameter.
    */
-  setScroll(speed: number, noFast: boolean): void;
+  setScroll(speed: unknown, noFast: unknown): void;
   /**
    * Sets speaker name.
    * @param speakerName The speakerName parameter.
    */
-  setSpeakerName(speakerName: string): void;
+  setSpeakerName(speakerName: unknown): void;
   /**
    * Gets speaker name.
    * @returns The result.
    */
-  speakerName(): string;
+  speakerName(): unknown;
 }

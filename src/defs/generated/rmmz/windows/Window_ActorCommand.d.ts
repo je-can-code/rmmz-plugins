@@ -10,17 +10,17 @@ interface Window_ActorCommand extends Window_Command
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_ActorCommand#initialize}.<br/>
    * Written in: {@link Window_ActorCommand#initialize}, {@link Window_ActorCommand#setup}.<br/>
    * Read in: {@link Window_ActorCommand#actor}, {@link Window_ActorCommand#addAttackCommand}, {@link Window_ActorCommand#addGuardCommand}, {@link Window_ActorCommand#addSkillCommands}, {@link Window_ActorCommand#makeCommandList}, {@link Window_ActorCommand#processOk}, {@link Window_ActorCommand#selectLast}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Gets actor.
    * @returns The result.
    */
-  actor(): Game_Actor | undefined;
+  actor(): unknown;
   /**
    * Adds attack command.
    */
@@ -41,7 +41,7 @@ interface Window_ActorCommand extends Window_Command
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Creates command list.
    */
@@ -58,5 +58,5 @@ interface Window_ActorCommand extends Window_Command
    * Performs setup.
    * @param actor The actor parameter.
    */
-  setup(actor: Game_Actor): void;
+  setup(actor: unknown): void;
 }

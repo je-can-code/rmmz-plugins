@@ -10,21 +10,21 @@ interface Sprite_Button extends Sprite_Clickable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Sprite_Button#initialize}.<br/>
    * Written in: {@link Sprite_Button#initialize}.<br/>
    * Read in: {@link Sprite_Button#buttonData}, {@link Sprite_Button#onClick}.<br/>
    */
-  _buttonType: number;
+  _buttonType: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | () => void`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Sprite_Button#initialize}.<br/>
    * Written in: {@link Sprite_Button#initialize}, {@link Sprite_Button#setClickHandler}.<br/>
    * Read in: {@link Sprite_Button#onClick}.<br/>
    */
-  _clickHandler: null | () => void;
+  _clickHandler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -57,7 +57,7 @@ interface Sprite_Button extends Sprite_Clickable
    * Gets button data.
    * @returns The result.
    */
-  buttonData(): object;
+  buttonData(): unknown;
   /**
    * Performs check bitmap.
    */
@@ -66,7 +66,7 @@ interface Sprite_Button extends Sprite_Clickable
    * Initializes initialize.
    * @param buttonType The buttonType parameter.
    */
-  initialize(buttonType: number): void;
+  initialize(buttonType: unknown): void;
   /**
    * Performs load button image.
    */
@@ -79,7 +79,7 @@ interface Sprite_Button extends Sprite_Clickable
    * Sets click handler.
    * @param method The method parameter.
    */
-  setClickHandler(method: () => void): void;
+  setClickHandler(method: unknown): void;
   /**
    * Sets cold frame.
    * @param x The x parameter.
@@ -87,7 +87,7 @@ interface Sprite_Button extends Sprite_Clickable
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  setColdFrame(x: number, y: number, width: number, height: number): void;
+  setColdFrame(x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Sets hot frame.
    * @param x The x parameter.
@@ -95,7 +95,7 @@ interface Sprite_Button extends Sprite_Clickable
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  setHotFrame(x: number, y: number, width: number, height: number): void;
+  setHotFrame(x: unknown, y: unknown, width: unknown, height: unknown): void;
   /**
    * Performs setup frames.
    */

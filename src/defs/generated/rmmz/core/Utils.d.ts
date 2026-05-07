@@ -79,7 +79,7 @@ declare namespace Utils
    * @param str The str parameter.
    * @returns The result.
    */
-  function containsArabic(str: string): boolean;
+  function containsArabic(str: unknown): boolean;
   /**
    * Decrypts encrypted data.
    * @param source The data to be decrypted.

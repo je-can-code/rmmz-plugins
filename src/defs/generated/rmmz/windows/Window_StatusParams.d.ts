@@ -10,17 +10,17 @@ interface Window_StatusParams extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_StatusParams#initialize}.<br/>
    * Written in: {@link Window_StatusParams#initialize}, {@link Window_StatusParams#setActor}.<br/>
    * Read in: {@link Window_StatusParams#drawItem}, {@link Window_StatusParams#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Performs draw item background.
    */
@@ -29,12 +29,12 @@ interface Window_StatusParams extends Window_StatusBase
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets max items.
    * @returns The result.
@@ -44,5 +44,5 @@ interface Window_StatusParams extends Window_StatusBase
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
 }

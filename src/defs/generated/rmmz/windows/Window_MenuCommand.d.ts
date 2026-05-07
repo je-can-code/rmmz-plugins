@@ -53,12 +53,12 @@ interface Window_MenuCommand extends Window_Command
    * Gets are main commands enabled.
    * @returns The result.
    */
-  areMainCommandsEnabled(): boolean;
+  areMainCommandsEnabled(): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether formation enabled.
    * @returns True if formation enabled; false otherwise.
@@ -88,7 +88,7 @@ interface Window_MenuCommand extends Window_Command
    * @param name The name parameter.
    * @returns The result.
    */
-  needsCommand(name: string): boolean;
+  needsCommand(name: unknown): boolean;
   /**
    * Performs process ok.
    */

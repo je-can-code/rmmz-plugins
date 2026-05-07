@@ -56,12 +56,12 @@ declare namespace ImageManager
    * Gets face size.
    * @returns The result.
    */
-  function getFaceSize(): number;
+  function getFaceSize(): unknown;
   /**
    * Gets icon size.
    * @returns The result.
    */
-  function getIconSize(): number;
+  function getIconSize(): unknown;
   /**
    * Gets icon height.
    * @returns The result.
@@ -77,13 +77,13 @@ declare namespace ImageManager
    * @param filename The filename parameter.
    * @returns True if big character; false otherwise.
    */
-  function isBigCharacter(filename: string): boolean;
+  function isBigCharacter(filename: unknown): boolean;
   /**
    * Determines whether object character.
    * @param filename The filename parameter.
    * @returns True if object character; false otherwise.
    */
-  function isObjectCharacter(filename: string): boolean;
+  function isObjectCharacter(filename: unknown): boolean;
   /**
    * Determines whether ready.
    * @returns True if ready; false otherwise.
@@ -94,109 +94,109 @@ declare namespace ImageManager
    * @param filename The filename parameter.
    * @returns True if zero parallax; false otherwise.
    */
-  function isZeroParallax(filename: string): boolean;
+  function isZeroParallax(filename: unknown): boolean;
   /**
    * Gets load animation.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadAnimation(filename: string): Bitmap;
+  function loadAnimation(filename: unknown): unknown;
   /**
    * Gets load battleback1.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadBattleback1(filename: string): Bitmap;
+  function loadBattleback1(filename: unknown): unknown;
   /**
    * Gets load battleback2.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadBattleback2(filename: string): Bitmap;
+  function loadBattleback2(filename: unknown): unknown;
   /**
    * Gets load bitmap.
    * @param folder The folder parameter.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadBitmap(folder: string, filename: string): Bitmap;
+  function loadBitmap(folder: unknown, filename: unknown): unknown;
   /**
    * Gets load bitmap from url.
    * @param url The url parameter.
    * @returns The result.
    */
-  function loadBitmapFromUrl(url: string): Bitmap;
+  function loadBitmapFromUrl(url: unknown): unknown;
   /**
    * Gets load character.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadCharacter(filename: string): Bitmap;
+  function loadCharacter(filename: unknown): unknown;
   /**
    * Gets load enemy.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadEnemy(filename: string): Bitmap;
+  function loadEnemy(filename: unknown): unknown;
   /**
    * Gets load face.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadFace(filename: string): Bitmap;
+  function loadFace(filename: unknown): unknown;
   /**
    * Gets load parallax.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadParallax(filename: string): Bitmap;
+  function loadParallax(filename: unknown): unknown;
   /**
    * Gets load picture.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadPicture(filename: string): Bitmap;
+  function loadPicture(filename: unknown): unknown;
   /**
    * Gets load sv actor.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadSvActor(filename: string): Bitmap;
+  function loadSvActor(filename: unknown): unknown;
   /**
    * Gets load sv enemy.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadSvEnemy(filename: string): Bitmap;
+  function loadSvEnemy(filename: unknown): unknown;
   /**
    * Gets load system.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadSystem(filename: string): Bitmap;
+  function loadSystem(filename: unknown): unknown;
   /**
    * Gets load tileset.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadTileset(filename: string): Bitmap;
+  function loadTileset(filename: unknown): unknown;
   /**
    * Gets load title1.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadTitle1(filename: string): Bitmap;
+  function loadTitle1(filename: unknown): unknown;
   /**
    * Gets load title2.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function loadTitle2(filename: string): Bitmap;
+  function loadTitle2(filename: unknown): unknown;
   /**
    * Performs throw load error.
    * @param bitmap The bitmap parameter.
    */
-  function throwLoadError(bitmap: Bitmap): void;
+  function throwLoadError(bitmap: unknown): void;
   /**
    * Engine static constant.
    */

@@ -24,17 +24,17 @@ interface Sprite_Timer extends Sprite
    * Performs destroy.
    * @param options The options parameter.
    */
-  destroy(options: object): void;
+  destroy(options: unknown): void;
   /**
    * Gets font face.
    * @returns The result.
    */
-  fontFace(): string;
+  fontFace(): unknown;
   /**
    * Gets font size.
    * @returns The result.
    */
-  fontSize(): number;
+  fontSize(): unknown;
   /**
    * Initializes initialize.
    */

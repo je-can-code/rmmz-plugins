@@ -10,12 +10,12 @@ interface Sprite_Picture extends Sprite_Clickable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Sprite_Picture#initialize}.<br/>
    * Written in: {@link Sprite_Picture#initialize}.<br/>
    * Read in: {@link Sprite_Picture#picture}.<br/>
    */
-  _pictureId: number;
+  _pictureId: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -29,7 +29,7 @@ interface Sprite_Picture extends Sprite_Clickable
    * Initializes initialize.
    * @param pictureId The pictureId parameter.
    */
-  initialize(pictureId: number): void;
+  initialize(pictureId: unknown): void;
   /**
    * Performs load bitmap.
    */
@@ -38,7 +38,7 @@ interface Sprite_Picture extends Sprite_Clickable
    * Gets picture.
    * @returns The result.
    */
-  picture(): Game_Picture | null;
+  picture(): unknown;
   /**
    * Performs update.
    */

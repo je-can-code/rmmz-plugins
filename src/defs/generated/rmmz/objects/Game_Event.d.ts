@@ -19,12 +19,12 @@ interface Game_Event extends Game_Character
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Game_Event#initialize}.<br/>
    * Written in: {@link Game_Event#initialize}.<br/>
    * Read in: {@link Game_Event#event}, {@link Game_Event#eventId}, {@link Game_Event#meetsConditions}, {@link Game_Event#updateParallel}.<br/>
    */
-  _eventId: number;
+  _eventId: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Game_Event extends Game_Character
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Game_Event#initialize}.<br/>
    * Written in: {@link Game_Event#initialize}.<br/>
    * Read in: {@link Game_Event#meetsConditions}.<br/>
    */
-  _mapId: number;
+  _mapId: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -124,7 +124,7 @@ interface Game_Event extends Game_Character
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  checkEventTriggerTouch(x: number, y: number): void;
+  checkEventTriggerTouch(x: unknown, y: unknown): void;
   /**
    * Clears page settings.
    */
@@ -141,12 +141,12 @@ interface Game_Event extends Game_Character
    * Gets event.
    * @returns The result.
    */
-  event(): object;
+  event(): unknown;
   /**
    * Gets event id.
    * @returns The result.
    */
-  eventId(): number;
+  eventId(): unknown;
   /**
    * Gets find proper page index.
    * @returns The result.
@@ -156,7 +156,7 @@ interface Game_Event extends Game_Character
    * Performs force move route.
    * @param moveRoute The moveRoute parameter.
    */
-  forceMoveRoute(moveRoute: object): void;
+  forceMoveRoute(moveRoute: unknown): void;
   /**
    * Initializes members.
    */
@@ -166,28 +166,28 @@ interface Game_Event extends Game_Character
    * @param mapId The mapId parameter.
    * @param eventId The eventId parameter.
    */
-  initialize(mapId: number, eventId: number): void;
+  initialize(mapId: unknown, eventId: unknown): void;
   /**
    * Determines whether collided with characters.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if collided with characters; false otherwise.
    */
-  isCollidedWithCharacters(x: number, y: number): boolean;
+  isCollidedWithCharacters(x: unknown, y: unknown): boolean;
   /**
    * Determines whether collided with events.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if collided with events; false otherwise.
    */
-  isCollidedWithEvents(x: number, y: number): boolean;
+  isCollidedWithEvents(x: unknown, y: unknown): boolean;
   /**
    * Determines whether collided with player characters.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if collided with player characters; false otherwise.
    */
-  isCollidedWithPlayerCharacters(x: number, y: number): boolean;
+  isCollidedWithPlayerCharacters(x: unknown, y: unknown): boolean;
   /**
    * Determines whether near the player.
    * @returns True if near the player; false otherwise.
@@ -208,18 +208,18 @@ interface Game_Event extends Game_Character
    * @param triggers The triggers parameter.
    * @returns True if trigger in; false otherwise.
    */
-  isTriggerIn(triggers: number[]): boolean;
+  isTriggerIn(triggers: unknown): boolean;
   /**
    * Gets list.
    * @returns The result.
    */
-  list(): Array<{ code: number; indent: number; parameters: readonly (number | string | boolean | object | null)[] }>;
+  list(): unknown;
   /**
    * Performs locate.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  locate(x: number, y: number): void;
+  locate(x: unknown, y: unknown): void;
   /**
    * Performs lock.
    */
@@ -229,7 +229,7 @@ interface Game_Event extends Game_Character
    * @param page The page parameter.
    * @returns The result.
    */
-  meetsConditions(page: object): boolean;
+  meetsConditions(page: unknown): boolean;
   /**
    * Performs move type custom.
    */
@@ -246,7 +246,7 @@ interface Game_Event extends Game_Character
    * Gets page.
    * @returns The result.
    */
-  page(): object;
+  page(): unknown;
   /**
    * Performs refresh.
    */
@@ -271,7 +271,7 @@ interface Game_Event extends Game_Character
    * Gets stop count threshold.
    * @returns The result.
    */
-  stopCountThreshold(): number;
+  stopCountThreshold(): unknown;
   /**
    * Performs unlock.
    */

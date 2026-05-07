@@ -107,7 +107,7 @@ class RPG_DropItem
 
   /**
    * Constructor.
-   * @param {rm.types.EnemyDropItem} enemyDropItem The drop item to parse.
+   * @param {RPG_DropItem} enemyDropItem The drop item to parse.
    */
   constructor({
     dataId,

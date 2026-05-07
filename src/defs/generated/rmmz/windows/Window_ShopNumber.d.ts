@@ -31,21 +31,21 @@ interface Window_ShopNumber extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `string`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
    * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setCurrencyUnit}.<br/>
    * Read in: {@link Window_ShopNumber#drawTotalPrice}.<br/>
    */
-  _currencyUnit: string;
+  _currencyUnit: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_ShopNumber#initialize}.<br/>
    * Written in: {@link Window_ShopNumber#initialize}, {@link Window_ShopNumber#setup}.<br/>
    * Read in: {@link Window_ShopNumber#drawCurrentItemName}.<br/>
    */
-  _item: null | RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor;
+  _item: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -82,12 +82,12 @@ interface Window_ShopNumber extends Window_Selectable
    * Gets button y.
    * @returns The result.
    */
-  buttonY(): number;
+  buttonY(): unknown;
   /**
    * Performs change number.
    * @param amount The amount parameter.
    */
-  changeNumber(amount: number): void;
+  changeNumber(amount: unknown): void;
   /**
    * Creates buttons.
    */
@@ -96,12 +96,12 @@ interface Window_ShopNumber extends Window_Selectable
    * Gets cursor width.
    * @returns The result.
    */
-  cursorWidth(): number;
+  cursorWidth(): unknown;
   /**
    * Gets cursor x.
    * @returns The result.
    */
-  cursorX(): number;
+  cursorX(): unknown;
   /**
    * Performs draw current item name.
    */
@@ -126,7 +126,7 @@ interface Window_ShopNumber extends Window_Selectable
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether scroll enabled.
    * @returns True if scroll enabled; false otherwise.
@@ -141,12 +141,12 @@ interface Window_ShopNumber extends Window_Selectable
    * Gets item name y.
    * @returns The result.
    */
-  itemNameY(): number;
+  itemNameY(): unknown;
   /**
    * Gets item rect.
    * @returns The result.
    */
-  itemRect(): Rectangle;
+  itemRect(): unknown;
   /**
    * Gets max digits.
    * @returns The result.
@@ -161,12 +161,12 @@ interface Window_ShopNumber extends Window_Selectable
    * Gets multiplication sign x.
    * @returns The result.
    */
-  multiplicationSignX(): number;
+  multiplicationSignX(): unknown;
   /**
    * Gets number.
    * @returns The result.
    */
-  number(): number;
+  number(): unknown;
   /**
    * Performs on button down.
    */
@@ -207,24 +207,24 @@ interface Window_ShopNumber extends Window_Selectable
    * Sets currency unit.
    * @param currencyUnit The currencyUnit parameter.
    */
-  setCurrencyUnit(currencyUnit: string): void;
+  setCurrencyUnit(currencyUnit: unknown): void;
   /**
    * Performs setup.
    * @param item The item parameter.
    * @param max The max parameter.
    * @param price The price parameter.
    */
-  setup(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, max: number, price: number): void;
+  setup(item: unknown, max: unknown, price: unknown): void;
   /**
    * Gets total button width.
    * @returns The result.
    */
-  totalButtonWidth(): number;
+  totalButtonWidth(): unknown;
   /**
    * Gets total price y.
    * @returns The result.
    */
-  totalPriceY(): number;
+  totalPriceY(): unknown;
   /**
    * Performs update.
    */

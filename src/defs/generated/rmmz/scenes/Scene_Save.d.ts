@@ -11,17 +11,17 @@ interface Scene_Save extends Scene_File
    * Performs execute save.
    * @param savefileId The savefileId parameter.
    */
-  executeSave(savefileId: number): void;
+  executeSave(savefileId: unknown): void;
   /**
    * Gets first savefile id.
    * @returns The result.
    */
-  firstSavefileId(): number;
+  firstSavefileId(): unknown;
   /**
    * Gets help window text.
    * @returns The result.
    */
-  helpWindowText(): string;
+  helpWindowText(): unknown;
   /**
    * Initializes initialize.
    */

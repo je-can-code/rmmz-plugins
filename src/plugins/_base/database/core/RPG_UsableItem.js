@@ -71,7 +71,7 @@ class RPG_UsableItem
 
   /**
    * Constructor.
-   * @param {rm.types.UsableItem} usableItem The usable item to parse.
+   * @param {RPG_UsableItem} usableItem The usable item to parse.
    * @param {number} index The index of the skill in the database.
    */
   constructor(usableItem, index)

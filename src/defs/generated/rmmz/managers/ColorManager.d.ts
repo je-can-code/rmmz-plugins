@@ -24,28 +24,28 @@ declare namespace ColorManager
    * Gets crisis color.
    * @returns The result.
    */
-  function crisisColor(): number;
+  function crisisColor(): string;
   /**
    * Gets ct gauge color1.
    * @returns The result.
    */
-  function ctGaugeColor1(): number;
+  function ctGaugeColor1(): string;
   /**
    * Gets ct gauge color2.
    * @returns The result.
    */
-  function ctGaugeColor2(): number;
+  function ctGaugeColor2(): string;
   /**
    * Gets damage color.
    * @param colorType The colorType parameter.
    * @returns The result.
    */
-  function damageColor(colorType: number): string;
+  function damageColor(colorType: unknown): string;
   /**
    * Gets death color.
    * @returns The result.
    */
-  function deathColor(): number;
+  function deathColor(): string;
   /**
    * Gets dim color1.
    * @returns The result.
@@ -60,23 +60,23 @@ declare namespace ColorManager
    * Gets gauge back color.
    * @returns The result.
    */
-  function gaugeBackColor(): number;
+  function gaugeBackColor(): string;
   /**
    * Gets hp color.
    * @param actor The actor parameter.
    * @returns The result.
    */
-  function hpColor(actor: Game_Actor): number;
+  function hpColor(actor: unknown): unknown;
   /**
    * Gets hp gauge color1.
    * @returns The result.
    */
-  function hpGaugeColor1(): number;
+  function hpGaugeColor1(): string;
   /**
    * Gets hp gauge color2.
    * @returns The result.
    */
-  function hpGaugeColor2(): number;
+  function hpGaugeColor2(): string;
   /**
    * Gets item back color1.
    * @returns The result.
@@ -95,27 +95,27 @@ declare namespace ColorManager
    * Gets mp color.
    * @returns The result.
    */
-  function mpColor(): number;
+  function mpColor(): unknown;
   /**
    * Gets mp cost color.
    * @returns The result.
    */
-  function mpCostColor(): number;
+  function mpCostColor(): string;
   /**
    * Gets mp gauge color1.
    * @returns The result.
    */
-  function mpGaugeColor1(): number;
+  function mpGaugeColor1(): string;
   /**
    * Gets mp gauge color2.
    * @returns The result.
    */
-  function mpGaugeColor2(): number;
+  function mpGaugeColor2(): string;
   /**
    * Gets normal color.
    * @returns The result.
    */
-  function normalColor(): number;
+  function normalColor(): string;
   /**
    * Gets outline color.
    * @returns The result.
@@ -126,51 +126,51 @@ declare namespace ColorManager
    * @param change The change parameter.
    * @returns The result.
    */
-  function paramchangeTextColor(change: number): number;
+  function paramchangeTextColor(change: unknown): unknown;
   /**
    * Gets pending color.
    * @returns The result.
    */
-  function pendingColor(): number;
+  function pendingColor(): string;
   /**
    * Gets power down color.
    * @returns The result.
    */
-  function powerDownColor(): number;
+  function powerDownColor(): string;
   /**
    * Gets power up color.
    * @returns The result.
    */
-  function powerUpColor(): number;
+  function powerUpColor(): string;
   /**
    * Gets system color.
    * @returns The result.
    */
-  function systemColor(): number;
+  function systemColor(): string;
   /**
    * Gets text color.
    * @param n The n parameter.
    * @returns The result.
    */
-  function textColor(n: number): number;
+  function textColor(n: unknown): string;
   /**
    * Gets tp color.
    * @returns The result.
    */
-  function tpColor(): number;
+  function tpColor(): unknown;
   /**
    * Gets tp cost color.
    * @returns The result.
    */
-  function tpCostColor(): number;
+  function tpCostColor(): string;
   /**
    * Gets tp gauge color1.
    * @returns The result.
    */
-  function tpGaugeColor1(): number;
+  function tpGaugeColor1(): string;
   /**
    * Gets tp gauge color2.
    * @returns The result.
    */
-  function tpGaugeColor2(): number;
+  function tpGaugeColor2(): string;
 }

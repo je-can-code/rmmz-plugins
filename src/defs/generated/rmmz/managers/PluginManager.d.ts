@@ -10,12 +10,12 @@ interface PluginManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `object`.<br/>
+   * Type: `RPG_PluginCommandRegistry`.<br/>
    * Initialized in: module init.<br/>
    * Written in: module init.<br/>
    * Read in: {@link PluginManager#callCommand}, {@link PluginManager#registerCommand}.<br/>
    */
-  _commands: object;
+  _commands: RPG_PluginCommandRegistry;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -32,12 +32,12 @@ interface PluginManager
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `object`.<br/>
+   * Type: `RPG_PluginParameterRegistry`.<br/>
    * Initialized in: module init.<br/>
    * Written in: module init.<br/>
    * Read in: {@link PluginManager#parameters}, {@link PluginManager#setParameters}.<br/>
    */
-  _parameters: object;
+  _parameters: RPG_PluginParameterRegistry;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -61,7 +61,7 @@ declare namespace PluginManager
    * @param commandName The commandName parameter.
    * @param args The args parameter.
    */
-  function callCommand(self: object, pluginName: string, commandName: string, args: string): void;
+  function callCommand(self: unknown, pluginName: unknown, commandName: unknown, args: unknown): void;
   /**
    * Performs check errors.
    */
@@ -70,45 +70,45 @@ declare namespace PluginManager
    * Performs load script.
    * @param filename The filename parameter.
    */
-  function loadScript(filename: string): void;
+  function loadScript(filename: unknown): void;
   /**
    * Creates url.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function makeUrl(filename: string): string;
+  function makeUrl(filename: unknown): string;
   /**
    * Performs on error.
    * @param e The e parameter.
    */
-  function onError(e: Event): void;
+  function onError(e: unknown): void;
   /**
    * Gets parameters.
    * @param name The name parameter.
    * @returns The result.
    */
-  function parameters(name: string): object;
+  function parameters(name: string): RPG_PluginParameterMap;
   /**
    * Performs register command.
    * @param pluginName The pluginName parameter.
    * @param commandName The commandName parameter.
    * @param func The func parameter.
    */
-  function registerCommand(pluginName: string, commandName: string, func: (args: string) => void): void;
+  function registerCommand(pluginName: unknown, commandName: unknown, func: (args: unknown) => void): void;
   /**
    * Sets parameters.
    * @param name The name parameter.
    * @param parameters The parameters parameter.
    */
-  function setParameters(name: string, parameters: object): void;
+  function setParameters(name: string, parameters: RPG_PluginParameterMap): void;
   /**
    * Performs setup.
    * @param plugins The plugins parameter.
    */
-  function setup(plugins: object[]): void;
+  function setup(plugins: unknown): void;
   /**
    * Performs throw load error.
    * @param url The url parameter.
    */
-  function throwLoadError(url: string): void;
+  function throwLoadError(url: unknown): void;
 }

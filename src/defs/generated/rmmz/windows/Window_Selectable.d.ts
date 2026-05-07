@@ -46,16 +46,16 @@ interface Window_Selectable extends Window_Scrollable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `object`.<br/>
+   * Type: `RPG_WindowSelectableHandlers`.<br/>
    * Initialized in: {@link Window_Selectable#initialize}.<br/>
    * Written in: {@link Window_Selectable#initialize}.<br/>
    * Read in: {@link Window_Selectable#callHandler}, {@link Window_Selectable#isHandled}, {@link Window_Selectable#setHandler}.<br/>
    */
-  _handlers: object;
+  _handlers: RPG_WindowSelectableHandlers;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_Selectable#initialize}.<br/>
    * Written in: {@link Window_Selectable#initialize}, {@link Window_Selectable#setHelpWindow}.<br/>
    * Read in: {@link Window_Selectable#callUpdateHelp}, {@link Window_Selectable#hideHelpWindow}, {@link Window_Selectable#setHelpWindowItem}, {@link Window_Selectable#showHelpWindow}, {@link Window_Selectable#updateHelp}.<br/>
@@ -63,7 +63,7 @@ interface Window_Selectable extends Window_Scrollable
    * Consumed by:<br/>
    * - `clear()`: {@link Window_Selectable#updateHelp}.<br/>
    */
-  _helpWindow: null | Window_Base;
+  _helpWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -85,7 +85,7 @@ interface Window_Selectable extends Window_Scrollable
    * Performs call handler.
    * @param _symbol The symbol parameter.
    */
-  callHandler(_symbol: string): void;
+  callHandler(_symbol: unknown): void;
   /**
    * Performs call ok handler.
    */
@@ -98,7 +98,7 @@ interface Window_Selectable extends Window_Scrollable
    * Clears item.
    * @param index The index parameter.
    */
-  clearItem(index: number): void;
+  clearItem(index: unknown): void;
   /**
    * Gets col spacing.
    * @returns The result.
@@ -108,27 +108,27 @@ interface Window_Selectable extends Window_Scrollable
    * Gets contents height.
    * @returns The result.
    */
-  contentsHeight(): number;
+  contentsHeight(): unknown;
   /**
    * Gets cursor all.
    * @returns The result.
    */
-  cursorAll(): boolean;
+  cursorAll(): unknown;
   /**
    * Performs cursor down.
    * @param wrap The wrap parameter.
    */
-  cursorDown(wrap: boolean): void;
+  cursorDown(wrap: unknown): void;
   /**
    * Gets cursor fixed.
    * @returns The result.
    */
-  cursorFixed(): boolean;
+  cursorFixed(): unknown;
   /**
    * Performs cursor left.
    * @param wrap The wrap parameter.
    */
-  cursorLeft(wrap: boolean): void;
+  cursorLeft(wrap: unknown): void;
   /**
    * Performs cursor pagedown.
    */
@@ -141,12 +141,12 @@ interface Window_Selectable extends Window_Scrollable
    * Performs cursor right.
    * @param wrap The wrap parameter.
    */
-  cursorRight(wrap: boolean): void;
+  cursorRight(wrap: unknown): void;
   /**
    * Performs cursor up.
    * @param wrap The wrap parameter.
    */
-  cursorUp(wrap: boolean): void;
+  cursorUp(wrap: unknown): void;
   /**
    * Performs deactivate.
    */
@@ -163,7 +163,7 @@ interface Window_Selectable extends Window_Scrollable
    * Performs draw background rect.
    * @param rect The rect parameter.
    */
-  drawBackgroundRect(rect: Rectangle): void;
+  drawBackgroundRect(rect: unknown): void;
   /**
    * Performs draw item.
    */
@@ -172,17 +172,17 @@ interface Window_Selectable extends Window_Scrollable
    * Performs draw item background.
    * @param index The index parameter.
    */
-  drawItemBackground(index: number): void;
+  drawItemBackground(index: unknown): void;
   /**
    * Performs ensure cursor visible.
    * @param smooth The smooth parameter.
    */
-  ensureCursorVisible(smooth: boolean): void;
+  ensureCursorVisible(smooth: unknown): void;
   /**
    * Performs force select.
    * @param index The index parameter.
    */
-  forceSelect(index: number): void;
+  forceSelect(index: unknown): void;
   /**
    * Performs hide help window.
    */
@@ -191,24 +191,24 @@ interface Window_Selectable extends Window_Scrollable
    * Gets hit index.
    * @returns The result.
    */
-  hitIndex(): number;
+  hitIndex(): unknown;
   /**
    * Gets hit test.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  hitTest(x: number, y: number): number;
+  hitTest(x: unknown, y: unknown): unknown;
   /**
    * Gets index.
    * @returns The result.
    */
-  index(): number;
+  index(): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether cancel enabled.
    * @returns True if cancel enabled; false otherwise.
@@ -234,7 +234,7 @@ interface Window_Selectable extends Window_Scrollable
    * @param _symbol The symbol parameter.
    * @returns True if handled; false otherwise.
    */
-  isHandled(_symbol: string): boolean;
+  isHandled(_symbol: unknown): boolean;
   /**
    * Determines whether horizontal.
    * @returns True if horizontal; false otherwise.
@@ -274,30 +274,30 @@ interface Window_Selectable extends Window_Scrollable
    * Gets item height.
    * @returns The result.
    */
-  itemHeight(): number;
+  itemHeight(): unknown;
   /**
    * Gets item line rect.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemLineRect(index: number): Rectangle;
+  itemLineRect(index: unknown): unknown;
   /**
    * Gets item rect.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemRect(index: number): Rectangle;
+  itemRect(index: unknown): Rectangle;
   /**
    * Gets item rect with padding.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemRectWithPadding(index: number): Rectangle;
+  itemRectWithPadding(index: unknown): unknown;
   /**
    * Gets item width.
    * @returns The result.
    */
-  itemWidth(): number;
+  itemWidth(): unknown;
   /**
    * Gets max cols.
    * @returns The result.
@@ -312,27 +312,27 @@ interface Window_Selectable extends Window_Scrollable
    * Gets max page items.
    * @returns The result.
    */
-  maxPageItems(): number;
+  maxPageItems(): unknown;
   /**
    * Gets max page rows.
    * @returns The result.
    */
-  maxPageRows(): number;
+  maxPageRows(): unknown;
   /**
    * Gets max rows.
    * @returns The result.
    */
-  maxRows(): number;
+  maxRows(): unknown;
   /**
    * Gets max top row.
    * @returns The result.
    */
-  maxTopRow(): number;
+  maxTopRow(): unknown;
   /**
    * Gets max visible items.
    * @returns The result.
    */
-  maxVisibleItems(): number;
+  maxVisibleItems(): unknown;
   /**
    * Performs on touch cancel.
    */
@@ -345,12 +345,12 @@ interface Window_Selectable extends Window_Scrollable
    * Performs on touch select.
    * @param trigger The trigger parameter.
    */
-  onTouchSelect(trigger: boolean): void;
+  onTouchSelect(trigger: unknown): void;
   /**
    * Gets overall height.
    * @returns The result.
    */
-  overallHeight(): number;
+  overallHeight(): unknown;
   /**
    * Performs paint.
    */
@@ -367,7 +367,7 @@ interface Window_Selectable extends Window_Scrollable
    * Gets process handling.
    * @returns The result.
    */
-  processHandling(): boolean;
+  processHandling(): unknown;
   /**
    * Performs process ok.
    */
@@ -392,7 +392,7 @@ interface Window_Selectable extends Window_Scrollable
    * Performs redraw item.
    * @param index The index parameter.
    */
-  redrawItem(index: number): void;
+  redrawItem(index: unknown): void;
   /**
    * Performs refresh.
    */
@@ -413,7 +413,7 @@ interface Window_Selectable extends Window_Scrollable
    * Gets row.
    * @returns The result.
    */
-  row(): number;
+  row(): unknown;
   /**
    * Gets row spacing.
    * @returns The result.
@@ -423,38 +423,38 @@ interface Window_Selectable extends Window_Scrollable
    * Performs select.
    * @param index The index parameter.
    */
-  select(index: number): void;
+  select(index: unknown): void;
   /**
    * Sets cursor all.
    * @param cursorAll The cursorAll parameter.
    */
-  setCursorAll(cursorAll: boolean): void;
+  setCursorAll(cursorAll: unknown): void;
   /**
    * Sets cursor fixed.
    * @param cursorFixed The cursorFixed parameter.
    */
-  setCursorFixed(cursorFixed: boolean): void;
+  setCursorFixed(cursorFixed: unknown): void;
   /**
    * Sets handler.
    * @param _symbol The symbol parameter.
    * @param method The method parameter.
    */
-  setHandler(_symbol: string, method: () => void): void;
+  setHandler(_symbol: unknown, method: unknown): void;
   /**
    * Sets help window.
    * @param helpWindow The helpWindow parameter.
    */
-  setHelpWindow(helpWindow: Window_Base): void;
+  setHelpWindow(helpWindow: unknown): void;
   /**
    * Sets help window item.
    * @param item The item parameter.
    */
-  setHelpWindowItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setHelpWindowItem(item: unknown): void;
   /**
    * Sets top row.
    * @param row The row parameter.
    */
-  setTopRow(row: number): void;
+  setTopRow(row: unknown): void;
   /**
    * Performs show help window.
    */
@@ -463,17 +463,17 @@ interface Window_Selectable extends Window_Scrollable
    * Performs smooth select.
    * @param index The index parameter.
    */
-  smoothSelect(index: number): void;
+  smoothSelect(index: unknown): void;
   /**
    * Gets top index.
    * @returns The result.
    */
-  topIndex(): number;
+  topIndex(): unknown;
   /**
    * Gets top row.
    * @returns The result.
    */
-  topRow(): number;
+  topRow(): unknown;
   /**
    * Performs update.
    */

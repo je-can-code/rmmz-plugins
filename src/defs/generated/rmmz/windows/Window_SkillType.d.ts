@@ -10,26 +10,26 @@ interface Window_SkillType extends Window_Command
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_SkillType#initialize}.<br/>
    * Written in: {@link Window_SkillType#initialize}, {@link Window_SkillType#setActor}.<br/>
    * Read in: {@link Window_SkillType#makeCommandList}, {@link Window_SkillType#selectLast}, {@link Window_SkillType#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_SkillType#setSkillWindow}.<br/>
    * Read in: {@link Window_SkillType#update}.<br/>
    */
-  _skillWindow: Window_Base;
+  _skillWindow: unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Creates command list.
    */
@@ -42,12 +42,12 @@ interface Window_SkillType extends Window_Command
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
   /**
    * Sets skill window.
    * @param skillWindow The skillWindow parameter.
    */
-  setSkillWindow(skillWindow: Window_Base): void;
+  setSkillWindow(skillWindow: unknown): void;
   /**
    * Performs update.
    */

@@ -20,12 +20,12 @@ interface Game_Unit
    * Gets agility.
    * @returns The result.
    */
-  agility(): number;
+  agility(): unknown;
   /**
    * Gets alive members.
    * @returns The result.
    */
-  aliveMembers(): Game_Battler[];
+  aliveMembers(): unknown;
   /**
    * Clears actions.
    */
@@ -38,12 +38,12 @@ interface Game_Unit
    * Gets dead members.
    * @returns The result.
    */
-  deadMembers(): Game_Battler[];
+  deadMembers(): unknown;
   /**
    * Gets in battle.
    * @returns The result.
    */
-  inBattle(): boolean;
+  inBattle(): unknown;
   /**
    * Initializes initialize.
    */
@@ -61,12 +61,12 @@ interface Game_Unit
    * Gets members.
    * @returns The result.
    */
-  members(): Game_Battler[];
+  members(): unknown[];
   /**
    * Gets movable members.
    * @returns The result.
    */
-  movableMembers(): Game_Battler[];
+  movableMembers(): unknown;
   /**
    * Performs on battle end.
    */
@@ -75,50 +75,50 @@ interface Game_Unit
    * Performs on battle start.
    * @param advantageous The advantageous parameter.
    */
-  onBattleStart(advantageous: boolean): void;
+  onBattleStart(advantageous: unknown): void;
   /**
    * Gets random dead target.
    * @returns The result.
    */
-  randomDeadTarget(): Game_Battler | null;
+  randomDeadTarget(): null;
   /**
    * Gets random target.
    * @returns The result.
    */
-  randomTarget(): Game_Battler | null;
+  randomTarget(): unknown;
   /**
    * Performs select.
    * @param activeMember The activeMember parameter.
    */
-  select(activeMember: Game_Battler): void;
+  select(activeMember: unknown): void;
   /**
    * Gets smooth dead target.
    * @param index The index parameter.
    * @returns The result.
    */
-  smoothDeadTarget(index: number): Game_Battler | undefined;
+  smoothDeadTarget(index: unknown): unknown;
   /**
    * Gets smooth target.
    * @param index The index parameter.
    * @returns The result.
    */
-  smoothTarget(index: number): Game_Battler | undefined;
+  smoothTarget(index: unknown): unknown;
   /**
    * Gets substitute battler.
    * @param target The target parameter.
    * @returns The result.
    */
-  substituteBattler(target: Game_Battler): Game_Battler | null;
+  substituteBattler(target: unknown): unknown;
   /**
    * Gets tgr sum.
    * @returns The result.
    */
-  tgrSum(): number;
+  tgrSum(): unknown;
   /**
    * Gets tpb base speed.
    * @returns The result.
    */
-  tpbBaseSpeed(): number;
+  tpbBaseSpeed(): unknown;
   /**
    * Gets tpb reference time.
    * @returns The result.

@@ -28,17 +28,17 @@ interface Sprite_Balloon extends Sprite
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Sprite`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Balloon#initMembers}, {@link Sprite_Balloon#setup}.<br/>
    * Read in: {@link Sprite_Balloon#updatePosition}.<br/>
    */
-  _target: null | Sprite;
+  _target: null;
   /**
    * Gets frame index.
    * @returns The result.
    */
-  frameIndex(): number;
+  frameIndex(): unknown;
   /**
    * Initializes members.
    */
@@ -61,7 +61,7 @@ interface Sprite_Balloon extends Sprite
    * @param targetSprite The targetSprite parameter.
    * @param balloonId The balloonId parameter.
    */
-  setup(targetSprite: Sprite, balloonId: number): void;
+  setup(targetSprite: unknown, balloonId: unknown): void;
   /**
    * Gets speed.
    * @returns The result.

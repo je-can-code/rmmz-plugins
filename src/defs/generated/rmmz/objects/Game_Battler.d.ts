@@ -42,12 +42,12 @@ interface Game_Battler extends Game_BattlerBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Battler#clearEffect}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestEffect}.<br/>
    * Read in: {@link Game_Battler#effectType}, {@link Game_Battler#isEffectRequested}.<br/>
    */
-  _effectType: null | number;
+  _effectType: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -69,12 +69,12 @@ interface Game_Battler extends Game_BattlerBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Battler#clearMotion}, {@link Game_Battler#initMembers}, {@link Game_Battler#requestMotion}.<br/>
    * Read in: {@link Game_Battler#isMotionRequested}, {@link Game_Battler#motionType}.<br/>
    */
-  _motionType: null | number;
+  _motionType: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -173,24 +173,24 @@ interface Game_Battler extends Game_BattlerBase
    * @param index The index parameter.
    * @returns The result.
    */
-  action(index: number): Game_Action | undefined;
+  action(index: unknown): unknown;
   /**
    * Adds buff.
    * @param paramId The paramId parameter.
    * @param turns The turns parameter.
    */
-  addBuff(paramId: number, turns: number): void;
+  addBuff(paramId: unknown, turns: unknown): void;
   /**
    * Adds debuff.
    * @param paramId The paramId parameter.
    * @param turns The turns parameter.
    */
-  addDebuff(paramId: number, turns: number): void;
+  addDebuff(paramId: unknown, turns: unknown): void;
   /**
    * Adds state.
    * @param stateId The stateId parameter.
    */
-  addState(stateId: number): void;
+  addState(stateId: unknown): void;
   /**
    * Performs apply tpb penalty.
    */
@@ -208,7 +208,7 @@ interface Game_Battler extends Game_BattlerBase
    * Performs charge tp by damage.
    * @param damageRate The damageRate parameter.
    */
-  chargeTpByDamage(damageRate: number): void;
+  chargeTpByDamage(damageRate: unknown): void;
   /**
    * Clears actions.
    */
@@ -245,12 +245,12 @@ interface Game_Battler extends Game_BattlerBase
    * Performs consume item.
    * @param item The item parameter.
    */
-  consumeItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  consumeItem(item: unknown): void;
   /**
    * Gets current action.
    * @returns The result.
    */
-  currentAction(): Game_Action | undefined;
+  currentAction(): unknown;
   /**
    * Performs deselect.
    */
@@ -259,7 +259,7 @@ interface Game_Battler extends Game_BattlerBase
    * Gets effect type.
    * @returns The result.
    */
-  effectType(): number;
+  effectType(): unknown;
   /**
    * Performs escape.
    */
@@ -273,27 +273,27 @@ interface Game_Battler extends Game_BattlerBase
    * @param skillId The skillId parameter.
    * @param targetIndex The targetIndex parameter.
    */
-  forceAction(skillId: number, targetIndex: number): void;
+  forceAction(skillId: unknown, targetIndex: unknown): void;
   /**
    * Performs gain hp.
    * @param value The value parameter.
    */
-  gainHp(value: number): void;
+  gainHp(value: unknown): void;
   /**
    * Performs gain mp.
    * @param value The value parameter.
    */
-  gainMp(value: number): void;
+  gainMp(value: unknown): void;
   /**
    * Performs gain silent tp.
    * @param value The value parameter.
    */
-  gainSilentTp(value: number): void;
+  gainSilentTp(value: unknown): void;
   /**
    * Performs gain tp.
    * @param value The value parameter.
    */
-  gainTp(value: number): void;
+  gainTp(value: unknown): void;
   /**
    * Initializes members.
    */
@@ -306,7 +306,7 @@ interface Game_Battler extends Game_BattlerBase
    * Initializes tpb charge time.
    * @param advantageous The advantageous parameter.
    */
-  initTpbChargeTime(advantageous: boolean): void;
+  initTpbChargeTime(advantageous: unknown): void;
   /**
    * Initializes tpb turn.
    */
@@ -365,13 +365,13 @@ interface Game_Battler extends Game_BattlerBase
    * @param stateId The stateId parameter.
    * @returns True if state addable; false otherwise.
    */
-  isStateAddable(stateId: number): boolean;
+  isStateAddable(stateId: unknown): boolean;
   /**
    * Determines whether state restrict.
    * @param stateId The stateId parameter.
    * @returns True if state restrict; false otherwise.
    */
-  isStateRestrict(stateId: number): boolean;
+  isStateRestrict(stateId: unknown): boolean;
   /**
    * Determines whether tpb charged.
    * @returns True if tpb charged; false otherwise.
@@ -411,7 +411,7 @@ interface Game_Battler extends Game_BattlerBase
    * Creates action times.
    * @returns The result.
    */
-  makeActionTimes(): number;
+  makeActionTimes(): unknown;
   /**
    * Creates actions.
    */
@@ -428,17 +428,17 @@ interface Game_Battler extends Game_BattlerBase
    * Gets max slip damage.
    * @returns The result.
    */
-  maxSlipDamage(): number;
+  maxSlipDamage(): unknown;
   /**
    * Gets motion type.
    * @returns The result.
    */
-  motionType(): number;
+  motionType(): unknown;
   /**
    * Gets num actions.
    * @returns The result.
    */
-  numActions(): number;
+  numActions(): unknown;
   /**
    * Performs on all actions end.
    */
@@ -451,12 +451,12 @@ interface Game_Battler extends Game_BattlerBase
    * Performs on battle start.
    * @param advantageous The advantageous parameter.
    */
-  onBattleStart(advantageous: boolean): void;
+  onBattleStart(advantageous: unknown): void;
   /**
    * Performs on damage.
    * @param value The value parameter.
    */
-  onDamage(value: number): void;
+  onDamage(value: unknown): void;
   /**
    * Performs on restrict.
    */
@@ -485,7 +485,7 @@ interface Game_Battler extends Game_BattlerBase
    * Performs perform action start.
    * @param action The action parameter.
    */
-  performActionStart(action: Game_Action): void;
+  performActionStart(action: unknown): void;
   /**
    * Performs perform collapse.
    */
@@ -554,7 +554,7 @@ interface Game_Battler extends Game_BattlerBase
    * Removes buff.
    * @param paramId The paramId parameter.
    */
-  removeBuff(paramId: number): void;
+  removeBuff(paramId: unknown): void;
   /**
    * Removes buffs auto.
    */
@@ -567,12 +567,12 @@ interface Game_Battler extends Game_BattlerBase
    * Removes state.
    * @param stateId The stateId parameter.
    */
-  removeState(stateId: number): void;
+  removeState(stateId: unknown): void;
   /**
    * Removes states auto.
    * @param timing The timing parameter.
    */
-  removeStatesAuto(timing: number): void;
+  removeStatesAuto(timing: unknown): void;
   /**
    * Removes states by damage.
    */
@@ -581,12 +581,12 @@ interface Game_Battler extends Game_BattlerBase
    * Performs request effect.
    * @param effectType The effectType parameter.
    */
-  requestEffect(effectType: number): void;
+  requestEffect(effectType: unknown): void;
   /**
    * Performs request motion.
    * @param motionType The motionType parameter.
    */
-  requestMotion(motionType: number): void;
+  requestMotion(motionType: unknown): void;
   /**
    * Performs request motion refresh.
    */
@@ -595,7 +595,7 @@ interface Game_Battler extends Game_BattlerBase
    * Gets result.
    * @returns The result.
    */
-  result(): Game_ActionResult;
+  result(): unknown;
   /**
    * Performs select.
    */
@@ -605,17 +605,17 @@ interface Game_Battler extends Game_BattlerBase
    * @param index The index parameter.
    * @param action The action parameter.
    */
-  setAction(index: number, action: Game_Action): void;
+  setAction(index: unknown, action: unknown): void;
   /**
    * Sets action state.
    * @param actionState The actionState parameter.
    */
-  setActionState(actionState: string): void;
+  setActionState(actionState: unknown): void;
   /**
    * Sets last target.
    * @param target The target parameter.
    */
-  setLastTarget(target: Game_Battler): void;
+  setLastTarget(target: unknown): void;
   /**
    * Gets should delay tpb charge.
    * @returns The result.
@@ -630,7 +630,7 @@ interface Game_Battler extends Game_BattlerBase
    * Gets speed.
    * @returns The result.
    */
-  speed(): number;
+  speed(): unknown;
   /**
    * Performs start damage popup.
    */
@@ -651,42 +651,42 @@ interface Game_Battler extends Game_BattlerBase
    * Performs start weapon animation.
    * @param weaponImageId The weaponImageId parameter.
    */
-  startWeaponAnimation(weaponImageId: number): void;
+  startWeaponAnimation(weaponImageId: unknown): void;
   /**
    * Gets tpb acceleration.
    * @returns The result.
    */
-  tpbAcceleration(): number;
+  tpbAcceleration(): unknown;
   /**
    * Gets tpb base speed.
    * @returns The result.
    */
-  tpbBaseSpeed(): number;
+  tpbBaseSpeed(): unknown;
   /**
    * Gets tpb charge time.
    * @returns The result.
    */
-  tpbChargeTime(): number;
+  tpbChargeTime(): unknown;
   /**
    * Gets tpb relative speed.
    * @returns The result.
    */
-  tpbRelativeSpeed(): number;
+  tpbRelativeSpeed(): unknown;
   /**
    * Gets tpb required cast time.
    * @returns The result.
    */
-  tpbRequiredCastTime(): number;
+  tpbRequiredCastTime(): unknown;
   /**
    * Gets tpb speed.
    * @returns The result.
    */
-  tpbSpeed(): number;
+  tpbSpeed(): unknown;
   /**
    * Gets turn count.
    * @returns The result.
    */
-  turnCount(): number;
+  turnCount(): unknown;
   /**
    * Updates tpb.
    */
@@ -711,10 +711,10 @@ interface Game_Battler extends Game_BattlerBase
    * Performs use item.
    * @param item The item parameter.
    */
-  useItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  useItem(item: unknown): void;
   /**
    * Gets weapon image id.
    * @returns The result.
    */
-  weaponImageId(): number;
+  weaponImageId(): unknown;
 }

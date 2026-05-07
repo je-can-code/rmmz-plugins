@@ -10,40 +10,40 @@ interface Window_EquipSlot extends Window_StatusBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_EquipSlot#initialize}.<br/>
    * Written in: {@link Window_EquipSlot#initialize}, {@link Window_EquipSlot#setActor}.<br/>
    * Read in: {@link Window_EquipSlot#drawItem}, {@link Window_EquipSlot#isEnabled}, {@link Window_EquipSlot#itemAt}, {@link Window_EquipSlot#maxItems}, {@link Window_EquipSlot#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_EquipSlot#setItemWindow}.<br/>
    * Read in: {@link Window_EquipSlot#update}.<br/>
    */
-  _itemWindow: Window_Base;
+  _itemWindow: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_EquipSlot#setStatusWindow}.<br/>
    * Read in: {@link Window_EquipSlot#updateHelp}.<br/>
    */
-  _statusWindow: Window_Base;
+  _statusWindow: unknown;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether current item enabled.
    * @returns True if current item enabled; false otherwise.
@@ -54,18 +54,18 @@ interface Window_EquipSlot extends Window_StatusBase
    * @param index The index parameter.
    * @returns True if enabled; false otherwise.
    */
-  isEnabled(index: number): boolean;
+  isEnabled(index: unknown): boolean;
   /**
    * Gets item.
    * @returns The result.
    */
-  item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  item(): unknown;
   /**
    * Gets item at.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemAt(index: number): null;
+  itemAt(index: unknown): null;
   /**
    * Gets max items.
    * @returns The result.
@@ -75,17 +75,17 @@ interface Window_EquipSlot extends Window_StatusBase
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
   /**
    * Sets item window.
    * @param itemWindow The itemWindow parameter.
    */
-  setItemWindow(itemWindow: Window_Base): void;
+  setItemWindow(itemWindow: unknown): void;
   /**
    * Sets status window.
    * @param statusWindow The statusWindow parameter.
    */
-  setStatusWindow(statusWindow: Window_Base): void;
+  setStatusWindow(statusWindow: unknown): void;
   /**
    * Gets slot name width.
    * @returns The result.

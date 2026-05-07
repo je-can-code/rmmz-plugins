@@ -562,10 +562,10 @@ class JABS_Action
 
   /**
    * Builds a synthetic multiline note from the action-map template event + active page so
-   * {@link RPGManager} can parse `<vis*>` tags (optional event-level `note` on {@link rm.types.Event},
+   * {@link RPGManager} can parse `<vis*>` tags (optional event-level `note` on {@link RPG_MapEvent},
    * parsable Comment commands on that page).
-   * @param {rm.types.Event} eventData Raw event blob from `$actionMap`.
-   * @param {rm.types.EventPage} pageData The resolved page used for this spawn.
+   * @param {RPG_MapEvent} eventData Raw event blob from `$actionMap`.
+   * @param {RPG_MapEventPage} pageData The resolved page used for this spawn.
    * @returns {string}
    */
   static collectSyntheticVisualNoteFromActionEventPage(eventData, pageData)
@@ -595,8 +595,8 @@ class JABS_Action
 
   /**
    * Stamps {@link #_actionMapVisualNoteHolder} once from the template used to spawn this action’s map event.
-   * @param {rm.types.Event} eventData Raw event blob from `$actionMap`.
-   * @param {rm.types.EventPage} pageData The resolved page used for this spawn.
+   * @param {RPG_MapEvent} eventData Raw event blob from `$actionMap`.
+   * @param {RPG_MapEventPage} pageData The resolved page used for this spawn.
    */
   stampActionMapVisualNoteFromActionEvent(eventData, pageData)
   {

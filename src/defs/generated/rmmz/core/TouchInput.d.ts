@@ -129,18 +129,18 @@ declare namespace TouchInput
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  function _onCancel(x: number, y: number): void;
+  function _onCancel(x: unknown, y: unknown): void;
   /**
    * Performs on hover.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  function _onHover(x: number, y: number): void;
+  function _onHover(x: unknown, y: unknown): void;
   /**
    * Performs on left button down.
    * @param event The event parameter.
    */
-  function _onLeftButtonDown(event: MouseEvent): void;
+  function _onLeftButtonDown(event: unknown): void;
   /**
    * Performs on lost focus.
    */
@@ -153,34 +153,34 @@ declare namespace TouchInput
    * Performs on mouse down.
    * @param event The event parameter.
    */
-  function _onMouseDown(event: MouseEvent): void;
+  function _onMouseDown(event: unknown): void;
   /**
    * Performs on mouse move.
    * @param event The event parameter.
    */
-  function _onMouseMove(event: MouseEvent): void;
+  function _onMouseMove(event: unknown): void;
   /**
    * Performs on mouse up.
    * @param event The event parameter.
    */
-  function _onMouseUp(event: MouseEvent): void;
+  function _onMouseUp(event: unknown): void;
   /**
    * Performs on move.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  function _onMove(x: number, y: number): void;
+  function _onMove(x: unknown, y: unknown): void;
   /**
    * Performs on release.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  function _onRelease(x: number, y: number): void;
+  function _onRelease(x: unknown, y: unknown): void;
   /**
    * Performs on right button down.
    * @param event The event parameter.
    */
-  function _onRightButtonDown(event: MouseEvent): void;
+  function _onRightButtonDown(event: unknown): void;
   /**
    * Performs on touch cancel.
    */
@@ -189,28 +189,28 @@ declare namespace TouchInput
    * Performs on touch end.
    * @param event The event parameter.
    */
-  function _onTouchEnd(event: TouchEvent): void;
+  function _onTouchEnd(event: unknown): void;
   /**
    * Performs on touch move.
    * @param event The event parameter.
    */
-  function _onTouchMove(event: TouchEvent): void;
+  function _onTouchMove(event: unknown): void;
   /**
    * Performs on touch start.
    * @param event The event parameter.
    */
-  function _onTouchStart(event: TouchEvent): void;
+  function _onTouchStart(event: unknown): void;
   /**
    * Performs on trigger.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  function _onTrigger(x: number, y: number): void;
+  function _onTrigger(x: unknown, y: unknown): void;
   /**
    * Performs on wheel.
    * @param event The event parameter.
    */
-  function _onWheel(event: MouseEvent): void;
+  function _onWheel(event: unknown): void;
   /**
    * The time of the last input in milliseconds.
    */
@@ -291,12 +291,12 @@ declare namespace TouchInput
    * The x coordinate on the canvas area of the latest touch event.
    * @returns The result.
    */
-  get x(): number;
+  get x(): unknown;
   /**
    * The y coordinate on the canvas area of the latest touch event.
    * @returns The result.
    */
-  get y(): number;
+  get y(): unknown;
   /**
    * Engine static constant.
    */

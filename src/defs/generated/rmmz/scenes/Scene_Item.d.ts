@@ -75,5 +75,5 @@ interface Scene_Item extends Scene_ItemBase
    * Gets user.
    * @returns The result.
    */
-  user(): Game_Actor | undefined;
+  user(): unknown;
 }

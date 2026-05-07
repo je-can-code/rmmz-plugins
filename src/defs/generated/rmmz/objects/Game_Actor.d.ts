@@ -154,12 +154,12 @@ interface Game_Actor extends Game_Battler
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `string`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Actor#setProfile}, {@link Game_Actor#setup}.<br/>
    * Read in: {@link Game_Actor#profile}.<br/>
    */
-  _profile: string;
+  _profile: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -186,17 +186,17 @@ interface Game_Actor extends Game_Battler
    * Gets actor.
    * @returns The result.
    */
-  actor(): RPG_Actor;
+  actor(): unknown;
   /**
    * Gets actor id.
    * @returns The result.
    */
-  actorId(): number;
+  actorId(): unknown;
   /**
    * Gets armors.
    * @returns The result.
    */
-  armors(): RPG_Armor[];
+  armors(): unknown;
   /**
    * Gets attack animation id1.
    * @returns The result.
@@ -211,7 +211,7 @@ interface Game_Actor extends Game_Battler
    * Gets attack elements.
    * @returns The result.
    */
-  attackElements(): number[];
+  attackElements(): unknown;
   /**
    * Gets bare hands animation id.
    * @returns The result.
@@ -231,7 +231,7 @@ interface Game_Actor extends Game_Battler
    * Gets battler name.
    * @returns The result.
    */
-  battlerName(): string;
+  battlerName(): unknown;
   /**
    * Gets bench members exp rate.
    * @returns The result.
@@ -242,53 +242,53 @@ interface Game_Actor extends Game_Battler
    * @param slotId The slotId parameter.
    * @returns The result.
    */
-  bestEquipItem(slotId: number): RPG_Weapon | RPG_Armor | null;
+  bestEquipItem(slotId: unknown): unknown;
   /**
    * Gets calc equip item performance.
    * @param item The item parameter.
    * @returns The result.
    */
-  calcEquipItemPerformance(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): number;
+  calcEquipItemPerformance(item: unknown): unknown;
   /**
    * Performs change class.
    * @param classId The classId parameter.
    * @param keepExp The keepExp parameter.
    */
-  changeClass(classId: number, keepExp: boolean): void;
+  changeClass(classId: unknown, keepExp: unknown): void;
   /**
    * Performs change equip.
    * @param slotId The slotId parameter.
    * @param item The item parameter.
    */
-  changeEquip(slotId: number, item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  changeEquip(slotId: unknown, item: unknown): void;
   /**
    * Performs change equip by id.
    * @param etypeId The etypeId parameter.
    * @param itemId The itemId parameter.
    */
-  changeEquipById(etypeId: number, itemId: number): void;
+  changeEquipById(etypeId: unknown, itemId: unknown): void;
   /**
    * Performs change exp.
    * @param exp The exp parameter.
    * @param show The show parameter.
    */
-  changeExp(exp: number, show: boolean): void;
+  changeExp(exp: unknown, show: unknown): void;
   /**
    * Performs change level.
    * @param level The level parameter.
    * @param show The show parameter.
    */
-  changeLevel(level: number, show: boolean): void;
+  changeLevel(level: unknown, show: unknown): void;
   /**
    * Gets character index.
    * @returns The result.
    */
-  characterIndex(): number;
+  characterIndex(): unknown;
   /**
    * Gets character name.
    * @returns The result.
    */
-  characterName(): string;
+  characterName(): unknown;
   /**
    * Performs check floor effect.
    */
@@ -309,42 +309,42 @@ interface Game_Actor extends Game_Battler
    * Gets current class.
    * @returns The result.
    */
-  currentClass(): RPG_Class;
+  currentClass(): unknown;
   /**
    * Gets current exp.
    * @returns The result.
    */
-  currentExp(): number;
+  currentExp(): unknown;
   /**
    * Gets current level exp.
    * @returns The result.
    */
-  currentLevelExp(): number;
+  currentLevelExp(): unknown;
   /**
    * Performs discard equip.
    * @param item The item parameter.
    */
-  discardEquip(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  discardEquip(item: unknown): void;
   /**
    * Performs display level up.
    * @param newSkills The newSkills parameter.
    */
-  displayLevelUp(newSkills: RPG_Skill[]): void;
+  displayLevelUp(newSkills: unknown): void;
   /**
    * Gets equip slots.
    * @returns The result.
    */
-  equipSlots(): number[];
+  equipSlots(): unknown;
   /**
    * Gets equips.
    * @returns The result.
    */
-  equips(): Array<RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null>;
+  equips(): unknown;
   /**
    * Performs erase state.
    * @param stateId The stateId parameter.
    */
-  eraseState(stateId: number): void;
+  eraseState(stateId: unknown): void;
   /**
    * Performs execute floor damage.
    */
@@ -354,55 +354,55 @@ interface Game_Actor extends Game_Battler
    * @param level The level parameter.
    * @returns The result.
    */
-  expForLevel(level: number): number;
+  expForLevel(level: unknown): unknown;
   /**
    * Gets face index.
    * @returns The result.
    */
-  faceIndex(): number;
+  faceIndex(): unknown;
   /**
    * Gets face name.
    * @returns The result.
    */
-  faceName(): string;
+  faceName(): unknown;
   /**
    * Gets final exp rate.
    * @returns The result.
    */
-  finalExpRate(): number;
+  finalExpRate(): unknown;
   /**
    * Gets find new skills.
    * @param lastSkills The lastSkills parameter.
    * @returns The result.
    */
-  findNewSkills(lastSkills: RPG_Skill[]): RPG_Skill[];
+  findNewSkills(lastSkills: unknown): unknown;
   /**
    * Performs force change equip.
    * @param slotId The slotId parameter.
    * @param item The item parameter.
    */
-  forceChangeEquip(slotId: number, item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  forceChangeEquip(slotId: unknown, item: unknown): void;
   /**
    * Performs forget skill.
    * @param skillId The skillId parameter.
    */
-  forgetSkill(skillId: number): void;
+  forgetSkill(skillId: unknown): void;
   /**
    * Gets friends unit.
    * @returns The result.
    */
-  friendsUnit(): Game_Unit;
+  friendsUnit(): unknown;
   /**
    * Performs gain exp.
    * @param exp The exp parameter.
    */
-  gainExp(exp: number): void;
+  gainExp(exp: unknown): void;
   /**
    * Determines whether armor.
    * @param armor The armor parameter.
    * @returns True if armor; false otherwise.
    */
-  hasArmor(armor: RPG_Armor): boolean;
+  hasArmor(armor: unknown): boolean;
   /**
    * Determines whether no weapons.
    * @returns True if no weapons; false otherwise.
@@ -413,13 +413,13 @@ interface Game_Actor extends Game_Battler
    * @param skillId The skillId parameter.
    * @returns True if skill; false otherwise.
    */
-  hasSkill(skillId: number): boolean;
+  hasSkill(skillId: unknown): boolean;
   /**
    * Determines whether weapon.
    * @param weapon The weapon parameter.
    * @returns True if weapon; false otherwise.
    */
-  hasWeapon(weapon: RPG_Weapon): boolean;
+  hasWeapon(weapon: unknown): boolean;
   /**
    * Performs hide.
    */
@@ -428,12 +428,12 @@ interface Game_Actor extends Game_Battler
    * Gets index.
    * @returns The result.
    */
-  index(): number;
+  index(): unknown;
   /**
    * Initializes equips.
    * @param equips The equips parameter.
    */
-  initEquips(equips: number[]): void;
+  initEquips(equips: unknown): void;
   /**
    * Initializes exp.
    */
@@ -454,12 +454,12 @@ interface Game_Actor extends Game_Battler
    * Initializes initialize.
    * @param actorId The actorId parameter.
    */
-  initialize(actorId: number): void;
+  initialize(actorId: unknown): void;
   /**
    * Gets inputting action.
    * @returns The result.
    */
-  inputtingAction(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  inputtingAction(): unknown;
   /**
    * Determines whether actor.
    * @returns True if actor; false otherwise.
@@ -475,19 +475,19 @@ interface Game_Actor extends Game_Battler
    * @param gameClass The gameClass parameter.
    * @returns True if class; false otherwise.
    */
-  isClass(gameClass: RPG_Class): boolean;
+  isClass(gameClass: unknown): boolean;
   /**
    * Determines whether equip change ok.
    * @param slotId The slotId parameter.
    * @returns True if equip change ok; false otherwise.
    */
-  isEquipChangeOk(slotId: number): boolean;
+  isEquipChangeOk(slotId: unknown): boolean;
   /**
    * Determines whether equipped.
    * @param item The item parameter.
    * @returns True if equipped; false otherwise.
    */
-  isEquipped(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isEquipped(item: unknown): boolean;
   /**
    * Determines whether formation change ok.
    * @returns True if formation change ok; false otherwise.
@@ -498,7 +498,7 @@ interface Game_Actor extends Game_Battler
    * @param skillId The skillId parameter.
    * @returns True if learned skill; false otherwise.
    */
-  isLearnedSkill(skillId: number): boolean;
+  isLearnedSkill(skillId: unknown): boolean;
   /**
    * Determines whether max level.
    * @returns True if max level; false otherwise.
@@ -509,7 +509,7 @@ interface Game_Actor extends Game_Battler
    * @param skill The skill parameter.
    * @returns True if skill wtype ok; false otherwise.
    */
-  isSkillWtypeOk(skill: RPG_Skill): boolean;
+  isSkillWtypeOk(skill: unknown): boolean;
   /**
    * Determines whether sprite visible.
    * @returns True if sprite visible; false otherwise.
@@ -520,32 +520,32 @@ interface Game_Actor extends Game_Battler
    * @param wtypeId The wtypeId parameter.
    * @returns True if wtype equipped; false otherwise.
    */
-  isWtypeEquipped(wtypeId: number): boolean;
+  isWtypeEquipped(wtypeId: unknown): boolean;
   /**
    * Gets last battle skill.
    * @returns The result.
    */
-  lastBattleSkill(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  lastBattleSkill(): unknown;
   /**
    * Gets last command symbol.
    * @returns The result.
    */
-  lastCommandSymbol(): string;
+  lastCommandSymbol(): unknown;
   /**
    * Gets last menu skill.
    * @returns The result.
    */
-  lastMenuSkill(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  lastMenuSkill(): unknown;
   /**
    * Gets last skill.
    * @returns The result.
    */
-  lastSkill(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  lastSkill(): unknown;
   /**
    * Performs learn skill.
    * @param skillId The skillId parameter.
    */
-  learnSkill(skillId: number): void;
+  learnSkill(skillId: unknown): void;
   /**
    * Gets level.
    * @returns The result.
@@ -563,7 +563,7 @@ interface Game_Actor extends Game_Battler
    * Creates action list.
    * @returns The result.
    */
-  makeActionList(): Game_Action[];
+  makeActionList(): unknown;
   /**
    * Creates actions.
    */
@@ -580,38 +580,38 @@ interface Game_Actor extends Game_Battler
    * Gets max floor damage.
    * @returns The result.
    */
-  maxFloorDamage(): number;
+  maxFloorDamage(): unknown;
   /**
    * Gets max level.
    * @returns The result.
    */
-  maxLevel(): number;
+  maxLevel(): unknown;
   /**
    * Gets meets usable item conditions.
    * @param item The item parameter.
    * @returns The result.
    */
-  meetsUsableItemConditions(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  meetsUsableItemConditions(item: unknown): boolean;
   /**
    * Gets name.
    * @returns The result.
    */
-  name(): string;
+  name(): unknown;
   /**
    * Gets next level exp.
    * @returns The result.
    */
-  nextLevelExp(): number;
+  nextLevelExp(): unknown;
   /**
    * Gets next required exp.
    * @returns The result.
    */
-  nextRequiredExp(): number;
+  nextRequiredExp(): unknown;
   /**
    * Gets nickname.
    * @returns The result.
    */
-  nickname(): string;
+  nickname(): unknown;
   /**
    * Performs on escape failure.
    */
@@ -624,7 +624,7 @@ interface Game_Actor extends Game_Battler
    * Gets opponents unit.
    * @returns The result.
    */
-  opponentsUnit(): Game_Unit;
+  opponentsUnit(): unknown;
   /**
    * Performs optimize equipments.
    */
@@ -634,18 +634,18 @@ interface Game_Actor extends Game_Battler
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramBase(paramId: number): number;
+  paramBase(paramId: unknown): unknown;
   /**
    * Gets param plus.
    * @param paramId The paramId parameter.
    * @returns The result.
    */
-  paramPlus(paramId: number): number;
+  paramPlus(paramId: unknown): unknown;
   /**
    * Performs perform action.
    * @param action The action parameter.
    */
-  performAction(action: Game_Action): void;
+  performAction(action: unknown): void;
   /**
    * Performs perform action end.
    */
@@ -654,7 +654,7 @@ interface Game_Actor extends Game_Battler
    * Performs perform action start.
    * @param action The action parameter.
    */
-  performActionStart(action: Game_Action): void;
+  performActionStart(action: unknown): void;
   /**
    * Performs perform attack.
    */
@@ -695,7 +695,7 @@ interface Game_Actor extends Game_Battler
    * Gets profile.
    * @returns The result.
    */
-  profile(): string;
+  profile(): unknown;
   /**
    * Performs refresh.
    */
@@ -704,12 +704,12 @@ interface Game_Actor extends Game_Battler
    * Performs release unequippable items.
    * @param forcing The forcing parameter.
    */
-  releaseUnequippableItems(forcing: boolean): void;
+  releaseUnequippableItems(forcing: unknown): void;
   /**
    * Clears state counts.
    * @param stateId The stateId parameter.
    */
-  resetStateCounts(stateId: number): void;
+  resetStateCounts(stateId: unknown): void;
   /**
    * Gets select next command.
    * @returns The result.
@@ -724,54 +724,54 @@ interface Game_Actor extends Game_Battler
    * Sets battler image.
    * @param battlerName The battlerName parameter.
    */
-  setBattlerImage(battlerName: string): void;
+  setBattlerImage(battlerName: unknown): void;
   /**
    * Sets character image.
    * @param characterName The characterName parameter.
    * @param characterIndex The characterIndex parameter.
    */
-  setCharacterImage(characterName: string, characterIndex: number): void;
+  setCharacterImage(characterName: unknown, characterIndex: unknown): void;
   /**
    * Sets face image.
    * @param faceName The faceName parameter.
    * @param faceIndex The faceIndex parameter.
    */
-  setFaceImage(faceName: string, faceIndex: number): void;
+  setFaceImage(faceName: unknown, faceIndex: unknown): void;
   /**
    * Sets last battle skill.
    * @param skill The skill parameter.
    */
-  setLastBattleSkill(skill: RPG_Skill): void;
+  setLastBattleSkill(skill: unknown): void;
   /**
    * Sets last command symbol.
    * @param _symbol The symbol parameter.
    */
-  setLastCommandSymbol(_symbol: string): void;
+  setLastCommandSymbol(_symbol: unknown): void;
   /**
    * Sets last menu skill.
    * @param skill The skill parameter.
    */
-  setLastMenuSkill(skill: RPG_Skill): void;
+  setLastMenuSkill(skill: unknown): void;
   /**
    * Sets name.
    * @param name The name parameter.
    */
-  setName(name: string): void;
+  setName(name: unknown): void;
   /**
    * Sets nickname.
    * @param nickname The nickname parameter.
    */
-  setNickname(nickname: string): void;
+  setNickname(nickname: unknown): void;
   /**
    * Sets profile.
    * @param profile The profile parameter.
    */
-  setProfile(profile: string): void;
+  setProfile(profile: unknown): void;
   /**
    * Performs setup.
    * @param actorId The actorId parameter.
    */
-  setup(actorId: number): void;
+  setup(actorId: unknown): void;
   /**
    * Gets should display level up.
    * @returns The result.
@@ -789,12 +789,12 @@ interface Game_Actor extends Game_Battler
    * Gets skill types.
    * @returns The result.
    */
-  skillTypes(): number[];
+  skillTypes(): unknown;
   /**
    * Gets skills.
    * @returns The result.
    */
-  skills(): RPG_Skill[];
+  skills(): unknown;
   /**
    * Gets steps for turn.
    * @returns The result.
@@ -805,19 +805,19 @@ interface Game_Actor extends Game_Battler
    * @param item The item parameter.
    * @returns The result.
    */
-  testEscape(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  testEscape(item: unknown): unknown;
   /**
    * Gets trade item with party.
    * @param newItem The newItem parameter.
    * @param oldItem The oldItem parameter.
    * @returns The result.
    */
-  tradeItemWithParty(newItem: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, oldItem: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  tradeItemWithParty(newItem: unknown, oldItem: unknown): boolean;
   /**
    * Gets trait objects.
    * @returns The result.
    */
-  traitObjects(): object[];
+  traitObjects(): unknown;
   /**
    * Performs turn end on map.
    */
@@ -826,15 +826,15 @@ interface Game_Actor extends Game_Battler
    * Updates state steps.
    * @param state The state parameter.
    */
-  updateStateSteps(state: RPG_State): void;
+  updateStateSteps(state: unknown): void;
   /**
    * Gets usable skills.
    * @returns The result.
    */
-  usableSkills(): RPG_Skill[];
+  usableSkills(): unknown;
   /**
    * Gets weapons.
    * @returns The result.
    */
-  weapons(): RPG_Weapon[];
+  weapons(): unknown;
 }

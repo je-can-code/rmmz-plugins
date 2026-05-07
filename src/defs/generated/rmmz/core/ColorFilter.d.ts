@@ -11,7 +11,7 @@ interface ColorFilter extends PIXI.Filter
    * Sets the brightness.
    * @returns The result.
    */
-  _fragmentSrc(): string;
+  _fragmentSrc(): unknown;
   /**
    * The color filter for WebGL.
    */
@@ -20,7 +20,7 @@ interface ColorFilter extends PIXI.Filter
    * Sets the blend color.
    * @param color The blend color [r, g, b, a].
    */
-  setBlendColor(color: [number, number, number, number]): void;
+  setBlendColor(color: unknown[]): void;
   /**
    * Sets the brightness.
    * @param brightness The brightness (0 to 255).
@@ -30,7 +30,7 @@ interface ColorFilter extends PIXI.Filter
    * Sets the color tone.
    * @param tone The color tone [r, g, b, gray].
    */
-  setColorTone(tone: [number, number, number, number]): void;
+  setColorTone(tone: unknown[]): void;
   /**
    * Sets the hue rotation value.
    * @param hue The hue value (-360, 360).

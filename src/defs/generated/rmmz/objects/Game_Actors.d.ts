@@ -21,7 +21,7 @@ interface Game_Actors
    * @param actorId The actorId parameter.
    * @returns The result.
    */
-  actor(actorId: number): Game_Actor | null;
+  actor(actorId: unknown): Game_Actor | null;
   /**
    * Initializes initialize.
    */

@@ -71,7 +71,7 @@ declare namespace Video
    * Performs update visibility.
    * @param videoVisible The videoVisible parameter.
    */
-  function _updateVisibility(videoVisible: boolean): void;
+  function _updateVisibility(videoVisible: unknown): void;
   /**
    * Initializes the video system.
    * @param width The width of the video.

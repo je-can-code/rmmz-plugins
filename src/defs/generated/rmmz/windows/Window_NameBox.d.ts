@@ -10,12 +10,12 @@ interface Window_NameBox extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_NameBox#setMessageWindow}.<br/>
    * Read in: {@link Window_NameBox#updatePlacement}.<br/>
    */
-  _messageWindow: Window_Base;
+  _messageWindow: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -41,12 +41,12 @@ interface Window_NameBox extends Window_Base
    * Sets message window.
    * @param messageWindow The messageWindow parameter.
    */
-  setMessageWindow(messageWindow: Window_Base): void;
+  setMessageWindow(messageWindow: unknown): void;
   /**
    * Sets name.
    * @param name The name parameter.
    */
-  setName(name: string): void;
+  setName(name: unknown): void;
   /**
    * Performs start.
    */
@@ -63,7 +63,7 @@ interface Window_NameBox extends Window_Base
    * Gets window height.
    * @returns The result.
    */
-  windowHeight(): number;
+  windowHeight(): unknown;
   /**
    * Gets window width.
    * @returns The result.

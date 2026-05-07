@@ -39,22 +39,22 @@ declare namespace FontManager
    * @param family The family parameter.
    * @param filename The filename parameter.
    */
-  function load(family: string, filename: string): void;
+  function load(family: unknown, filename: unknown): void;
   /**
    * Creates url.
    * @param filename The filename parameter.
    * @returns The result.
    */
-  function makeUrl(filename: string): string;
+  function makeUrl(filename: unknown): string;
   /**
    * Performs start loading.
    * @param family The family parameter.
    * @param url The url parameter.
    */
-  function startLoading(family: string, url: string): void;
+  function startLoading(family: unknown, url: unknown): void;
   /**
    * Performs throw load error.
    * @param family The family parameter.
    */
-  function throwLoadError(family: string): void;
+  function throwLoadError(family: unknown): void;
 }

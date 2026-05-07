@@ -13,14 +13,14 @@ declare namespace JsonEx
    * @param value The value parameter.
    * @returns The result.
    */
-  function _decode(value: object): object;
+  function _decode(value: unknown): object;
   /**
    * Makes a deep copy of the specified object.
    * @param value The value parameter.
    * @param depth The depth parameter.
    * @returns The result.
    */
-  function _encode(value: object, depth: number): object;
+  function _encode(value: unknown, depth: unknown): object;
   /**
    * Makes a deep copy of the specified object.
    * @param object The object to be copied.

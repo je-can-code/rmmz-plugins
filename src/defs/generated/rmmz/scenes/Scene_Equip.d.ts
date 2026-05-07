@@ -101,7 +101,7 @@ interface Scene_Equip extends Scene_MenuBase
    * Gets item window rect.
    * @returns The result.
    */
-  itemWindowRect(): Rectangle;
+  itemWindowRect(): unknown;
   /**
    * Gets needs page buttons.
    * @returns The result.

@@ -42,28 +42,28 @@ interface Game_Followers
    * Gets are gathered.
    * @returns The result.
    */
-  areGathered(): boolean;
+  areGathered(): unknown;
   /**
    * Gets are gathering.
    * @returns The result.
    */
-  areGathering(): boolean;
+  areGathering(): unknown;
   /**
    * Gets are moving.
    * @returns The result.
    */
-  areMoving(): boolean;
+  areMoving(): unknown;
   /**
    * Gets data.
    * @returns The result.
    */
-  data(): Game_Follower[];
+  data(): unknown;
   /**
    * Gets follower.
    * @param index The index parameter.
    * @returns The result.
    */
-  follower(index: number): Game_Follower;
+  follower(index: unknown): unknown;
   /**
    * Performs gather.
    */
@@ -82,7 +82,7 @@ interface Game_Followers
    * @param y The y parameter.
    * @returns True if someone collided; false otherwise.
    */
-  isSomeoneCollided(x: number, y: number): boolean;
+  isSomeoneCollided(x: unknown, y: unknown): boolean;
   /**
    * Determines whether visible.
    * @returns True if visible; false otherwise.
@@ -100,7 +100,7 @@ interface Game_Followers
    * Gets reverse data.
    * @returns The result.
    */
-  reverseData(): Game_Follower[];
+  reverseData(): unknown;
   /**
    * Performs setup.
    */
@@ -115,7 +115,7 @@ interface Game_Followers
    * @param y The y parameter.
    * @param d The d parameter.
    */
-  synchronize(x: number, y: number, d: number): void;
+  synchronize(x: unknown, y: unknown, d: unknown): void;
   /**
    * Performs update.
    */
@@ -128,5 +128,5 @@ interface Game_Followers
    * Gets visible followers.
    * @returns The result.
    */
-  visibleFollowers(): Game_Follower[];
+  visibleFollowers(): unknown;
 }

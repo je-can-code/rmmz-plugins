@@ -12,7 +12,7 @@ declare namespace SoundManager
    * Performs load system sound.
    * @param n The n parameter.
    */
-  function loadSystemSound(n: number): void;
+  function loadSystemSound(n: unknown): void;
   /**
    * Performs play actor collapse.
    */
@@ -105,7 +105,7 @@ declare namespace SoundManager
    * Performs play system sound.
    * @param n The n parameter.
    */
-  function playSystemSound(n: number): void;
+  function playSystemSound(n: unknown): void;
   /**
    * Performs play use item.
    */

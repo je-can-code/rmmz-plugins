@@ -96,64 +96,64 @@ interface Game_Party extends Game_Unit
    * Adds actor.
    * @param actorId The actorId parameter.
    */
-  addActor(actorId: number): void;
+  addActor(actorId: unknown): void;
   /**
    * Gets all battle members.
    * @returns The result.
    */
-  allBattleMembers(): Game_Actor[];
+  allBattleMembers(): unknown;
   /**
    * Gets all items.
    * @returns The result.
    */
-  allItems(): (RPG_Item | RPG_Weapon | RPG_Armor)[];
+  allItems(): unknown;
   /**
    * Gets all members.
    * @returns The result.
    */
-  allMembers(): Game_Actor[];
+  allMembers(): unknown;
   /**
    * Gets armors.
    * @returns The result.
    */
-  armors(): RPG_Armor[];
+  armors(): unknown;
   /**
    * Gets battle members.
    * @returns The result.
    */
-  battleMembers(): Game_Actor[];
+  battleMembers(): unknown;
   /**
    * Determines whether input.
-   * @returns True if input; false otherwise.
+   * @returns The result.
    */
-  canInput(): boolean;
+  canInput(): unknown;
   /**
    * Determines whether use.
    * @param item The item parameter.
-   * @returns True if use; false otherwise.
+   * @returns The result.
    */
-  canUse(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  canUse(item: unknown): unknown;
   /**
    * Gets characters for savefile.
    * @returns The result.
    */
-  charactersForSavefile(): [string, number][];
+  charactersForSavefile(): unknown;
   /**
    * Performs consume item.
    * @param item The item parameter.
    */
-  consumeItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  consumeItem(item: unknown): void;
   /**
    * Performs discard members equip.
    * @param item The item parameter.
    * @param amount The amount parameter.
    */
-  discardMembersEquip(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, amount: number): void;
+  discardMembersEquip(item: unknown, amount: unknown): void;
   /**
    * Gets equip items.
    * @returns The result.
    */
-  equipItems(): (RPG_Item | RPG_Weapon | RPG_Armor)[];
+  equipItems(): unknown;
   /**
    * Gets exists.
    * @returns The result.
@@ -163,24 +163,24 @@ interface Game_Party extends Game_Unit
    * Gets faces for savefile.
    * @returns The result.
    */
-  facesForSavefile(): [string, number][];
+  facesForSavefile(): unknown;
   /**
    * Performs gain gold.
    * @param amount The amount parameter.
    */
-  gainGold(amount: number): void;
+  gainGold(amount: unknown): void;
   /**
    * Performs gain item.
    * @param item The item parameter.
    * @param amount The amount parameter.
    * @param includeEquip The includeEquip parameter.
    */
-  gainItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, amount: number, includeEquip: boolean): void;
+  gainItem(item: unknown, amount: unknown, includeEquip: unknown): void;
   /**
    * Gets gold.
    * @returns The result.
    */
-  gold(): number;
+  gold(): unknown;
   /**
    * Determines whether cancel surprise.
    * @returns True if cancel surprise; false otherwise.
@@ -212,13 +212,13 @@ interface Game_Party extends Game_Unit
    * @param includeEquip The includeEquip parameter.
    * @returns True if item; false otherwise.
    */
-  hasItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, includeEquip: boolean): boolean;
+  hasItem(item: unknown, includeEquip: unknown): boolean;
   /**
    * Determines whether max items.
    * @param item The item parameter.
    * @returns True if max items; false otherwise.
    */
-  hasMaxItems(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  hasMaxItems(item: unknown): boolean;
   /**
    * Determines whether raise preemptive.
    * @returns True if raise preemptive; false otherwise.
@@ -228,12 +228,12 @@ interface Game_Party extends Game_Unit
    * Gets hidden battle members.
    * @returns The result.
    */
-  hiddenBattleMembers(): Game_Actor[];
+  hiddenBattleMembers(): unknown;
   /**
    * Gets highest level.
    * @returns The result.
    */
-  highestLevel(): number;
+  highestLevel(): unknown;
   /**
    * Performs increase steps.
    */
@@ -256,7 +256,7 @@ interface Game_Party extends Game_Unit
    * @param item The item parameter.
    * @returns True if any member equipped; false otherwise.
    */
-  isAnyMemberEquipped(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isAnyMemberEquipped(item: unknown): boolean;
   /**
    * Determines whether empty.
    * @returns True if empty; false otherwise.
@@ -272,34 +272,34 @@ interface Game_Party extends Game_Unit
    * @param item The item parameter.
    * @returns The result.
    */
-  itemContainer(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): null;
+  itemContainer(item: unknown): null;
   /**
    * Gets items.
    * @returns The result.
    */
-  items(): RPG_Item[];
+  items(): unknown;
   /**
    * Gets last item.
    * @returns The result.
    */
-  lastItem(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  lastItem(): unknown;
   /**
    * Gets leader.
    * @returns The result.
    */
-  leader(): Game_Actor | undefined;
+  leader(): unknown;
   /**
    * Performs lose gold.
    * @param amount The amount parameter.
    */
-  loseGold(amount: number): void;
+  loseGold(amount: unknown): void;
   /**
    * Performs lose item.
    * @param item The item parameter.
    * @param amount The amount parameter.
    * @param includeEquip The includeEquip parameter.
    */
-  loseItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, amount: number, includeEquip: boolean): void;
+  loseItem(item: unknown, amount: unknown, includeEquip: unknown): void;
   /**
    * Creates menu actor next.
    */
@@ -327,12 +327,12 @@ interface Game_Party extends Game_Unit
    * Gets members.
    * @returns The result.
    */
-  members(): Game_Actor[];
+  members(): unknown;
   /**
    * Gets menu actor.
    * @returns The result.
    */
-  menuActor(): Game_Actor | undefined;
+  menuActor(): unknown;
   /**
    * Gets name.
    * @returns The result.
@@ -343,7 +343,7 @@ interface Game_Party extends Game_Unit
    * @param item The item parameter.
    * @returns The result.
    */
-  numItems(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): number;
+  numItems(item: unknown): number;
   /**
    * Performs on escape failure.
    */
@@ -357,7 +357,7 @@ interface Game_Party extends Game_Unit
    * @param abilityId The abilityId parameter.
    * @returns The result.
    */
-  partyAbility(abilityId: number): boolean;
+  partyAbility(abilityId: unknown): unknown;
   /**
    * Performs perform escape.
    */
@@ -371,18 +371,18 @@ interface Game_Party extends Game_Unit
    * @param troopAgi The troopAgi parameter.
    * @returns The result.
    */
-  ratePreemptive(troopAgi: number): number;
+  ratePreemptive(troopAgi: unknown): unknown;
   /**
    * Gets rate surprise.
    * @param troopAgi The troopAgi parameter.
    * @returns The result.
    */
-  rateSurprise(troopAgi: number): number;
+  rateSurprise(troopAgi: unknown): unknown;
   /**
    * Removes actor.
    * @param actorId The actorId parameter.
    */
-  removeActor(actorId: number): void;
+  removeActor(actorId: unknown): void;
   /**
    * Removes battle states.
    */
@@ -403,17 +403,17 @@ interface Game_Party extends Game_Unit
    * Sets last item.
    * @param item The item parameter.
    */
-  setLastItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setLastItem(item: unknown): void;
   /**
    * Sets menu actor.
    * @param actor The actor parameter.
    */
-  setMenuActor(actor: Game_Actor): void;
+  setMenuActor(actor: unknown): void;
   /**
    * Sets target actor.
    * @param actor The actor parameter.
    */
-  setTargetActor(actor: Game_Actor): void;
+  setTargetActor(actor: unknown): void;
   /**
    * Performs setup battle test.
    */
@@ -434,28 +434,28 @@ interface Game_Party extends Game_Unit
    * Gets size.
    * @returns The result.
    */
-  size(): number;
+  size(): unknown;
   /**
    * Gets steps.
    * @returns The result.
    */
-  steps(): number;
+  steps(): unknown;
   /**
    * Performs swap order.
    * @param index1 The index1 parameter.
    * @param index2 The index2 parameter.
    */
-  swapOrder(index1: number, index2: number): void;
+  swapOrder(index1: unknown, index2: unknown): void;
   /**
    * Gets target actor.
    * @returns The result.
    */
-  targetActor(): Game_Actor | undefined;
+  targetActor(): unknown;
   /**
    * Gets weapons.
    * @returns The result.
    */
-  weapons(): RPG_Weapon[];
+  weapons(): unknown;
 }
 declare namespace Game_Party
 {

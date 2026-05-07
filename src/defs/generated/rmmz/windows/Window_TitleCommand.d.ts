@@ -20,7 +20,7 @@ interface Window_TitleCommand extends Window_Command
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether continue enabled.
    * @returns True if continue enabled; false otherwise.

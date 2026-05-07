@@ -28,12 +28,12 @@ interface Sprite_Enemy extends Sprite_Battler
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | string`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#updateBitmap}.<br/>
    * Read in: {@link Sprite_Enemy#updateBitmap}.<br/>
    */
-  _battlerName: null | string;
+  _battlerName: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,21 +46,21 @@ interface Sprite_Enemy extends Sprite_Battler
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | number`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}.<br/>
    * Read in: {@link Sprite_Enemy#isEffecting}, {@link Sprite_Enemy#startEffect}, {@link Sprite_Enemy#updateEffect}, {@link Sprite_Enemy#updateFrame}.<br/>
    */
-  _effectType: null | number;
+  _effectType: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Enemy#initMembers}, {@link Sprite_Enemy#setBattler}.<br/>
    * Read in: {@link Sprite_Enemy#initVisibility}, {@link Sprite_Enemy#setupEffect}, {@link Sprite_Enemy#update}, {@link Sprite_Enemy#updateBitmap}.<br/>
    */
-  _enemy: null | Game_Battler;
+  _enemy: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -87,12 +87,12 @@ interface Sprite_Enemy extends Sprite_Battler
    * Gets damage offset x.
    * @returns The result.
    */
-  damageOffsetX(): number;
+  damageOffsetX(): unknown;
   /**
    * Gets damage offset y.
    * @returns The result.
    */
-  damageOffsetY(): number;
+  damageOffsetY(): unknown;
   /**
    * Initializes members.
    */
@@ -105,7 +105,7 @@ interface Sprite_Enemy extends Sprite_Battler
    * Initializes initialize.
    * @param battler The battler parameter.
    */
-  initialize(battler: Game_Battler): void;
+  initialize(battler: unknown): void;
   /**
    * Determines whether effecting.
    * @returns True if effecting; false otherwise.
@@ -115,7 +115,7 @@ interface Sprite_Enemy extends Sprite_Battler
    * Performs load bitmap.
    * @param name The name parameter.
    */
-  loadBitmap(name: string): void;
+  loadBitmap(name: unknown): void;
   /**
    * Performs revert to normal.
    */
@@ -124,12 +124,12 @@ interface Sprite_Enemy extends Sprite_Battler
    * Sets battler.
    * @param battler The battler parameter.
    */
-  setBattler(battler: Game_Battler): void;
+  setBattler(battler: unknown): void;
   /**
    * Sets hue.
    * @param hue The hue parameter.
    */
-  setHue(hue: number): void;
+  setHue(hue: unknown): void;
   /**
    * Performs setup effect.
    */
@@ -158,7 +158,7 @@ interface Sprite_Enemy extends Sprite_Battler
    * Performs start effect.
    * @param effectType The effectType parameter.
    */
-  startEffect(effectType: number): void;
+  startEffect(effectType: unknown): void;
   /**
    * Performs start instant collapse.
    */

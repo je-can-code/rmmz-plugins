@@ -10,12 +10,12 @@ interface Game_Character extends Game_CharacterBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | object`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#initMembers}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
    * Read in: {@link Game_Character#advanceMoveRouteIndex}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#processRouteEnd}, {@link Game_Character#updateRoutineMove}.<br/>
    */
-  _moveRoute: null | object;
+  _moveRoute: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -37,12 +37,12 @@ interface Game_Character extends Game_CharacterBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | object`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_Character#initMembers}, {@link Game_Character#memorizeMoveRoute}, {@link Game_Character#restoreMoveRoute}, {@link Game_Character#setMoveRoute}.<br/>
    * Read in: {@link Game_Character#forceMoveRoute}, {@link Game_Character#restoreMoveRoute}.<br/>
    */
-  _originalMoveRoute: null | object;
+  _originalMoveRoute: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -70,25 +70,25 @@ interface Game_Character extends Game_CharacterBase
    * @param x The x parameter.
    * @returns The result.
    */
-  deltaXFrom(x: number): number;
+  deltaXFrom(x: unknown): unknown;
   /**
    * Gets delta yfrom.
    * @param y The y parameter.
    * @returns The result.
    */
-  deltaYFrom(y: number): number;
+  deltaYFrom(y: unknown): unknown;
   /**
    * Gets find direction to.
    * @param goalX The goalX parameter.
    * @param goalY The goalY parameter.
    * @returns The result.
    */
-  findDirectionTo(goalX: number, goalY: number): number;
+  findDirectionTo(goalX: unknown, goalY: unknown): number;
   /**
    * Performs force move route.
    * @param moveRoute The moveRoute parameter.
    */
-  forceMoveRoute(moveRoute: object): void;
+  forceMoveRoute(moveRoute: unknown): void;
   /**
    * Initializes members.
    */
@@ -110,7 +110,7 @@ interface Game_Character extends Game_CharacterBase
    * Performs move away from character.
    * @param character The character parameter.
    */
-  moveAwayFromCharacter(character: Game_Character): void;
+  moveAwayFromCharacter(character: unknown): void;
   /**
    * Performs move away from player.
    */
@@ -131,7 +131,7 @@ interface Game_Character extends Game_CharacterBase
    * Performs move toward character.
    * @param character The character parameter.
    */
-  moveTowardCharacter(character: Game_Character): void;
+  moveTowardCharacter(character: unknown): void;
   /**
    * Performs move toward player.
    */
@@ -140,7 +140,7 @@ interface Game_Character extends Game_CharacterBase
    * Performs process move command.
    * @param command The command parameter.
    */
-  processMoveCommand(command: object): void;
+  processMoveCommand(command: unknown): void;
   /**
    * Performs process route end.
    */
@@ -158,12 +158,12 @@ interface Game_Character extends Game_CharacterBase
    * Sets move route.
    * @param moveRoute The moveRoute parameter.
    */
-  setMoveRoute(moveRoute: object): void;
+  setMoveRoute(moveRoute: unknown): void;
   /**
    * Performs swap.
    * @param character The character parameter.
    */
-  swap(character: Game_Character): void;
+  swap(character: unknown): void;
   /**
    * Performs turn180.
    */
@@ -172,7 +172,7 @@ interface Game_Character extends Game_CharacterBase
    * Performs turn away from character.
    * @param character The character parameter.
    */
-  turnAwayFromCharacter(character: Game_Character): void;
+  turnAwayFromCharacter(character: unknown): void;
   /**
    * Performs turn away from player.
    */
@@ -197,7 +197,7 @@ interface Game_Character extends Game_CharacterBase
    * Performs turn toward character.
    * @param character The character parameter.
    */
-  turnTowardCharacter(character: Game_Character): void;
+  turnTowardCharacter(character: unknown): void;
   /**
    * Performs turn toward player.
    */

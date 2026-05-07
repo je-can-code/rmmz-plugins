@@ -10,12 +10,12 @@ interface Sprite_Battler extends Sprite_Clickable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Battler`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#setBattler}.<br/>
    * Read in: {@link Sprite_Battler#checkBattler}, {@link Sprite_Battler#createDamageSprite}, {@link Sprite_Battler#onClick}, {@link Sprite_Battler#onMouseEnter}, {@link Sprite_Battler#onPress}, {@link Sprite_Battler#setupDamagePopup}, {@link Sprite_Battler#update}, {@link Sprite_Battler#updateMain}, {@link Sprite_Battler#updateSelectionEffect}, {@link Sprite_Battler#updateVisibility}.<br/>
    */
-  _battler: null | Game_Battler;
+  _battler: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -86,27 +86,27 @@ interface Sprite_Battler extends Sprite_Clickable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.<br/>
    * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
    */
-  _targetOffsetX: number;
+  _targetOffsetX: unknown;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Sprite_Battler#initMembers}, {@link Sprite_Battler#startMove}.<br/>
    * Read in: {@link Sprite_Battler#startMove}, {@link Sprite_Battler#updateMove}.<br/>
    */
-  _targetOffsetY: number;
+  _targetOffsetY: unknown;
   /**
    * Gets check battler.
    * @param battler The battler parameter.
    * @returns The result.
    */
-  checkBattler(battler: Game_Battler): boolean;
+  checkBattler(battler: unknown): boolean;
   /**
    * Creates damage sprite.
    */
@@ -125,7 +125,7 @@ interface Sprite_Battler extends Sprite_Clickable
    * Performs destroy damage sprite.
    * @param sprite The sprite parameter.
    */
-  destroyDamageSprite(sprite: Sprite): void;
+  destroyDamageSprite(sprite: unknown): void;
   /**
    * Gets in home position.
    * @returns The result.
@@ -139,7 +139,7 @@ interface Sprite_Battler extends Sprite_Clickable
    * Initializes initialize.
    * @param battler The battler parameter.
    */
-  initialize(battler: Game_Battler): void;
+  initialize(battler: unknown): void;
   /**
    * Determines whether effecting.
    * @returns True if effecting; false otherwise.
@@ -175,13 +175,13 @@ interface Sprite_Battler extends Sprite_Clickable
    * Sets battler.
    * @param battler The battler parameter.
    */
-  setBattler(battler: Game_Battler): void;
+  setBattler(battler: unknown): void;
   /**
    * Sets home.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setHome(x: number, y: number): void;
+  setHome(x: unknown, y: unknown): void;
   /**
    * Performs setup damage popup.
    */
@@ -192,7 +192,7 @@ interface Sprite_Battler extends Sprite_Clickable
    * @param y The y parameter.
    * @param duration The duration parameter.
    */
-  startMove(x: number, y: number, duration: number): void;
+  startMove(x: unknown, y: unknown, duration: unknown): void;
   /**
    * Performs update.
    */

@@ -15,7 +15,7 @@ class RPG_BaseBattler
   /**
    * Constructor.
    * Maps the base battler data to the properties on this class.
-   * @param {RPG_Enemy|rm.types.Actor} battler The battler to parse.
+   * @param {RPG_Enemy|RPG_Actor} battler The battler to parse.
    * @param {number} index The index of the entry in the database.
    */
   constructor(battler, index)

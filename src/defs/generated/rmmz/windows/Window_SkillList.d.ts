@@ -10,12 +10,12 @@ interface Window_SkillList extends Window_Selectable
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Game_Actor`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: {@link Window_SkillList#initialize}.<br/>
    * Written in: {@link Window_SkillList#initialize}, {@link Window_SkillList#setActor}.<br/>
    * Read in: {@link Window_SkillList#drawSkillCost}, {@link Window_SkillList#isEnabled}, {@link Window_SkillList#makeItemList}, {@link Window_SkillList#selectLast}, {@link Window_SkillList#setActor}.<br/>
    */
-  _actor: null | Game_Actor;
+  _actor: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Window_SkillList extends Window_Selectable
    * Gets cost width.
    * @returns The result.
    */
-  costWidth(): number;
+  costWidth(): unknown;
   /**
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Performs draw skill cost.
    * @param skill The skill parameter.
@@ -59,18 +59,18 @@ interface Window_SkillList extends Window_Selectable
    * @param y The y parameter.
    * @param width The width parameter.
    */
-  drawSkillCost(skill: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null, x: number, y: number, width: number): void;
+  drawSkillCost(skill: unknown, x: unknown, y: unknown, width: unknown): void;
   /**
    * Gets includes.
    * @param item The item parameter.
    * @returns The result.
    */
-  includes(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  includes(item: unknown): unknown;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether current item enabled.
    * @returns True if current item enabled; false otherwise.
@@ -81,18 +81,18 @@ interface Window_SkillList extends Window_Selectable
    * @param item The item parameter.
    * @returns True if enabled; false otherwise.
    */
-  isEnabled(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): boolean;
+  isEnabled(item: unknown): boolean;
   /**
    * Gets item.
    * @returns The result.
    */
-  item(): RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null;
+  item(): unknown;
   /**
    * Gets item at.
    * @param index The index parameter.
    * @returns The result.
    */
-  itemAt(index: number): null;
+  itemAt(index: unknown): null;
   /**
    * Creates item list.
    */
@@ -119,12 +119,12 @@ interface Window_SkillList extends Window_Selectable
    * Sets actor.
    * @param actor The actor parameter.
    */
-  setActor(actor: Game_Actor): void;
+  setActor(actor: unknown): void;
   /**
    * Sets stype id.
    * @param stypeId The stypeId parameter.
    */
-  setStypeId(stypeId: number): void;
+  setStypeId(stypeId: unknown): void;
   /**
    * Updates help.
    */

@@ -29,7 +29,7 @@ interface Window_DebugEdit extends Window_Selectable
    * Gets current id.
    * @returns The result.
    */
-  currentId(): number;
+  currentId(): unknown;
   /**
    * Gets delta for variable.
    * @returns The result.
@@ -39,24 +39,24 @@ interface Window_DebugEdit extends Window_Selectable
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Gets item name.
    * @param dataId The dataId parameter.
    * @returns The result.
    */
-  itemName(dataId: number): string;
+  itemName(dataId: unknown): unknown;
   /**
    * Gets item status.
    * @param dataId The dataId parameter.
    * @returns The result.
    */
-  itemStatus(dataId: number): string;
+  itemStatus(dataId: unknown): string;
   /**
    * Gets max items.
    * @returns The result.
@@ -66,12 +66,12 @@ interface Window_DebugEdit extends Window_Selectable
    * Sets mode.
    * @param mode The mode parameter.
    */
-  setMode(mode: string): void;
+  setMode(mode: unknown): void;
   /**
    * Sets top id.
    * @param id The id parameter.
    */
-  setTopId(id: number): void;
+  setTopId(id: unknown): void;
   /**
    * Performs update.
    */

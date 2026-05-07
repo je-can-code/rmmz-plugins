@@ -33,11 +33,11 @@ interface Game_Switches
    * @param switchId The switchId parameter.
    * @param value The value parameter.
    */
-  setValue(switchId: number, value: boolean): void;
+  setValue(switchId: unknown, value: unknown): void;
   /**
    * Gets value.
    * @param switchId The switchId parameter.
    * @returns The result.
    */
-  value(switchId: number): boolean;
+  value(switchId: unknown): boolean;
 }

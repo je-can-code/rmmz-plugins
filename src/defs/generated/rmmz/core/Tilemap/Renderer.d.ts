@@ -63,7 +63,7 @@ declare namespace Tilemap
      * Performs bind textures.
      * @param renderer The renderer parameter.
      */
-    bindTextures(renderer: PIXI.Renderer): void;
+    bindTextures(renderer: unknown): void;
     /**
      * Performs context change.
      */
@@ -76,17 +76,17 @@ declare namespace Tilemap
      * Gets shader.
      * @returns The result.
      */
-    getShader(): PIXI.Shader;
+    getShader(): unknown;
     /**
      * Initializes initialize.
      * @param renderer The renderer parameter.
      */
-    initialize(renderer: PIXI.Renderer): void;
+    initialize(renderer: unknown): void;
     /**
      * Updates textures.
      * @param renderer The renderer parameter.
      * @param images The images parameter.
      */
-    updateTextures(renderer: PIXI.Renderer, images: TexImageSource[]): void;
+    updateTextures(renderer: unknown, images: unknown): void;
   }
 }

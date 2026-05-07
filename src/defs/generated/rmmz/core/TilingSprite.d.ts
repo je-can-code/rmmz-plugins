@@ -90,7 +90,7 @@ interface TilingSprite extends PIXI.TilingSprite
    * The opacity of the tiling sprite (0 to 255).
    * @returns The result.
    */
-  get opacity(): number;
+  get opacity(): unknown;
   /**
    * Specifies the region of the image that the tiling sprite will use.
    * @param x The x coordinate of the frame.

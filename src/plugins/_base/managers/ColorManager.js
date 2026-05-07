@@ -18,9 +18,9 @@ ColorManager.longParam = function(paramId)
 };
 
 /**
- * Gets the color index for a given element.
+ * Gets the windowskin text palette color for a given element (same sampling path as {@link ColorManager.textColor}).
  * @param {number} elementId The element id to get a color for.
- * @returns {number} The color index of the given element.
+ * @returns {string} Hex color string from the windowskin palette (see {@link Bitmap#getPixel}).
  */
 // eslint-disable-next-line
 ColorManager.elementColorHexcode = function(elementId)
@@ -168,9 +168,9 @@ ColorManager.elementColorIndex = function(elementId)
 };
 
 /**
- * Gets the color index of the given skill type.
+ * Gets the windowskin text palette color for the given skill type.
  * @param {number} skillTypeId The id to get the color for.
- * @returns {rm.types.Color}
+ * @returns {string} Hex color string from the windowskin palette.
  */
 // eslint-disable-next-line no-unused-vars
 ColorManager.skillType = function(skillTypeId)
@@ -179,9 +179,9 @@ ColorManager.skillType = function(skillTypeId)
 };
 
 /**
- * Gets the color index of the given weapon type.
+ * Gets the windowskin text palette color for the given weapon type.
  * @param {number} weaponTypeId The id to get the color for.
- * @returns {rm.types.Color}
+ * @returns {string} Hex color string from the windowskin palette.
  */
 // eslint-disable-next-line no-unused-vars
 ColorManager.weaponType = function(weaponTypeId)
@@ -190,9 +190,9 @@ ColorManager.weaponType = function(weaponTypeId)
 };
 
 /**
- * Gets the color index of the given armor type.
+ * Gets the windowskin text palette color for the given armor type.
  * @param {number} armorTypeId The id to get the color for.
- * @returns {rm.types.Color}
+ * @returns {string} Hex color string from the windowskin palette.
  */
 // eslint-disable-next-line no-unused-vars
 ColorManager.armorType = function(armorTypeId)
@@ -201,9 +201,9 @@ ColorManager.armorType = function(armorTypeId)
 };
 
 /**
- * Gets the color index of the given equip type.
+ * Gets the windowskin text palette color for the given equip type.
  * @param {number} equipTypeId The id to get the color for.
- * @returns {rm.types.Color}
+ * @returns {string} Hex color string from the windowskin palette.
  */
 // eslint-disable-next-line no-unused-vars
 ColorManager.equipType = function(equipTypeId)
@@ -212,9 +212,9 @@ ColorManager.equipType = function(equipTypeId)
 };
 
 /**
- * Gets the color index of the given SDP.
+ * Gets the windowskin text palette color for the given SDP rarity band.
  * @param {string} rarity The key to get the panel for.
- * @returns {rm.types.Color}
+ * @returns {string} Hex color string from the windowskin palette.
  */
 ColorManager.sdp = function(rarity)
 {

@@ -91,7 +91,7 @@ interface Weather extends PIXI.Container
    * Performs reborn sprite.
    * @param sprite The sprite parameter.
    */
-  _rebornSprite(sprite: Sprite): void;
+  _rebornSprite(sprite: unknown): void;
   /**
    * Performs remove sprite.
    */
@@ -108,22 +108,22 @@ interface Weather extends PIXI.Container
    * Performs update rain sprite.
    * @param sprite The sprite parameter.
    */
-  _updateRainSprite(sprite: Sprite): void;
+  _updateRainSprite(sprite: unknown): void;
   /**
    * Performs update snow sprite.
    * @param sprite The sprite parameter.
    */
-  _updateSnowSprite(sprite: Sprite): void;
+  _updateSnowSprite(sprite: unknown): void;
   /**
    * Performs update sprite.
    * @param sprite The sprite parameter.
    */
-  _updateSprite(sprite: Sprite): void;
+  _updateSprite(sprite: unknown): void;
   /**
    * Performs update storm sprite.
    * @param sprite The sprite parameter.
    */
-  _updateStormSprite(sprite: Sprite): void;
+  _updateStormSprite(sprite: unknown): void;
   /**
    * Destroys the weather.
    */

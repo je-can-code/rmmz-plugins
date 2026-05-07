@@ -274,7 +274,7 @@ Window_Base.prototype.obtainEscapeCode = function(textState)
 
 /**
  * Retrieves additional escape codes that are our custom creation.
- * @param {any} textState The rolling text state.
+ * @param {RPG_TextState} textState Rolling bag from {@link Window_Base.prototype.createTextState}.
  * @returns {string} The found escape code, if any.
  */
 Window_Base.prototype.customEscapeCodes = function(textState)

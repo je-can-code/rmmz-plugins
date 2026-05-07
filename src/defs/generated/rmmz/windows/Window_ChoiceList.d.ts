@@ -37,12 +37,12 @@ interface Window_ChoiceList extends Window_Command
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `Window_Base`.<br/>
+   * Type: `unknown`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_ChoiceList#setMessageWindow}.<br/>
    * Read in: {@link Window_ChoiceList#callCancelHandler}, {@link Window_ChoiceList#callOkHandler}, {@link Window_ChoiceList#maxLines}, {@link Window_ChoiceList#windowY}.<br/>
    */
-  _messageWindow: Window_Base;
+  _messageWindow: unknown;
   /**
    * Performs call cancel handler.
    */
@@ -59,7 +59,7 @@ interface Window_ChoiceList extends Window_Command
    * Performs draw item.
    * @param index The index parameter.
    */
-  drawItem(index: number): void;
+  drawItem(index: unknown): void;
   /**
    * Initializes initialize.
    */
@@ -77,7 +77,7 @@ interface Window_ChoiceList extends Window_Command
    * Gets max choice width.
    * @returns The result.
    */
-  maxChoiceWidth(): number;
+  maxChoiceWidth(): unknown;
   /**
    * Gets max lines.
    * @returns The result.
@@ -92,7 +92,7 @@ interface Window_ChoiceList extends Window_Command
    * Gets num visible rows.
    * @returns The result.
    */
-  numVisibleRows(): number;
+  numVisibleRows(): unknown;
   /**
    * Performs place cancel button.
    */
@@ -105,7 +105,7 @@ interface Window_ChoiceList extends Window_Command
    * Sets message window.
    * @param messageWindow The messageWindow parameter.
    */
-  setMessageWindow(messageWindow: Window_Base): void;
+  setMessageWindow(messageWindow: unknown): void;
   /**
    * Performs start.
    */
@@ -130,12 +130,12 @@ interface Window_ChoiceList extends Window_Command
    * Gets window height.
    * @returns The result.
    */
-  windowHeight(): number;
+  windowHeight(): unknown;
   /**
    * Gets window width.
    * @returns The result.
    */
-  windowWidth(): number;
+  windowWidth(): unknown;
   /**
    * Gets window x.
    * @returns The result.
@@ -145,5 +145,5 @@ interface Window_ChoiceList extends Window_Command
    * Gets window y.
    * @returns The result.
    */
-  windowY(): number;
+  windowY(): unknown;
 }

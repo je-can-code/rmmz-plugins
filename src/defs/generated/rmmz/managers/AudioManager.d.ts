@@ -163,55 +163,55 @@ declare namespace AudioManager
    * @param name The name parameter.
    * @returns The result.
    */
-  function createBuffer(folder: string, name: string): WebAudio;
+  function createBuffer(folder: unknown, name: unknown): unknown;
   /**
    * Performs fade in bgm.
    * @param duration The duration parameter.
    */
-  function fadeInBgm(duration: number): void;
+  function fadeInBgm(duration: unknown): void;
   /**
    * Performs fade in bgs.
    * @param duration The duration parameter.
    */
-  function fadeInBgs(duration: number): void;
+  function fadeInBgs(duration: unknown): void;
   /**
    * Performs fade out bgm.
    * @param duration The duration parameter.
    */
-  function fadeOutBgm(duration: number): void;
+  function fadeOutBgm(duration: unknown): void;
   /**
    * Performs fade out bgs.
    * @param duration The duration parameter.
    */
-  function fadeOutBgs(duration: number): void;
+  function fadeOutBgs(duration: unknown): void;
   /**
    * Performs fade out me.
    * @param duration The duration parameter.
    */
-  function fadeOutMe(duration: number): void;
+  function fadeOutMe(duration: unknown): void;
   /**
    * Determines whether current bgm.
    * @param bgm The bgm parameter.
    * @returns True if current bgm; false otherwise.
    */
-  function isCurrentBgm(bgm: object): boolean;
+  function isCurrentBgm(bgm: unknown): boolean;
   /**
    * Determines whether current bgs.
    * @param bgs The bgs parameter.
    * @returns True if current bgs; false otherwise.
    */
-  function isCurrentBgs(bgs: object): boolean;
+  function isCurrentBgs(bgs: unknown): boolean;
   /**
    * Determines whether static se.
    * @param se The se parameter.
    * @returns True if static se; false otherwise.
    */
-  function isStaticSe(se: object): boolean;
+  function isStaticSe(se: unknown): boolean;
   /**
    * Performs load static se.
    * @param se The se parameter.
    */
-  function loadStaticSe(se: object): void;
+  function loadStaticSe(se: unknown): void;
   /**
    * Creates empty audio object.
    * @returns The result.
@@ -227,38 +227,38 @@ declare namespace AudioManager
    * @param bgm The bgm parameter.
    * @param pos The pos parameter.
    */
-  function playBgm(bgm: object, pos: number): void;
+  function playBgm(bgm: unknown, pos: unknown): void;
   /**
    * Performs play bgs.
    * @param bgs The bgs parameter.
    * @param pos The pos parameter.
    */
-  function playBgs(bgs: object, pos: number): void;
+  function playBgs(bgs: unknown, pos: unknown): void;
   /**
    * Performs play me.
    * @param me The me parameter.
    */
-  function playMe(me: object): void;
+  function playMe(me: unknown): void;
   /**
    * Performs play se.
    * @param se The se parameter.
    */
-  function playSe(se: object): void;
+  function playSe(se: unknown): void;
   /**
    * Performs play static se.
    * @param se The se parameter.
    */
-  function playStaticSe(se: object): void;
+  function playStaticSe(se: unknown): void;
   /**
    * Performs replay bgm.
    * @param bgm The bgm parameter.
    */
-  function replayBgm(bgm: object): void;
+  function replayBgm(bgm: unknown): void;
   /**
    * Performs replay bgs.
    * @param bgs The bgs parameter.
    */
-  function replayBgs(bgs: object): void;
+  function replayBgs(bgs: unknown): void;
   /**
    * Gets save bgm.
    * @returns The result.
@@ -298,45 +298,45 @@ declare namespace AudioManager
    * Performs throw load error.
    * @param webAudio The webAudio parameter.
    */
-  function throwLoadError(webAudio: WebAudio): void;
+  function throwLoadError(webAudio: unknown): void;
   /**
    * Updates bgm parameters.
    * @param bgm The bgm parameter.
    */
-  function updateBgmParameters(bgm: object): void;
+  function updateBgmParameters(bgm: unknown): void;
   /**
    * Updates bgs parameters.
    * @param bgs The bgs parameter.
    */
-  function updateBgsParameters(bgs: object): void;
+  function updateBgsParameters(bgs: unknown): void;
   /**
    * Updates buffer parameters.
    * @param buffer The buffer parameter.
    * @param configVolume The configVolume parameter.
    * @param audio The audio parameter.
    */
-  function updateBufferParameters(buffer: WebAudio, configVolume: number, audio: object): void;
+  function updateBufferParameters(buffer: unknown, configVolume: unknown, audio: unknown): void;
   /**
    * Updates current bgm.
    * @param bgm The bgm parameter.
    * @param pos The pos parameter.
    */
-  function updateCurrentBgm(bgm: object, pos: number): void;
+  function updateCurrentBgm(bgm: unknown, pos: unknown): void;
   /**
    * Updates current bgs.
    * @param bgs The bgs parameter.
    * @param pos The pos parameter.
    */
-  function updateCurrentBgs(bgs: object, pos: number): void;
+  function updateCurrentBgs(bgs: unknown, pos: unknown): void;
   /**
    * Updates me parameters.
    * @param me The me parameter.
    */
-  function updateMeParameters(me: object): void;
+  function updateMeParameters(me: unknown): void;
   /**
    * Updates se parameters.
    * @param buffer The buffer parameter.
    * @param se The se parameter.
    */
-  function updateSeParameters(buffer: WebAudio, se: object): void;
+  function updateSeParameters(buffer: unknown, se: unknown): void;
 }

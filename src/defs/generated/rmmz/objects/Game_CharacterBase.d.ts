@@ -172,12 +172,12 @@ interface Game_CharacterBase
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `number | string`.<br/>
+   * Type: `number`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Game_CharacterBase#initMembers}, {@link Game_CharacterBase#setPattern}, {@link Game_CharacterBase#straighten}, {@link Game_CharacterBase#updatePattern}.<br/>
    * Read in: {@link Game_CharacterBase#pattern}, {@link Game_CharacterBase#updatePattern}.<br/>
    */
-  _pattern: number | string;
+  _pattern: number;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -281,17 +281,17 @@ interface Game_CharacterBase
    * Gets animation wait.
    * @returns The result.
    */
-  animationWait(): number;
+  animationWait(): unknown;
   /**
    * Gets blend mode.
    * @returns The result.
    */
-  blendMode(): number;
+  blendMode(): unknown;
   /**
    * Gets bush depth.
    * @returns The result.
    */
-  bushDepth(): number;
+  bushDepth(): unknown;
   /**
    * Determines whether pass.
    * @param x The x parameter.
@@ -299,7 +299,7 @@ interface Game_CharacterBase
    * @param d The d parameter.
    * @returns True if pass; false otherwise.
    */
-  canPass(x: number, y: number, d: number): boolean;
+  canPass(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether pass diagonally.
    * @param x The x parameter.
@@ -308,17 +308,17 @@ interface Game_CharacterBase
    * @param vert The vert parameter.
    * @returns True if pass diagonally; false otherwise.
    */
-  canPassDiagonally(x: number, y: number, horz: number, vert: number): boolean;
+  canPassDiagonally(x: unknown, y: unknown, horz: unknown, vert: unknown): boolean;
   /**
    * Gets character index.
    * @returns The result.
    */
-  characterIndex(): number;
+  characterIndex(): unknown;
   /**
    * Gets character name.
    * @returns The result.
    */
-  characterName(): string;
+  characterName(): unknown;
   /**
    * Gets check event trigger touch.
    * @returns The result.
@@ -328,28 +328,28 @@ interface Game_CharacterBase
    * Performs check event trigger touch front.
    * @param d The d parameter.
    */
-  checkEventTriggerTouchFront(d: number): void;
+  checkEventTriggerTouchFront(d: unknown): void;
   /**
    * Gets check stop.
    * @param threshold The threshold parameter.
    * @returns The result.
    */
-  checkStop(threshold: number): boolean;
+  checkStop(threshold: unknown): boolean;
   /**
    * Performs copy position.
    * @param character The character parameter.
    */
-  copyPosition(character: Game_Character): void;
+  copyPosition(character: unknown): void;
   /**
    * Gets direction.
    * @returns The result.
    */
-  direction(): number;
+  direction(): unknown;
   /**
    * Gets distance per frame.
    * @returns The result.
    */
-  distancePerFrame(): number;
+  distancePerFrame(): unknown;
   /**
    * Performs end animation.
    */
@@ -396,21 +396,21 @@ interface Game_CharacterBase
    * @param y The y parameter.
    * @returns True if collided with characters; false otherwise.
    */
-  isCollidedWithCharacters(x: number, y: number): boolean;
+  isCollidedWithCharacters(x: unknown, y: unknown): boolean;
   /**
    * Determines whether collided with events.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if collided with events; false otherwise.
    */
-  isCollidedWithEvents(x: number, y: number): boolean;
+  isCollidedWithEvents(x: unknown, y: unknown): boolean;
   /**
    * Determines whether collided with vehicles.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns True if collided with vehicles; false otherwise.
    */
-  isCollidedWithVehicles(x: number, y: number): boolean;
+  isCollidedWithVehicles(x: unknown, y: unknown): boolean;
   /**
    * Determines whether dashing.
    * @returns True if dashing; false otherwise.
@@ -438,7 +438,7 @@ interface Game_CharacterBase
    * @param d The d parameter.
    * @returns True if map passable; false otherwise.
    */
-  isMapPassable(x: number, y: number, d: number): boolean;
+  isMapPassable(x: unknown, y: unknown, d: unknown): boolean;
   /**
    * Determines whether movement succeeded.
    * @returns True if movement succeeded; false otherwise.
@@ -504,18 +504,18 @@ interface Game_CharacterBase
    * @param xPlus The xPlus parameter.
    * @param yPlus The yPlus parameter.
    */
-  jump(xPlus: number, yPlus: number): void;
+  jump(xPlus: unknown, yPlus: unknown): void;
   /**
    * Gets jump height.
    * @returns The result.
    */
-  jumpHeight(): number;
+  jumpHeight(): unknown;
   /**
    * Performs locate.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  locate(x: number, y: number): void;
+  locate(x: unknown, y: unknown): void;
   /**
    * Gets max pattern.
    * @returns The result.
@@ -526,27 +526,27 @@ interface Game_CharacterBase
    * @param horz The horz parameter.
    * @param vert The vert parameter.
    */
-  moveDiagonally(horz: number, vert: number): void;
+  moveDiagonally(horz: unknown, vert: unknown): void;
   /**
    * Gets move frequency.
    * @returns The result.
    */
-  moveFrequency(): number;
+  moveFrequency(): unknown;
   /**
    * Gets move speed.
    * @returns The result.
    */
-  moveSpeed(): number;
+  moveSpeed(): unknown;
   /**
    * Performs move straight.
    * @param d The d parameter.
    */
-  moveStraight(d: number): void;
+  moveStraight(d: unknown): void;
   /**
    * Gets opacity.
    * @returns The result.
    */
-  opacity(): number;
+  opacity(): unknown;
   /**
    * Gets pattern.
    * @returns The result.
@@ -558,19 +558,19 @@ interface Game_CharacterBase
    * @param y The y parameter.
    * @returns The result.
    */
-  pos(x: number, y: number): boolean;
+  pos(x: unknown, y: unknown): boolean;
   /**
    * Gets pos nt.
    * @param x The x parameter.
    * @param y The y parameter.
    * @returns The result.
    */
-  posNt(x: number, y: number): boolean;
+  posNt(x: unknown, y: unknown): boolean;
   /**
    * Gets real move speed.
    * @returns The result.
    */
-  realMoveSpeed(): number;
+  realMoveSpeed(): unknown;
   /**
    * Performs refresh bush depth.
    */
@@ -579,7 +579,7 @@ interface Game_CharacterBase
    * Gets region id.
    * @returns The result.
    */
-  regionId(): number;
+  regionId(): unknown;
   /**
    * Clears pattern.
    */
@@ -593,114 +593,114 @@ interface Game_CharacterBase
    * @param d The d parameter.
    * @returns The result.
    */
-  reverseDir(d: number): number;
+  reverseDir(d: unknown): unknown;
   /**
    * Gets screen x.
    * @returns The result.
    */
-  screenX(): number;
+  screenX(): unknown;
   /**
    * Gets screen y.
    * @returns The result.
    */
-  screenY(): number;
+  screenY(): unknown;
   /**
    * Gets screen z.
    * @returns The result.
    */
-  screenZ(): number;
+  screenZ(): unknown;
   /**
    * Gets scrolled x.
    * @returns The result.
    */
-  scrolledX(): number;
+  scrolledX(): unknown;
   /**
    * Gets scrolled y.
    * @returns The result.
    */
-  scrolledY(): number;
+  scrolledY(): unknown;
   /**
    * Sets blend mode.
    * @param blendMode The blendMode parameter.
    */
-  setBlendMode(blendMode: number): void;
+  setBlendMode(blendMode: unknown): void;
   /**
    * Sets direction.
    * @param d The d parameter.
    */
-  setDirection(d: number): void;
+  setDirection(d: unknown): void;
   /**
    * Sets direction fix.
    * @param directionFix The directionFix parameter.
    */
-  setDirectionFix(directionFix: boolean): void;
+  setDirectionFix(directionFix: unknown): void;
   /**
    * Sets image.
    * @param characterName The characterName parameter.
    * @param characterIndex The characterIndex parameter.
    */
-  setImage(characterName: string, characterIndex: number): void;
+  setImage(characterName: unknown, characterIndex: unknown): void;
   /**
    * Sets move frequency.
    * @param moveFrequency The moveFrequency parameter.
    */
-  setMoveFrequency(moveFrequency: number): void;
+  setMoveFrequency(moveFrequency: unknown): void;
   /**
    * Sets move speed.
    * @param moveSpeed The moveSpeed parameter.
    */
-  setMoveSpeed(moveSpeed: number): void;
+  setMoveSpeed(moveSpeed: unknown): void;
   /**
    * Sets movement success.
    * @param success The success parameter.
    */
-  setMovementSuccess(success: boolean): void;
+  setMovementSuccess(success: unknown): void;
   /**
    * Sets opacity.
    * @param opacity The opacity parameter.
    */
-  setOpacity(opacity: number): void;
+  setOpacity(opacity: unknown): void;
   /**
    * Sets pattern.
    * @param pattern The pattern parameter.
    */
-  setPattern(pattern: string): void;
+  setPattern(pattern: unknown): void;
   /**
    * Sets position.
    * @param x The x parameter.
    * @param y The y parameter.
    */
-  setPosition(x: number, y: number): void;
+  setPosition(x: unknown, y: unknown): void;
   /**
    * Sets priority type.
    * @param priorityType The priorityType parameter.
    */
-  setPriorityType(priorityType: number): void;
+  setPriorityType(priorityType: unknown): void;
   /**
    * Sets step anime.
    * @param stepAnime The stepAnime parameter.
    */
-  setStepAnime(stepAnime: boolean): void;
+  setStepAnime(stepAnime: unknown): void;
   /**
    * Sets through.
    * @param through The through parameter.
    */
-  setThrough(through: boolean): void;
+  setThrough(through: unknown): void;
   /**
    * Sets tile image.
    * @param tileId The tileId parameter.
    */
-  setTileImage(tileId: number): void;
+  setTileImage(tileId: unknown): void;
   /**
    * Sets transparent.
    * @param transparent The transparent parameter.
    */
-  setTransparent(transparent: boolean): void;
+  setTransparent(transparent: unknown): void;
   /**
    * Sets walk anime.
    * @param walkAnime The walkAnime parameter.
    */
-  setWalkAnime(walkAnime: boolean): void;
+  setWalkAnime(walkAnime: unknown): void;
   /**
    * Gets shift y.
    * @returns The result.
@@ -722,12 +722,12 @@ interface Game_CharacterBase
    * Gets terrain tag.
    * @returns The result.
    */
-  terrainTag(): number;
+  terrainTag(): unknown;
   /**
    * Gets tile id.
    * @returns The result.
    */
-  tileId(): number;
+  tileId(): unknown;
   /**
    * Performs update.
    */
@@ -760,10 +760,10 @@ interface Game_CharacterBase
    * Gets x.
    * @returns The result.
    */
-  get x(): number;
+  get x(): unknown;
   /**
    * Gets y.
    * @returns The result.
    */
-  get y(): number;
+  get y(): unknown;
 }

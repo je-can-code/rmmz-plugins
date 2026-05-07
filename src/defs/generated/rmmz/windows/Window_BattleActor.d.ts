@@ -15,7 +15,7 @@ interface Window_BattleActor extends Window_BattleStatus
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs process touch.
    */
@@ -24,7 +24,7 @@ interface Window_BattleActor extends Window_BattleStatus
    * Performs select.
    * @param index The index parameter.
    */
-  select(index: number): void;
+  select(index: unknown): void;
   /**
    * Performs show.
    */

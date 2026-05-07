@@ -101,13 +101,13 @@ interface Bitmap
    * Performs create base texture.
    * @param source The source parameter.
    */
-  _createBaseTexture(source: object): void;
+  _createBaseTexture(source: unknown): void;
   /**
    * Tries to load the image again.
    * @param width The width parameter.
    * @param height The height parameter.
    */
-  _createCanvas(width: number, height: number): void;
+  _createCanvas(width: unknown, height: unknown): void;
   /**
    * Performs destroy canvas.
    */
@@ -119,7 +119,7 @@ interface Bitmap
    * @param ty The ty parameter.
    * @param maxWidth The maxWidth parameter.
    */
-  _drawTextBody(text: string, tx: number, ty: number, maxWidth: number): void;
+  _drawTextBody(text: unknown, tx: unknown, ty: unknown, maxWidth: unknown): void;
   /**
    * Tries to load the image again.
    * @param text The text parameter.
@@ -127,7 +127,7 @@ interface Bitmap
    * @param ty The ty parameter.
    * @param maxWidth The maxWidth parameter.
    */
-  _drawTextOutline(text: string, tx: number, ty: number, maxWidth: number): void;
+  _drawTextOutline(text: unknown, tx: unknown, ty: unknown, maxWidth: unknown): void;
   /**
    * Performs ensure canvas.
    */
@@ -149,7 +149,7 @@ interface Bitmap
    * Performs on xhr load.
    * @param xhr The xhr parameter.
    */
-  _onXhrLoad(xhr: XMLHttpRequest): void;
+  _onXhrLoad(xhr: unknown): void;
   /**
    * Performs start decrypting.
    */
@@ -166,7 +166,7 @@ interface Bitmap
    * Adds a callback function that will be called when the bitmap is loaded.
    * @param listner The callback function.
    */
-  addLoadListener(listner: () => void): void;
+  addLoadListener(listner: (...args: unknown[]) => unknown): void;
   /**
    * The base texture that holds the image.
    * @returns The result.
@@ -184,7 +184,7 @@ interface Bitmap
    * @param dw The dw parameter.
    * @param dh The dh parameter.
    */
-  blt(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+  blt(source: Bitmap, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: unknown, dh: unknown): void;
   /**
    * The bitmap canvas.
    * @returns The result.

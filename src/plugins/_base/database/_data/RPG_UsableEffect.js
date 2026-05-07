@@ -33,7 +33,7 @@ class RPG_UsableEffect
 
   /**
    * Constructor.
-   * @param {rm.types.Effect} effect The effect to parse.
+   * @param {RPG_UsableEffect} effect The effect to parse.
    */
   constructor(effect)
   {

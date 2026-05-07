@@ -19,21 +19,21 @@ interface Window_Message extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setChoiceListWindow}.<br/>
    * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
-  _choiceListWindow: null | Window_Base;
+  _choiceListWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setEventItemWindow}.<br/>
    * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
-  _eventItemWindow: null | Window_Base;
+  _eventItemWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -46,12 +46,12 @@ interface Window_Message extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setGoldWindow}.<br/>
    * Read in: {@link Window_Message#processEscapeCharacter}, {@link Window_Message#terminateMessage}, {@link Window_Message#updatePlacement}.<br/>
    */
-  _goldWindow: null | Window_Base;
+  _goldWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -64,21 +64,21 @@ interface Window_Message extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNameBoxWindow}.<br/>
    * Read in: {@link Window_Message#startMessage}, {@link Window_Message#synchronizeNameBox}, {@link Window_Message#updateSpeakerName}.<br/>
    */
-  _nameBoxWindow: null | Window_Base;
+  _nameBoxWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | Window_Base`.<br/>
+   * Type: `null`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#setNumberInputWindow}.<br/>
    * Read in: {@link Window_Message#isAnySubWindowActive}, {@link Window_Message#startInput}.<br/>
    */
-  _numberInputWindow: null | Window_Base;
+  _numberInputWindow: null;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -109,12 +109,12 @@ interface Window_Message extends Window_Base
   /**
    * Inferred engine backing field.<br/>
    *<br/>
-   * Type: `null | object`.<br/>
+   * Type: `null | RPG_TextState`.<br/>
    * Initialized in: none.<br/>
    * Written in: {@link Window_Message#initMembers}, {@link Window_Message#onEndOfText}, {@link Window_Message#startMessage}.<br/>
    * Read in: {@link Window_Message#startMessage}, {@link Window_Message#updateInput}, {@link Window_Message#updateMessage}.<br/>
    */
-  _textState: null | object;
+  _textState: null | RPG_TextState;
   /**
    * Inferred engine backing field.<br/>
    *<br/>
@@ -134,7 +134,7 @@ interface Window_Message extends Window_Base
    * @param textState The textState parameter.
    * @returns True if break here; false otherwise.
    */
-  canBreakHere(textState: object): boolean;
+  canBreakHere(textState: RPG_TextState): boolean;
   /**
    * Determines whether start.
    * @returns True if start; false otherwise.
@@ -169,7 +169,7 @@ interface Window_Message extends Window_Base
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Determines whether any sub window active.
    * @returns True if any sub window active; false otherwise.
@@ -180,7 +180,7 @@ interface Window_Message extends Window_Base
    * @param textState The textState parameter.
    * @returns True if end of text; false otherwise.
    */
-  isEndOfText(textState: object): boolean;
+  isEndOfText(textState: RPG_TextState): boolean;
   /**
    * Determines whether triggered.
    * @returns True if triggered; false otherwise.
@@ -200,18 +200,18 @@ interface Window_Message extends Window_Base
    * @param textState The textState parameter.
    * @returns The result.
    */
-  needsNewPage(textState: object): boolean;
+  needsNewPage(textState: RPG_TextState): boolean;
   /**
    * Gets new line x.
    * @param textState The textState parameter.
    * @returns The result.
    */
-  newLineX(textState: object): number;
+  newLineX(textState: RPG_TextState): unknown;
   /**
    * Performs new page.
    * @param textState The textState parameter.
    */
-  newPage(textState: object): void;
+  newPage(textState: RPG_TextState): void;
   /**
    * Performs on end of text.
    */
@@ -221,54 +221,54 @@ interface Window_Message extends Window_Base
    * @param textState The textState parameter.
    * @param c The c parameter.
    */
-  processControlCharacter(textState: object, c: string): void;
+  processControlCharacter(textState: RPG_TextState, c: unknown): void;
   /**
    * Performs process escape character.
    * @param code The code parameter.
    * @param textState The textState parameter.
    */
-  processEscapeCharacter(code: string, textState: object): void;
+  processEscapeCharacter(code: unknown, textState: RPG_TextState): void;
   /**
    * Performs process new line.
    * @param textState The textState parameter.
    */
-  processNewLine(textState: object): void;
+  processNewLine(textState: RPG_TextState): void;
   /**
    * Performs process new page.
    * @param textState The textState parameter.
    */
-  processNewPage(textState: object): void;
+  processNewPage(textState: RPG_TextState): void;
   /**
    * Sets choice list window.
    * @param choiceListWindow The choiceListWindow parameter.
    */
-  setChoiceListWindow(choiceListWindow: Window_Base): void;
+  setChoiceListWindow(choiceListWindow: unknown): void;
   /**
    * Sets event item window.
    * @param eventItemWindow The eventItemWindow parameter.
    */
-  setEventItemWindow(eventItemWindow: Window_Base): void;
+  setEventItemWindow(eventItemWindow: unknown): void;
   /**
    * Sets gold window.
    * @param goldWindow The goldWindow parameter.
    */
-  setGoldWindow(goldWindow: Window_Base): void;
+  setGoldWindow(goldWindow: unknown): void;
   /**
    * Sets name box window.
    * @param nameBoxWindow The nameBoxWindow parameter.
    */
-  setNameBoxWindow(nameBoxWindow: Window_Base): void;
+  setNameBoxWindow(nameBoxWindow: unknown): void;
   /**
    * Sets number input window.
    * @param numberInputWindow The numberInputWindow parameter.
    */
-  setNumberInputWindow(numberInputWindow: Window_Base): void;
+  setNumberInputWindow(numberInputWindow: unknown): void;
   /**
    * Gets should break here.
    * @param textState The textState parameter.
    * @returns The result.
    */
-  shouldBreakHere(textState: object): boolean;
+  shouldBreakHere(textState: RPG_TextState): boolean;
   /**
    * Gets start input.
    * @returns The result.
@@ -286,7 +286,7 @@ interface Window_Message extends Window_Base
    * Performs start wait.
    * @param count The count parameter.
    */
-  startWait(count: number): void;
+  startWait(count: unknown): void;
   /**
    * Performs synchronize name box.
    */

@@ -24,7 +24,7 @@ interface Window_Help extends Window_Base
    * Initializes initialize.
    * @param rect The rect parameter.
    */
-  initialize(rect: Rectangle): void;
+  initialize(rect: unknown): void;
   /**
    * Performs refresh.
    */
@@ -33,10 +33,10 @@ interface Window_Help extends Window_Base
    * Sets item.
    * @param item The item parameter.
    */
-  setItem(item: RPG_Item | RPG_Skill | RPG_Weapon | RPG_Armor | null): void;
+  setItem(item: unknown): void;
   /**
    * Sets text.
    * @param text The text parameter.
    */
-  setText(text: string): void;
+  setText(text: unknown): void;
 }
