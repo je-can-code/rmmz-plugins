@@ -81,7 +81,6 @@ Items in [`unstarted/`](unstarted/) with **`status: open`** (or unset): **severi
 | [pixel-per-enemy-hitbox-size](unstarted/pixel-per-enemy-hitbox-size.md) | Low–medium | Medium–high tuning | Per-enemy hitbox radius notetag + clamp rules. |
 | [popups-combat-session-merge-coalesce](unstarted/popups-combat-session-merge-coalesce.md) | Medium | High UX polish | Merge combo hits + accumulate slip/regen pops; optional ally chip demotion. |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
-| [rmmz-engine-type-definitions-reconciliation](unstarted/rmmz-engine-type-definitions-reconciliation.md) | Medium | **High** editor trust | Align `src/defs` with vanilla `project/js/rmmz_*.js`; Path A reconcile vs Path B greenfield; retire Lunalite drift. |
 | [team-overlays](unstarted/team-overlays.md) | Low today, high later | Medium–high | Optional overlay layer for charms/summons/auras without changing primary team id. |
 | [weapon-tier-hardness-damage-balance](unstarted/weapon-tier-hardness-damage-balance.md) | High when SDP central | High readability | Restore weapon/enemy relevance vs SDP via tier gates, hardness/pierce, or hybrid damage channels. |
 
@@ -95,4 +94,4 @@ Same shape; these use **`status: deferred`** in file frontmatter — explicitly 
 | [ext-star-completion](unstarted/ext-star-completion.md) | **High** if Star used | **High** feature unblock | Finish Star ABS flow (enemy spawn, missing map). |
 | [game-action-battler-uuid-refactor](unstarted/game-action-battler-uuid-refactor.md) | **High** if casual | **High** if done right | UUID vs id/index for `Game_Action` on map + saves. |
 
-**Completed** items live in [`completed/`](completed/). Remove rows here when closing an item out. Baselines: [`completed/jsonex-j-register-serialization-registry.md`](completed/jsonex-j-register-serialization-registry.md), [`completed/j-base-external-json-config-loader.md`](completed/j-base-external-json-config-loader.md), [`completed/abs-game-event-page-null-handling.md`](completed/abs-game-event-page-null-handling.md).
+**Completed** items live in [`completed/`](completed/). Remove rows here when closing an item out. Baselines: [`completed/jsonex-j-register-serialization-registry.md`](completed/jsonex-j-register-serialization-registry.md), [`completed/j-base-external-json-config-loader.md`](completed/j-base-external-json-config-loader.md), [`completed/abs-game-event-page-null-handling.md`](completed/abs-game-event-page-null-handling.md), [`completed/rmmz-engine-type-definitions-reconciliation.md`](completed/rmmz-engine-type-definitions-reconciliation.md).
