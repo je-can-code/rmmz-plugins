@@ -35222,6 +35222,58 @@ Scene_Map.prototype.forceCloseAbsMenu = function()
 
 //region Sprite_Animation
 /**
+ * Extends {@link Sprite_Animation.prototype.setup}.<br/>
+ * Normalizes Effekseer timing arrays before the engine iterates them; vanilla assumes both arrays exist and
+ * contain only defined timing objects, which can fail when map hits queue animations in tight succession or
+ * when database rows omit optional arrays.
+ */
+J.ABS.Aliased.Sprite_Animation.set('setup', Sprite_Animation.prototype.setup);
+Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, previous)
+{
+  // perform original logic when there is nothing to normalize.
+  if (animation === undefined || animation === null)
+  {
+    J.ABS.Aliased.Sprite_Animation.get('setup')
+      .call(this, targets, animation, mirror, delay, previous);
+    return;
+  }
+
+  const hadSoundArray = Array.isArray(animation.soundTimings);
+  const hadFlashArray = Array.isArray(animation.flashTimings);
+
+  const soundTimings = hadSoundArray
+    ? animation.soundTimings.filter(t => t !== undefined && t !== null)
+    : [];
+  const flashTimings = hadFlashArray
+    ? animation.flashTimings.filter(t => t !== undefined && t !== null)
+    : [];
+
+  const arraysAlreadyDense = hadSoundArray
+    && hadFlashArray
+    && soundTimings === animation.soundTimings
+    && flashTimings === animation.flashTimings;
+
+  if (arraysAlreadyDense === true)
+  {
+    J.ABS.Aliased.Sprite_Animation.get('setup')
+      .call(this, targets, animation, mirror, delay, previous);
+    return;
+  }
+
+  const safeAnimation = Object.assign(
+    {},
+    animation,
+    {
+      soundTimings,
+      flashTimings,
+    }
+  );
+
+  J.ABS.Aliased.Sprite_Animation.get('setup')
+    .call(this, targets, safeAnimation, mirror, delay, previous);
+};
+
+/**
  * Extends {@link Sprite_Animation.prototype.targetPosition}.<br/>
  * Adds a guard to ensure we don't attempt to calculate positions for destroyed sprites.
  */

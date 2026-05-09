@@ -725,6 +725,50 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     return 'RPG_TextState';
   }
 
+  // `Game_Actor.prototype.weapons` / `armors` filter `equips()` to rows; J-Base hydrates `$dataWeapons` /
+  // `$dataArmors`.
+  if (cls === 'Game_Actor' && n === 'weapons')
+  {
+    if (currentTs === 'unknown' || currentTs === 'unknown[]')
+    {
+      return 'RPG_Weapon[]';
+    }
+  }
+
+  if (cls === 'Game_Actor' && n === 'armors')
+  {
+    if (currentTs === 'unknown' || currentTs === 'unknown[]')
+    {
+      return 'RPG_Armor[]';
+    }
+  }
+
+  // `equips()` is one slot per row; empty slots yield `null` from {@link Game_Item.prototype.object}.
+  if (cls === 'Game_Actor' && n === 'equips')
+  {
+    if (currentTs === 'unknown' || currentTs === 'unknown[]')
+    {
+      return '(RPG_Weapon | RPG_Armor | null)[]';
+    }
+  }
+
+  // `Game_Party.prototype.weapons` / `armors` map inventory keys to `$dataWeapons` / `$dataArmors` rows.
+  if (cls === 'Game_Party' && n === 'weapons')
+  {
+    if (currentTs === 'unknown' || currentTs === 'unknown[]')
+    {
+      return 'RPG_Weapon[]';
+    }
+  }
+
+  if (cls === 'Game_Party' && n === 'armors')
+  {
+    if (currentTs === 'unknown' || currentTs === 'unknown[]')
+    {
+      return 'RPG_Armor[]';
+    }
+  }
+
   return null;
 }
 

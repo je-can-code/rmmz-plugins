@@ -4,13 +4,13 @@
  * @param {JABS_Battler} caster The `JABS_Battler` executing the JABS action.
  * @param {JABS_Action} action The JABS action to execute.
  */
-JABS_Engine.handleActionPose = function(caster, action)
+JABS_Engine.prototype.handleActionPose = function(caster, action)
 {
   // perform the action's corresponding pose.
   caster.performActionPose(action.getBaseSkill());
-}
+};
 
-J.ABS.EXT.POSES.Aliased.JABS_Engine.set('executeMapAction', JABS_Engine.executeMapAction);
+J.ABS.EXT.POSES.Aliased.JABS_Engine.set('executeMapAction', JABS_Engine.prototype.executeMapAction);
 /**
  * Executes the provided JABS action.
  * It generates a copy of an event from the "ActionMap" and fires it off
@@ -20,7 +20,7 @@ J.ABS.EXT.POSES.Aliased.JABS_Engine.set('executeMapAction', JABS_Engine.executeM
  * @param {number?} targetX The target's `x` coordinate, if applicable.
  * @param {number?} targetY The target's `y` coordinate, if applicable.
  */
-JABS_Engine.executeMapAction = function(caster, action, targetX, targetY)
+JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targetY)
 {
   // perform original logic.
   J.ABS.EXT.POSES.Aliased.JABS_Engine.get('executeMapAction')
@@ -28,5 +28,5 @@ JABS_Engine.executeMapAction = function(caster, action, targetX, targetY)
 
   // handle the pose for this forced action.
   this.handleActionPose(caster, action);
-}
+};
 //endregion JABS_Engine
