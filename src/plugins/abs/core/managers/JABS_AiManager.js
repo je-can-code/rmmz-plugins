@@ -938,6 +938,9 @@ class JABS_AiManager
     // no AI is executed when waiting.
     if (battler.isWaiting()) return;
 
+    // drop ally guard when idle, missing guard skill, or threat disappeared while engaged.
+    this.releaseAllyCombatGuardIfStale(battler);
+
     // if the battler is engaged, then do AI things.
     if (battler.isEngaged())
     {
@@ -955,6 +958,12 @@ class JABS_AiManager
 
       // don't try to idle while engaged.
       battler.setIdle(false);
+
+      // defensive interrupt: near opposing pressure can preempt the normal phase work for this tick.
+      if (this.tryDefensiveInterrupt(battler)) return;
+
+      // raise held guard after dodge priority when pressure exists (followers only).
+      this.tryRaiseAllyCombatGuard(battler);
 
       // determine the phase and perform actions accordingly.
       const phase = battler.getPhase();
@@ -2092,6 +2101,262 @@ class JABS_AiManager
   }
 
   //endregion Phase 3 - Post-Action Cooldown Phase
+
+  //region Ally defensive guard (held offhand)
+  /**
+   * Drops ally held guard when gear/combat state is invalid, pressure eases, or max hold elapses.
+   * @param {JABS_Battler} battler The battler receiving ally AI (followers only consume raises).
+   */
+  static releaseAllyCombatGuardIfStale(battler)
+  {
+    if (!battler.isActor() || battler.isPlayer())
+    {
+      return;
+    }
+
+    const gb = battler.getBattler();
+    const guardSkillId = gb.getEquippedSkillId(JABS_Button.Offhand);
+
+    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    {
+      if (battler.guarding())
+      {
+        battler.executeGuard(false, JABS_Button.Offhand);
+      }
+
+      return;
+    }
+
+    if (!battler.guarding())
+    {
+      return;
+    }
+
+    if (battler._aiAllyGuardRaiseFrame === 0)
+    {
+      battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
+    }
+
+    const heldFrames = Graphics.frameCount - battler._aiAllyGuardRaiseFrame;
+
+    if (heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames)
+    {
+      battler.executeGuard(false, JABS_Button.Offhand);
+
+      return;
+    }
+
+    if (!battler.isEngaged())
+    {
+      battler.executeGuard(false, JABS_Button.Offhand);
+
+      return;
+    }
+
+    const closestHostile = JABS_AiManager.getClosestOpposingBattler(battler);
+
+    if (!closestHostile || closestHostile.isDead())
+    {
+      battler.executeGuard(false, JABS_Button.Offhand);
+
+      return;
+    }
+
+    const separation = battler.distanceToDesignatedTarget(closestHostile);
+
+    if (separation === null || separation > J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles)
+    {
+      battler.executeGuard(false, JABS_Button.Offhand);
+
+      return;
+    }
+
+    const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
+
+    if (!threat)
+    {
+      battler.executeGuard(false, JABS_Button.Offhand);
+    }
+  }
+
+  /**
+   * Raises held guard for follower actors under the same threat footprint as defensive dodge (after dodge priority).
+   * @param {JABS_Battler} battler The ally battler.
+   */
+  static tryRaiseAllyCombatGuard(battler)
+  {
+    if (!battler.isActor() || battler.isPlayer())
+    {
+      return;
+    }
+
+    if (!battler.isEngaged() || battler.guarding())
+    {
+      return;
+    }
+
+    const gb = battler.getBattler();
+    const hpGate = J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent;
+
+    if (hpGate < 1 && hpGate > 0 && gb.mhp > 0)
+    {
+      if (gb.hp / gb.mhp > hpGate)
+      {
+        return;
+      }
+    }
+
+    const guardSkillId = gb.getEquippedSkillId(JABS_Button.Offhand);
+
+    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    {
+      return;
+    }
+
+    const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
+
+    if (!threat)
+    {
+      return;
+    }
+
+    if (Graphics.frameCount < battler._aiAllyDefensiveGuardReadyFrame)
+    {
+      return;
+    }
+
+    if (!RPGManager.chanceIn100(J.ABS.Metadata.AiAllyDefensiveGuardChancePercent))
+    {
+      return;
+    }
+
+    if (!battler.isGuardSkillByKey(JABS_Button.Offhand))
+    {
+      return;
+    }
+
+    const guardData = battler.getGuardData(JABS_Button.Offhand);
+
+    if (!guardData || !guardData.canGuard())
+    {
+      return;
+    }
+
+    battler.executeGuard(true, JABS_Button.Offhand);
+    battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
+    battler._aiAllyDefensiveGuardReadyFrame = Graphics.frameCount
+      + J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames;
+  }
+
+  //endregion Ally defensive guard (held offhand)
+
+  //region Defensive interrupt (MVP — AI dodge)
+  /**
+   * Attempts a dodge away from the most urgent nearby hostile before normal AI phase logic.
+   * @param {JABS_Battler} battler The battler potentially reacting.
+   * @returns {boolean} True when dodge consumed this AI tick.
+   */
+  static tryDefensiveInterrupt(battler)
+  {
+    if (!battler.isEngaged())
+    {
+      return false;
+    }
+
+    if (battler.isCasting())
+    {
+      return false;
+    }
+
+    if (battler.isDodging())
+    {
+      return false;
+    }
+
+    if (Graphics.frameCount < battler._aiDefensiveDodgeReadyFrame)
+    {
+      return false;
+    }
+
+    const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
+
+    if (!threat)
+    {
+      return false;
+    }
+
+    if (!RPGManager.chanceIn100(J.ABS.Metadata.AiDefensiveDodgeChancePercent))
+    {
+      return false;
+    }
+
+    const dodged = battler.tryExecuteAiEmergencyDodgeAwayFrom(threat);
+
+    if (!dodged)
+    {
+      return false;
+    }
+
+    battler._aiDefensiveDodgeReadyFrame = Graphics.frameCount + J.ABS.Metadata.AiDefensiveDodgeCooldownFrames;
+    battler.clearDecidedAction();
+    battler.setInPosition(false);
+
+    return true;
+  }
+
+  /**
+   * Picks the hostile battler that should drive a defensive dodge — closest opponent in threat radius,
+   * slightly biased when their map action is currently active.
+   * @param {JABS_Battler} selfBattler The defender.
+   * @returns {JABS_Battler|null}
+   */
+  static findDefensiveThreatBattler(selfBattler)
+  {
+    const radius = J.ABS.Metadata.AiDefensiveThreatRadiusTiles;
+    const candidates = JABS_AiManager.getOpposingBattlersWithinRange(selfBattler, radius);
+
+    if (!candidates.length)
+    {
+      return null;
+    }
+
+    const actions = $jabsEngine.getAllActionEvents();
+
+    let best = null;
+    let bestScore = Infinity;
+
+    for (let i = 0; i < candidates.length; i++)
+    {
+      const other = candidates[i];
+      let score = selfBattler.distanceToDesignatedTarget(other);
+
+      if (score === null)
+      {
+        continue;
+      }
+
+      for (let j = 0; j < actions.length; j++)
+      {
+        const caster = actions[j].getCaster();
+
+        if (caster === other)
+        {
+          score -= 0.35;
+          break;
+        }
+      }
+
+      if (score < bestScore)
+      {
+        bestScore = score;
+        best = other;
+      }
+    }
+
+    return best;
+  }
+
+  //endregion Defensive interrupt (MVP — AI dodge)
 }
 
 //endregion JABS_AiManager

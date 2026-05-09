@@ -238,6 +238,17 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
     return;
   }
 
+  // forced dodge owns movement; pixel steering here stacks dodge speed and reads as free sprint.
+  if (this.isDodging())
+  {
+    return;
+  }
+
+  if (this.guarding())
+  {
+    return;
+  }
+
   // Acquire our character.
   const chr = this.getCharacter();
 
@@ -494,6 +505,17 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
  */
 JABS_Battler.prototype.smartMoveTowardCoordinates = function(targetX, targetY)
 {
+  // ally ai + formations issue this every frame; while dodging it fights executeDodgeMovement and stacks dodge speed.
+  if (this.isDodging())
+  {
+    return;
+  }
+
+  if (this.guarding())
+  {
+    return;
+  }
+
   // Acquire the character for this battler.
   const chr = this.getCharacter();
 

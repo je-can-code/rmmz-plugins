@@ -38,7 +38,7 @@ J.ABS.EXT.POSES.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.ABS.EXT.POSES.Metadata = new J_PosesPluginMetadata('J-ABS-Poses', '1.0.2');
+J.ABS.EXT.POSES.Metadata = new J_PosesPluginMetadata('J-ABS-Poses', '1.0.4');
 
 /**
  * A collection of all aliased methods for this plugin.

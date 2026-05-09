@@ -421,30 +421,5 @@ JABS_AllyAI.prototype.decideSupport = function(usableSkills, user)
 };
 //endregion support
 
-/**
- * Overrides {@link #aiComboChanceModifier}.<br>
- * Adjusts the bonus combo chance modifier based on the selected ally AI mode.
- * @returns {number}
- */
-JABS_AllyAI.prototype.aiComboChanceModifier = function()
-{
-  // determine which AI mode the ally is assigned.
-  const currentMode = this.getMode();
-
-  // modify the combo chance based on the selected AI mode.
-  switch (currentMode)
-  {
-    case JABS_AllyAI.modes.BASIC_ATTACK.key:
-      return 30;
-    case JABS_AllyAI.modes.VARIETY.key:
-      return 20;
-    case JABS_AllyAI.modes.FULL_FORCE.key:
-      return 50;
-    case JABS_AllyAI.modes.SUPPORT.key:
-      return 10;
-    default:
-      return 0;
-  }
-};
 //endregion decide action
 //endregion JABS_AllyAI

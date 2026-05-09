@@ -277,6 +277,9 @@ JABS_Battler.prototype.endGuarding = function()
   // end the guarding tracker.
   this.setGuarding(false);
 
+  // reset ally ai guard timing so max-hold does not fire on the next stance.
+  this._aiAllyGuardRaiseFrame = 0;
+
   // remove any remaining parry time.
   this.setParryWindow(0);
 
