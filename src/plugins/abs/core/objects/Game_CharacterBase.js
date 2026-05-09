@@ -133,12 +133,21 @@ Game_CharacterBase.prototype.setDodgeModifier = function(dodgeMoveSpeed)
 };
 
 /**
- * Whether or not the player has executed a dodge skill.
+ * Whether this character’s linked {@link JABS_Battler} is currently dodging.
+ * Used by {@link Game_CharacterBase.realMoveSpeed} for dodge move-speed bonus.
  */
 Game_CharacterBase.prototype.isDodging = function()
 {
-  // TODO: update to accommodate the designated player if applicable.
-  return $jabsEngine.getPlayer1()
-    .isDodging();
+  if (typeof this.getJabsBattler === 'function')
+  {
+    const battler = this.getJabsBattler();
+
+    if (battler)
+    {
+      return battler.isDodging();
+    }
+  }
+
+  return false;
 };
 //endregion Game_CharacterBase

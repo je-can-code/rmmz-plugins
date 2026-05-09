@@ -268,6 +268,31 @@ JABS_Battler.prototype.initBattleInfo = function()
   this._lastUsedSlot = String.empty;
 
   /**
+   * First engine frame at which AI may attempt the pending combo follow-up (fair pacing).
+   * Zero means no gate is armed.
+   * @type {number}
+   */
+  this._aiComboHumanizedReadyFrame = 0;
+
+  /**
+   * Earliest frame ({@link Graphics.frameCount}) at which AI may roll another defensive dodge interrupt.
+   * @type {number}
+   */
+  this._aiDefensiveDodgeReadyFrame = 0;
+
+  /**
+   * Earliest frame ({@link Graphics.frameCount}) at which ally AI may roll another defensive guard raise.
+   * @type {number}
+   */
+  this._aiAllyDefensiveGuardReadyFrame = 0;
+
+  /**
+   * Engine frame when ally AI last raised guard (for max-hold release); zero when not tracking.
+   * @type {number}
+   */
+  this._aiAllyGuardRaiseFrame = 0;
+
+  /**
    * The current phase of AI battling that this battler is in.
    * Only utilized by AI.
    * @type {number}

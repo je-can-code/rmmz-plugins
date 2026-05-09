@@ -531,11 +531,9 @@ JABS_Battler.prototype.updateDodging = function()
  */
 JABS_Battler.prototype.canUpdateDodge = function()
 {
-  // if we are not a player, we cannot dodge.
-  if (!this.isPlayer()) return false;
-
-  // we can dodge!
-  return true;
+  // followers/enemies run the same dodge step + endDodge cleanup as the leader once executeDodgeSkill fires.
+  // gating on isPlayer() prevented endDodge from ever running for allies, leaving dodge speed stuck on forever.
+  return this.isDodging();
 };
 
 /**

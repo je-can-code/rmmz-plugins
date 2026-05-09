@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.2 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v2.2.0 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -116,6 +116,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Raised minimum J-ABS version to 4.10.0 (defensive dodge/guard coordination).
+ *    Ally `JABS_AiManager` / battler paths updated for defensive interrupts and follower dodge behavior.
  * - 2.1.2
  *    decideAction and ally AI mode helpers now return a skill-id array, matching J-ABS 4.7.2.
  *    Raised minimum J-ABS version to 4.7.2.

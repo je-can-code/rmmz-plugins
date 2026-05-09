@@ -146,9 +146,48 @@ JABS_SkillSlotManager.prototype.setupEnemySlots = function(enemy)
     skillIds.push(basicAttackSkillId);
   }
 
-  // iterate over each skill.
+  // dedupe so we never register the same skill twice under different keys.
+  const uniqueSkillIds = [];
+
   skillIds.forEach(skillId =>
   {
+    if (!uniqueSkillIds.includes(skillId))
+    {
+      uniqueSkillIds.push(skillId);
+    }
+  });
+
+  // first dodge-type and guard-type skills win (matches actor slot semantics).
+  let dodgeSkillId = 0;
+  let guardSkillId = 0;
+
+  uniqueSkillIds.forEach(skillId =>
+  {
+    if (!dodgeSkillId && JABS_Battler.isDodgeSkillById(skillId))
+    {
+      dodgeSkillId = skillId;
+    }
+
+    if (!guardSkillId && JABS_Battler.isGuardSkillById(skillId))
+    {
+      guardSkillId = skillId;
+    }
+  });
+
+  // always mirror actors: dodge lives on the dodge slot (may stay empty).
+  this.addSlot(JABS_Button.Dodge, dodgeSkillId);
+
+  // guard skills mirror actors: players equip guard on offhand (performGuard / autocounter use Offhand).
+  this.addSlot(JABS_Button.Offhand, guardSkillId);
+
+  // remaining skills keep per-skill arbitrary keys for ai/cooldown isolation.
+  uniqueSkillIds.forEach(skillId =>
+  {
+    if (skillId === dodgeSkillId || skillId === guardSkillId)
+    {
+      return;
+    }
+
     // grab the skill itself.
     const skill = enemy.skill(skillId);
 
