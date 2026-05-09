@@ -699,38 +699,6 @@ class JABS_EnemyAI
     return [ basicAttackSkillId ];
   }
   //endregion follower
-
-  /**
-   * Overrides {@link #aiComboChanceModifier}.<br>
-   * Calculates the combo chance modifier based on active AI traits.
-   * @returns {number} An integer percent chance between 0-100.
-   */
-  aiComboChanceModifier()
-  {
-    let comboChanceModifier = 50;
-
-    const {
-      careful,
-      executor,
-      reckless,
-      healer,
-      cleanser,
-      buffer,
-      tactical,
-      berserker,
-    } = this;
-
-    if (careful) comboChanceModifier += 10;
-    if (executor) comboChanceModifier += 30;
-    if (reckless) comboChanceModifier -= 20;
-    if (healer) comboChanceModifier -= 30;
-    if (cleanser) comboChanceModifier -= 20;
-    if (buffer) comboChanceModifier -= 15;
-    if (tactical) comboChanceModifier += 15;
-    if (berserker) comboChanceModifier -= 25;
-
-    return comboChanceModifier;
-  }
 }
 
 //endregion JABS_EnemyAI

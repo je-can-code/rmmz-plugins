@@ -336,10 +336,23 @@ JABS_Battler.prototype.getCooldownKeyBySkillId = function(skillId)
   // handle accordingly for enemies.
   if (this.isEnemy())
   {
-    // grab the skill itself.
+    // resolve semantic slots (dodge / offhand guard) before the legacy per-skill key.
+    const slot = this.getBattler()
+      .findSlotForSkillId(skillId);
+
+    if (slot)
+    {
+      return slot.key;
+    }
+
     const skill = this.getSkill(skillId);
 
-    // return the arbitrary key.
+    if (!skill)
+    {
+      return null;
+    }
+
+    // fallback: arbitrary key used for non-slot skills (see setupEnemySlots).
     return `${skill.id}-${skill.name}`;
   }
   // handle accordingly for actors.

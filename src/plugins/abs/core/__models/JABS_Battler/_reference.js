@@ -598,6 +598,10 @@ JABS_Battler.prototype.resetPhases = function()
   this.setDecidedAction(null);
   this.setAllyTarget(null);
   this.setInPosition(false);
+  this.clearAiComboHumanizedReadyFrame();
+  this._aiDefensiveDodgeReadyFrame = 0;
+  this._aiAllyDefensiveGuardReadyFrame = 0;
+  this._aiAllyGuardRaiseFrame = 0;
 };
 
 /**
@@ -1286,6 +1290,17 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
   const target = this.getTarget();
   if (!target) return;
 
+  // ai steering must not stack with forced dodge tiles / dodge speed or allies rocket diagonally.
+  if (this.isDodging())
+  {
+    return;
+  }
+
+  if (this.guarding())
+  {
+    return;
+  }
+
   battler.moveAwayFromCharacter(target.getCharacter());
   if (!battler.isMovementSucceeded())
   {
@@ -1328,6 +1343,17 @@ JABS_Battler.prototype.smartMoveTowardAllyTarget = function()
  */
 JABS_Battler.prototype.smartMoveTowardCoordinates = function(x, y)
 {
+  // formation / idle / ai paths defer until endDodge clears dodge speed and forced steps finish.
+  if (this.isDodging())
+  {
+    return;
+  }
+
+  if (this.guarding())
+  {
+    return;
+  }
+
   const character = this.getCharacter();
   const nextDir = character.findDiagonalDirectionTo(x, y);
 
@@ -1459,6 +1485,37 @@ JABS_Battler.prototype.setComboNextActionId = function(cooldownKey, nextComboId)
   this.getBattler()
     .getSkillSlotManager()
     .setSlotComboId(cooldownKey, nextComboId);
+};
+
+/**
+ * Arms the first frame at which AI-controlled battlers may press the pending combo link (humanized pacing).
+ * @param {number} frameNumber Global {@link Graphics.frameCount} threshold.
+ */
+JABS_Battler.prototype.setAiComboHumanizedReadyFrame = function(frameNumber)
+{
+  this._aiComboHumanizedReadyFrame = frameNumber;
+};
+
+/**
+ * Clears AI combo timing pressure when the chain slot resets or phases reset.
+ */
+JABS_Battler.prototype.clearAiComboHumanizedReadyFrame = function()
+{
+  this._aiComboHumanizedReadyFrame = 0;
+};
+
+/**
+ * Whether AI combo humanization allows attempting the follow-up this frame.
+ * @returns {boolean}
+ */
+JABS_Battler.prototype.isAiComboHumanizationTimingReady = function()
+{
+  if (this._aiComboHumanizedReadyFrame <= 0)
+  {
+    return true;
+  }
+
+  return Graphics.frameCount >= this._aiComboHumanizedReadyFrame;
 };
 
 /**

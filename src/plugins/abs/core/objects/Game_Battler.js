@@ -324,11 +324,18 @@ Game_Battler.prototype.findSlotForSkillId = function(skillIdToFind)
 /**
  * Gets the currently-equipped skill id in the specified slot.
  * @param {string} slot The slot to retrieve an equipped skill for.
- * @returns {number}
+ * @returns {number} Skill id, or 0 when the slot key does not exist on this battler (same as empty).
  */
 Game_Battler.prototype.getEquippedSkillId = function(slot)
 {
-  return this.getSkillSlot(slot).id;
+  const skillSlot = this.getSkillSlot(slot);
+
+  if (!skillSlot)
+  {
+    return 0;
+  }
+
+  return skillSlot.id;
 };
 
 /**

@@ -136,9 +136,16 @@ JABS_Battler.prototype.tryDodgeSkill = function()
 /**
  * Executes the provided dodge skill.
  * @param {RPG_Skill} skill The RPG item representing the dodge skill.
+ * @param {number} [forcedDirection8] When set, skips movement-note inference (AI rolls away from a threat vector).
  */
-JABS_Battler.prototype.executeDodgeSkill = function(skill)
+JABS_Battler.prototype.executeDodgeSkill = function(skill, forcedDirection8)
 {
+  // dodge and held guard share the body; drop guard so dodge movement and speed stack cleanly.
+  if (this.guarding())
+  {
+    this.executeGuard(false, JABS_Button.Offhand);
+  }
+
   // set up any parsed i‑frame window; not applied yet pending semantics.
   this.setDodgeIFrames(skill.jabsIFrames);
 
@@ -153,7 +160,16 @@ JABS_Battler.prototype.executeDodgeSkill = function(skill)
   this.setDodgeSteps(skill.jabsDodgeSteps);
 
   // set the direction to be dodging in.
-  const dodgeDirection = this.determineDodgeDirection(skill.jabsMoveType);
+  let dodgeDirection;
+  if (forcedDirection8 !== undefined && forcedDirection8 !== null)
+  {
+    dodgeDirection = forcedDirection8;
+  }
+  else
+  {
+    dodgeDirection = this.determineDodgeDirection(skill.jabsMoveType);
+  }
+
   this.setDodgeDirection(dodgeDirection);
 
   // also execute the mobility skill’s action payload.
@@ -175,40 +191,214 @@ JABS_Battler.prototype.executeDodgeSkill = function(skill)
 };
 
 /**
+ * AI-only: spends dodge toward open tile away from an opposing battler when interrupt logic demands it.
+ * @param {JABS_Battler} threatBattler The hostile pressure source.
+ * @returns {boolean} True when dodge map actions actually fired.
+ */
+JABS_Battler.prototype.tryExecuteAiEmergencyDodgeAwayFrom = function(threatBattler)
+{
+  const battler = this.getBattler();
+  const skillId = battler.getEquippedSkillId(JABS_Button.Dodge);
+
+  if (!skillId)
+  {
+    return false;
+  }
+
+  if (!JABS_Battler.isDodgeSkillById(skillId))
+  {
+    return false;
+  }
+
+  if (!this.canExecuteSkill(skillId))
+  {
+    return false;
+  }
+
+  const skill = this.getSkill(skillId);
+
+  if (!battler.canPaySkillCost(skill))
+  {
+    return false;
+  }
+
+  const chr = this.getCharacter();
+  const threatChr = threatBattler.getCharacter();
+  const towardThreat = chr.findDirectionTo(threatChr.x, threatChr.y);
+  const awayFromThreat = chr.reverseDir(towardThreat);
+
+  this.executeDodgeSkill(skill, awayFromThreat);
+
+  return true;
+};
+
+/**
+ * Whether one dodge step in the given eight-way direction is passable for this character.
+ * Prefers Pixelistics collision probes when present.
+ * @param {Game_Character} character The character that will step.
+ * @param {number} direction8 Eight-way direction constant.
+ * @returns {boolean}
+ */
+JABS_Battler.prototype.canDirectionalDodgeStepPass = function(character, direction8)
+{
+  if (character.isDiagonalDirection(direction8))
+  {
+    if (typeof character.canPassDiagonalByDirection === 'function')
+    {
+      return character.canPassDiagonalByDirection(direction8);
+    }
+
+    if (typeof character.getDiagonalDirections === 'function'
+      && typeof character.canPassDiagonally === 'function')
+    {
+      const pair = character.getDiagonalDirections(direction8);
+
+      return character.canPassDiagonally(character._x, character._y, pair[0], pair[1]);
+    }
+  }
+
+  if (typeof character.canPassStraight === 'function')
+  {
+    return character.canPassStraight(direction8);
+  }
+
+  return true;
+};
+
+/**
+ * Scores eight-way directions by alignment with fleeing away from a unit threat vector.
+ * @param {number} ux Unit X component away from threat (world space).
+ * @param {number} uy Unit Y component away from threat (world space).
+ * @returns {{d: number, s: number}[]} Sorted best-first for dodge preference.
+ */
+JABS_Battler.buildDirectionalDodgeScores = function(ux, uy)
+{
+  const rows = [
+    { d: J.ABS.Directions.UP, vx: 0, vy: -1 },
+    { d: J.ABS.Directions.DOWN, vx: 0, vy: 1 },
+    { d: J.ABS.Directions.LEFT, vx: -1, vy: 0 },
+    { d: J.ABS.Directions.RIGHT, vx: 1, vy: 0 },
+    { d: J.ABS.Directions.UPPERLEFT, vx: -1, vy: -1 },
+    { d: J.ABS.Directions.UPPERRIGHT, vx: 1, vy: -1 },
+    { d: J.ABS.Directions.LOWERLEFT, vx: -1, vy: 1 },
+    { d: J.ABS.Directions.LOWERRIGHT, vx: 1, vy: 1 },
+  ];
+
+  const scored = rows.map(({ d, vx, vy }) => ({
+    d,
+    s: vx * ux + vy * uy,
+  }));
+
+  scored.sort((a, b) => b.s - a.s);
+
+  return scored;
+};
+
+/**
+ * Directional dodge for non-leader battlers: flee passable directions away from the best threat,
+ * never preferring toward-negative alignment before exhausting safer options.
+ * @returns {number} Eight-way direction code.
+ */
+JABS_Battler.prototype.pickAiDirectionalDodgeDirection = function()
+{
+  const character = this.getCharacter();
+  const threat = JABS_AiManager.getClosestOpposingBattler(this)
+    || JABS_AiManager.findDefensiveThreatBattler(this);
+
+  if (!threat || threat.isDead())
+  {
+    return character.direction();
+  }
+
+  const tx = threat.getX();
+  const ty = threat.getY();
+  const dxAway = character.x - tx;
+  const dyAway = character.y - ty;
+  const magSq = dxAway * dxAway + dyAway * dyAway;
+
+  if (magSq < 0.0001)
+  {
+    return character.reverseDir(character.direction());
+  }
+
+  const mag = Math.sqrt(magSq);
+  const ux = dxAway / mag;
+  const uy = dyAway / mag;
+  const scored = JABS_Battler.buildDirectionalDodgeScores(ux, uy);
+
+  const pickWithFloor = minScore =>
+  {
+    for (let i = 0; i < scored.length; i++)
+    {
+      if (scored[i].s < minScore)
+      {
+        continue;
+      }
+
+      if (this.canDirectionalDodgeStepPass(character, scored[i].d))
+      {
+        return scored[i].d;
+      }
+    }
+
+    return 0;
+  };
+
+  let chosen = pickWithFloor(0.01);
+
+  if (chosen)
+  {
+    return chosen;
+  }
+
+  chosen = pickWithFloor(-0.2);
+
+  if (chosen)
+  {
+    return chosen;
+  }
+
+  chosen = pickWithFloor(-999);
+
+  if (chosen)
+  {
+    return chosen;
+  }
+
+  return character.direction();
+};
+
+/**
  * Translates a dodge skill type into a direction to move.
  * @param {'forward'|'backward'|'directional'} moveType The type of dodge skill the player is using.
  */
 JABS_Battler.prototype.determineDodgeDirection = function(moveType)
 {
-  // grab the player's current direction.
-  const player = this.getCharacter();
+  const character = this.getCharacter();
 
-  // pivot on move type.
   switch (moveType)
   {
-    // "forward" represents the direction the player is currently facing.
     case J.ABS.Notetags.MoveType.Forward:
-      return player.direction();
+      return character.direction();
 
-    // "backward" is the inverse of the direction the player's current direction.
     case J.ABS.Notetags.MoveType.Backward:
-      return player.reverseDir(player.direction());
+      return character.reverseDir(character.direction());
 
-    // "directional" is the direction that the player is moving.
     case J.ABS.Notetags.MoveType.Directional:
-      // check if the player is just standing there.
-      if (Input.dir8 === 0)
+      if (character.isPlayer())
       {
-        // move the player in the direction they are facing.
-        return player.direction();
+        if (Input.dir8 === 0)
+        {
+          return character.direction();
+        }
+
+        return Input.dir8;
       }
 
-      // return the direction the player is moving.
-      return Input.dir8;
+      return this.pickAiDirectionalDodgeDirection();
 
-    // other forms of dodge default to moving the way the player is facing.
     default:
-      return player.direction();
+      return character.direction();
   }
 };
 //endregion dodging

@@ -76,6 +76,17 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
 J.PIXEL.EXT.ABS.Aliased.JABS_AiManager.set("moveTowardSlotIfNeeded", JABS_AiManager.moveTowardSlotIfNeeded);
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
+  // dodge pipeline owns the ally sprite until endDodge; skip formation pull during forced dodge.
+  if (allyBattler.isDodging())
+  {
+    return;
+  }
+
+  if (allyBattler.guarding())
+  {
+    return;
+  }
+
   // acquire the character once.
   const chr = allyBattler.getCharacter();
 

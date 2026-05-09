@@ -38,45 +38,16 @@ class JABS_AI
     // grab the combo skill id from the last used skill slot.
     const comboSkillId = user.getComboNextActionId(user.getLastUsedSlot());
 
+    // nothing queued for this slot (or chain cleared between frames).
+    if (!comboSkillId) return false;
+
     // if the battler doesn't meet the criteria to perform the skill, then don't combo.
     if (!user.canExecuteSkill(comboSkillId)) return false;
 
-    // determine this AI's chance to perform a combo, conditions allowing.
-    const comboChance = this.determineComboChance();
+    // respect humanized pacing so AI does not mash at frame-perfect earliest legality vs human reflex.
+    if (!user.isAiComboHumanizationTimingReady()) return false;
 
-    // roll the dice and determine your fate!!
-    const comboRng = RPGManager.chanceIn100(comboChance);
-
-    // return combo rngesus's determination in life.
-    return comboRng;
-  }
-
-  /**
-   * Calculates the chance for combos based on this AI's traits.
-   * @returns {number} The integer percent chance to perform the combo skill if available.
-   */
-  determineComboChance()
-  {
-    // determine the base combo chance.
-    const baseChance = this.baseComboChance();
-
-    // determine the modifier based on this ai for comboing.
-    const modifierChance = this.aiComboChanceModifier();
-
-    // sum the two chance rates together.
-    const comboChance = (baseChance + modifierChance);
-
-    // return whether or not we will combo.
-    return comboChance;
-  }
-
-  /**
-   * Gets the base percent chance for whether or not to perform a combo skill.
-   * @returns {number}
-   */
-  baseComboChance()
-  {
-    return 50;
+    return true;
   }
 
   /**
@@ -91,16 +62,6 @@ class JABS_AI
 
     // return what we found.
     return comboSkillId;
-  }
-
-  /**
-   * Gets the modifier percent chance, based on the AI of this battler,
-   * as to whether or not to perform a combo skill.
-   * @returns {number}
-   */
-  aiComboChanceModifier()
-  {
-    return 0;
   }
 
   /**

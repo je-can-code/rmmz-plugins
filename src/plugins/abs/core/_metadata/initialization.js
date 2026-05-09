@@ -164,6 +164,26 @@ J.ABS.Metadata.DefaultToolCooldownTime = Number(J.ABS.PluginParameters['defaultT
 J.ABS.Metadata.DefaultAttackAnimationId = Number(J.ABS.PluginParameters['defaultAttackAnimationId']);
 J.ABS.Metadata.DefaultLootExpiration = Number(J.ABS.PluginParameters['defaultLootExpiration']);
 
+// AI combo follow-up pacing: random percentile within the link window (combo delay .. cooldown tag).
+J.ABS.Metadata.AiComboHumanizeWindowMinPercent = 0.1;
+J.ABS.Metadata.AiComboHumanizeWindowMaxPercent = 0.3;
+
+// AI defensive dodge interrupt (MVP): threat radius in tile-ish units (see distanceToPoint), roll vs chance, cooldown frames.
+J.ABS.Metadata.AiDefensiveDodgeChancePercent = 75;
+J.ABS.Metadata.AiDefensiveDodgeCooldownFrames = 45;
+J.ABS.Metadata.AiDefensiveThreatRadiusTiles = 3;
+
+// Ally AI defensive guard (offhand guard skill): raise uses defensive threat radius; hold uses tighter distance + max hold.
+// Below this hp fraction (0–1) ally ai may roll a raise; use 1 to ignore hp (always eligible when threatened).
+J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent = 0.55;
+J.ABS.Metadata.AiAllyDefensiveGuardChancePercent = 40;
+// After a forced or natural guard drop, earliest frame ally AI may roll another raise (not a hold timer — guard is a toggle).
+J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames = 30;
+// Drop held guard after this many frames so allies peek out of block in crowded melee (guard has no resource cooldown).
+J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames = 120;
+// Hold guard only while the closest hostile is within this tile-ish distance; wider clusters no longer justify turtling.
+J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles = 2.35;
+
 // enemy battler default enemy setup configurations.
 J.ABS.Metadata.DefaultEnemyPrepareTime = Number(J.ABS.PluginParameters['defaultEnemyPrepareTime']);
 J.ABS.Metadata.DefaultEnemyAttackSkillId = Number(J.ABS.PluginParameters['defaultEnemyAttackSkillId']);

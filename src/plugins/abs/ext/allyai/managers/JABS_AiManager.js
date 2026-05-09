@@ -346,6 +346,17 @@ JABS_AiManager.rotateOffsetForFacing = function(ox, oy, dir)
  */
 JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY)
 {
+  // forced dodge must win over slot chasing or dodge speed stacks with formation steering.
+  if (allyBattler.isDodging())
+  {
+    return;
+  }
+
+  if (allyBattler.guarding())
+  {
+    return;
+  }
+
   // define a small tolerance to avoid jitter.
   const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
 
@@ -422,8 +433,11 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
   // get all slots that have skills in them.
   const validSkillSlots = battler.getValidSkillSlotsForAlly();
 
-  // convert the slots into their respective skill ids.
-  const currentlyEquippedSkillIds = validSkillSlots.map(skillSlot => skillSlot.id);
+  // strip guard skills from random picks: roll-time guard still poisons slot bookkeeping; ally guard is driven by
+  // {@link JABS_AiManager.tryRaiseAllyCombatGuard} on the same threat footprint as defensive dodge.
+  const currentlyEquippedSkillIds = validSkillSlots
+    .map(skillSlot => skillSlot.id)
+    .filter(skillId => !JABS_Battler.isGuardSkillById(skillId));
 
   // decide the action based on the ally ai mode currently assigned.
   const decidedPicks = jabsBattler
@@ -445,6 +459,16 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
   // TODO: allow allies to use dodge skills, but code the AI to use it intelligently.
   // check if the skill id is actually a mobility skill.
   if (JABS_Battler.isDodgeSkillById(decidedSkillId))
+  {
+    // cancel the setup.
+    this.cancelActionSetup(jabsBattler);
+
+    // stop processing.
+    return;
+  }
+
+  // do not execute guard skills from phase roulette (held guard is ally-ai-driven separately).
+  if (JABS_Battler.isGuardSkillById(decidedSkillId))
   {
     // cancel the setup.
     this.cancelActionSetup(jabsBattler);

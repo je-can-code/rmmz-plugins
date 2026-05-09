@@ -219,6 +219,33 @@ class JABS_Engine
     };
   }
 
+  /**
+   * Picks when AI may attempt this combo link: random point between
+   * {@link J.ABS.Metadata.AiComboHumanizeWindowMinPercent} and
+   * {@link J.ABS.Metadata.AiComboHumanizeWindowMaxPercent} through the window from combo delay through cooldown tag.
+   * @param {RPG_Skill} skill The skill that just unlocked the next link.
+   * @returns {number} Global frame ({@link Graphics#frameCount}) when AI follow-up attempts become fair game.
+   */
+  static computeAiComboHumanizedReadyFrameForSkill(skill)
+  {
+    const delayFrames = skill.jabsComboDelay | 0;
+    const cooldownFrames = skill.jabsCooldown | 0;
+    const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
+    const windowWidth = maxFrames - delayFrames;
+    const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
+    const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
+
+    if (windowWidth <= 0)
+    {
+      return Graphics.frameCount + delayFrames;
+    }
+
+    const pct = minPct + (Math.random() * (maxPct - minPct));
+    const offset = delayFrames + Math.round(pct * windowWidth);
+
+    return Graphics.frameCount + offset;
+  }
+
   //endregion static
 
   //region init
@@ -1235,6 +1262,19 @@ class JABS_Engine
   {
     // if we cannot execute map actions, then do not.
     if (!this.canExecuteMapActions(caster, actions)) return;
+
+    // offensive skills drop held guard so melee allies are not stuck in block while trying to strike.
+    const [ primaryStrike ] = actions;
+
+    if (primaryStrike && caster.guarding())
+    {
+      const strikeSkillId = primaryStrike.getBaseSkill().id;
+
+      if (!JABS_Battler.isGuardSkillById(strikeSkillId))
+      {
+        caster.executeGuard(false, JABS_Button.Offhand);
+      }
+    }
 
     // apply on-execution effects for this action.
     this.applyOnExecutionEffects(caster, actions[0]);
@@ -2720,11 +2760,37 @@ class JABS_Engine
    */
   checkComboSequence(caster, action)
   {
-    // check to make sure we have combo data before processing the combo.
-    if (!this.canUpdateComboSequence(caster, action)) return;
+    // advance the chain when the skill authorizes a follow-up the battler can use.
+    if (this.canUpdateComboSequence(caster, action))
+    {
+      this.updateComboSequence(caster, action);
 
-    // execute the combo action.
-    this.updateComboSequence(caster, action);
+      return;
+    }
+
+    // no `<combo>` link from this skill (finisher), or next skill not learned — still clear the queued step so the slot
+    // does not keep resolving to the finisher id forever (infinite end-hit spam).
+    this.tryClearComboWhenChainCannotAdvance(caster, action);
+  }
+
+  /**
+   * Clears pending combo state when this execution consumed the queued combo skill id but {@link #updateComboSequence}
+   * did not run — terminal hits and blocked branches both leave stale combo ids otherwise.
+   * @param {JABS_Battler} caster The caster.
+   * @param {JABS_Action} action The action that resolved.
+   */
+  tryClearComboWhenChainCannotAdvance(caster, action)
+  {
+    const cooldownKey = action.getCooldownType();
+    const executedId = action.getBaseSkill().id;
+    const pendingId = caster.getComboNextActionId(cooldownKey);
+
+    // nothing queued or this action did not spend the queued combo step — leave slot combo alone.
+    if (pendingId !== executedId) return;
+
+    // drop back to starter routing on this cooldown key; AI pacing latch dies with the chain.
+    caster.setComboNextActionId(cooldownKey, 0);
+    caster.clearAiComboHumanizedReadyFrame();
   }
 
   /**
@@ -2762,10 +2828,11 @@ class JABS_Engine
   updateComboSequence(caster, action)
   {
     // extract the combo data out of the skill.
+    const skill = action.getBaseSkill();
     const {
       jabsComboSkillId,
       jabsComboDelay
-    } = action.getBaseSkill();
+    } = skill;
 
     // determine which slot to apply cooldowns to.
     const cooldownKey = action.getCooldownType();
@@ -2785,6 +2852,9 @@ class JABS_Engine
     // update the next combo data.
     caster.setComboFrames(cooldownKey, jabsComboDelay);
     caster.setComboNextActionId(cooldownKey, jabsComboSkillId);
+
+    // arm fair pacing so AI does not mash the follow-up at the earliest legal frame every time.
+    caster.setAiComboHumanizedReadyFrame(JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill));
   }
 
   /**
