@@ -2,6 +2,7 @@
 .vs/
 node_modules/
 .cursor/debug-*.log
+.cursor/rules/context-mode.mdc
 
 file*.rmmzsave
 out/
