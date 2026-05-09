@@ -21,7 +21,7 @@ J.PIXEL.EXT.ABS = {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.0.1');
+J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.0.3');
 
 /**
  * A collection of all aliased methods for this plugin.

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.9.0 JABS] Enables combat to be carried out on the map.
+ * [v4.10.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,10 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.10.0
+ *    Defensive dodge and guard: readiness on battlers, `JABS_AiManager` interrupt and non-leader dodge direction,
+ *    `Game_CharacterBase` dodge state, engine map-action gating, `JABS_SkillSlotManager` equipped-skill access for
+ *    dodge/offhand, init metadata wiring. `JABS_EnemyAI` doc alignment.
  * - 4.9.0
  *    Team rules are now data-driven via required `data/config.jabs.json`
  *    (root `{ teams: [...] }` with per-team `opposes` lists).
