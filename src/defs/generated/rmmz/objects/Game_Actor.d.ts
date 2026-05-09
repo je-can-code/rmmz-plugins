@@ -196,7 +196,7 @@ interface Game_Actor extends Game_Battler
    * Gets armors.
    * @returns The result.
    */
-  armors(): unknown;
+  armors(): RPG_Armor[];
   /**
    * Gets attack animation id1.
    * @returns The result.
@@ -339,7 +339,7 @@ interface Game_Actor extends Game_Battler
    * Gets equips.
    * @returns The result.
    */
-  equips(): unknown;
+  equips(): (RPG_Weapon | RPG_Armor | null)[];
   /**
    * Performs erase state.
    * @param stateId The stateId parameter.
@@ -836,5 +836,5 @@ interface Game_Actor extends Game_Battler
    * Gets weapons.
    * @returns The result.
    */
-  weapons(): unknown;
+  weapons(): RPG_Weapon[];
 }
