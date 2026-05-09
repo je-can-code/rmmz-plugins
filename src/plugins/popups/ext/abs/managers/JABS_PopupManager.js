@@ -126,6 +126,11 @@ class JABS_PopupManager
    */
   static showSkillUsedPop(action)
   {
+    if (J.POPUPS.EXT.ABS.DisableSkillUsedPopups === true)
+    {
+      return;
+    }
+
     const caster = action.getCaster();
     if (caster.isInanimate())
     {

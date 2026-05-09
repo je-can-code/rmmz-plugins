@@ -116,7 +116,7 @@ interface Game_Party extends Game_Unit
    * Gets armors.
    * @returns The result.
    */
-  armors(): unknown;
+  armors(): RPG_Armor[];
   /**
    * Gets battle members.
    * @returns The result.
@@ -455,7 +455,7 @@ interface Game_Party extends Game_Unit
    * Gets weapons.
    * @returns The result.
    */
-  weapons(): unknown;
+  weapons(): RPG_Weapon[];
 }
 declare namespace Game_Party
 {
