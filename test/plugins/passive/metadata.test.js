@@ -20,8 +20,8 @@ describe('J-Passive metadata and regex (out/J-Passive.js)', () =>
 
   it('exposes J.PASSIVE namespace and versioned metadata', () =>
   {
-    expect(sandbox.J.PASSIVE.Metadata.Name).toBe('J-Passive');
-    expect(sandbox.J.PASSIVE.Metadata.Version).toBe('2.0.2');
+    expect(sandbox.J.PASSIVE.Metadata.name).toBe('J-Passive');
+    expect(sandbox.J.PASSIVE.Metadata.version.version()).toBe('2.1.0');
   });
 
   it('passive tag regex captures bracketed id lists', () =>

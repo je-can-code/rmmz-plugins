@@ -33,4 +33,4 @@ JAFTING already moved workflow state into models (`CraftingCreationSession`, `Re
 ## Notes
 
 - Complements `../completed/sdp-plugin-revisit.md` (menu/scene fat).
-- `jafting-freestyle-implementation.md` remains a separate feature; do not block freestyle on this refactor.
+- Planned **salvage** and **socketing** extensions (`jafting-ext-salvage.md`, `jafting-ext-socketing.md`) are separate features; do not block those UI surfaces on this refactor.

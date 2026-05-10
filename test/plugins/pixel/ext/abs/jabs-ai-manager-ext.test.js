@@ -103,6 +103,14 @@ describe('J-ABS-Pixelistics JABS_AiManager overrides', () =>
     const b = new sandbox.JABS_Battler();
 
     b.__canMove = true;
+    b.isDodging = function()
+    {
+      return false;
+    };
+    b.guarding = function()
+    {
+      return false;
+    };
     b.getCharacter = function()
     {
       return chr;
@@ -137,6 +145,14 @@ describe('J-ABS-Pixelistics JABS_AiManager overrides', () =>
     const b = new sandbox.JABS_Battler();
 
     b.__canMove = true;
+    b.isDodging = function()
+    {
+      return false;
+    };
+    b.guarding = function()
+    {
+      return false;
+    };
     b.getCharacter = function()
     {
       return chr;
@@ -171,6 +187,14 @@ describe('J-ABS-Pixelistics JABS_AiManager overrides', () =>
     const b = new sandbox.JABS_Battler();
 
     b.__canMove = true;
+    b.isDodging = function()
+    {
+      return false;
+    };
+    b.guarding = function()
+    {
+      return false;
+    };
     b.getCharacter = function()
     {
       return chr;

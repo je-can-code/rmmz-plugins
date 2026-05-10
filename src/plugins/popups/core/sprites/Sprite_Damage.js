@@ -198,6 +198,20 @@ Sprite_Damage.prototype.setupMotionData = function(sprite)
  */
 Sprite_Damage.prototype.createValue = function(value)
 {
+  let healingPopup = false;
+
+  if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
+  {
+    healingPopup = true;
+  }
+
+  const displayValue = J.POPUPS.formatNumericPopupDisplayString(value, healingPopup);
+
+  if (this._j._popups._sourcePopup)
+  {
+    this._j._popups._sourcePopup.value = displayValue;
+  }
+
   const w = J.POPUPS.Layout.ValueBitmapWidth;
   const h = this.fontSize();
   const sprite = this.createChildSprite(w, h);
@@ -213,7 +227,9 @@ Sprite_Damage.prototype.createValue = function(value)
   {
     const accent = this._j._popups._textAccent;
     const accentItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
-    const legacyItalic = value.includes('Missed') || value.includes('Evaded') || value.includes('Parry');
+    const legacyItalic = displayValue.includes('Missed')
+      || displayValue.includes('Evaded')
+      || displayValue.includes('Parry');
 
     if (accentItalic || legacyItalic)
     {
@@ -228,7 +244,7 @@ Sprite_Damage.prototype.createValue = function(value)
   // draw the text.
   // we center the text on the bitmap, and the bitmap is centered on the parent.
   // using 0 y-offset to align with the icon's vertical center.
-  sprite.bitmap.drawText(value, 0, 0, w, h, "center");
+  sprite.bitmap.drawText(displayValue, 0, 0, w, h, "center");
 };
 
 /**

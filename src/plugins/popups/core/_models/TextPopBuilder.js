@@ -101,6 +101,13 @@ class TextPopBuilder
    */
   #layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
 
+  /**
+   * When false, merge layer keeps {@link Sprite_MapDamage} in accumulation phase until flushed.
+   * @type {boolean}
+   * @private
+   */
+  #jInstantRelease = true;
+
   //endregion properties
 
   /**
@@ -130,6 +137,7 @@ class TextPopBuilder
       healing: this.#isHealing,
       textAccent: this.#textAccent,
       layoutRing: this.#layoutRing,
+      jInstantRelease: this.#jInstantRelease,
     });
 
     // clear out the just-built popup.
@@ -157,6 +165,7 @@ class TextPopBuilder
     this.#yVariance = 0;
     this.#textAccent = null;
     this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
+    this.#jInstantRelease = true;
   }
 
   /**
@@ -451,6 +460,16 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.CenterFocus;
     this.setXVariance(0);
     this.setYVariance(0);
+    return this;
+  }
+
+  /**
+   * @param {boolean} instant When false, {@link Sprite_MapDamage} waits for merge flush before motion.
+   * @returns {TextPopBuilder} The builder, for fluent chaining.
+   */
+  setJInstantRelease(instant)
+  {
+    this.#jInstantRelease = instant;
     return this;
   }
 

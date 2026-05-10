@@ -4,13 +4,13 @@
  * Also shows a slip or regen popup on the battler's character.
  */
 J.POPUPS.EXT.ABS.Aliased.JABS_Battler.set('onSlipRegenTick', JABS_Battler.prototype.onSlipRegenTick);
-JABS_Battler.prototype.onSlipRegenTick = function(displayAmount, type)
+JABS_Battler.prototype.onSlipRegenTick = function(displayAmount, type, stateId)
 {
   // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Battler.get('onSlipRegenTick')
-    .call(this, displayAmount, type);
+    .call(this, displayAmount, type, stateId);
 
-  JABS_PopupManager.showSlipPop(displayAmount, type, this);
+  JABS_PopupManager.showSlipPop(displayAmount, type, this, stateId);
 };
 
 /**

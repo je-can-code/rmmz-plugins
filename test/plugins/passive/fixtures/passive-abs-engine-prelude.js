@@ -4,6 +4,15 @@
 (function()
 {
   // J-ABS normally owns these globals; the test VM loads J-Passive-ABS without the full ABS bundle.
+  if (typeof globalThis.Sprite_Character !== 'function')
+  {
+    globalThis.Sprite_Character = function Sprite_Character()
+    {
+    };
+
+    globalThis.Sprite_Character.prototype = {};
+  }
+
   if (typeof globalThis.Scene_Boot !== 'function')
   {
     function Scene_Boot()
@@ -31,17 +40,17 @@
     globalThis.JABS_AiManager = {};
   }
 
-  if (typeof Sprite_Character.prototype.getBattlerName !== 'function')
+  if (typeof globalThis.Sprite_Character.prototype.getBattlerName !== 'function')
   {
-    Sprite_Character.prototype.getBattlerName = function()
+    globalThis.Sprite_Character.prototype.getBattlerName = function()
     {
       return new JABS_BattlerName();
     };
   }
 
-  if (typeof Scene_Boot.prototype.onDatabaseLoaded !== 'function')
+  if (typeof globalThis.Scene_Boot.prototype.onDatabaseLoaded !== 'function')
   {
-    Scene_Boot.prototype.onDatabaseLoaded = function()
+    globalThis.Scene_Boot.prototype.onDatabaseLoaded = function()
     {
     };
   }

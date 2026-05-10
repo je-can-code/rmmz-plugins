@@ -269,6 +269,8 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
     'Game_Timer',
     'Game_Vehicle',
     'Scene_Base',
+    'Scene_Boot',
+    'Scene_Menu',
     'Sprite',
     'Sprite_Character',
     'Sprite_Gauge',

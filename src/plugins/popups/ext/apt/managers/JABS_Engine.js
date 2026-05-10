@@ -24,7 +24,10 @@ JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
         .isAptitude()
         .build();
 
-      TextPopManager.show(pop, jabsBattler.getCharacter());
+      JABS_PopupMergeController.routeRewardPop(pop, jabsBattler.getCharacter(), {
+        rewardType: Map_TextPop.Types.Ap,
+        amount: actualAp,
+      });
     });
 };
 

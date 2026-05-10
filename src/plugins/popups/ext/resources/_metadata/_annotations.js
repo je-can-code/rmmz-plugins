@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 POPUPS-RESOURCES] Skill cost and resource gain popups.
+ * [v1.0.1 POPUPS-RESOURCES] Skill cost and resource gain popups.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -38,10 +38,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Cost and on-map resource gain popups route through strike merge when J-Popups-ABS is active (`routeStrikePop`).
  * - 1.0.0
  *    Initial release.
  *    Added HP/MP/TP cost and gain popups hooked via Game_Battler methods.
  *    On-attack and when-hit gains from J-Resources-ABS are covered automatically.
  * ============================================================================
  */
-//endregion annotations
+//endregion annotations

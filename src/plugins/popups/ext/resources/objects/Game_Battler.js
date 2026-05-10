@@ -30,8 +30,13 @@ Game_Battler.prototype.paySkillHpCost = function(amount)
     .forEnemyDamageRing()
     .build();
 
-  // show the damage popup.
-  TextPopManager.show(pop, character);
+  const uuid = jabsBattler.getUuid();
+
+  JABS_PopupMergeController.routeStrikePop(pop, character, {
+    attackerUuid: uuid,
+    targetUuid: uuid,
+    amount,
+  });
 };
 
 /**
@@ -65,8 +70,13 @@ Game_Battler.prototype.gainHpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
-  // show the damage popup.
-  TextPopManager.show(pop, character);
+  const uuid = jabsBattler.getUuid();
+
+  JABS_PopupMergeController.routeStrikePop(pop, character, {
+    attackerUuid: uuid,
+    targetUuid: uuid,
+    amount: -amount,
+  });
 };
 
 /**
@@ -100,8 +110,13 @@ Game_Battler.prototype.gainMpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
-  // show the damage popup.
-  TextPopManager.show(pop, character);
+  const uuid = jabsBattler.getUuid();
+
+  JABS_PopupMergeController.routeStrikePop(pop, character, {
+    attackerUuid: uuid,
+    targetUuid: uuid,
+    amount: -amount,
+  });
 };
 
 /**
@@ -135,7 +150,12 @@ Game_Battler.prototype.gainTpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
-  // show the damage popup.
-  TextPopManager.show(pop, character);
+  const uuid = jabsBattler.getUuid();
+
+  JABS_PopupMergeController.routeStrikePop(pop, character, {
+    attackerUuid: uuid,
+    targetUuid: uuid,
+    amount: -amount,
+  });
 };
 //endregion Game_Battler
