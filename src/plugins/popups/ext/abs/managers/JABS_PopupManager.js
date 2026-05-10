@@ -15,7 +15,56 @@ class JABS_PopupManager
   {
     const character = target.getCharacter();
     const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
-    TextPopManager.show(pop, character);
+    const caster = action.getCaster();
+    const attackerUuid = caster.getUuid();
+    const targetUuid = character.getJabsBattlerUuid();
+    const actionResult = target.getBattler()
+      .result();
+
+    if (actionResult.parried)
+    {
+      JABS_PopupMergeController.routeMitigationPop(pop, character, {
+        mitigationType: Map_TextPop.Types.Parry,
+        labelPrefix: 'PARRY',
+      });
+
+      return;
+    }
+
+    if (actionResult.evaded)
+    {
+      JABS_PopupMergeController.routeMitigationPop(pop, character, {
+        mitigationType: Map_TextPop.Types.Evade,
+        labelPrefix: 'DODGE',
+      });
+
+      return;
+    }
+
+    let amount;
+
+    if (actionResult.hpDamage !== 0)
+    {
+      amount = actionResult.hpDamage;
+    }
+    else if (actionResult.mpDamage !== 0)
+    {
+      amount = actionResult.mpDamage;
+    }
+    else if (actionResult.tpDamage !== 0)
+    {
+      amount = actionResult.tpDamage;
+    }
+    else
+    {
+      amount = actionResult.hpDamage;
+    }
+
+    JABS_PopupMergeController.routeStrikePop(pop, character, {
+      attackerUuid,
+      targetUuid,
+      amount,
+    });
   }
 
   /**
@@ -157,7 +206,10 @@ class JABS_PopupManager
       .isExperience()
       .build();
 
-    TextPopManager.show(pop, character);
+    JABS_PopupMergeController.routeRewardPop(pop, character, {
+      rewardType: Map_TextPop.Types.Experience,
+      amount: Math.round(experience),
+    });
   }
 
   /**
@@ -171,7 +223,10 @@ class JABS_PopupManager
       .isGold()
       .build();
 
-    TextPopManager.show(pop, character);
+    JABS_PopupMergeController.routeRewardPop(pop, character, {
+      rewardType: Map_TextPop.Types.Gold,
+      amount: Math.round(gold),
+    });
   }
 
   /**
@@ -201,6 +256,7 @@ class JABS_PopupManager
       .isLevelUp()
       .build();
 
+    J.POPUPS.notifyMergeFlushAll('level-up');
     TextPopManager.show(pop, character);
   }
 
@@ -215,6 +271,7 @@ class JABS_PopupManager
       .isSkillLearned(skill.iconIndex)
       .build();
 
+    J.POPUPS.notifyMergeFlushAll('skill-learn');
     TextPopManager.show(pop, character);
   }
 
@@ -306,7 +363,54 @@ class JABS_PopupManager
       .setCritical(actionResult.critical)
       .build();
 
-    TextPopManager.show(pop, character);
+    const attackerUuid = caster.getUuid();
+    const targetUuid = target.getCharacter()
+      .getJabsBattlerUuid();
+
+    if (actionResult.parried)
+    {
+      JABS_PopupMergeController.routeMitigationPop(pop, character, {
+        mitigationType: Map_TextPop.Types.Parry,
+        labelPrefix: 'PARRY',
+      });
+
+      return;
+    }
+
+    if (actionResult.evaded)
+    {
+      JABS_PopupMergeController.routeMitigationPop(pop, character, {
+        mitigationType: Map_TextPop.Types.Evade,
+        labelPrefix: 'DODGE',
+      });
+
+      return;
+    }
+
+    let amount;
+
+    if (actionResult.hpDamage !== 0)
+    {
+      amount = actionResult.hpDamage;
+    }
+    else if (actionResult.mpDamage !== 0)
+    {
+      amount = actionResult.mpDamage;
+    }
+    else if (actionResult.tpDamage !== 0)
+    {
+      amount = actionResult.tpDamage;
+    }
+    else
+    {
+      amount = actionResult.hpDamage;
+    }
+
+    JABS_PopupMergeController.routeStrikePop(pop, character, {
+      attackerUuid,
+      targetUuid,
+      amount,
+    });
   }
 
   /**
@@ -314,8 +418,9 @@ class JABS_PopupManager
    * @param {number} displayAmount The signed amount (negative = regen).
    * @param {0|1|2} type HP / MP / TP resource index.
    * @param {JABS_Battler} battler The battler showing the pop.
+   * @param {number} [stateId] Contributing state id when slip comes from {@link JABS_Battler#processStateRegens}.
    */
-  static showSlipPop(displayAmount, type, battler)
+  static showSlipPop(displayAmount, type, battler, stateId)
   {
     const character = battler.getCharacter();
     const textPopBuilder = new TextPopBuilder(displayAmount);
@@ -342,7 +447,13 @@ class JABS_PopupManager
       textPopBuilder.forSlipDamageRing();
     }
 
-    TextPopManager.show(textPopBuilder.build(), character);
+    const pop = textPopBuilder.build();
+
+    JABS_PopupMergeController.routeSlipPop(pop, character, {
+      type,
+      stateId,
+      amount: displayAmount,
+    });
   }
 }
 

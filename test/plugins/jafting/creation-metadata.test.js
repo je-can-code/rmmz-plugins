@@ -63,7 +63,7 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (built plugins)', () =>
     expect(() =>
     {
       loadJaftingCreationPluginVm(badSandbox, { craftingJson: '{ not valid json' });
-    }).toThrow(/Failed to parse JSON at data\/config\.crafting\.json/);
+    }).toThrow(/failed to parse JSON at data\/config\.crafting\.json/i);
   });
 });
 //endregion plugins/jafting/creation-metadata.test.js

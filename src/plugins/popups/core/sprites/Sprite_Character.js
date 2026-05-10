@@ -161,6 +161,27 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
   this.parent.addChild(sprite);
   J.POPUPS.notifyPopupSpriteSpawned(character, popup, sprite);
 };
+
+/**
+ * Parents a converted popup sprite that bypassed the pending queue (merge accumulation path).
+ *
+ * @param {Sprite_Damage} sprite The sprite from {@link TextPopSpriteManager.convert}.
+ * @param {Map_TextPop} popup The source popup model.
+ */
+Sprite_Character.prototype.attachConvertedDamagePopupSprite = function(sprite, popup)
+{
+  if (sprite.isDamage())
+  {
+    this._j._popups._damagePopSprites.push(sprite);
+  }
+  else
+  {
+    this._j._popups._nonDamagePopSprites.push(sprite);
+  }
+
+  this.parent.addChild(sprite);
+  J.POPUPS.notifyPopupSpriteSpawned(this.character(), popup, sprite);
+};
 //endregion incoming subscription
 
 //region handle text pops

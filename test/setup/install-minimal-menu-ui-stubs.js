@@ -137,6 +137,17 @@ export function installMinimalMenuUiStubs(sandbox)
 
   sandbox.Window_Command = Window_Command;
 
+  function Window_MenuCommand()
+  {
+  }
+
+  Object.setPrototypeOf(Window_MenuCommand.prototype, Window_Command.prototype);
+  Window_MenuCommand.prototype.constructor = Window_MenuCommand;
+  Window_MenuCommand.prototype.initialize = noop;
+  Window_MenuCommand.prototype.makeCommandList = noop;
+
+  sandbox.Window_MenuCommand = Window_MenuCommand;
+
   function Window_Help()
   {
   }

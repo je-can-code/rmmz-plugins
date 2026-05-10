@@ -18,9 +18,9 @@ describe('J-Popups TextPopSpriteManager (out/popups/J-Popups.js)', () =>
     sandbox = null;
   });
 
-  it('convert() maps popup fields onto Sprite_Damage', () =>
+  it('convert() maps popup fields onto Sprite_MapDamage', () =>
   {
-    const { TextPopBuilder, TextPopSpriteManager, Map_TextPop } = sandbox;
+    const { TextPopBuilder, TextPopSpriteManager, Map_TextPop, Sprite_MapDamage } = sandbox;
 
     const popup = new TextPopBuilder(5)
       .setPopupType(Map_TextPop.Types.Gold)
@@ -31,6 +31,7 @@ describe('J-Popups TextPopSpriteManager (out/popups/J-Popups.js)', () =>
       .build();
 
     const sprite = TextPopSpriteManager.convert(popup);
+    expect(sprite instanceof Sprite_MapDamage).toBe(true);
     expect(sprite._j._popups._xVariance).toBe(2);
     expect(sprite._j._popups._yVariance).toBe(3);
     expect(sprite._j._popups._damageColor).toBe(4);

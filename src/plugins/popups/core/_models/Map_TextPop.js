@@ -108,6 +108,7 @@ Map_TextPop.prototype.initialize = function({
   healing,
   textAccent,
   layoutRing,
+  jInstantRelease,
 })
 {
   /**
@@ -165,5 +166,12 @@ Map_TextPop.prototype.initialize = function({
    * @type {string}
    */
   this.layoutRing = layoutRing;
+
+  /**
+   * When false, {@link Sprite_MapDamage} stays in accumulation phase until merge policy releases motion.
+   * When true (default), motion plays immediately like legacy {@link Sprite_Damage} pops.
+   * @type {boolean}
+   */
+  this.jInstantRelease = jInstantRelease !== false;
 };
 //endregion Map_TextPop

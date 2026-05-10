@@ -13,7 +13,10 @@ JABS_Engine.prototype.onSdpRewardGranted = function(sdpPoints, character)
     .isSdpPoints()
     .build();
 
-  TextPopManager.show(pop, character);
+  JABS_PopupMergeController.routeRewardPop(pop, character, {
+    rewardType: Map_TextPop.Types.Sdp,
+    amount: sdpPoints,
+  });
 };
 
 /**
