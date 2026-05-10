@@ -246,6 +246,80 @@ class JABS_Engine
     return Graphics.frameCount + offset;
   }
 
+  /**
+   * Implicit passive parry chance (0–100) from attacker/defender pressure vs the dominance band.
+   * Matches the probability step inside {@link #checkParry}; does not apply facing, GRD &gt; 0,
+   * or attacker ignore-parry state gates ({@link #isParryPossible}).
+   * @param {JABS_Battler} caster The attacker on the map.
+   * @param {JABS_Battler} target The defender on the map.
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100); same as skill tag
+   * {@code jabsIgnoreParry}.
+   * @returns {number} Rounded percent chance the implicit parry roll succeeds (same rounding as combat).
+   */
+  static implicitParryChancePercent(caster, target, ignoreParryPercent)
+  {
+    const targetBattler = target.getBattler();
+    const casterBattler = caster.getBattler();
+
+    const ignoreRaw = ignoreParryPercent ?? 0;
+    const parryIgnoredFactor = (100 - ignoreRaw) / 100;
+
+    const hundredX = value => parseFloat((value * 100).toFixed(3));
+    const tenPercent = value => parseFloat((value * 0.1).toFixed(3));
+
+    const baselineFloor = J.ABS.Metadata.ImplicitParryBaselineFloor;
+    const baselinePerLevel = J.ABS.Metadata.ImplicitParryBaselinePerLevel;
+    const baselineA = baselineFloor + baselinePerLevel * Math.max(0, casterBattler.level - 1);
+    const baselineD = baselineFloor + baselinePerLevel * Math.max(0, targetBattler.level - 1);
+
+    // grd is 1.0-based; subtract 1 before scaling to extract the flat integer delta.
+    const baseGrd = baselineD + hundredX(targetBattler.grd - 1);
+    const bonusGrdFromAgi = tenPercent(targetBattler.agi);
+    const bonusGrdFromLuk = tenPercent(targetBattler.luk);
+    const D = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
+
+    const baseHit = hundredX(casterBattler.hit) + baselineA;
+    const bonusHitFromAgi = tenPercent(casterBattler.agi);
+    const bonusHitFromLuk = tenPercent(casterBattler.luk);
+    let A = baseHit + bonusHitFromAgi + bonusHitFromLuk;
+
+    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    {
+      const levelMul = LevelScaling.multiplier(
+        casterBattler.level,
+        targetBattler.level,
+        LevelScaling.Scope.COMBAT
+      );
+      A *= levelMul;
+    }
+
+    const defenderFloor = 1;
+    const ratio = A / Math.max(D, defenderFloor);
+
+    let M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
+    if (!Number.isFinite(M) || M <= 1)
+    {
+      M = 2;
+    }
+
+    const invM = 1 / M;
+
+    if (ratio >= M)
+    {
+      return 0;
+    }
+
+    if (ratio <= invM)
+    {
+      return 100;
+    }
+
+    const span = M - invM;
+    const t = (ratio - invM) / span;
+
+    return Math.round(100 * (1 - t));
+  }
+
   //endregion static
 
   //region init
@@ -2893,68 +2967,8 @@ class JABS_Engine
     // cannot parry if not facing target.
     if (!this.isParryPossible(caster, target)) return false;
 
-    // grab the caster and target battlers.
-    const targetBattler = target.getBattler();
-    const casterBattler = caster.getBattler();
-
-    // grab the amount of parry ignored.
-    const parryIgnoredFactor = (100 - (action.getBaseSkill().jabsIgnoreParry ?? 0)) / 100;
-
-    const hundredX = value => parseFloat((value * 100).toFixed(3));
-    const tenPercent = value => parseFloat((value * 0.1).toFixed(3));
-
-    const baselineFloor = J.ABS.Metadata.ImplicitParryBaselineFloor;
-    const baselinePerLevel = J.ABS.Metadata.ImplicitParryBaselinePerLevel;
-    const baselineA = baselineFloor + baselinePerLevel * Math.max(0, casterBattler.level - 1);
-    const baselineD = baselineFloor + baselinePerLevel * Math.max(0, targetBattler.level - 1);
-
-    // defender pressure D (scaled by ignoreParry on the skill).
-    // grd is 1.0-based; subtract 1 before scaling to extract the flat integer delta.
-    const baseGrd = baselineD + hundredX(targetBattler.grd - 1);
-    const bonusGrdFromAgi = tenPercent(targetBattler.agi);
-    const bonusGrdFromLuk = tenPercent(targetBattler.luk);
-    const D = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
-
-    // attacker pressure A (level scaling matches Game_Action: caster vs target).
-    const baseHit = hundredX(casterBattler.hit) + baselineA;
-    const bonusHitFromAgi = tenPercent(casterBattler.agi);
-    const bonusHitFromLuk = tenPercent(casterBattler.luk);
-    let A = baseHit + bonusHitFromAgi + bonusHitFromLuk;
-
-    if (J.LEVEL && J.LEVEL.Metadata.enabled)
-    {
-      const levelMul = LevelScaling.multiplier(
-        casterBattler.level,
-        targetBattler.level,
-        LevelScaling.Scope.COMBAT
-      );
-      A *= levelMul;
-    }
-
-    const defenderFloor = 1;
-    const ratio = A / Math.max(D, defenderFloor);
-
-    let M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
-    if (!Number.isFinite(M) || M <= 1)
-    {
-      M = 2;
-    }
-
-    const invM = 1 / M;
-
-    if (ratio >= M)
-    {
-      return false;
-    }
-
-    if (ratio <= invM)
-    {
-      return true;
-    }
-
-    const span = M - invM;
-    const t = (ratio - invM) / span;
-    const parryChancePercent = Math.round(100 * (1 - t));
+    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+    const parryChancePercent = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
 
     if (parryChancePercent >= 100)
     {

@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.0.4 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -26,7 +26,7 @@
  * ----------------------------------------------------------------------------
  * REQUIREMENTS
  * - J-Base  (any recent version)
- * - J-ABS   (v4.10.0+)
+ * - J-ABS   (v4.11.0+)
  * - J-Pixelistics (v1.0.0+)
  *
  * Load order in RPG Maker plugin manager:
@@ -34,6 +34,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.4
+ *    `angleToDirection` folds atan2 vs `dir8ToAngle` degrees into one sector map so keyboard north and analog aim agree.
  * - 1.0.3
  *    `JABS_AiManager` and `JABS_Battler` integration for defensive dodge with pixel movement and formation rules.
  * - 1.0.2

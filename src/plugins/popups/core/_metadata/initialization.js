@@ -13,7 +13,7 @@ J.POPUPS = {};
  */
 J.POPUPS.Metadata = {};
 J.POPUPS.Metadata.Name = `J-Popups`;
-J.POPUPS.Metadata.Version = '2.0.0';
+J.POPUPS.Metadata.Version = '2.1.0';
 
 J.POPUPS.PluginParameters = PluginManager.parameters('J-Popups');
 
@@ -36,6 +36,8 @@ J.POPUPS.EventNames = {
   SpriteSpawned: 'popups/sprite-spawned',
   SpriteFinished: 'popups/sprite-finished',
   FlushRequested: 'popups/flush-requested',
+  ComboChainCleared: 'popups/combo-chain-cleared',
+  MergeFlushAll: 'popups/merge-flush-all',
 };
 
 /**
@@ -181,6 +183,7 @@ J.POPUPS.Aliased.Game_Character = new Map();
 J.POPUPS.Aliased.Spriteset_Map = new Map();
 J.POPUPS.Aliased.Sprite_Character = new Map();
 J.POPUPS.Aliased.Sprite_Damage = new Map();
+J.POPUPS.Aliased.Scene_Map = new Map();
 
 //region J_PopupsEvents
 /**
@@ -234,6 +237,33 @@ J.POPUPS.notifyPopupSpriteFinished = function(character, popup, sprite)
     character,
     popup,
     sprite,
+  });
+};
+
+/**
+ * Emits {@link J.POPUPS.EventNames.ComboChainCleared} after JABS clears a combo id from a skill slot.
+ * Extensions may subscribe; strike merge release uses `mergeIdleFlushFrames` idle flush, not this event.
+ *
+ * @param {JABS_Battler} jabsBattler The battler who owned the chain.
+ * @param {string} cooldownKey The skill-slot cooldown key (mainhand/offhand/etc.).
+ */
+J.POPUPS.notifyComboChainCleared = function(jabsBattler, cooldownKey)
+{
+  J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.ComboChainCleared, {
+    jabsBattler,
+    cooldownKey,
+  });
+};
+
+/**
+ * Requests merge accumulators to flush (listeners interpret scope).
+ *
+ * @param {string} reason Diagnostic tag for subscribers.
+ */
+J.POPUPS.notifyMergeFlushAll = function(reason)
+{
+  J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.MergeFlushAll, {
+    reason,
   });
 };
 //endregion J_PopupsEvents

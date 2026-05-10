@@ -14,15 +14,15 @@ class TextPopSpriteManager
   }
 
   /**
-   * Converts a `Map_TextPop` into a `Sprite_Damage`.
+   * Converts a `Map_TextPop` into a {@link Sprite_MapDamage} (extends {@link Sprite_Damage}).
    * @param {Map_TextPop} popup The popup to convert.
    * @param {{ x?: number, y?: number }} ringExtra Extra offset from {@link J.POPUPS.consumeLayoutRingOffset}.
-   * @returns {Sprite_Damage} The converted sprite.
+   * @returns {Sprite_MapDamage} The converted sprite.
    */
   static convert(popup, ringExtra = { x: 0, y: 0 })
   {
-    // start by creating a blank damage sprite.
-    const sprite = new Sprite_Damage();
+    // start by creating a blank damage sprite with accumulation-capable subclass.
+    const sprite = new Sprite_MapDamage();
 
     const rx = ringExtra.x || 0;
     const ry = ringExtra.y || 0;
@@ -66,6 +66,12 @@ class TextPopSpriteManager
 
     // reposition children if both icon and text exist.
     sprite.repositionChildren();
+
+    // discrete pops play motion immediately; merge-driven pops defer until flush.
+    if (popup.jInstantRelease !== false)
+    {
+      sprite.releaseAccumulatePhase();
+    }
 
     // return the constructed sprite for the popup.
     return sprite;

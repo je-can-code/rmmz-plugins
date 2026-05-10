@@ -11,6 +11,7 @@ const EXPOSE_POPUPS_GLOBALS = `
 globalThis.TextPopBuilder = TextPopBuilder;
 globalThis.TextPopSpriteManager = TextPopSpriteManager;
 globalThis.Map_TextPop = Map_TextPop;
+globalThis.Sprite_MapDamage = Sprite_MapDamage;
 `;
 
 /**

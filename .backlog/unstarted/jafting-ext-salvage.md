@@ -28,7 +28,7 @@ That provenance should pair with **inventory hygiene**: when the player sells, d
 
 ## Work
 
-- Add a **JAFTING-owned salvage extension** (namespace under `J.JAFTING.EXT.*`, parallel to create/refine/freestyle patterns) with UI/session hooks consistent with `jafting-heavy-scenes-decomposition.md` guidance.
+- Add a **JAFTING-owned salvage extension** (namespace under `J.JAFTING.EXT.*`, parallel to create/refine patterns and the planned socketing extension) with UI/session hooks consistent with `jafting-heavy-scenes-decomposition.md` guidance.
 - **Stamp crafted instances** (save-safe fields via `JsonEx` / party item state) with the **recipe key** (and any params needed to reconstruct partial refunds). Ensure loads and stack splits preserve or resolve stamping rules explicitly.
 - Define **recovery rules**: flat percentage, tiered by proficiency, ingredient whitelist/blacklist, minimum one unit, etc., driven by plugin params and/or notetags.
 - **Sell / discard / shop** integration: when an item leaves the party through those paths, run the same id-reclaim / bookkeeping path as salvage where applicable so dynamic ids stay coherent.
@@ -36,4 +36,4 @@ That provenance should pair with **inventory hygiene**: when the player sells, d
 
 ## Notes
 
-- Coordinate with `jafting-freestyle-implementation.md` only if freestyle becomes a real surface; core create/refine remain the primary integration points.
+- Coordinate with `jafting-ext-socketing.md` on salvage vs socket preservation policy; core create/refine remain the primary integration points.

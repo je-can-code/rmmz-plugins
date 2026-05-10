@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 POPUPS] Map text popups for JABS and beyond.
+ * [v2.1.0 POPUPS] Map text popups for JABS and beyond.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -40,6 +40,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Sprite_MapDamage accumulation phase; merge helpers + PopupEmitter flush hooks.
+ *    Merge idle flush is battler-wide (any merged stream refreshes the timer); strike floats release on that idle
+ *    window only (not on unrelated combo-chain clear signals).
  * - 2.0.0
  *    Split from J-TextPops; plugin renamed J-Popups; layout rings + WeakMap
  *    stacking; addTextPop validation; J.POPUPS.EXT.* extensions for J-ABS,
@@ -52,4 +56,4 @@
  *    Initial release (as J-TextPops).
  * ============================================================================
  */
-//endregion Introduction
+//endregion Introduction

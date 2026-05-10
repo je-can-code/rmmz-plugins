@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 POPUPS-ABS] Combat and reward popups for JABS.
+ * [v1.3.0 POPUPS-ABS] Combat and reward popups for JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -16,6 +16,32 @@
  * @type boolean
  * @default false
  * @desc When true, hides the floating skill name on the caster only; damage/healing/reward popups still show.
+ * @param enableMergeCombat
+ * @text Merge combat strike numbers
+ * @type boolean
+ * @default true
+ * @desc Sum incoming strikes on the target into one stream per HP/MP/TP line (who-hit-you lives in logs).
+ * @param enableMergeSlip
+ * @text Merge slip/regen ticks
+ * @type boolean
+ * @default true
+ * @desc Sum slip/regen ticks on the battler into one stream per resource line until flush.
+ * @param enableMergeRewards
+ * @text Merge reward totals (exp/gold/AP/SDP)
+ * @type boolean
+ * @default true
+ * @desc Sum numeric reward pops before releasing motion.
+ * @param enableMergeMitigation
+ * @text Stack mitigation labels (parry/dodge counts)
+ * @type boolean
+ * @default true
+ * @desc Shows PARRY xN / DODGE xN style stacks before releasing motion.
+ * @param mergeIdleFlushFrames
+ * @text Idle flush frames
+ * @type number
+ * @default 90
+ * @min 1
+ * @desc Release after this many frames with no merge **on this battler** (any stream counts).
  * @help
  * ============================================================================
  * OVERVIEW
@@ -34,6 +60,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Per-target strike/slip aggregates (no per-attacker lanes); combat slip/reward/mitigation merge buckets +
+ *    idle/combo/map flush hooks; requires J-Popups v2.1.0+ merge stack (`Sprite_MapDamage`, merge controller).
+ *    `mergeIdleFlushFrames` is one sliding window per target (all merge kinds refresh it); strike release does not
+ *    listen on `ComboChainCleared` (avoids global flush from other battlers' cooldowns).
  * - 1.2.0
  *    Plugin parameter disableSkillUsedPopups suppresses caster skill-name popups only.
  * - 1.1.0

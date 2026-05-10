@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.10.0 JABS] Enables combat to be carried out on the map.
+ * [v4.11.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,10 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.11.0
+ *    Regen ticks twice per second (interval + scaled natural regen + per-state slip application so per-second totals match
+ *    legacy math); slip/regen hooks can attribute popups per state. `JABS_Engine.implicitParryChancePercent` extracts the
+ *    implicit parry probability step from {@link JABS_Engine#checkParry} for tooling/UI parity.
  * - 4.10.0
  *    Defensive dodge and guard: readiness on battlers, `JABS_AiManager` interrupt and non-leader dodge direction,
  *    `Game_CharacterBase` dodge state, engine map-action gating, `JABS_SkillSlotManager` equipped-skill access for
