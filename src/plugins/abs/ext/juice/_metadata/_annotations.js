@@ -31,6 +31,86 @@
  * stays primary; if a pose plugin ever writes scale each frame, raise juice
  * timings only after verifying the interaction in-game.
  *
+ * ============================================================================
+ * REQUIRED EXTERNAL CONFIGURATION
+ * J-ABS-Juice has NO plugin parameters. All tuning lives in the external JABS
+ * configuration file at `data/config.jabs.json`, under a top-level `juice`
+ * block. The plugin THROWS at startup when the block (or any required leaf) is
+ * missing or malformed — this is intentional. Disabling juice is "remove the
+ * plugin from your manifest", not "leave the config block out".
+ *
+ * Why? Plugin parameters cannot express structured data without becoming
+ * fragile JSON-in-a-string blobs, and "juice off when a switch is on" was
+ * never a real requirement: developers who do not want juice should just not
+ * load the plugin.
+ *
+ * Required shape (all leaves required; missing keys are loud errors):
+ *
+ *   {
+ *     "teams": [ ... ],
+ *     "juice": {
+ *       "target": {
+ *         "physicalSquishIntensity": 0.12,
+ *         "magicalSquishIntensity":  0.08,
+ *         "squishFrames":            10,
+ *         "healingRecipientScale":   0.65,
+ *         "flurryDecayPercent":      72
+ *       },
+ *       "caster": {
+ *         "dodgeSquishIntensity":          0.28,
+ *         "dodgeSquishFrames":             12,
+ *         "supportPulseIntensity":         0.06,
+ *         "supportPulseFrames":            12,
+ *         "strikeTiltRadians":             0.18,
+ *         "strikeTiltFrames":              6,
+ *         "weaponSwingPeakRadians":        0.65,
+ *         "weaponSwingFrames":             10,
+ *         "spriteVerticalOffsetPixels":    10,
+ *         "unarmedStrikeSquishIntensity":  0.14,
+ *         "unarmedStrikeSquishFrames":     9
+ *       },
+ *       "casting": {
+ *         "pulseAmplitude": 0.045
+ *       },
+ *       "profiles": {
+ *         "default": { "tiltMul": 1, "swingMul": 1 }
+ *       }
+ *     }
+ *   }
+ *
+ * Field reference (all values dimensionless unless noted):
+ * target.physicalSquishIntensity — scale pulse on physical hits.
+ * target.magicalSquishIntensity  — scale pulse on magical hits.
+ * target.squishFrames            — frames spent easing the target pulse.
+ * target.healingRecipientScale   — multiplier applied when the action heals.
+ * target.flurryDecayPercent      — per-repeat damping (1–100) for the same
+ *                                  action UUID vs target within a 2-frame window.
+ * caster.dodgeSquishIntensity    — caster squish on the dodge cooldown.
+ * caster.dodgeSquishFrames       — frames easing the dodge squish.
+ * caster.supportPulseIntensity   — caster squish on heal / support actions.
+ * caster.supportPulseFrames      — frames easing support pulses.
+ * caster.strikeTiltRadians       — peak body tilt for offensive actions (radians).
+ * caster.strikeTiltFrames        — frames easing tilt recovery.
+ * caster.weaponSwingPeakRadians  — peak overlay rotation for IconSet swings (radians).
+ * caster.weaponSwingFrames       — frames the IconSet overlay spends swinging.
+ * caster.spriteVerticalOffsetPixels — positive shifts the IconSet overlay down
+ *                                     on screen (tall-head chibi sprites often need 8–14).
+ * caster.unarmedStrikeSquishIntensity — squish intensity when no IconSet
+ *                                       swing plays (icon unresolved).
+ * caster.unarmedStrikeSquishFrames    — frames easing unarmed pulses.
+ * casting.pulseAmplitude         — continuous shimmer amplitude while
+ *                                  {@link JABS_Battler.isCasting} stays true.
+ * profiles                       — keyed tilt/swing multiplier rows. Keys
+ *                                  match `[A-Za-z0-9_-]+`. Each row needs both
+ *                                  `tiltMul` and `swingMul`. A `default` row
+ *                                  is mandatory (fallback when a skill's
+ *                                  resolved style key has no matching row).
+ *
+ * Inferred profile keys (when a skill has no `<jabsJuiceWeaponStyle:...>` tag):
+ *   - weapons: string weapon type id (example wtypeId 1 → "1").
+ *   - armor:   "a" + armor type id  (example atypeId 4 → "a4").
+ *
+ * ============================================================================
  * SKILL TAGS (notes):
  * <jabsJuiceIcon:N>
  *   Forces weapon swing overlay icon index N on the IconSet sheet (-1 behavior
@@ -41,7 +121,7 @@
  * <juiceMotion:arc> | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
  *   Weapon overlay preset. Legacy swing-top-down / swing-bottom-up map to arc / arc-reverse.
  *   Legacy spin keys: spin-360 → spin; spin-720 → spin (see juiceSpinCount); spin-360-reverse → spin-reverse.
- *   present lifts the icon upward on screen (screen-stable “brandish” read; placement uses facing-up card).
+ *   present lifts the icon upward on screen (screen-stable "brandish" read; placement uses facing-up card).
  *   On healing skills, omitting juiceMotion keeps caster-only support squish; any juiceMotion tag opts into full strike juice.
  *
  * <juiceSpan:N>
@@ -60,219 +140,16 @@
  *   pure side-view art cannot read as true top-down aim; use a separate sprite or tune degrees.
  *
  * <jabsJuiceWeaponStyle:key>
- *   Selects a multiplier row from the Weapon style multipliers JSON parameter.
- *   Keys are arbitrary identifiers (letters, numbers, underscore).
+ *   Selects a multiplier row from the `profiles` map in `config.jabs.json` -> `juice`.
+ *   Keys are arbitrary identifiers (letters, digits, underscore, dash) and must already
+ *   exist in the `profiles` map.
  *   When omitted, inferred keys match the swing icon row: weapon rows use string weapon type ids; armor rows use
  *   a + armor type id (example type 4 → "a4") so armor buckets never collide with weapon type ids.
- *
- * ----------------------------------------------------------------------------
- * PARAMETERS
- * Master switch id 0 keeps juice always enabled. Tune intensities down first
- * when testing with heavy screen FX plugins.
- *
- * Weapon style multipliers expects JSON shaped like:
- * {"default":{"tiltMul":1,"swingMul":1},"1":{"tiltMul":1.1,"swingMul":0.9},"a2":{"tiltMul":1,"swingMul":1.05}}
- * Inferred weapon rows use string weapon type ids; inferred armor rows use a + atypeId (see jabsJuiceWeaponStyle).
  *
  * ============================================================================
  * CHANGELOG:
  * - 1.0.0
  *    Initial release.
  * ============================================================================
- *
- * @param parentConfig
- * @text SETUP
- *
- * @param menu-switch
- * @parent parentConfig
- * @type switch
- * @text Master Switch ID
- * @desc When non-zero, juice runs only while this switch is ON. Use 0 to ignore switches.
- * @default 0
- *
- *
- * @param parentTarget
- * @text TARGET REACTIONS
- *
- * @param target-physical-squish-intensity
- * @parent parentTarget
- * @type number
- * @decimals 3
- * @min 0
- * @max 1
- * @text Physical Hit Squish
- * @desc Scale pulse intensity when physical actions connect (dimensionless).
- * @default 0.120
- *
- * @param target-magical-squish-intensity
- * @parent parentTarget
- * @type number
- * @decimals 3
- * @min 0
- * @max 1
- * @text Magical Hit Squish
- * @desc Scale pulse intensity when magical actions connect (dimensionless).
- * @default 0.080
- *
- * @param target-squish-frames
- * @parent parentTarget
- * @type number
- * @min 1
- * @max 120
- * @text Target Squish Frames
- * @desc Duration of the target squish easing window.
- * @default 10
- *
- * @param healing-recipient-squish-scale
- * @parent parentTarget
- * @type number
- * @decimals 3
- * @min 0
- * @max 2
- * @text Healing Recipient Scale
- * @desc Multiplier applied to squish intensity when the action heals the target.
- * @default 0.650
- *
- * @param flurry-decay-percent
- * @parent parentTarget
- * @type number
- * @min 1
- * @max 100
- * @text Flurry Decay Percent
- * @desc Per-repeat damping percent for the same action UUID vs target within a 2-frame window.
- * @default 72
- *
- *
- * @param parentCaster
- * @text CASTER MOTION
- *
- * @param dodge-squish-intensity
- * @parent parentCaster
- * @type number
- * @decimals 3
- * @min 0
- * @max 1
- * @text Dodge Squish Intensity
- * @desc Body squash intensity when the dodge cooldown executes.
- * @default 0.280
- *
- * @param dodge-squish-frames
- * @parent parentCaster
- * @type number
- * @min 1
- * @max 120
- * @text Dodge Squish Frames
- * @desc Frames spent easing dodge squash. Dodge movement is very short; a few extra frames keep the read without changing i-frames.
- * @default 12
- *
- * @param support-caster-pulse-intensity
- * @parent parentCaster
- * @type number
- * @decimals 3
- * @min 0
- * @max 1
- * @text Support Pulse Intensity
- * @desc Gentle squish on heal/support actions before projectiles spawn.
- * @default 0.060
- *
- * @param support-caster-pulse-frames
- * @parent parentCaster
- * @type number
- * @min 1
- * @max 120
- * @text Support Pulse Frames
- * @desc Frames spent easing support pulses.
- * @default 12
- *
- * @param caster-strike-tilt-radians
- * @parent parentCaster
- * @type number
- * @decimals 3
- * @min 0
- * @max 1.5707963267948966
- * @text Strike Tilt (rad)
- * @desc Peak body tilt for offensive actions before style multipliers apply.
- * @default 0.180
- *
- * @param caster-strike-tilt-frames
- * @parent parentCaster
- * @type number
- * @min 1
- * @max 120
- * @text Strike Tilt Frames
- * @desc Frames spent easing tilt recovery.
- * @default 6
- *
- * @param weapon-swing-peak-radians
- * @parent parentCaster
- * @type number
- * @decimals 3
- * @min 0
- * @max 3.141592653589793
- * @text Weapon Swing Peak (rad)
- * @desc Peak overlay rotation for IconSet swing arcs before style multipliers apply.
- * @default 0.650
- *
- * @param weapon-swing-frames
- * @parent parentCaster
- * @type number
- * @min 1
- * @max 120
- * @text Weapon Swing Frames
- * @desc Frames the IconSet overlay spends swinging.
- * @default 10
- *
- * @param sprite-juice-vertical-offset-pixels
- * @parent parentCaster
- * @type number
- * @min -96
- * @max 96
- * @text Sprite juice vertical offset (px)
- * @desc Positive shifts IconSet swing overlays down (screen Y). Tall-head chibi sprites often need ~8–14.
- * @default 10
- *
- * @param unarmed-strike-squish-intensity
- * @parent parentCaster
- * @type number
- * @decimals 3
- * @min 0
- * @max 1
- * @text Unarmed Strike Squish
- * @desc Squish intensity when no IconSet swing plays (icon unresolved).
- * @default 0.140
- *
- * @param unarmed-strike-squish-frames
- * @parent parentCaster
- * @type number
- * @min 1
- * @max 120
- * @text Unarmed Squish Frames
- * @desc Frames spent easing unarmed strike pulses.
- * @default 9
- *
- *
- * @param parentCasting
- * @text CASTING LAYER
- *
- * @param casting-pulse-amplitude
- * @parent parentCasting
- * @type number
- * @decimals 3
- * @min 0
- * @max 0.25
- * @text Casting Pulse Amplitude
- * @desc Continuous shimmer amplitude while {@link JABS_Battler.isCasting} stays true.
- * @default 0.045
- *
- *
- * @param parentStyles
- * @text WEAPON STYLE MULTIPLIERS
- *
- * @param weapon-style-multipliers
- * @parent parentStyles
- * @type string
- * @text Style Table (JSON)
- * @desc Keyed tilt/swing multipliers. Must include a default row; weapon types map by numeric string id.
- * @default {"default":{"tiltMul":1,"swingMul":1}}
  */
 //endregion annotations

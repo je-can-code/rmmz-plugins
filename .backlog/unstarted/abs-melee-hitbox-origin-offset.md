@@ -22,6 +22,12 @@ That is fine for ground AoEs and traps, but for **melee** hitboxes (slashes, arc
 
 If we shift only the visuals, the visuals become a lie. If we force the weapon swing to match feet-origin, it looks wrong.
 
+**Pixel movement / tile alignment:** With pixel movement enabled, the character can sit at a sub-tile offset inside a map cell,
+but melee hitbox placement still tracks the **tile** the player is considered "on" (or is otherwise tile-quantized in practice).
+Moving up or down within the same tile makes this obvious: the sprite shifts while the hitbox stays tied to that tile anchor,
+so swings look misaligned even before worrying about feet vs torso. Whatever origin work we do should use the same **continuous**
+battler position the sprite uses (and verify against Cyclone / `J-ABS-Pixelistics` coordinate paths), not a rounded tile corner only.
+
 ## Work
 
 - Add an explicit concept of a melee "attack origin" offset that affects **both**:
@@ -36,8 +42,12 @@ If we shift only the visuals, the visuals become a lie. If we force the weapon s
 - Acceptance:
   - A slash arc can originate from torso-height with a small forward bias and the debug visuals match the real hitbox.
   - No regressions to existing ground AoE visuals/collision.
+- Audit hitbox origin inputs: ensure melee shapes use the battler’s **actual** map position under pixel movement (not only
+  tile-index math), so hitboxes follow fine vertical/horizontal offsets within a tile the way the character sprite does.
 
 ## Notes
 
 - This was triggered by juice work: weapon swing overlays feel right when centered near torso/hand, but hitbox visuals
   currently spawn from feet-origin.
+- Observed in play: with pixel movement on, vertical nudging inside a tile leaves hitboxes visually locked to the tile grid
+  while the actor sprite is not, which reads as the player swinging "off" their body.

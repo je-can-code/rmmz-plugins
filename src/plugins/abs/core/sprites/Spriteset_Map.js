@@ -1081,21 +1081,27 @@ Spriteset_Map.prototype.handleHitboxOverlay = function ()
     $jabsEngine.requestToggleHitboxOverlays = false;
   }
 
-  // synchronize the layer’s visibility to the engine’s desired state.
-  layer.visible = !!$jabsEngine.hitboxOverlaysVisible;
+  const showFullOverlays = !!$jabsEngine.hitboxOverlaysVisible;
+  const pulseColliderHighlight = J.ABS.Metadata.HitboxPulse.enabled === true
+    && J.ABS.Metadata.HitboxPulse.highlightColliderBattlers === true;
 
-  // if overlays are hidden, do not process any overlay work.
-  if (!layer.visible)
+  // full debug overlays on, or pulse mode requests collider outlines only.
+  layer.visible = showFullOverlays || pulseColliderHighlight;
+
+  if (layer.visible === false)
   {
-    // do not build/refresh/purge any hitbox overlays while hidden.
     return;
   }
 
-  // handle the action hitbox overlays when visible.
-  this.handleActionHitboxes();
-
-  // handle the battler hitbox overlays when visible.
-  this.handleBattlerHitboxes();
+  if (showFullOverlays)
+  {
+    this.handleActionHitboxes();
+    this.handleBattlerHitboxes('all');
+  }
+  else
+  {
+    this.handleBattlerHitboxes('colliding');
+  }
 };
 
 /**
@@ -1213,24 +1219,72 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
     // guard: no action model means nothing to collide with.
     if (!jabsAction) continue; // skip invalid action entries.
 
-    // direct actions (proximity-based) do not use a map shape; skip them for this visual.
-    if (jabsAction.isDirectAction()) continue; // only shaped actions.
-
-    // derive parameters for the shape collision.
     const shape = jabsAction.getShape();
     const range = jabsAction.getRange();
-    // logical travel dir8 on the action model (map event direction may be cardinal for `$` sheet rows).
     const facing = jabsAction.direction();
 
-    // ask the engine if the target is within this action's range according to shape logic.
-    const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape); // engine parity.
+    // mirror {@link JABS_Engine#getCollisionTargets}: direct + sprite uses the same wedge test as gameplay.
+    if (jabsAction.isDirectAction())
+    {
+      const actionSprite = jabsAction.getActionSprite();
 
-    // if overlapping, we're done.
-    if (overlapped) return true; // this battler is overlapping at least one action.
+      if (actionSprite)
+      {
+        const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionSprite, range, shape);
+
+        if (overlapped)
+        {
+          return true;
+        }
+
+        continue;
+      }
+
+      const gameAction = jabsAction.getAction();
+
+      if (gameAction.isForUser())
+      {
+        const casterChar = jabsAction.getCaster()
+          .getCharacter();
+
+        if (target === casterChar)
+        {
+          return true;
+        }
+
+        continue;
+      }
+
+      const casterJb = jabsAction.getCaster();
+      const targetJb = typeof target.getJabsBattler === 'function'
+        ? target.getJabsBattler()
+        : null;
+
+      if (!targetJb)
+      {
+        continue;
+      }
+
+      const maxDistance = jabsAction.getProximity();
+      const distance = casterJb.distanceToDesignatedTarget(targetJb);
+
+      if (distance <= maxDistance)
+      {
+        return true;
+      }
+
+      continue;
+    }
+
+    const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape);
+
+    if (overlapped)
+    {
+      return true;
+    }
   }
 
-  // if none overlapped, report no overlap.
-  return false; // not colliding with any active action.
+  return false;
 };
 
 //region action hitboxes
@@ -1675,30 +1729,49 @@ Spriteset_Map.prototype.drawSectorG = function (
 
 /**
  * Handle the overlays for all battler-based hitboxes.
+ * @param {'all'|'colliding'} itemMode Whether to draw every battler or only those overlapping an action shape.
  */
-Spriteset_Map.prototype.handleBattlerHitboxes = function ()
+Spriteset_Map.prototype.handleBattlerHitboxes = function (itemMode = 'all')
 {
   // build any missing hitbox sprites for active battlers.
-  this.buildMissingBattlerHitboxSprites();
+  this.buildMissingBattlerHitboxSprites(itemMode);
 
   // refresh positions and shapes for existing battler hitbox sprites.
-  this.refreshExistingBattlerHitboxSprites();
+  this.refreshExistingBattlerHitboxSprites(itemMode);
 
   // purge battler hitbox sprites that no longer have a corresponding battler.
-  this.purgeOrphanedBattlerHitboxSprites();
+  this.purgeOrphanedBattlerHitboxSprites(itemMode);
+};
+
+/**
+ * Collects battler overlay items, optionally filtered to those overlapping an active action.
+ * @param {'all'|'colliding'} itemMode Filter mode.
+ * @returns {{ key:string, type:string, source: Game_CharacterBase }[]}
+ */
+Spriteset_Map.prototype.collectBattlerOverlayItems = function (itemMode = 'all')
+{
+  const items = this.collectActiveBattlerOverlayItems();
+
+  if (itemMode === 'colliding')
+  {
+    return items.filter(entry => this.isBattlerCollidingWithAnyAction(entry));
+  }
+
+  return items;
 };
 
 /**
  * Builds battler hitbox sprites for any battlers that lack one.
+ * @param {'all'|'colliding'} itemMode Filter mode.
  */
-Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function ()
+Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function (itemMode = 'all')
 {
   // get the container and dict for battler hitboxes.
   const layer = this.getJabsHitboxLayer(); // parent container for hitboxes.
   const dict = this.getBattlerHitboxSprites(); // existing battler hitbox sprites.
 
   // collect all active battler keys + sources to build for.
-  const items = this.collectActiveBattlerOverlayItems(); // [{ key, type, source }]
+  const items = this.collectBattlerOverlayItems(itemMode); // [{ key, type, source }]
 
   // create any that are missing.
   items.forEach(item =>
@@ -1715,15 +1788,16 @@ Spriteset_Map.prototype.buildMissingBattlerHitboxSprites = function ()
 
 /**
  * Synchronizes position and appearance of existing battler hitbox sprites.
+ * @param {'all'|'colliding'} itemMode Filter mode.
  */
-Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function ()
+Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function (itemMode = 'all')
 {
   // quick access to tile size.
   const tw = $gameMap.tileWidth(); // tile width in pixels.
   const th = $gameMap.tileHeight(); // tile height in pixels.
 
   // collect all active battler keys + sources to refresh.
-  const items = this.collectActiveBattlerOverlayItems(); // [{ key, type, source }]
+  const items = this.collectBattlerOverlayItems(itemMode); // [{ key, type, source }]
 
   // refresh each active battler's sprite.
   items.forEach(item =>
@@ -1750,11 +1824,12 @@ Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function ()
 
 /**
  * Removes battler hitbox sprites that no longer correspond to an active battler.
+ * @param {'all'|'colliding'} itemMode Filter mode.
  */
-Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function ()
+Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function (itemMode = 'all')
 {
   // compute the set of active keys now.
-  const active = new Set(this.collectActiveBattlerOverlayItems()
+  const active = new Set(this.collectBattlerOverlayItems(itemMode)
     .map(it => it.key)); // active keys.
 
   // walk the dict and remove any sprites whose keys aren’t active.

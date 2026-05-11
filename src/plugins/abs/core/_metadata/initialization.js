@@ -238,6 +238,39 @@ J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRub
 J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
 J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === 'true');
 
+const hitboxMeleeOxRaw = J.ABS.PluginParameters['hitboxMeleeOriginOffsetPxX'];
+const hitboxMeleeOyRaw = J.ABS.PluginParameters['hitboxMeleeOriginOffsetPxY'];
+J.ABS.Metadata.HitboxMeleeOriginOffsetPxX = Number(hitboxMeleeOxRaw);
+if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginOffsetPxX))
+{
+  J.ABS.Metadata.HitboxMeleeOriginOffsetPxX = 0;
+}
+J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = Number(hitboxMeleeOyRaw);
+if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginOffsetPxY))
+{
+  J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = -10;
+}
+
+const hitboxMeleeExtraDownRaw = J.ABS.PluginParameters['hitboxMeleeOriginExtraPxYFacingDown'];
+const hitboxMeleeExtraUpRaw = J.ABS.PluginParameters['hitboxMeleeOriginExtraPxYFacingUp'];
+J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown = Number(hitboxMeleeExtraDownRaw);
+if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown))
+{
+  J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown = 0;
+}
+J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp = Number(hitboxMeleeExtraUpRaw);
+if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp))
+{
+  J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp = 0;
+}
+
+const hitboxMeleeLiftRedDownRaw = J.ABS.PluginParameters['hitboxMeleeOriginLiftReductionPxFacingDown'];
+J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown = Number(hitboxMeleeLiftRedDownRaw);
+if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown))
+{
+  J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown = 28;
+}
+
 // disengage configurations.
 J.ABS.Metadata.ShowDisengageBalloon = (J.ABS.PluginParameters['showDisengageBalloon'] === 'true');
 J.ABS.Metadata.DisengageBalloonId = Number(J.ABS.PluginParameters['disengageBalloonId']) || 7;
@@ -388,7 +421,9 @@ J.ABS.Metadata.HitboxStyles = {
 };
 
 J.ABS.Metadata.HitboxPulse = {
-  enabled: true,
+  enabled: J.ABS.PluginParameters['hitboxPulseEnabled'] !== 'false',
+  highlightColliderBattlers: J.ABS.PluginParameters['hitboxPulseHighlightColliders'] !== 'false',
+  useFadeAnimation: J.ABS.PluginParameters['hitboxPulseUseFadeAnimation'] === 'true',
   maxConcurrentPulses: 8,
   duration: 18,
   startAlpha: 0.22,

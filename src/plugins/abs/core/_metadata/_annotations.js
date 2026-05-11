@@ -727,8 +727,9 @@
  *
  * ----------------------------------------------------------------------------
  * DIRECT:
- * With the "direct" tag, no projectile event is produced. Instead, the
- * skill immediately targets the nearest foe within the caster's proximity.
+ * With the "direct" tag, combat resolves through proximity (<proximity:N>) to
+ * the nearest valid target — not a flying map projectile. The optional map
+ * action event (hitbox visuals / collision anchor) stays body-anchored.
  * The skill still obeys CAST TIME, RADIUS, HITBOX, and other tags.
  * The most common use case is healing skills, or skills that should feel
  * instant and unblockable.
@@ -1998,6 +1999,77 @@
  * @type boolean
  * @text Enable Hitbox Overlays
  * @desc Whether or not to overlay the map with battler and action hitbox visuals- for debugging.
+ * @default false
+ *
+ * @param hitboxMeleeOriginOffsetPxX
+ * @parent miscConfigs
+ * @type number
+ * @decimals 0
+ * @min -999
+ * @max 999
+ * @text Melee Hitbox Origin Offset X (px)
+ * @desc Extra pixels added to the screen-space X origin shared by collision, overlays, and hitbox pulses (negative = left).
+ * @default 0
+ *
+ * @param hitboxMeleeOriginOffsetPxY
+ * @parent miscConfigs
+ * @type number
+ * @decimals 0
+ * @min -999
+ * @max 999
+ * @text Melee Hitbox Origin Offset Y (px)
+ * @desc Extra pixels added to the screen-space Y origin shared by collision, overlays, and hitbox pulses (negative = up).
+ * @default -10
+ *
+ * @param hitboxMeleeOriginExtraPxYFacingDown
+ * @parent miscConfigs
+ * @type number
+ * @decimals 0
+ * @min -999
+ * @max 999
+ * @text Melee Origin Extra Y When Facing Down (px)
+ * @desc Added on top of Offset Y when travel facing is down (2) or diagonal down (1/3); tune if down-swings read behind the actor.
+ * @default 0
+ *
+ * @param hitboxMeleeOriginExtraPxYFacingUp
+ * @parent miscConfigs
+ * @type number
+ * @decimals 0
+ * @min -999
+ * @max 999
+ * @text Melee Origin Extra Y When Facing Up (px)
+ * @desc Added on top of Offset Y when travel facing is up (8) or diagonal up (7/9); tune if up-swings read too far from the body.
+ * @default 0
+ *
+ * @param hitboxMeleeOriginLiftReductionPxFacingDown
+ * @parent miscConfigs
+ * @type number
+ * @decimals 0
+ * @min 0
+ * @max 999
+ * @text Melee Origin Lift Reduction When Facing Down (px)
+ * @desc Subtracts from the default half-tile vertical lift when facing down (2) or diagonal down (1/3). Fixes pivots that sit too high (hitbox reads behind the actor). Half strength on diagonals.
+ * @default 28
+ *
+ * @param hitboxPulseEnabled
+ * @parent miscConfigs
+ * @type boolean
+ * @text Hitbox Pulse (Active Shape)
+ * @desc When enabled, draws your attack hit shape for the full active lifetime (hit or miss). Uses the Hitbox Pulse layer.
+ * @default true
+ *
+ * @param hitboxPulseHighlightColliders
+ * @parent miscConfigs
+ * @type boolean
+ * @text Pulse: Highlight Colliding Battlers
+ * @desc While Hitbox Pulse is enabled, briefly outline battlers (enemies, pillars, etc.) whose collision box overlaps your action shape—without turning on full debug overlays.
+ * @default true
+ *
+ * @param hitboxPulseUseFadeAnimation
+ * @parent miscConfigs
+ * @type boolean
+ * @text Hitbox Pulse: Use Fade / Pop Animation
+ * @desc When false, the active hit shape holds steady alpha for the whole swing. When true, uses the legacy fade/scale pulse curve (better for very short flashes).
  * @default false
  *
  *
