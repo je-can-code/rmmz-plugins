@@ -30,6 +30,12 @@ class JABS_HitboxPulseManager
    * @type {JABS_HitboxPulseOptions}
    */
   static _defaults = JABS_HitboxPulseOptions.defaults();
+
+  /**
+   * Sustained pulses keyed by {@link JABS_Action#getUuid}; refreshed each frame while the action lives.
+   * @type {Record<string, Sprite_HitboxPulse>}
+   */
+  static _sustainedByUuid = {};
   //endregion static fields
 
   //region accessors
@@ -145,6 +151,85 @@ class JABS_HitboxPulseManager
    * Accepts either a `JABS_HitboxPulseOptions` or a plain partial literal.
    * @param {JABS_HitboxPulseOptions|Partial<JABS_HitboxPulseOptions>} data The pulse data.
    */
+  /**
+   * Keeps one sustained pulse sprite aligned with the supplied action for the entire collision window.
+   * @param {JABS_Action} jabsAction The live map action.
+   */
+  static syncSustainedActionPulse(jabsAction)
+  {
+    if (!J.ABS.Metadata.HitboxPulse.enabled)
+    {
+      JABS_HitboxPulseManager.releaseSustainedPulse(jabsAction.getUuid());
+      return;
+    }
+
+    const layer = JABS_HitboxPulseManager.getLayer();
+
+    // early-map bootstrap: skip quietly until Spriteset_Map wires the layer.
+    if (!layer)
+    {
+      return;
+    }
+
+    if (jabsAction.getNeedsRemoval())
+    {
+      JABS_HitboxPulseManager.releaseSustainedPulse(jabsAction.getUuid());
+      return;
+    }
+
+    if (jabsAction.isDelayCompleted() === false)
+    {
+      JABS_HitboxPulseManager.releaseSustainedPulse(jabsAction.getUuid());
+      return;
+    }
+
+    const uuid = jabsAction.getUuid();
+    const plain = jabsAction.composeHitboxPulsePlainOptions();
+
+    let pulse = JABS_HitboxPulseManager._sustainedByUuid[uuid];
+    const pool = JABS_HitboxPulseManager.getPool();
+
+    if (!pulse)
+    {
+      pulse = pool.length > 0
+        ? pool.pop()
+        : new Sprite_HitboxPulse();
+      JABS_HitboxPulseManager._sustainedByUuid[uuid] = pulse;
+      layer.addChild(pulse);
+    }
+
+    pulse.reset();
+    pulse.setup(plain);
+    pulse.setWorldPosition(plain.x, plain.y);
+    pulse.setRotation(JABS_HitboxPulseManager.directionToRadians(plain.facing));
+  }
+
+  /**
+   * Detaches a sustained pulse by action uuid (cleanup / disable paths).
+   * @param {string} uuid The {@link JABS_Action} uuid.
+   */
+  static releaseSustainedPulse(uuid)
+  {
+    const pulse = JABS_HitboxPulseManager._sustainedByUuid[uuid];
+
+    if (!pulse)
+    {
+      return;
+    }
+
+    delete JABS_HitboxPulseManager._sustainedByUuid[uuid];
+
+    const layer = JABS_HitboxPulseManager.getLayer();
+
+    if (layer && pulse.parent === layer)
+    {
+      layer.removeChild(pulse);
+    }
+
+    JABS_HitboxPulseManager.getPool()
+      .push(pulse);
+  }
+
   static spawn(data)
   {
     // resolve the target layer.
@@ -243,6 +328,13 @@ class JABS_HitboxPulseManager
    */
   static clear()
   {
+    // tear down sustained overlays before recycling ephemeral pulses.
+    Object.keys(JABS_HitboxPulseManager._sustainedByUuid)
+      .forEach(uuid =>
+      {
+        JABS_HitboxPulseManager.releaseSustainedPulse(uuid);
+      });
+
     // resolve collections and layer via accessors.
     const active = JABS_HitboxPulseManager.getActive();
     const pool = JABS_HitboxPulseManager.getPool();

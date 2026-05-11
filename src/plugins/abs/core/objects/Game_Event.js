@@ -1017,7 +1017,15 @@ Game_Event.prototype.existOnCaster = function()
   // if for whatever reason we have no caster, then do not follow.
   if (!caster) return;
 
-  // exist ontop of the caster.
-  this.locate(caster.getX(), caster.getY());
+  // copy the caster character’s logical + continuous coords directly.
+  // `locate()` uses `setPosition()`, which rounds `_x`/`_y`; drift vs `_realX`/`_realY` reads as a lagging hitbox.
+  const c = caster.getCharacter();
+
+  this._realX = c._realX;
+  this._realY = c._realY;
+  this._x = c._x;
+  this._y = c._y;
+  this.straighten();
+  this.refreshBushDepth();
 };
 //endregion Game_Event

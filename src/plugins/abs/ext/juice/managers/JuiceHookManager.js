@@ -11,20 +11,6 @@ class JuiceHookManager
   static #flurryState = new Map();
 
   /**
-   * @returns {boolean}
-   */
-  static #systemEnabled()
-  {
-    const md = J.ABS.EXT.JUICE.Metadata;
-    if (md.menuSwitchId === 0)
-    {
-      return true;
-    }
-
-    return $gameSwitches.value(md.menuSwitchId);
-  }
-
-  /**
    * Clears stale flurry rows occasionally so long sessions do not grow forever.
    */
   static #maybeGarbageCollectFlurry()
@@ -69,11 +55,6 @@ class JuiceHookManager
    */
   static onPostPrimaryBattleEffects(action, target)
   {
-    if (!JuiceHookManager.#systemEnabled())
-    {
-      return;
-    }
-
     JuiceHookManager.#maybeGarbageCollectFlurry();
 
     const result = target.getBattler()
@@ -121,11 +102,6 @@ class JuiceHookManager
    */
   static onExecuteMapAction(caster, action)
   {
-    if (!JuiceHookManager.#systemEnabled())
-    {
-      return;
-    }
-
     const cooldownKey = action.getCooldownType();
     const dodgeKey = typeof JABS_Button !== 'undefined'
       ? JABS_Button.Dodge
@@ -252,11 +228,6 @@ class JuiceHookManager
    */
   static tickCastingJuice(battler)
   {
-    if (!JuiceHookManager.#systemEnabled())
-    {
-      return;
-    }
-
     if (battler._juiceCastingScheduled === true)
     {
       return;
