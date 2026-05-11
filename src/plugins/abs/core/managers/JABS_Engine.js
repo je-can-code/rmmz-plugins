@@ -190,8 +190,71 @@ class JABS_Engine
   }
 
   /**
-   * Computes the on-screen pixel origin for an action event, aligned to the
-   * center of the tile above the feet (the corrected physics origin).
+   * Builds screen-space melee px offsets from plugin defaults plus facing-aware vertical trims.
+   * Lateral offsets stay global; up/down cardinals (and blended diagonals) get extra Y so wedges track torso motion.
+   * @param {number} facing Logical travel dir8 from the {@link JABS_Action} (2 down … 8 up).
+   * @returns {{ ox:number, oy:number }}
+   */
+  static resolveMeleeOriginPixelOffsetsForFacing(facing)
+  {
+    const baseX = J.ABS.Metadata.HitboxMeleeOriginOffsetPxX;
+    const baseY = J.ABS.Metadata.HitboxMeleeOriginOffsetPxY;
+    const extraDown = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown;
+    const extraUp = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp;
+
+    let addY = 0;
+
+    if (facing === 2)
+    {
+      addY = extraDown;
+    }
+    else if (facing === 8)
+    {
+      addY = extraUp;
+    }
+    else if (facing === 1 || facing === 3)
+    {
+      addY = extraDown * 0.5;
+    }
+    else if (facing === 7 || facing === 9)
+    {
+      addY = extraUp * 0.5;
+    }
+
+    return {
+      ox: baseX,
+      oy: baseY + addY,
+    };
+  }
+
+  /**
+   * Vertical lift from {@link Game_CharacterBase#screenY} for melee origins (normally half a tile).
+   * Down-facing swings need less lift so the wedge pivot sits nearer the feet instead of above the head on-screen.
+   * @param {number} facing Logical travel dir8.
+   * @returns {number} Pixels to subtract from {@link Game_CharacterBase#screenY} before px offsets.
+   */
+  static resolveMeleeVerticalLiftPxForFacing(facing)
+  {
+    const th = $gameMap.tileHeight();
+    let liftPx = th / 2;
+    const reduction = J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown;
+
+    if (facing === 2)
+    {
+      liftPx -= reduction;
+    }
+    else if (facing === 1 || facing === 3)
+    {
+      liftPx -= reduction * 0.5;
+    }
+
+    const minLift = Math.max(8, th * 0.18);
+
+    return Math.max(minLift, liftPx);
+  }
+
+  /**
+   * Computes the on-screen pixel origin for an action event (feet anchor minus facing-aware lift plus offsets).
    * @param {Game_Event} actionEvent The action event to compute the origin for.
    * @returns {{ x:number, y:number }} The origin in screen pixels.
    */
@@ -206,16 +269,55 @@ class JABS_Engine
       };
     }
 
-    // tile height is needed to vertically center the origin above the feet.
-    const th = $gameMap.tileHeight();
+    let facing = 2;
 
-    // center the origin one tile above the feet position.
-    const x = actionEvent.screenX();
-    const y = actionEvent.screenY() - (th / 2);
+    if (typeof actionEvent.getJabsAction === 'function')
+    {
+      const ja = actionEvent.getJabsAction();
+
+      if (ja)
+      {
+        facing = ja.direction();
+      }
+    }
+
+    const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);
+    const liftPx = JABS_Engine.resolveMeleeVerticalLiftPxForFacing(facing);
+
+    // lift pulls the pivot off the feet anchor; down-facing uses less lift so swings stay in front of the actor.
+    const x = actionEvent.screenX() + ox;
+    const y = actionEvent.screenY() - liftPx + oy;
 
     return {
       x,
       y
+    };
+  }
+
+  /**
+   * Screen-space melee visual origin for a map character when no action event exists.
+   * Matches {@link #getActionOriginPixels} lift + offsets so pulses align with collision math.
+   * @param {Game_CharacterBase} character The caster’s character.
+   * @returns {{ x:number, y:number }}
+   */
+  static getMeleeVisualOriginPixelsFromCharacter(character)
+  {
+    // guard against missing character; return neutral origin.
+    if (!character)
+    {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
+
+    const facing = character.direction();
+    const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);
+    const liftPx = JABS_Engine.resolveMeleeVerticalLiftPxForFacing(facing);
+
+    return {
+      x: character.screenX() + ox,
+      y: character.screenY() - liftPx + oy
     };
   }
 
@@ -3554,9 +3656,9 @@ class JABS_Engine
       // direct actions that have an action sprite (spatialized) use sprite position.
       if (jabsAction.isDirectAction() && actionSprite)
       {
-        // read the center tile from the action sprite.
-        const cx = actionSprite.x;
-        const cy = actionSprite.y;
+        // continuous map coords — `.x`/`.y` getters round and skew spatial queries under pixel movement.
+        const cx = actionSprite._realX;
+        const cy = actionSprite._realY;
 
         // build the inclusive bounds using the action range.
         const minX = Math.floor(cx - range);
@@ -3571,9 +3673,9 @@ class JABS_Engine
       // direct actions without a sprite use caster proximity and/or target coordinates.
       if (jabsAction.isDirectAction() && !actionSprite)
       {
-        // grab the caster location in tiles.
-        const cx = Math.floor(casterJabsBattler.getX());
-        const cy = Math.floor(casterJabsBattler.getY());
+        // grab the caster location in continuous tile coords (same units as spatial buckets).
+        const cx = casterJabsBattler.getX();
+        const cy = casterJabsBattler.getY();
 
         // use proximity radius for the AABB.
         const radius = jabsAction.getProximity();
@@ -3591,9 +3693,9 @@ class JABS_Engine
       // non-direct actions will have an action sprite; anchor on sprite.
       if (!jabsAction.isDirectAction() && actionSprite)
       {
-        // read the sprite center in tiles.
-        const cx = actionSprite.x;
-        const cy = actionSprite.y;
+        // read continuous map coords so AoE spatial queries track pixel movement.
+        const cx = actionSprite._realX;
+        const cy = actionSprite._realY;
 
         // build the bounds using the action range.
         const minX = Math.floor(cx - range);

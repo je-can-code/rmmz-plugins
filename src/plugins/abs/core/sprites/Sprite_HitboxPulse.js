@@ -61,6 +61,9 @@ class Sprite_HitboxPulse
     this._degrees = 180;     // for Arc shape
     this._thickness = 1;     // for Line/Wall width (tiles)
 
+    // sustained pulses skip pooled expiry animation; manager refreshes them each frame.
+    this._sustained = false;
+
     // snap transforms.
     this.rotation = 0;
     this.alpha = 1.0;
@@ -100,11 +103,21 @@ class Sprite_HitboxPulse
       ? Math.max(0, opts.thickness)
       : 1;
 
+    // sustained overlays are ticked by JABS_HitboxPulseManager.sync, not the ephemeral pool update().
+    this._sustained = opts.sustained === true;
+
     // set blend.
     this.blendMode = this._blendMode;
 
     // draw the geometry now (static path; only alpha/scale animates per frame).
     this.drawGeometry();
+
+    // snap visual curve for sustained pulses so they read as a steady outline during the swing.
+    if (this._sustained)
+    {
+      this.alpha = this._startAlpha;
+      this.scale.set(this._scaleStart, this._scaleStart);
+    }
   }
 
   //endregion lifecycle
@@ -229,6 +242,12 @@ class Sprite_HitboxPulse
    */
   update()
   {
+    // sustained pulses live outside the ephemeral pool timeline.
+    if (this._sustained)
+    {
+      return;
+    }
+
     // increment age.
     this._age++;
 
@@ -250,6 +269,12 @@ class Sprite_HitboxPulse
    */
   isExpired()
   {
+    // sustained pulses never expire through age; the manager detaches them explicitly.
+    if (this._sustained)
+    {
+      return false;
+    }
+
     // report if this pulse has reached or exceeded its lifetime.
     return this._age >= this._duration;
   }

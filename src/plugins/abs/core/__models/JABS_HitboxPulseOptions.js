@@ -25,6 +25,7 @@ class JABS_HitboxPulseOptions
 
     // visuals/lifetime.
     o.duration = 60;
+    o.sustained = false;
     o.startAlpha = 0.20;
     o.endAlpha = 0.00;
     o.scaleStart = 1.00;
@@ -88,6 +89,7 @@ class JABS_HitboxPulseOptions
       degrees: this.degrees,
       thickness: this.thickness,
       duration: this.duration,
+      sustained: this.sustained,
       startAlpha: this.startAlpha,
       endAlpha: this.endAlpha,
       scaleStart: this.scaleStart,
@@ -264,6 +266,20 @@ class JABS_HitboxPulseOptions
   {
     // assign the blend mode.
     this.blendMode = mode;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: marks this pulse as externally driven each frame (no automatic expiry in the pool path).
+   * @param {boolean} value Whether this pulse is sustained.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withSustained(value)
+  {
+    // assign sustained flag.
+    this.sustained = value === true;
 
     // allow chaining.
     return this;

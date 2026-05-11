@@ -331,6 +331,9 @@ class JABS_Action
    */
   preCleanupHook()
   {
+    // tear down any sustained hitbox pulse tied to this uuid so the layer cannot leak across swings.
+    JABS_HitboxPulseManager.releaseSustainedPulse(this.getUuid());
+
     // handle self-targeted animations on cleanup.
     this.handleSelfAnimationOnDefeat();
   }
@@ -871,9 +874,9 @@ class JABS_Action
       return true;
     };
 
-    // anchor the AABB on the action sprite center in tiles.
-    const cx = actionSprite.x;
-    const cy = actionSprite.y;
+    // anchor the AABB on the action sprite’s continuous map coords (tile getters round under pixel movement).
+    const cx = actionSprite._realX;
+    const cy = actionSprite._realY;
 
     // compute inclusive bounds for the spatial index query.
     const minX = Math.floor(cx - radius);
@@ -1042,12 +1045,41 @@ class JABS_Action
   }
 
   /**
+   * Keeps direct map actions glued to the caster’s continuous map coords each frame.
+   * Direct skills use proximity targeting (not flying map shots); the bound map event is always body-anchored.
+   */
+  syncDirectActionSpriteToCaster()
+  {
+    if (!this.isDirectAction())
+    {
+      return;
+    }
+
+    const actionSprite = this.getActionSprite();
+
+    if (!actionSprite)
+    {
+      return;
+    }
+
+    const casterChar = this.getCaster()
+      .getCharacter();
+
+    actionSprite._realX = casterChar._realX;
+    actionSprite._realY = casterChar._realY;
+    actionSprite._x = casterChar._x;
+    actionSprite._y = casterChar._y;
+  }
+
+  /**
    * The main update logic for an action.
    * this includes handling the delay countdown, cleanup, the piercing, and collision.
    */
   mainUpdate()
   {
     if (!this.canMainUpdate()) return;
+
+    this.syncDirectActionSpriteToCaster();
 
     if (this.isDelayCompleted())
     {
@@ -1226,57 +1258,39 @@ class JABS_Action
   {
     // flag our first hit so we don't do this again.
     this._hitAtLeastOne = true;
-
-    // respect explicit global disable (if configured).
-    if (J.ABS.Metadata.HitboxPulse.enabled === false) return;
-
-    this.processHitboxPulse();
   }
 
   /**
-   * Performs the hitbox pulse visualization for the action.
+   * Builds the plain options object consumed by {@link Sprite_HitboxPulse} for sustained active-shape visualization.
+   * Origins intentionally mirror {@link JABS_Engine#getActionOriginPixels} so pulses agree with collision math.
+   * @returns {Object}
    */
-  processHitboxPulse()
+  composeHitboxPulsePlainOptions()
   {
-    // resolve the action event that visually anchors the pulse (if available).
+    const meta = J.ABS.Metadata.HitboxPulse;
     const actionEvent = this.getActionSprite();
 
-    // determine the origin/facing from either the action event (preferred) or the caster’s character as a fallback.
-    // this allows sprite-less actions to still render a pulse anchored to the caster.
     let originX;
     let originY;
     let facing;
 
-    // attempt to use the action event for origin and facing when present.
     if (actionEvent)
     {
-      // derive the on-screen origin in pixels (screen-space), matching tilemap parenting.
-      originX = actionEvent.screenX();
-      originY = actionEvent.screenY();
-
-      // derive facing from logical travel dir8 (map event direction may be cardinal for `$` sheet rows).
+      const o = JABS_Engine.getActionOriginPixels(actionEvent);
+      originX = o.x;
+      originY = o.y;
       facing = this.direction();
     }
     else
     {
-      // action event is unavailable; fall back to the caster’s character sprite.
-      // this ensures sprite-less actions still draw the pulse and respect overlays.
-      const caster = this.getCaster();
-      const casterCharacter = caster.getCharacter();
-
-      // derive the on-screen origin from the caster.
-      originX = casterCharacter.screenX();
-      originY = casterCharacter.screenY();
-
-      // derive facing from the caster.
+      const casterCharacter = this.getCaster()
+        .getCharacter();
+      const o = JABS_Engine.getMeleeVisualOriginPixelsFromCharacter(casterCharacter);
+      originX = o.x;
+      originY = o.y;
       facing = casterCharacter.direction();
     }
 
-    // derive geometry data directly from this action instance.
-    const shape = this.getShape();
-    const range = this.getRange();
-
-    // optional arc width and thickness from engine helpers (if applicable).
     const degrees = actionEvent
       ? ($jabsEngine.getActionDegrees(actionEvent) || 180)
       : 180;
@@ -1284,22 +1298,38 @@ class JABS_Action
       ? ($jabsEngine.getActionThicknessTiles(actionEvent) || 1)
       : 1;
 
-    // build a compact options object using the fluent API.
-    const options = JABS_HitboxPulseOptions.defaults()
-      .withOrigin(originX, originY)
-      .withShape(shape)
-      .withRange(range)
-      .withFacing(facing)
-      .withDegrees(degrees)
-      .withThickness(thickness)
-      .withFade(38, 0.42, 0.0)
-      .withScale(1.00, 1.08)
-      .withLine(0xFFFFFF, 0.85, 2)
-      .withFill(0xFFFFFF, 0.18)
-      .withBlendMode(PIXI.BLEND_MODES.ADD);
+    const useFade = meta.useFadeAnimation === true;
+    const duration = useFade
+      ? meta.duration
+      : 999999;
+    const endAlpha = useFade
+      ? meta.endAlpha
+      : meta.startAlpha;
+    const scaleEnd = useFade
+      ? meta.scaleEnd
+      : meta.scaleStart;
 
-    // spawn the pulse via the static manager (layer is set up by Spriteset_Map).
-    JABS_HitboxPulseManager.spawn(options);
+    return {
+      x: originX,
+      y: originY,
+      shape: this.getShape(),
+      range: this.getRange(),
+      facing,
+      degrees,
+      thickness,
+      duration,
+      sustained: true,
+      startAlpha: meta.startAlpha,
+      endAlpha,
+      scaleStart: meta.scaleStart,
+      scaleEnd,
+      lineColor: meta.lineColor,
+      lineAlpha: meta.lineAlpha,
+      lineWidth: meta.lineWidth,
+      fillColor: meta.fillColor,
+      fillAlpha: meta.fillAlpha,
+      blendMode: meta.blendMode,
+    };
   }
 
   /**
@@ -1319,6 +1349,9 @@ class JABS_Action
         event.setOpacity(opacity);
       }
     }
+
+    // keep the transient hitbox pulse pinned to this action for every active frame after delay (hit or miss).
+    JABS_HitboxPulseManager.syncSustainedActionPulse(this);
   }
 
   //endregion update
