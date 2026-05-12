@@ -16,8 +16,8 @@
  * NOTE ABOUT THIS PLUGIN:
  * This is a base plugin that offers no actual crafting functionality itself.
  * It offers instead a root "JAFTING" menu that the other extensions will
- * connect to for singular JAFTING access—including a first-class Salvage row on
- * that hub (same scene as the {@code call-salvage} plugin command). Chances are, if you are using
+ * connect to for singular JAFTING access—including Salvage on that hub (same
+ * scene as {@code call-salvage}). Chances are, if you are using
  * this plugin, you probably also want to grab the "Creation" extension and/or
  * the "Refinement" extension and place them below this one.
  * ============================================================================
@@ -34,13 +34,16 @@
  * ============================================================================
  * CHANGELOG:
  * - 2.1.2
- *    Salvage appears on the root JAFTING hub ({@link Window_JaftingList}) with configurable label, icon, and optional
- *    switch gating; {@link Scene_JaftingSalvage} exposes {@link Scene_JaftingSalvage.KEY} for extension ordering.
+ *    Salvage hub row: label, icon, optional switch gate
+ *    ({@link Window_JaftingList}).
+ *    {@link Scene_JaftingSalvage.KEY} ties the hub entry to scene routing.
  * - 2.1.1
- *    Salvage party bags initialize from {@link DataManager.createGameObjects} / {@link DataManager.extractSaveContents}
- *    (not {@link Scene_Boot#onDatabaseLoaded}, which runs before `$gameParty` exists).
+ *    Party salvage bags init from {@link DataManager.createGameObjects} and
+ *    {@link DataManager.extractSaveContents}
+ *    (not {@link Scene_Boot#onDatabaseLoaded}; runs before $gameParty exists).
  * - 2.1.0
- *    Added JAFTING salvage ledger helpers, {@link Scene_JaftingSalvage}, and {@link PluginManager} command call-salvage.
+ *    Salvage ledger helpers, {@link Scene_JaftingSalvage}, and plugin command
+ *    call-salvage.
  * - 2.0.0
  *    Removed all references to refinement logic.
  *    Extracted the crafting logic entirely into its own plugin.

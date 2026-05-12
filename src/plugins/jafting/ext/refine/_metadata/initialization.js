@@ -24,7 +24,7 @@ J.JAFTING.EXT.REFINE = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.2');
+J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.3');
 
 
 /**

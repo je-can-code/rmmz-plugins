@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 JAFT-Refine] An extension for JAFTING to enable equip refinement.
+ * [v1.0.2 JAFT-Refine] An extension for JAFTING to enable equip refinement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -20,9 +20,9 @@
  * - J-JAFTING; the core that this engine hooks into to enable upgrading.
  *
  * NOTE ABOUT INGREDIENT TYPES
- * Armor and optional weapon database types that stay stack-counted in refine lists (versus one row per copy) are
- * configured on the J-JAFTING core plugin parameters ("Material armor type id" / "Material weapon type id").
- * Use -1 on either parameter to disable that side; 0 remains a valid armor or weapon type id in the database.
+ * Stack-counted armor and weapon rows (one list row per stack) read type ids
+ * from J-JAFTING core ("Material armor type id" / "Material weapon type id").
+ * Use -1 on either parameter to disable; 0 remains a valid database type id.
  *
  * ============================================================================
  * UPGRADING
@@ -148,6 +148,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Salvage ledger merges before refine consumes inputs.
+ *    Refinable list lineage hints; hollow-diamond prefix for stamped rows.
  * - 1.0.1
  *    Consumed `RPGManager` updates.
  * - 1.0.0
