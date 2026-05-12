@@ -29,11 +29,13 @@ J.JAFTING.EXT = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.Metadata = new J_CraftingPluginMetadata('J-JAFTING', '2.0.0');
+J.JAFTING.Metadata = new J_CraftingPluginMetadata('J-JAFTING', '2.1.2');
 
 /**
  * A helpful mapping of all the various RMMZ classes being extended.
  */
 J.JAFTING.Aliased = {};
 J.JAFTING.Aliased.Game_Party = new Map();
+J.JAFTING.Aliased.DataManager = new Map();
+J.JAFTING.Aliased.Scene_Jafting = new Map();
 //endregion Introduction

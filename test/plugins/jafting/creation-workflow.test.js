@@ -27,6 +27,7 @@ describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
       party.initialize();
       party.__testItemContainer = {};
       $gameParty = party;
+      JaftingSalvageManager.initPartySalvageStorage();
     `, sandbox);
   });
 
@@ -179,6 +180,7 @@ describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
         party.initialize();
         party.__testItemContainer = {};
         $gameParty = party;
+        JaftingSalvageManager.initPartySalvageStorage();
         const ing = $dataItems[1];
         $gameParty.gainItem(ing, 1);
         const recipe = J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('needs_tool');
@@ -204,6 +206,7 @@ describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
         party.initialize();
         party.__testItemContainer = {};
         $gameParty = party;
+        JaftingSalvageManager.initPartySalvageStorage();
         const recipe = J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('vitest_recipe');
         recipe.maskedUntilCrafted = true;
         globalThis.__vitestMaskedBefore = recipe.needsMasking();

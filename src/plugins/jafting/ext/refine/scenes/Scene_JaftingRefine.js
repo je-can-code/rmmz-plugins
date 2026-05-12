@@ -160,6 +160,12 @@ class Scene_JaftingRefine
     this._j._crafting._refine._consumedSelected = null;
 
     /**
+     * Ordinal of the chosen base row when stacks expand (matches {@link Window_RefinableList} extension data).
+     * @type {number|null}
+     */
+    this._j._crafting._refine._baseSelectedUnitOrdinal = null;
+
+    /**
      * Lazily computed outer height for {@link Window_RefinementStepHint} (one text line).
      * @type {number|undefined}
      */
@@ -182,6 +188,16 @@ class Scene_JaftingRefine
   setBaseSelected(equip)
   {
     this._j._crafting._refine._baseSelected = equip;
+  }
+
+  getBaseSelectedUnitOrdinal()
+  {
+    return this._j._crafting._refine._baseSelectedUnitOrdinal;
+  }
+
+  setBaseSelectedUnitOrdinal(value)
+  {
+    this._j._crafting._refine._baseSelectedUnitOrdinal = value;
   }
 
   getConsumedSelected()
@@ -254,12 +270,18 @@ class Scene_JaftingRefine
     if (selected === undefined || selected === null)
     {
       this.setBaseSelected(null);
+      this.setBaseSelectedUnitOrdinal(null);
       detailsWindow.primaryEquip = null;
       this.refreshRefinementStepHint();
       return;
     }
 
     this.setBaseSelected(selected.data);
+    this.setBaseSelectedUnitOrdinal(
+      selected.unitOrdinal === undefined || selected.unitOrdinal === null
+        ? null
+        : selected.unitOrdinal,
+    );
     detailsWindow.primaryEquip = selected.data;
 
     this.refreshRefinementStepHint();
@@ -571,8 +593,13 @@ class Scene_JaftingRefine
 
     const baseRefinableListWindow = this.getBaseRefinableListWindow();
 
-    const baseRefinable = baseRefinableListWindow.currentExt().data;
-    this.setBaseSelected(baseRefinable);
+    const baseRefinable = baseRefinableListWindow.currentExt();
+    this.setBaseSelected(baseRefinable.data);
+    this.setBaseSelectedUnitOrdinal(
+      baseRefinable.unitOrdinal === undefined || baseRefinable.unitOrdinal === null
+        ? null
+        : baseRefinable.unitOrdinal,
+    );
 
     this.deselectBaseRefinableListWindow();
     this.selectConsumableRefinableListWindow();
@@ -653,6 +680,7 @@ class Scene_JaftingRefine
 
     // reveal the window.
     listWindow.baseSelection = this.getBaseSelected();
+    listWindow.baseSelectionUnitOrdinal = this.getBaseSelectedUnitOrdinal();
     listWindow.refresh();
     listWindow.show();
     listWindow.activate();
@@ -898,6 +926,7 @@ class Scene_JaftingRefine
     this.selectBaseRefinableListWindow();
 
     this.setBaseSelected(null);
+    this.setBaseSelectedUnitOrdinal(null);
     this.setConsumedSelected(null);
 
     const listWindow = this.getBaseRefinableListWindow();

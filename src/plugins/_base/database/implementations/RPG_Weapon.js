@@ -59,6 +59,32 @@ class RPG_Weapon
   {
     return `${super.implementationType()}:weapon`;
   }
+
+  /**
+   * Hydrated blank weapon row for reclaiming dynamic refinement slots (matches unused DB slot shape, not `null`).
+   *
+   * @param {number} index database id and `$dataWeapons` index for this row
+   * @returns {RPG_Weapon}
+   */
+  static createEmpty(index)
+  {
+    const raw = {
+      id: index,
+      animationId: 0,
+      wtypeId: 0,
+      etypeId: 1,
+      params: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+      price: 0,
+      traits: [],
+      description: String.empty,
+      iconIndex: 0,
+      name: String.empty,
+      note: String.empty,
+      meta: {},
+    };
+
+    return new RPG_Weapon(raw, index);
+  }
 }
 
 //endregion RPG_Weapon

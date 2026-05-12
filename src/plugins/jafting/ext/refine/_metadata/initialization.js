@@ -24,7 +24,7 @@ J.JAFTING.EXT.REFINE = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.0');
+J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.2');
 
 
 /**
@@ -45,6 +45,11 @@ J.JAFTING.EXT.REFINE.Messages = {
    * The name of the command that cancels the refinement process.
    */
   CancelRefinementCommandName: "Cancel",
+
+  /**
+   * Hollow-diamond prefix for rows with dismantle lineage or refinement history—subtle, not a rarity star.
+   */
+  RefinableListSalvageStampPrefix: '\u25C7',
 
   /**
    * When an item hasn't been selected somehow, this message shows in the help window.

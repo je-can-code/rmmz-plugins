@@ -52,6 +52,31 @@ class RPG_Armor
   {
     return `${super.implementationType()}:armor`;
   }
+
+  /**
+   * Hydrated blank armor row for reclaiming dynamic refinement slots (matches unused DB slot shape, not `null`).
+   *
+   * @param {number} index database id and `$dataArmors` index for this row
+   * @returns {RPG_Armor}
+   */
+  static createEmpty(index)
+  {
+    const raw = {
+      id: index,
+      atypeId: 0,
+      etypeId: 2,
+      params: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
+      price: 0,
+      traits: [],
+      description: String.empty,
+      iconIndex: 0,
+      name: String.empty,
+      note: String.empty,
+      meta: {},
+    };
+
+    return new RPG_Armor(raw, index);
+  }
 }
 
 //endregion RPG_Armor

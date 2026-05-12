@@ -691,7 +691,20 @@ class JaftingManager
       return false;
     }
 
-    equips = equips.filter(equip => equip.atypeId !== 5);
+    equips = equips.filter(equip =>
+    {
+      if (JaftingSalvageLedger.isMaterialArmorDatum(equip))
+      {
+        return false;
+      }
+
+      if (JaftingSalvageLedger.isMaterialWeaponDatum(equip))
+      {
+        return false;
+      }
+
+      return true;
+    });
 
     for (let i = 0; i < equips.length; i++)
     {

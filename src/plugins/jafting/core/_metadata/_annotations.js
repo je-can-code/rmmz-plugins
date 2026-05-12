@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 JAFTING-Core] Root JAFTING menu; extensions provide Creation and Refinement.
+ * [v2.1.2 JAFTING-Core] Root JAFTING menu, salvage loop, and extension hooks.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -16,7 +16,8 @@
  * NOTE ABOUT THIS PLUGIN:
  * This is a base plugin that offers no actual crafting functionality itself.
  * It offers instead a root "JAFTING" menu that the other extensions will
- * connect to for singular JAFTING access. Chances are, if you are using
+ * connect to for singular JAFTING access—including a first-class Salvage row on
+ * that hub (same scene as the {@code call-salvage} plugin command). Chances are, if you are using
  * this plugin, you probably also want to grab the "Creation" extension and/or
  * the "Refinement" extension and place them below this one.
  * ============================================================================
@@ -32,6 +33,14 @@
  * call the other JAFTING scenes directly if you preferred.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.2
+ *    Salvage appears on the root JAFTING hub ({@link Window_JaftingList}) with configurable label, icon, and optional
+ *    switch gating; {@link Scene_JaftingSalvage} exposes {@link Scene_JaftingSalvage.KEY} for extension ordering.
+ * - 2.1.1
+ *    Salvage party bags initialize from {@link DataManager.createGameObjects} / {@link DataManager.extractSaveContents}
+ *    (not {@link Scene_Boot#onDatabaseLoaded}, which runs before `$gameParty` exists).
+ * - 2.1.0
+ *    Added JAFTING salvage ledger helpers, {@link Scene_JaftingSalvage}, and {@link PluginManager} command call-salvage.
  * - 2.0.0
  *    Removed all references to refinement logic.
  *    Extracted the crafting logic entirely into its own plugin.
@@ -44,5 +53,53 @@
  * @command call-menu
  * @text Call Core Menu
  * @desc Brings up the core JAFTING menu.
+ *
+ * @command call-salvage
+ * @text Call Salvage Scene
+ * @desc Opens the JAFTING salvage scene where stamped gear can be dismantled (same scene as the hub Salvage row).
+ *
+ * @param jaftingSalvageConfig
+ * @text SALVAGE / REFINE STACKS
+ *
+ * @param material-armor-type-id
+ * @parent jaftingSalvageConfig
+ * @type number
+ * @min -1
+ * @text Material armor type id
+ * @desc Armor atypeId treated as stack-only ingredients (refinement base list omits them; dismantle keeps bare rows). Use -1 to disable. Default 5.
+ * @default 5
+ *
+ * @param material-weapon-type-id
+ * @parent jaftingSalvageConfig
+ * @type number
+ * @min -1
+ * @text Material weapon type id
+ * @desc Weapon wtypeId treated like material armors (stack counts in refine lists; dismantle pass-through). Use -1 to disable; 0 is a valid type id.
+ * @default -1
+ *
+ * @param jaftingHubSalvage
+ * @text HUB — SALVAGE ROW
+ *
+ * @param salvage-menu-switch
+ * @parent jaftingHubSalvage
+ * @type number
+ * @min 0
+ * @text Salvage hub switch id
+ * @desc When non-zero, the Salvage hub row requires this game switch ON. Use 0 to always show Salvage (ignore switches).
+ * @default 0
+ *
+ * @param salvage-menu-name
+ * @parent jaftingHubSalvage
+ * @type string
+ * @text Salvage hub command name
+ * @desc Label for the Salvage entry on the root JAFTING menu.
+ * @default Salvage
+ *
+ * @param salvage-menu-icon
+ * @parent jaftingHubSalvage
+ * @type number
+ * @text Salvage hub command icon
+ * @desc Icon index drawn beside the Salvage hub command (RPG Maker icon sheet).
+ * @default 192
  *
  */

@@ -19,6 +19,11 @@
  * - J-Base; to be honest this is just required for all my plugins.
  * - J-JAFTING; the core that this engine hooks into to enable upgrading.
  *
+ * NOTE ABOUT INGREDIENT TYPES
+ * Armor and optional weapon database types that stay stack-counted in refine lists (versus one row per copy) are
+ * configured on the J-JAFTING core plugin parameters ("Material armor type id" / "Material weapon type id").
+ * Use -1 on either parameter to disable that side; 0 remains a valid armor or weapon type id in the database.
+ *
  * ============================================================================
  * UPGRADING
  * Ever want to upgrade your equips by sacrificing others in the name of

@@ -176,6 +176,45 @@ class RPG_State
   {
     return `${super.implementationType()}:state`;
   }
+
+  /**
+   * Hydrated blank state row—symmetry with other DB wrappers when a slot must read as "unused but valid".
+   *
+   * @param {number} index database id and `$dataStates` index for this row
+   * @returns {RPG_State}
+   */
+  static createEmpty(index)
+  {
+    const raw = {
+      id: index,
+      autoRemovalTiming: 0,
+      chanceByDamage: 100,
+      traits: [],
+      iconIndex: 0,
+      maxTurns: 1,
+      message1: String.empty,
+      message2: String.empty,
+      message3: String.empty,
+      message4: String.empty,
+      minTurns: 1,
+      motion: 0,
+      name: String.empty,
+      note: String.empty,
+      overlay: 0,
+      priority: 50,
+      removeAtBattleEnd: false,
+      removeByDamage: false,
+      removeByRestriction: false,
+      removeByWalking: false,
+      restriction: 0,
+      stepsToRemove: 100,
+      messageType: 1,
+      description: String.empty,
+      meta: {},
+    };
+
+    return new RPG_State(raw, index);
+  }
 }
 
 //endregion RPG_State

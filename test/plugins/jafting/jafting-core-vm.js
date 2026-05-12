@@ -15,6 +15,11 @@ void function()
   globalThis.__JAFT_VM = globalThis.__JAFT_VM || {};
   globalThis.__JAFT_VM.Window_JaftingList = Window_JaftingList;
   globalThis.__JAFT_VM.Scene_Jafting = Scene_Jafting;
+  globalThis.__JAFT_VM.Scene_JaftingSalvage = Scene_JaftingSalvage;
+  globalThis.__JAFT_VM.JaftingSalvageManager = JaftingSalvageManager;
+  globalThis.__JAFT_VM.JaftingSalvageLedgerRow = JaftingSalvageLedgerRow;
+  globalThis.__JAFT_VM.JaftingSalvageLedgerSnapshot = JaftingSalvageLedgerSnapshot;
+  globalThis.__JAFT_VM.JaftingSalvagePartyLedgerBag = JaftingSalvagePartyLedgerBag;
 }();
 `;
 
