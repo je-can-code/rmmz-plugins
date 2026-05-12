@@ -66,6 +66,45 @@ class RPG_Item
   {
     return `${super.implementationType()}:item`;
   }
+
+  /**
+   * Hydrated blank consumable row—symmetry with equip `createEmpty`; useful when rebuilding `$dataItems` slots.
+   *
+   * @param {number} index database id and `$dataItems` index for this row
+   * @returns {RPG_Item}
+   */
+  static createEmpty(index)
+  {
+    const raw = {
+      id: index,
+      animationId: 0,
+      consumable: true,
+      damage: {
+        critical: false,
+        elementId: 0,
+        formula: '0',
+        type: 0,
+        variance: 20,
+      },
+      description: String.empty,
+      effects: [],
+      hitType: 0,
+      iconIndex: 0,
+      itypeId: 1,
+      name: String.empty,
+      note: String.empty,
+      occasion: 0,
+      price: 0,
+      repeats: 1,
+      scope: 7,
+      speed: 0,
+      successRate: 100,
+      tpGain: 0,
+      meta: {},
+    };
+
+    return new RPG_Item(raw, index);
+  }
 }
 
 //endregion RPG_Item

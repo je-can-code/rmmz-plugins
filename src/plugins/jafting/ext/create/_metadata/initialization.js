@@ -17,7 +17,7 @@ J.JAFTING.EXT.CREATE = {};
 /**
  * The metadata associated with this plugin.
  */
-J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata('J-JAFTING-Creation', '1.1.0');
+J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata('J-JAFTING-Creation', '1.1.1');
 
 /**
  * A collection of all aliased methods for this plugin.

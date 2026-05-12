@@ -23,9 +23,11 @@ describe('J-JAFTING core (built plugin)', () =>
     const md = sandbox.J.JAFTING.Metadata;
 
     expect(md.name).toBe('J-JAFTING');
+    expect(md.materialArmorTypeId).toBe(5);
+    expect(md.materialWeaponTypeId).toBe(-1);
     expect(md.version.major).toBe(2);
-    expect(md.version.minor).toBe(0);
-    expect(md.version.patch).toBe(0);
+    expect(md.version.minor).toBe(1);
+    expect(md.version.patch).toBe(2);
   });
 
   it('reserves J.JAFTING.EXT for extensions', () =>
@@ -34,9 +36,9 @@ describe('J-JAFTING core (built plugin)', () =>
     expect(typeof sandbox.J.JAFTING.EXT).toBe('object');
   });
 
-  it('defines the hub Window_JaftingList with an extensible command list', () =>
+  it('defines the hub Window_JaftingList with Salvage plus extension hooks', () =>
   {
-    const { Window_JaftingList } = sandbox.__JAFT_VM;
+    const { Window_JaftingList, Scene_JaftingSalvage } = sandbox.__JAFT_VM;
 
     expect(typeof Window_JaftingList).toBe('function');
 
@@ -45,7 +47,8 @@ describe('J-JAFTING core (built plugin)', () =>
     const commands = hub.buildCommands();
 
     expect(Array.isArray(commands)).toBe(true);
-    expect(commands.length).toBe(0);
+    expect(commands.length).toBe(1);
+    expect(commands[0].symbol).toBe(Scene_JaftingSalvage.KEY);
   });
 
   it('defines Scene_Jafting as a menu scene subclass', () =>
@@ -54,6 +57,27 @@ describe('J-JAFTING core (built plugin)', () =>
 
     expect(typeof Scene_Jafting).toBe('function');
     expect(Scene_Jafting.prototype.constructor).toBe(Scene_Jafting);
+  });
+
+  it('defines Scene_JaftingSalvage and JaftingSalvageManager', () =>
+  {
+    const { Scene_JaftingSalvage, JaftingSalvageManager } = sandbox.__JAFT_VM;
+
+    expect(typeof Scene_JaftingSalvage).toBe('function');
+    expect(typeof JaftingSalvageManager).toBe('function');
+  });
+
+  it('defines concrete salvage ledger model classes', () =>
+  {
+    const {
+      JaftingSalvageLedgerRow,
+      JaftingSalvageLedgerSnapshot,
+      JaftingSalvagePartyLedgerBag,
+    } = sandbox.__JAFT_VM;
+
+    expect(typeof JaftingSalvageLedgerRow).toBe('function');
+    expect(typeof JaftingSalvageLedgerSnapshot).toBe('function');
+    expect(typeof JaftingSalvagePartyLedgerBag).toBe('function');
   });
 });
 //endregion plugins/jafting/jafting-core.test.js

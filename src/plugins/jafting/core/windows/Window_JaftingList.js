@@ -27,28 +27,27 @@ class Window_JaftingList
   }
 
   /**
-   * Returns hub commands from extensions; core does not add modes here by default.
+   * Returns hub commands: core registers Salvage first; Creation / Refinement extensions append after this list.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
   {
-    /*
-    const refinementCommand = new WindowCommandBuilder("Refinement")
-      .setSymbol("refinement")
-      .addSubTextLine("The niche hobbiest dream.")
-      .addSubTextLine("Update equips by consuming other equips and materials- to an extent.")
-      .setIconIndex(2566)
-      .build();
+    return [ this.buildSalvageHubCommand() ];
+  }
 
-    const freestyleCommand = new WindowCommandBuilder("Freestyle")
-      .setSymbol("freestyle")
-      .addSubTextLine("Submit to RNGesus.")
-      .addSubTextLine("Freestyle with some materials to experience creation- with a touch of random.")
-      .setIconIndex(2569)
+  /**
+   * Salvage hub row—opens {@link Scene_JaftingSalvage} (same entry point as plugin command {@code call-salvage}).
+   * @returns {BuiltWindowCommand}
+   */
+  buildSalvageHubCommand()
+  {
+    return new WindowCommandBuilder(J.JAFTING.Metadata.salvageCommandName)
+      .setSymbol(Scene_JaftingSalvage.KEY)
+      .setEnabled(Scene_JaftingSalvage.isSalvageHubCommandEnabled())
+      .addTextLine('Break down stamped equipment toward its ingredient history.')
+      .addTextLine('Vendor-only shells never list here—only gear carrying dismantle lineage.')
+      .setIconIndex(J.JAFTING.Metadata.salvageMenuIconIndex)
       .build();
-    */
-
-    return [];
   }
 
   /**
