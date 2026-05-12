@@ -149,6 +149,33 @@ class Window_RecipeToolList
   drawBackgroundRect(_)
   {
   }
+
+  /**
+   * Overrides {@link Window_Selectable.prototype.drawAllItems}.<br>
+   * Explains an empty TOOLS column instead of leaving it ambiguous.
+   * @override
+   */
+  drawAllItems()
+  {
+    if (this._components.length === 0)
+    {
+      this.resetFontSettings();
+      this.changeTextColor(ColorManager.normalColor());
+
+      const y = this.recipeComponentRowTopInset();
+      this.drawText(
+        'No tools required.',
+        0,
+        y,
+        this.innerWidth,
+        Window_Base.TextAlignments.Center
+      );
+
+      return;
+    }
+
+    Window_Command.prototype.drawAllItems.call(this);
+  }
 }
 
 //endregion Window_RecipeToolList

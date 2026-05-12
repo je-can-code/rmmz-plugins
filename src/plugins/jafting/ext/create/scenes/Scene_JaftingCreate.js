@@ -133,6 +133,12 @@ class Scene_JaftingCreate
     this._j._crafting._create._creationDescription = null;
 
     /**
+     * Recipe-browsing chrome: icon + name for the active category (aligned with the help band).
+     * @type {Window_CreationCategoryBadge}
+     */
+    this._j._crafting._create._creationCategoryBadge = null;
+
+    /**
      * The window that shows the list of unlocked categories.
      * @type {Window_CategoryList}
      */
@@ -214,6 +220,7 @@ class Scene_JaftingCreate
   {
     // create all the windows.
     this.createCreationDescriptionWindow();
+    this.createCreationCategoryBadgeWindow();
     this.createCategoryListWindow();
     this.createRecipeListWindow();
     this.createRecipeDetailsWindow();
@@ -287,17 +294,35 @@ class Scene_JaftingCreate
   }
 
   /**
+   * Shared height for the help band and the category badge (recipe browsing chrome).
+   * @returns {number}
+   */
+  creationHeaderBandHeight()
+  {
+    return 100;
+  }
+
+  /**
+   * Width of the left column shared by category list, recipe list, and category badge windows.
+   * @returns {number}
+   */
+  getCreationListColumnWidth()
+  {
+    return this.getCategoryListRectangle().width;
+  }
+
+  /**
    * Gets the rectangle associated with this window.
    * @returns {Rectangle}
    */
   getCreationDescriptionRectangle()
   {
-    const listRect = this.getRecipeListRectangle();
-    const [ ox ] = Graphics.boxOrigin;
-    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const {y} = listRect;
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const listColumnWidth = this.getCreationListColumnWidth();
+    const x = ox + listColumnWidth + Graphics.horizontalPadding;
+    const y = oy;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-    const height = 100;
+    const height = this.creationHeaderBandHeight();
 
     return new Rectangle(x, y, width, height);
   }
@@ -317,6 +342,59 @@ class Scene_JaftingCreate
   setCreationDescriptionWindow(someWindow)
   {
     this._j._crafting._create._creationDescription = someWindow;
+  }
+
+  /**
+   * Creates the category badge window (recipe browsing only).
+   */
+  createCreationCategoryBadgeWindow()
+  {
+    const window = this.buildCreationCategoryBadgeWindow();
+
+    this.setCreationCategoryBadgeWindow(window);
+    window.hide();
+    window.deactivate();
+    this.addWindow(window);
+  }
+
+  /**
+   * @returns {Window_CreationCategoryBadge}
+   */
+  buildCreationCategoryBadgeWindow()
+  {
+    const rectangle = this.getCreationCategoryBadgeRectangle();
+
+    return new Window_CreationCategoryBadge(rectangle);
+  }
+
+  /**
+   * Top-left slot beside the help window: same width as the list column; height matches
+   * {@link #creationHeaderBandHeight}.
+   * @returns {Rectangle}
+   */
+  getCreationCategoryBadgeRectangle()
+  {
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const w = this.getCreationListColumnWidth();
+    const h = this.creationHeaderBandHeight();
+
+    return new Rectangle(ox, oy, w, h);
+  }
+
+  /**
+   * @returns {Window_CreationCategoryBadge}
+   */
+  getCreationCategoryBadgeWindow()
+  {
+    return this._j._crafting._create._creationCategoryBadge;
+  }
+
+  /**
+   * @param {Window_CreationCategoryBadge} someWindow
+   */
+  setCreationCategoryBadgeWindow(someWindow)
+  {
+    this._j._crafting._create._creationCategoryBadge = someWindow;
   }
 
   //endregion creation description
@@ -521,17 +599,14 @@ class Scene_JaftingCreate
    */
   getRecipeListRectangle()
   {
-    // the window's origin coordinates are the box window's origin as well.
-    const [ x, y ] = Graphics.boxOrigin;
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const w = this.getCreationListColumnWidth();
+    const header = this.creationHeaderBandHeight();
+    const gap = Graphics.verticalPadding;
+    const y = oy + header + gap;
+    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // define the width of the window.
-    const {width} = this.getCategoryListRectangle();
-
-    // define the height of the window.
-    const height = Graphics.boxHeight - (Graphics.verticalPadding * 2);
-
-    // build the rectangle to return.
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(ox, y, w, height);
   }
 
   /**
@@ -571,8 +646,12 @@ class Scene_JaftingCreate
     // reveal that window, too.
     detailsWindow.show();
 
-    this.getCreationDescriptionWindow()
-      .setText(recipeListWindow.currentHelpText() ?? String.empty);
+    const badgeWindow = this.getCreationCategoryBadgeWindow();
+    const categoryKey = recipeListWindow.getCurrentCategory();
+    const category = $gameParty.getCategoryByKey(categoryKey);
+
+    badgeWindow.setCategory(category);
+    badgeWindow.show();
   }
 
   /**
@@ -587,6 +666,11 @@ class Scene_JaftingCreate
     listWindow.select(0);
     listWindow.hide();
     listWindow.deactivate();
+
+    const badgeWindow = this.getCreationCategoryBadgeWindow();
+
+    badgeWindow.hide();
+    badgeWindow.clearCategory();
 
     // hide all those windows.
     this.getRecipeDetailsWindow()
@@ -613,9 +697,9 @@ class Scene_JaftingCreate
       outputs
     } = currentRecipe;
 
-    // set the help text to the recipe's description, which is the help text.
+    // derive description from the recipe model — command.helpText is stale until makeCommandList runs again.
     this.getCreationDescriptionWindow()
-      .setText(recipeListWindow.currentHelpText() ?? String.empty);
+      .setText(currentRecipe.getRecipeDescription());
 
     // grab the details window.
     const detailsWindow = this.getRecipeDetailsWindow();
@@ -659,10 +743,10 @@ class Scene_JaftingCreate
       SoundManager.playShop();
     }
 
-    this.onRecipeListIndexChange();
-
     const listWindow = this.getRecipeListWindow();
+
     listWindow.refresh();
+    this.onRecipeListIndexChange();
     listWindow.activate();
   }
 
@@ -707,10 +791,10 @@ class Scene_JaftingCreate
   {
     const [ ox, oy ] = Graphics.boxOrigin;
     const listRect = this.getRecipeListRectangle();
-    const descWindow = this.getCreationDescriptionWindow();
 
-    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const y = listRect.y + descWindow.height + Graphics.verticalPadding;
+    const { x: listX, y: listY } = listRect;
+    const x = listX + listRect.width + Graphics.horizontalPadding;
+    const y = listY;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 

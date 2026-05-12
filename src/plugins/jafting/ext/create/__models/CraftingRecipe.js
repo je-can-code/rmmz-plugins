@@ -120,6 +120,9 @@ class CraftingRecipe
     // generate all the outputs.
     this.outputs.forEach(component => component.generate());
 
+    // stamp ingredient ancestry onto outputs so later refinement stacks still carry salvage lineage for core.
+    JaftingSalvageManager.applyCraftRecipeOutputs(this);
+
     // improve the proficiency for the recipe.
     $gameParty
       .getRecipeTrackingByKey(this.key)

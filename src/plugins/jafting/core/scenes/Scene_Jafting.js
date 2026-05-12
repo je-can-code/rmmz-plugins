@@ -61,7 +61,7 @@ class Scene_Jafting
   initPrimaryMembers()
   {
     /**
-     * The window that lists Creation, Refinement, and other registered JAFTING modes.
+     * The window that lists Salvage, Creation, Refinement, and other registered JAFTING modes.
      * @type {Window_JaftingList}
      */
     this._j._crafting._commandList = null;

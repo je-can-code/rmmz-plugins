@@ -64,20 +64,253 @@ class Window_RecipeDetails
   }
 
   /**
+   * Italic subtext under each column title — kept in one place so wrapping math and drawing stay aligned.
+   */
+  static #SUBTEXT_INGREDIENTS = 'Materials consumed when crafting this recipe.';
+  static #SUBTEXT_TOOLS = 'Materials required to craft this recipe.';
+  static #SUBTEXT_OUTPUTS = 'Materials generated when the recipe is crafted.';
+
+  /**
    * Inner Y where ingredient / tool / output list windows should start (below the tallest header band).
-   * Uses the same stacking rules as {@link #drawComponentHeaderColumn}.
    * @returns {number}
    */
   componentListRowsInnerStartY()
   {
-    const w = this.detailsQuarterWidth();
-    const ends = [
-      this.#componentHeaderColumnInnerEndY(w, 'Materials consumed when crafting this recipe.'),
-      this.#componentHeaderColumnInnerEndY(w, 'Materials required to craft this recipe.'),
-      this.#componentHeaderColumnInnerEndY(w, 'Materials generated when the recipe is crafted.'),
+    return this.#recipeComponentHeaderBandEndInnerY();
+  }
+
+  /**
+   * Inner Y just below the unified horizontal rules under INGREDIENTS / TOOLS / OUTPUTS.
+   * @returns {number}
+   */
+  #recipeComponentHeaderBandEndInnerY()
+  {
+    const cw = this.detailsQuarterWidth();
+    const { ruleTopY } = this.#tripleColumnHeaderRuleTopInnerY(cw);
+    const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
+    const gapAfterRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_AFTER;
+
+    return ruleTopY + ruleH + gapAfterRule;
+  }
+
+  /**
+   * Prepares the smaller italic face used under column titles.
+   */
+  #prepareItalicsSubtextFont()
+  {
+    this.resetFontSettings();
+    this.modFontSize(-12);
+    this.toggleItalics();
+  }
+
+  /**
+   * Restores default font after italic subtext measurement or drawing.
+   */
+  #restoreAfterItalicsSubtextFont()
+  {
+    this.toggleItalics();
+    this.resetFontSettings();
+  }
+
+  /**
+   * Wraps plain text to fit width using the current font metrics (caller sets face).
+   *
+   * @param {string} text
+   * @param {number} maxWidth
+   * @returns {string[]}
+   */
+  #splitLongToken(token, maxWidth)
+  {
+    const segments = [];
+    let chunk = '';
+
+    for (let ci = 0; ci < token.length; ci++)
+    {
+      const next = chunk + token.charAt(ci);
+
+      if (this.textWidth(next) <= maxWidth)
+      {
+        chunk = next;
+      }
+      else
+      {
+        if (chunk.length > 0)
+        {
+          segments.push(chunk);
+        }
+
+        chunk = token.charAt(ci);
+      }
+    }
+
+    if (chunk.length > 0)
+    {
+      segments.push(chunk);
+    }
+
+    return segments;
+  }
+
+  #wrapPlainTextToLines(text, maxWidth)
+  {
+    if (text === '')
+    {
+      return [ '' ];
+    }
+
+    const words = text.split(/\s+/);
+    const lines = [];
+    let line = '';
+
+    for (let wi = 0; wi < words.length; wi++)
+    {
+      const word = words[wi];
+      const trial = line.length === 0 ? word : `${line} ${word}`;
+
+      if (this.textWidth(trial) <= maxWidth)
+      {
+        line = trial;
+        continue;
+      }
+
+      if (line.length > 0)
+      {
+        lines.push(line);
+        line = '';
+      }
+
+      if (this.textWidth(word) <= maxWidth)
+      {
+        line = word;
+      }
+      else
+      {
+        const segments = this.#splitLongToken(word, maxWidth);
+
+        for (let si = 0; si < segments.length; si++)
+        {
+          if (si < segments.length - 1)
+          {
+            lines.push(segments[si]);
+          }
+          else
+          {
+            line = segments[si];
+          }
+        }
+      }
+    }
+
+    if (line.length > 0)
+    {
+      lines.push(line);
+    }
+
+    if (lines.length === 0)
+    {
+      lines.push('');
+    }
+
+    return lines;
+  }
+
+  /**
+   * Measures wrapped lines for italic subtext at the standard recipe-detail size.
+   *
+   * @param {string} subtext
+   * @param {number} bandWidth
+   * @returns {string[]}
+   */
+  #measureItalicSubtextLines(subtext, bandWidth)
+  {
+    this.#prepareItalicsSubtextFont();
+    const usableW = Math.max(1, bandWidth - 4);
+    const lines = this.#wrapPlainTextToLines(subtext, usableW);
+    this.#restoreAfterItalicsSubtextFont();
+
+    return lines;
+  }
+
+  /**
+   * Computes the shared rule baseline for all three columns (max of per-column title + wrapped subtext heights).
+   *
+   * @param {number} cw column inner width
+   * @returns {{ ruleTopY: number, layouts: { titleH: number, lines: string[], subLineHeight: number }[] }}
+   */
+  #tripleColumnHeaderRuleTopInnerY(cw)
+  {
+    const subtexts = [
+      Window_RecipeDetails.#SUBTEXT_INGREDIENTS,
+      Window_RecipeDetails.#SUBTEXT_TOOLS,
+      Window_RecipeDetails.#SUBTEXT_OUTPUTS,
     ];
 
-    return Math.max(ends[0], ends[1], ends[2]);
+    this.#prepareItalicsSubtextFont();
+    const subLineHeight = this.lineHeight();
+    this.#restoreAfterItalicsSubtextFont();
+
+    const layouts = [];
+
+    for (let i = 0; i < 3; i++)
+    {
+      this.resetFontSettings();
+      this.modFontSize(4);
+      this.toggleBold();
+      const titleH = this.lineHeight();
+      this.toggleBold();
+
+      const lines = this.#measureItalicSubtextLines(subtexts[i], cw);
+
+      layouts.push({ titleH, lines, subLineHeight });
+    }
+
+    const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
+    let maxContentBottom = 0;
+
+    for (let i = 0; i < 3; i++)
+    {
+      const L = layouts[i];
+      const bottom = L.titleH + L.lines.length * L.subLineHeight;
+
+      if (bottom > maxContentBottom)
+      {
+        maxContentBottom = bottom;
+      }
+    }
+
+    const ruleTopY = maxContentBottom + gapBeforeRule;
+
+    return { ruleTopY, layouts };
+  }
+
+  /**
+   * Draws title + wrapped subtext for one column; horizontal rules are drawn separately at a shared Y.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} bandWidth
+   * @param {string} title
+   * @param {string[]} lines
+   * @param {number} subLineHeight
+   */
+  #drawColumnTitleAndSubtext(x, y, bandWidth, title, lines, subLineHeight)
+  {
+    this.resetFontSettings();
+    this.modFontSize(4);
+    this.toggleBold();
+    this.drawText(title, x, y, bandWidth, Window_Base.TextAlignments.Left);
+    let cursor = y + this.lineHeight();
+    this.toggleBold();
+
+    this.#prepareItalicsSubtextFont();
+
+    for (let li = 0; li < lines.length; li++)
+    {
+      this.drawText(lines[li], x, cursor, bandWidth, Window_Base.TextAlignments.Left);
+      cursor += subLineHeight;
+    }
+
+    this.#restoreAfterItalicsSubtextFont();
   }
 
   /**
@@ -113,7 +346,7 @@ class Window_RecipeDetails
 
   /**
    * Implements {@link Window_Base.drawContent}.<br>
-   * Draws a the recipe details.
+   * Draws the recipe details header bands and the primary output column.
    */
   drawContent()
   {
@@ -123,79 +356,22 @@ class Window_RecipeDetails
     const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
     const wDetail = cw + remainder;
 
-    this.#drawComponentHeaderColumn(x + cw * 0, y, cw, 'INGREDIENTS', 'Materials consumed when crafting this recipe.');
-    this.#drawComponentHeaderColumn(x + cw * 1, y, cw, 'TOOLS', 'Materials required to craft this recipe.');
-    this.#drawComponentHeaderColumn(x + cw * 2, y, cw, 'OUTPUTS', 'Materials generated when the recipe is crafted.');
-    this.drawPrimaryOutput(x + cw * 3, y, wDetail);
-  }
-
-  /**
-   * Pixel height of one header band (title + wrapped subtext + rule + gap), for list alignment.
-   * @param {number} bandWidth
-   * @param {string} subtext
-   * @returns {number}
-   */
-  #componentHeaderColumnInnerEndY(bandWidth, subtext)
-  {
-    this.resetFontSettings();
-
-    let y = 0;
-
-    this.modFontSize(4);
-    this.toggleBold();
-    y += this.lineHeight();
-    this.toggleBold();
-
-    this.modFontSize(-12);
-    this.toggleItalics();
-    const subLh = this.lineHeight();
-    const usableW = Math.max(1, bandWidth - 4);
-    const roughLines = Math.max(1, Math.ceil(this.textWidth(subtext) / usableW));
-    const subLines = Math.min(3, Math.max(1, roughLines));
-    y += subLines * subLh;
-    this.toggleItalics();
-
-    const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
-    const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
-    const gapAfterRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_AFTER;
-
-    return y + gapBeforeRule + ruleH + gapAfterRule;
-  }
-
-  /**
-   * @param {number} x
-   * @param {number} y
-   * @param {number} bandWidth
-   * @param {string} title
-   * @param {string} subtext
-   */
-  #drawComponentHeaderColumn(x, y, bandWidth, title, subtext)
-  {
-    this.resetFontSettings();
-
-    let cursor = y;
-
-    this.modFontSize(4);
-    this.toggleBold();
-    this.drawText(title, x, cursor, bandWidth, 'left');
-    cursor += this.lineHeight();
-    this.toggleBold();
-
-    this.modFontSize(-12);
-    this.toggleItalics();
-    this.drawText(subtext, x, cursor, bandWidth, Window_Base.TextAlignments.Left);
-    const subLh = this.lineHeight();
-    const usableW = Math.max(1, bandWidth - 4);
-    const roughLines = Math.max(1, Math.ceil(this.textWidth(subtext) / usableW));
-    const subLines = Math.min(3, Math.max(1, roughLines));
-    cursor += subLines * subLh;
-    this.toggleItalics();
-
-    const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
+    const { ruleTopY, layouts } = this.#tripleColumnHeaderRuleTopInnerY(cw);
+    const titles = [ 'INGREDIENTS', 'TOOLS', 'OUTPUTS' ];
     const inset = Window_RecipeDetails.#COMPONENT_HEADER_RULE_SIDE_INSET;
-    const ruleW = Math.max(1, bandWidth - inset * 2);
     const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
-    this.drawHorizontalLine(x + inset, cursor + gapBeforeRule, ruleW, ruleH);
+
+    for (let col = 0; col < 3; col++)
+    {
+      const L = layouts[col];
+
+      this.#drawColumnTitleAndSubtext(x + cw * col, y, cw, titles[col], L.lines, L.subLineHeight);
+
+      const ruleW = Math.max(1, cw - inset * 2);
+      this.drawHorizontalLine(x + cw * col + inset, ruleTopY, ruleW, ruleH);
+    }
+
+    this.drawPrimaryOutput(x + cw * 3, y, wDetail);
   }
 
   /**

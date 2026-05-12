@@ -1,7 +1,9 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br>
- * Also initializes our jafting members.
+ * Refinement party hooks: counters, refined-equip tracking, and `$data*` refresh helpers.<br>
+ * When the last copy of a dynamic refinement row leaves the party, {@link JaftingSalvageManager} reclaims the slot and
+ * writes {@link RPG_Weapon.createEmpty} / {@link RPG_Armor.createEmpty} back into `$dataWeapons` / `$dataArmors` so
+ * indices stay hydrated blanks instead of `null`—keep any custom refresh paths consistent with that contract.
  */
 J.JAFTING.EXT.REFINE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
 Game_Party.prototype.initialize = function()

@@ -22,6 +22,7 @@ describe('J-JAFTING-Refinement workflow & layout (built plugins)', () =>
       party.initialize();
       party.__testItemContainer = {};
       $gameParty = party;
+      JaftingSalvageManager.initPartySalvageStorage();
     `, sandbox);
   });
 
@@ -95,10 +96,33 @@ describe('J-JAFTING-Refinement workflow & layout (built plugins)', () =>
       };
 
       vm.runInContext(`
-        const base = { _key() { return 'b'; }, name: 'Base' };
-        const mat = { _key() { return 'm'; }, name: 'Mat' };
+        function vitestWeaponRaw(id, name)
+        {
+          return {
+            id,
+            meta: {},
+            name,
+            note: '',
+            animationId: 0,
+            wtypeId: 1,
+            etypeId: 1,
+            params: [ 10, 0, 0, 0, 0, 0, 0, 0 ],
+            price: 0,
+            traits: [],
+            iconIndex: 1,
+            description: '',
+          };
+        }
+
+        const base = new RPG_Weapon(vitestWeaponRaw(10, 'Base'), 10);
+        const mat = new RPG_Weapon(vitestWeaponRaw(11, 'Mat'), 11);
+
+        $dataWeapons[10] = base;
+        $dataWeapons[11] = mat;
+
         $gameParty.gainItem(base, 1);
         $gameParty.gainItem(mat, 1);
+
         globalThis.__vitestRefineBase = base;
         globalThis.__vitestRefineMat = mat;
       `, sandbox);
@@ -121,6 +145,71 @@ describe('J-JAFTING-Refinement workflow & layout (built plugins)', () =>
 
       expect(sandbox.__vitestAfterBase).toBe(0);
       expect(sandbox.__vitestAfterMat).toBe(0);
+
+      VM.JaftingManager.createRefinedOutput = prevCreate;
+    });
+
+    it('commitRefinement merges party salvage before removing the last base copy (craft rows survive)', () =>
+    {
+      const session = new VM.RefinementWorkflowSession();
+      let createdWith = null;
+      const prevCreate = VM.JaftingManager.createRefinedOutput;
+
+      VM.JaftingManager.createRefinedOutput = function(equip)
+      {
+        createdWith = equip;
+      };
+
+      vm.runInContext(`
+void (() =>
+{
+  function vitestWeaponRaw(id, name)
+  {
+    return {
+      id,
+      meta: {},
+      name,
+      note: '',
+      animationId: 0,
+      wtypeId: 1,
+      etypeId: 1,
+      params: [ 10, 0, 0, 0, 0, 0, 0, 0 ],
+      price: 0,
+      traits: [],
+      iconIndex: 1,
+      description: '',
+    };
+  }
+
+  const base = new RPG_Weapon(vitestWeaponRaw(10, 'LedgerBase'), 10);
+  const mat = new RPG_Weapon(vitestWeaponRaw(11, 'LedgerMat'), 11);
+
+  $dataWeapons[10] = base;
+  $dataWeapons[11] = mat;
+
+  $gameParty.gainItem(base, 1);
+  $gameParty.gainItem(mat, 1);
+
+  JaftingSalvageManager.initPartySalvageStorage();
+  const bag = new JaftingSalvagePartyLedgerBag();
+  bag.unitLedgers[0] = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 99, 5) ]);
+  JaftingSalvageManager.recomputeMergedRowsFromPartyLedgerBag(bag);
+  $gameParty._j._jafting._salvageLedgers['w:10'] = bag;
+
+  globalThis.__ledgerRefineBase = base;
+  globalThis.__ledgerRefineMat = mat;
+})();
+`, sandbox);
+
+      session.beginMaterialSelection();
+      session.beginConfirmation();
+
+      const outEquip = { wtypeId: 1, name: 'LedgerRefined' };
+      const result = session.commitRefinement(sandbox.__ledgerRefineBase, sandbox.__ledgerRefineMat, outEquip);
+
+      expect(result.ok).toBe(true);
+      expect(createdWith._jaftingSalvageLedger).toBeDefined();
+      expect(createdWith._jaftingSalvageLedger.rows.some(r => r.t === 'i' && r.id === 99 && r.n === 5)).toBe(true);
 
       VM.JaftingManager.createRefinedOutput = prevCreate;
     });

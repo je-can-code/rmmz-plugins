@@ -98,6 +98,50 @@ class RPG_Skill
   {
     return `${super.implementationType()}:skill`;
   }
+
+  /**
+   * Hydrated blank skill row—symmetry with other DB wrappers when a slot must read as "unused but valid".
+   *
+   * @param {number} index database id and `$dataSkills` index for this row
+   * @returns {RPG_Skill}
+   */
+  static createEmpty(index)
+  {
+    const raw = {
+      id: index,
+      message1: String.empty,
+      message2: String.empty,
+      messageType: 1,
+      mpCost: 0,
+      requiredWtypeId1: 0,
+      requiredWtypeId2: 0,
+      stypeId: 1,
+      tpCost: 0,
+      animationId: 0,
+      damage: {
+        critical: false,
+        elementId: 0,
+        formula: '0',
+        type: 0,
+        variance: 20,
+      },
+      effects: [],
+      hitType: 0,
+      occasion: 0,
+      repeats: 1,
+      scope: 1,
+      speed: 0,
+      successRate: 100,
+      tpGain: 0,
+      description: String.empty,
+      iconIndex: 0,
+      name: String.empty,
+      note: String.empty,
+      meta: {},
+    };
+
+    return new RPG_Skill(raw, index);
+  }
 }
 
 //endregion RPG_Skill
