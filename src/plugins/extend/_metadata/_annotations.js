@@ -14,8 +14,10 @@
  * DETAILS:
  * The new functionalities available are as follows:
  * - Skills extending skills.
- * - On-hit self-state application.
- * - On-cast self-state application.
+ * - On-hit self-state application and removal.
+ * - On-cast self-state application and removal.
+ * - On-hit target-state stack stripping and full removal.
+ * - On-cast target-state stack stripping and full removal.
  * ============================================================================
  * SKILL EXTENSION:
  * Have you ever wanted to have a single skill gain additional effects by
@@ -109,11 +111,13 @@
  * to start your extension (or another skill extension of the same skill
  * perhaps)!
  * ============================================================================
- * SELF-STATE APPLICATION:
- * Have you ever wanted a battler to be able to inflict themselves with a state
- * upon execution of a skill? Well now you can! By applying the appropriate tag
- * to the skill(s) in question, you too can have battlers that are applying
- * states of any kind to themselves!
+ * STATE REACTION EFFECTS:
+ * Have you ever wanted a battler to be able to inflict themselves with a state,
+ * lose one of their own state stacks, strip a state stack from a target, or
+ * fully remove a state from a target as part of a skill's execution? Well now
+ * you can! By applying the appropriate tag to the skill(s) in question, you too
+ * can have battlers that react to casting or landing skills with state
+ * application and removal effects.
  *
  * NOTE 1:
  * State resistance is not taken into account in regards to the CHANCE of the
@@ -126,14 +130,25 @@
  * multiple times, having a skill "repeat", or in JABS have multiple hits on
  * the skill, will both result in triggering the on-hit effect multiple times.
  *
+ * NOTE 3:
+ * On-hit effects only process on a literal hit.
+ * If the action misses, is evaded, or is parried, then the on-hit effects will
+ * not trigger.
+ *
  * TAG USAGE:
  * - Skills only.
  *
  * TAG FORMAT:
  *  <onCastSelfState:[STATE_ID,CHANCE]>
  *  <onHitSelfState:[STATE_ID,CHANCE]>
- * Where STATE_ID is the id of the state to apply.
- * Where CHANCE is the percent chance between 0 and 100 that it'll apply.
+ *  <onCastLoseState:[STATE_ID,CHANCE]>
+ *  <onHitLoseState:[STATE_ID,CHANCE]>
+ *  <onCastStripState:[STATE_ID,CHANCE]>
+ *  <onHitStripState:[STATE_ID,CHANCE]>
+ *  <onCastRemoveState:[STATE_ID,CHANCE]>
+ *  <onHitRemoveState:[STATE_ID,CHANCE]>
+ * Where STATE_ID is the id of the state to apply, strip, or remove.
+ * Where CHANCE is the percent chance between 0 and 100 that it'll trigger.
  *
  * TAG EXAMPLES:
  *  <onCastSelfState:[3,40]>
@@ -144,12 +159,37 @@
  *
  *  <onHitSelfState:[19,100]>
  * The caster has a 100% (always) chance of appling state id 19 to oneself.
- * This processes as soon as the skill is "applied" to the target.
- * When using JABS, this applies as soon as the skill/action connects with
- * a target of any kind. This will trigger multiple times if an action has
- * multiple projectiles.
- * When using non-JABS, this applies when a skill is being executed against a
- * target. This happens regardless the outcome of the skill.
+ * This processes when the action successfully hits the target.
+ * When using JABS, this applies as soon as the skill/action lands on
+ * a target. This will trigger multiple times if an action has multiple
+ * projectiles.
+ * When using non-JABS, this applies when a skill successfully hits a
+ * target. Misses, evades, and parries do not trigger this.
+ *
+ *  <onCastLoseState:[6,100]>
+ * The caster has a 100% (always) chance of losing one stack of state id 6 from oneself.
+ * This processes alongside other on-cast effects when the skill is executed.
+ *
+ *  <onHitLoseState:[7,50]>
+ * The caster has a 50% chance of losing one stack of state id 7 from oneself when the
+ * skill successfully hits a target.
+ *
+ *  <onCastStripState:[8,100]>
+ * The caster has a 100% (always) chance of stripping one stack of state id 8
+ * from the target.
+ * This processes alongside other on-cast effects when the skill is executed.
+ *
+ *  <onHitStripState:[9,40]>
+ * The caster has a 40% chance of stripping one stack of state id 9 from the
+ * target when the skill successfully hits that target.
+ *
+ *  <onCastRemoveState:[10,100]>
+ * The caster has a 100% (always) chance of fully removing state id 10 from the target.
+ * This processes alongside other on-cast effects when the skill is executed.
+ *
+ *  <onHitRemoveState:[11,40]>
+ * The caster has a 40% chance of fully removing state id 11 from the target when the
+ * skill successfully hits that target.
  * ============================================================================
  * CHANGELOG:
  * - 1.2.1

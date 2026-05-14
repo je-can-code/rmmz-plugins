@@ -13,6 +13,8 @@ class Window_AbsMenuSelect
     ToolEquip: 'equip-tool',
     DodgeList: 'dodge',
     DodgeEquip: 'equip-dodge',
+    OffhandList: 'offhand',
+    OffhandEquip: 'equip-offhand',
   };
 
   /**
@@ -72,6 +74,14 @@ class Window_AbsMenuSelect
         // the dodge skill equip menu, where all the dodge skills can be equipped.
         this.makeEquippedDodgeSkillList();
         break;
+      case Window_AbsMenuSelect.SelectionTypes.OffhandList:
+        // the list of all offhand-eligible skills the leader knows.
+        this.makeOffhandSkillList();
+        break;
+      case Window_AbsMenuSelect.SelectionTypes.OffhandEquip:
+        // the offhand equip menu, where the offhand pin slot is shown for assignment.
+        this.makeEquippedOffhandList();
+        break;
     }
   }
 
@@ -94,7 +104,7 @@ class Window_AbsMenuSelect
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
       .setSymbol('skill')
       .setColorIndex(16)
-      .setHelpText('Remove the existing combat skill from the slot.')
+      .setTextLines([ 'Remove the existing combat skill from the slot.' ])
       .build();
 
     // add the clear slot command to the list.
@@ -142,7 +152,7 @@ class Window_AbsMenuSelect
     // build the clear slot command.
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
       .setSymbol('tool')
-      .setHelpText('Remove the existing tool from the slot.')
+      .setTextLines([ 'Remove the existing tool from the slot.' ])
       .setColorIndex(16)
       .build();
 
@@ -203,7 +213,7 @@ class Window_AbsMenuSelect
     const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
       .setSymbol('dodge')
       .setColorIndex(16)
-      .setHelpText('Remove the existing dodge skill from the slot.')
+      .setTextLines([ 'Remove the existing dodge skill from the slot.' ])
       .build();
 
     // add the clear slot command to the list.
@@ -281,7 +291,6 @@ class Window_AbsMenuSelect
         .setSymbol('slot')
         .setExtensionData(skillSlot.key)
         .setIconIndex(iconIndex)
-        .setHelpText(description)
         .build();
 
       // add the built command.
@@ -333,7 +342,6 @@ class Window_AbsMenuSelect
       .setSymbol('slot')
       .setExtensionData(toolSkillSlot.key)
       .setIconIndex(iconIndex)
-      .setHelpText(description)
       .setRightText(`x${amount}`)
       .build();
 
@@ -374,7 +382,103 @@ class Window_AbsMenuSelect
       .setSymbol('slot')
       .setExtensionData(dodgeSkillSlot.key)
       .setIconIndex(iconIndex)
-      .setHelpText(description)
+      .build();
+
+    // add the built command.
+    this.addBuiltCommand(command);
+  }
+
+  /**
+   * Fills the list with skills eligible for pinning into the offhand slot.
+   *
+   * Includes a leading "clear slot" entry so the player can drop the pin and fall back
+   * to the default equipment-driven offhand behavior. The remainder of the list is built
+   * from the leader's offhand-assignable skill pool, which surfaces explicitly eligible
+   * learned skills plus the current offhand/mainhand-provided offhand skills.
+   */
+  makeOffhandSkillList()
+  {
+    // initialize our blank list of skills to view.
+    const commands = Array.empty;
+
+    // build the clear slot command for clearing the offhand pin.
+    const clearSlotCommand = new WindowCommandBuilder('Use Equipment Default.')
+      .setSymbol('offhand')
+      .setColorIndex(16)
+      .setTextLines([ 'Remove the offhand pin and let the equipped offhand grant the skill again.' ])
+      .build();
+
+    // add the clear slot command to the list.
+    commands.push(clearSlotCommand);
+
+    // build the eligible skill pool for the leader (learned + equipped-granted).
+    const offhandSkills = $gameParty.leader()
+      .buildOffhandAssignableSkillPool();
+
+    // an iterator function for building offhand skill commands.
+    const forEacher = offhandSkill =>
+    {
+      // destruct the data out of the database data.
+      const {
+        name,
+        id,
+        iconIndex,
+        description
+      } = offhandSkill;
+
+      // build the command.
+      const offhandCommand = new WindowCommandBuilder(name)
+        .setSymbol('offhand')
+        .setExtensionData(id)
+        .setIconIndex(iconIndex)
+        .setTextLines(description.split(/[\r\n]+/))
+        .build();
+
+      // add the built command to the list.
+      commands.push(offhandCommand);
+    };
+
+    // iterate over each of the offhand skills and add them to the list.
+    offhandSkills.forEach(forEacher, this);
+
+    // iterate over all of the commands found and render them.
+    commands.forEach(this.addBuiltCommand, this);
+  }
+
+  /**
+   * Fills the list with the currently equipped offhand skill row, used as the
+   * single-slot landing window when assigning offhand pins.
+   */
+  makeEquippedOffhandList()
+  {
+    // grab the leader for reference data.
+    const leader = $gameParty.leader();
+
+    // grab the leader's offhand skill slot directly.
+    const offhandSkillSlot = leader.getSkillSlot(JABS_Button.Offhand);
+
+    // initialize the command variables.
+    let name = `${offhandSkillSlot.key}: ${J.ABS.Metadata.UnassignedText}`;
+    let iconIndex = 0;
+    let description = String.empty;
+
+    // check if the offhand slot has anything assigned right now.
+    if (offhandSkillSlot.isUsable())
+    {
+      // determine the currently resolved offhand skill (pin or equip).
+      const equippedOffhandSkill = leader.skill(offhandSkillSlot.id);
+
+      // update the command variables with the equipped offhand skill data.
+      name = equippedOffhandSkill.name;
+      iconIndex = equippedOffhandSkill.iconIndex;
+      description = equippedOffhandSkill.description;
+    }
+
+    // build the command.
+    const command = new WindowCommandBuilder(name)
+      .setSymbol('slot')
+      .setExtensionData(offhandSkillSlot.key)
+      .setIconIndex(iconIndex)
       .build();
 
     // add the built command.

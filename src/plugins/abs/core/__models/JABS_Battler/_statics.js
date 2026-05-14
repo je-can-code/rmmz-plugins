@@ -135,8 +135,45 @@ JABS_Battler.isSkillVisibleInCombatMenu = function(skill)
   // weapon skills are not visible in the combat skill menu.
   if (JABS_Battler.isWeaponSkillById(skill.id)) return false;
 
+  // skills explicitly opted into the offhand assignment list are surfaced there
+  // instead of the combat menu, to avoid a single skill bleeding across both menus.
+  if (skill.jabsOffhandEligible) return false;
+
   // show this skill!
   return true;
+};
+
+/**
+ * Determines whether or not a skill should be visible
+ * in the jabs offhand skill assignment menu.
+ *
+ * The offhand quick menu only surfaces learned skills that explicitly opt into
+ * offhand selection. Equipment-provided offhand skills are injected elsewhere
+ * by the actor, so they do not participate in this learned-skill filter.
+ *
+ * Dodge, guard, hidden, and generic weapon skills are excluded from this list.
+ * @param {RPG_Skill} skill The skill to check.
+ * @returns {boolean}
+ */
+JABS_Battler.isSkillVisibleInOffhandMenu = function(skill)
+{
+  // invalid skills are not visible in the offhand menu.
+  if (!skill) return false;
+
+  // explicitly hidden skills are not visible in the offhand menu.
+  if (skill.jabsHiddenFromMenus) return false;
+
+  // dodge skills belong to the dodge slot, not the offhand.
+  if (JABS_Battler.isDodgeSkillById(skill.id)) return false;
+
+  // guard skills are configured via equipment, not via the player-pinned offhand list.
+  if (JABS_Battler.isGuardSkillById(skill.id)) return false;
+
+  // generic weapon skills are still equipment-driven; they are not blanket-pickable.
+  if (JABS_Battler.isWeaponSkillById(skill.id)) return false;
+
+  // learned skills must opt in explicitly via the offhandEligible notetag.
+  return skill.jabsOffhandEligible === true;
 };
 
 /**

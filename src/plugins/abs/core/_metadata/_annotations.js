@@ -720,19 +720,39 @@
  *
  * ----------------------------------------------------------------------------
  * PROXIMITY:
- * How close an AI-controlled battler must get to the target before they
- * can execute this skill.
+ * Defines the maximum tile distance between the battler and the target at which
+ * the skill can be used. This tag serves two purposes:
+ *
+ * 1. AI GATE: An AI-controlled battler will not attempt this skill unless they
+ *    are within VAL tiles of their current target.
+ *
+ * 2. DIRECT SKILL RANGE: For skills that also carry <direct>, proximity defines
+ *    the search radius for target selection at decision time. The engine will
+ *    only lock onto targets within this distance. All direct skills must have
+ *    this tag -- it is not optional.
+ *
  *    <proximity:VAL>
- *  Where VAL is the proximity value for this skill.
+ *  Where VAL is the proximity value (in tiles) for this skill.
+ *
+ * NOTE: <proximity:0> means zero range, not uncapped. A value of 0 will never
+ * match any target.
  *
  * ----------------------------------------------------------------------------
  * DIRECT:
- * With the "direct" tag, combat resolves through proximity (<proximity:N>) to
- * the nearest valid target — not a flying map projectile. The optional map
- * action event (hitbox visuals / collision anchor) stays body-anchored.
+ * With the "direct" tag, the skill locks onto the nearest valid target within
+ * <proximity:N> rather than firing a flying map projectile. The hitbox event
+ * is spawned at the resolved target's tile and stays there.
  * The skill still obeys CAST TIME, RADIUS, HITBOX, and other tags.
- * The most common use case is healing skills, or skills that should feel
- * instant and unblockable.
+ *
+ * <direct> requires <proximity:N> on the same skill. Proximity defines the
+ * maximum range at which a target can be locked onto.
+ *
+ * Target selection priority (highest to lowest):
+ *   1. Opponent carrying the <directStateTarget:N> state (if configured).
+ *   2. Non-inanimate explicit target or last-hit within range.
+ *   3. Closest non-inanimate opponent found via proximity scan.
+ *   4. Inanimate fallback (explicit target or last-hit within range).
+ *
  *    <direct>
  *
  * NOTE ABOUT PARRYING:
@@ -758,6 +778,26 @@
  *
  * NOTE: <directLock> and <direct> are mutually exclusive. If both are
  * present on a skill, <directLock> takes precedence.
+ *
+ * ----------------------------------------------------------------------------
+ * DIRECT STATE TARGET:
+ * When present on a <direct> skill, the targeting system will prioritize any
+ * opponent within <proximity:N> that is currently afflicted with the specified
+ * state ID above all other targeting candidates.
+ *
+ * This is designed for combo chains where the opening hit applies a "mark"
+ * state to the target, and subsequent hits in the chain should snap to that
+ * marked target rather than the nearest foe. As long as the state is active
+ * and the target is within proximity, the chain stays locked.
+ *
+ * If the state expires, the target moves beyond proximity, or the state is
+ * cleansed, the skill falls through to the normal priority chain.
+ *
+ *    <directStateTarget:STATE_ID>
+ *  Where STATE_ID is the ID of the state that marks the priority target.
+ *
+ * NOTE: Requires <direct> and <proximity:N> on the same skill.
+ * NOTE: Proximity is always enforced. A marked target beyond range is not eligible.
  *
  * ----------------------------------------------------------------------------
  * PROJECTILE:
@@ -1123,14 +1163,29 @@
  *
  * ----------------------------------------------------------------------------
  * MAINHAND AND OFFHAND SLOTS:
- * These slots are typically auto-assigned via equipment. The weapon slot
- * translates to mainhand; the shield fills offhand. Dual-wielding puts
- * the second weapon in the offhand slot. To designate which skill a
- * piece of equipment grants, use:
+ * The mainhand slot is auto-assigned via the weapon equip slot using its
+ * <skillId:SKILL_ID> tag. The offhand slot is resolved each refresh using
+ * the following precedence (highest first):
+ *  1. Native offhand seal: if the battler has RMMZ's "Seal Equip: Offhand"
+ *     trait active AND the mainhand does not also declare <offhandSkillId:N>,
+ *     the offhand resolves to nothing.
+ *  2. Player pin: a skill the player explicitly assigned to the offhand
+ *     via the JABS quick menu (see "ASSIGNING THE OFFHAND" below).
+ *  3. Mainhand-provided offhand skill: <offhandSkillId:N> on the
+ *     currently equipped mainhand weapon.
+ *  4. The equipped offhand item's <skillId:N> tag.
+ *  5. Nothing.
+ *
+ * Once the base offhand skill is resolved, active states may temporarily
+ * transform it into another skill via <skillTransform:[BASE, OVERRIDE]>.
+ *
+ * To designate which skill a piece of equipment grants, use:
  *    <skillId:SKILL_ID>
  *  Where SKILL_ID is the skill to assign to the equip slot.
  *
- * NOTE: Only the offhand slot can define a guard skill.
+ * NOTE: Only the offhand slot can host a guard skill. Pinning a non-guard
+ * skill into the offhand intentionally trades the guard ability for that
+ * skill until the player clears or changes the pin.
  *
  * OFFHAND SKILL OVERRIDE:
  * In some cases, you may want a weapon to specify a different skill for
@@ -1138,6 +1193,32 @@
  * weapons that also define their own offhand behavior:
  *    <offhandSkillId:SKILL_ID>
  *  Where SKILL_ID is the skill to assign specifically to the offhand.
+ *
+ * TWO-HANDED WEAPONS:
+ * Use RMMZ's native trait instead of a notetag:
+ *    Trait -> Seal Equip -> Offhand
+ * When that trait is active anywhere on the battler, JABS treats the offhand
+ * as sealed. The seal is bypassed if the mainhand also declares
+ * <offhandSkillId:N>, which lets a "two-handed but defines its own offhand
+ * action" weapon (such as a spear) keep its offhand action.
+ *
+ * ASSIGNING THE OFFHAND (PLAYER PIN):
+ * Players may pin a learned skill into the offhand slot via the JABS
+ * quick menu. The pin survives until the player either clears it or
+ * changes the offhand equipment, at which point the pin is automatically
+ * cleared so that the newly equipped offhand's skill takes priority.
+ *
+ * Skills available in the offhand assignment list are:
+ *  - Learned skills carrying the <offhandEligible> tag.
+ *  - The skill currently granted by the equipped offhand item.
+ *  - The skill currently granted by the mainhand's <offhandSkillId:N>.
+ * Generic learned weapon skills are NOT automatically eligible.
+ *
+ *    <offhandEligible>
+ * Place this tag on any skill to opt it into the offhand assignment list
+ * regardless of skill type. This is intended for specially learned support,
+ * utility, or offensive skills that should be equippable as player-chosen
+ * offhand actions.
  *
  * KNOCKBACK RESISTANCE:
  * Equip this on a weapon or armor to reduce the tiles a battler carrying
@@ -1374,6 +1455,23 @@
  * PARALYZED:
  * Functionally the same as being rooted, disabled, and muted all at once.
  *    <paralyzed>
+ *
+ * ----------------------------------------------------------------------------
+ * SKILL TRANSFORM:
+ * Temporarily transforms one already-resolved equipped skill into another.
+ *    <skillTransform:[BASE, OVERRIDE]>
+ *  Where BASE is the equipped skill id being looked for.
+ *  Where OVERRIDE is the skill id that should execute instead.
+ *
+ * In the current offhand implementation, this is evaluated against the
+ * resolved offhand skill only. It is intentionally NOT exposed in the quick
+ * menu as an equip option. If multiple states transform the same base skill,
+ * the highest-priority state wins.
+ *
+ * Example:
+ *    <skillTransform:[151, 152]>
+ * If the battler's resolved offhand skill is 151, then 152 is used instead
+ * for as long as this state remains applied.
  *
  * ----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------
@@ -2151,6 +2249,13 @@
  * @desc The text that shows up in the JABS quickmenu for the "equip dodge skills" command.
  * @default Equip Dodge Skills
  *
+ * @param equipOffhandText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Offhand Skill Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip offhand skill" command.
+ * @default Equip Offhand Skill
+ *
  * @param equipToolsText
  * @parent quickmenuConfigs
  * @type string
@@ -2261,6 +2366,7 @@
  * @desc The slot to assign the skill to for this actor.
  * @option Tool
  * @option Dodge
+ * @option Offhand
  * @option L1A
  * @option L1B
  * @option L1X
@@ -2280,6 +2386,7 @@
  * @type select
  * @option Tool
  * @option Dodge
+ * @option Offhand
  * @option L1A
  * @option L1B
  * @option L1X

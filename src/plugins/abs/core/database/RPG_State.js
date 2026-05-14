@@ -110,18 +110,21 @@ Object.defineProperty(RPG_State.prototype, 'jabsAggroLock', {
 });
 //endregion aggroLock
 
-//region offhand skillId
+//region skillTransforms
 /**
- * The offhand skill id override from this state.
- * @type {number}
+ * The collection of skill transforms defined on this state.
+ *
+ * Each entry is expected to be a two-number array in the form:
+ * [ baseSkillId, transformedSkillId ]
+ * @type {number[][]}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsOffhandSkillId', {
+Object.defineProperty(RPG_State.prototype, 'jabsSkillTransforms', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.OffhandSkillId, true);
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
   },
 });
-//endregion offhand skillId
+//endregion skillTransforms
 
 //region reapplication type
 /**

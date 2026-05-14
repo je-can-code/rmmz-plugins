@@ -21,6 +21,17 @@ export function installJabsOnChanceEffectGlobalStub(sandbox)
     this.key = key;
   }
 
+  /**
+   * Determines whether or not this on-chance effect should trigger.
+   * @param {number} [rollForPositive=1] The number of rolls that count as success.
+   * @param {number} [rollForNegative=0] The number of rolls that count as failure.
+   * @returns {boolean}
+   */
+  JABS_OnChanceEffect.prototype.shouldTrigger = function(rollForPositive = 1, rollForNegative = 0)
+  {
+    return sandbox.RPGManager.chanceIn100(this.chance, rollForPositive, rollForNegative);
+  };
+
   sandbox.JABS_OnChanceEffect = JABS_OnChanceEffect;
 }
 //endregion install-jabs-onchance-stub

@@ -1607,6 +1607,7 @@ class JABS_Engine
     // non-direct actions always create events; direct actions only do so if coords are provided.
     const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
 
+
     // check if we determined we should create an event.
     if (shouldCreateEvent)
     {
@@ -3647,6 +3648,7 @@ class JABS_Engine
     const actionSprite = jabsAction.getActionSprite();
     const range = jabsAction.getRange();
     const shape = jabsAction.getShape();
+
     const targetsHit = [];
     let hitOne = false;
 

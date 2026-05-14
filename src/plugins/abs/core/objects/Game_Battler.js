@@ -658,6 +658,43 @@ Game_Battler.prototype.removeState = function(stateId)
 };
 
 /**
+ * Decrements the stack count of a tracked state by the designated amount.
+ * If the state is not being tracked by JABS, then this falls back to normal state removal.
+ * @param {number} stateId The id of the state to decrement.
+ * @param {number} [stacksRemoved=1] The number of stacks to remove.
+ */
+Game_Battler.prototype.decrementStateStacks = function(stateId, stacksRemoved = 1)
+{
+  // if we aren't afflicted with the state, then there is nothing to decrement.
+  if (!this.isStateAffected(stateId))
+  {
+    return;
+  }
+
+  // grab the tracked state from the JABS state tracker.
+  const trackedState = $jabsEngine.getJabsStateByUuidAndStateId(this.getUuid(), stateId);
+
+  // if the state isn't tracked by JABS, then remove it normally instead.
+  if (!trackedState)
+  {
+    this.removeState(stateId);
+    return;
+  }
+
+  // decrement the tracked state's stack count.
+  trackedState.decrementStacks(stacksRemoved);
+
+  // if there are still stacks remaining, then stop here.
+  if (trackedState.stackCount > 0)
+  {
+    return;
+  }
+
+  // remove the state now that all stacks are gone.
+  trackedState.removeFromBattler();
+};
+
+/**
  * Adds a particular state to become tracked by the tracker for this battler.
  * @param {number} stateId The state id to track.
  * @param {Game_Battler|Game_Actor|Game_Enemy} attacker The battler who is applying this state.

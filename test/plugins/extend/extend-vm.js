@@ -1,4 +1,5 @@
 //region plugins/extend/extend-vm.js
+import { installJabsOnChanceEffectGlobalStub } from '../_base/fixtures/install-jabs-onchance-stub.js';
 import { installExtendEngineStubs } from './fixtures/engine-stubs.js';
 import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
@@ -16,6 +17,7 @@ export function loadSkillExtendPluginVm(sandbox)
     sandbox,
     afterHostGlobalsInstall(s)
     {
+      installJabsOnChanceEffectGlobalStub(s);
       installExtendEngineStubs(s);
     },
   });

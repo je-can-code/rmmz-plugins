@@ -26,7 +26,6 @@ Object.defineProperty(RPG_EquipItem.prototype, 'jabsOffhandSkillId', {
 });
 //endregion offhand skillId
 
-
 //region useOnPickup
 /**
  * Normally defines whether or not an item will be automatically used
