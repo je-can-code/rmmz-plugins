@@ -21,6 +21,20 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
   }
 
   /**
+   * Returns false when the target sprite's Pixi transform has been nulled out.
+   *
+   * Pixi sets {@code transform = null} when a sprite is destroyed; it does NOT reliably set
+   * a {@code destroyed} boolean in all RMMZ-bundled versions, so checking transform directly
+   * is the safe guard. A null transform means any scale/rotation write would immediately
+   * throw "Cannot read properties of null (reading 'scale')".
+   * @returns {boolean}
+   */
+  isSpriteAlive()
+  {
+    return !!this._sprite.transform;
+  }
+
+  /**
    * Snaps the sprite back to the baseline captured at construction time.
    */
   restore()

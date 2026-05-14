@@ -522,69 +522,45 @@ Game_Actor.prototype.buildOffhandAssignableSkillPool = function()
 };
 
 /**
- * Gets the transformed offhand skill id after evaluating active state transforms.
+ * Extends {@link Game_Battler#getSkillTransformSources}.<br/>
+ * Also includes the actor's equipped equips and current class as transform sources,
+ * inserted between states and the actor's own database row.
+ */
+J.ABS.Aliased.Game_Actor.set('getSkillTransformSources', Game_Actor.prototype.getSkillTransformSources);
+Game_Actor.prototype.getSkillTransformSources = function()
+{
+  // copy the actor's active states so sorting does not mutate the live array.
+  const sortedStates = [ ...this.states() ];
+
+  // higher-priority states take precedence; sort descending by priority field.
+  sortedStates.sort((left, right) => right.priority - left.priority);
+
+  // individual equips come after states: a worn fire ring beats a class-wide transform.
+  const equipSources = this.equippedEquips();
+
+  // class is a broader, more passive source than individual equipped items.
+  const classSources = [ this.currentClass() ];
+
+  // the actor's database row is the most passive and lowest-precedence source.
+  const actorSources = [ this.databaseData() ];
+
+  // precedence order: states > equips > class > actor db row.
+  return [ ...sortedStates, ...equipSources, ...classSources, ...actorSources ];
+};
+
+/**
+ * Gets the transformed offhand skill id after applying any active skill transforms.
  *
- * If multiple states attempt to transform the same base offhand skill, the state with
- * the highest priority wins. Equal-priority states preserve the order returned by the
- * battler's state collection.
+ * Delegates to the generic {@link Game_Battler#resolveEquippedSkillId} resolver, which
+ * searches all note sources in precedence order. The offhand-specific implementation
+ * previously lived here; it has been superseded by the generic layer.
  * @param {number} baseSkillId The base offhand skill id before transforms are applied.
  * @returns {number}
  */
 Game_Actor.prototype.getTransformedOffhandSkillId = function(baseSkillId)
 {
-  // if there is no base skill, then there is nothing to transform.
-  if (!baseSkillId) return 0;
-
-  // find the highest-priority matching transform, if one exists.
-  const matchingTransform = this.findOffhandSkillTransform(baseSkillId);
-  if (!matchingTransform)
-  {
-    return baseSkillId;
-  }
-
-  // extract the transformed skill id from the matching transform pair.
-  const [ , transformedSkillId ] = matchingTransform;
-  return transformedSkillId;
-};
-
-/**
- * Finds the highest-priority state transform for the given offhand skill id.
- * @param {number} baseSkillId The base offhand skill id to look for a transform for.
- * @returns {number[]|null}
- */
-Game_Actor.prototype.findOffhandSkillTransform = function(baseSkillId)
-{
-  // default to not having found a matching transform yet.
-  let matchingTransform = null;
-
-  // copy and sort the actor's active states so higher-priority states are inspected first.
-  const prioritizedStates = [ ...this.states() ];
-  prioritizedStates.sort((left, right) => right.priority - left.priority);
-
-  // stop on the first matching transform because the list is now priority-ordered.
-  prioritizedStates.some(state =>
-  {
-    // skip states that do not define any transforms.
-    if (!state.jabsSkillTransforms.length) return false;
-
-    // look for a transform whose base skill matches the resolved offhand skill.
-    const stateTransform = state.jabsSkillTransforms
-      .find(transform =>
-      {
-        const [ transformBaseSkillId, ] = transform;
-        return transformBaseSkillId === baseSkillId;
-      });
-
-    // keep searching if this state does not transform the requested skill.
-    if (!stateTransform) return false;
-
-    // capture the matching transform from this highest-priority state.
-    matchingTransform = stateTransform;
-    return true;
-  });
-
-  // return the best matching transform, if any were found.
-  return matchingTransform;
+  // delegate to the generic resolver that covers all note sources and all slots.
+  return this.resolveEquippedSkillId(baseSkillId);
 };
 
 /**

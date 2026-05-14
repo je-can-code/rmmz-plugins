@@ -2115,7 +2115,9 @@ class JABS_AiManager
     }
 
     const gb = battler.getBattler();
-    const guardSkillId = gb.getEquippedSkillId(JABS_Button.Offhand);
+
+    // use the resolved skill id so guard-type classification matches the transformed skill.
+    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
 
     if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
     {
@@ -2206,7 +2208,8 @@ class JABS_AiManager
       }
     }
 
-    const guardSkillId = gb.getEquippedSkillId(JABS_Button.Offhand);
+    // use the resolved skill id so guard-type classification matches the transformed skill.
+    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
 
     if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
     {

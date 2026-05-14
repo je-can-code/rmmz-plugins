@@ -135,35 +135,45 @@ class Sprite_BaseSkillSlot
   }
 
   /**
-   * Gets the skill (or item) id of the assigned ability of this skill slot.
-   * Accommodates the possibility of
+   * Gets the effective skill (or item) id for this slot, accounting for active skill transforms
+   * and any queued combo follow-up.
+   *
+   * Resolution order:
+   *  1. Item slots return the raw item id unchanged — transforms do not apply to items.
+   *  2. When a combo follow-up is queued, its id is returned directly; combo chains are
+   *     sourced from the resolved (transformed) starter skill and are not re-transformed.
+   *  3. Otherwise the slot's base skill id is passed through the transform resolver so the
+   *     HUD displays the skill that will actually fire, not the raw equipped id.
    * @returns {number}
    */
   skillId()
   {
-    // the base id is of the skill slot's id.
-    const skillId = this.skillSlot().id;
-
-    // if it is an item, then the base skill id is the only id.
-    if (this.skillSlot()
-      .isItem())
+    // item slots store item ids — transforms are skills-only, so return raw.
+    if (this.skillSlot().isItem())
     {
-      return skillId;
+      return this.skillSlot().id;
     }
 
-    // grab the cooldown data for this skill.
+    // grab the cooldown data for this skill slot.
     const cooldownData = this.cooldownData();
 
-    // if there is none, then return the default.
-    if (!cooldownData) return skillId;
+    // when a combo follow-up is queued, show the combo skill as-is.
+    if (cooldownData && cooldownData.comboNextActionId > 0)
+    {
+      return cooldownData.comboNextActionId;
+    }
 
-    // see if we should be grabbing the next combo skill, or this skill.
-    const hasNextSkill = cooldownData.comboNextActionId > 0;
-    const nextSkillId = hasNextSkill
-      ? cooldownData.comboNextActionId  // return the next skill in the combo.
-      : skillId;                        // return the current skill.
+    // for the base slot, ask the battler for the resolved (post-transform) skill id.
+    const battler = this.targetBattler();
 
-    return nextSkillId;
+    // fall back to the raw slot id if there is no battler reference yet.
+    if (!battler)
+    {
+      return this.skillSlot().id;
+    }
+
+    // resolve through the transform layer so the HUD reflects the effective skill.
+    return battler.getResolvedSkillId(this.skillSlot().key);
   }
 
   /**
