@@ -438,4 +438,48 @@ JABS_SkillSlotManager.prototype.unlockAllSlots = function()
   this.getAllSlots()
     .forEach(slot => slot.unlock());
 };
+
+//region offhand pin
+/**
+ * Gets the skill id pinned to the offhand slot, or 0 when no pin is set.
+ *
+ * Convenience wrapper to keep callers (Game_Actor, plugin commands, scenes) from
+ * threading the slot key through their resolution code.
+ * @returns {number}
+ */
+JABS_SkillSlotManager.prototype.getOffhandPinnedSkillId = function()
+{
+  // grab the offhand slot directly; return 0 if it is not present yet.
+  const offhandSlot = this.getSkillSlotByKey(JABS_Button.Offhand);
+  if (!offhandSlot) return 0;
+
+  // delegate the read to the slot itself so legacy field handling is centralized.
+  return offhandSlot.getPinnedSkillId();
+};
+
+/**
+ * Sets the skill id pinned to the offhand slot.
+ *
+ * Pass 0 to clear the pin. Returns silently when the offhand slot does not yet exist
+ * (battlers initialize their slots lazily).
+ * @param {number} skillId The skill id to pin into the offhand slot, or 0 to clear.
+ */
+JABS_SkillSlotManager.prototype.setOffhandPinnedSkillId = function(skillId)
+{
+  // do nothing if the offhand slot is not yet initialized for this battler.
+  const offhandSlot = this.getSkillSlotByKey(JABS_Button.Offhand);
+  if (!offhandSlot) return;
+
+  // delegate the write to the slot, which handles change-detection and onChange.
+  offhandSlot.setPinnedSkillId(skillId);
+};
+
+/**
+ * Clears the pin on the offhand slot, if any.
+ */
+JABS_SkillSlotManager.prototype.clearOffhandPin = function()
+{
+  this.setOffhandPinnedSkillId(0);
+};
+//endregion offhand pin
 //endregion JABS_SkillSlotManager

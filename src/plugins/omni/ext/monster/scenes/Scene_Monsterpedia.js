@@ -50,8 +50,8 @@ class Scene_Monsterpedia
       // iterate over each potential drop and add it as being observed.
       allDrops.forEach(drop => observations.addKnownDrop(drop.kind, drop.dataId), this);
 
-      // iterate over all standard elements in the context of CA.
-      [ 1, 2, 3, 4, 5, 6, 7, 8, 9 ].forEach(id => observations.addKnownElementalistic(id), this);
+      // iterate over all standard damage-type elements in the context of CA (Cut through Typeless).
+      [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ].forEach(id => observations.addKnownElementalistic(id), this);
     };
 
     // iterate over every enemy.

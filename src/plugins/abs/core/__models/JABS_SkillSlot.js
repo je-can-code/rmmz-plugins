@@ -60,6 +60,16 @@ JABS_SkillSlot.prototype.initMembers = function()
    */
   this.locked = false;
 
+  /**
+   * The skill id that the player has explicitly pinned into this slot.
+   *
+   * Pinning is independent of {@link locked}: a pin is a player preference that survives
+   * equipment refreshes and wins over auto-derived skill ids during resolution. A value
+   * of 0 means no pin is set. Currently only meaningful for the offhand slot.
+   * @type {number}
+   */
+  this.pinnedSkillId = 0;
+
   // initialize the refreshes.
   this.initVisualRefreshes();
 };
@@ -450,6 +460,65 @@ JABS_SkillSlot.prototype.isLocked = function()
 {
   return this.locked;
 };
+
+//region pin
+/**
+ * Gets the skill id that has been explicitly pinned to this slot.
+ *
+ * Returns 0 when no pin is set. Defensively handles legacy save data where the
+ * pin field may be undefined on a deserialized slot.
+ * @returns {number}
+ */
+JABS_SkillSlot.prototype.getPinnedSkillId = function()
+{
+  // legacy saves may not have this field; treat absence as "no pin".
+  return this.pinnedSkillId ?? 0;
+};
+
+/**
+ * Sets the skill id pinned to this slot.
+ *
+ * A value of 0 clears the pin. Triggers the slot's on-change hook only when the
+ * pin actually changes so consumers (HUD refresh, etc) are not spammed.
+ * @param {number} skillId The skill id to pin, or 0 to clear the pin.
+ * @returns {this} Returns `this` for fluent chaining.
+ */
+JABS_SkillSlot.prototype.setPinnedSkillId = function(skillId)
+{
+  // normalize falsy values so a missing legacy field reads the same as 0.
+  const previous = this.getPinnedSkillId();
+
+  // assign the new pin value.
+  this.pinnedSkillId = skillId;
+
+  // only fire the on-change hook when the pin actually changed.
+  if (previous !== skillId)
+  {
+    this.onChange();
+  }
+
+  // return this for fluent-chaining.
+  return this;
+};
+
+/**
+ * Whether or not this slot has a pinned skill id.
+ * @returns {boolean}
+ */
+JABS_SkillSlot.prototype.hasPinnedSkill = function()
+{
+  return this.getPinnedSkillId() > 0;
+};
+
+/**
+ * Clears the pinned skill id from this slot.
+ * @returns {this} Returns `this` for fluent chaining.
+ */
+JABS_SkillSlot.prototype.clearPinnedSkill = function()
+{
+  return this.setPinnedSkillId(0);
+};
+//endregion pin
 
 /**
  * Gets the underlying data for this slot.

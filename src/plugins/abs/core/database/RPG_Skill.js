@@ -143,6 +143,25 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsDirectLock', {
     return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.DirectLock, true);
   },
 });
+//region directStateTarget
+/**
+ * The state ID that must be present on a target for it to receive top priority
+ * when resolving direct-skill targeting at decision time.
+ *
+ * When set, the targeting system scans within <proximity:N> for any opponent
+ * currently afflicted with this state before falling through to the normal
+ * priority chain (explicit target -> last-hit -> proximity scan -> inanimate).
+ *
+ * Requires <direct> and <proximity:N> on the same skill.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsDirectStateTarget', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.DirectStateTarget, true);
+  },
+});
+//endregion directStateTarget
 //endregion direct targeting
 
 //region aggro
@@ -577,6 +596,23 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsUnparryable', {
   },
 });
 //endregion unparryable
+
+//region offhandEligible
+/**
+ * Whether or not this skill may be assigned by the player into the offhand slot
+ * via the in-game JABS quick menu.
+ *
+ * Skills that are weapon-typed are implicitly offhand-eligible elsewhere; this tag is
+ * the opt-in flag for any other skill type to participate in the offhand assignment list.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsOffhandEligible', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.OffhandEligible);
+  },
+});
+//endregion offhandEligible
 
 //region selfAnimation
 /**

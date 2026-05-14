@@ -1045,26 +1045,57 @@ class JABS_Action
   }
 
   /**
-   * Keeps direct map actions glued to the caster’s continuous map coords each frame.
-   * Direct skills use proximity targeting (not flying map shots); the bound map event is always body-anchored.
+   * Keeps direct map actions anchored to the correct position each frame.
+   *
+   * When a direct skill was spatialized at decision-time (the options carry a frozen target
+   * location with valid coordinates), the action event was spawned there and must stay put -
+   * the hitbox lives at the target's tile, not the caster's.
+   *
+   * When no frozen location exists (pure proximity skills that never resolved a specific tile),
+   * fall back to the original behavior and keep the event glued to the caster so the
+   * caster-proximity collision path still works correctly.
    */
   syncDirectActionSpriteToCaster()
   {
+    // if this is not a direct action, there is nothing to sync.
     if (!this.isDirectAction())
     {
       return;
     }
 
+    // grab the action sprite to sync positions on.
     const actionSprite = this.getActionSprite();
 
+    // if there is no action sprite, there is nothing to sync.
     if (!actionSprite)
     {
       return;
     }
 
+    // read the options to check whether a frozen target location was captured at decision-time.
+    const options = this.getActionOptions();
+    const frozenLocation = options
+      ? options.getTargetLocation()
+      : null;
+    const frozenX = frozenLocation
+      ? frozenLocation.getX()
+      : null;
+    const frozenY = frozenLocation
+      ? frozenLocation.getY()
+      : null;
+
+    // if a frozen target tile exists, the event was spawned there - leave it in place.
+    if (frozenX !== null && frozenY !== null)
+    {
+      return;
+    }
+
+    // no frozen target: fall back to body-anchoring the sprite to the caster so
+    // the caster-proximity collision path still works for skills without a target tile.
     const casterChar = this.getCaster()
       .getCharacter();
 
+    // anchor the sprite to the caster's current continuous position.
     actionSprite._realX = casterChar._realX;
     actionSprite._realY = casterChar._realY;
     actionSprite._x = casterChar._x;

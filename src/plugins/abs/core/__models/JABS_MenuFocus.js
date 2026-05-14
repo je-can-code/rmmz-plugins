@@ -42,8 +42,15 @@ class JABS_MenuType
   static Dodge = "dodge";
 
   /**
+   * The "offhand" window is the list of offhand-eligible skills that the player can pin
+   * into the offhand slot.
+   * @type {string}
+   */
+  static Offhand = "offhand";
+
+  /**
    * The "assign" window is one of multiple types of windows where items or skills are assigned
-   * via the concept of "combat skills", "dodge skills", and "tools".
+   * via the concept of "combat skills", "dodge skills", "offhand skills", and "tools".
    * @type {string}
    */
   static Assign = "assign"
