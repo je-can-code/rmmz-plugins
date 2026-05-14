@@ -116,8 +116,8 @@ JABS_Battler.prototype.tryDodgeSkill = function()
   // grab the battler.
   const battler = this.getBattler();
 
-  // grab the skill id for the dodge slot.
-  const skillId = battler.getEquippedSkillId(JABS_Button.Dodge);
+  // grab the resolved skill id for the dodge slot, applying any active transform.
+  const skillId = battler.getResolvedSkillId(JABS_Button.Dodge);
 
   // if we have no skill id in the dodge slot, then do not dodge.
   if (!skillId) return;
@@ -198,7 +198,9 @@ JABS_Battler.prototype.executeDodgeSkill = function(skill, forcedDirection8)
 JABS_Battler.prototype.tryExecuteAiEmergencyDodgeAwayFrom = function(threatBattler)
 {
   const battler = this.getBattler();
-  const skillId = battler.getEquippedSkillId(JABS_Button.Dodge);
+
+  // get the resolved skill id for the dodge slot, applying any active transform.
+  const skillId = battler.getResolvedSkillId(JABS_Button.Dodge);
 
   if (!skillId)
   {

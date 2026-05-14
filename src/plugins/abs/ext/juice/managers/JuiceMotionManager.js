@@ -83,6 +83,19 @@ class JuiceMotionManager
   }
 
   /**
+   * Discards all queued effects and clears all sprite locks.
+   *
+   * Call this whenever the map scene is about to be torn down so that effects referencing
+   * soon-to-be-destroyed sprites do not linger in the static queue and crash the next
+   * Scene_Map instance when frameTick runs again.
+   */
+  static clearAll()
+  {
+    JuiceMotionManager.#effects.length = 0;
+    JuiceMotionManager.#spriteLocks = new WeakMap();
+  }
+
+  /**
    * Registers an external effect (usually a {@link JuiceBaseEffect} subclass) on the global queue.
    * @param {JuiceBaseEffect} effect The effect instance.
    */
@@ -105,6 +118,14 @@ class JuiceMotionManager
     for (let i = 0; i < JuiceMotionManager.#effects.length; i++)
     {
       const effect = JuiceMotionManager.#effects[i];
+
+      // pixi nulls out the internal transform when a sprite is destroy()ed; writing scale or
+      // rotation through a dead sprite would throw. silently discard the effect instead.
+      if (!effect.isSpriteAlive())
+      {
+        continue;
+      }
+
       if (effect.tick())
       {
         survivors.push(effect);

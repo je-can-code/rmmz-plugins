@@ -513,6 +513,20 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
   }
 
   /**
+   * Returns false when the parent character sprite's Pixi transform has been nulled out.
+   *
+   * Pixi sets {@code transform = null} when a sprite is destroyed; it does NOT reliably set
+   * a {@code destroyed} boolean in all RMMZ-bundled versions, so checking transform directly
+   * is the safe guard. The overlay is a child of the parent; a null transform on the parent
+   * means both are gone and ticking either would immediately throw.
+   * @returns {boolean}
+   */
+  isSpriteAlive()
+  {
+    return !!this._parentSprite.transform;
+  }
+
+  /**
    * Advances one frame of the swing arc.
    * @returns {boolean} True while the effect should stay in the runner queue.
    */

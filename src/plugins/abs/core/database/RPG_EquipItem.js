@@ -52,4 +52,24 @@ Object.defineProperty(RPG_EquipItem.prototype, 'jabsExpiration', {
   },
 });
 //endregion expiration
+
+//region skillTransforms
+/**
+ * The collection of skill transforms defined on this piece of equipment.
+ *
+ * Each entry is a two-number array in the form:
+ * [ baseSkillId, transformedSkillId ]
+ *
+ * While a battler has this equip equipped, any slot whose base skill id matches
+ * {@code baseSkillId} will execute as {@code transformedSkillId} instead,
+ * without mutating the slot's stored id.
+ * @type {number[][]}
+ */
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsSkillTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+  },
+});
+//endregion skillTransforms
 //endregion RPG_EquipItem

@@ -33,4 +33,24 @@ Object.defineProperty(RPG_Class.prototype, 'jabsBonusHitsScopeSkill', {
   },
 });
 //endregion bonusHitsScopes
+
+//region skillTransforms
+/**
+ * The collection of skill transforms defined on this class.
+ *
+ * Each entry is a two-number array in the form:
+ * [ baseSkillId, transformedSkillId ]
+ *
+ * While a battler uses this class, any equipped skill whose id matches
+ * {@code baseSkillId} will execute as {@code transformedSkillId} instead,
+ * without mutating the slot's stored id.
+ * @type {number[][]}
+ */
+Object.defineProperty(RPG_Class.prototype, 'jabsSkillTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+  },
+});
+//endregion skillTransforms
 //endregion RPG_Class

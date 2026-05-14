@@ -66,7 +66,10 @@ class Sprite_SkillCost
   }
 
   /**
-   * Calculates the skill cost accordingly to the type of this sprite.
+   * Calculates the skill cost according to the type of this sprite.
+   *
+   * The resolved (post-transform) skill id is used so cost display reflects the
+   * skill that will actually fire rather than the raw base skill in the slot.
    * @returns {number}
    */
   skillCostByType()
@@ -74,8 +77,9 @@ class Sprite_SkillCost
     const leader = $gameParty.leader();
     if (!leader) return 0;
 
-    const ability = this.skillSlot()
-      .data(leader);
+    // resolve through the transform layer so cost reflects the effective skill.
+    const resolvedId = leader.getResolvedSkillId(this.skillSlot().key);
+    const ability = this.skillSlot().data(leader, resolvedId);
     if (!ability) return 0;
 
     switch (this.skillCostType())
