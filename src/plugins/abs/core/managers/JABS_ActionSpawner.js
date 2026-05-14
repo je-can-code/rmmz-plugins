@@ -237,16 +237,27 @@ class JABS_ActionSpawner
       // translate lateral offset into dx/dy for the given facing.
       const delta = this.offsetToDelta(projectileDirection, lateral);
 
+      // preserve the original resolved target location, if one exists.
+      const targetLocation = actionOptions.getTargetLocation();
+
       // clone/compose a new options instance per projectile, storing only the lateral delta.
       // the absolute spawn position is resolved at fire time by applying this offset to the
       // caster's current coordinates in JABS_Engine.buildActionEventData.
-      const perActionOptions = JABS_ActionOptions.Builder()
+      const optionsBuilder = JABS_ActionOptions.Builder()
         .setIsRetaliation(actionOptions.isActionRetaliation())
         .setCooldownKey(actionOptions.getCooldownKey())
         .setSpawnOffset(delta[0], delta[1])
         .setIsTerrainDamage(actionOptions.isTerrainDamage())
-        .setProjectileTravelAngleDegrees(actionOptions.getProjectileTravelAngleDegrees())
-        .build();
+        .setProjectileTravelAngleDegrees(actionOptions.getProjectileTravelAngleDegrees());
+
+      // carry forward the original target coordinates for direct skills.
+      if (targetLocation)
+      {
+        optionsBuilder.setLocation(targetLocation);
+      }
+
+      // build the per-action options.
+      const perActionOptions = optionsBuilder.build();
 
       // build and return the action bound to this projectile's setup.
       return JABS_Action.Builder()

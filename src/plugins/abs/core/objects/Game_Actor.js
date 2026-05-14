@@ -25,6 +25,16 @@ Game_Actor.prototype.initJabsMembers = function()
    * @type {boolean}
    */
   this._j._abs._deathEffect = false;
+
+  /**
+   * The last observed offhand equip's item id, used to detect offhand swaps so we
+   * can clear any player-pinned offhand skill the next time equipment changes.
+   *
+   * Stored as null until the first equip-change hook seeds it; reads default to 0
+   * for legacy save data via the helper accessor.
+   * @type {?number}
+   */
+  this._j._abs._lastOffhandItemId = null;
 };
 
 /**
@@ -49,6 +59,10 @@ Game_Actor.prototype.setup = function(actorId)
  */
 Game_Actor.prototype.jabsRefresh = function()
 {
+  // reconcile the offhand pin against the current offhand item so a swap clears it
+  // before the slot is re-resolved below.
+  this.reconcileOffhandPinAgainstEquip();
+
   // refresh the currently equipped skills to ensure they are still valid.
   this.refreshBasicAttackSkills();
 
@@ -177,81 +191,410 @@ Game_Actor.prototype.updateOffhandSkill = function()
 /**
  * Gets the offhand skill for this actor.
  *
- * Takes into consideration the possibility of an offhand override
- * from the mainhand or some states.
+ * Resolution precedence (highest first):
+ *  1. Native offhand equip-seal (returns 0) unless the mainhand also defines an
+ *     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it.
+ *  2. Player pin via the JABS quick menu, when the pinned skill is still assignable.
+ *  3. The mainhand's provided offhand skill via {@code <offhandSkillId:N>}.
+ *  4. The equipped offhand item's {@link RPG_EquipItem#jabsSkillId jabsSkillId}.
+ *  5. 0 (no skill).
+ *
+ * After the base skill is identified, active states may temporarily transform that
+ * offhand skill into another one via {@code <skillTransform:[BASE, OVERRIDE]>}.
  * @returns {number} The offhand skill id.
  */
 Game_Actor.prototype.getOffhandSkill = function()
 {
-  // grab the offhand skill override if one exists.
-  const offhandOverride = this.offhandSkillOverride();
-
-  // check if there is an offhand override skill to use instead.
-  if (offhandOverride)
+  // an offhand equip-seal trait anywhere on the battler seals the slot unless the
+  // same weapon also declares its own offhand skill. this preserves spear-like
+  // weapons that intentionally define a specific offhand action.
+  if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId())
   {
-    // return the override.
-    return offhandOverride;
+    return 0;
   }
 
-  // grab the offhand of the actor.
-  const [ , offhand ] = this.equips();
+  // determine the base offhand skill from the player's pin or equipment defaults.
+  const baseOffhandSkillId = this.getBaseOffhandSkill();
 
-  // default the offhand skill to 0.
-  let offhandSkill = 0;
-
-  // check if we have something in our offhand.
-  if (offhand)
+  // if there is no offhand skill to resolve, then return 0.
+  if (!baseOffhandSkillId)
   {
-    // assign the skill id tag from the offhand.
-    offhandSkill = offhand.jabsSkillId ?? 0;
+    return 0;
   }
 
-  // return what we found.
-  return offhandSkill;
+  // apply state-driven transforms to the resolved offhand skill, if applicable.
+  return this.getTransformedOffhandSkillId(baseOffhandSkillId);
 };
 
 /**
- * Gets the offhand skill id override if one exists from
- * any states.
+ * Gets the base offhand skill for this actor before any temporary transforms are applied.
+ *
+ * This method only decides "what the actor has equipped or pinned". Any short-lived state
+ * behavior that upgrades one offhand skill into another is layered on afterwards by
+ * {@link #getTransformedOffhandSkillId}.
  * @returns {number}
  */
-Game_Actor.prototype.offhandSkillOverride = function()
+Game_Actor.prototype.getBaseOffhandSkill = function()
 {
-  // default to override of skill id 0.
-  let overrideSkillId = 0;
-
-  // grab all states to start.
-  const objectsToCheck = [ ...this.states() ];
-
-  // grab the weapon of the actor.
-  const [ weapon, ] = this.equips();
-
-  // check if we have a weapon.
-  if (weapon)
+  // honor a player-pinned offhand skill when it is still assignable for this actor.
+  const pinnedOffhandSkillId = this.getPinnedOffhandSkillId();
+  if (pinnedOffhandSkillId && this.isOffhandSkillAssignable(pinnedOffhandSkillId))
   {
-    // add the weapon on for possible offhand overrides.
-    objectsToCheck.unshift(weapon);
+    return pinnedOffhandSkillId;
   }
 
-  // iterate over all sources.
-  objectsToCheck.forEach(obj =>
+  // when there is no pin, prefer the mainhand's provided offhand skill first.
+  const mainhandProvidedSkillId = this.getMainhandProvidedOffhandSkillId();
+  if (mainhandProvidedSkillId)
   {
-    // check if we have an offhand skill id override.
-    if (obj.jabsOffhandSkillId)
-    {
-      // assign it if we do.
-      overrideSkillId = obj.jabsOffhandSkillId;
-    }
+    return mainhandProvidedSkillId;
+  }
+
+  // otherwise, fall back to the equipped offhand item's granted skill.
+  const offhandEquippedSkillId = this.getOffhandEquippedSkillId();
+  if (offhandEquippedSkillId)
+  {
+    return offhandEquippedSkillId;
+  }
+
+  // no offhand skill source was identified.
+  return 0;
+};
+
+/**
+ * Gets the native equip-type id that represents the offhand slot.
+ *
+ * In RMMZ, "Seal Equip: Offhand" is represented by {@link Game_BattlerBase.TRAIT_EQUIP_SEAL}
+ * with this equip-type id as the {@code dataId}. We centralize the magic number here
+ * so all offhand-seal checks read consistently.
+ * @returns {number}
+ */
+Game_Actor.prototype.offhandEquipTypeId = function()
+{
+  return 2;
+};
+
+/**
+ * Whether or not this actor is currently in a two-handed state.
+ *
+ * This is driven by native battler traits, not custom notetags: if any active source
+ * on the battler applies the offhand equip-seal trait, then JABS treats the offhand
+ * slot as sealed for skill-resolution purposes.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isTwoHanded = function()
+{
+  // check the battler's active traits for the native offhand equip-seal.
+  return this.isEquipTypeSealed(this.offhandEquipTypeId());
+};
+
+/**
+ * Whether or not this actor's currently equipped mainhand is effectively two-handed.
+ *
+ * This wrapper is retained for existing callers while the underlying implementation now
+ * delegates to the battler-wide native offhand-seal trait check.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isMainhandTwoHanded = function()
+{
+  return this.isTwoHanded();
+};
+
+/**
+ * Whether or not the currently equipped mainhand explicitly declares an offhand skill id.
+ *
+ * This is the seal-bypass check: a mainhand can be marked two-handed and still grant a
+ * specific offhand action via {@code <offhandSkillId:N>} (e.g. spear-style weapons).
+ * @returns {boolean}
+ */
+Game_Actor.prototype.mainhandDeclaresOffhandSkillId = function()
+{
+  // grab the mainhand only; state-driven overrides are not considered for the seal bypass.
+  const [ mainhand, ] = this.equips();
+
+  // no mainhand means it cannot be declaring anything.
+  if (!mainhand) return false;
+
+  // a positive value indicates an explicit declaration on the equip itself.
+  return (mainhand.jabsOffhandSkillId ?? 0) > 0;
+};
+
+/**
+ * Gets the offhand skill currently provided by the mainhand weapon.
+ * @returns {number}
+ */
+Game_Actor.prototype.getMainhandProvidedOffhandSkillId = function()
+{
+  // grab only the mainhand equip.
+  const [ mainhand, ] = this.equips();
+
+  // no mainhand means there is no mainhand-provided offhand skill.
+  if (!mainhand) return 0;
+
+  // return the explicit offhand contribution from the mainhand.
+  return mainhand.jabsOffhandSkillId ?? 0;
+};
+
+/**
+ * Whether or not the given skill id currently belongs to the mainhand's provided offhand path.
+ *
+ * This returns true both for the base skill directly granted by the mainhand's
+ * {@code <offhandSkillId:N>} and for the transformed result of that skill while a
+ * state-driven offhand transform is active.
+ * @param {number} skillId The skill id to check.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isMainhandProvidedOffhandSkill = function(skillId)
+{
+  // a missing or zero id cannot belong to the mainhand's offhand path.
+  if (!skillId) return false;
+
+  // no mainhand-provided offhand skill means there is nothing to compare against.
+  const mainhandProvidedSkillId = this.getMainhandProvidedOffhandSkillId();
+  if (!mainhandProvidedSkillId) return false;
+
+  // direct match against the mainhand's provided skill.
+  if (mainhandProvidedSkillId === skillId)
+  {
+    return true;
+  }
+
+  // transformed match against the state-upgraded result of the mainhand's provided skill.
+  const transformedMainhandSkillId = this.getTransformedOffhandSkillId(mainhandProvidedSkillId);
+  return transformedMainhandSkillId === skillId;
+};
+
+/**
+ * Gets the offhand skill currently provided by the equipped offhand item.
+ * @returns {number}
+ */
+Game_Actor.prototype.getOffhandEquippedSkillId = function()
+{
+  // grab only the offhand equip.
+  const [ , offhand ] = this.equips();
+
+  // no offhand means there is no offhand-provided skill.
+  if (!offhand) return 0;
+
+  // return the offhand's granted skill id.
+  return offhand.jabsSkillId ?? 0;
+};
+
+/**
+ * Gets the skill id pinned to the offhand slot by the player, or 0 if no pin is set.
+ * @returns {number}
+ */
+Game_Actor.prototype.getPinnedOffhandSkillId = function()
+{
+  // shortcut to the slot manager's offhand pin accessor.
+  const skillSlotManager = this.getSkillSlotManager();
+  if (!skillSlotManager) return 0;
+
+  return skillSlotManager.getOffhandPinnedSkillId();
+};
+
+/**
+ * Pins the given skill id to the offhand slot for this actor and refreshes the slot.
+ *
+ * Pass 0 to clear the pin and let auto-derivation take over again. The basic-attack
+ * refresh chain is invoked so the slot's resolved id and any HUD updates stay
+ * coherent without waiting for the next data-change tick.
+ * @param {number} skillId The skill id to pin into the offhand slot, or 0 to clear.
+ */
+Game_Actor.prototype.pinOffhandSkill = function(skillId)
+{
+  // grab the slot manager; bail if the actor has not been set up yet.
+  const skillSlotManager = this.getSkillSlotManager();
+  if (!skillSlotManager) return;
+
+  // write the pin (the slot itself handles change detection and onChange).
+  skillSlotManager.setOffhandPinnedSkillId(skillId);
+
+  // re-resolve the offhand slot so consumers see the new skill id immediately.
+  this.refreshBasicAttackSkills();
+};
+
+/**
+ * Clears the player-set pin from the offhand slot, if any.
+ */
+Game_Actor.prototype.clearOffhandPin = function()
+{
+  this.pinOffhandSkill(0);
+};
+
+/**
+ * Whether or not the given skill id is currently assignable as this actor's offhand.
+ *
+ * Offhand-assignable skills are sourced explicitly, not from the actor's entire learned
+ * weapon-skill pool. A skill is assignable only if it appears in the current offhand
+ * candidate list:
+ * - learned skills carrying {@code <offhandEligible>}
+ * - the skill currently granted by the equipped offhand item
+ * - the skill currently granted by the mainhand's {@code <offhandSkillId:N>}
+ * @param {number} skillId The skill id to validate.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.isOffhandSkillAssignable = function(skillId)
+{
+  // a missing or zero id is never assignable.
+  if (!skillId) return false;
+
+  // build the current collection of assignable skill ids and see if this one is present.
+  const offhandAssignableSkillIds = this.buildOffhandAssignableSkillIds();
+  return offhandAssignableSkillIds.includes(skillId);
+};
+
+/**
+ * Builds the list of skill ids available for player pinning into the offhand slot.
+ *
+ * The candidate list intentionally does not include all learned weapon skills. Offhand
+ * choices come only from explicit skill tags or the currently equipped gear's provided
+ * offhand skills.
+ * @returns {number[]}
+ */
+Game_Actor.prototype.buildOffhandAssignableSkillIds = function()
+{
+  // initialize the current collection of assignable skill ids.
+  const assignableSkillIds = [];
+
+  // begin with learned skills that explicitly opt into offhand assignment.
+  const explicitlyEligibleSkills = this.skills()
+    .filter(JABS_Battler.isSkillVisibleInOffhandMenu);
+
+  // add each explicitly eligible learned skill to the pool.
+  explicitlyEligibleSkills.forEach(skill =>
+  {
+    // skip duplicates while preserving the original learned-skill order.
+    if (assignableSkillIds.includes(skill.id)) return;
+
+    // add the explicitly eligible skill to the pool.
+    assignableSkillIds.push(skill.id);
   });
 
-  // return the last override skill found, if any.
-  return overrideSkillId;
+  // add the currently equipped offhand-provided skill, such as guard or utility actions.
+  const offhandEquippedSkillId = this.getOffhandEquippedSkillId();
+  if (offhandEquippedSkillId && !assignableSkillIds.includes(offhandEquippedSkillId))
+  {
+    assignableSkillIds.push(offhandEquippedSkillId);
+  }
+
+  // add the mainhand's provided offhand skill, such as pistol shot or taser discharge.
+  const mainhandProvidedSkillId = this.getMainhandProvidedOffhandSkillId();
+  if (mainhandProvidedSkillId && !assignableSkillIds.includes(mainhandProvidedSkillId))
+  {
+    assignableSkillIds.push(mainhandProvidedSkillId);
+  }
+
+  // return the ordered list of candidate ids.
+  return assignableSkillIds;
+};
+
+/**
+ * Builds the list of skills available for player pinning into the offhand slot.
+ *
+ * This translates the current offhand-assignable skill id list into database skill data
+ * for the quick menu.
+ * @returns {RPG_Skill[]}
+ */
+Game_Actor.prototype.buildOffhandAssignableSkillPool = function()
+{
+  // convert the assignable id collection into actual skill database objects.
+  const skillPool = [];
+
+  // build the current collection of assignable offhand skill ids.
+  const assignableSkillIds = this.buildOffhandAssignableSkillIds();
+
+  // translate each id into its corresponding skill data.
+  assignableSkillIds.forEach(skillId =>
+  {
+    // grab the skill data from the battler's skill resolver.
+    const skillData = this.skill(skillId);
+
+    // skip any invalid skill ids that somehow slipped through.
+    if (!skillData) return;
+
+    // add the translated skill data to the final pool.
+    skillPool.push(skillData);
+  });
+
+  // return the translated pool.
+  return skillPool;
+};
+
+/**
+ * Gets the transformed offhand skill id after evaluating active state transforms.
+ *
+ * If multiple states attempt to transform the same base offhand skill, the state with
+ * the highest priority wins. Equal-priority states preserve the order returned by the
+ * battler's state collection.
+ * @param {number} baseSkillId The base offhand skill id before transforms are applied.
+ * @returns {number}
+ */
+Game_Actor.prototype.getTransformedOffhandSkillId = function(baseSkillId)
+{
+  // if there is no base skill, then there is nothing to transform.
+  if (!baseSkillId) return 0;
+
+  // find the highest-priority matching transform, if one exists.
+  const matchingTransform = this.findOffhandSkillTransform(baseSkillId);
+  if (!matchingTransform)
+  {
+    return baseSkillId;
+  }
+
+  // extract the transformed skill id from the matching transform pair.
+  const [ , transformedSkillId ] = matchingTransform;
+  return transformedSkillId;
+};
+
+/**
+ * Finds the highest-priority state transform for the given offhand skill id.
+ * @param {number} baseSkillId The base offhand skill id to look for a transform for.
+ * @returns {number[]|null}
+ */
+Game_Actor.prototype.findOffhandSkillTransform = function(baseSkillId)
+{
+  // default to not having found a matching transform yet.
+  let matchingTransform = null;
+
+  // copy and sort the actor's active states so higher-priority states are inspected first.
+  const prioritizedStates = [ ...this.states() ];
+  prioritizedStates.sort((left, right) => right.priority - left.priority);
+
+  // stop on the first matching transform because the list is now priority-ordered.
+  prioritizedStates.some(state =>
+  {
+    // skip states that do not define any transforms.
+    if (!state.jabsSkillTransforms.length) return false;
+
+    // look for a transform whose base skill matches the resolved offhand skill.
+    const stateTransform = state.jabsSkillTransforms
+      .find(transform =>
+      {
+        const [ transformBaseSkillId, ] = transform;
+        return transformBaseSkillId === baseSkillId;
+      });
+
+    // keep searching if this state does not transform the requested skill.
+    if (!stateTransform) return false;
+
+    // capture the matching transform from this highest-priority state.
+    matchingTransform = stateTransform;
+    return true;
+  });
+
+  // return the best matching transform, if any were found.
+  return matchingTransform;
 };
 
 /**
  * Automatically removes all skills that are no longer available.
  * This most commonly will occur when a skill is bound to equipment that is
  * no longer equipped to the character. Skills that are "forced" will not be removed.
+ *
+ * Additionally, if the offhand slot's pinned skill is no longer assignable to this
+ * actor (typically because the actor unlearned it and no equip grants it), the pin is
+ * cleared so it cannot resurrect a stale id during the next refresh.
  */
 Game_Actor.prototype.removeInvalidSkills = function()
 {
@@ -269,6 +612,85 @@ Game_Actor.prototype.removeInvalidSkills = function()
       skillSlot.autoclear();
     }
   });
+
+  // sweep the offhand pin separately: it lives independently of the slot id, so the
+  // autoclear above does not touch it. an unassignable pin must be cleared so it
+  // cannot resurrect a stale skill id the next time the slot is resolved.
+  const pinnedOffhandSkillId = this.getPinnedOffhandSkillId();
+  if (pinnedOffhandSkillId && !this.isOffhandSkillAssignable(pinnedOffhandSkillId))
+  {
+    this.getSkillSlotManager()
+      .clearOffhandPin();
+  }
+};
+
+/**
+ * Gets the cached id of the most recently observed offhand equip.
+ *
+ * Returns 0 when no offhand was previously cached (legacy save data) or when the
+ * cache slot has not yet been seeded with the actor's current equipment.
+ * @returns {number}
+ */
+Game_Actor.prototype.lastOffhandItemId = function()
+{
+  return this._j._abs._lastOffhandItemId ?? 0;
+};
+
+/**
+ * Caches the given equip item's id as the actor's last-known offhand.
+ * @param {RPG_EquipItem|null} offhand The current offhand item, or null when unequipped.
+ */
+Game_Actor.prototype.setLastOffhandItemId = function(offhand)
+{
+  // store the database id of the equip; an empty slot is recorded as 0.
+  this._j._abs._lastOffhandItemId = offhand ? offhand.id : 0;
+};
+
+/**
+ * Whether or not this actor has an existing snapshot of the offhand equip.
+ *
+ * Used to skip the "first observation" path so a freshly loaded actor does not clear
+ * an existing pin just because the cache had not been seeded yet.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasLastOffhandSnapshot = function()
+{
+  return this._j._abs._lastOffhandItemId !== null && this._j._abs._lastOffhandItemId !== undefined;
+};
+
+/**
+ * Reconciles the offhand pin against the currently equipped offhand item.
+ *
+ * Compares the live offhand item id against the last cached snapshot and, if they
+ * differ, clears any active pin so the newly equipped offhand's skill takes priority.
+ * The first observation seeds the cache without clearing anything.
+ */
+Game_Actor.prototype.reconcileOffhandPinAgainstEquip = function()
+{
+  // resolve the current offhand once for both the comparison and the cache write.
+  const [ , offhand ] = this.equips();
+  const currentOffhandId = offhand ? offhand.id : 0;
+
+  // first observation: seed the cache without modifying any pin.
+  if (!this.hasLastOffhandSnapshot())
+  {
+    this.setLastOffhandItemId(offhand);
+    return;
+  }
+
+  // when the offhand item itself changed, clear the player's pin.
+  if (this.lastOffhandItemId() !== currentOffhandId)
+  {
+    // cache the new id before clearing so the pin removal does not loop.
+    this.setLastOffhandItemId(offhand);
+
+    // clear the pin via the manager helper; safe even if no pin is set.
+    if (this.getSkillSlotManager())
+    {
+      this.getSkillSlotManager()
+        .clearOffhandPin();
+    }
+  }
 };
 //endregion JABS basic attack skills
 

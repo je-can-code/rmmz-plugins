@@ -53,6 +53,8 @@ J.ABS.Helpers.PluginManager.TranslateOptionToSlot = slot =>
       return JABS_Button.Tool;
     case 'Dodge':
       return JABS_Button.Dodge;
+    case 'Offhand':
+      return JABS_Button.Offhand;
     case 'L1A':
       return JABS_Button.CombatSkill1;
     case 'L1B':
@@ -304,6 +306,7 @@ J.ABS.Metadata.ImplicitParryBaselinePerLevel = (Number.isFinite(implicitParryBas
 // quick menu commands configurations.
 J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
 J.ABS.Metadata.EquipDodgeSkillsText = J.ABS.PluginParameters['equipDodgeSkillsText'];
+J.ABS.Metadata.EquipOffhandText = J.ABS.PluginParameters['equipOffhandText'];
 J.ABS.Metadata.EquipToolsText = J.ABS.PluginParameters['equipToolsText'];
 J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
 J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
@@ -744,6 +747,7 @@ J.ABS.RegExp = {
   // action-execution-related.
   Direct: /<direct>/i,
   DirectLock: /<directLock>/i,
+  DirectStateTarget: /<directStateTarget:[ ]?(\d+)>/gi,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
@@ -766,6 +770,10 @@ J.ABS.RegExp = {
   UpgradeOverSkill: /<upgradeOverSkill:[ ]?(\d+)>/i,
   NoSkillUpgrading: /<noUpgrade>/i,
   UpgradeOnlySkill: /<onlyUpgrade>/i,
+
+  // a boolean tag that flags a skill as eligible to be assigned into the offhand slot
+  // by the player from the in-game JABS quick menu.
+  OffhandEligible: /<offhandEligible>/i,
 
   // aggro-related.
   BonusAggro: /<aggro:[ ]?(-?\d+)>/gi,
@@ -904,6 +912,7 @@ J.ABS.RegExp = {
   ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
   StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
   LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
+  SkillTransform: /<skillTransform:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // jabs core ailment functionalities.
   Paralyzed: /<paralyzed>/gi,

@@ -116,7 +116,8 @@
  *   Forces weapon swing overlay icon index N on the IconSet sheet (-1 behavior
  *   falls back to inferred equip icon for actors: dual-wield offhand uses weapon slot 2; offhand + one weapon
  *   resolves orb/shield armor by matching skill ids on armor rows or equip slot 1 when it is armor (body armor is
- *   not blindly armors()[0]), unless the lone weapon or a state claims the strike via offhandSkillId tags).
+ *   not blindly armors()[0]), unless the executing offhand skill currently belongs to the mainhand's
+ *   provided offhand path, including any temporary state-driven transform on that path).
  *
  * <juiceMotion:arc> | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
  *   Weapon overlay preset. Legacy swing-top-down / swing-bottom-up map to arc / arc-reverse.

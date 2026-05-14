@@ -59,6 +59,24 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
   // determine the locked state of the skill being assigned.
   const isLocked = locked === 'true';
 
+  // offhand assignments route through the pin path so equipment refreshes do not stomp
+  // the choice; the slot's id is then locked separately if requested.
+  if (skillSlotKey === JABS_Button.Offhand)
+  {
+    // pin the skill so the offhand resolve chain returns it on the next refresh.
+    actor.pinOffhandSkill(assignedId);
+
+    // honor the lock flag using the slot's existing lock plumbing.
+    if (isLocked)
+    {
+      actor.getSkillSlotManager()
+        .getSkillSlotByKey(JABS_Button.Offhand)
+        .lock();
+    }
+
+    return;
+  }
+
   // assign the id to the slot.
   actor.setEquippedSkill(skillSlotKey, assignedId, isLocked);
 });

@@ -110,6 +110,18 @@ Scene_Map.prototype.initJabsMenu = function()
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipDodgeWindow = null;
+
+  /**
+   * The window containing the list of offhand-eligible skills the leader knows.
+   * @type {Window_AbsMenuSelect|null}
+   */
+  this._j._absMenu._offhandWindow = null;
+
+  /**
+   * The window containing the currently resolved offhand skill row.
+   * @type {Window_AbsMenuSelect|null}
+   */
+  this._j._absMenu._equipOffhandWindow = null;
 };
 
 //region properties
@@ -274,6 +286,42 @@ Scene_Map.prototype.setJabsEquippedDodgeSkillWindow = function(window)
 {
   this._j._absMenu._equipDodgeWindow = window;
 };
+
+/**
+ * Gets the window containing the list of offhand-eligible skills.
+ * @returns {Window_AbsMenuSelect|null}
+ */
+Scene_Map.prototype.getJabsOffhandSkillListWindow = function()
+{
+  return this._j._absMenu._offhandWindow;
+};
+
+/**
+ * Sets the currently tracked JABS menu offhand skill list window to the given window.
+ * @param {Window_AbsMenuSelect} window The offhand skill list window to track.
+ */
+Scene_Map.prototype.setJabsOffhandSkillListWindow = function(window)
+{
+  this._j._absMenu._offhandWindow = window;
+};
+
+/**
+ * Gets the window containing the currently equipped offhand skill row.
+ * @returns {Window_AbsMenuSelect|null}
+ */
+Scene_Map.prototype.getJabsEquippedOffhandSkillWindow = function()
+{
+  return this._j._absMenu._equipOffhandWindow;
+};
+
+/**
+ * Sets the currently tracked JABS menu equipped offhand skill window to the given window.
+ * @param {Window_AbsMenuSelect} window The equipped offhand skill window to track.
+ */
+Scene_Map.prototype.setJabsEquippedOffhandSkillWindow = function(window)
+{
+  this._j._absMenu._equipOffhandWindow = window;
+};
 //endregion properties
 //endregion init
 
@@ -297,18 +345,20 @@ Scene_Map.prototype.createAllWindows = function()
  */
 Scene_Map.prototype.createJabsAbsMenu = function()
 {
-  // the main window that forks into the other three.
+  // the main window that forks into the other categories.
   this.createJabsAbsMenuMainWindow();
 
-  // the three main windows of the ABS menu.
+  // the per-category list windows of the ABS menu.
   this.createJabsAbsSkillListWindow();
   this.createJabsAbsMenuToolListWindow();
   this.createJabsAbsMenuDodgeListWindow();
+  this.createJabsAbsMenuOffhandListWindow();
 
-  // the assignment of the the windows.
+  // the per-category equipped/landing windows for assignment.
   this.createJabsAbsMenuEquipSkillWindow();
   this.createJabsAbsMenuEquipToolWindow();
   this.createJabsAbsMenuEquipDodgeWindow();
+  this.createJabsAbsMenuEquipOffhandWindow();
 };
 
 //region main menu
@@ -346,6 +396,7 @@ Scene_Map.prototype.buildJabsMenuMainWindow = function()
   // assign functionality for each of the commands.
   window.setHandler('skill-assign', this.commandSkill.bind(this));
   window.setHandler('dodge-assign', this.commandDodge.bind(this));
+  window.setHandler('offhand-assign', this.commandOffhand.bind(this));
   window.setHandler('item-assign', this.commandItem.bind(this));
   window.setHandler('main-menu', this.commandMenu.bind(this));
   window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Main));
@@ -782,6 +833,143 @@ Scene_Map.prototype.jabsEquippedDodgeSkillWindowRectangle = function()
   return new Rectangle(x, y, width, height);
 };
 //endregion equip dodge
+
+//region offhand list
+/**
+ * Creates the offhand-eligible skill list window of the JABS menu.
+ */
+Scene_Map.prototype.createJabsAbsMenuOffhandListWindow = function()
+{
+  // create the window.
+  const window = this.buildJabsOffhandSkillListWindow();
+
+  // update the tracker with the new window.
+  this.setJabsOffhandSkillListWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the offhand skill list of the JABS menu.
+ * @returns {Window_AbsMenuSelect}
+ */
+Scene_Map.prototype.buildJabsOffhandSkillListWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.jabsOffhandSkillListWindowRectangle();
+
+  // create the window with the rectangle.
+  const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.OffhandList);
+
+  // assign functionality for each of the commands.
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Offhand));
+  window.setHandler('offhand', this.commandEquipOffhand.bind(this));
+
+  // close and hide the window by default upon creation.
+  window.close();
+  window.hide();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Get the rectangle associated with the offhand skill list of the JABS menu.
+ *
+ * Mirrors the dodge list dimensions for visual parity across categories.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.jabsOffhandSkillListWindowRectangle = function()
+{
+  // define the width arbitrarily.
+  const width = Math.round(Graphics.boxWidth * 0.66);
+
+  // the general height of a command item is this many pixels.
+  const commandHeight = 72;
+
+  // the height should be 10 items tall with some padding on top and bottom.
+  const height = commandHeight * 10 + 40;
+
+  // the x coordinate should push the window against the right side.
+  const x = Graphics.boxWidth - width;
+
+  // define the y coordinate arbitrarily.
+  const y = 0;
+
+  // build the rectangle to return.
+  return new Rectangle(x, y, width, height);
+};
+//endregion offhand list
+
+//region equip offhand
+/**
+ * Creates the equip offhand skill window of the JABS menu.
+ */
+Scene_Map.prototype.createJabsAbsMenuEquipOffhandWindow = function()
+{
+  // create the window.
+  const window = this.buildJabsEquippedOffhandSkillWindow();
+
+  // update the tracker with the new window.
+  this.setJabsEquippedOffhandSkillWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the equipped offhand skill window of the JABS menu.
+ * @returns {Window_AbsMenuSelect}
+ */
+Scene_Map.prototype.buildJabsEquippedOffhandSkillWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.jabsEquippedOffhandSkillWindowRectangle();
+
+  // create the window with the rectangle.
+  const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.OffhandEquip);
+
+  // assign functionality for each of the commands.
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+  window.setHandler('slot', this.commandAssign.bind(this));
+
+  // close and hide the window by default upon creation.
+  window.close();
+  window.hide();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Get the rectangle associated with the equipped offhand skill of the JABS menu.
+ *
+ * Mirrors the equipped dodge skill dimensions: a single-row landing window beneath
+ * the matching list window.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.jabsEquippedOffhandSkillWindowRectangle = function()
+{
+  // define the width arbitrarily.
+  const width = 400;
+
+  // the height should be just enough to fit the single offhand skill in there.
+  const height = 96;
+
+  // the x coordinate should push the window against the right side.
+  const x = Graphics.boxWidth - width;
+
+  // grab the parent rectangle for location details.
+  const parentRectangle = this.jabsOffhandSkillListWindowRectangle();
+
+  // define the y coordinate arbitrarily.
+  const y = parentRectangle.y + parentRectangle.height;
+
+  // build the rectangle to return.
+  return new Rectangle(x, y, width, height);
+};
+//endregion equip offhand
 //endregion create
 
 //region actions
@@ -937,7 +1125,58 @@ Scene_Map.prototype.commandEquipDodge = function()
 };
 
 /**
+ * When the "equip offhand skill" option is chosen, it prioritizes this window.
+ */
+Scene_Map.prototype.commandOffhand = function()
+{
+  // adjust the focus.
+  this.setJabsMenuFocus(JABS_MenuType.Offhand);
+
+  // refresh the window.
+  this.getJabsOffhandSkillListWindow()
+    .refresh();
+
+  // show the related equipped window.
+  this.getJabsEquippedOffhandSkillWindow()
+    .refresh();
+  this.showJabsEquippedOffhandSkillWindow();
+  this.getJabsEquippedOffhandSkillWindow()
+    .deselect();
+  this.getJabsEquippedOffhandSkillWindow()
+    .deactivate();
+
+  // show the window.
+  this.showJabsOffhandSkillListWindow();
+
+  // set the assignment type to offhand skills.
+  this.setJabsMenuEquipType(JABS_MenuType.Offhand);
+};
+
+/**
+ * When a decision is made in offhand assign, prioritize the equip window.
+ */
+Scene_Map.prototype.commandEquipOffhand = function()
+{
+  // adjust the focus.
+  this.setJabsMenuFocus(JABS_MenuType.Assign);
+
+  // grab the window.
+  const window = this.getJabsEquippedOffhandSkillWindow();
+
+  // refresh the window.
+  window.refresh();
+  window.select(0);
+
+  // show the window.
+  this.showJabsEquippedOffhandSkillWindow();
+};
+
+/**
  * When assigning a slot, determine the last opened window and use that.
+ *
+ * Offhand assignments route through the actor's pin path so the choice survives
+ * the next equipment-derived refresh; non-offhand slots use the legacy direct
+ * setEquippedSkill path unchanged.
  */
 Scene_Map.prototype.commandAssign = function()
 {
@@ -972,10 +1211,27 @@ Scene_Map.prototype.commandAssign = function()
       nextActionSkill = this.getJabsDodgeSkillListWindow()
         .currentExt();
       break;
+    case JABS_MenuType.Offhand:
+      // offhand always targets the offhand slot key from the equip window's payload.
+      equippedActionSlot = this.getJabsEquippedOffhandSkillWindow()
+        .currentExt();
+      // the list window's payload is either a skill id (number) or undefined for the
+      // clear-slot row; an undefined payload is normalized to 0 to clear the pin.
+      nextActionSkill = this.getJabsOffhandSkillListWindow()
+        .currentExt() ?? 0;
+      break;
   }
 
-  // update the leader's equipped slots with the skill.
-  actor.setEquippedSkill(equippedActionSlot, nextActionSkill);
+  // pivot writes for offhand through the pin path so equipment refreshes do not stomp it.
+  if (this.getJabsMenuEquipType() === JABS_MenuType.Offhand)
+  {
+    actor.pinOffhandSkill(nextActionSkill);
+  }
+  else
+  {
+    // update the leader's equipped slots with the skill.
+    actor.setEquippedSkill(equippedActionSlot, nextActionSkill);
+  }
 
   // automatically return back to the list.
   this.closeAbsWindow(JABS_MenuType.Assign);
@@ -1086,6 +1342,10 @@ Scene_Map.prototype.manageAbsMenu = function()
     case JABS_MenuType.Dodge:
       this.hideJabsMainWindow();
       this.showJabsDodgeSkillListWindow();
+      break;
+    case JABS_MenuType.Offhand:
+      this.hideJabsMainWindow();
+      this.showJabsOffhandSkillListWindow();
       break;
     case null:
       this.setJabsMenuFocus(JABS_MenuType.Main);
@@ -1301,6 +1561,58 @@ Scene_Map.prototype.hideJabsEquippedDodgeSkillWindow = function()
 };
 //endregion equip dodge skill
 
+//region offhand skills
+/**
+ * Shows the JABS menu offhand skill list window.
+ */
+Scene_Map.prototype.showJabsOffhandSkillListWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsOffhandSkillListWindow();
+
+  // show the window.
+  this.showJabsMenuWindow(window);
+};
+
+/**
+ * Hides the JABS menu offhand skill list window.
+ */
+Scene_Map.prototype.hideJabsOffhandSkillListWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsOffhandSkillListWindow();
+
+  // hide the window.
+  this.hideJabsMenuWindow(window);
+};
+//endregion offhand skills
+
+//region equip offhand skill
+/**
+ * Shows the JABS menu equip offhand skill window.
+ */
+Scene_Map.prototype.showJabsEquippedOffhandSkillWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsEquippedOffhandSkillWindow();
+
+  // show the window.
+  this.showJabsMenuWindow(window);
+};
+
+/**
+ * Hides the JABS menu equip offhand skill window.
+ */
+Scene_Map.prototype.hideJabsEquippedOffhandSkillWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsEquippedOffhandSkillWindow();
+
+  // hide the window.
+  this.hideJabsMenuWindow(window);
+};
+//endregion equip offhand skill
+
 /**
  * Hides all windows of the JABS menu.
  */
@@ -1308,6 +1620,9 @@ Scene_Map.prototype.hideAllJabsWindows = function()
 {
   this.hideJabsDodgeSkillListWindow();
   this.hideJabsEquippedDodgeSkillWindow();
+
+  this.hideJabsOffhandSkillListWindow();
+  this.hideJabsEquippedOffhandSkillWindow();
 
   this.hideJabsToolListWindow();
   this.hideJabsEquippedToolWindow();
@@ -1378,6 +1693,11 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       this.hideJabsEquippedDodgeSkillWindow();
       this.setJabsMenuFocus(JABS_MenuType.Main);
       break;
+    case JABS_MenuType.Offhand:
+      this.hideJabsOffhandSkillListWindow();
+      this.hideJabsEquippedOffhandSkillWindow();
+      this.setJabsMenuFocus(JABS_MenuType.Main);
+      break;
     case JABS_MenuType.Assign:
       this.redirectToParentAssignMenu();
       break;
@@ -1416,6 +1736,13 @@ Scene_Map.prototype.redirectToParentAssignMenu = function()
       this.getJabsDodgeSkillListWindow()
         .activate();
       break;
+    case JABS_MenuType.Offhand:
+      const equippedOffhandSkillWindow = this.getJabsEquippedOffhandSkillWindow();
+      equippedOffhandSkillWindow.deselect();
+      equippedOffhandSkillWindow.refresh();
+      this.getJabsOffhandSkillListWindow()
+        .activate();
+      break;
   }
 };
 
@@ -1437,6 +1764,7 @@ Scene_Map.prototype.forceCloseAbsMenu = function()
   this.closeAbsWindow(JABS_MenuType.Skill);
   this.closeAbsWindow(JABS_MenuType.Tool);
   this.closeAbsWindow(JABS_MenuType.Dodge);
+  this.closeAbsWindow(JABS_MenuType.Offhand);
 
   this.setJabsMenuEquipType(String.empty);
   this.closeAbsWindow(JABS_MenuType.Main);

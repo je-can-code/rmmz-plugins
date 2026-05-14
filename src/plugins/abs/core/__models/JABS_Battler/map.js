@@ -184,6 +184,7 @@ JABS_Battler.prototype.getAttackData = function(cooldownKey)
     // resolve a stable snapshot of [x,y] at decision time.
     const [ x, y ] = this.resolveDirectActionTargetCoordinatesForSkill(skill);
 
+
     // if resolved, capture into the location on the options.
     if (x !== null && y !== null)
     {
