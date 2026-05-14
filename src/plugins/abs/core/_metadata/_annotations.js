@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.11.0 JABS] Enables combat to be carried out on the map.
+ * [v4.12.0 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,25 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.12.0
+ *    Generic skill transform: <skillTransform:[BASE, OVERRIDE]> now applies to all equipped
+ *    slots (combat, dodge, offhand) and all note-bearing sources (actor, class, weapon/armor,
+ *    state). Precedence order: active states (highest priority, sorted by priority desc) >
+ *    equipped items > class > actor/enemy DB row. The transform target does not need to be
+ *    learned via hasSkill — the tag itself is the implicit permission grant. Tool slot is
+ *    excluded (stores item ids, not skill ids).
+ *    Added Game_Battler#getSkillTransformSources, #resolveEquippedSkillId, #getResolvedSkillId.
+ *    Game_Actor extends getSkillTransformSources to include equips and class.
+ *    All execution paths (map action, guarding, dodging, AI guard decisions) use the resolved
+ *    skill id. Added battlerHasPermissionForSlot to guard hasSkill against the raw base slot id.
+ *    Fixed applyPlayerCooldowns shared-cooldown stamping to use resolveEquippedSkillId so
+ *    transformed slots correctly receive their cooldown when the executed skill id differs from
+ *    the raw stored slot id.
+ *    HUD (Sprite_BaseSkillSlot, Sprite_SkillSlotIcon, Sprite_SkillCost) and JABS quick menu
+ *    (Window_AbsMenuSelect) now display the transformed skill's icon, name, and cost.
+ *    Existing getTransformedOffhandSkillId now delegates to the generic resolver; the
+ *    offhand-only findOffhandSkillTransform helper has been removed.
+ *    Added jabsSkillTransforms getter to RPG_BaseBattler, RPG_Class, and RPG_EquipItem.
  * - 4.11.0
  *    Regen ticks twice per second (interval + scaled natural regen + per-state slip application so per-second totals match
  *    legacy math); slip/regen hooks can attribute popups per state. `JABS_Engine.implicitParryChancePercent` extracts the
@@ -1176,8 +1195,9 @@
  *  4. The equipped offhand item's <skillId:N> tag.
  *  5. Nothing.
  *
- * Once the base offhand skill is resolved, active states may temporarily
- * transform it into another skill via <skillTransform:[BASE, OVERRIDE]>.
+ * Once the base offhand skill is resolved, it may be further transformed
+ * via <skillTransform:[BASE, OVERRIDE]> from any note-bearing source
+ * (state, equip, class, or actor) — see SKILL TRANSFORM below.
  *
  * To designate which skill a piece of equipment grants, use:
  *    <skillId:SKILL_ID>
@@ -1458,20 +1478,34 @@
  *
  * ----------------------------------------------------------------------------
  * SKILL TRANSFORM:
- * Temporarily transforms one already-resolved equipped skill into another.
+ * Transforms one equipped skill into another at runtime without mutating
+ * the slot's stored id. Valid on actors, enemies, classes, weapons, armors,
+ * and states. The slot's base skill id is compared against BASE; when they
+ * match, OVERRIDE is used for all execution and display purposes instead.
  *    <skillTransform:[BASE, OVERRIDE]>
- *  Where BASE is the equipped skill id being looked for.
- *  Where OVERRIDE is the skill id that should execute instead.
+ *  Where BASE is the equipped skill id to match against.
+ *  Where OVERRIDE is the skill id that executes and displays instead.
  *
- * In the current offhand implementation, this is evaluated against the
- * resolved offhand skill only. It is intentionally NOT exposed in the quick
- * menu as an equip option. If multiple states transform the same base skill,
- * the highest-priority state wins.
+ * This applies to ALL equipped skill slots (combat, dodge, offhand). The tool
+ * slot is excluded because it stores item ids rather than skill ids.
+ *
+ * PERMISSION: The battler does not need to have formally learned OVERRIDE.
+ * The transform tag itself grants implicit permission; only the BASE slot
+ * skill must be known via the normal hasSkill check.
+ *
+ * PRECEDENCE (first match wins):
+ *  1. Active states, ordered by highest priority first.
+ *  2. Equipped items (actors only), in equip-slot order.
+ *  3. Current class (actors only).
+ *  4. Actor or enemy database row.
+ *
+ * If multiple sources define a transform for the same BASE, the source
+ * highest in the precedence list wins. States always beat equips.
  *
  * Example:
  *    <skillTransform:[151, 152]>
- * If the battler's resolved offhand skill is 151, then 152 is used instead
- * for as long as this state remains applied.
+ * While this note is active on any source, any slot whose base skill id is
+ * 151 will execute and display as skill 152 instead.
  *
  * ----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------

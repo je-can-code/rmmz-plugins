@@ -63,6 +63,9 @@ class Sprite_SkillSlotIcon
 
   /**
    * Gets the icon associated with the tracked skill slot.
+   *
+   * The resolved (post-transform) skill id is used so the icon reflects the skill that
+   * will actually fire rather than the raw equipped skill in the slot.
    * @returns {number}
    */
   skillSlotIcon()
@@ -70,17 +73,22 @@ class Sprite_SkillSlotIcon
     // if there is no skill slot, return whatever is currently there.
     if (!this.hasSkillSlot()) return this._j._iconIndex;
 
-    // if there is no leader, do not try to translate the slot into an icon.
-    if (!$gameParty.leader()) return this._j._iconIndex;
+    // grab the party leader; they are the source of transform resolution for the icon.
+    const leader = $gameParty.leader();
 
-    // if we are leveraging skill extensions, then grab the appropriate skill.
-    const skill = this.skillSlot()
-      .data($gameParty.leader());
+    // if there is no leader, do not try to translate the slot into an icon.
+    if (!leader) return this._j._iconIndex;
+
+    // resolve through the transform layer so the icon shows the effective skill.
+    const resolvedId = leader.getResolvedSkillId(this.skillSlot().key);
+
+    // fetch the skill data for the resolved id.
+    const skill = this.skillSlot().data(leader, resolvedId);
 
     // if nothing was in the slot, then don't draw it.
     if (!skill) return 0;
 
-    // return the skill's icon index.
+    // return the resolved skill's icon index.
     return skill.iconIndex;
   }
 

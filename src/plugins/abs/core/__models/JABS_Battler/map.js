@@ -161,17 +161,18 @@ JABS_Battler.prototype.getAttackData = function(cooldownKey)
   // grab the underlying battler.
   const battler = this.getBattler();
 
-  // get the skill equipped in the designated slot.
+  // get the resolved skill id to execute (transform applied if applicable, combo if queued).
   const skillId = this.getSkillIdForAction(cooldownKey);
 
   // if there isn't one, then we don't do anything.
   if (!skillId) return [];
 
-  // check to make sure we can actually use the skill.
+  // check costs against the resolved skill — that is what will actually fire.
   if (!battler.meetsSkillConditions(battler.skill(skillId))) return [];
 
-  // check to make sure we actually know the skill, too.
-  if (!battler.hasSkill(skillId)) return [];
+  // check that the battler has permission to use this slot.
+  // the raw base slot id is checked so transforms do not require learning the target skill.
+  if (!this.battlerHasPermissionForSlot(cooldownKey)) return [];
 
   // build action options with the cooldown key.
   const builder = JABS_ActionOptions.Builder()
@@ -207,8 +208,38 @@ JABS_Battler.prototype.getAttackData = function(cooldownKey)
 };
 
 /**
+ * Determines whether the battler has permission to initiate an action from the given slot.
+ *
+ * For combo follow-ups the combo skill was already validated when the combo was armed, so
+ * no additional check is needed here. For a base slot execution, permission is granted when
+ * the battler knows the raw equipped skill — the transform target does not need to be
+ * learned, as the transform tag itself acts as the implicit permission grant.
+ * @param {string} slot The slot key to check permission for.
+ * @returns {boolean} True when the battler may proceed to build and execute an action.
+ */
+JABS_Battler.prototype.battlerHasPermissionForSlot = function(slot)
+{
+  // combo skills are pre-validated at arm time; no extra check needed.
+  if (this.getComboNextActionId(slot) !== 0)
+  {
+    return true;
+  }
+
+  // for the base slot, check the raw equipped skill id so the transform target
+  // does not require a separate hasSkill entry to be usable.
+  const battler = this.getBattler();
+  const baseSkillId = battler.getEquippedSkillId(slot);
+  return battler.hasSkill(baseSkillId);
+};
+
+/**
  * Gets the next skill id to create an action from for the given slot.
- * Accommodates combo actions.
+ *
+ * When a combo is queued, the combo id is returned as-is — combo chains are already
+ * sourced from the resolved (transformed) skill's own notetags and should not be
+ * re-transformed. For the base slot case the skill id is passed through
+ * {@link Game_Battler#getResolvedSkillId} so that any active skill transform is applied
+ * before the action is built.
  * @param {string} slot The slot for the skill to check.
  * @returns {number}
  */
@@ -217,24 +248,15 @@ JABS_Battler.prototype.getSkillIdForAction = function(slot)
   // grab the underlying battler.
   const battler = this.getBattler();
 
-  // check the slot for a combo action.
-  let skillId;
-
-  // check if we have a skill id in the next combo action id slot.
+  // check if a combo follow-up is queued for this slot.
   if (this.getComboNextActionId(slot) !== 0)
   {
-    // capture the combo action id.
-    skillId = this.getComboNextActionId(slot);
-  }
-  // if no combo...
-  else
-  {
-    // then just grab the skill id in the slot.
-    skillId = battler.getEquippedSkillId(slot);
+    // return the pending combo id; combo skills are pre-resolved from the starter's notetags.
+    return this.getComboNextActionId(slot);
   }
 
-  // return whichever skill id was found.
-  return skillId;
+  // no combo pending — return the resolved skill id so transforms are applied.
+  return battler.getResolvedSkillId(slot);
 };
 
 /**

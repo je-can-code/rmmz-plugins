@@ -169,8 +169,8 @@ JABS_Battler.prototype.getGuardData = function(cooldownKey)
   // shorthand the battler of which we're getting data for.
   const battler = this.getBattler();
 
-  // determine the skill in the given slot.
-  const skillId = battler.getEquippedSkillId(cooldownKey);
+  // determine the resolved skill in the given slot, applying any active transform.
+  const skillId = battler.getResolvedSkillId(cooldownKey);
 
   // if we have no skill to guard with, then we don't guard.
   if (!skillId) return null;
@@ -198,9 +198,9 @@ JABS_Battler.prototype.getGuardData = function(cooldownKey)
  */
 JABS_Battler.prototype.isGuardSkillByKey = function(cooldownKey)
 {
-  // get the equipped skill in the given slot.
+  // get the resolved skill in the given slot, applying any active transform.
   const skillId = this.getBattler()
-    .getEquippedSkillId(cooldownKey);
+    .getResolvedSkillId(cooldownKey);
 
   // if we don't hve a skill id, it isn't a guard skill.
   if (!skillId) return false;

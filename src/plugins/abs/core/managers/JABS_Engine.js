@@ -2236,12 +2236,15 @@ class JABS_Engine
     }
     else
     {
-      // if the skill is not unique, then the cooldown applies to all slots it is equipped to.
-      const equippedSkills = caster.getBattler()
-        .getAllEquippedSkills();
+      // the cooldown applies to every slot whose resolved (post-transform) skill matches
+      // the executed skill. comparing raw slot ids would miss slots where a transform
+      // mapped a different base skill onto the same executed skill id.
+      const battler = caster.getBattler();
+      const equippedSkills = battler.getAllEquippedSkills();
       equippedSkills.forEach(skillSlot =>
       {
-        if (skillSlot.id === skill.id)
+        // resolve the slot's effective skill id before comparing to the executed skill.
+        if (battler.resolveEquippedSkillId(skillSlot.id) === skill.id)
         {
           caster.setCooldownCounter(skillSlot.key, cooldownValue);
         }

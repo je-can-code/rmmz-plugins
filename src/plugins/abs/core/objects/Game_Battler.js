@@ -939,6 +939,101 @@ Game_Battler.prototype.ignoreAllParry = function()
   return unparryable;
 };
 
+//region skill transform resolution
+/**
+ * Gets the ordered list of note sources that should be searched for skill transform tags.
+ *
+ * Sources are returned in descending precedence: the first source in the list wins when
+ * multiple sources define a transform for the same base skill id. The base implementation
+ * covers both actors and enemies: active states (sorted highest priority first), then the
+ * battler's own database row.
+ *
+ * {@link Game_Actor} overrides this to insert equips and class between states and the DB row.
+ * @returns {RPG_Base[]}
+ */
+Game_Battler.prototype.getSkillTransformSources = function()
+{
+  // copy the active states so sorting does not mutate the live array.
+  const sortedStates = [ ...this.states() ];
+
+  // higher-priority states take precedence; sort descending by priority field.
+  sortedStates.sort((left, right) => right.priority - left.priority);
+
+  // states first, then the battler's own database row as the lowest-priority passive source.
+  return [ ...sortedStates, this.databaseData() ];
+};
+
+/**
+ * Resolves a base equipped skill id to its transformed counterpart, if any active note source
+ * defines a matching {@code <skillTransform:[BASE, OVERRIDE]>} tag.
+ *
+ * Sources are evaluated in the order returned by {@link #getSkillTransformSources}; the first
+ * matching transform wins. If no source transforms the given id, the original id is returned
+ * unchanged so callers need not special-case the no-transform path.
+ * @param {number} baseSkillId The raw skill id stored in the slot.
+ * @returns {number} The transformed skill id, or {@code baseSkillId} when no transform applies.
+ */
+Game_Battler.prototype.resolveEquippedSkillId = function(baseSkillId)
+{
+  // nothing to resolve for an empty slot.
+  if (!baseSkillId) return 0;
+
+  // grab the ordered note sources for this battler.
+  const sources = this.getSkillTransformSources();
+
+  // walk each source in precedence order and stop at the first matching transform.
+  for (const source of sources)
+  {
+    // skip sources that carry no transform tags at all.
+    if (!source || !source.jabsSkillTransforms || source.jabsSkillTransforms.length === 0)
+    {
+      continue;
+    }
+
+    // look for a transform pair whose base id matches the slot's stored skill.
+    const match = source.jabsSkillTransforms
+      .find(transform =>
+      {
+        const [ transformBaseId ] = transform;
+        return transformBaseId === baseSkillId;
+      });
+
+    // first match wins — extract the override id and return immediately.
+    if (match)
+    {
+      const [ , transformedSkillId ] = match;
+      return transformedSkillId;
+    }
+  }
+
+  // no transform was found; return the base id unchanged.
+  return baseSkillId;
+};
+
+/**
+ * Gets the effective skill id for the given slot after applying any active skill transforms.
+ *
+ * This is the primary resolution point that all execution and display paths should call instead
+ * of {@link #getEquippedSkillId} when the transformed (runtime) skill is needed. The tool slot
+ * is intentionally excluded: it stores item ids, not skill ids, and transform logic does not
+ * apply to it.
+ * @param {string} slot The slot key to resolve.
+ * @returns {number} The resolved skill id, or 0 when the slot is empty or does not exist.
+ */
+Game_Battler.prototype.getResolvedSkillId = function(slot)
+{
+  // the tool slot stores item ids; transforms do not apply to it.
+  if (slot === JABS_Button.Tool)
+  {
+    return this.getEquippedSkillId(slot);
+  }
+
+  // get the raw stored id, then pass it through the transform resolver.
+  const baseSkillId = this.getEquippedSkillId(slot);
+  return this.resolveEquippedSkillId(baseSkillId);
+};
+//endregion skill transform resolution
+
 /**
  * Disables native RMMZ regeneration.
  */

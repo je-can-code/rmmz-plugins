@@ -33,4 +33,23 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBonusHitsScopeSkill', {
   },
 });
 //endregion bonusHitsScopes
+
+//region skillTransforms
+/**
+ * The collection of skill transforms defined on this battler's database entry.
+ *
+ * Each entry is a two-number array in the form:
+ * [ baseSkillId, transformedSkillId ]
+ *
+ * When active, any equipped skill whose id matches {@code baseSkillId} will execute
+ * as {@code transformedSkillId} instead, without mutating the slot's stored id.
+ * @type {number[][]}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsSkillTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+  },
+});
+//endregion skillTransforms
 //endregion RPG_BaseBattler

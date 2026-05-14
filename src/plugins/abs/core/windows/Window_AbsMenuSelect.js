@@ -277,8 +277,8 @@ class Window_AbsMenuSelect
       // check if the skillslot has something in it.
       if (skillSlot.isUsable())
       {
-        // grab the skill in the slot.
-        const equippedSkill = leader.skill(skillSlot.id);
+        // resolve through the transform layer so the menu shows the effective skill.
+        const equippedSkill = leader.skill(leader.getResolvedSkillId(skillSlot.key));
 
         // update the command variables with the equipped skill data.
         name = equippedSkill.name;
@@ -368,10 +368,10 @@ class Window_AbsMenuSelect
     // check if the dodge skillslot has anything in it.
     if (dodgeSkillSlot.isUsable())
     {
-      // determine the currently equipped dodge skill.
-      const equippedDodgeSkill = leader.skill(dodgeSkillSlot.id);
+      // resolve through the transform layer so the menu shows the effective dodge skill.
+      const equippedDodgeSkill = leader.skill(leader.getResolvedSkillId(dodgeSkillSlot.key));
 
-      // update the command variables with the equipped tool data.
+      // update the command variables with the equipped dodge skill data.
       name = equippedDodgeSkill.name;
       iconIndex = equippedDodgeSkill.iconIndex;
       description = equippedDodgeSkill.description;
@@ -465,8 +465,8 @@ class Window_AbsMenuSelect
     // check if the offhand slot has anything assigned right now.
     if (offhandSkillSlot.isUsable())
     {
-      // determine the currently resolved offhand skill (pin or equip).
-      const equippedOffhandSkill = leader.skill(offhandSkillSlot.id);
+      // resolve through the transform layer so the menu shows the effective offhand skill.
+      const equippedOffhandSkill = leader.skill(leader.getResolvedSkillId(offhandSkillSlot.key));
 
       // update the command variables with the equipped offhand skill data.
       name = equippedOffhandSkill.name;
