@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: code-quality
 ---
 
@@ -32,3 +32,11 @@ Same logical failure is handled in more than one place; fixes can easily update 
 ## Notes
 
 - Ties to `JABS_Engine` mega-file extraction themes (`jabs-engine-loot-action-director.md`).
+
+## Resolution
+
+Shipped. The sprite layer now leans on shared engine-facing helpers such as `$jabsEngine.dir8ToUnitVector()` and the
+engine-owned action-origin helpers, so the earlier duplicate facing-validation burden between `JABS_Engine` and
+`Spriteset_Map` is no longer the active problem this note was tracking.
+
+Remaining non-dir8 warnings are engine-local rotation guards, not a second competing validation path in the spriteset.

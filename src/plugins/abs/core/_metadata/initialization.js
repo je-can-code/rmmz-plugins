@@ -146,7 +146,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
  */
 J.ABS.Metadata = {};
 J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.11.0';
+J.ABS.Metadata.Version = '4.12.1';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.

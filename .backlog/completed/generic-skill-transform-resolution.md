@@ -1,6 +1,6 @@
 ---
-status: open
-area: architecture
+status: done
+area: feature
 ---
 
 # Generalize skill transforms across notes and equipped-slot resolution
@@ -70,3 +70,9 @@ This must be designed carefully so transforms do not accidentally corrupt slot b
 - This should be implemented as a **generic equipped-skill resolution layer**, not as an offhand-only special case.
 - Offhand work may seed some of the helpers, but the full generic rollout should be treated as its own focused pass.
 - Related current discussion: offhand source-based eligibility and temporary state-driven upgrades for pistol/gun family behavior in CA.
+
+## Resolution
+
+Shipped. Generic `<skillTransform:[BASE, OVERRIDE]>` parsing now exists across battler/class/equip/state note sources, with centralized runtime resolution on `Game_Battler`. Equipped slots retain their base skill id while resolved execution paths consume transformed ids where appropriate.
+
+The transform-aware resolution is now threaded through action execution, guarding, dodging, AI guard classification, HUD input sprites, and `Window_AbsMenuSelect`, so the visible icon/name/cost and the executed skill stay aligned. Metadata/docs were updated, and CA already has at least one live content use in `States.json`.
