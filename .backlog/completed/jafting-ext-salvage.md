@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: feature
 ---
 
@@ -37,3 +37,11 @@ That provenance should pair with **inventory hygiene**: when the player sells, d
 ## Notes
 
 - Coordinate with `jafting-ext-socketing.md` on salvage vs socket preservation policy; core create/refine remain the primary integration points.
+
+## Resolution
+
+Shipped. The salvage loop landed as first-class JAFTING functionality with `Scene_JaftingSalvage`, salvage windows, stamped
+lineage ledgers, craft-output stamping, refund preview/execution, and inventory cleanup hooks when stamped gear leaves the party.
+
+The final implementation lives in JAFTING core rather than as a separate `ext` plugin, but it fulfills the feature this
+backlog item was tracking, including dynamic id reclaim/bookkeeping and accompanying test coverage.

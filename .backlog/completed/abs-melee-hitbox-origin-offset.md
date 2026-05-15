@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: architecture
 ---
 
@@ -51,3 +51,12 @@ battler position the sprite uses (and verify against Cyclone / `J-ABS-Pixelistic
   currently spawn from feet-origin.
 - Observed in play: with pixel movement on, vertical nudging inside a tile leaves hitboxes visually locked to the tile grid
   while the actor sprite is not, which reads as the player swinging "off" their body.
+
+## Resolution
+
+Shipped. JABS now owns explicit melee-origin helpers such as `resolveMeleeOriginPixelOffsetsForFacing()`,
+`resolveMeleeVerticalLiftPxForFacing()`, `getActionOriginPixels()`, and `getMeleeVisualOriginPixelsFromCharacter()`,
+and both collision math and hitbox/debug rendering consume that shared origin path.
+
+The configurable offset metadata landed with the engine-side origin helpers, so melee visuals and real collision now move
+together instead of diverging around a feet-origin anchor.

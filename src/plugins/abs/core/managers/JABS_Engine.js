@@ -1607,7 +1607,6 @@ class JABS_Engine
     // non-direct actions always create events; direct actions only do so if coords are provided.
     const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
 
-
     // check if we determined we should create an event.
     if (shouldCreateEvent)
     {
@@ -3943,39 +3942,47 @@ class JABS_Engine
     // build a unit facing vector from the numeric direction (supports diagonals).
     const { x: fx, y: fy } = this.dir8ToUnitVector(facing);
 
-    // compute vector from origin to the target rect’s center.
-    // delta x to target center.
-    const tx = targetRect.cx - cx;
-    // delta y to target center.
-    const ty = targetRect.cy - cy;
-
-    // degenerate case: target’s center exactly at origin → accept.
-    if (tx === 0 && ty === 0)
-    {
-      // overlapping centers are inside any wedge.
-      return true;
-    }
-
-    // normalize the target vector for dot-product angle testing.
-    // euclidean length.
-    const tLen = Math.hypot(tx, ty);
-    // unit x.
-    const tnx = tx / tLen;
-    // unit y.
-    const tny = ty / tLen;
-
     // compute cosine threshold for the half-angle.
     // half-angle in radians.
     const halfAngleRad = (degrees * 0.5) * (Math.PI / 180);
     // cosine threshold.
     const cosHalf = Math.cos(halfAngleRad);
 
-    // dot-product with the facing unit vector yields cos(theta).
-    // cos(theta).
-    const dot = (fx * tnx) + (fy * tny);
+    // test all four corners and the center against the wedge angle.
+    // the circle fast-reject already bounds the range; here we check if any sample
+    // point on the AABB lies within the angular sweep. using corners + center correctly
+    // handles large enemies whose AABB center falls outside the wedge while an edge does not.
+    const samplePoints = [
+      { px: targetRect.cx, py: targetRect.cy },
+      { px: targetRect.x, py: targetRect.y },
+      { px: targetRect.x + targetRect.w, py: targetRect.y },
+      { px: targetRect.x, py: targetRect.y + targetRect.h },
+      { px: targetRect.x + targetRect.w, py: targetRect.y + targetRect.h },
+    ];
 
-    // accept if the angle is within the wedge sweep.
-    return dot >= cosHalf;
+    for (let pIdx = 0; pIdx < samplePoints.length; pIdx++)
+    {
+      const { px, py } = samplePoints[pIdx];
+      const vx = px - cx;
+      const vy = py - cy;
+
+      // degenerate: sample point at the arc origin is inside any wedge.
+      if (vx === 0 && vy === 0)
+      {
+        return true;
+      }
+
+      const vLen = Math.hypot(vx, vy);
+      const dot = (fx * (vx / vLen)) + (fy * (vy / vLen));
+
+      if (dot >= cosHalf)
+      {
+        return true;
+      }
+    }
+
+    // no sample point was inside the wedge.
+    return false;
   }
 
   /**

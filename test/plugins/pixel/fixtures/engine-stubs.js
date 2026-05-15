@@ -65,6 +65,16 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
   {
   };
 
+  GCB.prototype.screenX = function()
+  {
+    return (this.x + 0.5) * sandbox.$gameMap.tileWidth();
+  };
+
+  GCB.prototype.screenY = function()
+  {
+    return (this.y + 1.0) * sandbox.$gameMap.tileHeight();
+  };
+
   GCB.prototype.isMoving = function()
   {
     return false;
@@ -109,6 +119,73 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
   sandbox.Game_Player.prototype.initMembers = function()
   {
     sandbox.Game_Character.prototype.initMembers.call(this);
+  };
+
+  sandbox.Game_Event.prototype = Object.create(sandbox.Game_Character.prototype);
+  sandbox.Game_Event.prototype.constructor = sandbox.Game_Event;
+
+  sandbox.Game_Event.prototype.initMembers = function()
+  {
+    sandbox.Game_Character.prototype.initMembers.call(this);
+    this._erased = false;
+    this._normalPriority = true;
+    this._jabsAction = false;
+    this._jabsBattler = false;
+    this._battlerId = 0;
+    this._validCommentCommands = [];
+  };
+
+  sandbox.Game_Event.prototype.setupPageSettings = function()
+  {
+  };
+
+  sandbox.Game_Event.prototype.isErased = function()
+  {
+    return this._erased === true;
+  };
+
+  sandbox.Game_Event.prototype.isNormalPriority = function()
+  {
+    return this._normalPriority !== false;
+  };
+
+  sandbox.Game_Event.prototype.isJabsAction = function()
+  {
+    return this._jabsAction === true;
+  };
+
+  sandbox.Game_Event.prototype.isJabsBattler = function()
+  {
+    return this._jabsBattler === true;
+  };
+
+  sandbox.Game_Event.prototype.getBattlerId = function()
+  {
+    return this._battlerId;
+  };
+
+  sandbox.Game_Event.prototype.getValidCommentCommands = function()
+  {
+    return this._validCommentCommands;
+  };
+
+  sandbox.Game_Event.prototype.extractValueByRegex = function(structure, defaultValue = null, andParse = true)
+  {
+    let value = defaultValue;
+
+    this.getValidCommentCommands().forEach(command =>
+    {
+      const [ comment, ] = command.parameters;
+      structure.lastIndex = 0;
+      const regexResult = structure.exec(comment);
+      if (!regexResult) return;
+      [ , value ] = regexResult;
+    });
+
+    if (value === defaultValue) return value;
+    if (andParse === false) return value;
+
+    return sandbox.JsonMapper.parseObject(value);
   };
 }
 
@@ -171,6 +248,14 @@ if (typeof Array.prototype.contains !== 'function')
     {
       return 2;
     },
+    tileWidth()
+    {
+      return 48;
+    },
+    tileHeight()
+    {
+      return 48;
+    },
     height()
     {
       return 2;
@@ -206,6 +291,14 @@ if (typeof Array.prototype.contains !== 'function')
     {
       return false;
     },
+    events()
+    {
+      return [];
+    },
+    eventsXyNt()
+    {
+      return [];
+    },
     requestRefresh: noop,
   };
 
@@ -229,6 +322,10 @@ if (typeof Array.prototype.contains !== 'function')
       return 0;
     },
   };
+
+  sandbox.$gamePlayer = new sandbox.Game_Player();
+  sandbox.$gamePlayer.initMembers();
+  sandbox.$gamePlayer._followers = { _data: [] };
 }
 
 /**
@@ -291,6 +388,68 @@ globalThis.J.ABS.EXT = globalThis.J.ABS.EXT || {};
   sandbox.JABS_AiManager.goHome = noop;
   sandbox.JABS_AiManager.rubberbandAlly = noop;
   sandbox.JABS_AiManager.moveTowardSlotIfNeeded = noop;
+
+  if (typeof sandbox.RPG_Enemy !== 'function')
+  {
+    function RPG_Enemy()
+    {
+      this.note = '';
+    }
+
+    sandbox.RPG_Enemy = RPG_Enemy;
+  }
+
+  sandbox.$dataEnemies = [];
+  sandbox.$gameEnemies = {
+    enemy(enemyId)
+    {
+      return {
+        enemy()
+        {
+          return sandbox.$dataEnemies[enemyId];
+        },
+      };
+    },
+  };
+
+  class JABS_Aabb
+  {
+    constructor(x, y, w, h)
+    {
+      this.x = x;
+      this.y = y;
+      this.w = w;
+      this.h = h;
+      this.cx = x + (w / 2);
+      this.cy = y + (h / 2);
+    }
+
+    static fromFeet(feetX, feetY, tw, th)
+    {
+      return new JABS_Aabb(feetX - (tw / 2), feetY - th, tw, th);
+    }
+  }
+
+  sandbox.JABS_Aabb = JABS_Aabb;
+
+  class JABS_Engine
+  {
+    static getBattlerAabbModel(character)
+    {
+      if (!character)
+      {
+        return new sandbox.JABS_Aabb(0, 0, 0, 0);
+      }
+
+      return sandbox.JABS_Aabb.fromFeet(
+        character.screenX(),
+        character.screenY(),
+        sandbox.$gameMap.tileWidth(),
+        sandbox.$gameMap.tileHeight());
+    }
+  }
+
+  sandbox.JABS_Engine = JABS_Engine;
 
   function JABS_Battler()
   {

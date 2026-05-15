@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: feature
 ---
 
@@ -65,3 +65,11 @@ Today slip visuals are distinguished from strike damage mainly by **`layoutRing`
 
 - Related UX discussion: floating text as feedback channel vs noise cap (tiering / merge / settings: minimal vs full) — parameters should leave room for a future **combat numbers** preset.
 - Related backlog: `textpop-builder-extension-placement.md` (ownership of builders); `game-character-action-sprite-lifecycle.md` (character vs action flags).
+
+## Resolution
+
+Shipped. `JABS_PopupMergeController` now owns merge buckets for strike, slip/regen, mitigation, and reward popups, with
+idle-flush behavior and live accumulation on the anchored popup sprite instead of spawning one popup per event.
+
+This landed as the `J-Popups-ABS` merge stack documented in the plugin changelog, so the core readability/coalescing work
+from this note is complete. Any future explicit combo-streak API belongs to the narrower follow-up item instead.

@@ -39,6 +39,39 @@ class JAbsPixelistics_PluginMetadata
      * @type {number}
      */
     this.IdleWanderRadius = parseFloat(this.parsedPluginParameters['idleWanderRadius']) || 1.50;
+
+    /**
+     * The default enemy hitbox width in tiles when no override is provided.
+     * This is the full width, not a half-width/radius.
+     * @type {number}
+     */
+    this.DefaultEnemyHitboxWidth = parseFloat(this.parsedPluginParameters['defaultEnemyHitboxWidth']) || 0.80;
+
+    /**
+     * The default enemy hitbox height in tiles when no override is provided.
+     * This is the full height, not a half-height/radius.
+     * @type {number}
+     */
+    this.DefaultEnemyHitboxHeight = parseFloat(this.parsedPluginParameters['defaultEnemyHitboxHeight']) || 0.50;
+
+    /**
+     * Whether or not all eligible battler hitbox outlines should always be visible.
+     * When enabled, reveal range requirements are ignored completely.
+     * @type {boolean}
+     */
+    this.EnemyHitboxOutlineAlwaysActive = this.parsedPluginParameters['outlineAlwaysActive'] === 'true';
+
+    // parse the configured reveal range once so we can distinguish missing from explicit zero.
+    const configuredRevealRange = parseFloat(this.parsedPluginParameters['defaultHitboxRevealRange']);
+
+    /**
+     * The default range in tiles for revealing enemy hitbox outlines.
+     * A value of 0 disables proximity-based outlines unless always-active mode is enabled.
+     * @type {number}
+     */
+    this.DefaultEnemyHitboxRevealRange = Number.isNaN(configuredRevealRange)
+      ? 6.00
+      : configuredRevealRange;
   }
 }
 //endregion plugin metadata

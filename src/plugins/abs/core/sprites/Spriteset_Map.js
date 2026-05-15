@@ -1185,15 +1185,21 @@ Spriteset_Map.prototype.clearAllHitboxOverlays = function ()
 /**
  * Applies the provided style to a PIXI.Graphics for drawing a hitbox.
  * @param {PIXI.Graphics} g The graphics instance to apply styles to.
- * @param {{ fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number, lineWidth:number }} style
+ * @param {{
+ *  fillColor:number, fillAlpha:number, lineColor:number, lineAlpha:number,
+ *  lineWidth:number, lineAlignment?:number
+ * }} style
  */
 Spriteset_Map.prototype.applyHitboxStyle = function (
   g,
   style
 )
 {
+  // default to an inner-aligned stroke so the visible outer edge stays honest to the real geometry.
+  const lineAlignment = style.lineAlignment ?? 0;
+
   // configure line + fill according to style.
-  g.lineStyle(style.lineWidth, style.lineColor, style.lineAlpha); // outline style.
+  g.lineStyle(style.lineWidth, style.lineColor, style.lineAlpha, lineAlignment); // outline style.
   g.beginFill(style.fillColor, style.fillAlpha); // fill style.
 };
 
