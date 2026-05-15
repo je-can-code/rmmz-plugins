@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.4 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.0.6 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -32,8 +32,70 @@
  * Load order in RPG Maker plugin manager:
  *   J-Base → J-ABS → J-Pixelistics → J-ABS-Pixelistics
  *
+ * ----------------------------------------------------------------------------
+ * HITBOX SIZE
+ * Enemy battlers now share one rectangular hitbox model across:
+ *  - PIXEL movement/body collision
+ *  - JABS battler targeting/collision
+ *  - JABS battler hitbox overlays
+ *
+ * The hitbox is centered horizontally on the event and anchored vertically to
+ * the event's feet, meaning the feet are the bottom-center of the rectangle.
+ *
+ * Apply hitbox size in either place:
+ *  - enemy note
+ *  - event comments on the battler page
+ *
+ * If both exist, the event comment wins.
+ * If neither exists, the plugin parameter defaults are used.
+ *
+ * Tag formats:
+ *   <hitboxSize:N>
+ *    Square shorthand. N is both the width and height in tiles.
+ *
+ *   <hitboxSize:[W, H]>
+ *    Explicit rectangle. W is width in tiles, H is height in tiles.
+ *
+ * Examples:
+ *   <hitboxSize:1.0>
+ *    A 1.0 x 1.0 tile square hitbox.
+ *
+ *   <hitboxSize:[0.8, 0.5]>
+ *    A rectangle 0.8 tiles wide and 0.5 tiles tall.
+ *
+ * ----------------------------------------------------------------------------
+ * HITBOX REVEAL
+ * Enemy battlers can optionally reveal a faint hitbox outline when the player
+ * is nearby, using the same battler AABB model as combat collision.
+ *
+ * Apply reveal range in either place:
+ *  - enemy note
+ *  - event comments on the battler page
+ *
+ * If both exist, the event comment wins.
+ * If neither exists, the plugin parameter default is used.
+ *
+ * Tag format:
+ *   <hitboxReveal:N>
+ *    Reveal this battler's hitbox outline while the player is within N tiles.
+ *
+ * Example:
+ *   <hitboxReveal:4.5>
+ *    The outline is visible when the player is within 4.5 tiles.
+ *
+ * If the default range is 0, then proximity-based outlines are disabled unless
+ * the always-active plugin parameter is enabled.
+ *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.6
+ *    Added enemy `hitboxReveal` support for proximity-based hitbox outlines in `J-ABS-Pixelistics`.
+ *    Added an always-active outline option and a default reveal-range plugin parameter.
+ * - 1.0.5
+ *    Added unified enemy `hitboxSize` support across PIXEL movement, JABS battler collision,
+ *    and battler hitbox overlays.
+ *    `event > enemy > default` precedence now applies to enemy hitbox sizing.
+ *    Added default enemy hitbox width/height plugin parameters.
  * - 1.0.4
  *    `angleToDirection` folds atan2 vs `dir8ToAngle` degrees into one sector map so keyboard north and analog aim agree.
  * - 1.0.3
@@ -73,6 +135,43 @@
  * @text Idle Wander Radius
  * @desc Distance in tiles from home an enemy may wander while idle. Default 1.5 gives a 3x3-tile area.
  * @default 1.50
+ *
+ * @param enemyHitboxConfigs
+ * @text ENEMY HITBOX
+ *
+ * @param defaultEnemyHitboxWidth
+ * @parent enemyHitboxConfigs
+ * @type number
+ * @decimals 2
+ * @min 0.05
+ * @text Default Enemy Hitbox Width
+ * @desc Full enemy hitbox width in tiles when no event or enemy override exists.
+ * @default 0.80
+ *
+ * @param defaultEnemyHitboxHeight
+ * @parent enemyHitboxConfigs
+ * @type number
+ * @decimals 2
+ * @min 0.05
+ * @text Default Enemy Hitbox Height
+ * @desc Full enemy hitbox height in tiles when no event or enemy override exists.
+ * @default 0.50
+ *
+ * @param outlineAlwaysActive
+ * @parent enemyHitboxConfigs
+ * @type boolean
+ * @text Outline Always Active
+ * @desc If true, all eligible battler hitbox outlines are always visible regardless of range.
+ * @default false
+ *
+ * @param defaultHitboxRevealRange
+ * @parent enemyHitboxConfigs
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @text Default Hitbox Reveal Range
+ * @desc Reveal hitbox outlines within this many tiles when no event or enemy override exists. 0 disables proximity mode.
+ * @default 6.00
  *
  */
 //endregion annotations

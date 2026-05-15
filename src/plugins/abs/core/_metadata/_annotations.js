@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.12.0 JABS] Enables combat to be carried out on the map.
+ * [v4.12.1 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.12.1
+ *    Arc hitbox (`<hitbox:arc>`) collision now correctly registers hits against large enemies
+ *    whose AABB center falls outside the wedge sweep but whose edge or corner overlaps it.
+ *    The angle gate now samples all four AABB corners in addition to the center; if any sample
+ *    point lies within the wedge, the hit registers.
  * - 4.12.0
  *    Generic skill transform: <skillTransform:[BASE, OVERRIDE]> now applies to all equipped
  *    slots (combat, dodge, offhand) and all note-bearing sources (actor, class, weapon/armor,

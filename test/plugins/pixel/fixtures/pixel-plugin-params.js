@@ -8,5 +8,9 @@ export const DEFAULT_PIXEL_CORE_PLUGIN_PARAMS = {
 
 export const DEFAULT_PIXEL_ABS_EXT_PLUGIN_PARAMS = {
   idleWanderRadius: '1.50',
+  defaultEnemyHitboxWidth: '0.80',
+  defaultEnemyHitboxHeight: '0.50',
+  outlineAlwaysActive: 'false',
+  defaultHitboxRevealRange: '6.00',
 };
 //endregion pixel-plugin-params
