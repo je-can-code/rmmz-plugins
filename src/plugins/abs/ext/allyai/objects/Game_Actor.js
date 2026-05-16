@@ -38,7 +38,7 @@ Game_Actor.prototype.initAllyAiMembers = function()
    * The currently selected Ally AI mode.
    * @type {JABS_AllyAI|null}
    */
-  this._j._abs._allyAi._mode = new JABS_AllyAI(JABS_AllyAI.modes.VARIETY);
+  this._j._abs._allyAi._mode = new JABS_AllyAI(JABS_AllyAI.presets.GENERALIST.key);
 };
 
 /**
@@ -64,8 +64,8 @@ Game_Actor.prototype.initAllyAI = function()
   // grab the default ally AI mode for this actor.
   const defaultAllyAiMode = this.getDefaultAllyAI();
 
-  // update the ally AI mode with the default.
-  this.setAllyAIMode(defaultAllyAiMode);
+  // apply the default preset to this ally's AI.
+  this.setAllyAIPreset(defaultAllyAiMode);
 };
 
 /**
@@ -83,12 +83,12 @@ Game_Actor.prototype.getAllyAI = function()
 }
 
 /**
- * Set the current ally AI mode for this ally.
- * @param {JABS_AllyAI} mode The mode to set.
+ * Applies an ally AI preset to this ally by preset key.
+ * @param {string} presetKey The key of the preset to apply.
  */
-Game_Actor.prototype.setAllyAIMode = function(mode)
+Game_Actor.prototype.setAllyAIPreset = function(presetKey)
 {
-  this._j._abs._allyAi._mode.changeMode(mode);
+  this._j._abs._allyAi._mode.applyPreset(presetKey);
 };
 
 /**
@@ -116,15 +116,15 @@ Game_Actor.prototype.getDefaultAllyAI = function()
   // priority is class > actor > default, for ally ai mode.
   const allyAiMode = classMode ?? actorMode;
 
-  // validate the mode provided.
-  if (JABS_AllyAI.validateMode(allyAiMode))
+  // validate the preset provided.
+  if (JABS_AllyAI.validatePreset(allyAiMode))
   {
     // if validation succeeds, then return what was in the notes.
     return allyAiMode;
   }
 
-  // return the default of "variety" for ally ai.
-  return JABS_AllyAI.modes.VARIETY.key;
+  // return the default of "generalist" for ally ai.
+  return JABS_AllyAI.presets.GENERALIST.key;
 };
 
 /**
