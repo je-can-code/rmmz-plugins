@@ -63,7 +63,8 @@ Window_AbsMenuSelect.prototype.makeCommandList = function()
       this.addAllyFormationCommand();
       break;
     case "select-ai":
-      this.makeAllyAiModeList();
+      this.makeAllyAiDoNothingToggle();
+      this.makeAllyAiPresetList();
       break;
   }
 };
@@ -141,56 +142,76 @@ Window_AbsMenuSelect.prototype.addAllyFormationCommand = function()
 };
 
 /**
- * Draws the list of available AI modes that an ally can use.
+ * Adds a do-nothing toggle command at the top of the ally AI selection window.
+ * Mirrors the aggro/passive toggle pattern from the party list window.
  */
-Window_AbsMenuSelect.prototype.makeAllyAiModeList = function()
+Window_AbsMenuSelect.prototype.makeAllyAiDoNothingToggle = function()
 {
-  // grab the currently selected actor.
   const currentActor = $gameActors.actor(this.getActorId());
-
-  // if there is no actor, then there is no AI.
   if (!currentActor) return;
 
-  // grab all available ally AI modes.
-  const modes = JABS_AllyAI.getModes();
+  const allyAI = currentActor.getAllyAI();
+  const isDoNothing = allyAI.isDoNothing();
 
-  // grab the currently selected AI.
+  const commandName = isDoNothing
+    ? 'Do Nothing: ON'
+    : 'Do Nothing: OFF';
+
+  const description = isDoNothing
+    ? 'This ally hangs back and takes no actions.\nToggle off to restore their preset behavior.'
+    : 'This ally acts according to their preset.\nToggle on to make them stand down entirely.';
+
+  const colorIndex = isDoNothing ? 3 : 2;
+
+  const iconIndex = isDoNothing
+    ? J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex
+    : J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex;
+
+  const command = new WindowCommandBuilder(commandName)
+    .setSymbol('do-nothing-toggle')
+    .setTextLines(description.split(/[\r\n]/i))
+    .flagAsSubText()
+    .setColorIndex(colorIndex)
+    .setIconIndex(iconIndex)
+    .build();
+
+  this.addBuiltCommand(command);
+};
+
+/**
+ * Draws the list of available AI presets that an ally can use.
+ */
+Window_AbsMenuSelect.prototype.makeAllyAiPresetList = function()
+{
+  const currentActor = $gameActors.actor(this.getActorId());
+  if (!currentActor) return;
+
+  const presets = JABS_AllyAI.getPresets();
   const currentAi = currentActor.getAllyAI();
 
-  // an iterator function for building all ally AI modes as commands.
-  const forEacher = mode =>
+  const forEacher = preset =>
   {
-    // extract some data from this ally AI mode.
-    const {
-      key,
-      name,
-      description,
-    } = mode;
+    const { key, name, description } = preset;
 
-    // check if the currently selected ally AI mode is this command.
-    const isEquipped = currentAi.getMode() === key;
+    const isEquipped = currentAi.getPresetKey() === key;
 
-    // build the icon based on whether or not its equipped.
     const iconIndex = isEquipped
       ? J.ABS.EXT.ALLYAI.Metadata.AiModeEquippedIconIndex
       : J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex;
 
-    // build the command.
     const command = new WindowCommandBuilder(name)
-      .setSymbol("select-ai")
+      .setSymbol('select-ai')
       .setTextLines(description.split(/[\r\n]/i))
       .flagAsSubText()
       .setIconIndex(iconIndex)
       .setEnabled(true)
-      .setExtensionData(mode)
+      .setExtensionData(preset)
       .build();
 
-    // add the command to the list.
     this.addBuiltCommand(command);
   };
 
-  // iterate over each mode and rebuild the commands.
-  modes.forEach(forEacher, this);
+  presets.forEach(forEacher, this);
 };
 
 /**
