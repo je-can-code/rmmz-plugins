@@ -175,6 +175,7 @@ Scene_Map.prototype.createAllyAiEquipWindow = function()
   // setup the handlers.
   aiMemberMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "select-ai"));
   aiMemberMenu.setHandler("select-ai", this.commandEquipMemberAi.bind(this));
+  aiMemberMenu.setHandler("do-nothing-toggle", this.commandToggleDoNothing.bind(this));
 
   // set the window for tracking.
   this._j._absMenu._allyAiEquipWindow = aiMemberMenu;
@@ -191,20 +192,23 @@ Scene_Map.prototype.createAllyAiEquipWindow = function()
  */
 Scene_Map.prototype.allyAiEquipRectangle = function()
 {
-  // define the width of the window.
-  const w = 600;
+  // define the width to match the skill/tool list windows.
+  const width = Math.round(Graphics.boxWidth * 0.4);
 
-  // define the height of the window.
-  const h = 400;
+  // the general height of a command item (2 lines at font size 24).
+  const commandHeight = 72;
 
-  // define the origin x of the window.
-  const x = Graphics.boxWidth - w;
+  // 11 items: 1 do-nothing toggle + 10 presets, with standard padding.
+  const height = commandHeight * 11 + 40;
 
-  // define the origin y of the window.
-  const y = 200;
+  // push against the right edge.
+  const x = Graphics.boxWidth - width;
+
+  // start at the top.
+  const y = 0;
 
   // return the built rectangle.
-  return new Rectangle(x, y, w, h);
+  return new Rectangle(x, y, width, height);
 };
 
 /**
@@ -298,21 +302,24 @@ Scene_Map.prototype.commandAggroPassiveToggle = function()
 };
 
 /**
- * When an ai mode is chosen, it replaces it for the actor.
+ * When a preset is chosen, applies it to the actor's ally AI.
  */
 Scene_Map.prototype.commandEquipMemberAi = function()
 {
-  // grab the new ally AI mode from the window.
-  const newMode = this._j._absMenu._allyAiEquipWindow.currentExt();
+  const newPreset = this._j._absMenu._allyAiEquipWindow.currentExt();
+  const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
+  allyAi.applyPreset(newPreset.key);
+  this._j._absMenu._allyAiEquipWindow.refresh();
+};
 
-  // grab the current ally AI.
-  const allyAi = $gameActors.actor(this.getAllyAiActorId())
-    .getAllyAI();
-
-  // change the mode of the AI to the new one by its key.
-  allyAi.changeMode(newMode.key);
-
-  // refresh the ally AI window to reflect the change.
+/**
+ * Toggles the do-nothing flag for the currently selected ally.
+ */
+Scene_Map.prototype.commandToggleDoNothing = function()
+{
+  SoundManager.playRecovery();
+  const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
+  allyAi.setDoNothing(!allyAi.isDoNothing());
   this._j._absMenu._allyAiEquipWindow.refresh();
 };
 
