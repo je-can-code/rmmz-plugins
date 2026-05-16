@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v3.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -13,98 +13,76 @@
  * @help
  * ============================================================================
  * OVERVIEW
- * This plugin enables allies to leverage one of a selection of ally AI modes.
+ * This plugin grants party followers AI to fight alongside the player.
+ * Ally behavior is governed by three orthogonal axes and a do-nothing toggle.
  *
  * This plugin requires JABS.
  * This plugin requires followers be enabled to do anything.
- * This plugin has plugin parameters that can adjust some arbitrary parameters.
  * ----------------------------------------------------------------------------
  * DETAILS:
- * All members of the party represented by "followers" on the field will be
- * granted AI to enable action decision-making while in combat.
+ * All party members represented by followers on the field are granted AI for
+ * action decision-making and movement positioning while in combat.
  *
- * In order to set a default ally AI mode (defaults to "variety"), you can use
- * a tag on the actor and/or class. Class will take priority over actor tags.
+ * Each ally's behavior is shaped by three independent axes:
+ *
+ *   RISK    (careful / balanced / reckless)
+ *     Controls how aggressively the ally selects offensive skills.
+ *     Careful allies lean on battle memories; reckless allies always press
+ *     the strongest available skill.
+ *
+ *   SUPPORT (offense / balanced / support)
+ *     Controls how much the ally weighs healing and buffing against offense.
+ *     Support allies prioritize cleansing > healing > buffing before attacking.
+ *     Balanced allies conditionally support when allies are in danger.
+ *
+ *   SPACING (frontline / midline / backline)
+ *     Controls how close the ally positions itself relative to its target.
+ *     Frontline allies close to melee range; backline allies hold at max skill
+ *     range and maintain a shorter leash from the leader.
+ *
+ * The ten named presets snap all three axes to a coherent archetype:
+ *   berserker  — reckless / offense  / frontline
+ *   guardian   — careful  / offense  / frontline
+ *   vanguard   — balanced / balanced / frontline
+ *   war-priest — balanced / support  / frontline
+ *   skirmisher — balanced / offense  / midline
+ *   generalist — balanced / balanced / midline   (default)
+ *   cleric     — careful  / support  / midline
+ *   artillery  — careful  / offense  / backline
+ *   wizard     — balanced / offense  / backline
+ *   medic      — careful  / support  / backline
+ *
+ * A separate DO-NOTHING toggle overrides all axis behavior: the ally takes no
+ * actions and backs away from all targets, staying near the leader.
  *
  * ============================================================================
- * DEFAULT ALLY AI MODE:
- * Have you ever wanted to set the default AI mode of your allies to a
- * particular mode? Well now you can! By applying the appropriate tags to
- * actors/classes, you can allow your allies to have a preset ally AI mode!
- *
- * NOTE:
- * Tags on classes are considered "more granular" and thus take priority over
- * tags that exist on the actors.
+ * DEFAULT ALLY AI PRESET:
+ * Apply a tag to an actor or class to set their default preset on game start.
+ * Class tags take priority over actor tags.
  *
  * TAG USAGE:
  * - Actors
  * - Classes
  *
  * TAG FORMAT:
- *  <defaultAi:MODE>
- * Where MODE is one of the valid modes listed below.
+ *  <defaultAi:PRESET>
+ * Where PRESET is one of the ten preset keys listed above.
  *
  * EXAMPLE:
- *  <defaultAi:do-nothing>
- * This ally will be set to the "do-nothing" mode by default.
- *
- * AVAILABLE MODES:
- * - Do Nothing (do-nothing):
- *   Your ally will take no action.
- *
- * - Only Attack (basic-attack):
- *   Your ally will only execute the action from their mainhand weapon.
- *
- * - Variety (variety):
- *   Your ally will pick and choose an action from it's available skills. There
- *   is a 50% chance that if an ally is in need of support, this mode will
- *   select a support skill instead- if any are equipped. This will leverage
- *   battle memories where applicable.
- *
- * - Full Force (full-force):
- *   Your ally will always select the skill that will deal the most damage to
- *   it's current target. This will leverage battle memories where applicable.
- *
- * - Support (support):
- *   Your ally will attempt to keep all allies in the vicinity healthy. They
- *   will first address any <negative> states, second address allies health who
- *   are below a designated threshold of max hp (configurable), third address
- *   an effort to buff allies and debuff enemies. For the buff/debuff address,
- *   the AI will make an active effort to keep your party buffed with all
- *   states available, and refresh states once they reach a designated
- *   threshold of duration (configurable) left.
- *
- * ----------------------------------------------------------------------------
- * NOTE ABOUT COMBOS WITH ALLY AI:
- * As the player can, your allies can potentially perform combo skills, but
- * they adhere to the same restrictions that the player does. However, unlike
- * the player, it is not dependent on button inputs, but instead dependent on
- * RNG to continue a combo. Each of the modes above provide different bonuses
- * to the base 50% chance for executing a combo:
- * - do-nothing:    no bonus because they won't even do anything.
- * - basic-attack:  +30% chance (=80% chance)
- * - variety:       +20% chance (=70% chance)
- * - full-force:    +50% chance (=100% chance!!!)
- * - support:       +10% chance (=60% chance)
+ *  <defaultAi:medic>
+ * This ally defaults to the Medic preset (careful / support / backline).
  *
  * ----------------------------------------------------------------------------
  * BATTLE MEMORIES:
- * Additionally, in the modes of "Variety" and "Full Force", there is an extra
- * functionality to be considered called "battle memories". The data type is
- * defined in J-ABS core and is primarily used by ally AI in those modes.
- * Battle Memories are effectively a snapshot recollection of your ally using
- * a skill against the enemy. The ally remembers the damage dealt, and the
- * level of effectiveness (elemental efficacy) versus a given target with a
- * given skill. This will influence the allies decision making when it comes to
- * deciding skills (preferring known effectiveness over otherwise).
+ * Allies accumulate battle memories as they fight. A memory records which
+ * skills proved effective against a given enemy. Careful and balanced allies
+ * use these memories to inform skill selection; reckless allies use them only
+ * as a secondary signal when picking the strongest skill.
  *
  * AGGRO/PASSIVE TOGGLE:
- * Lastly, there is a party-wide toggle available that will toggle between two
- * options: Passive and Aggressive. When "Passive" is enabled, your allies will
- * not engage unless they are hit directly, or you attack a foe. When
- * "Aggressive" is enabled, your allies will engage with any enemy that comes
- * within their designated sight range (configurable) similar to how enemies
- * will engage the player when you enter their sight range.
+ * A party-wide toggle controls engagement behavior. When Passive, allies only
+ * fight when the leader attacks or when struck directly. When Aggressive,
+ * allies engage any enemy that enters their sight range.
  *
  * ============================================================================
  * Caveats to note:
@@ -116,6 +94,15 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.0
+ *    Replaced exclusive AI modes with three orthogonal behavior axes:
+ *    risk (careful/balanced/reckless), support (offense/balanced/support),
+ *    and spacing (frontline/midline/backline).
+ *    Added ten named presets that snap all axes to a coherent archetype.
+ *    Added per-ally do-nothing toggle (overrides all axes).
+ *    Spacing axis now drives per-ally safe-distance thresholds and leash range.
+ *    Removed dead modes: do-nothing (now a toggle), basic-attack, variety,
+ *    full-force, support. Removed unused JABS_AllyAIMode class.
  * - 2.2.0
  *    Raised minimum J-ABS version to 4.10.0 (defensive dodge/guard coordination).
  *    Ally `JABS_AiManager` / battler paths updated for defensive interrupts and follower dodge behavior.
@@ -242,39 +229,5 @@
  * @desc The icon indicating that the mode is not equipped.
  * @default 95
  *
- * @param aiModeDoNothing
- * @parent aiModeConfigs
- * @type string
- * @text "Do Nothing" Text
- * @desc The text displayed for the ally ai mode of "do nothing".
- * @default Do Nothing
- *
- * @param aiModeOnlyAttack
- * @parent aiModeConfigs
- * @type string
- * @text "Only Attack" Text
- * @desc The text displayed for the ally ai mode of "only attack".
- * @default Only Attack
- *
- * @param aiModeVariety
- * @parent aiModeConfigs
- * @type string
- * @text "Variety" Text
- * @desc The text displayed for the ally ai mode of "variety".
- * @default Variety
- *
- * @param aiModeFullForce
- * @parent aiModeConfigs
- * @type string
- * @text "Full Force" Text
- * @desc The text displayed for the ally ai mode of "full force".
- * @default Full Force
- *
- * @param aiModeSupport
- * @parent aiModeConfigs
- * @type string
- * @text "Support" Text
- * @desc The text displayed for the ally ai mode of "support".
- * @default Support
  *
  */

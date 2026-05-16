@@ -12,11 +12,11 @@ Object.defineProperty(JABS_Engine.prototype, "requestAlliesRefresh", {
  * Extends {@link JABS_Engine.prePartyCycling}.<br>
  * Jumps all followers to the player upon party cycling.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set('prePartyCycling', JABS_Engine.prototype.prePartyCycling);
+J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set('prePartyCycling', JABS_Engine.prototype.prePartyCycling);
 JABS_Engine.prototype.prePartyCycling = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('prePartyCycling')
+  J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.get('prePartyCycling')
     .call(this);
 
   // when cycling, jump all followers to the player.
@@ -27,7 +27,7 @@ JABS_Engine.prototype.prePartyCycling = function()
  * Overrides {@link JABS_Engine.handlePartyCycleMemberChanges}.<br>
  * Jumps all followers to the player upon party cycling.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set(
+J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set(
   'handlePartyCycleMemberChanges',
   JABS_Engine.prototype.handlePartyCycleMemberChanges);
 JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
@@ -43,7 +43,7 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   }
 
   // perform original logic, updating the player to the latest.
-  J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('handlePartyCycleMemberChanges')
+  J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.get('handlePartyCycleMemberChanges')
     .call(this);
 
   // Defer ally rebuild to after sprite rebind; let the sprite layer trigger it.
@@ -54,13 +54,13 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
  * Extends {@link JABS_Engine.continuedPrimaryBattleEffects}.<br>
  * Also applies battle memories as-necessary.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set(
+J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set(
   'continuedPrimaryBattleEffects',
   JABS_Engine.prototype.continuedPrimaryBattleEffects);
 JABS_Engine.prototype.continuedPrimaryBattleEffects = function(action, target)
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('continuedPrimaryBattleEffects')
+  J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.get('continuedPrimaryBattleEffects')
     .call(this, action, target);
 
   // apply the battle memories to the target.
@@ -127,13 +127,32 @@ JABS_Engine.prototype.rebuildActorAllies = function()
  * Extends {@link #postPartyCycling}.<br/>
  * Also rebuilds allies so they can be correctly aligned with the proper battler data.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.set('postPartyCycling', JABS_Engine.prototype.postPartyCycling);
+J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set('postPartyCycling', JABS_Engine.prototype.postPartyCycling);
 JABS_Engine.prototype.postPartyCycling = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_BattleMap.get('postPartyCycling').call(this);
+  J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.get('postPartyCycling').call(this);
 
   // rebuild all actor allies (followers) so they have proper ally core and character binding.
   this.rebuildActorAllies();
+};
+/**
+ * Extends {@link JABS_Engine#canBeAlerted}.<br>
+ * Do-nothing allies cannot be alerted; they ignore attacks passively.
+ */
+J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set('canBeAlerted', JABS_Engine.prototype.canBeAlerted);
+JABS_Engine.prototype.canBeAlerted = function(attacker, battler)
+{
+  // perform original logic.
+  if (!J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.get('canBeAlerted').call(this, attacker, battler)) return false;
+
+  // do-nothing allies should not be alerted.
+  if (battler.isActor())
+  {
+    const allyAI = battler.getAllyAiMode();
+    if (allyAI && allyAI.isDoNothing()) return false;
+  }
+
+  return true;
 };
 //endregion JABS_Engine

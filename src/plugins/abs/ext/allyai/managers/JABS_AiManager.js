@@ -59,8 +59,12 @@ JABS_AiManager.allyAiPhase0 = function(allyBattler)
   // check if we can perform phase 0 logic for allies.
   if (!this.canPerformAllyPhase0(allyBattler)) return;
 
-  // if alerted, seek toward the alerter location first.
-  if (allyBattler.isAlerted())
+  // do-nothing allies ignore alert state entirely and stay in formation.
+  const allyAI = allyBattler.getAllyAiMode();
+  const isDoNothing = allyAI && allyAI.isDoNothing();
+
+  // if alerted (and not in do-nothing mode), seek toward the alerter location first.
+  if (!isDoNothing && allyBattler.isAlerted())
   {
     // move toward the alert coordinates.
     this.seekForAlerter(allyBattler);
@@ -167,8 +171,8 @@ JABS_AiManager.maintainLeashAndEngagement = function(allyBattler, leaderBattler)
     leaderBattler.getCharacter()._realX,
     leaderBattler.getCharacter()._realY);
 
-  // determine leash threshold.
-  const leash = JABS_Battler.allyRubberbandRange();
+  // determine leash threshold (spacing-axis-scaled per ally).
+  const leash = allyBattler.getAllyLeashRange();
 
   // if the ally is too far, disengage and rubberband back to the leader.
   if (distanceToLeader > leash)
@@ -395,6 +399,40 @@ JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, toler
 
   // return whether or not we are close enough.
   return dist <= tolerance;
+};
+
+/**
+ * Extends {@link #maintainSafeDistance}.<br>
+ * Allies use spacing-axis-driven close/far thresholds instead of the global constants.
+ * @param {JABS_Battler} battler The battler to reposition.
+ */
+J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.set('maintainSafeDistance', JABS_AiManager.maintainSafeDistance);
+JABS_AiManager.maintainSafeDistance = function(battler)
+{
+  // enemies use the original global-constant logic unchanged.
+  if (battler.isEnemy())
+  {
+    J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('maintainSafeDistance')
+      .call(this, battler);
+    return;
+  }
+
+  // allies use spacing-axis distances.
+  const distance = battler.distanceToCurrentTarget();
+  const closeDistance = battler.getCloseDistance();
+  const farDistance = battler.getFarDistance();
+
+  // within the safe band: hold position.
+  if (distance > closeDistance && distance <= farDistance) return;
+
+  if (distance <= closeDistance)
+  {
+    battler.smartMoveAwayFromTarget();
+  }
+  else if (distance > farDistance)
+  {
+    battler.smartMoveTowardTarget();
+  }
 };
 
 /**

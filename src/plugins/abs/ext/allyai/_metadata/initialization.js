@@ -37,7 +37,7 @@ J.ABS.EXT.ALLYAI = {};
  */
 J.ABS.EXT.ALLYAI.Metadata = {};
 J.ABS.EXT.ALLYAI.Metadata.Name = `J-ABS-AllyAI`;
-J.ABS.EXT.ALLYAI.Metadata.Version = '2.2.0';
+J.ABS.EXT.ALLYAI.Metadata.Version = '3.0.0';
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -61,11 +61,6 @@ J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex = Number(J.ABS.EXT.ALLYAI.P
 J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandName = J.ABS.EXT.ALLYAI.PluginParameters['allyFormationsCommandName'] || 'Ally Formations';
 J.ABS.EXT.ALLYAI.Metadata.AllyFormationsCommandIconIndex = Number(J.ABS.EXT.ALLYAI.PluginParameters['allyFormationsCommandIconIndex'] || 289);
 
-J.ABS.EXT.ALLYAI.Metadata.AiModeDoNothingText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeDoNothing'];
-J.ABS.EXT.ALLYAI.Metadata.AiModeOnlyAttackText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeOnlyAttack'];
-J.ABS.EXT.ALLYAI.Metadata.AiModeVarietyText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeVariety'];
-J.ABS.EXT.ALLYAI.Metadata.AiModeFullForceText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeFullForce'];
-J.ABS.EXT.ALLYAI.Metadata.AiModeSupportText = J.ABS.EXT.ALLYAI.PluginParameters['aiModeSupport'];
 
 J.ABS.EXT.ALLYAI.Metadata.FormationTolerance = 0.5;
 
@@ -154,17 +149,17 @@ J.ABS.EXT.ALLYAI.Metadata.DefaultFormationType = J.ABS.EXT.ALLYAI.Metadata.Forma
  */
 J.ABS.EXT.ALLYAI.Aliased = {
   Game_Actor: new Map(),
-  Game_BattleMap: new Map(),
-  Game_Battler: {},
+  Game_Battler: new Map(),
   Game_Follower: new Map(),
   Game_Followers: new Map(),
-  Game_Interpreter: {},
+  Game_Interpreter: new Map(),
   Game_Map: new Map(),
   Game_Party: new Map(),
-  Game_Player: {},
+  Game_Player: new Map(),
 
   JABS_AiManager: new Map(),
   JABS_Battler: new Map(),
+  JABS_Engine: new Map(),
 
   Scene_Map: new Map(),
 
@@ -178,6 +173,7 @@ J.ABS.EXT.ALLYAI.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.ABS.EXT.ALLYAI.RegExp = {};
-J.ABS.EXT.ALLYAI.RegExp.DefaultAi = /<defaultAi:(do-nothing|basic-attack|variety|full-force|support)>/i;
+J.ABS.EXT.ALLYAI.RegExp.DefaultAi =
+  /<defaultAi:(berserker|guardian|vanguard|war-priest|skirmisher|generalist|cleric|artillery|wizard|medic)>/i;
 //endregion plugin setup and configuration
 //endregion Introduction

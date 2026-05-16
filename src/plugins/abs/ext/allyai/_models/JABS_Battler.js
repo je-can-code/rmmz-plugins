@@ -56,6 +56,10 @@ JABS_Battler.prototype.shouldEngage = function(target, distance)
  */
 JABS_Battler.prototype.shouldAllyEngage = function(target, distance)
 {
+  // do-nothing allies never engage targets on their own.
+  const allyAI = this.getAllyAiMode();
+  if (allyAI && allyAI.isDoNothing()) return false;
+
   // allies cannot engage against inanimate targets.
   if (target.isInanimate()) return false;
 
@@ -97,6 +101,44 @@ JABS_Battler.prototype.getAllyAiMode = function()
 
   return this.getBattler()
     .getAllyAI();
+};
+
+/**
+ * Gets the close-distance threshold in tiles for this battler.
+ * Enemies use the global default; allies delegate to their spacing axis.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getCloseDistance = function()
+{
+  if (this.isEnemy()) return JABS_Battler.closeDistance;
+  const allyAI = this.getAllyAiMode();
+  if (!allyAI) return JABS_Battler.closeDistance;
+  return allyAI.getCloseDistance();
+};
+
+/**
+ * Gets the far-distance threshold in tiles for this battler.
+ * Enemies use the global default; allies delegate to their spacing axis.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getFarDistance = function()
+{
+  if (this.isEnemy()) return JABS_Battler.farDistance;
+  const allyAI = this.getAllyAiMode();
+  if (!allyAI) return JABS_Battler.farDistance;
+  return allyAI.getFarDistance();
+};
+
+/**
+ * Gets the leash range for this ally battler.
+ * Applies the spacing-axis leash multiplier to the base rubber-band range.
+ * @returns {number}
+ */
+JABS_Battler.prototype.getAllyLeashRange = function()
+{
+  const allyAI = this.getAllyAiMode();
+  if (!allyAI) return JABS_Battler.allyRubberbandRange();
+  return JABS_Battler.allyRubberbandRange() * allyAI.getLeashMultiplier();
 };
 
 /**
