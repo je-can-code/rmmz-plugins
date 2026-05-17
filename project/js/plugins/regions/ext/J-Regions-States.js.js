@@ -110,7 +110,7 @@
 //endregion annotations
 
 //#region src/plugins/regions/ext/states/_metadata/_pluginMetadata.js
-var J_RegionStatesPluginMetadata = class extends PluginMetadata {
+var J_RegionStatesPluginMetadata$1 = class extends PluginMetadata {
 	/**
 	* Constructor.
 	*/
@@ -135,41 +135,35 @@ var J_RegionStatesPluginMetadata = class extends PluginMetadata {
 };
 
 //#endregion
-//#region src/plugins/regions/ext/states/_metadata/meta.js
-var PLUGIN_NAME = "J-Region-States";
-var PLUGIN_VERSION = "1.0.0";
-var PLUGIN_DESC_TAG = "REGION-STATES";
-
-//#endregion
 //#region src/plugins/regions/ext/states/_metadata/initialization.js
 /**
 * The core where all of my extensions live: in the `J` object.
 */
-globalThis.J ||= {};
+var J$1 = J$1 || {};
 /**
 * The plugin umbrella that governs all extensions related to the parent.
 */
-J.REGIONS.EXT ||= {};
+J$1.REGIONS.EXT ||= {};
 /**
 * The plugin umbrella that governs all things related to this plugin.
 */
-J.REGIONS.EXT.STATES = {};
+J$1.REGIONS.EXT.STATES = {};
 /**
 * The metadata associated with this plugin, such as name and version.
 */
-J.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
+J$1.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata("J-Region-States", "1.0.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
-J.REGIONS.EXT.STATES.Aliased = {};
-J.REGIONS.EXT.STATES.Aliased.Game_Character = new Map();
-J.REGIONS.EXT.STATES.Aliased.Game_Map = new Map();
-J.REGIONS.EXT.STATES.Aliased.Game_System = new Map();
+J$1.REGIONS.EXT.STATES.Aliased = {};
+J$1.REGIONS.EXT.STATES.Aliased.Game_Character = new Map();
+J$1.REGIONS.EXT.STATES.Aliased.Game_Map = new Map();
+J$1.REGIONS.EXT.STATES.Aliased.Game_System = new Map();
 /**
 * All regular expressions used by this plugin.
 */
-J.REGIONS.EXT.STATES.RegExp = {};
-J.REGIONS.EXT.STATES.RegExp.RegionState = /<regionAddState:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+])>/gi;
+J$1.REGIONS.EXT.STATES.RegExp = {};
+J$1.REGIONS.EXT.STATES.RegExp.RegionState = /<regionAddState:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+])>/gi;
 
 //#endregion
 //#region src/plugins/regions/ext/states/models/RegionStateData.js
@@ -177,7 +171,7 @@ J.REGIONS.EXT.STATES.RegExp.RegionState = /<regionAddState:[ ]?(\[\d+, ?\d+, ?\d
 * A data class containing the various data points associated with a region that
 * may apply a state while standing upon it.
 */
-var RegionStateData = class {
+var RegionStateData$1 = class {
 	/**
 	* The regionId this data class stores data for.
 	* @type {number}
@@ -335,16 +329,12 @@ Game_Character.prototype.initRegionStatesMembers = function() {
 	/**
 	* A grouping of all properties associated with the region states plugin extension.
 	*/
-	if (!this._j._regions._states) {
-		this._j._regions._states = {};
-	}
+	this._j._regions._states = {};
 	/**
 	* The timer that manages the (re)application of region-derived states.
 	* @type {JABS_Timer}
 	*/
-	if (!this._j._regions._states._timer) {
-		this._j._regions._states._timer = new JABS_Timer(J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications);
-	}
+	this._j._regions._states._timer = new JABS_Timer(J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications);
 };
 /**
 * Gets the region states timer for this character.
@@ -380,7 +370,6 @@ Game_Character.prototype.handleRegionStates = function() {
 */
 Game_Character.prototype.canHandleRegionStates = function() {
 	if (this.isVehicle()) return false;
-	if (typeof this.isVisible === "function" && this.isVisible() === false) return false;
 	if (!this.hasJabsBattler()) return false;
 	return true;
 };
@@ -395,11 +384,7 @@ Game_Character.prototype.applyRegionStates = function() {
 		const { stateId, chance, animationId } = regionStateData;
 		const calculatedChance = battler.stateRate(stateId) * chance;
 		if (!RPGManager.chanceIn100(calculatedChance)) return;
-		if (battler.isStateAffected(stateId)) {
-			battler.resetStateCounts(stateId, battler);
-		} else {
-			battler.addState(stateId, battler);
-		}
+		battler.addState(stateId);
 		if (animationId > 0) {
 			this.requestAnimation(animationId);
 		}
@@ -435,4 +420,4 @@ Game_System.prototype.updateRegionStatesAfterLoad = function() {
 };
 
 //#endregion
-//# sourceMappingURL=J-Regions-States.js.map
+//# sourceMappingURL=J-Regions-States.js.js.map

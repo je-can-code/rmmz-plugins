@@ -1,8 +1,11 @@
 //region initialization
+import J_RegionEffectsPluginMetadata from './_pluginMetadata.js';
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./meta.js";
+
 /**
  * The core where all of my extensions live = in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -13,18 +16,6 @@ J.REGIONS = {};
  * The parent namespace for all REGIONS extensions.
  */
 J.REGIONS.EXT = {};
-
-/**
- * The `metadata` associated with this plugin; such as version.
- */
-J.REGIONS.Metadata = {};
-J.REGIONS.Metadata.Name = `J-RegionEffects`;
-J.REGIONS.Metadata.Version = '1.0.2';
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.REGIONS.PluginParameters = PluginManager.parameters(J.REGIONS.Metadata.Name);
 
 //region helpers
 /**
@@ -47,23 +38,10 @@ J.REGIONS.Helpers.translateRegionIds = regionsBlob =>
 };
 //endregion helpers
 
-//region metadata
 /**
- * The global region ids that allow passage on all maps.
- * @type {number[]}
+ * The `metadata` associated with this plugin; such as version.
  */
-J.REGIONS.Metadata.GlobalAllowRegions = J.REGIONS.Helpers.translateRegionIds(
-  J.REGIONS.PluginParameters["globalAllowRegions"],
-);
-
-/**
- * The global region ids that deny passage on all maps.
- * @type {number[]}
- */
-J.REGIONS.Metadata.GlobalDenyRegions = J.REGIONS.Helpers.translateRegionIds(
-  J.REGIONS.PluginParameters["globalDenyRegions"],
-);
-//endregion metadata
+J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
 
 /**
  * A collection of all aliased methods for this plugin.

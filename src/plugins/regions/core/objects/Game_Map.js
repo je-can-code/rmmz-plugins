@@ -252,7 +252,7 @@ Game_Map.prototype.isPassable = function(x, y, d)
 Game_Map.prototype.isDenyRegionId = function(regionId)
 {
   // grab the global region ids.
-  const globalDenyRegionIds = J.REGIONS.Metadata.GlobalDenyRegions;
+  const globalDenyRegionIds = J.REGIONS.Metadata.globalDenyRegions;
 
   // grab the region ids.
   const currentDenyRegionIds = this.getDenyEffectRegionIds();
@@ -275,7 +275,7 @@ Game_Map.prototype.isDenyRegionId = function(regionId)
 Game_Map.prototype.isAllowRegionId = function(regionId)
 {
   // grab the global region ids.
-  const globalAllowRegionIds = J.REGIONS.Metadata.GlobalAllowRegions;
+  const globalAllowRegionIds = J.REGIONS.Metadata.globalAllowRegions;
 
   // grab this map's region ids.
   const currentAllowRegionIds = this.getAllowEffectRegionIds();

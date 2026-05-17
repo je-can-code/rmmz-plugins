@@ -21,16 +21,18 @@ describe('J-RegionEffects metadata (out/regions/J-RegionEffects.js)', () =>
 
   it('initializes metadata and regex objects', () =>
   {
-    expect(sandbox.J.REGIONS.Metadata.Name).toBe('J-RegionEffects');
-    expect(sandbox.J.REGIONS.Metadata.Version).toBe('1.0.2');
+    expect(sandbox.J.REGIONS.Metadata.name).toBe('J-RegionEffects');
+    expect(sandbox.J.REGIONS.Metadata.version.major).toBe(1);
+    expect(sandbox.J.REGIONS.Metadata.version.minor).toBe(1);
+    expect(sandbox.J.REGIONS.Metadata.version.patch).toBe(0);
     expect(typeof sandbox.J.REGIONS.RegExp.AllowRegions.test).toBe('function');
     expect(typeof sandbox.J.REGIONS.RegExp.DenyRegions.test).toBe('function');
   });
 
   it('parses global allow/deny region params from defaults', () =>
   {
-    expect(sandbox.J.REGIONS.Metadata.GlobalAllowRegions).toEqual([]);
-    expect(sandbox.J.REGIONS.Metadata.GlobalDenyRegions).toEqual([]);
+    expect(sandbox.J.REGIONS.Metadata.globalAllowRegions).toEqual([]);
+    expect(sandbox.J.REGIONS.Metadata.globalDenyRegions).toEqual([]);
   });
 });
 
@@ -57,8 +59,8 @@ describe('J-RegionEffects metadata with custom global region params', () =>
 
   it('translates global allow/deny region ids', () =>
   {
-    expect(sandbox.J.REGIONS.Metadata.GlobalAllowRegions).toEqual([ 1, 2 ]);
-    expect(sandbox.J.REGIONS.Metadata.GlobalDenyRegions).toEqual([ 3 ]);
+    expect(sandbox.J.REGIONS.Metadata.globalAllowRegions).toEqual([ 1, 2 ]);
+    expect(sandbox.J.REGIONS.Metadata.globalDenyRegions).toEqual([ 3 ]);
   });
 });
 //endregion plugins/regions/core/metadata.test.js

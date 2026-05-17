@@ -1,4 +1,6 @@
 //region Game_Map
+import RegionSkillData from "../models/RegionSkillData.js";
+
 /**
  * Extends {@link #initialize}.<br>
  * Also initializes the region skills properties.
