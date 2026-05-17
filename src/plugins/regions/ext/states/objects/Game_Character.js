@@ -32,13 +32,19 @@ Game_Character.prototype.initRegionStatesMembers = function()
   /**
    * A grouping of all properties associated with the region states plugin extension.
    */
-  this._j._regions._states = {};
+  if (!this._j._regions._states)
+  {
+    this._j._regions._states = {};
+  }
 
   /**
    * The timer that manages the (re)application of region-derived states.
    * @type {JABS_Timer}
    */
-  this._j._regions._states._timer = new JABS_Timer(J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications);
+  if (!this._j._regions._states._timer)
+  {
+    this._j._regions._states._timer = new JABS_Timer(J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications);
+  }
 };
 
 /**
@@ -99,6 +105,9 @@ Game_Character.prototype.canHandleRegionStates = function()
   // if this character is a vehicle, then they cannot handle region states.
   if (this.isVehicle()) return false;
 
+  // followers hidden from the party should not receive region states (or animations).
+  if (typeof this.isVisible === 'function' && this.isVisible() === false) return false;
+
   // if this character has no battler, then they cannot handle region states.
   if (!this.hasJabsBattler()) return false;
 
@@ -137,8 +146,15 @@ Game_Character.prototype.applyRegionStates = function()
     // roll the dice and see if we should even apply it.
     if (!RPGManager.chanceIn100(calculatedChance)) return;
 
-    // apply the state.
-    battler.addState(stateId);
+    // same entry point as j-skill-extend applyStates; resetStateCounts on reapply still routes to addJabsState.
+    if (battler.isStateAffected(stateId))
+    {
+      battler.resetStateCounts(stateId, battler);
+    }
+    else
+    {
+      battler.addState(stateId, battler);
+    }
 
     // check if there is a valid animation to play.
     if (animationId > 0)

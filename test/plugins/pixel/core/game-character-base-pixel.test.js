@@ -87,6 +87,32 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers', () =>
     expect(ch._realY).toBe(0.75);
   });
 
+  it('regionId samples the collision pivot tile when _x/_y are fractional', () =>
+  {
+    let capturedX = -1;
+    let capturedY = -1;
+
+    sandbox.$gameMap = {
+      regionId(x, y)
+      {
+        capturedX = x;
+        capturedY = y;
+
+        return 1;
+      },
+    };
+
+    const ch = new sandbox.Game_CharacterBase();
+
+    ch.initMembers();
+    ch._x = 10.5356952975542;
+    ch._y = 7.857090246365618;
+
+    expect(ch.regionId()).toBe(1);
+    expect(capturedX).toBe(11);
+    expect(capturedY).toBe(8);
+  });
+
   it('recordPixelPosition appends fractional points when distance warrants', () =>
   {
     const ch = new sandbox.Game_CharacterBase();

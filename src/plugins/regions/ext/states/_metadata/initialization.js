@@ -1,7 +1,10 @@
+import J_RegionStatesPluginMetadata from './_pluginMetadata.js';
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./meta.js";
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all extensions related to the parent.
@@ -16,7 +19,7 @@ J.REGIONS.EXT.STATES = {};
 /**
  * The metadata associated with this plugin, such as name and version.
  */
-J.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata('J-Region-States', '1.0.0');
+J.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
 
 /**
  * A collection of all aliased methods for this plugin.
