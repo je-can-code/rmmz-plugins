@@ -32,4 +32,5 @@ class J_RegionStatesPluginMetadata
   }
 }
 
+export default J_RegionStatesPluginMetadata;
 //endregion plugin metadata

@@ -1,5 +1,5 @@
 //region plugin metadata
-class J_RegionSkillsPluginMetadata
+class J_RegionEffectsPluginMetadata
   extends PluginMetadata
 {
   /**
@@ -29,15 +29,18 @@ class J_RegionSkillsPluginMetadata
   initializeMetadata()
   {
     /**
-     * The number of frames between executing while standing on the given regionId.<br>
-     * Lower this to increase frequency of skill execution.<br>
-     * Raise this to reduce frequency of skill execution.<br>
-     * This only applies while a battler is standing on a tile with a valid region skill.
-     * @type {number}
+     * The global region ids that allow passage on all maps.
+     * @type {number[]}
      */
-    this.delayBetweenExecutions = this.parsedPluginParameters['execution-delay'] ?? 60;
+    this.globalAllowRegions = J.REGIONS.Helpers.translateRegionIds(this.parsedPluginParameters['globalAllowRegions']);
+
+    /**
+     * The global region ids that deny passage on all maps.
+     * @type {number[]}
+     */
+    this.globalDenyRegions = J.REGIONS.Helpers.translateRegionIds(this.parsedPluginParameters['globalDenyRegions']);
   }
 }
 
-export default J_RegionSkillsPluginMetadata;
+export default J_RegionEffectsPluginMetadata;
 //endregion plugin metadata

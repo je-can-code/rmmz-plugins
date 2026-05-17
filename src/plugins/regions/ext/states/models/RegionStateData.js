@@ -41,4 +41,5 @@ class RegionStateData
   }
 }
 
+export default RegionStateData;
 //endregion RegionStateData

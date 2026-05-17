@@ -48,4 +48,5 @@ class RegionSkillData
   }
 }
 
+export default RegionSkillData;
 //endregion RegionSkillData

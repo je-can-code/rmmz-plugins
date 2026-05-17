@@ -1,8 +1,11 @@
 //region initialization
+import J_RegionSkillsPluginMetadata from './_pluginMetadata.js';
+import { PLUGIN_NAME, PLUGIN_VERSION } from "./meta.js";
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -17,7 +20,7 @@ J.REGIONS.EXT.SKILLS.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.REGIONS.EXT.SKILLS.Metadata = new J_RegionSkillsPluginMetadata('J-Region-Skills', '1.0.0');
+J.REGIONS.EXT.SKILLS.Metadata = new J_RegionSkillsPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
 
 /**
  * A collection of all aliased methods for this plugin.

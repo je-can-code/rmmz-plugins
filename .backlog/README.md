@@ -75,6 +75,7 @@ Items in [`unstarted/`](unstarted/) with **`status: open`** (or unset): **severi
 | [jabs-engine-loot-action-director](unstarted/jabs-engine-loot-action-director.md) | Low–medium | Medium–high | Extract loot/action helpers from mega-`JABS_Engine`. |
 | [jafting-ext-socketing](unstarted/jafting-ext-socketing.md) | Medium (optional) | High build variety | Socket gems/runestones on JAFTING gear; save-safe models and scene hooks. |
 | [jafting-heavy-scenes-decomposition](unstarted/jafting-heavy-scenes-decomposition.md) | Low player / medium dev | Medium | Split huge JAFTING scenes for complexity targets. |
+| [monorepo-vite-esm-plugin-migration](unstarted/monorepo-vite-esm-plugin-migration.md) | **High** scope | **High** long-term | Regions proved Vite+ESM ships work; migrate all plugin families off Combiner (major lift). |
 | [pixel-angled-projectiles](unstarted/pixel-angled-projectiles.md) | Medium | **High** feel | Angled projectiles with Pixelistics + JABS. |
 | [popups-merge-idle-combo-tracker](unstarted/popups-merge-idle-combo-tracker.md) | Low–medium | Medium | **v1.1:** expose combo streak counter / events from merge idle window semantics (HUD + plugins). |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
