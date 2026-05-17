@@ -204,7 +204,11 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateExtendAmount', {
 Object.defineProperty(RPG_State.prototype, 'jabsStateExtendMax', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ReapplyExtendMax, true);
+    return RPGManager.getNumberFromNoteByRegex(
+      this,
+      J.ABS.RegExp.ReapplyExtendMax,
+      true
+    ) ?? J.ABS.Metadata.DefaultStateExtendMax;
   },
 });
 

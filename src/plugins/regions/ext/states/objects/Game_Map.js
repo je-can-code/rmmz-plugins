@@ -1,4 +1,6 @@
 //region Game_Map
+import RegionStateData from "../models/RegionStateData.js";
+
 /**
  * Extends {@link #initialize}.<br>
  * Also initializes the region states properties.
