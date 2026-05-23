@@ -1,7 +1,10 @@
+import { PLUGIN_NAME, PLUGIN_VERSION } from './meta.js';
+import J_CriticalFactorsPluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -24,17 +27,7 @@ J.CRIT = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.CRIT.Metadata = {
-  /**
-   * The name of this plugin.
-   */
-  Name: `J-CriticalFactors`,
-
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.2',
-};
+J.CRIT.Metadata = new J_CriticalFactorsPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
 
 /**
  * A collection of all aliased methods for this plugin.

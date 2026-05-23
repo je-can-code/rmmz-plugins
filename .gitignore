@@ -1,4 +1,14 @@
-.idea/
+# JetBrains / WebStorm — share project settings; ignore machine-local churn.
+# https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/
+.idea/**/contentModel.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/aws.xml
 .vs/
 node_modules/
 .cursor/debug-*.log

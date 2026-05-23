@@ -38,7 +38,7 @@
   file and review what the actual functions are.
     * If a function or property is missing- but necessary- provide implementation for them if nothing else satisfies the
       need (such as a function or property with a different name that accomplishes the same thing).
-* Never add arbitrary nested blocks that violate that violate eslint "no-lone-blocks" rule.
+* Never add arbitrary nested blocks that violate the oxlint `no-lone-blocks` rule.
 * Any time you're about tell me "make sure this exists somewhere..." or "ensure you implement this...", instead go look
   around and see if it exists or is already implemented, or warn me that its not if its not anywhere.
 * It is forbidden to include anything that would or should live in "initialization.js" inside of any of the other source
@@ -291,7 +291,7 @@ To avoid confusion between augmenting existing implementations and creating new 
 ## Code Formatting Style
 
 * There should never be more than one class (prototype-based or modern) in a single file.
-* All drop-in code replacements should obey the eslint rules of the project wtihout exception.
+* All drop-in code replacements should obey the oxlint rules of the project (`.oxlintrc.json`) and workspace style without exception.
 * When possible, almost every line should have an inline comment above it, describing what it does using proper sentence
   casing.
     * Examples of this are plentiful throughout the codebase.
