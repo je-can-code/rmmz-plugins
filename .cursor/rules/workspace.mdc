@@ -29,9 +29,10 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 - **When the assistant authors code in this workspace**, it acts as an extension of Jeremy’s authorship: use the **same inline voice** — what is happening, **why**, what we are trying to accomplish, and how non-obvious branches fit the design. Prefer substantive step and intent comments over bare code. Avoid comments that **only** restate an identifier in different words with no added insight.
 - This applies across **all three repos** when writing or editing code on Jeremy’s behalf, subject to each project’s syntax (e.g. `rmmz-plugins` plugin JS vs TypeScript elsewhere).
 
-## ESLint Compliance
-- **Never violate ESLint rules.** `rmmz-plugins` enforces `eol-last: ["error", "never"]` — files must NOT end with a trailing newline. When using the `Write` tool, the final character of the `contents` string must be the last character of the file (no `\n` after the closing `//endregion` or final line). Always run `ReadLints` on newly written files to catch violations before committing.
-- **Always run `bun run lint` after code changes.** Jeremy’s terminal command `bunx eslint "src/plugins/**/*.js" "src/build-tools/**/*.js" "eslint.config.js"` is equivalent to the lint script; treat `bun run lint` as the default. All lint **errors** must be fixed. Lint **warnings** should be addressed or explicitly justified (e.g., suppressed with a targeted one-liner) depending on the concern and intent.
+## Oxlint compliance
+- **Never violate Oxlint rules** configured in `.oxlintrc.json`. Layout conventions (Allman braces, `eol-last: never`, `max-len` 120 / 200 on `_annotations.js`) are workspace style; Oxlint does not yet expose those stylistic rules natively — follow `.junie/guidelines.md` and WebStorm formatting.
+- **No trailing newline on plugin files:** the final character of a file must be the last character of the last line (no `\n` after `//endregion` or the closing line). When using the `Write` tool, do not append a trailing newline.
+- **Always run `bun run lint` after code changes** (`oxlint src/plugins src/build-tools`). All lint **errors** must be fixed. **Warnings** may remain when justified (e.g. `// eslint-disable-next-line` for complexity); Oxlint honors ESLint-style disable comments.
 
 ## Universal Coding Style (all three projects)
 

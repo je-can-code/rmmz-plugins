@@ -40,10 +40,10 @@ function extractMethods(src)
       i = idx + 10;
       continue;
     }
-    const name = m[1];
-    const paramList = m[2].trim();
+    const [fullMatch, name, paramListRaw] = m;
+    const paramList = paramListRaw.trim();
     let depth = 1;
-    let j = idx + m[0].length;
+    let j = idx + fullMatch.length;
     const startBody = j;
     while (j < src.length && depth > 0)
     {
