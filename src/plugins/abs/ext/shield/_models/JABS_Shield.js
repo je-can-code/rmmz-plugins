@@ -262,4 +262,5 @@ class JABS_Shield
   }
 }
 
+export default JABS_Shield;
 //endregion JABS_Shield

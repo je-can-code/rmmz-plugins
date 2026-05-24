@@ -1,4 +1,5 @@
 //region Game_Battler
+import JABS_Shield from './../_models/JABS_Shield.js';
 /**
  * Extends {@link #createJabsState}.<br/>
  * Also includes shield data.

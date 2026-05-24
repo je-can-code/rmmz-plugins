@@ -1,4 +1,5 @@
 //region RPG_State effects
+import JABS_State from './../__models/JABS_State.js';
 //region paralysis
 /**
  * Whether or not this state is also a JABS paralysis state.

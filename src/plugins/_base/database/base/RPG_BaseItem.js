@@ -1,3 +1,5 @@
+import RPG_Base from './RPG_Base.js';
+
 //region RPG_BaseItem
 /**
  * The class representing baseItem from the database,
@@ -35,4 +37,6 @@ class RPG_BaseItem
   }
 }
 
+
+export default RPG_BaseItem;
 //endregion RPG_BaseItem

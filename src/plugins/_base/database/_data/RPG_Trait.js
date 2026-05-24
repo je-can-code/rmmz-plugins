@@ -276,4 +276,6 @@ class RPG_Trait
   }
 }
 
+
+export default RPG_Trait;
 //endregion RPG_Trait

@@ -42,3 +42,4 @@ class RPG_SoundEffect
     this.volume = volume;
   }
 }
+export default RPG_SoundEffect;

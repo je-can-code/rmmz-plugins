@@ -1,4 +1,6 @@
 //region ExternalJsonConfigLoader
+import ExternalJsonConfigLoaderOptions from './../models/ExternalJsonConfigLoaderOptions.js';
+
 /**
  * A centralized loader for external JSON configuration files in the project.
  *
@@ -143,4 +145,6 @@ ${lines.map(line => `      ${line}`)
   }
 }
 
+
+export default ExternalJsonConfigLoader;
 //endregion ExternalJsonConfigLoader

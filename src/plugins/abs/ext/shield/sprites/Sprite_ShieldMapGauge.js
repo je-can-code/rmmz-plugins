@@ -125,4 +125,5 @@ class Sprite_ShieldMapGauge
   }
 }
 
+export default Sprite_ShieldMapGauge;
 //endregion Sprite_ShieldMapGauge

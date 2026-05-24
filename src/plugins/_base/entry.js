@@ -1,0 +1,66 @@
+import './_metadata/initialization.js';
+
+import './_utilities/ArrayHelper.js';
+import './_utilities/JsonMapper.js';
+
+import './core/SerializableRegistry.js';
+import './core/JsonEx.js';
+import './core/Bitmap.js';
+
+import './models/PluginVersion.js';
+import './models/PluginMetadata.js';
+import './models/BuiltWindowCommand.js';
+import './models/ExternalJsonConfigLoaderOptions.js';
+import './models/GaugeOptionsBuilder.js';
+import './models/J_EventEmitter.js';
+import './models/J_Timer.js';
+import './models/WindowCommandBuilder.js';
+import './models/WindowGaugeOptions.js';
+
+import './managers/ColorManager.js';
+import './managers/DataManager.js';
+import './managers/ExternalJsonConfigLoader.js';
+import './managers/Graphics.js';
+import './managers/IconManager.js';
+import './managers/ImageManager.js';
+import './managers/RPGManager.js';
+import './managers/SoundManager.js';
+import './managers/TextManager.js';
+import './managers/TraitManager.js';
+
+import './objects/Game_Actor.js';
+import './objects/Game_Actors.js';
+import './objects/Game_Battler.js';
+import './objects/Game_BattlerBase.js';
+import './objects/Game_Character.js';
+import './objects/Game_CharacterBase.js';
+import './objects/Game_Enemies.js';
+import './objects/Game_Enemy.js';
+import './objects/Game_Event.js';
+import './objects/Game_Follower.js';
+import './objects/Game_Map.js';
+import './objects/Game_Party.js';
+import './objects/Game_Player.js';
+import './objects/Game_System.js';
+import './objects/Game_Temp.js';
+import './objects/Game_Timer.js';
+import './objects/Game_Vehicle.js';
+
+import './scenes/Scene_Base.js';
+
+import './sprites/Sprite_BaseText.js';
+import './sprites/Sprite_Character.js';
+import './sprites/Sprite_Face.js';
+import './sprites/Sprite_Icon.js';
+import './sprites/Sprite_MapGauge.js';
+
+import './windows/TileMap.js';
+import './windows/Window_ActorRibbon.js';
+import './windows/Window_Base.js';
+import './windows/Window_Command.js';
+import './windows/Window_Dimmer.js';
+import './windows/Window_EquipItem.js';
+import './windows/Window_Help.js';
+import './windows/Window_MoreData.js';
+import './windows/Window_Selectable.js';
+import './windows/WindowLayer.js';

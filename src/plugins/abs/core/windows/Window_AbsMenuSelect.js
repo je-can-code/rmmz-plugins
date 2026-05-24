@@ -1,4 +1,6 @@
 //region Window_AbsMenuSelect
+import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * A window that is reused to draw all the subwindows of the JABS menu.
  */
@@ -488,4 +490,5 @@ class Window_AbsMenuSelect
   /* eslint-enable prefer-destructuring */
 }
 
+export default Window_AbsMenuSelect;
 //endregion Window_AbsMenuSelect

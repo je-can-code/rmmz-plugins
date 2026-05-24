@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadDropsControlPluginVm, resetDropsControlPluginSandbox } from './drops-vm.js';
 
-describe('J-DropsControl Game_Actor (out/J-DropsControl.js)', () =>
+describe('J-DropsControl Game_Actor (out/drops/J-DropsControl.js)', () =>
 {
   let sandbox;
 

@@ -1,6 +1,6 @@
 //region engine-stubs
 /**
- * Minimal engine facades so {@link out/J-NaturalGrowth.js} can load and patch prototypes.
+ * Minimal engine facades so {@link out/natural/J-NaturalGrowth.js} can load and patch prototypes.
  *
  * @param {object} sandbox Target object that will become the VM global object.
  * @param {Record<string, string>} pluginParameterStrings String values as RMMZ would provide.

@@ -381,4 +381,5 @@ class Window_MoreEquipData
   }
 }
 
+export default Window_MoreEquipData;
 //endregion Window_MoreEquipData

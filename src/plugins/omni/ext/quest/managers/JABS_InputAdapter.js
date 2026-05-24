@@ -1,4 +1,6 @@
 //region JABS_InputAdapter
+import Scene_Questopedia from '../scenes/Scene_Questopedia.js';
+
 // only setup this shortcut key if we're using JABS.
 if (J.ABS)
 {

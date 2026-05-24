@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 HUD-QUEST] A HUD frame that displays quest objective information.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A HUD frame that displays quest objective information.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

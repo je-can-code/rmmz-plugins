@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadProfPluginVm, resetProfPluginSandbox } from './prof-vm.js';
 
-describe('J-Proficiency lifecycle hooks (out/J-Proficiency.js)', () =>
+describe('J-Proficiency lifecycle hooks (out/prof/J-Proficiency.js)', () =>
 {
   let sandbox;
 

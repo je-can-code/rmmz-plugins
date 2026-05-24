@@ -1,4 +1,6 @@
 //region Window_QuestopediaCategories
+import QuestManager from './../managers/QuestManager.js';
+
 class Window_QuestopediaCategories
   extends Window_HorzCommand
 {
@@ -61,4 +63,5 @@ class Window_QuestopediaCategories
   }
 }
 
+export default Window_QuestopediaCategories;
 //endregion Window_QuestopediaCategories

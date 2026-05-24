@@ -2,7 +2,7 @@
 import { installNaturalEngineStubs } from './fixtures/engine-stubs.js';
 import { clearRpgManagerCacheInVm, evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const NATURAL_OUT_FILENAME = 'J-NaturalGrowth.js';
+export const NATURAL_OUT_FILENAME = 'natural/J-NaturalGrowth.js';
 
 export const DEFAULT_NATURAL_PLUGIN_PARAMS = {
   actorBaseTp: '42',
@@ -10,7 +10,7 @@ export const DEFAULT_NATURAL_PLUGIN_PARAMS = {
 };
 
 /**
- * Evaluates {@link out/J-NaturalGrowth.js} into an existing VM sandbox (with J-Base + Natural engine stubs).
+ * Evaluates {@link out/natural/J-NaturalGrowth.js} into an existing VM sandbox (with J-Base + Natural engine stubs).
  *
  * @param {object} sandbox
  */

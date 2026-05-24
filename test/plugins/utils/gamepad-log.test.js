@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { loadUtilsPluginVm } from './utils-vm.js';
 
-describe('J-SystemUtilities gamepad fresh press logging (out/J-SystemUtilities.js)', () =>
+describe('J-SystemUtilities gamepad fresh press logging (out/utils/J-SystemUtilities.js)', () =>
 {
   let sandbox;
 

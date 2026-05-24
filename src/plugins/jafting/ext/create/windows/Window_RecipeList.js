@@ -120,4 +120,6 @@ class Window_RecipeList
   }
 }
 
+export default Window_RecipeList;
+
 //endregion Window_RecipeList

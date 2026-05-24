@@ -1,4 +1,6 @@
 //region Game_Troop
+import ExperienceManager from './../managers/ExperienceManager.js';
+
 /**
  * Extends {@link #expTotal}.<br/>
  * Uses the flat-experience gained formula.

@@ -1,4 +1,10 @@
 //region OmniFulfillment
+import IndiscriminateData from './fulfillment/IndiscriminateData.js';
+import DestinationData from './fulfillment/DestinationData.js';
+import FetchData from './fulfillment/FetchData.js';
+import SlayData from './fulfillment/SlayData.js';
+import QuestData from './fulfillment/QuestData.js';
+
 /**
  * A class representing the data shape of the fulfillment requirements for a single objective on a quest.
  */
@@ -52,4 +58,5 @@ class OmniFulfillmentData
   }
 }
 
+export default OmniFulfillmentData;
 //endregion OmniFulfillment

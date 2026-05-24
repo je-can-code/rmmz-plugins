@@ -1,4 +1,6 @@
 //region Window_SalvagePreview
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
+
 /**
  * Refund breakdown for the highlighted salvage candidate—icons and name colors match standard {@link Window_Base}
  * item drawing so the pane reads like the rest of the engine menus.<br>
@@ -366,5 +368,7 @@ class Window_SalvagePreview
     return null;
   }
 }
+
+export default Window_SalvagePreview;
 
 //endregion Window_SalvagePreview

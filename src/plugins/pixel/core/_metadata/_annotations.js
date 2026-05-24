@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PIXEL] Enables sub-tile (pixel-accurate) movement on the map.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enables sub-tile (pixel-accurate) movement on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -1,4 +1,6 @@
 //region guarding
+import JABS_GuardData from './../JABS_GuardData.js';
+import JABS_Battler from './_initialization.js';
 /**
  * Whether or not the precise-parry window is active.
  * @returns {boolean}

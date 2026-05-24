@@ -50,4 +50,5 @@ class Window_StatusPageHint
   //endregion drawing
 }
 
+export default Window_StatusPageHint;
 //endregion Window_StatusPageHint

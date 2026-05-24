@@ -1,4 +1,6 @@
 //region J_PopupLayoutRings
+import Map_TextPop from './../_models/Map_TextPop.js';
+
 /**
  * Step layout for each ring. Indices wrap at slotCount.
  */

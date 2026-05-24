@@ -32,4 +32,5 @@ class StatusStatListRow
   }
 }
 
+export default StatusStatListRow;
 //endregion StatusStatListRow

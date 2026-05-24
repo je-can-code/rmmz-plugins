@@ -6,7 +6,7 @@ const noop = function()
 };
 
 /**
- * Minimal globals so {@link out/J-CA-Mods.js} can evaluate after {@link out/J-Base.js}.
+ * Minimal globals so {@link out/ca-mods/J-CA-Mods.js} can evaluate after {@link out/J-Base.js}.
  *
  * @param {object} sandbox VM global object (after {@link installJBaseHostGlobals}).
  */

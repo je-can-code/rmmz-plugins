@@ -1,4 +1,7 @@
 //region JABS_ActionBuilder
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_ActionOptions from './JABS_ActionOptions.js';
+import JABS_Action from './JABS_Action.js';
 /**
  * A builder for creating {@link JABS_Action}s.
  * @returns {JABS_ActionBuilder}
@@ -152,4 +155,5 @@ class JABS_ActionBuilder
   }
 }
 
+export default JABS_ActionBuilder;
 //endregion JABS_ActionBuilder

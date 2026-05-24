@@ -450,4 +450,6 @@ class CraftingComponent
   }
 }
 
+export default CraftingComponent;
+
 //endregion CraftingComponent

@@ -1,4 +1,6 @@
 //region Window_SalvageCandidateList
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
+
 /**
  * Lists inventory rows that currently carry a JAFTING salvage ledger.
  */
@@ -91,5 +93,7 @@ class Window_SalvageCandidateList
     this.drawText(datum.name, rect.x + 40, rect.y, rect.width - 40);
   }
 }
+
+export default Window_SalvageCandidateList;
 
 //endregion Window_SalvageCandidateList

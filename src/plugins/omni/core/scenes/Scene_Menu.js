@@ -1,4 +1,6 @@
 //region Scene_Menu
+import Scene_Omnipedia from './Scene_Omnipedia.js';
+
 /**
  * Hooks into the command window creation of the menu to add functionality for the SDP menu.
  */

@@ -1,5 +1,5 @@
 //region plugin metadata
-class JPopupsResources_PluginMetadata
+class J_PopupsResources_PluginMetadata
   extends PluginMetadata
 {
   /**
@@ -21,4 +21,5 @@ class JPopupsResources_PluginMetadata
   }
 }
 
+export default J_PopupsResources_PluginMetadata;
 //endregion plugin metadata

@@ -401,4 +401,5 @@ JABS_Cooldown.prototype.unlock = function()
   this.locked = false;
 };
 //endregion locking
+export default JABS_Cooldown;
 //endregion JABS_Cooldown

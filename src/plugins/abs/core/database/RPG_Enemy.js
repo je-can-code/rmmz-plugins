@@ -1,4 +1,7 @@
 //region teamId
+import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
+import JABS_BattlerRole from './../__models/JABS_BattlerRole.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * The JABS team id for this battler.
  * This number is the id of the team that this battler will belong to.

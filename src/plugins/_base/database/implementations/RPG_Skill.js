@@ -1,3 +1,5 @@
+import RPG_UsableItem from '../core/RPG_UsableItem.js';
+
 //region RPG_Skill
 /**
  * An class representing a single skill from the database.
@@ -144,4 +146,6 @@ class RPG_Skill
   }
 }
 
+
+export default RPG_Skill;
 //endregion RPG_Skill

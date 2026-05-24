@@ -67,4 +67,6 @@ class Window_PassiveTabHeader
   }
   //endregion draw
 }
+
+export default Window_PassiveTabHeader;
 //endregion Window_PassiveTabHeader

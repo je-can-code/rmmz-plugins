@@ -1,4 +1,6 @@
 //region plugin commands
+import ApManager from '../managers/ApManager.js';
+
 /**
  * Plugin command for modifying AP for all actors.
  */

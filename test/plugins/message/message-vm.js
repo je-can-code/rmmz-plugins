@@ -5,7 +5,7 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installMessageEngineStubs } from './fixtures/engine-stubs.js';
 
-export const MESSAGE_OUT_FILENAME = 'J-MessageTextCodes.js';
+export const MESSAGE_OUT_FILENAME = 'message/J-MessageTextCodes.js';
 
 const EXPOSE_MESSAGE_GLOBALS = `
 globalThis.BasicChoiceConditional = BasicChoiceConditional;

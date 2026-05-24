@@ -165,6 +165,19 @@ describe('J-Base RPGManager (out/J-Base.js)', () =>
       expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(10);
     });
 
+    it('re-evaluates formulas when battler context level changes', () =>
+    {
+      const data = { note: '<f:15 + (a.level * 4)>' };
+      const re = /<f:([^>]+)>/;
+      const ctx = { level: 1 };
+
+      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(19);
+
+      ctx.level = 2;
+
+      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(23);
+    });
+
     it('swallows bad formulas and still returns finite sum', () =>
     {
       const err = vi.spyOn(sandbox.console, 'error').mockImplementation(() => {});

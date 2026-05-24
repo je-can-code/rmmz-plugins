@@ -1,4 +1,6 @@
 //region RefinementWorkflowSession
+import JaftingManager from './../managers/JaftingManager.js';
+
 /**
  * Small state machine for {@link Scene_JaftingRefine}: which list the player is on (base vs material vs confirm).<br>
  * <br>
@@ -158,5 +160,7 @@ class RefinementWorkflowSession
     return { ok: true, reason: null };
   }
 }
+
+export default RefinementWorkflowSession;
 
 //endregion RefinementWorkflowSession

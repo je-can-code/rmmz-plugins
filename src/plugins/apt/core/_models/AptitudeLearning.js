@@ -67,4 +67,5 @@ AptitudeLearning.prototype.isLearned = function()
 {
   return this.currentAp >= this.requiredAp;
 };
+export default AptitudeLearning;
 //endregion AptitudeLearning

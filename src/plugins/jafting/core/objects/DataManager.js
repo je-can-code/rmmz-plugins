@@ -1,4 +1,6 @@
 //region DataManager
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
+
 /**
  * Salvage ledger bags live on `$gameParty._j` — they must exist after the party object is real.<br>
  * Vanilla {@link Scene_Boot#onDatabaseLoaded} fires **before** {@link DataManager.createGameObjects}, so `$gameParty`

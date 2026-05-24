@@ -21,4 +21,5 @@ class JResourcesAbs_PluginMetadata
   }
 }
 
+export default JResourcesAbs_PluginMetadata;
 //endregion plugin metadata

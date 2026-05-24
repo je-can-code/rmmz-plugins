@@ -1,4 +1,6 @@
 //region Game_Party
+import MonsterpediaObservations from './../__models/MonsterpediaObservations.js';
+
 /**
  * Extends {@link #initOmnipediaMembers}.<br>
  * Includes monsterpedia members.

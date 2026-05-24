@@ -81,6 +81,8 @@ Game_Map.prototype.updateStarBattlePhases = function()
 };
 
 //region phase 1 - prepare
+import StarPhases from './../_models/StarPhases.js';
+import StarOrigin from './../_models/StarOrigin.js';
 /**
  * The "prepare" star phase.
  * The transition to the battlemap and generation of the troop onto the field.

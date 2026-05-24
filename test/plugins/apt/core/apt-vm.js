@@ -31,11 +31,15 @@ export function loadAptPluginVm(sandbox)
     {
       installAptEngineStubs(s);
 
+      // J-Aptitude init checks J.ABS.Metadata.version.version() (PluginMetadata), not legacy .Version.
       vm.runInContext(`
 globalThis.J = globalThis.J || {};
 globalThis.J.ABS = globalThis.J.ABS || {};
 globalThis.J.ABS.Metadata = globalThis.J.ABS.Metadata || {};
-globalThis.J.ABS.Metadata.Version = globalThis.J.ABS.Metadata.Version || '4.6.0';
+if (globalThis.J.ABS.Metadata.version === undefined)
+{
+  globalThis.J.ABS.Metadata.version = { version: () => '4.12.1' };
+}
 `, s);
     },
   });

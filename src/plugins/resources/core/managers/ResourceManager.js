@@ -242,4 +242,5 @@ class ResourceCostManager
   }
 }
 
+export default ResourceCostManager;
 //endregion ResourceCostManager

@@ -1,4 +1,6 @@
 //region JsonEx
+import SerializableRegistry from './SerializableRegistry.js';
+
 /**
  * Extends {@link JsonEx._decode}.<br/>
  * Also resolves constructors via {@link SerializableRegistry} before falling back

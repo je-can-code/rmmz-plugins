@@ -1,4 +1,6 @@
 //region Game_CharacterBase
+import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
+
 //region init
 /**
  * Extends {@link Game_CharacterBase.initMembers}.<br>

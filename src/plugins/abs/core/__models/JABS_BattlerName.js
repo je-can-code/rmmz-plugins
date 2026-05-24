@@ -8,4 +8,5 @@ class JABS_BattlerName
   colorHex = '#ffffff';
 }
 
+export default JABS_BattlerName;
 //endregion JABS_BattlerName

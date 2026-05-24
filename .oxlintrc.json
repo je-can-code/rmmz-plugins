@@ -1,0 +1,69 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "off",
+    "pedantic": "off",
+    "perf": "off",
+    "style": "off",
+    "restriction": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/out/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/rmmz_*.js",
+    "**/*.d.ts",
+    "src/external/**",
+    "project/**"
+  ],
+  "rules": {
+    "preserve-caught-error": "off",
+    "no-case-declarations": "off",
+    "no-empty-function": "off",
+    "no-undef": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "varsIgnorePattern": "(?:(^[RPG|JABS|Window|Sprite|Scene|Game])|(Manager$|Builder$))",
+        "argsIgnorePattern": "^(_$|_.+)$"
+      }
+    ],
+    "no-useless-call": "off",
+    "no-prototype-builtins": "off",
+    "eqeqeq": "error",
+    "complexity": ["warn", 20],
+    "no-eq-null": "error",
+    "no-lone-blocks": "error",
+    "no-multi-assign": "error",
+    "no-multi-str": "error",
+    "no-nested-ternary": "error",
+    "no-new": "error",
+    "no-new-wrappers": "error",
+    "no-param-reassign": "warn",
+    "no-promise-executor-return": "error",
+    "no-shadow": "error",
+    "no-unexpected-multiline": "error",
+    "no-void": "error",
+    "prefer-arrow-callback": "error",
+    "prefer-const": "error",
+    "prefer-destructuring": "warn",
+    "no-eval": "off",
+    "no-unused-expressions": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/plugins/**/__models/**/*.js",
+        "src/plugins/**/_models/**/*.js",
+        "src/plugins/drops/models/**/*.js",
+        "src/plugins/log/_models/**/*.js"
+      ],
+      "rules": {
+        "no-unused-vars": "off"
+      }
+    }
+  ]
+}

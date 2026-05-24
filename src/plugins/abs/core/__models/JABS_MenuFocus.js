@@ -56,4 +56,5 @@ class JABS_MenuType
   static Assign = "assign"
 }
 
+export default JABS_MenuType;
 //endregion JABS_MenuType

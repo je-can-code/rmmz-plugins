@@ -78,4 +78,6 @@ class JAFTING_RefinementData
   }
 }
 
+export default JAFTING_RefinementData;
+
 //endregion JAFT_RefinementData

@@ -1,8 +1,29 @@
 //region initialization
+import J_HUD_Quest_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+
+//region version checks
+(() =>
+{
+  const requiredBaseVersion = '2.1.2';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  const requiredHudVersion = '2.0.0';
+  const hasHudRequirement = J.BASE.Helpers.satisfies(J.HUD.Metadata.version.version(), requiredHudVersion);
+  if (hasHudRequirement === false)
+  {
+    throw new Error(`Either missing J-HUD or has a lower version than the required: ${requiredHudVersion}`);
+  }
+})();
+//endregion version check
 
 /**
  * The plugin umbrella that governs all extensions related to the parent.
@@ -11,8 +32,9 @@ J.HUD.EXT.QUEST ||= {};
 
 /**
  * The metadata associated with this plugin.
+ * @type {J_HUD_Quest_PluginMetadata}
  */
-J.HUD.EXT.QUEST.Metadata = new J_HUD_Quest_PluginMetadata('J-HUD-QuestFrame', '1.0.0');
+J.HUD.EXT.QUEST.Metadata = new J_HUD_Quest_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

@@ -14,4 +14,5 @@ class JuiceFlurryStrikeRecord
     this.frame = frame;
   }
 }
+export default JuiceFlurryStrikeRecord;
 //endregion JuiceFlurryStrikeRecord

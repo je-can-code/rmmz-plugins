@@ -590,4 +590,6 @@ class IconManager
   }
 }
 
+
+export default IconManager;
 //endregion IconManager

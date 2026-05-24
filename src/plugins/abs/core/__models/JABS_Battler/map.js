@@ -1,4 +1,11 @@
 //region create/apply effects
+import JABS_TeamRules from './../../managers/JABS_TeamRules.js';
+import JABS_Location from './../JABS_Location.js';
+import JABS_Battler from './_initialization.js';
+import JABS_AiManager from './../../managers/JABS_AiManager.js';
+import JABS_ActionSpawner from './../../managers/JABS_ActionSpawner.js';
+import JABS_ActionOptions from './../JABS_ActionOptions.js';
+import JABS_Action from './../JABS_Action.js';
 /**
  * Performs a preliminary check to see if the target is actually able to be hit.
  * @returns {boolean} True if actions can potentially connect, false otherwise.

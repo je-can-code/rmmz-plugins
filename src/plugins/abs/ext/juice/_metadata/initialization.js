@@ -1,8 +1,7 @@
 //region initialization
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import JAbsJuice_PluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -17,7 +16,7 @@ var J = J || {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.7.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (hasJabsRequirement === false)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -34,7 +33,7 @@ J.ABS.EXT.JUICE = {};
 /**
  * The metadata associated with this plugin.
  */
-J.ABS.EXT.JUICE.Metadata = new JAbsJuice_PluginMetadata('J-ABS-Juice', '1.0.0');
+J.ABS.EXT.JUICE.Metadata = new JAbsJuice_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

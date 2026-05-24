@@ -1,4 +1,5 @@
 //region Window_InputFrame
+import Sprite_InputKeySlot from '../sprites/Sprite_InputKeySlot.js';
 /**
  * A window displaying available skills and button inputs.
  */
@@ -1097,4 +1098,5 @@ class Window_InputFrame
   //endregion draw
 }
 
+export default Window_InputFrame;
 //endregion Window_InputFrame

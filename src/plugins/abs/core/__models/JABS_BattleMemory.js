@@ -54,4 +54,5 @@ JABS_BattleMemory.prototype.wasEffective = function()
 {
   return this.effectiveness >= 1;
 };
+export default JABS_BattleMemory;
 //endregion JABS_BattleMemory

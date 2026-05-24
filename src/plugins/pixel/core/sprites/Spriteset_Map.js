@@ -1,4 +1,6 @@
 //region Spriteset_Map
+import Sprite_PixelCollisionOverlay from './Sprite_PixelCollisionOverlay.js';
+
 /**
  * Extends {@link Spriteset_Map.createUpperLayer}.<br/>
  * Creates the PIXEL collision overlay sprite and adds it to the spriteset.

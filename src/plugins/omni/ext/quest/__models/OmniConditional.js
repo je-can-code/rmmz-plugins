@@ -1,4 +1,6 @@
 //region OmniConditional
+import OmniQuest from './OmniQuest.js';
+
 class OmniConditional
 {
   questKey = String.empty;
@@ -13,4 +15,5 @@ class OmniConditional
   }
 }
 
+export default OmniConditional;
 //endregion OmniConditional

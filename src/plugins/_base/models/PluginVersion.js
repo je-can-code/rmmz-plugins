@@ -167,4 +167,6 @@ class PluginVersion
   }
 }
 
+
+export default PluginVersion;
 //endregion PluginVersion

@@ -1,0 +1,22 @@
+import './_metadata/initialization.js';
+
+import './_metadata/_annotations.js';
+import './_models/JABS_Battler.js';
+import './_models/JABS_Button.js';
+import './_models/JABS_InputAdapter.js';
+import './_models/JABS_StandardController.js';
+import './managers/DataManager.js';
+import './managers/IconManager.js';
+import './managers/Input.js';
+import './managers/JABS_Engine.js';
+import './objects/Game_Player.js';
+import './objects/Game_System.js';
+import './scenes/Scene_JabsRemap.js';
+import './scenes/Scene_Menu.js';
+import './windows/Window_JabsRemapActions.js';
+import './windows/Window_JabsRemapCommand.js';
+import './windows/Window_JabsRemapPrompt.js';
+import './windows/Window_JabsRemapUsageHelp.js';
+import './windows/Window_MenuCommand.js';
+import './windows/Window_Selectable.js';
+

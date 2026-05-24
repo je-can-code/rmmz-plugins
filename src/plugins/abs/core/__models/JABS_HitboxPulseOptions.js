@@ -306,4 +306,5 @@ class JABS_HitboxPulseOptions
   }
 }
 
+export default JABS_HitboxPulseOptions;
 //endregion JABS_HitboxPulseOptions

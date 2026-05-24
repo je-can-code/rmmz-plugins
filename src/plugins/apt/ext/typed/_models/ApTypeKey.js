@@ -1,3 +1,4 @@
+//region ApTypeKey
 class ApTypeKey
 {
   /**
@@ -49,3 +50,5 @@ class ApTypeKey
     return this.domain === other.domain && this.id === other.id;
   }
 }
+
+export default ApTypeKey;

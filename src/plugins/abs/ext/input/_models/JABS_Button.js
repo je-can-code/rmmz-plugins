@@ -167,4 +167,5 @@ class JABS_Button
   }
 }
 
+export default JABS_Button;
 //endregion JABS_Button

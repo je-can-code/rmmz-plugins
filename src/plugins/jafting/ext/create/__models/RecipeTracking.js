@@ -90,4 +90,6 @@ RecipeTracking.prototype.craftingProficiency = function()
 {
   return this.proficiency;
 };
+export default RecipeTracking;
+
 //endregion RecipeTracking

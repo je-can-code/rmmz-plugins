@@ -1,4 +1,6 @@
 //region Window_JaftingList
+import Scene_JaftingSalvage from '../scenes/Scene_JaftingSalvage.js';
+
 /**
  * Root JAFTING hub list: commands registered by Creation, Refinement, and other extensions.
  */
@@ -60,5 +62,7 @@ class Window_JaftingList
     return this.lineHeight() * 2;
   }
 }
+
+export default Window_JaftingList;
 
 //endregion Window_JaftingList

@@ -1,4 +1,7 @@
 //region JABS_InputAdapter
+import JABS_GlobalCooldown from './JABS_GlobalCooldown.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_BaseController from './JABS_BaseController.js';
 /**
  * This static class governs the instructions of what to do regarding input.
  * Inputs are received by the JABS_InputController.
@@ -478,4 +481,5 @@ class JABS_InputAdapter
   }
 }
 
+export default JABS_InputAdapter;
 //endregion JABS_InputAdapter

@@ -1,4 +1,5 @@
 //region Sprite_Character
+import Sprite_ShieldMapGauge from './Sprite_ShieldMapGauge.js';
 /**
  * Extends {@link #initGaugeMembers}.<br/>
  * Adds the shield gauge slot to the gauge group.

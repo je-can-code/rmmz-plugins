@@ -1,4 +1,6 @@
 //region RPG_Base
+import ApTypeKey from './../_models/ApTypeKey.js';
+
 /**
  * Extends {@link #buildAptitudeTeachings}.<br/>
  * Also appends typed teachables parsed from `<aptitudeTyped:[skillId, requiredAp, domain, idOrName]>`.

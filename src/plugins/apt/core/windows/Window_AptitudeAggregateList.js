@@ -1,4 +1,6 @@
 //region Window_AptitudeList
+import AptitudeSkillAggregate from './../_models/AptitudeSkillAggregate.js';
+
 /**
  * The window containing the list of aptitude skill aggregations for an actor.
  */
@@ -171,4 +173,5 @@ class Window_AptitudeAggregateList
   //endregion commands
 }
 
+export default Window_AptitudeAggregateList;
 //endregion Window_AptitudeList

@@ -244,3 +244,5 @@ class BuiltWindowCommand
 
   //endregion getters
 }
+
+export default BuiltWindowCommand;

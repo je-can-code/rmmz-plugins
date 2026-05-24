@@ -221,4 +221,6 @@ class Window_ActorRibbon
   //endregion draw
 }
 
+
+export default Window_ActorRibbon;
 //endregion Window_ActorRibbon

@@ -11,4 +11,5 @@ class QuestData
   keys = [];
 }
 
+export default QuestData;
 //endregion QuestData

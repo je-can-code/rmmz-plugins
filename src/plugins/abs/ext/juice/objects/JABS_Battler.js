@@ -1,4 +1,5 @@
 //region JABS_Battler (casting hooks)
+import JuiceHookManager from './../managers/JuiceHookManager.js';
 /**
  * Extends {@link JABS_Battler.processCastingTimer}.<br/>
  * Keeps casting pulse juice alive while the battler remains in a casting state.

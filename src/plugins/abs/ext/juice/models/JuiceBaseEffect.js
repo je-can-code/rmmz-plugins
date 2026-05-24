@@ -35,4 +35,5 @@ class JuiceBaseEffect
     return true;
   }
 }
+export default JuiceBaseEffect;
 //endregion JuiceBaseEffect

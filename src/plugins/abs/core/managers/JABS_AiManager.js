@@ -1,4 +1,10 @@
 //region JABS_AiManager
+import JABS_TeamRules from './JABS_TeamRules.js';
+import JABS_Location from './../__models/JABS_Location.js';
+import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
+import JABS_Action from './../__models/JABS_Action.js';
 /**
  * This static class tracks and manages all {@link JABS_Battler}s on the map.
  */
@@ -2362,4 +2368,5 @@ class JABS_AiManager
   //endregion Defensive interrupt (MVP — AI dodge)
 }
 
+export default JABS_AiManager;
 //endregion JABS_AiManager

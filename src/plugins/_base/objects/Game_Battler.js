@@ -1,4 +1,13 @@
 //region Game_Battler
+import RPGManager from './../managers/RPGManager.js';
+import RPG_State from './../database/implementations/RPG_State.js';
+import RPG_Skill from './../database/implementations/RPG_Skill.js';
+import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
+import RPG_Enemy from './../database/implementations/RPG_Enemy.js';
+import RPG_Class from './../database/implementations/RPG_Class.js';
+import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
+import RPG_Actor from './../database/implementations/RPG_Actor.js';
+
 /**
  * Gets the skill associated with the given skill id.
  * By default, we simply get the skill from the database with no modifications.

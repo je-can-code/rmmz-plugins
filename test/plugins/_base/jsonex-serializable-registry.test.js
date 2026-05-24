@@ -19,8 +19,10 @@ describe("JsonEx SerializableRegistry pilot (JABS_HitstopData)", () =>
       repoRoot,
       "src/plugins/abs/ext/hitstop/_models/JABS_HitstopData.js",
     );
-    const code = fs.readFileSync(modelPath, "utf8");
-    vm.runInContext(code, sandbox, { filename: modelPath });
+    const modelSource = fs.readFileSync(modelPath, "utf8")
+      .replace(/export default JABS_HitstopData;\r?\n?/, "");
+
+    vm.runInContext(modelSource, sandbox, { filename: modelPath });
 
     const result = vm.runInContext(`
 (() =>

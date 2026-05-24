@@ -1,9 +1,30 @@
 /* eslint-disable max-len */
 //region initialization
+import J_QUEST_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+
+//region version checks
+(() =>
+{
+  const requiredBaseVersion = '3.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  const requiredOmniVersion = '1.0.0';
+  const hasOmniRequirement = J.BASE.Helpers.satisfies(J.OMNI.Metadata.version.version(), requiredOmniVersion);
+  if (hasOmniRequirement === false)
+  {
+    throw new Error(`Either missing J-Omnipedia or has a lower version than the required: ${requiredOmniVersion}`);
+  }
+})();
+//endregion version check
 
 /**
  * The plugin umbrella that governs all extensions related to the parent.
@@ -18,7 +39,7 @@ J.OMNI.EXT.QUEST = {};
 /**
  * The metadata associated with this plugin.
  */
-J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata('J-Omni-Questopedia', '1.0.3');
+J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

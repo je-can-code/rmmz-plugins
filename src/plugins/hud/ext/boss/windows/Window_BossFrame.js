@@ -230,4 +230,5 @@ class Window_BossFrame
   }
 }
 
+export default Window_BossFrame;
 //endregion Window_BossFrame

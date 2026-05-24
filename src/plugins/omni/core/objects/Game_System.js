@@ -1,4 +1,6 @@
 //region Game_System
+import Scene_Omnipedia from '../scenes/Scene_Omnipedia.js';
+
 /**
  * Calls the omnipedia scene if possible.
  * @param {boolean=} force Whether or not to force-call the scene; defaults to false.

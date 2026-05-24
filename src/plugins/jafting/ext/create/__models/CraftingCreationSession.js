@@ -1,4 +1,5 @@
 //region CraftingCreationSession
+import CraftingRecipe from './CraftingRecipe.js';
 /**
  * Owns Creation scene workflow state and the craft attempt (delegates rules to {@link CraftingRecipe}).
  */
@@ -132,5 +133,7 @@ class CraftingCreationSession
     return this.#lastCraftOutcome;
   }
 }
+
+export default CraftingCreationSession;
 
 //endregion CraftingCreationSession

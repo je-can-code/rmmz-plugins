@@ -1,4 +1,10 @@
 //region Game_Party
+import RPGManager from './../managers/RPGManager.js';
+import RPG_Weapon from './../database/implementations/RPG_Weapon.js';
+import RPG_Item from './../database/implementations/RPG_Item.js';
+import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
+import RPG_Armor from './../database/implementations/RPG_Armor.js';
+
 /**
  * Overrides {@link #gainItem}.<br>
  * Replaces item gain and management with index-based management instead.

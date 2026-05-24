@@ -1,4 +1,7 @@
 //region Window_MoreData
+import RPG_UsableItem from './../database/core/RPG_UsableItem.js';
+import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
+import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
 /**
  * A window designed to display "more" data.
  * "More" data is typically defined as parameters not found otherwise listed
@@ -188,4 +191,6 @@ class Window_MoreData
   }
 }
 
+
+export default Window_MoreData;
 //endregion Window_MoreData

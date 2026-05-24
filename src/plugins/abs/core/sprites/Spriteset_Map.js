@@ -1,4 +1,9 @@
 //region Spriteset_Map
+import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
+import JABS_Engine from './../managers/JABS_Engine.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Action from './../__models/JABS_Action.js';
+import JABS_Aabb from './../__models/JABS_Aabb.js';
 //region init
 J.ABS.Aliased.Spriteset_Map.set('createLowerLayer', Spriteset_Map.prototype.createLowerLayer);
 Spriteset_Map.prototype.createLowerLayer = function ()

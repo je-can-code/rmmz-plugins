@@ -1,4 +1,6 @@
 //region JuiceProfileResolver
+import JuiceWeaponSwingMotionEffect from './../models/JuiceWeaponSwingMotionEffect.js';
+import JuiceStyleMultiplierRow from './JuiceStyleMultiplierRow.js';
 /**
  * Resolves weapon / armor icon indices and swing style keys for juice profiles.
  */
@@ -311,4 +313,5 @@ class JuiceProfileResolver
     return new JuiceStyleMultiplierRow(raw.tiltMul, raw.swingMul);
   }
 }
+export default JuiceProfileResolver;
 //endregion JuiceProfileResolver

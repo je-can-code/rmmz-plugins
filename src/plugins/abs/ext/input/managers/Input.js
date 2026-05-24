@@ -1,4 +1,5 @@
 //region Input
+import JABS_Button from './../_models/JABS_Button.js';
 /**
  * The mappings of the gamepad descriptions to their buttons.
  */

@@ -1,4 +1,5 @@
 //region Sprite_SkillCost
+import Sprite_BaseSkillSlot from './Sprite_BaseSkillSlot.js';
 /**
  * A sprite that represents a skill slot's assigned skill's mp cost.
  */
@@ -212,4 +213,5 @@ class Sprite_SkillCost
   }
 }
 
+export default Sprite_SkillCost;
 //endregion Sprite_SkillCost

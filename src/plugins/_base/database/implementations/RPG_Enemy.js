@@ -1,3 +1,7 @@
+import RPG_DropItem from '../_data/RPG_DropItem.js';
+import RPG_EnemyAction from '../_data/RPG_EnemyAction.js';
+import RPG_BaseBattler from '../core/RPG_BaseBattler.js';
+
 //region RPG_Enemy
 /**
  * A class representing a single enemy battler's data from the database.
@@ -96,4 +100,6 @@ class RPG_Enemy
   }
 }
 
+
+export default RPG_Enemy;
 //endregion RPG_Enemy

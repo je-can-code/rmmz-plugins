@@ -1,4 +1,10 @@
 //region JABS_Battler
+import JABS_Timer from './../JABS_Timer.js';
+import JABS_EnemyAI from './../JABS_EnemyAI.js';
+import JABS_BattlerRole from './../JABS_BattlerRole.js';
+import JABS_BattlerCoreData from './../JABS_BattlerCoreData.js';
+import JABS_Aggro from './../JABS_Aggro.js';
+import JABS_Action from './../JABS_Action.js';
 /**
  * An object that represents the binding of a `Game_Event` to a `Game_Battler`.
  * This can be for either the player, an ally, or an enemy.
@@ -569,4 +575,5 @@ JABS_Battler.prototype.initCooldowns = function()
   battler.getSkillSlotManager()
     .setupSlots(battler);
 };
+export default JABS_Battler;
 //endregion initialize battler

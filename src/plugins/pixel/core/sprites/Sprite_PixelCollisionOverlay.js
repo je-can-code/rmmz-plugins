@@ -1,4 +1,6 @@
 //region Sprite_PixelCollisionOverlay
+import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
+
 /**
  * A sprite that visualizes the PIXEL subcell collision table and the player's hitbox.
  * Draws only the currently visible subcells for performance.
@@ -446,4 +448,6 @@ Sprite_PixelCollisionOverlay.prototype._strokeRect = function(x, y, w, h, color)
   // Draw right edge.
   this.bitmap.fillRect(x + w - 1, y, 1, h, color);
 };
+
+export default Sprite_PixelCollisionOverlay;
 //endregion Sprite_PixelCollisionOverlay

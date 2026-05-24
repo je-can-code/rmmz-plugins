@@ -1,4 +1,5 @@
 //region Window_JabsRemapActions
+import JABS_Button from './../_models/JABS_Button.js';
 
 const JABS_REMAP_HEADER_HELP = {
   'Primary Actions':
@@ -719,4 +720,5 @@ class Window_JabsRemapActions
   //endregion utils
 }
 
+export default Window_JabsRemapActions;
 //endregion Window_JabsRemapActions

@@ -66,4 +66,5 @@ class Window_Formations
     return this.lineHeight() * 2;
   }
 }
+export default Window_Formations;
 //endregion Window_Formations

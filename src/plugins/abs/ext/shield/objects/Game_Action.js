@@ -1,4 +1,5 @@
 //region Game_Action
+import JABS_Shield from './../_models/JABS_Shield.js';
 /**
  * Extends {@link #executeDamage}.<br/>
  * Considers shields when executing damage.

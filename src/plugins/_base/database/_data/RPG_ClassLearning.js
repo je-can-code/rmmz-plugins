@@ -38,4 +38,6 @@ class RPG_ClassLearning
   }
 }
 
+
+export default RPG_ClassLearning;
 //endregion RPG_ClassLearning

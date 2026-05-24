@@ -1,4 +1,5 @@
 //region JuiceWeaponSwingMotionEffect
+import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
  * Drives one weapon-icon overlay swing arc, then detaches and destroys the overlay sprite.
  */
@@ -781,4 +782,5 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     this.#applyTipAlignedRotation(dir, p.rotationDelta);
   }
 }
+export default JuiceWeaponSwingMotionEffect;
 //endregion JuiceWeaponSwingMotionEffect

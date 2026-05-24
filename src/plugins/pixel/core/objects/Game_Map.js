@@ -1,4 +1,6 @@
 //region Game_Map
+import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
+
 /**
  * Extends {@link Game_Map.setup}.<br>
  * Builds the PIXEL subcell collision table when a new map loads.

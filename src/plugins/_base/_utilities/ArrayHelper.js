@@ -80,3 +80,4 @@ class ArrayHelper
     return Array.from({ length: b - a + 1 }, (_, i) => a + i);
   }
 }
+export default ArrayHelper;

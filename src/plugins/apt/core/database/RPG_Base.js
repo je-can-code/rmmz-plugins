@@ -1,4 +1,6 @@
 //region RPG_Base
+import AptitudeTeachable from './../_models/AptitudeTeachable.js';
+
 /**
  * Gets all {@link AptitudeTeachable}s associated with this database object.
  * @type {AptitudeTeachable[]}

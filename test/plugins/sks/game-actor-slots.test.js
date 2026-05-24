@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadSksPluginVm, resetSksPluginSandbox } from './sks-vm.js';
 
-describe('J-SkillSlots Game_Actor slots (out/J-SkillSlots.js)', () =>
+describe('J-SkillSlots Game_Actor slots (out/sks/J-SkillSlots.js)', () =>
 {
   let sandbox;
 

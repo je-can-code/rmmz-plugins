@@ -24,4 +24,6 @@ class Window_SalvageConfirmation
   }
 }
 
+export default Window_SalvageConfirmation;
+
 //endregion Window_SalvageConfirmation

@@ -1,4 +1,10 @@
 //region Game_Character
+import JABS_LootDrop from './../__models/JABS_LootDrop.js';
+import JABS_Engine from './../managers/JABS_Engine.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
+import JABS_Action from './../__models/JABS_Action.js';
+import JABS_Aabb from './../__models/JABS_Aabb.js';
 /**
  * Hooks into the `Game_Character.initMembers` and adds in action sprite properties.
  */

@@ -1,4 +1,5 @@
 //region Map_TextPop
+import TextPopBuilder from './TextPopBuilder.js';
 /**
  * A class representing a single popup on the map.
  */
@@ -174,4 +175,5 @@ Map_TextPop.prototype.initialize = function({
    */
   this.jInstantRelease = jInstantRelease !== false;
 };
+export default Map_TextPop;
 //endregion Map_TextPop

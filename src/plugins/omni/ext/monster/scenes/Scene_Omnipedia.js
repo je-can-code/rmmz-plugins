@@ -1,4 +1,6 @@
 //region Scene_Omnipedia
+import Scene_Monsterpedia from './Scene_Monsterpedia.js';
+
 //region root actions
 /**
  * Extends {@link #onRootPediaSelection}.<br>

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadProfPluginVm, resetProfPluginSandbox } from './prof-vm.js';
 
-describe('J-Proficiency Game_Action.apply (out/J-Proficiency.js)', () =>
+describe('J-Proficiency Game_Action.apply (out/prof/J-Proficiency.js)', () =>
 {
   let sandbox;
 

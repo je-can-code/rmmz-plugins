@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 HUD-TARGET] A HUD frame that displays your battle target.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A HUD frame that displays your battle target.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS

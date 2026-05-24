@@ -52,4 +52,6 @@ class Window_PassiveActorRibbon
   }
   //endregion draw
 }
+
+export default Window_PassiveActorRibbon;
 //endregion Window_PassiveActorRibbon

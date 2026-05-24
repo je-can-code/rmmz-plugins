@@ -1,4 +1,5 @@
 // #region AptitudeSkillAggregate
+import AptitudeSkillSourceProgress from './AptitudeSkillSourceProgress.js';
 
 /**
  * Represents one skill learned via aptitudes across all sources on an actor.
@@ -178,4 +179,5 @@ class AptitudeSkillAggregate
   }
 }
 
+export default AptitudeSkillAggregate;
 // #endregion AptitudeSkillAggregate

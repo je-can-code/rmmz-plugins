@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.1.0 POPUPS] Map text popups for JABS and beyond.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Map text popups for JABS and beyond.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

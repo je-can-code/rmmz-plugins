@@ -6,7 +6,7 @@ import { evaluateShippedPlugin, clearRpgManagerCacheInVm } from '../../setup/shi
 import { buildVitestProficiencyConfigJson } from './fixtures/prof-config-json.js';
 import { installProfEngineStubs } from './fixtures/engine-stubs.js';
 
-export const PROF_OUT_FILENAME = 'J-Proficiency.js';
+export const PROF_OUT_FILENAME = 'prof/J-Proficiency.js';
 
 /**
  * @param {object} sandbox

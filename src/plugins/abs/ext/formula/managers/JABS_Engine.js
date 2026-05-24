@@ -1,4 +1,5 @@
 //region JABS_Engine
+import FormulaEffect from './../__models/FormulaEffect.js';
 J.ABS.EXT.FORMULA.Aliased.JABS_Engine ||= new Map();
 
 /**

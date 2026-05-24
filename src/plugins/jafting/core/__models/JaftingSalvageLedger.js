@@ -1,17 +1,18 @@
 //region JaftingSalvageLedger
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
+import {
+  JaftingSalvageLedgerRow,
+  JaftingSalvageLedgerSnapshot,
+} from './JaftingSalvageDataModels.js';
+
 /**
  * Stateless helpers for salvage ledger **rows** (clone, merge, dedupe).<br>
  * Concrete row / snapshot / bag classes live in {@link JaftingSalvageLedgerRow},
  * {@link JaftingSalvageLedgerSnapshot}, and {@link JaftingSalvagePartyLedgerBag}
  * (see `JaftingSalvageDataModels.js`).<br>
- * Party-facing **saved** ledgers live under {@link JaftingSalvageManager} on `$gameParty` or on RPG equipment rows.<br>
- * <br>
- * **Why a global name:** JAFTING ships as concatenated plain JS (no modules). Attaching a namespace object to one
- * global is how shared utilities share scope with {@link JaftingSalvageManager} without circular ordering headaches.
- * The `var X = X || {}` idiom keeps the bucket safe if anything ever double-evaluates.<br>
- * If we outgrow it, fold these functions onto `J.JAFTING` or into the manager—behavior stays the same.
+ * Party-facing **saved** ledgers live under {@link JaftingSalvageManager} on `$gameParty` or on RPG equipment rows.
  */
-var JaftingSalvageLedger = JaftingSalvageLedger || {};
+const JaftingSalvageLedger = {};
 
 /**
  * Armor type id used for ingredient-style armors (monster parts, materials).<br>
@@ -245,5 +246,7 @@ JaftingSalvageLedger.mergeRowArrays = function(a, b)
 
   return JaftingSalvageLedger.mergeDuplicateRows(combined);
 };
+
+export default JaftingSalvageLedger;
 
 //endregion JaftingSalvageLedger

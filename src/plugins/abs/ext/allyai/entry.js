@@ -1,0 +1,21 @@
+import './_metadata/initialization.js';
+
+import './_metadata/_annotations.js';
+import './_models/JABS_AllyAI.js';
+import './_models/JABS_Battler.js';
+import './_models/JABS_Formation.js';
+import './managers/JABS_AiManager.js';
+import './managers/JABS_Engine.js';
+import './managers/JABS_SkillSlotManager.js';
+import './objects/Game_Actor.js';
+import './objects/Game_Follower.js';
+import './objects/Game_Followers.js';
+import './objects/Game_Interpreter.js';
+import './objects/Game_Map.js';
+import './objects/Game_Party.js';
+import './objects/Game_Player.js';
+import './scenes/Scene_Map.js';
+import './sprites/Spriteset_Map.js';
+import './windows/Window_AbsMenu.js';
+import './windows/Window_AbsMenuSelect.js';
+import './windows/Window_Formations.js';

@@ -81,4 +81,5 @@ JABS_BattlerRole.prototype.hasRole = function()
 {
   return (this.leader || this.follower || this.guardian || this.ward || this.solo || this.sentinel);
 };
+export default JABS_BattlerRole;
 //endregion JABS_BattlerRole

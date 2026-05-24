@@ -1,4 +1,6 @@
 //region Window_StatusParameters
+import StatusParameter from './../_models/StatusParameter.js';
+
 /**
  * A replacement class for `Window_StatusParams`, which originally extended `Window_Selectable`
  * and rendered only the b-params. This window now extends `Window_Base` and renders all
@@ -868,4 +870,5 @@ class Window_StatusParameters
   }
 }
 
+export default Window_StatusParameters;
 //endregion Window_StatusParameters

@@ -1,0 +1,18 @@
+import './_metadata/initialization.js';
+
+import './_metadata/_annotations.js';
+import './_models/JABS_Shield.js';
+import './_models/JABS_State.js';
+import './_models/JABS_StateBuilder.js';
+import './_models/Map_TextPop.js';
+import './database/RPG_UsableItem.js';
+import './managers/ColorManager.js';
+import './managers/JABS_Engine.js';
+import './managers/TextPopBuilder.js';
+import './objects/_Game_Battler.js';
+import './objects/Game_Action.js';
+import './objects/Game_Actor.js';
+import './sprites/Sprite_ActorValue.js';
+import './sprites/Sprite_Character.js';
+import './sprites/Sprite_ShieldMapGauge.js';
+import './windows/Window_PartyFrame.js';

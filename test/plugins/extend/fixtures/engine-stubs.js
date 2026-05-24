@@ -4,7 +4,7 @@ const noop = function()
 };
 
 /**
- * Minimal globals so {@link out/J-SkillExtend.js} can evaluate after {@link out/J-Base.js}.
+ * Minimal globals so {@link out/extend/J-SkillExtend.js} can evaluate after {@link out/J-Base.js}.
  *
  * @param {object} sandbox VM global object (after {@link installJBaseHostGlobals}).
  */

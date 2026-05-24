@@ -1,4 +1,7 @@
 //region plugin metadata
+/**
+ * Plugin metadata for J-Resources.
+ */
 class JResources_PluginMetadata
   extends PluginMetadata
 {
@@ -36,4 +39,5 @@ class JResources_PluginMetadata
   }
 }
 
+export default JResources_PluginMetadata;
 //endregion plugin metadata

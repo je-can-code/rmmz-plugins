@@ -1,4 +1,6 @@
 //region Scene_Map
+import BossFrameManager from './../managers/BossFrameManager.js';
+import Window_BossFrame from '../windows/Window_BossFrame.js';
 /**
  * Extends {@link #initHudMembers}.<br>
  * Includes initialization of the boss frame members.

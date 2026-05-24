@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Extends the Omnipedia with a Questopedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

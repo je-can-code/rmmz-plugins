@@ -1,4 +1,8 @@
 //region JuiceMotionManager
+import JuiceTiltMotionEffect from './../models/JuiceTiltMotionEffect.js';
+import JuiceSquishMotionEffect from './../models/JuiceSquishMotionEffect.js';
+import JuiceCastingPulseMotionEffect from './../models/JuiceCastingPulseMotionEffect.js';
+import JuiceBaseEffect from './../models/JuiceBaseEffect.js';
 /**
  * Owns lightweight per-frame juice tweens on Pixi sprites (scale / rotation).
  */
@@ -154,4 +158,5 @@ class JuiceMotionManager
     JuiceMotionManager.#spriteLocks.delete(sprite);
   }
 }
+export default JuiceMotionManager;
 //endregion JuiceMotionManager

@@ -1,4 +1,6 @@
 //region Window_SkillDetail
+import JCMS_ParameterKvp from './../_models/JCMS_ParameterKvp.js';
+
 /**
  * A window responsible for showing various datapoints of a skill.
  */
@@ -632,4 +634,5 @@ class Window_SkillDetail
   }
 }
 
+export default Window_SkillDetail;
 //endregion Window_SkillDetail

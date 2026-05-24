@@ -1,4 +1,5 @@
 //region Game_Player
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * While JABS is enabled, don't try to interact with events if they are enemies.
  */

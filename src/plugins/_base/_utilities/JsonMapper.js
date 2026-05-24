@@ -101,4 +101,6 @@ class JsonMapper
   }
 }
 
+
+export default JsonMapper;
 //endregion JsonMapper

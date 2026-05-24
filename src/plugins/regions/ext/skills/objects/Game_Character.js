@@ -1,4 +1,5 @@
 //region Game_Character
+import RegionSkillData from './../models/RegionSkillData.js';
 /**
  * Extends {@link #initMembers}.<br>
  * Also initializes the region skills members.

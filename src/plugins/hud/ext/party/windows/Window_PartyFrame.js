@@ -1,4 +1,5 @@
 //region Window_PartyFrame
+import Sprite_ActorValue from '../sprites/Sprite_ActorValue.js';
 /**
  * A window containing the HUD data for the {@link Game_Party}.
  */
@@ -1335,4 +1336,5 @@ class Window_PartyFrame
   //endregion draw
 }
 
+export default Window_PartyFrame;
 //endregion Window_PartyFrame

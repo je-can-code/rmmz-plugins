@@ -74,11 +74,12 @@ The monorepo relies on alias maps and consistent super-call ordering. There is n
 ## Work
 
 1. Generate a maintained markdown table (this file or `docs/`) listing engine class → plugin file → method names → alias namespace.
-2. Flag methods with **multiple overwriters** (e.g. `JABS_AiManager.canMoveIdly`, `moveIdly`, `goHome` under Pixel + others) and document **expected plugin load order** from combine manifests.
+2. Flag methods with **multiple overwriters** (e.g. `JABS_AiManager.canMoveIdly`, `moveIdly`, `goHome` under Pixel + others) and document **expected plugin load order** from `plugins.js` / ship dependencies.
 3. For the worst offenders, consider extracting collaborators (`jabs-engine-loot-action-director.md`) rather than growing `JABS_Engine` further.
 4. Optional long-term: formal “subscribe” hooks on `$jabsEngine` for cross-cutting concerns instead of N separate prototype files (high effort; only after inventory exists).
 
 ## Notes
 
 - Relates to `game-action-battler-uuid-refactor.md` (identity and serialization touch `Game_Action` and battlers).
-- Relates to `build-tools-linting.md` (dead-method / override conflict detection could use this inventory).
+- Relates to [`build-tools-linting.md`](../completed/build-tools-linting.md) (lint gates `hotfix`; override inventory could inform future tooling).
+- Plugin **load order** is `plugins.js` + `@orderAfter` / ship dependencies (post-Vite); there is no Combiner manifest.

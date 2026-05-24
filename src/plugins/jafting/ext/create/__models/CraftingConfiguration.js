@@ -1,4 +1,6 @@
 //region crafting configuration
+import CraftingRecipe from './CraftingRecipe.js';
+import CraftingCategory from './CraftingCategory.js';
 /**
  * The configuration model for crafting config data.
  */
@@ -106,5 +108,7 @@ class CraftingConfiguration
     }
   }
 }
+
+export default CraftingConfiguration;
 
 //endregion

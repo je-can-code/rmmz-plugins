@@ -23,6 +23,8 @@
  * ✨ target directory created: ./src/plugins/abs/ext/poses
  * ✨ copied [Z:\dev\gaming\rmmz-plugins\src\plugin-template] to [Z:\dev\gaming\rmmz-plugins\src\plugins\abs\ext\poses]
  * ✨ Initter™ has completed execution. 💯✅
+ *
+ * After init, read SCAFFOLD.md in the new plugin folder (namespace, vite config, package.json build script).
  */
 
 import Mirror from './mirror.js';

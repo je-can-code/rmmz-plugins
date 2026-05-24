@@ -1,8 +1,10 @@
 //region initialization
+import JResources_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -17,7 +19,7 @@ J.RESOURCES.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.RESOURCES.Metadata = new JResources_PluginMetadata('J-Resources', '1.0.0');
+J.RESOURCES.Metadata = new JResources_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -58,5 +60,4 @@ J.RESOURCES.RegExp.TpCostFormula = /<tp-cost:\[([+\-*/ ().\w]+)]>/gi;
 J.RESOURCES.RegExp.TpGainFlat = /<tp-gain:(\d+)>/i;
 J.RESOURCES.RegExp.TpGainPercent = /<tp-gain:(\d+)%>/i;
 J.RESOURCES.RegExp.TpGainFormula = /<tp-gain:\[([+\-*/ ().\w]+)]>/gi;
-
 //endregion initialization

@@ -1,4 +1,7 @@
 //region BattleManager
+import StarPhases from './../_models/StarPhases.js';
+import StarPhase from './../_models/StarPhase.js';
+import StarOrigin from './../_models/StarOrigin.js';
 /**
  * The `enemyMap` is a property containing the master map from which enemies
  * from the troop are derived from.
