@@ -1,4 +1,6 @@
 //region Window_RecipeOutputList
+import Window_RecipeIngredientList from './Window_RecipeIngredientList.js';
+
 class Window_RecipeOutputList
   extends Window_Command
 {
@@ -154,5 +156,7 @@ class Window_RecipeOutputList
   {
   }
 }
+
+export default Window_RecipeOutputList;
 
 //endregion Window_RecipeOutputList

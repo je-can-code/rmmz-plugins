@@ -1,9 +1,11 @@
 /* eslint-disable max-len */
 //region Metadata
+import J_AbsPluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -132,8 +134,14 @@ J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
   );
 
   // assign the external config and extracted teams into metadata.
-  J.ABS.Metadata.ExternalConfig = parsedConfig;
-  J.ABS.Metadata.Teams = parsedConfig.teams;
+  const metadata = J.ABS.Metadata;
+  if (metadata === undefined)
+  {
+    throw new Error('J.ABS.Metadata must be assigned before J.ABS.Helpers.loadExternalConfig().');
+  }
+
+  metadata.ExternalConfig = parsedConfig;
+  metadata.Teams = parsedConfig.teams;
 
   // return the parsed root blob.
   return parsedConfig;
@@ -141,306 +149,14 @@ J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 //endregion helpers
 
 //region metadata
-/**
- * The `metadata` associated with this plugin, such as version.
- */
-J.ABS.Metadata = {};
-J.ABS.Metadata.Name = 'J-ABS';
-J.ABS.Metadata.Version = '4.12.1';
 
 /**
- * The actual `plugin parameters` extracted from RMMZ.
+ * The metadata associated with this plugin.
  */
-J.ABS.PluginParameters = PluginManager.parameters(J.ABS.Metadata.Name);
+J.ABS.Metadata = new J_AbsPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
-// the most important configuration!
-J.ABS.Metadata.MaxAiUpdateRange = Number(J.ABS.PluginParameters['maxAiUpdateRange']) || 20;
-
-// defaults configurations.
-J.ABS.Metadata.DefaultActionMapId = Number(J.ABS.PluginParameters['actionMapId']);
-J.ABS.Metadata.DefaultEnemyMapId = Number(J.ABS.PluginParameters['enemyMapId']);
-J.ABS.Metadata.DefaultDodgeSkillTypeId = Number(J.ABS.PluginParameters['dodgeSkillTypeId']);
-J.ABS.Metadata.DefaultGuardSkillTypeId = Number(J.ABS.PluginParameters['guardSkillTypeId']);
-J.ABS.Metadata.DefaultWeaponSkillTypeId = Number(J.ABS.PluginParameters['weaponSkillTypeId']);
-J.ABS.Metadata.DefaultToolCooldownTime = Number(J.ABS.PluginParameters['defaultToolCooldownTime']);
-J.ABS.Metadata.DefaultAttackAnimationId = Number(J.ABS.PluginParameters['defaultAttackAnimationId']);
-J.ABS.Metadata.DefaultLootExpiration = Number(J.ABS.PluginParameters['defaultLootExpiration']);
-
-// AI combo follow-up pacing: random percentile within the link window (combo delay .. cooldown tag).
-J.ABS.Metadata.AiComboHumanizeWindowMinPercent = 0.1;
-J.ABS.Metadata.AiComboHumanizeWindowMaxPercent = 0.3;
-
-// AI defensive dodge interrupt (MVP): threat radius in tile-ish units (see distanceToPoint), roll vs chance, cooldown frames.
-J.ABS.Metadata.AiDefensiveDodgeChancePercent = 75;
-J.ABS.Metadata.AiDefensiveDodgeCooldownFrames = 45;
-J.ABS.Metadata.AiDefensiveThreatRadiusTiles = 3;
-
-// Ally AI defensive guard (offhand guard skill): raise uses defensive threat radius; hold uses tighter distance + max hold.
-// Below this hp fraction (0–1) ally ai may roll a raise; use 1 to ignore hp (always eligible when threatened).
-J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent = 0.55;
-J.ABS.Metadata.AiAllyDefensiveGuardChancePercent = 40;
-// After a forced or natural guard drop, earliest frame ally AI may roll another raise (not a hold timer — guard is a toggle).
-J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames = 30;
-// Drop held guard after this many frames so allies peek out of block in crowded melee (guard has no resource cooldown).
-J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames = 120;
-// Hold guard only while the closest hostile is within this tile-ish distance; wider clusters no longer justify turtling.
-J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles = 2.35;
-
-// enemy battler default enemy setup configurations.
-J.ABS.Metadata.DefaultEnemyPrepareTime = Number(J.ABS.PluginParameters['defaultEnemyPrepareTime']);
-J.ABS.Metadata.DefaultEnemyAttackSkillId = Number(J.ABS.PluginParameters['defaultEnemyAttackSkillId']);
-J.ABS.Metadata.DefaultEnemySightRange = Number(J.ABS.PluginParameters['defaultEnemySightRange']);
-J.ABS.Metadata.DefaultEnemyPursuitRange = Number(J.ABS.PluginParameters['defaultEnemyPursuitRange']);
-J.ABS.Metadata.DefaultEnemyAlertedSightBoost = Number(J.ABS.PluginParameters['defaultEnemyAlertedSightBoost']);
-J.ABS.Metadata.DefaultEnemyAlertedPursuitBoost = Number(J.ABS.PluginParameters['defaultEnemyAlertedPursuitBoost']);
-J.ABS.Metadata.DefaultEnemyAlertDuration = Number(J.ABS.PluginParameters['defaultEnemyAlertDuration']);
-J.ABS.Metadata.DefaultEnemyCanIdle = Boolean(J.ABS.PluginParameters['defaultEnemyCanIdle'] === 'true');
-J.ABS.Metadata.DefaultEnemyShowHpBar = Boolean(J.ABS.PluginParameters['defaultEnemyShowHpBar'] === 'true');
-J.ABS.Metadata.DefaultEnemyShowBattlerName = Boolean(J.ABS.PluginParameters['defaultEnemyShowBattlerName'] === 'true');
-J.ABS.Metadata.DefaultEnemyIsInvincible = Boolean(J.ABS.PluginParameters['defaultEnemyIsInvincible'] === 'true');
-J.ABS.Metadata.DefaultEnemyIsInanimate = Boolean(J.ABS.PluginParameters['defaultEnemyIsInanimate'] === 'true');
-
-// custom data configurations.
-J.ABS.Metadata.UseElementalIcons = J.ABS.PluginParameters['useElementalIcons'] === 'true';
-J.ABS.Metadata.ElementalIcons = J.ABS.Helpers.PluginManager.TranslateElementalIcons(J.ABS.PluginParameters['elementalIconData']);
-
-// external data configurations.
+// load external config after metadata is published (constructor must not call this — Metadata is not assigned yet).
 J.ABS.Helpers.loadExternalConfig();
-
-// action decided configurations.
-J.ABS.Metadata.AttackDecidedAnimationId = Number(J.ABS.PluginParameters['attackDecidedAnimationId']);
-J.ABS.Metadata.SupportDecidedAnimationId = Number(J.ABS.PluginParameters['supportDecidedAnimationId']);
-
-// aggro configurations.
-J.ABS.Metadata.BaseAggro = Number(J.ABS.PluginParameters['baseAggro']);
-J.ABS.Metadata.AggroPerHp = Number(J.ABS.PluginParameters['aggroPerHp']);
-J.ABS.Metadata.AggroPerMp = Number(J.ABS.PluginParameters['aggroPerMp']);
-J.ABS.Metadata.AggroPerTp = Number(J.ABS.PluginParameters['aggroPerTp']);
-J.ABS.Metadata.AggroDrain = Number(J.ABS.PluginParameters['aggroDrainMultiplier']);
-J.ABS.Metadata.AggroParryFlatAmount = Number(J.ABS.PluginParameters['aggroParryFlatAmount']);
-J.ABS.Metadata.AggroParryUserGain = Number(J.ABS.PluginParameters['aggroParryUserGain']);
-J.ABS.Metadata.AggroPlayerReduction = Number(J.ABS.PluginParameters['aggroPlayerReduction']);
-
-// state configurations.
-J.ABS.Metadata.DefaultStateReapplyType = J.ABS.PluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
-
-J.ABS.Metadata.DefaultStateRefreshDiminish = Number(J.ABS.PluginParameters['defaultStateRefreshDiminish']) || 120;
-J.ABS.Metadata.DefaultStateRefreshReset = Number(J.ABS.PluginParameters['defaultStateRefreshReset']) || 900;
-
-J.ABS.Metadata.DefaultStateExtendAmount = Number(J.ABS.PluginParameters['defaultStateExtendAmount']) || 180;
-J.ABS.Metadata.DefaultStateExtendMax = Number(J.ABS.PluginParameters['defaultStateExtendMax']) || 216000;
-
-J.ABS.Metadata.DefaultStateStackMax = Number(J.ABS.PluginParameters['defaultStateStackMax']) || 5;
-J.ABS.Metadata.DefaultStateApplicationCount = Number(J.ABS.PluginParameters['defaultStateApplicationCount']) || 1;
-J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce = (J.ABS.PluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
-
-// miscellaneous configurations.
-J.ABS.Metadata.LootPickupRange = Number(J.ABS.PluginParameters['lootPickupDistance']);
-J.ABS.Metadata.AllyRubberbandAdjustment = Number(J.ABS.PluginParameters['allyRubberbandAdjustment']);
-J.ABS.Metadata.DashSpeedBoost = Number(J.ABS.PluginParameters['dashSpeedBoost']);
-J.ABS.Metadata.HitboxOverlaysInitiallyVisible = (J.ABS.PluginParameters['hitboxOverlaysInitiallyVisible'] === 'true');
-
-const hitboxMeleeOxRaw = J.ABS.PluginParameters['hitboxMeleeOriginOffsetPxX'];
-const hitboxMeleeOyRaw = J.ABS.PluginParameters['hitboxMeleeOriginOffsetPxY'];
-J.ABS.Metadata.HitboxMeleeOriginOffsetPxX = Number(hitboxMeleeOxRaw);
-if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginOffsetPxX))
-{
-  J.ABS.Metadata.HitboxMeleeOriginOffsetPxX = 0;
-}
-J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = Number(hitboxMeleeOyRaw);
-if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginOffsetPxY))
-{
-  J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = -10;
-}
-
-const hitboxMeleeExtraDownRaw = J.ABS.PluginParameters['hitboxMeleeOriginExtraPxYFacingDown'];
-const hitboxMeleeExtraUpRaw = J.ABS.PluginParameters['hitboxMeleeOriginExtraPxYFacingUp'];
-J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown = Number(hitboxMeleeExtraDownRaw);
-if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown))
-{
-  J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown = 0;
-}
-J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp = Number(hitboxMeleeExtraUpRaw);
-if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp))
-{
-  J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp = 0;
-}
-
-const hitboxMeleeLiftRedDownRaw = J.ABS.PluginParameters['hitboxMeleeOriginLiftReductionPxFacingDown'];
-J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown = Number(hitboxMeleeLiftRedDownRaw);
-if (!Number.isFinite(J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown))
-{
-  J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown = 28;
-}
-
-// disengage configurations.
-J.ABS.Metadata.ShowDisengageBalloon = (J.ABS.PluginParameters['showDisengageBalloon'] === 'true');
-J.ABS.Metadata.DisengageBalloonId = Number(J.ABS.PluginParameters['disengageBalloonId']) || 7;
-
-// guard / parry visuals.
-const parryCharacterAnimationRaw = J.ABS.PluginParameters['parryCharacterAnimationId'];
-const parryCharacterAnimationParsed = Number(parryCharacterAnimationRaw);
-J.ABS.Metadata.ParryCharacterAnimationId = (Number.isFinite(parryCharacterAnimationParsed)
-  && parryCharacterAnimationParsed >= 0)
-  ? Math.floor(parryCharacterAnimationParsed)
-  : 122;
-
-const implicitParryDomRaw = J.ABS.PluginParameters['implicitParryDominanceMultiplier'];
-const implicitParryDomParsed = Number(implicitParryDomRaw);
-J.ABS.Metadata.ImplicitParryDominanceMultiplier = (Number.isFinite(implicitParryDomParsed) && implicitParryDomParsed > 1)
-  ? implicitParryDomParsed
-  : 2;
-
-const implicitParryBaselineFloorRaw = J.ABS.PluginParameters['implicitParryBaselineFloor'];
-const implicitParryBaselineFloorParsed = Number(implicitParryBaselineFloorRaw);
-J.ABS.Metadata.ImplicitParryBaselineFloor = (Number.isFinite(implicitParryBaselineFloorParsed) && implicitParryBaselineFloorParsed >= 0)
-  ? implicitParryBaselineFloorParsed
-  : 50;
-
-const implicitParryBaselinePerLevelRaw = J.ABS.PluginParameters['implicitParryBaselinePerLevel'];
-const implicitParryBaselinePerLevelParsed = Number(implicitParryBaselinePerLevelRaw);
-J.ABS.Metadata.ImplicitParryBaselinePerLevel = (Number.isFinite(implicitParryBaselinePerLevelParsed) && implicitParryBaselinePerLevelParsed >= 0)
-  ? implicitParryBaselinePerLevelParsed
-  : 0.25;
-
-// quick menu commands configurations.
-J.ABS.Metadata.EquipCombatSkillsText = J.ABS.PluginParameters['equipCombatSkillsText'];
-J.ABS.Metadata.EquipDodgeSkillsText = J.ABS.PluginParameters['equipDodgeSkillsText'];
-J.ABS.Metadata.EquipOffhandText = J.ABS.PluginParameters['equipOffhandText'];
-J.ABS.Metadata.EquipToolsText = J.ABS.PluginParameters['equipToolsText'];
-J.ABS.Metadata.MainMenuText = J.ABS.PluginParameters['mainMenuText'];
-J.ABS.Metadata.CancelText = J.ABS.PluginParameters['cancelText'];
-J.ABS.Metadata.ClearSlotText = J.ABS.PluginParameters['clearSlotText'];
-J.ABS.Metadata.UnassignedText = J.ABS.PluginParameters['unassignedText'];
-
-/**
- * Global cooldown (GCD) plugin state: master switch, default duration in frames, and whitelist of skill {@code stypeId} values.
- * {@link J.ABS.Metadata.GlobalCooldownSkillTypeSet} is built from {@code globalCooldownSkillTypes} as JSON array or comma-separated legacy text.
- */
-// global cooldown (GCD) configurations.
-J.ABS.Metadata.EnableGlobalCooldown = J.ABS.PluginParameters['enableGlobalCooldown'] === 'true';
-J.ABS.Metadata.GlobalCooldownFrames = Number(J.ABS.PluginParameters['globalCooldownFrames']) || 30;
-(() =>
-{
-  const raw = J.ABS.PluginParameters['globalCooldownSkillTypes'] ?? '';
-  const set = new Set();
-  const ingest = v =>
-  {
-    const n = parseInt(String(v), 10);
-    if (Number.isFinite(n))
-    {
-      set.add(n);
-    }
-  };
-  const str = String(raw)
-    .trim();
-  if (str.startsWith('['))
-  {
-    try
-    {
-      const arr = JSON.parse(str);
-      if (Array.isArray(arr))
-      {
-        arr.forEach(ingest);
-      }
-    }
-    catch (e)
-    {
-      console.warn('J-ABS: globalCooldownSkillTypes JSON parse failed.', e);
-    }
-  }
-  else if (str.length)
-  {
-    str.split(',')
-      .forEach(part => ingest(part.trim()));
-  }
-  J.ABS.Metadata.GlobalCooldownSkillTypeSet = set;
-})();
-
-J.ABS.Metadata.HitboxStyles = {
-  // Base defaults used for all shapes unless overridden below.
-  base: {
-    // orange.
-    fillColor: 0xFFA500,
-    fillAlpha: 0.35,
-    lineColor: 0xE08000,
-    lineAlpha: 0.9,
-    lineWidth: 2,
-  },
-
-  // Optional per-shape overrides.
-  byShape: {
-    circle: {
-      // coral.
-      fillColor: 0xFF7F50,
-    },
-    rhombus: {
-      // light orange.
-      fillColor: 0xFFD580,
-    },
-    square: {
-      // darker orange.
-      fillColor: 0xFFA64D,
-    },
-    line: {
-      lineWidth: 3,
-    },
-    wall: {
-      lineColor: 0xCC6600,
-    },
-    cross: {
-      fillAlpha: 0.25,
-    },
-    arc: {
-      fillColor: 0xFFB84D,
-    },
-  },
-
-
-  // Battler overrides by kind (player/follower/battler)
-  byKind:
-    {
-      player: {
-        fillColor: 0x4DA3FF,
-        lineColor: 0x2368CC,
-        fillAlpha: 0.25
-      },
-      follower: { fillColor: 0x9B59B6 },
-      battler: { fillColor: 0x2ECC71 },
-    },
-
-  // New: state-based overrides layered last (e.g., for collision highlighting)
-  byState:
-    {
-      colliding:
-        {
-          // bright red while overlapping an action.
-          fillColor: 0xFF3B30,
-          fillAlpha: 0.35,
-          lineColor: 0xC12722,
-          lineWidth: 3,
-        },
-    },
-};
-
-J.ABS.Metadata.HitboxPulse = {
-  enabled: J.ABS.PluginParameters['hitboxPulseEnabled'] !== 'false',
-  highlightColliderBattlers: J.ABS.PluginParameters['hitboxPulseHighlightColliders'] !== 'false',
-  useFadeAnimation: J.ABS.PluginParameters['hitboxPulseUseFadeAnimation'] === 'true',
-  maxConcurrentPulses: 8,
-  duration: 18,
-  startAlpha: 0.22,
-  endAlpha: 0.00,
-  scaleStart: 1.00,
-  scaleEnd: 1.08,
-  lineColor: 0xFFFFFF,
-  lineAlpha: 0.85,
-  lineWidth: 2,
-  fillColor: 0xFFFFFF,
-  fillAlpha: 0.18,
-  // PIXI.BLEND_MODES.NORMAL or ADD
-  blendMode: PIXI.BLEND_MODES.ADD,
-};
 //endregion metadata
 
 /**

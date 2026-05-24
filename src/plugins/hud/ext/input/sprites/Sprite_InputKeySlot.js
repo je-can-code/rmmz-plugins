@@ -1,4 +1,10 @@
 //region Sprite_InputKeySlot
+import Sprite_BaseSkillSlot from './Sprite_BaseSkillSlot.js';
+import Sprite_CooldownGauge from './Sprite_CooldownGauge.js';
+import Sprite_CooldownTimer from './Sprite_CooldownTimer.js';
+import Sprite_SkillCost from './Sprite_SkillCost.js';
+import Sprite_SkillName from './Sprite_SkillName.js';
+import Sprite_SkillSlotIcon from './Sprite_SkillSlotIcon.js';
 /**
  * A single sprite that owns the drawing and management of a single input key slot.
  */
@@ -767,4 +773,5 @@ class Sprite_InputKeySlot
   //endregion drawing
 }
 
+export default Sprite_InputKeySlot;
 //endregion Sprite_InputKeySlot

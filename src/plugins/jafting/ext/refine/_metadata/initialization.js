@@ -1,7 +1,10 @@
+//region Introduction
+import J_CraftingRefinePluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -9,9 +12,16 @@ var J = J || {};
   // Check to ensure we have the minimum required version of the J-Base plugin.
   const requiredBaseVersion = '3.0.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
+  if (hasBaseRequirement === false)
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  const requiredJaftingVersion = '2.1.0';
+  const hasJaftingRequirement = J.BASE.Helpers.satisfies(J.JAFTING.Metadata.version.version(), requiredJaftingVersion);
+  if (hasJaftingRequirement === false)
+  {
+    throw new Error(`Either missing J-JAFTING or has a lower version than the required: ${requiredJaftingVersion}`);
   }
 })();
 //endregion version check
@@ -19,12 +29,13 @@ var J = J || {};
 /**
  * The plugin umbrella that governs all things related to this extension plugin.
  */
+J.JAFTING.EXT ||= {};
 J.JAFTING.EXT.REFINE = {};
 
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata('J-JAFTING-Refinement', '1.1.3');
+J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 
 /**

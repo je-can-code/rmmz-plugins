@@ -1,4 +1,9 @@
 //region Scene_Status
+import Window_StatusPageHint from '../windows/Window_StatusPageHint.js';
+import Window_StatusParameters from '../windows/Window_StatusParameters.js';
+import Window_StatusStatBreakdown from '../windows/Window_StatusStatBreakdown.js';
+import Window_StatusStatList from '../windows/Window_StatusStatList.js';
+
 /**
  * Overwrites {@link #createButtons}.<br/>
  * Removes buttons because fuck the buttons.

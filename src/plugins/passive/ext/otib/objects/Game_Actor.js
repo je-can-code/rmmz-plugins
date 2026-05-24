@@ -1,4 +1,6 @@
 //region Game_Actor
+import OtibUnlockRecord from './../_models/OtibUnlockRecord.js';
+
 /**
  * Extends {@link #initMembers}.<br>
  * Also initializes the OTIB unlock storage for this actor.

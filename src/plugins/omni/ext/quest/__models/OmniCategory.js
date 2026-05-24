@@ -36,4 +36,5 @@ class OmniCategory
   }
 }
 
+export default OmniCategory;
 //endregion OmniCategory

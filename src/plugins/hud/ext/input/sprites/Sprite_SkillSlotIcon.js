@@ -164,4 +164,5 @@ class Sprite_SkillSlotIcon
   }
 }
 
+export default Sprite_SkillSlotIcon;
 //endregion Sprite_SkillIcon

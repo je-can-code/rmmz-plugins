@@ -107,4 +107,5 @@ class AptitudeSkillSourceProgress
   }
 }
 
+export default AptitudeSkillSourceProgress;
 //endregion AptitudeSkillSourceProgress

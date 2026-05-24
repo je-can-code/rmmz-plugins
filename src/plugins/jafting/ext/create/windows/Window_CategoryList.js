@@ -75,4 +75,6 @@ class Window_CategoryList
   }
 }
 
+export default Window_CategoryList;
+
 //endregion Window_CategoryList

@@ -1,4 +1,5 @@
 //region JABS_Engine (juice hooks)
+import JuiceHookManager from './JuiceHookManager.js';
 /**
  * Extends {@link JABS_Engine.postPrimaryBattleEffects}.<br/>
  * Applies lightweight target-side sprite reactions after core logging (and after Hitstop).

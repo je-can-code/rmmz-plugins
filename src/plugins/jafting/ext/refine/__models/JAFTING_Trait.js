@@ -86,4 +86,6 @@ JAFTING_Trait.prototype.convertToRmTrait = function()
 {
   return RPG_Trait.fromValues(this._code, this._dataId, this._value);
 };
+export default JAFTING_Trait;
+
 //endregion JAFTING_Trait

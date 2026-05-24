@@ -1,4 +1,6 @@
 //region Scene_Jafting
+import Scene_JaftingCreate from './Scene_JaftingCreate.js';
+
 /**
  * Extends {@link #onRootJaftingSelection}.<br>
  * When Creation is chosen on the JAFTING hub, opens the Creation scene.

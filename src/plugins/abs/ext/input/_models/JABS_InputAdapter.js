@@ -1,4 +1,5 @@
 //region JABS_InputAdapter.getAllControllers
+import JABS_StandardController from './JABS_StandardController.js';
 /**
  * Gets all registered input controllers managed by the adapter.
  * Returns a shallow copy to prevent external mutation.

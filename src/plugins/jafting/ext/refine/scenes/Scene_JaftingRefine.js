@@ -1,4 +1,12 @@
 //region Scene_JaftingRefine
+import RefinementWorkflowSession from './../__models/RefinementWorkflowSession.js';
+import JaftingManager from './../managers/JaftingManager.js';
+import Window_RefinableList from '../windows/Window_RefinableList.js';
+import Window_RefinementConfirmation from '../windows/Window_RefinementConfirmation.js';
+import Window_RefinementDescription from '../windows/Window_RefinementDescription.js';
+import Window_RefinementDetails from '../windows/Window_RefinementDetails.js';
+import Window_RefinementStepHint from '../windows/Window_RefinementStepHint.js';
+
 class Scene_JaftingRefine
   extends Scene_MenuBase
 {
@@ -939,5 +947,7 @@ class Scene_JaftingRefine
 
   //endregion confirmation prompt
 }
+
+export default Scene_JaftingRefine;
 
 //endregion

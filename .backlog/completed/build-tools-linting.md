@@ -1,29 +1,26 @@
 ---
 status: done
 area: core
+updated: 2026-05-24
 ---
 
 # Build Tools: Linting and Validation
 
 ## Summary
 
-`bun run hotfix` used to only concatenate source files; a successful build didn’t imply the source was lint-valid.
-
-This item is considered done now that linting is integrated into the repo workflow and `hotfix` is gated on ESLint failures.
+`bun run hotfix` must not publish broken source. Lint runs before every full build/copy chain.
 
 ## What shipped
 
-- ESLint 10 flat config added at `eslint.config.js` (replacing legacy `.eslintrc.*`).
-- `package.json` scripts:
-  - `lint`: runs ESLint across `src/plugins/**/*.js` and `src/build-tools/**/*.js`.
-  - `hotfix`: now runs `lint` first and **stops the chain** if lint exits non-zero (errors).
-- Lint policy: **warnings allowed** (including complexity), errors block `hotfix`.
-- Targeted `no-unused-vars` strategy:
-  - Model folders (`__models` / `_models`) exempted where bindings are used indirectly (serialization/registration patterns).
-  - Hook/extension surface args preserved with per-line `eslint-disable-next-line no-unused-vars` where needed.
+- **Oxlint** at `.oxlintrc.json`; `bun run lint` → `oxlint src/plugins src/build-tools`.
+- **`hotfix`:** lint → `clean:out` → `build:all` (69 Vite ships) → `copy:to-all`; lint failures block the chain.
+- Lint policy: fix errors; warnings may remain when justified (workspace + `.junie/guidelines.md`).
+- Layout style (Allman braces, `eol-last: never`, line length) documented in guidelines; not all enforced by Oxlint yet.
+
+## Historical note
+
+Originally tracked against ESLint + Combiner™. ESLint flat config may still exist for reference; **Oxlint** is the active linter. Builds are **Vite-only** (see [`monorepo-vite-esm-plugin-migration.md`](monorepo-vite-esm-plugin-migration.md)).
 
 ## Notes
 
-- Complexity warnings were intentionally left as warnings (with local disables + TODOs added separately).
-- If/when you want “warnings allowed, but don’t increase”, that’s a separate effort and not part of this item.
-
+- Complexity refactors remain a separate item: [`eslint-complexity-refactors.md`](../unstarted/eslint-complexity-refactors.md) (title retained; applies to Oxlint complexity rules where enabled).

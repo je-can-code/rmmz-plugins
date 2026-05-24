@@ -1,18 +1,26 @@
 //region initialization
+import JLevelMasterFlat_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
- * The plugin umbrella that governs all extensions related to the parent.
+ * The parent namespace must exist when this ext loads after J-LevelMaster.
  */
-J.LEVEL.EXT.FLAT ||= {};
+J.LEVEL ||= {};
+J.LEVEL.EXT ||= {};
+
+/**
+ * The plugin umbrella that governs all things related to this plugin.
+ */
+J.LEVEL.EXT.FLAT = {};
 
 /**
  * The metadata associated with this plugin.
  */
-J.LEVEL.EXT.FLAT.Metadata = new JLevelMasterFlat_PluginMetadata('J-LEVEL-Flat', '1.0.0');
+J.LEVEL.EXT.FLAT.Metadata = new JLevelMasterFlat_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

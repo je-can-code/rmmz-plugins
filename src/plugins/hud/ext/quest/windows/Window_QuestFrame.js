@@ -306,4 +306,5 @@ class Window_QuestFrame
   }
 }
 
+export default Window_QuestFrame;
 //endregion Window_QuestFrame

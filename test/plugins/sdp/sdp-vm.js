@@ -2,10 +2,10 @@
 import { installSdpEngineStubs } from './fixtures/engine-stubs.js';
 import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const SDP_OUT_FILENAME = 'J-SDP.js';
+export const SDP_OUT_FILENAME = 'sdp/J-SDP.js';
 
 /**
- * Loads {@link out/J-SDP.js} with J-Base and harness.
+ * Loads {@link out/sdp/J-SDP.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

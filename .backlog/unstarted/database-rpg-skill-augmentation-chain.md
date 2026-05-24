@@ -37,4 +37,4 @@ Multiple plugins patch `RPG_Skill` prototype or re-run note-derived initializati
 ## Notes
 
 - `cross-plugin-prototype-hook-surface.md` is the umbrella; this item is **data-layer** specific.
-- Skill Slots (`sks`) and ABS extensions interact most often; test with combine order used in shipped bundles.
+- Skill Slots (`sks`) and ABS extensions interact most often; test with plugin load order used in shipped bundles.

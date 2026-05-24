@@ -1,4 +1,7 @@
 //region Window_RefinementDetails
+import JaftingManager from './../managers/JaftingManager.js';
+import JAFTING_Trait from './../__models/JAFTING_Trait.js';
+
 /**
  * The window containing the chosen equips for refinement and also the projected results.
  */
@@ -281,5 +284,7 @@ class Window_RefinementDetails
     this.outputEquip = result;
   }
 }
+
+export default Window_RefinementDetails;
 
 //endregion Window_RefinementDetails

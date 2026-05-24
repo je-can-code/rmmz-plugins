@@ -1,4 +1,6 @@
 //region JuiceTiltMotionEffect
+import JuiceMotionManager from './../managers/JuiceMotionManager.js';
+import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
  * One-shot rotation wobble (strike tilt juice) on a sprite.
  */
@@ -61,4 +63,5 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
     return true;
   }
 }
+export default JuiceTiltMotionEffect;
 //endregion JuiceTiltMotionEffect

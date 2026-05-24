@@ -1,4 +1,6 @@
 //region Window_JaftingList
+import Scene_JaftingRefine from '../scenes/Scene_JaftingRefine.js';
+
 /**
  * Extends {@link #buildCommands}.<br>
  * Includes the refinement command as well as the rest.

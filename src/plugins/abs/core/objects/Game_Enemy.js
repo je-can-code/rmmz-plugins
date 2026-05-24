@@ -1,4 +1,6 @@
 //region Game_Enemy
+import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * Extends {@link Game_Enemy.setup}.<br>
  * Includes JABS skill initialization.

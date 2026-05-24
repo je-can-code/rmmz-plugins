@@ -11,4 +11,6 @@ class J_EventEmitter
 {
 }
 
+
+export default J_EventEmitter;
 //endregion J_EventEmitter

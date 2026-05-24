@@ -1,4 +1,6 @@
 //region JABS_Engine
+import ResourceHitManager from './ResourceHitManager.js';
+
 /**
  * Extends {@link #postPrimaryBattleEffects}.<br/>
  * Also applies on-attack resource gains to the caster and when-hit resource

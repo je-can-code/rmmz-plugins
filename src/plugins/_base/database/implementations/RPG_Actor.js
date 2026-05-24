@@ -1,3 +1,5 @@
+import RPG_BaseBattler from '../core/RPG_BaseBattler.js';
+
 //region RPG_Actor
 /**
  * A class representing a single actor battler's data from the database.
@@ -125,4 +127,6 @@ class RPG_Actor
   }
 }
 
+
+export default RPG_Actor;
 //endregion RPG_Actor

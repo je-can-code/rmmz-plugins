@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadCriticalFactorsPluginVm } from './crit-vm.js';
 
-describe('J-CriticalFactors metadata (out/J-CriticalFactors.js)', () =>
+describe('J-CriticalFactors metadata (out/crit/J-CriticalFactors.js)', () =>
 {
   let sandbox;
 

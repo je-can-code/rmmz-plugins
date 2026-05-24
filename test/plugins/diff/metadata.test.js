@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DEFAULT_DIFF_PLUGIN_PARAMS } from './fixtures/engine-stubs.js';
 import { loadDiffPluginVm } from './diff-vm.js';
 
-describe('J-Difficulty metadata (out/J-Difficulty.js)', () =>
+describe('J-Difficulty metadata (out/diff/J-Difficulty.js)', () =>
 {
   let sandbox;
 

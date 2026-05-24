@@ -31,4 +31,5 @@ class OtibUnlockRecord
 
 SerializableRegistry.register(OtibUnlockRecord);
 
+export default OtibUnlockRecord;
 //endregion OtibUnlockRecord

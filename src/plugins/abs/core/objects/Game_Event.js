@@ -1,4 +1,8 @@
 //region Game_Event
+import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
+import JABS_BattlerRole from './../__models/JABS_BattlerRole.js';
+import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 J.ABS.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
 Game_Event.prototype.initMembers = function()
 {

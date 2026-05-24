@@ -1,4 +1,9 @@
 //region Scene_Passive
+import Window_PassiveActorRibbon from '../windows/Window_PassiveActorRibbon.js';
+import Window_PassiveDetail from '../windows/Window_PassiveDetail.js';
+import Window_PassiveList from '../windows/Window_PassiveList.js';
+import Window_PassiveTabHeader from '../windows/Window_PassiveTabHeader.js';
+
 /**
  * The dedicated viewer scene for all passive states applied to an actor.
  *
@@ -14,6 +19,18 @@
 class Scene_Passive
   extends Scene_MenuBase
 {
+  /**
+   * Tab configurations in registration order; the core seeds the "All" tab first.
+   * @type {Array<{key: string, label: string, filter: Function|null}>}
+   */
+  static _tabRegistry = [
+    {
+      key: 'all',
+      label: 'All',
+      filter: null,
+    },
+  ];
+
   static callScene()
   {
     SceneManager.push(this);
@@ -35,7 +52,7 @@ class Scene_Passive
    */
   static registerTab(config)
   {
-    Scene_Passive._tabRegistry.push(config);
+    this._tabRegistry.push(config);
   }
 
   /**
@@ -44,7 +61,7 @@ class Scene_Passive
    */
   static registeredTabs()
   {
-    return Scene_Passive._tabRegistry;
+    return this._tabRegistry;
   }
 
   //endregion static tab registry
@@ -499,7 +516,7 @@ class Scene_Passive
    */
   currentTab()
   {
-    return Scene_Passive._tabRegistry[this._j._passive._tabIndex];
+    return this.constructor._tabRegistry[this._j._passive._tabIndex];
   }
 
   /**
@@ -508,7 +525,7 @@ class Scene_Passive
   cycleTabRight()
   {
     // increment the index modularly.
-    const tabCount = Scene_Passive._tabRegistry.length;
+    const tabCount = this.constructor._tabRegistry.length;
     this._j._passive._tabIndex = (this._j._passive._tabIndex + 1) % tabCount;
 
     // apply the new tab.
@@ -521,7 +538,7 @@ class Scene_Passive
   cycleTabLeft()
   {
     // decrement the index modularly.
-    const tabCount = Scene_Passive._tabRegistry.length;
+    const tabCount = this.constructor._tabRegistry.length;
     this._j._passive._tabIndex = (this._j._passive._tabIndex - 1 + tabCount) % tabCount;
 
     // apply the new tab.
@@ -614,12 +631,5 @@ class Scene_Passive
   //endregion actions
 }
 
-// the "All" tab is always registered first by the core; extensions push their own tabs after.
-Scene_Passive._tabRegistry = [
-  {
-    key: 'all',
-    label: 'All',
-    filter: null,
-  },
-];
+export default Scene_Passive;
 //endregion Scene_Passive

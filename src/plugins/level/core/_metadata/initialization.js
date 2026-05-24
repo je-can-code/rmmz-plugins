@@ -1,7 +1,9 @@
+import J_LevelPluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -16,7 +18,13 @@ J.LEVEL.EXT = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.LEVEL.Metadata = new J_LevelPluginMetadata(`J-LevelMaster`, '1.3.1');
+J.LEVEL.Metadata = new J_LevelPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
+
+/**
+ * The maximum level definable in the level. Any level below this can be determined without extra calculations.
+ * @type {number}
+ */
+J.LEVEL.EditorMaxLevel = 99;
 
 /**
  * All aliased methods for this plugin.

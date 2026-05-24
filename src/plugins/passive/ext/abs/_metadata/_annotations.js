@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PASSIVE-ABS] Random passive affixes + tier presentation for JABS enemies.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Random passive affixes + tier presentation for JABS enemies.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -1,4 +1,6 @@
 //region Scene_Map
+import Scene_Omnipedia from './Scene_Omnipedia.js';
+
 /**
  * Extends {@link #createJabsAbsMenuMainWindow}.<br>
  * Adds additional handling in the list for the omnipedia command.

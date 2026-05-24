@@ -1,4 +1,5 @@
 //region JABS_InputController
+import JABS_Button from './JABS_Button.js';
 /**
  * The class that handles input in the context of JABS for a player.
  * A battler must be set in order for this to update.
@@ -1042,4 +1043,5 @@ class JABS_StandardController
   //endregion guard
 }
 
+export default JABS_StandardController;
 //endregion JABS_InputController

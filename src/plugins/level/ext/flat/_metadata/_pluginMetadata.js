@@ -42,4 +42,5 @@ class JLevelMasterFlat_PluginMetadata
   }
 }
 
+export default JLevelMasterFlat_PluginMetadata;
 //endregion plugin metadata

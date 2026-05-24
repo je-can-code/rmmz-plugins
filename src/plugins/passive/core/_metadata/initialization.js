@@ -1,7 +1,10 @@
+//region Introduction
+import JPassive_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -17,7 +20,7 @@ J.PASSIVE.EXT = {};
  * The `metadata` associated with this plugin, such as version and plugin parameter values.
  * @type {JPassive_PluginMetadata}
  */
-J.PASSIVE.Metadata = new JPassive_PluginMetadata('J-Passive', '2.1.0');
+J.PASSIVE.Metadata = new JPassive_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * All regular expressions used by this plugin.

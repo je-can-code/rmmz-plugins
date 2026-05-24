@@ -1,4 +1,5 @@
 //region Sprite_HitboxPulse
+import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
 /**
  * A lightweight graphics sprite that renders a transient hitbox visualization.
  * It supports several common JABS shapes: Circle, Square, Line, Arc (sector).
@@ -282,4 +283,5 @@ class Sprite_HitboxPulse
   //endregion update
 }
 
+export default Sprite_HitboxPulse;
 //endregion Sprite_HitboxPulse

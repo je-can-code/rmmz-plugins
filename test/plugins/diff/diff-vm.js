@@ -4,10 +4,10 @@ import vm from 'node:vm';
 import { installDiffEngineStubs } from './fixtures/engine-stubs.js';
 import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const DIFF_OUT_FILENAME = 'J-Difficulty.js';
+export const DIFF_OUT_FILENAME = 'diff/J-Difficulty.js';
 
 /**
- * Loads {@link out/J-Difficulty.js} with J-Base and harness.
+ * Loads {@link out/diff/J-Difficulty.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

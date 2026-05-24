@@ -1,4 +1,6 @@
 //region plugin metadata
+import OmniQuest from '../__models/OmniQuest.js';
+
 class J_QUEST_PluginMetadata
   extends PluginMetadata
 {
@@ -202,4 +204,5 @@ class J_QUEST_PluginMetadata
   }
 }
 
+export default J_QUEST_PluginMetadata;
 //endregion plugin metadata

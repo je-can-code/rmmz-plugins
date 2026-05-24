@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 JAFT-Refine] An extension for JAFTING to enable equip refinement.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] An extension for JAFTING to enable equip refinement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

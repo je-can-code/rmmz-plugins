@@ -53,4 +53,6 @@ class J_CraftingRefinePluginMetadata
   }
 }
 
+export default J_CraftingRefinePluginMetadata;
+
 //endregion plugin metadata

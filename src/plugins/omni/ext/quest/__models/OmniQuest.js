@@ -1,4 +1,7 @@
 //region OmniQuest
+import OmniObjective from './OmniObjective.js';
+import OmniQuestBuilder from './OmniQuestBuilder.js';
+
 /**
  * A class representing the data shape of a single quest.
  */
@@ -152,4 +155,5 @@ class OmniQuest
   static Builder = () => new OmniQuestBuilder();
 }
 
+export default OmniQuest;
 //endregion OmniQuest

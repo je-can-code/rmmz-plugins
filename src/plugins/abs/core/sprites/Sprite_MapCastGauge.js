@@ -1,4 +1,5 @@
 //region Sprite_MapCastGauge
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * A dedicated cast-time gauge for JABS battlers.
  * Extends {@link Sprite_MapGauge} and binds to a {@link JABS_Battler}.
@@ -291,4 +292,5 @@ Sprite_MapCastGauge.prototype.gaugeColor2 = function()
   // Purple/magenta right.
   return "#C86BFA";
 };
+export default Sprite_MapCastGauge;
 //endregion Sprite_MapCastGauge

@@ -57,4 +57,5 @@ class FramedTargetConfiguration
   }
 }
 
+export default FramedTargetConfiguration;
 //endregion FramedTargetConfiguration

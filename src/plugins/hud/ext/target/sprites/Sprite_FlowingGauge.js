@@ -982,4 +982,5 @@ class Sprite_FlowingGauge
   }
 }
 
+export default Sprite_FlowingGauge;
 //endregion Sprite_FlowingGauge

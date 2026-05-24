@@ -1,35 +1,19 @@
 //region initialization
+import J_PopupsAbs_PluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
+J.POPUPS ||= {};
+J.POPUPS.EXT ||= {};
+
 /**
- * The core where all of my extensions live: in the `J` object.
+ * The plugin umbrella that governs all things related to this extension plugin.
  */
 J.POPUPS.EXT.ABS = {};
 
-J.POPUPS.EXT.ABS.PluginParameters = PluginManager.parameters('J-Popups-ABS');
-
 /**
- * Parsed merge toggles and idle flush tuning for {@link JABS_PopupMergeController}.
- *
- * @type {{
- *   enableCombat: boolean,
- *   enableSlip: boolean,
- *   enableRewards: boolean,
- *   enableMitigation: boolean,
- *   idleFlushFrames: number,
- * }}
+ * The metadata associated with this plugin.
  */
-J.POPUPS.EXT.ABS.MergeParams = {
-  enableCombat: J.POPUPS.EXT.ABS.PluginParameters['enableMergeCombat'] !== 'false',
-  enableSlip: J.POPUPS.EXT.ABS.PluginParameters['enableMergeSlip'] !== 'false',
-  enableRewards: J.POPUPS.EXT.ABS.PluginParameters['enableMergeRewards'] !== 'false',
-  enableMitigation: J.POPUPS.EXT.ABS.PluginParameters['enableMergeMitigation'] !== 'false',
-  idleFlushFrames: Number(J.POPUPS.EXT.ABS.PluginParameters['mergeIdleFlushFrames'] ?? 90),
-};
-
-/**
- * When true, {@link JABS_PopupManager.showSkillUsedPop} returns early (damage and other ABS popups unchanged).
- * @type {boolean}
- */
-J.POPUPS.EXT.ABS.DisableSkillUsedPopups = J.POPUPS.EXT.ABS.PluginParameters['disableSkillUsedPopups'] === 'true';
+J.POPUPS.EXT.ABS.Metadata = new J_PopupsAbs_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

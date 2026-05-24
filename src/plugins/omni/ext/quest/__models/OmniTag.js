@@ -36,4 +36,5 @@ class OmniTag
   }
 }
 
+export default OmniTag;
 //endregion OmniTag

@@ -1,4 +1,6 @@
 //region JABS_Engine
+import ExperienceManager from './ExperienceManager.js';
+
 if (J.ABS)
 {
   /**

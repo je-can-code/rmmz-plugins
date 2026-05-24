@@ -45,4 +45,5 @@ class JABS_Formation
   }
 }
 
+export default JABS_Formation;
 //endregion JABS_Formation

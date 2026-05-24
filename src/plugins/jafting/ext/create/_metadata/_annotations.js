@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.4 JAFT-Create] An extension for JAFTING to enable recipe creation.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] An extension for JAFTING to enable recipe creation.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

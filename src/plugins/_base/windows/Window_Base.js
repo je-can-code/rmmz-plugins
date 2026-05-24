@@ -1,4 +1,5 @@
 //region Window_Base
+import WindowGaugeOptions from './../models/WindowGaugeOptions.js';
 /**
  * All alignments available for {@link Window_Base.prototype.drawText}.<br>
  */

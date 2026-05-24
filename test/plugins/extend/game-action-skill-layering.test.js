@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadSkillExtendPluginVm } from './extend-vm.js';
 import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
 
-describe('J-SkillExtend Game_Action skill layering (out/J-SkillExtend.js)', () =>
+describe('J-SkillExtend Game_Action skill layering (out/extend/J-SkillExtend.js)', () =>
 {
   let sandbox;
 

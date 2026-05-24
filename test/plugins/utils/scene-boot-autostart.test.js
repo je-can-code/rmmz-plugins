@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadUtilsPluginVm } from './utils-vm.js';
 
-describe('J-SystemUtilities Scene_Boot behavior (out/J-SystemUtilities.js)', () =>
+describe('J-SystemUtilities Scene_Boot behavior (out/utils/J-SystemUtilities.js)', () =>
 {
   let sandbox;
 

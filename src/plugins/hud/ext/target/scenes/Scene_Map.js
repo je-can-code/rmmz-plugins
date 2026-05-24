@@ -1,4 +1,5 @@
 //region Scene_Map
+import Window_TargetFrame from '../windows/Window_TargetFrame.js';
 /**
  * Extends {@link #initHudMembers}.<br>
  * Includes initialization of the target frame members.

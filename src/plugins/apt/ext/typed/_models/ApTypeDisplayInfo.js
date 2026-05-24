@@ -31,4 +31,5 @@ class ApTypeDisplayInfo
     this.icon = Number(icon);
   }
 }
+export default ApTypeDisplayInfo;
 // #endregion ApTypeDisplayInfo

@@ -1,4 +1,7 @@
 //region TextPopSpriteManager
+import Map_TextPop from './Map_TextPop.js';
+import Sprite_MapDamage from '../sprites/Sprite_MapDamage.js';
+
 /**
  * A builder class for converting text pops to sprites.
  */
@@ -127,4 +130,5 @@ class TextPopSpriteManager
   }
 }
 
+export default TextPopSpriteManager;
 //endregion TextPopSpriteManager

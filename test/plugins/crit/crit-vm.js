@@ -7,10 +7,10 @@ import {
 import { installNaturalEngineStubs } from '../natural/fixtures/engine-stubs.js';
 import { appendShippedPluginToVm, evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const CRITICAL_FACTORS_OUT_FILENAME = 'J-CriticalFactors.js';
+export const CRITICAL_FACTORS_OUT_FILENAME = 'crit/J-CriticalFactors.js';
 
 /**
- * Loads {@link out/J-NaturalGrowth.js} then {@link out/J-CriticalFactors.js} with J-Base and harness.
+ * Loads {@link out/natural/J-NaturalGrowth.js} then {@link out/crit/J-CriticalFactors.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

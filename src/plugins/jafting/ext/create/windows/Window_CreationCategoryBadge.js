@@ -57,4 +57,6 @@ class Window_CreationCategoryBadge
     this.drawText(name, iconSlot, iy, Math.max(48, this.innerWidth - iconSlot - 8), Window_Base.TextAlignments.Left);
   }
 }
+export default Window_CreationCategoryBadge;
+
 //endregion Window_CreationCategoryBadge

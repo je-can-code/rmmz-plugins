@@ -81,4 +81,5 @@ class JABS_GuardData
   }
 }
 
+export default JABS_GuardData;
 //endregion JABS_GuardData

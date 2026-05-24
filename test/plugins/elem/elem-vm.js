@@ -5,7 +5,7 @@ import { evaluateShippedPlugin, clearRpgManagerCacheInVm } from '../../setup/shi
 
 import { installElemEngineStubs } from './fixtures/engine-stubs.js';
 
-export const ELEM_OUT_FILENAME = 'J-Elementalistics.js';
+export const ELEM_OUT_FILENAME = 'elem/J-Elementalistics.js';
 
 /**
  * @param {object} sandbox

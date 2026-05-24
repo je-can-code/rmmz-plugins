@@ -1,8 +1,10 @@
 //region Metadata
+import J_OmniMonster_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -10,9 +12,16 @@ var J = J || {};
   // Check to ensure we have the minimum required version of the J-Base plugin.
   const requiredBaseVersion = '3.0.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
+  if (hasBaseRequirement === false)
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  const requiredOmniVersion = '1.0.0';
+  const hasOmniRequirement = J.BASE.Helpers.satisfies(J.OMNI.Metadata.version.version(), requiredOmniVersion);
+  if (hasOmniRequirement === false)
+  {
+    throw new Error(`Either missing J-Omnipedia or has a lower version than the required: ${requiredOmniVersion}`);
   }
 })();
 //endregion version check
@@ -30,37 +39,7 @@ J.OMNI.EXT.MONSTER = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.OMNI.EXT.MONSTER.Metadata = {};
-
-/**
- * The name of this plugin.
- */
-J.OMNI.EXT.MONSTER.Metadata.Name = 'J-Omni-Monsterpedia';
-
-/**
- * The version of this plugin.
- */
-J.OMNI.EXT.MONSTER.Metadata.Version = '1.0.2';
-
-/**
- * The plugin parameters for this plugin.
- */
-J.OMNI.EXT.MONSTER.PluginParameters = PluginManager.parameters(J.OMNI.EXT.MONSTER.Metadata.Name);
-
-/**
- * The various data points that define the command for the Omnipedia.
- */
-J.OMNI.EXT.MONSTER.Metadata.Command = {};
-J.OMNI.EXT.MONSTER.Metadata.Command.Name = "Monsterpedia";
-J.OMNI.EXT.MONSTER.Metadata.Command.Symbol = "monster-pedia";
-J.OMNI.EXT.MONSTER.Metadata.Command.IconIndex = 14;
-
-/**
- * The id of the switch that will represent whether or not the command
- * should be visible in the Omnipedia menu.
- * @type {number}
- */
-J.OMNI.EXT.MONSTER.Metadata.EnabledSwitch = 103;
+J.OMNI.EXT.MONSTER.Metadata = new J_OmniMonster_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

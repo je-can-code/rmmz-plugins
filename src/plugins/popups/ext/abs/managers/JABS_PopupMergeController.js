@@ -199,7 +199,7 @@ class JABS_PopupMergeController
    */
   static routeStrikePop(pop, character, ctx)
   {
-    if (J.POPUPS.EXT.ABS.MergeParams.enableCombat === false)
+    if (J.POPUPS.EXT.ABS.Metadata.mergeParams.enableCombat === false)
     {
       TextPopManager.show(pop, character);
 
@@ -272,7 +272,7 @@ class JABS_PopupMergeController
    */
   static routeSlipPop(pop, character, ctx)
   {
-    if (J.POPUPS.EXT.ABS.MergeParams.enableSlip === false)
+    if (J.POPUPS.EXT.ABS.Metadata.mergeParams.enableSlip === false)
     {
       TextPopManager.show(pop, character);
 
@@ -335,7 +335,7 @@ class JABS_PopupMergeController
    */
   static routeMitigationPop(pop, character, ctx)
   {
-    if (J.POPUPS.EXT.ABS.MergeParams.enableMitigation === false)
+    if (J.POPUPS.EXT.ABS.Metadata.mergeParams.enableMitigation === false)
     {
       TextPopManager.show(pop, character);
 
@@ -399,7 +399,7 @@ class JABS_PopupMergeController
    */
   static routeRewardPop(pop, character, ctx)
   {
-    if (J.POPUPS.EXT.ABS.MergeParams.enableRewards === false)
+    if (J.POPUPS.EXT.ABS.Metadata.mergeParams.enableRewards === false)
     {
       TextPopManager.show(pop, character);
 
@@ -492,7 +492,7 @@ class JABS_PopupMergeController
    */
   static tickIdleFlush()
   {
-    const idleFrames = J.POPUPS.EXT.ABS.MergeParams.idleFlushFrames;
+    const idleFrames = J.POPUPS.EXT.ABS.Metadata.mergeParams.idleFlushFrames;
     const now = Graphics.frameCount;
 
     JABS_PopupMergeController.#trackedCharacters.forEach(character =>
@@ -573,4 +573,5 @@ class JABS_PopupMergeController
 }
 
 JABS_PopupMergeController.start();
+export default JABS_PopupMergeController;
 //endregion JABS_PopupMergeController

@@ -1,4 +1,6 @@
 //region JABS_Battler
+import JABS_PopupManager from './../managers/JABS_PopupManager.js';
+
 /**
  * Extends {@link #onSlipRegenTick}.<br/>
  * Also shows a slip or regen popup on the battler's character.

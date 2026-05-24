@@ -27,4 +27,5 @@ class StarPhase
    */
   key = 0;
 }
+export default StarPhase;
 //endregion StarPhase

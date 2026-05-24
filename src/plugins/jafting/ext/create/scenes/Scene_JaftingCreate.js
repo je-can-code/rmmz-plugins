@@ -1,4 +1,14 @@
 //region Scene_JaftingCreate
+import CraftingCreationSession from './../__models/CraftingCreationSession.js';
+import Window_CategoryList from '../windows/Window_CategoryList.js';
+import Window_CreationCategoryBadge from '../windows/Window_CreationCategoryBadge.js';
+import Window_CreationDescription from '../windows/Window_CreationDescription.js';
+import Window_RecipeDetails from '../windows/Window_RecipeDetails.js';
+import Window_RecipeIngredientList from '../windows/Window_RecipeIngredientList.js';
+import Window_RecipeList from '../windows/Window_RecipeList.js';
+import Window_RecipeOutputList from '../windows/Window_RecipeOutputList.js';
+import Window_RecipeToolList from '../windows/Window_RecipeToolList.js';
+
 class Scene_JaftingCreate
   extends Scene_MenuBase
 {
@@ -1033,5 +1043,7 @@ class Scene_JaftingCreate
 
   //endregion recipe output list
 }
+
+export default Scene_JaftingCreate;
 
 //endregion Scene_JaftingCreate

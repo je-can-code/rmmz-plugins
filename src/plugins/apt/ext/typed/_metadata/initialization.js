@@ -1,8 +1,12 @@
 //region initialization
+import JAptitudeTyped_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+J.APT ||= {};
+J.APT.EXT ||= {};
 
 // ensure nested namespaces exist.
 J.APT.EXT.TYPED = J.APT.EXT.TYPED || {};
@@ -11,7 +15,7 @@ J.APT.EXT.TYPED = J.APT.EXT.TYPED || {};
  * The plugin umbrella that governs all things related to this extension plugin.
  * Name and Version are owned by the metadata instance.
  */
-J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata('J-Aptitude-Typed', '1.0.0');
+J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -59,6 +63,6 @@ J.APT.EXT.TYPED.RegExp = {
    * </pre>
    * @type {RegExp}
    */
-  ApTypedReward: /<apTyped:[ ]?(\[\d+,[ ]?[A-Za-z]+,[ ]?[A-Za-z0-9_\- ]+])>/gi,
+  ApTypedReward: /<apTyped:[ ]?(\[\d+,[ ]?\d+,[ ]?[A-Za-z]+,[ ]?[A-Za-z0-9_\- ]+])>/gi,
 };
 //endregion initialization

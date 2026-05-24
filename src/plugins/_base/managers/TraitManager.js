@@ -1,3 +1,5 @@
+import IconManager from './IconManager.js';
+
 //region TraitManager
 /**
  * A static class that centralizes display data (name and icon) for traits and
@@ -72,4 +74,6 @@ class TraitManager
     return 0;
   }
 }
+
+export default TraitManager;
 //endregion TraitManager

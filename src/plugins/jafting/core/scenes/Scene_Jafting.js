@@ -1,4 +1,7 @@
 //region Scene_Jafting
+import Window_JaftingList from '../windows/Window_JaftingList.js';
+import Window_JaftingListHeader from '../windows/Window_JaftingListHeader.js';
+
 class Scene_Jafting
   extends Scene_MenuBase
 {
@@ -374,5 +377,7 @@ class Scene_Jafting
   //endregion root actions
   //endregion actions
 }
+
+export default Scene_Jafting;
 
 //endregion Scene_Jafting

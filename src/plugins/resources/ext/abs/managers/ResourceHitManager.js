@@ -234,4 +234,5 @@ class ResourceHitManager
   //endregion private helpers
 }
 
+export default ResourceHitManager;
 //endregion ResourceHitManager

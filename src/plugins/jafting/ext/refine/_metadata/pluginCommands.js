@@ -1,4 +1,6 @@
 //region plugin commands
+import Scene_JaftingRefine from '../scenes/Scene_JaftingRefine.js';
+
 /**
  * A plugin command.<br>
  * Calls the JAFTING refinement menu.

@@ -1,4 +1,6 @@
 //region JaftingManager
+import JAFTING_Trait from './../__models/JAFTING_Trait.js';
+
 /**
  * A class responsible for handling interactions between the JAFTING data stores,
  * and the mutating the data itself.
@@ -744,5 +746,7 @@ class JaftingManager
     return false;
   }
 }
+
+export default JaftingManager;
 
 //endregion JaftingManager

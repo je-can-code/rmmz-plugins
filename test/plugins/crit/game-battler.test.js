@@ -5,7 +5,7 @@ import { loadCriticalFactorsPluginVm } from './crit-vm.js';
 import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
 import { resetNaturalGrowthPluginSandbox } from '../natural/natural-vm.js';
 
-describe('J-CriticalFactors Game_Battler (out/J-CriticalFactors.js)', () =>
+describe('J-CriticalFactors Game_Battler (out/crit/J-CriticalFactors.js)', () =>
 {
   let sandbox;
 

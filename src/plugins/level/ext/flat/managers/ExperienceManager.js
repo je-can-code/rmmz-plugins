@@ -212,4 +212,5 @@ class ExperienceManager
   }
 }
 
+export default ExperienceManager;
 //endregion ExperienceManager

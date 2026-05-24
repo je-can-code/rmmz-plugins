@@ -32,4 +32,5 @@ AptitudeTeachable.prototype.initialize = function(skillId, requiredAp)
    */
   this.requiredAp = requiredAp;
 };
+export default AptitudeTeachable;
 //endregion AptitudeTeachable

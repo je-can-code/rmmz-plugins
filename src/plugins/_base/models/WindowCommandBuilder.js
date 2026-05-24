@@ -1,3 +1,5 @@
+import BuiltWindowCommand from './BuiltWindowCommand.js';
+
 /**
  * A builder class for constructing {@link BuiltWindowCommand}.<br>
  */
@@ -298,3 +300,5 @@ class WindowCommandBuilder
     return this;
   }
 }
+
+export default WindowCommandBuilder;

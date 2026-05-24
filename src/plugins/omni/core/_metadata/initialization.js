@@ -1,8 +1,22 @@
 //region Metadata
+import J_Omnipedia_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+
+//region version checks
+(() =>
+{
+  const requiredBaseVersion = '3.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+})();
+//endregion version check
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -12,45 +26,7 @@ J.OMNI = {};
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.OMNI.Metadata = {};
-
-/**
- * The name of this plugin.
- */
-J.OMNI.Metadata.Name = 'J-Omnipedia';
-
-/**
- * The version of this plugin.
- */
-J.OMNI.Metadata.Version = '1.0.1';
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.OMNI.PluginParameters = PluginManager.parameters(J.OMNI.Metadata.Name);
-
-/**
- * The various data points that define the command for the Omnipedia.
- */
-J.OMNI.Metadata.Command = {};
-J.OMNI.Metadata.Command.Name = "The Omnipedia";
-J.OMNI.Metadata.Command.Symbol = "omni-menu";
-J.OMNI.Metadata.Command.IconIndex = 232;
-J.OMNI.Metadata.Command.ColorIndex = 5;
-
-/**
- * The id of the switch that will represent whether or not the command
- * should be visible in the JABS menu.
- * @type {number}
- */
-J.OMNI.Metadata.InJabsMenuSwitch = 102;
-
-/**
- * The id of the switch that will represent whether or not the command
- * should be visible in the main menu.
- * @type {number}
- */
-J.OMNI.Metadata.InMainMenuSwitch = 102;
+J.OMNI.Metadata = new J_Omnipedia_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

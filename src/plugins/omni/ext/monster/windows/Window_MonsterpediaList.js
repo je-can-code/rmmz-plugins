@@ -125,4 +125,5 @@ class Window_MonsterpediaList
   }
 }
 
+export default Window_MonsterpediaList;
 //endregion Window_MonsterpediaList

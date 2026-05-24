@@ -1,7 +1,6 @@
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import J_StarPluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -21,7 +20,7 @@ J.ABS.EXT.STAR = {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.6.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -32,14 +31,7 @@ J.ABS.EXT.STAR = {};
 /**
  * The metadata for this plugin.
  */
-J.ABS.EXT.STAR.Metadata = {};
-J.ABS.EXT.STAR.Metadata.Name = 'J-ABS-STAR';
-J.ABS.EXT.STAR.Metadata.Version = '1.0.1';
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.ABS.EXT.STAR.PluginParameters = PluginManager.parameters(J.ABS.EXT.STAR.Metadata.Name);
+J.ABS.EXT.STAR.Metadata = new J_StarPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * The default values for this plugin.

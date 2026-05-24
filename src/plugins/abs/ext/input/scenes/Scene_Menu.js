@@ -1,4 +1,5 @@
 //region Scene_Menu
+import Scene_JabsRemap from './Scene_JabsRemap.js';
 /**
  * Extends {@link #createCommandWindow}.<br/>
  * Also wires the handler for opening the JABS input remapping scene.

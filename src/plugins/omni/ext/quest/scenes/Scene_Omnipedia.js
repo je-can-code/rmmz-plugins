@@ -1,4 +1,6 @@
 //region Scene_Omnipedia
+import Scene_Questopedia from './Scene_Questopedia.js';
+
 //region root actions
 /**
  * Extends {@link #onRootPediaSelection}.<br>

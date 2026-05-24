@@ -1,4 +1,7 @@
 //region Scene_Omnipedia
+import Window_OmnipediaListHeader from '../windows/Window_OmnipediaListHeader.js';
+import Window_OmnipediaList from '../windows/Window_OmnipediaList.js';
+
 /**
  * A scene containing access to all available and implemented pedia entries.
  */
@@ -386,4 +389,5 @@ class Scene_Omnipedia
   //endregion actions
 }
 
+export default Scene_Omnipedia;
 //endregion Scene_Omnipedia

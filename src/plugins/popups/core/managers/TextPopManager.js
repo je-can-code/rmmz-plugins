@@ -29,4 +29,5 @@ class TextPopManager
     character.requestTextPop();
   }
 }
+export default TextPopManager;
 //endregion TextPopManager

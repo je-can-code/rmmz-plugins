@@ -1,4 +1,5 @@
 //region Game_Action
+import FormulaEffect from './../__models/FormulaEffect.js';
 /**
  * Extends {@link Game_Action.applyVirtualJabsAction}.<br/>
  * Injects on-use packets before the core apply flow, and on-hit packets after.

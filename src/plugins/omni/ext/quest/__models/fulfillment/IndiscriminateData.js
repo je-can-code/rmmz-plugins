@@ -7,4 +7,5 @@ class IndiscriminateData
   hint = null;
 }
 
+export default IndiscriminateData;
 //endregion IndiscriminateData

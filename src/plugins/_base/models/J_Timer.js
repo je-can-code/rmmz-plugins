@@ -285,4 +285,6 @@ J_Timer.prototype.onComplete = function()
 {
   //console.log(`timer completed`, this);
 }
+
+export default J_Timer;
 //endregion J_Timer

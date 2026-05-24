@@ -1,4 +1,6 @@
 //region Window_JaftingList
+import Scene_JaftingCreate from '../scenes/Scene_JaftingCreate.js';
+
 /**
  * Extends {@link #buildCommands}.<br>
  * Includes the creation command as well as the rest.

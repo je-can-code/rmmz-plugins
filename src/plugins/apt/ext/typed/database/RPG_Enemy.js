@@ -1,4 +1,7 @@
 //region RPG_Enemy
+import ApTypeKey from './../_models/ApTypeKey.js';
+import ApTypeGrant from './../_models/ApTypeGrant.js';
+
 /**
  * The explicit typed AP rewards from `<apTyped:[AMOUNT, DOMAIN, ID_OR_NAME]>`.
  * @returns {ApTypeGrant[]}

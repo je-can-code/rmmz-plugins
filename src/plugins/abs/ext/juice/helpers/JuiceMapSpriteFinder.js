@@ -26,4 +26,5 @@ class JuiceMapSpriteFinder
     return spriteset.findTargetSprite(mapCharacter);
   }
 }
+export default JuiceMapSpriteFinder;
 //endregion JuiceMapSpriteFinder

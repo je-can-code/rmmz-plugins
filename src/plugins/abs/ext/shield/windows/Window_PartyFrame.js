@@ -1,3 +1,4 @@
+import Sprite_ShieldMapGauge from './../sprites/Sprite_ShieldMapGauge.js';
 if (J.HUD && J.HUD.EXT.PARTY)
 {
   /**

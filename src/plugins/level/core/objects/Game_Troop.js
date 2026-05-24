@@ -1,3 +1,5 @@
+import LevelScaling from '../managers/LevelScaling.js';
+
 //region Game_Troop
 /**
  * Upon defeating a troop of enemies, scales the earned experience based on

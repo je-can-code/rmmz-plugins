@@ -1,7 +1,10 @@
+//region Introduction
+import JHudParty_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -9,14 +12,21 @@ var J = J || {};
   // Check to ensure we have the minimum required version of the J-Base plugin.
   const requiredBaseVersion = '2.3.2';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
+  if (hasBaseRequirement === false)
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  // Check to ensure we have the minimum required version of the J-HUD plugin.
+  const requiredHudVersion = '2.0.0';
+  const hasHudRequirement = J.BASE.Helpers.satisfies(J.HUD.Metadata.version.version(), requiredHudVersion);
+  if (hasHudRequirement === false)
+  {
+    throw new Error(`Either missing J-HUD or has a lower version than the required: ${requiredHudVersion}`);
   }
 })();
 //endregion version check
 
-//region metadata
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -24,11 +34,9 @@ J.HUD.EXT.PARTY = {};
 
 /**
  * The `metadata` associated with this plugin, such as version.
+ * @type {JHudParty_PluginMetadata}
  */
-J.HUD.EXT.PARTY = {};
-J.HUD.EXT.PARTY.Metadata = {};
-J.HUD.EXT.PARTY.Metadata.Version = '1.2.0';
-J.HUD.EXT.PARTY.Metadata.Name = `J-HUD-PartyFrame`;
+J.HUD.EXT.PARTY.Metadata = new JHudParty_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -36,5 +44,4 @@ J.HUD.EXT.PARTY.Metadata.Name = `J-HUD-PartyFrame`;
 J.HUD.EXT.PARTY.Aliased = {
   Scene_Map: new Map(),
 };
-//endregion introduction
-//endregion introduction
+//endregion Introduction

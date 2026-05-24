@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadDiffPluginVm } from './diff-vm.js';
 
-describe('J-Difficulty Game_Actor.param (out/J-Difficulty.js)', () =>
+describe('J-Difficulty Game_Actor.param (out/diff/J-Difficulty.js)', () =>
 {
   let sandbox;
 

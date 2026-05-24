@@ -33,7 +33,7 @@ Game_Character.prototype.initMembers = function()
  */
 Game_Character.prototype.hasTextPops = function()
 {
-  if (J.POPUPS.Metadata.DisablePopups === true) return false;
+  if (J.POPUPS.Metadata.disablePopups === true) return false;
 
   return this._j._textPopRequest;
 };
@@ -43,7 +43,7 @@ Game_Character.prototype.hasTextPops = function()
  */
 Game_Character.prototype.requestTextPop = function()
 {
-  if (J.POPUPS.Metadata.DisablePopups === true) return;
+  if (J.POPUPS.Metadata.disablePopups === true) return;
 
   this._j._textPopRequest = true;
   J.POPUPS.notifyPopupFlushRequested(this);
@@ -63,12 +63,12 @@ Game_Character.prototype.acknowledgeTextPops = function()
  */
 Game_Character.prototype.addTextPop = function(textPop)
 {
-  if (J.POPUPS.Metadata.DisablePopups === true) return;
+  if (J.POPUPS.Metadata.disablePopups === true) return;
 
   if (J.POPUPS.isValidTextPopForQueue(textPop) === false)
   {
     console.warn(
-      `[${J.POPUPS.Metadata.Name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`,
+      `[${J.POPUPS.Metadata.name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`,
       textPop,
     );
     return;

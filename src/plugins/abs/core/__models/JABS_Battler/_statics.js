@@ -1,4 +1,6 @@
 //region statics
+import JABS_BattlerCoreData from './../JABS_BattlerCoreData.js';
+import JABS_Battler from './_initialization.js';
 /**
  * Generates a `JABS_Battler` based on the current leader of the party.
  * Also assigns the controller inputs for the player.

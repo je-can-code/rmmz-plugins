@@ -8,4 +8,6 @@ class Window_CreationDescription
   }
 }
 
+export default Window_CreationDescription;
+
 //endregion Window_CreationDescription

@@ -1,16 +1,11 @@
 //region JABS_State
+import JABS_StateBuilder from './JABS_StateBuilder.js';
+
 /**
  * A class for handling the state data in the context of JABS.
  */
 class JABS_State
 {
-  /**
-   * A factory that generates builders for creating {@link JABS_State}s.
-   * @returns {JABS_StateBuilder}
-   */
-  static Builder = (target, stateId) => new JABS_StateBuilder(target, stateId);
-
-  //region properties
   /**
    * The list of rulesets available for how to handle reapplication of a state.
    */
@@ -494,4 +489,13 @@ class JABS_State
   }
 }
 
+/**
+ * Fluent entry point for constructing a {@link JABS_State} (see {@link JABS_StateBuilder}).
+ * @param {Game_Battler} target The afflicted battler.
+ * @param {number} stateId The database state id.
+ * @returns {JABS_StateBuilder}
+ */
+JABS_State.Builder = (target, stateId) => new JABS_StateBuilder(target, stateId);
+
+export default JABS_State;
 //endregion JABS_State

@@ -1633,3 +1633,5 @@ class Window_MonsterpediaDetail
   - ailmentalistics
    */
 }
+
+export default Window_MonsterpediaDetail;

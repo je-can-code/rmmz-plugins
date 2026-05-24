@@ -8,4 +8,6 @@ class Window_RefinementDescription
   }
 }
 
+export default Window_RefinementDescription;
+
 //endregion Window_RefinementDescription

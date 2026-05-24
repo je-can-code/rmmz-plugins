@@ -5,14 +5,14 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installEscribeEngineStubs } from './fixtures/engine-stubs.js';
 
-export const ESCRIBE_OUT_FILENAME = 'J-Escriptions.js';
+export const ESCRIBE_OUT_FILENAME = 'escribe/J-Escriptions.js';
 
 const EXPOSE_ESCRIBE_GLOBALS = `
 globalThis.Escription = Escription;
 `;
 
 /**
- * Loads {@link out/J-Escriptions.js} with J-Base and harness.
+ * Loads {@link out/escribe/J-Escriptions.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

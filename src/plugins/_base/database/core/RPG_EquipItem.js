@@ -1,3 +1,5 @@
+import RPG_Traited from '../base/RPG_Traited.js';
+
 //region RPG_EquipItem
 /**
  * A base class representing containing common properties found in both
@@ -75,4 +77,6 @@ class RPG_EquipItem
   }
 }
 
+
+export default RPG_EquipItem;
 //endregion RPG_EquipItem

@@ -1,4 +1,6 @@
 //region JABS_BaseController
+import JABS_InputAdapter from './JABS_InputAdapter.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
 /**
  * Base class for all JABS input controllers.
  */
@@ -52,4 +54,5 @@ class JABS_BaseController
   }
 }
 
+export default JABS_BaseController;
 //endregion JABS_BaseController

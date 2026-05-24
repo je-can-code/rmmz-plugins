@@ -1,4 +1,7 @@
 //region ApManager
+import ApTypeKey from './../_models/ApTypeKey.js';
+import ApTypeDisplayInfo from './../_models/ApTypeDisplayInfo.js';
+
 /**
  * Overrides {@link #gainAp}.<br/>
  * Routes untyped AP through `gainApUntypedOnly` so typed tracks are not fueled by it.

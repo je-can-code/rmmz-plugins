@@ -1,4 +1,11 @@
 //region Game_Battler
+import JABS_StateBuilder from './../__models/JABS_StateBuilder.js';
+import JABS_State from './../__models/JABS_State.js';
+import JABS_SkillSlotManager from './../__models/JABS_SkillSlotManager.js';
+import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
+import JABS_OnChanceEffect from './../__models/JABS_OnChanceEffect.js';
+import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * Extends {@link Game_Battler.initMembers}.<br>
  * Includes JABS parameter initialization.

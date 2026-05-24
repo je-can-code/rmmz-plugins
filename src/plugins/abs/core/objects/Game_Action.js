@@ -1,4 +1,6 @@
 //region Game_Action
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Overrides {@link #subject}.<br>
  * On the map there is no context of a $gameTroop. This means that an

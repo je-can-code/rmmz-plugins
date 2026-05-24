@@ -54,4 +54,5 @@ class OmniObjectiveLogs
   }
 }
 
+export default OmniObjectiveLogs;
 //endregion OmniObjectiveLogs

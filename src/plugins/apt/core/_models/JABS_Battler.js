@@ -1,4 +1,6 @@
 //region JABS_Battler
+import ApManager from './../managers/ApManager.js';
+
 if (J.ABS)
 {
   /**

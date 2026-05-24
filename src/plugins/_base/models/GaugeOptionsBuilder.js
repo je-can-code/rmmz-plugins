@@ -1,4 +1,6 @@
 //region GaugeOptionsBuilder
+import WindowGaugeOptions from './WindowGaugeOptions.js';
+
 /**
  * A factory for generating {@link WindowGaugeOptions}.
  * Comes with sensible defaults.
@@ -258,4 +260,6 @@ class GaugeOptionsBuilder
   //endregion setters
 }
 
+
+export default GaugeOptionsBuilder;
 //endregion GaugeOptionsBuilder

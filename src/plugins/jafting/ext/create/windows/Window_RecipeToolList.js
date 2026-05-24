@@ -1,4 +1,6 @@
 //region Window_RecipeToolList
+import Window_RecipeIngredientList from './Window_RecipeIngredientList.js';
+
 class Window_RecipeToolList
   extends Window_Command
 {
@@ -177,5 +179,7 @@ class Window_RecipeToolList
     Window_Command.prototype.drawAllItems.call(this);
   }
 }
+
+export default Window_RecipeToolList;
 
 //endregion Window_RecipeToolList

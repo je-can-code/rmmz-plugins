@@ -110,4 +110,5 @@ class JABS_ChargingTier
   }
 }
 
+export default JABS_ChargingTier;
 //endregion JABS_ChargingTier

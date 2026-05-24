@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadUtilsPluginVm } from './utils-vm.js';
 
-describe('J-SystemUtilities metadata (out/J-SystemUtilities.js)', () =>
+describe('J-SystemUtilities metadata (out/utils/J-SystemUtilities.js)', () =>
 {
   let sandbox;
 

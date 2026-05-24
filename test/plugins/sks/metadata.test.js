@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadSksPluginVm } from './sks-vm.js';
 
-describe('J-SkillSlots metadata and regex (out/J-SkillSlots.js)', () =>
+describe('J-SkillSlots metadata and regex (out/sks/J-SkillSlots.js)', () =>
 {
   let sandbox;
 

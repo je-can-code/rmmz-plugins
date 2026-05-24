@@ -1,4 +1,5 @@
 //region Game_Character
+import JABS_HitstopData from './../_models/JABS_HitstopData.js';
 /**
  * Extends {@link #initMembers}.<br>
  * Also initializes hitstop members.

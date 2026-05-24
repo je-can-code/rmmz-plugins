@@ -9,4 +9,5 @@ class FetchData
   amount = 0;
 }
 
+export default FetchData;
 //endregion FetchData

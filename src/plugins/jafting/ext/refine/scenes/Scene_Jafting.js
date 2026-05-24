@@ -1,4 +1,6 @@
 //region Scene_Jafting
+import Scene_JaftingRefine from './Scene_JaftingRefine.js';
+
 /**
  * Extends {@link #onRootJaftingSelection}.<br>
  * When Refinement is chosen on the JAFTING hub, opens the Refinement scene.

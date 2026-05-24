@@ -69,4 +69,6 @@ CategoryTracking.prototype.craftedCount = function()
 {
   return this.timesCrafted;
 };
+export default CategoryTracking;
+
 //endregion CraftRecipe_Tracking
