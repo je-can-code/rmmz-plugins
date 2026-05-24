@@ -227,8 +227,8 @@ JABS_Battler.prototype.tryStartPose = function(skill)
   // stitch the file path together with the sprite url.
   const spritePath = `img/characters/${Utils.encodeURI(newCharacterSprite)}.png`;
 
-  // check if the sprite exists.
-  const spriteExists = StorageManager.fileExists(spritePath);
+  // check if the pose sheet exists on disk before swapping the character graphic.
+  const spriteExists = J.ABS.EXT.POSES.Helpers.gameAssetExists(spritePath);
 
   // only actually switch to the other character sprite if it exists.
   if (spriteExists)

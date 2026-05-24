@@ -51,4 +51,6 @@ class JPassive_PluginMetadata
     this.commandIconIndex = parseInt(this.parsedPluginParameters['menuCommandIcon']);
   }
 }
+
+export default JPassive_PluginMetadata;
 //endregion plugin metadata

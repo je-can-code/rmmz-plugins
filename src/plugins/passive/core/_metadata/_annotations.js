@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.2 PASSIVE] Grants passive states from various database objects.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Grants passive states from various database objects.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

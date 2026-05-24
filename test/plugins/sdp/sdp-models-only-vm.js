@@ -5,7 +5,9 @@ import vm from 'node:vm';
 
 import { repoRoot } from '../../setup/repo-root.js';
 
-const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/__models');
+import { stripEsmForVm } from './fixtures/strip-esm-for-vm.js';
+
+const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/__models');
 
 /**
  * @param {string} filename
@@ -13,7 +15,8 @@ const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/__models');
  */
 function readSdpModelSource(filename)
 {
-  return fs.readFileSync(path.join(SDP_MODELS_DIR, filename), 'utf8');
+  const source = fs.readFileSync(path.join(SDP_MODELS_DIR, filename), 'utf8');
+  return stripEsmForVm(source);
 }
 
 /**

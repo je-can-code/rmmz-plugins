@@ -1,4 +1,11 @@
 //region JaftingSalvageManager
+import {
+  JaftingSalvageLedgerRow,
+  JaftingSalvageLedgerSnapshot,
+  JaftingSalvagePartyLedgerBag,
+} from '../__models/JaftingSalvageDataModels.js';
+import JaftingSalvageLedger from '../__models/JaftingSalvageLedger.js';
+
 /**
  * Orchestrates **where** ledgers live, **when** they merge from craft/refine, **how** dismantle pays out, and
  * **cleanup** when the last copy of dynamic refinement rows disappears from inventory.<br>
@@ -1031,5 +1038,7 @@ class JaftingSalvageManager
     JaftingSalvageManager.onAfterDynamicSlotReclaimed('armor', armorDatum.id);
   }
 }
+
+export default JaftingSalvageManager;
 
 //endregion JaftingSalvageManager

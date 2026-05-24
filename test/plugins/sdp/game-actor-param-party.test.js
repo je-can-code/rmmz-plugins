@@ -37,7 +37,7 @@ function makeActor(s, id)
   return actor;
 }
 
-describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (out/J-SDP.js)', () =>
+describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (out/sdp/J-SDP.js)', () =>
 {
   let sandbox;
 

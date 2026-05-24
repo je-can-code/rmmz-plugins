@@ -1,4 +1,6 @@
 //region Window_QuestopediaList
+import OmniQuest from './../__models/OmniQuest.js';
+
 class Window_QuestopediaList
   extends Window_Command
 {
@@ -147,4 +149,5 @@ class Window_QuestopediaList
   }
 }
 
+export default Window_QuestopediaList;
 //endregion Window_QuestopediaList

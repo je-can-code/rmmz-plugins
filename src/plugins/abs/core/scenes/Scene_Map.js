@@ -1,4 +1,8 @@
 //region Scene_Map
+import JABS_MenuType from './../__models/JABS_MenuFocus.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
+import Window_AbsMenu from './../windows/Window_AbsMenu.js';
+import Window_AbsMenuSelect from './../windows/Window_AbsMenuSelect.js';
 //region init
 /**
  * Extends {@link #initialize}.<br>

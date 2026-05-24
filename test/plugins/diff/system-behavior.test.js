@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { VITEST_DIFF_KEY, VITEST_HARD_KEY } from './fixtures/diff-config-json.js';
 import { loadDiffPluginVm } from './diff-vm.js';
 
-describe('J-Difficulty runtime merge and battler hooks (out/J-Difficulty.js)', () =>
+describe('J-Difficulty runtime merge and battler hooks (out/diff/J-Difficulty.js)', () =>
 {
   let sandbox;
 

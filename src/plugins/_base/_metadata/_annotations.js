@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.1.1 BASE] The base class for all J plugins.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help

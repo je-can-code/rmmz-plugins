@@ -74,4 +74,6 @@ class JAbsPixelistics_PluginMetadata
       : configuredRevealRange;
   }
 }
+
+export default JAbsPixelistics_PluginMetadata;
 //endregion plugin metadata

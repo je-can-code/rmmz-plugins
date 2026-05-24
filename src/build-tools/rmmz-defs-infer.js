@@ -551,8 +551,7 @@ const INTERPRETER_COMMAND232_PARAMS =
 
 /**
  * Full map of vanilla `Game_Interpreter.prototype.commandNNN(params)` tuple shapes from
- * `project/js/rmmz_objects.js`. Regenerate with
- * `node src/build-tools/generate-interpreter-command-param-types.mjs`.
+ * `project/js/rmmz_objects.js`. Update manually when the engine interpreter changes.
  * Polymorphic commands use `readonly unknown[]` (111, 122, 285, 302).
  *
  * @type {Readonly<Record<string, string>>}

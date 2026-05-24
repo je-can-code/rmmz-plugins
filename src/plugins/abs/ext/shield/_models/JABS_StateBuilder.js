@@ -1,4 +1,5 @@
 //region JABS_StateBuilder
+import JABS_Shield from './JABS_Shield.js';
 
 /**
  * The shield for this state.

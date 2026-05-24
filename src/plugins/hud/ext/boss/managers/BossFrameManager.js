@@ -309,4 +309,5 @@ class BossFrameManager
   //endregion privates
 }
 
+export default BossFrameManager;
 //endregion BossFrameManager

@@ -1,3 +1,6 @@
+//region Sprite_MapGauge
+import Sprite_Icon from './Sprite_Icon.js';
+
 /**
  * The sprite for displaying a gauge on a character's sprite.
  */
@@ -473,4 +476,6 @@ class Sprite_MapGauge
   //endregion draw
 }
 
+
+export default Sprite_MapGauge;
 //endregion Sprite_MapGauge

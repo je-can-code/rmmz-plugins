@@ -94,4 +94,5 @@ Sprite_CooldownTimer.prototype.fontFace = function()
 {
   return $gameSystem.numberFontFace();
 }
+export default Sprite_CooldownTimer;
 //endregion

@@ -1,4 +1,5 @@
 //region JABS_Location
+import JABS_LocationBuilder from './JABS_LocationBuilder.js';
 /**
  * A class representing the location of a JABS entity.
  */
@@ -53,4 +54,5 @@ class JABS_Location
   getD = () => this.d;
 }
 
+export default JABS_Location;
 //endregion JABS_Location

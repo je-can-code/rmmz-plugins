@@ -161,4 +161,6 @@ class Window_RecipeIngredientList
   }
 }
 
+export default Window_RecipeIngredientList;
+
 //endregion Window_IngredientList

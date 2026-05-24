@@ -1,8 +1,12 @@
 //region initialization
+import J_PopupsResources_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+J.POPUPS ||= {};
+J.POPUPS.EXT ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -12,7 +16,7 @@ J.POPUPS.EXT.RESOURCES = {};
 /**
  * The metadata associated with this plugin.
  */
-J.POPUPS.EXT.RESOURCES.Metadata = new JPopupsResources_PluginMetadata('J-Popups-Resources', '1.0.0');
+J.POPUPS.EXT.RESOURCES.Metadata = new J_PopupsResources_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

@@ -1,4 +1,6 @@
 //region WindowGaugeOptions
+import GaugeOptionsBuilder from './GaugeOptionsBuilder.js';
+
 /**
  * The options for a gauge that shows up in the window.
  */
@@ -127,4 +129,6 @@ class WindowGaugeOptions
   }
 }
 
+
+export default WindowGaugeOptions;
 //endregion WindowGaugeOptions

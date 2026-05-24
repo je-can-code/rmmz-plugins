@@ -11,7 +11,7 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 
 | Folder | What it is |
 |---|---|
-| `rmmz-plugins` | Monorepo of RPG Maker MZ plugins (JavaScript, no modules in `/src/plugins/**`). Primary project. |
+| `rmmz-plugins` | Monorepo of RPG Maker MZ plugins (ESM source → Vite single-file ships). Primary project. |
 | `ca` | Consumer test game ("Chef Adventure"). The actual RMMZ project lives at `ca/chef-adventure/`. |
 | `jmz-data-editor` | React + Neutralino.js GUI for editing plugin data. TypeScript + Vite + Bun. |
 
@@ -32,7 +32,7 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 ## Oxlint compliance
 - **Never violate Oxlint rules** configured in `.oxlintrc.json`. Layout conventions (Allman braces, `eol-last: never`, `max-len` 120 / 200 on `_annotations.js`) are workspace style; Oxlint does not yet expose those stylistic rules natively — follow `.junie/guidelines.md` and WebStorm formatting.
 - **No trailing newline on plugin files:** the final character of a file must be the last character of the last line (no `\n` after `//endregion` or the closing line). When using the `Write` tool, do not append a trailing newline.
-- **Always run `bun run lint` after code changes** (`oxlint src/plugins src/build-tools`). All lint **errors** must be fixed. **Warnings** may remain when justified (e.g. `// eslint-disable-next-line` for complexity); Oxlint honors ESLint-style disable comments.
+- **Always run `bun run lint` after code changes** (`oxlint src/plugins src/build-tools`). All lint **errors** must be fixed. **Warnings** may remain when justified; Oxlint honors ESLint-style `eslint-disable` comments where rules overlap.
 
 ## Universal Coding Style (all three projects)
 
@@ -52,8 +52,9 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 ## rmmz-plugins Specific
 
 - **Single quotes** for strings.
-- **No `import`/`export` anywhere in `rmmz-plugins` plugin source.** These files are concatenated by `combine.js` and loaded as plain JS by the RMMZ engine — there is no compilation step. Modules simply do not work here. (`src/build-tools` uses Node `require`/`import` normally since it runs in Node, not in the game.)
+- **ESM in source, one script at runtime.** Under `src/plugins/**`, use `import` / `export default` between colocated modules; each ship’s `entry.js` is the Vite entry. Rolldown emits a **single** bundled `.js` into `out/` (no `import`/`export` in what RMMZ loads). `src/build-tools` and `src/defs` use normal Node ESM.
 - **No IIFEs**. Use object namespaces (`J.ABS`, `J.SKS`, etc.) and alias maps.
+- **Plugin command registration:** `PluginManager.registerCommand(J.*.Metadata.name, …)` — use lowercase **`name`** from `PluginMetadata`. J-Base still assigns legacy `Metadata.Name`; do not use `.Name` on other plugins unless matching that J-Base pattern.
 
 ### Database objects at runtime (J-Base)
 
@@ -80,7 +81,7 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Serialized models** (saved to file via `JsonEx`): use `class` syntax with JSON-safe fields and call `SerializableRegistry.register(ClassName)` at the bottom of the model file (after the closing `}`, before `//endregion`). This is **mandatory** — without registration, `JsonEx` cannot restore class instances on load, so any prototype methods added to the model will silently break after a save/load cycle. See `src/plugins/_base/core/SerializableRegistry.js` and `JABS_HitstopData.js` for the reference pattern.
 - **`//region` / `//endregion`** wrappers on every file; region name = filename.
 - Use `RPGManager` methods for all notetag parsing. Never parse `note` strings manually.
-- Build tools: `combine.js` (via `bun run build:<plugin>`) concatenates source into `out/`. Built files are committed under `project/js/plugins/`. Per-plugin build scripts exist for tooling; they are **not** the agent’s default way to publish changes.
+- **Build:** `bun run hotfix` (lint → clean `out/` → `build:all` → copy to `project/js/plugins/` and CA). Vite configs per ship merge `vite.config.shared.js`; MZ header via `vite-plugin_rmmz-header-prepender.js`. Built files under `project/js/plugins/` are committed. Per-ship `build:*` scripts are for focused rebuilds, not the default publish path.
 - PR format: per-plugin `## \`J-PluginName\` [major/minor/patch] update` sections with bullet points. No generic Summary/Test Plan tables.
 
 ## jmz-data-editor Specific

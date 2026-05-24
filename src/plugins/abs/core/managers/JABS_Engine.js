@@ -1,4 +1,15 @@
 //region JABS_Engine
+import JABS_TeamRules from './JABS_TeamRules.js';
+import JABS_State from './../__models/JABS_State.js';
+import JABS_LootDrop from './../__models/JABS_LootDrop.js';
+import JABS_Location from './../__models/JABS_Location.js';
+import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
+import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_AiManager from './JABS_AiManager.js';
+import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
+import JABS_Action from './../__models/JABS_Action.js';
+import JABS_Aabb from './../__models/JABS_Aabb.js';
 /**
  * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
@@ -4777,4 +4788,5 @@ class JABS_Engine
 //endregion defeated target aftermath
 }
 
+export default JABS_Engine;
 //endregion JABS_Engine

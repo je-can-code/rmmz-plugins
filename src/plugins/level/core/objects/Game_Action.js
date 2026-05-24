@@ -1,3 +1,5 @@
+import LevelScaling from "../managers/LevelScaling.js";
+
 //region Game_Action
 /**
  * Scales damaged dealt and received to be based on level differences.

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 
 import { loadProfPluginVm, resetProfPluginSandbox } from './prof-vm.js';
 
-describe('J-Proficiency advanced conditionals (out/J-Proficiency.js)', () =>
+describe('J-Proficiency advanced conditionals (out/prof/J-Proficiency.js)', () =>
 {
   let sandbox;
 

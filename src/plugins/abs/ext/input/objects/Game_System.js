@@ -1,4 +1,5 @@
 //region Game_System
+import JABS_StandardController from './../_models/JABS_StandardController.js';
 /**
  * Extends {@link #initMembers}.<br/>
  * Initializes members used for storing JABS input mappings per controller.

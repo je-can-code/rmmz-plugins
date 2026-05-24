@@ -1,4 +1,8 @@
 //region Game_Party
+import TrackedOmniQuest from './../__models/TrackedOmniQuest.js';
+import TrackedOmniObjective from './../__models/TrackedOmniObjective.js';
+import QuestManager from './../managers/QuestManager.js';
+
 /**
  * Extends {@link #initOmnipediaMembers}.<br>
  * Includes monsterpedia members.

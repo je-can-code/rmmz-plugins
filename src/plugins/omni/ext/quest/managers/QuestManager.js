@@ -1,4 +1,7 @@
 //region QuestManager
+import OmniQuest from './../__models/OmniQuest.js';
+import OmniObjective from './../__models/OmniObjective.js';
+
 /**
  * A manager layer for convenient static methods that check various data points or perform common actions.
  */
@@ -412,4 +415,5 @@ class QuestManager
   }
 }
 
+export default QuestManager;
 //endregion QuestManager

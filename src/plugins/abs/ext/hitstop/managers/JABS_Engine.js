@@ -1,4 +1,5 @@
 //region JABS_Engine (impact hook)
+import JABS_HitstopManager from './JABS_HitstopManager.js';
 /**
  * Extends {@link JABS_Engine.postPrimaryBattleEffects}.<br/>
  * Also applies local hitstop to attacker, target, and the delivering action event.

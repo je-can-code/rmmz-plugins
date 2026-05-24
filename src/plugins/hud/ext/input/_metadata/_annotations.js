@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 HUD-INPUT] A HUD frame that displays your leader's buttons data.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A HUD frame that displays your leader's buttons data.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

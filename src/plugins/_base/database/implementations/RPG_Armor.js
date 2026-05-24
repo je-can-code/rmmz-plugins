@@ -1,3 +1,5 @@
+import RPG_EquipItem from '../core/RPG_EquipItem.js';
+
 //region RPG_Armor
 /**
  * A class representing a single armor from the database.
@@ -79,4 +81,6 @@ class RPG_Armor
   }
 }
 
+
+export default RPG_Armor;
 //endregion RPG_Armor

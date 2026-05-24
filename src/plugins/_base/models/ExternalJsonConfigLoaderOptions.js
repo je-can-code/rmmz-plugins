@@ -188,4 +188,6 @@ class ExternalJsonConfigLoaderOptionsBuilder
   }
 }
 //endregion ExternalJsonConfigLoaderOptionsBuilder
+
+export default ExternalJsonConfigLoaderOptions;
 //endregion ExternalJsonConfigLoaderOptions

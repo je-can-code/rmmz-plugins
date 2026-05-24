@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 RESOURCES-ABS] Damage-linked HP, MP, and TP resource effects.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Damage-linked HP, MP, and TP resource effects.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

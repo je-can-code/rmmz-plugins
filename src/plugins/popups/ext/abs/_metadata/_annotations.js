@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.3.0 POPUPS-ABS] Combat and reward popups for JABS.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Combat and reward popups for JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -1,4 +1,5 @@
 //region JABS_StateBuilder
+import JABS_State from './JABS_State.js';
 /**
  * A fluent builder/factory for constructing {@link JABS_State} instances.
  *
@@ -143,4 +144,5 @@ class JABS_StateBuilder
   }
 }
 
+export default JABS_StateBuilder;
 //endregion JABS_StateBuilder

@@ -1,4 +1,5 @@
 //region timers
+import JABS_Battler from './_initialization.js';
 /**
  * Sets the battler's wait duration to a number. If this number is greater than
  * zero, then the battler must wait before doing anything else.

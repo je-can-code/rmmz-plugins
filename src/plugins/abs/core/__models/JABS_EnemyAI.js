@@ -1,4 +1,8 @@
 //region JABS_EnemyAI
+import JABS_BattlerRole from './JABS_BattlerRole.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
+import JABS_AI from './JABS_AI.js';
 /**
  * An object representing the AI decision-making logic for an enemy {@link JABS_Battler}.
  * Coordination roles (leader/follower/guardian/ward/solo/sentinel) are handled by
@@ -701,4 +705,5 @@ class JABS_EnemyAI
   //endregion follower
 }
 
+export default JABS_EnemyAI;
 //endregion JABS_EnemyAI

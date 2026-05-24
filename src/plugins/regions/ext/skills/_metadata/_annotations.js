@@ -1,8 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc
- * [v1.0.0 REGIONS-SKILLS] Enables execution of skills via region ids.
+ * @plugindesc [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enables execution of skills via region ids.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

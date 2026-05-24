@@ -220,4 +220,5 @@ class JABS_HitstopManager
   //endregion internals
 }
 
+export default JABS_HitstopManager;
 //endregion JABS_HitstopManager

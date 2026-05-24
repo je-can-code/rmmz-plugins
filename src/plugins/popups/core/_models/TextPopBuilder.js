@@ -1,4 +1,6 @@
 //region TextPopBuilder
+import Map_TextPop from './Map_TextPop.js';
+
 /**
  * The fluent-builder for text pops on the map.
  */
@@ -773,4 +775,5 @@ class TextPopBuilder
   //endregion presents
 }
 
+export default TextPopBuilder;
 //endregion TextPopBuilder

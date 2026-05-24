@@ -1,4 +1,6 @@
 //region Window_StatusStatList
+import StatusStatListRow from './../_models/StatusStatListRow.js';
+
 /**
  * A selectable list of stats (by long param id) that drives the breakdown panel.
  */
@@ -301,4 +303,5 @@ class Window_StatusStatList
   //endregion helpers
 }
 
+export default Window_StatusStatList;
 //endregion Window_StatusStatList

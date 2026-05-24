@@ -115,4 +115,5 @@ class Window_Frame
   }
 }
 
+export default Window_Frame;
 //endregion Window_Frame

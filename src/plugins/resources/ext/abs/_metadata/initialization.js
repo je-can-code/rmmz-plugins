@@ -1,13 +1,22 @@
 //region initialization
+import JResourcesAbs_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
+ */
+globalThis.J ||= {};
+J.RESOURCES ||= {};
+J.RESOURCES.EXT ||= {};
+
+/**
+ * The plugin umbrella that governs all things related to this extension plugin.
  */
 J.RESOURCES.EXT.ABS = {};
 
 /**
  * The metadata associated with this plugin.
  */
-J.RESOURCES.EXT.ABS.Metadata = new JResourcesAbs_PluginMetadata('J-Resources-ABS', '1.0.0');
+J.RESOURCES.EXT.ABS.Metadata = new JResourcesAbs_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

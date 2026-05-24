@@ -1,4 +1,10 @@
 //region TrackedOmniQuest
+import TrackedOmniObjective from './TrackedOmniObjective.js';
+import QuestManager from './../managers/QuestManager.js';
+import OmniTag from './OmniTag.js';
+import OmniObjective from './OmniObjective.js';
+import OmniQuest from './OmniQuest.js';
+
 /**
  * A class representing the tracking for a single quest.
  */
@@ -762,4 +768,5 @@ TrackedOmniQuest.prototype.handleQuestUpdateLog = function()
 };
 //endregion state management
 
+export default TrackedOmniQuest;
 //endregion TrackedOmniQuest

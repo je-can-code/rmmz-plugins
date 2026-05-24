@@ -26,4 +26,6 @@ class Window_RefinementConfirmation
   }
 }
 
+export default Window_RefinementConfirmation;
+
 //endregion Window_JaftingRefinementConfirmation

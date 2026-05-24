@@ -189,4 +189,6 @@ class Window_PassiveList
   }
   //endregion input
 }
+
+export default Window_PassiveList;
 //endregion Window_PassiveList

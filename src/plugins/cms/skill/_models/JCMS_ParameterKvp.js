@@ -54,4 +54,5 @@ class JCMS_ParameterKvp
   }
 }
 
+export default JCMS_ParameterKvp;
 //endregion JCMS_ParameterKvp

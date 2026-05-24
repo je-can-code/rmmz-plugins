@@ -1,4 +1,6 @@
 //region plugin commands
+import QuestManager from '../managers/QuestManager.js';
+
 /**
  * Plugin command for unlocking quests by their keys.
  */

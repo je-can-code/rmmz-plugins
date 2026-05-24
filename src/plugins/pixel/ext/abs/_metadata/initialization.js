@@ -1,8 +1,10 @@
 //region initialization
+import JAbsPixelistics_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region metadata
 /**
@@ -21,7 +23,7 @@ J.PIXEL.EXT.ABS = {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata('J-ABS-Pixelistics', '1.0.6');
+J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of regex patterns for this plugin.

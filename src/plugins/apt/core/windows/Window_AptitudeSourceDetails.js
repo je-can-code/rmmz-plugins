@@ -1,4 +1,7 @@
 //region Window_AptitudeSourceDetails
+import AptitudeTeachable from './../_models/AptitudeTeachable.js';
+import ApManager from './../managers/ApManager.js';
+
 /**
  * A window displaying details about a specific aptitude source.
  */
@@ -456,4 +459,5 @@ class Window_AptitudeSourceDetails
   //endregion helpers
 }
 
+export default Window_AptitudeSourceDetails;
 //endregion Window_AptitudeSourceDetails

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadSkillExtendPluginVm } from './extend-vm.js';
 import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
 
-describe('J-SkillExtend JABS_SkillSlotManager (out/J-SkillExtend.js)', () =>
+describe('J-SkillExtend JABS_SkillSlotManager (out/extend/J-SkillExtend.js)', () =>
 {
   let sandbox;
 

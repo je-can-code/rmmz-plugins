@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadNaturalGrowthPluginVm, resetNaturalGrowthPluginSandbox } from './natural-vm.js';
 import { wrapActorRefreshCounter } from './test-helpers.js';
 
-describe('J-NaturalGrowth Game_Party / Scene_Equip / Window_EquipItem (out/J-NaturalGrowth.js)', () =>
+describe('J-NaturalGrowth Game_Party / Scene_Equip / Window_EquipItem (out/natural/J-NaturalGrowth.js)', () =>
 {
   let sandbox;
 

@@ -1,4 +1,7 @@
 //region updates
+import JABS_Battler from './_initialization.js';
+import JABS_AiManager from './../../managers/JABS_AiManager.js';
+import JABS_Action from './../JABS_Action.js';
 /**
  * Things that are battler-respective and should be updated on their own.
  */

@@ -3,10 +3,10 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installCamodsEngineStubs } from './fixtures/engine-stubs.js';
 
-export const CAMODS_OUT_FILENAME = 'J-CA-Mods.js';
+export const CAMODS_OUT_FILENAME = 'ca-mods/J-CA-Mods.js';
 
 /**
- * Loads {@link out/J-CA-Mods.js} with J-Base and harness.
+ * Loads {@link out/ca-mods/J-CA-Mods.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

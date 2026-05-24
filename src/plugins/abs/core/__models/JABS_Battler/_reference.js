@@ -1,4 +1,10 @@
 //region reference helpers
+import JABS_TeamRules from './../../managers/JABS_TeamRules.js';
+import JABS_EnemyAI from './../JABS_EnemyAI.js';
+import JABS_BattlerRole from './../JABS_BattlerRole.js';
+import JABS_Battler from './_initialization.js';
+import JABS_AiManager from './../../managers/JABS_AiManager.js';
+import JABS_Action from './../JABS_Action.js';
 //region else
 /**
  * Reassigns the character to something else.

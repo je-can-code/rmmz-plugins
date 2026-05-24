@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 OMNI] Enables the "omnipedia" data-centric scene.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enables the "omnipedia" data-centric scene.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

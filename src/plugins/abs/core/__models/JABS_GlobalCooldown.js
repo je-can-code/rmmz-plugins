@@ -1,4 +1,5 @@
 //region JABS_GlobalCooldown
+import JABS_Battler from './JABS_Battler/_initialization.js';
 /**
  * Stateless helpers for the optional battler-wide global cooldown (GCD), similar to MMO-style GCD.
  * Whitelisted skill types share one countdown on the {@link JABS_Battler}; while it runs, other GCD-subject skills are
@@ -108,4 +109,5 @@ class JABS_GlobalCooldown
   }
 }
 
+export default JABS_GlobalCooldown;
 //endregion JABS_GlobalCooldown

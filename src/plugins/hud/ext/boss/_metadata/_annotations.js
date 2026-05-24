@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 HUD-BOSS] A HUD frame that displays a single target, like a boss.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A HUD frame that displays a single target, like a boss.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

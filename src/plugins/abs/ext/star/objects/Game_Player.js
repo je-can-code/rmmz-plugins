@@ -1,4 +1,5 @@
 //region Game_Player
+import StarPhases from './../_models/StarPhases.js';
 /**
  * Extends {@link Game_Player.clearTransferInfo}.<br>
  * Parse out enemy data from the troop and convert them into JABS battlers.

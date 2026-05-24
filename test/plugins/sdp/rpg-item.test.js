@@ -5,7 +5,7 @@ import { loadSdpPluginVm } from './sdp-vm.js';
 import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
 import { newVmRpgItem } from './vm-rpg-rows.js';
 
-describe('J-SDP RPG_Item notes (out/J-SDP.js)', () =>
+describe('J-SDP RPG_Item notes (out/sdp/J-SDP.js)', () =>
 {
   let sandbox;
 

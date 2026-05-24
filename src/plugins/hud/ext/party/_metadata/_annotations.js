@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 HUD-PARTY] A HUD frame that displays your party's data.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A HUD frame that displays your party's data.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

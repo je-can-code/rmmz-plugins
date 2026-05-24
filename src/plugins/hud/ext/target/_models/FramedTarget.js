@@ -1,4 +1,5 @@
 //region FramedTarget
+import FramedTargetConfiguration from './FramedTargetConfiguration.js';
 /**
  * The shape of a target for the target frame.
  */
@@ -61,4 +62,5 @@ class FramedTarget
   }
 }
 
+export default FramedTarget;
 //endregion FramedTarget

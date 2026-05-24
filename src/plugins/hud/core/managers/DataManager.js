@@ -1,4 +1,5 @@
 //region DataManager
+import HudManager from './HudManager.js';
 /**
  * Instantiates the hud manager after the rest of the objects are created.
  */

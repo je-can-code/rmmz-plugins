@@ -1,4 +1,6 @@
 //region plugin commands
+import Scene_JaftingCreate from '../scenes/Scene_JaftingCreate.js';
+
 /**
  * A plugin command.<br>
  * Calls the JAFTING creation menu.

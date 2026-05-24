@@ -41,4 +41,5 @@ class J_PosesPluginMetadata
 
 }
 
+export default J_PosesPluginMetadata;
 //endregion plugin metadata

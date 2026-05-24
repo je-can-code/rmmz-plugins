@@ -39,7 +39,7 @@ export const DEFAULT_SDP_PLUGIN_PARAMS = {
 };
 
 /**
- * Globals required for {@link out/J-SDP.js} to evaluate after {@link out/J-Base.js}.
+ * Globals required for {@link out/sdp/J-SDP.js} to evaluate after {@link out/J-Base.js}.
  *
  * @param {object} sandbox VM global object (after {@link installJBaseHostGlobals}).
  */

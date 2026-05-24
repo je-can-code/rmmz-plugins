@@ -81,4 +81,5 @@ class Window_OmnipediaListHeader
   }
 }
 
+export default Window_OmnipediaListHeader;
 //endregion Window_OmnipediaListHeader

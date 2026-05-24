@@ -1,4 +1,6 @@
 //region OmniQuestBuilder
+import OmniQuest from './OmniQuest.js';
+
 /**
  * A builder for creating {@link OmniQuest}s.
  */
@@ -89,4 +91,5 @@ class OmniQuestBuilder
   }
 }
 
+export default OmniQuestBuilder;
 //endregion OmniQuestBuilder

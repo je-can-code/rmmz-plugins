@@ -1,4 +1,8 @@
 //region JABS_ActionSpawner
+import JABS_Engine from './JABS_Engine.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
+import JABS_Action from './../__models/JABS_Action.js';
 /**
  * The action spawner is responsible for translating projectile directions into
  * fully-formed `JABS_Action` instances, including per-spoke odd/even parallel
@@ -275,4 +279,5 @@ class JABS_ActionSpawner
     return actions;
   }
 }
+export default JABS_ActionSpawner;
 //endregion JABS_ActionSpawner

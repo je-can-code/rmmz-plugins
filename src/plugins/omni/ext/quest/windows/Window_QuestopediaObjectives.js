@@ -1,4 +1,6 @@
 //region Window_QuestopediaObjectives
+import OmniObjective from './../__models/OmniObjective.js';
+
 class Window_QuestopediaObjectives
   extends Window_Command
 {
@@ -112,4 +114,5 @@ class Window_QuestopediaObjectives
   }
 }
 
+export default Window_QuestopediaObjectives;
 //endregion Window_QuestopediaObjectives

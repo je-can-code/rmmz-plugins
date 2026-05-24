@@ -1,4 +1,6 @@
 //region AptitudeProgress
+import AptitudeLearning from './AptitudeLearning.js';
+
 /**
  * The structure of an object and its potential {@link AptitudeLearning}s.
  * @param {string} key "type:id" unique key of the aptitude being learned.
@@ -91,4 +93,5 @@ AptitudeProgress.prototype.learnings = function()
 {
   return this._learnings;
 };
+export default AptitudeProgress;
 //endregion AptitudeProgress

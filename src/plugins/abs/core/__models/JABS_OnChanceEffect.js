@@ -80,4 +80,5 @@ class JABS_OnChanceEffect
   }
 }
 
+export default JABS_OnChanceEffect;
 //endregion JABS_OnChanceEffect

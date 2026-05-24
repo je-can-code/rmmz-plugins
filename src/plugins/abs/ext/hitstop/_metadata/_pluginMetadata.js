@@ -139,4 +139,5 @@ class JHitstop_PluginMetadata
   }
 }
 
+export default JHitstop_PluginMetadata;
 //endregion plugin metadata

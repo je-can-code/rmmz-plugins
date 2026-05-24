@@ -1,4 +1,7 @@
 //region PluginMetadata
+import JsonMapper from './../_utilities/JsonMapper.js';
+import PluginVersion from './PluginVersion.js';
+
 class PluginMetadata
 {
   /**
@@ -134,4 +137,6 @@ class PluginMetadata
   }
 }
 
+
+export default PluginMetadata;
 //endregion PluginMetadata

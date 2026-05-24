@@ -56,4 +56,6 @@ class SerializableRegistry
     return null;
   }
 }
+
+export default SerializableRegistry;
 //endregion SerializableRegistry

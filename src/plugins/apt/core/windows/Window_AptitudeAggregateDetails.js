@@ -1,4 +1,8 @@
 //region Window_AptitudeDetails
+import AptitudeSkillSourceProgress from './../_models/AptitudeSkillSourceProgress.js';
+import AptitudeSkillAggregate from './../_models/AptitudeSkillAggregate.js';
+import ApManager from './../managers/ApManager.js';
+
 /**
  * The window containing the details of an aptitude skill aggregate.
  */
@@ -467,4 +471,5 @@ class Window_AptitudeAggregateDetails
   //endregion helpers
 }
 
+export default Window_AptitudeAggregateDetails;
 //endregion Window_AptitudeDetails

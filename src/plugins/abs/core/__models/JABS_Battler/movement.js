@@ -1,4 +1,5 @@
 //region movement
+import JABS_Battler from './_initialization.js';
 /**
  * Gets whether or not this battler's movement is locked.
  * @returns {boolean} True if the battler's movement is locked, false otherwise.

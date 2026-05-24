@@ -11,7 +11,7 @@ void function()
 {
   globalThis.__JAFT_VM = globalThis.__JAFT_VM || {};
   globalThis.__JAFT_VM.RefinementWorkflowSession = RefinementWorkflowSession;
-  globalThis.__JAFT_VM.JaftingManager = JaftingManager;
+  globalThis.__JAFT_VM.JaftingManager = globalThis.JaftingManager;
   globalThis.__JAFT_VM.Window_RefinementDetails = Window_RefinementDetails;
   globalThis.__JAFT_VM.JAFTING_Trait = JAFTING_Trait;
 }();

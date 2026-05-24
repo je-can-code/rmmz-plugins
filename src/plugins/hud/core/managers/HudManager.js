@@ -567,4 +567,5 @@ class HudManager
   //endregion private functions
 }
 
+export default HudManager;
 //endregion Hud_Manager

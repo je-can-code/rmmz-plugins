@@ -1,4 +1,6 @@
 //region Game_Battler
+import ResourceCostManager from './../managers/ResourceManager.js';
+
 /**
  * Extends {@link #initMembers}.<br/>
  * Also initializes the resources members.

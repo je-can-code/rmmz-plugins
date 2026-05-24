@@ -1,4 +1,6 @@
 //region Game_Party
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
+
 /**
  * Extends {@link Game_Party.prototype.gainItem}.<br>
  * Keeps per-slot salvage ledgers aligned when static-template stacks grow outside crafting stamps.

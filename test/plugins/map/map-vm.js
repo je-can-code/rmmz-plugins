@@ -5,7 +5,7 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installMapEngineStubs } from './fixtures/engine-stubs.js';
 
-export const MAP_OUT_FILENAME = 'J-Map.js';
+export const MAP_OUT_FILENAME = 'map/J-Map.js';
 
 const EXPOSE_MAP_GLOBALS = `
 globalThis.MinimapEventType = MinimapEventType;

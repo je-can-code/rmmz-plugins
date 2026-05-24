@@ -142,4 +142,6 @@ MonsterpediaObservations.prototype.isElementalisticKnown = function(elementId)
 {
   return this.knownElementalistics.includes(elementId);
 };
+
+export default MonsterpediaObservations;
 //endregion MonsterpediaObservations

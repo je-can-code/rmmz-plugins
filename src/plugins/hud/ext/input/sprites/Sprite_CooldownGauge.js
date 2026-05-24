@@ -418,3 +418,6 @@ class Sprite_CooldownGauge
     );  // the color gradient to end with.
   }
 }
+
+export default Sprite_CooldownGauge;
+//endregion Sprite_CooldownGauge

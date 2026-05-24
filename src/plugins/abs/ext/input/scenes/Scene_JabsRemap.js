@@ -1,4 +1,9 @@
 //region Scene_JabsRemap
+import Window_JabsRemapUsageHelp from './../windows/Window_JabsRemapUsageHelp.js';
+import Window_JabsRemapPrompt from './../windows/Window_JabsRemapPrompt.js';
+import Window_JabsRemapCommand from './../windows/Window_JabsRemapCommand.js';
+import Window_JabsRemapActions from './../windows/Window_JabsRemapActions.js';
+import JABS_Button from './../_models/JABS_Button.js';
 /**
  * The scene for remapping JABS inputs.
  * Owns layout, capture flow, and applying/saving mappings.
@@ -1233,4 +1238,5 @@ class Scene_JabsRemap
   //endregion helpers
 }
 
+export default Scene_JabsRemap;
 //endregion Scene_JabsRemap

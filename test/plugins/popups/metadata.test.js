@@ -20,8 +20,11 @@ describe('J-Popups metadata (out/popups/J-Popups.js)', () =>
 
   it('initializes J.POPUPS metadata', () =>
   {
-    expect(sandbox.J.POPUPS.Metadata.Name).toBe('J-Popups');
-    expect(sandbox.J.POPUPS.Metadata.Version).toBe('2.1.0');
+    expect(sandbox.J.POPUPS.Metadata.name).toBe('J-Popups');
+    expect(sandbox.J.POPUPS.Metadata.version.major).toBe(2);
+    expect(sandbox.J.POPUPS.Metadata.version.minor).toBe(1);
+    expect(sandbox.J.POPUPS.Metadata.version.patch).toBe(0);
+    expect(sandbox.J.POPUPS.Metadata.disablePopups).toBe(false);
   });
 });
 //endregion plugins/popups/metadata.test.js

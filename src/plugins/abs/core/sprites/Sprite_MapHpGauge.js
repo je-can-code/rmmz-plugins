@@ -24,4 +24,5 @@ class Sprite_MapHpGauge
   }
 }
 
+export default Sprite_MapHpGauge;
 //endregion Sprite_MapHpGauge

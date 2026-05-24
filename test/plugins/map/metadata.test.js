@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadMapPluginVm } from './map-vm.js';
 
-describe('J-MAP metadata (out/J-Map.js)', () =>
+describe('J-MAP metadata (out/map/J-Map.js)', () =>
 {
   let sandbox;
 

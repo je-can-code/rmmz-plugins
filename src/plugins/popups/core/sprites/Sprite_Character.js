@@ -1,4 +1,7 @@
 //region Sprite_Character
+import TextPopSpriteManager from './../_models/TextPopSpriteManager.js';
+import Map_TextPop from './../_models/Map_TextPop.js';
+
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.
  */

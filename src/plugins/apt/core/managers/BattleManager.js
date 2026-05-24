@@ -1,4 +1,6 @@
 //region BattleManager
+import ApManager from './ApManager.js';
+
 /**
  * Extends {@link #makeRewards}.<br/>
  * Also includes the aptitude AP earned.

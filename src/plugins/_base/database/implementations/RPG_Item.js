@@ -1,3 +1,5 @@
+import RPG_UsableItem from '../core/RPG_UsableItem.js';
+
 //region RPG_Item
 /**
  * A class representing a single item entry from the database.
@@ -107,4 +109,6 @@ class RPG_Item
   }
 }
 
+
+export default RPG_Item;
 //endregion RPG_Item

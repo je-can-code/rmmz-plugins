@@ -1,4 +1,8 @@
 //region isReady & cooldowns
+import JABS_SkillSlot from './../JABS_SkillSlot.js';
+import JABS_GlobalCooldown from './../JABS_GlobalCooldown.js';
+import JABS_Cooldown from './../JABS_Cooldown.js';
+import JABS_Battler from './_initialization.js';
 /**
  * Initializes a cooldown with the given key.
  * @param {string} cooldownKey The key of this cooldown.

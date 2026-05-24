@@ -169,4 +169,5 @@ class Window_AbsMenu
   }
 }
 
+export default Window_AbsMenu;
 //endregion Window_AbsMenu

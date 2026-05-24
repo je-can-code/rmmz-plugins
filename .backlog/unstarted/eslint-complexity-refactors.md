@@ -3,13 +3,13 @@ status: open
 area: code-quality
 ---
 
-# ESLint complexity refactors (small, safe)
+# Complexity refactors (small, safe)
 
 ## Context
 
-ESLint `complexity` warnings are currently allowed, but several hotspots were marked with `eslint-disable-next-line complexity` plus TODOs.
+Oxlint / legacy ESLint `complexity` warnings are currently allowed, but several hotspots were marked with disable comments plus TODOs.
 
-This item tracks converting those hotspots into simpler, table-driven code **without changing behavior**.
+This item tracks converting those hotspots into simpler, table-driven code **without changing behavior**. Lint gates `hotfix` via Oxlint (see [`build-tools-linting.md`](../completed/build-tools-linting.md)).
 
 ## Work
 

@@ -1,3 +1,5 @@
+import RPG_Traited from '../base/RPG_Traited.js';
+
 //region RPG_BaseBattler
 /**
  * A class representing the groundwork for what all battlers
@@ -37,4 +39,6 @@ class RPG_BaseBattler
   }
 }
 
+
+export default RPG_BaseBattler;
 //endregion RPG_BaseBattler

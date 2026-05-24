@@ -1,4 +1,5 @@
 //region Scene_Map
+import Window_QuestFrame from '../windows/Window_QuestFrame.js';
 /**
  * Extends {@link #initHudMembers}.<br>
  * Includes initialization of the target frame members.

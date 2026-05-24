@@ -1,4 +1,6 @@
 //region Game_Event
+import JsonMapper from './../_utilities/JsonMapper.js';
+
 /**
  * Gets all valid-shaped comment event commands.
  * @returns {RPG_EventListCommand[]}

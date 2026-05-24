@@ -170,4 +170,5 @@ class JABS_LootDrop
   }
 }
 
+export default JABS_LootDrop;
 //endregion JABS_LootDrop

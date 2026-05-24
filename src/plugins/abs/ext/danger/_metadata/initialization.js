@@ -1,8 +1,7 @@
 //region Introduction
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import J_DangerPluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -17,7 +16,7 @@ var J = J || {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.6.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -29,21 +28,6 @@ var J = J || {};
  * The plugin umbrella that governs all things related to this plugin.
  */
 J.ABS.EXT.DANGER = {};
-
-/**
- * The `metadata` associated with this plugin, such as version.
- */
-J.ABS.EXT.DANGER.Metadata = {
-  /**
-   * The name of this plugin.
-   */
-  Name: `J-ABS-DangerIndicator`,
-
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.1',
-};
 
 /**
  * A collection of helper functions for use within this plugin.
@@ -77,15 +61,9 @@ J.ABS.EXT.DANGER.Helpers.PluginManager.TranslateDangerIndicatorIcons = obj =>
 };
 
 /**
- * The actual `plugin parameters` extracted from RMMZ.
+ * The metadata associated with this plugin.
  */
-J.ABS.EXT.DANGER.PluginParameters = PluginManager.parameters(J.ABS.EXT.DANGER.Metadata.Name);
-J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator =
-  J.ABS.EXT.DANGER.PluginParameters['defaultEnemyShowDangerIndicator'] === "true";
-J.ABS.EXT.DANGER.Metadata.DangerIndicatorIcons =
-  J.ABS.EXT.DANGER.Helpers.PluginManager.TranslateDangerIndicatorIcons(
-    J.ABS.EXT.DANGER.PluginParameters['dangerIndicatorIconData'],
-  );
+J.ABS.EXT.DANGER.Metadata = new J_DangerPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of icons that represent the danger level of a given enemy relative to the player.

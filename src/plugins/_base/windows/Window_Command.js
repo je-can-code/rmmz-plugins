@@ -1,4 +1,5 @@
 //region Window_Command
+import BuiltWindowCommand from './../models/BuiltWindowCommand.js';
 /**
  * Gets all commands currently in this list.
  * @returns {BuiltWindowCommand[]}

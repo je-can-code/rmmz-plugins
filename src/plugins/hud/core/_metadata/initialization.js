@@ -1,7 +1,10 @@
+//region Introduction
+import JHud_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -9,14 +12,13 @@ var J = J || {};
   // Check to ensure we have the minimum required version of the J-Base plugin.
   const requiredBaseVersion = '1.0.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
-  if (!hasBaseRequirement)
+  if (hasBaseRequirement === false)
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
   }
 })();
 //endregion version check
 
-//region metadata
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
@@ -29,15 +31,9 @@ J.HUD.EXT = {};
 
 /**
  * The `metadata` associated with this plugin, such as version.
+ * @type {JHud_PluginMetadata}
  */
-J.HUD.Metadata = {};
-J.HUD.Metadata.Version = '2.0.0';
-J.HUD.Metadata.Name = `J-HUD`;
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.HUD.PluginParameters = PluginManager.parameters(J.HUD.Metadata.Name);
+J.HUD.Metadata = new JHud_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.
@@ -47,20 +43,15 @@ J.HUD.Aliased = {
   Scene_Map: new Map(),
   DataManager: new Map(),
 };
-//endregion metadata
 
-/**
- * A global object for managing the hud.
- * @global
- * @type {HudManager}
- */
-var $hudManager = null;
+// pre-declare the hud manager global before DataManager creates the instance.
+globalThis.$hudManager ??= null;
 
 //region plugin commands
 /**
  * Plugin command for hiding the hud.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "hideHud", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'hideHud', () =>
 {
   $hudManager.requestHideHud();
 });
@@ -68,7 +59,7 @@ PluginManager.registerCommand(J.HUD.Metadata.Name, "hideHud", () =>
 /**
  * Plugin command for showing the hud.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "showHud", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'showHud', () =>
 {
   $hudManager.requestShowHud();
 });
@@ -76,7 +67,7 @@ PluginManager.registerCommand(J.HUD.Metadata.Name, "showHud", () =>
 /**
  * Plugin command for hiding allies in the hud.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "hideAllies", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'hideAllies', () =>
 {
   $hudManager.requestHideAllies();
 });
@@ -84,7 +75,7 @@ PluginManager.registerCommand(J.HUD.Metadata.Name, "hideAllies", () =>
 /**
  * Plugin command for showing allies in the hud.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "showAllies", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'showAllies', () =>
 {
   $hudManager.requestShowAllies();
 });
@@ -92,7 +83,7 @@ PluginManager.registerCommand(J.HUD.Metadata.Name, "showAllies", () =>
 /**
  * Plugin command for refreshing the hud.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "refreshHud", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'refreshHud', () =>
 {
   $hudManager.requestRefreshHud();
 });
@@ -100,9 +91,9 @@ PluginManager.registerCommand(J.HUD.Metadata.Name, "refreshHud", () =>
 /**
  * Plugin command for refreshing the hud's image cache.
  */
-PluginManager.registerCommand(J.HUD.Metadata.Name, "refreshImageCache", () =>
+PluginManager.registerCommand(J.HUD.Metadata.name, 'refreshImageCache', () =>
 {
   $hudManager.requestRefreshImageCache();
 });
 //endregion plugin commands
-//endregion introduction
+//endregion Introduction

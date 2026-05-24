@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 __TEMPLATE__] A plugin that does cool stuff.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A plugin that does cool stuff.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DEFAULT_SDP_PLUGIN_PARAMS } from './fixtures/engine-stubs.js';
 import { loadSdpPluginVm } from './sdp-vm.js';
 
-describe('J-SDP metadata (out/J-SDP.js)', () =>
+describe('J-SDP metadata (out/sdp/J-SDP.js)', () =>
 {
   let sandbox;
 

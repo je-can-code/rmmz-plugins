@@ -9,6 +9,8 @@ area: core
 
 Vitest + `test/` harnesses **already exist** (see `.junie/guidelines.md`: `bun run test`, shipped-plugin VMs, `_base`, `sdp`, `apt`, etc.). This backlog item is retargeted from “introduce testing” to **expand and standardize coverage** where gaps remain.
 
+All ships build via Vite (`bun run build:all` / `hotfix`); tests evaluate **`out/`** bundles, not source modules directly.
+
 ## Severity
 
 **Medium.** Missing tests slow refactors on high-risk areas (notes, save data, ABS loops).
@@ -25,7 +27,7 @@ Vitest + `test/` harnesses **already exist** (see `.junie/guidelines.md`: `bun r
 ## Remaining work / gaps
 
 - Add or extend coverage for: `PIXEL_CollisionManager` (if not already complete), new Popups core (`popups/core` models), JAFTING sessions post-refactor, and any plugin without a `*-vm.js` harness.
-- Build-tool scripts (`combine.js`, `copy.js`): optional pure-Node tests (mentioned in original scope).
+- Build-tool scripts (`copy.js`, `build-all.js`): optional pure-Node tests (mentioned in original scope).
 - **Boolean note audit** (completed: `.backlog/completed/boolean-notetag-regex-audit.md`): optional follow-up is extra targeted `RPGManager` / merge-path tests if desired.
 
 ## Prerequisites
@@ -35,4 +37,4 @@ Vitest + `test/` harnesses **already exist** (see `.junie/guidelines.md`: `bun r
 ## Notes
 
 - Do not attempt to unit-test entire prototype override chains; use integration/manual for those.
-- Pairs with `build-tools-linting.md` for CI gates.
+- Pairs with [`build-tools-linting.md`](../completed/build-tools-linting.md) (oxlint gates `hotfix`).

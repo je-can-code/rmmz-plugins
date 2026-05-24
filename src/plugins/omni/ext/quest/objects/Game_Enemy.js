@@ -1,4 +1,6 @@
 //region Game_Enemy
+import QuestManager from './../managers/QuestManager.js';
+
 /**
  * Extends {@link onDeath}.<br/>
  * Also processes quest checks for slain enemies.

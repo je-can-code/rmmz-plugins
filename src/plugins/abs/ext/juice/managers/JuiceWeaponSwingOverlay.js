@@ -1,4 +1,7 @@
 //region JuiceWeaponSwingOverlay
+import JuiceWeaponSwingMotionEffect from './../models/JuiceWeaponSwingMotionEffect.js';
+import JuiceProfileResolver from './../resolvers/JuiceProfileResolver.js';
+import JuiceMotionManager from './JuiceMotionManager.js';
 /**
  * Spawns a short-lived weapon icon sprite parented to a {@link Sprite_Character} and swings it.
  */
@@ -322,4 +325,5 @@ class JuiceWeaponSwingOverlay
     JuiceMotionManager.pushExternalEffect(motion);
   }
 }
+export default JuiceWeaponSwingOverlay;
 //endregion JuiceWeaponSwingOverlay

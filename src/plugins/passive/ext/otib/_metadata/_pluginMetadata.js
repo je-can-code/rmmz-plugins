@@ -36,4 +36,5 @@ class JPassiveOTIB_PluginMetadata
   }
 }
 
+export default JPassiveOTIB_PluginMetadata;
 //endregion plugin metadata

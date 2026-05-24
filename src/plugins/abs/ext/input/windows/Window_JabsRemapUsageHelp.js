@@ -35,4 +35,5 @@ class Window_JabsRemapUsageHelp
   }
 }
 
+export default Window_JabsRemapUsageHelp;
 //endregion Window_JabsRemapUsageHelp

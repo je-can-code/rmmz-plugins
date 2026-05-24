@@ -1,4 +1,9 @@
 //region JABS_BattlerCoreDataBuilder
+import JABS_EnemyAI from './JABS_EnemyAI.js';
+import JABS_BattlerRole from './JABS_BattlerRole.js';
+import JABS_BattlerCoreData from './JABS_BattlerCoreData.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_AI from './JABS_AI.js';
 /**
  * A builder for creating {@link JABS_BattlerCoreData}s.
  */
@@ -414,4 +419,5 @@ class JABS_BattlerCoreDataBuilder
   //endregion setters
 }
 
+export default JABS_BattlerCoreDataBuilder;
 //endregion JABS_BattlerCoreDataBuilder

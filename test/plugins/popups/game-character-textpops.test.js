@@ -20,7 +20,7 @@ describe('J-Popups Game_Character integration (out/popups/J-Popups.js)', () =>
 
   it('request/add/acknowledge flow tracks pops when not disabled', () =>
   {
-    sandbox.J.POPUPS.Metadata.DisablePopups = false;
+    sandbox.J.POPUPS.Metadata.disablePopups = false;
 
     const ch = new sandbox.Game_Character();
     ch.initMembers();
@@ -40,9 +40,9 @@ describe('J-Popups Game_Character integration (out/popups/J-Popups.js)', () =>
     expect(ch.getTextPops().length).toBe(0);
   });
 
-  it('does not track pops when DisableTextPops is true', () =>
+  it('does not track pops when disablePopups is true', () =>
   {
-    sandbox.J.POPUPS.Metadata.DisablePopups = true;
+    sandbox.J.POPUPS.Metadata.disablePopups = true;
 
     const ch = new sandbox.Game_Character();
     ch.initMembers();

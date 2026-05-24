@@ -1,11 +1,12 @@
 /* eslint-disable no-unused-vars */
 //region DataManager
+import JABS_Engine from './JABS_Engine.js';
 /**
  * The global reference for the `JABS_Engine` data object.
  * @type {JABS_Engine}
  * @global
  */
-var $jabsEngine = null;
+globalThis.$jabsEngine = null;
 
 /**
  * The global reference for the `Game_Enemies` data object.<br/>
@@ -15,14 +16,14 @@ var $jabsEngine = null;
  * @type {Game_Enemies}
  * @global
  */
-var $gameEnemies = null;
+globalThis.$gameEnemies = null;
 
 /**
  * The global reference for the `$dataMap` data object that contains all the replicable JABS actions.
  * @type {Map}
  * @global
  */
-var $actionMap = null;
+globalThis.$actionMap = null;
 
 /**
  * Extends {@link DataManager.createGameObjects}.<br>
@@ -39,10 +40,10 @@ DataManager.createGameObjects = function()
   DataManager.getSkillMasterMap();
 
   // instantiate the engine itself.
-  $jabsEngine = new JABS_Engine();
+  globalThis.$jabsEngine = new JABS_Engine();
 
   // setup the global access to the enemies database data.
-  $gameEnemies = new Game_Enemies();
+  globalThis.$gameEnemies = new Game_Enemies();
 };
 
 /**
@@ -89,7 +90,7 @@ DataManager.onMapGet = function(xhr, name, src, url)
 {
   if (xhr.status < 400)
   {
-    $actionMap = JSON.parse(xhr.responseText);
+    globalThis.$actionMap = JSON.parse(xhr.responseText);
   }
   else
   {

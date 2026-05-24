@@ -11,4 +11,5 @@ class DestinationData
   y2 = -1;
 }
 
+export default DestinationData;
 //endregion DestinationData

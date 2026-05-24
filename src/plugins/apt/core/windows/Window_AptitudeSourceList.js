@@ -151,4 +151,5 @@ class Window_AptitudeSourceList
   }
 }
 
+export default Window_AptitudeSourceList;
 //endregion Window_AptitudeSourceList

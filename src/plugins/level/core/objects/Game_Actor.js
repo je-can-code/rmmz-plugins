@@ -24,7 +24,7 @@ Game_Actor.prototype.initMembers = function()
    * The calculated max level of this actor.
    * @type {number}
    */
-  this._j._level._realMaxLevel = J_LevelPluginMetadata.EditorMaxLevel;
+  this._j._level._realMaxLevel = J.LEVEL.EditorMaxLevel;
 };
 
 Game_Actor.prototype.getRealMaxLevel = function()
@@ -119,7 +119,7 @@ Game_Actor.prototype.baseMaxLevel = function()
 Game_Actor.prototype.paramBase = function(paramId)
 {
   const rawLevel = Math.floor(this.getLevel());
-  const editorMax = J_LevelPluginMetadata.EditorMaxLevel;
+  const editorMax = J.LEVEL.EditorMaxLevel;
 
   if (rawLevel <= editorMax)
   {

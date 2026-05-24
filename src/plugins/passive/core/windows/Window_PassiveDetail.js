@@ -973,4 +973,6 @@ class Window_PassiveDetail
   //endregion rewards section
   //endregion draw
 }
+
+export default Window_PassiveDetail;
 //endregion Window_PassiveDetail

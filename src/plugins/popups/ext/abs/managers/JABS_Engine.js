@@ -1,4 +1,6 @@
 //region JABS_Engine
+import JABS_PopupManager from './JABS_PopupManager.js';
+
 /**
  * Extends {@link #postPrimaryBattleEffects}.<br/>
  * Also shows attack damage and skill-used popups on the affected battlers.

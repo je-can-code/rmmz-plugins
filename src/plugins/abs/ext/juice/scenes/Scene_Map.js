@@ -1,4 +1,5 @@
 //region Scene_Map (motion tick)
+import JuiceMotionManager from './../managers/JuiceMotionManager.js';
 /**
  * Extends {@link Scene_Map#update}.<br/>
  * Advances queued juice tweens after the map scene finishes its own update pass.

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadNaturalGrowthPluginVm, resetNaturalGrowthPluginSandbox } from './natural-vm.js';
 
-describe('J-NaturalGrowth Game_Enemy (out/J-NaturalGrowth.js)', () =>
+describe('J-NaturalGrowth Game_Enemy (out/natural/J-NaturalGrowth.js)', () =>
 {
   let sandbox;
 

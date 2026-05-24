@@ -1,4 +1,7 @@
 //region Window_StatusStatBreakdown
+import StatusParameter from './../_models/StatusParameter.js';
+import StatusHelper from './../helpers/StatusHelper.js';
+
 /**
  * A read-only window that explains where a stat comes from.
  */
@@ -2167,4 +2170,5 @@ class Window_StatusStatBreakdown
   //endregion layout helpers
 }
 
+export default Window_StatusStatBreakdown;
 //endregion Window_StatusStatBreakdown

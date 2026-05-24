@@ -36,4 +36,5 @@ class J_HUD_Quest_PluginMetadata
   }
 }
 
+export default J_HUD_Quest_PluginMetadata;
 //endregion plugin metadata

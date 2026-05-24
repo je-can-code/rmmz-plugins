@@ -4,7 +4,7 @@ const noop = function()
 };
 
 /**
- * Engine facades required for {@link out/J-CriticalFactors.js} after {@link out/J-NaturalGrowth.js}.
+ * Engine facades required for {@link out/crit/J-CriticalFactors.js} after {@link out/natural/J-NaturalGrowth.js}.
  *
  * @param {object} sandbox VM global object.
  */

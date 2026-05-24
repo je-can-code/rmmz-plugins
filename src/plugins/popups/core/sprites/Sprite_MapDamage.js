@@ -288,4 +288,5 @@ Sprite_MapDamage.prototype.updateChild = function(sprite)
 
   Sprite_Damage.prototype.updateChild.call(this, sprite);
 };
+export default Sprite_MapDamage;
 //endregion Sprite_MapDamage

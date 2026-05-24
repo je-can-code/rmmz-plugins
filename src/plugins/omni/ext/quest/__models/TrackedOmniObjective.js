@@ -1,4 +1,9 @@
 //region TrackedOmniObjective
+import QuestManager from './../managers/QuestManager.js';
+import OmniFulfillmentData from './OmniFulfillmentData.js';
+import OmniObjective from './OmniObjective.js';
+import OmniQuest from './OmniQuest.js';
+
 /**
  * A class representing the tracking for a single objective of a quest.
  */
@@ -735,4 +740,5 @@ TrackedOmniObjective.prototype.handleObjectiveUpdateLog = function()
 
 };
 
+export default TrackedOmniObjective;
 //endregion TrackedOmniObjective

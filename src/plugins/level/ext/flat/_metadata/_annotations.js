@@ -1,8 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc
- * [v1.0.0 LEVEL-FLAT] Flat per-level thresholds and map-based kill experience.
+ * @plugindesc [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Flat per-level thresholds and map-based kill experience.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

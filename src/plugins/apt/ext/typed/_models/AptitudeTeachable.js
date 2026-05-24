@@ -1,4 +1,5 @@
 //region AptitudeTeachable
+import ApTypeKey from './ApTypeKey.js';
 /**
  * Sets the AP type key for this teachable.
  * @param {ApTypeKey} apTypeKey - The AP type key to set.

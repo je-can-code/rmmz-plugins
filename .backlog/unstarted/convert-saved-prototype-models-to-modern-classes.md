@@ -16,6 +16,7 @@ polluting globals.
 
 - `SerializableRegistry` exists and `JsonEx._decode` consults it (registry-first, `window[...]` fallback).
 - A pilot model has been migrated and proven via tests (`JABS_HitstopData`).
+- **Vite + ESM ships (done):** source uses `class` + `export default` where applicable; see [`monorepo-vite-esm-plugin-migration.md`](../completed/monorepo-vite-esm-plugin-migration.md). This item is about **save-persisted** shapes, not the build pipeline.
 
 ## Goals
 

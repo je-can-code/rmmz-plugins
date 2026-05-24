@@ -19,7 +19,7 @@ area: architecture
 
 ## Context
 
-The directory is documented in guidelines as CA-exclusive. It still participates in the same combine pipeline as reusable plugins, so diffs here are easy to miss in cross-game testing.
+The directory is documented in guidelines as CA-exclusive. It still participates in the same Vite build pipeline as reusable plugins, so diffs here are easy to miss in cross-game testing.
 
 ## Work
 

@@ -1,6 +1,11 @@
 /* eslint-disable no-unused-vars */
 
 //region Game_Actor
+import RPG_State from './../database/implementations/RPG_State.js';
+import RPG_Skill from './../database/implementations/RPG_Skill.js';
+import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
+import RPG_Class from './../database/implementations/RPG_Class.js';
+import RPG_Actor from './../database/implementations/RPG_Actor.js';
 /**
  * Gets the parameter value from the "long" parameter id.
  *

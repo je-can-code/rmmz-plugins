@@ -3,12 +3,6 @@ class J_LevelPluginMetadata
   extends PluginMetadata
 {
   /**
-   * The maximum level definable in the level. Any level below this can be determined without extra calculations.
-   * @type {number}
-   */
-  static EditorMaxLevel = 99;
-
-  /**
    * Constructor.
    */
   constructor(name, version)
@@ -120,4 +114,5 @@ class J_LevelPluginMetadata
   }
 }
 
+export default J_LevelPluginMetadata;
 //endregion plugin metadata

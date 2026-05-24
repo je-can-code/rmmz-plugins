@@ -5,17 +5,20 @@ import vm from 'node:vm';
 
 import { repoRoot } from '../../../setup/repo-root.js';
 
-const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/__models');
+import { stripEsmForVm } from './strip-esm-for-vm.js';
+
+const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/__models');
 
 /**
- * Reads a bundled SDP `__models` source file (plugin layer is plain concatenated JS, not Node modules).
+ * Reads an SDP `__models` source file and strips ESM for VM evaluation.
  *
  * @param {string} filename
  * @returns {string}
  */
 function readSdpModelSource(filename)
 {
-  return fs.readFileSync(path.join(SDP_MODELS_DIR, filename), 'utf8');
+  const source = fs.readFileSync(path.join(SDP_MODELS_DIR, filename), 'utf8');
+  return stripEsmForVm(source);
 }
 
 /**

@@ -1,4 +1,7 @@
 //region Game_Enemy
+import RPG_Skill from './../database/implementations/RPG_Skill.js';
+import RPG_EnemyAction from './../database/_data/RPG_EnemyAction.js';
+import RPG_Enemy from './../database/implementations/RPG_Enemy.js';
 /**
  * Gets the battler id of this enemy from the database.
  * @returns {number}
