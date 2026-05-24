@@ -1,4 +1,5 @@
 //region DataManager
+import JABS_StandardController from './../_models/JABS_StandardController.js';
 J.ABS.EXT.INPUT.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);
 DataManager.createGameObjects = function()
 {

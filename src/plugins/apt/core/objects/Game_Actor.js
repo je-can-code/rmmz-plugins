@@ -1,4 +1,10 @@
 //region Game_Actor
+import AptitudeSkillSourceProgress from './../_models/AptitudeSkillSourceProgress.js';
+import AptitudeSkillAggregate from './../_models/AptitudeSkillAggregate.js';
+import AptitudeSkill from './../_models/AptitudeSkill.js';
+import AptitudeProgress from './../_models/AptitudeProgress.js';
+import AptitudeLearning from './../_models/AptitudeLearning.js';
+
 /**
  * Extends {@link #initMembers}.<br/>
  * Also initializes aptitude members.

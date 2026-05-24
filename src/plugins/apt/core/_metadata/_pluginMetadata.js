@@ -51,4 +51,5 @@ class JAptitude_PluginMetadata
   }
 }
 
+export default JAptitude_PluginMetadata;
 //endregion plugin metadata

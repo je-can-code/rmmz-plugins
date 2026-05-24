@@ -32,4 +32,5 @@ class JShield_PluginMetadata
   }
 }
 
+export default JShield_PluginMetadata;
 //endregion plugin metadata

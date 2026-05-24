@@ -1,4 +1,5 @@
 //region JABS_Battler
+import JABS_ChargingTier from './JABS_ChargingTier.js';
 /**
  * Extends {@link JABS_Battler.initBattleInfo}.<br>
  * Also initializes the charge-related data.

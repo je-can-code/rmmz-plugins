@@ -1,4 +1,6 @@
 //region OmniObjective
+import OmniObjectiveLogs from './OmniObjectiveLogs.js';
+import OmniFulfillmentData from './OmniFulfillmentData.js';
 /**
  * A class representing the data shape of a single objective on a quest.
  */
@@ -209,4 +211,5 @@ class OmniObjective
   }
 }
 
+export default OmniObjective;
 //endregion OmniObjective

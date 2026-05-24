@@ -1,4 +1,6 @@
 //region Scene_Menu
+import Scene_Passive from './Scene_Passive.js';
+
 /**
  * Extends {@link #createCommandWindow}.<br>
  * Wires the passive-menu symbol to the Passives viewer scene.

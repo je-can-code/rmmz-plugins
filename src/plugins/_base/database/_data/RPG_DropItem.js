@@ -122,4 +122,6 @@ class RPG_DropItem
   }
 }
 
+
+export default RPG_DropItem;
 //endregion RPG_DropItem

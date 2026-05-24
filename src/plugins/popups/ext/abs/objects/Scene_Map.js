@@ -1,4 +1,6 @@
 //region Scene_Map
+import JABS_PopupMergeController from './../managers/JABS_PopupMergeController.js';
+
 /**
  * Runs idle merge flush ticks while the map scene updates.
  */

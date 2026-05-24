@@ -45,4 +45,6 @@ Sprite_Face.prototype.loadBitmap = function()
   const sy = Math.floor(Math.floor(this._j._faceIndex / 4) * ph + (ph - sh) / 2);
   this.setFrame(sx, sy, pw, ph);
 };
+
+export default Sprite_Face;
 //endregion Sprite_Face

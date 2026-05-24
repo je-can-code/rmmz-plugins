@@ -194,4 +194,5 @@ class Sprite_BaseSkillSlot
   }
 }
 
+export default Sprite_BaseSkillSlot;
 //endregion Sprite_BaseSkillSlot

@@ -40,4 +40,6 @@ class StatusHelper
     return this.toPercentString(delta, true);
   }
 }
+
+export default StatusHelper;
 //endregion J.CMS_S.Helpers

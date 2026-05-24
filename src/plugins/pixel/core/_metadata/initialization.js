@@ -1,8 +1,10 @@
 //region initialization
+import JPixelistics_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 //region metadata
 /**
@@ -18,7 +20,7 @@ J.PIXEL.EXT ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.PIXEL.Metadata = new JPixelistics_PluginMetadata('J-Pixelistics', '1.0.1');
+J.PIXEL.Metadata = new JPixelistics_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

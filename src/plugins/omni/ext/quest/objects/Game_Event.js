@@ -1,4 +1,8 @@
 //region Game_Event
+import QuestManager from './../managers/QuestManager.js';
+import OmniQuest from './../__models/OmniQuest.js';
+import OmniConditional from './../__models/OmniConditional.js';
+
 /**
  * Extends {@link meetsConditions}.<br/>
  * Also includes the custom conditions that relate to a quest.

@@ -1,8 +1,30 @@
 //region initialization
+import J_CraftingCreatePluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
+
+//region version checks
+(() =>
+{
+  // Check to ensure we have the minimum required version of the J-Base plugin.
+  const requiredBaseVersion = '3.0.0';
+  const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
+  if (hasBaseRequirement === false)
+  {
+    throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
+  }
+
+  const requiredJaftingVersion = '2.1.0';
+  const hasJaftingRequirement = J.BASE.Helpers.satisfies(J.JAFTING.Metadata.version.version(), requiredJaftingVersion);
+  if (hasJaftingRequirement === false)
+  {
+    throw new Error(`Either missing J-JAFTING or has a lower version than the required: ${requiredJaftingVersion}`);
+  }
+})();
+//endregion version check
 
 /**
  * The plugin umbrella that governs all extensions related to the parent.
@@ -17,7 +39,7 @@ J.JAFTING.EXT.CREATE = {};
 /**
  * The metadata associated with this plugin.
  */
-J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata('J-JAFTING-Creation', '1.1.1');
+J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

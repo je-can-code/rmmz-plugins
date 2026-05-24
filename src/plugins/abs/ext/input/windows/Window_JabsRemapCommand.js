@@ -74,4 +74,5 @@ class Window_JabsRemapCommand
   }
 }
 
+export default Window_JabsRemapCommand;
 //endregion Window_JabsRemapCommand

@@ -1,4 +1,6 @@
 //region JuiceSquishMotionEffect
+import JuiceMotionManager from './../managers/JuiceMotionManager.js';
+import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
  * One-shot scale squash / stretch envelope on a sprite (body squish juice).
  */
@@ -66,4 +68,5 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
     return true;
   }
 }
+export default JuiceSquishMotionEffect;
 //endregion JuiceSquishMotionEffect

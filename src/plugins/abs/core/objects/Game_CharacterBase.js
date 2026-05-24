@@ -1,4 +1,5 @@
 //region Game_CharacterBase
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * Extends the {@link Game_CharacterBase.initMembers}.<br>
  * Allows custom move speeds and dashing.

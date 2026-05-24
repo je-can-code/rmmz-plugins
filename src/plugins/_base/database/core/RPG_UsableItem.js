@@ -1,3 +1,7 @@
+import RPG_SkillDamage from '../_data/RPG_SkillDamage.js';
+import RPG_UsableEffect from '../_data/RPG_UsableEffect.js';
+import RPG_BaseItem from '../base/RPG_BaseItem.js';
+
 //region RPG_UsableItem
 /**
  * A class representing the base properties for any usable item or skill
@@ -102,4 +106,6 @@ class RPG_UsableItem
   }
 }
 
+
+export default RPG_UsableItem;
 //endregion RPG_UsableItem

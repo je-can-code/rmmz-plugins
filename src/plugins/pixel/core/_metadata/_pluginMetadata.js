@@ -69,4 +69,6 @@ class JPixelistics_PluginMetadata
     this.OverlayInitiallyVisible = (this.parsedPluginParameters['overlayInitiallyVisible'] === 'true');
   }
 }
+
+export default JPixelistics_PluginMetadata;
 //endregion plugin metadata

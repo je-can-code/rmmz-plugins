@@ -1,4 +1,5 @@
 //region Scene_Map
+import Window_PartyFrame from '../windows/Window_PartyFrame.js';
 /**
  * Hooks into `initialize` to add our hud.
  */

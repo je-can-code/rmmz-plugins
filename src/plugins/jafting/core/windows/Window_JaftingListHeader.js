@@ -81,4 +81,6 @@ class Window_JaftingListHeader
   }
 }
 
+export default Window_JaftingListHeader;
+
 //endregion Window_JaftingListHeader

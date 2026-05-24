@@ -1,4 +1,6 @@
 //region JABS_PopupManager
+import JABS_PopupMergeController from './JABS_PopupMergeController.js';
+
 /**
  * A static utility for building and dispatching JABS-related map popups.
  * All methods delegate final dispatch to {@link TextPopManager}.
@@ -14,7 +16,7 @@ class JABS_PopupManager
   static showAttackPop(action, target, engine)
   {
     const character = target.getCharacter();
-    const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
+    const pop = this.buildDamagePop(action, target, engine);
     const caster = action.getCaster();
     const attackerUuid = caster.getUuid();
     const targetUuid = character.getJabsBattlerUuid();
@@ -175,7 +177,7 @@ class JABS_PopupManager
    */
   static showSkillUsedPop(action)
   {
-    if (J.POPUPS.EXT.ABS.DisableSkillUsedPopups === true)
+    if (J.POPUPS.EXT.ABS.Metadata.disableSkillUsedPopups === true)
     {
       return;
     }
@@ -457,4 +459,5 @@ class JABS_PopupManager
   }
 }
 
+export default JABS_PopupManager;
 //endregion JABS_PopupManager

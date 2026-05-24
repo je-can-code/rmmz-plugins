@@ -105,4 +105,5 @@ class JPassiveAbs_PluginMetadata
   }
 }
 
+export default JPassiveAbs_PluginMetadata;
 //endregion plugin metadata

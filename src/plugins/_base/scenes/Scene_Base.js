@@ -1,4 +1,6 @@
 //region Scene_Base
+import Window_Dimmer from '../windows/Window_Dimmer.js';
+
 /**
  * Default {@link Window#contentsOpacity} for {@link #showModalDimmer} / {@link #buildModalDimmerWindow} (0 = clear,
  * 255 = strongest tint). Raise for heavier dim; override with {@link #showModalDimmer}'s first argument per call.

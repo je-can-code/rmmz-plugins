@@ -133,4 +133,7 @@ class LevelScaling
   }
 }
 
+// publish for prototype aliases and tests that expect a global LevelScaling symbol after the Vite ship bundles.
+export default LevelScaling;
+
 //endregion LevelScaling

@@ -53,4 +53,6 @@ class Window_RefinementStepHint
   }
 }
 
+export default Window_RefinementStepHint;
+
 //endregion Window_RefinementStepHint

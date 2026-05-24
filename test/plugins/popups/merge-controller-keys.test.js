@@ -8,6 +8,22 @@ import { describe, expect, it } from 'vitest';
 import { repoRoot } from '../../setup/repo-root.js';
 
 /**
+ * Reads merge-controller source for VM eval (strips ESM export the browser ship does not use in isolation).
+ *
+ * @returns {string}
+ */
+function readMergeControllerSourceForVm()
+{
+  const mergePath = path.join(
+    repoRoot,
+    'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js',
+  );
+
+  return fs.readFileSync(mergePath, 'utf8')
+    .replace(/\nexport default JABS_PopupMergeController;\r?\n/, '\n');
+}
+
+/**
  * Minimal host surface so {@link src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js}
  * evaluates in isolation (merge key helpers + `start()` wiring).
  *
@@ -56,8 +72,10 @@ function installMergeControllerHarness(sandbox)
       },
       EXT: {
         ABS: {
-          MergeParams: {
-            idleFlushFrames: 90,
+          Metadata: {
+            mergeParams: {
+              idleFlushFrames: 90,
+            },
           },
         },
       },
@@ -99,14 +117,12 @@ describe('JABS_PopupMergeController (evaluated from src)', () =>
     installMergeControllerHarness(sandbox);
     vm.createContext(sandbox);
 
-    const mergePath = path.join(
-      repoRoot,
-      'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js',
-    );
-    const code = `${fs.readFileSync(mergePath, 'utf8')
+    const code = `${readMergeControllerSourceForVm()
     }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
 
-    vm.runInContext(code, sandbox, { filename: mergePath });
+    vm.runInContext(code, sandbox, {
+      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
+    });
 
     const Merge = sandbox.__jabsMergeControllerExport;
 
@@ -130,14 +146,12 @@ describe('JABS_PopupMergeController (evaluated from src)', () =>
     installMergeControllerHarness(sandbox);
     vm.createContext(sandbox);
 
-    const mergePath = path.join(
-      repoRoot,
-      'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js',
-    );
-    const code = `${fs.readFileSync(mergePath, 'utf8')
+    const code = `${readMergeControllerSourceForVm()
     }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
 
-    vm.runInContext(code, sandbox, { filename: mergePath });
+    vm.runInContext(code, sandbox, {
+      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
+    });
 
     const Merge = sandbox.__jabsMergeControllerExport;
 
@@ -154,14 +168,12 @@ describe('JABS_PopupMergeController (evaluated from src)', () =>
     installMergeControllerHarness(sandbox);
     vm.createContext(sandbox);
 
-    const mergePath = path.join(
-      repoRoot,
-      'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js',
-    );
-    const code = `${fs.readFileSync(mergePath, 'utf8')
+    const code = `${readMergeControllerSourceForVm()
     }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
 
-    vm.runInContext(code, sandbox, { filename: mergePath });
+    vm.runInContext(code, sandbox, {
+      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
+    });
 
     const Merge = sandbox.__jabsMergeControllerExport;
 

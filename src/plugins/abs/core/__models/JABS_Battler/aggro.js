@@ -1,4 +1,7 @@
 //region aggro
+import JABS_Battler from './_initialization.js';
+import JABS_AiManager from './../../managers/JABS_AiManager.js';
+import JABS_Aggro from './../JABS_Aggro.js';
 /**
  * Adjust the currently engaged target based on aggro.
  */

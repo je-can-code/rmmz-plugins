@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PASSIVE-OTIB] One-Time Item Boosts as permanent passive states.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] One-Time Item Boosts as permanent passive states.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadProfPluginVm } from './prof-vm.js';
 
-describe('J-Proficiency metadata and regex (out/J-Proficiency.js)', () =>
+describe('J-Proficiency metadata and regex (out/prof/J-Proficiency.js)', () =>
 {
   let sandbox;
 

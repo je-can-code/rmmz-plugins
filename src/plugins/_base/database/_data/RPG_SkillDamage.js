@@ -59,4 +59,6 @@ class RPG_SkillDamage
   }
 }
 
+
+export default RPG_SkillDamage;
 //endregion RPG_SkillDamage

@@ -1,8 +1,7 @@
 //region Introduction
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import J_ToolsPluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -17,7 +16,7 @@ var J = J || {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.6.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -31,51 +30,9 @@ var J = J || {};
 J.ABS.EXT.TOOLS = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The metadata associated with this plugin.
  */
-J.ABS.EXT.TOOLS.Metadata = {
-  /**
-   * The name of this plugin.
-   */
-  Name: `J-ABS-Tools`,
-
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.2',
-};
-
-/**
- * The plugin parameters for this plugin.
- */
-J.ABS.EXT.TOOLS.PluginParameters = PluginManager.parameters(J.ABS.EXT.TOOLS.Metadata.Name);
-
-/**
- * A continuation of the `metadata` for this plugin, typically containing additional content
- * that was derived from the plugin parameters.
- */
-J.ABS.EXT.TOOLS.Metadata = {
-  // include the original metadata.
-  ...J.ABS.EXT.TOOLS.Metadata,
-
-  /**
-   * The behavior for whether or not the player can gap close to anything they hit, or if they
-   * can only gap close to targets bearing the "gap close target" tag.
-   */
-  CanGapCloseByDefault: J.ABS.EXT.TOOLS.PluginParameters['canGapCloseByDefault'] === 'true',
-
-  /**
-   * Whether or not grab and throw functionality is enabled globally by default.
-   * @type {boolean}
-   */
-  GrabThrowEnabled: J.ABS.EXT.TOOLS.PluginParameters['grabThrowEnabled'] !== 'false',
-
-  /**
-   * Whether or not the throw direction is always fixed regardless of input.
-   * @type {boolean}
-   */
-  DirectionFixAlways: J.ABS.EXT.TOOLS.PluginParameters['directionFixAlways'] === 'true',
-};
+J.ABS.EXT.TOOLS.Metadata = new J_ToolsPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

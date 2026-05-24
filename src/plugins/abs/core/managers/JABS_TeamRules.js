@@ -1,4 +1,5 @@
 //region JABS_TeamRules
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
  * A static class for resolving team relationships between battlers.
  *
@@ -117,4 +118,5 @@ class JABS_TeamRules
  * @property {string=} name An optional display name for this team.
  * @property {number[]=} opposes The list of team ids that this team treats as opposed.
  */
+export default JABS_TeamRules;
 //endregion typedefs

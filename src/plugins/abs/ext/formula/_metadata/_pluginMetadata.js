@@ -36,4 +36,5 @@ class JFORMULA_PluginMetadata
   }
 }
 
+export default JFORMULA_PluginMetadata;
 //endregion plugin metadata

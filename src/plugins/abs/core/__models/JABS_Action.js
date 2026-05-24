@@ -1,4 +1,11 @@
 //region JABS_Action
+import JABS_Timer from './JABS_Timer.js';
+import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
+import JABS_Engine from './../managers/JABS_Engine.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
+import JABS_ActionOptions from './JABS_ActionOptions.js';
+import JABS_ActionBuilder from './JABS_ActionBuilder.js';
 /**
  * An object that binds a `Game_Action` to a `Game_Event` on the map.
  */
@@ -1541,4 +1548,5 @@ class JABS_Action
   static Builder = () => new JABS_ActionBuilder();
 }
 
+export default JABS_Action;
 //endregion JABS_Action

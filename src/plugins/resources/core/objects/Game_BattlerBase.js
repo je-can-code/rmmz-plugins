@@ -1,4 +1,6 @@
 //region Game_BattlerBase
+import ResourceCostManager from './../managers/ResourceManager.js';
+
 //region hcr
 /**
  * Gets the hp cost reduction for this battler.

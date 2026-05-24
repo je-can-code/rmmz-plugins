@@ -1,4 +1,6 @@
 //region Scene_Menu (APT)
+import Scene_Aptitude from './Scene_Aptitude.js';
+
 /**
  * Extends {@link #createCommandWindow}.</br>
  * Adds a handler for the Aptitude menu command.

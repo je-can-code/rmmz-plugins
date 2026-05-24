@@ -1,4 +1,5 @@
 //region JABS_SkillSlot
+import JABS_Cooldown from './JABS_Cooldown.js';
 /**
  * This class represents a single skill slot handled by the skill slot manager.
  */
@@ -604,4 +605,5 @@ JABS_SkillSlot.prototype.canBeAutocleared = function()
 
   return !noAutoclearSlots.includes(this.key);
 };
+export default JABS_SkillSlot;
 //endregion JABS_SkillSlot

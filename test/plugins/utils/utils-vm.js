@@ -3,10 +3,10 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installUtilsEngineStubs } from './fixtures/engine-stubs.js';
 
-export const UTILS_OUT_FILENAME = 'J-SystemUtilities.js';
+export const UTILS_OUT_FILENAME = 'utils/J-SystemUtilities.js';
 
 /**
- * Loads {@link out/J-SystemUtilities.js} with J-Base and harness.
+ * Loads {@link out/utils/J-SystemUtilities.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

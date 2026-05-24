@@ -332,3 +332,5 @@ class Window_QuestopediaDescription
     this.drawIcon(objective.iconIndexByState(), x, logY);
   }
 }
+
+export default Window_QuestopediaDescription;

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { loadNaturalGrowthPluginVm, resetNaturalGrowthPluginSandbox } from './natural-vm.js';
 import { wrapActorRefreshCounter } from './test-helpers.js';
 
-describe('J-NaturalGrowth Game_Actor (out/J-NaturalGrowth.js)', () =>
+describe('J-NaturalGrowth Game_Actor (out/natural/J-NaturalGrowth.js)', () =>
 {
   let sandbox;
 
@@ -36,6 +36,22 @@ describe('J-NaturalGrowth Game_Actor (out/J-NaturalGrowth.js)', () =>
     expect(actor.paramBase(2)).toBe(17);
     expect(actor.xparam(0)).toBeCloseTo(1.25);
     expect(actor.sparam(0)).toBe(3);
+  });
+
+  it('onBattlerDataChange refreshes buff plus when the formula uses a.level', () =>
+  {
+    const actor = new sandbox.Game_Actor();
+    actor._level = 1;
+    actor.__testNoteSources = [ { note: '<hitBuffPlus:[15+(a.level * 4)]>' } ];
+    actor.initMembers();
+    actor.refreshAllParameterBuffs();
+
+    expect(actor.xParamBuffPlus(0)).toBeCloseTo(0.19);
+
+    actor._level = 2;
+    actor.onBattlerDataChange();
+
+    expect(actor.xParamBuffPlus(0)).toBeCloseTo(0.23);
   });
 
   it('setup and onBattlerDataChange each trigger refreshAllParameterBuffs', () =>

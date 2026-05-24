@@ -1,8 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc
- * [v1.0.0 RESOURCES] Extends skill cost/gain system to include HP, MP, and TP.
+ * @plugindesc [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Extends skill cost/gain system to include HP, MP, and TP.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

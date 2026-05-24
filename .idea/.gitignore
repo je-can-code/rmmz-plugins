@@ -1,0 +1,6 @@
+# Whitelist: only Project code style is shared in git.
+# Everything else under .idea stays local (workspace, inspections, modules, etc.).
+*
+!.gitignore
+!codeStyles/
+!codeStyles/**

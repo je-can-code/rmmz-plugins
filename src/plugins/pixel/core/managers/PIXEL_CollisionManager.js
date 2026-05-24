@@ -609,4 +609,6 @@ PIXEL_CollisionManager.GridShiftX = 0;
  * @type {number}
  */
 PIXEL_CollisionManager.GridShiftY = 0;
+
+export default PIXEL_CollisionManager;
 //endregion PIXEL_CollisionManager

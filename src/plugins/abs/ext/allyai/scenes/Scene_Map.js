@@ -1,4 +1,6 @@
 //region Scene_Map
+import Window_Formations from './../windows/Window_Formations.js';
+import JABS_Formation from './../_models/JABS_Formation.js';
 //region init
 /**
  * Extends the JABS menu initialization to include the new ally ai management selection.

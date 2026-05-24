@@ -1,4 +1,7 @@
 //region JABS_SkillSlotManager
+import JABS_SkillSlot from './JABS_SkillSlot.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * A class responsible for managing the skill slots on an actor.
  */
@@ -482,4 +485,5 @@ JABS_SkillSlotManager.prototype.clearOffhandPin = function()
   this.setOffhandPinnedSkillId(0);
 };
 //endregion offhand pin
+export default JABS_SkillSlotManager;
 //endregion JABS_SkillSlotManager

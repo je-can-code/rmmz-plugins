@@ -14,4 +14,5 @@ class JuiceStyleMultiplierRow
     this.swingMul = swingMul;
   }
 }
+export default JuiceStyleMultiplierRow;
 //endregion JuiceStyleMultiplierRow

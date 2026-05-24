@@ -1,4 +1,5 @@
 //region JABS_LocationBuilder
+import JABS_Location from './JABS_Location.js';
 /**
  * A builder for creating {@link JABS_Location}s.
  */
@@ -131,4 +132,5 @@ class JABS_LocationBuilder
   }
 }
 
+export default JABS_LocationBuilder;
 //endregion JABS_LocationBuilder

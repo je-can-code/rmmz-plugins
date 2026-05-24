@@ -1,6 +1,5 @@
 //region initialization
 import J_RegionEffectsPluginMetadata from './_pluginMetadata.js';
-import { PLUGIN_NAME, PLUGIN_VERSION } from "./meta.js";
 
 /**
  * The core where all of my extensions live = in the `J` object.
@@ -41,7 +40,7 @@ J.REGIONS.Helpers.translateRegionIds = regionsBlob =>
 /**
  * The `metadata` associated with this plugin; such as version.
  */
-J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata(PLUGIN_NAME, PLUGIN_VERSION);
+J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

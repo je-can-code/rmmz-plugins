@@ -1,4 +1,5 @@
 //region AptitudeSkill
+import AptitudeProgress from './AptitudeProgress.js';
 /**
  * The structure of an object and the skill that was learned.
  * @param {skillId} skillId The skill id that was learned.
@@ -73,4 +74,5 @@ AptitudeSkill.prototype.learnedFrom = function()
   // TODO: map this to something meaningful for output.
   return this._learnedFrom;
 };
+export default AptitudeSkill;
 //endregion AptitudeSkill

@@ -1,4 +1,10 @@
 //region RPGManager
+import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
+import RPG_BaseBattler from './../database/core/RPG_BaseBattler.js';
+import RPG_Base from './../database/base/RPG_Base.js';
+import JsonMapper from './../_utilities/JsonMapper.js';
+import ArrayHelper from './../_utilities/ArrayHelper.js';
+
 /**
  * A utility class for handling common database-related translations.
  */
@@ -588,7 +594,7 @@ class RPGManager
     }
 
     // define the unique key for this regex and option set.
-    const key = `eval:${structure.source}::${structure.flags}::${baseParam}::${context}::nullIfEmpty=${nullIfEmpty}`;
+    const key = `eval:${structure.source}::${structure.flags}::${baseParam}${this.#getEvalCacheContextSuffix(context)}::nullIfEmpty=${nullIfEmpty}`;
 
     // grab the result (potentially cached).
     return this.cached(
@@ -596,6 +602,32 @@ class RPGManager
       key,
       () => this.#getResultFromNoteByRegex(databaseData, structure, baseParam, context, nullIfEmpty)
     );
+  }
+
+  /**
+   * Builds a cache-key fragment for formula evaluation when battler context can change.
+   * Without this, {@code a.level} (and similar) would stay frozen at the first value cached per note object.
+   * @param {RPG_BaseBattler|null} context The formula context ("a").
+   * @returns {string} Suffix to append to eval cache keys, or empty when there is no context.
+   */
+  static #getEvalCacheContextSuffix(context)
+  {
+    if (context === null || context === undefined)
+    {
+      return '';
+    }
+
+    if (typeof context.getLevel === 'function')
+    {
+      return `::ctxLvl=${context.getLevel()}`;
+    }
+
+    if (typeof context.level === 'number')
+    {
+      return `::ctxLvl=${context.level}`;
+    }
+
+    return '';
   }
 
   /**
@@ -1282,4 +1314,6 @@ class RPGManager
   }
 }
 
+
+export default RPGManager;
 //endregion RPGManager

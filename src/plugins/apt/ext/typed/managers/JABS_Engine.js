@@ -1,4 +1,7 @@
 //region JABS_Engine
+import ApTypeKey from './../_models/ApTypeKey.js';
+import ApTypeGrant from './../_models/ApTypeGrant.js';
+
 if (J.ABS)
 {
   /**

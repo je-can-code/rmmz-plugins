@@ -1,4 +1,7 @@
 //region JABS_BattlerCoreData
+import JABS_EnemyAI from './JABS_EnemyAI.js';
+import JABS_BattlerRole from './JABS_BattlerRole.js';
+import JABS_BattlerCoreDataBuilder from './JABS_BattlerCoreDataBuilder.js';
 /**
  * A class containing all the data extracted from the comments of an event's
  * comments and contained with friendly methods to access and manipulate.
@@ -297,4 +300,5 @@ JABS_BattlerCoreData.Builder = function()
 {
   return new JABS_BattlerCoreDataBuilder();
 };
+export default JABS_BattlerCoreData;
 //endregion JABS_BattlerCoreData

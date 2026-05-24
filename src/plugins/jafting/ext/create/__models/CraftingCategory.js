@@ -76,4 +76,6 @@ class CraftingCategory
   }
 }
 
+export default CraftingCategory;
+
 //endregion CraftingCategory

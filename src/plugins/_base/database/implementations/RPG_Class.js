@@ -1,3 +1,6 @@
+import RPG_ClassLearning from '../_data/RPG_ClassLearning.js';
+import RPG_Traited from '../base/RPG_Traited.js';
+
 //region RPG_Class
 /**
  * A class representing a RPG-relevant class from the database.
@@ -64,4 +67,6 @@ class RPG_Class
   }
 }
 
+
+export default RPG_Class;
 //endregion RPG_Class

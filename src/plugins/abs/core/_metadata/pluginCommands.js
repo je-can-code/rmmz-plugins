@@ -1,8 +1,11 @@
 //region Plugin Command Registration
+import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
+import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
+
 /**
  * Plugin command for enabling JABS.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable JABS", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Enable JABS", () =>
 {
   $jabsEngine.absEnabled = true;
 });
@@ -10,7 +13,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable JABS", () =>
 /**
  * Plugin command for disabling JABS.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Disable JABS", () =>
 {
   $jabsEngine.absEnabled = false;
 });
@@ -18,7 +21,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable JABS", () =>
 /**
  * Plugin command for requesting a toggling of the hitbox overlay visibility.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "toggleHitboxOverlays", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "toggleHitboxOverlays", () =>
 {
   $jabsEngine.requestToggleHitboxOverlays = true;
 });
@@ -26,7 +29,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "toggleHitboxOverlays", () =>
 /**
  * Plugin command for assigning and locking a skill to a designated slot.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Set JABS Skill", args =>
 {
   // extract the values out of the various args.
   const {
@@ -84,7 +87,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Set JABS Skill", args =>
 /**
  * Plugin command for unlocking a specific JABS skill slot.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock JABS Skill Slot", args =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock JABS Skill Slot", args =>
 {
   const leader = $gameParty.leader();
   if (!leader)
@@ -101,7 +104,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock JABS Skill Slot", arg
 /**
  * Plugin command for unlocking all JABS skill slots.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock All JABS Skill Slots", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock All JABS Skill Slots", () =>
 {
   const leader = $gameParty.leader();
   if (!leader)
@@ -116,7 +119,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Unlock All JABS Skill Slots"
 /**
  * Plugin command for cycling through party members forcefully.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Rotate Party Members", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Rotate Party Members", () =>
 {
   JABS_InputAdapter.performPartyCycling(true);
 });
@@ -124,7 +127,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Rotate Party Members", () =>
 /**
  * Plugin command for disabling the ability to rotate party members.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable Party Rotation", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Disable Party Rotation", () =>
 {
   $gameParty.disablePartyCycling();
 });
@@ -132,7 +135,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Disable Party Rotation", () 
 /**
  * Plugin command for enabling the ability to rotate party members.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable Party Rotation", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Enable Party Rotation", () =>
 {
   $gameParty.enablePartyCycling();
 });
@@ -140,7 +143,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Enable Party Rotation", () =
 /**
  * Plugin command for updating the JABS menu.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Refresh JABS Menu", () =>
 {
   $jabsEngine.requestJabsMenuRefresh = true;
 });
@@ -151,7 +154,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Refresh JABS Menu", () =>
  * Positive {@code frames} starts or refreshes GCD for that battler; zero or invalid clears it. Actors
  * not represented on the map are skipped with a console warning.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Apply Global Cooldown", args =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Apply Global Cooldown", args =>
 {
   const { actorId, frames } = args;
   const actor = $gameActors.actor(parseInt(actorId, 10));
@@ -169,7 +172,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Apply Global Cooldown", args
  * Registers a plugin command for dynamically spawning an enemy onto the map.
  * The enemy spawned will be a clone from the enemy clone map.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Enemy", args =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Spawn Enemy", args =>
 {
   // extract the eventId and coordinates from the plugin args.
   const {
@@ -207,7 +210,7 @@ PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Enemy", args =>
 /**
  * Registers a plugin command for dynamically spawning loot onto the map.
  */
-PluginManager.registerCommand(J.ABS.Metadata.Name, "Spawn Loot", args =>
+PluginManager.registerCommand(J.ABS.Metadata.name, "Spawn Loot", args =>
 {
   // extract the eventId and coordinates from the plugin args.
   const {

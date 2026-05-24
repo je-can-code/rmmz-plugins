@@ -1,4 +1,5 @@
 //region Scene_Map
+import Window_InputFrame from '../windows/Window_InputFrame.js';
 /**
  * Hooks into `initialize` to add our hud.
  */

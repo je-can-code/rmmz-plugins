@@ -1,4 +1,6 @@
 //region Scene_Skill
+import Window_SkillDetail from '../windows/Window_SkillDetail.js';
+
 J.CMS_K.Aliased.Scene_Skill.initialize = Scene_Skill.prototype.initialize;
 Scene_Skill.prototype.initialize = function()
 {

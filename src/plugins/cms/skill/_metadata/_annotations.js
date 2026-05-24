@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 CMS_K] A redesign of the skill menu.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A redesign of the skill menu.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

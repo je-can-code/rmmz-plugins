@@ -1,4 +1,7 @@
 //region dodging
+import JABS_Battler from './_initialization.js';
+import JABS_AiManager from './../../managers/JABS_AiManager.js';
+import JABS_ActionOptions from './../JABS_ActionOptions.js';
 //region properties
 /**
  * Gets whether or not this battler is dodging.

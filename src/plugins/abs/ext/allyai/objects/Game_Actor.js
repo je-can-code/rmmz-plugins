@@ -1,4 +1,6 @@
 //region Game_Actor
+import JABS_AllyAI from './../_models/JABS_AllyAI.js';
+
 /**
  * Extends {@link #initMembers}.<br>
  * Also tracks JABS ally AI.

@@ -1,4 +1,5 @@
 //region JABS_Battler
+import JABS_AllyAI from './JABS_AllyAI.js';
 /**
  * Generates a `JABS_Battler` for an actor ally bound to a follower character.
  * Uses the actor's own core configuration.

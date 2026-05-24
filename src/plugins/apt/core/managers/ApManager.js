@@ -1,4 +1,6 @@
 //region ApManager
+import AptitudeTeachable from './../_models/AptitudeTeachable.js';
+
 class ApManager
 {
   /**
@@ -358,4 +360,5 @@ class ApManager
   }
 }
 
+export default ApManager;
 //endregion ApManager

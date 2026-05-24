@@ -123,4 +123,6 @@ class RPG_UsableEffect
   }
 }
 
+
+export default RPG_UsableEffect;
 //endregion RPG_UsableEffect

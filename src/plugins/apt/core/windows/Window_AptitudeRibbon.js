@@ -133,4 +133,5 @@ class Window_AptitudeRibbon
   //endregion draw
 }
 
+export default Window_AptitudeRibbon;
 //endregion Window_AptitudeRibbon

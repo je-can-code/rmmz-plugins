@@ -1,4 +1,5 @@
 //region JaftingSalvageDataModels
+import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 /**
  * Concrete JAFTING salvage ledger models (rows, per-unit snapshots, party keyed bags).<br>
  * <br>
@@ -271,4 +272,11 @@ class JaftingSalvagePartyLedgerBag
 
 SerializableRegistry.register(JaftingSalvagePartyLedgerBag);
 
+export {
+  JaftingSalvageLedgerRow,
+  JaftingSalvageLedgerSnapshot,
+  JaftingSalvagePartyLedgerBag,
+};
+
+export default JaftingSalvageLedgerRow;
 //endregion JaftingSalvageDataModels

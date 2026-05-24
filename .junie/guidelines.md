@@ -28,17 +28,16 @@
     * `clearRpgManagerCacheInVm(sandbox)` resets `RPGManager` WeakMap caches between examples when tags mutate on the same object reference.
 * When providing code samples, provide full-method drop-in replacements including the updated logic, and specify the
   file, path, and line the method starts on for clarity- this is a huge codebase.
-* This project does not support modules, we purely use prototypes and sequential ordering of code, but can use whatever
-  a browser/nodejs may have available in 2025.
-    * Do not use import/export in files under `/src/plugins/**`.
-    * `import`/`export` may be used in `/src/build-tools` and `/src/defs` if already present in the repo’s patterns.
+* **All 69 ships are Vite-built.** Source under `src/plugins/**` uses ESM (`import` / `export default`, `entry.js`, `_metadata/meta.js`). Rolldown emits one bundled `.js` per ship into `out/` — no runtime `import` in what RMMZ loads.
+    * `import`/`export` in `/src/build-tools` and `/src/defs` follows normal Node ESM.
+    * `PluginManager.registerCommand` must use **`J.*.Metadata.name`** (lowercase), not `.Name`, except where J-Base’s legacy `Metadata.Name` alias is intentional.
 * This project does not use IIFEs, instead we leverage object-driven namespacing (such as `J.ABS.EXT.SHIELD` etc) and
   aliasing.
 * Do not use ternary operators with `typeof something` to check if functions or properties exist- instead just open the
   file and review what the actual functions are.
     * If a function or property is missing- but necessary- provide implementation for them if nothing else satisfies the
       need (such as a function or property with a different name that accomplishes the same thing).
-* Never add arbitrary nested blocks that violate that violate eslint "no-lone-blocks" rule.
+* Never add arbitrary nested blocks that violate the oxlint `no-lone-blocks` rule.
 * Any time you're about tell me "make sure this exists somewhere..." or "ensure you implement this...", instead go look
   around and see if it exists or is already implemented, or warn me that its not if its not anywhere.
 * It is forbidden to include anything that would or should live in "initialization.js" inside of any of the other source
@@ -58,8 +57,7 @@
 * You should never need to execute any commands related to package.json- they are all for compiling the plugins.
 * Target ESNext- I keep all my plugins on the latest stable Node.js and so anything that reaches mainstream should be
   available.
-    * The project policy forbids module syntax for anything in the `/src/plugins/**` directory; also avoid features that
-      require compilation/transformations in the plugin layer.
+    * Source in `/src/plugins/**` uses ESM between files; the **shipped** plugin file is a single bundled script. Avoid syntax the Rolldown target cannot emit for MZ (e.g. top-level `await` in hot paths if unsupported).
 * Engine globals guard policy
     * Never guard in any way, unless explicitly instructed to do so.
     * Even when explicitly instructed to, always ask for clarification about the guarding to ensure no useless checks are written.
@@ -67,13 +65,12 @@
 ## Project Structure
 
 * `/docs` - Contains various markdown documentation relating to the plugins, but is mostly incomplete.
-* `/project` - Contains a test project that is largely deprecated and shouldn't be used or referenced at this time.
+* `/project` - In-repo MZ project; **`project/js/plugins/`** holds committed Vite build output mirrored from `out/`. Chef Adventure is the main playtest copy (`bun run copy:to-ca`).
 * `/src` - Contains the source code for the plugins as well as a number of other niceties like custom build tools and
   type definitions.
-    * `/src/build-tools` - a few custom build tools used in the root `package.json` file.
+    * `/src/build-tools` - Vite orchestration (`build-all`, `copy`, `init`, MZ header plugin, engine defs generator). See root `README.md`.
     * `/src/defs` - where custom definitions live representing much of the RPG Maker MZ core definitions.
-    * `/src/plugin-template` - a directory containing a structure that is cloned when generating new plugins into the
-      `src/plugins` directory.
+    * `/src/plugin-template` - Vite ship scaffold (`entry.js`, `vite.config.js`, `_metadata/meta.js`); cloned by `bun run plugin:init`. See `SCAFFOLD.md` in the new folder for rename/build steps.
     * `/src/plugins` - A parent directory of all plugins, where each child directory represents a plugin or plugin w/
       extension plugins.
         * `/src/plugins/__ca-mods` - A plugin that contains modifications to various other plugins that are exclusive to
@@ -291,7 +288,7 @@ To avoid confusion between augmenting existing implementations and creating new 
 ## Code Formatting Style
 
 * There should never be more than one class (prototype-based or modern) in a single file.
-* All drop-in code replacements should obey the eslint rules of the project wtihout exception.
+* All drop-in code replacements should obey the oxlint rules of the project (`.oxlintrc.json`) and workspace style without exception.
 * When possible, almost every line should have an inline comment above it, describing what it does using proper sentence
   casing.
     * Examples of this are plentiful throughout the codebase.

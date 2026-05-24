@@ -1,4 +1,5 @@
 //region JABS_Aggro
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * A tracker for managing the aggro for this particular battler and its owner.
  */
@@ -122,4 +123,5 @@ JABS_Aggro.prototype.isForLivingActor = function()
   // the aggro's target is a living actor.
   return true;
 };
+export default JABS_Aggro;
 //endregion JABS_Aggro

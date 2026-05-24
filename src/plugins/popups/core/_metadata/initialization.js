@@ -1,7 +1,10 @@
+//region initialization
+import J_PopupsPluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -9,19 +12,9 @@ var J = J || {};
 J.POPUPS = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The metadata associated with this plugin.
  */
-J.POPUPS.Metadata = {};
-J.POPUPS.Metadata.Name = `J-Popups`;
-J.POPUPS.Metadata.Version = '2.1.0';
-
-J.POPUPS.PluginParameters = PluginManager.parameters('J-Popups');
-
-/**
- * When true, queued map popups are suppressed.
- * @type {boolean}
- */
-J.POPUPS.Metadata.DisablePopups = Boolean(J.POPUPS.PluginParameters['disablePopups'] === 'true');
+J.POPUPS.Metadata = new J_PopupsPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * Namespace for optional first-party extensions (J-Popups-ABS, J-Popups-APT, …).
@@ -266,5 +259,4 @@ J.POPUPS.notifyMergeFlushAll = function(reason)
     reason,
   });
 };
-//endregion J_PopupsEvents
-//endregion Introduction
+//endregion initialization

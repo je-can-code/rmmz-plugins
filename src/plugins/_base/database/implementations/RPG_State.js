@@ -1,3 +1,5 @@
+import RPG_Traited from '../base/RPG_Traited.js';
+
 //region RPG_State
 /**
  * An class representing a single state from the database.
@@ -217,4 +219,6 @@ class RPG_State
   }
 }
 
+
+export default RPG_State;
 //endregion RPG_State

@@ -226,4 +226,6 @@ class RPG_Base
   //endregion typing
 }
 
+
+export default RPG_Base;
 //endregion RPG_Base

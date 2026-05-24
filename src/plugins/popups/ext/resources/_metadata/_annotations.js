@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 POPUPS-RESOURCES] Skill cost and resource gain popups.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Skill cost and resource gain popups.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

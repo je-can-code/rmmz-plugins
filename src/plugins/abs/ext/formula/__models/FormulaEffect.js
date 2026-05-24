@@ -357,4 +357,5 @@ class FormulaEffect
   }
 }
 
+export default FormulaEffect;
 //endregion FormulaEffect

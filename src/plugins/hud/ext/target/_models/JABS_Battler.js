@@ -1,4 +1,6 @@
 //region JABS_Battler
+import FramedTarget from './FramedTarget.js';
+import FramedTargetConfiguration from './FramedTargetConfiguration.js';
 /**
  * Sets the last battler struck by this battler.
  * @param {JABS_Battler} battlerLastHit The battler that is being set as last struck.

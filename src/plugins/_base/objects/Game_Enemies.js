@@ -36,4 +36,6 @@ class Game_Enemies
   }
 }
 
+
+export default Game_Enemies;
 //endregion Game_Enemies

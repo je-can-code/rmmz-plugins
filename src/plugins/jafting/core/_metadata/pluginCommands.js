@@ -1,4 +1,7 @@
 //region plugin commands
+import Scene_Jafting from '../scenes/Scene_Jafting.js';
+import Scene_JaftingSalvage from '../scenes/Scene_JaftingSalvage.js';
+
 /**
  * A plugin command.<br>
  * Calls the core JAFTING menu.

@@ -1,4 +1,6 @@
 //region Window_AbsMenuSelect
+import JABS_AllyAI from './../_models/JABS_AllyAI.js';
+
 /**
  * Extends {@link Window_AbsMenuSelect#initialize}.<br/>
  * Also initializes the ally AI members.

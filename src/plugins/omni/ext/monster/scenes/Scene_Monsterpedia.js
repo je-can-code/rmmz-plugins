@@ -1,6 +1,9 @@
 /**
  * A scene for interacting with the Monsterpedia.
  */
+import Window_MonsterpediaList from '../windows/Window_MonsterpediaList.js';
+import Window_MonsterpediaDetail from '../windows/Window_MonsterpediaDetail.js';
+
 class Scene_Monsterpedia
   extends Scene_MenuBase
 {
@@ -422,3 +425,5 @@ class Scene_Monsterpedia
 
   //endregion actions
 }
+
+export default Scene_Monsterpedia;

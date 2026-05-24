@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 CMS_S] A redesign of the status menu for chef adventure.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A redesign of the status menu for chef adventure.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

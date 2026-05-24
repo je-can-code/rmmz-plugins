@@ -1,4 +1,5 @@
 //region Window_Base
+import ApTypeKey from './../_models/ApTypeKey.js';
 /**
  * Draws a compact typed AP badge (icon + [label]) right-aligned within the left column.
  * @param {ApTypeKey} apTypeKey - The typed key to render.

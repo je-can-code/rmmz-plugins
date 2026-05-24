@@ -1,4 +1,5 @@
 //region J_PopupNumericDisplay
+import TextPopBuilder from './../_models/TextPopBuilder.js';
 /**
  * Strips IEEE-754 dust from purely numeric popup labels immediately before bitmap draw.
  *

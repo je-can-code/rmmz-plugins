@@ -1,4 +1,6 @@
 //region ApTypeGrant
+import ApTypeKey from './ApTypeKey.js';
+
 /**
  * Represents a typed AP grant consisting of a `domain`, an `id`, and an `amount`.
  * Used for explicit typed AP reward lines parsed off enemies.
@@ -51,4 +53,5 @@ class ApTypeGrant
     return new ApTypeKey(this.domain, this.id);
   }
 }
+export default ApTypeGrant;
 //endregion ApTypeGrant

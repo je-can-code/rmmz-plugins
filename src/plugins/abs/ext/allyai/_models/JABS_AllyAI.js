@@ -608,4 +608,5 @@ JABS_AllyAI.prototype.decideCautiousOffense = function(usableSkills, user, targe
 //endregion offense
 
 //endregion decide action
+export default JABS_AllyAI;
 //endregion JABS_AllyAI

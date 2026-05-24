@@ -1,4 +1,7 @@
 //region JABS_HitboxPulseManager (static)
+import JABS_HitboxPulseOptions from './../__models/JABS_HitboxPulseOptions.js';
+import JABS_Action from './../__models/JABS_Action.js';
+import Sprite_HitboxPulse from './../sprites/Sprite_HitboxPulse.js';
 /**
  * A static manager that owns lightweight hitbox "pulses" for resolved JABS actions.
  * Uses a small pool to avoid churn. Attach a PIXI container via `setLayer()`.
@@ -405,4 +408,5 @@ class JABS_HitboxPulseManager
   //endregion helpers
 }
 
+export default JABS_HitboxPulseManager;
 //endregion JABS_HitboxPulseManager (static)

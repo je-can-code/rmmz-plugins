@@ -1,4 +1,5 @@
 //region RPG_Skill
+import FormulaEffect from './../__models/FormulaEffect.js';
 /**
  * Gets all FormulaEffect packets defined on this skill via J.ABS.EXT.FORMULA.
  * Parsed once and cached on the skill instance.

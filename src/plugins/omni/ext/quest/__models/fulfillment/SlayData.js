@@ -8,4 +8,5 @@ class SlayData
   amount = 0;
 }
 
+export default SlayData;
 //endregion SlayData

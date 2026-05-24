@@ -1,6 +1,4 @@
 //region plugins/pixel/pixel-vm.js
-import vm from 'node:vm';
-
 import { appendShippedPluginToVm, evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { DEFAULT_PIXEL_CORE_PLUGIN_PARAMS } from './fixtures/pixel-plugin-params.js';
@@ -12,10 +10,6 @@ import {
 export const PIXEL_CORE_OUT_FILENAME = 'pixel/J-Pixelistics.js';
 
 export const PIXEL_ABS_EXT_OUT_FILENAME = 'pixel/ext/J-Pixel-ABS.js';
-
-const EXPOSE_PIXEL_GLOBALS = `
-globalThis.PIXEL_CollisionManager = PIXEL_CollisionManager;
-`;
 
 /**
  * Loads {@link out/pixel/J-Pixelistics.js} with J-Base and harness.
@@ -38,8 +32,6 @@ export function loadPixelCorePluginVm(sandbox, options = {})
       installPixelCoreEngineStubs(s, coreParams);
     },
   });
-
-  vm.runInContext(EXPOSE_PIXEL_GLOBALS, sandbox);
 }
 
 /**
@@ -65,8 +57,6 @@ export function loadPixelAbsStackPluginVm(sandbox, options = {})
       installPixelCoreEngineStubs(s, coreParams);
     },
   });
-
-  vm.runInContext(EXPOSE_PIXEL_GLOBALS, sandbox);
 
   installPixelAbsExtensionEngineStubs(sandbox, extParams);
 

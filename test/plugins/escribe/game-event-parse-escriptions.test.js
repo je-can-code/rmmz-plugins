@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadEscribePluginVm } from './escribe-vm.js';
 
-describe('J-Escriptions Game_Event escription parsing (out/J-Escriptions.js)', () =>
+describe('J-Escriptions Game_Event escription parsing (out/escribe/J-Escriptions.js)', () =>
 {
   let sandbox;
 

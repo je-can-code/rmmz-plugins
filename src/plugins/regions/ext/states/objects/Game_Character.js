@@ -1,4 +1,5 @@
 //region Game_Character
+import RegionStateData from './../models/RegionStateData.js';
 /**
  * Extends {@link #initMembers}.<br>
  * Also initializes the region states members.

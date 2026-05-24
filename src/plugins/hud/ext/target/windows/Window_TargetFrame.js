@@ -1,4 +1,5 @@
 //region Window_TargetFrame
+import Sprite_FlowingGauge from '../sprites/Sprite_FlowingGauge.js';
 /**
  * A window that displays a target and their relevant information.
  */
@@ -793,4 +794,5 @@ class Window_TargetFrame
   }
 }
 
+export default Window_TargetFrame;
 //endregion Window_TargetFrame

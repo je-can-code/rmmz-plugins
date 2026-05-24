@@ -53,4 +53,6 @@ class RPG_EnemyAction
   }
 }
 
+
+export default RPG_EnemyAction;
 //endregion RPG_EnemyAction

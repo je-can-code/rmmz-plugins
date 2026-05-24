@@ -1,4 +1,5 @@
 //region Sprite_ActorValue
+import Window_PartyFrame from '../windows/Window_PartyFrame.js';
 /**
  * A sprite that represents a value of an actor's parameter.
  */
@@ -468,4 +469,5 @@ class Sprite_ActorValue
   }
 }
 
+export default Sprite_ActorValue;
 //endregion Sprite_ActorValue

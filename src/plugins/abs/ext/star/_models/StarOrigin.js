@@ -35,4 +35,5 @@ class StarOrigin
     this.y = y;
   }
 }
+export default StarOrigin;
 //endregion StarOrigin

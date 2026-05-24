@@ -7,7 +7,7 @@ const DEFAULT_J_SKILL_SLOTS_PARAMETERS = {
 };
 
 /**
- * Stubs so {@link out/J-SkillSlots.js} can evaluate (menu windows + plugin parameters + actor init chain).
+ * Stubs so {@link out/sks/J-SkillSlots.js} can evaluate (menu windows + plugin parameters + actor init chain).
  *
  * @param {object} sandbox
  * @param {Record<string, string>} [skillSlotsParameters] raw shape passed to {@link PluginMetadata} for `J-SkillSlots`.

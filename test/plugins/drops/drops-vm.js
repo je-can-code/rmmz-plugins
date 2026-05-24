@@ -2,7 +2,7 @@
 import { installDropsEngineStubs } from './fixtures/engine-stubs.js';
 import { clearRpgManagerCacheInVm, evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const DROPS_OUT_FILENAME = 'J-DropsControl.js';
+export const DROPS_OUT_FILENAME = 'drops/J-DropsControl.js';
 
 /**
  * Evaluates {@link out/J-DropsControl.js} into an existing VM sandbox (with J-Base + Drops engine stubs).

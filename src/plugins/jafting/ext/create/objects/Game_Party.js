@@ -1,4 +1,7 @@
 //region Game_Party
+import RecipeTracking from './../__models/RecipeTracking.js';
+import CategoryTracking from './../__models/CategoryTracking.js';
+
 /**
  * Extends {@link #initialize}.<br>
  * Also initializes our jafting members.

@@ -1,4 +1,9 @@
 //region Sprite_Character
+import JABS_LootDrop from './../__models/JABS_LootDrop.js';
+import JABS_BattlerName from './../__models/JABS_BattlerName.js';
+import JABS_Action from './../__models/JABS_Action.js';
+import Sprite_MapCastGauge from './Sprite_MapCastGauge.js';
+import Sprite_MapHpGauge from './Sprite_MapHpGauge.js';
 //region init
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.

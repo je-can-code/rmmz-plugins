@@ -1,8 +1,10 @@
 //region initialization
+import JPassiveOTIB_PluginMetadata from './_pluginMetadata.js';
+
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -12,7 +14,7 @@ J.PASSIVE.EXT.OTIB = {};
 /**
  * The metadata associated with this plugin.
  */
-J.PASSIVE.EXT.OTIB.Metadata = new JPassiveOTIB_PluginMetadata('J-Passive-OTIB', '1.0.0');
+J.PASSIVE.EXT.OTIB.Metadata = new JPassiveOTIB_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

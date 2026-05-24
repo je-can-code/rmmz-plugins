@@ -1,4 +1,8 @@
 //region JABS_AI
+import JABS_EnemyAI from './JABS_EnemyAI.js';
+import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_BattleMemory from './JABS_BattleMemory.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * A base class containing the commonalities between all AI governed by {@link JABS_AiManager}.
  */
@@ -592,4 +596,5 @@ class JABS_AI
   //endregion battle memory
 }
 
+export default JABS_AI;
 //endregion JABS_AI

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadCamodsPluginVm } from './camods-vm.js';
 
-describe('J-CA-Mods loot drop offset (out/J-CA-Mods.js)', () =>
+describe('J-CA-Mods loot drop offset (out/ca-mods/J-CA-Mods.js)', () =>
 {
   let sandbox;
 

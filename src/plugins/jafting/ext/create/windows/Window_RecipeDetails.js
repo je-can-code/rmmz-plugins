@@ -1,4 +1,6 @@
 //region Window_RecipeDetails
+import CraftingComponent from './../__models/CraftingComponent.js';
+
 class Window_RecipeDetails
   extends Window_Base
 {
@@ -845,5 +847,7 @@ class Window_RecipeDetails
 
   //endregion resource output
 }
+
+export default Window_RecipeDetails;
 
 //endregion Window_RecipeDetails

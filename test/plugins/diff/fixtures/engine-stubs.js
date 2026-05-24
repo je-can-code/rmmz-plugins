@@ -15,7 +15,7 @@ export const DEFAULT_DIFF_PLUGIN_PARAMS = {
 };
 
 /**
- * Globals required for {@link out/J-Difficulty.js} after host install, before {@link out/J-Base.js}.
+ * Globals required for {@link out/diff/J-Difficulty.js} after host install, before {@link out/J-Base.js}.
  *
  * @param {object} sandbox
  */

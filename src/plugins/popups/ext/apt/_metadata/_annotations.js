@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 POPUPS-APT] Aptitude point gain popups.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Aptitude point gain popups.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

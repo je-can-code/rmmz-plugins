@@ -1,3 +1,5 @@
+import RPG_EquipItem from '../core/RPG_EquipItem.js';
+
 //region RPG_Weapon
 /**
  * A class representing a single weapon from the database.
@@ -87,4 +89,6 @@ class RPG_Weapon
   }
 }
 
+
+export default RPG_Weapon;
 //endregion RPG_Weapon

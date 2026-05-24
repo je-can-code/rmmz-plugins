@@ -11,12 +11,12 @@ class J__TEMPLATE___PluginMetadata
   }
 
   /**
-   *  Extends {@link #postInitialize}.<br>
-   *  Includes translation of plugin parameters.
+   * Extends {@link #postInitialize}.<br>
+   * Includes translation of plugin parameters.
    */
   postInitialize()
   {
-    // execute original logic.
+    // perform original logic.
     super.postInitialize();
 
     // initialize this plugin from configuration.
@@ -36,4 +36,5 @@ class J__TEMPLATE___PluginMetadata
   }
 }
 
+export default J__TEMPLATE___PluginMetadata;
 //endregion plugin metadata

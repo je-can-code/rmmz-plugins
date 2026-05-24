@@ -1,7 +1,7 @@
 /**
  * The core where all of my extensions live: in the `J` object.
  */
-var J = J || {};
+globalThis.J ||= {};
 
 /**
  * The plugin umbrella that governs all things related to this plugin.
@@ -12,8 +12,8 @@ J.BASE = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.BASE.Metadata = {};
-J.BASE.Metadata.Name = `J-Base`;
-J.BASE.Metadata.Version = '3.1.1';
+J.BASE.Metadata.Name = __PLUGIN_NAME__;
+J.BASE.Metadata.Version = __PLUGIN_VERSION__;
 
 /**
  * The actual `plugin parameters` extracted from RMMZ.
@@ -161,6 +161,7 @@ J.BASE.Aliased = {
 };
 
 //region Helpers
+import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
 /**
  * The helper functions used commonly throughout my plugins.
  */

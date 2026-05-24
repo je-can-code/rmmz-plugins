@@ -4,7 +4,7 @@ const noop = function()
 };
 
 /**
- * Stubs for {@link out/J-Proficiency.js}: storage config, actor/enemy init chain, action/item, managers.
+ * Stubs for {@link out/prof/J-Proficiency.js}: storage config, actor/enemy init chain, action/item, managers.
  *
  * @param {object} sandbox
  * @param {() => string} readProfConfig returns JSON text for {@link StorageManager.fsReadFile}

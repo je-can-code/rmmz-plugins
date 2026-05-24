@@ -1,4 +1,6 @@
 //region JuiceCastingPulseMotionEffect
+import JuiceMotionManager from './../managers/JuiceMotionManager.js';
+import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
  * Continuous scale shimmer while a caller-supplied predicate stays true (casting juice).
  */
@@ -92,4 +94,5 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     return true;
   }
 }
+export default JuiceCastingPulseMotionEffect;
 //endregion JuiceCastingPulseMotionEffect

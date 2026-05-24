@@ -1,4 +1,5 @@
 //region CraftingRecipe
+import CraftingComponent from './CraftingComponent.js';
 /**
  * A data model for a single recipe in crafting.
  */
@@ -255,5 +256,7 @@ class CraftingRecipe
     this.tools.forEach(tool => tool.generate());
   }
 }
+
+export default CraftingRecipe;
 
 //endregion CraftingRecipe

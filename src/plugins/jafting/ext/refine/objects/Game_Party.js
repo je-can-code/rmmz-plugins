@@ -1,4 +1,6 @@
 //region Game_Party
+import JaftingManager from './../managers/JaftingManager.js';
+
 /**
  * Refinement party hooks: counters, refined-equip tracking, and `$data*` refresh helpers.<br>
  * When the last copy of a dynamic refinement row leaves the party, {@link JaftingSalvageManager} reclaims the slot and

@@ -1,4 +1,6 @@
 //region Game_Map
+import QuestManager from './../managers/QuestManager.js';
+
 /**
  * Extends {@link initialize}.<br/>
  * Also initializes the questopedia members.

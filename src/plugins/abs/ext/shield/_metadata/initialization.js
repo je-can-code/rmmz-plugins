@@ -1,8 +1,7 @@
 //region initialization
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import JShield_PluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -17,7 +16,7 @@ var J = J || {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.6.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -26,7 +25,7 @@ var J = J || {};
 //endregion version check
 
 /**
- * The plugin umbrella that governs all things related to this plugin.
+ * The plugin umbrella that governs all extensions related to the parent.
  */
 J.ABS.EXT ||= {};
 
@@ -38,7 +37,7 @@ J.ABS.EXT.SHIELD ||= {};
 /**
  * The metadata associated with this plugin.
  */
-J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata('J-ABS-Shield', '1.0.1');
+J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

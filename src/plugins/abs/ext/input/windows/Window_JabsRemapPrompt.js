@@ -421,4 +421,5 @@ class Window_JabsRemapPrompt
   //endregion api
 }
 
+export default Window_JabsRemapPrompt;
 //endregion Window_JabsRemapPrompt

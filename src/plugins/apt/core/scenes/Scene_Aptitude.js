@@ -1,4 +1,11 @@
 //region Scene_Aptitude
+import AptitudeSkillAggregate from './../_models/AptitudeSkillAggregate.js';
+import Window_AptitudeAggregateDetails from '../windows/Window_AptitudeAggregateDetails.js';
+import Window_AptitudeAggregateList from '../windows/Window_AptitudeAggregateList.js';
+import Window_AptitudeRibbon from '../windows/Window_AptitudeRibbon.js';
+import Window_AptitudeSourceDetails from '../windows/Window_AptitudeSourceDetails.js';
+import Window_AptitudeSourceList from '../windows/Window_AptitudeSourceList.js';
+
 /**
  * The scene for viewing aptitude progress.
  */
@@ -1181,4 +1188,5 @@ class Scene_Aptitude
 
 }
 
+export default Scene_Aptitude;
 //endregion Scene_Aptitude

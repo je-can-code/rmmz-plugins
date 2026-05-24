@@ -5,7 +5,7 @@ import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
 import { installLogEngineStubs } from './fixtures/engine-stubs.js';
 
-export const LOG_OUT_FILENAME = 'J-Log.js';
+export const LOG_OUT_FILENAME = 'log/J-Log.js';
 
 const EXPOSE_LOG_GLOBALS = `
 globalThis.MapLogManager = MapLogManager;

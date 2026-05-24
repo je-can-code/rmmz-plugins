@@ -1,8 +1,7 @@
 //region initialization
 /*:
  * @target MZ
- * @plugindesc
- * [v1.3.1 LEVEL] Allows levels to have greater control and purpose.
+ * @plugindesc [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

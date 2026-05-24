@@ -128,4 +128,5 @@ class JABS_Aabb
   }
 }
 
+export default JABS_Aabb;
 //endregion JABS_Aabb

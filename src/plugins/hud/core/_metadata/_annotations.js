@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 HUD] Provides core functionality for this HUD system.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Provides core functionality for this HUD system.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS

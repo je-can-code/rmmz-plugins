@@ -1,8 +1,7 @@
 //region Introduction
-/**
- * The core where all of my extensions live: in the `J` object.
- */
-var J = J || {};
+import J_SpeedPluginMetadata from './_pluginMetadata.js';
+
+globalThis.J ||= {};
 
 //region version checks
 (() =>
@@ -17,7 +16,7 @@ var J = J || {};
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
   const requiredJabsVersion = '4.6.0';
-  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.Version, requiredJabsVersion);
+  const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
@@ -31,24 +30,9 @@ var J = J || {};
 J.ABS.EXT.SPEED = {};
 
 /**
- * The `metadata` associated with this plugin, such as version.
+ * The metadata associated with this plugin.
  */
-J.ABS.EXT.SPEED.Metadata = {
-  /**
-   * The name of this plugin.
-   */
-  Name: `J-ABS-SpeedBoosts`,
-
-  /**
-   * The version of this plugin.
-   */
-  Version: '1.0.2',
-};
-
-/**
- * The actual `plugin parameters` extracted from RMMZ.
- */
-J.ABS.EXT.SPEED.PluginParameters = PluginManager.parameters(J.ABS.EXT.SPEED.Metadata.Name);
+J.ABS.EXT.SPEED.Metadata = new J_SpeedPluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 /**
  * A collection of all aliased methods for this plugin.

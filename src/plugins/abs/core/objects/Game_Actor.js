@@ -1,4 +1,7 @@
 //region Game_Actor
+import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
+import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends {@link #initJabsMembers}.<br>
  * Includes additional actor-specific members.

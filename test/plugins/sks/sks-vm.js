@@ -5,7 +5,7 @@ import { evaluateShippedPlugin, clearRpgManagerCacheInVm } from '../../setup/shi
 
 import { installSksEngineStubs } from './fixtures/engine-stubs.js';
 
-export const SKS_OUT_FILENAME = 'J-SkillSlots.js';
+export const SKS_OUT_FILENAME = 'sks/J-SkillSlots.js';
 
 /**
  * @param {object} sandbox

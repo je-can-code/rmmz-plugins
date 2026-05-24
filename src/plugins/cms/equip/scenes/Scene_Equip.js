@@ -1,4 +1,6 @@
 //region Scene_Equip
+import Window_MoreEquipData from '../windows/Window_MoreEquipData.js';
+
 /**
  * Initializes this scene.
  */

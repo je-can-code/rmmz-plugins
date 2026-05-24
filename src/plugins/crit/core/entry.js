@@ -1,0 +1,8 @@
+import './_metadata/initialization.js';
+import './managers/IconManager.js';
+import './managers/TextManager.js';
+import './objects/Game_Action.js';
+import './objects/Game_Actor.js';
+import './objects/Game_Battler.js';
+import './objects/Game_BattlerBase.js';
+import './scenes/Scene_Boot.js';

@@ -158,4 +158,5 @@ class StatusParameter
   }
 }
 
+export default StatusParameter;
 //endregion StatusParameter

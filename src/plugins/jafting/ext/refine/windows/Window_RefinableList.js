@@ -1,4 +1,6 @@
 //region Window_RefinableList
+import JaftingManager from './../managers/JaftingManager.js';
+
 /**
  * Refinement equip list helpers + {@link Window_RefinableList}.<br>
  * <br>
@@ -452,5 +454,7 @@ class Window_RefinableList
     this.addBuiltCommand(command);
   }
 }
+
+export default Window_RefinableList;
 
 //endregion Window_RefinableList

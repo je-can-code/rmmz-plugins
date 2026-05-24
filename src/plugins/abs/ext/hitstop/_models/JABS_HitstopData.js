@@ -147,4 +147,5 @@ class JABS_HitstopData
 
 SerializableRegistry.register(JABS_HitstopData);
 
+export default JABS_HitstopData;
 //endregion JABS_HitstopData

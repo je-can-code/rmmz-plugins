@@ -1,4 +1,9 @@
 //region JuiceHookManager
+import JuiceWeaponSwingOverlay from './JuiceWeaponSwingOverlay.js';
+import JuiceProfileResolver from './../resolvers/JuiceProfileResolver.js';
+import JuiceMotionManager from './JuiceMotionManager.js';
+import JuiceMapSpriteFinder from './../helpers/JuiceMapSpriteFinder.js';
+import JuiceFlurryStrikeRecord from './../helpers/JuiceFlurryStrikeRecord.js';
 /**
  * Central hook orchestration for J-ABS-Juice (caster, target, casting).
  */
@@ -267,4 +272,5 @@ class JuiceHookManager
     JuiceMotionManager.cancelForSprite(sprite);
   }
 }
+export default JuiceHookManager;
 //endregion JuiceHookManager

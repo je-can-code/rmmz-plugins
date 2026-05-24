@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 POPUPS-SDP] SDP point gain popups.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] SDP point gain popups.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

@@ -1,4 +1,9 @@
 //region plugin metadata
+import CraftingCategory from '../__models/CraftingCategory.js';
+import CraftingComponent from '../__models/CraftingComponent.js';
+import CraftingConfiguration from '../__models/CraftingConfiguration.js';
+import CraftingRecipe from '../__models/CraftingRecipe.js';
+
 /**
  * Plugin metadata for the creation JAFTING plugin.<br>
  * Such data includes things like recipes, categories, and connectivity
@@ -310,5 +315,7 @@ class J_CraftingCreatePluginMetadata
       .build();
   }
 }
+
+export default J_CraftingCreatePluginMetadata;
 
 //endregion plugin metadata

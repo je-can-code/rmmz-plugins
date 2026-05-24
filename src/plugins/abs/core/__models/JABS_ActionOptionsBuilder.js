@@ -1,4 +1,7 @@
 //region JABS_ActionOptionsBuilder
+import JABS_Location from './JABS_Location.js';
+import JABS_ActionOptions from './JABS_ActionOptions.js';
+import JABS_Action from './JABS_Action.js';
 /**
  * A builder for creating {@link JABS_ActionOptions}.
  */
@@ -159,4 +162,5 @@ class JABS_ActionOptionsBuilder
   }
 }
 
+export default JABS_ActionOptionsBuilder;
 //endregion JABS_ActionOptionsBuilder

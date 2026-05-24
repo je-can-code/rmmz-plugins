@@ -1,3 +1,6 @@
+import RPG_Trait from '../_data/RPG_Trait.js';
+import RPG_BaseItem from './RPG_BaseItem.js';
+
 //region RPG_Traited
 /**
  * A class representing a BaseItem from the database, but with traits.
@@ -36,4 +39,6 @@ class RPG_Traited
   }
 }
 
+
+export default RPG_Traited;
 //endregion RPG_Traited

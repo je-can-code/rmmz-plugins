@@ -1,4 +1,10 @@
 //region Scene_Questopedia
+import QuestManager from './../managers/QuestManager.js';
+import Window_QuestopediaCategories from '../windows/Window_QuestopediaCategories.js';
+import Window_QuestopediaList from '../windows/Window_QuestopediaList.js';
+import Window_QuestopediaDescription from '../windows/Window_QuestopediaDescription.js';
+import Window_QuestopediaObjectives from '../windows/Window_QuestopediaObjectives.js';
+
 /**
  * A scene for interacting with the Questopedia.
  */
@@ -643,4 +649,5 @@ class Scene_Questopedia
   }
 }
 
+export default Scene_Questopedia;
 //endregion Scene_Questopedia

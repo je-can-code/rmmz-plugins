@@ -1,5 +1,5 @@
 //region Game_Map
-import RegionSkillData from "../models/RegionSkillData.js";
+import RegionSkillData from './../models/RegionSkillData.js';
 
 /**
  * Extends {@link #initialize}.<br>

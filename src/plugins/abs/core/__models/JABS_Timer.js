@@ -277,4 +277,5 @@ class JABS_Timer
   }
 }
 
+export default JABS_Timer;
 //endregion JABS_Timer

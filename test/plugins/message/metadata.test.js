@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadMessagePluginVm } from './message-vm.js';
 
-describe('J-MessageTextCodes metadata (out/J-MessageTextCodes.js)', () =>
+describe('J-MessageTextCodes metadata (out/message/J-MessageTextCodes.js)', () =>
 {
   let sandbox;
 
@@ -20,8 +20,10 @@ describe('J-MessageTextCodes metadata (out/J-MessageTextCodes.js)', () =>
 
   it('initializes J.MESSAGE metadata and regex', () =>
   {
-    expect(sandbox.J.MESSAGE.Metadata.Name).toBe('J-MessageTextCodes');
-    expect(sandbox.J.MESSAGE.Metadata.Version).toBe('1.2.1');
+    expect(sandbox.J.MESSAGE.Metadata.name).toBe('J-MessageTextCodes');
+    expect(sandbox.J.MESSAGE.Metadata.version.major).toBe(1);
+    expect(sandbox.J.MESSAGE.Metadata.version.minor).toBe(2);
+    expect(sandbox.J.MESSAGE.Metadata.version.patch).toBe(1);
 
     expect(sandbox.J.MESSAGE.RegExp.LeaderChoiceConditional.test('<leaderChoiceCondition: 3>')).toBe(true);
     expect(sandbox.J.MESSAGE.RegExp.SwitchOffChoiceConditional.test('<switchOffChoiceCondition:2>')).toBe(true);

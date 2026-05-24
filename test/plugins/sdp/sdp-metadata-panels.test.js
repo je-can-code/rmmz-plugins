@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loadSdpPluginVm } from './sdp-vm.js';
 
-describe('J-SDP metadata panels (out/J-SDP.js)', () =>
+describe('J-SDP metadata panels (out/sdp/J-SDP.js)', () =>
 {
   let sandbox;
 

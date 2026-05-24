@@ -1,4 +1,5 @@
 //region regeneration
+import JABS_Battler from './_initialization.js';
 /**
  * Frames between regeneration ticks at 60fps.
  * 30 frames = 2 ticks/sec (was 15 = 4/sec); per-tick amounts are scaled so per-second totals match legacy behavior.

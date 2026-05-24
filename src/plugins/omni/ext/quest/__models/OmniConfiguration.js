@@ -1,4 +1,7 @@
 //region OmniConfiguration
+import OmniTag from './OmniTag.js';
+import OmniQuest from './OmniQuest.js';
+import OmniCategory from './OmniCategory.js';
 /**
  * A class representing the data shape of the Questopedia configuration.
  */
@@ -36,4 +39,5 @@ class OmniConfiguration
   }
 }
 
+export default OmniConfiguration;
 //endregion OmniConfiguration
