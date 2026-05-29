@@ -94,6 +94,7 @@
     "build:level-flat": "vite build --config src/plugins/level/ext/flat/vite.config.level-ext.flat.js",
     "build:passive": "vite build --config src/plugins/passive/core/vite.config.passive-core.js",
     "build:passive-affix": "vite build --config src/plugins/passive/ext/affix/vite.config.passive-affix.js",
+    "build:passive-conditional": "vite build --config src/plugins/passive/ext/conditional/vite.config.passive-conditional.js",
     "build:passive-otib": "vite build --config src/plugins/passive/ext/otib/vite.config.passive-otib.js",
     "build:pixel": "vite build --config src/plugins/pixel/core/vite.config.pixel-core.js",
     "build:pixel-abs": "vite build --config src/plugins/pixel/ext/abs/vite.config.pixel-abs.js",
