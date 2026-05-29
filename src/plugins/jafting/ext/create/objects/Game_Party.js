@@ -3,7 +3,7 @@ import RecipeTracking from './../__models/RecipeTracking.js';
 import CategoryTracking from './../__models/CategoryTracking.js';
 
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also initializes our jafting members.
  */
 J.JAFTING.EXT.CREATE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);

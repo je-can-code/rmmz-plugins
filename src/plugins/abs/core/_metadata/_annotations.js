@@ -2270,6 +2270,39 @@
  * @desc Extra baseline per level: caster level on A, target level on D (Lv1 adds 0).
  * @default 0.25
  *
+ * @param implicitParryScaleFactor
+ * @parent implicitParryConfigs
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @max 1
+ * @text Full Parry Scale Factor
+ * @desc Multiplies the raw parry formula output to produce the actual full-negate chance. 0.2 = 20% of formula.
+ * @default 0.2
+ *
+ *
+ * @param glancingBlowConfigs
+ * @text GLANCING BLOW (PARTIAL HIT)
+ *
+ * @param glancingBlowDominanceMultiplier
+ * @parent glancingBlowConfigs
+ * @type number
+ * @decimals 2
+ * @min 1.01
+ * @text Glancing Dominance Multiplier (M)
+ * @desc Band width for the glancing roll; uses the same A/D formula as parry but an independent M. Default 2.
+ * @default 2
+ *
+ * @param glancingBlowDamageFactor
+ * @parent glancingBlowConfigs
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @max 1
+ * @text Glancing Blow Damage Factor
+ * @desc Fraction of normal damage dealt on a glancing blow. 0.3 = 30% of calculated damage.
+ * @default 0.3
+ *
  *
  * @param quickmenuConfigs
  * @text QUICKMENU SETUP

@@ -1,6 +1,7 @@
 //region WindowLayer
 /**
- * OVERWRITE Renders windows, but WITH the ability to overlay.
+ * Overwrites {@link #render}.<br/>
+ * Renders windows, but WITH the ability to overlay.
  *
  * @param {PIXI.Renderer} renderer - The renderer.
  */

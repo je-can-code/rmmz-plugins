@@ -14,7 +14,7 @@ class J_PopupsAbs_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps merge toggles and skill-used popup policy from plugin parameters.
    */
   postInitialize()

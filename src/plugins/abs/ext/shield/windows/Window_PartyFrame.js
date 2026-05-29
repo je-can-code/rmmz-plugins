@@ -241,7 +241,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
   };
 
   /**
-   * Extends/Overrides {@link #drawAllyGauges}.<br/>
+   * Extends {@link #drawAllyGauges}.<br/>
    * Calls original, then overlays the composite shield gauge on the ally HP gauge.
    * @param {Game_Actor} ally The ally to draw the gauges for.
    * @param {number} x The x coordinate.

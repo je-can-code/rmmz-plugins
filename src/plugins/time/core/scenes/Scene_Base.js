@@ -7,7 +7,7 @@ Scene_Base._noTimeScenes = [
 ];
 
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also updates artificial time if it should be updated.
  */
 J.TIME.Aliased.Scene_Base.set('update', Scene_Base.prototype.update);

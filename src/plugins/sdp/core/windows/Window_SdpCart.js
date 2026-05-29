@@ -52,7 +52,8 @@ class Window_SdpCart
   }
 
   /**
-   * OVERWRITE No commands are selectable in this window.
+   * Overwrites {@link #isCurrentItemEnabled}.<br/>
+   * No commands are selectable in this window.
    */
   isCurrentItemEnabled()
   {
@@ -60,7 +61,7 @@ class Window_SdpCart
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Draws the contents of the cart and the total cost.
    */
   makeCommandList()
@@ -139,7 +140,8 @@ class Window_SdpCart
   }
 
   /**
-   * OVERWRITE Renders the cart rows with styled padded numbers.
+   * Overwrites {@link #drawItem}.<br/>
+   * Renders the cart rows with styled padded numbers.
    * @param {number} index The command index.
    */
   drawItem(index)

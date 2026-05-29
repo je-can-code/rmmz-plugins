@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #param}.<br>
+ * Extends {@link #param}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -22,7 +22,7 @@ Game_Actor.prototype.param = function(paramId)
 };
 
 /**
- * Extends {@link #sparam}.<br>
+ * Extends {@link #sparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -44,7 +44,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 };
 
 /**
- * Extends {@link #xparam}.<br>
+ * Extends {@link #xparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */

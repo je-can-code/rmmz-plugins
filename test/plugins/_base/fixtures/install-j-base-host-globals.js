@@ -170,6 +170,7 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
   sandbox.SoundManager = {};
   sandbox.StorageManager = {};
   sandbox.TextManager = {};
+  sandbox.IconManager = {};
 
   class EventEmitter
   {

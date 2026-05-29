@@ -22,21 +22,21 @@ export function installCritCompanionStubs(sandbox)
   Object.setPrototypeOf(sandbox.Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
   sandbox.Game_Battler.prototype.constructor = sandbox.Game_Battler;
 
-  sandbox.Game_Actor.prototype.longParam = function(longParamId)
+  sandbox.Game_Actor.prototype.parameter = function()
   {
     return 0;
   };
 
   sandbox.IconManager = {
-    longParam()
+    parameterIcon()
     {
-      return '';
+      return 0;
     },
   };
 
-  sandbox.TextManager.longParamDescription = function()
+  sandbox.TextManager.parameterDescription = function()
   {
-    return '';
+    return [ '' ];
   };
 }
 //endregion crit-companion-stubs

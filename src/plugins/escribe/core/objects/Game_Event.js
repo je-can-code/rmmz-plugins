@@ -278,7 +278,7 @@ Game_Event.prototype.parseEscriptionIconProximityValue = function()
 };
 
 /**
- * Extends {@link Game_Event.update}.<br>
+ * Extends {@link Game_Event.update}.<br/>
  * Also updates the describe proximity information of the player for the describe data.
  */
 J.ESCRIBE.Aliased.Game_Event.set('update', Game_Event.prototype.update);

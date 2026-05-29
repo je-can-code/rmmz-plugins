@@ -286,11 +286,9 @@ class Scene_SkillEquip
     win.setHandler('cancel', this.onSlotCancel.bind(this));
 
     // set the handler for unequipping the skill in the focused slot.
-    win.setHandler('more', this.onSlotUnequip.bind(this));
-
-    // wire page navigation keys for actor cycling.
-    win.setHandler('pageup', this.onCycleActorLeft.bind(this));
-    win.setHandler('pagedown', this.onCycleActorRight.bind(this));
+    win.setHandler('context', this.onSlotUnequip.bind(this));
+    win.setHandler('actor-prev', this.onCycleActorLeft.bind(this));
+    win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // assign the window reference.
     this._j._sks._windows._slots = win;
@@ -609,7 +607,7 @@ class Scene_SkillEquip
   }
 
   /**
-   * Handles the "more" action from the slot selection.
+   * Handles the "context" action from the slot selection.
    * Unequips the skill in the currently focused slot, if one is equipped.
    */
   onSlotUnequip()

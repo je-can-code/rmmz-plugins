@@ -10,7 +10,7 @@ class Window_QuestopediaCategories
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of all known quests in this window.
    */
   makeCommandList()
@@ -53,7 +53,7 @@ class Window_QuestopediaCategories
   }
 
   /**
-   * Overrides {@link maxCols}.<br/>
+   * Overwrites {@link maxCols}.<br/>
    * Sets the column count to be the number of categories there are.
    * @returns {number}
    */

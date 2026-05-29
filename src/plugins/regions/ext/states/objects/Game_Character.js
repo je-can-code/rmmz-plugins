@@ -1,7 +1,7 @@
 //region Game_Character
 import RegionStateData from './../models/RegionStateData.js';
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the region states members.
  */
 J.REGIONS.EXT.STATES.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMembers);
@@ -58,7 +58,7 @@ Game_Character.prototype.getRegionStatesTimer = function()
 };
 
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also handles region states updates for the character.
  */
 J.REGIONS.EXT.STATES.Aliased.Game_Character.set('update', Game_Character.prototype.update);

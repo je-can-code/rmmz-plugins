@@ -17,7 +17,8 @@ class Window_RefinementConfirmation
   }
 
   /**
-   * OVERWRITE Creates the command list for this window.
+   * Overwrites {@link #makeCommandList}.<br/>
+   * Creates the command list for this window.
    */
   makeCommandList()
   {

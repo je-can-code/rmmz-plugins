@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Includes our custom members as well.
  */
 J.PASSIVE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
@@ -210,7 +210,7 @@ Game_Party.prototype.getAllStackablePassiveStateIds = function()
 };
 
 /**
- * Extends {@link #gainItem}.<br>
+ * Extends {@link #gainItem}.<br/>
  * Also refreshes the passive states for the party.
  * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
  * @param {number} amount The amount to modify the quantity by.

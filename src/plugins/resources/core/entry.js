@@ -9,3 +9,4 @@ import './objects/Game_BattlerBase.js';
 import './objects/Game_Battler.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Enemy.js';
+import './core/registerResourcesParameters.js';

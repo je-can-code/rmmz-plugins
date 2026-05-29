@@ -62,8 +62,8 @@ Input.keyMapper = {
   88: J.ABS.EXT.INPUT.Symbols.Offhand,
   // shift (already defined).
   16: J.ABS.EXT.INPUT.Symbols.Dash,
-  // c.
-  67: J.ABS.EXT.INPUT.Symbols.Tool,
+  // tab key — same physical symbol triangle fires on pad.
+  9: J.ABS.EXT.INPUT.Symbols.Tool,
 
   // functional buttons.
   // q.
@@ -72,8 +72,8 @@ Input.keyMapper = {
   17: J.ABS.EXT.INPUT.Symbols.StrafeTrigger,
   // e.
   69: J.ABS.EXT.INPUT.Symbols.GuardTrigger,
-  // tab.
-  9: J.ABS.EXT.INPUT.Symbols.MobilitySkill,
+  // alt — keyboard default for r2 / content-next in menus.
+  18: J.ABS.EXT.INPUT.Symbols.MobilitySkill,
 
   // quickmenu button.
   // enter.
@@ -115,7 +115,7 @@ Input.keyMapper = {
  * - NEW: select/options, start/menu
  * - NEW: L2/LT, R2/RT
  * - NEW: L3/LSB, R3/RSB
- * - OVERWRITE: Y now is the tool button, and start is the menu.
+ * - remapped: Y is now the tool button, and start is the menu.
  */
 Input.gamepadMapper = {
   // action face buttons.
@@ -434,6 +434,8 @@ Input.ensureRemapBootstrapped = function()
   // friendly labels for some common symbols.
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.L3, 'L3');
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.R3, 'R3');
+  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.Tool, 'Triangle');
+  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, 'L2');
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.MobilitySkill, 'R2');
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadUp, 'D-Pad Up');
   Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadDown, 'D-Pad Down');
@@ -465,6 +467,7 @@ Input.bootstrapAllKeyboardKeysForCapture = function()
   const reserved = new Set([
     // core engine actions and directions.
     'ok', 'cancel', 'menu', 'escape', 'tab', 'pageup', 'pagedown', 'shift', 'control', 'up', 'down', 'left', 'right',
+    'l2', 'r2',
   ]);
 
   // also consider whatever the current keyMapper already resolves to.
@@ -686,7 +689,8 @@ Input.setAxisThreshold = function(v)
 };
 
 /**
- * OVERWRITE-ALIAS Extends gamepad processing to reinforce directions from axes
+ * Extends {@link Input._updateGamepadState}.<br/>
+ * Extends gamepad processing to reinforce directions from axes
  * using a configurable threshold, without disabling vanilla behavior.
  * Ensures mutual exclusivity and proper clearing when axes return to neutral.
  * Also writes results to the per-pad state, then rebuilds the merged state as

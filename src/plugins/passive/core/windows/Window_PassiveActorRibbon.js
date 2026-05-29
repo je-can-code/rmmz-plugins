@@ -22,7 +22,7 @@ class Window_PassiveActorRibbon
 
   //region draw
   /**
-   * Extends {@link Window_ActorRibbon#drawContent}.<br>
+   * Extends {@link Window_ActorRibbon#drawContent}.<br/>
    * Also draws the actor name and level beside the face.
    */
   drawContent()

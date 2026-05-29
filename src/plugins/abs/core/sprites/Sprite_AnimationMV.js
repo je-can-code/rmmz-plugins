@@ -1,6 +1,6 @@
 //region Sprite_AnimationMV
 /**
- * Extends/Overrides {@link Sprite_AnimationMV.prototype.updatePosition}.<br/>
+ * Extends {@link Sprite_AnimationMV.prototype.updatePosition}.<br/>
  * Adds a guard to ensure we don't attempt to follow destroyed or removed sprites.
  */
 J.ABS.Aliased.Sprite_AnimationMV.set('updatePosition', Sprite_AnimationMV.prototype.updatePosition);

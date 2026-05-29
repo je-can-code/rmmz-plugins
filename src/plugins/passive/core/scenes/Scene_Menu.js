@@ -2,7 +2,7 @@
 import Scene_Passive from './Scene_Passive.js';
 
 /**
- * Extends {@link #createCommandWindow}.<br>
+ * Extends {@link #createCommandWindow}.<br/>
  * Wires the passive-menu symbol to the Passives viewer scene.
  */
 J.PASSIVE.Aliased.Scene_Menu.set('createCommandWindow', Scene_Menu.prototype.createCommandWindow);

@@ -107,7 +107,8 @@ Game_Event.prototype.findProperPageIndex = function()
 };
 
 /**
- * OVERWRITE When an map battler is hidden by something like a switch or some
+ * Extends {@link #refresh}.<br/>
+ * When an map battler is hidden by something like a switch or some
  * other condition, unveil it upon meeting such conditions.
  */
 J.ABS.Aliased.Game_Event.set('refresh', Game_Event.prototype.refresh);
@@ -129,7 +130,7 @@ Game_Event.prototype.refresh = function()
 };
 
 /**
- * Overrides {@link Game_Event.refresh}.<br>
+ * Overwrites {@link Game_Event.refresh}.<br/>
  * Safely handles battler transformation and page index reassignment.
  *
  * Sometimes the page index reassignment can get out of hand and requires guardrails.

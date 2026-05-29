@@ -2,7 +2,7 @@
 import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
 
 /**
- * Extends {@link Game_Map.setup}.<br>
+ * Extends {@link Game_Map.setup}.<br/>
  * Builds the PIXEL subcell collision table when a new map loads.
  * @param {number} mapId The id of the map to setup.
  */

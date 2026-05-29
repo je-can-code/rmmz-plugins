@@ -38,7 +38,7 @@ class Window_QuestopediaList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of all known quests in this window.
    */
   makeCommandList()

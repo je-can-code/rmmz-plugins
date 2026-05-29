@@ -4,7 +4,7 @@ import TrackedOmniObjective from './../__models/TrackedOmniObjective.js';
 import QuestManager from './../managers/QuestManager.js';
 
 /**
- * Extends {@link #initOmnipediaMembers}.<br>
+ * Extends {@link #initOmnipediaMembers}.<br/>
  * Includes monsterpedia members.
  */
 J.OMNI.EXT.QUEST.Aliased.Game_Party.set('initOmnipediaMembers', Game_Party.prototype.initOmnipediaMembers);

@@ -110,7 +110,8 @@ class Sprite_SkillCost
   }
 
   /**
-   * OVERWRITE Gets the color of the text for this sprite based on the
+   * Overwrites {@link #color}.<br/>
+   * Gets the color of the text for this sprite based on the
    * type of skill cost for this sprite, instead of the assigned color.
    * @returns {string}
    */
@@ -139,7 +140,8 @@ class Sprite_SkillCost
   }
 
   /**
-   * OVERWRITE Gets the font size for this sprite's text.
+   * Overwrites {@link #fontSize}.<br/>
+   * Gets the font size for this sprite's text.
    * Skill costs are hard-coded to be a fixed size, 12.
    * @returns {number}
    */

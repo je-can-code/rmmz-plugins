@@ -7,4 +7,7 @@ import './models/DropsPartyStrategy.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Enemy.js';
 import './objects/Game_Party.js';
+import './managers/TextManager.js';
+import './managers/IconManager.js';
+import './core/registerDropsParameters.js';
 import './scenes/Scene_Boot.js';

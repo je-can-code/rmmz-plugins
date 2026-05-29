@@ -646,18 +646,6 @@ class Window_JabsRemapActions
     super.processOk();
   }
 
-  /**
-   * Forwards to base handling and maps PageDown to the `clear` handler.
-   */
-  processHandling()
-  {
-    super.processHandling();
-    if (this.isOpenAndActive() && Input.isTriggered('pagedown'))
-    {
-      this.callHandler('clear');
-    }
-  }
-
   //endregion handling
 
   //region utils

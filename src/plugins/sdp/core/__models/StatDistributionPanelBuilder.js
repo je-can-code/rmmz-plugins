@@ -1,4 +1,7 @@
 //region StatDistributionPanelBuilder
+import PanelIdentity from './PanelIdentity.js';
+import PanelMastery from './PanelMastery.js';
+import PanelProgression from './PanelProgression.js';
 import PanelRarity from './PanelRarity.js';
 import StatDistributionPanel from './StatDistributionPanel.js';
 
@@ -7,19 +10,12 @@ import StatDistributionPanel from './StatDistributionPanel.js';
  */
 class StatDistributionPanelBuilder
 {
-  #name = String.empty;
   #key = String.empty;
-  #iconIndex = 0;
-  #rarity = 0;
-  #unlockedByDefault = false;
-  #description = String.empty;
-  #flavorText = String.empty;
-  #maxRank = 1;
-  #baseCost = 0;
-  #flatGrowth = 0;
-  #multGrowth = 1.0;
+  #identity = PanelIdentity.empty();
+  #progression = PanelProgression.defaults();
   #parameters = [];
   #rewards = [];
+  #mastery = PanelMastery.none();
 
   /**
    * Builds the configured panel.
@@ -28,25 +24,18 @@ class StatDistributionPanelBuilder
   build()
   {
     return new StatDistributionPanel(
-      this.#name,
       this.#key,
-      this.#iconIndex,
-      this.#rarity,
-      this.#unlockedByDefault,
-      this.#description,
-      this.#flavorText,
-      this.#maxRank,
-      this.#baseCost,
-      this.#flatGrowth,
-      this.#multGrowth,
+      this.#identity,
+      this.#progression,
       this.#parameters,
-      this.#rewards);
+      this.#rewards,
+      this.#mastery);
   }
 
   //region setters
   name(name)
   {
-    this.#name = name;
+    this.#identity.name = name;
     return this;
   }
 
@@ -58,55 +47,55 @@ class StatDistributionPanelBuilder
 
   iconIndex(iconIndex)
   {
-    this.#iconIndex = iconIndex;
+    this.#identity.iconIndex = iconIndex;
     return this;
   }
 
   unlockedByDefault(unlockedByDefault)
   {
-    this.#unlockedByDefault = unlockedByDefault;
+    this.#identity.unlockedByDefault = unlockedByDefault;
     return this;
   }
 
   description(description)
   {
-    this.#description = description;
+    this.#identity.description = description;
     return this;
   }
 
   flavorText(flavorText)
   {
-    this.#flavorText = flavorText;
+    this.#identity.topFlavorText = flavorText;
     return this;
   }
 
   maxRank(maxRank)
   {
-    this.#maxRank = maxRank;
+    this.#progression.maxRank = maxRank;
     return this;
   }
 
   baseCost(baseCost)
   {
-    this.#baseCost = baseCost;
+    this.#progression.baseCost = baseCost;
     return this;
   }
 
   flatGrowth(flatGrowth)
   {
-    this.#flatGrowth = flatGrowth;
+    this.#progression.flatGrowthCost = flatGrowth;
     return this;
   }
 
   multGrowth(multGrowth)
   {
-    this.#multGrowth = multGrowth;
+    this.#progression.multGrowthCost = multGrowth;
     return this;
   }
 
   rarity(rarity)
   {
-    this.#rarity = PanelRarity.normalizeRarityFromJson(rarity);
+    this.#progression.rarity = PanelRarity.normalizeRarityFromJson(rarity);
     return this;
   }
 
@@ -119,6 +108,39 @@ class StatDistributionPanelBuilder
   rewards(rewards)
   {
     this.#rewards = rewards;
+    return this;
+  }
+
+  /**
+   * Sets presentation and unlock metadata for this panel.
+   * @param {PanelIdentity} identity
+   * @returns {StatDistributionPanelBuilder}
+   */
+  identity(identity)
+  {
+    this.#identity = identity;
+    return this;
+  }
+
+  /**
+   * Sets rank cap, rarity tier, and rank-up cost offsets for this panel.
+   * @param {PanelProgression} progression
+   * @returns {StatDistributionPanelBuilder}
+   */
+  progression(progression)
+  {
+    this.#progression = progression;
+    return this;
+  }
+
+  /**
+   * Sets subgroup mastery enrollment for this panel.
+   * @param {PanelMastery} mastery
+   * @returns {StatDistributionPanelBuilder}
+   */
+  mastery(mastery)
+  {
+    this.#mastery = mastery;
     return this;
   }
 

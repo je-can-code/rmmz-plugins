@@ -14,7 +14,7 @@ Game_System.prototype.onBeforeSave = function()
 };
 
 /**
- * Extends {@link #onAfterLoad}.<br>
+ * Extends {@link #onAfterLoad}.<br/>
  * Updates the database with the tracked refined equips.
  */
 J.OMNI.EXT.QUEST.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);

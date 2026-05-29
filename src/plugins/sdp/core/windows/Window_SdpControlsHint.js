@@ -40,7 +40,7 @@ class Window_SdpControlsHint
     // avoid palette picks that can disappear on darker skins; still lighter than body copy via size alone.
     this.changeTextColor(ColorManager.normalColor());
 
-    const text = 'L/R: -/+ cart  OK: checkout/upgrade  More: filter';
+    const text = 'L/R2: family  L/R: -/+ cart  OK: checkout  Triangle: filter';
 
     const y = Math.max(0, Math.floor((this.innerHeight - this.lineHeight()) / 2));
     this.drawText(text, padX, y, this.innerWidth - padX * 2, 'left');

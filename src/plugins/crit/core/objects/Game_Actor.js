@@ -20,24 +20,6 @@ Game_Actor.prototype.applyNaturalCustomGrowths = function()
 };
 
 /**
- * Extend `.longParam()` to first check for our crit params.
- */
-J.CRIT.Aliased.Game_Actor.set('longParam', Game_Actor.prototype.longParam);
-Game_Actor.prototype.longParam = function(longParamId)
-{
-  switch (longParamId)
-  {
-    case 28:
-      return this.cdm;
-    case 29:
-      return this.cdr;
-    default:
-      return J.CRIT.Aliased.Game_Actor.get('longParam')
-        .call(this, longParamId);
-  }
-};
-
-/**
  * Applies the natural CDM growths to this battler.
  */
 Game_Actor.prototype.applyNaturalCdmGrowths = function()
@@ -107,35 +89,10 @@ Game_Actor.prototype.getNaturalGrowthsRegexForCrit = function()
  */
 Game_Actor.prototype.critSdpBonuses = function(critParamId, baseParam)
 {
-  // short circuit if aren't using the system.
-  if (!J.SDP) return 0;
+  const parameterKey = critParamId === 0
+    ? 'cdm'
+    : 'cdr';
 
-  // grab all the rankings this actor has earned.
-  const panelRankings = this.getAllSdpRankings();
-
-  // short circuit if we have no rankings.
-  if (!panelRankings.length) return 0;
-
-  // crit params start at 28.
-  const actualCritParamId = 28 + critParamId;
-
-  // initialize the running value.
-  let val = 0;
-
-  // iterate over each of the earned rankings.
-  panelRankings.forEach(panelRanking =>
-  {
-    // grab our panel by its key.
-    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
-
-    // protect our players against changed keys mid-save file!
-    if (!panel) return;
-
-    // add the calculated bonus.
-    val += panel.calculateBonusByRank(actualCritParamId, panelRanking.currentRank, baseParam, false);
-  });
-
-  // return the summed value.
-  return val;
+  return this.getSdpBonusForParameterKey(parameterKey, baseParam);
 };
 //endregion Game_Actor

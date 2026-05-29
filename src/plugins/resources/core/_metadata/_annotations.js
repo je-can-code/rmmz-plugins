@@ -23,7 +23,7 @@
  * This plugin adds HP cost and gain support, as well as tag-based flat,
  * percentage, and formula costs for MP and TP as well.
  *
- * longParam ID 34 is reserved by this plugin for the HP cost parameter.
+ * HP cost reduction is registered in the parameter catalog as `hcr`.
  *
  * ============================================================================
  * HP COST
@@ -136,7 +136,7 @@
  *    Added HP/MP/TP costs and gains via flat, percent, and formula notetags.
  *    Added HCR (HP Cost Reduction) as an additive stat sourced from traits.
  *    Added sacrifice tag to allow lethal HP costs.
- *    Registered longParam ID 34 for Life Cost.
+ *    Registered {@code hcr} (HP Cost Reduction) in the parameter catalog.
  * ============================================================================
  *
  * @param parentConfig

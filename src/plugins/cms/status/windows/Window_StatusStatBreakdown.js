@@ -39,7 +39,7 @@ class Window_StatusStatBreakdown
     if (!this._j._cms_s._status) this._j._cms_s._status = {};
     this._j._cms_s._status._breakdown = {
       _actor: null,
-      _longParamId: 0,
+      _parameterKey: String.empty,
     };
   }
 
@@ -58,16 +58,16 @@ class Window_StatusStatBreakdown
     this._j._cms_s._status._breakdown._actor = v;
   }
 
-  /** @returns {number} */
-  getLongParamId()
+  /** @returns {string} */
+  getParameterKey()
   {
-    return this._j._cms_s._status._breakdown._longParamId | 0;
+    return this._j._cms_s._status._breakdown._parameterKey;
   }
 
-  /** @param {number} v */
-  setLongParamId(v)
+  /** @param {string} v */
+  setParameterKey(v)
   {
-    this._j._cms_s._status._breakdown._longParamId = v | 0;
+    this._j._cms_s._status._breakdown._parameterKey = v;
   }
 
   //endregion accessors
@@ -76,12 +76,12 @@ class Window_StatusStatBreakdown
   /**
    * Sets the context and refreshes the panel.
    * @param {Game_Actor} actor The actor.
-   * @param {number} longParamId The long param id.
+   * @param {string} parameterKey The registry key.
    */
-  setContext(actor, longParamId)
+  setContext(actor, parameterKey)
   {
     this.setActor(actor);
-    this.setLongParamId(longParamId);
+    this.setParameterKey(parameterKey);
     this.refresh();
   }
 
@@ -111,15 +111,15 @@ class Window_StatusStatBreakdown
   {
     // gather context.
     const actor = this.getActor();
-    const longId = this.getLongParamId();
+    const parameterKey = this.getParameterKey();
 
     // header visuals.
-    const name = TextManager.longParam(longId);
-    const icon = IconManager.longParam(longId);
-    const color = ColorManager.longParam(longId);
+    const name = TextManager.parameterLabel(parameterKey);
+    const icon = IconManager.parameterIcon(parameterKey);
+    const color = ColorManager.parameterColor(parameterKey);
 
     // final value mirrors Page 1 formatting.
-    const finalValue = new StatusParameter(actor.longParam(longId), longId).prettyValue(false);
+    const finalValue = new StatusParameter(actor.parameter(parameterKey), parameterKey).prettyValue(false);
 
     // layout.
     const gutter = 16;
@@ -135,8 +135,7 @@ class Window_StatusStatBreakdown
     this.drawText(finalValue, headerX, headerY, widthUsable, 'right');
 
     // draw the two-line description just under the header.
-    // leverage TextManager.longParamDescription(longId) from J.BASE.
-    const descriptionLines = TextManager.longParamDescription(longId);
+    const descriptionLines = TextManager.parameterDescription(parameterKey);
 
     // establish the starting y for descriptions (one row below the header).
     let cursorY = headerY + this.lineHeight();
@@ -159,27 +158,27 @@ class Window_StatusStatBreakdown
     cursorY += 16;
 
     // resolve kind and draw body accordingly.
-    const kind = this.resolveKind(longId);
+    const kind = this.resolveKind(parameterKey);
 
     switch (kind)
     {
       case Window_StatusStatBreakdown.KINDS.Base:
-        this.drawBParamBreakdown(actor, longId, headerX, cursorY, widthUsable);
+        this.drawBParamBreakdown(actor, ParameterKeys.bparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Ex:
-        this.drawXParamBreakdown(actor, longId - 8, headerX, cursorY, widthUsable);
+        this.drawXParamBreakdown(actor, ParameterKeys.xparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Special:
-        this.drawSParamBreakdown(actor, longId - 18, headerX, cursorY, widthUsable);
+        this.drawSParamBreakdown(actor, ParameterKeys.sparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Mtp:
         this.drawMtpBreakdown(actor, headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Crit:
-        this.drawCritBreakdown(actor, longId - 28, headerX, cursorY, widthUsable);
+        this.drawCritBreakdown(actor, parameterKey === 'cdm' ? 0 : 1, headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Custom:
-        this.drawCustomBreakdown(actor, longId, headerX, cursorY, widthUsable);
+        this.drawCustomBreakdown(actor, parameterKey, headerX, cursorY, widthUsable);
         break;
       default:
         this.drawText('No breakdown available for this stat.', headerX, cursorY, widthUsable, 'left');
@@ -191,17 +190,17 @@ class Window_StatusStatBreakdown
 
   //region kind resolution
   /**
-   * Resolves the kind from a long param id.
-   * @param {number} longId The long param id.
+   * Resolves the kind from a registry parameter key.
+   * @param {string} parameterKey The registry key.
    * @returns {string}
    */
-  resolveKind(longId)
+  resolveKind(parameterKey)
   {
-    if (longId === 30) return Window_StatusStatBreakdown.KINDS.Mtp;
-    if (longId >= 0 && longId <= 7) return Window_StatusStatBreakdown.KINDS.Base;
-    if (longId >= 8 && longId <= 17) return Window_StatusStatBreakdown.KINDS.Ex;
-    if (longId >= 18 && longId <= 27) return Window_StatusStatBreakdown.KINDS.Special;
-    if (longId >= 28 && longId <= 29) return Window_StatusStatBreakdown.KINDS.Crit;
+    if (parameterKey === 'mtp') return Window_StatusStatBreakdown.KINDS.Mtp;
+    if (parameterKey === 'cdm' || parameterKey === 'cdr') return Window_StatusStatBreakdown.KINDS.Crit;
+    if (ParameterKeys.bparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Base;
+    if (ParameterKeys.xparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Ex;
+    if (ParameterKeys.sparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Special;
     return Window_StatusStatBreakdown.KINDS.Custom;
   }
 
@@ -975,24 +974,24 @@ class Window_StatusStatBreakdown
    * - 32: Skill Proficiency Boost (SPB)
    * - 33: SDP Multiplier Bonus (SMB)
    * @param {Game_Actor} actor The actor whose stat is being explained.
-   * @param {number} longId The long param id to render.
+   * @param {string} parameterKey The registry key to render.
    * @param {number} x The x coordinate to start drawing.
    * @param {number} y The y coordinate to start drawing.
    * @param {number} w The width available to draw within.
    * @returns {number} The next y position after finishing this section.
    */
-  drawCustomBreakdown(actor, longId, x, y, w)
+  drawCustomBreakdown(actor, parameterKey, x, y, w)
   {
     // Dispatch to the appropriate custom renderer.
-    if (longId === 31)
+    if (parameterKey === 'msb')
     {
       return this._drawMsbBreakdown(actor, x, y, w);
     }
-    if (longId === 32)
+    if (parameterKey === 'prof')
     {
       return this._drawSpbBreakdown(actor, x, y, w);
     }
-    if (longId === 33)
+    if (parameterKey === 'sdr')
     {
       return this._drawSmbBreakdown(actor, x, y, w);
     }
@@ -1036,7 +1035,8 @@ class Window_StatusStatBreakdown
       if (!panel) return;
 
       // fetch all parameters for this panel that affect the target param id.
-      const panelParams = panel.getPanelParameterById(paramId);
+      const parameterKey = ParameterKeys.bparamKey(paramId);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if the panel has no relevant parameters, skip it.
       if (!panelParams.length) return;
@@ -1179,7 +1179,8 @@ class Window_StatusStatBreakdown
       if (!panel) return;
 
       // fetch panel parameters for this non-core id (offset by idExtra).
-      const panelParams = panel.getPanelParameterById(subId + idExtra);
+      const parameterKey = ParameterKeys.legacyLongParamKey(subId + idExtra);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if no relevant parameters, skip.
       if (!panelParams.length) return;
@@ -1260,7 +1261,8 @@ class Window_StatusStatBreakdown
       if (!panel) return;
 
       // fetch panel parameters for this regen sub-id.
-      const panelParams = panel.getPanelParameterById(subId + idExtra);
+      const parameterKey = ParameterKeys.legacyLongParamKey(subId + idExtra);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if no relevant parameters, skip.
       if (!panelParams.length) return;
@@ -1654,7 +1656,7 @@ class Window_StatusStatBreakdown
       .filter(s => !!s)
       .reduce((n, s) => n + (s.jabsSpeedBoost | 0), 0);
 
-    // Total should match Page 1’s longParam(31).
+    // Total should match Page 1’s msb value.
     const total = (equipTotal + stateTotal);
 
     // Build rows — MSB is shown as whole numbers (Page 1 omits % for 31).

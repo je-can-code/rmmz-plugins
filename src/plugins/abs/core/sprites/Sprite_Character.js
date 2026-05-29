@@ -363,7 +363,7 @@ Sprite_Character.prototype.setupMapSprite = function()
 
 //region visual offsetting
 /**
- * Extends/Overrides {@link Sprite_Character.prototype.updatePosition}.<br/>
+ * Extends {@link Sprite_Character.prototype.updatePosition}.<br/>
  * Also applies per-skill visual metadata (offset, anchor, z, rotation, scale) to JABS action sprites.
  */
 J.ABS.Aliased.Sprite_Character.set('updatePosition', Sprite_Character.prototype.updatePosition);

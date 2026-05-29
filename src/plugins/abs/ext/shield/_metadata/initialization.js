@@ -100,5 +100,17 @@ J.ABS.EXT.SHIELD.RegExp = {
    * Represents one or many skills to fire when this state’s shield breaks.
    */
   Break: /<shieldBreak:[ ]?(\[[\d, ]+])>/i,
+
+  /** Outgoing shield point amplification (`<sar:25>` = +25%). */
+  ShieldAmplification: /<sar:(-?\d+)>/gi,
+
+  /** Incoming shield effectiveness (`<ser:25>` = +25%). */
+  ShieldEffectiveness: /<ser:(-?\d+)>/gi,
+};
+
+/** Legacy SDP panel parameter ids for shield stats. */
+J.ABS.EXT.SHIELD.SdpParamId = {
+  SAR: 38,
+  SER: 39,
 };
 //endregion initialization

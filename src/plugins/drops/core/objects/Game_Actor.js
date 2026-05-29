@@ -1,4 +1,44 @@
 //region Game_Actor
+Object.defineProperties(Game_BattlerBase.prototype, {
+  /**
+   * Gold drop rate multiplier bonus.
+   */
+  gdr: {
+    get: function()
+    {
+      return 0;
+    },
+    configurable: true,
+  },
+
+  /**
+   * Item drop rate multiplier bonus.
+   */
+  dor: {
+    get: function()
+    {
+      return 0;
+    },
+    configurable: true,
+  },
+});
+
+Object.defineProperty(Game_Actor.prototype, 'gdr', {
+  get: function()
+  {
+    return this.getGoldMultiplier();
+  },
+  configurable: true,
+});
+
+Object.defineProperty(Game_Actor.prototype, 'dor', {
+  get: function()
+  {
+    return this.getDropMultiplierBonus();
+  },
+  configurable: true,
+});
+
 /**
  * Gets this actor's bonus drop multiplier.
  * @returns {number}

@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes this plugin's members.
  */
 J.LEVEL.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
@@ -78,7 +78,7 @@ Game_Actor.prototype.calculateRealMaxLevel = function()
 };
 
 /**
- * Overrides {@link #maxLevel}.<br/>
+ * Overwrites {@link #maxLevel}.<br/>
  * Recalculates the max level based on the possibility of a modified max level.
  * @returns {number}
  */
@@ -111,7 +111,7 @@ Game_Actor.prototype.baseMaxLevel = function()
 };
 
 /**
- * Overrides {@link #paramBase}.<br/>
+ * Overwrites {@link #paramBase}.<br/>
  * Potentially fetches "beyond max data" for when ones level is beyond the editor max of 99.
  * @param {number} paramId The paramId to fetch the data for.
  * @returns {number}

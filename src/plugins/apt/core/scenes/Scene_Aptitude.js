@@ -564,11 +564,9 @@ class Scene_Aptitude
     // wire basic handlers.
     win.setHandler('ok', this.onListOk.bind(this));
     win.setHandler('cancel', this.popScene.bind(this));
-    win.setHandler('more', this.toggleViewMode.bind(this));
-
-    // also wire page navigation keys (Q/W or shoulder buttons).
-    win.setHandler('pageup', this.onCycleActorLeft.bind(this));
-    win.setHandler('pagedown', this.onCycleActorRight.bind(this));
+    win.setHandler('context', this.toggleViewMode.bind(this));
+    win.setHandler('actor-prev', this.onCycleActorLeft.bind(this));
+    win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // store and add to the scene.
     this._j._aptitude._windows._aggregateList = win;
@@ -639,11 +637,9 @@ class Scene_Aptitude
     // wire basic handlers.
     win.setHandler('ok', this.onListOk.bind(this));
     win.setHandler('cancel', this.popScene.bind(this));
-    win.setHandler('more', this.toggleViewMode.bind(this));
-
-    // also wire page navigation keys (Q/W or shoulder buttons).
-    win.setHandler('pageup', this.onCycleActorLeft.bind(this));
-    win.setHandler('pagedown', this.onCycleActorRight.bind(this));
+    win.setHandler('context', this.toggleViewMode.bind(this));
+    win.setHandler('actor-prev', this.onCycleActorLeft.bind(this));
+    win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // hide this window initially.
     win.hide();

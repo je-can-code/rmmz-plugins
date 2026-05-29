@@ -46,14 +46,20 @@ export function loadSdpPanelModelsOnlyVm(sandbox)
       },
     };
     `,
+    readSdpModelSource('PanelIdentity.js'),
+    readSdpModelSource('PanelMastery.js'),
     readSdpModelSource('PanelParameter.js'),
     readSdpModelSource('PanelRankupReward.js'),
     readSdpModelSource('PanelRarity.js'),
+    readSdpModelSource('PanelProgression.js'),
     readSdpModelSource('StatDistributionPanel.js'),
     readSdpModelSource('StatDistributionPanelBuilder.js'),
     `
     globalThis.__sdpModels = {
+      PanelIdentity,
+      PanelMastery,
       PanelParameter,
+      PanelProgression,
       PanelRankupReward,
       PanelRarity,
       StatDistributionPanel,

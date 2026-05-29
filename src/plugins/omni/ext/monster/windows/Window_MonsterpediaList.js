@@ -15,7 +15,7 @@ class Window_MonsterpediaList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of all observable monsters in this window.
    */
   makeCommandList()

@@ -1,6 +1,6 @@
 //region Game_Battler
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the passive states properties for this battler.
  */
 J.PASSIVE.Aliased.Game_BattlerBase.set('initMembers', Game_Battler.prototype.initMembers);
@@ -353,7 +353,7 @@ Game_Battler.prototype.isPassiveState = function(stateId)
 };
 
 /**
- * Extends {@link #allStates}.<br>
+ * Extends {@link #allStates}.<br/>
  * Includes states from passive skills as well.
  * @returns {RPG_State[]}
  */
@@ -372,7 +372,7 @@ Game_Battler.prototype.allStates = function()
 };
 
 /**
- * Extends {@link #isStateAddable}.<br>
+ * Extends {@link #isStateAddable}.<br/>
  * Prevents adding states if they are identified as passive.
  */
 J.PASSIVE.Aliased.Game_Battler.set('isStateAddable', Game_Battler.prototype.isStateAddable);
@@ -387,7 +387,7 @@ Game_Battler.prototype.isStateAddable = function(stateId)
 };
 
 /**
- * Extends {@link #onStateAdded}.<br>
+ * Extends {@link #onStateAdded}.<br/>
  * Triggers a refresh of passive states when a state is added.
  * @param {number} stateId The state id being added.
  */
@@ -403,7 +403,7 @@ Game_Battler.prototype.onStateAdded = function(stateId)
 };
 
 /**
- * Extends {@link #removeState}.<br>
+ * Extends {@link #removeState}.<br/>
  * Prevent removal of states if they are identified as passive.
  */
 J.PASSIVE.Aliased.Game_Battler.set('removeState', Game_Battler.prototype.removeState);
@@ -418,7 +418,7 @@ Game_Battler.prototype.removeState = function(stateId)
 };
 
 /**
- * Extends {@link #onStateRemoval}.<br>
+ * Extends {@link #onStateRemoval}.<br/>
  * Triggers a refresh of passive states when a state is removed.
  * @param {number} stateId The state id being removed.
  */

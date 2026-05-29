@@ -9,50 +9,12 @@ TextManager.sdpPoints = function()
 };
 
 /**
- * Extends {@link #longParam}.<br>
- * First checks if it is the SDP multiplier paramId before searching for others.
- * @returns {string}
- */
-J.SDP.Aliased.TextManager.set('longParam', TextManager.longParam);
-TextManager.longParam = function(paramId)
-{
-  switch (paramId)
-  {
-    case 33:
-      return this.sdpMultiplier(); // sdp multiplier
-    default:
-      // perform original logic.
-      return J.SDP.Aliased.TextManager.get('longParam')
-        .call(this, paramId);
-  }
-};
-
-/**
  * Gets the proper name of "SDP Multiplier".
  * @returns {string}
  */
 TextManager.sdpMultiplier = function()
 {
-  return 'SDP Multiplier';
-};
-
-/**
- * Extends {@link #longParamDescription}.<br>
- * First checks if it is the SDP multiplier paramId before searching for others.
- * @returns {string[]}
- */
-J.SDP.Aliased.TextManager.set('longParamDescription', TextManager.longParamDescription);
-TextManager.longParamDescription = function(paramId)
-{
-  switch (paramId)
-  {
-    case 33:
-      return this.sdpMultiplierDescription(); // sdp multiplier
-    default:
-      // perform original logic.
-      return J.SDP.Aliased.TextManager.get('longParamDescription')
-        .call(this, paramId);
-  }
+  return 'SDP Rate';
 };
 
 /**

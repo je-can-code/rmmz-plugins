@@ -12,7 +12,7 @@ class Window_JaftingListHeader
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws the JAFTING hub title and short description.
    */
   drawContent()

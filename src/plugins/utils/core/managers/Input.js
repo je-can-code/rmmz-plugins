@@ -11,7 +11,7 @@ Input.keyMapper = {
 };
 
 /**
- * Extends/Overrides {@link #_updateGamepadState}.<br/>
+ * Extends {@link #_updateGamepadState}.<br/>
  * Also logs only freshly pressed gamepad buttons/directions.
  */
 J.UTILS.Aliased.Input.set("_updateGamepadState", Input._updateGamepadState);

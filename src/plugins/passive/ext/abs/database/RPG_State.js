@@ -43,4 +43,15 @@ Object.defineProperty(RPG_State.prototype, 'tierColorHex', {
     return RPGManager.getStringFromNoteByRegex(this, J.PASSIVE.EXT.ABS.RegExp.TierColorHex, true);
   }
 });
+/**
+ * All reward multipliers defined on this state via {@link J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier}.
+ * Returns a map of reward type key to its multiplier value.
+ * @type {Map<string, number>}
+ */
+Object.defineProperty(RPG_State.prototype, 'rewardMultipliers', {
+  get()
+  {
+    return J.PASSIVE.EXT.ABS.Helpers.parseRewardMultipliers(this);
+  },
+});
 //endregion RPG_State

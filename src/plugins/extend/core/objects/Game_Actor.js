@@ -2,7 +2,7 @@
 import OverlayManager from './../managers/OverlayManager.js';
 
 /**
- * Overrides {@link #skill}<br/>.
+ * Overwrites {@link #skill}.<br/>
  * Overlays the skill with any skill extensions.
  * @param {number} skillId The skill id to get the skill for.
  * @returns {RPG_Skill} The potentially extended skill.

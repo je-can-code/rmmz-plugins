@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes parameter buff initialization.
  */
 J.NATURAL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -15,7 +15,7 @@ Game_Enemy.prototype.setup = function(enemyId, x, y)
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Also refreshes all natural parameter buff values on the battler.
  */
 J.NATURAL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);
@@ -31,7 +31,8 @@ Game_Enemy.prototype.onBattlerDataChange = function()
 
 //region max tp
 /**
- * OVERWRITE Replaces the `maxTp()` function with our custom one that will respect
+ * Overwrites {@link #maxTp}.<br/>
+ * Replaces the `maxTp()` function with our custom one that will respect
  * formulas and apply rates from tags, etc.
  * @returns {number}
  */
@@ -205,7 +206,7 @@ Game_Enemy.prototype.getSparamNaturalBonuses = function(sparamId, baseParam)
 
 //region rewards
 /**
- * Overrides {@link #refreshRewardBonuses}.<br>
+ * Overwrites {@link #refreshRewardBonuses}.<br/>
  * Implements the refresh for battle reward bonuses for the enemy.
  */
 Game_Enemy.prototype.refreshRewardBonuses = function()
@@ -255,7 +256,7 @@ Game_Enemy.prototype.refreshSdpRewardBonuses = function()
 };
 
 /**
- * Extends {@link #exp}.<br>
+ * Extends {@link #exp}.<br/>
  * Also adds on any natural bonuses of experience.
  * @returns {number}
  */
@@ -274,7 +275,7 @@ Game_Enemy.prototype.exp = function()
 };
 
 /**
- * Extends {@link #gold}.<br>
+ * Extends {@link #gold}.<br/>
  * Also adds on any natural bonuses of gold.
  * @returns {number}
  */

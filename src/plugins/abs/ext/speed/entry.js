@@ -8,3 +8,4 @@ import './objects/Game_Actor.js';
 import './objects/Game_Battler.js';
 import './objects/Game_Character.js';
 import './objects/Game_Enemy.js';
+import './core/registerSpeedParameters.js';

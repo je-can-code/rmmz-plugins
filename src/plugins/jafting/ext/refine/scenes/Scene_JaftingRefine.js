@@ -296,7 +296,7 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
+   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
    * Changes the filter to a different type from {@link PIXI.filters}.<br>
    */
   createBackground()
@@ -310,7 +310,7 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Overrides {@link #createButtons}.<br>
+   * Overwrites {@link #createButtons}.<br/>
    * Disables the creation of the buttons.
    * @override
    */

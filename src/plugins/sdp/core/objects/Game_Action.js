@@ -1,7 +1,7 @@
 //region Game_Action
 //region unlock SDP
 /**
- * Extends {@link #applyGlobal}.<br>
+ * Extends {@link #applyGlobal}.<br/>
  * Also handles any SDP effects such as unlocking.
  */
 J.SDP.Aliased.Game_Action.set('applyGlobal', Game_Action.prototype.applyGlobal);

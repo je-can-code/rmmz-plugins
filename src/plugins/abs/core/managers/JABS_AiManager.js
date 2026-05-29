@@ -404,6 +404,9 @@ class JABS_AiManager
       // neutral battlers are never an opposition.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
 
+      // invisible followers are not combat-eligible; enemies should not target or aggro them.
+      if (battler.isFollower() && battler.getCharacter().isVisible() === false) return false;
+
       // check if the selected battler is opposed to the target battler's team.
       const isOpposingTeam = JABS_TeamRules.isOpposed(selectedBattler.getTeam(), battler.getTeam());
 
@@ -930,6 +933,10 @@ class JABS_AiManager
 
     // do not manage inanimate battlers.
     if (battler.isInanimate()) return false;
+
+    // invisible followers are not combat-eligible; the battler object persists for party cycling,
+    // but AI should not tick while the follower is hidden.
+    if (battler.isFollower() && battler.getCharacter().isVisible() === false) return false;
 
     // manage that AI!
     return true;

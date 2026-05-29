@@ -10,7 +10,7 @@ class J_MAP__PluginMetadata extends PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters into instance fields used by the minimap.
    */
   postInitialize()

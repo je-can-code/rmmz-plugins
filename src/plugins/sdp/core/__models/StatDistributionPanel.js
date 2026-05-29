@@ -1,4 +1,7 @@
 //region StatDistributionPanel
+import PanelIdentity from './PanelIdentity.js';
+import PanelMastery from './PanelMastery.js';
+import PanelProgression from './PanelProgression.js';
 import StatDistributionPanelBuilder from './StatDistributionPanelBuilder.js';
 import PanelRankupReward from './PanelRankupReward.js';
 import PanelParameter from './PanelParameter.js';
@@ -10,86 +13,39 @@ import PanelRarity from './PanelRarity.js';
  */
 class StatDistributionPanel
 {
+  /**
+   * @param {string} key
+   * @param {PanelIdentity} identity
+   * @param {PanelProgression} progression
+   * @param {PanelParameter[]} panelParameters
+   * @param {PanelRankupReward[]} panelRewards
+   * @param {PanelMastery} mastery
+   */
   constructor(
-    name,
     key,
-    iconIndex,
-    rarity,
-    unlockedByDefault,
-    description,
-    topFlavorText,
-    maxRank,
-    baseCost,
-    flatGrowthCost,
-    multGrowthCost,
+    identity,
+    progression,
     panelParameters,
-    panelRewards)
+    panelRewards,
+    mastery)
   {
     /**
-     * Gets the friendly name for this SDP.
-     * @type {string}
-     */
-    this.name = name;
-
-    /**
-     * Gets the unique identifier key that represents this SDP.
+     * Unique identifier key that represents this SDP (root-level in config.sdp.json).
      * @type {string}
      */
     this.key = key;
 
     /**
-     * Gets the icon index for this SDP.
-     * @type {number}
+     * Presentation and unlock metadata for this panel.
+     * @type {PanelIdentity}
      */
-    this.iconIndex = iconIndex;
+    this.identity = identity;
 
     /**
-     * Panel rarity (**0–5**, Common..Godlike).
-     * @type {number}
+     * Rank cap, rarity tier, and rank-up cost offsets for this panel.
+     * @type {PanelProgression}
      */
-    this.rarity = rarity;
-
-    /**
-     * Gets whether or not this SDP is unlocked by default.
-     * @type {boolean}
-     */
-    this.unlockedByDefault = unlockedByDefault;
-
-    /**
-     * Gets the description for this SDP.
-     * @type {string}
-     */
-    this.description = description;
-
-    /**
-     * The description that shows up underneath the name in the details window.
-     * @type {string}
-     */
-    this.topFlavorText = topFlavorText;
-
-    /**
-     * Gets the maximum rank for this SDP.
-     * @type {number}
-     */
-    this.maxRank = maxRank;
-
-    /**
-     * Additive offset on top of the rarity default base SDP (see `config.sdp.json`; core curve lives in plugin params).
-     * @type {number}
-     */
-    this.baseCost = baseCost;
-
-    /**
-     * Additive offset on the rarity default exponential coefficient (**flat** term before `mult ** step`).
-     * @type {number}
-     */
-    this.flatGrowthCost = flatGrowthCost;
-
-    /**
-     * Multiplier applied to the rarity default **mult** (keep **1.0** for “use defaults only”).
-     * @type {number}
-     */
-    this.multGrowthCost = multGrowthCost;
+    this.progression = progression;
 
     /**
      * The collection of all parameters that this panel affects when ranking it up.
@@ -102,6 +58,120 @@ class StatDistributionPanel
      * @type {PanelRankupReward[]}
      */
     this.panelRewards = panelRewards;
+
+    /**
+     * Subgroup mastery enrollment for this panel.
+     * @type {PanelMastery}
+     */
+    this.mastery = mastery;
+  }
+
+  /**
+   * Friendly name for this SDP.
+   * @returns {string}
+   */
+  get name()
+  {
+    return this.identity.name;
+  }
+
+  /**
+   * Icon index for this SDP.
+   * @returns {number}
+   */
+  get iconIndex()
+  {
+    return this.identity.iconIndex;
+  }
+
+  /**
+   * Whether this SDP is unlocked by default.
+   * @returns {boolean}
+   */
+  get unlockedByDefault()
+  {
+    return this.identity.unlockedByDefault;
+  }
+
+  /**
+   * Long description for the details window.
+   * @returns {string}
+   */
+  get description()
+  {
+    return this.identity.description;
+  }
+
+  /**
+   * Short flavor line under the name in the details window.
+   * @returns {string}
+   */
+  get topFlavorText()
+  {
+    return this.identity.topFlavorText;
+  }
+
+  /**
+   * Maximum rank for this SDP.
+   * @returns {number}
+   */
+  get maxRank()
+  {
+    return this.progression.maxRank;
+  }
+
+  /**
+   * Panel rarity (**0–5**, Common..Godlike).
+   * @returns {number}
+   */
+  get rarity()
+  {
+    return this.progression.rarity;
+  }
+
+  /**
+   * Additive offset on top of the rarity default base SDP.
+   * @returns {number}
+   */
+  get baseCost()
+  {
+    return this.progression.baseCost;
+  }
+
+  /**
+   * Additive offset on the rarity default exponential flat coefficient.
+   * @returns {number}
+   */
+  get flatGrowthCost()
+  {
+    return this.progression.flatGrowthCost;
+  }
+
+  /**
+   * Multiplier applied to the rarity default mult.
+   * @returns {number}
+   */
+  get multGrowthCost()
+  {
+    return this.progression.multGrowthCost;
+  }
+
+  /**
+   * Whether this panel is placed in the subgroup hierarchy.
+   * @returns {boolean}
+   */
+  enrolledInSubgroup()
+  {
+    return this.mastery.enrolledInSubgroup();
+  }
+
+  /**
+   * Whether maxing this panel grants a subgroup mastery wrapper skill.
+   * @returns {boolean}
+   */
+  participatesInMasteryProgram()
+  {
+    return this.mastery.grantsMasterySkill();
   }
 
   /**
@@ -134,14 +204,14 @@ class StatDistributionPanel
   }
 
   /**
-   * Retrieves all panel parameters associated with a provided `paramId`.
-   * @param {number} paramId The `paramId` to find parameters for.
+   * Retrieves all panel parameters associated with a provided registry key.
+   * @param {string} parameterKey The registry key to find parameters for.
    * @returns {PanelParameter[]}
    */
-  getPanelParameterById(paramId)
+  getPanelParameterByKey(parameterKey)
   {
     const { panelParameters } = this;
-    return panelParameters.filter(panelParameter => panelParameter.parameterId === paramId);
+    return panelParameters.filter(panelParameter => panelParameter.parameterKey === parameterKey);
   }
 
   /**
@@ -180,10 +250,12 @@ class StatDistributionPanel
     $gameParty.lockSdp(this.key);
   }
 
-  calculateBonusByRank(paramId, currentRank, baseParam = 0, fractional = false)
+  calculateBonusByRank(parameterKey, currentRank, baseParam = 0, fractional = false)
   {
     // determine all the applicable panel parameters.
-    const panelParameters = this.panelParameters.filter(panelParameter => panelParameter.parameterId === paramId);
+    const panelParameters = this.panelParameters.filter(
+      panelParameter => panelParameter.parameterKey === parameterKey
+    );
 
     // short circuit if we have no applicable parameters.
     if (!panelParameters.length) return 0;

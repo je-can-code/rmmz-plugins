@@ -46,13 +46,13 @@ describe('J-CriticalFactors Game_Battler (out/crit/J-CriticalFactors.js)', () =>
     expect(actor.baseCriticalMultiplier()).toBe(0.4);
   });
 
-  it('exposes longParam 28 and 29 as cdm and cdr getters', () =>
+  it('exposes critical damage multiplier and reduction as numeric stats', () =>
   {
     const actor = new sandbox.Game_Actor();
     actor.initMembers();
 
-    expect(typeof actor.longParam(28)).toBe('number');
-    expect(typeof actor.longParam(29)).toBe('number');
+    expect(typeof actor.criticalDamageMultiplier()).toBe('number');
+    expect(typeof actor.criticalDamageReduction()).toBe('number');
   });
 });
 //endregion plugins/crit/game-battler.test.js

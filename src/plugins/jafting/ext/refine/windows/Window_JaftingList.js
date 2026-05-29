@@ -2,7 +2,7 @@
 import Scene_JaftingRefine from '../scenes/Scene_JaftingRefine.js';
 
 /**
- * Extends {@link #buildCommands}.<br>
+ * Extends {@link #buildCommands}.<br/>
  * Includes the refinement command as well as the rest.
  */
 J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList.set('buildCommands', Window_JaftingList.prototype.buildCommands);

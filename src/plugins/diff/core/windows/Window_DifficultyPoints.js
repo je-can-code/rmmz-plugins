@@ -40,7 +40,7 @@ class Window_DifficultyPoints
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws the various data points surrounding the difficulty layer points
    * and how they are affected by the difficulty layer currently being
    * hovered over by the player.

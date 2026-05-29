@@ -31,7 +31,7 @@ Game_Event.prototype.isCollidedWithEvents = function(x, y)
 };
 
 /**
- * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Overwrites {@link Game_CharacterBase.getCollisionPivotY}.<br/>
  * Anchors NPC and enemy event collision near their feet for natural depth feel.
  * JABS action events (projectiles) are flagged as through and bypass tile collision
  * entirely, so this override does not affect them.

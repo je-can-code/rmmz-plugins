@@ -134,7 +134,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #bitmapWidth}.<br/>
+   * Overwrites {@link #bitmapWidth}.<br/>
    * Gets the width of our custom bitmap.
    * @returns {number}
    */
@@ -144,7 +144,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #bitmapHeight}.<br/>
+   * Overwrites {@link #bitmapHeight}.<br/>
    * Gets the height of our custom bitmap.
    * @returns {number}
    */
@@ -154,7 +154,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #gaugeHeight}.<br/>
+   * Overwrites {@link #gaugeHeight}.<br/>
    * Gets the height of our custom gauge.
    * @returns {number}
    */
@@ -164,7 +164,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #label}.<br/>
+   * Overwrites {@link #label}.<br/>
    * Gets our custom label for the gauge.
    * @returns {string}
    */
@@ -266,7 +266,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #currentValue}.<br/>
+   * Overwrites {@link #currentValue}.<br/>
    * Returns the current value of the gauge based on custom values.
    * @returns {number|NaN}
    */
@@ -291,7 +291,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #currentMaxValue}.<br/>
+   * Overwrites {@link #currentMaxValue}.<br/>
    * Returns the maximum value of the gauge based on custom values.
    * @returns {number|NaN}
    */
@@ -380,7 +380,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #drawLabel}.<br/>
+   * Overwrites {@link #drawLabel}.<br/>
    * Draws our custom label on the gauge.
    */
   drawLabel()
@@ -396,7 +396,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #drawValue}.<br/>
+   * Overwrites {@link #drawValue}.<br/>
    * Does nothing by design (no values for map gauges).
    */
   drawValue()
@@ -405,7 +405,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #redraw}.<br/>
+   * Overwrites {@link #redraw}.<br/>
    * Redraws the gauge with our custom values.
    */
   redraw()
@@ -440,7 +440,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #measureLabelWidth}.<br/>
+   * Overwrites {@link #measureLabelWidth}.<br/>
    * Measure the actual custom label for this map gauge. If no label is set,
    * return 0 so HUD gauges (which are unlabeled) render with the same width.
    * @returns {number}
@@ -464,7 +464,7 @@ class Sprite_MapGauge
   }
 
   /**
-   * Overrides {@link #textHeight}.<br/>
+   * Overwrites {@link #textHeight}.<br/>
    * Return the bitmap height as the text height for map gauges to ensure borders are correctly drawn.
    * @returns {number}
    */

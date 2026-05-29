@@ -1,5 +1,5 @@
 /**
- * Overrides {@link Bitmap#_createCanvas}.<br>
+ * Overwrites {@link Bitmap#_createCanvas}.<br/>
  * Adds an additional "willReadFrequently" attribute set to true on the canvas.
  * This forces software-based rendering, which is supposedly optimal based
  * on the way this code is written, according to Chromium's warning.

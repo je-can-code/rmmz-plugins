@@ -1,6 +1,6 @@
 //region Game_CharacterBase
 /**
- * Extends {@link Game_CharacterBase.isOverlappingSolidTiles}.<br>
+ * Extends {@link Game_CharacterBase.isOverlappingSolidTiles}.<br/>
  * Enemy battlers with rectangular hitboxes need tile overlap checks based on the
  * full feet-anchored rectangle instead of a square radius around the center.
  * @param {number} px The proposed pivot x in tile units.
@@ -65,7 +65,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
- * Extends {@link Game_CharacterBase.isCharacterCollisionAt}.<br>
+ * Extends {@link Game_CharacterBase.isCharacterCollisionAt}.<br/>
  * Character-vs-character overlap needs one shared PIXEL AABB builder so every
  * battler is compared in the same pivot-aware coordinate space.
  * @param {number} px Proposed x in fractional tiles.

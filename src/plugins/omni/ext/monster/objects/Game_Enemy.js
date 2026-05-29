@@ -10,7 +10,7 @@ Game_Enemy.prototype.getMonsterPediaObservations = function()
 };
 
 /**
- * Extends {@link #onDeath}.<br>
+ * Extends {@link #onDeath}.<br/>
  * Also updates the monsterpedia observations for this enemy.
  */
 J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('onDeath', Game_Enemy.prototype.onDeath);
@@ -110,7 +110,7 @@ Game_Enemy.prototype.learnMonsterpediaParameters = function()
 };
 
 /**
- * Extends {@link #makeDropItems}.<br>
+ * Extends {@link #makeDropItems}.<br/>
  * Also observes each drop dropped for monsterpedia purposes.
  */
 J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('makeDropItems', Game_Enemy.prototype.makeDropItems);

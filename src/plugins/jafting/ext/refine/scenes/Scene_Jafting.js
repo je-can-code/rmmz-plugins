@@ -2,7 +2,7 @@
 import Scene_JaftingRefine from './Scene_JaftingRefine.js';
 
 /**
- * Extends {@link #onRootJaftingSelection}.<br>
+ * Extends {@link #onRootJaftingSelection}.<br/>
  * When Refinement is chosen on the JAFTING hub, opens the Refinement scene.
  */
 J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting

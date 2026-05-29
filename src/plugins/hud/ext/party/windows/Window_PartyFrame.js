@@ -85,7 +85,7 @@ class Window_PartyFrame
   configure()
   {
     // make the window's background opacity transparent.
-    this.opacity = 32;
+    this.opacity = 0;
 
     // initialize the cache.
     this.refreshCache();

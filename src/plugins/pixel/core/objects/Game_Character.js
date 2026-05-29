@@ -7,7 +7,7 @@
 Game_Character.pixelRepeatableMoveCommandCodes = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ];
 
 /**
- * Extends {@link processMoveCommand}.<br>
+ * Extends {@link processMoveCommand}.<br/>
  * Ensures when move routes are being processed, that we adjust the x,y coordinates.
  * @param {RPG_EventListCommand} command The commands associated with this movement.
  */

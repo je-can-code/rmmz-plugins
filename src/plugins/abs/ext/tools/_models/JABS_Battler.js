@@ -90,7 +90,7 @@ JABS_Battler.prototype.clearGapCloseDestination = function()
 };
 
 /**
- * Extends {@link JABS_Battler.update}.<br>
+ * Extends {@link JABS_Battler.update}.<br/>
  * Also updates the gap closing process.
  */
 J.ABS.EXT.TOOLS.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update);

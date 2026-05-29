@@ -9,7 +9,7 @@ Object.defineProperty(JABS_Engine.prototype, "requestAlliesRefresh", {
 });
 
 /**
- * Extends {@link JABS_Engine.prePartyCycling}.<br>
+ * Extends {@link JABS_Engine.prePartyCycling}.<br/>
  * Jumps all followers to the player upon party cycling.
  */
 J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set('prePartyCycling', JABS_Engine.prototype.prePartyCycling);
@@ -24,7 +24,7 @@ JABS_Engine.prototype.prePartyCycling = function()
 };
 
 /**
- * Overrides {@link JABS_Engine.handlePartyCycleMemberChanges}.<br>
+ * Overwrites {@link JABS_Engine.handlePartyCycleMemberChanges}.<br/>
  * Jumps all followers to the player upon party cycling.
  */
 J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set(
@@ -51,7 +51,7 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
 };
 
 /**
- * Extends {@link JABS_Engine.continuedPrimaryBattleEffects}.<br>
+ * Extends {@link JABS_Engine.continuedPrimaryBattleEffects}.<br/>
  * Also applies battle memories as-necessary.
  */
 J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set(
@@ -137,7 +137,7 @@ JABS_Engine.prototype.postPartyCycling = function()
   this.rebuildActorAllies();
 };
 /**
- * Extends {@link JABS_Engine#canBeAlerted}.<br>
+ * Extends {@link JABS_Engine#canBeAlerted}.<br/>
  * Do-nothing allies cannot be alerted; they ignore attacks passively.
  */
 J.ABS.EXT.ALLYAI.Aliased.JABS_Engine.set('canBeAlerted', JABS_Engine.prototype.canBeAlerted);

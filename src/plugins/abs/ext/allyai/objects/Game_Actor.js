@@ -2,7 +2,7 @@
 import JABS_AllyAI from './../_models/JABS_AllyAI.js';
 
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also tracks JABS ally AI.
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
@@ -44,7 +44,7 @@ Game_Actor.prototype.initAllyAiMembers = function()
 };
 
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Also initializes ally AI.
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);

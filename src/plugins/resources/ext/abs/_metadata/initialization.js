@@ -55,4 +55,15 @@ J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainFlat    = /<when-hit-tp-gain:(\d+)>/gi;
 J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainPercent = /<when-hit-tp-gain:(\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainFormula = /<when-hit-tp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
+J.RESOURCES.EXT.ABS.RegExp.Lifesteal = /<lst:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.Manasteal = /<mst:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.Techsteal = /<tst:(-?\d+)>/gi;
+
+/** Legacy SDP panel parameter ids for on-attack drain stats. */
+J.RESOURCES.EXT.ABS.SdpParamId = {
+  LST: 35,
+  MST: 36,
+  TST: 37,
+};
+
 //endregion initialization

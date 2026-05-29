@@ -55,14 +55,16 @@ Game_Battler.prototype._ensureHcrInitializedForResources = function()
 };
 
 /**
- * Gets the hp cost reduction for this battler.
- * @returns {number}
+ * HP cost reduction in decimal percent space (0 = none).
  */
-Game_Battler.prototype.hcr = function()
-{
-  this._ensureHcrInitializedForResources();
-  return this._j._hcr;
-};
+Object.defineProperty(Game_Battler.prototype, 'hcr', {
+  get: function()
+  {
+    this._ensureHcrInitializedForResources();
+    return Math.max(0, (100 - this._j._hcr) / 100);
+  },
+  configurable: true,
+});
 
 /**
  * Gets the hp cost reduction factor for this battler.

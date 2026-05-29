@@ -13,7 +13,7 @@ class J_Omnipedia_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps static command and switch metadata used by menu integration.
    */
   postInitialize()

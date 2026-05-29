@@ -1,7 +1,7 @@
 //region Game_Player
 import StarPhases from './../_models/StarPhases.js';
 /**
- * Extends {@link Game_Player.clearTransferInfo}.<br>
+ * Extends {@link Game_Player.clearTransferInfo}.<br/>
  * Parse out enemy data from the troop and convert them into JABS battlers.
  */
 J.ABS.EXT.STAR.Aliased.Game_Player.set('clearTransferInfo', Game_Player.prototype.clearTransferInfo);
@@ -16,7 +16,7 @@ Game_Player.prototype.clearTransferInfo = function()
 };
 
 /**
- * Extends {@link Game_Player.executeEncounter}.<br>
+ * Extends {@link Game_Player.executeEncounter}.<br/>
  * Includes preparation for the stars of battle.
  */
 J.ABS.EXT.STAR.Aliased.Game_Player.set('executeEncounter', Game_Player.prototype.executeEncounter);

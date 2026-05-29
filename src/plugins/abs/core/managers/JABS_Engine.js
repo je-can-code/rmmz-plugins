@@ -26,7 +26,7 @@ class JABS_Engine
    * A cached collection of actions keyed by their uuids.
    */
   cachedActions = new Map();
-
+/**/
   //region properties
   /**
    * Retrieves whether or not the ABS is currently enabled.
@@ -360,16 +360,15 @@ class JABS_Engine
   }
 
   /**
-   * Implicit passive parry chance (0–100) from attacker/defender pressure vs the dominance band.
-   * Matches the probability step inside {@link #checkParry}; does not apply facing, GRD &gt; 0,
-   * or attacker ignore-parry state gates ({@link #isParryPossible}).
+   * Builds the attacker pressure (A) and defender pressure (D) used by all defensive-event formulas.
+   * Both values incorporate the baseline floor, per-level ramp, stat contributions, and the
+   * ignore-parry factor that skills can apply to weaken the defender's guard rating.
    * @param {JABS_Battler} caster The attacker on the map.
    * @param {JABS_Battler} target The defender on the map.
-   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100); same as skill tag
-   * {@code jabsIgnoreParry}.
-   * @returns {number} Rounded percent chance the implicit parry roll succeeds (same rounding as combat).
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100).
+   * @returns {{ A: number, D: number }} The resolved attacker and defender pressure values.
    */
-  static implicitParryChancePercent(caster, target, ignoreParryPercent)
+  static #defensivePressure(caster, target, ignoreParryPercent)
   {
     const targetBattler = target.getBattler();
     const casterBattler = caster.getBattler();
@@ -377,9 +376,11 @@ class JABS_Engine
     const ignoreRaw = ignoreParryPercent ?? 0;
     const parryIgnoredFactor = (100 - ignoreRaw) / 100;
 
+    // local helpers for stat scaling.
     const hundredX = value => parseFloat((value * 100).toFixed(3));
     const tenPercent = value => parseFloat((value * 0.1).toFixed(3));
 
+    // build the symmetric baseline for both sides; levels past 1 add a small ramp.
     const baselineFloor = J.ABS.Metadata.ImplicitParryBaselineFloor;
     const baselinePerLevel = J.ABS.Metadata.ImplicitParryBaselinePerLevel;
     const baselineA = baselineFloor + baselinePerLevel * Math.max(0, casterBattler.level - 1);
@@ -391,11 +392,13 @@ class JABS_Engine
     const bonusGrdFromLuk = tenPercent(targetBattler.luk);
     const D = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
 
+    // build the attacker pressure from hit rate plus secondary stat bonuses.
     const baseHit = hundredX(casterBattler.hit) + baselineA;
     const bonusHitFromAgi = tenPercent(casterBattler.agi);
     const bonusHitFromLuk = tenPercent(casterBattler.luk);
     let A = baseHit + bonusHitFromAgi + bonusHitFromLuk;
 
+    // apply the level-scaling multiplier when that plugin is active.
     if (J.LEVEL && J.LEVEL.Metadata.enabled)
     {
       const levelMul = LevelScaling.multiplier(
@@ -406,31 +409,81 @@ class JABS_Engine
       A *= levelMul;
     }
 
+    return { A, D };
+  }
+
+  /**
+   * Converts a resolved A/D pressure pair and a dominance multiplier M into a 0–100 percent chance.
+   * The band is [1/M, M]: at or below 1/M the defender fully dominates (100%); at or above M
+   * the attacker fully dominates (0%); between them the chance interpolates linearly.
+   * @param {number} A The attacker pressure value.
+   * @param {number} D The defender pressure value.
+   * @param {number} M The dominance multiplier (must be > 1; clamped to 2 if invalid).
+   * @returns {number} Rounded percent chance (0–100).
+   */
+  static #dominanceBandChance(A, D, M)
+  {
+    // guard against an invalid M that would break the band math.
+    const safeM = (Number.isFinite(M) && M > 1) ? M : 2;
+
     const defenderFloor = 1;
     const ratio = A / Math.max(D, defenderFloor);
+    const invM = 1 / safeM;
 
-    let M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
-    if (!Number.isFinite(M) || M <= 1)
-    {
-      M = 2;
-    }
-
-    const invM = 1 / M;
-
-    if (ratio >= M)
+    // attacker so dominant the defensive event cannot occur.
+    if (ratio >= safeM)
     {
       return 0;
     }
 
+    // defender so dominant the defensive event always occurs.
     if (ratio <= invM)
     {
       return 100;
     }
 
-    const span = M - invM;
+    // linear interpolation across the dominance band.
+    const span = safeM - invM;
     const t = (ratio - invM) / span;
 
     return Math.round(100 * (1 - t));
+  }
+
+  /**
+   * Implicit passive parry chance (0–100) from attacker/defender pressure vs the dominance band.
+   * Does not apply facing, GRD &gt; 0, or attacker ignore-parry state gates ({@link #isParryPossible}).
+   * Multiply the result by {@link J.ABS.Metadata.ImplicitParryScaleFactor} before rolling to get
+   * the effective full-negate chance used in {@link #checkImplicitFullParry}.
+   * @param {JABS_Battler} caster The attacker on the map.
+   * @param {JABS_Battler} target The defender on the map.
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100); same as skill tag
+   * {@code jabsIgnoreParry}.
+   * @returns {number} Rounded percent chance the implicit parry roll succeeds (same rounding as combat).
+   */
+  static implicitParryChancePercent(caster, target, ignoreParryPercent)
+  {
+    const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
+    const M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
+
+    return JABS_Engine.#dominanceBandChance(A, D, M);
+  }
+
+  /**
+   * Glancing blow chance (0–100) from attacker/defender pressure vs the glancing dominance band.
+   * Uses the same baseline pressure as {@link #implicitParryChancePercent} but reads
+   * {@link J.ABS.Metadata.GlancingBlowDominanceMultiplier} for its band width, allowing the two
+   * systems to be tuned independently.
+   * @param {JABS_Battler} caster The attacker on the map.
+   * @param {JABS_Battler} target The defender on the map.
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100).
+   * @returns {number} Rounded percent chance a glancing blow occurs (0–100).
+   */
+  static glancingBlowChancePercent(caster, target, ignoreParryPercent)
+  {
+    const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
+    const M = J.ABS.Metadata.GlancingBlowDominanceMultiplier;
+
+    return JABS_Engine.#dominanceBandChance(A, D, M);
   }
 
   //endregion static
@@ -2589,23 +2642,29 @@ class JABS_Engine
       isUnparryable = true;
     }
 
-    // check whether or not this action was parried.
+    // check whether or not this action triggers a defensive outcome.
     const caster = action.getCaster();
 
-    let willParry = false;
     if (isUnparryable === false && this.canAttemptImplicitParry(target))
     {
-      willParry = this.checkParry(caster, target, action);
-    }
-
-    // check if the action is parryable and was parried.
-    if (willParry)
-    {
-      // when an action is parried, it gets completely undone.
-      result.clear();
-
-      // flag the result for being parried.
-      result.parried = true;
+      // full implicit parry is checked first; it is the rarer, more powerful outcome.
+      const willFullParry = this.checkImplicitFullParry(caster, target, action);
+      if (willFullParry)
+      {
+        // a full implicit parry completely negates the action.
+        result.clear();
+        result.parried = true;
+      }
+      else
+      {
+        // only check for a glancing blow when the full parry did not fire.
+        const willGlance = this.checkGlancingBlow(caster, target, action);
+        if (willGlance)
+        {
+          // a glancing blow still lands but deals reduced damage; handled in executeJabsAction.
+          result.glancing = true;
+        }
+      }
     }
 
     // check if the action was guarded.
@@ -3068,23 +3127,30 @@ class JABS_Engine
 
   /**
    * Calculates whether or not the attack was parried by implicit (passive) parry.
-   * Uses ratio of attacker pressure A to defender pressure D with dominance
-   * multiplier M from plugin metadata. Baseline pressure uses floor + per-level on each
-   * side: attacker from caster level, defender from target level. Caller must use
-   * {@link #canAttemptImplicitParry} first; timed parry while guarding is handled in
-   * {@link Game_Action.handleGuardEffects}.
+   * Calculates whether the implicit parry roll succeeds as a full negate.
+   * Uses the standard A/D pressure formula scaled down by {@link J.ABS.Metadata.ImplicitParryScaleFactor},
+   * so full negation is rarer than the broad defensive-event chance. Prerequisites are checked
+   * via {@link #isParryPossible} first; active timed parry while guarding is separate
+   * ({@link Game_Action.handleGuardEffects}).
    * @param {JABS_Battler} caster The battler performing the action.
    * @param {JABS_Battler} target The target the action is against.
    * @param {JABS_Action} action The action being executed.
-   * @returns {boolean} True if the action was parried, false otherwise.
+   * @returns {boolean} True if the action was fully parried (complete negate), false otherwise.
    */
-  checkParry(caster, target, action)
+  checkImplicitFullParry(caster, target, action)
   {
-    // cannot parry if not facing target.
-    if (!this.isParryPossible(caster, target)) return false;
+    // prerequisites must be met before rolling for either defensive outcome.
+    if (this.isParryPossible(caster, target) === false)
+    {
+      return false;
+    }
 
     const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
-    const parryChancePercent = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
+
+    // the base formula gives the raw chance; scale it down so full negation is rare.
+    const rawChance = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
+    const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
+    const parryChancePercent = Math.round(rawChance * scaleFactor);
 
     if (parryChancePercent >= 100)
     {
@@ -3101,7 +3167,42 @@ class JABS_Engine
   }
 
   /**
-   * Prerequisites for implicit {@link #checkParry} (facing, GRD, attacker ignore-parry states).
+   * Calculates whether the implicit parry roll succeeds as a glancing blow.
+   * Uses the glancing blow dominance band (separate M from full parry) so the two checks
+   * can be tuned independently. Only called when {@link #checkImplicitFullParry} did not fire.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @param {JABS_Battler} target The target the action is against.
+   * @param {JABS_Action} action The action being executed.
+   * @returns {boolean} True if the hit is a glancing blow, false otherwise.
+   */
+  checkGlancingBlow(caster, target, action)
+  {
+    // prerequisites must be met (same gates as full parry; glancing is also a defensive outcome).
+    if (this.isParryPossible(caster, target) === false)
+    {
+      return false;
+    }
+
+    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+    const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
+
+    if (glancingChancePercent >= 100)
+    {
+      return true;
+    }
+
+    if (glancingChancePercent <= 0)
+    {
+      return false;
+    }
+
+    const rng = Math.randomInt(100) + 1;
+    return rng <= glancingChancePercent;
+  }
+
+  /**
+   * Prerequisites for implicit defensive events: {@link #checkImplicitFullParry} and
+   * {@link #checkGlancingBlow} (facing, GRD > 0, attacker ignore-parry states).
    * @param {JABS_Battler} caster The one executing the skill against the target.
    * @param {JABS_Battler} target The one being attacked by the caster.
    */
@@ -4504,12 +4605,30 @@ class JABS_Engine
   }
 
   /**
+   * Determines whether the victorious actor is eligible to gain rewards from the defeated enemy.
+   * This is the central policy gate for all four reward types (EXP, gold, SDP, AP).
+   * Returns true by default — all defeated enemies grant rewards. Alias this method to introduce
+   * game-specific exclusion conditions (e.g. inanimate objects, zero-yield flags, kill-type filters).
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
+   * @returns {boolean} True if rewards should be granted, false to skip all reward calculation.
+   */
+  // eslint-disable-next-line no-unused-vars
+  canGainReward(defeatedEnemy, victoriousActor)
+  {
+    return true;
+  }
+
+  /**
    * Determines how much experience the defeated enemy yielded.
    * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
    * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
    */
   determineExperienceGained(defeatedEnemy, victoriousActor)
   {
+    // check the reward policy gate before doing any calculation.
+    if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
     // identify the amount the enemy yielded.
     const experience = defeatedEnemy.exp();
 
@@ -4533,6 +4652,9 @@ class JABS_Engine
    */
   determineGoldGained(defeatedEnemy, victoriousActor)
   {
+    // check the reward policy gate before doing any calculation.
+    if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
     // identify the amount the enemy yielded.
     const gold = defeatedEnemy.gold();
 

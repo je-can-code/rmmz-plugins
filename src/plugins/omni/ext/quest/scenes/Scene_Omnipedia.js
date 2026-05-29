@@ -3,7 +3,7 @@ import Scene_Questopedia from './Scene_Questopedia.js';
 
 //region root actions
 /**
- * Extends {@link #onRootPediaSelection}.<br>
+ * Extends {@link #onRootPediaSelection}.<br/>
  * When the monsterpedia is selected, open the monsterpedia.
  */
 J.OMNI.EXT.QUEST.Aliased.Scene_Omnipedia.set('onRootPediaSelection', Scene_Omnipedia.prototype.onRootPediaSelection);

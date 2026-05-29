@@ -1,5 +1,5 @@
 /**
- * Extends {@link Game_Map.update}.<br>
+ * Extends {@link Game_Map.update}.<br/>
  * Also update the flow of star battle.
  */
 J.ABS.EXT.STAR.Aliased.Game_Map.set('update', Game_Map.prototype.update);

@@ -2,7 +2,7 @@
 import PanelRanking from './../__models/PanelRanking.js';
 
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the SDP members.
  */
 J.SDP.Aliased.Game_Actor.set('initMembers', Game_Actor.prototype.initMembers);
@@ -230,7 +230,7 @@ Game_Actor.prototype.modSdpPoints = function(points)
   if (gainedSdpPoints > 0)
   {
     // then add apply the multiplier to the gained points.
-    gainedSdpPoints = Math.round(gainedSdpPoints * this.sdpMultiplier());
+    gainedSdpPoints = Math.round(gainedSdpPoints * this.sdpMultiplier);
 
     // add to the running accumulative total.
     this.modAccumulatedTotalSdpPoints(gainedSdpPoints);
@@ -248,26 +248,28 @@ Game_Actor.prototype.modSdpPoints = function(points)
 };
 
 /**
- * OVERWRITE Gets the SDP points multiplier for this actor.
- * @returns {number}
+ * SDP points multiplier for this actor.
  */
-Game_Actor.prototype.sdpMultiplier = function()
-{
-  // initializing with base 100, representing 1x.
-  const multiplier = 100;
+Object.defineProperty(Game_Actor.prototype, 'sdpMultiplier', {
+  get: function()
+  {
+    // initializing with base 100, representing 1x.
+    const multiplier = 100;
 
-  // get all the objects to scan for possible sdp multipliers.
-  const objectsToCheck = this.getAllNotes();
+    // get all the objects to scan for possible sdp multipliers.
+    const objectsToCheck = this.getAllNotes();
 
-  // get the vision multiplier from anything this battler has available.
-  const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
+    // get the vision multiplier from anything this battler has available.
+    const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
 
-  // get the sum of the base and bonus multipliers.
-  const sdpMultiplier = (multiplier + sdpMultiplierBonus);
+    // get the sum of the base and bonus multipliers.
+    const sdpMultiplier = (multiplier + sdpMultiplierBonus);
 
-  // return the factor form by now dividing by 100.
-  return (sdpMultiplier / 100);
-};
+    // return the factor form by now dividing by 100.
+    return (sdpMultiplier / 100);
+  },
+  configurable: true,
+});
 
 /**
  * Ranks up this actor's panel by key.
@@ -280,6 +282,46 @@ Game_Actor.prototype.rankUpPanel = function(panelKey)
 };
 
 /**
+ * Calculates SDP panel bonuses for a catalog parameter key (cdm, lst, mtp, etc.).
+ * @param {string} parameterKey The registry key to accumulate panel growth for.
+ * @param {number} baseParam The base value used for percent-based panel growth.
+ * @returns {number}
+ */
+Game_Actor.prototype.getSdpBonusForParameterKey = function(parameterKey, baseParam)
+{
+  if (!J.SDP) return 0;
+  if (!parameterKey) return 0;
+
+  const panelRankings = this.getAllSdpRankings();
+  if (!panelRankings.length) return 0;
+
+  let val = 0;
+
+  panelRankings.forEach(panelRanking =>
+  {
+    const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+    if (!panel) return;
+
+    val += panel.calculateBonusByRank(parameterKey, panelRanking.currentRank, baseParam, false);
+  });
+
+  return val;
+};
+
+/**
+ * Calculates SDP panel bonuses for a custom catalog parameter (legacy numeric id wrapper).
+ * @param {number} paramId The legacy panel parameter id.
+ * @param {number} baseParam The base value used for percent-based panel growth.
+ * @returns {number}
+ */
+Game_Actor.prototype.getSdpBonusForCustomParam = function(paramId, baseParam)
+{
+  const parameterKey = ParameterKeys.legacyLongParamKey(paramId);
+
+  return this.getSdpBonusForParameterKey(parameterKey, baseParam);
+};
+
+/**
  * Calculates the value of the bonus stats for a designated core parameter.
  * @param {number} paramId The id of the parameter to get the bonus for.
  * @param {number} baseParam The base value of the designated parameter.
@@ -287,8 +329,10 @@ Game_Actor.prototype.rankUpPanel = function(panelKey)
  */
 Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
 {
+  const parameterKey = ParameterKeys.bparamKey(paramId);
   const panelRankings = this.getAllSdpRankings();
   if (!panelRankings.length) return 0;
+  if (!parameterKey) return 0;
 
   let panelModifications = 0;
   // for each of the panel rankings this actor has established-
@@ -301,7 +345,7 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
       return;
     }
 
-    const panelParameters = panel.getPanelParameterById(paramId);
+    const panelParameters = panel.getPanelParameterByKey(parameterKey);
     if (!panelParameters.length) return;
 
     panelParameters.forEach(panelParameter =>
@@ -331,8 +375,12 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
  */
 Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, idExtra)
 {
+  const parameterKey = idExtra === 8
+    ? ParameterKeys.xparamKey(sparamId)
+    : ParameterKeys.sparamKey(sparamId);
   const panelRankings = this.getAllSdpRankings();
   if (!panelRankings.length) return 0;
+  if (!parameterKey) return 0;
 
   let panelModifications = 0;
   // for each of the panel rankings this actor has established-
@@ -345,7 +393,7 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
       return;
     }
 
-    const panelParameters = panel.getPanelParameterById(sparamId + idExtra); // need +10 because sparams start higher.
+    const panelParameters = panel.getPanelParameterByKey(parameterKey);
     if (!panelParameters.length) return;
 
     panelParameters.forEach(panelParameter =>
@@ -412,7 +460,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 };
 
 /**
- * Extends {@link #maxTp}.<br>
+ * Extends {@link #maxTp}.<br/>
  * Includes bonuses from panels as well.
  * @returns {number}
  */
@@ -460,7 +508,7 @@ Game_Actor.prototype.maxTpSdpBonuses = function(baseMaxTp)
     }
 
     // TODO: generalize this whole thing.
-    const panelParameters = panel.getPanelParameterById(30);
+    const panelParameters = panel.getPanelParameterByKey('mtp');
 
     // validate we have any parameters from this panel.
     if (panelParameters.length)

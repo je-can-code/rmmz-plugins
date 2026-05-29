@@ -11,7 +11,7 @@ class J_ToolsPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps gap-close and grab/throw defaults from plugin parameters.
    */
   postInitialize()

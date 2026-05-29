@@ -1,5 +1,5 @@
 /**
- * Extends {@link #buildCommands}.<br>
+ * Extends {@link #buildCommands}.<br/>
  * Adds the monsterpedia command to the list of commands in the omnipedia.
  */
 J.OMNI.EXT.MONSTER.Aliased.Window_OmnipediaList.set('buildCommands', Window_OmnipediaList.prototype.buildCommands);

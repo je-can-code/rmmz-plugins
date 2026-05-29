@@ -1,6 +1,6 @@
 //region JABS_Engine
 /**
- * Extends {@link JABS_Engine.getBattlerAabbModel}.<br>
+ * Extends {@link JABS_Engine.getBattlerAabbModel}.<br/>
  * Enemy battlers with PIXEL hitbox-size data provide their own feet-anchored
  * rectangular AABB so JABS combat collision and overlays stay synchronized.
  * @param {Game_CharacterBase} character The character whose AABB is being queried.

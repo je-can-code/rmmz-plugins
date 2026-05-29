@@ -36,7 +36,7 @@ Game_Enemy.prototype.getEnemyNotes = function()
 };
 
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Adds a hook for performing actions when an enemy is setup.
  */
 J.BASE.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -137,7 +137,7 @@ Game_Enemy.prototype.learnSkill = function(skillId)
 };
 
 /**
- * Extends {@link #die}.<br>
+ * Extends {@link #die}.<br/>
  * Adds a toggle of the death effects.
  */
 J.BASE.Aliased.Game_Enemy.set('die', Game_Enemy.prototype.die);

@@ -1,6 +1,6 @@
 //region Window_StatusPageHint
 /**
- * A tiny, non-interactive window that informs the player they can use Left/Right
+ * A tiny, non-interactive window that informs the player they can use L2/R2
  * to switch the right-hand view in the Status scene.
  */
 class Window_StatusPageHint
@@ -35,7 +35,7 @@ class Window_StatusPageHint
     const y = 0;
 
     // pull text to draw.
-    const text = 'Left/Right: Switch View';
+    const text = 'L2/R2: Switch View · L1/R1: Party';
 
     // use the system color to denote hint/instruction.
     this.changeTextColor(ColorManager.systemColor());

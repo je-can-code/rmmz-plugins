@@ -2,7 +2,7 @@
 import RegionSkillData from './../models/RegionSkillData.js';
 
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also initializes the region skills properties.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
@@ -96,7 +96,7 @@ Game_Map.prototype.addRegionSkillDataByRegionId = function(regionId, regionSkill
 //endregion properties
 
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Also initializes this map's region-skill data.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Map.set('setup', Game_Map.prototype.setup);

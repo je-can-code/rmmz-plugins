@@ -27,63 +27,6 @@ Game_BattlerBase.knownSpParameterIds = function()
 };
 
 /**
- * Whether or not the given long-parameter id is a known base parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isBaseParam = function(longParameterId)
-{
-  return this.knownBaseParameterIds()
-    .includes(longParameterId);
-};
-
-/**
- * Whether or not the given long-parameter id is a known ex parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isExParam = function(longParameterId)
-{
-  return this.knownExParameterIds()
-    .includes(longParameterId - 8);
-};
-
-/**
- * Whether or not the given long-parameter id is a known sp parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isSpParam = function(longParameterId)
-{
-  return this.knownSpParameterIds()
-    .includes(longParameterId - 18);
-};
-
-/**
- * Whether or not the given ex-parameter id is a known parameter.
- * Use {@link #isRegenLongParamId} for long-parameter ids.
- * @param {number} paramId The ex-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isRegenParamId = function(paramId)
-{
-  const regenParamIds = [ 7, 8, 9 ];
-  return regenParamIds.includes(paramId);
-};
-
-/**
- * Whether or not the given long-parameter id is a known parameter.
- * Use {@link #isRegenParamId} for ex-parameter ids.
- * @param {number} longParamId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isRegenLongParamId = function(longParamId)
-{
-  const regenParamIds = [ 7, 8, 9 ];
-  return regenParamIds.includes(longParamId - 8);
-};
-
-/**
  * Gets the sum of deltas above the 1.0 neutral baseline for all traits matching the given
  * code and dataId.  Each trait value is treated as `1.0 + delta`; this method isolates
  * the delta portion and sums them additively.
@@ -103,7 +46,7 @@ Game_BattlerBase.prototype.traitsDeltaSum = function(code, id)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#sparam}.<br>
+ * Overwrites {@link Game_BattlerBase#sparam}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores sparam trait values as multipliers (1.0 = baseline, 1.5 = +50%).
@@ -124,7 +67,7 @@ Game_BattlerBase.prototype.sparam = function(sparamId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#elementRate}.<br>
+ * Overwrites {@link Game_BattlerBase#elementRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores element rate trait values as multipliers (1.0 = neutral, 1.2 = +20% damage taken).
@@ -148,7 +91,7 @@ Game_BattlerBase.prototype.elementRate = function(elementId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#paramRate}.<br>
+ * Overwrites {@link Game_BattlerBase#paramRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores param rate trait values as multipliers (1.0 = baseline, 1.5 = +50%).
@@ -171,7 +114,7 @@ Game_BattlerBase.prototype.paramRate = function(paramId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#stateRate}.<br>
+ * Overwrites {@link Game_BattlerBase#stateRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores state rate trait values as multipliers (1.0 = neutral, 0.5 = 50% less likely).
@@ -202,5 +145,27 @@ Object.defineProperty(Game_BattlerBase.prototype, "mtp", {
     return this.maxTp();
   },
   configurable: true
+});
+
+/**
+ * Magic reflect rate — negative values are meaningless, so floor at zero for combat and UI.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'mrf', {
+  get: function()
+  {
+    return Math.max(0, this.xparam(5));
+  },
+  configurable: true,
+});
+
+/**
+ * Counter rate — negative values are meaningless, so floor at zero for combat and UI.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'cnt', {
+  get: function()
+  {
+    return Math.max(0, this.xparam(6));
+  },
+  configurable: true,
 });
 //endregion Game_BattlerBase

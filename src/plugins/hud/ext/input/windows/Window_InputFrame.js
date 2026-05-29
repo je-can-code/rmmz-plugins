@@ -240,7 +240,7 @@ class Window_InputFrame
     super.configure();
 
     // remove opacity for completely transparent window.
-    this.opacity = 32;
+    this.opacity = 0;
   }
 
   //region caching

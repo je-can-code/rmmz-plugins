@@ -41,7 +41,7 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
   it('rankUpCost adds exponential growth (flat * mult^(rank+1)); max rank returns 0', () =>
   {
     const { PanelParameter, StatDistributionPanel } = sandbox;
-    const param = new PanelParameter(0, 5, true, false);
+    const param = new PanelParameter('atk', 5, true, false);
     const panel = StatDistributionPanel.Builder()
       .name('Cost')
       .key('cost_panel')
@@ -68,8 +68,8 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
   it('calculateBonusByRank handles flat and percent; fractional divides by 100', () =>
   {
     const { PanelParameter, StatDistributionPanel } = sandbox;
-    const flat = new PanelParameter(2, 7, true, false);
-    const pct = new PanelParameter(2, 50, false, false);
+    const flat = new PanelParameter('atk', 7, true, false);
+    const pct = new PanelParameter('atk', 50, false, false);
     const panel = StatDistributionPanel.Builder()
       .name('Bonus')
       .key('bonus_panel')
@@ -86,21 +86,21 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
       .rewards([])
       .build();
 
-    expect(panel.calculateBonusByRank(2, 4, 0, false)).toBe(4 * 7 + 0);
+    expect(panel.calculateBonusByRank('atk', 4, 0, false)).toBe(4 * 7 + 0);
 
     const baseAtk = 80;
     const percentPart = (4 * 50) / 100;
-    expect(panel.calculateBonusByRank(2, 4, baseAtk, false)).toBeCloseTo(4 * 7 + baseAtk * percentPart);
+    expect(panel.calculateBonusByRank('atk', 4, baseAtk, false)).toBeCloseTo(4 * 7 + baseAtk * percentPart);
 
-    const frac = panel.calculateBonusByRank(2, 2, 100, true);
+    const frac = panel.calculateBonusByRank('atk', 2, 100, true);
     expect(frac).toBe((2 * 7 + 100 * ((2 * 50) / 100)) / 100);
   });
 
-  it('getPanelParameterById and getPanelRewardsByRank filter correctly', () =>
+  it('getPanelParameterByKey and getPanelRewardsByRank filter correctly', () =>
   {
     const { PanelParameter, PanelRankupReward, StatDistributionPanel } = sandbox;
-    const p0 = new PanelParameter(0, 1, true, false);
-    const p1 = new PanelParameter(1, 2, true, false);
+    const p0 = new PanelParameter('mhp', 1, true, false);
+    const p1 = new PanelParameter('atk', 2, true, false);
     const r1 = new PanelRankupReward('A', 1, '');
     const r2 = new PanelRankupReward('B', 2, '');
     const panel = StatDistributionPanel.Builder()
@@ -119,8 +119,8 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
       .rewards([ r1, r2 ])
       .build();
 
-    expect(panel.getPanelParameterById(1).length).toBe(1);
-    expect(panel.getPanelParameterById(1)[0].perRank).toBe(2);
+    expect(panel.getPanelParameterByKey('atk').length).toBe(1);
+    expect(panel.getPanelParameterByKey('atk')[0].perRank).toBe(2);
     expect(panel.getPanelRewardsByRank(2).map(x => x.rewardName)).toEqual([ 'B' ]);
   });
 
@@ -141,7 +141,7 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
         .baseCost(0)
         .flatGrowth(0)
         .multGrowth(1)
-        .parameters([ new PanelParameter(0, 0, true, false) ])
+        .parameters([ new PanelParameter('mhp', 0, true, false) ])
         .rewards([])
         .build();
     };

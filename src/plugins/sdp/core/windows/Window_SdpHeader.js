@@ -22,7 +22,7 @@ class Window_SdpHeader
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Renders the single-line summary for the hovered panel.
    */
   drawContent()

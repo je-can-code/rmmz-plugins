@@ -1,7 +1,7 @@
 //region Game_Character
 import RegionSkillData from './../models/RegionSkillData.js';
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the region skills members.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMembers);
@@ -52,7 +52,7 @@ Game_Character.prototype.getRegionSkillsTimer = function()
 };
 
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also handles region skills updates for the character.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Character.set('update', Game_Character.prototype.update);

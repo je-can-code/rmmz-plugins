@@ -60,8 +60,10 @@ Items in [`unstarted/`](unstarted/) with **`status: open`** (or unset): **severi
 
 | Item | Severity | Gain | One-liner |
 |------|----------|------|-----------|
+| [abs-action-map-bootstrap-refactor](unstarted/abs-action-map-bootstrap-refactor.md) | Low | Medium clarity | Move `$actionMap` skill-master JSON off `globalThis` into a proper template loader / hoisted accessor. |
 | [abs-debug-and-placeholder-logging](unstarted/abs-debug-and-placeholder-logging.md) | Low–medium | Low effort, medium polish | Remove `omg` / `did the thing` / vague warns; consistent `[JABS]` diagnostics or debug flags. |
 | [abs-game-unit-inbattle-semantics](unstarted/abs-game-unit-inbattle-semantics.md) | Medium–high interop | Medium–high | `Game_Unit#inBattle` always true under ABS — document, narrow, or add explicit helper for plugins. |
+| [abs-input-controller-registry](unstarted/abs-input-controller-registry.md) | Low–medium | Medium clarity | Drop `$jabsController1`; primary input via `JABS_InputAdapter.controllers` (co-op = more controllers, not numbered globals). |
 | [abs-on-map-menu-scenes](unstarted/abs-on-map-menu-scenes.md) | High scope | **High** UX consistency | On-map equivalents for party/status/equip/skills (etc.) so full menu matches JABS quick-menu behavior and avoids off-map `Scene_Menu` return quirks. |
 | [abs-spriteset-refresh-character-sprites-hardening](unstarted/abs-spriteset-refresh-character-sprites-hardening.md) | Medium if broken | **High** confidence | Prove or fix `refreshAllCharacterSprites` (party cycle, allies, followers) per author TODO. |
 | [eslint-complexity-refactors](unstarted/eslint-complexity-refactors.md) | Low | Medium | Reduce/contain complexity hotspots (table-driven refactors) without behavior changes. |
@@ -72,13 +74,19 @@ Items in [`unstarted/`](unstarted/) with **`status: open`** (or unset): **severi
 | [editor-enemies-ai-behavior-tab](unstarted/editor-enemies-ai-behavior-tab.md) | Low–medium today, medium ongoing | **High** over content lifetime | Enemies board "AI Behavior" tab: curated archetypes (single-click trait/role presets) + text-only decision pipeline cards mirroring `JABS_EnemyAI.decideAction`; chip grid demoted to "show raw flags" reveal. |
 | [editor-ux-unification](unstarted/editor-ux-unification.md) | Medium | **High** breadth across whole editor | `jmz-data-editor` design-system pass: `<BoardSectionCard>` (Phase 1 done) + normalized app-bar Save/Reload + per-board card migration (Crafting is the template), then a real Index dashboard. |
 | [game-character-action-sprite-lifecycle](unstarted/game-character-action-sprite-lifecycle.md) | Medium | Medium | Action-sprite flags: `Game_Character` vs `JABS_Action` / Popups. |
+| [game-enemies-factory-rename](unstarted/game-enemies-factory-rename.md) | Low | Medium clarity | Rename `$gameEnemies` / `Game_Enemies` to factory/prototype-cache semantics; not an actors mirror. |
+| [game-system-j-namespace-save-slice](unstarted/game-system-j-namespace-save-slice.md) | Medium | **High** save hygiene | `$gameSystem._j._abs` persisted flags + map transient reset; prerequisite for static engine. |
 | [jabs-engine-loot-action-director](unstarted/jabs-engine-loot-action-director.md) | Low–medium | Medium–high | Extract loot/action helpers from mega-`JABS_Engine`. |
+| [jabs-5-static-engine-external-data](unstarted/jabs-5-static-engine-external-data.md) | **High** scope | **High** architecture | JABS 5.0: static `JABS_Engine`, `$gameSystem._j._abs` save slice, full external JSON — breaking umbrella. |
+| [jabs-database-tags-editor-first](unstarted/jabs-database-tags-editor-first.md) | **High** scope | **High** authoring | Official policy: jmz-data-editor only for JABS tags across 8 DB types; fill board gaps + parser parity. |
 | [jafting-ext-socketing](unstarted/jafting-ext-socketing.md) | Medium (optional) | High build variety | Socket gems/runestones on JAFTING gear; save-safe models and scene hooks. |
 | [jafting-heavy-scenes-decomposition](unstarted/jafting-heavy-scenes-decomposition.md) | Low player / medium dev | Medium | Split huge JAFTING scenes for complexity targets. |
+| [log-map-log-channel-registry](unstarted/log-map-log-channel-registry.md) | Low–medium | Medium clarity | One global owner (`$mapLogs` / registry) for three `MapLogManager` channel instances — drop triple `$` bootstraps. |
 | [pixel-angled-projectiles](unstarted/pixel-angled-projectiles.md) | Medium | **High** feel | Angled projectiles with Pixelistics + JABS. |
 | [popups-merge-idle-combo-tracker](unstarted/popups-merge-idle-combo-tracker.md) | Low–medium | Medium | **v1.1:** expose combo streak counter / events from merge idle window semantics (HUD + plugins). |
 | [repo-unit-testing](unstarted/repo-unit-testing.md) | Medium | **High** over time | Expand Vitest coverage where harness exists. |
 | [team-overlays](unstarted/team-overlays.md) | Low today, high later | Medium–high | Optional overlay layer for charms/summons/auras without changing primary team id. |
+| [time-save-data-vs-runtime-manager](unstarted/time-save-data-vs-runtime-manager.md) | Medium | Medium–high saves + clarity | Persist `Time_Snapshot`/DTO only; runtime `Game_Time` manager not written wholesale to save. |
 | [weapon-tier-hardness-damage-balance](unstarted/weapon-tier-hardness-damage-balance.md) | High when SDP central | High readability | Restore weapon/enemy relevance vs SDP via tier gates, hardness/pierce, or hybrid damage channels. |
 
 ## Unstarted inventory (deferred)

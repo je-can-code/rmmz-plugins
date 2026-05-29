@@ -11,9 +11,9 @@
  * @orderAfter J-ABS
  * @orderAfter J-ABS-Speed
  * @orderAfter J-DropsControl
- * @orderAfter J-CriticalFactors
  * @orderAfter J-Natural
  * @orderAfter J-Proficiency
+ * @orderBefore J-CriticalFactors
  * @help
  * ============================================================================
  * OVERVIEW

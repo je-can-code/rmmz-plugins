@@ -4,6 +4,11 @@ import './_utilities/ArrayHelper.js';
 import './_utilities/JsonMapper.js';
 
 import './core/SerializableRegistry.js';
+import './core/ParameterFormat.js';
+import './core/ParameterDisplayPolicy.js';
+import './core/ParameterDisplaySentinel.js';
+import './core/ParameterGroups.js';
+import './core/ParameterKeys.js';
 import './core/JsonEx.js';
 import './core/Bitmap.js';
 
@@ -27,6 +32,9 @@ import './managers/RPGManager.js';
 import './managers/SoundManager.js';
 import './managers/TextManager.js';
 import './managers/TraitManager.js';
+
+import './core/registerVanillaParameters.js';
+import './core/AffiliationDisplay.js';
 
 import './objects/Game_Actor.js';
 import './objects/Game_Actors.js';

@@ -49,14 +49,16 @@ Scene_Skill.prototype.skillDetailRect = function()
 Scene_Skill.prototype.mainCommandWidth = () => 400;
 
 /**
- * OVERWRITE Removes the buttons because fuck the buttons.
+ * Overwrites {@link #createButtons}.<br/>
+ * Removes the buttons because fuck the buttons.
  */
 Scene_Skill.prototype.createButtons = function()
 {
 };
 
 /**
- * OVERWRITE Replaces the button area height with 0 because fuck buttons.
+ * Overwrites {@link #buttonAreaHeight}.<br/>
+ * Replaces the button area height with 0 because fuck buttons.
  * @returns {number}
  */
 Scene_Skill.prototype.buttonAreaHeight = () => 0;

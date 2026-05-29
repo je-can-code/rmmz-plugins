@@ -91,7 +91,7 @@ JABS_StandardController.prototype.isTimerCompleteBySlot = function(slot)
 
 //region mainhand
 /**
- * Extends {@link JABS_StandardController.updateMainhandAction}.<br>
+ * Extends {@link JABS_StandardController.updateMainhandAction}.<br/>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController
@@ -204,7 +204,7 @@ JABS_StandardController.prototype.performMainhandChargeAlterAction = function()
 
 //region offhand
 /**
- * Extends {@link JABS_StandardController.updateOffhandAction}.<br>
+ * Extends {@link JABS_StandardController.updateOffhandAction}.<br/>
  * Handles charging capability to the offhand.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController
@@ -360,7 +360,7 @@ JABS_StandardController.prototype.performCombatSkillChargeAlterAction = function
 
 //region combat skill 1
 /**
- * Extends {@link JABS_StandardController.updateCombatAction1}.<br>
+ * Extends {@link JABS_StandardController.updateCombatAction1}.<br/>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController
@@ -433,7 +433,7 @@ JABS_StandardController.prototype.canChargeCombatAction1 = function()
 
 //region combat skill 2
 /**
- * Extends {@link JABS_StandardController.updateCombatAction2}.<br>
+ * Extends {@link JABS_StandardController.updateCombatAction2}.<br/>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController
@@ -506,7 +506,7 @@ JABS_StandardController.prototype.canChargeCombatAction2 = function()
 
 //region combat skill 3
 /**
- * Extends {@link JABS_StandardController.updateCombatAction3}.<br>
+ * Extends {@link JABS_StandardController.updateCombatAction3}.<br/>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController
@@ -579,7 +579,7 @@ JABS_StandardController.prototype.canChargeCombatAction3 = function()
 
 //region combat skill 4
 /**
- * Extends {@link JABS_StandardController.updateCombatAction4}.<br>
+ * Extends {@link JABS_StandardController.updateCombatAction4}.<br/>
  * Handles charging capability for this input.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_StandardController

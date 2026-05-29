@@ -55,7 +55,7 @@ Game_Action.prototype.apply = function(target)
 };
 
 /**
- * Overrides {@link #applyCritical}.<br/>
+ * Overwrites {@link #applyCritical}.<br/>
  * Replaces the way critical damage is calculated by
  * adding multiplier and reduction modifiers for actors and enemies alike.
  * @param {number} baseDamage The base damage before crit modification.
@@ -120,7 +120,7 @@ Game_Action.prototype.applyCriticalDamageReduction = function(criticalDamage)
 };
 
 /**
- * Overrides {@link #itemCri}.<br/>
+ * Overwrites {@link #itemCri}.<br/>
  * Includes the addition of potential action-based crit rate boosts.
  * @param {Game_Battler} target The target being struck with the critical.
  * @returns {number} The calculated critical chance of this action.

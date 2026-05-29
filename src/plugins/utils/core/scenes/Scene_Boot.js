@@ -23,7 +23,7 @@ Scene_Boot.prototype.startNormalGame = function()
 };
 
 /**
- * Extends {@link #start}.<br>
+ * Extends {@link #start}.<br/>
  * Also shows the devtools window because I need that to do dev things.
  */
 J.UTILS.Aliased.Scene_Boot.set('start', Scene_Boot.prototype.start);

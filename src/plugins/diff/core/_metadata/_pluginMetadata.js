@@ -153,7 +153,7 @@ class J_DiffPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Includes translation of plugin parameters.
    */
   postInitialize()

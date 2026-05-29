@@ -252,7 +252,7 @@ Sprite_MapCastGauge.prototype.drawLabel = function()
 };
 
 /**
- * Overrides {@link Sprite_Gauge.gaugeX}.<br/>
+ * Overwrites {@link Sprite_Gauge.gaugeX}.<br/>
  * Returns 0 so the fill track occupies the full bitmap width.
  * The skill name label and icon are drawn overlaid on the fill, not to its left,
  * so the track must not be shortened by the label text width.

@@ -7,7 +7,7 @@ import JABS_OnChanceEffect from './../__models/JABS_OnChanceEffect.js';
 import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
 import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
- * Extends {@link Game_Battler.initMembers}.<br>
+ * Extends {@link Game_Battler.initMembers}.<br/>
  * Includes JABS parameter initialization.
  */
 J.ABS.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
@@ -510,8 +510,8 @@ Game_Battler.prototype.onTargetDefeatSkillIds = function()
 //region JABS state management
 J.ABS.Aliased.Game_Battler.set('states', Game_Battler.prototype.states);
 /**
- * Overrides {@link #states}.<br/>
- * Returns the proper states for all that are afflicted on this battler.<br/>
+ * Overwrites {@link #states}.<br/>
+ * Returns the proper states for all that are afflicted on this battler.
  * Accommodates stacking.
  * @returns {RPG_State[]}
  */
@@ -560,7 +560,8 @@ Game_Battler.prototype.states = function()
 };
 
 /**
- * OVERWRITE Rewrites the handling for state application. The attacker is
+ * Extends {@link #addState}.<br/>
+ * Rewrites the handling for state application. The attacker is
  * now relevant to the state being applied.
  * @param {number} stateId The state id to potentially apply.
  * @param {Game_Battler} attacker The battler who is applying this state.

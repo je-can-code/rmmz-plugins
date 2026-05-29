@@ -2,7 +2,7 @@
 //region getters/setters
 J.ABS.EXT.POSES.Aliased.JABS_Battler.set('initialize', JABS_Battler.prototype.initialize);
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also intializes the pose information.
  * @param {Game_Event} event The event the battler is bound to.
  * @param {Game_Actor|Game_Enemy} battler The battler data itself.

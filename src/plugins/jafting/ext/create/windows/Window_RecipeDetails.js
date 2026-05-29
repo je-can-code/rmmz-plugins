@@ -347,7 +347,7 @@ class Window_RecipeDetails
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws the recipe details header bands and the primary output column.
    */
   drawContent()

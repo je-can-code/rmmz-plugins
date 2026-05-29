@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link #onSetup}.<br>
+ * Extends {@link #onSetup}.<br/>
  * Also refreshes the passive states on this battler for the first time.
  * @param {number} enemyId The battler's id.
  */
@@ -16,7 +16,7 @@ Game_Enemy.prototype.onSetup = function(enemyId)
 };
 
 /**
- * Extends {@link #traitObjects}.<br>
+ * Extends {@link #traitObjects}.<br/>
  * When considering traits, also include the enemy's passive states.
  */
 J.PASSIVE.Aliased.Game_Enemy.set('traitObjects', Game_Enemy.prototype.traitObjects);
@@ -34,7 +34,7 @@ Game_Enemy.prototype.traitObjects = function()
 };
 
 /**
- * Extends {@link #getNotesSources}.<br>
+ * Extends {@link #getNotesSources}.<br/>
  * Includes passive states from this enemy.
  * @returns {RPG_BaseItem[]}
  */

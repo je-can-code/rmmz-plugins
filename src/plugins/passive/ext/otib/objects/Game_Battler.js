@@ -11,7 +11,7 @@ Game_Battler.prototype.handleOtibUnlock = function(item)
 };
 
 /**
- * Extends {@link #consumeItem}.<br>
+ * Extends {@link #consumeItem}.<br/>
  * After the item is consumed, gives this battler a chance to handle any OTIB unlock.
  * Actors override {@link #handleOtibUnlock} with the real unlock logic; all others no-op.
  * @param {RPG_Item} item The item being consumed.

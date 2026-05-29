@@ -1,4 +1,6 @@
 //region TextManager
+import ParameterRegistry from './../core/ParameterRegistry.js';
+
 /**
  * Gets the proper name of "max tp".
  * @returns {string} The name of the parameter.
@@ -89,77 +91,37 @@ TextManager.rewardDescription = function(paramId)
 };
 
 /**
- * Gets the double-line description for parameters by their long parameter id.
- * @param {number} paramId The long parameter id.
+ * Gets the display label for a catalog parameter key.
+ * @param {string} parameterKey The registry key.
+ * @returns {string}
+ */
+TextManager.parameterLabel = function(parameterKey)
+{
+  const definition = ParameterRegistry.get(parameterKey);
+
+  if (!definition)
+  {
+    return parameterKey;
+  }
+
+  return definition.label();
+};
+
+/**
+ * Gets the double-line description for a catalog parameter key.
+ * @param {string} parameterKey The registry key.
  * @returns {string[]}
  */
-// eslint-disable-next-line complexity
-TextManager.longParamDescription = function(paramId)
+TextManager.parameterDescription = function(parameterKey)
 {
-  switch (paramId)
+  const definition = ParameterRegistry.get(parameterKey);
+
+  if (!definition)
   {
-    case  0:
-      return this.bparamDescription(paramId); // mhp
-    case  1:
-      return this.bparamDescription(paramId); // mmp
-    case 30:
-      return this.bparamDescription(paramId); // mtp
-    case  2:
-      return this.bparamDescription(paramId); // atk
-    case  3:
-      return this.bparamDescription(paramId); // def
-    case  4:
-      return this.bparamDescription(paramId); // mat
-    case  5:
-      return this.bparamDescription(paramId); // mdf
-    case  6:
-      return this.bparamDescription(paramId); // agi
-    case  7:
-      return this.bparamDescription(paramId); // luk
-    case  8:
-      return this.xparamDescription(paramId - 8); // hit
-    case  9:
-      return this.xparamDescription(paramId - 8); // eva (parry boost)
-    case 10:
-      return this.xparamDescription(paramId - 8); // cri
-    case 11:
-      return this.xparamDescription(paramId - 8); // cev
-    case 12:
-      return this.xparamDescription(paramId - 8); // mev (unused)
-    case 13:
-      return this.xparamDescription(paramId - 8); // mrf
-    case 14:
-      return this.xparamDescription(paramId - 8); // cnt (autocounter)
-    case 15:
-      return this.xparamDescription(paramId - 8); // hrg
-    case 16:
-      return this.xparamDescription(paramId - 8); // mrg
-    case 17:
-      return this.xparamDescription(paramId - 8); // trg
-    case 18:
-      return this.sparamDescription(paramId - 18); // trg (aggro)
-    case 19:
-      return this.sparamDescription(paramId - 18); // grd (parry)
-    case 20:
-      return this.sparamDescription(paramId - 18); // rec
-    case 21:
-      return this.sparamDescription(paramId - 18); // pha
-    case 22:
-      return this.sparamDescription(paramId - 18); // mcr (mp cost)
-    case 23:
-      return this.sparamDescription(paramId - 18); // tcr (tp cost)
-    case 24:
-      return this.sparamDescription(paramId - 18); // pdr
-    case 25:
-      return this.sparamDescription(paramId - 18); // mdr
-    case 26:
-      return this.sparamDescription(paramId - 18); // fdr
-    case 27:
-      return this.sparamDescription(paramId - 18); // exr
-    default:
-      console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
-      return String.empty;
+    return [ String.empty ];
   }
+
+  return definition.description();
 };
 
 /**
@@ -407,7 +369,7 @@ TextManager.sparam = function(sParamId)
     case 7:
       return "Magi Dmg Rate"; //J.Param.MDR_text;
     case 8:
-      return "Environ Dmg Rate"; //J.Param.FDR_text;
+      return 'Env Dmg Rate'; //J.Param.FDR_text;
     case 9:
       return "Experience UP"; //J.Param.EXR_text;
   }
@@ -442,83 +404,6 @@ TextManager.xparam = function(xParamId)
       return "MP Rejuv"; //J.Param.MRG_text;
     case 9:
       return "TP Restore"; //J.Param.TRG_text;
-  }
-};
-
-/**
- * Gets the `parameter name` based on the "long" parameter id.
- *
- * "Long" parameter ids are used in the context of 0-27, rather than
- * 0-7 for param, 0-9 for xparam, and 0-9 for sparam.
- * @param {number} paramId The "long" parameter id.
- * @returns {string} The `name`.
- */
-// eslint-disable-next-line complexity
-TextManager.longParam = function(paramId)
-{
-  switch (paramId)
-  {
-    case  0:
-      return this.param(paramId); // mhp
-    case  1:
-      return this.param(paramId); // mmp
-    case  2:
-      return this.param(paramId); // atk
-    case  3:
-      return this.param(paramId); // def
-    case  4:
-      return this.param(paramId); // mat
-    case  5:
-      return this.param(paramId); // mdf
-    case  6:
-      return this.param(paramId); // agi
-    case  7:
-      return this.param(paramId); // luk
-    case  8:
-      return this.xparam(paramId - 8); // hit
-    case  9:
-      return this.xparam(paramId - 8); // eva (parry boost)
-    case 10:
-      return this.xparam(paramId - 8); // cri
-    case 11:
-      return this.xparam(paramId - 8); // cev
-    case 12:
-      return this.xparam(paramId - 8); // mev (unused)
-    case 13:
-      return this.xparam(paramId - 8); // mrf
-    case 14:
-      return this.xparam(paramId - 8); // cnt (autocounter)
-    case 15:
-      return this.xparam(paramId - 8); // hrg
-    case 16:
-      return this.xparam(paramId - 8); // mrg
-    case 17:
-      return this.xparam(paramId - 8); // trg
-    case 18:
-      return this.sparam(paramId - 18); // trg (aggro)
-    case 19:
-      return this.sparam(paramId - 18); // grd (parry)
-    case 20:
-      return this.sparam(paramId - 18); // rec
-    case 21:
-      return this.sparam(paramId - 18); // pha
-    case 22:
-      return this.sparam(paramId - 18); // mcr (mp cost)
-    case 23:
-      return this.sparam(paramId - 18); // tcr (tp cost)
-    case 24:
-      return this.sparam(paramId - 18); // pdr
-    case 25:
-      return this.sparam(paramId - 18); // mdr
-    case 26:
-      return this.sparam(paramId - 18); // fdr
-    case 27:
-      return this.sparam(paramId - 18); // exr
-    case 30:
-      return this.maxTp(); // max tp
-    default:
-      console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
-      return String.empty;
   }
 };
 

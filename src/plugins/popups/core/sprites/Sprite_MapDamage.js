@@ -245,14 +245,22 @@ Sprite_MapDamage.prototype.refreshDisplayedValue = function(valueString, largePu
   else
   {
     const accent = this._j._popups._textAccent;
-    const accentItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
+
+    // mitigation labels (parry/evade/miss) render smaller and italic.
+    const accentSmallItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
     const legacyItalic = displayString.includes('Missed')
       || displayString.includes('Evaded')
       || displayString.includes('Parry');
 
-    if (accentItalic || legacyItalic)
+    if (accentSmallItalic || legacyItalic)
     {
       fontSize -= 6;
+      textSprite.bitmap.fontItalic = true;
+    }
+
+    // glancing blows are italic at normal size; the grey color handles the visual distinction.
+    if (accent === 'glance')
+    {
       textSprite.bitmap.fontItalic = true;
     }
   }

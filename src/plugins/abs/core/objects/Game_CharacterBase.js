@@ -45,7 +45,7 @@ Game_CharacterBase.prototype.getRealMoveSpeed = function()
 };
 
 /**
- * Overrides {@link Game_CharacterBase.realMoveSpeed}.<br>
+ * Overwrites {@link Game_CharacterBase.realMoveSpeed}.<br/>
  * Replaces the value to return our custom real move speed instead, along with dash boosts.
  * @returns {number}
  */
@@ -101,7 +101,7 @@ Game_CharacterBase.prototype.dashSpeed = function()
 };
 
 /**
- * Extends {@link Game_CharacterBase.setMoveSpeed}.<br>
+ * Extends {@link Game_CharacterBase.setMoveSpeed}.<br/>
  * Also modifies custom move speeds.
  */
 J.ABS.Aliased.Game_CharacterBase.set('setMoveSpeed', Game_CharacterBase.prototype.setMoveSpeed);

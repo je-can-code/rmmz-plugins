@@ -170,7 +170,8 @@ class Window_RefinableList
   }
 
   /**
-   * OVERWRITE Sets the alignment for this command window to be left-aligned.
+   * Overwrites {@link #itemTextAlign}.<br/>
+   * Sets the alignment for this command window to be left-aligned.
    */
   itemTextAlign()
   {

@@ -20,8 +20,10 @@ J.PASSIVE.EXT.ABS.Metadata = new JPassiveAbs_PluginMetadata(__PLUGIN_NAME__, __P
  * A collection of all aliased methods for this plugin.
  */
 J.PASSIVE.EXT.ABS.Aliased = {};
+J.PASSIVE.EXT.ABS.Aliased.Game_Enemy = new Map();
 J.PASSIVE.EXT.ABS.Aliased.JABS_AiManager = new Map();
 J.PASSIVE.EXT.ABS.Aliased.JABS_Battler = new Map();
+J.PASSIVE.EXT.ABS.Aliased.JABS_Engine = new Map();
 J.PASSIVE.EXT.ABS.Aliased.Scene_Boot = new Map();
 J.PASSIVE.EXT.ABS.Aliased.Sprite_Character = new Map();
 J.PASSIVE.EXT.ABS.Aliased.Window_PassiveDetail = new Map();
@@ -46,11 +48,49 @@ J.PASSIVE.EXT.ABS.RegExp.NoRngPassiveSuffixes = /<no-rng-passive-suffixes>/i;
 J.PASSIVE.EXT.ABS.RegExp.PassiveAffixPrefixChance = /<passive-affix-prefix-chance:[ ]?([+-]?\d+(?:\.\d+)?)>/i;
 J.PASSIVE.EXT.ABS.RegExp.PassiveAffixSuffixChance = /<passive-affix-suffix-chance:[ ]?([+-]?\d+(?:\.\d+)?)>/i;
 
+// on states and enemies — multiplicative reward scaling when this enemy is defeated.
+J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier = /<rewardMultiplier:\[[ ]?(exp|gold|sdp|ap|drops),[ ]?(\d+(?:\.\d+)?)[ ]?]>/gi;
+
 //region helpers
 /**
  * A collection of helper methods for this plugin.
  */
 J.PASSIVE.EXT.ABS.Helpers = {};
+
+/**
+ * Parses all {@link J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier} tags from a database object's note.
+ * Returns a map of reward type key to multiplier value. Each type appears at most once; if
+ * duplicated, the last tag on the note wins.
+ * @param {RPG_BaseItem} databaseData The database object whose note to scan.
+ * @returns {Map<string, number>} Reward type → multiplier pairs found.
+ */
+J.PASSIVE.EXT.ABS.Helpers.parseRewardMultipliers = function(databaseData)
+{
+  const results = new Map();
+
+  // bail out when there is nothing to parse.
+  if (!databaseData || !databaseData.note) return results;
+
+  const regex = J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier;
+  const lines = databaseData.note.split(/[\r\n]+/);
+
+  // build a non-global scanner so we do not carry lastIndex between lines.
+  const scan = new RegExp(regex.source, regex.flags.replace('g', '').replace('y', ''));
+
+  lines.forEach(line =>
+  {
+    const match = scan.exec(line);
+
+    if (match === null) return;
+
+    const rewardType = match[1].toLowerCase();
+    const multiplier = parseFloat(match[2]);
+
+    results.set(rewardType, multiplier);
+  });
+
+  return results;
+};
 
 /**
  * Resolves map/HUD tier stripe tint from the first enemy-prefix passive state on the battler.

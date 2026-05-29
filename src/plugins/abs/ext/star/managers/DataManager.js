@@ -1,6 +1,6 @@
 //region DataManager
 /**
- * Extends {@link DataManager.createGameObjects}.<br>
+ * Extends {@link DataManager.createGameObjects}.<br/>
  * Includes fetching the enemy map and storing it memory.
  */
 J.ABS.EXT.STAR.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);

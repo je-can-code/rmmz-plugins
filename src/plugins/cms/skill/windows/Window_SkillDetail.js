@@ -553,7 +553,7 @@ class Window_SkillDetail
    */
   makeHpCostParam(skill, actor)
   {
-    const hpName = TextManager.longParam(34);
+    const hpName = TextManager.parameterLabel('hcr');
     const { flat, percent, calculatedPercent, formula } = ResourceCostManager.hpCostBreakdown(actor, skill);
     const hasAnyCost = flat !== 0 || percent !== 0 || formula !== 0;
     const hpColor = hasAnyCost
@@ -571,7 +571,7 @@ class Window_SkillDetail
    */
   makeMpCostParam(skill, actor)
   {
-    const mpName = TextManager.longParam(22);
+    const mpName = TextManager.parameterLabel('mcr');
     if (J.RESOURCES)
     {
       // base vanilla cost is the original skillMpCost result (pre-tag-extras, post-MCR).
@@ -606,7 +606,7 @@ class Window_SkillDetail
    */
   makeTpCostParam(skill, actor)
   {
-    const tpName = TextManager.longParam(23);
+    const tpName = TextManager.parameterLabel('tcr');
     if (J.RESOURCES)
     {
       // base vanilla cost is the original skillTpCost result (pre-tag-extras, no rate in vanilla).

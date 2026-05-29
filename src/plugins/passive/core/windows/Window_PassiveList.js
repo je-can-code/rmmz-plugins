@@ -3,8 +3,7 @@
  * A scrollable list of passive states currently applied to the viewed actor.
  * The list is filtered by the active tab's filter function; null means show all.
  *
- * Left/right cursor inputs are forwarded as 'tabLeft'/'tabRight' handler calls
- * so the parent scene can cycle tabs in response.
+ * Tab cycling is handled via L2/R2 content handlers wired by {@link Scene_Passive}.
  */
 class Window_PassiveList
   extends Window_Selectable
@@ -171,22 +170,6 @@ class Window_PassiveList
   }
   //endregion draw
 
-  //region input
-  /**
-   * Overrides left cursor to forward the input as a tab-cycle event instead.
-   */
-  cursorLeft()
-  {
-    this.callHandler('tabLeft');
-  }
-
-  /**
-   * Overrides right cursor to forward the input as a tab-cycle event instead.
-   */
-  cursorRight()
-  {
-    this.callHandler('tabRight');
-  }
   //endregion input
 }
 

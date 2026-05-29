@@ -2,7 +2,7 @@
 import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
 import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes JABS skill initialization.
  */
 J.ABS.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -38,7 +38,7 @@ Game_Enemy.prototype.jabsRefresh = function()
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);

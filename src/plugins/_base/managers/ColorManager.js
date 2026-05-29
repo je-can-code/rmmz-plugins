@@ -1,20 +1,21 @@
 //region ColorManager
+import ParameterRegistry from './../core/ParameterRegistry.js';
+
 /**
- * Gets the color index from the "long" parameter id.
- *
- * "Long" parameter ids are used in the context of 0-27, rather than
- * 0-7 for param, 0-9 for xparam, and 0-9 for sparam.
- * @param {number} paramId The "long" parameter id.
- * @returns {number} The color index of the given parameter.
+ * Gets the color index for a catalog parameter key.
+ * @param {string} parameterKey The registry key.
+ * @returns {number}
  */
-ColorManager.longParam = function(paramId)
+ColorManager.parameterColor = function(parameterKey)
 {
-  switch (paramId)
+  const definition = ParameterRegistry.get(parameterKey);
+
+  if (!definition)
   {
-    // currently there are no special colors for parameters, but just in case...
-    default:
-      return 0;
+    return 0;
   }
+
+  return definition.colorIndex();
 };
 
 /**

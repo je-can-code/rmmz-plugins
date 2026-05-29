@@ -12,14 +12,16 @@ Scene_Equip.prototype.initialize = function()
 };
 
 /**
- * OVERWRITE Removes the buttons because fuck the buttons.
+ * Overwrites {@link #createButtons}.<br/>
+ * Removes the buttons because fuck the buttons.
  */
 Scene_Equip.prototype.createButtons = function()
 {
 };
 
 /**
- * OVERWRITE Removes the command window, because who even uses optimize?
+ * Overwrites {@link #create}.<br/>
+ * Removes the command window, because who even uses optimize?
  */
 Scene_Equip.prototype.create = function()
 {
@@ -36,18 +38,20 @@ Scene_Equip.prototype.create = function()
 };
 
 /**
- * OVERWRITE Replaces the button area height with 0 because fuck buttons.
+ * Overwrites {@link #buttonAreaHeight}.<br/>
+ * Replaces the button area height with 0 because fuck buttons.
  * @returns {number}
  */
 Scene_Equip.prototype.buttonAreaHeight = () => 0;
 
 /**
- * OVERWRITE Modifies the width of the equip status window.
+ * Overwrites {@link #statusWidth}.<br/>
+ * Modifies the width of the equip status window.
  */
 Scene_Equip.prototype.statusWidth = () => 1024;
 
 /**
- * Overrides {@link #helpWindowRect}.<br/>
+ * Overwrites {@link #helpWindowRect}.<br/>
  * Changes the width to be what we want it to be.
  * @returns {Rectangle}
  */
@@ -61,7 +65,8 @@ Scene_Equip.prototype.helpWindowRect = function()
 };
 
 /**
- * OVERWRITE Modifies the size of the equip slots window.
+ * Overwrites {@link #slotWindowRect}.<br/>
+ * Modifies the size of the equip slots window.
  * @returns {Rectangle}
  */
 Scene_Equip.prototype.slotWindowRect = function()
@@ -135,14 +140,44 @@ J.CMS_E.Aliased.Scene_Equip.createSlotWindow = Scene_Equip.prototype.createSlotW
 Scene_Equip.prototype.createSlotWindow = function()
 {
   J.CMS_E.Aliased.Scene_Equip.createSlotWindow.call(this);
-  this._slotWindow.setHandler("more", this.switchToMoreDataFromEquipSlots.bind(this));
-  this._slotWindow.setHandler("pagedown", this.nextActor.bind(this));
-  this._slotWindow.setHandler("pageup", this.previousActor.bind(this));
+  this._slotWindow.setHandler('more', this.switchToMoreDataFromEquipSlots.bind(this));
+  this._slotWindow.setHandler('context', this.onContextUnequipSlot.bind(this));
+  this._slotWindow.setHandler('actor-next', this.nextActor.bind(this));
+  this._slotWindow.setHandler('actor-prev', this.previousActor.bind(this));
   this._slotWindow.setMoreDataWindow(this._moreDataWindow);
 };
 
 /**
- * OVERWRITE Prevents hiding the item window.
+ * Handles the contextual unequip action from the slot window.
+ * Removes the item in the currently focused equip slot, if any.
+ */
+Scene_Equip.prototype.onContextUnequipSlot = function()
+{
+  // only act while the slot list owns focus.
+  if (this._slotWindow.active === false)
+  {
+    return;
+  }
+
+  // grab the slot index under the cursor.
+  const slotId = this._slotWindow.index();
+
+  // clear the slot when something is equipped there.
+  this.actor().changeEquip(slotId, null);
+
+  // refresh dependent windows.
+  this._statusWindow.refresh();
+  this._slotWindow.refresh();
+  this._itemWindow.refresh();
+  this.refreshActor();
+
+  // remain on the slot list.
+  this._slotWindow.activate();
+};
+
+/**
+ * Overwrites {@link #createItemWindow}.<br/>
+ * Prevents hiding the item window.
  */
 Scene_Equip.prototype.createItemWindow = function()
 {
@@ -208,7 +243,8 @@ Scene_Equip.prototype.itemWindowRect = function()
 };
 
 /**
- * OVERWRITE Prevents hiding the equip window.
+ * Overwrites {@link #onSlotOk}.<br/>
+ * Prevents hiding the equip window.
  */
 Scene_Equip.prototype.onSlotOk = function()
 {
@@ -217,7 +253,8 @@ Scene_Equip.prototype.onSlotOk = function()
 };
 
 /**
- * OVERWRITE Replaces the slot cancel functionality with the end of the scene.
+ * Overwrites {@link #onSlotCancel}.<br/>
+ * Replaces the slot cancel functionality with the end of the scene.
  */
 Scene_Equip.prototype.onSlotCancel = function()
 {
@@ -225,7 +262,8 @@ Scene_Equip.prototype.onSlotCancel = function()
 };
 
 /**
- * OVERWRITE Prevents hiding the item window.
+ * Overwrites {@link #hideItemWindow}.<br/>
+ * Prevents hiding the item window.
  */
 Scene_Equip.prototype.hideItemWindow = function()
 {
@@ -234,7 +272,8 @@ Scene_Equip.prototype.hideItemWindow = function()
 };
 
 /**
- * OVERWRITE Prevents trying to activate a window that was removed from the scene.
+ * Overwrites {@link #onActorChange}.<br/>
+ * Prevents trying to activate a window that was removed from the scene.
  */
 Scene_Equip.prototype.onActorChange = function()
 {

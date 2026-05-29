@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Includes parameter buff initialization.
  */
 J.NATURAL.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
@@ -15,7 +15,7 @@ Game_Actor.prototype.setup = function(actorId)
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Also refreshes all natural parameter buff values on the battler.
  */
 J.NATURAL.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
@@ -31,7 +31,8 @@ Game_Actor.prototype.onBattlerDataChange = function()
 
 //region max tp
 /**
- * OVERWRITE Replaces the `maxTp()` function with our custom one that will respect
+ * Overwrites {@link #maxTp}.<br/>
+ * Replaces the `maxTp()` function with our custom one that will respect
  * formulas and apply rates from tags, etc.
  * @returns {number}
  */

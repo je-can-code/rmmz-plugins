@@ -34,7 +34,7 @@ Game_Enemy.prototype.getBaseGoldRate = function()
 };
 
 /**
- * Overrides {@link #makeDropItems}.<br/>
+ * Overwrites {@link #makeDropItems}.<br/>
  * Modifies the drop chance algorithm to treat the number entered in the database as a percent chance instead of some
  * weird fractional shit. Also applies any applicable multipliers against the discovery rate of loot.
  * @returns {RPG_BaseItem[]} The array of loot successfully found.

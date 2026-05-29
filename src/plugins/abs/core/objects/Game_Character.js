@@ -394,7 +394,7 @@ Game_Character.prototype.requestAnimation = function(animationId)
 };
 
 /**
- * Extends {@link Game_Character.isMovementSucceeded}.<br>
+ * Extends {@link Game_Character.isMovementSucceeded}.<br/>
  * Includes handling for battlers being move-locked by JABS.
  * @returns {boolean}
  */

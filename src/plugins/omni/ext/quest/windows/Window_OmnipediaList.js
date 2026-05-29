@@ -1,5 +1,5 @@
 /**
- * Extends {@link #buildCommands}.<br>
+ * Extends {@link #buildCommands}.<br/>
  * Adds the questopedia command to the list of commands in the omnipedia.
  */
 J.OMNI.EXT.QUEST.Aliased.Window_OmnipediaList.set('buildCommands', Window_OmnipediaList.prototype.buildCommands);

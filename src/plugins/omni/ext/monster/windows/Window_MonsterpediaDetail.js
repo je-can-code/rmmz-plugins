@@ -341,7 +341,7 @@ class Window_MonsterpediaDetail
   //endregion image caching
 
   /**
-   * Extends {@link #clearContent}.<br>
+   * Extends {@link #clearContent}.<br/>
    * Also hides all cached images.
    */
   clearContent()
@@ -357,7 +357,7 @@ class Window_MonsterpediaDetail
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws a header and some detail for the omnipedia list header.
    */
   drawContent()
@@ -885,12 +885,22 @@ class Window_MonsterpediaDetail
    * @param {number} y The y coordinate of the point.
    * @param {number} iconIndex The icon index of the parameter.
    * @param {string} parameterName The name of the parameter.
-   * @param {number} parameterValue The numeric value of the parameter.
+   * @param {number|string} parameterValue The numeric or preformatted value of the parameter.
    * @param {boolean=} maskValue Whether or not to mask the parameter value; defaults to false.
-   * @param {number=} padZeroCount The number of zeroes to pad a masked parameter value with.
+   * @param {number=} padZeroCount The digits to pad to when {@link parameterValue} is numeric; defaults to 8.
    * @param {number=} spacePlus Additional space to add between the name and value of this parameter.
+   * @param {number=} valueColorIndex Palette index for significant digits; defaults to 0.
    */
-  drawEnemyParameter(x, y, iconIndex, parameterName, parameterValue, maskValue = false, padZeroCount = 8, spacePlus = 0)
+  drawEnemyParameter(
+    x,
+    y,
+    iconIndex,
+    parameterName,
+    parameterValue,
+    maskValue = false,
+    padZeroCount = 8,
+    spacePlus = 0,
+    valueColorIndex = 0)
   {
     // draw the icon for the parameter.
     this.drawIcon(iconIndex, x, y);
@@ -930,19 +940,28 @@ class Window_MonsterpediaDetail
       parameterValueX += nameValueSpace;
     }
 
-    // mask the value if we are commanded.
-    const possiblyMaskedValue = maskValue
-      ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
-      : parameterValue.padZero(padZeroCount);
+    // mask or pad the value depending on whether we received a raw number or a preformatted string.
+    let displayValue = parameterValue;
+
+    if (typeof parameterValue === 'number')
+    {
+      displayValue = maskValue
+        ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
+        : parameterValue.padZero(padZeroCount);
+    }
+    else if (maskValue)
+    {
+      displayValue = J.BASE.Helpers.maskString(parameterValue);
+    }
 
     // determine the width of the value.
     //const parameterValueWidth = this.textWidth(possiblyMaskedValue);
     const parameterValueWidth = (parameterName !== String.empty)
-      ? 120
-      : this.textWidth(possiblyMaskedValue);
+      ? 128
+      : this.textWidth(displayValue);
 
     // draw the parameter value.
-    this.drawEnemyParameterValue(parameterValueX, y, possiblyMaskedValue, parameterValueWidth);
+    this.drawEnemyParameterValue(parameterValueX, y, displayValue, parameterValueWidth, valueColorIndex);
   }
 
   /**
@@ -951,11 +970,12 @@ class Window_MonsterpediaDetail
    * @param {number} y The y coordinate of the point.
    * @param {string} value The stringified parameter value, possibly masked.
    * @param {number} width The width to work with.
+   * @param {number=} valueColorIndex Palette index for significant digits; defaults to 0.
    */
-  drawEnemyParameterValue(x, y, value, width)
+  drawEnemyParameterValue(x, y, value, width, valueColorIndex = 0)
   {
     // delegate to J-Base for styled zero padding (grey zeros + bold significant digits).
-    this.drawStyledPaddedValue(x, y, value, width);
+    this.drawStyledPaddedValue(x, y, value, width, 8, valueColorIndex);
   }
 
   /**
@@ -1545,19 +1565,34 @@ class Window_MonsterpediaDetail
     this.modFontSize(-4);
 
     const elementIcon = IconManager.element(elementId);
+    const gameEnemy = $gameEnemies.enemy(observations.id);
+    const absorbed = J.ELEM && gameEnemy.isElementAbsorbed(elementId);
+    const affiliationFlags = {
+      absorbed,
+      immune: absorbed === false && rate <= 0,
+    };
     const { knowsParameters } = observations;
-    let displayRate = rate;
+    const resolved = AffiliationDisplay.resolveDisplay(rate, affiliationFlags);
+    let displayRate = resolved.value;
+    let valueColorIndex = resolved.colorIndex;
 
     if (knowsParameters === false)
     {
-      displayRate = J.BASE.Helpers.maskString(rate.padZero(4));
-    }
-    else
-    {
-      this.#applyMonsterpediaElementRateTextColor(rate);
+      displayRate = J.BASE.Helpers.maskString(AffiliationDisplay.maskTemplate);
+      valueColorIndex = 0;
     }
 
-    this.drawEnemyParameter(x, y + lh * row, elementIcon, label, displayRate, false, 4);
+    this.drawEnemyParameter(
+      x,
+      y + lh * row,
+      elementIcon,
+      label,
+      displayRate,
+      false,
+      4,
+      0,
+      valueColorIndex);
+
     this.changeTextColor(ColorManager.normalColor());
   }
 
@@ -1580,50 +1615,35 @@ class Window_MonsterpediaDetail
     const gameEnemy = $gameEnemies.enemy(observations.id);
     const elementIcon = IconManager.element(elementId);
     const elementName = TextManager.element(elementId);
-    let elementRate = Math.round(gameEnemy.elementRate(elementId) * 100);
+    const magnitudePercent = Math.round(Math.abs(gameEnemy.elementRate(elementId)) * 100);
+    const absorbed = J.ELEM && gameEnemy.isElementAbsorbed(elementId);
+    const affiliationFlags = {
+      absorbed,
+      immune: absorbed === false && magnitudePercent <= 0,
+    };
     const knowsElementalistic = observations.isElementalisticKnown(elementId);
+    const resolved = AffiliationDisplay.resolveDisplay(magnitudePercent, affiliationFlags);
+    let displayRate = resolved.value;
+    let valueColorIndex = resolved.colorIndex;
 
     if (knowsElementalistic === false)
     {
-      elementRate = J.BASE.Helpers.maskString(elementRate.padZero(4));
-    }
-    else
-    {
-      this.#applyMonsterpediaElementRateTextColor(elementRate);
+      displayRate = J.BASE.Helpers.maskString(AffiliationDisplay.maskTemplate);
+      valueColorIndex = 0;
     }
 
-    this.drawEnemyParameter(x, y + lh * row, elementIcon, elementName, elementRate, false, 4);
+    this.drawEnemyParameter(
+      x,
+      y + lh * row,
+      elementIcon,
+      elementName,
+      displayRate,
+      false,
+      4,
+      0,
+      valueColorIndex);
+
     this.changeTextColor(ColorManager.normalColor());
-  }
-
-  /**
-   * Applies text color styling for a known elementalistic percentage.
-   * @param {number} elementRate The rounded percent rate.
-   */
-  #applyMonsterpediaElementRateTextColor(elementRate)
-  {
-    this.changeTextColor(ColorManager.normalColor());
-
-    if (elementRate === 100)
-    {
-      this.changeTextColor(ColorManager.normalColor());
-    }
-    else if (elementRate > 100)
-    {
-      this.changeTextColor(ColorManager.textColor(10));
-    }
-    else if (elementRate < 100 && elementRate > 0)
-    {
-      this.changeTextColor(ColorManager.textColor(17));
-    }
-    else if (elementRate === 0)
-    {
-      this.changeTextColor(ColorManager.textColor(8));
-    }
-    else if (elementRate < 0)
-    {
-      this.changeTextColor(ColorManager.textColor(23));
-    }
   }
 
   /*

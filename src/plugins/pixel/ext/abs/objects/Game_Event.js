@@ -1,6 +1,6 @@
 //region Game_Event
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the cached enemy hitbox size data.
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
@@ -14,7 +14,7 @@ Game_Event.prototype.initMembers = function()
 };
 
 /**
- * Extends {@link #setupPageSettings}.<br>
+ * Extends {@link #setupPageSettings}.<br/>
  * Rebuilds the cached hitbox data whenever the active page changes.
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Event.set('setupPageSettings', Game_Event.prototype.setupPageSettings);
@@ -398,7 +398,7 @@ Game_Event.prototype.getPixelAbsBattlerAabbModel = function()
 };
 
 /**
- * Extends {@link Game_Event.getCollisionRadius}.<br>
+ * Extends {@link Game_Event.getCollisionRadius}.<br/>
  * The rectangle is canonical, but PIXEL still asks for a scalar in some paths.
  * Use the larger half-extent as the compatibility radius.
  * @returns {number}
@@ -418,7 +418,7 @@ Game_Event.prototype.getCollisionRadius = function()
 };
 
 /**
- * Extends {@link Game_Event.getEffectiveRadius}.<br>
+ * Extends {@link Game_Event.getEffectiveRadius}.<br/>
  * Feet-anchored rectangles are already normalized, so the compatibility radius
  * should not be clamped by the legacy downward-bleed rule.
  * @returns {number}
@@ -437,7 +437,7 @@ Game_Event.prototype.getEffectiveRadius = function()
 };
 
 /**
- * Extends {@link Game_Event.getCollisionPivotY}.<br>
+ * Extends {@link Game_Event.getCollisionPivotY}.<br/>
  * Enemy hitboxes are feet-anchored, so the pivot becomes the event feet.
  * @returns {number}
  */
@@ -455,7 +455,7 @@ Game_Event.prototype.getCollisionPivotY = function()
 };
 
 /**
- * Extends {@link Game_Event._pixelHitbox}.<br>
+ * Extends {@link Game_Event._pixelHitbox}.<br/>
  * Builds the rectangular, feet-anchored hitbox for PIXEL movement checks.
  * @param {number} radius The incoming compatibility radius.
  * @returns {{w:number,h:number,hx:number,hy:number}}

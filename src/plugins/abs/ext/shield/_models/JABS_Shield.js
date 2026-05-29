@@ -45,8 +45,19 @@ class JABS_Shield
     };
 
     // combine all the point formulas into a single value.
-    const totalPoints = pointFormulas
+    let totalPoints = pointFormulas
       .reduce(safeReduce, 0);
+
+    // scale shield points by outgoing amplification and incoming effectiveness.
+    if (attacker && attacker.sar)
+    {
+      totalPoints *= attacker.sar;
+    }
+
+    if (target && target.ser)
+    {
+      totalPoints *= target.ser;
+    }
 
     // if we have no shield points, then nothing else matters.
     if (totalPoints === 0) return null;

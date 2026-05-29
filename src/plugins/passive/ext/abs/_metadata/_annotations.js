@@ -51,7 +51,7 @@
  * TAG USAGE:
  * - States (prefix/suffix pool membership + weights)
  * - Enemies (block RNG and/or override chances)
- * - Events (Comment commands on the page that spawns the enemy)
+ * - Events (Comment commands on the pfage that spawns the enemy)
  *
  * POLICY / PRECEDENCE:
  *  (1) If the event has an explicit `<passive:[...]>` list that contains any
@@ -165,6 +165,39 @@
  *  <tier-color-hex:#FF0000>
  *    Uses a bright red stripe tint when this prefix is the selected tier
  *    prefix.
+ *
+ * ============================================================================
+ * REWARD MULTIPLIERS
+ * Have you ever wanted affixed enemies to yield better rewards for the extra
+ * challenge they pose? Well now you can! By applying the following tag to
+ * states and/or enemy notes, you too can multiplicatively scale any reward
+ * type when the enemy is defeated.
+ *
+ * TAG USAGE:
+ * - States (affix states or any other state on the enemy)
+ * - Enemies
+ *
+ * TAG FORMAT:
+ *  <rewardMultiplier:[TYPE, VALUE]>
+ *    Where TYPE is one of: exp, gold, sdp, ap, drops
+ *    Where VALUE is a decimal multiplier (e.g. 2.0 = double).
+ *
+ * TAG NOTES:
+ * - Multiple tags per note are supported (one per reward type).
+ * - When an enemy has multipliers from both its note and its states,
+ *   they stack multiplicatively (e.g. 1.5x from note * 2.0x from
+ *   prefix state = 3.0x total).
+ * - The "drops" type multiplies the drop chance percentage, not the
+ *   number of items.
+ *
+ * TAG EXAMPLES:
+ *  <rewardMultiplier:[exp, 2.0]>
+ *    Enemies defeated with this tag yield double experience.
+ *
+ *  <rewardMultiplier:[gold, 1.5]>
+ *  <rewardMultiplier:[drops, 1.25]>
+ *    These two tags on the same state would grant 1.5x gold and
+ *    1.25x drop chance when the enemy is defeated.
  *
  * ============================================================================
  * PLUGIN PARAMETERS

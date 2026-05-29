@@ -129,6 +129,11 @@ class JABS_PopupManager
         {
           textPopBuilder.forEnemyDamageRing();
         }
+        // glancing blows render italic in grey to distinguish them from clean hits.
+        if (actionResult.glancing)
+        {
+          textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
+        }
         break;
       case actionResult.mpDamage !== 0:
         textPopBuilder
@@ -324,6 +329,11 @@ class JABS_PopupManager
         else
         {
           textPopBuilder.forEnemyDamageRing();
+        }
+        // glancing blows render italic in grey to distinguish them from clean hits.
+        if (actionResult.glancing)
+        {
+          textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
         }
         break;
       case actionResult.mpDamage !== 0:

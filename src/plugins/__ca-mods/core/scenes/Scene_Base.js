@@ -1,6 +1,6 @@
 //region Scene_Base
 /**
- * Overrides {@link #buttonAreaHeight}.<br>
+ * Overwrites {@link #buttonAreaHeight}.<br/>
  * Sets the button height to 0- they are not used in CA.
  * @returns {number}
  */
@@ -10,7 +10,7 @@ Scene_Base.prototype.buttonAreaHeight = function()
 };
 
 /**
- * Overrides {@link #createButtons}.<br>
+ * Overwrites {@link #createButtons}.<br/>
  * Removes logic for button creation- they are not used in CA.
  */
 Scene_Base.prototype.createButtons = function()

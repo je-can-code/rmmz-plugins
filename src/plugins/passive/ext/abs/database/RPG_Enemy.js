@@ -71,4 +71,17 @@ Object.defineProperty(
     }
   },
 );
+/**
+ * All reward multipliers defined on this enemy via {@link J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier}.
+ * Returns a map of reward type key to its multiplier value.
+ * @type {Map<string, number>}
+ */
+Object.defineProperty(
+  RPG_Enemy.prototype, 'rewardMultipliers', {
+    get()
+    {
+      return J.PASSIVE.EXT.ABS.Helpers.parseRewardMultipliers(this);
+    }
+  },
+);
 //endregion RPG_Enemy

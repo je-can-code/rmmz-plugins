@@ -15,6 +15,15 @@ class ApManager
     // don't bother if the AP gained is zero or actor cannot gain.
     if (this.canGainAp(actor, amount) === false) return;
 
+    // scale the award by the actor's aptitude gain multiplier when present.
+    let scaledAmount = amount;
+    if (actor.apr)
+    {
+      scaledAmount = Math.round(amount * actor.apr);
+    }
+
+    if (scaledAmount === 0) return;
+
     // build the list of active sources for this actor.
     const teachableSources = this.activeTeachables(actor);
 
@@ -25,7 +34,7 @@ class ApManager
       const { key, teachables } = source;
 
       // apply the AP to this source's taught skills.
-      this.applyApToSource(actor, key, teachables, amount, cause);
+      this.applyApToSource(actor, key, teachables, scaledAmount, cause);
     });
   }
 

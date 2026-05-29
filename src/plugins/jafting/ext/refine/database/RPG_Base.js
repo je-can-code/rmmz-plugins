@@ -1,5 +1,5 @@
 /**
- * Extends {@link RPG_Base._generate}.<br>
+ * Extends {@link RPG_Base._generate}.<br/>
  *
  * Also mirrors additional JAFTING-related values to the new object.
  * @param {RPG_Base} overrides The overriding object.

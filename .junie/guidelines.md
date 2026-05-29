@@ -28,7 +28,11 @@
     * `clearRpgManagerCacheInVm(sandbox)` resets `RPGManager` WeakMap caches between examples when tags mutate on the same object reference.
 * When providing code samples, provide full-method drop-in replacements including the updated logic, and specify the
   file, path, and line the method starts on for clarity- this is a huge codebase.
-* **All 69 ships are Vite-built.** Source under `src/plugins/**` uses ESM (`import` / `export default`, `entry.js`, `_metadata/meta.js`). Rolldown emits one bundled `.js` per ship into `out/` — no runtime `import` in what RMMZ loads.
+* **All 69 ships are Vite-built.** Source under `src/plugins/**` uses ESM (`import` / `export default`, `entry.js`, `_metadata/meta.js`). Rolldown emits a **single readable file** per ship into `out/` — **no** runtime `import`/`export`, **no** `$1` suffix collisions, **not** an IIFE.
+    * **Same ship:** colocated ESM via `entry.js`. **Cross-ship:** runtime globals only (`J.BASE.*`, engine globals) — never `import` from another plugin's tree (e.g. `../../../_base/`).
+    * **Same ship — never re-export classes onto `J.*`:** Do **not** assign implementation classes/managers from the same ship onto the namespace (e.g. `J.SDP.MasteryManager = SdpMasteryManager`). That is pointless redirection — **import** the module. Rolldown bundles colocated ESM into one script; a second path through `J.*` is dead indirection. See **J namespace bootstrap (no same-ship re-exports)** under Architecture & Patterns.
+    * **Engine globals** (`TextManager`, `IconManager`, …): augment in place (`IconManager.param = function…`), not `class` + `export default`.
+    * **Gate:** `bun run hotfix` runs `verify:ships` after build. See `.cursor/rules/esm-ship-bundle.mdc`.
     * `import`/`export` in `/src/build-tools` and `/src/defs` follows normal Node ESM.
     * `PluginManager.registerCommand` must use **`J.*.Metadata.name`** (lowercase), not `.Name`, except where J-Base’s legacy `Metadata.Name` alias is intentional.
 * This project does not use IIFEs, instead we leverage object-driven namespacing (such as `J.ABS.EXT.SHIELD` etc) and
@@ -42,6 +46,44 @@
   around and see if it exists or is already implemented, or warn me that its not if its not anywhere.
 * It is forbidden to include anything that would or should live in "initialization.js" inside of any of the other source
   files (such as alias map instantiation- assume it exists, and provide that update to the initialization.js file).
+
+### J namespace bootstrap (no same-ship re-exports)
+
+**Never assign same-ship implementation classes onto `J.*`.** If the class lives in the same Vite ship, colocated modules reach it via ESM `import` / `export default`. Hanging it on the namespace again is pointless redirection — two paths to the same thing, one of them dead for maintainers.
+
+**Never mirror hoisted globals onto `J.*` or `globalThis`.** Rolldown emits top-level `var ClassName = …` per ship; other plugins use those names directly after load. The **only** allowed `globalThis` assignment in a plugin is bootstrapping the namespace shell: `globalThis.J ||= {}`.
+
+**What `initialization.js` is for (bootstrap only):**
+
+- Namespace shell (`J.SDP = {}`, `J.ABS = {}`, …) via `globalThis.J ||= {}` once per ship
+- `Metadata` plugin instance (`J.SDP.Metadata = new J_SdpPluginMetadata(...)`)
+- `Aliased` alias maps
+- `RegExp`, `Helpers` — regex tables and small helper surfaces used across the ship at runtime after bundle
+
+**Forbidden (same ship or hoisted global mirror):**
+
+```javascript
+// BAD — SdpMasteryManager is colocated in this ship; import it where needed.
+J.SDP.MasteryManager = SdpMasteryManager;
+
+// BAD — ParameterRegistry is already a hoisted global from the J-Base bundle.
+J.BASE.ParameterRegistry = ParameterRegistry;
+
+// BAD — Scene_Difficulty is already hoisted; no globalThis assignment.
+globalThis.Scene_Difficulty = Scene_Difficulty;
+```
+
+**Correct (same ship):**
+
+```javascript
+// In PanelRanking.js (or wherever):
+import SdpMasteryManager from '../managers/SdpMasteryManager.js';
+SdpMasteryManager.reconcileSubgroupMastery(actor, subgroupKey);
+```
+
+**Cross-ship:** Other plugin files load as separate classic scripts after J-Base. Rolldown emits top-level `var ClassName = class { … }` — those bindings are **globally hoisted**. Call `ParameterRegistry`, `ParameterDefinition`, etc. directly; do **not** mirror them onto `J.BASE` in `initialization.js` or `registerVanillaParameters.js`.
+
+**Easy test:** "Does this class's source file ship in the same bundled `.js` as the caller?" → **import**. "Does it ship in another plugin's `.js`?" → **global class name** (after that plugin loads). Only bootstrap shapes (`Metadata`, `Aliased`, `RegExp`, `Helpers`) belong on `J.*` from `initialization.js` — never implementation classes.
 
 ## DRY and Complexity
 

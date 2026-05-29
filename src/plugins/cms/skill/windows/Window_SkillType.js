@@ -1,6 +1,7 @@
 //region Window_SkillType
 /**
- * OVERWRITE Fixes the maximum columns for this screen to be 1.
+ * Overwrites {@link #maxCols}.<br/>
+ * Fixes the maximum columns for this screen to be 1.
  * @returns {number}
  */
 Window_SkillType.prototype.maxCols = function()

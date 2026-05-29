@@ -21,10 +21,21 @@ class ResourceHitManager
     const caster = action.getCaster()
       .getBattler();
     const skill = action.getBaseSkill();
+    const targetBattler = target.getBattler();
+    const result = targetBattler.result();
 
-    const hpGain = ResourceHitManager.onAttackHpGain(caster, skill);
-    const mpGain = ResourceHitManager.onAttackMpGain(caster, skill);
-    const tpGain = ResourceHitManager.onAttackTpGain(caster, skill);
+    let hpGain = ResourceHitManager.onAttackHpGain(caster, skill);
+    let mpGain = ResourceHitManager.onAttackMpGain(caster, skill);
+    let tpGain = ResourceHitManager.onAttackTpGain(caster, skill);
+
+    // drain stats stack with on-attack skill tags (% of HP damage dealt).
+    if (result.hpDamage > 0)
+    {
+      const damage = result.hpDamage;
+      hpGain += Math.floor(damage * caster.lst);
+      mpGain += Math.floor(damage * caster.mst);
+      tpGain += Math.floor(damage * caster.tst);
+    }
 
     if (hpGain !== 0) caster.gainHpFromResource(hpGain);
     if (mpGain !== 0) caster.gainMpFromResource(mpGain);

@@ -11,7 +11,7 @@ class J_DangerPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps danger indicator defaults from plugin parameters.
    */
   postInitialize()

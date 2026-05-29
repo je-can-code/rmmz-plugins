@@ -113,7 +113,7 @@ Window_Base.prototype.drawContent = function()
 };
 
 /**
- * Overrides {@link Window_Base.resetFontSettings}.<br>
+ * Overwrites {@link Window_Base.resetFontSettings}.<br/>
  * Delegates each concern to its own method so individual windows can override
  * only what they need (e.g. a smaller font size) without re-implementing everything.
  */
@@ -455,6 +455,7 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
  * @param {number} width The width to work within.
  * @param {number=} zeroColorIndex Palette index for leading zeros; defaults to 8.
  * @param {number=} valueColorIndex Palette index for significant digits; defaults to 0.
+ * @param {'left'|'right'|'center'} align Horizontal alignment within {@code width}; defaults to {@code right}.
  */
 Window_Base.prototype.drawStyledPaddedValue = function(
   x,
@@ -462,13 +463,23 @@ Window_Base.prototype.drawStyledPaddedValue = function(
   value,
   width,
   zeroColorIndex = 8,
-  valueColorIndex = 0)
+  valueColorIndex = 0,
+  align = 'right')
 {
   // assumes monospaced digits (matches the Monsterpedia presentation); keeps numbers stable and scan-friendly.
   // use a digit for width so wrapped cost strings like `(-00000042)` don't inherit '(' sizing.
   const charWidth = this.textWidth('0');
   const totalCharWidth = value.length * charWidth;
-  const startX = x + width - totalCharWidth;
+  let startX = x;
+
+  if (align === 'right')
+  {
+    startX = x + width - totalCharWidth;
+  }
+  else if (align === 'center')
+  {
+    startX = x + Math.floor((width - totalCharWidth) / 2);
+  }
   const leadingPadZeroMask = this.buildLeadingPadZeroMask(value);
 
   [ ...value ].forEach((char, index) =>

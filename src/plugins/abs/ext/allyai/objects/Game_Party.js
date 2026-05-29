@@ -92,7 +92,7 @@ Game_Party.prototype.setPartyFormation = function(formation)
 };
 
 /**
- * Extends {@link Game_Party.addActor}.<br>
+ * Extends {@link Game_Party.addActor}.<br/>
  * Also updates allies to accommodate the addition of the actor.
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Party.set('addActor', Game_Party.prototype.addActor);
@@ -107,7 +107,7 @@ Game_Party.prototype.addActor = function(actorId)
 };
 
 /**
- * Extends {@link Game_Party.removeActor}.<br>
+ * Extends {@link Game_Party.removeActor}.<br/>
  * Also updates allies to accommodate the removal of the actor.
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Party.set('removeActor', Game_Party.prototype.removeActor);

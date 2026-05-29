@@ -226,14 +226,22 @@ Sprite_Damage.prototype.createValue = function(value)
   else
   {
     const accent = this._j._popups._textAccent;
-    const accentItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
+
+    // mitigation labels (parry/evade/miss) render smaller and italic.
+    const accentSmallItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
     const legacyItalic = displayValue.includes('Missed')
       || displayValue.includes('Evaded')
       || displayValue.includes('Parry');
 
-    if (accentItalic || legacyItalic)
+    if (accentSmallItalic || legacyItalic)
     {
       fontSize -= 6;
+      sprite.bitmap.fontItalic = true;
+    }
+
+    // glancing blows are italic at normal size; the grey color handles the visual distinction.
+    if (accent === 'glance')
+    {
       sprite.bitmap.fontItalic = true;
     }
   }
@@ -324,7 +332,8 @@ Sprite_Damage.prototype.addDuration = function(extraDuration)
 };
 
 /**
- * OVERWRITE Replaces the damage updating with our own motion management.
+ * Overwrites {@link #updateChild}.<br/>
+ * Replaces the damage updating with our own motion management.
  * @param {Sprite} sprite The sprite to udpate.
  */
 Sprite_Damage.prototype.updateChild = function(sprite)
@@ -454,7 +463,8 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
 };
 
 /**
- * OVERWRITE Updates the duration to start fading later, and for longer.
+ * Overwrites {@link #updateOpacity}.<br/>
+ * Updates the duration to start fading later, and for longer.
  */
 Sprite_Damage.prototype.updateOpacity = function()
 {
@@ -475,7 +485,8 @@ Sprite_Damage.prototype.setDamageColor = function(damageColor)
 };
 
 /**
- * OVERWRITE Replaces the color with a designated color on-creation.
+ * Overwrites {@link #damageColor}.<br/>
+ * Replaces the color with a designated color on-creation.
  */
 Sprite_Damage.prototype.damageColor = function()
 {

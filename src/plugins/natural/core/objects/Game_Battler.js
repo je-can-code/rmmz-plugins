@@ -892,7 +892,7 @@ Game_Battler.prototype.calculatePlusRate = function(baseValue, paramPlus, paramR
 
 //region max tp
 /**
- * Overrides {@link #maxTp}.<br/>
+ * Overwrites {@link #maxTp}.<br/>
  * Combines base max TP with formula-based values derived from tags.
  * @returns {number}
  */

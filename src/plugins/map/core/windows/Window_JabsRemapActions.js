@@ -1,6 +1,6 @@
 //region Window_JabsRemapActions
 /**
- * Extends/Overrides {@link #buildPostExtensionGroups}.<br/>
+ * Extends {@link #buildPostExtensionGroups}.<br/>
  * Also appends a "Map Actions" section for external (J.MAP) actions.
  * @param {BuiltWindowCommand[]} rows The rows being built.
  * @param {Set<string>} can The set of assignable logical action keys.

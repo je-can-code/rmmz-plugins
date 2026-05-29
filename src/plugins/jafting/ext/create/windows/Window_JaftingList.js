@@ -2,7 +2,7 @@
 import Scene_JaftingCreate from '../scenes/Scene_JaftingCreate.js';
 
 /**
- * Extends {@link #buildCommands}.<br>
+ * Extends {@link #buildCommands}.<br/>
  * Includes the creation command as well as the rest.
  */
 J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList.set('buildCommands', Window_JaftingList.prototype.buildCommands);

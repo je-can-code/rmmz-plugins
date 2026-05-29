@@ -22,7 +22,7 @@ class RPG_State
   chanceByDamage = 100;
 
   /**
-   * OVERWRITE States do not normally have descriptions.
+   * States do not normally have descriptions.
    * Rather than leaving it as `undefined`, lets be nice and keep it
    * an empty string.
    * @type {String.empty}

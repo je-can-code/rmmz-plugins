@@ -95,4 +95,6 @@ J.APT.RegExp.AptitudeTeachable = /<aptitude:[ ]?(\[\d+,[ ]?\d+])>/gi;
  */
 J.APT.RegExp.ApReward = /<ap: ?(\d+)>/i;
 
+J.APT.RegExp.AptMultiplier = /<aptMultiplier:(-?\d+)>/i;
+
 //endregion initialization

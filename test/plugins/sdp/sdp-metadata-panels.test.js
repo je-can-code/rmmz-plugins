@@ -27,10 +27,10 @@ describe('J-SDP metadata panels (out/sdp/J-SDP.js)', () =>
     expect(panel.flatGrowthCost).toBe(0);
     expect(panel.multGrowthCost).toBe(1);
     expect(panel.panelParameters.length).toBe(1);
-    expect(panel.panelParameters[0].parameterId).toBe(0);
+    expect(panel.panelParameters[0].parameterKey).toBe('mhp');
     expect(panel.panelParameters[0].perRank).toBe(1);
-    expect(panel.panelParameters[0].isFlat).toBe(true);
     expect(panel.panelParameters[0].isCore).toBe(true);
+    expect(panel.mastery.participates()).toBe(false);
 
     const flat = 70;
     const mult = 1.06;

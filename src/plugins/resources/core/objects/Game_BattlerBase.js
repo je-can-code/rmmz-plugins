@@ -3,24 +3,24 @@ import ResourceCostManager from './../managers/ResourceManager.js';
 
 //region hcr
 /**
- * Gets the hp cost reduction for this battler.
- */
-Object.defineProperty(Game_BattlerBase.prototype, 'hcr', {
-  get: function()
-  {
-    return this.hcrFactor();
-  },
-  configurable: true
-});
-
-/**
- * Gets the hp cost reduction for this battler.
+ * Gets the hp cost reduction factor for this battler.
  * @returns {number}
  */
 Game_BattlerBase.prototype.hcrFactor = function()
 {
   return 1.0;
 };
+
+/**
+ * HP cost reduction in decimal percent space (0 = none).
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'hcr', {
+  get: function()
+  {
+    return 0;
+  },
+  configurable: true,
+});
 //endregion hcr
 
 /**

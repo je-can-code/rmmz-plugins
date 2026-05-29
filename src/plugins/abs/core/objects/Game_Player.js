@@ -61,7 +61,7 @@ Game_Player.prototype.canMove = function()
 };
 
 /**
- * Extends/Overrides {@link #isDashing}.<br/>
+ * Extends {@link #isDashing}.<br/>
  * Disables engine dash while the player is in JABS combat.
  */
 J.ABS.Aliased.Game_Player.set("isDashing", Game_Player.prototype.isDashing);

@@ -4,6 +4,8 @@ import './database/RPG_Enemy.js';
 import './database/RPG_State.js';
 import './managers/JABS_AiManager.js';
 import './managers/JABS_Battler.js';
+import './managers/JABS_Engine.js';
+import './objects/Game_Enemy.js';
 import './objects/Game_Event.js';
 import './scenes/Scene_Boot.js';
 import './sprites/Sprite_Character.js';

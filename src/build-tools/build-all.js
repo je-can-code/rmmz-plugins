@@ -40,6 +40,9 @@ const ignoredKeys = [
   'hotfix',
   'test',
   'clean:',
+  'migrate:',
+  'verify:',
+  'defs:',
 ];
 
 // extract the scripts section of our package.json.

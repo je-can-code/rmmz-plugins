@@ -1,6 +1,6 @@
 //region Window_SdpPoints
 /**
- * The SDP window containing the menu actor identity.
+ * The upper-left SDP ribbon: menu actor identity and always-visible wallet balance.
  */
 class Window_SdpPoints
   extends Window_Base
@@ -34,28 +34,75 @@ class Window_SdpPoints
   }
 
   /**
-   * Draws the face + actor name of the menu actor.
+   * Draws the face, actor name, and right-aligned SDP wallet for the menu actor.
    */
   drawPoints()
   {
     this.drawSdpFace();
     this.drawActorName();
+    this.drawSdpWallet();
   }
 
   /**
-   * Draws the menu actor name (wallet moved to the cart).
+   * Draws the menu actor name beside the face graphic.
    */
   drawActorName()
   {
-    // don't draw the points if the actor is unavailable.
+    // don't draw the name if the actor is unavailable.
     if (!this._actor) return;
 
-    const actorName = this._actor.name();
-    const x = 140;
-    const y = 0;
-    const textWidth = this.innerWidth - x;
-    const alignment = 'left';
-    this.drawText(actorName, x, y, textWidth, alignment);
+    const nameX = 140;
+    const y = this.ribbonTextY();
+    const nameMaxWidth = this.sdpWalletAnchorX() - nameX - 8;
+
+    this.drawText(this._actor.name(), nameX, y, nameMaxWidth, 'left');
+  }
+
+  /**
+   * Draws the actor's SDP balance on the right edge of the ribbon.
+   */
+  drawSdpWallet()
+  {
+    // don't draw the wallet if the actor is unavailable.
+    if (!this._actor) return;
+
+    const y = this.ribbonTextY();
+    const pad = 12;
+    const gap = 8;
+    const wallet = this._actor.getSdpPoints();
+    const amountW = this.textWidth('00000000');
+    const amountX = this.innerWidth - amountW - pad;
+
+    // wallet amount (always normal coloring; leading zeros dim).
+    this.drawStyledZeroPaddedNumber(amountX, y, wallet, amountW, 8, 8, 0);
+
+    const iconX = amountX - gap - ImageManager.iconWidth;
+
+    this.drawIcon(J.SDP.Metadata.sdpIconIndex, iconX, y);
+  }
+
+  /**
+   * Left edge x for the wallet chrome; the name column stops before this point.
+   * @returns {number}
+   */
+  sdpWalletAnchorX()
+  {
+    const pad = 12;
+    const gap = 8;
+    const amountW = this.textWidth('00000000');
+    const iconW = ImageManager.iconWidth;
+    const amountX = this.innerWidth - amountW - pad;
+
+    return amountX - gap - iconW;
+  }
+
+  /**
+   * Vertically centers single-line ribbon text beside the face graphic.
+   * @returns {number}
+   */
+  ribbonTextY()
+  {
+    return Math.floor((this.innerHeight - this.lineHeight()) / 2);
   }
 
   /**

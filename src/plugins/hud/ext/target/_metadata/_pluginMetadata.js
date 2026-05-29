@@ -12,7 +12,7 @@ class JHudTarget_PluginMetadata extends PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Includes translation of plugin parameters.
    */
   postInitialize()

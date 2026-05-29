@@ -357,11 +357,13 @@ Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 };
 
 /**
- * Calculates total amount of bonus proficiency gain when gaining skill proficiency.
- * @returns {number}
+ * Bonus proficiency gained when earning skill proficiency.
  */
-Game_Actor.prototype.bonusSkillProficiencyGains = function()
-{
-  return this._j._proficiency._bonusSkillProficiencyGains;
-};
+Object.defineProperty(Game_Actor.prototype, 'prof', {
+  get: function()
+  {
+    return this._j._proficiency._bonusSkillProficiencyGains;
+  },
+  configurable: true,
+});
 //endregion Game_Actor

@@ -157,7 +157,7 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
 };
 
 /**
- * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Overwrites {@link Game_CharacterBase.getCollisionPivotY}.<br/>
  * Anchors the follower's collision center near their feet to match the player's
  * depth-biased collision feel. Keeps the follower train visually consistent.
  * @returns {number} The Y pivot offset in tile units.

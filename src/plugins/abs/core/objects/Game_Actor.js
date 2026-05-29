@@ -3,7 +3,7 @@ import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
 import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
- * Extends {@link #initJabsMembers}.<br>
+ * Extends {@link #initJabsMembers}.<br/>
  * Includes additional actor-specific members.
  */
 J.ABS.Aliased.Game_Actor.set('initJabsMembers', Game_Actor.prototype.initJabsMembers);
@@ -74,7 +74,7 @@ Game_Actor.prototype.jabsRefresh = function()
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
@@ -1050,7 +1050,8 @@ Game_Actor.prototype.getUpgradableSkillSlots = function()
 
 //region leveling
 /**
- * OVERWRITE Replaces the levelup display on the map to not display a message.
+ * Overwrites {@link #shouldDisplayLevelUp}.<br/>
+ * Replaces the levelup display on the map to not display a message.
  */
 Game_Actor.prototype.shouldDisplayLevelUp = function()
 {
@@ -1084,7 +1085,7 @@ Game_Actor.prototype.jabsLevelUp = function()
 };
 
 /**
- * Extends {@link #onLevelDown}.<br>
+ * Extends {@link #onLevelDown}.<br/>
  * Also refresh sprites' danger indicator.
  */
 J.ABS.Aliased.Game_Actor.set('onLevelDown', Game_Actor.prototype.onLevelDown);

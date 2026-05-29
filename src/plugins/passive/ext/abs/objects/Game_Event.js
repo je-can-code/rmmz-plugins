@@ -67,6 +67,13 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
     {
       const [ comment, ] = command.parameters;
 
+      // the combined master switch blocks both slots from a single tag.
+      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassives.test(comment))
+      {
+        blocks = true;
+      }
+
+      // the slot-specific tag blocks only prefixes.
       if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassivePrefixes.test(comment))
       {
         blocks = true;
@@ -90,6 +97,13 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixSuffixRng = function()
     {
       const [ comment, ] = command.parameters;
 
+      // the combined master switch blocks both slots from a single tag.
+      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassives.test(comment))
+      {
+        blocks = true;
+      }
+
+      // the slot-specific tag blocks only suffixes.
       if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassiveSuffixes.test(comment))
       {
         blocks = true;

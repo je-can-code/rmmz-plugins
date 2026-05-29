@@ -15,7 +15,7 @@ class Window_CategoryList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of unlocked crafting categories.
    */
   makeCommandList()
@@ -65,7 +65,7 @@ class Window_CategoryList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

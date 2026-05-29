@@ -13,7 +13,7 @@ class J_AbsPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters and external config into metadata fields.
    */
   postInitialize()
@@ -259,6 +259,37 @@ class J_AbsPluginMetadata
     if (Number.isFinite(implicitParryBaselinePerLevelParsed) === true && implicitParryBaselinePerLevelParsed >= 0)
     {
       this.ImplicitParryBaselinePerLevel = implicitParryBaselinePerLevelParsed;
+    }
+
+    // the scale factor multiplies the raw parry formula output, keeping full negation rare.
+    const implicitParryScaleFactorRaw = this.parsedPluginParameters['implicitParryScaleFactor'];
+    const implicitParryScaleFactorParsed = Number(implicitParryScaleFactorRaw);
+    this.ImplicitParryScaleFactor = 0.2;
+    if (Number.isFinite(implicitParryScaleFactorParsed) === true
+      && implicitParryScaleFactorParsed >= 0
+      && implicitParryScaleFactorParsed <= 1)
+    {
+      this.ImplicitParryScaleFactor = implicitParryScaleFactorParsed;
+    }
+
+    // glancing blow dominance multiplier: the band width for the glancing check (independent of parry M).
+    const glancingBlowDomRaw = this.parsedPluginParameters['glancingBlowDominanceMultiplier'];
+    const glancingBlowDomParsed = Number(glancingBlowDomRaw);
+    this.GlancingBlowDominanceMultiplier = 2;
+    if (Number.isFinite(glancingBlowDomParsed) === true && glancingBlowDomParsed > 1)
+    {
+      this.GlancingBlowDominanceMultiplier = glancingBlowDomParsed;
+    }
+
+    // the fraction of normal damage a glancing blow deals (0.0–1.0).
+    const glancingBlowDamageFactorRaw = this.parsedPluginParameters['glancingBlowDamageFactor'];
+    const glancingBlowDamageFactorParsed = Number(glancingBlowDamageFactorRaw);
+    this.GlancingBlowDamageFactor = 0.3;
+    if (Number.isFinite(glancingBlowDamageFactorParsed) === true
+      && glancingBlowDamageFactorParsed >= 0
+      && glancingBlowDamageFactorParsed <= 1)
+    {
+      this.GlancingBlowDamageFactor = glancingBlowDamageFactorParsed;
     }
   }
 

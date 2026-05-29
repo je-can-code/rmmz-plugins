@@ -89,7 +89,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
 };
 
 /**
- * Extends/Overrides {@link Sprite_Animation.prototype.targetSpritePosition}.<br/>
+ * Extends {@link Sprite_Animation.prototype.targetSpritePosition}.<br/>
  * Adds a definitive guard against null or destroyed sprites to prevent crashes during transformation updates.
  * @param {Sprite} sprite The sprite to get the position of.
  * @returns {Point}

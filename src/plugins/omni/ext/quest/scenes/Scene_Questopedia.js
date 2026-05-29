@@ -4,6 +4,7 @@ import Window_QuestopediaCategories from '../windows/Window_QuestopediaCategorie
 import Window_QuestopediaList from '../windows/Window_QuestopediaList.js';
 import Window_QuestopediaDescription from '../windows/Window_QuestopediaDescription.js';
 import Window_QuestopediaObjectives from '../windows/Window_QuestopediaObjectives.js';
+import Window_QuestopediaControlsHint from '../windows/Window_QuestopediaControlsHint.js';
 
 /**
  * A scene for interacting with the Questopedia.
@@ -108,6 +109,12 @@ class Scene_Questopedia
      * @type {Window_QuestopediaObjectives}
      */
     this._j._omni._quest._pediaObjectives = null;
+
+    /**
+     * The controller hint strip for category cycling.
+     * @type {Window_QuestopediaControlsHint}
+     */
+    this._j._omni._quest._pediaControlsHint = null;
   }
 
   //endregion init
@@ -148,6 +155,9 @@ class Scene_Questopedia
     // create the description of the selected quest.
     this.createQuestopediaDescriptionWindow();
 
+    // create the controller hint strip.
+    this.createQuestopediaControlsHintWindow();
+
     // create the known list of unfinished and completed objectives of the selected quest.
     //this.createQuestopediaObjectivesWindow();
 
@@ -163,8 +173,8 @@ class Scene_Questopedia
   }
 
   /**
-   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
-   * Changes the filter to a different type from {@link PIXI.filters}.<br>
+   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
+   * Changes the filter to a different type from {@link PIXI.filters}.
    */
   createBackground()
   {
@@ -291,8 +301,8 @@ class Scene_Questopedia
     // overwrite the onIndexChange hook with our local onQuestopediaIndexChange hook.
     window.onIndexChange = this.onQuestopediaIndexChange.bind(this);
 
-    window.setHandler('pagedown', this.cycleQuestCategories.bind(this, true));
-    window.setHandler('pageup', this.cycleQuestCategories.bind(this, false));
+    window.setHandler('content-next', this.cycleQuestCategories.bind(this, true));
+    window.setHandler('content-prev', this.cycleQuestCategories.bind(this, false));
 
     // return the built and configured omnipedia list window.
     return window;
@@ -317,7 +327,8 @@ class Scene_Questopedia
     const { width } = categoriesRectangle;
 
     // define the height of the list.
-    const height = Graphics.boxHeight - Graphics.verticalPadding - y;
+    const hintH = this.questopediaControlsHintHeight();
+    const height = Graphics.boxHeight - Graphics.verticalPadding - y - hintH;
 
     // build the rectangle to return.
     return new Rectangle(x, y, width, height);
@@ -342,6 +353,68 @@ class Scene_Questopedia
   }
 
   //endregion list window
+
+  //region controls hint window
+  /**
+   * Height reserved for the controller hint strip beneath the quest list.
+   * @returns {number}
+   */
+  questopediaControlsHintHeight()
+  {
+    return 28;
+  }
+
+  /**
+   * Creates the controller hint strip beneath the quest list.
+   */
+  createQuestopediaControlsHintWindow()
+  {
+    const window = this.buildQuestopediaControlsHintWindow();
+    this.setQuestopediaControlsHintWindow(window);
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds the questopedia controller hint window.
+   * @returns {Window_QuestopediaControlsHint}
+   */
+  buildQuestopediaControlsHintWindow()
+  {
+    return new Window_QuestopediaControlsHint(this.questopediaControlsHintRectangle());
+  }
+
+  /**
+   * Gets the rectangle for the controller hint strip.
+   * @returns {Rectangle}
+   */
+  questopediaControlsHintRectangle()
+  {
+    const listRectangle = this.questopediaListRectangle();
+    const hintH = this.questopediaControlsHintHeight();
+    const y = listRectangle.y + listRectangle.height;
+
+    return new Rectangle(listRectangle.x, y, listRectangle.width, hintH);
+  }
+
+  /**
+   * Gets the tracked controller hint window.
+   * @returns {Window_QuestopediaControlsHint}
+   */
+  getQuestopediaControlsHintWindow()
+  {
+    return this._j._omni._quest._pediaControlsHint;
+  }
+
+  /**
+   * Sets the tracked controller hint window.
+   * @param {Window_QuestopediaControlsHint} hintWindow The hint window to track.
+   */
+  setQuestopediaControlsHintWindow(hintWindow)
+  {
+    this._j._omni._quest._pediaControlsHint = hintWindow;
+  }
+
+  //endregion controls hint window
 
   //region description window
   /**

@@ -1,7 +1,7 @@
 //region Game_Enemy
 
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes setting up the learned level map for skills.
  */
 J.LEVEL.Aliased.Game_Enemy.set('initMembers', Game_Enemy.prototype.initMembers);
@@ -55,7 +55,7 @@ Game_Enemy.prototype.setCachedLevelOverride = function(level)
 };
 
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes setting up the learned level map for skills.
  */
 J.LEVEL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -123,7 +123,7 @@ Game_Enemy.prototype.isLearnedSkillByLevel = function(action)
 };
 
 /**
- * Overrides {@link #getBattlerBaseLevel}.<br/>
+ * Overwrites {@link #getBattlerBaseLevel}.<br/>
  * Instead of defaulting to zero, it will use the enemy's own note, accommodating any overrides if present.
  * @returns {number}
  */

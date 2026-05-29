@@ -3,7 +3,7 @@ import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
 
 //region init
 /**
- * Extends {@link Game_CharacterBase.initMembers}.<br>
+ * Extends {@link Game_CharacterBase.initMembers}.<br/>
  * Includes this plugin's extra properties as well.
  */
 J.PIXEL.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype.initMembers);
@@ -414,7 +414,7 @@ Game_CharacterBase.prototype.mostRecentPositionalRecord = function()
 //endregion properties
 
 /**
- * Extends {@link Game_CharacterBase.update}.<br>
+ * Extends {@link Game_CharacterBase.update}.<br/>
  * Ensures render coordinates match logical coordinates and clears per-frame flags.
  */
 J.PIXEL.Aliased.Game_CharacterBase.set("update", Game_CharacterBase.prototype.update);
@@ -424,8 +424,10 @@ Game_CharacterBase.prototype.update = function()
   J.PIXEL.Aliased.Game_CharacterBase.get("update")
     .call(this);
 
-  // Always synchronize render/smoothing coordinates to the logical coordinates.
-  if (this._realX !== this._x || this._realY !== this._y)
+  // Always synchronize render/smoothing coordinates to the logical coordinates,
+  // but not during a jump — updateJump handles _realX/_realY interpolation and
+  // snapping here would teleport the character to the destination on frame one.
+  if ((this._realX !== this._x || this._realY !== this._y) && !this.isJumping())
   {
     // Snap the render coordinates to the logical coordinates.
     this._realX = this._x;
@@ -1087,7 +1089,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
- * Extends {@link Game_CharacterBase.canPass}.<br>
+ * Extends {@link Game_CharacterBase.canPass}.<br/>
  * Rounds fractional pixel coordinates to the nearest tile integer before delegating
  * to the tile-based passability check. With pixel movement, `_x`/`_y` are fractional;
  * the base RMMZ method uses them as array indices, so non-integer inputs produce
@@ -1104,7 +1106,7 @@ Game_CharacterBase.prototype.canPass = function(x, y, d)
 };
 
 /**
- * Extends {@link Game_CharacterBase#regionId}.<br>
+ * Extends {@link Game_CharacterBase#regionId}.<br/>
  * Samples the map region at the character's collision pivot tile. With pixel movement,
  * `_x`/`_y` are fractional; vanilla forwards them into {@link Game_Map#tileId}, which
  * indexes `$dataMap.data` and returns wrong regions when coordinates are not integers.
@@ -1149,7 +1151,7 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
 };
 
 /**
- * Extends {@link Game_CharacterBase.moveDiagonally}.<br>
+ * Extends {@link Game_CharacterBase.moveDiagonally}.<br/>
  * Evaluates pixel-aware diagonal passability and executes pixel-distance movement.
  * Direction is updated unconditionally (matching rmmz default behavior) so that
  * a blocked diagonal step still rotates the character away from a wall.

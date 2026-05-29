@@ -24,7 +24,7 @@ class Window_SdpRewardList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of rewards granted by this SDP.
    */
   makeCommandList()
@@ -96,7 +96,8 @@ class Window_SdpRewardList
   }
 
   /**
-   * OVERWRITE Renders reward rows with styled padded ranks.
+   * Overwrites {@link #drawItem}.<br/>
+   * Renders reward rows with styled padded ranks.
    * @param {number} index The command index.
    */
   drawItem(index)

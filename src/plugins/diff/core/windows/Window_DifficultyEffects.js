@@ -133,7 +133,7 @@ class Window_DifficultyEffects
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Renders all the effect of the hovered difficulty layer.
    */
   makeCommandList()
@@ -740,7 +740,7 @@ class Window_DifficultyEffects
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

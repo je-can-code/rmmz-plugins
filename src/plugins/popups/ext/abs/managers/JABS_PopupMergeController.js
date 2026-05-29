@@ -44,7 +44,7 @@ class JABS_PopupMergeController
 
   /**
    * @param {Game_Character} character The anchor character.
-   * @returns {{ sessions: Map<string, object>, lastCharacterMergeFrame: number }}
+   * @returns {{ sessions: Map<string, object> }}
    */
   static #ensureBucket(character)
   {
@@ -54,7 +54,6 @@ class JABS_PopupMergeController
     {
       bucket = {
         sessions: new Map(),
-        lastCharacterMergeFrame: 0,
       };
       JABS_PopupMergeController.#characterStore.set(character, bucket);
     }
@@ -63,14 +62,14 @@ class JABS_PopupMergeController
   }
 
   /**
-   * Rolls the idle-release window forward for **every** merge stream on this battler — any strike, slip,
-   * mitigation stack, or reward tick counts as activity so separate buckets do not expire out of sync.
+   * Stamps the current frame on a single merge session so its idle window resets independently.
+   * Other sessions on the same character are unaffected and can expire on their own timeline.
    *
-   * @param {{ sessions: Map, lastCharacterMergeFrame: number }} bucket The character bucket.
+   * @param {object} session The individual merge session to touch.
    */
-  static #touchCharacterMergeWindow(bucket)
+  static #touchSessionMergeWindow(session)
   {
-    bucket.lastCharacterMergeFrame = Graphics.frameCount;
+    session.lastActivityFrame = Graphics.frameCount;
   }
 
   /**
@@ -218,8 +217,6 @@ class JABS_PopupMergeController
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
-
     let session = bucket.sessions.get(key);
 
     if (!session)
@@ -249,6 +246,7 @@ class JABS_PopupMergeController
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
       return;
     }
@@ -261,6 +259,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value, pop.critical === true);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -291,8 +291,6 @@ class JABS_PopupMergeController
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
-
     let session = bucket.sessions.get(key);
 
     if (!session)
@@ -312,6 +310,7 @@ class JABS_PopupMergeController
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
       return;
     }
@@ -324,6 +323,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -354,8 +355,6 @@ class JABS_PopupMergeController
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
-
     let session = bucket.sessions.get(key);
 
     if (!session)
@@ -376,6 +375,7 @@ class JABS_PopupMergeController
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
       return;
     }
@@ -388,6 +388,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -418,8 +420,6 @@ class JABS_PopupMergeController
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
-
     let session = bucket.sessions.get(key);
 
     if (!session)
@@ -439,6 +439,7 @@ class JABS_PopupMergeController
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
       return;
     }
@@ -451,6 +452,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -487,8 +490,8 @@ class JABS_PopupMergeController
   }
 
   /**
-   * Idle flush: releases sprites after **no** merge activity on this battler for the configured frames
-   * (strikes, slip, mitigation, and rewards all refresh the same sliding window).
+   * Idle flush: releases each merge session independently after it has been idle for the configured frames.
+   * A slip tick no longer holds reward or strike sessions hostage — each stream expires on its own timeline.
    */
   static tickIdleFlush()
   {
@@ -504,17 +507,10 @@ class JABS_PopupMergeController
         return;
       }
 
-      const lastAct = bucket.lastCharacterMergeFrame ?? 0;
-
-      if (now - lastAct < idleFrames)
-      {
-        return;
-      }
-
       const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
-      const toDelete = Array.from(bucket.sessions.keys());
+      const keys = Array.from(bucket.sessions.keys());
 
-      toDelete.forEach(key =>
+      keys.forEach(key =>
       {
         const session = bucket.sessions.get(key);
 
@@ -522,6 +518,14 @@ class JABS_PopupMergeController
         {
           bucket.sessions.delete(key);
 
+          return;
+        }
+
+        // each session tracks its own activity timestamp; only flush when this specific stream is idle.
+        const lastAct = session.lastActivityFrame ?? 0;
+
+        if (now - lastAct < idleFrames)
+        {
           return;
         }
 

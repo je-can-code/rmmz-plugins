@@ -13,23 +13,41 @@ if (J.ABS)
     J.SDP.Aliased.JABS_Engine.get('gainBasicRewards')
       .call(this, enemy, actor);
 
-    // grab the sdp points value.
-    let sdpPoints = enemy.sdpPoints();
+    // determine the sdp points gained from the defeated enemy.
+    const sdpPoints = this.determineSdpGained(enemy, actor);
 
     // if we have no points, then no point in continuing.
     if (!sdpPoints) return;
-
-    // get the scaling multiplier if any exists.
-    const levelMultiplier = this.getRewardScalingMultiplier(enemy, actor);
-
-    // round up in favor of the player to skip decimals from the multiplier.
-    sdpPoints = Math.ceil(sdpPoints * levelMultiplier);
 
     // gain the value calculated.
     this.gainSdpReward(sdpPoints, actor);
 
     // generate a log for the SDP gain.
     this.createSdpLog(sdpPoints, actor);
+  };
+
+  /**
+   * Determines how many SDP points the defeated enemy yielded.
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @param {JABS_Battler} actor The map battler that defeated the target.
+   * @returns {number} The SDP points gained.
+   */
+  JABS_Engine.prototype.determineSdpGained = function(defeatedEnemy, actor)
+  {
+    // check the reward policy gate; inanimates and any future exclusions bail here.
+    if (this.canGainReward(defeatedEnemy, actor.getBattler()) === false) return 0;
+
+    // grab the base sdp points value from the enemy.
+    const sdpPoints = defeatedEnemy.sdpPoints();
+
+    // if we have no base points, there is nothing to calculate.
+    if (!sdpPoints) return 0;
+
+    // get the scaling multiplier if any exists.
+    const levelMultiplier = this.getRewardScalingMultiplier(defeatedEnemy, actor);
+
+    // round up in favor of the player to skip decimals from the multiplier.
+    return Math.ceil(sdpPoints * levelMultiplier);
   };
 
   /**
@@ -47,8 +65,8 @@ if (J.ABS)
       .forEach(member => member.modSdpPoints(sdpPoints));
 
     // get the true amount obtained after multipliers for the leader.
-    const sdpMultiplier = actor.getBattler()
-      .sdpMultiplier();
+    const battler = actor.getBattler();
+    const { sdpMultiplier } = battler;
     const multipliedSdpPoints = Math.round(sdpMultiplier * sdpPoints);
 
     // notify that SDP points were rewarded so optional extensions can respond.

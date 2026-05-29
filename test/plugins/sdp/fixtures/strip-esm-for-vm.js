@@ -8,7 +8,7 @@
 export function stripEsmForVm(source)
 {
   return source
-    .replace(/^import .+;\r?\n/gm, '')
-    .replace(/^export default .+;\r?\n/gm, '');
+    .replace(/^import .+;[\r\n]+/gm, '')
+    .replace(/^export default .+;[\r\n]+/gm, '');
 }
 //endregion strip-esm-for-vm

@@ -8,7 +8,7 @@ import Window_Dimmer from '../windows/Window_Dimmer.js';
 Scene_Base.MODAL_DIMMER_CONTENTS_OPACITY_DEFAULT = 200;
 
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Adds extension for initializing custom members for scenes.
  */
 J.BASE.Aliased.Scene_Base.set('initialize', Scene_Base.prototype.initialize);

@@ -95,7 +95,7 @@ class Sprite_ShieldMapGauge
   }
 
   /**
-   * Overrides {@link #gaugeColor1}.<br/>
+   * Overwrites {@link #gaugeColor1}.<br/>
    * Returns the shield gauge color gradient 1.
    * @returns {string}
    */
@@ -105,7 +105,7 @@ class Sprite_ShieldMapGauge
   }
 
   /**
-   * Overrides {@link #gaugeColor2}.<br/>
+   * Overwrites {@link #gaugeColor2}.<br/>
    * Returns the shield gauge color gradient 2.
    * @returns {string}
    */

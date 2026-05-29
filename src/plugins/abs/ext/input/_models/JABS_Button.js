@@ -36,15 +36,15 @@ class JABS_Button
   static Offhand = 'Offhand';
 
   /**
-   * The "tool", "Y" button, or "C" key.
+   * The "tool", Triangle button, or Tab key (native symbol: tab).
    * Used for executing the currently selected tool skill.
    * @type {string}
    */
   static Tool = 'Tool';
 
   /**
-   * The "dodge", "R2" button, or "Tab" key.
-   * Used for executing the currently selected dodge skill.
+   * Optional dodge / mobility skill input (R2 by default when remapped).
+   * In combat, {@link JABS_Button.Sprint} (Square) handles mobility contextually.
    * @type {string}
    */
   static Dodge = 'Dodge';

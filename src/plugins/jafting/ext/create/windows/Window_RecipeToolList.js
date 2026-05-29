@@ -17,7 +17,7 @@ class Window_RecipeToolList
   }
 
   /**
-   * Extends {@link #initialize}.<br>
+   * Extends {@link #initialize}.<br/>
    * Initializes some additional window properies.
    */
   initialize(rect)
@@ -37,7 +37,7 @@ class Window_RecipeToolList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of unlocked crafting categories.
    */
   makeCommandList()
@@ -112,7 +112,7 @@ class Window_RecipeToolList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */
@@ -143,7 +143,7 @@ class Window_RecipeToolList
   }
 
   /**
-   * Overrides {@link #drawBackgroundRect}.<br>
+   * Overwrites {@link #drawBackgroundRect}.<br/>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.
    * @override
@@ -153,7 +153,7 @@ class Window_RecipeToolList
   }
 
   /**
-   * Overrides {@link Window_Selectable.prototype.drawAllItems}.<br>
+   * Overwrites {@link Window_Selectable.prototype.drawAllItems}.<br/>
    * Explains an empty TOOLS column instead of leaving it ambiguous.
    * @override
    */

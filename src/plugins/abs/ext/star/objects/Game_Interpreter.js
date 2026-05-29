@@ -1,6 +1,6 @@
 //region Game_Interpreter
 /**
- * Overrides {@link Game_Interpreter.command301}.<br>
+ * Overwrites {@link Game_Interpreter.command301}.<br/>
  * Alters the event command handler of "Battle Processing".
  * Replaces the default battle setup with our star battle setup instead.
  * @param {any} params The parameters from the event command.

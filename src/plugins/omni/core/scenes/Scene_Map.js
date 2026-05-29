@@ -2,7 +2,7 @@
 import Scene_Omnipedia from './Scene_Omnipedia.js';
 
 /**
- * Extends {@link #createJabsAbsMenuMainWindow}.<br>
+ * Extends {@link #createJabsAbsMenuMainWindow}.<br/>
  * Adds additional handling in the list for the omnipedia command.
  */
 J.OMNI.Aliased.Scene_Map.set('createJabsAbsMenuMainWindow', Scene_Map.prototype.createJabsAbsMenuMainWindow);

@@ -1,6 +1,6 @@
 //region Scene_Map
 /**
- * Overrides {@link #createButtons}.<br>
+ * Overwrites {@link #createButtons}.<br/>
  * Removes logic for button creation- they are not used in CA.
  */
 Scene_Map.prototype.createButtons = function()

@@ -1,6 +1,6 @@
 //region Game_Character
 /**
- * Extends {@link Game_Character.distancePerFrame}.<br>
+ * Extends {@link Game_Character.distancePerFrame}.<br/>
  * Enables modification of the character's movement speed on the map.
  * @return {number} The modified distance per frame to move.
  */
@@ -39,7 +39,7 @@ Game_Character.prototype.calculateSpeedBoostBonus = function(baseMoveSpeed)
 
   // get the current speed boosts associated with the battler.
   const scale = battler.getBattler()
-    .getWalkSpeedBoosts();
+    .msb;
 
   // if we have no boosts, then don't process.
   if (scale === 0) return 0;

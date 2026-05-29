@@ -1,6 +1,6 @@
 //region BattleManager
 /**
- * Extends {@link #makeRewards}.<br>
+ * Extends {@link #makeRewards}.<br/>
  * Also includes the SDP points earned.
  */
 J.SDP.Aliased.BattleManager.set('makeRewards', BattleManager.makeRewards);
@@ -18,7 +18,7 @@ BattleManager.makeRewards = function()
 };
 
 /**
- * Extends {@link #gainRewards}.<br>
+ * Extends {@link #gainRewards}.<br/>
  * Also gain the SDP points earned.
  */
 J.SDP.Aliased.BattleManager.set('gainRewards', BattleManager.gainRewards);
@@ -46,7 +46,7 @@ BattleManager.gainSdpPoints = function()
 };
 
 /**
- * Extends {@link #displayRewards}.<br>
+ * Extends {@link #displayRewards}.<br/>
  * Also displays the SDP victory text.
  */
 J.SDP.Aliased.BattleManager.set('displayRewards', BattleManager.displayRewards);

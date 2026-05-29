@@ -31,7 +31,7 @@ JABS_Battler.prototype.initIdleInfo = function()
 };
 
 /**
- * Overrides {@link #isHome}.<br/>
+ * Overwrites {@link #isHome}.<br/>
  * Uses a distance-based check instead of integer tile equality, since pixel
  * movement coordinates are fractional and exact equality is never satisfied.
  * @returns {boolean} True if within half a tile of home, false otherwise.

@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Adds a hook for omnipedia extensions to initialize their members.
  */
 J.OMNI.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);

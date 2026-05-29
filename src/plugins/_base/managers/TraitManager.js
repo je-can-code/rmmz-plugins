@@ -1,6 +1,6 @@
-import IconManager from './IconManager.js';
-
 //region TraitManager
+import { IconManager } from './IconManager.js';
+
 /**
  * A static class that centralizes display data (name and icon) for traits and
  * notetag-driven effects across the ecosystem.

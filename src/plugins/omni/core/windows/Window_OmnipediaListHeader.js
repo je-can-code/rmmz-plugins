@@ -12,7 +12,7 @@ class Window_OmnipediaListHeader
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws a header and some detail for the omnipedia list header.
    */
   drawContent()

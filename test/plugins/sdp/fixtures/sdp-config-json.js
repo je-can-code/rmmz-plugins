@@ -37,19 +37,11 @@ export function buildVitestSdpConfigJson()
     function panelToConfigRow(p)
     {
       return {
-        name: p.name,
         key: p.key,
-        iconIndex: String(p.iconIndex),
-        rarity: p.rarity,
-        unlockedByDefault: p.unlockedByDefault,
-        description: p.description,
-        topFlavorText: p.topFlavorText,
-        maxRank: String(p.maxRank),
-        baseCost: String(p.baseCost),
-        flatGrowthCost: String(p.flatGrowthCost),
-        multGrowthCost: String(p.multGrowthCost),
+        identity: p.identity.toConfigJson(),
+        progression: p.progression.toConfigJson(),
         panelParameters: p.panelParameters.map(pp => ({
-          parameterId: String(pp.parameterId),
+          parameterKey: pp.parameterKey,
           perRank: String(pp.perRank),
           isFlat: pp.isFlat,
           isCore: pp.isCore,
@@ -59,6 +51,7 @@ export function buildVitestSdpConfigJson()
           rankRequired: String(r.rankRequired),
           effect: r.effect,
         })),
+        mastery: p.mastery.toConfigJson(),
       };
     }
 
@@ -74,7 +67,7 @@ export function buildVitestSdpConfigJson()
       .baseCost(0)
       .flatGrowth(0)
       .multGrowth(1)
-      .parameters([ new PanelParameter(0, 1, true, true) ])
+      .parameters([ new PanelParameter('mhp', 1, true, true) ])
       .rewards([])
       .build();
 
@@ -90,7 +83,7 @@ export function buildVitestSdpConfigJson()
       .baseCost(0)
       .flatGrowth(0)
       .multGrowth(1)
-      .parameters([ new PanelParameter(2, 4, true, false) ])
+      .parameters([ new PanelParameter('atk', 4, true, false) ])
       .rewards([])
       .build();
 
@@ -106,7 +99,7 @@ export function buildVitestSdpConfigJson()
       .baseCost(0)
       .flatGrowth(0)
       .multGrowth(1)
-      .parameters([ new PanelParameter(2, 10, false, false) ])
+      .parameters([ new PanelParameter('atk', 10, false, false) ])
       .rewards([])
       .build();
 
@@ -122,7 +115,7 @@ export function buildVitestSdpConfigJson()
       .baseCost(0)
       .flatGrowth(0)
       .multGrowth(1)
-      .parameters([ new PanelParameter(2, -3, true, false) ])
+      .parameters([ new PanelParameter('atk', -3, true, false) ])
       .rewards([])
       .build();
 
@@ -138,22 +131,26 @@ export function buildVitestSdpConfigJson()
       .baseCost(0)
       .flatGrowth(0)
       .multGrowth(1)
-      .parameters([ new PanelParameter(2, -8, false, false) ])
+      .parameters([ new PanelParameter('atk', -8, false, false) ])
       .rewards([])
       .build();
 
     const allPanels = [ basePanel, atkFlat, atkPct, atkFlatNeg, atkPctNeg ];
 
     globalThis.__vitestSdpConfigJson = JSON.stringify({
+      subgroups: [],
       sdps: allPanels.map(panelToConfigRow),
     });
   `;
 
   const bundle = [
     `String.empty = '';`,
+    readSdpModelSource('PanelIdentity.js'),
+    readSdpModelSource('PanelMastery.js'),
     readSdpModelSource('PanelParameter.js'),
     readSdpModelSource('PanelRankupReward.js'),
     readSdpModelSource('PanelRarity.js'),
+    readSdpModelSource('PanelProgression.js'),
     readSdpModelSource('StatDistributionPanel.js'),
     readSdpModelSource('StatDistributionPanelBuilder.js'),
     snippet,

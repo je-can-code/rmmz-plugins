@@ -1,6 +1,6 @@
 //region Game_Player
 /**
- * Overrides {@link Game_Player.checkEventTriggerHere}.<br>
+ * Overwrites {@link Game_Player.checkEventTriggerHere}.<br/>
  * Includes the rounding of the x,y coordinates when checking event triggers for things beneath you.
  * @param {number[]} triggers The numeric triggers for this event.
  */
@@ -29,7 +29,7 @@ Game_Player.prototype.checkEventTriggerHere = function(triggers)
 };
 
 /**
- * Extends {@link Game_Player.update}.<br>
+ * Extends {@link Game_Player.update}.<br/>
  * Ticks down the foot-touch trigger cooldown after all movement and trigger logic for the frame.
  */
 J.PIXEL.Aliased.Game_Player.set('update', Game_Player.prototype.update);
@@ -45,7 +45,7 @@ Game_Player.prototype.update = function(sceneActive)
 };
 
 /**
- * Overrides {@link Game_Player.checkEventTriggerThere}.<br/>
+ * Overwrites {@link Game_Player.checkEventTriggerThere}.<br/>
  * Computes the front tile from the current facing using rounded base coordinates,
  * then starts map events there; if that tile is a counter, also checks one tile beyond.
  * @param {number[]} triggers The triggers associated with checking the event at the location.
@@ -86,7 +86,7 @@ Game_Player.prototype.checkEventTriggerThere = function(triggers)
 };
 
 /**
- * Extends {@link checkEventTriggerTouch}.<br>
+ * Extends {@link checkEventTriggerTouch}.<br/>
  * Handles the triggering of events by using a threshold-type formula to determine if actually touched.
  */
 J.PIXEL.Aliased.Game_Player.set('checkEventTriggerTouch', Game_Player.prototype.checkEventTriggerTouch);
@@ -113,7 +113,7 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
 };
 
 /**
- * Overrides {@link Game_Player.checkEventTriggerTouchFront}.<br/>
+ * Overwrites {@link Game_Player.checkEventTriggerTouchFront}.<br/>
  * Computes the front tile from the current facing using rounded base coordinates,
  * checks for touch triggers there via PIXEL threshold logic, and if the front tile
  * is a counter, also checks the tile beyond.
@@ -305,7 +305,7 @@ Game_Player.prototype.dir8ToAngle = function(dir8)
 };
 
 /**
- * Overrides {@link Game_Player.moveByInput}.<br>
+ * Overwrites {@link Game_Player.moveByInput}.<br/>
  * The meat and potatoes for pixel movement of the player.
  * Handles keyboard/gamepad directional input and click-to-move via destination coordinates.
  */
@@ -504,7 +504,7 @@ Game_Player.prototype.pixelMoveTowardDestination = function()
 };
 
 /**
- * Extends {@link #onStep}.<br>
+ * Extends {@link #onStep}.<br/>
  * Also processes on-step effects for the player.
  */
 J.PIXEL.Aliased.Game_Player.set('onStep', Game_Player.prototype.onStep);
@@ -585,7 +585,7 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
 };
 
 /**
- * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Overwrites {@link Game_CharacterBase.getCollisionPivotY}.<br/>
  * Anchors the player's collision center near their feet rather than the tile center.
  * This gives the implied top-down perspective its natural depth feel: the player can
  * slide closer to objects from below (approaching northward) and is gently blocked

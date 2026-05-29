@@ -263,7 +263,7 @@ class Scene_JabsRemap
 
     // bind handlers for interactions.
     window.setHandler('ok', this.onRemapRequested.bind(this));
-    window.setHandler('clear', this.onClearBinding.bind(this));
+    window.setHandler('context', this.onClearBinding.bind(this));
     window.setHandler('cancel', this.onActionsCancel.bind(this));
 
     // attach the top help so selection changes update descriptions.

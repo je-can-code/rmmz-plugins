@@ -31,6 +31,7 @@ import './windows/Window_QuestopediaCategories.js';
 import './windows/Window_QuestopediaList.js';
 import './windows/Window_QuestopediaDescription.js';
 import './windows/Window_QuestopediaObjectives.js';
+import './windows/Window_QuestopediaControlsHint.js';
 import './windows/Window_JabsRemapActions.js';
 import './scenes/Scene_Questopedia.js';
 import './windows/Window_OmnipediaList.js';

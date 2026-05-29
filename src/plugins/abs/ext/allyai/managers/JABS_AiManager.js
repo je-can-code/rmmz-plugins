@@ -402,7 +402,7 @@ JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, toler
 };
 
 /**
- * Extends {@link #maintainSafeDistance}.<br>
+ * Extends {@link #maintainSafeDistance}.<br/>
  * Allies use spacing-axis-driven close/far thresholds instead of the global constants.
  * @param {JABS_Battler} battler The battler to reposition.
  */
@@ -436,7 +436,7 @@ JABS_AiManager.maintainSafeDistance = function(battler)
 };
 
 /**
- * Extends {@link #decideAiPhase2Action}.<br>
+ * Extends {@link #decideAiPhase2Action}.<br/>
  * Includes handling ally AI as well as enemy.
  * @param {JABS_Battler} battler The battler deciding the action.
  */

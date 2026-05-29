@@ -23,6 +23,9 @@ JABS_Battler.prototype.canActionConnect = function()
     return false;
   }
 
+  // invisible followers are not combat-eligible; actions pass through them.
+  if (this.isFollower() && this.getCharacter().isVisible() === false) return false;
+
   // passes all the criteria.
   return true;
 };

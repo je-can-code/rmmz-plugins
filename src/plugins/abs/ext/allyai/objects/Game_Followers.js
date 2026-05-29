@@ -1,6 +1,7 @@
 //region Game_Followers
 /**
- * OVERWRITE If you're using this, the followers always show up!
+ * Extends {@link #show}.<br/>
+ * If you're using this, the followers always show up!
  * @returns {boolean}
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('show', Game_Followers.prototype.show);
@@ -18,7 +19,8 @@ Game_Followers.prototype.show = function()
 };
 
 /**
- * OVERWRITE If you're using this, the followers always show up!
+ * Extends {@link #hide}.<br/>
+ * If you're using this, the followers always show up!
  * @returns {boolean}
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('hide', Game_Followers.prototype.hide);
@@ -36,7 +38,8 @@ Game_Followers.prototype.hide = function()
 };
 
 /**
- * OVERWRITE Adjust the jumpAll function to prevent jumping to the player
+ * Overwrites {@link #jumpAll}.<br/>
+ * Adjust the jumpAll function to prevent jumping to the player
  * when the player is hit.
  */
 Game_Followers.prototype.jumpAll = function()

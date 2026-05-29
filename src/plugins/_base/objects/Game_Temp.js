@@ -1,6 +1,6 @@
 //region Game_Temp
 /**
- * Extends {@link Game_Temp.initialize}.<br>
+ * Extends {@link Game_Temp.initialize}.<br/>
  * Initializes all members of this class and adds our custom members.
  */
 J.BASE.Aliased.Game_Temp.set('initialize', Game_Temp.prototype.initialize);

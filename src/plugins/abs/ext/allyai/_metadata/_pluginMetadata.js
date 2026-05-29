@@ -12,7 +12,7 @@ class J_AllyAiPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps ally AI menu commands and formation defaults from plugin parameters.
    */
   postInitialize()

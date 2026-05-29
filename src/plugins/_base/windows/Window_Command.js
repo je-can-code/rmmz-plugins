@@ -62,7 +62,7 @@ Window_Command.prototype.preDrawItem = function(index)
 };
 
 /**
- * Overrides {@link #drawItem}.<br>
+ * Overwrites {@link #drawItem}.<br/>
  * Renders the text along with any additional data that is available to the command.
  */
 Window_Command.prototype.drawItem = function(index)
@@ -445,7 +445,7 @@ Window_Command.prototype.commandFaceData = function(index)
 
 //region adding commands
 /**
- * Overrides {@link #addCommand}.<br>
+ * Overwrites {@link #addCommand}.<br/>
  * Adds additional metadata to a command.
  * @param {string} name The visible name of this command.
  * @param {string} symbol The symbol for this command.

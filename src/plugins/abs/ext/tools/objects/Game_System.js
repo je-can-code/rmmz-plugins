@@ -1,6 +1,6 @@
 //region Game_System
 /**
- * Extends {@link Game_System.initMembers}.<br>
+ * Extends {@link Game_System.initMembers}.<br/>
  * Also initializes our new members.
  */
 J.ABS.EXT.TOOLS.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);

@@ -2,7 +2,7 @@
 import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
- * Overrides {@link #subject}.<br>
+ * Overwrites {@link #subject}.<br/>
  * On the map there is no context of a $gameTroop. This means that an
  * action must accommodate both enemy and actor alike. In order to handle
  * this, we check to see which id was set and respond accordingly.
@@ -34,7 +34,7 @@ Game_Action.prototype.subject = function()
 };
 
 /**
- * Overrides {@link #setSubject}.<br>
+ * Overwrites {@link #setSubject}.<br/>
  * On the map there is no context of a $gameTroop. This means that an
  * action must accommodate both enemy and actor alike. In order to handle
  * this, we check to see which id was set and respond accordingly.
@@ -62,7 +62,7 @@ Game_Action.prototype.setSubject = function(subject)
 
 //region action application
 /**
- * Overrides {@link #apply}.<br>
+ * Overwrites {@link #apply}.<br/>
  * Adjusts how a skill is applied to a target in the context of JABS.
  */
 J.ABS.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
@@ -150,11 +150,17 @@ Game_Action.prototype.executeJabsAction = function(target)
   // check if there is a damage formula.
   if (this.item().damage.type > 0)
   {
-    // determine if its a critical hit.
-    result.critical = this.isHitCritical(target);
+    // a glancing blow cannot also be a critical hit; the two outcomes are mutually exclusive.
+    result.critical = result.glancing ? false : this.isHitCritical(target);
 
-    // calculate the damage.
-    const value = this.makeDamageValue(target, result.critical);
+    // calculate the damage from the formula.
+    let value = this.makeDamageValue(target, result.critical);
+
+    // glancing blows deal only a fraction of the calculated damage.
+    if (result.glancing)
+    {
+      value = this.applyGlancingDamageReduction(value);
+    }
 
     // actually apply the damage to the target.
     this.executeDamage(target, value);
@@ -203,7 +209,7 @@ Game_Action.prototype.isHitCritical = function(target)
 };
 
 /**
- * Overrides {@link #itemHit}.<br>
+ * Overwrites {@link #itemHit}.<br/>
  * This overwrite converts the success rate of a skill into the value
  * representing what percent of your hit is used in the hit chance formula.
  * @returns {number}
@@ -221,7 +227,7 @@ Game_Action.prototype.itemHit = function()
 };
 
 /**
- * Extends {@link #makeDamageValue}.<br>
+ * Extends {@link #makeDamageValue}.<br/>
  * Includes consideration of guard effects of the target.
  */
 J.ABS.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
@@ -347,6 +353,7 @@ Game_Action.prototype.onParry = function(jabsBattler)
 
 /**
  * Calculates the damage reduction from parrying.
+ * Active (timed, skill-driven) parry retains full negation as the mastery-layer reward.
  * @param {JABS_Battler} jabsBattler The battler that is parrying.
  * @param {number} originalDamage The original amount of damage.
  * @returns {number} The damage after reduction.
@@ -354,8 +361,23 @@ Game_Action.prototype.onParry = function(jabsBattler)
 // eslint-disable-next-line no-unused-vars
 Game_Action.prototype.calculateParryDamageReduction = function(jabsBattler, originalDamage)
 {
-  // return the parry-modified damage.
+  // active parry fully negates the hit; return zero damage.
   return 0;
+};
+
+/**
+ * Scales the given damage value down to the glancing blow fraction defined by plugin parameters.
+ * Glancing blows always deal at least 1 damage so the hit registers visibly.
+ * @param {number} originalDamage The calculated damage before the glancing reduction.
+ * @returns {number} The reduced damage, floored at 1.
+ */
+Game_Action.prototype.applyGlancingDamageReduction = function(originalDamage)
+{
+  // retrieve the configured fraction of damage a glancing blow deals.
+  const damageFactor = J.ABS.Metadata.GlancingBlowDamageFactor;
+
+  // scale the damage down and ensure the hit always registers as non-zero.
+  return Math.max(1, Math.round(originalDamage * damageFactor));
 };
 
 /**
@@ -475,7 +497,7 @@ Game_Action.prototype.applyPercentDamageReduction = function(baseDamage, jabsBat
 
 //region state-related effect application
 /**
- * Extends {@link #itemEffectAddState}.<br>
+ * Extends {@link #itemEffectAddState}.<br/>
  * Adds a conditional check to see if adding state-related effects is allowed
  * against the target.
  * @param {Game_Battler} target The target battler potentially being afflicted.
@@ -513,7 +535,7 @@ Game_Action.prototype.canItemEffectAddState = function(target, effect)
 };
 
 /**
- * Overrides {@link #itemEffectAddAttackState}.<br>
+ * Overwrites {@link #itemEffectAddAttackState}.<br/>
  * When a "Normal Attack" effect is used and a state is applied, then
  * all of the battler's attack states have an opportunity to be applied
  * based on all the various rates and calculations.
@@ -548,7 +570,7 @@ Game_Action.prototype.itemEffectAddAttackState = function(target, effect)
 };
 
 /**
- * Overrides {@link #itemEffectAddNormalState}.<br>
+ * Overwrites {@link #itemEffectAddNormalState}.<br/>
  * Updates the method to be more modifyable, and considers attackers
  * when applying states.
  *

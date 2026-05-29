@@ -444,7 +444,7 @@ class Window_PassiveDetail
       this.drawDetailRow(icon, label, value);
     });
 
-    // HCR row from J-Resources: HP cost rate reduction, displayed like MCR/TCR.
+    // HCR row from J-Resources: life cost rate reduction, displayed like MCR/TCR.
     const hcrLine = this.collectHcrLine(state);
     if (hcrLine)
     {
@@ -459,7 +459,7 @@ class Window_PassiveDetail
   }
 
   /**
-   * Collects the HP Cost Reduction (HCR) display row from J-Resources.
+   * Collects the Life Cost (HCR) display row from J-Resources.
    * HCR formula evaluates to a positive reduction amount (e.g. 15 = 15% cheaper),
    * so the value is negated for display to match the MCR/TCR visual convention,
    * and invertColor is applied so the resulting '-' prefix renders green.
@@ -477,7 +477,7 @@ class Window_PassiveDetail
     const evaluated = Number(this.evaluateFormula(formula, this._actor));
     return {
       icon:  IconManager.param(0),
-      label: 'HP Cost Rate',
+      label: 'Life Cost',
       value: `-${Math.abs(evaluated)}%`,
     };
   }

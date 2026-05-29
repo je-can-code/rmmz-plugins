@@ -1,5 +1,6 @@
 //region Game_Battler
 import RPGManager from './../managers/RPGManager.js';
+import ParameterRegistry from './../core/ParameterRegistry.js';
 import RPG_State from './../database/implementations/RPG_State.js';
 import RPG_Skill from './../database/implementations/RPG_Skill.js';
 import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
@@ -62,7 +63,7 @@ Game_Battler.prototype.class = function(classId)
 };
 
 /**
- * Overrides {@link #maxTp}.<br/>
+ * Overwrites {@link #maxTp}.<br/>
  * Replaces the default of 100 for all battlers with a tag-based calculation that reviews all available notes to sum
  * together all maxTp values for a custom value.
  * @returns {number}
@@ -157,7 +158,7 @@ Game_Battler.prototype.state = function(stateId)
 };
 
 /**
- * Overrides {@link #states}.<br>
+ * Overwrites {@link #states}.<br/>
  * Returns all states from the view of this battler.
  * @returns {RPG_State[]}
  */
@@ -167,7 +168,7 @@ Game_Battler.prototype.states = function()
 };
 
 /**
- * Extends {@link #eraseState}.<br>
+ * Extends {@link #eraseState}.<br/>
  * Adds a hook for performing actions when a state is removed from the battler.
  */
 J.BASE.Aliased.Game_Battler.set('eraseState', Game_Battler.prototype.eraseState);
@@ -203,7 +204,7 @@ Game_Battler.prototype.onStateRemoval = function(stateId)
 };
 
 /**
- * Extends {@link #addNewState}.<br>
+ * Extends {@link #addNewState}.<br/>
  * Adds a hook for performing actions when a state is added on the battler.
  */
 J.BASE.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewState);
@@ -273,5 +274,16 @@ Game_Battler.prototype.currentHpPercent100 = function()
 {
   // return the whole base-100 version of the hp percent.
   return Math.round(this.currentHpPercent() * 100);
+};
+
+/**
+ * Resolves a catalog parameter value by string key.
+ * Delegates to {@link ParameterRegistry} — does not bypass param/xparam/sparam alias chains.
+ * @param {string} key The parameter key (e.g. `'atk'`).
+ * @returns {number}
+ */
+Game_Battler.prototype.parameter = function(key)
+{
+  return ParameterRegistry.resolveValue(this, key);
 };
 //endregion Game_Battler
