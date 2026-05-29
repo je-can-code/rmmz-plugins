@@ -8,7 +8,7 @@
  * share state through {@link currentX} and {@link currentY}, both reset at the
  * start of each repaint — no y threading through method signatures.
  *
- * Left column:   Combat (stub, filled by passive/ext/abs) + Ailments
+ * Left column:   Combat (stub, filled by a passive extension) + Ailments
  * Middle column: Parameters + Elements
  * Right column:  Skills + Equip + Properties + Rewards
  *
@@ -193,7 +193,7 @@ class Window_PassiveDetail
    * Top-level orchestrator — draws the full-width header, then populates the
    * left and right columns with their respective sections.
    *
-   * Left column: Combat (stub, filled by passive/ext/abs), Parameters, Elements.
+   * Left column: Combat (stub, filled by a passive extension), Parameters, Elements.
    * Right column: Ailments, Skills, Equip, Properties, Rewards.
    *
    * Extensions may alias either this method or any individual section method.
@@ -224,7 +224,7 @@ class Window_PassiveDetail
 
   /**
    * Stub for the combat section — occupies no space when unoverridden.
-   * J.PASSIVE.EXT.ABS overrides this to draw JABS combat, shield, and stacking.
+   * A passive affix extension overrides this to draw JABS combat, shield, and stacking.
    * @param {RPG_State} state The state being detailed.
    */
   // eslint-disable-next-line no-unused-vars

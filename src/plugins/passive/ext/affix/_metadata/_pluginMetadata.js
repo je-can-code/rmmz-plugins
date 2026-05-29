@@ -1,5 +1,5 @@
 //region plugin metadata
-class JPassiveAbs_PluginMetadata
+class JPassiveAffix_PluginMetadata
   extends PluginMetadata
 {
   /**
@@ -105,5 +105,5 @@ class JPassiveAbs_PluginMetadata
   }
 }
 
-export default JPassiveAbs_PluginMetadata;
+export default JPassiveAffix_PluginMetadata;
 //endregion plugin metadata

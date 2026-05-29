@@ -36,7 +36,7 @@ class FramedTarget
   configuration = null;
 
   /**
-   * Optional `#RRGGBB` for the name row when tier stripe hex should also tint the HUD (Passive-ABS + J-Passive-ABS).
+   * Optional `#RRGGBB` for the name row; a passive extension may set this so the HUD tints the target name.
    * Empty means use the window default text color.
    * @type {string|String.empty}
    */

@@ -47,11 +47,11 @@ JABS_AiManager.shouldBlockPassiveSuffixRng = function(character, enemyData)
  * @param {Game_Enemy} battler The enemy battler that was converted from the event.
  * @param {JABS_Battler} jabsBattler The created JABS battler from the event.
  */
-J.PASSIVE.EXT.ABS.Aliased.JABS_AiManager.set('postConvertMutate', JABS_AiManager.postConvertMutate);
+J.PASSIVE.EXT.AFFIX.Aliased.JABS_AiManager.set('postConvertMutate', JABS_AiManager.postConvertMutate);
 JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
 {
   // perform original logic.
-  J.PASSIVE.EXT.ABS.Aliased.JABS_AiManager.get('postConvertMutate')
+  J.PASSIVE.EXT.AFFIX.Aliased.JABS_AiManager.get('postConvertMutate')
     .call(this, battler, jabsBattler);
 
   // grab the spawning map event and passive state ids from its comments.
@@ -61,7 +61,7 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   // check if the enemy has any explicit affixes.
   const hasExplicitPassives = passiveStateIds.length > 0;
   const hasExplicitAffixes = hasExplicitPassives && passiveStateIds
-    .some(id => J.PASSIVE.EXT.ABS.Metadata.isAffixStateId(id));
+    .some(id => J.PASSIVE.EXT.AFFIX.Metadata.isAffixStateId(id));
 
   // check if the event had any explicit state ids.
   if (hasExplicitAffixes)
@@ -90,8 +90,8 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   {
     // pick a prefix at random.
     const prefixStateId = RPGManager.weightedMapChoice(
-      J.PASSIVE.EXT.ABS.Metadata.prefixMap,
-      J.PASSIVE.EXT.ABS.Metadata.totalPrefixWeight
+      J.PASSIVE.EXT.AFFIX.Metadata.prefixMap,
+      J.PASSIVE.EXT.AFFIX.Metadata.totalPrefixWeight
     );
 
     // add the prefix to the list of passive state ids when the pool produced a choice.
@@ -106,8 +106,8 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   {
     // pick a suffix at random.
     const suffixStateId = RPGManager.weightedMapChoice(
-      J.PASSIVE.EXT.ABS.Metadata.suffixMap,
-      J.PASSIVE.EXT.ABS.Metadata.totalSuffixWeight
+      J.PASSIVE.EXT.AFFIX.Metadata.suffixMap,
+      J.PASSIVE.EXT.AFFIX.Metadata.totalSuffixWeight
     );
 
     // add the suffix to the list of passive state ids when the pool produced a choice.

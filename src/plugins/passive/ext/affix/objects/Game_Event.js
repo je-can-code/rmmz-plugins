@@ -1,13 +1,13 @@
 //region Game_Event
 /**
- * Reads the last {@link J.PASSIVE.EXT.ABS.RegExp.PassiveAffixPrefixChance} tag from this page's comment commands.
+ * Reads the last {@link J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixPrefixChance} tag from this page's comment commands.
  * @returns {number|null} Parsed chance, or null when no tag is present.
  */
 Game_Event.prototype.getPassiveAffixPrefixChanceFromEventComments = function()
 {
   // last matching tag on this page wins — designers author comments top-to-bottom and the final line is authoritative.
   let chance = null;
-  const regex = J.PASSIVE.EXT.ABS.RegExp.PassiveAffixPrefixChance;
+  const regex = J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixPrefixChance;
 
   this.getValidCommentCommands()
     .forEach(command =>
@@ -27,14 +27,14 @@ Game_Event.prototype.getPassiveAffixPrefixChanceFromEventComments = function()
 };
 
 /**
- * Reads the last {@link J.PASSIVE.EXT.ABS.RegExp.PassiveAffixSuffixChance} tag from this page's comment commands.
+ * Reads the last {@link J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixSuffixChance} tag from this page's comment commands.
  * @returns {number|null} Parsed chance, or null when no tag is present.
  */
 Game_Event.prototype.getPassiveAffixSuffixChanceFromEventComments = function()
 {
   // last matching tag on this page wins — designers author comments top-to-bottom and the final line is authoritative.
   let chance = null;
-  const regex = J.PASSIVE.EXT.ABS.RegExp.PassiveAffixSuffixChance;
+  const regex = J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixSuffixChance;
 
   this.getValidCommentCommands()
     .forEach(command =>
@@ -54,7 +54,7 @@ Game_Event.prototype.getPassiveAffixSuffixChanceFromEventComments = function()
 };
 
 /**
- * True when any comment on this page contains {@link J.PASSIVE.EXT.ABS.RegExp.NoRngPassivePrefixes}.
+ * True when any comment on this page contains {@link J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassivePrefixes}.
  * @returns {boolean}
  */
 Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
@@ -68,13 +68,13 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
       const [ comment, ] = command.parameters;
 
       // the combined master switch blocks both slots from a single tag.
-      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassives.test(comment))
+      if (J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassives.test(comment))
       {
         blocks = true;
       }
 
       // the slot-specific tag blocks only prefixes.
-      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassivePrefixes.test(comment))
+      if (J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassivePrefixes.test(comment))
       {
         blocks = true;
       }
@@ -84,7 +84,7 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
 };
 
 /**
- * True when any comment on this page contains {@link J.PASSIVE.EXT.ABS.RegExp.NoRngPassiveSuffixes}.
+ * True when any comment on this page contains {@link J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassiveSuffixes}.
  * @returns {boolean}
  */
 Game_Event.prototype.eventCommentsDisablePassiveAffixSuffixRng = function()
@@ -98,13 +98,13 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixSuffixRng = function()
       const [ comment, ] = command.parameters;
 
       // the combined master switch blocks both slots from a single tag.
-      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassives.test(comment))
+      if (J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassives.test(comment))
       {
         blocks = true;
       }
 
       // the slot-specific tag blocks only suffixes.
-      if (J.PASSIVE.EXT.ABS.RegExp.NoRngPassiveSuffixes.test(comment))
+      if (J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassiveSuffixes.test(comment))
       {
         blocks = true;
       }
@@ -135,8 +135,8 @@ Game_Event.prototype.getResolvedPassiveAffixPrefixChance = function(enemyData)
       .clamp(0, 100);
   }
 
-  // fall back to the J-Passive-ABS plugin default parameter.
-  return J.PASSIVE.EXT.ABS.Metadata.defaultPrefixChance;
+  // fall back to the affix extension default parameter.
+  return J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance;
 };
 
 /**
@@ -164,7 +164,7 @@ Game_Event.prototype.getResolvedPassiveAffixSuffixChance = function(enemyData)
 
   }
 
-  // fall back to the J-Passive-ABS plugin default parameter for suffix chance.
-  return J.PASSIVE.EXT.ABS.Metadata.defaultSuffixChance;
+  // fall back to the affix extension default parameter for suffix chance.
+  return J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance;
 };
 //endregion Game_Event

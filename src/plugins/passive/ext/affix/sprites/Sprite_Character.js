@@ -5,12 +5,12 @@
  * Tier label copy is composed in the HUD target frame.
  * @returns {JABS_BattlerName}
  */
-J.PASSIVE.EXT.ABS.Aliased.Sprite_Character.set('getBattlerName', Sprite_Character.prototype.getBattlerName);
+J.PASSIVE.EXT.AFFIX.Aliased.Sprite_Character.set('getBattlerName', Sprite_Character.prototype.getBattlerName);
 Sprite_Character.prototype.getBattlerName = function()
 {
   // perform original logic.
   /** @type {JABS_BattlerName} */
-  const battlerName = J.PASSIVE.EXT.ABS.Aliased.Sprite_Character.get('getBattlerName')
+  const battlerName = J.PASSIVE.EXT.AFFIX.Aliased.Sprite_Character.get('getBattlerName')
     .call(this);
 
   // apply passive tier accent for the map nameplate stripe.
@@ -33,8 +33,8 @@ Sprite_Character.prototype.applyPassiveMapTierAccent = function(battlerName)
   // grab the battler.
   const battler = this.getBattler();
 
-  // share the exact same tier-prefix → tierColorHex rule as the HUD target frame (see J.PASSIVE.EXT.ABS).
-  const tierStripeHex = J.PASSIVE.EXT.ABS.Helpers.resolvePassiveTierStripeColorHex(battler);
+  // share the exact same tier-prefix → tierColorHex rule as the HUD target frame (see J.PASSIVE.EXT.AFFIX.Helpers).
+  const tierStripeHex = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
 
   // only touch the name bag when we actually resolved a stripe color (pure helper returns empty otherwise).
   if (tierStripeHex !== String.empty)

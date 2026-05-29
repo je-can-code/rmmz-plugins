@@ -6,13 +6,13 @@
  * All methods read and advance {@link Window_PassiveDetail#currentY} directly —
  * no y threading through method signatures.
  */
-J.PASSIVE.EXT.ABS.Aliased.Window_PassiveDetail.set(
+J.PASSIVE.EXT.AFFIX.Aliased.Window_PassiveDetail.set(
   'drawCombatSection',
   Window_PassiveDetail.prototype.drawCombatSection);
 Window_PassiveDetail.prototype.drawCombatSection = function(state)
 {
   // perform original logic (core stub — no-op).
-  J.PASSIVE.EXT.ABS.Aliased.Window_PassiveDetail
+  J.PASSIVE.EXT.AFFIX.Aliased.Window_PassiveDetail
     .get('drawCombatSection')
     .call(this, state);
 

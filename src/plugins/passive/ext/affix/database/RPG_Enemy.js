@@ -7,7 +7,7 @@ Object.defineProperty(
   RPG_Enemy.prototype, 'noRngPrefixes', {
     get()
     {
-      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.ABS.RegExp.NoRngPassivePrefixes);
+      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassivePrefixes);
     }
   },
 );
@@ -20,7 +20,7 @@ Object.defineProperty(
   RPG_Enemy.prototype, 'noRngSuffixes', {
     get()
     {
-      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.ABS.RegExp.NoRngPassiveSuffixes);
+      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassiveSuffixes);
     }
   },
 );
@@ -33,7 +33,7 @@ Object.defineProperty(
   RPG_Enemy.prototype, 'noRngPassives', {
     get()
     {
-      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.ABS.RegExp.NoRngPassives);
+      return RPGManager.checkForBooleanFromNoteByRegex(this, J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassives);
     }
   },
 );
@@ -48,7 +48,7 @@ Object.defineProperty(
     {
       return RPGManager.getNumberFromNoteByRegex(
         this,
-        J.PASSIVE.EXT.ABS.RegExp.PassiveAffixPrefixChance,
+        J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixPrefixChance,
         true
       );
     }
@@ -65,14 +65,14 @@ Object.defineProperty(
     {
       return RPGManager.getNumberFromNoteByRegex(
         this,
-        J.PASSIVE.EXT.ABS.RegExp.PassiveAffixSuffixChance,
+        J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixSuffixChance,
         true
       );
     }
   },
 );
 /**
- * All reward multipliers defined on this enemy via {@link J.PASSIVE.EXT.ABS.RegExp.RewardMultiplier}.
+ * All reward multipliers defined on this enemy via {@link J.PASSIVE.EXT.AFFIX.RegExp.RewardMultiplier}.
  * Returns a map of reward type key to its multiplier value.
  * @type {Map<string, number>}
  */
@@ -80,7 +80,7 @@ Object.defineProperty(
   RPG_Enemy.prototype, 'rewardMultipliers', {
     get()
     {
-      return J.PASSIVE.EXT.ABS.Helpers.parseRewardMultipliers(this);
+      return J.PASSIVE.EXT.AFFIX.Helpers.parseRewardMultipliers(this);
     }
   },
 );

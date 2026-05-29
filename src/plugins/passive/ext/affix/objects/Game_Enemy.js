@@ -36,11 +36,11 @@ Game_Enemy.prototype.getRewardMultiplierByType = function(rewardType)
  * Folds in any reward multipliers for the "drops" type from this enemy's note and states.
  * @returns {number} The adjusted drop multiplier.
  */
-J.PASSIVE.EXT.ABS.Aliased.Game_Enemy.set('getDropMultiplierBonus', Game_Enemy.prototype.getDropMultiplierBonus);
+J.PASSIVE.EXT.AFFIX.Aliased.Game_Enemy.set('getDropMultiplierBonus', Game_Enemy.prototype.getDropMultiplierBonus);
 Game_Enemy.prototype.getDropMultiplierBonus = function()
 {
   // perform original logic.
-  const base = J.PASSIVE.EXT.ABS.Aliased.Game_Enemy.get('getDropMultiplierBonus')
+  const base = J.PASSIVE.EXT.AFFIX.Aliased.Game_Enemy.get('getDropMultiplierBonus')
     .call(this);
 
   // apply any reward multiplier tags for the drops type.

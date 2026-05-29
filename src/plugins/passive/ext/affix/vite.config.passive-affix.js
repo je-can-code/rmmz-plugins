@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'passive/ext/J-Passive-ABS': path.resolve(_dirname, './entry.js'),
+        'passive/ext/J-Passive-Affix': path.resolve(_dirname, './entry.js'),
       },
     },
   },

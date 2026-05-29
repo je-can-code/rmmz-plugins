@@ -211,11 +211,11 @@
  *    Initial release.
  * ============================================================================
  *
- * @param parentConfigPassiveAbs
- * @text PASSIVE ABS
+ * @param parentConfigPassiveAffix
+ * @text PASSIVE AFFIX
  *
  * @param default-prefix-chance
- * @parent parentConfigPassiveAbs
+ * @parent parentConfigPassiveAffix
  * @type number
  * @decimals 2
  * @min 0
@@ -225,7 +225,7 @@
  * @default 8
  *
  * @param default-suffix-chance
- * @parent parentConfigPassiveAbs
+ * @parent parentConfigPassiveAffix
  * @type number
  * @decimals 2
  * @min 0

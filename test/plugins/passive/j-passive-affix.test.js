@@ -1,10 +1,10 @@
-//region plugins/passive/j-passive-abs.test.js
+//region plugins/passive/j-passive-affix.test.js
 import vm from 'node:vm';
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
-import { loadPassiveAbsPluginVm } from './passive-abs-vm.js';
+import { loadPassiveAffixPluginVm } from './passive-affix-vm.js';
 
 /**
  * {@link RPG_State} is a lexical class in the shipped bundle; expose the prototype for Object.create-based fixtures.
@@ -12,19 +12,19 @@ import { loadPassiveAbsPluginVm } from './passive-abs-vm.js';
  * @param {object} sandbox
  * @returns {object}
  */
-function passiveAbsRpgStatePrototype(sandbox)
+function passiveAffixRpgStatePrototype(sandbox)
 {
   return vm.runInContext('RPG_State.prototype', sandbox);
 }
 
-describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
+describe('J-Passive-Affix (out/passive/ext/J-Passive-Affix.js)', () =>
 {
   let sandbox;
 
   beforeAll(() =>
   {
     sandbox = { console };
-    loadPassiveAbsPluginVm(sandbox);
+    loadPassiveAffixPluginVm(sandbox);
   });
 
   afterAll(() =>
@@ -39,13 +39,13 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
 
   it('metadata reads default affix chances from plugin parameters', () =>
   {
-    expect(sandbox.J.PASSIVE.EXT.ABS.Metadata.defaultPrefixChance).toBe(33);
-    expect(sandbox.J.PASSIVE.EXT.ABS.Metadata.defaultSuffixChance).toBe(33);
+    expect(sandbox.J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance).toBe(33);
+    expect(sandbox.J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance).toBe(33);
   });
 
   it('RPG_State#tierColorHex is null when the tier hex tag is absent', () =>
   {
-    const state = Object.create(passiveAbsRpgStatePrototype(sandbox));
+    const state = Object.create(passiveAffixRpgStatePrototype(sandbox));
     state.id = 1;
     state.note = '<enemy-prefix>';
 
@@ -54,7 +54,7 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
 
   it('RPG_State#tierColorHex returns the captured hex when the tag is present', () =>
   {
-    const state = Object.create(passiveAbsRpgStatePrototype(sandbox));
+    const state = Object.create(passiveAffixRpgStatePrototype(sandbox));
     state.id = 2;
     state.note = '<enemy-prefix>\n<tier-color-hex:#aabbcc>';
 
@@ -95,7 +95,7 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
 
   it('resolvePassiveTierStripeColorHex returns empty when the first prefix state has no tier hex tag', () =>
   {
-    const prefixState = Object.create(passiveAbsRpgStatePrototype(sandbox));
+    const prefixState = Object.create(passiveAffixRpgStatePrototype(sandbox));
     prefixState.id = 50;
     prefixState.note = '<enemy-prefix>';
     prefixState.name = 'Tier';
@@ -116,14 +116,14 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
       },
     };
 
-    const hex = sandbox.J.PASSIVE.EXT.ABS.Helpers.resolvePassiveTierStripeColorHex(battler);
+    const hex = sandbox.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
 
     expect(hex).toBe('');
   });
 
   it('resolvePassiveTierStripeColorHex returns the hex when the prefix state defines tier-color-hex', () =>
   {
-    const prefixState = Object.create(passiveAbsRpgStatePrototype(sandbox));
+    const prefixState = Object.create(passiveAffixRpgStatePrototype(sandbox));
     prefixState.id = 51;
     prefixState.note = '<enemy-prefix>\n<tier-color-hex:#ff00aa>';
     prefixState.name = 'Tier';
@@ -144,7 +144,7 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
       },
     };
 
-    const hex = sandbox.J.PASSIVE.EXT.ABS.Helpers.resolvePassiveTierStripeColorHex(battler);
+    const hex = sandbox.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
 
     expect(hex).toBe('#ff00aa');
   });
@@ -185,14 +185,14 @@ describe('J-Passive-ABS (out/passive/ext/J-Passive-ABS.js)', () =>
   });
 });
 
-describe('J-Passive-ABS metadata with custom plugin parameters', () =>
+describe('J-Passive-Affix metadata with custom plugin parameters', () =>
 {
   let sandboxB;
 
   beforeAll(() =>
   {
     sandboxB = { console };
-    loadPassiveAbsPluginVm(sandboxB, {
+    loadPassiveAffixPluginVm(sandboxB, {
       'default-prefix-chance': '12',
       'default-suffix-chance': '88',
     });
@@ -205,8 +205,8 @@ describe('J-Passive-ABS metadata with custom plugin parameters', () =>
 
   it('honors custom default prefix and suffix chances', () =>
   {
-    expect(sandboxB.J.PASSIVE.EXT.ABS.Metadata.defaultPrefixChance).toBe(12);
-    expect(sandboxB.J.PASSIVE.EXT.ABS.Metadata.defaultSuffixChance).toBe(88);
+    expect(sandboxB.J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance).toBe(12);
+    expect(sandboxB.J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance).toBe(88);
   });
 
   it('Game_Event#getResolvedPassiveAffixPrefixChance uses the custom default when applicable', () =>
@@ -223,4 +223,4 @@ describe('J-Passive-ABS metadata with custom plugin parameters', () =>
     expect(ev.getResolvedPassiveAffixPrefixChance(enemyData)).toBe(12);
   });
 });
-//endregion plugins/passive/j-passive-abs.test.js
+//endregion plugins/passive/j-passive-affix.test.js

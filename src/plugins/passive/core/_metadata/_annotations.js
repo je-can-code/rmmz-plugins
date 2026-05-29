@@ -168,7 +168,7 @@
  *    Added Passives command to the main menu with configurable name, icon, and switch.
  *    Added J.PASSIVE.EXT.OTIB — item-to-state passive unlock system with optional DiaLog
  *    integration.
- *    Added J.PASSIVE.EXT.ABS — aliases detail window sections to inject JABS-specific
+ *    Added J.PASSIVE.EXT.AFFIX — aliases detail window sections to inject JABS-specific
  *    content: slip effects, shield, stacking, resource gains (J-Resources-ABS), and JABS
  *    modifier/timing rows.
  * - 2.0.2

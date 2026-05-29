@@ -64,8 +64,8 @@ class Window_TargetFrame
     this._j._name = String.empty;
 
     /**
-     * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx` (Passive-ABS tier stripe
-     * hex).
+     * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx`.
+     * Populated when a passive extension is active and supplies a name color for the target.
      * @type {string|String.empty}
      */
     this._j._nameColorHex = String.empty;
@@ -540,7 +540,7 @@ class Window_TargetFrame
     const w = this.targetFrameNameLineInnerWidth();
 
     // `Window_Base#drawTextEx` begins with `resetFontSettings()`, which calls `resetTextColor()` and would wipe a
-    // tier tint applied before the call. Mirror the engine path but keep Passive-ABS `nameColorHex` after font setup.
+    // name tint applied before the call. Mirror the engine path but re-apply extension `nameColorHex` after font setup.
     this.contents.fontFace = $gameSystem.mainFontFace();
     this.contents.fontSize = $gameSystem.mainFontSize();
 

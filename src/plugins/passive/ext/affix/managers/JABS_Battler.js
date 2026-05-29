@@ -10,18 +10,18 @@ if (J.HUD && J.HUD.EXT.TARGET)
    * @param {JABS_Battler} battlerLastHit Last-hit target for this frame.
    * @returns {FramedTarget}
    */
-  J.PASSIVE.EXT.ABS.Aliased.JABS_Battler.set('buildFramedTarget', JABS_Battler.prototype.buildFramedTarget);
+  J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.set('buildFramedTarget', JABS_Battler.prototype.buildFramedTarget);
   JABS_Battler.prototype.buildFramedTarget = function(battlerLastHit)
   {
     // perform original logic (HUD fills name, notes text, icon slot, gauge config).
-    const framedTarget = J.PASSIVE.EXT.ABS.Aliased.JABS_Battler.get('buildFramedTarget')
+    const framedTarget = J.PASSIVE.EXT.AFFIX.Aliased.JABS_Battler.get('buildFramedTarget')
       .call(this, battlerLastHit);
 
     // layer passive tier presentation on top of whatever the HUD decided the base name should be.
     this.applyPassiveTierTargetFrameDecoration(framedTarget, battlerLastHit);
 
     // derive the same stripe hex the map uses, then tint the HUD name row to match the stripe.
-    const tierStripeHex = J.PASSIVE.EXT.ABS.Helpers.resolvePassiveTierStripeColorHex(battlerLastHit.getBattler());
+    const tierStripeHex = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battlerLastHit.getBattler());
 
     if (ColorManager.isValidHexColor(tierStripeHex))
     {

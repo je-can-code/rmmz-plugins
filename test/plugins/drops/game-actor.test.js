@@ -43,5 +43,41 @@ describe('J-DropsControl Game_Actor (out/drops/J-DropsControl.js)', () =>
 
     expect(actor.getGoldMultiplier()).toBe(0.75);
   });
+
+  it('adds SDP panel bonus to gold multiplier factor when getSdpBonusForParameterKey is available', () =>
+  {
+    const actor = new sandbox.Game_Actor();
+
+    actor.__testNoteSources = [ { note: '<goldMultiplier:25>' } ];
+    actor.getSdpBonusForParameterKey = function(parameterKey, baseParam)
+    {
+      if (parameterKey === 'gdr' && baseParam === 1)
+      {
+        return 0.1;
+      }
+
+      return 0;
+    };
+
+    expect(actor.getGoldMultiplier()).toBe(0.35);
+  });
+
+  it('adds SDP panel bonus to drop multiplier factor when getSdpBonusForParameterKey is available', () =>
+  {
+    const actor = new sandbox.Game_Actor();
+
+    actor.__testNoteSources = [ { note: '<dropMultiplier:40>' } ];
+    actor.getSdpBonusForParameterKey = function(parameterKey, baseParam)
+    {
+      if (parameterKey === 'dor' && baseParam === 1)
+      {
+        return 0.15;
+      }
+
+      return 0;
+    };
+
+    expect(actor.getDropMultiplierBonus()).toBe(0.55);
+  });
 });
 //endregion plugins/drops/game-actor.test.js
