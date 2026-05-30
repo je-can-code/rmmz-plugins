@@ -46,13 +46,16 @@ class Window_CreationCategoryBadge
       return;
     }
 
+    // policy step inside draw content.
     this.resetFontSettings();
 
+    // policy step inside draw content.
     const { iconIndex, name } = this.#category;
     const lh = this.lineHeight();
     const iy = Math.floor((this.innerHeight - lh) / 2);
     const iconSlot = ImageManager.standardIconWidth + 8;
 
+    // policy step inside draw content.
     this.drawIcon(iconIndex, 8, iy);
     this.drawText(name, iconSlot, iy, Math.max(48, this.innerWidth - iconSlot - 8), Window_Base.TextAlignments.Left);
   }

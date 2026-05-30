@@ -122,6 +122,7 @@ class Window_QuestopediaDescription
     // don't render the icons if the quest is unknown, period.
     if (!quest.isKnown()) return;
 
+    // capture tags for downstream policy in this routine.
     const tags = quest.tags();
 
     // don't render the tags if there are none.
@@ -272,6 +273,7 @@ class Window_QuestopediaDescription
     // shorthand the lineHeight.
     const lh = this.lineHeight();
 
+    // policy step inside draw quest logs.
     quest.objectives
       .filter(objective =>
       {

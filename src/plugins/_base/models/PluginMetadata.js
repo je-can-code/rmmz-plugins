@@ -84,6 +84,7 @@ class PluginMetadata
       throw new Error(`Duplicate plugin entry detected: [${pluginMetadata.name}] !`);
     }
 
+    // Register the value on the alias map for runtime lookup.
     this.#plugins.set(pluginMetadata.name, pluginMetadata);
   }
 

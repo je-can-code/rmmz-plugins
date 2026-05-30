@@ -24,10 +24,12 @@ DataManager.registerMinimapInputActions = function()
   Input.registerAction('J.MAP', {
     key: 'minimap-toggle',
     label: 'Toggle Minimap',
+    // handle this switch arm for the current discriminant.
     defaults: [ J.ABS.EXT.INPUT.Symbols.DPadUp ],
     category: 'ui',
   });
 
+  // policy step inside register minimap input actions.
   Input.registerAction('J.MAP', {
     key: 'expand-minimap',
     label: 'Expand Minimap (Hold)',

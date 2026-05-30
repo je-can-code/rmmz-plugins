@@ -32,6 +32,7 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 
 ## Oxlint compliance
 - **Never violate Oxlint rules** configured in `.oxlintrc.json`. Layout conventions (Allman braces, `eol-last: never`, `max-len` 120 / 200 on `_annotations.js`) are workspace style; Oxlint does not yet expose those stylistic rules natively — follow `.junie/guidelines.md` and WebStorm formatting.
+- **`no-var`:** `var` is forbidden in `src/plugins` and `src/build-tools` — use `let` / `const` only.
 - **No trailing newline on plugin files:** the final character of a file must be the last character of the last line (no `\n` after `//endregion` or the closing line). When using the `Write` tool, do not append a trailing newline.
 - **Always run `bun run lint` after code changes** (`oxlint src/plugins src/build-tools`). All lint **errors** must be fixed. **Warnings** may remain when justified; Oxlint honors ESLint-style `eslint-disable` comments where rules overlap.
 
@@ -54,6 +55,7 @@ Jeremy’s plugin code uses **pedagogical inline comments** on purpose: the same
 
 - **Single quotes** for strings.
 - **ESM in source, one script at runtime.** Under `src/plugins/**`, use `import` / `export default` between colocated modules; each ship’s `entry.js` is the Vite entry. Rolldown emits a **single** bundled `.js` into `out/` (no `import`/`export` in what RMMZ loads). `src/build-tools` and `src/defs` use normal Node ESM.
+- **`export default` only** in plugin source (one entity per file); **`J.*` assignment only in `_metadata/initialization.js`**. Both enforced by `verify:ships` — see `.cursor/rules/esm-ship-bundle.mdc`.
 - **Ship bundle contract:** Read `.cursor/rules/esm-ship-bundle.mdc`. Cross-plugin = runtime globals only (`J.BASE.*`, engine globals) — **never** `import` from another plugin’s tree. Same-ship duplicate bindings → `$1` in `out/`. After plugin changes: `bun run hotfix` (runs `verify:ships` after build).
 - **No class re-exports on `J.*` or `globalThis`:** Same ship → **import**. Cross-ship → **hoisted global name** (`ParameterRegistry`, `AffiliationDisplay`, …). Never mirror onto `J.*`. Only allowed `globalThis` write per plugin: `globalThis.J ||= {}`. Never `globalThis.SomeClass = SomeClass`. See `.junie/guidelines.md` → **J namespace bootstrap**.
 - **No IIFEs**. Use object namespaces (`J.ABS`, `J.SKS`, etc.) and alias maps.

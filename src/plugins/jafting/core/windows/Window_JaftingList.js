@@ -46,6 +46,7 @@ class Window_JaftingList
     return new WindowCommandBuilder(J.JAFTING.Metadata.salvageCommandName)
       .setSymbol(Scene_JaftingSalvage.KEY)
       .setEnabled(Scene_JaftingSalvage.isSalvageHubCommandEnabled())
+      // policy step inside build salvage hub command.
       .addTextLine('Break down stamped equipment toward its ingredient history.')
       .addTextLine('Vendor-only shells never list here—only gear carrying dismantle lineage.')
       .setIconIndex(J.JAFTING.Metadata.salvageMenuIconIndex)

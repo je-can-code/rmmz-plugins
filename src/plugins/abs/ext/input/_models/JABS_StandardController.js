@@ -40,6 +40,7 @@ class JABS_StandardController
     // start with a null battler when initializing.
     this.battler = null;
 
+    // policy step inside init members.
     /**
      * A collection of input mappings from logical action (button) to an array of physical inputs.
      * "Physical inputs" are `Input` symbols like `ok`, `cancel`, or custom entries registered by plugins.
@@ -47,6 +48,7 @@ class JABS_StandardController
      */
     this.inputMapping = new Map();
 
+    // policy step inside init members.
     /**
      * Tracks whether the last-processed frame was considered in combat.
      * Used for treating a hold across the boundary (exploration → combat)

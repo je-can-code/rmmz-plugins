@@ -5,9 +5,11 @@
 J.ELEM.Aliased.Game_Enemy.set("elementRate", Game_Enemy.prototype.elementRate);
 Game_Enemy.prototype.elementRate = function(elementId)
 {
+  // perform original logic.
   const baseRate = J.ELEM.Aliased.Game_Enemy.get("elementRate")
     .call(this, elementId);
 
+  // capture is absorbed for downstream policy in this routine.
   const isAbsorbed = this.isElementAbsorbed(elementId)
     ? -1
     : 1;
@@ -24,10 +26,12 @@ Game_Enemy.prototype.elementsAbsorbed = function()
   const absorbed = [];
   objectsToCheck.forEach(referenceData =>
   {
+    // capture elements from object for downstream policy in this routine.
     const elementsFromObject = this.extractAbsorbedElements(referenceData);
     absorbed.push(...elementsFromObject);
   });
 
+  // hand back absorbed to the caller.
   return absorbed;
 };
 
@@ -52,6 +56,7 @@ Game_Enemy.prototype.strictElements = function()
     strict.push(...Game_Battler.prototype.strictElements.call(this));
   }
 
+  // hand back strict to the caller.
   return strict;
 };
 
@@ -66,12 +71,15 @@ Game_Enemy.prototype.elementRateBoost = function(elementId)
   const boosts = [];
   objectsToCheck.forEach(referenceData =>
   {
+    // capture boost for downstream policy in this routine.
     const boost = this.extractElementRateBoosts(referenceData);
     if (!boost.length) return;
 
+    // Append the row to the working collection.
     boosts.push(...boost);
   });
 
+  // capture filtered boosts for downstream policy in this routine.
   const filteredBoosts = boosts.filter(boost =>
   {
     return boost[0] === elementId;

@@ -8,6 +8,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("param", Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("param")
     .call(this, paramId);
 
@@ -30,6 +31,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("sparam", Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("sparam")
     .call(this, sparamId);
 
@@ -52,6 +54,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("xparam", Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("xparam")
     .call(this, xparamId);
 

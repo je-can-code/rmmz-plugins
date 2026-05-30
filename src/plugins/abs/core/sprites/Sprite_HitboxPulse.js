@@ -17,6 +17,7 @@ class Sprite_HitboxPulse
     // initialize base Sprite.
     super();
 
+    // policy step inside constructor.
     /**
      * Internal graphics used to draw the hitbox geometry.
      * @type {PIXI.Graphics}
@@ -153,6 +154,7 @@ class Sprite_HitboxPulse
         break;
       }
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Square:
       case J.ABS.Shapes.Rhombus:     // approximation for pulse visualization
       case J.ABS.Shapes.Cross:       // approximation for pulse visualization
@@ -164,6 +166,7 @@ class Sprite_HitboxPulse
         break;
       }
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Line:
       {
         // a rectangle extending forward from origin by `range` with thickness.
@@ -173,6 +176,7 @@ class Sprite_HitboxPulse
         break;
       }
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Arc:
       default:
       {

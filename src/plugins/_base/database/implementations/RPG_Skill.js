@@ -112,24 +112,31 @@ class RPG_Skill
     const raw = {
       id: index,
       message1: String.empty,
+      // policy step inside create empty.
       message2: String.empty,
       messageType: 1,
       mpCost: 0,
+      // policy step inside create empty.
       requiredWtypeId1: 0,
       requiredWtypeId2: 0,
       stypeId: 1,
+      // policy step inside create empty.
       tpCost: 0,
       animationId: 0,
       damage: {
+        // policy step inside create empty.
         critical: false,
         elementId: 0,
         formula: '0',
+        // policy step inside create empty.
         type: 0,
         variance: 20,
       },
+      // policy step inside create empty.
       effects: [],
       hitType: 0,
       occasion: 0,
+      // policy step inside create empty.
       repeats: 1,
       scope: 1,
       speed: 0,
@@ -142,6 +149,7 @@ class RPG_Skill
       meta: {},
     };
 
+    // hand back new RPG_Skill(raw, index) to the caller.
     return new RPG_Skill(raw, index);
   }
 }

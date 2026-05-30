@@ -85,10 +85,12 @@ class LevelScaling
     {
       return {
         min: J.LEVEL.Metadata.rewardMinimumMultiplier,
+        // continue the routine with the next policy step.
         max: J.LEVEL.Metadata.rewardMaximumMultiplier,
       };
     }
 
+    // hand back { to the caller.
     return {
       min: J.LEVEL.Metadata.minimumMultiplier,
       max: J.LEVEL.Metadata.maximumMultiplier,
@@ -113,6 +115,7 @@ class LevelScaling
     const upper = J.LEVEL.Metadata.invariantUpperRange;
     const lower = J.LEVEL.Metadata.invariantLowerRange;
 
+    // when levelDifference <= upper  and  levelDifference >= lower, take this branch.
     if (levelDifference <= upper && levelDifference >= lower) return base;
 
     // determine the level difference lesser the invariance range.
@@ -129,6 +132,7 @@ class LevelScaling
       max
     } = this.#clampsForScope(scope);
 
+    // hand back result.clamp(min, max) to the caller.
     return result.clamp(min, max);
   }
 }

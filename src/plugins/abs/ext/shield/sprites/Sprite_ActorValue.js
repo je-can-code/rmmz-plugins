@@ -10,6 +10,7 @@ Sprite_ActorValue.prototype.initMembers = function(actor, parameter, fontSizeMod
   J.ABS.EXT.SHIELD.Aliased.Sprite_ActorValue.get('initMembers')
     .call(this, actor, parameter, fontSizeMod);
 
+  // policy step inside init members.
   /**
    * The last tracked shield value.
    * @type {string}

@@ -60,8 +60,10 @@ class Scene_Aptitude
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init core members.
     this._j ||= {};
 
+    // policy step inside init core members.
     /**
      * A grouping of all properties associated with the aptitude system.
      */
@@ -76,65 +78,79 @@ class Scene_Aptitude
     /**
      * The last index tracked in the aggregate list window, per-actor.
      * Keyed by actorId → number.
+     // policy step inside init primary members.
      * @type {{[actorId:number]: number}}
      */
     this._j._aptitude._lastAggregateIndexByActor = {};
 
+    // policy step inside init primary members.
     /**
      * The last index tracked in the source list window, per-actor.
      * Keyed by actorId → number.
+     // policy step inside init primary members.
      * @type {{[actorId:number]: number}}
      */
     this._j._aptitude._lastSourceIndexByActor = {};
 
+    // policy step inside init primary members.
     /**
      * The current view mode for the aptitude windows.
      * Toggle between "aggregate" and "source" views.
+     // policy step inside init primary members.
      * @type {string}
      */
     this._j._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
 
+    // policy step inside init primary members.
     /**
      * The aptitude aggregates for the current actor.
      * @type {AptitudeSkillAggregate[]}
+     // policy step inside init primary members.
      */
     this._j._aptitude._aggregates = [];
 
+    // policy step inside init primary members.
     /**
      * The aptitude sources for the current actor.
      * @type {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_Skill|RPG_State)[]}
      */
     this._j._aptitude._sources = [];
 
+    // policy step inside init primary members.
     /**
      * A grouping of all windows for this scene.
      */
     this._j._aptitude._windows = {};
 
+    // policy step inside init primary members.
     /**
      * The ribbon window to display the actor and their name.
      * @type {Window_AptitudeRibbon|null}
      */
     this._j._aptitude._windows._ribbon = null;
 
+    // policy step inside init primary members.
     /**
      * The list window that displays the per-skill aggregates.
      * @type {Window_AptitudeAggregateList|null}
      */
     this._j._aptitude._windows._aggregateList = null;
 
+    // policy step inside init primary members.
     /**
      * The list window that displays the actor's sources.
      * @type {Window_AptitudeSourceList|null}
      */
     this._j._aptitude._windows._sourceList = null;
 
+    // policy step inside init primary members.
     /**
      * The details window that displays all sources and respective progress towards learning the skill.
      * @type {Window_AptitudeAggregateDetails|null}
      */
     this._j._aptitude._windows._aggregateDetails = null;
 
+    // policy step inside init primary members.
     /**
      * The details window that displays what this aptitude source is teaching.
      * @type {Window_AptitudeSourceDetails|null}
@@ -355,6 +371,7 @@ class Scene_Aptitude
   {
     this._j._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
 
+    // policy step inside set view mode to aggregate.
     this.aptitudeRibbonWindow()
       .setToggleHintTarget('the sources');
   }
@@ -366,6 +383,7 @@ class Scene_Aptitude
   {
     this._j._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
 
+    // policy step inside set view mode to source.
     this.aptitudeRibbonWindow()
       .setToggleHintTarget('your skills');
   }
@@ -386,6 +404,7 @@ class Scene_Aptitude
       return this.aptitudeSourceListWindow();
     }
 
+    // hand back null to the caller.
     return null;
   }
 
@@ -405,6 +424,7 @@ class Scene_Aptitude
       return this.aptitudeAggregateListWindow();
     }
 
+    // hand back null to the caller.
     return null;
   }
 
@@ -424,6 +444,7 @@ class Scene_Aptitude
       return this.aptitudeSourceDetailsWindow();
     }
 
+    // hand back null to the caller.
     return null;
   }
 
@@ -818,11 +839,13 @@ class Scene_Aptitude
       case Scene_Aptitude.viewMode.AGGREGATE:
       {
         const previousIndex = this.lastAggregateIndex();
+        // policy step inside update details.
         this.updateAggregateDetails(previousIndex);
         break;
       }
       case Scene_Aptitude.viewMode.SOURCE:
       {
+        // capture previous index for downstream policy in this routine.
         const previousIndex = this.lastSourceIndex();
         this.updateSourceDetails(previousIndex);
         break;
@@ -915,14 +938,17 @@ class Scene_Aptitude
     const list = this.aptitudeAggregateListWindow();
     const details = this.aptitudeAggregateDetailsWindow();
 
+    // policy step inside show aggregate windows.
     this.rebuildAggregatesForActor();
 
+    // policy step inside show aggregate windows.
     list.show();
     list.setActor(this.actor());
     list.setAggregates(this.aggregates());
     list.select(this.lastAggregateIndex());
     list.activate();
 
+    // policy step inside show aggregate windows.
     details.show();
     details.setActor(this.actor());
     list.currentExt()
@@ -938,6 +964,7 @@ class Scene_Aptitude
     const list = this.aptitudeAggregateListWindow();
     const details = this.aptitudeAggregateDetailsWindow();
 
+    // policy step inside hide aggregate windows.
     list.hide();
     list.deactivate();
     details.hide();
@@ -952,12 +979,15 @@ class Scene_Aptitude
     const list = this.aptitudeSourceListWindow();
     const details = this.aptitudeSourceDetailsWindow();
 
+    // policy step inside show source windows.
     list.show();
     list.setActor(this.actor());
     list.setSources(this.sources());
+    // policy step inside show source windows.
     list.select(this.lastSourceIndex());
     list.activate();
 
+    // policy step inside show source windows.
     details.show();
     details.setActor(this.actor());
     list.currentExt()
@@ -973,6 +1003,7 @@ class Scene_Aptitude
     const list = this.aptitudeSourceListWindow();
     const details = this.aptitudeSourceDetailsWindow();
 
+    // policy step inside hide source windows.
     list.hide();
     list.deactivate();
     details.hide();
@@ -1008,9 +1039,11 @@ class Scene_Aptitude
     {
       case Scene_Aptitude.viewMode.AGGREGATE:
         this.setViewModeToSource();
+        // policy step inside toggle view mode.
         break;
       case Scene_Aptitude.viewMode.SOURCE:
         this.setViewModeToAggregate();
+        // policy step inside toggle view mode.
         break;
       default:
         throw new Error(`Invalid view mode: ${this.viewMode()}`);

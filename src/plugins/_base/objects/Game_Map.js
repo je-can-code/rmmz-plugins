@@ -11,6 +11,7 @@ Game_Map.prototype.note = function()
     return String.empty;
   }
 
+  // hand back $dataMap.note to the caller.
   return $dataMap.note;
 };
 //endregion Game_Map

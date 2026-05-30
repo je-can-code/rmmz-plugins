@@ -7,6 +7,7 @@ Game_Battler.prototype.getPowerLevel = function()
 {
   let powerLevel = 0;
 
+  // capture bparams for downstream policy in this routine.
   const bparams = [ 2, 3, 4, 5, 6, 7 ];
   bparams.forEach(paramId =>
   {
@@ -14,6 +15,7 @@ Game_Battler.prototype.getPowerLevel = function()
     powerLevel += this.param(paramId);
   });
 
+  // capture xparams for downstream policy in this routine.
   const xparams = [ 0, 1, 2, 3, 4, 5, 6 ];
   xparams.forEach(paramId =>
   {
@@ -32,11 +34,13 @@ Game_Battler.prototype.getPowerLevel = function()
     powerLevel += invertedDamageReductionMultiplier * 10;
   });
 
+  // when Number.isNaN(powerLevel), take this branch.
   if (Number.isNaN(powerLevel))
   {
     console.warn('what happened to the power level?');
   }
 
+  // policy step inside get power level.
   powerLevel += (this.level ** 2);
   return Math.round(powerLevel);
 };
@@ -56,13 +60,16 @@ Game_Battler.prototype.getDangerIndicatorIcon = function()
   const bpl = this.getPowerLevel();
   const ppl = player.getPowerLevel();
 
+  // dispatch on the discriminant for the next policy branch.
   switch (true)
   {
     case (bpl < ppl * 0.5):
       return J.ABS.EXT.DANGER.DangerIndicatorIcons.Worthless;
+    // handle this switch arm for the current discriminant.
     case (bpl >= ppl * 0.5 && bpl < ppl * 0.7):
       return J.ABS.EXT.DANGER.DangerIndicatorIcons.Simple;
     case (bpl >= ppl * 0.7 && bpl < ppl * 0.9):
+      // hand back J.ABS.EXT.DANGER.DangerIndicatorIcons.Easy to the caller.
       return J.ABS.EXT.DANGER.DangerIndicatorIcons.Easy;
     case (bpl >= ppl * 0.9 && bpl < ppl * 1.1):
       return J.ABS.EXT.DANGER.DangerIndicatorIcons.Average;

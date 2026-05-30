@@ -18,13 +18,14 @@ class Window_SalvagePreview
     super(rect);
     this._datum = null;
     this._dismantleAmount = 1;
+    // store  refund two column on the instance for later reads.
     this._refundTwoColumn = false;
   }
 
   /**
    * When true, refund rows render in two columns so more components fit without scrolling.
    *
-   * @param {boolean} flag
+   * @param {boolean} flag The flag driving this step.
    */
   setRefundTwoColumnMode(flag)
   {
@@ -34,7 +35,7 @@ class Window_SalvagePreview
   /**
    * How many stamped units one confirm action dismantles (must match {@link Scene_JaftingSalvage.DismantleBatchSize}).
    *
-   * @param {number} amount
+   * @param {number} amount The amount driving this step.
    */
   setDismantleAmount(amount)
   {
@@ -44,12 +45,13 @@ class Window_SalvagePreview
     }
     else
     {
+      // store  dismantle amount on the instance for later reads.
       this._dismantleAmount = amount;
     }
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null} datum The datum driving this step.
    */
   setDatum(datum)
   {
@@ -68,26 +70,34 @@ class Window_SalvagePreview
       this.createContents();
     }
 
+    // policy step inside refresh.
     this.contents.clear();
 
+    // when this._datum  equals  null  or  this._datum  equals  undefined, take this branch.
     if (this._datum === null || this._datum === undefined)
     {
       this.drawText('Select an item to preview refunds.', 0, 0, this.contentsWidth(), 'left');
 
+      // exit early without a payload.
       return;
     }
 
+    // capture raw for downstream policy in this routine.
     const raw = JaftingSalvageManager.getLedgerForDatum(this._datum);
 
+    // when not raw  or  not raw.rows  or  raw.rows.length  equals  0, take this branch.
     if (!raw || !raw.rows || raw.rows.length === 0)
     {
       this.drawText('Nothing recoverable is stamped on this item.', 0, 0, this.contentsWidth(), 'left');
 
+      // exit early without a payload.
       return;
     }
 
+    // capture snap for downstream policy in this routine.
     const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(this._datum);
 
+    // when not snap  or  not snap.rows  or  snap.rows.length  equals  0, take this branch.
     if (!snap || !snap.rows || snap.rows.length === 0)
     {
       this.drawText(
@@ -98,11 +108,14 @@ class Window_SalvagePreview
         'left',
       );
 
+      // exit early without a payload.
       return;
     }
 
+    // capture visible rows for downstream policy in this routine.
     const visibleRows = Window_SalvagePreview.collectNonBannedRows(snap.rows);
 
+    // capture stack for downstream policy in this routine.
     const stack = $gameParty.numItems(this._datum);
     const batch = this._dismantleAmount;
     let y = 0;
@@ -110,6 +123,7 @@ class Window_SalvagePreview
     const countCol = 72;
     const nameW = this.contentsWidth() - countCol;
 
+    // policy step inside refresh.
     this.changeTextColor(ColorManager.systemColor());
     this.drawText('Selected item', 0, y, this.contentsWidth(), 'left');
     y += lh;
@@ -118,8 +132,10 @@ class Window_SalvagePreview
     this.drawText(`×${stack}`, nameW, y, countCol, 'right');
     y += lh;
 
+    // policy step inside refresh.
     this.changeTextColor(ColorManager.systemColor());
 
+    // when batch  equals  1, take this branch.
     if (batch === 1)
     {
       this.drawText('Refund after dismantling ×1 unit:', 0, y, this.contentsWidth(), 'left');
@@ -129,42 +145,48 @@ class Window_SalvagePreview
       this.drawText(`Refund after dismantling ×${batch} units:`, 0, y, this.contentsWidth(), 'left');
     }
 
+    // policy step inside refresh.
     y += lh;
     this.resetTextColor();
 
+    // policy step inside refresh.
     this.paintExpandedRefundRows(y, visibleRows, batch, lh, countCol, nameW);
   }
 
   /**
-   * @param {object[]} rows
+   * @param {object[]} rows The rows driving this step.
    * @returns {object[]}
    */
   static collectNonBannedRows(rows)
   {
     const out = [];
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < rows.length; i++)
     {
       const row = rows[i];
 
+      // when row.banned  equals  true, take this branch.
       if (row.banned === true)
       {
         continue;
       }
 
+      // Append the row to the working collection.
       out.push(row);
     }
 
+    // hand back out to the caller.
     return out;
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    */
   paintExpandedRefundRows(y, visibleRows, batch, lh, countCol, nameW)
   {
@@ -172,25 +194,28 @@ class Window_SalvagePreview
     {
       this.paintExpandedRefundRowsSingle(y, visibleRows, batch, lh, countCol, nameW);
 
+      // exit early without a payload.
       return;
     }
 
+    // policy step inside paint expanded refund rows.
     this.paintExpandedRefundRowsDouble(y, visibleRows, batch, lh);
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    */
   paintExpandedRefundRowsSingle(y, visibleRows, batch, lh, countCol, nameW)
   {
     let yy = y;
     let rendered = 0;
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < visibleRows.length; i++)
     {
       if (yy + lh > this.contentsHeight())
@@ -198,14 +223,17 @@ class Window_SalvagePreview
         break;
       }
 
+      // policy step inside paint expanded refund rows single.
       yy = this.drawLedgerRefundRow(visibleRows[i], 0, yy, batch, lh, countCol, nameW, this.contentsWidth());
       rendered++;
     }
 
+    // when rendered < visibleRows.length  and  yy + lh <= this.contentsHeight(), take this branch.
     if (rendered < visibleRows.length && yy + lh <= this.contentsHeight())
     {
       const more = visibleRows.length - rendered;
 
+      // policy step inside paint expanded refund rows single.
       this.changeTextColor(ColorManager.systemColor());
       this.drawText(`+${more} more refunds.`, 0, yy, this.contentsWidth(), 'left');
       this.resetTextColor();
@@ -213,10 +241,10 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
    */
   paintExpandedRefundRowsDouble(y, visibleRows, batch, lh)
   {
@@ -229,6 +257,7 @@ class Window_SalvagePreview
     const nwR = colW - ccR;
     let rendered = 0;
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < visibleRows.length; i += 2)
     {
       if (yy + lh > this.contentsHeight())
@@ -236,26 +265,32 @@ class Window_SalvagePreview
         break;
       }
 
+      // capture row l for downstream policy in this routine.
       const rowL = visibleRows[i];
       const rowR = visibleRows[i + 1];
       const rowY = yy;
 
+      // policy step inside paint expanded refund rows double.
       yy = this.drawLedgerRefundRow(rowL, 0, rowY, batch, lh, ccL, nwL, colW);
       rendered++;
 
+      // when rowR, take this branch.
       if (rowR)
       {
         this.drawLedgerRefundRow(rowR, colW + gutter, rowY, batch, lh, ccR, nwR, colW);
         rendered++;
       }
 
+      // policy step inside paint expanded refund rows double.
       yy += lh;
     }
 
+    // when rendered < visibleRows.length  and  yy + lh <= this.contentsHeight(), take this branch.
     if (rendered < visibleRows.length && yy + lh <= this.contentsHeight())
     {
       const more = visibleRows.length - rendered;
 
+      // policy step inside paint expanded refund rows double.
       this.changeTextColor(ColorManager.systemColor());
       this.drawText(`+${more} more refunds.`, 0, yy, this.contentsWidth(), 'left');
       this.resetTextColor();
@@ -263,7 +298,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static previewContentLineCount(datum)
@@ -272,7 +307,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static previewContentLineCountTwoColumn(datum)
@@ -281,7 +316,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static countVisibleRefundRowsForDatum(datum)
@@ -291,12 +326,12 @@ class Window_SalvagePreview
 
   /**
    * @param {{ t: string, id: number, n: number, banned?: boolean }} row
-   * @param {number} baseX
-   * @param {number} y
-   * @param {number} dismantleBatch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} baseX The base x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} dismantleBatch The dismantle batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    * @param {number} colInnerW width budget for this column (drawItemName + count).
    * @returns {number} next Y below this row.
    */
@@ -305,30 +340,38 @@ class Window_SalvagePreview
     const qty = row.n * dismantleBatch;
     const nameWClamped = Math.max(40, colInnerW - countCol);
 
+    // when row.t  equals  'i'  or  row.t  equals  'w'  or  row.t  equals  'a', take this branch.
     if (row.t === 'i' || row.t === 'w' || row.t === 'a')
     {
       const datum = Window_SalvagePreview.databaseDatumForRow(row);
 
+      // when datum  equals  null  or  datum  equals  undefined, take this branch.
       if (datum === null || datum === undefined)
       {
         this.drawText(`(missing) ×${qty}`, baseX, y, colInnerW, 'left');
 
+        // hand back y + lh to the caller.
         return y + lh;
       }
 
+      // policy step inside draw ledger refund row.
       this.drawItemName(datum, baseX, y, nameWClamped);
       this.drawText(`×${qty}`, baseX + nameWClamped, y, countCol, 'right');
 
+      // hand back y + lh to the caller.
       return y + lh;
     }
 
+    // when row.t  equals  'g', take this branch.
     if (row.t === 'g')
     {
       this.drawCurrencyValue(String(qty), TextManager.currencyUnit, baseX, y, colInnerW);
 
+      // hand back y + lh to the caller.
       return y + lh;
     }
 
+    // when row.t  equals  's', take this branch.
     if (row.t === 's')
     {
       this.changeTextColor(ColorManager.systemColor());
@@ -336,11 +379,14 @@ class Window_SalvagePreview
       this.resetTextColor();
       this.drawText(String(qty), baseX + nameWClamped, y, countCol, 'right');
 
+      // hand back y + lh to the caller.
       return y + lh;
     }
 
+    // policy step inside draw ledger refund row.
     this.drawText(`Unknown ×${qty}`, baseX, y, colInnerW, 'left');
 
+    // hand back y + lh to the caller.
     return y + lh;
   }
 
@@ -355,16 +401,19 @@ class Window_SalvagePreview
       return $dataItems[row.id];
     }
 
+    // when row.t  equals  'w', take this branch.
     if (row.t === 'w')
     {
       return $dataWeapons[row.id];
     }
 
+    // when row.t  equals  'a', take this branch.
     if (row.t === 'a')
     {
       return $dataArmors[row.id];
     }
 
+    // hand back null to the caller.
     return null;
   }
 }

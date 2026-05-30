@@ -2,7 +2,7 @@
 import JABS_Timer from './JABS_Timer.js';
 import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
 import JABS_Engine from './../managers/JABS_Engine.js';
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 import JABS_ActionOptions from './JABS_ActionOptions.js';
 import JABS_ActionBuilder from './JABS_ActionBuilder.js';
@@ -36,39 +36,47 @@ class JABS_Action
     /**
      * The `Game_Action` to bind to the `Game_Event` and `JABS_Battler`.
      * @type {Game_Action}
+     // policy step inside constructor.
      */
     this._gameAction = gameAction;
 
+    // policy step inside constructor.
     /**
      * The base skill object, in case needed for something.
      * @type {RPG_Skill}
+     // policy step inside constructor.
      */
     this._baseSkill = gameAction.item();
 
+    // policy step inside constructor.
     /**
      * The `JABS_Battler` that used created this JABS action.
      * @type {JABS_Battler}
      */
     this._caster = caster;
 
+    // policy step inside constructor.
     /**
      * Whether or not this action was generated as a retaliation to another battler's action.
      * @type {boolean}
      */
     this._isRetaliation = isRetaliation;
 
+    // policy step inside constructor.
     /**
      * The direction this projectile will initially face and move.
      * @type {number}
      */
     this._facing = direction;
 
+    // policy step inside constructor.
     /**
      * The type of action this is. Used for mapping cooldowns to the appropriate slot on the caster.
      * @type {string}
      */
     this._actionCooldownType = cooldownKey ?? J.ABS.Globals.GlobalCooldownKey;
 
+    // policy step inside constructor.
     /**
      * Whether or not this action is a result of terrain damage.
      * @type {boolean}
@@ -93,6 +101,7 @@ class JABS_Action
      */
     this._uuid = J.BASE.Helpers.generateUuid();
 
+    // policy step inside init members.
     /**
      * Whether or not this action has collided with at least one target.
      * @type {boolean}
@@ -123,39 +132,48 @@ class JABS_Action
     /**
      * The `Game_Event` this JABS action is bound to. Represents the visual aspect on the map.
      * @type {Game_Event}
+     // policy step inside init visuals.
      */
     Object.defineProperty(this, '_actionSprite',
       {
         value: null,
+        // policy step inside init visuals.
         enumerable: false,
         writable: true,
         configurable: true,
+      // policy step inside init visuals.
       });
 
+    // policy step inside init visuals.
     /**
      * The animation id to be performed on the action itself upon execution.
      * @type {number}
+     // policy step inside init visuals.
      */
     this._selfAnimationId = this._baseSkill.jabsSelfAnimationId ?? 0;
 
+    // policy step inside init visuals.
     /**
      * Tracks if the self animation-on-defeat has been played to prevent duplicates.
      * @type {boolean}
      */
     this._playedSelfAnimationOnDefeat = false;
 
+    // policy step inside init visuals.
     /**
      * The options used when creating this action. Includes decision-time location when applicable.
      * @type {JABS_ActionOptions|null}
      */
     this._actionOptions = null;
 
+    // policy step inside init visuals.
     /**
      * The animation id to play once on the caster when the skill executes (after any casting).
      * @type {number}
      */
     this._onCastAnimationId = this.getBaseSkill().jabsOnCastAnimationId ?? 0;
 
+    // policy step inside init visuals.
     /**
      * Stable `{ note }` blob for {@link RPGManager} when action-map Comment lines carry `<vis*>` tags.
      * Stamped once at spawn from the template event + resolved page; null when nothing to parse.
@@ -172,33 +190,40 @@ class JABS_Action
     /**
      * The current timer on this particular action.
      * @type {number}
+     // policy step inside init duration.
      */
     this._currentDuration = 0;
 
+    // policy step inside init duration.
     /**
      * Whether or not the visual of this map action needs removing.
      * @type {boolean}
+     // policy step inside init duration.
      */
     this._needsRemoval = false;
 
+    // policy step inside init duration.
     /**
      * Whether or not this action is currently in its linger phase.
      * @type {boolean}
      */
     this._isLingering = false;
 
+    // policy step inside init duration.
     /**
      * How many frames this action should linger visually.
      * @type {number}
      */
     this._lingerMaxFrames = this._baseSkill.jabsLinger ?? 10;
 
+    // policy step inside init duration.
     /**
      * The current linger frame counter.
      * @type {number}
      */
     this._currentLinger = 0;
 
+    // policy step inside init duration.
     /**
      * Internal toggle used to disable collision while lingering.
      * @type {boolean}
@@ -214,20 +239,25 @@ class JABS_Action
     /**
      * A grouping of all properties related to the delay of this action.
      */
+    // store  delay on the instance for later reads.
     this._delay = {};
 
+    // policy step inside init delay.
     /**
      * The duration remaining before this will action will autotrigger.
      * @type {JABS_Timer}
+     // policy step inside init delay.
      */
     this._delay._delayDuration = new JABS_Timer(this._baseSkill.jabsDelayDuration ?? 0);
 
+    // policy step inside init delay.
     /**
      * Whether or not this action will trigger when an enemy touches it.
      * @type {boolean}
      */
     this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
 
+    // policy step inside init delay.
     /**
      * Optional radius in tiles used only for touch-triggering during the delay window.
      * If null, the action’s normal hitbox will be used (legacy behavior).
@@ -247,18 +277,21 @@ class JABS_Action
      */
     this._pierceTimesLeft = this.makePiercingCount();
 
+    // policy step inside init piercing.
     /**
      * The base pierce delay in frames.
      * @type {number}
      */
     this._basePierceDelay = this._baseSkill.jabsPierceDelay;
 
+    // policy step inside init piercing.
     /**
      * The current pierce delay in frames.
      * @type {JABS_Timer}
      */
     this._pierceDelay = new JABS_Timer(this._basePierceDelay);
 
+    // policy step inside init piercing.
     this._pierceDelay.setCurrentTime(this._pierceDelay.getMaxTime() - 1);
 
     // extra full battle-effect applications per target per pierce tick, beyond the first.
@@ -283,8 +316,10 @@ class JABS_Action
     const gameBattler = this._caster.getBattler();
     const isBasicAttack = this._caster.isSkillIdBasicAttack(this._baseSkill.id);
 
+    // capture bonus hits for downstream policy in this routine.
     let bonusHits = gameBattler.getBonusHitsGlobal();
 
+    // when isBasicAttack, take this branch.
     if (isBasicAttack)
     {
       bonusHits += gameBattler.getBonusHitsBasic();
@@ -294,13 +329,16 @@ class JABS_Action
       bonusHits += gameBattler.getBonusHitsSkill();
     }
 
+    // policy step inside make hits per connection bonus.
     bonusHits += this._baseSkill.jabsBonusHitsFromSkillNote;
 
+    // when bonusHits < 0, take this branch.
     if (bonusHits < 0)
     {
       return 0;
     }
 
+    // hand back bonus hits to the caller.
     return bonusHits;
   }
 
@@ -324,6 +362,7 @@ class JABS_Action
     // determine if this action actually requires a cast time.
     const needsCast = castTime !== null && castTime > 0;
 
+    // policy step inside init casting.
     /**
      * Whether or not this action has been casted successfully.
      * @type {boolean}
@@ -387,6 +426,7 @@ class JABS_Action
     const event = this.getActionSprite();
     if (!event) return;
 
+    // when this.hasSelfAnimationId()  and  not this._playedSelfAnimationOnDefeat, take this branch.
     if (this.hasSelfAnimationId() && !this._playedSelfAnimationOnDefeat)
     {
       event.requestAnimation(this.getSelfAnimationId());
@@ -582,24 +622,29 @@ class JABS_Action
   {
     const lines = [];
 
+    // when eventData  and  eventData.note  and  String(eventData.note).trim(), take this branch.
     if (eventData && eventData.note && String(eventData.note).trim())
     {
       lines.push(String(eventData.note).trim());
     }
 
+    // when not pageData  or  not pageData.list  or  pageData.list.length  equals  0, take this branch.
     if (!pageData || !pageData.list || pageData.list.length === 0)
     {
       return lines.join('\n');
     }
 
+    // policy step inside collect synthetic visual note from action event page.
     Game_Event.getValidCommentCommandsFromPage(pageData)
       .forEach(command =>
       {
         const [ comment ] = command.parameters;
 
+        // Append the row to the working collection.
         lines.push(comment);
       });
 
+    // hand back lines.join('\n') to the caller.
     return lines.join('\n');
   }
 
@@ -612,11 +657,13 @@ class JABS_Action
   {
     const synthetic = JABS_Action.collectSyntheticVisualNoteFromActionEventPage(eventData, pageData);
 
+    // when not synthetic.length, take this branch.
     if (!synthetic.length)
     {
       return;
     }
 
+    // store  action map visual note holder on the instance for later reads.
     this._actionMapVisualNoteHolder = { note: synthetic };
   }
 
@@ -681,6 +728,7 @@ class JABS_Action
   countdownDuration()
   {
     this._currentDuration++;
+    // when this.getMaxDuration() <= this._currentDuration, take this branch.
     if (this.getMaxDuration() <= this._currentDuration)
     {
       this.setNeedsRemoval();
@@ -695,6 +743,7 @@ class JABS_Action
   {
     const isExpired = this.getMaxDuration() <= this._currentDuration;
     const minDurationElapsed = this._currentDuration > JABS_Action.getMinimumDuration();
+    // hand back (isExpired && minDurationElapsed) to the caller.
     return (isExpired && minDurationElapsed);
   }
 
@@ -851,6 +900,7 @@ class JABS_Action
       return [];
     }
 
+    // policy step inside get trigger touch targets.
     /**
      * Basic candidate filter: can be hit, in-scope for the action, and not
      * an inanimate target (when the caster is an enemy).
@@ -947,6 +997,7 @@ class JABS_Action
     {
       if (!this._isLingering)
       {
+        // policy step inside decrement pierce times.
         this.startLinger();
       }
     }
@@ -1117,30 +1168,36 @@ class JABS_Action
   {
     if (!this.canMainUpdate()) return;
 
+    // policy step inside main update.
     this.syncDirectActionSpriteToCaster();
 
+    // when this.isDelayCompleted(), take this branch.
     if (this.isDelayCompleted())
     {
       this.countdownDuration();
     }
 
+    // when this._isLingering, take this branch.
     if (this._isLingering)
     {
       this.updateLinger();
       return;
     }
 
+    // when this.isReadyForCleanup(), take this branch.
     if (this.isReadyForCleanup())
     {
       return;
     }
 
+    // when not this.isPierceReady(), take this branch.
     if (!this.isPierceReady())
     {
       this.countdownPierceDelay();
       return;
     }
 
+    // when this._collisionEnabled, take this branch.
     if (this._collisionEnabled)
     {
       this.processCollision();
@@ -1168,6 +1225,7 @@ class JABS_Action
   {
     if (this.getDuration() < JABS_Action.getMinimumDuration()) return false;
 
+    // when this._isLingering, take this branch.
     if (this._isLingering)
     {
       if (this._currentLinger >= this._lingerMaxFrames)
@@ -1176,9 +1234,11 @@ class JABS_Action
         return true;
       }
 
+      // hand back false to the caller.
       return false;
     }
 
+    // capture expired for downstream policy in this routine.
     const expired = this.isActionExpired();
     const outOfPierce = this.getPiercingTimes() <= 0;
     if (expired || outOfPierce)
@@ -1187,6 +1247,7 @@ class JABS_Action
       return false;
     }
 
+    // hand back false to the caller.
     return false;
   }
 
@@ -1197,10 +1258,13 @@ class JABS_Action
   {
     if (this._isLingering) return;
 
+    // store  is lingering on the instance for later reads.
     this._isLingering = true;
 
+    // store  collision enabled on the instance for later reads.
     this._collisionEnabled = false;
 
+    // policy step inside start linger.
     this.performSelfAnimation();
   }
 
@@ -1211,6 +1275,7 @@ class JABS_Action
   {
     this._currentLinger++;
 
+    // when this._currentLinger >= this._lingerMaxFrames, take this branch.
     if (this._currentLinger >= this._lingerMaxFrames)
     {
       this.cleanup();
@@ -1241,10 +1306,13 @@ class JABS_Action
   {
     const collisionTargets = $jabsEngine.getCollisionTargets(this);
 
+    // when collisionTargets.length  equals  0, take this branch.
     if (collisionTargets.length === 0) return;
 
+    // capture applications per target for downstream policy in this routine.
     const applicationsPerTarget = 1 + this.getHitsPerConnectionBonus();
 
+    // policy step inside process collision.
     collisionTargets.forEach(function(target)
     {
       for (let hitIndex = 0; hitIndex < applicationsPerTarget; hitIndex++)
@@ -1254,8 +1322,10 @@ class JABS_Action
           break;
         }
 
+        // policy step inside process collision.
         $jabsEngine.applyPrimaryBattleEffects(this, target);
 
+        // capture parried for downstream policy in this routine.
         const parried = target.getBattler().result().parried === true;
         if (parried)
         {
@@ -1264,6 +1334,7 @@ class JABS_Action
       }
     }, this);
 
+    // policy step inside process collision.
     this.onCollision();
   }
 
@@ -1308,48 +1379,61 @@ class JABS_Action
     const meta = J.ABS.Metadata.HitboxPulse;
     const actionEvent = this.getActionSprite();
 
+    // policy step inside compose hitbox pulse plain options.
     let originX;
     let originY;
     let facing;
 
+    // when actionEvent, take this branch.
     if (actionEvent)
     {
       const o = JABS_Engine.getActionOriginPixels(actionEvent);
       originX = o.x;
+      // policy step inside compose hitbox pulse plain options.
       originY = o.y;
       facing = this.direction();
     }
     else
     {
+      // capture caster character for downstream policy in this routine.
       const casterCharacter = this.getCaster()
         .getCharacter();
       const o = JABS_Engine.getMeleeVisualOriginPixelsFromCharacter(casterCharacter);
+      // policy step inside compose hitbox pulse plain options.
       originX = o.x;
       originY = o.y;
       facing = casterCharacter.direction();
     }
 
+    // capture degrees for downstream policy in this routine.
     const degrees = actionEvent
       ? ($jabsEngine.getActionDegrees(actionEvent) || 180)
       : 180;
+    // capture thickness for downstream policy in this routine.
     const thickness = actionEvent
       ? ($jabsEngine.getActionThicknessTiles(actionEvent) || 1)
       : 1;
 
+    // capture use fade for downstream policy in this routine.
     const useFade = meta.useFadeAnimation === true;
     const duration = useFade
       ? meta.duration
+      // policy step inside compose hitbox pulse plain options.
       : 999999;
     const endAlpha = useFade
       ? meta.endAlpha
+      // policy step inside compose hitbox pulse plain options.
       : meta.startAlpha;
     const scaleEnd = useFade
       ? meta.scaleEnd
+      // policy step inside compose hitbox pulse plain options.
       : meta.scaleStart;
 
+    // hand back { to the caller.
     return {
       x: originX,
       y: originY,
+      // policy step inside compose hitbox pulse plain options.
       shape: this.getShape(),
       range: this.getRange(),
       facing,
@@ -1380,6 +1464,7 @@ class JABS_Action
       const event = this.getActionSprite();
       if (event)
       {
+        // capture max for downstream policy in this routine.
         const max = Math.max(1, this._lingerMaxFrames);
         const t = Math.min(this._currentLinger, max);
         const pct = 1 - (t / max);

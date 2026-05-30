@@ -35,9 +35,11 @@ Game_Player.prototype.checkEventTriggerHere = function(triggers)
 J.PIXEL.Aliased.Game_Player.set('update', Game_Player.prototype.update);
 Game_Player.prototype.update = function(sceneActive)
 {
+  // perform original logic.
   J.PIXEL.Aliased.Game_Player.get('update')
     .call(this, sceneActive);
 
+  // when $gameMap._pixelFootTouchTriggerCooldown > 0, take this branch.
   if ($gameMap._pixelFootTouchTriggerCooldown > 0)
   {
     $gameMap._pixelFootTouchTriggerCooldown--;
@@ -82,7 +84,6 @@ Game_Player.prototype.checkEventTriggerThere = function(triggers)
     // Start any qualifying events on the tile beyond the counter.
     this.startMapEvent(x2, y2, triggers, true);
   }
-
 };
 
 /**
@@ -104,6 +105,7 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   if (didTrigger)
   {
     // return the original logic's result.
+    // perform original logic.
     return J.PIXEL.Aliased.Game_Player.get('checkEventTriggerTouch')
       .call(this, roundX, roundY);
   }
@@ -204,6 +206,7 @@ Game_Player.prototype.getVectorInputAngle = function()
   // the stick is inside the dead zone.
   const analogAngle = this._readGamepadAnalogAngle();
 
+  // when analogAngle  differs from  null, take this branch.
   if (analogAngle !== null)
   {
     return analogAngle;
@@ -212,11 +215,13 @@ Game_Player.prototype.getVectorInputAngle = function()
   // fall back to keyboard / d-pad: convert the 8-direction code to a fixed angle.
   const rawDir8 = Input.dir8;
 
+  // when rawDir8  equals  0, take this branch.
   if (rawDir8 === 0)
   {
     return null;
   }
 
+  // hand back this.dir8ToAngle(rawDir8) to the caller.
   return this.dir8ToAngle(rawDir8);
 };
 
@@ -241,13 +246,16 @@ Game_Player.prototype._readGamepadAnalogAngle = function()
     return null;
   }
 
+  // capture gamepads for downstream policy in this routine.
   const gamepads = navigator.getGamepads();
 
+  // when not gamepads, take this branch.
   if (!gamepads)
   {
     return null;
   }
 
+  // walk each entry in the iterable for this routine.
   for (const gamepad of gamepads)
   {
     if (!gamepad || gamepad.connected === false)
@@ -255,11 +263,13 @@ Game_Player.prototype._readGamepadAnalogAngle = function()
       continue;
     }
 
+    // policy step inside  read gamepad analog angle.
     const [axisX, axisY] = gamepad.axes;
 
     // compute magnitude to apply a circular dead zone.
     const magnitude = Math.sqrt(axisX * axisX + axisY * axisY);
 
+    // when magnitude < 0.15, take this branch.
     if (magnitude < 0.15)
     {
       // stick is inside the dead zone; try the next gamepad.
@@ -270,6 +280,7 @@ Game_Player.prototype._readGamepadAnalogAngle = function()
     return Math.atan2(axisY, axisX) * 180 / Math.PI;
   }
 
+  // hand back null to the caller.
   return null;
 };
 
@@ -285,15 +296,19 @@ Game_Player.prototype.dir8ToAngle = function(dir8)
   {
     case J.PIXEL.Directions.RIGHT:
       return 0;
+    // handle this switch arm for the current discriminant.
     case J.PIXEL.Directions.LOWERRIGHT:
       return 45;
     case J.PIXEL.Directions.DOWN:
+      // hand back 90 to the caller.
       return 90;
     case J.PIXEL.Directions.LOWERLEFT:
       return 135;
+    // handle this switch arm for the current discriminant.
     case J.PIXEL.Directions.LEFT:
       return 180;
     case J.PIXEL.Directions.UPPERLEFT:
+      // hand back 225 to the caller.
       return 225;
     case J.PIXEL.Directions.UP:
       return 270;
@@ -329,11 +344,13 @@ Game_Player.prototype.moveByInput = function()
       // check if vector movement is active and we have a valid angle.
       const vectorAngle = this.getVectorInputAngle();
 
+      // when vectorAngle  differs from  null, take this branch.
       if (vectorAngle !== null)
       {
         // use vector movement for smooth angle-based displacement.
         const moved = this.vectorMoveByAngle(vectorAngle);
 
+        // when moved, take this branch.
         if (moved)
         {
           // keep followers in sync with vector movement.

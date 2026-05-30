@@ -104,6 +104,7 @@ if (J.ABS)
   {
     if (!J.LOG) return;
 
+    // construct sdp log for the next step in this routine.
     const sdpLog = new ActionLogBuilder()
       .setupSdpAcquired(battler.battlerName(), sdpPoints)
       .build();
@@ -118,6 +119,7 @@ if (J.ABS)
   {
     if (!J.LOG) return;
 
+    // construct sdp log for the next step in this routine.
     const sdpLog = new ActionLogBuilder()
       .setupSdpUnlocked(sdpKey)
       .build();

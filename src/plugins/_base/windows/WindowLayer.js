@@ -12,6 +12,7 @@ WindowLayer.prototype.render = function(renderer)
     return;
   }
 
+  // construct graphics for the next step in this routine.
   const graphics = new PIXI.Graphics(), { gl } = renderer, children = this.children.clone();
 
   // noinspection JSUnresolvedFunction
@@ -20,6 +21,7 @@ WindowLayer.prototype.render = function(renderer)
   renderer.batch.flush();
   gl.enable(gl.STENCIL_TEST);
 
+  // keep looping while children.length > 0.
   while (children.length > 0)
   {
     // draw from front to back instead of back to front.
@@ -41,11 +43,13 @@ WindowLayer.prototype.render = function(renderer)
     }
   }
 
+  // policy step inside render.
   gl.disable(gl.STENCIL_TEST);
   gl.clear(gl.STENCIL_BUFFER_BIT);
   gl.clearStencil(0);
   renderer.batch.flush();
 
+  // walk each entry in the iterable for this routine.
   for (const child of this.children)
   {
     if (!child._isWindow && child.visible)
@@ -54,6 +58,7 @@ WindowLayer.prototype.render = function(renderer)
     }
   }
 
+  // policy step inside render.
   renderer.batch.flush();
 }
 //endregion WindowLayer

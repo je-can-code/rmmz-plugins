@@ -51,6 +51,7 @@ J.NATURAL.Aliased.Game_Enemy.set('paramBase', Game_Enemy.prototype.paramBase);
 Game_Enemy.prototype.paramBase = function(paramId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
     .call(this, paramId);
 
@@ -75,6 +76,7 @@ Game_Enemy.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('paramBase')
     .call(this, paramId);
 
@@ -107,6 +109,7 @@ J.NATURAL.Aliased.Game_Enemy.set('xparam', Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
     .call(this, xparamId);
 
@@ -125,6 +128,7 @@ Game_Enemy.prototype.xparam = function(xparamId)
 Game_Enemy.prototype.xparamNaturalBonuses = function(xparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('xparam')
     .call(this, xparamId);
 
@@ -159,6 +163,7 @@ J.NATURAL.Aliased.Game_Enemy.set('sparam', Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
     .call(this, sparamId);
 
@@ -177,6 +182,7 @@ Game_Enemy.prototype.sparam = function(sparamId)
 Game_Enemy.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Enemy.get('sparam')
     .call(this, sparamId);
 
@@ -214,6 +220,7 @@ Game_Enemy.prototype.refreshRewardBonuses = function()
   this.refreshExpRewardBonuses();
   this.refreshGoldRewardBonuses();
   this.refreshSdpRewardBonuses();
+// policy step inside refresh reward bonuses.
 };
 
 /**
@@ -264,6 +271,7 @@ J.NATURAL.Aliased.Game_Enemy.set("exp", Game_Enemy.prototype.exp);
 Game_Enemy.prototype.exp = function()
 {
   // grab the original value.
+  // perform original logic.
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("exp")
     .call(this);
 
@@ -283,6 +291,7 @@ J.NATURAL.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
 Game_Enemy.prototype.gold = function()
 {
   // grab the original value.
+  // perform original logic.
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("gold")
     .call(this);
 
@@ -301,6 +310,7 @@ J.NATURAL.Aliased.Game_Enemy.set("sdpPoints", Game_Enemy.prototype.sdpPoints);
 Game_Enemy.prototype.sdpPoints = function()
 {
   // grab the original value.
+  // perform original logic.
   const baseReward = J.NATURAL.Aliased.Game_Enemy.get("sdpPoints")
     .call(this);
 

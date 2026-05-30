@@ -75,7 +75,7 @@ class Window_SdpList
 
   /**
    * Sets the active family filter and refreshes the list.
-   * @param {string} familyFilterKey
+   * @param {string} familyFilterKey The family filter key driving this step.
    */
   setFamilyFilterKey(familyFilterKey)
   {
@@ -137,6 +137,7 @@ class Window_SdpList
       }, this)
       .filter(command => command !== null);
 
+    // policy step inside make command list.
     commands.forEach(this.addBuiltCommand, this);
   }
 
@@ -155,6 +156,7 @@ class Window_SdpList
       maxRank
     } = panel;
 
+    // capture color index for downstream policy in this routine.
     const colorIndex = panel.getPanelRarityColorIndex();
 
     // get the ranking for a given panel by its key.
@@ -193,6 +195,7 @@ class Window_SdpList
       .setColorIndex(colorIndex)
       .build();
 
+    // hand back command to the caller.
     return command;
   }
 
@@ -241,21 +244,26 @@ class Window_SdpList
     const command = this.commandEntryAt(index);
     const panel = command
       ? command.ext
+      // policy step inside draw rank details.
       : null;
     if (!panel)
     {
       return;
     }
 
+    // capture actor for downstream policy in this routine.
     const actor = this.currentActor;
     const {
       key,
+      // policy step inside draw rank details.
       maxRank,
     } = panel;
     const { currentRank } = actor.getSdpByKey(key);
+    // capture is max rank for downstream policy in this routine.
     const isMaxRank = maxRank <= currentRank;
     const cartLevels = this.cart.get(key) ?? 0;
 
+    // capture pad for downstream policy in this routine.
     const pad = 12;
     const rightEdge = x + width - pad;
 
@@ -264,6 +272,7 @@ class Window_SdpList
     {
       const done = 'DONE';
       const doneW = this.textWidth(done);
+      // policy step inside draw rank details.
       this.drawText(done, rightEdge - doneW, y, doneW, Window_Base.TextAlignments.Left);
       return;
     }
@@ -273,6 +282,7 @@ class Window_SdpList
     const slashText = ' / ';
     const slashW = this.textWidth(slashText);
 
+    // capture max x for downstream policy in this routine.
     const maxX = rightEdge - rankW;
     const slashX = maxX - slashW;
     const curX = slashX - rankW;
@@ -284,6 +294,7 @@ class Window_SdpList
       ? 24
       : 0;
 
+    // policy step inside draw rank details.
     this.drawStyledZeroPaddedNumber(
       curX,
       y,

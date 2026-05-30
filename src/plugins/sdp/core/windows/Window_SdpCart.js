@@ -77,6 +77,7 @@ class Window_SdpCart
     {
       const empty = new WindowCommandBuilder('Cart: empty')
         .setSymbol('cart-empty')
+        // policy step inside make command list.
         .setEnabled(false)
         .setColorIndex(8)
         .build();
@@ -94,10 +95,12 @@ class Window_SdpCart
         return;
       }
 
+      // policy step inside make command list.
       const { currentRank } = actor.getSdpByKey(key);
       const cost = Window_SdpCart.#calculateQueuedCost(panel, currentRank, levels);
       totalCost += cost;
 
+    // policy step inside make command list.
     });
 
     // wallet row (the anchor row) pinned at the top.
@@ -122,9 +125,11 @@ class Window_SdpCart
         return;
       }
 
+      // policy step inside make command list.
       const { currentRank } = actor.getSdpByKey(key);
       const cost = Window_SdpCart.#calculateQueuedCost(panel, currentRank, levels);
 
+      // construct command for the next step in this routine.
       const command = new WindowCommandBuilder(panel.name)
         .setSymbol(`cart-${key}`)
         .setEnabled(false)
@@ -135,6 +140,7 @@ class Window_SdpCart
         })
         .build();
 
+      // policy step inside make command list.
       this.addBuiltCommand(command);
     });
   }
@@ -167,6 +173,7 @@ class Window_SdpCart
     const commandNameX = rectX + 40;
     this.drawTextEx(this.buildCommandName(index), commandNameX, rectY, rectWidth);
 
+    // capture symbol for downstream policy in this routine.
     const symbol = this.commandSymbol(index);
     if (symbol === 'cart-wallet')
     {
@@ -189,6 +196,7 @@ class Window_SdpCart
     const pad = 12;
     const gap = 12;
 
+    // capture spend w for downstream policy in this routine.
     const spendW = this.textWidth('(-00000000)');
     const amountW = this.textWidth('00000000');
     const spendX = x + width - spendW - pad;
@@ -207,6 +215,7 @@ class Window_SdpCart
         : 18;
     }
 
+    // policy step inside draw cart wallet row.
     this.drawStyledZeroPaddedCost(spendX, y, this.totalCost, spendW, 8, 8, spendColor);
   }
 
@@ -228,6 +237,7 @@ class Window_SdpCart
       return;
     }
 
+    // policy step inside draw cart line item row.
     const { levels, cost } = ext;
     const pad = 12;
     const gap = 8;
@@ -244,10 +254,12 @@ class Window_SdpCart
     const plusW = this.textWidth(prefix);
     const levelsW = this.textWidth('00');
 
+    // capture pipe x for downstream policy in this routine.
     const pipeX = costX - gap - pipeW;
     const levelsX = pipeX - levelsW;
     const plusX = levelsX - plusW;
 
+    // policy step inside draw cart line item row.
     this.drawText(prefix, plusX, y, plusW, Window_Base.TextAlignments.Left);
     this.drawStyledZeroPaddedNumber(levelsX, y, levels, levelsW, 2, 8, 0);
     this.drawText(pipe, pipeX, y, pipeW, Window_Base.TextAlignments.Left);
@@ -267,6 +279,7 @@ class Window_SdpCart
     {
       cost += panel.rankUpCost(currentRank + i);
     }
+    // hand back cost to the caller.
     return cost;
   }
 }

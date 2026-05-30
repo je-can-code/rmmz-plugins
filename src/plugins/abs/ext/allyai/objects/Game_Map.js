@@ -30,6 +30,7 @@ Game_Map.prototype.parseAllyBattlers = function()
   return JABS_AiManager
     .convertFollowersToBattlers($gamePlayer.followers()
       .data());
+// policy step inside parse ally battlers.
 };
 
 /**
@@ -39,6 +40,7 @@ Game_Map.prototype.parseAllyBattlers = function()
  */
 Game_Map.prototype.getFollowerBattlers = function()
 {
+  // hand back JABS_AiManager.getAllBattlers() to the caller.
   return JABS_AiManager.getAllBattlers()
     .filter(battler => battler.isFollower());
 };

@@ -39,8 +39,10 @@ class JuiceMotionManager
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
+    // construct effect for the next step in this routine.
     const effect = new JuiceSquishMotionEffect(sprite, intensityScale, durationFrames);
 
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -55,8 +57,10 @@ class JuiceMotionManager
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
+    // construct effect for the next step in this routine.
     const effect = new JuiceTiltMotionEffect(sprite, peakRadians, durationFrames);
 
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -71,8 +75,10 @@ class JuiceMotionManager
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
+    // construct effect for the next step in this routine.
     const effect = new JuiceCastingPulseMotionEffect(sprite, amplitudeScale, continuePredicate);
 
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -118,6 +124,7 @@ class JuiceMotionManager
       return;
     }
 
+    // capture survivors for downstream policy in this routine.
     const survivors = [];
     for (let i = 0; i < JuiceMotionManager.#effects.length; i++)
     {
@@ -130,12 +137,14 @@ class JuiceMotionManager
         continue;
       }
 
+      // when effect.tick(), take this branch.
       if (effect.tick())
       {
         survivors.push(effect);
       }
     }
 
+    // policy step inside frame tick.
     JuiceMotionManager.#effects.length = 0;
     survivors.forEach(s => JuiceMotionManager.#effects.push(s));
   }
@@ -152,8 +161,10 @@ class JuiceMotionManager
       return;
     }
 
+    // continue the routine with the next policy step.
     held.restore();
 
+    // Keep only rows that pass this predicate.
     JuiceMotionManager.#effects = JuiceMotionManager.#effects.filter(e => e !== held);
     JuiceMotionManager.#spriteLocks.delete(sprite);
   }

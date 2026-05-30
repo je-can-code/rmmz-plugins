@@ -20,6 +20,7 @@ class J_AbsPluginMetadata
   {
     super.postInitialize();
 
+    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -31,12 +32,15 @@ class J_AbsPluginMetadata
     this.initializeCoreRangeMetadata();
     this.initializeDefaultMapAndSkillMetadata();
     this.initializeAiTuningMetadata();
+    // policy step inside initialize metadata.
     this.initializeEnemyDefaultMetadata();
     this.initializeElementalIconMetadata();
     this.initializeActionDecidedMetadata();
+    // policy step inside initialize metadata.
     this.initializeAggroMetadata();
     this.initializeStateMetadata();
     this.initializeMiscMovementMetadata();
+    // policy step inside initialize metadata.
     this.initializeHitboxMeleeOriginMetadata();
     this.initializeDisengageMetadata();
     this.initializeParryMetadata();
@@ -62,9 +66,11 @@ class J_AbsPluginMetadata
     this.DefaultActionMapId = Number(this.parsedPluginParameters['actionMapId']);
     this.DefaultEnemyMapId = Number(this.parsedPluginParameters['enemyMapId']);
     this.DefaultDodgeSkillTypeId = Number(this.parsedPluginParameters['dodgeSkillTypeId']);
+    // assign default guard skill type id on this instance for callers.
     this.DefaultGuardSkillTypeId = Number(this.parsedPluginParameters['guardSkillTypeId']);
     this.DefaultWeaponSkillTypeId = Number(this.parsedPluginParameters['weaponSkillTypeId']);
     this.DefaultToolCooldownTime = Number(this.parsedPluginParameters['defaultToolCooldownTime']);
+    // assign default attack animation id on this instance for callers.
     this.DefaultAttackAnimationId = Number(this.parsedPluginParameters['defaultAttackAnimationId']);
     this.DefaultLootExpiration = Number(this.parsedPluginParameters['defaultLootExpiration']);
   }
@@ -103,12 +109,15 @@ class J_AbsPluginMetadata
     this.DefaultEnemyPrepareTime = Number(this.parsedPluginParameters['defaultEnemyPrepareTime']);
     this.DefaultEnemyAttackSkillId = Number(this.parsedPluginParameters['defaultEnemyAttackSkillId']);
     this.DefaultEnemySightRange = Number(this.parsedPluginParameters['defaultEnemySightRange']);
+    // assign default enemy pursuit range on this instance for callers.
     this.DefaultEnemyPursuitRange = Number(this.parsedPluginParameters['defaultEnemyPursuitRange']);
     this.DefaultEnemyAlertedSightBoost = Number(this.parsedPluginParameters['defaultEnemyAlertedSightBoost']);
     this.DefaultEnemyAlertedPursuitBoost = Number(this.parsedPluginParameters['defaultEnemyAlertedPursuitBoost']);
+    // assign default enemy alert duration on this instance for callers.
     this.DefaultEnemyAlertDuration = Number(this.parsedPluginParameters['defaultEnemyAlertDuration']);
     this.DefaultEnemyCanIdle = Boolean(this.parsedPluginParameters['defaultEnemyCanIdle'] === 'true');
     this.DefaultEnemyShowHpBar = Boolean(this.parsedPluginParameters['defaultEnemyShowHpBar'] === 'true');
+    // assign default enemy show battler name on this instance for callers.
     this.DefaultEnemyShowBattlerName = Boolean(this.parsedPluginParameters['defaultEnemyShowBattlerName'] === 'true');
     this.DefaultEnemyIsInvincible = Boolean(this.parsedPluginParameters['defaultEnemyIsInvincible'] === 'true');
     this.DefaultEnemyIsInanimate = Boolean(this.parsedPluginParameters['defaultEnemyIsInanimate'] === 'true');
@@ -140,9 +149,11 @@ class J_AbsPluginMetadata
     this.BaseAggro = Number(this.parsedPluginParameters['baseAggro']);
     this.AggroPerHp = Number(this.parsedPluginParameters['aggroPerHp']);
     this.AggroPerMp = Number(this.parsedPluginParameters['aggroPerMp']);
+    // assign aggro per tp on this instance for callers.
     this.AggroPerTp = Number(this.parsedPluginParameters['aggroPerTp']);
     this.AggroDrain = Number(this.parsedPluginParameters['aggroDrainMultiplier']);
     this.AggroParryFlatAmount = Number(this.parsedPluginParameters['aggroParryFlatAmount']);
+    // assign aggro parry user gain on this instance for callers.
     this.AggroParryUserGain = Number(this.parsedPluginParameters['aggroParryUserGain']);
     this.AggroPlayerReduction = Number(this.parsedPluginParameters['aggroPlayerReduction']);
   }
@@ -154,12 +165,15 @@ class J_AbsPluginMetadata
   {
     this.DefaultStateReapplyType = this.parsedPluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
 
+    // assign default state refresh diminish on this instance for callers.
     this.DefaultStateRefreshDiminish = Number(this.parsedPluginParameters['defaultStateRefreshDiminish']) || 120;
     this.DefaultStateRefreshReset = Number(this.parsedPluginParameters['defaultStateRefreshReset']) || 900;
 
+    // assign default state extend amount on this instance for callers.
     this.DefaultStateExtendAmount = Number(this.parsedPluginParameters['defaultStateExtendAmount']) || 180;
     this.DefaultStateExtendMax = Number(this.parsedPluginParameters['defaultStateExtendMax']) || 216000;
 
+    // assign default state stack max on this instance for callers.
     this.DefaultStateStackMax = Number(this.parsedPluginParameters['defaultStateStackMax']) || 5;
     this.DefaultStateApplicationCount = Number(this.parsedPluginParameters['defaultStateApplicationCount']) || 1;
     this.DefaultStateLoseAllStacksAtOnce = (this.parsedPluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
@@ -173,6 +187,7 @@ class J_AbsPluginMetadata
     this.LootPickupRange = Number(this.parsedPluginParameters['lootPickupDistance']);
     this.AllyRubberbandAdjustment = Number(this.parsedPluginParameters['allyRubberbandAdjustment']);
     this.DashSpeedBoost = Number(this.parsedPluginParameters['dashSpeedBoost']);
+    // assign hitbox overlays initially visible on this instance for callers.
     this.HitboxOverlaysInitiallyVisible = (this.parsedPluginParameters['hitboxOverlaysInitiallyVisible'] === 'true');
   }
 
@@ -184,19 +199,23 @@ class J_AbsPluginMetadata
     const hitboxMeleeOxRaw = this.parsedPluginParameters['hitboxMeleeOriginOffsetPxX'];
     const hitboxMeleeOyRaw = this.parsedPluginParameters['hitboxMeleeOriginOffsetPxY'];
     this.HitboxMeleeOriginOffsetPxX = Number(hitboxMeleeOxRaw);
+    // when Number.isFinite(this.HitboxMeleeOriginOffsetPxX)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginOffsetPxX) === false)
     {
       this.HitboxMeleeOriginOffsetPxX = 0;
     }
     this.HitboxMeleeOriginOffsetPxY = Number(hitboxMeleeOyRaw);
+    // when Number.isFinite(this.HitboxMeleeOriginOffsetPxY)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginOffsetPxY) === false)
     {
       this.HitboxMeleeOriginOffsetPxY = -10;
     }
 
+    // capture hitbox melee extra down raw for downstream policy in this routine.
     const hitboxMeleeExtraDownRaw = this.parsedPluginParameters['hitboxMeleeOriginExtraPxYFacingDown'];
     const hitboxMeleeExtraUpRaw = this.parsedPluginParameters['hitboxMeleeOriginExtraPxYFacingUp'];
     this.HitboxMeleeOriginExtraPxYFacingDown = Number(hitboxMeleeExtraDownRaw);
+    // when Number.isFinite(this.HitboxMeleeOriginExtraPxYFacingDown)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginExtraPxYFacingDown) === false)
     {
       this.HitboxMeleeOriginExtraPxYFacingDown = 0;
@@ -207,6 +226,7 @@ class J_AbsPluginMetadata
       this.HitboxMeleeOriginExtraPxYFacingUp = 0;
     }
 
+    // capture hitbox melee lift red down raw for downstream policy in this routine.
     const hitboxMeleeLiftRedDownRaw = this.parsedPluginParameters['hitboxMeleeOriginLiftReductionPxFacingDown'];
     this.HitboxMeleeOriginLiftReductionPxFacingDown = Number(hitboxMeleeLiftRedDownRaw);
     if (Number.isFinite(this.HitboxMeleeOriginLiftReductionPxFacingDown) === false)
@@ -232,27 +252,33 @@ class J_AbsPluginMetadata
     const parryCharacterAnimationRaw = this.parsedPluginParameters['parryCharacterAnimationId'];
     const parryCharacterAnimationParsed = Number(parryCharacterAnimationRaw);
     this.ParryCharacterAnimationId = 122;
+    // when Number.isFinite(parryCharacterAnimationParsed)  equals  true  and  pa..., take this branch.
     if (Number.isFinite(parryCharacterAnimationParsed) === true && parryCharacterAnimationParsed >= 0)
     {
       this.ParryCharacterAnimationId = Math.floor(parryCharacterAnimationParsed);
     }
 
+    // capture implicit parry dom raw for downstream policy in this routine.
     const implicitParryDomRaw = this.parsedPluginParameters['implicitParryDominanceMultiplier'];
     const implicitParryDomParsed = Number(implicitParryDomRaw);
     this.ImplicitParryDominanceMultiplier = 2;
+    // when Number.isFinite(implicitParryDomParsed)  equals  true  and  implicitP..., take this branch.
     if (Number.isFinite(implicitParryDomParsed) === true && implicitParryDomParsed > 1)
     {
       this.ImplicitParryDominanceMultiplier = implicitParryDomParsed;
     }
 
+    // capture implicit parry baseline floor raw for downstream policy in this routine.
     const implicitParryBaselineFloorRaw = this.parsedPluginParameters['implicitParryBaselineFloor'];
     const implicitParryBaselineFloorParsed = Number(implicitParryBaselineFloorRaw);
     this.ImplicitParryBaselineFloor = 50;
+    // when Number.isFinite(implicitParryBaselineFloorParsed)  equals  true  and ..., take this branch.
     if (Number.isFinite(implicitParryBaselineFloorParsed) === true && implicitParryBaselineFloorParsed >= 0)
     {
       this.ImplicitParryBaselineFloor = implicitParryBaselineFloorParsed;
     }
 
+    // capture implicit parry baseline per level raw for downstream policy in this routine.
     const implicitParryBaselinePerLevelRaw = this.parsedPluginParameters['implicitParryBaselinePerLevel'];
     const implicitParryBaselinePerLevelParsed = Number(implicitParryBaselinePerLevelRaw);
     this.ImplicitParryBaselinePerLevel = 0.25;
@@ -301,9 +327,11 @@ class J_AbsPluginMetadata
     this.EquipCombatSkillsText = this.parsedPluginParameters['equipCombatSkillsText'];
     this.EquipDodgeSkillsText = this.parsedPluginParameters['equipDodgeSkillsText'];
     this.EquipOffhandText = this.parsedPluginParameters['equipOffhandText'];
+    // assign equip tools text on this instance for callers.
     this.EquipToolsText = this.parsedPluginParameters['equipToolsText'];
     this.MainMenuText = this.parsedPluginParameters['mainMenuText'];
     this.CancelText = this.parsedPluginParameters['cancelText'];
+    // assign clear slot text on this instance for callers.
     this.ClearSlotText = this.parsedPluginParameters['clearSlotText'];
     this.UnassignedText = this.parsedPluginParameters['unassignedText'];
   }
@@ -316,27 +344,33 @@ class J_AbsPluginMetadata
     /**
      * Global cooldown (GCD) plugin state: master switch, default duration in frames, and whitelist of skill {@code stypeId} values.
      * {@link this.GlobalCooldownSkillTypeSet} is built from {@code globalCooldownSkillTypes} as JSON array or comma-separated legacy text.
+     // policy step inside initialize global cooldown metadata.
      */
     this.EnableGlobalCooldown = this.parsedPluginParameters['enableGlobalCooldown'] === 'true';
     this.GlobalCooldownFrames = Number(this.parsedPluginParameters['globalCooldownFrames']) || 30;
 
+    // capture raw for downstream policy in this routine.
     const raw = this.parsedPluginParameters['globalCooldownSkillTypes'] ?? '';
     const set = new Set();
     const ingest = v =>
     {
+      // capture n for downstream policy in this routine.
       const n = parseInt(String(v), 10);
       if (Number.isFinite(n))
       {
         set.add(n);
       }
+    // policy step inside initialize global cooldown metadata.
     };
     const str = String(raw)
       .trim();
+    // when str.startsWith('['), take this branch.
     if (str.startsWith('['))
     {
       try
       {
         const arr = JSON.parse(str);
+        // when Array.isArray(arr), take this branch.
         if (Array.isArray(arr))
         {
           arr.forEach(ingest);
@@ -367,6 +401,7 @@ class J_AbsPluginMetadata
         fillColor: 0xFFA500,
         fillAlpha: 0.35,
         lineColor: 0xE08000,
+        // policy step inside initialize hitbox overlay style metadata.
         lineAlpha: 0.9,
         lineWidth: 2,
       },
@@ -386,15 +421,19 @@ class J_AbsPluginMetadata
           fillColor: 0xFFA64D,
         },
         line: {
+          // policy step inside initialize hitbox overlay style metadata.
           lineWidth: 3,
         },
         wall: {
+          // policy step inside initialize hitbox overlay style metadata.
           lineColor: 0xCC6600,
         },
         cross: {
+          // policy step inside initialize hitbox overlay style metadata.
           fillAlpha: 0.25,
         },
         arc: {
+          // policy step inside initialize hitbox overlay style metadata.
           fillColor: 0xFFB84D,
         },
       },
@@ -426,6 +465,7 @@ class J_AbsPluginMetadata
         },
     };
 
+    // assign hitbox pulse on this instance for callers.
     this.HitboxPulse = {
       enabled: this.parsedPluginParameters['hitboxPulseEnabled'] !== 'false',
       highlightColliderBattlers: this.parsedPluginParameters['hitboxPulseHighlightColliders'] !== 'false',

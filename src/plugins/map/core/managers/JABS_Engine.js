@@ -1,8 +1,13 @@
 //region JABS_Engine
+/**
+ * Extends {@link JABS_Engine.addLootDropToMap}.<br/>
+ * Injects a minimap loot comment tag into freshly spawned loot events.
+ */
 J.MAP.Aliased.JABS_Engine.set('addLootDropToMap', JABS_Engine.prototype.addLootDropToMap);
 JABS_Engine.prototype.addLootDropToMap = function(x, y, item)
 {
   // Call the most recent/previous implementation (this will respect CA’s Y offset mod, etc.).
+  // perform original logic.
   const lootEvent = J.MAP.Aliased.JABS_Engine.get('addLootDropToMap')
     .call(this, x, y, item);
 

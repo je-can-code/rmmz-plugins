@@ -37,17 +37,18 @@ class PanelFamily
 
   /**
    * Constructor.
-   * @param {string} name
-   * @param {string} key
-   * @param {number} iconIndex
-   * @param {string} description
-   * @param {string[]} subgroupKeys
+   * @param {string} name The name driving this step.
+   * @param {string} key The key driving this step.
+   * @param {number} iconIndex The icon index driving this step.
+   * @param {string} description The description driving this step.
+   * @param {string[]} subgroupKeys The subgroup keys driving this step.
    */
   constructor(name, key, iconIndex, description, subgroupKeys)
   {
     this.name = name;
     this.key = key;
     this.iconIndex = iconIndex;
+    // assign description on this instance for callers.
     this.description = description;
     this.subgroupKeys = subgroupKeys;
   }

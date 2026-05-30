@@ -37,11 +37,14 @@ class Window_OmnipediaList
     /*
     const weaponpediaCommand = new WindowCommandBuilder("Weapon-pedia")
       .setSymbol("weapon-pedia")
+      // policy step inside build commands.
       .addSubTextLine("It has your weapon information in it, duh.")
       .addSubTextLine("You can review various weapon attributes within.")
       .setIconIndex(112)
+      // policy step inside build commands.
       .build();
 
+    // construct armorpedia command for the next step in this routine.
     const armorpediaCommand = new WindowCommandBuilder("Armor-pedia")
       .setSymbol("armor-pedia")
       .addSubTextLine("Your armor information is in this thing.")
@@ -49,6 +52,7 @@ class Window_OmnipediaList
       .setIconIndex(482)
       .build();
 
+    // construct itempedia command for the next step in this routine.
     const itempediaCommand = new WindowCommandBuilder("Item-pedia")
       .setSymbol("item-pedia")
       .addSubTextLine("Your item data is all stored in here.")
@@ -57,6 +61,7 @@ class Window_OmnipediaList
       .build();
      */
 
+    // hand back [] to the caller.
     return [];
   }
 

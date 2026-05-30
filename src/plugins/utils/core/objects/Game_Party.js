@@ -13,23 +13,27 @@ Game_Party.isInvalidInventoryDatum = function(datum)
     return true;
   }
 
+  // capture raw name for downstream policy in this routine.
   const rawName = datum.name;
   if (rawName === undefined || rawName === null)
   {
     return true;
   }
 
+  // capture name for downstream policy in this routine.
   const name = String(rawName).trim();
   if (name === '')
   {
     return true;
   }
 
+  // when name.indexOf(' equals ')  equals  0, take this branch.
   if (name.indexOf('===') === 0)
   {
     return true;
   }
 
+  // hand back false to the caller.
   return false;
 };
 
@@ -46,9 +50,11 @@ Game_Party.prototype.removeInvalidItemsFromParty = function()
     const keys = Object.keys(container);
     for (let i = 0; i < keys.length; i++)
     {
+      // capture key for downstream policy in this routine.
       const key = keys[i];
       const id = Number(key);
       const datum = dataTable[id];
+      // when Game_Party.isInvalidInventoryDatum(datum), take this branch.
       if (Game_Party.isInvalidInventoryDatum(datum))
       {
         delete container[key];
@@ -56,10 +62,12 @@ Game_Party.prototype.removeInvalidItemsFromParty = function()
     }
   };
 
+  // policy step inside remove invalid items from party.
   purgeContainer(this._items, $dataItems);
   purgeContainer(this._weapons, $dataWeapons);
   purgeContainer(this._armors, $dataArmors);
 
+  // capture members for downstream policy in this routine.
   const members = this.members();
   for (let i = 0; i < members.length; i++)
   {
@@ -76,6 +84,7 @@ Game_Party.prototype.removeInvalidItemsFromParty = function()
     actor.refresh();
   }
 
+  // policy step inside remove invalid items from party.
   $gameMap.requestRefresh();
 };
 //endregion Game_Party

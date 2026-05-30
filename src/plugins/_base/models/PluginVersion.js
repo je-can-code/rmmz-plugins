@@ -23,7 +23,7 @@ class PluginVersion
    * Constructor.
    * It is strongly recommended to use the {@link PluginVersion.builder} to
    * create these classes due to their string-parsing sensitivity.
-   * @param {string} version
+   * @param {string} version The version driving this step.
    */
   constructor(version)
   {
@@ -126,6 +126,7 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#major = parsedVersion;
+      // hand back this to the caller.
       return this;
     }
 
@@ -139,6 +140,7 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#minor = parsedVersion;
+      // hand back this to the caller.
       return this;
     }
 
@@ -152,6 +154,7 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#patch = parsedVersion;
+      // hand back this to the caller.
       return this;
     }
 

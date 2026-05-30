@@ -94,6 +94,7 @@ class ExternalJsonConfigLoader
   {
     const prefix = this.#errorPrefix(pluginName, configName);
     const label = configName ?? 'configuration';
+    // hand back new Error(`${prefix}missing ${label} file at ${config... to the caller.
     return new Error(`${prefix}missing ${label} file at ${configPath}.`);
   }
 
@@ -133,6 +134,7 @@ class ExternalJsonConfigLoader
         ? built
         : [ built ];
 
+      // Emit progress to the build log for operator visibility.
       console.log(`loaded:
 ${lines.map(line => `      ${line}`)
     .join('\n')}

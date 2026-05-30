@@ -2,12 +2,14 @@
 /**
  * Extends the `.initialize()` to include tracking for the more equip data window.
  */
-J.CMS_E.Aliased.Window_EquipItem.initialize = Window_EquipItem.prototype.initialize;
+J.CMS_E.Aliased.Window_EquipItem.set('initialize', Window_EquipItem.prototype.initialize);
 Window_EquipItem.prototype.initialize = function(rect)
 {
-  J.CMS_E.Aliased.Window_EquipItem.initialize.call(this, rect);
+  // perform original logic.
+  J.CMS_E.Aliased.Window_EquipItem.get('initialize').call(this, rect);
   /**
    * The more data window to manipulate.
+   // policy step inside initialize.
    * @type {Window_MoreEquipData}
    */
   this._moreDataWindow = null;

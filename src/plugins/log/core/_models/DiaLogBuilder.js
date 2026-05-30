@@ -52,6 +52,7 @@ class DiaLogBuilder
     this.#lines = [];
     this.#faceIndex = -1;
     this.#faceName = String.empty;
+    // hand back this to the caller.
     return this;
   }
 

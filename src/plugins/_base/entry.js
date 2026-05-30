@@ -18,7 +18,7 @@ import './models/BuiltWindowCommand.js';
 import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/GaugeOptionsBuilder.js';
 import './models/J_EventEmitter.js';
-import './models/J_Timer.js';
+import './core/registerJBaseSerializableModels.js';
 import './models/WindowCommandBuilder.js';
 import './models/WindowGaugeOptions.js';
 

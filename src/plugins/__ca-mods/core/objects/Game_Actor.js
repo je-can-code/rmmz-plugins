@@ -41,6 +41,7 @@ Game_Actor.prototype.basicFloorDamage = function()
 {
   if (!$dataMap || !$dataMap.meta)
   {
+    // perform original logic.
     return J.CAMods.Aliased.Game_Actor.get('basicFloorDamage')
       .call(this);
   }
@@ -79,6 +80,7 @@ Game_Actor.prototype.extractFloorDamageRate = function(referenceData)
   // if for some reason there is no note, then don't try to parse it.
   if (!referenceData.note) return 0;
 
+  // capture flat for downstream policy in this routine.
   const flat = RPGManager.getNumbersFromNoteByRegex(referenceData, /<damageFlat: ?(\d+)>/i);
   const percents = RPGManager.getNumbersFromNoteByRegex(referenceData, /<damagePerc: ?(\d+)>/i);
   const percentDamage = percents.reduce((t, p) => t + (p / 100) * this.mhp, 0);

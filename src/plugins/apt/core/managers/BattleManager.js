@@ -9,6 +9,7 @@ J.APT.Aliased.BattleManager.set('makeRewards', BattleManager.makeRewards);
 BattleManager.makeRewards = function()
 {
   // Perform original logic.
+  // perform original logic.
   J.APT.Aliased.BattleManager.get('makeRewards')
     .call(this);
 
@@ -27,6 +28,7 @@ J.APT.Aliased.BattleManager.set('gainRewards', BattleManager.gainRewards);
 BattleManager.gainRewards = function()
 {
   // Perform original logic.
+  // perform original logic.
   J.APT.Aliased.BattleManager.get('gainRewards')
     .call(this);
 
@@ -61,6 +63,7 @@ BattleManager.displayRewards = function()
   this.displayAptitudeAp();
 
   // Perform original logic.
+  // perform original logic.
   J.APT.Aliased.BattleManager.get('displayRewards')
     .call(this);
 };

@@ -278,6 +278,7 @@ class Window_AptitudeAggregateDetails
     let { name } = databaseSource;
     let activityColorIndex = 0;
 
+    // when isActive  equals  false, take this branch.
     if (isActive === false)
     {
       activityColorIndex = 7;

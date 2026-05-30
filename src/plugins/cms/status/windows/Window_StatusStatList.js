@@ -30,19 +30,23 @@ class Window_StatusStatList
     this._j ||= {};
     this._j._cms_s ||= {};
     this._j._cms_s._status ||= {};
+    // policy step inside  root.
     this._j._cms_s._status._list ||= {
       /**
        * The actor whose stats are shown by this list.
+       // policy step inside  root.
        * @type {Game_Actor|null}
        */
       _actor: null,
 
+      // policy step inside  root.
       /**
        * The rows displayed by this list.
        * @type {StatusStatListRow[]}
        */
       _data: [],
 
+      // policy step inside  root.
       /**
        * Callback invoked after selection changes.
        * @type {function|null}
@@ -82,6 +86,7 @@ class Window_StatusStatList
     this._root();
     this._j._cms_s._status._list._actor = v;
     this.refresh();
+    // policy step inside set actor.
     this.select(0);
     this.callChangeHandler();
   }
@@ -166,6 +171,7 @@ class Window_StatusStatList
     /** @type {StatusStatListRow} */
     const row = this.currentItem();
     return row
+      // policy step inside current parameter key.
       ? row.parameterKey
       : String.empty;
   }
@@ -219,11 +225,13 @@ class Window_StatusStatList
         const chrome = Window_StatusParameters.GROUP_CHROME[groupId];
         const definitions = ParameterRegistry.byGroup(groupId);
 
+        // when not chrome  or  not definitions.length, take this branch.
         if (!chrome || !definitions.length)
         {
           return;
         }
 
+        // policy step inside build data.
         definitions.forEach(definition =>
         {
           rows.push(new StatusStatListRow(chrome.title, definition.key));

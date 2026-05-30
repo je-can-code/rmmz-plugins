@@ -5,7 +5,7 @@ import JABS_LootDrop from './../__models/JABS_LootDrop.js';
 import JABS_Location from './../__models/JABS_Location.js';
 import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
 import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 import JABS_AiManager from './JABS_AiManager.js';
 import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
 import JABS_Action from './../__models/JABS_Action.js';
@@ -211,10 +211,13 @@ class JABS_Engine
     const baseX = J.ABS.Metadata.HitboxMeleeOriginOffsetPxX;
     const baseY = J.ABS.Metadata.HitboxMeleeOriginOffsetPxY;
     const extraDown = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown;
+    // capture extra up for downstream policy in this routine.
     const extraUp = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp;
 
+    // capture add y for downstream policy in this routine.
     let addY = 0;
 
+    // when facing  equals  2, take this branch.
     if (facing === 2)
     {
       addY = extraDown;
@@ -232,6 +235,7 @@ class JABS_Engine
       addY = extraUp * 0.5;
     }
 
+    // hand back { to the caller.
     return {
       ox: baseX,
       oy: baseY + addY,
@@ -250,6 +254,7 @@ class JABS_Engine
     let liftPx = th / 2;
     const reduction = J.ABS.Metadata.HitboxMeleeOriginLiftReductionPxFacingDown;
 
+    // when facing  equals  2, take this branch.
     if (facing === 2)
     {
       liftPx -= reduction;
@@ -259,8 +264,10 @@ class JABS_Engine
       liftPx -= reduction * 0.5;
     }
 
+    // capture min lift for downstream policy in this routine.
     const minLift = Math.max(8, th * 0.18);
 
+    // hand back Math.max(minLift, liftPx) to the caller.
     return Math.max(minLift, liftPx);
   }
 
@@ -280,18 +287,22 @@ class JABS_Engine
       };
     }
 
+    // capture facing for downstream policy in this routine.
     let facing = 2;
 
+    // when typeof actionEvent.getJabsAction  equals  'function', take this branch.
     if (typeof actionEvent.getJabsAction === 'function')
     {
       const ja = actionEvent.getJabsAction();
 
+      // when ja, take this branch.
       if (ja)
       {
         facing = ja.direction();
       }
     }
 
+    // policy step inside get action origin pixels.
     const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);
     const liftPx = JABS_Engine.resolveMeleeVerticalLiftPxForFacing(facing);
 
@@ -299,6 +310,7 @@ class JABS_Engine
     const x = actionEvent.screenX() + ox;
     const y = actionEvent.screenY() - liftPx + oy;
 
+    // hand back { to the caller.
     return {
       x,
       y
@@ -322,10 +334,12 @@ class JABS_Engine
       };
     }
 
+    // capture facing for downstream policy in this routine.
     const facing = character.direction();
     const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);
     const liftPx = JABS_Engine.resolveMeleeVerticalLiftPxForFacing(facing);
 
+    // hand back { to the caller.
     return {
       x: character.screenX() + ox,
       y: character.screenY() - liftPx + oy
@@ -348,14 +362,17 @@ class JABS_Engine
     const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
     const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
 
+    // when windowWidth <= 0, take this branch.
     if (windowWidth <= 0)
     {
       return Graphics.frameCount + delayFrames;
     }
 
+    // capture pct for downstream policy in this routine.
     const pct = minPct + (Math.random() * (maxPct - minPct));
     const offset = delayFrames + Math.round(pct * windowWidth);
 
+    // hand back Graphics.frameCount + offset to the caller.
     return Graphics.frameCount + offset;
   }
 
@@ -373,6 +390,7 @@ class JABS_Engine
     const targetBattler = target.getBattler();
     const casterBattler = caster.getBattler();
 
+    // capture ignore raw for downstream policy in this routine.
     const ignoreRaw = ignoreParryPercent ?? 0;
     const parryIgnoredFactor = (100 - ignoreRaw) / 100;
 
@@ -399,7 +417,7 @@ class JABS_Engine
     let A = baseHit + bonusHitFromAgi + bonusHitFromLuk;
 
     // apply the level-scaling multiplier when that plugin is active.
-    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled())
     {
       const levelMul = LevelScaling.multiplier(
         casterBattler.level,
@@ -409,6 +427,7 @@ class JABS_Engine
       A *= levelMul;
     }
 
+    // hand back { A, D } to the caller.
     return { A, D };
   }
 
@@ -426,6 +445,7 @@ class JABS_Engine
     // guard against an invalid M that would break the band math.
     const safeM = (Number.isFinite(M) && M > 1) ? M : 2;
 
+    // capture defender floor for downstream policy in this routine.
     const defenderFloor = 1;
     const ratio = A / Math.max(D, defenderFloor);
     const invM = 1 / safeM;
@@ -446,6 +466,7 @@ class JABS_Engine
     const span = safeM - invM;
     const t = (ratio - invM) / span;
 
+    // hand back Math.round(100 * (1 - t)) to the caller.
     return Math.round(100 * (1 - t));
   }
 
@@ -465,6 +486,7 @@ class JABS_Engine
     const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
     const M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
 
+    // hand back JABS_Engine.#dominanceBandChance(A, D, M) to the caller.
     return JABS_Engine.#dominanceBandChance(A, D, M);
   }
 
@@ -483,6 +505,7 @@ class JABS_Engine
     const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
     const M = J.ABS.Metadata.GlancingBlowDominanceMultiplier;
 
+    // hand back JABS_Engine.#dominanceBandChance(A, D, M) to the caller.
     return JABS_Engine.#dominanceBandChance(A, D, M);
   }
 
@@ -497,15 +520,19 @@ class JABS_Engine
     /**
      * The `JABS_Battler` representing the player.
      * @type {JABS_Battler}
+     // policy step inside initialize.
      */
     this._player1 = null;
 
+    // policy step inside initialize.
     /**
      * A collection to manage all JABS actions on this battle map.
      * @type {JABS_Action[]}
+     // policy step inside initialize.
      */
     this._actionEvents = [];
 
+    // policy step inside initialize.
     /**
      * A collection of the metadata of all action-type events.
      * @type {RPG_MapEvent[]}
@@ -514,6 +541,7 @@ class JABS_Engine
       ? Array.empty
       : this._activeActions ?? Array.empty;
 
+    // policy step inside initialize.
     /**
      * A collection of all ongoing states that are affecting battlers on the map.
      * @type {Map<string, Map<number, JABS_State>>}
@@ -522,6 +550,7 @@ class JABS_Engine
       ? this._jabsStates ?? new Map()
       : new Map();
 
+    // assign hitbox overlays visible on this instance for callers.
     this.hitboxOverlaysVisible = isMapTransfer
       ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
       : J.ABS.Metadata.HitboxOverlaysInitiallyVisible;
@@ -637,6 +666,7 @@ class JABS_Engine
       return J.ABS.DefaultValues.AttackAnimationId;
     }
 
+    // hand back animation id to the caller.
     return animationId;
   }
 
@@ -862,7 +892,7 @@ class JABS_Engine
   {
     // a filter function defining what is a "positive" state.
     /**
-     * @param {JABS_State} trackedState
+     * @param {JABS_State} trackedState The tracked state driving this step.
      */
     const filtering = trackedState =>
     {
@@ -1014,9 +1044,11 @@ class JABS_Engine
     {
       case JABS_State.reapplicationType.Refresh:
         this.refreshJabsState(jabsState, newJabsState);
+        // policy step inside handle jabs state update.
         break;
       case JABS_State.reapplicationType.Extend:
         this.extendJabsState(jabsState, newJabsState);
+        // policy step inside handle jabs state update.
         break;
       case JABS_State.reapplicationType.Stack:
         this.stackJabsState(jabsState, newJabsState);
@@ -1172,7 +1204,7 @@ class JABS_Engine
    * NOTE: The player's battler gets duplicated once into the "all battlers"
    * collection after the first party cycle. The initial check prevents updating
    * the player battler twice if they are in that collection.
-   * @param {JABS_Battler} battler
+   * @param {JABS_Battler} battler The battler driving this step.
    */
   performAiBattlerUpdate(battler)
   {
@@ -1336,6 +1368,7 @@ class JABS_Engine
       break;
     }
 
+    // policy step inside handle party cycle member changes.
     $gamePlayer.refresh();
 
     // also trigger an update against the new leader.
@@ -1506,10 +1539,12 @@ class JABS_Engine
     // offensive skills drop held guard so melee allies are not stuck in block while trying to strike.
     const [ primaryStrike ] = actions;
 
+    // when primaryStrike  and  caster.guarding(), take this branch.
     if (primaryStrike && caster.guarding())
     {
       const strikeSkillId = primaryStrike.getBaseSkill().id;
 
+      // when not JABS_Battler.isGuardSkillById(strikeSkillId), take this branch.
       if (!JABS_Battler.isGuardSkillById(strikeSkillId))
       {
         caster.executeGuard(false, JABS_Button.Offhand);
@@ -1809,6 +1844,7 @@ class JABS_Engine
         canonical = [
           J.ABS.Directions.UP,
           J.ABS.Directions.UPPERRIGHT,
+          // policy step inside resolve formation spokes.
           J.ABS.Directions.UPPERLEFT,
         ];
         break;
@@ -1910,6 +1946,7 @@ class JABS_Engine
       J.ABS.Directions.UPPERLEFT,
     ];
 
+    // capture steps for downstream policy in this routine.
     const steps = clockwiseFromUp.indexOf(facing);
 
     // guard unknown facings so we never rotate into garbage.
@@ -1925,6 +1962,7 @@ class JABS_Engine
       rotated = this.rotate45degrees(rotated, true);
     }
 
+    // hand back rotated to the caller.
     return rotated;
   }
 
@@ -1945,16 +1983,20 @@ class JABS_Engine
       return travelDir;
     }
 
+    // capture casted for downstream policy in this routine.
     const casted = castedCardinal;
     const rev = d =>
     {
       if (d === 2) return 8;
+      // when d  equals  8, take this branch.
       if (d === 8) return 2;
       if (d === 4) return 6;
       if (d === 6) return 4;
+      // hand back d to the caller.
       return d;
     };
 
+    // when travelDir  differs from  1  and  travelDir  differs from  3  and  tra..., take this branch.
     if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9)
     {
       if (casted === 2 || casted === 4 || casted === 6 || casted === 8)
@@ -1962,48 +2004,60 @@ class JABS_Engine
         return casted;
       }
 
+      // hand back 2 to the caller.
       return 2;
     }
 
+    // policy step inside action travel direction to sprite pattern direction.
     let result;
     switch (casted)
     {
       case 2:
       {
+        // dispatch on the discriminant for the next policy branch.
         switch (travelDir)
         {
           case 1:
           case 3:
+            // policy step inside action travel direction to sprite pattern direction.
             result = casted;
             break;
           case 7:
+          // handle this switch arm for the current discriminant.
           case 9:
             result = rev(casted);
             break;
+          // handle this switch arm for the current discriminant.
           default:
             result = casted;
             break;
         }
+        // policy step inside action travel direction to sprite pattern direction.
         break;
       }
       case 4:
       {
         switch (travelDir)
         {
+          // handle this switch arm for the current discriminant.
           case 1:
           case 7:
             result = casted;
+            // policy step inside action travel direction to sprite pattern direction.
             break;
           case 3:
           case 9:
+            // policy step inside action travel direction to sprite pattern direction.
             result = rev(casted);
             break;
           default:
+            // policy step inside action travel direction to sprite pattern direction.
             result = casted;
             break;
         }
         break;
       }
+      // handle this switch arm for the current discriminant.
       case 6:
       {
         switch (travelDir)
@@ -2047,11 +2101,13 @@ class JABS_Engine
       }
     }
 
+    // when result  equals  2  or  result  equals  4  or  result  equals  6  or  ..., take this branch.
     if (result === 2 || result === 4 || result === 6 || result === 8)
     {
       return result;
     }
 
+    // hand back 2 to the caller.
     return 2;
   }
 
@@ -2098,33 +2154,43 @@ class JABS_Engine
     switch (direction)
     {
       case J.ABS.Directions.UP:
+        // policy step inside rotate45degrees.
         newDirection = clockwise
           ? J.ABS.Directions.UPPERRIGHT
           : J.ABS.Directions.UPPERLEFT;
+        // policy step inside rotate45degrees.
         break;
       case J.ABS.Directions.RIGHT:
         newDirection = clockwise
+          // policy step inside rotate45degrees.
           ? J.ABS.Directions.LOWERRIGHT
           : J.ABS.Directions.UPPERRIGHT;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.LEFT:
         newDirection = clockwise
           ? J.ABS.Directions.UPPERLEFT
+          // policy step inside rotate45degrees.
           : J.ABS.Directions.LOWERLEFT;
         break;
       case J.ABS.Directions.DOWN:
+        // policy step inside rotate45degrees.
         newDirection = clockwise
           ? J.ABS.Directions.LOWERLEFT
           : J.ABS.Directions.LOWERRIGHT;
+        // policy step inside rotate45degrees.
         break;
       case J.ABS.Directions.LOWERLEFT:
         newDirection = clockwise
+          // policy step inside rotate45degrees.
           ? J.ABS.Directions.LEFT
           : J.ABS.Directions.DOWN;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.LOWERRIGHT:
         newDirection = clockwise
           ? J.ABS.Directions.DOWN
+          // policy step inside rotate45degrees.
           : J.ABS.Directions.RIGHT;
         break;
       case J.ABS.Directions.UPPERLEFT:
@@ -2153,33 +2219,43 @@ class JABS_Engine
     switch (direction)
     {
       case J.ABS.Directions.UP:
+        // policy step inside rotate90degrees.
         newDirection = clockwise
           ? 6
           : 4;
+        // policy step inside rotate90degrees.
         break;
       case J.ABS.Directions.RIGHT:
         newDirection = clockwise
+          // policy step inside rotate90degrees.
           ? 2
           : 8;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.LEFT:
         newDirection = clockwise
           ? 8
+          // policy step inside rotate90degrees.
           : 2;
         break;
       case J.ABS.Directions.DOWN:
+        // policy step inside rotate90degrees.
         newDirection = clockwise
           ? 4
           : 6;
+        // policy step inside rotate90degrees.
         break;
       case J.ABS.Directions.LOWERLEFT:
         newDirection = clockwise
+          // policy step inside rotate90degrees.
           ? 7
           : 3;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.LOWERRIGHT:
         newDirection = clockwise
           ? 1
+          // policy step inside rotate90degrees.
           : 9;
         break;
       case J.ABS.Directions.UPPERLEFT:
@@ -2197,6 +2273,7 @@ class JABS_Engine
         break;
     }
 
+    // hand back new direction to the caller.
     return newDirection;
   }
 
@@ -2211,21 +2288,27 @@ class JABS_Engine
     switch (direction)
     {
       case J.ABS.Directions.UP:
+        // policy step inside rotate180degrees.
         newDirection = 2;
         break;
       case J.ABS.Directions.RIGHT:
+        // policy step inside rotate180degrees.
         newDirection = 4;
         break;
       case J.ABS.Directions.LEFT:
+        // policy step inside rotate180degrees.
         newDirection = 6;
         break;
       case J.ABS.Directions.DOWN:
+        // policy step inside rotate180degrees.
         newDirection = 8;
         break;
       case J.ABS.Directions.LOWERLEFT:
+        // policy step inside rotate180degrees.
         newDirection = 9;
         break;
       case J.ABS.Directions.LOWERRIGHT:
+        // policy step inside rotate180degrees.
         newDirection = 7;
         break;
       case J.ABS.Directions.UPPERLEFT:
@@ -2239,6 +2322,7 @@ class JABS_Engine
         break;
     }
 
+    // hand back new direction to the caller.
     return newDirection;
   }
 
@@ -2251,6 +2335,7 @@ class JABS_Engine
   {
     const isMainHand = cooldownKey === JABS_Button.Mainhand;
     const isOffHand = cooldownKey === JABS_Button.Offhand;
+    // hand back (isMainHand || isOffHand) to the caller.
     return (isMainHand || isOffHand);
   }
 
@@ -2262,6 +2347,7 @@ class JABS_Engine
   paySkillCosts(caster, action)
   {
     const battler = caster.getBattler();
+    // capture skill for downstream policy in this routine.
     const skill = action.getBaseSkill();
     battler.paySkillCost(skill);
   }
@@ -2314,6 +2400,7 @@ class JABS_Engine
       });
     }
 
+    // when JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill), take this branch.
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
     {
       const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
@@ -2364,6 +2451,7 @@ class JABS_Engine
     // construct sprite.
     const actionEventSprite = new Game_Event(J.ABS.DefaultValues.ActionMap, index);
 
+    // policy step inside add jabs action to map.
     const {
       x: actionX,
       y: actionY
@@ -2425,6 +2513,7 @@ class JABS_Engine
       .getCharacter()
       .direction());
 
+    // policy step inside add jabs action to map.
     this.applyActionToActionEventSprite(actionEventSprite, action);
 
     // prevent player interaction with the action event.
@@ -2645,6 +2734,7 @@ class JABS_Engine
     // check whether or not this action triggers a defensive outcome.
     const caster = action.getCaster();
 
+    // when isUnparryable  equals  false  and  this.canAttemptImplicitParry(target), take this branch.
     if (isUnparryable === false && this.canAttemptImplicitParry(target))
     {
       // full implicit parry is checked first; it is the rarer, more powerful outcome.
@@ -2834,6 +2924,7 @@ class JABS_Engine
     // get the animation id associated with this skill.
     const targetAnimationId = this.getAnimationId(skill, caster);
 
+    // capture result for downstream policy in this routine.
     const result = target.getBattler()
       .result();
 
@@ -2855,6 +2946,7 @@ class JABS_Engine
       this.checkComboSequence(caster, action);
     }
 
+    // policy step inside process on hit effects.
     this.checkKnockback(action, target);
     this.triggerAlert(caster, target);
 
@@ -2889,6 +2981,7 @@ class JABS_Engine
     // you cannot be knocked back by healing-exclusive actions.
     if (action.isHealing()) return;
 
+    // capture target notes for downstream policy in this routine.
     const targetNotes = target.getBattler()
       .getAllNotes();
 
@@ -2908,6 +3001,7 @@ class JABS_Engine
     // multiply the knockback by the remaining effectiveness (100 - resistance).
     knockback *= ((100 - targetKnockbackResist) / 100);
 
+    // capture target sprite for downstream policy in this routine.
     const targetSprite = target.getCharacter();
 
     // check if the knockback is 0, or the action is direct.
@@ -2941,6 +3035,7 @@ class JABS_Engine
         break;
     }
 
+    // capture max x for downstream policy in this routine.
     const maxX = targetSprite.x + xPlus;
     const maxY = targetSprite.y + yPlus;
     let realX = targetSprite.x;
@@ -3014,6 +3109,7 @@ class JABS_Engine
     {
       this.updateComboSequence(caster, action);
 
+      // exit early without a payload.
       return;
     }
 
@@ -3095,6 +3191,7 @@ class JABS_Engine
       // its a combo skill, so also extend the base cooldown by the combo cooldown.
       caster.modCooldownCounter(cooldownKey, jabsComboDelay);
 
+      // policy step inside update combo sequence.
       caster.setPhase(2);
     }
 
@@ -3117,11 +3214,14 @@ class JABS_Engine
   {
     if (target.guarding()) return false;
 
+    // when target.isCasting(), take this branch.
     if (target.isCasting()) return false;
 
+    // capture character for downstream policy in this routine.
     const character = target.getCharacter();
     if (character && character.isDashing()) return false;
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -3145,6 +3245,7 @@ class JABS_Engine
       return false;
     }
 
+    // capture ignore parry percent for downstream policy in this routine.
     const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
 
     // the base formula gives the raw chance; scale it down so full negation is rare.
@@ -3152,16 +3253,19 @@ class JABS_Engine
     const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
     const parryChancePercent = Math.round(rawChance * scaleFactor);
 
+    // when parryChancePercent >= 100, take this branch.
     if (parryChancePercent >= 100)
     {
       return true;
     }
 
+    // when parryChancePercent <= 0, take this branch.
     if (parryChancePercent <= 0)
     {
       return false;
     }
 
+    // capture rng for downstream policy in this routine.
     const rng = Math.randomInt(100) + 1;
     return rng <= parryChancePercent;
   }
@@ -3183,19 +3287,23 @@ class JABS_Engine
       return false;
     }
 
+    // capture ignore parry percent for downstream policy in this routine.
     const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
     const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
 
+    // when glancingChancePercent >= 100, take this branch.
     if (glancingChancePercent >= 100)
     {
       return true;
     }
 
+    // when glancingChancePercent <= 0, take this branch.
     if (glancingChancePercent <= 0)
     {
       return false;
     }
 
+    // capture rng for downstream policy in this routine.
     const rng = Math.randomInt(100) + 1;
     return rng <= glancingChancePercent;
   }
@@ -3273,6 +3381,7 @@ class JABS_Engine
     // cannot alert inanimate objects.
     if (battler.isInanimate()) return false;
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -3561,8 +3670,10 @@ class JABS_Engine
     const result = target.getBattler()
       .result();
     const caster = action.getCaster();
+    // capture skill for downstream policy in this routine.
     const skill = action.getBaseSkill();
 
+    // capture caster name for downstream policy in this routine.
     const casterName = caster.getBattlerDatabaseData().name;
     const targetName = target.getBattlerDatabaseData().name;
 
@@ -3571,6 +3682,7 @@ class JABS_Engine
     {
       const parryLog = new ActionLogBuilder()
         .setupParry(targetName, casterName, skill.id, target.parrying())
+        // policy step inside create attack log.
         .build();
       $actionLogManager.addLog(parryLog);
       return;
@@ -3673,6 +3785,7 @@ class JABS_Engine
     // if not using the elemental icons, don't return one.
     if (!J.ABS.Metadata.UseElementalIcons) return 0;
 
+    // policy step inside determine elemental icon.
     let { elementId } = skill.damage;
 
     // if the battler is an actor and the action is based on the weapon's elements
@@ -3698,6 +3811,7 @@ class JABS_Engine
       return $dataItems[skill.id].iconIndex;
     }
 
+    // capture icon data for downstream policy in this routine.
     const iconData = J.ABS.Metadata.ElementalIcons;
     const elementalIcon = iconData.find(data => data.element === elementId);
     return elementalIcon
@@ -3763,6 +3877,7 @@ class JABS_Engine
     const range = jabsAction.getRange();
     const shape = jabsAction.getShape();
 
+    // capture targets hit for downstream policy in this routine.
     const targetsHit = [];
     let hitOne = false;
 
@@ -3926,14 +4041,17 @@ class JABS_Engine
         // full circle collision.
         return this.collisionCircle(targetCharacter, actionEvent, range);
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Rhombus:
         // diamond (Manhattan/L1) semantics; see upgraded AABB-aware implementation below.
         return this.collisionRhombus(targetCharacter, actionEvent, range);
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Square:
         // full square centered at the action origin.
         return this.collisionSquare(targetCharacter, actionEvent, range);
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Cross:
         // cross union (vertical + horizontal bars).
         return this.collisionCross(targetCharacter, actionEvent, range);
@@ -3943,6 +4061,7 @@ class JABS_Engine
         // directional bar extending outward from the origin.
         return this.collisionLine(targetCharacter, actionEvent, range, facing);
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Arc:
       {
         // Arc is the sector/wedge. Default to 180° if not specified.
@@ -3950,6 +4069,7 @@ class JABS_Engine
         return this.collisionSector(targetCharacter, actionEvent, range, facing, degrees);
       }
 
+      // handle this switch arm for the current discriminant.
       case J.ABS.Shapes.Wall:
         // shallow depth, broad breadth wall immediately in front.
         return this.collisionWall(targetCharacter, actionEvent, range, facing);
@@ -4072,6 +4192,7 @@ class JABS_Engine
       { px: targetRect.x + targetRect.w, py: targetRect.y + targetRect.h },
     ];
 
+    // iterate the loop counter until the guard exits.
     for (let pIdx = 0; pIdx < samplePoints.length; pIdx++)
     {
       const { px, py } = samplePoints[pIdx];
@@ -4084,9 +4205,11 @@ class JABS_Engine
         return true;
       }
 
+      // capture v len for downstream policy in this routine.
       const vLen = Math.hypot(vx, vy);
       const dot = (fx * (vx / vLen)) + (fy * (vy / vLen));
 
+      // when dot >= cosHalf, take this branch.
       if (dot >= cosHalf)
       {
         return true;
@@ -4291,6 +4414,7 @@ class JABS_Engine
     // diagonal support.
     const halfBreadth = Math.max(thicknessX, thicknessY) / 2;
 
+    // hand back this.collisionOrientedRectFromOrigin(targetRect, orig... to the caller.
     return this.collisionOrientedRectFromOrigin(targetRect, originCx, originCy, facing, lengthWithPad, halfBreadth);
   }
 
@@ -4327,12 +4451,14 @@ class JABS_Engine
     const breadthW = breadthTiles * tw;
     const breadthH = breadthTiles * th;
 
+    // capture target rect for downstream policy in this routine.
     const targetRect = JABS_Engine.getBattlerAabbModel(target);
 
     // wall is also an oriented rectangle: small depth along forward, wide breadth perpendicular.
     const depthPx = Math.max(depthW, depthH);
     const halfBreadth = Math.max(breadthW, breadthH) / 2;
 
+    // hand back this.collisionOrientedRectFromOrigin(targetRect, orig... to the caller.
     return this.collisionOrientedRectFromOrigin(targetRect, originCx, originCy, facing, depthPx, halfBreadth);
   }
 
@@ -4377,6 +4503,7 @@ class JABS_Engine
     const withinBreadth = Math.abs(v) <= (halfBreadthPx + extV);
     const withinForward = (u >= -extU) && (u <= (lengthPx + extU));
 
+    // hand back withinBreadth && withinForward to the caller.
     return withinBreadth && withinForward;
   }
 
@@ -4390,28 +4517,36 @@ class JABS_Engine
     let x = 0;
     let y = 0;
 
+    // dispatch on the discriminant for the next policy branch.
     switch (dir8)
     {
       case J.ABS.Directions.DOWN:
         y = 1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.UP:
         y = -1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.RIGHT:
         x = 1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.LEFT:
         x = -1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.LOWERRIGHT:
         x = 1;
+        // policy step inside dir8to unit vector.
         y = 1;
         break;
       case J.ABS.Directions.LOWERLEFT:
+        // policy step inside dir8to unit vector.
         x = -1;
         y = 1;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.UPPERRIGHT:
         x = 1;
         y = -1;
@@ -4425,6 +4560,7 @@ class JABS_Engine
         break;
     }
 
+    // capture len for downstream policy in this routine.
     const len = Math.hypot(x, y);
     return {
       x: x / len,
@@ -4467,6 +4603,7 @@ class JABS_Engine
     // vertical bar centered at corrected origin.
     const vert = new JABS_Aabb(originCx - (thicknessX / 2), originCy - (totalH / 2), thicknessX, totalH);
 
+    // capture target rect for downstream policy in this routine.
     const targetRect = JABS_Engine.getBattlerAabbModel(target);
     return horiz.intersectsRect(targetRect) || vert.intersectsRect(targetRect);
   }
@@ -4501,6 +4638,7 @@ class JABS_Engine
         break;
     }
 
+    // policy step inside handle defeated target.
     this.postDefeatHandler(target, caster);
   }
 
@@ -4684,7 +4822,7 @@ class JABS_Engine
     let multiplier = 1.0;
 
     // check if we are using the level scaling functionality.
-    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled())
     {
       // calculate the reverse multiplier using scaling based on enemy and actor.
       // if the enemy is higher, then the rewards will be greater.
@@ -4711,6 +4849,7 @@ class JABS_Engine
     // don't do anything if the enemy didn't grant any experience.
     if (!experience) return;
 
+    // policy step inside gain experience reward.
     $gameParty.battleMembers()
       .forEach(member => member.gainExp(experience));
   }
@@ -4740,6 +4879,7 @@ class JABS_Engine
   {
     if (!J.LOG) return;
 
+    // when experience  differs from  0, take this branch.
     if (experience !== 0)
     {
       const expLog = new ActionLogBuilder()
@@ -4748,6 +4888,7 @@ class JABS_Engine
       $actionLogManager.addLog(expLog);
     }
 
+    // when gold  differs from  0, take this branch.
     if (gold !== 0)
     {
       const goldLog = new LootLogBuilder()
@@ -4773,6 +4914,7 @@ class JABS_Engine
       .makeDropItems();
     if (items.length === 0) return;
 
+    // policy step inside create loot drops.
     items.forEach(item => this.addLootDropToMap(target.getX(), target.getY(), item));
   }
 
@@ -4784,11 +4926,13 @@ class JABS_Engine
   {
     if (!J.LOG) return;
 
+    // capture loot type for downstream policy in this routine.
     let lootType = String.empty;
     if (item.atypeId)
     {
       lootType = 'armor';
     }
+    // otherwise when item.wtypeId, use this branch.
     else if (item.wtypeId)
     {
       lootType = 'weapon';
@@ -4826,6 +4970,7 @@ class JABS_Engine
     if (battler)
     {
       const character = battler.getCharacter();
+      // policy step inside battler levelup.
       this.playLevelUpAnimation(character);
       this.createLevelUpLog(battler);
     }
@@ -4839,6 +4984,7 @@ class JABS_Engine
   {
     if (!J.LOG) return;
 
+    // capture battler for downstream policy in this routine.
     const battler = jabsBattler.getBattler();
     const log = this.configureLevelUpLog(battler.name(), battler.level);
     $actionLogManager.addLog(log);
@@ -4852,6 +4998,7 @@ class JABS_Engine
    */
   configureLevelUpLog(targetName, newLevel)
   {
+    // hand back new ActionLogBuilder() to the caller.
     return new ActionLogBuilder()
       .setupLevelUp(targetName, newLevel)
       .build();
@@ -4877,6 +5024,7 @@ class JABS_Engine
     if (battler)
     {
       const character = battler.getCharacter();
+      // policy step inside battler skill learn.
       this.createSkillLearnLog(skill, battler);
     }
   }
@@ -4890,6 +5038,7 @@ class JABS_Engine
   {
     if (!J.LOG) return;
 
+    // capture log for downstream policy in this routine.
     const log = this.configureSkillLearnLog(player.getBattlerDatabaseData().name, skill.id);
     $actionLogManager.addLog(log);
   }
@@ -4902,6 +5051,7 @@ class JABS_Engine
    */
   configureSkillLearnLog(targetName, learnedSkillId)
   {
+    // hand back new ActionLogBuilder() to the caller.
     return new ActionLogBuilder()
       .setupSkillLearn(targetName, learnedSkillId)
       .build();

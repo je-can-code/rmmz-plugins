@@ -1,4 +1,6 @@
 //region JABS_HitstopManager
+import JABS_HitstopRuntime from './../_models/JABS_HitstopRuntime.js';
+
 /**
  * A small helper that owns hitstop calculation and application.
  */
@@ -192,6 +194,7 @@ class JABS_HitstopManager
     const attackerIsPlayer = attacker.isPlayer && attacker.isPlayer();
     const targetIsPlayer = target.isPlayer && target.isPlayer();
 
+    // when onlyOnPlayer, take this branch.
     if (onlyOnPlayer)
     {
       // allow: player as attacker; optionally: player as target.
@@ -202,7 +205,7 @@ class JABS_HitstopManager
     // global anti-spam cooldown using frame counter.
     const now = Graphics.frameCount || SceneManager._frameCount || 0;
     const cooldown = J.ABS.EXT.HITSTOP.Metadata.shakeCooldownFrames;
-    if (now - J.ABS.EXT.HITSTOP._lastShakeFrame < cooldown) return;
+    if (now - JABS_HitstopRuntime.lastShakeFrame < cooldown) return;
 
     // derive power and duration (still tiny), then shake.
     const base = J.ABS.EXT.HITSTOP.Metadata.shakeBasePower;
@@ -211,10 +214,11 @@ class JABS_HitstopManager
     const speed = J.ABS.EXT.HITSTOP.Metadata.shakeSpeed;
     const duration = Math.min(frames, J.ABS.EXT.HITSTOP.Metadata.shakeMaxDurationFrames);
 
+    // continue the routine with the next policy step.
     $gameScreen.startShake(power, speed, duration);
 
     // stamp cooldown.
-    J.ABS.EXT.HITSTOP.Metadata.lastShakeFrame = now;
+    JABS_HitstopRuntime.lastShakeFrame = now;
   }
 
   //endregion internals

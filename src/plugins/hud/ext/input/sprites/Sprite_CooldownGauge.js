@@ -29,25 +29,32 @@ class Sprite_CooldownGauge
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // store  j on the instance for later reads.
     this._j = {
       /**
        * The cooldown data this gauge is associated with.
+       // policy step inside init members.
        * @type {JABS_Cooldown|null}
        */
       _cooldownData: null,
 
+      // policy step inside init members.
       /**
        * The current value of the gauge.
        * @type {number}
+       // policy step inside init members.
        */
       _valueCurrent: 0,
 
+      // policy step inside init members.
       /**
        * The maximum value of the gauge.
        * @type {number}
+       // policy step inside init members.
        */
       _valueMax: 0,
 
+      // policy step inside init members.
       /**
        * Highest recent combined cooldown (slot vs GCD) so the bar does not shrink when GCD outlasts the per-skill
        * timer.
@@ -55,12 +62,14 @@ class Sprite_CooldownGauge
        */
       _gcdHudPeak: 0,
 
+      // policy step inside init members.
       /**
        * Leader battler whose {@link J.ABS.Globals.GlobalCooldownKey} may be reflected on this input-slot gauge.
        * @type {JABS_Battler|null}
        */
       _gcdMergeBattler: null,
 
+      // policy step inside init members.
       /**
        * Skill id assigned to this HUD slot; used with
        * {@link JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown} to decide if GCD should merge.
@@ -81,9 +90,11 @@ class Sprite_CooldownGauge
     this._j._gcdMergeBattler = null;
     this._j._gcdMergeSkillId = 0;
     if (!jabsBattler || !skillSlot) return;
+    // policy step inside set hud gcd merge.
     const { key } = skillSlot;
     if (key === JABS_Button.Tool || key === JABS_Button.Dodge) return;
     if (skillSlot.isItem()) return;
+    // policy step inside set hud gcd merge.
     this._j._gcdMergeBattler = jabsBattler;
     this._j._gcdMergeSkillId = skillSlot.id;
   }
@@ -100,9 +111,11 @@ class Sprite_CooldownGauge
     if (!this._j._gcdMergeBattler || !this._j._gcdMergeSkillId) return 0;
     if (typeof J.ABS === 'undefined' || typeof JABS_GlobalCooldown === 'undefined') return 0;
     const sk = $dataSkills[this._j._gcdMergeSkillId];
+    // when JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(sk)  equals  false, take this branch.
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(sk) === false) return 0;
     const globalCd = this._j._gcdMergeBattler.getCooldown(J.ABS.Globals.GlobalCooldownKey);
     if (!globalCd) return 0;
+    // when globalCd.isBaseReady()  equals  true, take this branch.
     if (globalCd.isBaseReady() === true) return 0;
     return globalCd.frames;
   }
@@ -142,6 +155,7 @@ class Sprite_CooldownGauge
   {
     const cd = this.cooldownData();
     const g = this.globalHudFrames();
+    // hand back Math.max(cd.frames, g) to the caller.
     return Math.max(cd.frames, g);
   }
 
@@ -226,14 +240,17 @@ class Sprite_CooldownGauge
     // the rate is always zero if we don't have anything assigned.
     if (this.isMaxUnassigned()) return 0;
 
+    // capture value for downstream policy in this routine.
     const value = this.currentValue();
     const maxValue = this.maxValue();
     const rate = maxValue > 0
       ? value / maxValue
       : 0;
 
+    // capture parsed rate for downstream policy in this routine.
     const parsedRate = parseFloat(rate.toFixed(3));
 
+    // hand back parsed rate to the caller.
     return parsedRate;
   }
 
@@ -264,6 +281,7 @@ class Sprite_CooldownGauge
     // zero the max value.
     this.setMaxValue(0);
 
+    // policy step inside disable gauge.
     this._j._gcdHudPeak = 0;
 
     // make the sprite invisible.
@@ -318,6 +336,7 @@ class Sprite_CooldownGauge
     // if we do not have a current value, do not update.
     if (Number.isNaN(this.currentValue())) return false;
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -332,17 +351,20 @@ class Sprite_CooldownGauge
     const g = this.globalHudFrames();
     const eff = Math.max(cooldown.frames, g);
 
+    // when cooldown.isComboReady()  and  this.isMaxUnassigned(), take this branch.
     if (cooldown.isComboReady() && this.isMaxUnassigned())
     {
       this.enableGauge();
     }
 
+    // when cooldown.isBaseReady()  equals  true  and  g <= 0, take this branch.
     if (cooldown.isBaseReady() === true && g <= 0)
     {
       this.disableGauge();
       return;
     }
 
+    // when cooldown.isBaseReady()  equals  false  or  g > 0, take this branch.
     if (cooldown.isBaseReady() === false || g > 0)
     {
       if (this._j._gcdHudPeak < eff)

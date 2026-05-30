@@ -19,25 +19,30 @@ BattleManager.initMembers = function()
   J.ABS.EXT.STAR.Aliased.BattleManager.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The origin location that the player came from.
    * This doubles as a return location, too.
+   // policy step inside init members.
    * @type {StarOrigin}
    */
   this._originLocation = null;
 
+  // policy step inside init members.
   /**
    * Whether or not the player is engaged in battle.
    * @type {boolean}
    */
   this._inBattle = false;
 
+  // policy step inside init members.
   /**
    * An arbitrary counter for various purposes.
    * @type {JABS_Timer}
    */
   this._wait = new JABS_Timer(60, false);
 
+  // policy step inside init members.
   /**
    * The phase of star battle we are in.
    * @type {StarPhase}

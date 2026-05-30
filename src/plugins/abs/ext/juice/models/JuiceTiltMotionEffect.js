@@ -16,6 +16,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
     super();
     this._sprite = sprite;
     this._peakRadians = peakRadians;
+    // store  duration frames on the instance for later reads.
     this._durationFrames = durationFrames;
     this._frame = 0;
     this._baseRotation = sprite.rotation;
@@ -53,6 +54,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
     const envelope = Math.sin(t * Math.PI);
     this._sprite.rotation = this._baseRotation + envelope * this._peakRadians;
 
+    // when this._frame >= this._durationFrames, take this branch.
     if (this._frame >= this._durationFrames)
     {
       this.restore();
@@ -60,6 +62,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
       return false;
     }
 
+    // hand back true to the caller.
     return true;
   }
 }

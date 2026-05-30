@@ -31,9 +31,11 @@ class J_RegionEffectsPluginMetadata
     /**
      * The global region ids that allow passage on all maps.
      * @type {number[]}
+     // policy step inside initialize metadata.
      */
     this.globalAllowRegions = J.REGIONS.Helpers.translateRegionIds(this.parsedPluginParameters['globalAllowRegions']);
 
+    // policy step inside initialize metadata.
     /**
      * The global region ids that deny passage on all maps.
      * @type {number[]}

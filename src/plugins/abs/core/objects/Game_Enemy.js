@@ -1,6 +1,6 @@
 //region Game_Enemy
 import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 /**
  * Extends {@link Game_Enemy.setup}.<br/>
  * Includes JABS skill initialization.
@@ -92,6 +92,7 @@ J.ABS.Aliased.Game_Enemy.set('basicAttackSkillId', Game_Enemy.prototype.basicAtt
 Game_Enemy.prototype.basicAttackSkillId = function()
 {
   // check our enemy to see if we found a custom basic attack skill id.
+  // perform original logic.
   const basicAttackSkillId = J.ABS.Aliased.Game_Enemy.get('basicAttackSkillId')
     .call(this);
 

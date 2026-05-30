@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
  * Algebraic parity for {@link JABS_Battler} regeneration redesign (half tick rate, scaled amounts).
  *
  * Keep numeric literals aligned with:
- * `src/plugins/abs/core/__models/JABS_Battler/regeneration.js`
+ * `src/plugins/abs/core/__models/JABS_Battler.js`
  */
 describe('JABS_Battler regeneration DPS parity (constant algebra)', () =>
 {

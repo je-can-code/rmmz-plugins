@@ -138,6 +138,7 @@ class Window_QuestopediaList
       case OmniQuest.States.Inactive:
         return 93;
       case OmniQuest.States.Active:
+        // hand back 92 to the caller.
         return 92;
       case OmniQuest.States.Completed:
         return 91;

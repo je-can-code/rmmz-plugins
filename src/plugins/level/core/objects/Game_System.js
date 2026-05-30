@@ -9,11 +9,13 @@ Game_System.prototype.initialize = function()
   J.LEVEL.Aliased.Game_System.get('initialize')
     .call(this);
 
+  // policy step inside initialize.
   /**
    * The overarching _j object, where all my stateful plugin data is stored.
    */
   this._j ||= {};
 
+  // policy step inside initialize.
   /**
    * Whether or not the level scaling is enabled.
    * @type {boolean}

@@ -23,11 +23,14 @@ Game_Actor.prototype.initOtibMembers = function()
 {
   this._j ||= {};
 
+  // policy step inside init otib members.
   /**
    * A grouping of all properties associated with OTIB.
    */
+  // policy step inside init otib members.
   this._j._otib ||= {};
 
+  // policy step inside init otib members.
   /**
    * The persisted list of all OTIB unlocks earned by this actor.
    * Each entry is an {@link OtibUnlockRecord} mapping an item id to the states it granted.
@@ -62,6 +65,7 @@ Game_Actor.prototype.addOtibUnlock = function(record)
  */
 Game_Actor.prototype.otibPassiveStateIds = function()
 {
+  // hand back this.otibUnlocks() to the caller.
   return this.otibUnlocks()
     .flatMap(unlock => unlock.stateIds);
 };
@@ -73,6 +77,7 @@ Game_Actor.prototype.otibPassiveStateIds = function()
  */
 Game_Actor.prototype.isOtibUnlocked = function(itemId)
 {
+  // hand back this.otibUnlocks() to the caller.
   return this.otibUnlocks()
     .some(unlock => unlock.itemId === itemId);
 };
@@ -154,6 +159,7 @@ Game_Actor.prototype.getPassiveStateSources = function()
  */
 Game_Actor.prototype.buildOtibPassiveSources = function()
 {
+  // hand back this.otibUnlocks() to the caller.
   return this.otibUnlocks()
     .map(unlock => this.buildSourceFromStateIds(unlock.stateIds));
 };

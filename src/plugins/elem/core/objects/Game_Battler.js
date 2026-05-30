@@ -6,6 +6,7 @@
  */
 Game_Battler.prototype.isElementAbsorbed = function(elementId)
 {
+  // hand back this.elementsAbsorbed() to the caller.
   return this.elementsAbsorbed()
     .includes(elementId);
 };
@@ -95,6 +96,7 @@ Game_Battler.prototype.extractElementRateBoosts = function(referenceData)
   // if for some reason there is no note, then don't try to parse it.
   if (!referenceData.note) return [];
 
+  // capture caps for downstream policy in this routine.
   const caps = RPGManager
     .getAllCapturesFromNoteByRegex(referenceData, J.ELEM.RegExp.BoostElement);
   return caps.map(([ id, boost ]) => [ Number(id), Number(boost) ]);

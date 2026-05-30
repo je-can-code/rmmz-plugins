@@ -88,6 +88,7 @@ J.CAMods.Aliased.JABS_Engine.set('postExecuteSkillEffects', JABS_Engine.prototyp
 JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 {
   // execute the original method so the result is on the target.
+  // perform original logic.
   J.CAMods.Aliased.JABS_Engine.get('postExecuteSkillEffects')
     .call(this, action, target);
 
@@ -174,6 +175,7 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
       $gameVariables.setValue(J.CAMods.Tracking.HighestDamageTaken, hpDamage);
     }
 
+    // when critical, take this branch.
     if (critical)
     {
       // count of landed critical hits.
@@ -187,12 +189,14 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
       }
     }
 
+    // close out the hp-damage branch before parry tracking.
   }
   else if (parried)
   {
     // count of all types of successful parries.
     J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfParries, 1);
 
+    // when preciseParried, take this branch.
     if (preciseParried)
     {
       // count of all types of successful parries.
@@ -226,7 +230,7 @@ JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targe
 
 /**
  * Tracks mainhand/offhand/skill usage data points and assigns them to variables.
- * @param {JABS_Action} action
+ * @param {JABS_Action} action The action driving this step.
  */
 JABS_Engine.prototype.trackActionData = function(action)
 {
@@ -268,6 +272,7 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   // insert them at the secondary index.
   $gameParty._actors.splice(1, 0, originalLeaderActorId);
 
+  // policy step inside handle party cycle member changes.
   $gamePlayer.refresh();
 
   // recreate the JABS player battler and set it to the player character.

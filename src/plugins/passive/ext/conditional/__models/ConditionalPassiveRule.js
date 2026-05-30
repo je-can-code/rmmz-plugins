@@ -14,13 +14,16 @@ class ConditionalPassiveRule
     /**
      * @type {number}
      */
+    // assign state id on this instance for callers.
     this.stateId = stateId;
 
+    // policy step inside constructor.
     /**
      * @type {string}
      */
     this.conditionKind = conditionKind;
 
+    // policy step inside constructor.
     /**
      * @type {number|null}
      */

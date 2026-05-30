@@ -21,6 +21,7 @@ Input._updateGamepadState = function(gamepad)
   const prev = this._gamepadStates[gamepad.index] || [];
 
   // perform the original update to refresh internal states.
+  // perform original logic.
   J.UTILS.Aliased.Input.get("_updateGamepadState").call(this, gamepad);
 
   // extract the updated button state array populated by the original logic.

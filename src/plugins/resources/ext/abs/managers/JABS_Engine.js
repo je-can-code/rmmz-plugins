@@ -13,6 +13,7 @@ JABS_Engine.prototype.postPrimaryBattleEffects = function(action, target)
   J.RESOURCES.EXT.ABS.Aliased.JABS_Engine.get('postPrimaryBattleEffects')
     .call(this, action, target);
 
+  // capture result for downstream policy in this routine.
   const result = target.getBattler()
     .result();
 

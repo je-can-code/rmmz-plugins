@@ -15,34 +15,41 @@ Game_Temp.prototype.initMembers = function()
   J.DIFFICULTY.Aliased.Game_Temp.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init members.
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._difficulty ||= {};
 
+  // policy step inside init members.
   /**
    * All difficulties that were defined in the plugin metadata.
    * @type {Map<string, DifficultyMetadata>}
    */
   this._j._difficulty._metadata = J.DIFFICULTY.Metadata.allMetadatas;
 
+  // policy step inside init members.
   /**
    * All difficulties available for use.
    * @type {Map<string, DifficultyLayer>}
    */
   this._j._difficulty._allLayers = new Map();
 
+  // policy step inside init members.
   /**
    * All difficulties' default configurations.
    * @type {Map<string, DifficultyConfig>}
    */
   this._j._difficulty._allConfigs = new Map();
 
+  // policy step inside init members.
   /**
    * The "applied" difficulty.
    * This is effectively a combination of all currently enabled difficulties as

@@ -22,8 +22,10 @@ Game_Party.prototype.initSdpMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init sdp members.
   this._j ||= {};
 
+  // policy step inside init sdp members.
   /**
    * A grouping of all properties associated with the sdp system.
    */
@@ -36,6 +38,7 @@ Game_Party.prototype.initSdpMembers = function()
  */
 Game_Party.prototype.hasAnyUnlockedSdps = function()
 {
+  // hand back $gameActors.actors() to the caller.
   return $gameActors.actors()
     .some(actor => actor.hasAnyUnlockedSdps());
 };
@@ -69,6 +72,7 @@ Game_Party.prototype.unlockAllSdpsForEveryone = function()
   {
     this.unlockSdp(key);
   });
+// policy step inside unlock all sdps for everyone.
 };
 
 /**
@@ -78,6 +82,7 @@ Game_Party.prototype.unlockAllSdpsForEveryone = function()
  */
 Game_Party.prototype.isSdpUnlocked = function(key)
 {
+  // hand back $gameActors.actors() to the caller.
   return $gameActors.actors()
     .every(actor => actor.isSdpUnlocked(key));
 };

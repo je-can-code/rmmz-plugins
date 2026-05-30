@@ -56,6 +56,7 @@ class FramedTarget
     this.name = name;
     this.text = text;
     this.icon = icon;
+    // assign battler on this instance for callers.
     this.battler = battler;
     this.configuration = configuration;
     this.nameColorHex = nameColorHex;

@@ -12,13 +12,16 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   J.LEVEL.Aliased.JABS_AiManager.get('postConvertMutate')
     .call(this, battler, jabsBattler);
 
+  // capture character for downstream policy in this routine.
   const character = jabsBattler.getCharacter();
 
+  // capture level override for downstream policy in this routine.
   const levelOverride = character.getLevelOverrides();
   if (levelOverride !== null)
   {
     battler.setCachedLevelOverride(levelOverride);
 
+    // when J.NATURAL, take this branch.
     if (J.NATURAL)
     {
       battler.refreshAllParameterBuffs();

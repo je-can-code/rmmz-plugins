@@ -94,7 +94,7 @@ class RefinementWorkflowSession
   /**
    * Refinement lists hand {@link Scene_JaftingRefine} raw RPG datums; menus may still wrap rows in {@link Game_Item}.
    *
-   * @param {Game_Item|RPG_Base|null|undefined} partyItem
+   * @param {Game_Item|RPG_Base|null|undefined} partyItem The party item driving this step.
    * @returns {RPG_Base|null}
    */
   static datumFromPartyItem(partyItem)
@@ -104,11 +104,13 @@ class RefinementWorkflowSession
       return null;
     }
 
+    // when partyItem instanceof Game_Item, take this branch.
     if (partyItem instanceof Game_Item)
     {
       return partyItem.object();
     }
 
+    // hand back party item to the caller.
     return partyItem;
   }
 
@@ -118,9 +120,9 @@ class RefinementWorkflowSession
    * Callers pass {@link Game_Item} wrappers from list windows; tests may pass bare datums—{@link
    * RefinementWorkflowSession.datumFromPartyItem} normalizes once here.
    *
-   * @param {Game_Item|null|undefined} baseItem
-   * @param {Game_Item|null|undefined} materialItem
-   * @param {RPG_EquipItem|null|undefined} outputEquip
+   * @param {Game_Item|null|undefined} baseItem The base item driving this step.
+   * @param {Game_Item|null|undefined} materialItem The material item driving this step.
+   * @param {RPG_EquipItem|null|undefined} outputEquip The output equip driving this step.
    * @returns {{ ok: boolean, reason: string|null }}
    */
   commitRefinement(baseItem, materialItem, outputEquip)
@@ -130,11 +132,13 @@ class RefinementWorkflowSession
       return { ok: false, reason: 'missing_base' };
     }
 
+    // when materialItem  equals  null  or  materialItem  equals  undefined, take this branch.
     if (materialItem === null || materialItem === undefined)
     {
       return { ok: false, reason: 'missing_material' };
     }
 
+    // when outputEquip  equals  null  or  outputEquip  equals  undefined, take this branch.
     if (outputEquip === null || outputEquip === undefined)
     {
       return { ok: false, reason: 'missing_output' };
@@ -148,15 +152,18 @@ class RefinementWorkflowSession
     // resync `unitLedgers` once counts drop, which would otherwise merge from an empty base and drop craft stamps.
     const mergedLedger = JaftingSalvageManager.buildRefinementOutputLedger(baseDatum, materialDatum);
 
+    // policy step inside commit refinement.
     $gameParty.gainItem(baseItem, -1);
     $gameParty.gainItem(materialItem, -1);
 
+    // policy step inside commit refinement.
     outputEquip._jaftingSalvageLedger = mergedLedger;
 
     // hands the stamped RPG row to JAFTING core so it picks the next dynamic weapon/armor slot and `gainItem`s it.
     JaftingManager.createRefinedOutput(outputEquip);
     this.markCommittedReturnToBase();
 
+    // hand back { ok: true, reason: null } to the caller.
     return { ok: true, reason: null };
   }
 }

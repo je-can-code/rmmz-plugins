@@ -54,7 +54,7 @@ class Window_MonsterpediaDetail
 
   /**
    * Sets the current enemy observations for this window.
-   * @param {MonsterpediaObservations} observations
+   * @param {MonsterpediaObservations} observations The observations driving this step.
    */
   setObservations(observations)
   {
@@ -631,6 +631,7 @@ class Window_MonsterpediaDetail
       mtp,
     } = gameEnemy;
 
+    // capture max remover for downstream policy in this routine.
     const maxRemover = parameterName =>
     {
       return parameterName.replace('Max ', String.empty);
@@ -692,6 +693,7 @@ class Window_MonsterpediaDetail
     const {
       id,
       knowsParameters
+    // policy step inside draw core parameters.
     } = this.getObservations();
 
     // grab a reference to the enemy for database analysis.
@@ -701,15 +703,19 @@ class Window_MonsterpediaDetail
     const {
       atk,
       def,
+      // policy step inside draw core parameters.
       pdr,
       mat,
       mdf,
+      // policy step inside draw core parameters.
       mdr,
       agi,
       hit,
+      // policy step inside draw core parameters.
       cnt,
       luk,
       cri,
+      // policy step inside draw core parameters.
       cev,
     } = gameEnemy;
 
@@ -720,9 +726,11 @@ class Window_MonsterpediaDetail
     const atkXPlus = leftColumnX;
     this.drawEnemyParameter(
       x + atkXPlus,
+      // policy step inside draw core parameters.
       y,
       IconManager.param(2),
       TextManager.param(2),
+      // policy step inside draw core parameters.
       atk,
       !knowsParameters,
       4);
@@ -731,12 +739,15 @@ class Window_MonsterpediaDetail
     const defXPlus = leftColumnX + 8;
     const defYPlus = lh * 1;
     this.drawEnemyParameter(
+      // policy step inside draw core parameters.
       x + defXPlus,
       y + defYPlus,
       IconManager.param(3),
+      // policy step inside draw core parameters.
       TextManager.param(3),
       def,
       !knowsParameters,
+      // policy step inside draw core parameters.
       4
     );
 
@@ -744,12 +755,15 @@ class Window_MonsterpediaDetail
     const pdrXPlus = leftColumnX + 8;
     const pdrYPlus = lh * 2;
     const pdrValue = Math.round((pdr * 100) - 100);
+    // policy step inside draw core parameters.
     this.drawEnemyParameter(
       x + pdrXPlus,
       y + pdrYPlus,
+      // policy step inside draw core parameters.
       IconManager.sparam(6),
       TextManager.sparam(6),
       pdrValue,
+      // policy step inside draw core parameters.
       !knowsParameters,
       3
     );
@@ -758,12 +772,15 @@ class Window_MonsterpediaDetail
     const matXPlus = leftColumnX;
     const matYPlus = lh * 3;
     this.drawEnemyParameter(
+      // policy step inside draw core parameters.
       x + matXPlus,
       y + matYPlus,
       IconManager.param(4),
+      // policy step inside draw core parameters.
       TextManager.param(4),
       mat,
       !knowsParameters,
+      // policy step inside draw core parameters.
       4
     );
 
@@ -771,12 +788,15 @@ class Window_MonsterpediaDetail
     const mdfXPlus = leftColumnX + 8;
     const mdfYPlus = lh * 4;
     this.drawEnemyParameter(
+      // policy step inside draw core parameters.
       x + mdfXPlus,
       y + mdfYPlus,
       IconManager.param(5),
+      // policy step inside draw core parameters.
       TextManager.param(5),
       mdf,
       !knowsParameters,
+      // policy step inside draw core parameters.
       4
     );
 
@@ -784,6 +804,7 @@ class Window_MonsterpediaDetail
     const mdrXPlus = leftColumnX + 8;
     const mdrYPlus = lh * 5;
     const mdrValue = Math.round((mdr * 100) - 100);
+    // policy step inside draw core parameters.
     this.drawEnemyParameter(
       x + mdrXPlus,
       y + mdrYPlus,
@@ -943,6 +964,7 @@ class Window_MonsterpediaDetail
     // mask or pad the value depending on whether we received a raw number or a preformatted string.
     let displayValue = parameterValue;
 
+    // when typeof parameterValue  equals  'number', take this branch.
     if (typeof parameterValue === 'number')
     {
       displayValue = maskValue
@@ -1077,6 +1099,7 @@ class Window_MonsterpediaDetail
     // grab the list of possible drops this foe has.
     const sdpDropData = gameEnemy.getSdpDropData();
 
+    // when sdpDropData  equals  null  or  sdpDropData.at(0)  equals  String.empty, take this branch.
     if (sdpDropData === null || sdpDropData.at(0) === String.empty)
     {
       // draw the blurb about no SDP drop.
@@ -1170,6 +1193,7 @@ class Window_MonsterpediaDetail
         // add to the number of items we skipped.
         numberSkipped++;
 
+        // exit early without a payload.
         return;
       }
 
@@ -1236,6 +1260,7 @@ class Window_MonsterpediaDetail
         .includes(drop.dataId);
     }
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -1375,6 +1400,7 @@ class Window_MonsterpediaDetail
     const damageStartRow = 0;
     const taxonomyStartRow = 0;
 
+    // policy step inside draw elementalistics.
     this.#drawMonsterpediaTaxonomySections(
       taxonomyColumnX,
       yTop,
@@ -1383,6 +1409,7 @@ class Window_MonsterpediaDetail
       observations,
       taxonomy);
 
+    // capture damage element ids for downstream policy in this routine.
     const damageElementIds = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 ];
     damageElementIds.forEach((elementId, index) =>
     {
@@ -1407,14 +1434,17 @@ class Window_MonsterpediaDetail
     const xList = [];
     const tool = [];
 
+    // iterate the loop counter until the guard exits.
     for (let elementId = 1; elementId < names.length; elementId++)
     {
       const rawName = names[elementId];
       if (!rawName) continue;
 
+      // capture trimmed for downstream policy in this routine.
       const trimmed = String(rawName).trim();
       const low = trimmed.toLowerCase();
 
+      // capture bucket for downstream policy in this routine.
       let bucket = null;
       if (low.startsWith('vs '))
       {
@@ -1429,11 +1459,14 @@ class Window_MonsterpediaDetail
         bucket = tool;
       }
 
+      // when bucket  equals  null, take this branch.
       if (bucket === null) continue;
 
+      // capture rate for downstream policy in this routine.
       const rate = Math.round(gameEnemy.elementRate(elementId) * 100);
       if (rate === 100) continue;
 
+      // capture label for downstream policy in this routine.
       let label = trimmed;
       if (low.startsWith('vs '))
       {
@@ -1448,14 +1481,17 @@ class Window_MonsterpediaDetail
         label = trimmed.slice('tool-'.length).trim();
       }
 
+      // Append the row to the working collection.
       bucket.push({ elementId, label, rate });
     }
 
+    // capture by element id for downstream policy in this routine.
     const byElementId = (a, b) => a.elementId - b.elementId;
     vs.sort(byElementId);
     xList.sort(byElementId);
     tool.sort(byElementId);
 
+    // hand back { vs, x: xList, tool } to the caller.
     return { vs, x: xList, tool };
   }
 
@@ -1468,21 +1504,25 @@ class Window_MonsterpediaDetail
   {
     let lines = 0;
 
+    // when taxonomy.vs.length > 0, take this branch.
     if (taxonomy.vs.length > 0)
     {
       lines += 1 + taxonomy.vs.length;
     }
 
+    // when taxonomy.x.length > 0, take this branch.
     if (taxonomy.x.length > 0)
     {
       lines += 1 + taxonomy.x.length;
     }
 
+    // when taxonomy.tool.length > 0, take this branch.
     if (taxonomy.tool.length > 0)
     {
       lines += 1 + taxonomy.tool.length;
     }
 
+    // hand back lines to the caller.
     return lines;
   }
 
@@ -1500,15 +1540,19 @@ class Window_MonsterpediaDetail
   {
     let r = row;
 
+    // continue the routine with the next policy step.
     r = this.#drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.vs, 'Family');
 
+    // continue the routine with the next policy step.
     r = this.#drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.x, 'Traits');
 
+    // continue the routine with the next policy step.
     r = this.#drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.tool, 'Tools');
 
+    // hand back r to the caller.
     return r;
   }
 
@@ -1527,6 +1571,7 @@ class Window_MonsterpediaDetail
   {
     if (rows.length === 0) return row;
 
+    // capture cursor for downstream policy in this routine.
     let cursor = row;
 
     // section headers stay subtle so the data rows remain the hero.
@@ -1538,6 +1583,7 @@ class Window_MonsterpediaDetail
     this.toggleItalics(false);
     cursor += 1;
 
+    // continue the routine with the next policy step.
     rows.forEach(entry =>
     {
       const { elementId, label, rate } = entry;
@@ -1545,6 +1591,7 @@ class Window_MonsterpediaDetail
       cursor += 1;
     });
 
+    // hand back cursor to the caller.
     return cursor;
   }
 
@@ -1564,24 +1611,29 @@ class Window_MonsterpediaDetail
     this.resetFontSettings();
     this.modFontSize(-4);
 
+    // capture element icon for downstream policy in this routine.
     const elementIcon = IconManager.element(elementId);
     const gameEnemy = $gameEnemies.enemy(observations.id);
     const absorbed = J.ELEM && gameEnemy.isElementAbsorbed(elementId);
+    // capture affiliation flags for downstream policy in this routine.
     const affiliationFlags = {
       absorbed,
       immune: absorbed === false && rate <= 0,
+    // continue the routine with the next policy step.
     };
     const { knowsParameters } = observations;
     const resolved = AffiliationDisplay.resolveDisplay(rate, affiliationFlags);
     let displayRate = resolved.value;
     let valueColorIndex = resolved.colorIndex;
 
+    // when knowsParameters  equals  false, take this branch.
     if (knowsParameters === false)
     {
       displayRate = J.BASE.Helpers.maskString(AffiliationDisplay.maskTemplate);
       valueColorIndex = 0;
     }
 
+    // continue the routine with the next policy step.
     this.drawEnemyParameter(
       x,
       y + lh * row,
@@ -1593,6 +1645,7 @@ class Window_MonsterpediaDetail
       0,
       valueColorIndex);
 
+    // continue the routine with the next policy step.
     this.changeTextColor(ColorManager.normalColor());
   }
 
@@ -1610,14 +1663,18 @@ class Window_MonsterpediaDetail
     this.resetFontSettings();
     this.modFontSize(-4);
 
+    // continue the routine with the next policy step.
     this.changeTextColor(ColorManager.normalColor());
 
+    // capture game enemy for downstream policy in this routine.
     const gameEnemy = $gameEnemies.enemy(observations.id);
     const elementIcon = IconManager.element(elementId);
     const elementName = TextManager.element(elementId);
+    // capture magnitude percent for downstream policy in this routine.
     const magnitudePercent = Math.round(Math.abs(gameEnemy.elementRate(elementId)) * 100);
     const absorbed = J.ELEM && gameEnemy.isElementAbsorbed(elementId);
     const affiliationFlags = {
+      // continue the routine with the next policy step.
       absorbed,
       immune: absorbed === false && magnitudePercent <= 0,
     };
@@ -1626,12 +1683,14 @@ class Window_MonsterpediaDetail
     let displayRate = resolved.value;
     let valueColorIndex = resolved.colorIndex;
 
+    // when knowsElementalistic  equals  false, take this branch.
     if (knowsElementalistic === false)
     {
       displayRate = J.BASE.Helpers.maskString(AffiliationDisplay.maskTemplate);
       valueColorIndex = 0;
     }
 
+    // continue the routine with the next policy step.
     this.drawEnemyParameter(
       x,
       y + lh * row,
@@ -1643,6 +1702,7 @@ class Window_MonsterpediaDetail
       0,
       valueColorIndex);
 
+    // continue the routine with the next policy step.
     this.changeTextColor(ColorManager.normalColor());
   }
 

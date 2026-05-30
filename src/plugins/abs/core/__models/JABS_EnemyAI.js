@@ -1,6 +1,6 @@
 //region JABS_EnemyAI
 import JABS_BattlerRole from './JABS_BattlerRole.js';
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 import JABS_AI from './JABS_AI.js';
 /**
@@ -115,6 +115,7 @@ class JABS_EnemyAI
     // filter out the unusable or invalid skills.
     const usableSkills = this.filterUncastableSkills(user, availableSkills);
 
+    // policy step inside decide action.
     const {
       careful,
       executor,
@@ -139,12 +140,14 @@ class JABS_EnemyAI
       if (picked.length) return picked;
     }
 
+    // when healer, take this branch.
     if (healer)
     {
       const picked = this.decideHealerAction(user, usableSkills);
       if (picked.length) return picked;
     }
 
+    // when buffer, take this branch.
     if (buffer)
     {
       const picked = this.decideBufferAction(user, usableSkills);
@@ -192,8 +195,10 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length) return [];
 
+    // hand back this.wrapSupportSkillId(this.decideCleansing(user, us... to the caller.
     return this.wrapSupportSkillId(this.decideCleansing(user, usableSkills));
   }
 
@@ -211,6 +216,7 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length) return [];
 
     // reckless healers treat a wider threshold as "low".
@@ -231,8 +237,10 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length) return [];
 
+    // hand back this.wrapSupportSkillId(this.decideBuffing(user, usab... to the caller.
     return this.wrapSupportSkillId(this.decideBuffing(user, usableSkills));
   }
   //endregion support wrappers
@@ -253,8 +261,10 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length) return [ user.getEnemyBasicAttack() ];
 
+    // capture strongest skill id for downstream policy in this routine.
     const strongestSkillId = this.determineStrongestSkill(usableSkills, user, target);
     if (strongestSkillId) return [ strongestSkillId ];
     return [ user.getEnemyBasicAttack() ];
@@ -285,8 +295,10 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length) return [];
 
+    // capture target for downstream policy in this routine.
     const target = user.getTarget();
     let filtered = usableSkills;
 
@@ -308,6 +320,7 @@ class JABS_EnemyAI
       filtered = this.filterForTacticalSkills(filtered, user, target);
     }
 
+    // hand back [ this.decideFromNoneToManySkills(user, filtered) ] to the caller.
     return [ this.decideFromNoneToManySkills(user, filtered) ];
   }
 
@@ -323,6 +336,7 @@ class JABS_EnemyAI
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 
+    // capture status skills for downstream policy in this routine.
     const statusSkills = skillsToUse.filter(skillId =>
     {
       const skill = user.getSkill(skillId);
@@ -330,6 +344,7 @@ class JABS_EnemyAI
       return skill.effects.some(fx => fx.code === 21);
     });
 
+    // hand back statusSkills.length > 0 ? statusSkills : skillsToUse to the caller.
     return statusSkills.length > 0 ? statusSkills : skillsToUse;
   }
 
@@ -347,11 +362,13 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
+    // when not usableSkills.length, take this branch.
     if (!usableSkills.length)
     {
       return [ user.getEnemyBasicAttack() ];
     }
 
+    // capture random index for downstream policy in this routine.
     const randomIndex = Math.randomInt(usableSkills.length);
     const randomSkillId = usableSkills.at(randomIndex);
 
@@ -361,6 +378,7 @@ class JABS_EnemyAI
       return [ user.getEnemyBasicAttack() ];
     }
 
+    // hand back [ randomSkillId ] to the caller.
     return [ randomSkillId ];
   }
   //endregion attack actions
@@ -385,13 +403,16 @@ class JABS_EnemyAI
   {
     if (!this.canDecideActionForFollower(leader, follower)) return;
 
+    // when not follower.hasLeader(), take this branch.
     if (!follower.hasLeader())
     {
       follower.setLeader(leader.getUuid());
     }
 
+    // capture decided follower picks for downstream policy in this routine.
     const decidedFollowerPicks = this.decideActionForFollower(leader, follower);
 
+    // when decidedFollowerPicks.length  and  this.isSkillIdValid(decidedFollower..., take this branch.
     if (decidedFollowerPicks.length && this.isSkillIdValid(decidedFollowerPicks[0]))
     {
       follower.setLeaderDecidedAction(decidedFollowerPicks[0]);
@@ -408,17 +429,20 @@ class JABS_EnemyAI
   {
     if (leader === follower) return false;
 
+    // when not follower, take this branch.
     if (!follower) return false;
 
     // leaders cannot lead other leaders.
     if (follower.getBattlerRole().leader) return false;
 
+    // when follower.hasLeader()  and  follower.getLeader()  differs from  leader..., take this branch.
     if (follower.hasLeader() && follower.getLeader() !== leader.getUuid())
     {
       leader.removeFollower(follower.getUuid());
       return false;
     }
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -435,16 +459,20 @@ class JABS_EnemyAI
       return [ this.followWithCombo(followerBattler) ];
     }
 
+    // capture basic attack skill id for downstream policy in this routine.
     const basicAttackSkillId = followerBattler.getEnemyBasicAttack();
     let skillsToUse = followerBattler.getSkillIdsFromEnemy();
 
+    // when not skillsToUse.length, take this branch.
     if (!skillsToUse.length) return [ basicAttackSkillId ];
 
+    // policy step inside decide action for follower.
     const { healer, careful, executor } = this;
 
     // the leader's sight plus the follower's sight as a combined range for ally scanning.
     const modifiedSightRadius = leaderBattler.getSightRadius() + followerBattler.getSightRadius();
 
+    // when healer, take this branch.
     if (healer)
     {
       const allies = JABS_AiManager.getAlliedBattlersWithinRange(leaderBattler, modifiedSightRadius);
@@ -455,18 +483,23 @@ class JABS_EnemyAI
       skillsToUse = this.decideAttackAction(leaderBattler, skillsToUse);
     }
 
+    // when skillsToUse.length  equals  0, take this branch.
     if (skillsToUse.length === 0)
     {
       return [ basicAttackSkillId ];
     }
 
+    // capture chosen skill id for downstream policy in this routine.
     const chosenSkillId = skillsToUse.at(0);
 
+    // capture follower game battler for downstream policy in this routine.
     const followerGameBattler = followerBattler.getBattler();
     const skill = followerGameBattler.skill(chosenSkillId);
 
+    // when not followerGameBattler.canPaySkillCost(skill), take this branch.
     if (!followerGameBattler.canPaySkillCost(skill)) return [ basicAttackSkillId ];
 
+    // hand back [ chosenSkillId ] to the caller.
     return [ chosenSkillId ];
   }
 
@@ -482,43 +515,54 @@ class JABS_EnemyAI
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 
+    // policy step inside filter skills healer priority.
     const { careful, reckless } = this;
     if (!careful && !reckless) return skillsToUse;
 
+    // capture most wounded ally for downstream policy in this routine.
     let mostWoundedAlly = null;
     let lowestHpRatio = 1.01;
     let actualHpDifference = 0;
+    // capture allies below66 for downstream policy in this routine.
     let alliesBelow66 = 0;
     let alliesMissingAnyHp = 0;
 
+    // policy step inside filter skills healer priority.
     allies.forEach(ally =>
     {
       const battler = ally.getBattler();
       const hpRatio = battler.hp / battler.mhp;
 
+      // when lowestHpRatio > hpRatio, take this branch.
       if (lowestHpRatio > hpRatio)
       {
         lowestHpRatio = hpRatio;
         mostWoundedAlly = ally;
+        // policy step inside filter skills healer priority.
         actualHpDifference = battler.mhp - battler.hp;
 
+        // when hpRatio <= 0.66, take this branch.
         if (hpRatio <= 0.66)
         {
           alliesBelow66++;
         }
       }
 
+      // when hpRatio < 1, take this branch.
       if (hpRatio < 1)
       {
         alliesMissingAnyHp++;
       }
     });
 
+    // when not alliesMissingAnyHp  and  not reckless, take this branch.
     if (!alliesMissingAnyHp && !reckless) return skillsToUse;
 
+    // policy step inside filter skills healer priority.
     user.setAllyTarget(mostWoundedAlly);
     const mostWoundedAllyBattler = mostWoundedAlly.getBattler();
 
+    // capture healing type skills for downstream policy in this routine.
     const healingTypeSkills = skillsToUse.filter(skillId =>
     {
       const testAction = new Game_Action(user.getBattler());
@@ -526,8 +570,10 @@ class JABS_EnemyAI
       return (testAction.isForAliveFriend() && testAction.isRecover() && testAction.isHpEffect());
     });
 
+    // when healingTypeSkills.length < 2, take this branch.
     if (healingTypeSkills.length < 2) return healingTypeSkills;
 
+    // policy step inside filter skills healer priority.
     let bestSkillId;
     let runningBiggestHealAll = 0;
     let runningBiggestHealOne = 0;
@@ -541,6 +587,7 @@ class JABS_EnemyAI
     let closestFitHealOneSkill = null;
     let firstSkill = false;
 
+    // policy step inside filter skills healer priority.
     healingTypeSkills.forEach(skillId =>
     {
       const skill = $dataSkills[skillId];
@@ -548,12 +595,14 @@ class JABS_EnemyAI
       testAction.setItemObject(skill);
       const healAmount = testAction.makeDamageValue(mostWoundedAllyBattler, false);
 
+      // when Math.abs(runningBiggestHeal) < Math.abs(healAmount), take this branch.
       if (Math.abs(runningBiggestHeal) < Math.abs(healAmount))
       {
         biggestHealSkill = skillId;
         runningBiggestHeal = healAmount;
       }
 
+      // when not firstSkill, take this branch.
       if (!firstSkill)
       {
         biggestHealAllSkill = skillId;
@@ -567,6 +616,7 @@ class JABS_EnemyAI
         firstSkill = true;
       }
 
+      // when testAction.isForAll(), take this branch.
       if (testAction.isForAll())
       {
         if (runningBiggestHealAll < healAmount)
@@ -575,6 +625,7 @@ class JABS_EnemyAI
           runningBiggestHealAll = healAmount;
         }
 
+        // capture running difference for downstream policy in this routine.
         const runningDifference = Math.abs(runningClosestFitHealAll - actualHpDifference);
         const thisDifference = Math.abs(healAmount - actualHpDifference);
         if (thisDifference < runningDifference)
@@ -584,6 +635,7 @@ class JABS_EnemyAI
         }
       }
 
+      // when testAction.isForOne(), take this branch.
       if (testAction.isForOne())
       {
         if (runningBiggestHealOne < healAmount)
@@ -592,6 +644,7 @@ class JABS_EnemyAI
           runningBiggestHealOne = healAmount;
         }
 
+        // capture running difference for downstream policy in this routine.
         const runningDifference = Math.abs(runningClosestFitHealOne - actualHpDifference);
         const thisDifference = Math.abs(healAmount - actualHpDifference);
         if (thisDifference < runningDifference)
@@ -602,9 +655,11 @@ class JABS_EnemyAI
       }
     });
 
+    // capture skill options for downstream policy in this routine.
     const skillOptions = [ biggestHealAllSkill, biggestHealOneSkill, closestFitHealAllSkill, closestFitHealOneSkill ];
     bestSkillId = skillOptions[Math.randomInt(skillOptions.length)];
 
+    // when careful, take this branch.
     if (careful)
     {
       if (lowestHpRatio <= 0.40)
@@ -632,11 +687,13 @@ class JABS_EnemyAI
       }
     }
 
+    // when reckless  and  alliesMissingAnyHp > 0, take this branch.
     if (reckless && alliesMissingAnyHp > 0)
     {
       bestSkillId = biggestHealSkill;
     }
 
+    // when not bestSkillId, take this branch.
     if (!bestSkillId) return [];
     return [ bestSkillId ];
   }
@@ -656,6 +713,7 @@ class JABS_EnemyAI
       return this.decideFollowerAiByLeader(battler);
     }
 
+    // hand back this.decideFollowerAiBySelf(battler) to the caller.
     return this.decideFollowerAiBySelf(battler);
   }
 
@@ -669,6 +727,7 @@ class JABS_EnemyAI
     if (!battler.hasLeader()) return false;
     if (!battler.getLeaderBattler()) return false;
     if (!battler.getLeaderBattler().isEngaged()) return false;
+    // hand back true to the caller.
     return true;
   }
 
@@ -681,10 +740,13 @@ class JABS_EnemyAI
   {
     battler.showBalloon(J.ABS.Balloons.Check);
 
+    // capture leader decided skill id for downstream policy in this routine.
     const leaderDecidedSkillId = battler.getNextLeaderDecidedAction();
 
+    // when not this.isSkillIdValid(leaderDecidedSkillId), take this branch.
     if (!this.isSkillIdValid(leaderDecidedSkillId)) return [];
 
+    // hand back [ leaderDecidedSkillId ] to the caller.
     return [ leaderDecidedSkillId ];
   }
 
@@ -698,8 +760,10 @@ class JABS_EnemyAI
   {
     const basicAttackSkillId = battler.getEnemyBasicAttack();
 
+    // when not this.isSkillIdValid(basicAttackSkillId), take this branch.
     if (!this.isSkillIdValid(basicAttackSkillId)) return [];
 
+    // hand back [ basicAttackSkillId ] to the caller.
     return [ basicAttackSkillId ];
   }
   //endregion follower

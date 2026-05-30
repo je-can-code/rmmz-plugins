@@ -85,6 +85,7 @@ class JABS_ActionOptionsBuilder
     this.#isRetaliation = false;
     this.#cooldownKey = J.ABS.Globals.GlobalCooldownKey;
     this.#sourceLocation = null;
+    // policy step inside clear.
     this.#isTerrainDamage = false;
     this.#spawnOffsetX = 0;
     this.#spawnOffsetY = 0;
@@ -93,7 +94,7 @@ class JABS_ActionOptionsBuilder
 
   /**
    * Sets whether or not the action is a retaliation of another battler.
-   * @param {boolean} isRetaliation
+   * @param {boolean} isRetaliation The is retaliation driving this step.
    * @returns {JABS_ActionOptionsBuilder}
    */
   setIsRetaliation(isRetaliation)
@@ -104,7 +105,7 @@ class JABS_ActionOptionsBuilder
 
   /**
    * Sets the cooldown key to the given cooldown key.
-   * @param {string} cooldownKey
+   * @param {string} cooldownKey The cooldown key driving this step.
    * @returns {JABS_ActionOptionsBuilder}
    */
   setCooldownKey(cooldownKey)
@@ -115,7 +116,7 @@ class JABS_ActionOptionsBuilder
 
   /**
    * Sets the location to the given location.
-   * @param {JABS_Location} location
+   * @param {JABS_Location} location The location driving this step.
    * @returns {JABS_ActionOptionsBuilder}
    */
   setLocation(location)
@@ -126,7 +127,7 @@ class JABS_ActionOptionsBuilder
 
   /**
    * Sets whether or not the action is terrain damage.
-   * @param {boolean} isTerrainDamage
+   * @param {boolean} isTerrainDamage The is terrain damage driving this step.
    */
   setIsTerrainDamage(isTerrainDamage)
   {
@@ -145,6 +146,7 @@ class JABS_ActionOptionsBuilder
   {
     this.#spawnOffsetX = dx;
     this.#spawnOffsetY = dy;
+    // hand back this to the caller.
     return this;
   }
 

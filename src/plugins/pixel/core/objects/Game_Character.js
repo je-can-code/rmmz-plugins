@@ -18,6 +18,7 @@ Game_Character.prototype.processMoveCommand = function(command)
   this.setMovePressed(false);
 
   // perform the original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Character.get('processMoveCommand')
     .call(this, command);
 };

@@ -31,9 +31,11 @@ class JPassiveAffix_PluginMetadata
     /**
      * The default chance for a prefix to be applied.
      * @type {number}
+     // policy step inside initialize metadata.
      */
     this.defaultPrefixChance = parseFloat(this.parsedPluginParameters['default-prefix-chance']);
 
+    // policy step inside initialize metadata.
     /**
      * The default chance for a suffix to be applied.
      * @type {number}
@@ -52,18 +54,21 @@ class JPassiveAffix_PluginMetadata
      */
     this.totalPrefixWeight = 0;
 
+    // policy step inside initialize state affix weights.
     /**
      * The total weight of all suffixes.
      * @type {number}
      */
     this.totalSuffixWeight = 0;
 
+    // policy step inside initialize state affix weights.
     /**
      * The collection of key=id,value=weight for all states and their prefix weights found in the database.
      * @type {Map<number, number>}
      */
     this.prefixMap = new Map();
 
+    // policy step inside initialize state affix weights.
     /**
      * The collection of key=id,value=weight for all states and their suffix weights found in the database.
      * @type {Map<number, number>}

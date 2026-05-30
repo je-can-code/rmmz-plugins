@@ -41,6 +41,7 @@ class JABS_Formation
     this.name = name;
     this.description = description;
     this.formation = formation;
+    // assign effects on this instance for callers.
     this.effects = effects;
   }
 }

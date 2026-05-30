@@ -5,13 +5,13 @@ import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
 import { loadPassiveConditionalPluginVm } from './passive-conditional-vm.js';
 
 /**
- * Builds a test actor with explicit HP accessors and a skill note carrying conditional tags.
+ * Builds a test actor whose skill notes carry passive grants and rule tags.
  *
  * @param {object} sandbox
- * @param {string[]} conditionalNotes
+ * @param {string[]} skillNotes
  * @returns {object}
  */
-function buildConditionalTestActor(sandbox, conditionalNotes)
+function buildConditionalTestActor(sandbox, skillNotes)
 {
   const actor = new sandbox.Game_Actor();
 
@@ -58,7 +58,7 @@ function buildConditionalTestActor(sandbox, conditionalNotes)
     },
   });
 
-  const skillRows = conditionalNotes.map(note =>
+  const skillRows = skillNotes.map(note =>
   {
     const payload = {
       id: -1,
@@ -75,6 +75,21 @@ function buildConditionalTestActor(sandbox, conditionalNotes)
   actor.skills = function()
   {
     return skillRows;
+  };
+
+  actor.databaseData = function()
+  {
+    return emptyRow;
+  };
+
+  actor.allStates = function()
+  {
+    return [];
+  };
+
+  actor.equippedEquips = function()
+  {
+    return [];
   };
 
   return actor;
@@ -103,37 +118,53 @@ describe('J-Passive-Conditional (out/passive/ext/J-Passive-Conditional.js)', () 
   it('exposes metadata defaults from plugin parameters', () =>
   {
     expect(sandbox.J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames).toBe(15);
+    expect(sandbox.J.PASSIVE.EXT.CONDITIONAL.Metadata.defaultProximityTiles).toBe(5);
   });
 
-  it('evaluates hpBelow and hpAbove rules against current HP rate', () =>
+  it('gates passiveStateRule thresholds with inclusive Above/Below semantics', () =>
   {
     const actor = buildConditionalTestActor(sandbox, [
-      '<conditionalPassive:[42, hpBelow, 25]>',
-      '<conditionalPassive:[43, hpAbove, 50]>',
+      '<passive:[42]>\n<passiveStateRule:[42, hpBelow, 25]>',
+      '<passive:[43]>\n<passiveStateRule:[43, hpAbove, 50]>',
     ]);
 
     actor._hp = 20;
+    actor.refreshPassiveStates();
 
-    const manager = sandbox.ConditionalPassiveManager;
-
-    expect(manager.resolveActiveStateIds(actor)).toEqual([ 42 ]);
+    expect(actor.getPassiveStateIds()).toContain(42);
+    expect(actor.getPassiveStateIds()).not.toContain(43);
 
     actor._hp = 60;
+    actor.refreshPassiveStates();
 
-    expect(manager.resolveActiveStateIds(actor)).toEqual([ 43 ]);
+    expect(actor.getPassiveStateIds()).not.toContain(42);
+    expect(actor.getPassiveStateIds()).toContain(43);
   });
 
-  it('appends satisfied conditional passives after refreshPassiveStates', () =>
+  it('includes passive state ids at threshold boundaries (inclusive compare)', () =>
   {
     const actor = buildConditionalTestActor(sandbox, [
-      '<conditionalPassive:[99, hpAbove, 1]>',
+      '<passive:[99]>\n<passiveStateRule:[99, hpAbove, 50]>',
     ]);
 
-    actor._hp = 100;
-
+    actor._hp = 50;
     actor.refreshPassiveStates();
 
     expect(actor.getPassiveStateIds()).toContain(99);
+  });
+
+  it('scales stackable passives via passiveStateCount', () =>
+  {
+    const actor = buildConditionalTestActor(sandbox, [
+      '<passive:[77]>\n<passiveStateCount:[77, moreIsMoreHp, 25]>',
+    ]);
+
+    actor._hp = 100;
+    actor.refreshPassiveStates();
+
+    const stacks = actor.getPassiveStateIds().filter(id => id === 77);
+
+    expect(stacks.length).toBe(4);
   });
 });
 //endregion plugins/passive/j-passive-conditional.test.js

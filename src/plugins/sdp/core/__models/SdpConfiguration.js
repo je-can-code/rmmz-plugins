@@ -52,13 +52,13 @@ class SdpConfiguration
 
   /**
    * Constructor.
-   * @param {StatDistributionPanel[]} panels
-   * @param {PanelSubgroup[]} subgroups
-   * @param {PanelFamily[]} families
-   * @param {Map<string, PanelSubgroup>} subgroupsMap
-   * @param {Map<string, PanelFamily>} familiesMap
-   * @param {Map<string, string>} familyKeyBySubgroupKey
-   * @param {Map<string, StatDistributionPanel[]>} panelsBySubgroupKey
+   * @param {StatDistributionPanel[]} panels The panels driving this step.
+   * @param {PanelSubgroup[]} subgroups The subgroups driving this step.
+   * @param {PanelFamily[]} families The families driving this step.
+   * @param {Map<string, PanelSubgroup>} subgroupsMap The subgroups map driving this step.
+   * @param {Map<string, PanelFamily>} familiesMap The families map driving this step.
+   * @param {Map<string, string>} familyKeyBySubgroupKey The family key by subgroup key driving this step.
+   * @param {Map<string, StatDistributionPanel[]>} panelsBySubgroupKey The panels by subgroup key driving this step.
    */
   constructor(
     panels,
@@ -73,6 +73,7 @@ class SdpConfiguration
     this.#panels = panels;
     this.#subgroups = subgroups;
     this.#families = families;
+    // policy step inside constructor.
     this.#subgroupsMap = subgroupsMap;
     this.#familiesMap = familiesMap;
     this.#familyKeyBySubgroupKey = familyKeyBySubgroupKey;
@@ -206,8 +207,10 @@ class SdpConfiguration
         this.#panelsBySubgroupKey
       );
 
+      // policy step inside build.
       this.#clear();
 
+      // hand back new config to the caller.
       return newConfig;
     }
 
@@ -219,6 +222,7 @@ class SdpConfiguration
       this.#panels = [];
       this.#subgroups = [];
       this.#families = [];
+      // continue the routine with the next policy step.
       this.#subgroupsMap = new Map();
       this.#familiesMap = new Map();
       this.#familyKeyBySubgroupKey = new Map();
@@ -260,7 +264,7 @@ class SdpConfiguration
 
     /**
      * Sets the subgroup map for the builder.
-     * @param {Map<string, PanelSubgroup>} subgroupsMap
+     * @param {Map<string, PanelSubgroup>} subgroupsMap The subgroups map driving this step.
      * @returns {SdpConfigurationBuilder}
      */
     subgroupsMap(subgroupsMap)
@@ -271,7 +275,7 @@ class SdpConfiguration
 
     /**
      * Sets the family map for the builder.
-     * @param {Map<string, PanelFamily>} familiesMap
+     * @param {Map<string, PanelFamily>} familiesMap The families map driving this step.
      * @returns {SdpConfigurationBuilder}
      */
     familiesMap(familiesMap)
@@ -282,7 +286,7 @@ class SdpConfiguration
 
     /**
      * Sets the subgroup-to-family reverse lookup for the builder.
-     * @param {Map<string, string>} familyKeyBySubgroupKey
+     * @param {Map<string, string>} familyKeyBySubgroupKey The family key by subgroup key driving this step.
      * @returns {SdpConfigurationBuilder}
      */
     familyKeyBySubgroupKey(familyKeyBySubgroupKey)
@@ -293,7 +297,7 @@ class SdpConfiguration
 
     /**
      * Sets the subgroup panel groupings for the builder.
-     * @param {Map<string, StatDistributionPanel[]>} panelsBySubgroupKey
+     * @param {Map<string, StatDistributionPanel[]>} panelsBySubgroupKey The panels by subgroup key driving this step.
      * @returns {SdpConfigurationBuilder}
      */
     panelsBySubgroupKey(panelsBySubgroupKey)

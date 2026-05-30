@@ -18,6 +18,7 @@ class JABS_HitboxPulseOptions
     o.x = 0;
     o.y = 0;
     o.shape = J.ABS.Shapes.Circle;
+    // policy step inside defaults.
     o.range = 1;
     o.facing = 2;
     o.degrees = 180;
@@ -83,15 +84,19 @@ class JABS_HitboxPulseOptions
     return {
       x: this.x,
       y: this.y,
+      // policy step inside to plain.
       shape: this.shape,
       range: this.range,
       facing: this.facing,
+      // policy step inside to plain.
       degrees: this.degrees,
       thickness: this.thickness,
       duration: this.duration,
+      // policy step inside to plain.
       sustained: this.sustained,
       startAlpha: this.startAlpha,
       endAlpha: this.endAlpha,
+      // policy step inside to plain.
       scaleStart: this.scaleStart,
       scaleEnd: this.scaleEnd,
       lineColor: this.lineColor,

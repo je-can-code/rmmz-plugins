@@ -1,6 +1,5 @@
 //region ParameterDefinitionBuilder
 import ParameterDefinition from './ParameterDefinition.js';
-import ParameterDisplayPolicy from './../core/ParameterDisplayPolicy.js';
 import ParameterFormat from './../core/ParameterFormat.js';
 import SdpParameterBinding from './SdpParameterBinding.js';
 
@@ -17,12 +16,11 @@ class ParameterDefinitionBuilder
   #iconIndex = () => 0;
   #colorIndex = () => 0;
   #format = ParameterFormat.FLAT;
-  #displayPolicy = ParameterDisplayPolicy.NONE;
   #getValue = _battler => 0;
   #sdpBinding = SdpParameterBinding.none();
 
   /**
-   * @param {string} key
+   * @param {string} key The key driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   key(key)
@@ -32,7 +30,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {string} group
+   * @param {string} group The group driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   group(group)
@@ -42,7 +40,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {number} sortOrder
+   * @param {number} sortOrder The sort order driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   sortOrder(sortOrder)
@@ -52,7 +50,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {function(): string} label
+   * @param {function(): string} label The label driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   label(label)
@@ -62,7 +60,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {function(): string[]} description
+   * @param {function(): string[]} description The description driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   description(description)
@@ -72,7 +70,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {function(): number} iconIndex
+   * @param {function(): number} iconIndex The icon index driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   iconIndex(iconIndex)
@@ -82,7 +80,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {function(): number} colorIndex
+   * @param {function(): number} colorIndex The color index driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   colorIndex(colorIndex)
@@ -92,7 +90,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {string} format
+   * @param {string} format The format driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   format(format)
@@ -102,17 +100,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {string} displayPolicy
-   * @returns {ParameterDefinitionBuilder}
-   */
-  displayPolicy(displayPolicy)
-  {
-    this.#displayPolicy = displayPolicy;
-    return this;
-  }
-
-  /**
-   * @param {function(Game_Battler): number} getValue
+   * @param {function(Game_Battler): number} getValue The get value driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   getValue(getValue)
@@ -122,7 +110,7 @@ class ParameterDefinitionBuilder
   }
 
   /**
-   * @param {SdpParameterBinding} sdpBinding
+   * @param {SdpParameterBinding} sdpBinding The sdp binding driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
   sdpBinding(sdpBinding)
@@ -139,13 +127,15 @@ class ParameterDefinitionBuilder
     return new ParameterDefinition(
       this.#key,
       this.#group,
+      // policy step inside build.
       this.#sortOrder,
       this.#label,
       this.#description,
+      // policy step inside build.
       this.#iconIndex,
       this.#colorIndex,
       this.#format,
-      this.#displayPolicy,
+      // policy step inside build.
       this.#getValue,
       this.#sdpBinding
     );

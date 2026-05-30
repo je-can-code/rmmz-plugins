@@ -33,6 +33,7 @@ class Window_SdpHeader
       return;
     }
 
+    // policy step inside draw content.
     const { name } = panel;
     const { topFlavorText: flavor } = panel;
 

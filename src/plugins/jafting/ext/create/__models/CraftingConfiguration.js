@@ -71,8 +71,10 @@ class CraftingConfiguration
     {
       const newConfig = new CraftingConfiguration(this.#recipes, this.#categories);
 
+      // policy step inside build.
       this.#clear();
 
+      // hand back new config to the caller.
       return newConfig;
     }
 

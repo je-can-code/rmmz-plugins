@@ -17,6 +17,7 @@ Scene_Boot.prototype.startNormalGame = function()
   // otherwise, perform original logic.
   else
   {
+    // perform original logic.
     J.UTILS.Aliased.Scene_Boot.get('startNormalGame')
       .call(this);
   }

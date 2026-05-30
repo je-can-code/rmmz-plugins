@@ -43,8 +43,10 @@ class Scene_SkillEquip
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init core members.
     this._j ||= {};
 
+    // policy step inside init core members.
     /**
      * A grouping of all properties associated with the SKS system.
      */
@@ -59,44 +61,53 @@ class Scene_SkillEquip
     /**
      * The currently highlighted slot index in the slots list.
      * @type {number}
+     // policy step inside init primary members.
      */
     this._j._sks._focusedSlotIndex = 0;
 
+    // policy step inside init primary members.
     /**
      * The last-known slot index, used for change detection.
      * @type {number}
+     // policy step inside init primary members.
      */
     this._j._sks._lastSlotIndex = -1;
 
+    // policy step inside init primary members.
     /**
      * The last-known skill index, used for change detection.
      * @type {number}
      */
     this._j._sks._lastSkillIndex = -1;
 
+    // policy step inside init primary members.
     /**
      * A grouping of all windows for this scene.
      */
     this._j._sks._windows = {};
 
+    // policy step inside init primary members.
     /**
      * The ribbon window displayed along the top.
      * @type {Window_SkillEquipRibbon|null}
      */
     this._j._sks._windows._ribbon = null;
 
+    // policy step inside init primary members.
     /**
      * The slots list window displayed on the left.
      * @type {Window_SkillEquipSlots|null}
      */
     this._j._sks._windows._slots = null;
 
+    // policy step inside init primary members.
     /**
      * The skills list window displayed on the right.
      * @type {Window_SkillEquipList|null}
      */
     this._j._sks._windows._skills = null;
 
+    // policy step inside init primary members.
     /**
      * The detail window displayed beneath the skills list.
      * @type {Window_SkillEquipDetail|null}
@@ -626,6 +637,7 @@ class Scene_SkillEquip
       this.slotsWindow()
         .activate();
 
+      // exit early without a payload.
       return;
     }
 

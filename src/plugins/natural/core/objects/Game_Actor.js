@@ -89,6 +89,7 @@ J.NATURAL.Aliased.Game_Actor.set('paramBase', Game_Actor.prototype.paramBase);
 Game_Actor.prototype.paramBase = function(paramId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
     .call(this, paramId);
 
@@ -113,6 +114,7 @@ Game_Actor.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
     .call(this, paramId);
 
@@ -171,6 +173,7 @@ J.NATURAL.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
     .call(this, xparamId);
 
@@ -195,6 +198,7 @@ Game_Actor.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
     .call(this, xparamId);
 
@@ -251,6 +255,7 @@ J.NATURAL.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
     .call(this, sparamId);
 
@@ -269,6 +274,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
     .call(this, sparamId);
 
@@ -393,6 +399,7 @@ Game_Actor.prototype.applyNaturalBparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexByBparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
       .call(this, paramId);
 
@@ -421,18 +428,23 @@ Game_Actor.prototype.getGrowthRegexByBparamId = function(paramId)
   {
     case 0:
       return [ J.NATURAL.RegExp.MaxLifeGrowthPlus, J.NATURAL.RegExp.MaxLifeGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 1:
       return [ J.NATURAL.RegExp.MaxMagiGrowthPlus, J.NATURAL.RegExp.MaxMagiGrowthRate ];
     case 2:
+      // hand back [ J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.... to the caller.
       return [ J.NATURAL.RegExp.PowerGrowthPlus, J.NATURAL.RegExp.PowerGrowthRate ];
     case 3:
       return [ J.NATURAL.RegExp.DefenseGrowthPlus, J.NATURAL.RegExp.DefenseGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 4:
       return [ J.NATURAL.RegExp.ForceGrowthPlus, J.NATURAL.RegExp.ForceGrowthRate ];
     case 5:
+      // hand back [ J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp... to the caller.
       return [ J.NATURAL.RegExp.ResistGrowthPlus, J.NATURAL.RegExp.ResistGrowthRate ];
     case 6:
       return [ J.NATURAL.RegExp.SpeedGrowthPlus, J.NATURAL.RegExp.SpeedGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 7:
       return [ J.NATURAL.RegExp.LuckGrowthPlus, J.NATURAL.RegExp.LuckGrowthRate ];
     default:
@@ -455,6 +467,7 @@ Game_Actor.prototype.applyNaturalXparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexByXparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
       .call(this, paramId);
 
@@ -483,21 +496,27 @@ Game_Actor.prototype.getGrowthRegexByXparamId = function(xparamId)
   {
     case 0:
       return [ J.NATURAL.RegExp.HitGrowthPlus, J.NATURAL.RegExp.HitGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 1:
       return [ J.NATURAL.RegExp.EvadeGrowthPlus, J.NATURAL.RegExp.EvadeGrowthRate ];
     case 2:
+      // hand back [ J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.Re... to the caller.
       return [ J.NATURAL.RegExp.CritChanceGrowthPlus, J.NATURAL.RegExp.CritChanceGrowthRate ];
     case 3:
       return [ J.NATURAL.RegExp.CritEvadeGrowthPlus, J.NATURAL.RegExp.CritEvadeGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 4:
       return [ J.NATURAL.RegExp.MagiEvadeGrowthPlus, J.NATURAL.RegExp.MagiEvadeGrowthRate ];
     case 5:
+      // hand back [ J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.R... to the caller.
       return [ J.NATURAL.RegExp.MagiReflectGrowthPlus, J.NATURAL.RegExp.MagiReflectGrowthRate ];
     case 6:
       return [ J.NATURAL.RegExp.CounterGrowthPlus, J.NATURAL.RegExp.CounterGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 7:
       return [ J.NATURAL.RegExp.LifeRegenGrowthPlus, J.NATURAL.RegExp.LifeRegenGrowthRate ];
     case 8:
+      // hand back [ J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.Reg... to the caller.
       return [ J.NATURAL.RegExp.MagiRegenGrowthPlus, J.NATURAL.RegExp.MagiRegenGrowthRate ];
     case 9:
       return [ J.NATURAL.RegExp.TechRegenGrowthPlus, J.NATURAL.RegExp.TechRegenGrowthRate ];
@@ -521,6 +540,7 @@ Game_Actor.prototype.applyNaturalSparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexBySparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
       .call(this, paramId);
 
@@ -549,21 +569,27 @@ Game_Actor.prototype.getGrowthRegexBySparamId = function(sparamId)
   {
     case 0:
       return [ J.NATURAL.RegExp.AggroGrowthPlus, J.NATURAL.RegExp.AggroGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 1:
       return [ J.NATURAL.RegExp.ParryGrowthPlus, J.NATURAL.RegExp.ParryGrowthRate ];
     case 2:
+      // hand back [ J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegEx... to the caller.
       return [ J.NATURAL.RegExp.HealingGrowthPlus, J.NATURAL.RegExp.HealingGrowthRate ];
     case 3:
       return [ J.NATURAL.RegExp.ItemFxGrowthPlus, J.NATURAL.RegExp.ItemFxGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 4:
       return [ J.NATURAL.RegExp.MagiCostRateGrowthPlus, J.NATURAL.RegExp.MagiCostRateGrowthRate ];
     case 5:
+      // hand back [ J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.... to the caller.
       return [ J.NATURAL.RegExp.TechCostRateGrowthPlus, J.NATURAL.RegExp.TechCostRateGrowthRate ];
     case 6:
       return [ J.NATURAL.RegExp.PhysDmgRateGrowthPlus, J.NATURAL.RegExp.PhysDmgRateGrowthRate ];
+    // handle this switch arm for the current discriminant.
     case 7:
       return [ J.NATURAL.RegExp.MagiDmgRateGrowthPlus, J.NATURAL.RegExp.MagiDmgRateGrowthRate ];
     case 8:
+      // hand back [ J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.... to the caller.
       return [ J.NATURAL.RegExp.FloorDmgRateGrowthPlus, J.NATURAL.RegExp.FloorDmgRateGrowthRate ];
     case 9:
       return [ J.NATURAL.RegExp.ExpGainRateGrowthPlus, J.NATURAL.RegExp.ExpGainRateGrowthRate ];

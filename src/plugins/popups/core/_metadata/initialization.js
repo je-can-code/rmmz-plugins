@@ -163,10 +163,6 @@ J.POPUPS.Layout = {
   },
 };
 
-/**
- * Per-character slot offsets for {@link Map_TextPop.LayoutRings}. Ephemeral (WeakMap; not saved).
- */
-J.POPUPS._layoutRingState = new WeakMap();
 
 J.POPUPS.Helpers = {};
 J.POPUPS.Helpers.PopupEmitter = new J_EventEmitter();
@@ -189,6 +185,7 @@ J.POPUPS.notifyPopupQueued = function(character, popup)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.Queued, {
     character,
     popup,
+  // policy step inside notify popup queued.
   });
 };
 
@@ -201,6 +198,7 @@ J.POPUPS.notifyPopupFlushRequested = function(character)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.FlushRequested, {
     character,
   });
+// policy step inside notify popup flush requested.
 };
 
 /**
@@ -214,6 +212,7 @@ J.POPUPS.notifyPopupSpriteSpawned = function(character, popup, sprite)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.SpriteSpawned, {
     character,
     popup,
+    // policy step inside notify popup sprite spawned.
     sprite,
   });
 };
@@ -229,6 +228,7 @@ J.POPUPS.notifyPopupSpriteFinished = function(character, popup, sprite)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.SpriteFinished, {
     character,
     popup,
+    // policy step inside notify popup sprite finished.
     sprite,
   });
 };
@@ -245,6 +245,7 @@ J.POPUPS.notifyComboChainCleared = function(jabsBattler, cooldownKey)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.ComboChainCleared, {
     jabsBattler,
     cooldownKey,
+  // policy step inside notify combo chain cleared.
   });
 };
 
@@ -258,5 +259,6 @@ J.POPUPS.notifyMergeFlushAll = function(reason)
   J.POPUPS.Helpers.PopupEmitter.emit(J.POPUPS.EventNames.MergeFlushAll, {
     reason,
   });
+// policy step inside notify merge flush all.
 };
 //endregion initialization

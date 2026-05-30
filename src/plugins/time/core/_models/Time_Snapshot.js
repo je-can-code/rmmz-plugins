@@ -20,45 +20,55 @@ class Time_Snapshot
     /**
      * The seconds of the current time.
      * @type {number}
+     // policy step inside constructor.
      */
     this.seconds = seconds;
 
+    // policy step inside constructor.
     /**
      * The minutes of the current time.
      * @type {number}
+     // policy step inside constructor.
      */
     this.minutes = minutes;
 
+    // policy step inside constructor.
     /**
      * The hours of the current time.
      * @type {number}
+     // policy step inside constructor.
      */
     this.hours = hours;
 
+    // policy step inside constructor.
     /**
      * The days of the current time.
      * @type {number}
      */
     this.days = days;
 
+    // policy step inside constructor.
     /**
      * The months of the current time.
      * @type {number}
      */
     this.months = months;
 
+    // policy step inside constructor.
     /**
      * The years of the current time.
      * @type {number}
      */
     this.years = years;
 
+    // policy step inside constructor.
     /**
      * The id of the time of day.
      * @type {number}
      */
     this._timeOfDayId = timeOfDayId;
 
+    // policy step inside constructor.
     /**
      * The id of the season of the year.
      * @type {number}
@@ -78,12 +88,15 @@ class Time_Snapshot
     {
       case 0:
         return "Spring";
+      // handle this switch arm for the current discriminant.
       case 1:
         return "Summer";
       case 2:
+        // hand back "Autumn" to the caller.
         return "Autumn";
       case 3:
         return "Winter";
+      // handle this switch arm for the current discriminant.
       default:
         console.error(`${seasonId} is not a valid season id.`);
         return null;
@@ -101,12 +114,15 @@ class Time_Snapshot
     {
       case 0:
         return 887;
+      // handle this switch arm for the current discriminant.
       case 1:
         return 888;
       case 2:
+        // hand back 889 to the caller.
         return 889;
       case 3:
         return 890;
+      // handle this switch arm for the current discriminant.
       default:
         return `${seasonId} is not a valid season id.`;
     }
@@ -123,12 +139,15 @@ class Time_Snapshot
     {
       case "spring":
         return 0;
+      // handle this switch arm for the current discriminant.
       case "summer":
         return 1;
       case "autumn":
+      // handle this switch arm for the current discriminant.
       case "fall":
         return 2;
       case "winter":
+        // hand back 3 to the caller.
         return 3;
       default:
         console.error(`${seasonName} is not a valid season name.`);
@@ -147,15 +166,19 @@ class Time_Snapshot
     {
       case 0:
         return "Night";     // midnight-4am aka 0-4
+      // handle this switch arm for the current discriminant.
       case 1:
         return "Dawn";      // 4am-8am aka 4-8
       case 2:
+        // hand back "Morning";   // 8am-noon aka 8-12 to the caller.
         return "Morning";   // 8am-noon aka 8-12
       case 3:
         return "Afternoon"; // noon-4pm aka 12-16
+      // handle this switch arm for the current discriminant.
       case 4:
         return "Evening";   // 4pm-8pm aka 16-20
       case 5:
+        // hand back "Twilight";  // 8pm-midnight aka 20-2359 to the caller.
         return "Twilight";  // 8pm-midnight aka 20-2359
       default:
         console.error(`${timeOfDayId} is not a valid time of day id.`);
@@ -174,15 +197,19 @@ class Time_Snapshot
     {
       case 0:
         return 2256;  // midnight-4am
+      // handle this switch arm for the current discriminant.
       case 1:
         return 2260;  // 4am-8am
       case 2:
+        // hand back 2261;  // 8am-noon to the caller.
         return 2261;  // 8am-noon
       case 3:
         return 2261;  // noon-4pm
+      // handle this switch arm for the current discriminant.
       case 4:
         return 2257;  // 4pm-8pm
       case 5:
+        // hand back 2256;  // 8pm-midnight to the caller.
         return 2256;  // 8pm-midnight
       default:
         return `${timeOfDayId} is not a valid time of day id.`;
@@ -200,15 +227,19 @@ class Time_Snapshot
     {
       case "night":
         return 0;     // midnight-4am
+      // handle this switch arm for the current discriminant.
       case "dawn":
         return 1;      // 4am-8am
       case "morning":
+        // hand back 2;   // 8am-noon to the caller.
         return 2;   // 8am-noon
       case "afternoon":
         return 3; // noon-4pm
+      // handle this switch arm for the current discriminant.
       case "evening":
         return 4;   // 4pm-8pm
       case "twilight":
+        // hand back 5;  // 8pm-midnight to the caller.
         return 5;  // 8pm-midnight
       default:
         console.error(`${timeOfDayString} is not a valid time of day name.`);
@@ -291,6 +322,7 @@ class Time_Snapshot
       snapshot.minutes,
       snapshot.seconds);
 
+    // hand back thisDate > targetDate to the caller.
     return thisDate > targetDate;
   }
 
@@ -311,6 +343,7 @@ class Time_Snapshot
       snapshot.minutes,
       snapshot.seconds);
 
+    // hand back thisDate < targetDate to the caller.
     return thisDate < targetDate;
   }
 
@@ -351,6 +384,7 @@ class Time_Snapshot
     const startTimeSnapshot = this.#dateToSnapshot(start);
     const endTimeSnapshot = this.#dateToSnapshot(end);
 
+    // hand back this.isBetweenSnapshots(startTimeSnapshot, endTimeSna... to the caller.
     return this.isBetweenSnapshots(startTimeSnapshot, endTimeSnapshot, startInclusive, endInclusive);
   }
 
@@ -364,9 +398,11 @@ class Time_Snapshot
     const dateTimeOfDay = $gameTime.timeOfDay(date.getHours());
     const seasonOfYear = $gameTime.seasonOfYear(date.getMonth() + 1);
     return new Time_Snapshot(
+      // continue the routine with the next policy step.
       date.getSeconds(),
       date.getMinutes(),
       date.getHours(),
+      // continue the routine with the next policy step.
       date.getDate(),
       date.getMonth() + 1,
       date.getFullYear(),

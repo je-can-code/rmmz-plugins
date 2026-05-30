@@ -62,6 +62,7 @@ class Window_RecipeDetails
     const cw = Math.max(80, Math.floor(innerWidth / 4));
     const remainder = innerWidth - cw * 4;
 
+    // hand back { cw, remainder } to the caller.
     return { cw, remainder };
   }
 
@@ -92,6 +93,7 @@ class Window_RecipeDetails
     const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
     const gapAfterRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_AFTER;
 
+    // hand back ruleTopY + ruleH + gapAfterRule to the caller.
     return ruleTopY + ruleH + gapAfterRule;
   }
 
@@ -117,8 +119,8 @@ class Window_RecipeDetails
   /**
    * Wraps plain text to fit width using the current font metrics (caller sets face).
    *
-   * @param {string} text
-   * @param {number} maxWidth
+   * @param {string} text The text driving this step.
+   * @param {number} maxWidth The max width driving this step.
    * @returns {string[]}
    */
   #splitLongToken(token, maxWidth)
@@ -126,10 +128,12 @@ class Window_RecipeDetails
     const segments = [];
     let chunk = '';
 
+    // iterate the loop counter until the guard exits.
     for (let ci = 0; ci < token.length; ci++)
     {
       const next = chunk + token.charAt(ci);
 
+      // when this.textWidth(next) <= maxWidth, take this branch.
       if (this.textWidth(next) <= maxWidth)
       {
         chunk = next;
@@ -141,15 +145,18 @@ class Window_RecipeDetails
           segments.push(chunk);
         }
 
+        // continue the routine with the next policy step.
         chunk = token.charAt(ci);
       }
     }
 
+    // when chunk.length > 0, take this branch.
     if (chunk.length > 0)
     {
       segments.push(chunk);
     }
 
+    // hand back segments to the caller.
     return segments;
   }
 
@@ -160,27 +167,32 @@ class Window_RecipeDetails
       return [ '' ];
     }
 
+    // capture words for downstream policy in this routine.
     const words = text.split(/\s+/);
     const lines = [];
     let line = '';
 
+    // iterate the loop counter until the guard exits.
     for (let wi = 0; wi < words.length; wi++)
     {
       const word = words[wi];
       const trial = line.length === 0 ? word : `${line} ${word}`;
 
+      // when this.textWidth(trial) <= maxWidth, take this branch.
       if (this.textWidth(trial) <= maxWidth)
       {
         line = trial;
         continue;
       }
 
+      // when line.length > 0, take this branch.
       if (line.length > 0)
       {
         lines.push(line);
         line = '';
       }
 
+      // when this.textWidth(word) <= maxWidth, take this branch.
       if (this.textWidth(word) <= maxWidth)
       {
         line = word;
@@ -189,6 +201,7 @@ class Window_RecipeDetails
       {
         const segments = this.#splitLongToken(word, maxWidth);
 
+        // iterate the loop counter until the guard exits.
         for (let si = 0; si < segments.length; si++)
         {
           if (si < segments.length - 1)
@@ -203,24 +216,27 @@ class Window_RecipeDetails
       }
     }
 
+    // when line.length > 0, take this branch.
     if (line.length > 0)
     {
       lines.push(line);
     }
 
+    // when lines.length  equals  0, take this branch.
     if (lines.length === 0)
     {
       lines.push('');
     }
 
+    // hand back lines to the caller.
     return lines;
   }
 
   /**
    * Measures wrapped lines for italic subtext at the standard recipe-detail size.
    *
-   * @param {string} subtext
-   * @param {number} bandWidth
+   * @param {string} subtext The subtext driving this step.
+   * @param {number} bandWidth The band width driving this step.
    * @returns {string[]}
    */
   #measureItalicSubtextLines(subtext, bandWidth)
@@ -230,6 +246,7 @@ class Window_RecipeDetails
     const lines = this.#wrapPlainTextToLines(subtext, usableW);
     this.#restoreAfterItalicsSubtextFont();
 
+    // hand back lines to the caller.
     return lines;
   }
 
@@ -247,12 +264,15 @@ class Window_RecipeDetails
       Window_RecipeDetails.#SUBTEXT_OUTPUTS,
     ];
 
+    // continue the routine with the next policy step.
     this.#prepareItalicsSubtextFont();
     const subLineHeight = this.lineHeight();
     this.#restoreAfterItalicsSubtextFont();
 
+    // capture layouts for downstream policy in this routine.
     const layouts = [];
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < 3; i++)
     {
       this.resetFontSettings();
@@ -261,39 +281,46 @@ class Window_RecipeDetails
       const titleH = this.lineHeight();
       this.toggleBold();
 
+      // capture lines for downstream policy in this routine.
       const lines = this.#measureItalicSubtextLines(subtexts[i], cw);
 
+      // Append the row to the working collection.
       layouts.push({ titleH, lines, subLineHeight });
     }
 
+    // capture gap before rule for downstream policy in this routine.
     const gapBeforeRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_BEFORE;
     let maxContentBottom = 0;
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < 3; i++)
     {
       const L = layouts[i];
       const bottom = L.titleH + L.lines.length * L.subLineHeight;
 
+      // when bottom > maxContentBottom, take this branch.
       if (bottom > maxContentBottom)
       {
         maxContentBottom = bottom;
       }
     }
 
+    // capture rule top y for downstream policy in this routine.
     const ruleTopY = maxContentBottom + gapBeforeRule;
 
+    // hand back { ruleTopY, layouts } to the caller.
     return { ruleTopY, layouts };
   }
 
   /**
    * Draws title + wrapped subtext for one column; horizontal rules are drawn separately at a shared Y.
    *
-   * @param {number} x
-   * @param {number} y
-   * @param {number} bandWidth
-   * @param {string} title
-   * @param {string[]} lines
-   * @param {number} subLineHeight
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} bandWidth The band width driving this step.
+   * @param {string} title The title driving this step.
+   * @param {string[]} lines The lines driving this step.
+   * @param {number} subLineHeight The sub line height driving this step.
    */
   #drawColumnTitleAndSubtext(x, y, bandWidth, title, lines, subLineHeight)
   {
@@ -304,14 +331,17 @@ class Window_RecipeDetails
     let cursor = y + this.lineHeight();
     this.toggleBold();
 
+    // continue the routine with the next policy step.
     this.#prepareItalicsSubtextFont();
 
+    // iterate the loop counter until the guard exits.
     for (let li = 0; li < lines.length; li++)
     {
       this.drawText(lines[li], x, cursor, bandWidth, Window_Base.TextAlignments.Left);
       cursor += subLineHeight;
     }
 
+    // continue the routine with the next policy step.
     this.#restoreAfterItalicsSubtextFont();
   }
 
@@ -323,6 +353,7 @@ class Window_RecipeDetails
   {
     const { cw } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
 
+    // hand back cw to the caller.
     return cw;
   }
 
@@ -334,6 +365,7 @@ class Window_RecipeDetails
   {
     const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
 
+    // hand back cw + remainder to the caller.
     return cw + remainder;
   }
 
@@ -354,25 +386,31 @@ class Window_RecipeDetails
   {
     if (!this.#canDrawContent()) return;
 
+    // policy step inside draw content.
     const [ x, y ] = [ 0, 0 ];
     const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
     const wDetail = cw + remainder;
 
+    // policy step inside draw content.
     const { ruleTopY, layouts } = this.#tripleColumnHeaderRuleTopInnerY(cw);
     const titles = [ 'INGREDIENTS', 'TOOLS', 'OUTPUTS' ];
     const inset = Window_RecipeDetails.#COMPONENT_HEADER_RULE_SIDE_INSET;
     const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
 
+    // iterate the loop counter until the guard exits.
     for (let col = 0; col < 3; col++)
     {
       const L = layouts[col];
 
+      // policy step inside draw content.
       this.#drawColumnTitleAndSubtext(x + cw * col, y, cw, titles[col], L.lines, L.subLineHeight);
 
+      // capture rule w for downstream policy in this routine.
       const ruleW = Math.max(1, cw - inset * 2);
       this.drawHorizontalLine(x + cw * col + inset, ruleTopY, ruleW, ruleH);
     }
 
+    // policy step inside draw content.
     this.drawPrimaryOutput(x + cw * 3, y, wDetail);
   }
 
@@ -390,26 +428,32 @@ class Window_RecipeDetails
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
    * @param {number} bandWidth width of the fourth (detail) column
    */
   drawPrimaryOutput(x, y, bandWidth)
   {
     this.resetFontSettings();
 
+    // policy step inside draw primary output.
     this.drawVerticalLine(x - Window_RecipeDetails.#DETAIL_DIVIDER_LEFT_OFFSET, y, this.innerHeight, 3);
 
+    // capture lh for downstream policy in this routine.
     const lh = this.lineHeight();
     const textW = Math.max(48, bandWidth - 8);
 
+    // capture proficiency for downstream policy in this routine.
     const proficiency = `Proficiency: ${this.#currentRecipe.getProficiency()}`;
     this.drawText(proficiency, x, y, textW);
 
+    // capture body y for downstream policy in this routine.
     const bodyY = this.componentListRowsInnerStartY();
 
+    // capture primary output for downstream policy in this routine.
     const primaryOutput = this.#currentRecipe.outputs.at(0);
 
+    // dispatch on the discriminant for the next policy branch.
     switch (primaryOutput.getComponentType())
     {
       case (CraftingComponent.Types.Item):
@@ -429,6 +473,7 @@ class Window_RecipeDetails
         break;
     }
 
+    // policy step inside draw primary output.
     this.drawText(String.empty, x, bodyY + (lh * 1), bandWidth);
   }
 
@@ -442,18 +487,23 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
+    // capture life y for downstream policy in this routine.
     const lifeY = y + (lh * 1);
     this.drawLifeMessage(output, x, lifeY);
 
+    // capture magi y for downstream policy in this routine.
     const magiY = y + (lh * 2);
     this.drawMagiMessage(output, x, magiY);
 
+    // capture tech y for downstream policy in this routine.
     const techY = y + (lh * 3);
     this.drawTechMessage(output, x, techY);
 
+    // capture revival y for downstream policy in this routine.
     const revivalY = y + (lh * 5);
     this.drawRevival(output, x, revivalY);
 
+    // capture states y for downstream policy in this routine.
     const statesY = y + (lh * 7);
     this.drawFoodStateChanges(output, x, statesY);
   }
@@ -512,6 +562,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
+    // policy step inside draw life message.
     this.drawText(recoveryMessage.trim(), x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
@@ -569,6 +620,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
+    // policy step inside draw magi message.
     this.drawText(recoveryMessage.trim(), x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
@@ -618,6 +670,7 @@ class Window_RecipeDetails
       recoveryMessage = '??';
     }
 
+    // policy step inside draw tech message.
     this.drawText(recoveryMessage, x + 40, y, this.detailsQuarterTextWidth() - 40);
   }
 
@@ -631,17 +684,21 @@ class Window_RecipeDetails
       .find(effect => effect.code === Game_Action.EFFECT_REMOVE_STATE && effect.dataId === $gameParty.leader()
         .deathStateId());
 
+    // policy step inside draw revival.
     this.drawIcon($dataStates.at(1).iconIndex, x, y);
 
+    // capture text for downstream policy in this routine.
     let text = revivalEffect
       ? `Revival ${revivalEffect.value1 * 100}%`
       : `Cannot revive.`;
 
+    // when this.needsMasking, take this branch.
     if (this.needsMasking)
     {
       text = '??';
     }
 
+    // capture text x for downstream policy in this routine.
     const textX = x + 40;
     this.drawText(text, textX, y);
   }
@@ -660,26 +717,32 @@ class Window_RecipeDetails
     // shorthand the line height.
     const lh = this.lineHeight() - 4;
 
+    // capture for eacher for downstream policy in this routine.
     const forEacher = (foodStateEffect, index) =>
     {
       /** @type {RPG_State} */
       const foodState = $dataStates.at(foodStateEffect.dataId);
 
+      // capture food state y for downstream policy in this routine.
       const foodStateY = y + (index * lh);
       this.drawIcon(foodState.iconIndex, x, foodStateY);
 
+      // capture food state text for downstream policy in this routine.
       const foodStateText = `${foodState.name}`;
       const foodStateNameX = x + 40;
       const nameCellW = this.detailsQuarterTextWidth() - 48;
       this.drawText(foodStateText, foodStateNameX, foodStateY, nameCellW);
 
+      // capture food state effect chance for downstream policy in this routine.
       const foodStateEffectChance = this.needsMasking
         ? "?"
         : `${foodStateEffect.value1 * 100}%`;
 
+      // policy step inside draw food state changes.
       this.drawText(foodStateEffectChance, foodStateNameX, foodStateY, nameCellW, 'right');
     };
 
+    // policy step inside draw food state changes.
     foodStateEffects.forEach(forEacher, this);
   }
 
@@ -700,9 +763,11 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
+    // capture core params y for downstream policy in this routine.
     const coreParamsY = y + (lh * 1);
     this.drawCoreParams(output, x, coreParamsY);
 
+    // capture traits y for downstream policy in this routine.
     const traitsY = y + (lh * 5);
     this.drawTraits(output, x, traitsY);
   }
@@ -712,6 +777,7 @@ class Window_RecipeDetails
     // start from scratch.
     this.resetFontSettings();
 
+    // capture left x for downstream policy in this routine.
     const leftX = x;
     const rightX = x + Math.max(72, Math.floor(this.detailsFourthBandWidth() / 2) - 8);
 
@@ -722,6 +788,7 @@ class Window_RecipeDetails
     const mhpY = y;
     const mhp = this.needsMasking
       ? '??'
+      // policy step inside draw core params.
       : output.params.at(0);
     this.drawIcon(IconManager.param(0), leftX, mhpY);
     this.drawText(mhp, leftX + 40, mhpY);
@@ -730,6 +797,7 @@ class Window_RecipeDetails
     const mmpY = y + (lh * 1);
     const mmp = this.needsMasking
       ? '??'
+      // policy step inside draw core params.
       : output.params.at(1);
     this.drawIcon(IconManager.param(1), leftX, mmpY);
     this.drawText(mmp, leftX + 40, mmpY);
@@ -791,6 +859,7 @@ class Window_RecipeDetails
     // shorthand the line height.
     const lh = this.lineHeight() - 8;
 
+    // capture for eacher for downstream policy in this routine.
     const forEacher = (trait, index) =>
     {
       const traitY = y + (lh * index);
@@ -800,9 +869,11 @@ class Window_RecipeDetails
         traitMessage = traitMessage.replace(/[A-Za-z0-9\-!?',.]/ig, "?");
       }
 
+      // policy step inside draw traits.
       this.drawText(traitMessage, x, traitY, this.detailsQuarterTextWidth());
     };
 
+    // policy step inside draw traits.
     output.traits.forEach(forEacher, this);
   }
 
@@ -818,9 +889,11 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
+    // capture tw for downstream policy in this routine.
     const tw = this.detailsQuarterTextWidth();
     this.drawText('Resource:', x, y + (lh * 1), tw);
 
+    // capture resource y for downstream policy in this routine.
     const resourceY = y + (lh * 2);
     this.drawIcon(IconManager.rewardParam(1), x, resourceY);
     this.drawText('Gold', x, resourceY, tw);
@@ -836,9 +909,11 @@ class Window_RecipeDetails
     const output = this.#currentRecipe.outputs.at(0)
       .getItem();
 
+    // capture tw for downstream policy in this routine.
     const tw = this.detailsQuarterTextWidth();
     this.drawText('Resource:', x, y + (lh * 1), tw);
 
+    // capture resource y for downstream policy in this routine.
     const resourceY = y + (lh * 2);
     this.drawIcon(IconManager.rewardParam(4), x, resourceY);
     this.drawText('SDP', x, resourceY, tw);

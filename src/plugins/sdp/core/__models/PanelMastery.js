@@ -9,24 +9,28 @@
 class PanelMastery
 {
   /**
-   * @param {string} subgroupKey
-   * @param {number} subgroupTier
-   * @param {number} masterySkillId
+   * @param {string} subgroupKey The subgroup key driving this step.
+   * @param {number} subgroupTier The subgroup tier driving this step.
+   * @param {number} masterySkillId The mastery skill id driving this step.
    */
   constructor(subgroupKey, subgroupTier, masterySkillId)
   {
     /**
      * Subgroup key from the SDP configuration registry (empty when not enrolled).
      * @type {string}
+     // policy step inside constructor.
      */
     this.subgroupKey = subgroupKey;
 
+    // policy step inside constructor.
     /**
      * Tier within the subgroup used for intra-subgroup mastery replacement.
      * @type {number}
+     // policy step inside constructor.
      */
     this.subgroupTier = subgroupTier;
 
+    // policy step inside constructor.
     /**
      * Wrapper skill id granted when this panel is maxed; J-Passive owns passive state(s).
      * Zero means the panel is organized under the subgroup but grants no mastery skill.
@@ -91,6 +95,7 @@ class PanelMastery
       return true;
     }
 
+    // hand back false to the caller.
     return false;
   }
 
@@ -105,9 +110,9 @@ class PanelMastery
 
   /**
    * Builds mastery metadata from flat configuration json fields.
-   * @param {string} subgroupKey
-   * @param {number} subgroupTier
-   * @param {number} masterySkillId
+   * @param {string} subgroupKey The subgroup key driving this step.
+   * @param {number} subgroupTier The subgroup tier driving this step.
+   * @param {number} masterySkillId The mastery skill id driving this step.
    * @returns {PanelMastery}
    */
   static fromFlat(subgroupKey, subgroupTier, masterySkillId)
@@ -118,17 +123,19 @@ class PanelMastery
   /**
    * Hydrates mastery metadata from a parsed config.sdp.json panel row.
    * Accepts nested `mastery` (canonical) or legacy flat root fields during migration.
-   * @param {object} parsedPanel
+   * @param {object} parsedPanel The parsed panel driving this step.
    * @returns {PanelMastery}
    */
   static fromConfigPanel(parsedPanel)
   {
     const nested = parsedPanel.mastery;
 
+    // when nested  and  typeof nested  equals  'object', take this branch.
     if (nested && typeof nested === 'object')
     {
       return PanelMastery.fromFlat(
         nested.subgroupKey ?? String.empty,
+        // policy step inside from config panel.
         PanelMastery.#parseIntField(nested.subgroupTier, 0),
         PanelMastery.#parseIntField(nested.masterySkillId, 0)
       );
@@ -143,8 +150,8 @@ class PanelMastery
   }
 
   /**
-   * @param {string|number|null|undefined} value
-   * @param {number} defaultValue
+   * @param {string|number|null|undefined} value The value driving this step.
+   * @param {number} defaultValue The default value driving this step.
    * @returns {number}
    */
   static #parseIntField(value, defaultValue)
@@ -154,13 +161,16 @@ class PanelMastery
       return defaultValue;
     }
 
+    // capture parsed for downstream policy in this routine.
     const parsed = Number.parseInt(String(value), 10);
 
+    // when Number.isNaN(parsed), take this branch.
     if (Number.isNaN(parsed))
     {
       return defaultValue;
     }
 
+    // hand back parsed to the caller.
     return parsed;
   }
 
@@ -173,6 +183,7 @@ class PanelMastery
     return {
       subgroupKey: this.subgroupKey,
       subgroupTier: this.subgroupTier,
+      // policy step inside to config json.
       masterySkillId: this.masterySkillId,
     };
   }

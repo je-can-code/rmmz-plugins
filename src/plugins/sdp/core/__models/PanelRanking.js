@@ -19,12 +19,14 @@ class PanelRanking
      */
     this.key = key;
 
+    // policy step inside constructor.
     /**
      * The id of the actor that owns this ranking.
      * @type {number}
      */
     this.actorId = actorId;
 
+    // policy step inside constructor.
     this.initMembers();
   }
 
@@ -36,15 +38,18 @@ class PanelRanking
     /**
      * The current rank for this panel ranking.
      * @type {number}
+     // policy step inside init members.
      */
     this.currentRank = 0;
 
+    // policy step inside init members.
     /**
      * Whether or not this panel is maxed out.
      * @type {boolean}
      */
     this.maxed = false;
 
+    // policy step inside init members.
     /**
      * Whether or not this panel ranking is unlocked for investment.
      * @type {boolean}
@@ -87,6 +92,7 @@ class PanelRanking
     const panel = J.SDP.Metadata.panelsMap.get(this.key);
     const { maxRank } = panel;
 
+    // when this.currentRank < maxRank, take this branch.
     if (this.currentRank < maxRank)
     {
       this.currentRank++;
@@ -94,6 +100,7 @@ class PanelRanking
       this.performCurrentRankupEffects();
     }
 
+    // when this.currentRank  equals  maxRank, take this branch.
     if (this.currentRank === maxRank)
     {
       this.performMaxRankupEffects();
@@ -108,6 +115,7 @@ class PanelRanking
     const panel = J.SDP.Metadata.panelsMap.get(this.key);
     const { maxRank } = panel;
 
+    // when this.currentRank > maxRank, take this branch.
     if (this.currentRank > maxRank)
     {
       this.currentRank = maxRank;
@@ -195,9 +203,10 @@ class PanelRanking
   {
     const panel = J.SDP.Metadata.panelsMap.get(this.key);
 
-    // skip panels that aren't enrolled in a subgroup.
-    if (!panel || panel.mastery.enrolledInSubgroup() === false) return;
+    // skip panels that aren't enrolled in the mastery program.
+    if (!panel || panel.mastery.participates() === false) return;
 
+    // capture actor for downstream policy in this routine.
     const actor = $gameActors.actor(this.actorId);
 
     // learn/forget wrapper skills for this subgroup based on highest maxed tier.

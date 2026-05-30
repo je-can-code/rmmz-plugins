@@ -5,9 +5,11 @@
 J.PROF.Aliased.Game_Action.set("apply", Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
+  // perform original logic.
   J.PROF.Aliased.Game_Action.get("apply")
     .call(this, target);
 
+  // capture result for downstream policy in this routine.
   const result = target.result();
 
   // determine if the battler can increase proficiency against the target.
@@ -56,10 +58,12 @@ Game_Action.prototype.increaseProficiency = function()
   const skill = this.item();
   if (!caster || !skill)
   {
+    // Surface a non-fatal warning for operator triage.
     console.warn('attempted to improve prof for an invalid caster or skill.');
     return;
   }
 
+  // capture amount for downstream policy in this routine.
   const amount = caster.skillProficiencyAmount();
   caster.increaseSkillProficiency(skill.id, amount);
 };
@@ -74,6 +78,7 @@ Game_Action.prototype.skillProficiency = function()
   {
     const skill = this.item();
     const skillProficiency = this.subject()
+      // policy step inside skill proficiency.
       .skillProficiencyBySkillId(skill.id);
     if (skillProficiency)
     {
@@ -81,6 +86,7 @@ Game_Action.prototype.skillProficiency = function()
     }
   }
 
+  // hand back 0 to the caller.
   return 0;
 };
 

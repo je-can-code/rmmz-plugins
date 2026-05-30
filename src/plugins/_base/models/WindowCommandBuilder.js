@@ -111,6 +111,7 @@ class WindowCommandBuilder
     const command = new BuiltWindowCommand(
       this.#name,
       this.#key,
+      // policy step inside build.
       this.#enabled,
       this.#extensionData,
       this.#iconIndex,

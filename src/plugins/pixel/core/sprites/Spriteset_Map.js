@@ -1,5 +1,6 @@
 //region Spriteset_Map
 import Sprite_PixelCollisionOverlay from './Sprite_PixelCollisionOverlay.js';
+import PixelDebugSampler from './../_models/PixelDebugSampler.js';
 
 /**
  * Extends {@link Spriteset_Map.createUpperLayer}.<br/>
@@ -9,6 +10,7 @@ J.PIXEL.Aliased.Spriteset_Map.set("createUpperLayer", Spriteset_Map.prototype.cr
 Spriteset_Map.prototype.createUpperLayer = function()
 {
   // Perform original createUpperLayer logic.
+  // perform original logic.
   J.PIXEL.Aliased.Spriteset_Map.get("createUpperLayer")
     .call(this);
 
@@ -31,7 +33,7 @@ Spriteset_Map.prototype.createPixelCollisionOverlay = function()
   this._pixelOverlayVisible = this._pixelOverlayVisible || initialVisibility;
 
   // Keep debug sample collection in sync with initial visibility.
-  J.PIXEL.Debug.enabled = this._pixelOverlayVisible;
+  PixelDebugSampler.enabled = this._pixelOverlayVisible;
 
   // Create the overlay sprite.
   this._pixelCollisionOverlay = new Sprite_PixelCollisionOverlay();
@@ -65,6 +67,7 @@ J.PIXEL.Aliased.Spriteset_Map.set("update", Spriteset_Map.prototype.update);
 Spriteset_Map.prototype.update = function()
 {
   // Perform original update logic.
+  // perform original logic.
   J.PIXEL.Aliased.Spriteset_Map.get("update")
     .call(this);
 
@@ -84,7 +87,7 @@ Spriteset_Map.prototype.update = function()
     // Sync the debug sample collection to overlay visibility.
     // When the overlay is hidden, no samples need to be pushed, eliminating
     // the per-frame object allocation in all _pixelCheck* probe loops.
-    J.PIXEL.Debug.enabled = this._pixelOverlayVisible;
+    PixelDebugSampler.enabled = this._pixelOverlayVisible;
   }
 };
 //endregion Spriteset_Map

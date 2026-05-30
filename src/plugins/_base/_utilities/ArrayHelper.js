@@ -12,6 +12,7 @@ class ArrayHelper
       return false;
     }
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -35,6 +36,7 @@ class ArrayHelper
       return false;
     }
 
+    // when not right  or  right.length  equals  0, take this branch.
     if (!right || right.length === 0)
     {
       return false;

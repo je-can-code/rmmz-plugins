@@ -106,15 +106,18 @@ class BuiltWindowCommand
     this.#name = name;
     this.#key = symbol;
     this.#enabled = enabled;
+    // policy step inside constructor.
     this.#extensionData = extensionData;
     this.#iconIndex = iconIndex;
     this.#colorIndex = colorIndex;
+    // policy step inside constructor.
     this.#rightText = rightText;
     this.#rightColorIndex = rightColorIndex;
     this.#lines = lines;
     this.#helpText = helpText;
     this.#isSubtext = isSubtext;
 
+    // policy step inside constructor.
     const [ faceName, faceIndex ] = faceData;
     this.#faceName = faceName;
     this.#faceIndex = faceIndex;

@@ -48,6 +48,7 @@ class DiaLog
       console.warn(lines);
     }
 
+    // continue the routine with the next policy step.
     this.#lines = lines;
   }
 

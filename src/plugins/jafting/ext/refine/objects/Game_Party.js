@@ -26,25 +26,31 @@ Game_Party.prototype.initJaftingRefinementMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init jafting refinement members.
   this._j ||= {};
 
+  // policy step inside init jafting refinement members.
   /**
    * A grouping of all properties associated with the jafting system.
    */
+  // policy step inside init jafting refinement members.
   this._j._refinement ||= {};
 
+  // policy step inside init jafting refinement members.
   /**
    * A collection of all weapons that have been refined.
    * @type {RPG_EquipItem[]}
    */
   this._j._refinement._weapons = [];
 
+  // policy step inside init jafting refinement members.
   /**
    * A collection of all armors that have been refined.
    * @type {RPG_EquipItem[]}
    */
   this._j._refinement._armors = [];
 
+  // policy step inside init jafting refinement members.
   /**
    * A collection of all current increment indices for refinable equipment types.
    * This ensures no refined equipment gets overwritten by another refined equipment.
@@ -52,12 +58,14 @@ Game_Party.prototype.initJaftingRefinementMembers = function()
    */
   this._j._refinement._increments = {};
 
+  // policy step inside init jafting refinement members.
   /**
    * The refinement increment index for weapons.
    * @type {number}
    */
   this._j._refinement._increments[JaftingManager.RefinementTypes.Weapon] = JaftingManager.StartingIndex;
 
+  // policy step inside init jafting refinement members.
   /**
    * The refinement increment index for armors.
    * @type {number}
@@ -111,6 +119,7 @@ Game_Party.prototype.refreshDatabaseWeapons = function()
     .forEach(weapon =>
     {
       const updatedWeapon = new RPG_Weapon(weapon, weapon.index);
+      // policy step inside refresh database weapons.
       $dataWeapons[updatedWeapon._key()] = updatedWeapon;
     });
 };
@@ -125,6 +134,7 @@ Game_Party.prototype.refreshDatabaseArmors = function()
     .forEach(armor =>
     {
       const updatedArmor = new RPG_Armor(armor, armor.index);
+      // policy step inside refresh database armors.
       $dataArmors[updatedArmor._key()] = updatedArmor;
     });
 };

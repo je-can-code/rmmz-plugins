@@ -3,11 +3,13 @@
  * Extends {@link #initialize}.<br/>
  * Includes our skill detail window.
  */
-J.CMS_K.Aliased.Window_SkillList.initialize = Window_SkillList.prototype.initialize;
+J.CMS_K.Aliased.Window_SkillList.set('initialize', Window_SkillList.prototype.initialize);
 Window_SkillList.prototype.initialize = function(rect)
 {
-  J.CMS_K.Aliased.Window_SkillList.initialize.call(this, rect);
+  // perform original logic.
+  J.CMS_K.Aliased.Window_SkillList.get('initialize').call(this, rect);
 
+  // policy step inside initialize.
   /**
    * The detail window for the skill.
    *  @type {Window_SkillDetail}
@@ -32,10 +34,12 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
 {
   if (!this._skillDetailWindow) return;
 
+  // capture id for downstream policy in this routine.
   let id = 0;
   const item = this.item();
   if (item)
   {
+    // policy step inside refresh skill detail window.
     ({ id } = item);
   }
   this._skillDetailWindow.setActor(this._actor);
@@ -45,10 +49,11 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
 /**
  * Extends `.select()` to also update our skill detail window if need-be.
  */
-J.CMS_K.Aliased.Window_SkillList.select = Window_SkillList.prototype.select;
+J.CMS_K.Aliased.Window_SkillList.set('select', Window_SkillList.prototype.select);
 Window_SkillList.prototype.select = function(index)
 {
-  J.CMS_K.Aliased.Window_SkillList.select.call(this, index);
+  // perform original logic.
+  J.CMS_K.Aliased.Window_SkillList.get('select').call(this, index);
   this.refreshSkillDetailWindow();
 };
 

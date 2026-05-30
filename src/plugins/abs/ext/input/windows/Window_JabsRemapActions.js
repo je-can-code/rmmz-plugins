@@ -24,23 +24,30 @@ function jabsRemapActionLookupMaps()
     return jabsRemapActionLookupMaps._cached;
   }
 
+  // capture labels for downstream policy in this routine.
   const labels = {};
   labels[JABS_Button.Mainhand] = 'Mainhand';
   labels[JABS_Button.Offhand] = 'Offhand';
+  // policy step inside jabs remap action lookup maps.
   labels[JABS_Button.Tool] = 'Tool';
   labels[JABS_Button.Dodge] = 'Dodge';
   labels[JABS_Button.CombatSkill1] = 'Skill Trigger + Mainhand';
+  // policy step inside jabs remap action lookup maps.
   labels[JABS_Button.CombatSkill2] = 'Skill Trigger + Offhand';
   labels[JABS_Button.CombatSkill3] = 'Skill Trigger + Dodge';
   labels[JABS_Button.CombatSkill4] = 'Skill Trigger + Tool';
+  // policy step inside jabs remap action lookup maps.
   labels[JABS_Button.Sprint] = 'Sprint';
   labels[JABS_Button.SkillTrigger] = 'Skill Trigger';
   labels[JABS_Button.Strafe] = 'Strafe';
+  // policy step inside jabs remap action lookup maps.
   labels[JABS_Button.Rotate] = 'Rotate';
   labels[JABS_Button.Guard] = 'Guard';
   labels[JABS_Button.Menu] = 'Menu';
+  // policy step inside jabs remap action lookup maps.
   labels[JABS_Button.Select] = 'Party Cycle';
 
+  // capture help for downstream policy in this routine.
   const help = {};
   help[JABS_Button.Menu] = 'Open the JABS quick menu.\nAccess actions, tools, and options.';
   help[JABS_Button.Select] = 'Cycle the party leader.\nRotate the front actor with the next in line.';
@@ -62,6 +69,7 @@ function jabsRemapActionLookupMaps()
   help[JABS_Button.CombatSkill3] = 'Trigger Combat Skill 3.\nUsed with the Skill Trigger modifier.';
   help[JABS_Button.CombatSkill4] = 'Trigger Combat Skill 4.\nUsed with the Skill Trigger modifier.';
 
+  // policy step inside jabs remap action lookup maps.
   jabsRemapActionLookupMaps._cached = { labels, help };
   return jabsRemapActionLookupMaps._cached;
 }
@@ -95,8 +103,10 @@ class Window_JabsRemapActions
     this._j ||= {};
     this._j._abs ||= {};
     this._j._abs._input ||= {};
+    // policy step inside init members.
     this._j._abs._input._actions ||= {};
 
+    // capture actions for downstream policy in this routine.
     const actions = this._j._abs._input._actions;
     actions._state = {
       _mapping: {},
@@ -105,6 +115,7 @@ class Window_JabsRemapActions
     };
     actions._view = { _helpWindow: null };
 
+    // when this.getButtons().length  equals  0, take this branch.
     if (this.getButtons().length === 0)
     {
       this.setButtons(this.buildButtonList());
@@ -164,6 +175,7 @@ class Window_JabsRemapActions
     {
       return state._buttons;
     }
+    // hand back this.buildButtonList() to the caller.
     return this.buildButtonList();
   }
 
@@ -176,6 +188,7 @@ class Window_JabsRemapActions
     this._state()._buttons = Array.isArray(buttons)
       ? buttons.slice(0)
       : [];
+    // policy step inside set buttons.
     this.refresh();
   }
 
@@ -209,12 +222,14 @@ class Window_JabsRemapActions
     {
       return String.empty;
     }
+    // when cmd.ext  and  cmd.ext.kind  equals  'header', take this branch.
     if (cmd.ext && cmd.ext.kind === 'header')
     {
       return String(cmd.ext.label || String.empty);
     }
     if (cmd.ext && cmd.ext.kind === 'ext-action')
     {
+      // hand back String(cmd.ext.label || String.empty) to the caller.
       return String(cmd.ext.label || String.empty);
     }
     if (cmd.ext && cmd.ext.kind === 'action')
@@ -234,6 +249,7 @@ class Window_JabsRemapActions
     this._j ||= {};
     this._j._abs ||= {};
     this._j._abs._input ||= {};
+    // policy step inside  root.
     this._j._abs._input._actions ||= {};
   }
 
@@ -246,9 +262,11 @@ class Window_JabsRemapActions
     this._root();
     const actions = this._j._abs._input._actions;
     actions._state ||= {
+      // policy step inside  state.
       _mapping: {},
       _externalMapping: {},
       _buttons: [],
+    // policy step inside  state.
     };
     return actions._state;
   }
@@ -262,6 +280,7 @@ class Window_JabsRemapActions
     this._root();
     const actions = this._j._abs._input._actions;
     actions._view ||= { _helpWindow: null };
+    // hand back actions._view to the caller.
     return actions._view;
   }
 
@@ -278,23 +297,29 @@ class Window_JabsRemapActions
       {
         title: 'Primary Actions',
         buttons: [
+          // policy step inside  builtin section specs.
           JABS_Button.Mainhand,
           JABS_Button.Offhand,
           JABS_Button.Tool,
+          // policy step inside  builtin section specs.
           JABS_Button.Sprint,
         ],
       },
       {
+        // policy step inside  builtin section specs.
         title: 'Secondary Actions',
         buttons: [
           JABS_Button.SkillTrigger,
+          // policy step inside  builtin section specs.
           JABS_Button.Rotate,
           JABS_Button.Strafe,
           JABS_Button.Dodge,
+        // policy step inside  builtin section specs.
         ],
       },
       {
         title: 'Functional Actions',
+        // policy step inside  builtin section specs.
         buttons: [
           JABS_Button.Menu,
           JABS_Button.Select,
@@ -314,6 +339,7 @@ class Window_JabsRemapActions
     for (let i = 0; i < specs.length; i++)
     {
       const spec = specs[i];
+      // Append the row to the working collection.
       rows.push(this.buildHeaderCommand(spec.title));
       for (let j = 0; j < spec.buttons.length; j++)
       {
@@ -349,6 +375,7 @@ class Window_JabsRemapActions
     const can = new Set(this.getButtons());
     const rows = [];
     this.buildPreExtensionGroups(rows, can);
+    // policy step inside build commands.
     this.buildBuiltinActionSections(rows, can);
     this.buildPostExtensionGroups(rows, can);
     return rows;
@@ -398,9 +425,11 @@ class Window_JabsRemapActions
     return new WindowCommandBuilder(label)
       .setSymbol(`__header__${label}`)
       .setExtensionData({
+        // policy step inside build header command.
         kind: 'header',
         label,
       })
+      // policy step inside build header command.
       .setEnabled(false)
       .build();
   }
@@ -415,9 +444,11 @@ class Window_JabsRemapActions
     return new WindowCommandBuilder(this.humanizeButton(button))
       .setSymbol(button)
       .setExtensionData({
+        // policy step inside build action command.
         kind: 'action',
         button,
       })
+      // policy step inside build action command.
       .setEnabled(true)
       .build();
   }
@@ -435,9 +466,11 @@ class Window_JabsRemapActions
     return new WindowCommandBuilder(label)
       .setSymbol(`__ext__${ns}:${key}`)
       .setExtensionData({
+        // policy step inside build external action command.
         kind: 'ext-action',
         ns,
         key,
+        // policy step inside build external action command.
         label,
         icon: Number(iconIndex) || 0,
       })
@@ -457,11 +490,13 @@ class Window_JabsRemapActions
     const cmd = this._list[index];
     if (!cmd)
     {
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'header')
     {
       this._drawHeaderItem(rect, cmd);
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'ext-action')
@@ -481,6 +516,7 @@ class Window_JabsRemapActions
     const name = cmd.name || String.empty;
     this.changeTextColor(ColorManager.systemColor());
     this.contents.fontBold = true;
+    // policy step inside  draw header item.
     this.drawText(name, rect.x, rect.y, rect.width, 'center');
     this.resetTextColor();
     this.contents.fontBold = false;
@@ -495,19 +531,23 @@ class Window_JabsRemapActions
     const displayLabel = String(cmd.ext.label || '');
     const combined = this.getMapping();
     const token = String(cmd.symbol || '');
+    // capture has staged for downstream policy in this routine.
     const hasStaged = Object.prototype.hasOwnProperty.call(combined, token);
     const staged = hasStaged ? combined[token] : null;
     let boundList;
+    // when staged  differs from  null, take this branch.
     if (staged !== null)
     {
       boundList = Array.isArray(staged) ? staged : [];
     }
     else
     {
+      // policy step inside  draw external action item.
       boundList = Input.getBindings(cmd.ext.ns, cmd.ext.key) || [];
     }
     const bound = boundList.length > 0
       ? boundList[0]
+      // policy step inside  draw external action item.
       : String.empty;
     let leftIcon = 0;
     if (cmd.ext.icon && cmd.ext.icon > 0)
@@ -526,9 +566,11 @@ class Window_JabsRemapActions
     const button = String(cmd.symbol);
     const mapping = this.getMapping();
     const boundList = mapping[button] || [];
+    // capture bound for downstream policy in this routine.
     const bound = boundList.length > 0
       ? boundList[0]
       : String.empty;
+    // capture label for downstream policy in this routine.
     const label = this.humanizeButton(button);
     this._drawActionBindingRow(rect, label, bound, 0);
   }
@@ -557,6 +599,7 @@ class Window_JabsRemapActions
     if (iconIndex > 0)
     {
       this.drawIcon(iconIndex, leftX, iconY);
+      // policy step inside  draw left label with optional icon.
       labelX += ImageManager.iconWidth + 6;
     }
     const leftW = Math.max(0, midX - rect.x);
@@ -577,9 +620,11 @@ class Window_JabsRemapActions
     {
       iconIndex = this.iconIndexForSymbol(bound);
     }
+    // capture icon y for downstream policy in this routine.
     const iconY = this._iconYForRect(rect);
     const midX = rect.x + Math.floor(rect.width / 2);
     this._drawLeftLabelWithOptionalIcon(rect.x, iconY, iconIndex, label, rect, midX);
+    // policy step inside  draw action binding row.
     this._drawArrowBetweenColumns(rect, midX);
     const rightText = IconManager.jabsIconTextForSymbol(bound);
     this._drawRightBindingText(rect, midX, rightText);
@@ -603,6 +648,7 @@ class Window_JabsRemapActions
   _drawRightBindingText(rect, midX, rightText)
   {
     const rightWidth = this.textSizeEx(rightText).width;
+    // capture right x for downstream policy in this routine.
     const rightX = midX + Math.floor(rect.width / 2) - rightWidth;
     this.drawTextEx(rightText, rightX, rect.y, Math.floor(rect.width / 2));
   }
@@ -620,6 +666,7 @@ class Window_JabsRemapActions
     {
       return;
     }
+    // capture button for downstream policy in this routine.
     const button = this.currentButton();
     help.setText(this.describeButton(button));
   }
@@ -636,11 +683,13 @@ class Window_JabsRemapActions
     if (!cmd)
     {
       SoundManager.playBuzzer();
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'header')
     {
       SoundManager.playBuzzer();
+      // exit early without a payload.
       return;
     }
     super.processOk();
@@ -660,6 +709,7 @@ class Window_JabsRemapActions
       const cmd = this._list[i];
       if (cmd && cmd.enabled !== false)
       {
+        // hand back i to the caller.
         return i;
       }
     }
@@ -697,6 +747,7 @@ class Window_JabsRemapActions
     {
       return header;
     }
+    // policy step inside describe button.
     const { help } = jabsRemapActionLookupMaps();
     if (help[button])
     {

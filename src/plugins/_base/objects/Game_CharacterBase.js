@@ -55,9 +55,11 @@ Game_CharacterBase.prototype.getDiagonalDirections = function(direction)
   {
     case 1:
       return [ 4, 2 ];
+    // handle this switch arm for the current discriminant.
     case 3:
       return [ 6, 2 ];
     case 7:
+      // hand back [ 4, 8 ] to the caller.
       return [ 4, 8 ];
     case 9:
       return [ 6, 8 ];

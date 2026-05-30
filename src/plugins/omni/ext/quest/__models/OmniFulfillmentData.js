@@ -53,6 +53,7 @@ class OmniFulfillmentData
     this.indiscriminate = indiscriminate ?? new IndiscriminateData();
     this.destination = destination ?? new DestinationData(-1, -1, -1, -1, -1);
     this.fetch = fetch ?? new FetchData(OmniObjectiveFetchType.Unset, 0, 0);
+    // assign slay on this instance for callers.
     this.slay = slay ?? new SlayData(0, 0);
     this.quest = quest ?? new QuestData([]);
   }

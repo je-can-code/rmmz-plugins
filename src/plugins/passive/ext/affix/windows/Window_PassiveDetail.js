@@ -36,8 +36,10 @@ Window_PassiveDetail.prototype.drawJabsCombatSection = function(state)
   const rows = this.collectJabsCombatRows(state);
   if (rows.length === 0) return;
 
+  // policy step inside draw jabs combat section.
   this.drawDetailSectionHeader('Combat');
 
+  // policy step inside draw jabs combat section.
   rows.forEach(({ icon, label, value }) =>
   {
     this.drawDetailRow(icon, label, value);
@@ -66,6 +68,7 @@ Window_PassiveDetail.prototype.collectJabsCombatRows = function(state)
   // cast time, cooldown, on-cast state, duration formula.
   rows.push(...this.collectJabsTimingRows(state));
 
+  // hand back rows to the caller.
   return rows;
 };
 
@@ -83,6 +86,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   if (state.jabsParalyzed) rows.push({ icon: 0, label: 'Paralyzed', value: '(rooted + muted + disabled)' });
   if (state.jabsRooted)    rows.push({ icon: 0, label: 'Rooted',    value: '(cannot move)' });
   if (state.jabsMuted)     rows.push({ icon: 0, label: 'Muted',     value: '(no cast skills)' });
+  // when state.jabsDisarmed, take this branch.
   if (state.jabsDisarmed)  rows.push({ icon: 0, label: 'Disabled',  value: '(no basic attack)' });
   if (state.jabsNegative)  rows.push({ icon: 0, label: 'Negative',  value: '(AI tries to remove)' });
 
@@ -90,6 +94,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   const slipHpPct  = state.jabsSlipHpPercentPerFive;
   const slipMpPct  = state.jabsSlipMpPercentPerFive;
   const slipTpPct  = state.jabsSlipTpPercentPerFive;
+  // capture slip hp form for downstream policy in this routine.
   const slipHpForm = state.jabsSlipHpFormulaPerFive;
   const slipMpForm = state.jabsSlipMpFormulaPerFive;
   const slipTpForm = state.jabsSlipTpFormulaPerFive;
@@ -103,6 +108,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   {
     rows.push({
       icon:  TraitManager.slipIcon('hp', slipHpPct),
+      // policy step inside collect jabs ailment rows.
       label: TraitManager.slipName('hp', slipHpPct),
       value: `+${Math.abs(slipHpPct)}% / 5s`,
     });
@@ -117,6 +123,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     });
   }
 
+  // when slipMpPct, take this branch.
   if (slipMpPct)
   {
     rows.push({
@@ -135,6 +142,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     });
   }
 
+  // when slipTpPct, take this branch.
   if (slipTpPct)
   {
     rows.push({
@@ -153,6 +161,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     });
   }
 
+  // hand back rows to the caller.
   return rows;
 };
 
@@ -169,6 +178,7 @@ Window_PassiveDetail.prototype.collectResourcesAbsRows = function(state)
 {
   if (!J.RESOURCES || !J.RESOURCES.EXT || !J.RESOURCES.EXT.ABS) return [];
 
+  // capture rows for downstream policy in this routine.
   const rows = [];
   const rx = J.RESOURCES.EXT.ABS.RegExp;
 
@@ -176,6 +186,7 @@ Window_PassiveDetail.prototype.collectResourcesAbsRows = function(state)
   const checks = [
     [rx.OnAttackHpGainFlat, rx.OnAttackHpGainPercent, rx.OnAttackHpGainFormula,
       `On-Attack ${TextManager.resource(0)}`, IconManager.param(0)],
+    // policy step inside collect resources abs rows.
     [rx.OnAttackMpGainFlat, rx.OnAttackMpGainPercent, rx.OnAttackMpGainFormula,
       `On-Attack ${TextManager.resource(1)}`, IconManager.param(1)],
     [rx.OnAttackTpGainFlat, rx.OnAttackTpGainPercent, rx.OnAttackTpGainFormula,
@@ -188,12 +199,14 @@ Window_PassiveDetail.prototype.collectResourcesAbsRows = function(state)
       `When-Hit ${TextManager.resource(30)}`, IconManager.maxTp()],
   ];
 
+  // policy step inside collect resources abs rows.
   checks.forEach(([flatRx, pctRx, formRx, label, icon]) =>
   {
     const row = this.collectResourceGainRow(state, flatRx, pctRx, formRx, label, icon);
     if (row) rows.push(row);
   });
 
+  // hand back rows to the caller.
   return rows;
 };
 
@@ -214,9 +227,11 @@ Window_PassiveDetail.prototype.collectResourceGainRow = function(state, flatRx, 
   const flat = RPGManager.getNumberFromNoteByRegex(state, flatRx);
   if (flat) return { icon, label, value: `+${flat}` };
 
+  // capture pct for downstream policy in this routine.
   const pct = RPGManager.getNumberFromNoteByRegex(state, pctRx);
   if (pct) return { icon, label, value: `+${pct}%` };
 
+  // capture form for downstream policy in this routine.
   const form = RPGManager.getStringFromNoteByRegex(state, formRx);
   if (form)
   {
@@ -224,6 +239,7 @@ Window_PassiveDetail.prototype.collectResourceGainRow = function(state, flatRx, 
     return { icon, label, value: `+${Math.abs(Number(evaluated))}` };
   }
 
+  // hand back null to the caller.
   return null;
 };
 
@@ -247,6 +263,7 @@ Window_PassiveDetail.prototype.collectJabsModifierRows = function(state)
   if (offhandId)
   {
     const skill = $dataSkills[offhandId];
+    // Append the row to the working collection.
     rows.push({
       icon: skill ? skill.iconIndex : 0,
       label: 'Offhand',
@@ -306,6 +323,7 @@ Window_PassiveDetail.prototype.collectJabsModifierRows = function(state)
     if (isTarget) rows.push({ icon: 0, label: 'Gap Close Target', value: '' });
   }
 
+  // hand back rows to the caller.
   return rows;
 };
 
@@ -330,18 +348,21 @@ Window_PassiveDetail.prototype.collectJabsTimingRows = function(state)
       rows.push({ icon: 0, label: 'Cast Time Flat', value: `${this.evaluateFormula(castFlat, this._actor)}` });
     }
 
+    // capture cast rate for downstream policy in this routine.
     const castRate = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.CastSpeedRate);
     if (castRate)
     {
       rows.push({ icon: 0, label: 'Cast Time Rate', value: `${this.evaluateFormula(castRate, this._actor)}%` });
     }
 
+    // capture cd flat for downstream policy in this routine.
     const cdFlat = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.FastCooldownFlat);
     if (cdFlat)
     {
       rows.push({ icon: 0, label: 'Cooldown Flat', value: `${this.evaluateFormula(cdFlat, this._actor)}` });
     }
 
+    // capture cd rate for downstream policy in this routine.
     const cdRate = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.FastCooldownRate);
     if (cdRate)
     {
@@ -372,6 +393,7 @@ Window_PassiveDetail.prototype.collectJabsTimingRows = function(state)
     rows.push({ icon: 0, label: 'Duration', value: `x${this.evaluateFormula(durationForm, this._actor)}` });
   }
 
+  // hand back rows to the caller.
   return rows;
 };
 
@@ -385,6 +407,7 @@ Window_PassiveDetail.prototype.drawJabsShieldSection = function(state)
   // ext-shield isn't loaded; nothing to show.
   if (!J.ABS.EXT.SHIELD) return;
 
+  // capture rows for downstream policy in this routine.
   const rows = [];
 
   // shield points derived from a formula — evaluated as self vs. self since the bearer
@@ -401,10 +424,13 @@ Window_PassiveDetail.prototype.drawJabsShieldSection = function(state)
     state, J.ABS.EXT.SHIELD.RegExp.Protect);
   if (shieldProtect) rows.push({ icon: 0, label: 'Shield Protect', value: '(no overflow dmg)' });
 
+  // when rows.length  equals  0, take this branch.
   if (rows.length === 0) return;
 
+  // policy step inside draw jabs shield section.
   this.drawDetailSectionHeader('Shield');
 
+  // policy step inside draw jabs shield section.
   rows.forEach(({ icon, label, value }) =>
   {
     this.drawDetailRow(icon, label, value);
@@ -422,10 +448,13 @@ Window_PassiveDetail.prototype.drawJabsStackingSection = function(state)
   const reapplyType = state.jabsStateReapplyType;
   if (!reapplyType) return;
 
+  // policy step inside draw jabs stacking section.
   this.drawDetailSectionHeader('Stacking');
 
+  // policy step inside draw jabs stacking section.
   this.drawDetailRow(0, 'Stack Type', reapplyType);
 
+  // when reapplyType  equals  'extend', take this branch.
   if (reapplyType === 'extend')
   {
     const extendAmt = state.jabsStateExtendAmount;
@@ -434,6 +463,7 @@ Window_PassiveDetail.prototype.drawJabsStackingSection = function(state)
     if (extendMax) this.drawDetailRow(0, 'Extend Cap', `${extendMax}f`);
   }
 
+  // when reapplyType  equals  'stack', take this branch.
   if (reapplyType === 'stack')
   {
     this.drawDetailRow(0, 'Max Stacks',     `${state.jabsStateStackMax}`);

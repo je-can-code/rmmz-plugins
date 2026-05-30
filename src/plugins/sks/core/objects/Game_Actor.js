@@ -25,25 +25,31 @@ Game_Actor.prototype.initSkillSlotsMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init skill slots members.
   this._j ||= {};
 
+  // policy step inside init skill slots members.
   /**
    * A grouping of all properties associated with SKS.
    */
+  // policy step inside init skill slots members.
   this._j._sks = {};
 
+  // policy step inside init skill slots members.
   /**
    * The ordered array of equipped skill slots for this actor.
    * @type {SkillEquipSlot[]}
    */
   this._j._sks._slots = [];
 
+  // policy step inside init skill slots members.
   /**
    * A map of slot index to equipped skill id for fast lookups.
    * @type {Map<number, number>}
    */
   this._j._sks._slotMap = new Map();
 
+  // policy step inside init skill slots members.
   /**
    * The maximum number of slot points this actor can spend across all slots.
    * @type {number}

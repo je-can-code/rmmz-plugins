@@ -1,40 +1,67 @@
 //region TextManager
+/**
+ * Display label for lifesteal — HP recovered from HP damage dealt.
+ * @returns {string}
+ */
 TextManager.lst = function()
 {
   return 'Lifesteal';
 };
 
+/**
+ * Help text explaining lifesteal recovery on successful ABS hits.
+ * @returns {string[]}
+ */
 TextManager.lstDescription = function()
 {
   return [
     'Percent of HP damage dealt recovered as HP on a successful hit.',
-    'Stacks additively with on-hit resource gain.',
+    'Stacks with on-attack skill resource tags.',
+  // policy step inside lst description.
   ];
 };
 
+/**
+ * Display label for manasteal — MP recovered from HP damage dealt.
+ * @returns {string}
+ */
 TextManager.mst = function()
 {
   return 'Manasteal';
 };
 
+/**
+ * Help text explaining manasteal recovery on successful ABS hits.
+ * @returns {string[]}
+ */
 TextManager.mstDescription = function()
 {
   return [
     'Percent of HP damage dealt recovered as MP on a successful hit.',
-    'Stacks additively with on-hit resource gain.',
+    'Stacks with on-attack skill resource tags.',
+  // policy step inside mst description.
   ];
 };
 
+/**
+ * Display label for techsteal — TP recovered from HP damage dealt.
+ * @returns {string}
+ */
 TextManager.tst = function()
 {
   return 'Techsteal';
 };
 
+/**
+ * Help text explaining techsteal recovery on successful ABS hits.
+ * @returns {string[]}
+ */
 TextManager.tstDescription = function()
 {
   return [
     'Percent of HP damage dealt recovered as TP on a successful hit.',
-    'Stacks additively with on-hit resource gain.',
+    'Stacks with on-attack skill resource tags.',
+  // policy step inside tst description.
   ];
 };
 //endregion TextManager

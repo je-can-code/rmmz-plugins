@@ -66,9 +66,11 @@ class RPG_Armor
     const raw = {
       id: index,
       atypeId: 0,
+      // policy step inside create empty.
       etypeId: 2,
       params: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
       price: 0,
+      // policy step inside create empty.
       traits: [],
       description: String.empty,
       iconIndex: 0,
@@ -77,6 +79,7 @@ class RPG_Armor
       meta: {},
     };
 
+    // hand back new RPG_Armor(raw, index) to the caller.
     return new RPG_Armor(raw, index);
   }
 }

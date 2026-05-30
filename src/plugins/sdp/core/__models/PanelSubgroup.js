@@ -2,7 +2,6 @@
 /**
  * Authoring metadata for a panel subgroup (mirrors crafting categories).
  * Subgroups group tiered panels whose masteries replace one another.
- * Panels reference a subgroup by key; the registry lives in config.sdp.json `subgroups`.
  */
 class PanelSubgroup
 {
@@ -13,7 +12,7 @@ class PanelSubgroup
   name = String.empty;
 
   /**
-   * Unique key referenced by panels via {@link PanelMastery#subgroupKey}.
+   * Unique key referenced by panels via {@link StatDistributionPanel#subgroupKey}.
    * @type {string}
    */
   key = String.empty;
@@ -32,16 +31,17 @@ class PanelSubgroup
 
   /**
    * Constructor.
-   * @param {string} name
-   * @param {string} key
-   * @param {number} iconIndex
-   * @param {string} description
+   * @param {string} name The name driving this step.
+   * @param {string} key The key driving this step.
+   * @param {number} iconIndex The icon index driving this step.
+   * @param {string} description The description driving this step.
    */
   constructor(name, key, iconIndex, description)
   {
     this.name = name;
     this.key = key;
     this.iconIndex = iconIndex;
+    // assign description on this instance for callers.
     this.description = description;
   }
 }

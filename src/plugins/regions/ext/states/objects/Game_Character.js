@@ -23,13 +23,17 @@ Game_Character.prototype.initRegionStatesMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init region states members.
   this._j ||= {};
 
+  // policy step inside init region states members.
   /**
    * A grouping of all properties associated with REGIONS.
    */
+  // policy step inside init region states members.
   this._j._regions ||= {};
 
+  // policy step inside init region states members.
   /**
    * A grouping of all properties associated with the region states plugin extension.
    */
@@ -38,6 +42,7 @@ Game_Character.prototype.initRegionStatesMembers = function()
     this._j._regions._states = {};
   }
 
+  // policy step inside init region states members.
   /**
    * The timer that manages the (re)application of region-derived states.
    * @type {JABS_Timer}

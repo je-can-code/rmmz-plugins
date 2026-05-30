@@ -11,14 +11,17 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
   // perform original logic when there is nothing to normalize.
   if (animation === undefined || animation === null)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_Animation.get('setup')
       .call(this, targets, animation, mirror, delay, previous);
     return;
   }
 
+  // capture had sound array for downstream policy in this routine.
   const hadSoundArray = Array.isArray(animation.soundTimings);
   const hadFlashArray = Array.isArray(animation.flashTimings);
 
+  // capture sound timings for downstream policy in this routine.
   const soundTimings = hadSoundArray
     ? animation.soundTimings.filter(t => t !== undefined && t !== null)
     : [];
@@ -26,18 +29,22 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
     ? animation.flashTimings.filter(t => t !== undefined && t !== null)
     : [];
 
+  // capture arrays already dense for downstream policy in this routine.
   const arraysAlreadyDense = hadSoundArray
     && hadFlashArray
     && soundTimings === animation.soundTimings
     && flashTimings === animation.flashTimings;
 
+  // when arraysAlreadyDense  equals  true, take this branch.
   if (arraysAlreadyDense === true)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_Animation.get('setup')
       .call(this, targets, animation, mirror, delay, previous);
     return;
   }
 
+  // capture safe animation for downstream policy in this routine.
   const safeAnimation = Object.assign(
     {},
     animation,
@@ -47,6 +54,7 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
     }
   );
 
+  // perform original logic.
   J.ABS.Aliased.Sprite_Animation.get('setup')
     .call(this, targets, safeAnimation, mirror, delay, previous);
 };
@@ -61,6 +69,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
   // if this is a screen animation, use the original logic.
   if (this._animation.displayType === 2)
   {
+    // perform original logic.
     return J.ABS.Aliased.Sprite_Animation.get('targetPosition')
       .call(this, renderer);
   }
@@ -85,6 +94,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
   pos.x /= validTargets.length;
   pos.y /= validTargets.length;
 
+  // hand back pos to the caller.
   return pos;
 };
 
@@ -112,6 +122,7 @@ Sprite_Animation.prototype.targetSpritePosition = function (sprite)
   // perform original logic.
   try
   {
+    // perform original logic.
     return J.ABS.Aliased.Sprite_Animation.get('targetSpritePosition')
       .call(this, sprite);
   }

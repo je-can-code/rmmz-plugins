@@ -28,6 +28,7 @@ Game_Enemy.prototype.getRewardMultiplierByType = function(rewardType)
     }
   });
 
+  // hand back multiplier to the caller.
   return multiplier;
 };
 
@@ -46,6 +47,7 @@ Game_Enemy.prototype.getDropMultiplierBonus = function()
   // apply any reward multiplier tags for the drops type.
   const rewardMultiplier = this.getRewardMultiplierByType('drops');
 
+  // hand back base * rewardMultiplier to the caller.
   return base * rewardMultiplier;
 };
 //endregion Game_Enemy

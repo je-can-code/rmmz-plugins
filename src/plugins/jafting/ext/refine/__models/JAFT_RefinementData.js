@@ -14,9 +14,11 @@ class JAFTING_RefinementData
     this._notes = notes.split(/[\r\n]+/);
     this._meta = meta;
     this.refinedCount = 0;
+    // assign max refine count on this instance for callers.
     this.maxRefineCount = this.getMaxRefineCount();
     this.maxTraitCount = this.getMaxTraitCount();
     this.notRefinementMaterial = this.isNotRefinableAsMaterial();
+    // assign not refinement base on this instance for callers.
     this.notRefinementBase = this.isNotRefinableAsBase();
     this.unrefinable = this.isNotRefinable();
   }

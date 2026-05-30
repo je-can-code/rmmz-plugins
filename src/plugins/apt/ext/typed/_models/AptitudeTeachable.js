@@ -9,6 +9,7 @@ AptitudeTeachable.prototype.setApTypeKey = function(apTypeKey)
   /**
    * The AP type key for this teachable.
    * @type {ApTypeKey} apTypeKey - The AP type key to set.
+   // policy step inside set ap type key.
    */
   this.apType = apTypeKey;
 };

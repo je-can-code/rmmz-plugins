@@ -26,6 +26,7 @@ class StatDistributionPanelBuilder
     return new StatDistributionPanel(
       this.#key,
       this.#identity,
+      // policy step inside build.
       this.#progression,
       this.#parameters,
       this.#rewards,
@@ -113,7 +114,7 @@ class StatDistributionPanelBuilder
 
   /**
    * Sets presentation and unlock metadata for this panel.
-   * @param {PanelIdentity} identity
+   * @param {PanelIdentity} identity The identity driving this step.
    * @returns {StatDistributionPanelBuilder}
    */
   identity(identity)
@@ -124,7 +125,7 @@ class StatDistributionPanelBuilder
 
   /**
    * Sets rank cap, rarity tier, and rank-up cost offsets for this panel.
-   * @param {PanelProgression} progression
+   * @param {PanelProgression} progression The progression driving this step.
    * @returns {StatDistributionPanelBuilder}
    */
   progression(progression)
@@ -135,7 +136,7 @@ class StatDistributionPanelBuilder
 
   /**
    * Sets subgroup mastery enrollment for this panel.
-   * @param {PanelMastery} mastery
+   * @param {PanelMastery} mastery The mastery driving this step.
    * @returns {StatDistributionPanelBuilder}
    */
   mastery(mastery)

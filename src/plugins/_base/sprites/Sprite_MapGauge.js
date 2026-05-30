@@ -54,50 +54,61 @@ class Sprite_MapGauge
     /**
      * The gauge data points.
      */
+    // store  gauge on the instance for later reads.
     this._gauge = {};
 
+    // policy step inside init gauge members.
     /**
      * The width of the gauge bitmap.
      * @type {number}
+     // policy step inside init gauge members.
      */
     this._gauge._bitmapWidth = bitmapWidth;
 
+    // policy step inside init gauge members.
     /**
      * The height of the gauge bitmap.
      * @type {number}
+     // policy step inside init gauge members.
      */
     this._gauge._bitmapHeight = bitmapHeight;
 
+    // policy step inside init gauge members.
     /**
      * The height of the gauge itself.
      * @type {number}
      */
     this._gauge._gaugeHeight = gaugeHeight;
 
+    // policy step inside init gauge members.
     /**
      * The label on the gauge.
      * @type {string}
      */
     this._gauge._label = label;
 
+    // policy step inside init gauge members.
     /**
      * The value of the gauge.
      * @type {number|null}
      */
     this._gauge._value = value;
 
+    // policy step inside init gauge members.
     /**
      * The icon index of the gauge.
      * @type {number}
      */
     this._gauge._iconIndex = iconIndex;
 
+    // policy step inside init gauge members.
     /**
      * The sprite representing the icon on the gauge.
      * @type {Sprite_Icon|null}
      */
     this._gauge._iconSprite = null;
 
+    // policy step inside init gauge members.
     /**
      * Whether or not the gauge is activated.
      * @type {boolean}
@@ -275,10 +286,12 @@ class Sprite_MapGauge
     // if there is no battler, then there is no value.
     if (!this.getBattler()) return NaN;
 
+    // dispatch on the discriminant for the next policy branch.
     switch (this.getStatusType())
     {
       case 'hp':
         return this._battler.hp;
+      // handle this switch arm for the current discriminant.
       case 'mp':
         return this._battler.mp;
       case 'tp':
@@ -300,10 +313,12 @@ class Sprite_MapGauge
     // if there is no battler, then there is no value.
     if (!this.getBattler()) return NaN;
 
+    // dispatch on the discriminant for the next policy branch.
     switch (this._statusType)
     {
       case 'hp':
         return this._battler.mhp;
+      // handle this switch arm for the current discriminant.
       case 'mp':
         return this._battler.mmp;
       case 'tp':
@@ -338,6 +353,7 @@ class Sprite_MapGauge
     // give it a small left padding so the label can start at x=32 nicely.
     sprite.move(10, centeredY);
 
+    // hand back sprite to the caller.
     return sprite;
   }
 

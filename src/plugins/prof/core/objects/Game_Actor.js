@@ -13,28 +13,33 @@ Game_Actor.prototype.initMembers = function()
   J.PROF.Aliased.Game_Actor.get("initMembers")
     .call(this);
 
+  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with the proficiency system.
    */
   this._j._proficiency ||= {};
 
+  // policy step inside init members.
   /**
    * All skill proficiencies earned by completing conditionals.
    * @type {SkillProficiency[]}
    */
   this._j._proficiency._proficiencies ||= [];
 
+  // policy step inside init members.
   /**
    * All conditionals that have been unlocked by this actor.
    * @type {string[]}
    */
   this._j._proficiency._unlockedConditionals ||= [];
 
+  // policy step inside init members.
   this._j._proficiency._bonusSkillProficiencyGains = 0;
 };
 
@@ -94,6 +99,7 @@ Game_Actor.prototype.addUnlockedConditional = function(conditional)
  */
 Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
 {
+  // hand back this.proficiencyConditionals() to the caller.
   return this.proficiencyConditionals()
     .filter(conditional => conditional.requirements.some(requirement => requirement.skillId === skillId));
 };
@@ -105,6 +111,7 @@ Game_Actor.prototype.proficiencyConditionalBySkillId = function(skillId)
  */
 Game_Actor.prototype.isConditionalUnlocked = function(key)
 {
+  // hand back this.unlockedConditionals() to the caller.
   return this.unlockedConditionals()
     .includes(key);
 };
@@ -115,6 +122,7 @@ Game_Actor.prototype.isConditionalUnlocked = function(key)
  */
 Game_Actor.prototype.lockedConditionals = function()
 {
+  // hand back this.proficiencyConditionals() to the caller.
   return this.proficiencyConditionals()
     .filter(conditional => this.isConditionalUnlocked(conditional.key) === false);
 };
@@ -131,6 +139,7 @@ Game_Actor.prototype.unlockConditional = function(key)
     return;
   }
 
+  // policy step inside unlock conditional.
   this.addUnlockedConditional(key);
 };
 
@@ -171,6 +180,7 @@ Game_Actor.prototype.executeJsRewards = function(conditional)
   // if we don't actually have any javascript to execute, then don't bother.
   if (!conditional.jsRewards) return;
 
+  // capture a for downstream policy in this routine.
   const a = this;         // the actor reference.
   const c = conditional;  // the conditional reference.
   const { jsRewards } = c;
@@ -198,6 +208,7 @@ Game_Actor.prototype.skillProficiencyBySkillId = function(skillId)
   return this
     .skillProficiencies()
     .find(skillProficiency => skillProficiency.skillId === skillId);
+// policy step inside skill proficiency by skill id.
 };
 
 /**
@@ -351,6 +362,7 @@ Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
     this._j._proficiency._bonusSkillProficiencyGains = 0;
   }
 
+  // policy step inside update bonus skill proficiency gains.
   this._j._proficiency._bonusSkillProficiencyGains = RPGManager.getSumFromAllNotesByRegex(
     this.getAllNotes(),
     J.PROF.RegExp.ProficiencyBonus)

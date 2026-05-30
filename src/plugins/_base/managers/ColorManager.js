@@ -10,11 +10,13 @@ ColorManager.parameterColor = function(parameterKey)
 {
   const definition = ParameterRegistry.get(parameterKey);
 
+  // when not definition, take this branch.
   if (!definition)
   {
     return 0;
   }
 
+  // hand back definition.colorIndex() to the caller.
   return definition.colorIndex();
 };
 
@@ -30,51 +32,67 @@ ColorManager.elementColorHexcode = function(elementId)
   {
     case -1:    // inherits element from parent.
       return this.textColor(0);
+    // handle this switch arm for the current discriminant.
     case 0:     // true
       return this.textColor(17);
     case 1:     // cut
+      // hand back this.textColor(7) to the caller.
       return this.textColor(7);
     case 2:     // poke
       return this.textColor(8);
+    // handle this switch arm for the current discriminant.
     case 3:     // blunt
       return this.textColor(25);
     case 4:     // heat
+      // hand back this.textColor(18) to the caller.
       return this.textColor(18);
     case 5:     // liquid
       return this.textColor(23);
+    // handle this switch arm for the current discriminant.
     case 6:     // air
       return this.textColor(8);
     case 7:     // ground
+      // hand back this.textColor(25) to the caller.
       return this.textColor(25);
     case 8:     // energy
       return this.textColor(6);
+    // handle this switch arm for the current discriminant.
     case 9:     // void
       return this.textColor(26);
     case 10:    // typeless
+      // hand back this.textColor(0) to the caller.
       return this.textColor(0);
     case 11:    // vs undead
       return this.textColor(2);
+    // handle this switch arm for the current discriminant.
     case 12:    // vs reptile
       return this.textColor(2);
     case 13:    // vs aquatic
+      // hand back this.textColor(2) to the caller.
       return this.textColor(2);
     case 14:    // vs slime
       return this.textColor(2);
+    // handle this switch arm for the current discriminant.
     case 15:    // vs plants
       return this.textColor(2);
     case 16:    // vs beast
+      // hand back this.textColor(2) to the caller.
       return this.textColor(2);
     case 17:    // vs insect
       return this.textColor(2);
+    // handle this switch arm for the current discriminant.
     case 18:    // vs humanoid
       return this.textColor(2);
     case 19:    // vs construct
+      // hand back this.textColor(2) to the caller.
       return this.textColor(2);
     case 20:    // vs deity
       return this.textColor(2);
+    // handle this switch arm for the current discriminant.
     case 21:    // x weaponry
       return this.textColor(27);
     case 22:    // x flying
+      // hand back this.textColor(27) to the caller.
       return this.textColor(27);
     case 23:    // x shields
       return this.textColor(27);
@@ -105,51 +123,67 @@ ColorManager.elementColorIndex = function(elementId)
   {
     case -1:    // inherits element from parent.
       return 0;
+    // handle this switch arm for the current discriminant.
     case 0:     // true
       return 17;
     case 1:     // cut
+      // hand back 7 to the caller.
       return 7;
     case 2:     // poke
       return 8;
+    // handle this switch arm for the current discriminant.
     case 3:     // blunt
       return 25;
     case 4:     // heat
+      // hand back 18 to the caller.
       return 18;
     case 5:     // liquid
       return 23;
+    // handle this switch arm for the current discriminant.
     case 6:     // air
       return 8;
     case 7:     // ground
+      // hand back 25 to the caller.
       return 25;
     case 8:     // energy
       return 6;
+    // handle this switch arm for the current discriminant.
     case 9:     // void
       return 26;
     case 10:    // typeless
+      // hand back 0 to the caller.
       return 0;
     case 11:    // vs undead
       return 2;
+    // handle this switch arm for the current discriminant.
     case 12:    // vs reptile
       return 2;
     case 13:    // vs aquatic
+      // hand back 2 to the caller.
       return 2;
     case 14:    // vs slime
       return 2;
+    // handle this switch arm for the current discriminant.
     case 15:    // vs plants
       return 2;
     case 16:    // vs beast
+      // hand back 2 to the caller.
       return 2;
     case 17:    // vs insect
       return 2;
+    // handle this switch arm for the current discriminant.
     case 18:    // vs humanoid
       return 2;
     case 19:    // vs construct
+      // hand back 2 to the caller.
       return 2;
     case 20:    // vs deity
       return 2;
+    // handle this switch arm for the current discriminant.
     case 21:    // x weaponry
       return 27;
     case 22:    // x flying
+      // hand back 27 to the caller.
       return 27;
     case 23:    // x shields
       return 27;
@@ -238,8 +272,10 @@ ColorManager.isValidHexColor = function(colorHex)
     return false;
   }
 
+  // capture structure for downstream policy in this routine.
   const structure = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
 
+  // hand back structure.test(colorHex.trim()) to the caller.
   return structure.test(colorHex.trim());
 };
 
@@ -255,15 +291,19 @@ ColorManager.parseHexStringToRgb = function(hexString)
     return null;
   }
 
+  // capture h for downstream policy in this routine.
   let h = hexString.trim();
 
+  // when h.startsWith('#')  equals  false, take this branch.
   if (h.startsWith('#') === false)
   {
     return null;
   }
 
+  // Copy a sub-range without mutating the source array.
   h = h.slice(1);
 
+  // when h.length  equals  3, take this branch.
   if (h.length === 3)
   {
     h = h.split('')
@@ -274,20 +314,24 @@ ColorManager.parseHexStringToRgb = function(hexString)
       .join('');
   }
 
+  // when h.length  differs from  6, take this branch.
   if (h.length !== 6)
   {
     return null;
   }
 
+  // capture r for downstream policy in this routine.
   const r = parseInt(h.slice(0, 2), 16);
   const g = parseInt(h.slice(2, 4), 16);
   const b = parseInt(h.slice(4, 6), 16);
 
+  // when Number.isNaN(r)  or  Number.isNaN(g)  or  Number.isNaN(b), take this branch.
   if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b))
   {
     return null;
   }
 
+  // hand back { to the caller.
   return {
     r,
     g,
@@ -307,6 +351,7 @@ ColorManager.rgbDistanceSquared = function(a, b)
   const dg = a.g - b.g;
   const db = a.b - b.b;
 
+  // hand back dr * dr + dg * dg + db * db to the caller.
   return dr * dr + dg * dg + db * db;
 };
 
@@ -323,36 +368,45 @@ ColorManager.colorIndexFromHex = function(hexString)
     return null;
   }
 
+  // capture lower for downstream policy in this routine.
   const lower = hexString.trim()
     .toLowerCase();
 
+  // when lower  equals  '#ffffff'  or  lower  equals  '#fff', take this branch.
   if (lower === '#ffffff' || lower === '#fff')
   {
     return null;
   }
 
+  // capture target rgb for downstream policy in this routine.
   const targetRgb = ColorManager.parseHexStringToRgb(hexString);
 
+  // when targetRgb  equals  null, take this branch.
   if (targetRgb === null)
   {
     return null;
   }
 
+  // capture best index for downstream policy in this routine.
   let bestIndex = 0;
   let bestDist = Infinity;
 
+  // iterate the loop counter until the guard exits.
   for (let i = 0; i < 32; i++)
   {
     const sample = ColorManager.textColor(i);
     const sampleRgb = ColorManager.parseHexStringToRgb(sample);
 
+    // when sampleRgb  equals  null, take this branch.
     if (sampleRgb === null)
     {
       continue;
     }
 
+    // capture d for downstream policy in this routine.
     const d = ColorManager.rgbDistanceSquared(targetRgb, sampleRgb);
 
+    // when d < bestDist, take this branch.
     if (d < bestDist)
     {
       bestDist = d;
@@ -360,6 +414,7 @@ ColorManager.colorIndexFromHex = function(hexString)
     }
   }
 
+  // hand back best index to the caller.
   return bestIndex;
 };
 //endregion ColorManager

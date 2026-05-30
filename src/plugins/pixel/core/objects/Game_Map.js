@@ -10,6 +10,7 @@ J.PIXEL.Aliased.Game_Map.set("setup", Game_Map.prototype.setup);
 Game_Map.prototype.setup = function(mapId)
 {
   // Perform the original setup logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Map.get("setup")
     .call(this, mapId);
 

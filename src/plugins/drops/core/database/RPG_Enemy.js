@@ -59,6 +59,7 @@ RPG_Enemy.prototype.initExtraDrops = function()
  */
 RPG_Enemy.prototype.originalDropItems = function()
 {
+  // hand back this.dropItems to the caller.
   return this.dropItems
     .filter(this.validDropItemFilter, this);
 };

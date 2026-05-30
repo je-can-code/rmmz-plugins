@@ -72,6 +72,7 @@ class CraftingCreationSession
     return {
       phase: this.#phase,
       categoryKey: this.#categoryKey,
+      // policy step inside snapshot.
       lastCraftOutcome: this.#lastCraftOutcome,
     };
   }
@@ -79,7 +80,7 @@ class CraftingCreationSession
   /**
    * User locked in a category; recipe list should filter to {@link categoryKey}.
    *
-   * @param {string} categoryKey
+   * @param {string} categoryKey The category key driving this step.
    */
   enterRecipeBrowsing(categoryKey)
   {
@@ -99,7 +100,7 @@ class CraftingCreationSession
   /**
    * Attempts to craft the given recipe when the player confirms on the recipe list.
    *
-   * @param {CraftingRecipe|null|undefined} recipe
+   * @param {CraftingRecipe|null|undefined} recipe The recipe driving this step.
    * @returns {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }}
    */
   tryCraftRecipe(recipe)
@@ -108,22 +109,27 @@ class CraftingCreationSession
     {
       this.#lastCraftOutcome = {
         crafted: false,
+        // policy step inside try craft recipe.
         playedSuccessSound: false,
         reason: 'no_recipe',
       };
+      // hand back this.#lastCraftOutcome to the caller.
       return this.#lastCraftOutcome;
     }
 
+    // when recipe.canCraft()  equals  false, take this branch.
     if (recipe.canCraft() === false)
     {
       this.#lastCraftOutcome = {
         crafted: false,
+        // policy step inside try craft recipe.
         playedSuccessSound: false,
         reason: 'requirements_not_met',
       };
       return this.#lastCraftOutcome;
     }
 
+    // policy step inside try craft recipe.
     recipe.craft();
     this.#lastCraftOutcome = {
       crafted: true,

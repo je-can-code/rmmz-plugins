@@ -48,6 +48,7 @@ class RPG_EnemyAction
     this.conditionParam1 = enemyAction.conditionParam1;
     this.conditionParam2 = enemyAction.conditionParam2;
     this.conditionType = enemyAction.conditionType;
+    // assign rating on this instance for callers.
     this.rating = enemyAction.rating;
     this.skillId = enemyAction.skillId;
   }

@@ -41,6 +41,7 @@ Game_Battler.prototype.skillProficiencyAmount = function()
   const base = this.baseSkillProficiencyAmount();
   const bonuses = this.prof;
   return base + bonuses;
+// policy step inside skill proficiency amount.
 };
 
 /**

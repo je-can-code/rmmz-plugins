@@ -1,7 +1,7 @@
 //region JABS_Battler
 /**
  * Extends {@link JABS_Battler#update}.<br/>
- * Throttles conditional passive reconciles while this battler is active on the map.
+ * Throttles passive rule reconciles and stamps movement timestamps for sinceLast/movedWithin rules.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update);
 JABS_Battler.prototype.update = function()
@@ -10,21 +10,92 @@ JABS_Battler.prototype.update = function()
   J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.get('update')
     .call(this);
 
-  // re-check conditional passives on a throttled cadence.
-  this.updateConditionalPassiveReconcile();
+  // keep movement stamps and reconcile timer in sync with map simulation.
+  this.updatePassiveRuleMovementTracking();
+  this.updatePassiveRuleReconcile();
 };
 
 /**
- * Delegates throttled conditional passive reconciliation to the underlying battler.
+ * Extends {@link JABS_Battler#setLastUsedSkillId}.<br/>
+ * Stamps attack timestamps when this battler executes map skills.
  */
-JABS_Battler.prototype.updateConditionalPassiveReconcile = function()
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.set(
+  'setLastUsedSkillId',
+  JABS_Battler.prototype.setLastUsedSkillId
+);
+JABS_Battler.prototype.setLastUsedSkillId = function(skillId)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler.get('setLastUsedSkillId')
+    .call(this, skillId);
+
+  // unwrap to the underlying Game_Battler for timestamp storage.
+  const battler = this.getBattler();
+
+  // when not battler, take this branch.
+  if (!battler) return;
+
+  // real skill execution — not queued action polling — drives attackedWithin/sinceLastAttacked.
+  battler.stampPassiveRuleAttackedFrame();
+};
+
+/**
+ * Delegates throttled passive rule reconciliation to the underlying battler.<br/>
+ * Called every JABS update tick while this map battler is active.
+ */
+JABS_Battler.prototype.updatePassiveRuleReconcile = function()
 {
   const battler = this.getBattler();
 
+  // no underlying battler means nothing to reconcile.
   if (!battler) return;
 
-  if (typeof battler.updateConditionalPassiveTimer !== 'function') return;
+  // advance the battler-owned timer; refresh happens when drift is detected.
+  battler.updatePassiveRuleReconcileTimer();
+};
 
-  battler.updateConditionalPassiveTimer();
+/**
+ * Stamps movement when this map battler's character coordinates change.<br/>
+ * Feeds {@code sinceLastMoved} and {@code movedWithin} gate kinds on the underlying battler.
+ */
+JABS_Battler.prototype.updatePassiveRuleMovementTracking = function()
+{
+  const character = this.getCharacter();
+
+  // when not character, take this branch.
+  if (!character) return;
+
+  // capture battler for downstream policy in this routine.
+  const battler = this.getBattler();
+
+  // when not battler, take this branch.
+  if (!battler) return;
+
+  // capture tracker for downstream policy in this routine.
+  const tracker = battler._j._passive._conditional;
+
+  // capture current x for downstream policy in this routine.
+  const currentX = character._realX;
+  const currentY = character._realY;
+
+  // seed baseline on first update so standing still does not count as movement.
+  if (tracker._lastTrackedX === undefined)
+  {
+    tracker._lastTrackedX = currentX;
+    tracker._lastTrackedY = currentY;
+
+    // exit early without a payload.
+    return;
+  }
+
+  // no coordinate change — nothing to stamp this frame.
+  if (tracker._lastTrackedX === currentX && tracker._lastTrackedY === currentY) return;
+
+  // persist the new baseline for the next comparison.
+  tracker._lastTrackedX = currentX;
+  tracker._lastTrackedY = currentY;
+
+  // policy step inside update passive rule movement tracking.
+  battler.stampPassiveRuleMovedFrame();
 };
 //endregion JABS_Battler

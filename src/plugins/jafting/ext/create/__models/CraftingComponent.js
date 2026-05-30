@@ -49,15 +49,18 @@ class CraftingComponent
     /**
      * How many of this component is required.
      * @type {number}
+     // policy step inside constructor.
      */
     this.#count = count;
 
+    // policy step inside constructor.
     /**
      * The id of the underlying component.
      * @type {number}
      */
     this.#id = id;
 
+    // policy step inside constructor.
     /**
      * The type of component this is, such as `i`/`w`/`a`.
      * @type {string}
@@ -96,16 +99,19 @@ class CraftingComponent
       return this.#getDatabaseEntry();
     }
 
+    // when this.isGold(), take this branch.
     if (this.isGold())
     {
       return this.#getGoldComponent();
     }
 
+    // when this.isSdp(), take this branch.
     if (this.isSdp())
     {
       return this.#getSdpComponent();
     }
 
+    // Surface a non-fatal warning for operator triage.
     console.warn("attempted to retrieve an unsupported type; this will probably break.", this);
     return null;
   }
@@ -141,9 +147,11 @@ class CraftingComponent
     {
       case CraftingComponent.Types.Item:
       case CraftingComponent.Types.Weapon:
+      // handle this switch arm for the current discriminant.
       case CraftingComponent.Types.Armor:
         return true;
       case CraftingComponent.Types.Gold:
+      // handle this switch arm for the current discriminant.
       case CraftingComponent.Types.SDP:
         return false;
       default:
@@ -162,9 +170,11 @@ class CraftingComponent
     {
       case CraftingComponent.Types.Item:
         return $dataItems.at(this.#id);
+      // handle this switch arm for the current discriminant.
       case CraftingComponent.Types.Weapon:
         return $dataWeapons.at(this.#id);
       case CraftingComponent.Types.Armor:
+        // hand back $dataArmors.at(this.#id) to the caller.
         return $dataArmors.at(this.#id);
       default:
         console.warn("attempted to retrieve an unsupported type.", this);
@@ -189,6 +199,7 @@ class CraftingComponent
   {
     const goldComponent = CraftingComponent.Typed.Gold();
     goldComponent.setCount(this.#count);
+    // hand back gold component to the caller.
     return goldComponent;
   }
 
@@ -209,6 +220,7 @@ class CraftingComponent
   {
     const sdpComponent = CraftingComponent.Typed.SDP();
     sdpComponent.setCount(this.#count);
+    // hand back sdp component to the caller.
     return sdpComponent;
   }
 
@@ -281,6 +293,7 @@ class CraftingComponent
       }
     }
 
+    // Surface a non-fatal warning for operator triage.
     console.warn('an unsupported component type was presented for quantity.', this);
 
     // we don't even know what is desired, so lets just say none.
@@ -418,8 +431,10 @@ class CraftingComponent
     {
       const builtComponent = new CraftingComponent(this.#count, this.#id, this.#type)
 
+      // policy step inside build.
       this.#clear();
 
+      // hand back built component to the caller.
       return builtComponent;
     }
 

@@ -55,13 +55,7 @@ Game_Actor.prototype.getDropMultiplierBonus = function()
   const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.DropMultiplier);
 
   // calculate the multiplier factor.
-  let factor = (multiplierBonus + baseMultiplier) / 100;
-
-  // fold in SDP panel rank bonuses for drop rate.
-  if (this.getSdpBonusForParameterKey)
-  {
-    factor += this.getSdpBonusForParameterKey('dor', 1);
-  }
+  const factor = (multiplierBonus + baseMultiplier) / 100;
 
   // return the factor.
   return factor;
@@ -83,13 +77,7 @@ Game_Actor.prototype.getGoldMultiplier = function()
   const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.GoldMultiplier);
 
   // calculate the multiplier factor.
-  let factor = (multiplierBonus + baseMultiplier) / 100;
-
-  // fold in SDP panel rank bonuses for gold rate.
-  if (this.getSdpBonusForParameterKey)
-  {
-    factor += this.getSdpBonusForParameterKey('gdr', 1);
-  }
+  const factor = (multiplierBonus + baseMultiplier) / 100;
 
   // return the factor.
   return factor;

@@ -1,6 +1,6 @@
 //region JABS_ActionSpawner
 import JABS_Engine from './JABS_Engine.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
 import JABS_Action from './../__models/JABS_Action.js';
 /**

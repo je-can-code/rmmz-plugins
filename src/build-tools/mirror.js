@@ -32,7 +32,7 @@ class Mirror
 
   /**
    * Sets the destinations of which this mirror will mirror to.
-   * @param {string[]} destinations
+   * @param {string[]} destinations The destinations driving this step.
    */
   setDestinations(destinations)
   {
@@ -50,7 +50,7 @@ class Mirror
 
   /**
    * Sets a new source to mirror from.
-   * @param {string} source
+   * @param {string} source The source driving this step.
    */
   setSource(source)
   {
@@ -94,6 +94,7 @@ class Mirror
     // better resolve this path one, too.
     const resolvedDestination = path.resolve(destination);
 
+    // await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, ... before continuing.
     await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, resolvedDestination);
     Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
   }
@@ -145,6 +146,7 @@ class Mirror
   {
     const entries = await this.#listFilesRecursive(resolvedSource);
 
+    // walk each entry in the iterable for this routine.
     for (const absoluteFile of entries)
     {
       if (absoluteFile.endsWith('.map'))
@@ -152,6 +154,7 @@ class Mirror
         continue;
       }
 
+      // capture rel for downstream policy in this routine.
       const rel = path.relative(resolvedSource, absoluteFile);
       const outFile = path.join(resolvedDestination, rel);
       const outDir = path.dirname(outFile);
@@ -171,6 +174,7 @@ class Mirror
     const results = [];
     const dirents = await fsp.readdir(dir, { withFileTypes: true });
 
+    // walk each entry in the iterable for this routine.
     for (const dirent of dirents)
     {
       const full = path.join(dir, dirent.name);
@@ -180,12 +184,14 @@ class Mirror
         continue;
       }
 
+      // when dirent.isFile(), take this branch.
       if (dirent.isFile())
       {
         results.push(full);
       }
     }
 
+    // hand back results to the caller.
     return results;
   }
 }

@@ -59,20 +59,10 @@ function migrateConfigFile(filePath)
 {
   const raw = readFileSync(filePath, 'utf8');
   const config = JSON.parse(raw);
-  const isWrapped = !Array.isArray(config);
-  const panels = isWrapped
-    ? config.sdps
-    : config;
-
-  if (!panels)
-  {
-    throw new Error(`${filePath}: expected a panel array or { sdps: [...] }.`);
-  }
-
   let migratedCount = 0;
   let skippedCount = 0;
 
-  panels.forEach(panel =>
+  config.sdps.forEach(panel =>
   {
     if (!panel.panelParameters) return;
 
@@ -98,10 +88,7 @@ function migrateConfigFile(filePath)
     });
   });
 
-  const output = isWrapped
-    ? config
-    : panels;
-  writeFileSync(filePath, `${JSON.stringify(output, null, 2)}\n`);
+  writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`);
 
   console.log(`${filePath}: migrated ${migratedCount}, already keyed ${skippedCount}.`);
 }

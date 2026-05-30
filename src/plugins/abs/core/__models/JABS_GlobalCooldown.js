@@ -1,5 +1,5 @@
 //region JABS_GlobalCooldown
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 /**
  * Stateless helpers for the optional battler-wide global cooldown (GCD), similar to MMO-style GCD.
  * Whitelisted skill types share one countdown on the {@link JABS_Battler}; while it runs, other GCD-subject skills are
@@ -39,6 +39,7 @@ class JABS_GlobalCooldown
     if (JABS_GlobalCooldown.isSystemEnabled() === false) return false;
     if (!skill) return false;
     if (skill.jabsIgnoresGlobalCooldown === true) return false;
+    // hand back J.ABS.Metadata.GlobalCooldownSkillTypeSet.has(skill.s... to the caller.
     return J.ABS.Metadata.GlobalCooldownSkillTypeSet.has(skill.stypeId);
   }
 
@@ -54,6 +55,7 @@ class JABS_GlobalCooldown
     const override = skill.jabsGlobalCooldownOverride;
     if (override !== null && override !== undefined)
     {
+      // capture o for downstream policy in this routine.
       const o = Number(override);
       if (Number.isFinite(o) && o > 0)
       {
@@ -75,6 +77,7 @@ class JABS_GlobalCooldown
     const skill = $dataSkills[skillId];
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill) === false) return false;
     const globalCd = jabsBattler.getCooldown(J.ABS.Globals.GlobalCooldownKey);
+    // when not globalCd, take this branch.
     if (!globalCd) return false;
     if (globalCd.isBaseReady() === true) return false;
     return true;
@@ -93,10 +96,12 @@ class JABS_GlobalCooldown
     const leader = $gameParty.leader();
     if (leader === actor)
     {
+      // hand back $gamePlayer.getJabsBattler() to the caller.
       return $gamePlayer.getJabsBattler();
     }
     const vis = $gamePlayer.followers()
       .visibleFollowers();
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < vis.length; i++)
     {
       const follower = vis[i];

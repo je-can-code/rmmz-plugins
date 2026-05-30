@@ -8,6 +8,7 @@ J.ABS.EXT.SPEED.Aliased.Game_Character.set('distancePerFrame', Game_Character.pr
 Game_Character.prototype.distancePerFrame = function()
 {
   // determine base distance per frame.
+  // perform original logic.
   const base = J.ABS.EXT.SPEED.Aliased.Game_Character.get('distancePerFrame')
     .call(this);
 

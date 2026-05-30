@@ -11,6 +11,7 @@ Game_Interpreter.prototype.command301 = function(params)
   // we cannot engage in battle if already in battle.
   if ($gameParty.inBattle()) return true;
 
+  // policy step inside command301.
   const [ designationType, troopIdentifier, canEscape, canLose ] = params;
 
   // makes sure we don't do this if we're already in-battle.
@@ -62,6 +63,7 @@ Game_Interpreter.prototype.command301convertToTroopId = function(designationType
       return $gamePlayer.makeEncounterTroopId();
   }
 
+  // Surface a hard failure before aborting the pass.
   console.error(`invalid event command params, `, designationType, troopIdentifier);
   throw new Error('borked');
 };

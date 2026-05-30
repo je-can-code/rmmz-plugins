@@ -1,5 +1,5 @@
 //region TraitManager
-import { IconManager } from './IconManager.js';
+import IconManager from './IconManager.js';
 
 /**
  * A static class that centralizes display data (name and icon) for traits and

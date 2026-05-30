@@ -19,6 +19,7 @@ Game_Party.prototype.extraDropSources = function()
   $gameParty.battleMembers()
     .forEach(member => extraSources.push(...member.allStates()));
 
+  // hand back extra sources to the caller.
   return extraSources;
 };
 
@@ -28,6 +29,7 @@ Game_Party.prototype.extraDropSources = function()
  */
 Game_Party.prototype.elementalActors = function()
 {
+  // hand back $gameParty.battleMembers() to the caller.
   return $gameParty.battleMembers()
     .filter(member => Game_Party.ELEMENTAL_ALLY_ACTOR_IDS.contains(member.actorId()));
 };

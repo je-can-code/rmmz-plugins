@@ -13,15 +13,19 @@ class ResourceCostManager
     const flatRaw = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.HpCostFlat);
     const percent = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.HpCostPercent);
     const calculatedPercentRaw = battler.mhp * (percent / 100);
+    // capture formula raw for downstream policy in this routine.
     const formulaRaw = RPGManager.getResultFromNoteByRegex(
       skill,
       J.RESOURCES.RegExp.HpCostFormula,
+      // policy step inside hp cost breakdown.
       (flatRaw + calculatedPercentRaw),
       battler
     );
+    // capture hcr for downstream policy in this routine.
     const hcr = battler.hcrFactor();
     return {
       flat: flatRaw * hcr,
+      // policy step inside hp cost breakdown.
       percent,
       calculatedPercent: calculatedPercentRaw * hcr,
       formula: formulaRaw * hcr,
@@ -61,15 +65,19 @@ class ResourceCostManager
     const flatRaw = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.MpCostFlat);
     const percent = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.MpCostPercent);
     const calculatedPercentRaw = battler.mmp * (percent / 100);
+    // capture formula raw for downstream policy in this routine.
     const formulaRaw = RPGManager.getResultFromNoteByRegex(
       skill,
       J.RESOURCES.RegExp.MpCostFormula,
+      // policy step inside extra mp cost breakdown.
       (flatRaw + calculatedPercentRaw),
       battler
     );
+    // policy step inside extra mp cost breakdown.
     const { mcr } = battler;
     return {
       flat: flatRaw * mcr,
+      // policy step inside extra mp cost breakdown.
       percent,
       calculatedPercent: calculatedPercentRaw * mcr,
       formula: formulaRaw * mcr,
@@ -109,15 +117,19 @@ class ResourceCostManager
     const flatRaw = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.TpCostFlat);
     const percent = RPGManager.getNumberFromNoteByRegex(skill, J.RESOURCES.RegExp.TpCostPercent);
     const calculatedPercentRaw = battler.mtp * (percent / 100);
+    // capture formula raw for downstream policy in this routine.
     const formulaRaw = RPGManager.getResultFromNoteByRegex(
       skill,
       J.RESOURCES.RegExp.TpCostFormula,
+      // policy step inside extra tp cost breakdown.
       (flatRaw + calculatedPercentRaw),
       battler
     );
+    // policy step inside extra tp cost breakdown.
     const { tcr } = battler;
     return {
       flat: flatRaw * tcr,
+      // policy step inside extra tp cost breakdown.
       percent,
       calculatedPercent: calculatedPercentRaw * tcr,
       formula: formulaRaw * tcr,

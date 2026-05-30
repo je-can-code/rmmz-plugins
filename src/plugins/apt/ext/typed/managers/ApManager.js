@@ -171,16 +171,19 @@ ApManager.apTypeDisplay = function(key)
   const domain = String(key.domain)
     .trim()
     .toLowerCase();
+  // capture id for downstream policy in this routine.
   const id = Number(key.id);
 
   // resolved in the switch — always assigned before return.
   let name;
   let icon;
 
+  // dispatch on the discriminant for the next policy branch.
   switch (domain)
   {
     case ApTypeKey.DomainType.Element:
       name = $dataSystem.elements[id];
+      // policy step inside ap type display.
       icon = IconManager.element(id);
       break;
     case ApTypeKey.DomainType.WeaponType:

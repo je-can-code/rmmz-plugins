@@ -10,6 +10,7 @@ Window_Selectable.prototype.processCursorMove = function()
   const lastIndex = this.index();
 
   // perform the original logic (stock up/down/left/right + analog, etc.).
+  // perform original logic.
   J.ABS.EXT.INPUT.Aliased.Window_Selectable.get("processCursorMove").call(this);
 
   // if the index changed, the original already handled input; exit.

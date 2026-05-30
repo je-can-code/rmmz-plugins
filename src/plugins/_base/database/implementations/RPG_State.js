@@ -145,9 +145,11 @@ class RPG_State
     this.autoRemovalTiming = state.autoRemovalTiming;
     this.chanceByDamage = state.chanceByDamage;
     this.maxTurns = state.maxTurns;
+    // assign message1 on this instance for callers.
     this.message1 = state.message1;
     this.message2 = state.message2;
     this.message3 = state.message3;
+    // assign message4 on this instance for callers.
     this.message4 = state.message4;
     this.minTurns = state.minTurns;
     this.motion = state.motion;
@@ -190,21 +192,27 @@ class RPG_State
     const raw = {
       id: index,
       autoRemovalTiming: 0,
+      // policy step inside create empty.
       chanceByDamage: 100,
       traits: [],
       iconIndex: 0,
+      // policy step inside create empty.
       maxTurns: 1,
       message1: String.empty,
       message2: String.empty,
+      // policy step inside create empty.
       message3: String.empty,
       message4: String.empty,
       minTurns: 1,
+      // policy step inside create empty.
       motion: 0,
       name: String.empty,
       note: String.empty,
+      // policy step inside create empty.
       overlay: 0,
       priority: 50,
       removeAtBattleEnd: false,
+      // policy step inside create empty.
       removeByDamage: false,
       removeByRestriction: false,
       removeByWalking: false,
@@ -215,6 +223,7 @@ class RPG_State
       meta: {},
     };
 
+    // hand back new RPG_State(raw, index) to the caller.
     return new RPG_State(raw, index);
   }
 }

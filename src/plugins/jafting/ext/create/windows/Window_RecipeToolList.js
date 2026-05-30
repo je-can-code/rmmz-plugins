@@ -28,6 +28,7 @@ class Window_RecipeToolList
      */
     this._components = [];
 
+    // policy step inside initialize.
     super.initialize(rect);
   }
 
@@ -84,6 +85,7 @@ class Window_RecipeToolList
       : 18;
     const needQuantity = `x${need}`;
 
+    // capture subtexts for downstream policy in this routine.
     const subtexts = [];
 
     // determine the subtext messages for the command.
@@ -93,6 +95,7 @@ class Window_RecipeToolList
       missingMessage += ` (missing: ${(need - have)})`;
     }
 
+    // Append the row to the working collection.
     subtexts.push(missingMessage);
 
     // build a command based on the component.
@@ -130,15 +133,17 @@ class Window_RecipeToolList
   }
 
   /**
-   * @param {number} index
+   * @param {number} index The index driving this step.
    * @returns {Rectangle}
    */
   itemLineRect(index)
   {
     const rect = Window_Selectable.prototype.itemLineRect.call(this, index);
 
+    // policy step inside item line rect.
     rect.y += this.recipeComponentRowTopInset();
 
+    // hand back rect to the caller.
     return rect;
   }
 
@@ -164,6 +169,7 @@ class Window_RecipeToolList
       this.resetFontSettings();
       this.changeTextColor(ColorManager.normalColor());
 
+      // capture y for downstream policy in this routine.
       const y = this.recipeComponentRowTopInset();
       this.drawText(
         'No tools required.',
@@ -173,9 +179,11 @@ class Window_RecipeToolList
         Window_Base.TextAlignments.Center
       );
 
+      // exit early without a payload.
       return;
     }
 
+    // Invoke the aliased body with the original receiver.
     Window_Command.prototype.drawAllItems.call(this);
   }
 }

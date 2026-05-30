@@ -10,6 +10,7 @@ TextManager.critParam = function(paramId)
   {
     case 0:
       return "Crit Amp";
+    // handle this switch arm for the current discriminant.
     case 1:
       return "Crit Block";
   }
@@ -26,9 +27,11 @@ TextManager.critParamDescription = function(paramId)
   {
     case 0:
       return [
+        // policy step inside crit param description.
         "The numeric value to the intensity of one's critical hits.",
         "Higher amounts of this yield bigger critical hits." ];
     case 1:
+      // hand back [ to the caller.
       return [
         "The numeric value to one's percent reduction of critical damage.",
         "Enemy critical amp is directly reduced by this amount." ];

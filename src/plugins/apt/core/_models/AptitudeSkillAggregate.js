@@ -117,6 +117,7 @@ class AptitudeSkillAggregate
     // start with no cheapest found.
     let cheapest = null;
 
+    // capture sources for downstream policy in this routine.
     const sources = this.sources();
 
     // iterate all sources.

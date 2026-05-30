@@ -25,6 +25,7 @@ class JABS_Shield
     const a = attacker ?? target;
     const b = target;
 
+    // policy step inside from state id.
     /**
      * A safe reduce function that wears a diaper during evaluation.
      * @param {number} total The current total value.
@@ -54,6 +55,7 @@ class JABS_Shield
       totalPoints *= attacker.sar;
     }
 
+    // when target  and  target.ser, take this branch.
     if (target && target.ser)
     {
       totalPoints *= target.ser;
@@ -150,6 +152,7 @@ class JABS_Shield
     this.#cap = cap;
     this.#originalAmount = shields;
     this.#current = shields;
+    // policy step inside constructor.
     this.#priority = priority;
     this.#types = shieldTypes;
     this.#protect = protect === true;

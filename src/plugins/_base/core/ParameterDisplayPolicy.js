@@ -1,7 +1,7 @@
 //region ParameterDisplayPolicy
 /**
  * Value-aware display policy for {@link ParameterDefinition} entries.
- * Drives sign-column padding, dynamic status colors, and clamped sentinel labels.
+ * Drives signed padding and dynamic status colors without changing raw battler math.
  */
 class ParameterDisplayPolicy
 {
@@ -12,25 +12,19 @@ class ParameterDisplayPolicy
   static NONE = 'none';
 
   /**
-   * Damage intake rates (PDR, MDR, FDR): lower is better; {@code -100%} → {@link ParameterDisplaySentinel.IMMUNE}.
+   * Damage intake rates (PDR, MDR, FDR): lower is better, negative is protective.
    * @type {string}
    */
   static DAMAGE_RATE = 'damageRate';
 
   /**
-   * Reward gain rates (EXP, gold, drops, SDP, APT, REC, PHA): higher is better; {@code -100%} → {@link ParameterDisplaySentinel.NONE}.
+   * Reward gain rates (EXP, gold, drops, SDP, APT): higher is better, centered at zero.
    * @type {string}
    */
   static REWARD_RATE = 'rewardRate';
 
   /**
-   * Skill cost rates (HCR, MCR, TCR): lower is better; {@code -100%} → {@link ParameterDisplaySentinel.FREE}.
-   * @type {string}
-   */
-  static COST_RATE = 'costRate';
-
-  /**
-   * Signed centered percent with no dynamic color (aggro); {@code -100%} → {@link ParameterDisplaySentinel.NONE}.
+   * Signed centered percent with no dynamic color (aggro).
    * @type {string}
    */
   static SIGNED = 'signed';

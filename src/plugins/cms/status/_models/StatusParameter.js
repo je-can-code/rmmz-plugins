@@ -59,6 +59,7 @@ class StatusParameter
   {
     const definition = ParameterRegistry.get(this.parameterKey);
 
+    // when not definition, take this branch.
     if (!definition)
     {
       this.name = this.parameterKey;
@@ -67,30 +68,10 @@ class StatusParameter
       return;
     }
 
+    // assign name on this instance for callers.
     this.name = definition.label();
     this.iconIndex = definition.iconIndex();
-    this.colorIndex = definition.resolveDisplayColorIndex(this.value);
-  }
-
-  /**
-   * Whether this parameter should use styled zero-padding on the status screen.
-   * @returns {boolean}
-   */
-  usesStyledValue()
-  {
-    const definition = ParameterRegistry.get(this.parameterKey);
-
-    if (!definition)
-    {
-      return false;
-    }
-
-    if (definition.resolveDisplaySentinel(this.value))
-    {
-      return false;
-    }
-
-    return definition.format !== ParameterFormat.REGEN_PER_SECOND;
+    this.colorIndex = definition.colorIndex();
   }
 
   /**
@@ -102,11 +83,13 @@ class StatusParameter
   {
     const definition = ParameterRegistry.get(this.parameterKey);
 
+    // when not definition, take this branch.
     if (!definition)
     {
       return this.value.toString();
     }
 
+    // hand back definition.prettyValue(this.value, withPadding) to the caller.
     return definition.prettyValue(this.value, withPadding);
   }
 }

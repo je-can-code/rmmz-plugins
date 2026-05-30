@@ -45,19 +45,24 @@ class Window_SdpRewardList
   {
     const commands = [];
 
+    // when not this.panelRewards, take this branch.
     if (!this.panelRewards) return commands;
     if (this.panelRewards.length === 0)
     {
       const command = new WindowCommandBuilder('No rewards.')
+        // policy step inside build commands.
         .setSymbol('no-rewards')
         .setEnabled(false)
         .setColorIndex(8)
+        // policy step inside build commands.
         .build();
 
+      // Append the row to the working collection.
       commands.push(command);
       return commands;
     }
 
+    // policy step inside build commands.
     this.panelRewards.forEach(panelReward =>
     {
       const {
@@ -65,6 +70,7 @@ class Window_SdpRewardList
         rankRequired
       } = panelReward;
 
+      // policy step inside build commands.
       let iconIndex;
       switch (rankRequired)
       {
@@ -89,9 +95,11 @@ class Window_SdpRewardList
         })
         .build();
 
+      // Append the row to the working collection.
       commands.push(command);
     });
 
+    // hand back commands to the caller.
     return commands;
   }
 
@@ -145,11 +153,14 @@ class Window_SdpRewardList
       return;
     }
 
+    // policy step inside draw reward rank requirement.
     const { rankRequired } = ext;
 
+    // capture pad for downstream policy in this routine.
     const pad = 12;
     const rightEdge = x + width - pad;
 
+    // capture label for downstream policy in this routine.
     const label = 'Rank: ';
     const labelW = this.textWidth(label);
 
@@ -158,6 +169,7 @@ class Window_SdpRewardList
     if (rankRequired === -1) valueText = 'EACH';
     else if (rankRequired === 0) valueText = 'MAX';
 
+    // when valueText, take this branch.
     if (valueText)
     {
       const valueW = this.textWidth(valueText);
@@ -168,6 +180,7 @@ class Window_SdpRewardList
       return;
     }
 
+    // capture value w for downstream policy in this routine.
     const valueW = this.textWidth('00');
     const valueX = rightEdge - valueW;
     const labelX = valueX - labelW;

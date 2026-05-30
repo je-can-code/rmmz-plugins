@@ -21,6 +21,7 @@ Game_System.prototype.updateRegionSkillsAfterLoad = function()
   $gameMap.initRegionSkillsMembers();
   $gameMap.setupRegionSkills();
   $gamePlayer.initRegionSkillsMembers();
+  // policy step inside update region skills after load.
   $gamePlayer.followers()
     .data()
     .forEach(follower => follower.initRegionSkillsMembers());

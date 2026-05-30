@@ -37,6 +37,7 @@ class RegionStateData
     this.regionId = regionId;
     this.stateId = stateId;
     this.chance = chanceOfApplication;
+    // assign animation id on this instance for callers.
     this.animationId = animationId;
   }
 }

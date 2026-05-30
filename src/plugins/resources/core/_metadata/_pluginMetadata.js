@@ -34,6 +34,7 @@ class JResources_PluginMetadata
     /**
      * The id of a switch that represents whether or not this system is accessible in the menu.
      * @type {number}
+     // policy step inside initialize metadata.
      */
     this.menuSwitchId = parseInt(this.parsedPluginParameters['menu-switch']);
   }

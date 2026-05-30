@@ -33,20 +33,26 @@ class Sprite_Icon
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init members.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * Whether or not the sprite is ready to be drawn yet.
      * @type {boolean}
+     // policy step inside init members.
      */
     this._j._isReady = false;
 
+    // policy step inside init members.
     /**
      * The icon index that this sprite represents.
      * @type {number}
+     // policy step inside init members.
      */
     this._j._iconIndex = 0;
 
+    // policy step inside init members.
     /**
      * The width of our icon. Defaults to the image manager's width,
      * but it can be set higher or lower for different-sized iconsheets.
@@ -54,6 +60,7 @@ class Sprite_Icon
      */
     this._j._iconWidth = ImageManager.iconWidth;
 
+    // policy step inside init members.
     /**
      * The height of our icon. Defaults to the image manager's height,
      * but it can be set higher or lower for different-sized iconsheets.
@@ -61,6 +68,7 @@ class Sprite_Icon
      */
     this._j._iconHeight = ImageManager.iconHeight;
 
+    // policy step inside init members.
     /**
      * The number of columns on the iconset we're using. Defaults to 16,
      * which was also predefined by this plugin, but is just the number
@@ -69,6 +77,7 @@ class Sprite_Icon
      */
     this._j._iconColumns = ImageManager.iconColumns;
 
+    // policy step inside init members.
     /**
      * Some systems that leverage {@link Sprite_Icon} may have automation to manage the opacity of their icons.
      * Setting this flag to true will disable that automation and allow you to manage the opacity yourself.

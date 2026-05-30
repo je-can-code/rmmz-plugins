@@ -8,6 +8,7 @@ J.LEVEL.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDam
 Game_Action.prototype.makeDamageValue = function(target, critical)
 {
   // get the base damage that would've been done.
+  // perform original logic.
   const baseDamage = J.LEVEL.Aliased.Game_Action.get('makeDamageValue')
     .call(this, target, critical);
 

@@ -23,18 +23,22 @@ Game_Character.prototype.initHitstopMembers = function()
   /**
    * The root namespace for all plugin data.
    */
+  // policy step inside init hitstop members.
   this._j ||= {};
 
+  // policy step inside init hitstop members.
   /**
    * The root namespace for ABS-related data.
    */
   this._j._abs ||= {};
 
+  // policy step inside init hitstop members.
   /**
    * A grouping of all properties associated with this hitstop extension.
    */
   this._j._abs._hitstop = {};
 
+  // policy step inside init hitstop members.
   /**
    * The hitstop data model owning timers and queued effects.
    * @type {JABS_HitstopData}

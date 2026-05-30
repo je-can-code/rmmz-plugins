@@ -22,6 +22,7 @@ Game_System.prototype.updateProficienciesFromPluginMetadata = function()
     .forEach(actorId =>
     {
       const actorConditionals = J.PROF.Metadata.conditionals.filter(condition => condition.actorIds.includes(actorId));
+      // Register the value on the alias map for runtime lookup.
       J.PROF.Metadata.actorConditionalsMap.set(actorId, actorConditionals);
     });
 };

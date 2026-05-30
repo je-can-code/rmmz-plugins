@@ -30,8 +30,8 @@ J.CMS_E = {};
 J.CMS_E.Metadata = new J_CmsEquip_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
 J.CMS_E.Aliased = {
-  Scene_Equip: {},
-  Window_EquipItem: {},
-  Window_EquipSlot: {},
+  Scene_Equip: new Map(),
+  Window_EquipItem: new Map(),
+  Window_EquipSlot: new Map(),
 };
 //endregion Introduction

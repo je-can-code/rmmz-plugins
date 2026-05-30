@@ -26,6 +26,11 @@
     };
   }
 
+  if (typeof globalThis.Graphics === 'undefined')
+  {
+    globalThis.Graphics = { frameCount: 0 };
+  }
+
   if (typeof globalThis.JABS_Battler !== 'function')
   {
     function JABS_Battler()

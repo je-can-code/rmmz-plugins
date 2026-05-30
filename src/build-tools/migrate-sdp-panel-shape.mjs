@@ -88,11 +88,12 @@ function migratePanelShape(filePath)
 
   let panelsPatched = 0;
 
+  // eslint-disable-next-line complexity -- legacy panel fields normalize in one pass per row
   config.sdps.forEach(panel =>
   {
     let patched = false;
 
-    let identity = panel.identity;
+    let { identity } = panel;
 
     if (identity === undefined || identity === null || typeof identity !== 'object')
     {
@@ -127,7 +128,7 @@ function migratePanelShape(filePath)
       patched = true;
     }
 
-    let progression = panel.progression;
+    let { progression } = panel;
 
     if (progression === undefined || progression === null || typeof progression !== 'object')
     {
@@ -158,7 +159,7 @@ function migratePanelShape(filePath)
       patched = true;
     }
 
-    let mastery = panel.mastery;
+    let { mastery } = panel;
 
     if (mastery === undefined || mastery === null || typeof mastery !== 'object')
     {

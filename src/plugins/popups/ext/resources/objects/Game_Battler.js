@@ -30,8 +30,10 @@ Game_Battler.prototype.paySkillHpCost = function(amount)
     .forEnemyDamageRing()
     .build();
 
+  // capture uuid for downstream policy in this routine.
   const uuid = jabsBattler.getUuid();
 
+  // policy step inside pay skill hp cost.
   JABS_PopupMergeController.routeStrikePop(pop, character, {
     attackerUuid: uuid,
     targetUuid: uuid,
@@ -70,8 +72,10 @@ Game_Battler.prototype.gainHpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
+  // capture uuid for downstream policy in this routine.
   const uuid = jabsBattler.getUuid();
 
+  // policy step inside gain hp from resource.
   JABS_PopupMergeController.routeStrikePop(pop, character, {
     attackerUuid: uuid,
     targetUuid: uuid,
@@ -110,8 +114,10 @@ Game_Battler.prototype.gainMpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
+  // capture uuid for downstream policy in this routine.
   const uuid = jabsBattler.getUuid();
 
+  // policy step inside gain mp from resource.
   JABS_PopupMergeController.routeStrikePop(pop, character, {
     attackerUuid: uuid,
     targetUuid: uuid,
@@ -150,8 +156,10 @@ Game_Battler.prototype.gainTpFromResource = function(amount)
     .forIncomingHealRing()
     .build();
 
+  // capture uuid for downstream policy in this routine.
   const uuid = jabsBattler.getUuid();
 
+  // policy step inside gain tp from resource.
   JABS_PopupMergeController.routeStrikePop(pop, character, {
     attackerUuid: uuid,
     targetUuid: uuid,

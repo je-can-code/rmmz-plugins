@@ -22,13 +22,16 @@ Game_System.prototype.initSdpMembers = function()
   /**
    * The J object where all my additional properties live.
    */
+  // policy step inside init sdp members.
   this._j ||= {};
 
+  // policy step inside init sdp members.
   /**
    * A grouping of all properties associated with the SDP system.
    */
   this._j._sdp ||= {};
 
+  // policy step inside init sdp members.
   /**
    * Whether or not to force any enemy that can drop a panel to drop a panel.
    * @type {boolean}

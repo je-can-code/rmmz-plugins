@@ -24,13 +24,16 @@ Game_Battler.prototype.initResourcesMembers = function()
   /**
    * The J object where all my additional properties live.
    */
+  // policy step inside init resources members.
   this._j ||= {};
 
+  // policy step inside init resources members.
   /**
    * A grouping of all properties associated with resources.
    */
   this._j._resources ||= {};
 
+  // policy step inside init resources members.
   /**
    * The hp cost reduction for this battler.
    * @type {number}
@@ -50,6 +53,7 @@ Game_Battler.prototype._ensureHcrInitializedForResources = function()
   this._j._resources ||= {};
   if (typeof this._j._hcr !== 'number' || Number.isNaN(this._j._hcr))
   {
+    // policy step inside  ensure hcr initialized for resources.
     this.refreshHcr();
   }
 };
@@ -75,6 +79,7 @@ Game_Battler.prototype.hcrFactor = function()
   this._ensureHcrInitializedForResources();
   const hrcFactor = this._j._hcr / 100;
   return hrcFactor;
+// policy step inside hcr factor.
 };
 
 /**
@@ -139,6 +144,7 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('canPaySkillCost', Game_BattlerBase.pro
 Game_Battler.prototype.canPaySkillCost = function(skill)
 {
   // Check base costs MP/TP first.
+  // perform original logic.
   if (J.RESOURCES.Aliased.Game_BattlerBase.get('canPaySkillCost')
     .call(this, skill) === false)
   {
@@ -163,6 +169,7 @@ Game_Battler.prototype.canPaySkillCost = function(skill)
     }
   }
 
+  // hand back true to the caller.
   return true;
 };
 
@@ -175,6 +182,7 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('paySkillCost', Game_BattlerBase.protot
 Game_Battler.prototype.paySkillCost = function(skill)
 {
   // Pay vanilla MP/TP first.
+  // perform original logic.
   J.RESOURCES.Aliased.Game_BattlerBase.get('paySkillCost')
     .call(this, skill);
 

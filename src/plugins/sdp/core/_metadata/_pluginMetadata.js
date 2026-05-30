@@ -21,7 +21,7 @@ class J_SdpPluginMetadata
 
   /**
    * Classifies the anonymous object from the parsed json into panels and subgroups.
-   * @param {any} parsedJson
+   * @param {any} parsedJson The parsed json driving this step.
    * @returns {SdpConfiguration}
    */
   static classifyConfiguration(parsedJson)
@@ -30,6 +30,7 @@ class J_SdpPluginMetadata
     const sdpsBlob = Array.isArray(parsedJson)
       ? parsedJson
       : parsedJson.sdps;
+    // capture subgroups blob for downstream policy in this routine.
     const subgroupsBlob = Array.isArray(parsedJson)
       ? []
       : parsedJson.subgroups;
@@ -37,6 +38,7 @@ class J_SdpPluginMetadata
       ? []
       : parsedJson.families;
 
+    // capture subgroups for downstream policy in this routine.
     const subgroups = J_SdpPluginMetadata.parseSubgroups(subgroupsBlob);
     const families = J_SdpPluginMetadata.parseFamilies(familiesBlob);
     const panels = J_SdpPluginMetadata.classifyPanels(sdpsBlob);
@@ -45,6 +47,7 @@ class J_SdpPluginMetadata
     const subgroupMaps = J_SdpPluginMetadata.validateMasteryMetadata(subgroups, panels);
     const familyMaps = J_SdpPluginMetadata.validateFamilyMetadata(families, subgroupMaps.subgroupsMap);
 
+    // hand back SdpConfiguration.builder to the caller.
     return SdpConfiguration.builder
       .panels(panels)
       .subgroups(subgroups)
@@ -58,7 +61,7 @@ class J_SdpPluginMetadata
 
   /**
    * Converts the JSON-parsed blob into classified {@link PanelSubgroup}s.
-   * @param {any[]|undefined|null} parsedSubgroupsBlob
+   * @param {any[]|undefined|null} parsedSubgroupsBlob The parsed subgroups blob driving this step.
    * @returns {PanelSubgroup[]}
    */
   static parseSubgroups(parsedSubgroupsBlob)
@@ -68,8 +71,10 @@ class J_SdpPluginMetadata
       return [];
     }
 
+    // capture parsed subgroups for downstream policy in this routine.
     const parsedSubgroups = [];
 
+    // policy step inside parse subgroups.
     parsedSubgroupsBlob.forEach(parsedSubgroup =>
     {
       const subgroupName = parsedSubgroup.name ?? String.empty;
@@ -79,6 +84,7 @@ class J_SdpPluginMetadata
       if (subgroupName.startsWith('--')) return;
       if (subgroupName.startsWith('__')) return;
 
+      // construct subgroup for the next step in this routine.
       const subgroup = new PanelSubgroup(
         subgroupName,
         parsedSubgroup.key ?? String.empty,
@@ -86,15 +92,17 @@ class J_SdpPluginMetadata
         parsedSubgroup.description ?? String.empty
       );
 
+      // Append the row to the working collection.
       parsedSubgroups.push(subgroup);
     });
 
+    // hand back parsed subgroups to the caller.
     return parsedSubgroups;
   }
 
   /**
    * Converts the JSON-parsed blob into classified {@link PanelFamily}s.
-   * @param {any[]|undefined|null} parsedFamiliesBlob
+   * @param {any[]|undefined|null} parsedFamiliesBlob The parsed families blob driving this step.
    * @returns {PanelFamily[]}
    */
   static parseFamilies(parsedFamiliesBlob)
@@ -104,8 +112,10 @@ class J_SdpPluginMetadata
       return [];
     }
 
+    // capture parsed families for downstream policy in this routine.
     const parsedFamilies = [];
 
+    // policy step inside parse families.
     parsedFamiliesBlob.forEach(parsedFamily =>
     {
       const familyName = parsedFamily.name ?? String.empty;
@@ -115,10 +125,12 @@ class J_SdpPluginMetadata
       if (familyName.startsWith('--')) return;
       if (familyName.startsWith('__')) return;
 
+      // capture subgroup keys for downstream policy in this routine.
       const subgroupKeys = Array.isArray(parsedFamily.subgroupKeys)
         ? parsedFamily.subgroupKeys.filter(key => typeof key === 'string' && key !== String.empty)
         : [];
 
+      // construct family for the next step in this routine.
       const family = new PanelFamily(
         familyName,
         parsedFamily.key ?? String.empty,
@@ -127,16 +139,18 @@ class J_SdpPluginMetadata
         subgroupKeys
       );
 
+      // Append the row to the working collection.
       parsedFamilies.push(family);
     });
 
+    // hand back parsed families to the caller.
     return parsedFamilies;
   }
 
   /**
    * Validates family metadata and builds subgroup → family reverse lookup.
-   * @param {PanelFamily[]} families
-   * @param {Map<string, PanelSubgroup>} subgroupsMap
+   * @param {PanelFamily[]} families The families driving this step.
+   * @param {Map<string, PanelSubgroup>} subgroupsMap The subgroups map driving this step.
    * @returns {{ familiesMap: Map<string, PanelFamily>, familyKeyBySubgroupKey: Map<string, string> }}
    */
   static validateFamilyMetadata(families, subgroupsMap)
@@ -144,6 +158,7 @@ class J_SdpPluginMetadata
     const familiesMap = new Map();
     const familyKeyBySubgroupKey = new Map();
 
+    // policy step inside validate family metadata.
     families.forEach(family =>
     {
       if (!family.key)
@@ -151,13 +166,16 @@ class J_SdpPluginMetadata
         throw new Error('J-SDP: every family row must define a non-empty key.');
       }
 
+      // when familiesMap.has(family.key), take this branch.
       if (familiesMap.has(family.key))
       {
         throw new Error(`J-SDP: duplicate family key [${family.key}] in config.sdp.json.`);
       }
 
+      // Register the value on the alias map for runtime lookup.
       familiesMap.set(family.key, family);
 
+      // policy step inside validate family metadata.
       family.subgroupKeys.forEach(subgroupKey =>
       {
         if (subgroupsMap.has(subgroupKey) === false)
@@ -167,16 +185,19 @@ class J_SdpPluginMetadata
           );
         }
 
+        // when familyKeyBySubgroupKey.has(subgroupKey), take this branch.
         if (familyKeyBySubgroupKey.has(subgroupKey))
         {
           const otherFamilyKey = familyKeyBySubgroupKey.get(subgroupKey);
 
+          // abort this pass so the operator sees a hard failure.
           throw new Error(
             `J-SDP: subgroup [${subgroupKey}] is assigned to multiple families `
             + `[${otherFamilyKey}] and [${family.key}].`
           );
         }
 
+        // Register the value on the alias map for runtime lookup.
         familyKeyBySubgroupKey.set(subgroupKey, family.key);
       });
     });
@@ -191,8 +212,8 @@ class J_SdpPluginMetadata
 
   /**
    * Validates mastery metadata and builds subgroup panel groupings for reverse lookup.
-   * @param {PanelSubgroup[]} subgroups
-   * @param {StatDistributionPanel[]} panels
+   * @param {PanelSubgroup[]} subgroups The subgroups driving this step.
+   * @param {StatDistributionPanel[]} panels The panels driving this step.
    * @returns {{ subgroupsMap: Map<string, PanelSubgroup>, panelsBySubgroupKey: Map<string, StatDistributionPanel[]> }}
    */
   static validateMasteryMetadata(subgroups, panels)
@@ -209,18 +230,22 @@ class J_SdpPluginMetadata
         throw new Error('J-SDP: every subgroup row must define a non-empty key.');
       }
 
+      // when subgroupsMap.has(subgroup.key), take this branch.
       if (subgroupsMap.has(subgroup.key))
       {
         throw new Error(`J-SDP: duplicate subgroup key [${subgroup.key}] in config.sdp.json.`);
       }
 
+      // Register the value on the alias map for runtime lookup.
       subgroupsMap.set(subgroup.key, subgroup);
     });
 
+    // policy step inside validate mastery metadata.
     panels.forEach(panel =>
     {
       const { mastery } = panel;
 
+      // when mastery.hasPartialEnrollment(), take this branch.
       if (mastery.hasPartialEnrollment())
       {
         throw new Error(
@@ -235,6 +260,7 @@ class J_SdpPluginMetadata
         return;
       }
 
+      // when subgroupsMap.has(mastery.subgroupKey)  equals  false, take this branch.
       if (subgroupsMap.has(mastery.subgroupKey) === false)
       {
         throw new Error(
@@ -242,6 +268,7 @@ class J_SdpPluginMetadata
         );
       }
 
+      // capture tier map for downstream policy in this routine.
       const tierMap = tierBySubgroupKey.get(mastery.subgroupKey) ?? new Map();
 
       // two panels must never share the same tier within one subgroup — replacement would be ambiguous.
@@ -249,18 +276,21 @@ class J_SdpPluginMetadata
       {
         const otherPanelKey = tierMap.get(mastery.subgroupTier);
 
+        // abort this pass so the operator sees a hard failure.
         throw new Error(
           `J-SDP: duplicate subgroup tier ${mastery.subgroupTier} in subgroup [${mastery.subgroupKey}] `
           + `for panels [${otherPanelKey}] and [${panel.key}].`
         );
       }
 
+      // Register the value on the alias map for runtime lookup.
       tierMap.set(mastery.subgroupTier, panel.key);
       tierBySubgroupKey.set(mastery.subgroupKey, tierMap);
 
       // accumulate mastery panels per subgroup for fast reverse lookup at max-rank time.
       const subgroupPanels = panelsBySubgroupKey.get(mastery.subgroupKey) ?? [];
 
+      // Append the row to the working collection.
       subgroupPanels.push(panel);
       panelsBySubgroupKey.set(mastery.subgroupKey, subgroupPanels);
     });
@@ -271,6 +301,7 @@ class J_SdpPluginMetadata
       subgroupPanels.sort((left, right) => left.mastery.subgroupTier - right.mastery.subgroupTier);
     });
 
+    // hand back { to the caller.
     return {
       subgroupsMap,
       panelsBySubgroupKey,
@@ -286,12 +317,14 @@ class J_SdpPluginMetadata
   {
     const parsedPanels = [];
 
+    // capture foreacher for downstream policy in this routine.
     const foreacher = parsedPanel =>
     {
       // validate the name is not one of the organizational names for the editor-only.
       const panelName = parsedPanel.identity?.name ?? parsedPanel.name ?? String.empty;
       if (panelName.startsWith('__')) return;
       if (panelName.startsWith('==')) return;
+      // when panelName.startsWith('--'), take this branch.
       if (panelName.startsWith('--')) return;
 
       // destructure the details we care about.
@@ -341,12 +374,14 @@ class J_SdpPluginMetadata
         .mastery(PanelMastery.fromConfigPanel(parsedPanel))
         .build();
 
+      // Append the row to the working collection.
       parsedPanels.push(panel);
     };
 
     // build an SDP from each parsed item provided.
     parsedBlob.forEach(foreacher, this);
 
+    // hand back parsed panels to the caller.
     return parsedPanels;
   }
 
@@ -385,22 +420,28 @@ class J_SdpPluginMetadata
   {
     const { parsedPluginParameters: p } = this;
 
+    // policy step inside initialize panel cost defaults by rarity.
     /**
      * One rarity tier: base SDP, exponential coefficient, and growth base (**mult**).
      * @type {{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }}
+     // policy step inside initialize panel cost defaults by rarity.
      */
     const row = (baseKey, flatKey, multKey, fbBase, fbFlat, fbMult) =>
     {
       return {
+        // policy step inside initialize panel cost defaults by rarity.
         baseCost: J.BASE.Helpers.parsePluginInt(p[baseKey], fbBase),
         flatGrowthCost: J.BASE.Helpers.parsePluginInt(p[flatKey], fbFlat),
         multGrowthCost: J_SdpPluginMetadata.#parsePositiveFloatOr(p[multKey], fbMult),
+      // policy step inside initialize panel cost defaults by rarity.
       };
     };
 
+    // policy step inside initialize panel cost defaults by rarity.
     /**
      * Indexed **0–5** matching {@link PanelRarity} Common..Godlike.
      * @type {Array<{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }>}
+     // policy step inside initialize panel cost defaults by rarity.
      */
     this.panelCostDefaultsByRarity =
       [
@@ -414,8 +455,8 @@ class J_SdpPluginMetadata
   }
 
   /**
-   * @param {string|number|undefined|null} value
-   * @param {number} fallback
+   * @param {string|number|undefined|null} value The value driving this step.
+   * @param {number} fallback The fallback driving this step.
    * @returns {number}
    */
   static #parsePositiveFloatOr(value, fallback)
@@ -425,20 +466,23 @@ class J_SdpPluginMetadata
       return fallback;
     }
 
+    // capture parsed for downstream policy in this routine.
     const parsed = Number.parseFloat(String(value));
 
+    // when Number.isFinite(parsed)  and  parsed > 0, take this branch.
     if (Number.isFinite(parsed) && parsed > 0)
     {
       return parsed;
     }
 
+    // hand back fallback to the caller.
     return fallback;
   }
 
   /**
    * Effective rank-up cost knobs after combining rarity defaults with per-panel overrides from `config.sdp.json`.
    *
-   * @param {StatDistributionPanel} panel
+   * @param {StatDistributionPanel} panel The panel driving this step.
    * @returns {{ baseCost: number, flatGrowthCost: number, multGrowthCost: number }}
    */
   resolveEffectiveRankUpCostParts(panel)
@@ -452,6 +496,7 @@ class J_SdpPluginMetadata
       ? scale
       : 1.0;
 
+    // hand back { to the caller.
     return {
       baseCost: row.baseCost + panel.baseCost,
       flatGrowthCost: row.flatGrowthCost + panel.flatGrowthCost,
@@ -468,47 +513,57 @@ class J_SdpPluginMetadata
     const canLogLoadInfo = J_SdpPluginMetadata.#hasMinimumBaseVersion();
     const classifiedConfiguration = ExternalJsonConfigLoader.load(
       J_SdpPluginMetadata.CONFIG_PATH,
+      // policy step inside initialize panels.
       ExternalJsonConfigLoaderOptions.Builder()
         .pluginName('J-SDP')
         .configName('sdp configuration')
+        // policy step inside initialize panels.
         .mapper(parsed => J_SdpPluginMetadata.classifyConfiguration(parsed))
         .logSummary(canLogLoadInfo
           ? result => [
+            // policy step inside initialize panels.
             `- ${result.panels().length} panels`,
             `- ${result.subgroups().length} subgroups`,
             `- ${result.families().length} families`,
+          // policy step inside initialize panels.
           ]
           : null)
         .build()
     );
 
+    // policy step inside initialize panels.
     /**
      * The collection of all defined SDPs.
      * @type {StatDistributionPanel[]}
      */
     this.panels = classifiedConfiguration.panels();
 
+    // construct panel map for the next step in this routine.
     const panelMap = new Map();
     this.panels.forEach(panel => panelMap.set(panel.key, panel));
 
+    // policy step inside initialize panels.
     /**
      * A key:panel map of all defined SDPs.
      * @type {Map<string, StatDistributionPanel>}
      */
     this.panelsMap = panelMap;
 
+    // policy step inside initialize panels.
     /**
      * The collection of all defined panel subgroups.
      * @type {PanelSubgroup[]}
      */
     this.subgroups = classifiedConfiguration.subgroups();
 
+    // policy step inside initialize panels.
     /**
      * A key:subgroup map of all defined panel subgroups.
      * @type {Map<string, PanelSubgroup>}
      */
     this.subgroupsMap = classifiedConfiguration.subgroupsMap();
 
+    // policy step inside initialize panels.
     /**
      * Panels grouped by subgroup key, sorted ascending by {@link PanelMastery#subgroupTier}.
      * Built at boot so max-rank reconciliation can reverse-lookup without scanning every panel.
@@ -516,18 +571,21 @@ class J_SdpPluginMetadata
      */
     this.panelsBySubgroupKey = classifiedConfiguration.panelsBySubgroupKey();
 
+    // policy step inside initialize panels.
     /**
      * The collection of all defined panel families.
      * @type {PanelFamily[]}
      */
     this.families = classifiedConfiguration.families();
 
+    // policy step inside initialize panels.
     /**
      * A key:family map of all defined panel families.
      * @type {Map<string, PanelFamily>}
      */
     this.familiesMap = classifiedConfiguration.familiesMap();
 
+    // policy step inside initialize panels.
     /**
      * Reverse lookup from subgroup key to owning family key.
      * @type {Map<string, string>}
@@ -540,34 +598,43 @@ class J_SdpPluginMetadata
     /**
      * The id of a switch that represents whether or not this system is accessible
      * in the menu.
+     // policy step inside initialize metadata.
      * @type {number}
      */
     this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menuSwitch'], 0);
 
+    // policy step inside initialize metadata.
     /**
      * The icon index that represents the system itself.
      * Used as the icon for costs and currency.
+     // policy step inside initialize metadata.
      * @type {number}
      */
     this.sdpIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['sdpIcon'], 0);
 
+    // policy step inside initialize metadata.
     /**
      * The text displayed upon victory during a battle-end victory scene.
      */
+    // assign victory text on this instance for callers.
     this.victoryText = this.parsedPluginParameters['victoryText'];
 
+    // policy step inside initialize metadata.
     /**
      * The name used for the command when visible in a menu.
      * @type {string}
+     // policy step inside initialize metadata.
      */
     this.commandName = this.parsedPluginParameters['menuCommandName'] ?? 'Distribute';
 
+    // policy step inside initialize metadata.
     /**
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}
      */
     this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menuCommandIcon'], 0);
 
+    // policy step inside initialize metadata.
     /**
      * When JABS is enabled, this menu is removed from the main menu and added instead
      * to the quick menu. If this is set to true, then access to the menu will be re-added
@@ -578,18 +645,21 @@ class J_SdpPluginMetadata
      */
     this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === 'true';
 
+    // policy step inside initialize metadata.
     /**
      * Singular player-facing name for one SDP row (confirmation copy, future labels).
      * @type {string}
      */
     this.unitSingular = this.parsedPluginParameters['sdpUnitSingular'] ?? 'panel';
 
+    // policy step inside initialize metadata.
     /**
      * Plural player-facing name for counts such as “4 upgrades on 2 …”.
      * @type {string}
      */
     this.unitPlural = this.parsedPluginParameters['sdpUnitPlural'] ?? 'panels';
 
+    // policy step inside initialize metadata.
     /**
      * Short label for spendable currency (“Remaining …”, cart wallet chip, {@link TextManager#sdpPoints}).
      * @type {string}
@@ -626,6 +696,7 @@ class J_SdpPluginMetadata
     return PluginVersion.builder
       .major('2')
       .minor('3')
+      // continue the routine with the next policy step.
       .patch('1')
       .build();
   }

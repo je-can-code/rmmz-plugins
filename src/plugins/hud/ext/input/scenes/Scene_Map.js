@@ -10,6 +10,7 @@ Scene_Map.prototype.initHudMembers = function()
   J.HUD.EXT.INPUT.Aliased.Scene_Map.get('initHudMembers')
     .call(this);
 
+  // policy step inside init hud members.
   /**
    * The input frame window on the map.
    * @type {Window_InputFrame}

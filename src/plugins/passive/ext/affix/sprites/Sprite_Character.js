@@ -10,6 +10,7 @@ Sprite_Character.prototype.getBattlerName = function()
 {
   // perform original logic.
   /** @type {JABS_BattlerName} */
+  // perform original logic.
   const battlerName = J.PASSIVE.EXT.AFFIX.Aliased.Sprite_Character.get('getBattlerName')
     .call(this);
 
@@ -58,6 +59,7 @@ Sprite_Character.prototype.canApplyPassiveMapTierAccent = function()
   // if the battler isn't an enemy, then don't worry about the name.
   if (battler.isEnemy() === false) return false;
 
+  // hand back true to the caller.
   return true;
 };
 //endregion Sprite_Character

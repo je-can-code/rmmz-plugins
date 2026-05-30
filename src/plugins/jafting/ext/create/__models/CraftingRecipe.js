@@ -84,9 +84,11 @@ class CraftingRecipe
     this.name = name;
     this.key = key;
     this.categoryKeys = categoryKeys;
+    // assign icon index on this instance for callers.
     this.iconIndex = iconIndex;
     this.description = description;
     this.unlockedByDefault = unlockedByDefault;
+    // assign masked until crafted on this instance for callers.
     this.maskedUntilCrafted = maskedUntilCrafted;
     this.ingredients = ingredients;
     this.tools = tools;
@@ -157,6 +159,7 @@ class CraftingRecipe
    */
   getProficiency()
   {
+    // hand back $gameParty to the caller.
     return $gameParty
       .getRecipeTrackingByKey(this.key)
       .craftingProficiency();

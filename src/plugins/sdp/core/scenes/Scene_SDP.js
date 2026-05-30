@@ -45,90 +45,107 @@ class Scene_SDP
     // perform original logic.
     super.initMembers();
 
+    // policy step inside init members.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * A grouping of all properties associated with the sdp system.
      */
+    // policy step inside init members.
     this._j._sdp = {};
 
+    // policy step inside init members.
     /**
      * A grouping of all windows associated with this scene.
      */
     this._j._sdp._windows = {};
 
+    // policy step inside init members.
     /**
      * All panels that are unlocked by the party and available for ranking up.
      * @type {Window_SdpList}
      */
     this._j._sdp._windows._sdpList = null;
 
+    // policy step inside init members.
     /**
      * Header strip for the hovered SDP (single-line name/rarity/flavor).
      * @type {Window_SdpHeader}
      */
     this._j._sdp._windows._sdpHeader = null;
 
+    // policy step inside init members.
     /**
      * The list of parameters associated with the currently selected SDP.
      * @type {Window_SdpParameterList}
      */
     this._j._sdp._windows._sdpParameterList = null;
 
+    // policy step inside init members.
     /**
      * The list of rewards associated with the currently selected SDP.
      * @type {Window_SdpRewardList}
      */
     this._j._sdp._windows._sdpRewardList = null;
 
+    // policy step inside init members.
     /**
      * Subgroup mastery summary for the hovered panel (separate from rank rewards).
      * @type {Window_SdpMastery}
      */
     this._j._sdp._windows._sdpMastery = null;
 
+    // policy step inside init members.
     /**
      * The shopping cart window for planned rank-ups.
      * @type {Window_SdpCart}
      */
     this._j._sdp._windows._sdpCart = null;
 
+    // policy step inside init members.
     /**
      * The confirmation window that allows the user to confirm the rankup of a panel.
      * @type {Window_SdpConfirmation}
      */
     this._j._sdp._windows._sdpConfirmation = null;
 
+    // policy step inside init members.
     /**
      * The points window that displays the current menu actor's SDP points.
      * @type {Window_SdpPoints}
      */
     this._j._sdp._windows._sdpPoints = null;
 
+    // policy step inside init members.
     /**
      * The help window that displays the description of the currently hovered SDP.
      * @type {Window_SdpHelp}
      */
     this._j._sdp._windows._sdpHelp = null;
 
+    // policy step inside init members.
     /**
      * Family-filter strip above the panel list.
      * @type {Window_SdpFamilyStrip}
      */
     this._j._sdp._windows._sdpFamilyStrip = null;
 
+    // policy step inside init members.
     /**
      * The controller-first shopping cart of queued rankups by panel key.
      * @type {Map<string, number>}
      */
     this._j._sdp._cart = new Map();
 
+    // policy step inside init members.
     /**
      * L2/R2 family-filter cycle keys for the current menu actor.
      * @type {string[]}
      */
     this._j._sdp._familyFilterCycle = [];
 
+    // policy step inside init members.
     /**
      * Index into {@link this._j._sdp._familyFilterCycle}.
      * @type {number}
@@ -219,6 +236,7 @@ class Scene_SDP
     const lineHeight = Window_Base.prototype.lineHeight();
     const pad = $gameSystem.windowPadding();
 
+    // hand back lineHeight + pad * 2 to the caller.
     return lineHeight + pad * 2;
   }
 
@@ -229,6 +247,7 @@ class Scene_SDP
   {
     const window = this.buildSdpFamilyStripWindow();
 
+    // policy step inside create sdp family strip window.
     this.setSdpFamilyStripWindow(window);
     this.addWindow(window);
   }
@@ -250,11 +269,12 @@ class Scene_SDP
   sdpFamilyStripRectangle()
   {
     const pointsRect = this.sdpPointsRectangle();
-    const width = pointsRect.width;
+    const { width, height: pointsHeight } = pointsRect;
     const height = this.sdpFamilyStripHeight();
     const x = 0;
-    const y = pointsRect.height;
+    const y = pointsHeight;
 
+    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -269,7 +289,7 @@ class Scene_SDP
 
   /**
    * Sets the tracked family strip window.
-   * @param {Window_SdpFamilyStrip} familyStripWindow
+   * @param {Window_SdpFamilyStrip} familyStripWindow The family strip window driving this step.
    */
   setSdpFamilyStripWindow(familyStripWindow)
   {
@@ -286,11 +306,13 @@ class Scene_SDP
     const previousKey = this.getActiveFamilyFilterKey();
     let nextIndex = cycle.indexOf(previousKey);
 
+    // when nextIndex < 0, take this branch.
     if (nextIndex < 0)
     {
       nextIndex = 0;
     }
 
+    // policy step inside rebuild family filter cycle.
     this._j._sdp._familyFilterCycle = cycle;
     this._j._sdp._familyFilterIndex = nextIndex;
   }
@@ -303,11 +325,13 @@ class Scene_SDP
   {
     const cycle = this._j._sdp._familyFilterCycle;
 
+    // when cycle.length  equals  0, take this branch.
     if (cycle.length === 0)
     {
       return SdpFamilyFilter.ALL;
     }
 
+    // hand back cycle[this._j._sdp._familyFilterIndex | 0] ?? SdpFami... to the caller.
     return cycle[this._j._sdp._familyFilterIndex | 0] ?? SdpFamilyFilter.ALL;
   }
 
@@ -320,15 +344,18 @@ class Scene_SDP
     const filterKey = this.getActiveFamilyFilterKey();
     const listWindow = this.getSdpListWindow();
 
+    // policy step inside apply active family filter.
     this.getSdpFamilyStripWindow()
       .setFilterKey(filterKey);
     listWindow.setFamilyFilterKey(filterKey);
 
+    // when clampSelection  equals  false, take this branch.
     if (clampSelection === false)
     {
       return;
     }
 
+    // policy step inside apply active family filter.
     this.clampSdpListSelection();
   }
 
@@ -340,12 +367,14 @@ class Scene_SDP
     const listWindow = this.getSdpListWindow();
     const commandCount = listWindow.commandList().length;
 
+    // when commandCount  equals  0, take this branch.
     if (commandCount === 0)
     {
       listWindow.deselect();
       return;
     }
 
+    // when listWindow.index() >= commandCount, take this branch.
     if (listWindow.index() >= commandCount)
     {
       listWindow.select(commandCount - 1);
@@ -354,26 +383,30 @@ class Scene_SDP
 
   /**
    * Cycles the family filter forward or backward.
-   * @param {boolean} isForward
+   * @param {boolean} isForward The is forward driving this step.
    */
   cycleFamilyFilters(isForward = true)
   {
     const cycle = this._j._sdp._familyFilterCycle;
 
+    // when cycle.length <= 1, take this branch.
     if (cycle.length <= 1)
     {
       SoundManager.playBuzzer();
       this.getSdpListWindow()
+        // policy step inside cycle family filters.
         .activate();
       return;
     }
 
+    // capture current index for downstream policy in this routine.
     const currentIndex = this._j._sdp._familyFilterIndex | 0;
     const delta = isForward
       ? 1
       : -1;
     const nextIndex = (currentIndex + delta + cycle.length) % cycle.length;
 
+    // policy step inside cycle family filters.
     this._j._sdp._familyFilterIndex = nextIndex;
     this.applyActiveFamilyFilter();
     this.onPanelHoveredChange();
@@ -503,10 +536,12 @@ class Scene_SDP
     // create the window with the rectangle.
     const window = new Window_SdpParameterList(rectangle);
 
+    // policy step inside build sdp parameter list window.
     window.deselect();
     window.deactivate();
     window.setActor($gameParty.menuActor());
 
+    // hand back window to the caller.
     return window;
   }
 
@@ -521,11 +556,13 @@ class Scene_SDP
     const helpH = this.sdpHelpRectangle().height;
     const hintH = this.sdpControlsHintHeight();
 
+    // capture x for downstream policy in this routine.
     const x = listRect.width;
     const y = headerH;
     const width = this.sdpCenterColumnWidth();
     const height = Graphics.boxHeight - helpH - headerH - hintH;
 
+    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -577,9 +614,11 @@ class Scene_SDP
     // create the window with the rectangle.
     const window = new Window_SdpRewardList(rectangle);
 
+    // policy step inside build sdp reward list window.
     window.deselect();
     window.deactivate();
 
+    // hand back window to the caller.
     return window;
   }
 
@@ -611,6 +650,7 @@ class Scene_SDP
   {
     const window = this.buildSdpMasteryWindow();
 
+    // policy step inside create sdp mastery window.
     this.setSdpMasteryWindow(window);
     this.addWindow(window);
   }
@@ -624,6 +664,7 @@ class Scene_SDP
     const rectangle = this.sdpMasteryRectangle();
     const window = new Window_SdpMastery(rectangle);
 
+    // hand back window to the caller.
     return window;
   }
 
@@ -654,6 +695,7 @@ class Scene_SDP
   {
     const window = this.buildSdpCartWindow();
 
+    // policy step inside create sdp cart window.
     this.setSdpCartWindow(window);
     this.addWindow(window);
   }
@@ -671,6 +713,7 @@ class Scene_SDP
     window.deselect();
     window.deactivate();
 
+    // hand back window to the caller.
     return window;
   }
 
@@ -704,19 +747,24 @@ class Scene_SDP
     const centerW = this.sdpCenterColumnWidth();
     const { height: headerH } = this.sdpHeaderRectangle();
 
+    // capture x for downstream policy in this routine.
     const x = sdpListRect.width + centerW;
     const topY = headerH;
     const width = Graphics.boxWidth - x;
+    // capture bottom for downstream policy in this routine.
     const bottom = this.sdpRightColumnBottom();
     const gap = this.sdpRightColumnSplitGap();
     const fullHeight = bottom - topY;
+    // capture cart height for downstream policy in this routine.
     const cartHeight = Math.floor((fullHeight - gap) / 2);
     const cartY = bottom - cartHeight;
     const topRegionHeight = cartY - topY - gap;
 
+    // hand back { to the caller.
     return {
       x,
       topY,
+      // policy step inside sdp right column metrics.
       width,
       cartY,
       cartHeight,
@@ -744,6 +792,7 @@ class Scene_SDP
     const metrics = this.sdpRightColumnMetrics();
     const height = this.sdpMasteryWindowHeight();
 
+    // hand back new Rectangle(metrics.x, metrics.topY, metrics.width,... to the caller.
     return new Rectangle(metrics.x, metrics.topY, metrics.width, height);
   }
 
@@ -755,6 +804,7 @@ class Scene_SDP
   {
     const metrics = this.sdpRightColumnMetrics();
 
+    // hand back new Rectangle(metrics.x, metrics.cartY, metrics.width... to the caller.
     return new Rectangle(metrics.x, metrics.cartY, metrics.width, metrics.cartHeight);
   }
 
@@ -769,6 +819,7 @@ class Scene_SDP
     const y = metrics.topY + masteryHeight + metrics.gap;
     const height = metrics.cartY - y - metrics.gap;
 
+    // hand back new Rectangle(metrics.x, y, metrics.width, height) to the caller.
     return new Rectangle(metrics.x, y, metrics.width, height);
   }
 
@@ -800,6 +851,7 @@ class Scene_SDP
   {
     const window = this.buildSdpHeaderWindow();
 
+    // policy step inside create sdp header window.
     this.setSdpHeaderWindow(window);
     this.addWindow(window);
   }
@@ -860,6 +912,7 @@ class Scene_SDP
     const lineHeight = Window_Base.prototype.lineHeight();
     const pad = $gameSystem.windowPadding();
 
+    // hand back lineHeight + pad * 2 to the caller.
     return lineHeight + pad * 2;
   }
 
@@ -870,6 +923,7 @@ class Scene_SDP
   {
     const window = this.buildSdpControlsHintWindow();
 
+    // policy step inside create sdp controls hint window.
     this.addWindow(window);
   }
 
@@ -882,8 +936,10 @@ class Scene_SDP
     const rectangle = this.sdpControlsHintRectangle();
     const window = new Window_SdpControlsHint(rectangle);
 
+    // policy step inside build sdp controls hint window.
     window.refresh();
 
+    // hand back window to the caller.
     return window;
   }
 
@@ -899,11 +955,13 @@ class Scene_SDP
       width: helpWidth,
     } = this.sdpHelpRectangle();
 
+    // capture x for downstream policy in this routine.
     const x = 0;
     const y = helpY - hintH;
     const width = helpWidth;
     const height = hintH;
 
+    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -1157,9 +1215,11 @@ class Scene_SDP
     const window = this.getSdpConfirmationWindow();
     window.setMode('cart');
     window.setCartSummary(this.buildCartSummary($gameParty.menuActor()));
+    // policy step inside open cart checkout confirmation.
     window.refresh();
     window.show();
     window.open();
+    // policy step inside open cart checkout confirmation.
     window.activate();
     this.showModalDimmer(Scene_Base.MODAL_DIMMER_CONTENTS_OPACITY_DEFAULT, this.getSdpConfirmationWindow());
   }
@@ -1172,12 +1232,15 @@ class Scene_SDP
     const actor = $gameParty.menuActor();
     const panel = this.getSdpListWindow()
       .currentExt();
+    // policy step inside open single upgrade confirmation.
     const { currentRank } = actor.getSdpByKey(panel.key);
     const cost = panel.rankUpCost(currentRank);
 
+    // capture window for downstream policy in this routine.
     const window = this.getSdpConfirmationWindow();
     window.setMode('single');
     window.setSingleSummary(panel.name, cost, actor.getSdpPoints());
+    // policy step inside open single upgrade confirmation.
     window.refresh();
     window.show();
     window.open();
@@ -1214,15 +1277,18 @@ class Scene_SDP
       return;
     }
 
+    // capture actor for downstream policy in this routine.
     const actor = $gameParty.menuActor();
     const { key, maxRank } = panel;
     const { currentRank } = actor.getSdpByKey(key);
     const maxQueue = Math.max(0, maxRank - currentRank);
 
+    // capture cart for downstream policy in this routine.
     const cart = this._j._sdp._cart;
     const existing = cart.get(key) ?? 0;
     const next = Math.max(0, Math.min(existing + delta, maxQueue));
 
+    // when next  equals  0, take this branch.
     if (next === 0)
     {
       cart.delete(key);
@@ -1232,6 +1298,7 @@ class Scene_SDP
       cart.set(key, next);
     }
 
+    // policy step inside modify hovered panel cart levels.
     this.onPanelHoveredChange();
     this.getSdpListWindow()
       .activate();
@@ -1276,6 +1343,7 @@ class Scene_SDP
         return;
       }
 
+      // policy step inside checkout cart.
       const { currentRank } = actor.getSdpByKey(key);
       for (let i = 0; i < levels; i++)
       {
@@ -1300,6 +1368,7 @@ class Scene_SDP
         return;
       }
 
+      // policy step inside checkout cart.
       const { currentRank } = actor.getSdpByKey(key);
       for (let i = 0; i < levels; i++)
       {
@@ -1309,6 +1378,7 @@ class Scene_SDP
           return;
         }
 
+        // policy step inside checkout cart.
         actor.modSdpPoints(-cost);
         actor.rankUpPanel(key);
         actor.modAccumulatedSpentSdpPoints(cost);
@@ -1323,6 +1393,7 @@ class Scene_SDP
     this.getSdpListWindow()
       .activate();
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -1347,6 +1418,7 @@ class Scene_SDP
     let levelCount = 0;
     let panelCount = 0;
 
+    // policy step inside build cart summary.
     cart.forEach((levels, key) =>
     {
       const panel = J.SDP.Metadata.panelsMap.get(key);
@@ -1367,17 +1439,21 @@ class Scene_SDP
       }
     });
 
+    // capture remaining for downstream policy in this routine.
     const remaining = wallet - totalCost;
     const canAfford = remaining >= 0;
 
+    // capture sole panel name for downstream policy in this routine.
     let solePanelName = null;
 
+    // when panelCount  equals  1, take this branch.
     if (panelCount === 1)
     {
       cart.forEach((_levels, key) =>
       {
         const sole = J.SDP.Metadata.panelsMap.get(key);
 
+        // when sole, take this branch.
         if (sole)
         {
           solePanelName = sole.name;
@@ -1385,6 +1461,7 @@ class Scene_SDP
       });
     }
 
+    // hand back { to the caller.
     return {
       panelCount,
       levelCount,
@@ -1555,6 +1632,7 @@ class Scene_SDP
       return;
     }
 
+    // policy step inside on cart checkout confirm.
     this.hideModalDimmer();
 
     // close the confirmation window.

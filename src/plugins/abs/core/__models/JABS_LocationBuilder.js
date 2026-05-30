@@ -13,6 +13,7 @@ class JABS_LocationBuilder
   {
     const newLocation = new JABS_Location(this.#x, this.#y, this.#d);
     this.clear();
+    // hand back new location to the caller.
     return newLocation;
   }
 
@@ -21,6 +22,7 @@ class JABS_LocationBuilder
     this.#x = null;
     this.#y = null;
     this.#d = null;
+    // hand back this to the caller.
     return this;
   }
 
@@ -110,18 +112,23 @@ class JABS_LocationBuilder
     {
       case J.ABS.Directions.LOWERLEFT:
         return this.facingUpperRight();
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.DOWN:
         return this.facingUp();
       case J.ABS.Directions.LOWERRIGHT:
+        // hand back this.facingUpperLeft to the caller.
         return this.facingUpperLeft;
       case J.ABS.Directions.LEFT:
         return this.facingRight();
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.RIGHT:
         return this.facingLeft();
       case J.ABS.Directions.UPPERLEFT:
+        // hand back this.facingLowerRight() to the caller.
         return this.facingLowerRight();
       case J.ABS.Directions.UP:
         return this.facingDown();
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.UPPERRIGHT:
         this.#d = J.ABS.Directions.LOWERLEFT;
         return this.facingLowerLeft();

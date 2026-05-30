@@ -17,5 +17,6 @@ TextManager.proficiencyDescription = function()
   return [
     "The numeric bonus of proficiency gained when gaining proficiency.",
     "Higher amounts of this means achieving proficiency mastery faster." ];
+// policy step inside proficiency description.
 };
 //endregion TextManager

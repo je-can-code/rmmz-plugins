@@ -1,6 +1,6 @@
 import './_metadata/initialization.js';
 
-import './__models/JaftingSalvageDataModels.js';
+import './registerJaftingSalvageSerializableModels.js';
 import './__models/JaftingSalvageLedger.js';
 import './managers/JaftingSalvageManager.js';
 import './objects/DataManager.js';

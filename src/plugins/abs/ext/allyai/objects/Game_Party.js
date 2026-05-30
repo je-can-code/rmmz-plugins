@@ -21,24 +21,29 @@ Game_Party.prototype.initAllyAi = function()
   /**
    * All encompassing object for storing my custom properties.
    */
+  // policy step inside init ally ai.
   this._j ||= {};
 
+  // policy step inside init ally ai.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
+  // policy step inside init ally ai.
   /**
    * A grouping of all properties associated with the ally ai JABS extension.
    */
   this._j._abs._allyAI ||= {};
 
+  // policy step inside init ally ai.
   /**
    * Whether or not the party will engage without the player's engagement.
    * @type {boolean}
    */
   this._j._abs._allyAI._aggroPassiveToggle ||= false;
 
+  // policy step inside init ally ai.
   /**
    * The name of the current formation the party is leveraging.
    * @type {string}

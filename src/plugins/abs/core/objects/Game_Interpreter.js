@@ -4,7 +4,7 @@
  * @param {number} param The character/event id to get the data for.
  * @returns {Game_Character}
  */
-J.ABS.Aliased.Game_Interpreter.character = Game_Interpreter.prototype.character;
+J.ABS.Aliased.Game_Interpreter.set('character', Game_Interpreter.prototype.character);
 Game_Interpreter.prototype.character = function(param)
 {
   if ($jabsEngine.absEnabled)
@@ -13,21 +13,25 @@ Game_Interpreter.prototype.character = function(param)
     {
       return $gamePlayer;
     }
+    // otherwise when this.isOnCurrentMap(), use this branch.
     else if (this.isOnCurrentMap())
     {
       const id = param > 0
         ? param
+        // policy step inside character.
         : this._eventId;
       return $gameMap.event(id);
     }
     else
     {
+      // hand back null to the caller.
       return null;
     }
   }
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.character.call(this, param);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('character').call(this, param);
   }
 };
 
@@ -36,34 +40,39 @@ Game_Interpreter.prototype.character = function(param)
  * Removed the check for seeing if the player is in-battle, because the player
  * is technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command201 = Game_Interpreter.prototype.command201;
+J.ABS.Aliased.Game_Interpreter.set('command201', Game_Interpreter.prototype.command201);
 Game_Interpreter.prototype.command201 = function(params)
 {
   if ($jabsEngine.absEnabled)
   {
     if ($gameMessage.isBusy()) return false;
 
+    // policy step inside command201.
     let mapId;
     let x;
     let y;
+    // when params[0]  equals  0, take this branch.
     if (params[0] === 0)
     {
       [, mapId, x, y] = params;
     }
     else
     {
+      // policy step inside command201.
       mapId = $gameVariables.value(params[1]);
       x = $gameVariables.value(params[2]);
       y = $gameVariables.value(params[3]);
     }
 
+    // policy step inside command201.
     $gamePlayer.reserveTransfer(mapId, x, y, params[4], params[5]);
     this.setWaitMode("transfer");
     return true;
   }
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.command201.call(this, params);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command201').call(this, params);
   }
 };
 
@@ -72,7 +81,7 @@ Game_Interpreter.prototype.command201 = function(params)
  * Removed the check for seeing if the player is in-battle, because the player
  * is technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command204 = Game_Interpreter.prototype.command204;
+J.ABS.Aliased.Game_Interpreter.set('command204', Game_Interpreter.prototype.command204);
 Game_Interpreter.prototype.command204 = function(params)
 {
   if ($jabsEngine.absEnabled)
@@ -83,17 +92,20 @@ Game_Interpreter.prototype.command204 = function(params)
       return false;
     }
 
+    // policy step inside command204.
     $gameMap.startScroll(params[0], params[1], params[2]);
     if (params[3])
     {
       this.setWaitMode("scroll");
     }
 
+    // hand back true to the caller.
     return true;
   }
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.command204.call(this, params);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command204').call(this, params);
   }
 };
 
@@ -105,7 +117,7 @@ Game_Interpreter.prototype.command204 = function(params)
  * NOTE: Though the battling is enabled, the battles may not behave as one would
  * expect from a default battle system when using an ABS as well.
  */
-J.ABS.Aliased.Game_Interpreter.command301 = Game_Interpreter.prototype.command301;
+J.ABS.Aliased.Game_Interpreter.set('command301', Game_Interpreter.prototype.command301);
 Game_Interpreter.prototype.command301 = function(params)
 {
   if ($jabsEngine.absEnabled)
@@ -127,6 +139,7 @@ Game_Interpreter.prototype.command301 = function(params)
         break;
     }
 
+    // when $dataTroops[troopId], take this branch.
     if ($dataTroops[troopId])
     {
       BattleManager.setup(troopId, params[2], params[3]);
@@ -135,11 +148,13 @@ Game_Interpreter.prototype.command301 = function(params)
       SceneManager.push(Scene_Battle);
     }
 
+    // hand back true to the caller.
     return true;
   }
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.command301.call(this, params);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command301').call(this, params);
   }
 };
 
@@ -148,7 +163,7 @@ Game_Interpreter.prototype.command301 = function(params)
  * Removed the check for seeing if the player is in-battle, because the player is
  * technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command302 = Game_Interpreter.prototype.command302;
+J.ABS.Aliased.Game_Interpreter.set('command302', Game_Interpreter.prototype.command302);
 Game_Interpreter.prototype.command302 = function(params)
 {
   if ($jabsEngine.absEnabled)
@@ -156,17 +171,20 @@ Game_Interpreter.prototype.command302 = function(params)
     const goods = [ params ];
     while (this.nextEventCode() === 605)
     {
+      // policy step inside command302.
       this._index++;
       goods.push(this.currentCommand().parameters);
     }
 
+    // Append the row to the working collection.
     SceneManager.push(Scene_Shop);
     SceneManager.prepareNextScene(goods, params[4]);
     return true;
   }
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.command302.call(this, params);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command302').call(this, params);
   }
 };
 
@@ -175,7 +193,7 @@ Game_Interpreter.prototype.command302 = function(params)
  * Removed the check for seeing if the player is in-battle, because the player is
  * technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command303 = Game_Interpreter.prototype.command303;
+J.ABS.Aliased.Game_Interpreter.set('command303', Game_Interpreter.prototype.command303);
 Game_Interpreter.prototype.command303 = function(params)
 {
   if ($jabsEngine.absEnabled)
@@ -186,10 +204,14 @@ Game_Interpreter.prototype.command303 = function(params)
       SceneManager.prepareNextScene(params[0], params[1]);
     }
 
+    // hand back true to the caller.
     return true;
   }
 
-  return J.ABS.Aliased.Game_Interpreter.command303.call(this, params);
+  // perform original logic.
+  // hand back J.ABS.Aliased.Game_Interpreter.get('command303').call(this, ... to the caller.
+  // perform original logic.
+  return J.ABS.Aliased.Game_Interpreter.get('command303').call(this, params);
 };
 
 /**
@@ -197,7 +219,7 @@ Game_Interpreter.prototype.command303 = function(params)
  * Removed the check for seeing if the player is in-battle, because the player is
  * technically ALWAYS in-battle while the ABS is enabled.
  */
-J.ABS.Aliased.Game_Interpreter.command352 = Game_Interpreter.prototype.command352;
+J.ABS.Aliased.Game_Interpreter.set('command352', Game_Interpreter.prototype.command352);
 Game_Interpreter.prototype.command352 = function()
 {
   if ($jabsEngine.absEnabled)
@@ -205,9 +227,11 @@ Game_Interpreter.prototype.command352 = function()
     SceneManager.push(Scene_Save);
     return true;
   }
+  // otherwise fall back to the alternate path.
   else
   {
-    return J.ABS.Aliased.Game_Interpreter.command352.call(this);
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command352').call(this);
   }
 };
 //endregion Game_Interpreter

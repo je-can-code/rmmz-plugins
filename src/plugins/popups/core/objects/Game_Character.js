@@ -1,4 +1,6 @@
 //region Game_Character
+import PopupLayoutHelper from './../helpers/PopupLayoutHelper.js';
+
 /**
  * Hooks into the `Game_Character.initMembers` and adds in action sprite properties.
  */
@@ -8,15 +10,18 @@ Game_Character.prototype.initMembers = function()
   /**
    * The master reference to the `_j` object containing all plugin properties.
    * @type {{}}
+   // policy step inside init members.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * The text pops that are pending processing.
    * @type {Map_TextPop[]}
    */
   this._j._textPops = [];
 
+  // policy step inside init members.
   /**
    * Whether or not this character has a request for generating damage pops.
    * @type {boolean}
@@ -24,6 +29,7 @@ Game_Character.prototype.initMembers = function()
   this._j._textPopRequest = false;
 
   // run the rest of the original logic.
+  // perform original logic.
   J.POPUPS.Aliased.Game_Character.get('initMembers')
     .call(this);
 };
@@ -35,6 +41,7 @@ Game_Character.prototype.hasTextPops = function()
 {
   if (J.POPUPS.Metadata.disablePopups === true) return false;
 
+  // hand back this._j._textPopRequest to the caller.
   return this._j._textPopRequest;
 };
 
@@ -45,6 +52,7 @@ Game_Character.prototype.requestTextPop = function()
 {
   if (J.POPUPS.Metadata.disablePopups === true) return;
 
+  // policy step inside request text pop.
   this._j._textPopRequest = true;
   J.POPUPS.notifyPopupFlushRequested(this);
 };
@@ -65,7 +73,8 @@ Game_Character.prototype.addTextPop = function(textPop)
 {
   if (J.POPUPS.Metadata.disablePopups === true) return;
 
-  if (J.POPUPS.isValidTextPopForQueue(textPop) === false)
+  // when J.POPUPS.isValidTextPopForQueue(textPop)  equals  false, take this branch.
+  if (PopupLayoutHelper.isValidTextPopForQueue(textPop) === false)
   {
     console.warn(
       `[${J.POPUPS.Metadata.name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`,
@@ -74,6 +83,7 @@ Game_Character.prototype.addTextPop = function(textPop)
     return;
   }
 
+  // Append the row to the working collection.
   this._j._textPops.push(textPop);
   J.POPUPS.notifyPopupQueued(this, textPop);
 };
@@ -94,6 +104,7 @@ Game_Character.prototype.emptyDamagePops = function()
 {
   const textPops = this.getTextPops();
 
+  // Mutate the array in place for this edit.
   textPops.splice(0, textPops.length);
 };
 

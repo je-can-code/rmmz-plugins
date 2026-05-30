@@ -1,9 +1,6 @@
 //region JaftingSalvageLedger
-import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
-import {
-  JaftingSalvageLedgerRow,
-  JaftingSalvageLedgerSnapshot,
-} from './JaftingSalvageDataModels.js';
+import JaftingSalvageLedgerRow from './JaftingSalvageLedgerRow.js';
+import JaftingSalvageLedgerSnapshot from './JaftingSalvageLedgerSnapshot.js';
 
 /**
  * Stateless helpers for salvage ledger **rows** (clone, merge, dedupe).<br>
@@ -35,12 +32,14 @@ JaftingSalvageLedger.getMaterialArmorTypeId = function()
   {
     const v = J.JAFTING.Metadata.materialArmorTypeId;
 
+    // when typeof v  equals  'number'  and  not Number.isNaN(v), take this branch.
     if (typeof v === 'number' && !Number.isNaN(v))
     {
       return v;
     }
   }
 
+  // hand back JaftingSalvageLedger.MaterialArmorTypeId to the caller.
   return JaftingSalvageLedger.MaterialArmorTypeId;
 };
 
@@ -58,59 +57,66 @@ JaftingSalvageLedger.getMaterialWeaponTypeId = function()
   {
     const v = J.JAFTING.Metadata.materialWeaponTypeId;
 
+    // when typeof v  equals  'number'  and  not Number.isNaN(v), take this branch.
     if (typeof v === 'number' && !Number.isNaN(v))
     {
       return v;
     }
   }
 
+  // hand back -1 to the caller.
   return -1;
 };
 
 /**
  * True when this armor row uses the configured material armor type (refine primary filter, dismantle pass-through).
  *
- * @param {RPG_Armor|RPG_Base} datum
+ * @param {RPG_Armor|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isMaterialArmorDatum = function(datum)
 {
   const armorTypeId = JaftingSalvageLedger.getMaterialArmorTypeId();
 
+  // when armorTypeId < 0, take this branch.
   if (armorTypeId < 0)
   {
     return false;
   }
 
+  // hand back datum.isArmor() === true && datum.atypeId === armorTy... to the caller.
   return datum.isArmor() === true && datum.atypeId === armorTypeId;
 };
 
 /**
  * True when this weapon row uses the configured material weapon type (parameter must be zero or greater).
  *
- * @param {RPG_Weapon|RPG_Base} datum
+ * @param {RPG_Weapon|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isMaterialWeaponDatum = function(datum)
 {
   const weaponTypeId = JaftingSalvageLedger.getMaterialWeaponTypeId();
 
+  // when weaponTypeId < 0, take this branch.
   if (weaponTypeId < 0)
   {
     return false;
   }
 
+  // hand back datum.isWeapon() === true && datum.wtypeId === weapon... to the caller.
   return datum.isWeapon() === true && datum.wtypeId === weaponTypeId;
 };
 
 /**
  * True when refine lists should keep one row with stack counts (monster parts, clip-style weapons, etc.).
  *
- * @param {RPG_EquipItem|RPG_Base} datum
+ * @param {RPG_EquipItem|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isStackCountedRefinableEquip = function(datum)
 {
+  // hand back JaftingSalvageLedger.isMaterialArmorDatum(datum) to the caller.
   return JaftingSalvageLedger.isMaterialArmorDatum(datum)
     || JaftingSalvageLedger.isMaterialWeaponDatum(datum);
 };
@@ -137,11 +143,13 @@ JaftingSalvageLedger.cloneRows = function(rows)
   const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
   const out = [];
 
+  // iterate the loop counter until the guard exits.
   for (let i = 0; i < list.length; i++)
   {
     out.push(list[i].clone());
   }
 
+  // hand back out to the caller.
   return out;
 };
 
@@ -160,11 +168,13 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
   const bucket = {};
   const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
 
+  // iterate the loop counter until the guard exits.
   for (let i = 0; i < list.length; i++)
   {
     const row = list[i];
     const key = JaftingSalvageLedger.rowMergeKey(row);
 
+    // when not bucket[key], take this branch.
     if (!bucket[key])
     {
       bucket[key] = row.clone();
@@ -181,6 +191,7 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
     }
   }
 
+  // hand back Object.keys(bucket).map(k => bucket[k]) to the caller.
   return Object.keys(bucket).map(k => bucket[k]);
 };
 
@@ -188,23 +199,26 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
  * Builds ledger rows from recipe ingredients (what crafting consumed).<br>
  * Tools are intentionally omitted — salvage stamps track consumed inputs only.
  *
- * @param {CraftingComponent[]} ingredients
+ * @param {CraftingComponent[]} ingredients The ingredients driving this step.
  * @returns {JaftingSalvageLedgerRow[]}
  */
 JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
 {
   const rows = [];
 
+  // iterate the loop counter until the guard exits.
   for (let i = 0; i < ingredients.length; i++)
   {
     const component = ingredients[i];
 
+    // when component.isDatabaseEntry(), take this branch.
     if (component.isDatabaseEntry())
     {
       // mirror {@link CraftingComponent} letter codes into ledger row type letters for stash/refund routing.
       const datum = component.getItem();
       let typeLetter = 'i';
 
+      // when component.isWeapon(), take this branch.
       if (component.isWeapon())
       {
         typeLetter = 'w';
@@ -214,6 +228,7 @@ JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
         typeLetter = 'a';
       }
 
+      // Append the row to the working collection.
       rows.push(new JaftingSalvageLedgerRow(typeLetter, datum.id, component.quantity()));
     }
     else if (component.isGold())
@@ -244,6 +259,7 @@ JaftingSalvageLedger.mergeRowArrays = function(a, b)
   // concat first so identical keys from both sides collide, then dedupe sums counts and merges banned flags.
   const combined = JaftingSalvageLedger.cloneRows(a).concat(JaftingSalvageLedger.cloneRows(b));
 
+  // hand back JaftingSalvageLedger.mergeDuplicateRows(combined) to the caller.
   return JaftingSalvageLedger.mergeDuplicateRows(combined);
 };
 

@@ -984,16 +984,19 @@ RPG_Skill.mergeJabsVisPairFromNotes = function(skill, holder, regExp)
   const sk = RPGManager.getArrayFromNotesByRegex(skill, regExp, true, true);
   const ev = holder ? RPGManager.getArrayFromNotesByRegex(holder, regExp, true, true) : null;
 
+  // when sk  differs from  null, take this branch.
   if (sk !== null)
   {
     return sk;
   }
 
+  // when ev  differs from  null, take this branch.
   if (ev !== null)
   {
     return ev;
   }
 
+  // hand back null to the caller.
   return null;
 };
 
@@ -1009,11 +1012,13 @@ RPG_Skill.mergeJabsVisPairNumberFromNotes = function(skill, holder, regExp)
   const sk = RPGManager.getNumberFromNoteByRegex(skill, regExp, true);
   const ev = holder ? RPGManager.getNumberFromNoteByRegex(holder, regExp, true) : null;
 
+  // when sk  differs from  null, take this branch.
   if (sk !== null)
   {
     return sk;
   }
 
+  // hand back ev to the caller.
   return ev;
 };
 
@@ -1029,11 +1034,13 @@ RPG_Skill.mergeJabsVisPairBoolFromNotes = function(skill, holder, regExp)
   const sk = RPGManager.checkForBooleanFromNoteByRegex(skill, regExp, true);
   const ev = holder ? RPGManager.checkForBooleanFromNoteByRegex(holder, regExp, true) : null;
 
+  // when sk  differs from  null, take this branch.
   if (sk !== null)
   {
     return sk;
   }
 
+  // hand back ev to the caller.
   return ev;
 };
 
@@ -1048,14 +1055,17 @@ RPG_Skill.prototype.getJabsVisAnchorMergedForActionMap = function(jabsAction)
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
   const combined = RPG_Skill.mergeJabsVisPairFromNotes(this, holder, J.ABS.RegExp.VisAnchor);
 
+  // when combined  equals  null, take this branch.
   if (combined === null)
   {
     return null;
   }
 
+  // capture ax for downstream policy in this routine.
   const ax = Math.max(0, Math.min(1, combined[0]));
   const ay = Math.max(0, Math.min(1, combined[1]));
 
+  // hand back [ ax, ay ] to the caller.
   return [ ax, ay ];
 };
 
@@ -1068,6 +1078,7 @@ RPG_Skill.prototype.getJabsVisZMergedForActionMap = function(jabsAction)
 {
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
 
+  // hand back RPG_Skill.mergeJabsVisPairNumberFromNotes(this, holde... to the caller.
   return RPG_Skill.mergeJabsVisPairNumberFromNotes(this, holder, J.ABS.RegExp.VisZ);
 };
 
@@ -1081,6 +1092,7 @@ RPG_Skill.prototype.getJabsVisRotateMergedForActionMap = function(jabsAction)
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
   const merged = RPG_Skill.mergeJabsVisPairBoolFromNotes(this, holder, J.ABS.RegExp.VisRotate);
 
+  // hand back merged !== null ? merged : false to the caller.
   return merged !== null ? merged : false;
 };
 
@@ -1093,6 +1105,7 @@ RPG_Skill.prototype.getJabsVisScaleMergedForActionMap = function(jabsAction)
 {
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
 
+  // hand back RPG_Skill.mergeJabsVisPairFromNotes(this, holder, J.A... to the caller.
   return RPG_Skill.mergeJabsVisPairFromNotes(this, holder, J.ABS.RegExp.VisScale);
 };
 
@@ -1106,6 +1119,7 @@ RPG_Skill.prototype.getJabsVisDebugMergedForActionMap = function(jabsAction)
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
   const merged = RPG_Skill.mergeJabsVisPairBoolFromNotes(this, holder, J.ABS.RegExp.VisDebug);
 
+  // hand back merged !== null ? merged : false to the caller.
   return merged !== null ? merged : false;
 };
 
@@ -1121,27 +1135,34 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
 {
   const holder = jabsAction ? jabsAction.getActionMapVisualNoteHolder() : null;
 
+  // when not holder, take this branch.
   if (!holder)
   {
     return this.getJabsVisOffsetFor(direction);
   }
 
+  // capture pick for downstream policy in this routine.
   const pick = RPG_Skill.mergeJabsVisPairFromNotes;
 
+  // capture def skill for downstream policy in this routine.
   const defSkill = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisOffset, true, true);
   const defEv = RPGManager.getArrayFromNotesByRegex(holder, J.ABS.RegExp.VisOffset, true, true);
   const defRaw = defSkill !== null ? defSkill : defEv;
+  // capture def for downstream policy in this routine.
   const def = defRaw !== null ? defRaw : [ 0, 0 ];
 
+  // capture merged u for downstream policy in this routine.
   const mergedU = pick(this, holder, J.ABS.RegExp.VisOffsetU);
   const mergedD = pick(this, holder, J.ABS.RegExp.VisOffsetD);
   const mergedL = pick(this, holder, J.ABS.RegExp.VisOffsetL);
+  // capture merged r for downstream policy in this routine.
   const mergedR = pick(this, holder, J.ABS.RegExp.VisOffsetR);
   const mergedUR = pick(this, holder, J.ABS.RegExp.VisOffsetUR);
   const mergedUL = pick(this, holder, J.ABS.RegExp.VisOffsetUL);
   const mergedDR = pick(this, holder, J.ABS.RegExp.VisOffsetDR);
   const mergedDL = pick(this, holder, J.ABS.RegExp.VisOffsetDL);
 
+  // dispatch on the discriminant for the next policy branch.
   switch (direction)
   {
     case 8:
@@ -1162,6 +1183,7 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
       return mergedDL || mergedD || mergedL || def || [ 0, 0 ];
   }
 
+  // hand back def || [ 0, 0 ] to the caller.
   return def || [ 0, 0 ];
 };
 //endregion directional

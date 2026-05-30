@@ -22,19 +22,23 @@ Game_Battler.prototype.initPassiveStatesMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init passive states members.
   this._j ||= {};
 
+  // policy step inside init passive states members.
   /**
    * A grouping of all properties associated with passive states.
    */
   this._j._passive ||= {};
 
+  // policy step inside init passive states members.
   /**
    * A cached list of all currently applied passive state ids.
    * @type {number[]|null}
    */
   this._j._passive._stateIds = [];
 
+  // policy step inside init passive states members.
   /**
    * A group of all external sources that are associated with this battler's passive states.
    * @type {RPG_BaseItem[]}
@@ -176,6 +180,7 @@ Game_Battler.prototype.canAddPassiveStateId = function(stateId, allowDuplicates)
  */
 Game_Battler.prototype.getPassiveStates = function()
 {
+  // hand back this.getPassiveStateIds() to the caller.
   return this.getPassiveStateIds()
     .map(this.state, this);
 };
@@ -361,6 +366,7 @@ J.PASSIVE.Aliased.Game_Battler.set('allStates', Game_Battler.prototype.allStates
 Game_Battler.prototype.allStates = function()
 {
   // get all original states.
+  // perform original logic.
   const states = J.PASSIVE.Aliased.Game_Battler.get('allStates')
     .call(this);
 
@@ -382,6 +388,7 @@ Game_Battler.prototype.isStateAddable = function(stateId)
   if (this.isPassiveState(stateId)) return false;
 
   // otherwise, check as normal.
+  // perform original logic.
   return J.PASSIVE.Aliased.Game_Battler.get('isStateAddable')
     .call(this, stateId);
 };
@@ -413,6 +420,7 @@ Game_Battler.prototype.removeState = function(stateId)
   if (this.isPassiveState(stateId)) return;
 
   // otherwise, remove as normal.
+  // perform original logic.
   J.PASSIVE.Aliased.Game_Battler.get('removeState')
     .call(this, stateId);
 };

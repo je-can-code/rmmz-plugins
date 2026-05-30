@@ -28,13 +28,17 @@ Game_Party.prototype.initJaftingCreationMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init jafting creation members.
   this._j ||= {};
 
+  // policy step inside init jafting creation members.
   /**
    * A grouping of all properties associated with the jafting system.
    */
+  // policy step inside init jafting creation members.
   this._j._crafting ||= {};
 
+  // policy step inside init jafting creation members.
   /**
    * A collection of all recipes being tracked by this party.
    * There should always be one for every recipe imported from the configuration.
@@ -42,6 +46,7 @@ Game_Party.prototype.initJaftingCreationMembers = function()
    */
   this._j._crafting._recipeTrackings = [];
 
+  // policy step inside init jafting creation members.
   /**
    * A collection of all categories being tracked by this party.
    * There should always be one for every category imported from the configuration.
@@ -144,6 +149,7 @@ Game_Party.prototype.getAllCategoryTrackings = function()
  */
 Game_Party.prototype.getUnlockedRecipeTrackings = function()
 {
+  // hand back this.getAllRecipeTrackings() to the caller.
   return this.getAllRecipeTrackings()
     .filter(recipe => recipe.isUnlocked());
 };
@@ -154,6 +160,7 @@ Game_Party.prototype.getUnlockedRecipeTrackings = function()
  */
 Game_Party.prototype.getUnlockedCategoryTrackings = function()
 {
+  // hand back this.getAllCategoryTrackings() to the caller.
   return this.getAllCategoryTrackings()
     .filter(category => category.isUnlocked());
 };
@@ -222,6 +229,7 @@ Game_Party.prototype.getUnlockedRecipesByCategory = function(categoryKey)
   const recipes = this.getUnlockedRecipes();
   const unlocked = recipes.filter(recipe => recipe.categoryKeys.includes(categoryKey));
 
+  // hand back unlocked to the caller.
   return unlocked;
 };
 
@@ -236,6 +244,7 @@ Game_Party.prototype.getCraftedRecipeCountByCategoryKey = function(categoryKey)
   // get all unlocked recipes of a given category.
   const unlocked = this.getUnlockedRecipesByCategory(categoryKey);
 
+  // when not unlocked.length, take this branch.
   if (!unlocked.length) return 0;
 
   // grab the keys of all the unlocked recipes.
@@ -267,6 +276,7 @@ Game_Party.prototype.getAllRecipesAsMap = function()
  */
 Game_Party.prototype.getRecipeTrackingByKey = function(key)
 {
+  // hand back this.getAllRecipeTrackings() to the caller.
   return this.getAllRecipeTrackings()
     .find(tracked => (tracked.key === key));
 };
@@ -278,6 +288,7 @@ Game_Party.prototype.getRecipeTrackingByKey = function(key)
  */
 Game_Party.prototype.getRecipeByKey = function(key)
 {
+  // hand back this.getAllRecipesAsMap() to the caller.
   return this.getAllRecipesAsMap()
     .get(key);
 };
@@ -298,6 +309,7 @@ Game_Party.prototype.getAllCategoriesAsMap = function()
  */
 Game_Party.prototype.getCategoryByKey = function(key)
 {
+  // hand back this.getAllCategoriesAsMap() to the caller.
   return this.getAllCategoriesAsMap()
     .get(key);
 };
@@ -309,6 +321,7 @@ Game_Party.prototype.getCategoryByKey = function(key)
  */
 Game_Party.prototype.getCategoryTrackingByKey = function(key)
 {
+  // hand back this.getAllCategoryTrackings() to the caller.
   return this.getAllCategoryTrackings()
     .find(tracked => (tracked.key === key));
 };
@@ -405,6 +418,7 @@ Game_Party.prototype.unlockAllCategories = function()
   this
     .getAllCategoryTrackings()
     .filter(tracking => this.canGainEntry(tracking.key))
+    // policy step inside unlock all categories.
     .forEach(tracking => tracking.unlock());
 };
 
@@ -416,6 +430,7 @@ Game_Party.prototype.lockAllCategories = function()
   this
     .getAllCategoryTrackings()
     .forEach(tracking => tracking.lock());
+// policy step inside lock all categories.
 };
 
 /**
@@ -426,6 +441,7 @@ Game_Party.prototype.unlockAllRecipes = function()
   this
     .getAllRecipeTrackings()
     .filter(tracking => this.canGainEntry(tracking.key))
+    // policy step inside unlock all recipes.
     .forEach(tracking => tracking.unlock());
 };
 
@@ -437,6 +453,7 @@ Game_Party.prototype.lockAllRecipes = function()
   this
     .getAllRecipeTrackings()
     .forEach(tracking => tracking.lock());
+// policy step inside lock all recipes.
 };
 
 /**
@@ -475,6 +492,7 @@ Game_Party.prototype.revealAllKnownRecipes = function()
   this
     .getAllRecipeTrackings()
     .filter(tracking => this.canGainEntry(tracking.key))
+    // policy step inside reveal all known recipes.
     .forEach(tracking => tracking.improveProficiency(1));
 };
 
@@ -487,6 +505,7 @@ Game_Party.prototype.unlockEverythingCompletely = function()
   this.unlockAllRecipes();
   this.unlockAllCategories();
   this.revealAllKnownRecipes();
+// policy step inside unlock everything completely.
 };
 
 Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(variableId, ...categoryKeys)

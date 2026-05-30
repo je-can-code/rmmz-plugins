@@ -1,4 +1,4 @@
-//region RPG_Skill
+//region RPG_UsableItem
 Object.defineProperties(RPG_UsableItem.prototype, {
   /**
    * Gets the elementIds that this skill bypasses.
@@ -22,31 +22,14 @@ Object.defineProperties(RPG_UsableItem.prototype, {
         return null;
       }
 
-      // reset the index.
-      J.ABS.EXT.SHIELD.RegExp.Bypass.lastIndex = 0;
-
-      // attempt to match the extension-provided bypass regex.
-      const match = J.ABS.EXT.SHIELD.RegExp.Bypass.exec(this.note);
-
-      // if somehow we didn't match (shouldn't happen), treat as no list.
-      if (!match)
+      // universal bypass carries no typed element list.
+      if (this.isShieldBypassUniversal)
       {
         return null;
       }
 
-      // when the capture group is missing/empty, this is the universal (parameterless) form.
-      if (!match[1] || String(match[1])
-        .trim().length === 0)
-      {
-        // universal bypass is handled by a separate boolean; return null here.
-        return null;
-      }
-
-      // otherwise, parse the numeric list via RPGManager using the same regex.
-      const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
-
-      // return the parsed numeric list.
-      return list;
+      // parse the numeric list via RPGManager using the canonical regex.
+      return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
     },
     configurable: true
   },
@@ -59,11 +42,7 @@ Object.defineProperties(RPG_UsableItem.prototype, {
   hasShieldBypass: {
     get: function()
     {
-      // reset the index.
-      J.ABS.EXT.SHIELD.RegExp.Bypass.lastIndex = 0;
-
-      // simple presence check against the canonical regex.
-      return J.ABS.EXT.SHIELD.RegExp.Bypass.test(this.note);
+      return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass);
     },
     configurable: true
   },
@@ -82,21 +61,10 @@ Object.defineProperties(RPG_UsableItem.prototype, {
         return false;
       }
 
-      // reset the index.
-      J.ABS.EXT.SHIELD.RegExp.Bypass.lastIndex = 0;
+      // parameterized tags yield a parsed list; parameterless tags do not.
+      const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true, true);
 
-      // exec to inspect the capture; universal form will have no usable group.
-      const match = J.ABS.EXT.SHIELD.RegExp.Bypass.exec(this.note);
-
-      // if present and no parameter payload, then it's universal.
-      if (match && (!match[1] || String(match[1])
-        .trim().length === 0))
-      {
-        return true;
-      }
-
-      // otherwise, it's the parameterized typed form.
-      return false;
+      return list === null;
     },
     configurable: true
   },
@@ -110,13 +78,10 @@ Object.defineProperties(RPG_UsableItem.prototype, {
   shieldBonusFormulas: {
     get: function()
     {
-      // reset the index.
-      J.ABS.EXT.SHIELD.RegExp.ShieldDamage.lastIndex = 0;
-
-      // Retrieve all matching formula strings from the note.
+      // retrieve all matching formula strings from the note.
       const formulas = RPGManager.getStringsFromNoteByRegex(this, J.ABS.EXT.SHIELD.RegExp.ShieldDamage);
 
-      // If no tags present, return an empty array for simpler consumers.
+      // if no tags present, return an empty array for simpler consumers.
       return Array.isArray(formulas)
         ? formulas
         : [];
@@ -124,4 +89,4 @@ Object.defineProperties(RPG_UsableItem.prototype, {
     configurable: true
   },
 });
-//endregion RPG_Skill
+//endregion RPG_UsableItem

@@ -68,6 +68,7 @@ Game_Follower.prototype.jumpToPlayer = function()
   const sx = $gamePlayer.deltaXFrom(this.x);
   const sy = $gamePlayer.deltaYFrom(this.y);
   this.jump(sx, sy);
+// policy step inside jump to player.
 };
 
 //endregion Game_Follower

@@ -10,6 +10,7 @@ Game_Unit.prototype.inBattle = function()
 {
   return $jabsEngine.absEnabled
     ? true
+    // perform original logic.
     : J.ABS.Aliased.Game_Unit.get('inBattle')
       .call(this);
 }

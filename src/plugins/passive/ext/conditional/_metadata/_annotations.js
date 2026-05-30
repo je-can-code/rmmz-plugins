@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Applies passive states while runtime conditions hold (JABS map combat).
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Gates and scales J-Passive grants via source rules (JABS map combat).
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -16,57 +16,43 @@
  * @help
  * ============================================================================
  * OVERVIEW
- * This plugin is a J-Passive extension for JABS map combat.
+ * Extends J-Passive so passive grants from a source can be gated and scaled.
+ * Unconditional passives are simply grants with no rules.
  *
- * It evaluates tag-driven rules on battler passive sources and temporarily
- * treats additional states as passives while conditions are true.
+ * Three tag families live on the same rows as <passive:[...]>:
+ *  passiveSourceRule  — gates every passive from this source
+ *  passiveStateRule   — gates one state id from this source
+ *  passiveStateCount  — stack contribution for one state id from this source
  *
- * ----------------------------------------------------------------------------
- * DETAILS:
- * Rules live on the same database objects that already feed J-Passive
- * (skills, states, actors, enemies, etc.). When a rule's condition passes,
- * the listed state id is merged into the battler's passive state tracker.
- *
- * Map battlers re-check on a throttled timer; any refresh of passive states
- * (equip change, skill learn, etc.) also re-evaluates conditions immediately.
- *
+ * Map battlers re-check on a throttled timer; any passive refresh re-evaluates.
  * ============================================================================
- * CONDITIONAL PASSIVE TAGS:
- * Have you ever wanted "apply state 12 while HP is below 25%" without hand-
- * rolling common events? Well now you can! By applying the tag below to any
- * passive source note, you too can gate passive states on runtime context.
+ * GATE TAGS
+ *  <passiveSourceRule:[KIND, PARAM?]>
+ *  <passiveStateRule:[STATE_ID, KIND, PARAM?]>
  *
- * TAG USAGE:
- * - Skills (mastery wrapper skills are the primary authoring surface)
- * - States, actors, enemies, classes, equipment — any J-Passive source
+ * Threshold kinds use *Above (>=) and *Below (<=):
+ *  hp/mp/tp — current resource percent; mhp/mmp/mtp — flat max values
+ *  {registryKey}Above/Below — flat or hundred-scale per ParameterRegistry
+ *  allAllies{Key}Above/Below — every allied JABS battler (incl. self) must pass
  *
- * TAG FORMAT:
- *  <conditionalPassive:[STATE_ID, CONDITION, PARAM?]>
- * Where STATE_ID is the passive state to apply while the condition holds.
- * Where CONDITION is the evaluator key (see supported list below).
- * Where PARAM is required for threshold-style conditions (percent 1–100, etc.).
+ * Discrete kinds include alliesNearby, enemiesNearby, hasState, negativeStateCount,
+ * slotOnCooldown, slotOffCooldown, allOnCooldown, allOffCooldown,
+ * sinceLastMoved/Hit/Attacked, movedWithin/hitWithin/attackedWithin (frames).
  *
- * TAG EXAMPLES:
- *  <conditionalPassive:[42, hpBelow, 25]>
- * While HP is strictly below 25%, state 42 is treated as a passive state.
- *
- *  <conditionalPassive:[43, hpAbove, 50]>
- * While HP is strictly above 50%, state 43 is treated as a passive state.
- *
- * SUPPORTED CONDITIONS (v1 scaffold):
- *  hpBelow — PARAM = HP percent threshold (exclusive)
- *  hpAbove — PARAM = HP percent threshold (exclusive)
- *
- * Multiple tags may point at the same state id; each tag is evaluated on its own.
+ * EXAMPLES:
+ *  <passive:[12]>
+ *  <passiveStateRule:[12, hpBelow, 25]>
+ *  <passiveSourceRule:[allOffCooldown]>
  * ============================================================================
- * PLUGIN PARAMETERS:
- *  - Reconcile Delay (frames):
- *      How often map battlers re-check conditional passives while ABS is active.
- *      Defaults to 15 (~4 times per second at 60 fps).
+ * STACK COUNT TAG
+ *  <passiveStateCount:[STATE_ID, KIND, PARAM]>
+ *
+ * Kinds: negativeStateCount, alliesNearby (excludes self), lessIsMoreHp/Mp/Tp,
+ * moreIsMoreHp/Mp/Tp, per-{registryKey} (integer points per stack).
  * ============================================================================
  * CHANGELOG:
  * - 1.0.0
- *    Initial release (scaffold + HP threshold conditions).
+ *    Initial release (passive rule framework).
  * ============================================================================
  *
  * @param parentConfigPassiveConditional
@@ -78,7 +64,16 @@
  * @min 1
  * @max 600
  * @text Reconcile Delay (frames)
- * @desc Frames between conditional passive re-checks per map battler.
+ * @desc Frames between passive rule re-checks per map battler.
  * @default 15
+ *
+ * @param default-proximity-tiles
+ * @parent parentConfigPassiveConditional
+ * @type number
+ * @min 1
+ * @max 99
+ * @text Default Proximity (tiles)
+ * @desc Tile radius for alliesNearby/enemiesNearby rules and stack counts.
+ * @default 5
  */
 //endregion annotations

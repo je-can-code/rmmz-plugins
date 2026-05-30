@@ -1,5 +1,5 @@
 //region JABS_ActionBuilder
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 import JABS_ActionOptions from './JABS_ActionOptions.js';
 import JABS_Action from './JABS_Action.js';
 /**
@@ -70,8 +70,10 @@ class JABS_ActionBuilder
       mapAction.setActionOptions(this.#actionOptions);
     }
 
+    // policy step inside build.
     this.clear();
 
+    // hand back map action to the caller.
     return mapAction;
   }
 

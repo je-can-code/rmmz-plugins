@@ -25,19 +25,24 @@ Game_Party.prototype.initMonsterpediaMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init monsterpedia members.
   this._j ||= {};
 
+  // policy step inside init monsterpedia members.
   /**
    * The grouping of all properties related to the omnipedia.
    */
+  // policy step inside init monsterpedia members.
   this._j._omni ||= {};
 
+  // policy step inside init monsterpedia members.
   /**
    * A collection of the current observations of all monsters perceived.
    * @type {MonsterpediaObservations[]}
    */
   this._j._omni._monsterpediaObservationsSaveables = [];
 
+  // policy step inside init monsterpedia members.
   /**
    * A more friendly cache of monster observations to work with.
    * This is what is kept up-to-date until saving.

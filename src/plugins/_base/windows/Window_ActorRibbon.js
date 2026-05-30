@@ -28,27 +28,33 @@ class Window_ActorRibbon
     /**
      * The actor in this window.
      * @type {Game_Actor|null}
+     // policy step inside init members.
      */
     this._actor = null;
 
+    // policy step inside init members.
     /**
      * The width of the actor face in the ribbon.
      * @type {number}
+     // policy step inside init members.
      */
     this._faceWidth = 128;
 
+    // policy step inside init members.
     /**
      * The height of the actor face in the ribbon.
      * @type {number}
      */
     this._faceHeight = 40;
 
+    // policy step inside init members.
     /**
      * The x of the actor's face in the ribbon.
      * @type {number}
      */
     this._faceX = 0;
 
+    // policy step inside init members.
     /**
      * The y of the actor's face in the ribbon.
      * @type {number}

@@ -70,6 +70,7 @@ class Window_JabsRemapCommand
       .setEnabled(true)
       .build();
 
+    // hand back [ apply, defaults, reset, cancel ] to the caller.
     return [ apply, defaults, reset, cancel ];
   }
 }

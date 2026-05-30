@@ -8,9 +8,11 @@ import JABS_PopupManager from './JABS_PopupManager.js';
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('postPrimaryBattleEffects', JABS_Engine.prototype.postPrimaryBattleEffects);
 JABS_Engine.prototype.postPrimaryBattleEffects = function(action, target)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('postPrimaryBattleEffects')
     .call(this, action, target);
 
+  // policy step inside post primary battle effects.
   JABS_PopupManager.showAttackPop(action, target, this);
   JABS_PopupManager.showSkillUsedPop(action);
 };
@@ -22,11 +24,14 @@ JABS_Engine.prototype.postPrimaryBattleEffects = function(action, target)
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('gainExperienceReward', JABS_Engine.prototype.gainExperienceReward);
 JABS_Engine.prototype.gainExperienceReward = function(experience, casterCharacter)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('gainExperienceReward')
     .call(this, experience, casterCharacter);
 
+  // when not experience, take this branch.
   if (!experience) return;
 
+  // policy step inside gain experience reward.
   JABS_PopupManager.showExperiencePop(experience, casterCharacter);
 };
 
@@ -37,11 +42,14 @@ JABS_Engine.prototype.gainExperienceReward = function(experience, casterCharacte
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('gainGoldReward', JABS_Engine.prototype.gainGoldReward);
 JABS_Engine.prototype.gainGoldReward = function(gold, character)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('gainGoldReward')
     .call(this, gold, character);
 
+  // when not gold, take this branch.
   if (!gold) return;
 
+  // policy step inside gain gold reward.
   JABS_PopupManager.showGoldPop(gold, character);
 };
 
@@ -52,9 +60,11 @@ JABS_Engine.prototype.gainGoldReward = function(gold, character)
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('onItemPickedUp', JABS_Engine.prototype.onItemPickedUp);
 JABS_Engine.prototype.onItemPickedUp = function(itemDataList, character)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('onItemPickedUp')
     .call(this, itemDataList, character);
 
+  // policy step inside on item picked up.
   JABS_PopupManager.showItemPickedUpPops(itemDataList, character);
 };
 
@@ -65,9 +75,11 @@ JABS_Engine.prototype.onItemPickedUp = function(itemDataList, character)
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('battlerLevelup', JABS_Engine.prototype.battlerLevelup);
 JABS_Engine.prototype.battlerLevelup = function(uuid)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('battlerLevelup')
     .call(this, uuid);
 
+  // capture battler for downstream policy in this routine.
   const battler = JABS_AiManager.getBattlerByUuid(uuid);
   if (battler)
   {
@@ -82,9 +94,11 @@ JABS_Engine.prototype.battlerLevelup = function(uuid)
 J.POPUPS.EXT.ABS.Aliased.JABS_Engine.set('battlerSkillLearn', JABS_Engine.prototype.battlerSkillLearn);
 JABS_Engine.prototype.battlerSkillLearn = function(skill, uuid)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('battlerSkillLearn')
     .call(this, skill, uuid);
 
+  // capture battler for downstream policy in this routine.
   const battler = JABS_AiManager.getBattlerByUuid(uuid);
   if (battler)
   {

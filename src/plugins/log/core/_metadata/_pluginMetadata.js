@@ -17,6 +17,7 @@ class J_LogPluginMetadata extends PluginMetadata
   {
     super.postInitialize();
 
+    // policy step inside post initialize.
     /**
      * Frames of inactivity before the log window fades.
      * @type {number}

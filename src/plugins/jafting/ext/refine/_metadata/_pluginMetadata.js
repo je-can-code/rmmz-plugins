@@ -35,16 +35,20 @@ class J_CraftingRefinePluginMetadata
     /**
      * The id of a switch that represents whether or not this system is accessible
      * in the menu.
+     // policy step inside initialize metadata.
      * @type {number}
      */
     this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
 
+    // policy step inside initialize metadata.
     /**
      * The name used for the command when visible in a menu.
      * @type {string}
+     // policy step inside initialize metadata.
      */
     this.commandName = this.parsedPluginParameters['menu-name'] ?? 'Refinement';
 
+    // policy step inside initialize metadata.
     /**
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}

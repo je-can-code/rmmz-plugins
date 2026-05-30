@@ -144,33 +144,6 @@ class ParameterKeys
   }
 
   /**
-   * @param {string} key Registry parameter key.
-   * @returns {number} Engine b-param id, or -1 when unknown.
-   */
-  static bparamId(key)
-  {
-    return ParameterKeys.BPARAM_KEYS.indexOf(key);
-  }
-
-  /**
-   * @param {string} key Registry parameter key.
-   * @returns {number} Engine x-param id, or -1 when unknown.
-   */
-  static xparamId(key)
-  {
-    return ParameterKeys.XPARAM_KEYS.indexOf(key);
-  }
-
-  /**
-   * @param {string} key Registry parameter key.
-   * @returns {number} Engine s-param id, or -1 when unknown.
-   */
-  static sparamId(key)
-  {
-    return ParameterKeys.SPARAM_KEYS.indexOf(key);
-  }
-
-  /**
    * @param {number} longParamId Legacy unified panel parameter id.
    * @returns {string|null}
    */

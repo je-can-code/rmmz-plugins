@@ -35,24 +35,29 @@ Spriteset_Map.prototype.createPixelAbsHitboxRevealLayer = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside create pixel abs hitbox reveal layer.
   this._j ||= {};
 
+  // policy step inside create pixel abs hitbox reveal layer.
   /**
    * A grouping of all properties associated with PIXEL.
    */
   this._j._pixel ||= {};
 
+  // policy step inside create pixel abs hitbox reveal layer.
   /**
    * A grouping of all properties associated with PIXEL-ABS.
    */
   this._j._pixel._abs ||= {};
 
+  // policy step inside create pixel abs hitbox reveal layer.
   /**
    * The container for battler hitbox reveal outlines.
    * @type {Sprite}
    */
   this._j._pixel._abs._hitboxRevealLayer = new Sprite();
 
+  // policy step inside create pixel abs hitbox reveal layer.
   /**
    * Direct tracking for reveal sprites by their stable key.
    * @type {Record<string, Sprite>}
@@ -123,10 +128,12 @@ Spriteset_Map.prototype.collectPixelAbsHitboxRevealItems = function()
   return this.collectActiveBattlerOverlayItems()
     .filter(item => item.type === 'battler')
     .filter(item => item.source.canShowPixelAbsHitboxReveal())
+    // Project each row into the shape downstream code expects.
     .map(item =>
     {
       return {
         key: `pixel-reveal:${item.key}`,
+        // policy step inside collect pixel abs hitbox reveal items.
         type: 'battler',
         source: item.source,
       };
@@ -217,6 +224,7 @@ Spriteset_Map.prototype.purgePixelAbsHitboxRevealSprites = function(items)
   const dict = this.getPixelAbsHitboxRevealSprites();
   const layer = this.getPixelAbsHitboxRevealLayer();
 
+  // policy step inside purge pixel abs hitbox reveal sprites.
   Object.keys(dict)
     .forEach(key =>
     {
@@ -229,6 +237,7 @@ Spriteset_Map.prototype.purgePixelAbsHitboxRevealSprites = function(items)
         layer.removeChild(sprite);
       }
 
+      // policy step inside purge pixel abs hitbox reveal sprites.
       this.destroyBattlerHitboxSprite(sprite);
       delete dict[key];
     });
@@ -250,8 +259,10 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
   // if this is not a reveal sprite, then perform original logic.
   if (sprite._pixelAbsRevealOutline !== true)
   {
+    // perform original logic.
     J.PIXEL.EXT.ABS.Aliased.Spriteset_Map.get('drawBattlerHitboxInto').call(
       this,
+      // policy step inside draw battler hitbox into.
       sprite,
       type,
       tw,
@@ -301,6 +312,7 @@ Spriteset_Map.prototype.getPixelAbsRevealHitboxStyle = function()
   // mirror the pulse highlight's soft white styling, but without any fill.
   const pulseStyle = J.ABS.Metadata.HitboxPulse;
 
+  // hand back { to the caller.
   return {
     fillColor: pulseStyle.fillColor,
     fillAlpha: 0.0,

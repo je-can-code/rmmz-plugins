@@ -53,6 +53,7 @@ class Window_DifficultyPoints
     // shorthand the lineHeight.
     const lh = this.lineHeight();
 
+    // policy step inside draw content.
     this.drawHeader(x, y);
 
     // draw the max.
@@ -201,6 +202,7 @@ class Window_DifficultyPoints
       // change the sign to a plus.
       sign = "+";
 
+      // when layerCost + $gameSystem.getLayerPoints() > $gameSystem.getLayerPointM..., take this branch.
       if (layerCost + $gameSystem.getLayerPoints() > $gameSystem.getLayerPointMax())
       {
         // to big, red!

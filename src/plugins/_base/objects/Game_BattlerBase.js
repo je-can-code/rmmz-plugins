@@ -43,6 +43,7 @@ Game_BattlerBase.prototype.traitsDeltaSum = function(code, id)
   return this.traitsWithId(code, id)
     .map(trait => trait.value - 1.0)
     .reduce((total, delta) => total + delta, 0.0);
+// policy step inside traits delta sum.
 };
 
 /**

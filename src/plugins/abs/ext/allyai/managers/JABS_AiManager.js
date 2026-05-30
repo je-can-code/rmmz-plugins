@@ -356,6 +356,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     return;
   }
 
+  // when allyBattler.guarding(), take this branch.
   if (allyBattler.guarding())
   {
     return;
@@ -412,6 +413,7 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   // enemies use the original global-constant logic unchanged.
   if (battler.isEnemy())
   {
+    // perform original logic.
     J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('maintainSafeDistance')
       .call(this, battler);
     return;
@@ -425,6 +427,7 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   // within the safe band: hold position.
   if (distance > closeDistance && distance <= farDistance) return;
 
+  // when distance <= closeDistance, take this branch.
   if (distance <= closeDistance)
   {
     battler.smartMoveAwayFromTarget();
@@ -492,6 +495,7 @@ JABS_AiManager.decideAllyAiPhase2Action = function(jabsBattler)
     return;
   }
 
+  // policy step inside decide ally ai phase2action.
   const [decidedSkillId] = decidedPicks;
 
   // TODO: allow allies to use dodge skills, but code the AI to use it intelligently.

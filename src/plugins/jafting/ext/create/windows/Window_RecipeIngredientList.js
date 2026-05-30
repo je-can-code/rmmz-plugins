@@ -26,6 +26,7 @@ class Window_RecipeIngredientList
      */
     this._components = [];
 
+    // policy step inside initialize.
     super.initialize(rect);
   }
 
@@ -82,6 +83,7 @@ class Window_RecipeIngredientList
       : 18;
     const needQuantity = `x${need}`;
 
+    // capture subtexts for downstream policy in this routine.
     const subtexts = [];
 
     // determine the subtext messages for the command.
@@ -91,6 +93,7 @@ class Window_RecipeIngredientList
       missingMessage += ` (missing: ${(need - have)})`;
     }
 
+    // Append the row to the working collection.
     subtexts.push(missingMessage);
 
     // build a command based on the component.
@@ -138,15 +141,17 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * @param {number} index
+   * @param {number} index The index driving this step.
    * @returns {Rectangle}
    */
   itemLineRect(index)
   {
     const rect = Window_Selectable.prototype.itemLineRect.call(this, index);
 
+    // policy step inside item line rect.
     rect.y += this.recipeComponentRowTopInset();
 
+    // hand back rect to the caller.
     return rect;
   }
 

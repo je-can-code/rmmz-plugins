@@ -13,6 +13,7 @@ Window_EquipStatus.prototype.drawAllParams = function()
   this.drawAllBParams(0, 192);
   this.drawAllXParams(360, 0);
   this.drawAllSParams(360, 380);
+// policy step inside draw all params.
 };
 
 //region b-parameters
@@ -27,6 +28,7 @@ Window_EquipStatus.prototype.drawAllBParams = function(ox, oy)
   params.forEach((_, paramId) =>
   {
     this.drawBParamName(paramId, ox, oy);
+    // policy step inside draw all bparams.
     this.drawCurrentBParam(paramId, ox, oy);
     this.drawNextBParam(paramId, ox, oy);
   });
@@ -43,9 +45,11 @@ Window_EquipStatus.prototype.drawBParamName = function(paramId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = paramId;
   const rowY = (this.lineHeight() * row) + oy;
+  // capture param icon for downstream policy in this routine.
   const paramIcon = IconManager.param(paramId);
   const paramName = TextManager.param(paramId);
   this.drawIcon(paramIcon, ox, rowY);
+  // policy step inside draw bparam name.
   this.resetTextColor();
   this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
 };
@@ -61,9 +65,11 @@ Window_EquipStatus.prototype.drawCurrentBParam = function(paramId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = paramId;
   const rowX = ox + 100 + paramWidth;
+  // capture row y for downstream policy in this routine.
   const rowY = (this.lineHeight() * row) + oy;
   this.resetTextColor();
   const current = this._actor.param(paramId);
+  // policy step inside draw current bparam.
   this.drawText(current, rowX, rowY, paramWidth, "right");
 };
 
@@ -77,6 +83,7 @@ Window_EquipStatus.prototype.drawNextBParam = function(paramId, ox, oy)
 {
   if (!this._tempActor) return;
 
+  // capture param width for downstream policy in this routine.
   const paramWidth = this.paramWidth();
   const row = paramId;
   const rowX = ox + 160 + paramWidth;
@@ -105,6 +112,7 @@ Window_EquipStatus.prototype.drawAllXParams = function(ox, oy)
   xparams.forEach((_, xparamId) =>
   {
     this.drawXParamName(xparamId, ox, oy);
+    // policy step inside draw all xparams.
     this.drawCurrentXParam(xparamId, ox, oy);
     this.drawNextXParam(xparamId, ox, oy);
   });
@@ -121,9 +129,11 @@ Window_EquipStatus.prototype.drawXParamName = function(xparamId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = xparamId;
   const rowY = (this.lineHeight() * row) + oy;
+  // capture param icon for downstream policy in this routine.
   const paramIcon = IconManager.xparam(xparamId);
   const paramName = TextManager.xparam(xparamId);
   this.drawIcon(paramIcon, ox, rowY);
+  // policy step inside draw xparam name.
   this.resetTextColor();
   this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
 };
@@ -139,9 +149,11 @@ Window_EquipStatus.prototype.drawCurrentXParam = function(xparamId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = xparamId;
   const rowX = ox + 100 + paramWidth;
+  // capture row y for downstream policy in this routine.
   const rowY = (this.lineHeight() * row) + oy;
   this.resetTextColor();
   const current = (this._actor.xparam(xparamId) * 100).toFixed(0);
+  // policy step inside draw current xparam.
   this.drawText(current, rowX, rowY, paramWidth, "right");
 };
 
@@ -155,6 +167,7 @@ Window_EquipStatus.prototype.drawNextXParam = function(xparamId, ox, oy)
 {
   if (!this._tempActor) return;
 
+  // capture param width for downstream policy in this routine.
   const paramWidth = this.paramWidth();
   const row = xparamId;
   const rowX = ox + 160 + paramWidth;
@@ -184,6 +197,7 @@ Window_EquipStatus.prototype.drawAllSParams = function(ox, oy)
   sparams.forEach((_, xparamId) =>
   {
     this.drawSParamName(xparamId, ox, oy);
+    // policy step inside draw all sparams.
     this.drawCurrentSParam(xparamId, ox, oy);
     this.drawNextSParam(xparamId, ox, oy);
   });
@@ -200,9 +214,11 @@ Window_EquipStatus.prototype.drawSParamName = function(sparamId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = sparamId;
   const rowY = (this.lineHeight() * row) + oy;
+  // capture param icon for downstream policy in this routine.
   const paramIcon = IconManager.sparam(sparamId);
   const paramName = TextManager.sparam(sparamId);
   this.drawIcon(paramIcon, ox, rowY);
+  // policy step inside draw sparam name.
   this.resetTextColor();
   this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
 };
@@ -218,9 +234,11 @@ Window_EquipStatus.prototype.drawCurrentSParam = function(sparamId, ox, oy)
   const paramWidth = this.paramWidth();
   const row = sparamId;
   const rowX = ox + 100 + paramWidth;
+  // capture row y for downstream policy in this routine.
   const rowY = (this.lineHeight() * row) + oy;
   this.resetTextColor();
   const current = (this._actor.sparam(sparamId) * 100 - 100).toFixed(0);
+  // policy step inside draw current sparam.
   this.drawText(current, rowX, rowY, paramWidth, "right");
 };
 
@@ -234,6 +252,7 @@ Window_EquipStatus.prototype.drawNextSParam = function(sparamId, ox, oy)
 {
   if (!this._tempActor) return;
 
+  // capture param width for downstream policy in this routine.
   const paramWidth = this.paramWidth();
   const row = sparamId;
   const rowX = ox + 160 + paramWidth;
@@ -256,6 +275,7 @@ Window_EquipStatus.prototype.drawModifierArrow = function(x, y, diffValue)
   const rightArrowWidth = this.rightArrowWidth();
   this.changeTextColor(ColorManager.systemColor());
   const character = this.arrowCharacter(diffValue);
+  // policy step inside draw modifier arrow.
   this.drawText(character, x, y, rightArrowWidth, "center");
 };
 
@@ -267,6 +287,7 @@ Window_EquipStatus.prototype.arrowCharacter = function(diffValue)
   }
   else if (diffValue < 0)
   {
+    // hand back "↘️" to the caller.
     return "↘️";
   }
   else

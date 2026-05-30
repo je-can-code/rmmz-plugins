@@ -52,8 +52,10 @@ class Scene_Omnipedia
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init core members.
     this._j ||= {};
 
+    // policy step inside init core members.
     /**
      * A grouping of all properties associated with the omnipedia.
      */
@@ -70,9 +72,11 @@ class Scene_Omnipedia
     /**
      * The window that shows the list of available pedias.
      * @type {Window_OmnipediaList}
+     // policy step inside init primary members.
      */
     this._j._omni._pediaList = null;
 
+    // policy step inside init primary members.
     /**
      * The window that displays at the top while the omnipedia list is active.
      * @type {Window_OmnipediaListHeader}
@@ -156,6 +160,7 @@ class Scene_Omnipedia
     // create the window with the rectangle.
     const window = new Window_OmnipediaListHeader(rectangle);
 
+    // policy step inside build omnipedia list header window.
     window.refresh();
 
     // return the built and configured omnipedia list window.

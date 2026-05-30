@@ -9,7 +9,7 @@ J.LEVEL.Aliased.Game_Troop.set('expTotal', Game_Troop.prototype.expTotal);
 Game_Troop.prototype.expTotal = function()
 {
   // check if the level scaling functionality is enabled.
-  if (J.LEVEL.Metadata.enabled)
+  if ($gameSystem.isLevelScalingEnabled())
   {
     // return the scaled result instead.
     return this.getScaledExpResult();
@@ -18,6 +18,7 @@ Game_Troop.prototype.expTotal = function()
   else
   {
     // return the default logic instead.
+    // perform original logic.
     return J.LEVEL.Aliased.Game_Troop.get('expTotal')
       .call(this);
   }

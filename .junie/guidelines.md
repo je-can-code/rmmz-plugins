@@ -46,6 +46,9 @@
   around and see if it exists or is already implemented, or warn me that its not if its not anywhere.
 * It is forbidden to include anything that would or should live in "initialization.js" inside of any of the other source
   files (such as alias map instantiation- assume it exists, and provide that update to the initialization.js file).
+* **`var` is forbidden** in plugin source and build-tools — oxlint `no-var: error`. Use `let` / `const`. (Shipped bundles may still contain Rolldown-emitted `var ClassName = class`; that is bundler output, not source style.)
+* **`export default` only** in plugin source modules — one class/object/entity per file. Exempt: `_metadata/meta.js` (ship name/version constants for the Vite header plugin). Enforced by `verify:ships` (`source-export-default-only`).
+* **No `J.*` assignment outside `initialization.js`** — alias maps, `Metadata`, `Aliased`, `Helpers`, API hooks, and any other namespace wiring belong in `_metadata/initialization.js` only. Enforced by `verify:ships` (`source-j-namespace-in-init-only`).
 
 ### J namespace bootstrap (no same-ship re-exports)
 

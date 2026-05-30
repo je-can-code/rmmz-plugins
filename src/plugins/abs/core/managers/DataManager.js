@@ -55,6 +55,7 @@ DataManager.getSkillMasterMap = function()
   if (mapId > 0)
   {
     const filename = 'Map%1.json'.format(mapId.padZero(3));
+    // policy step inside get skill master map.
     this.loadSkillMasterMap('$dataMap', filename);
   }
   else
@@ -73,9 +74,11 @@ DataManager.loadSkillMasterMap = function(name, src)
   const xhr = new XMLHttpRequest();
   const url = `data/${src}`;
   xhr.open('GET', url);
+  // policy step inside load skill master map.
   xhr.overrideMimeType('application/json');
   xhr.onload = () => this.onMapGet(xhr, name, src, url);
   xhr.onerror = () => this.gracefulFail(name, src, url);
+  // policy step inside load skill master map.
   xhr.send();
 };
 
@@ -94,6 +97,7 @@ DataManager.onMapGet = function(xhr, name, src, url)
   }
   else
   {
+    // policy step inside on map get.
     this.gracefulFail(name, src, url);
   }
 };
@@ -120,11 +124,13 @@ DataManager.makeSaveContents = function()
   const contents = J.ABS.Aliased.DataManager.get('makeSaveContents')
     .call(this);
 
+  // policy step inside make save contents.
   /**
    * @type {Game_Event[]}
    */
   const originalEvents = contents.map._events;
 
+  // capture actionless events for downstream policy in this routine.
   const actionlessEvents = originalEvents.map(event =>
   {
     // if the event itself is falsey, then return whatever it is.

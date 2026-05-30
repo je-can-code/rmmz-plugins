@@ -80,6 +80,7 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   const prefixChance = character.getResolvedPassiveAffixPrefixChance(enemyData);
   const suffixChance = character.getResolvedPassiveAffixSuffixChance(enemyData);
 
+  // capture can apply prefix for downstream policy in this routine.
   const canApplyPrefix = JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData) === false &&
     Math.random() * 100 < prefixChance;
   const canApplySuffix = JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData) === false &&

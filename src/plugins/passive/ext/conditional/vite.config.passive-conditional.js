@@ -1,4 +1,3 @@
-//region vite.config.passive-conditional
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, mergeConfig } from 'vite';

@@ -1,5 +1,5 @@
 //region Game_Player
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 /**
  * While JABS is enabled, don't try to interact with events if they are enemies.
  */
@@ -76,6 +76,7 @@ Game_Player.prototype.isDashing = function()
   }
 
   // otherwise, perform original engine logic.
+  // perform original logic.
   return J.ABS.Aliased.Game_Player.get("isDashing").call(this);
 };
 
@@ -226,6 +227,7 @@ Game_Player.prototype.pickupLootCollection = function(lootCollected)
 Game_Player.prototype.isTouchingLoot = function(lootDrop)
 {
   const distance = $gameMap.distance(lootDrop._realX, lootDrop._realY, this._realX, this._realY);
+  // hand back distance <= J.ABS.Metadata.LootPickupRange to the caller.
   return distance <= J.ABS.Metadata.LootPickupRange;
 };
 
@@ -249,6 +251,7 @@ Game_Player.prototype.pickupLoot = function(lootEvent)
  */
 Game_Player.prototype.useOnPickup = function(lootData)
 {
+  // capture player for downstream policy in this routine.
   const player = $jabsEngine.getPlayer1();
   player.applyToolEffects(lootData.id, true);
 };

@@ -33,6 +33,7 @@ if (J.ABS)
     // check the reward policy gate; no actor is available at this call site so pass null.
     if (this.canGainReward(defeatedEnemy, null) === false) return 0;
 
+    // hand back defeatedEnemy.apPoints() to the caller.
     return defeatedEnemy.apPoints();
   };
 
@@ -81,7 +82,7 @@ if (J.ABS)
   JABS_Engine.prototype.canGainAptitudeReward = function(actor, enemy)
   {
     // check if we are using the level plugin.
-    if (J.LEVEL && J.LEVEL.Metadata.enabled && J.APT.Metadata.usingLevelThresholdLimit === true)
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled() && J.APT.Metadata.usingLevelThresholdLimit === true)
     {
       // identify the level difference between the battlers.
       const levelDifference = actor.level - enemy.level;

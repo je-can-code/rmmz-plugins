@@ -18,6 +18,7 @@ class J_DangerPluginMetadata
   {
     super.postInitialize();
 
+    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -29,6 +30,7 @@ class J_DangerPluginMetadata
     this.DefaultEnemyShowDangerIndicator =
       this.parsedPluginParameters['defaultEnemyShowDangerIndicator'] === "true";
 
+    // assign danger indicator icons on this instance for callers.
     this.DangerIndicatorIcons =
       J.ABS.EXT.DANGER.Helpers.PluginManager.TranslateDangerIndicatorIcons(
         this.parsedPluginParameters['dangerIndicatorIconData'],

@@ -9,6 +9,7 @@ Sprite_Character.prototype.getBattlerName = function()
 {
   // get the original name of the sprite.
   /** @type {JABS_BattlerName} */
+  // perform original logic.
   const originalName = J.LEVEL.Aliased.Sprite_Character.get('getBattlerName')
     .call(this);
 

@@ -34,6 +34,7 @@ class Window_RecipeOutputList
      */
     this._components = [];
 
+    // policy step inside initialize.
     super.initialize(rect);
   }
 
@@ -93,6 +94,7 @@ class Window_RecipeOutputList
     // determine the subtext messages for the command.
     const subTextLine = `(have: ${have})`;
 
+    // capture possibly masked output for downstream policy in this routine.
     const possiblyMaskedOutput = this.needsMasking
       ? component.getName()
         .replace(/[A-Za-z\-!?',.]/ig, "?")
@@ -112,6 +114,7 @@ class Window_RecipeOutputList
 
       .build();
 
+    // hand back command to the caller.
     return command;
   }
 
@@ -134,15 +137,17 @@ class Window_RecipeOutputList
   }
 
   /**
-   * @param {number} index
+   * @param {number} index The index driving this step.
    * @returns {Rectangle}
    */
   itemLineRect(index)
   {
     const rect = Window_Selectable.prototype.itemLineRect.call(this, index);
 
+    // policy step inside item line rect.
     rect.y += this.recipeComponentRowTopInset();
 
+    // hand back rect to the caller.
     return rect;
   }
 

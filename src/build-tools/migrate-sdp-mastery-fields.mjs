@@ -69,7 +69,7 @@ function migrateMasteryFields(filePath)
   config.sdps.forEach(panel =>
   {
     let patched = false;
-    let mastery = panel.mastery;
+    let { mastery } = panel;
 
     if (mastery === undefined || mastery === null || typeof mastery !== 'object')
     {

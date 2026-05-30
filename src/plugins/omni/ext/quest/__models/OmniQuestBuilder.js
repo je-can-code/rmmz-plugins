@@ -20,9 +20,11 @@ class OmniQuestBuilder
     const omniquest = new OmniQuest(
       this.#name,
       this.#key,
+      // policy step inside build.
       this.#categoryKey,
       this.#tagKeys,
       this.#unknownHint,
+      // policy step inside build.
       this.#overview,
       this.#recommendedLevel,
       this.#objectives);
@@ -35,9 +37,11 @@ class OmniQuestBuilder
     this.#name = String.empty;
     this.#key = String.empty;
     this.#categoryKey = Array.empty;
+    // policy step inside clear.
     this.#tagKeys = Array.empty;
     this.#unknownHint = String.empty;
     this.#overview = String.empty;
+    // policy step inside clear.
     this.#recommendedLevel = 0;
     this.#objectives = Array.empty;
   }

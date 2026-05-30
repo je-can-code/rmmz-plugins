@@ -11,6 +11,7 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
 {
   const currentSelection = this.getRootJaftingKey();
 
+  // when currentSelection  equals  Scene_JaftingRefine.KEY, take this branch.
   if (currentSelection === Scene_JaftingRefine.KEY)
   {
     this.jaftingRefinementSelected();
@@ -18,6 +19,7 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
   else
   {
     // possibly activate other choices.
+    // perform original logic.
     J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting.get('onRootJaftingSelection')
       .call(this);
   }
@@ -30,6 +32,7 @@ Scene_Jafting.prototype.jaftingRefinementSelected = function()
 {
   this.closeRootJaftingWindows();
 
+  // policy step inside jafting refinement selected.
   Scene_JaftingRefine.callScene();
 };
 //endregion Scene_Jafting

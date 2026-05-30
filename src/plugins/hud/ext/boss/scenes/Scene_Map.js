@@ -12,12 +12,14 @@ Scene_Map.prototype.initHudMembers = function()
   J.HUD.EXT.BOSS.Aliased.Scene_Map.get('initHudMembers')
     .call(this);
 
+  // policy step inside init hud members.
   /**
    * A grouping of all properties that belong to the boss frame
    * extension of the HUD.
    */
   this._j._hud._boss = {};
 
+  // policy step inside init hud members.
   /**
    * The target frame showing boss data.
    * This is much bigger than the regular target frame.

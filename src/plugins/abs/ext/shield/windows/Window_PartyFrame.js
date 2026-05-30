@@ -165,6 +165,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
   Window_PartyFrame.prototype.createCache = function()
   {
     // establish the gauge types we will create.
+    // perform original logic.
     J.ABS.EXT.SHIELD.Aliased.Window_PartyFrame.get('createCache')
       .call(this);
 

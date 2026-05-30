@@ -9,6 +9,7 @@ Game_Event.prototype.getPassiveAffixPrefixChanceFromEventComments = function()
   let chance = null;
   const regex = J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixPrefixChance;
 
+  // policy step inside get passive affix prefix chance from event comments.
   this.getValidCommentCommands()
     .forEach(command =>
     {
@@ -18,11 +19,14 @@ Game_Event.prototype.getPassiveAffixPrefixChanceFromEventComments = function()
       regex.lastIndex = 0;
       const regexResult = regex.exec(comment);
 
+      // when regexResult  equals  null, take this branch.
       if (regexResult === null) return;
 
+      // policy step inside get passive affix prefix chance from event comments.
       chance = parseFloat(regexResult[1]);
     });
 
+  // hand back chance to the caller.
   return chance;
 };
 
@@ -36,6 +40,7 @@ Game_Event.prototype.getPassiveAffixSuffixChanceFromEventComments = function()
   let chance = null;
   const regex = J.PASSIVE.EXT.AFFIX.RegExp.PassiveAffixSuffixChance;
 
+  // policy step inside get passive affix suffix chance from event comments.
   this.getValidCommentCommands()
     .forEach(command =>
     {
@@ -45,11 +50,14 @@ Game_Event.prototype.getPassiveAffixSuffixChanceFromEventComments = function()
       regex.lastIndex = 0;
       const regexResult = regex.exec(comment);
 
+      // when regexResult  equals  null, take this branch.
       if (regexResult === null) return;
 
+      // policy step inside get passive affix suffix chance from event comments.
       chance = parseFloat(regexResult[1]);
     });
 
+  // hand back chance to the caller.
   return chance;
 };
 
@@ -62,6 +70,7 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
   // one blocking tag anywhere on the page is enough — the spawn should not roll prefix affixes at all.
   let blocks = false;
 
+  // policy step inside event comments disable passive affix prefix rng.
   this.getValidCommentCommands()
     .forEach(command =>
     {
@@ -80,6 +89,7 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixPrefixRng = function()
       }
     });
 
+  // hand back blocks to the caller.
   return blocks;
 };
 
@@ -92,6 +102,7 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixSuffixRng = function()
   // parallel to prefix blocking — suffix pools can be turned off independently per spawn point.
   let blocks = false;
 
+  // policy step inside event comments disable passive affix suffix rng.
   this.getValidCommentCommands()
     .forEach(command =>
     {
@@ -110,6 +121,7 @@ Game_Event.prototype.eventCommentsDisablePassiveAffixSuffixRng = function()
       }
     });
 
+  // hand back blocks to the caller.
   return blocks;
 };
 
@@ -162,6 +174,7 @@ Game_Event.prototype.getResolvedPassiveAffixSuffixChance = function(enemyData)
     return parseFloat(enemyOverride)
       .clamp(0, 100);
 
+    // close out the enemy note override branch.
   }
 
   // fall back to the affix extension default parameter for suffix chance.

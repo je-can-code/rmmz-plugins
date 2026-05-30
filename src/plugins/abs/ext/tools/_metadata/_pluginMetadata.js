@@ -18,6 +18,7 @@ class J_ToolsPluginMetadata
   {
     super.postInitialize();
 
+    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -29,15 +30,18 @@ class J_ToolsPluginMetadata
     /**
      * The behavior for whether or not the player can gap close to anything they hit, or if they
      * can only gap close to targets bearing the "gap close target" tag.
+     // policy step inside initialize metadata.
      */
     this.CanGapCloseByDefault = this.parsedPluginParameters['canGapCloseByDefault'] === 'true';
 
+    // policy step inside initialize metadata.
     /**
      * Whether or not grab and throw functionality is enabled globally by default.
      * @type {boolean}
      */
     this.GrabThrowEnabled = this.parsedPluginParameters['grabThrowEnabled'] !== 'false';
 
+    // policy step inside initialize metadata.
     /**
      * Whether or not the throw direction is always fixed regardless of input.
      * @type {boolean}

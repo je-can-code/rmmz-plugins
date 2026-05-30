@@ -71,24 +71,30 @@ J.PASSIVE.EXT.AFFIX.Helpers.parseRewardMultipliers = function(databaseData)
   // bail out when there is nothing to parse.
   if (!databaseData || !databaseData.note) return results;
 
+  // capture regex for downstream policy in this routine.
   const regex = J.PASSIVE.EXT.AFFIX.RegExp.RewardMultiplier;
   const lines = databaseData.note.split(/[\r\n]+/);
 
   // build a non-global scanner so we do not carry lastIndex between lines.
   const scan = new RegExp(regex.source, regex.flags.replace('g', '').replace('y', ''));
 
+  // policy step inside parse reward multipliers.
   lines.forEach(line =>
   {
     const match = scan.exec(line);
 
+    // when match  equals  null, take this branch.
     if (match === null) return;
 
+    // capture reward type for downstream policy in this routine.
     const rewardType = match[1].toLowerCase();
     const multiplier = parseFloat(match[2]);
 
+    // Register the value on the alias map for runtime lookup.
     results.set(rewardType, multiplier);
   });
 
+  // hand back results to the caller.
   return results;
 };
 
@@ -126,6 +132,7 @@ J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex = function(battler)
     break;
   }
 
+  // hand back String.empty to the caller.
   return String.empty;
 };
 //endregion helpers

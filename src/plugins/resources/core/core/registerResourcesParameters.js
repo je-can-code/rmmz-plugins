@@ -1,26 +1,33 @@
 //region registerResourcesParameters
 /**
- * Registers Life Cost (HCR) with the parameter catalog.
+ * Boot-time registration for J-Resources parameters in {@link ParameterRegistry}.
  */
-function registerResourcesParameters()
+class ResourcesParameterRegistration
 {
-  ParameterRegistry.register(
-    ParameterDefinition.Builder()
-      .key('hcr')
-      .group(ParameterGroups.COMBAT)
-      .sortOrder(5)
-      .label(() => TextManager.hcr())
-      .description(() => TextManager.hcrDescription())
-      .iconIndex(() => IconManager.hcr())
-      .format(ParameterFormat.PERCENT_CENTERED)
-      .displayPolicy(ParameterDisplayPolicy.COST_RATE)
-      .getValue(battler => battler.hcrFactor())
-      .sdpBinding(SdpParameterBinding.byKey('hcr', () => 100))
-      .build()
-  );
+  /**
+   * Registers Life Cost (HCR) with the parameter catalog.
+   */
+  static registerAll()
+  {
+    ParameterRegistry.register(
+      ParameterDefinition.Builder()
+        .key('hcr')
+        // policy step inside register all.
+        .group(ParameterGroups.COMBAT)
+        .sortOrder(5)
+        .label(() => TextManager.hcr())
+        // policy step inside register all.
+        .description(() => TextManager.hcrDescription())
+        .iconIndex(() => IconManager.hcr())
+        .format(ParameterFormat.PERCENT_CENTERED)
+        // policy step inside register all.
+        .displayPolicy(ParameterDisplayPolicy.COST_RATE)
+        .getValue(battler => battler.hcrFactor())
+        .sdpBinding(SdpParameterBinding.byKey('hcr', () => 100))
+        .build()
+    );
+  }
 }
 
-registerResourcesParameters();
-
-export default registerResourcesParameters;
+export default ResourcesParameterRegistration;
 //endregion registerResourcesParameters

@@ -10,22 +10,26 @@ Game_Event.prototype.initMembers = function()
   J.LEVEL.Aliased.Game_Event.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with levels.
    */
   this._j._level ||= {};
 
+  // policy step inside init members.
   /**
    * The cached level override value.
    * @type {number|null}
    */
   this._j._level._cachedLevelOverride = null;
 
+  // policy step inside init members.
   /**
    * The cached check of whether or not to hide the level in the battler's name.
    * @type {boolean|null}

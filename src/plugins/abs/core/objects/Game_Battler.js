@@ -5,7 +5,7 @@ import JABS_SkillSlotManager from './../__models/JABS_SkillSlotManager.js';
 import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
 import JABS_OnChanceEffect from './../__models/JABS_OnChanceEffect.js';
 import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 /**
  * Extends {@link Game_Battler.initMembers}.<br/>
  * Includes JABS parameter initialization.
@@ -29,16 +29,21 @@ Game_Battler.prototype.initJabsMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init jabs members.
   this._j ||= {};
 
+  // policy step inside init jabs members.
   /**
    * A grouping of all properties associated with JABS.
    */
+  // policy step inside init jabs members.
   this._j._abs ||= {};
 
+  // policy step inside init jabs members.
   /**
    * The unique identifier of this battler.
    * This is typically 6 characters long, including two pairs of 3 characters.
+   // policy step inside init jabs members.
    * The characters used are one of the 16 available hexadecimal characters.
    * This includes `0-9` and `A-F`.
    * An example might be something like `a40-1f7`.
@@ -46,24 +51,28 @@ Game_Battler.prototype.initJabsMembers = function()
    */
   this._j._abs._uuid = J.BASE.Helpers.shortUuid();
 
+  // policy step inside init jabs members.
   /**
    * Cached per-connection bonus hits from `<bonus-hits-global:>` across battler-side sources.
    * @type {number}
    */
   this._j._abs._bonusHitsGlobal = 0;
 
+  // policy step inside init jabs members.
   /**
    * Cached per-connection bonus hits from `<bonus-hits-basic:>` across battler-side sources.
    * @type {number}
    */
   this._j._abs._bonusHitsBasic = 0;
 
+  // policy step inside init jabs members.
   /**
    * Cached per-connection bonus hits from `<bonus-hits-skill:>` across battler-side sources.
    * @type {number}
    */
   this._j._abs._bonusHitsSkill = 0;
 
+  // policy step inside init jabs members.
   /**
    * All equipped skills on this battler.
    * @type {JABS_SkillSlotManager}
@@ -292,6 +301,7 @@ Game_Battler.prototype.isInanimate = function()
  */
 Game_Battler.prototype.isAggroLocked = function()
 {
+  // hand back this.states() to the caller.
   return this.states()
     .some(state => state.jabsAggroLock ?? false);
 };
@@ -313,6 +323,7 @@ Game_Battler.prototype.getSkillSlotManager = function()
  */
 Game_Battler.prototype.getAllEquippedSkills = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getAllSlots();
 };
@@ -324,6 +335,7 @@ Game_Battler.prototype.getAllEquippedSkills = function()
  */
 Game_Battler.prototype.findSlotForSkillId = function(skillIdToFind)
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getSlotBySkillId(skillIdToFind);
 };
@@ -337,11 +349,13 @@ Game_Battler.prototype.getEquippedSkillId = function(slot)
 {
   const skillSlot = this.getSkillSlot(slot);
 
+  // when not skillSlot, take this branch.
   if (!skillSlot)
   {
     return 0;
   }
 
+  // hand back skillSlot.id to the caller.
   return skillSlot.id;
 };
 
@@ -352,6 +366,7 @@ Game_Battler.prototype.getEquippedSkillId = function(slot)
  */
 Game_Battler.prototype.getSkillSlot = function(slot)
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getSkillSlotByKey(slot);
 };
@@ -362,6 +377,7 @@ Game_Battler.prototype.getSkillSlot = function(slot)
  */
 Game_Battler.prototype.getEmptySecondarySkills = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getEmptySecondarySlots();
 };
@@ -434,6 +450,7 @@ Game_Battler.prototype.isSlotLocked = function(slot)
   return this.getSkillSlotManager()
     .getSkillSlotByKey(slot)
     .isLocked();
+// policy step inside is slot locked.
 };
 
 /**
@@ -445,6 +462,7 @@ Game_Battler.prototype.unlockSlot = function(slot)
   this.getSkillSlotManager()
     .getSkillSlotByKey(slot)
     .unlock();
+// policy step inside unlock slot.
 };
 
 /**
@@ -521,6 +539,7 @@ Game_Battler.prototype.states = function()
   /**
    * @type {RPG_State[]}
    */
+  // perform original logic.
   const originalStates = J.ABS.Aliased.Game_Battler.get('states')
     .call(this);
 
@@ -542,6 +561,7 @@ Game_Battler.prototype.states = function()
     // check the current number of stacks applied.
     const appliedStacks = jabsState.stackCount;
 
+    // when appliedStacks < 2, take this branch.
     if (appliedStacks < 2) return;
 
     // we start the counter at 1 because there is already 1 copy of the state in the collection.
@@ -645,7 +665,7 @@ Game_Battler.prototype.resetStateCounts = function(stateId, attacker)
 
 /**
  * Extends `removeState()` to also expire the state in the JABS state tracker.
- * @param {number} stateId
+ * @param {number} stateId The state id driving this step.
  */
 J.ABS.Aliased.Game_Battler.set('removeState', Game_Battler.prototype.removeState);
 Game_Battler.prototype.removeState = function(stateId)
@@ -774,6 +794,7 @@ Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, to
   return JABS_State.Builder(target, stateId)
     .setIconIndex(iconIndex)
     .setDuration(totalDuration)
+    // policy step inside create jabs state.
     .setStartingStacks(stacks)
     .setSource(attacker);
 };
@@ -827,8 +848,10 @@ Game_Battler.prototype.refreshBonusHits = function()
   let bonusHitsBasic = 0;
   let bonusHitsSkill = 0;
 
+  // capture source collections for downstream policy in this routine.
   const sourceCollections = this.getBonusHitsSources();
 
+  // policy step inside refresh bonus hits.
   sourceCollections.forEach(sourceCollection =>
   {
     const part = this.getBonusHitsFromSources(sourceCollection);
@@ -837,6 +860,7 @@ Game_Battler.prototype.refreshBonusHits = function()
     bonusHitsSkill += part.skill;
   });
 
+  // policy step inside refresh bonus hits.
   this.setBonusHitsGlobal(bonusHitsGlobal);
   this.setBonusHitsBasic(bonusHitsBasic);
   this.setBonusHitsSkill(bonusHitsSkill);
@@ -851,6 +875,7 @@ Game_Battler.prototype.getBonusHitsSources = function()
   return [
     this.states(), [ this.databaseData() ],
   ];
+// policy step inside get bonus hits sources.
 };
 
 /**
@@ -916,17 +941,21 @@ Game_Battler.prototype.getBonusHitsFromSources = function(sources)
 {
   const totals = { global: 0, basic: 0, skill: 0 };
 
+  // capture collect from source for downstream policy in this routine.
   const collectFromSource = source =>
   {
     if (!source) return;
 
+    // policy step inside get bonus hits from sources.
     totals.global += source.jabsBonusHitsScopeGlobal;
     totals.basic += source.jabsBonusHitsScopeBasic;
     totals.skill += source.jabsBonusHitsScopeSkill;
   };
 
+  // policy step inside get bonus hits from sources.
   sources.forEach(collectFromSource);
 
+  // hand back totals to the caller.
   return totals;
 };
 //endregion JABS bonus hits

@@ -72,7 +72,7 @@ const BUILTIN_RECEIVERS = new Set([
 /**
  * Minimal fallback docs when a member has no source JSDoc and no body to infer prose from.
  *
- * @param {string} summary
+ * @param {string} summary The summary driving this step.
  * @returns {string}
  */
 function fallbackDoc(summary)
@@ -81,14 +81,15 @@ function fallbackDoc(summary)
 }
 
 /**
- * @param {string} memberName
- * @param {string} returnTs
+ * @param {string} memberName The member name driving this step.
+ * @param {string} returnTs The return ts driving this step.
  * @returns {string}
  */
 function fallbackMethodDoc(memberName, returnTs)
 {
   const isGetLike = returnTs && returnTs !== 'void' && returnTs !== 'never';
   const verb = isGetLike ? 'Gets' : 'Performs';
+  // hand back fallbackDoc(`${verb} ${memberName}.`) to the caller.
   return fallbackDoc(`${verb} ${memberName}.`);
 }
 
@@ -96,8 +97,8 @@ function fallbackMethodDoc(memberName, returnTs)
  * `Object.defineProperties` often appears before `prototype.param` in source order, so return inference
  * can be `unknown`. Recover MZ-shaped getters from the getter body alone.
  *
- * @param {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression} getterFn
- * @param {string} preliminaryTs
+ * @param {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression} getterFn The getter fn driving this step.
+ * @param {string} preliminaryTs The preliminary ts driving this step.
  * @returns {string}
  */
 function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
@@ -107,16 +108,19 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
     return preliminaryTs;
   }
   const body = getterFn.body;
+  // when not body  or  body.type  differs from  'BlockStatement', take this branch.
   if (!body || body.type !== 'BlockStatement')
   {
     return preliminaryTs;
   }
   /** @type {import('acorn').ReturnStatement[]} */
+  // capture rets for downstream policy in this routine.
   const rets = [];
   for (const st of body.body)
   {
     if (st.type === 'ReturnStatement')
     {
+      // Append the row to the working collection.
       rets.push(st);
     }
   }
@@ -124,25 +128,30 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
   {
     return preliminaryTs;
   }
+  // capture arg for downstream policy in this routine.
   const arg = rets[0].argument;
   if (!arg)
   {
     return preliminaryTs;
   }
+  // when arg.type  equals  'MemberExpression'  and  not arg.computed, take this branch.
   if (arg.type === 'MemberExpression' && !arg.computed)
   {
     if (
       arg.object.type === 'ThisExpression'
+      // policy step inside refine define property getter return.
       && arg.property.type === 'Identifier'
     )
     {
       const field = arg.property.name;
+      // when field  equals  '_hp'  or  field  equals  '_mp'  or  field  equals  '_tp', take this branch.
       if (field === '_hp' || field === '_mp' || field === '_tp')
       {
         return 'number';
       }
     }
     const ch = memberChain(arg);
+    // when ch  equals  '$dataSystem.currencyUnit', take this branch.
     if (ch === '$dataSystem.currencyUnit')
     {
       return 'string';
@@ -150,15 +159,18 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
   }
   if (arg.type !== 'CallExpression' || arg.callee.type !== 'MemberExpression' || arg.callee.computed)
   {
+    // hand back preliminary ts to the caller.
     return preliminaryTs;
   }
   if (arg.callee.object.type !== 'ThisExpression' || arg.callee.property.type !== 'Identifier')
   {
     return preliminaryTs;
   }
+  // capture m for downstream policy in this routine.
   const m = arg.callee.property.name;
   if (
     m === 'param'
+    // policy step inside refine define property getter return.
     || m === 'paramMax'
     || m === 'paramMin'
     || m === 'paramPlus'
@@ -192,7 +204,7 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
  */
 
 /**
- * @param {import('acorn').MemberExpression | import('acorn').Expression} node
+ * @param {import('acorn').MemberExpression | import('acorn').Expression} node The node driving this step.
  * @returns {string|null}
  */
 function memberChain(node)
@@ -203,11 +215,13 @@ function memberChain(node)
   }
   if (node.type === 'MemberExpression' && !node.computed)
   {
+    // when node.property.type  differs from  'Identifier', take this branch.
     if (node.property.type !== 'Identifier')
     {
       return null;
     }
     const base = memberChain(node.object);
+    // when base  equals  null, take this branch.
     if (base === null)
     {
       return null;
@@ -218,12 +232,12 @@ function memberChain(node)
 }
 
 /**
- * @param {import('acorn').Literal | import('acorn').UnaryExpression | import('acorn').TemplateLiteral} node
+ * @param {import('acorn').Literal | import('acorn').UnaryExpression | import('acorn').TemplateLiteral} node The node driving this step.
  * @returns {string|null}
  */
 /**
- * @param {ClassEntry} entry
- * @param {Map<string, string>} propMap
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {Map<string, string>} propMap The prop map driving this step.
  * @returns {void}
  */
 function absorbInstanceProps(entry, propMap)
@@ -234,6 +248,7 @@ function absorbInstanceProps(entry, propMap)
   }
   for (const [name, ts] of propMap)
   {
+    // capture bucket for downstream policy in this routine.
     const bucket = entry.instancePropertyBuckets.get(name) ?? [];
     bucket.push(ts);
     entry.instancePropertyBuckets.set(name, bucket);
@@ -241,10 +256,10 @@ function absorbInstanceProps(entry, propMap)
 }
 
 /**
- * @param {ClassEntry} entry
+ * @param {ClassEntry} entry The entry driving this step.
  * @param {Map<string, { reads: Set<string>, writes: Set<string>, consumes: Set<string> }>} usageMap
- * @param {string} methodName
- * @param {boolean} isInitializer
+ * @param {string} methodName The method name driving this step.
+ * @param {boolean} isInitializer The is initializer driving this step.
  * @returns {void}
  */
 function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
@@ -255,23 +270,28 @@ function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
   }
   for (const [prop, usage] of usageMap)
   {
+    // capture meta for downstream policy in this routine.
     let meta = entry.instancePropertyUsage.get(prop);
     if (!meta)
     {
       meta = {
+        // policy step inside absorb instance prop usage.
         initializedIn: new Set(),
         writtenIn: new Set(),
         readIn: new Set(),
+        // policy step inside absorb instance prop usage.
         consumedBy: new Map(),
       };
       entry.instancePropertyUsage.set(prop, meta);
     }
 
+    // capture method key for downstream policy in this routine.
     const methodKey = methodName;
     if (isInitializer && usage.writes.size > 0)
     {
       meta.initializedIn.add(methodKey);
     }
+    // when usage.writes.size > 0, take this branch.
     if (usage.writes.size > 0)
     {
       meta.writtenIn.add(methodKey);
@@ -290,8 +310,8 @@ function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
 }
 
 /**
- * @param {ClassEntry} entry
- * @param {string} classPath
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {string} classPath The class path driving this step.
  * @returns {Map<string, string>}
  */
 function finalizeInstancePropTs(entry, classPath)
@@ -300,6 +320,7 @@ function finalizeInstancePropTs(entry, classPath)
   const out = new Map();
   for (const [name, arr] of entry.instancePropertyBuckets)
   {
+    // capture merged for downstream policy in this routine.
     const merged = mergeInstancePropRhsObservations(arr);
     out.set(name, refineInstanceBackingFieldTs(classPath, name, merged));
   }
@@ -309,7 +330,7 @@ function finalizeInstancePropTs(entry, classPath)
 /**
  * Instance typings merge surface (prototype methods and/or inferred `this._*` fields).
  *
- * @param {ClassEntry} entry
+ * @param {ClassEntry} entry The entry driving this step.
  * @returns {boolean}
  */
 function entryHasInstanceSurface(entry)
@@ -320,7 +341,7 @@ function entryHasInstanceSurface(entry)
 /**
  * VS Code / TS hovers collapse multi-line JSDoc into one paragraph unless we force breaks.
  *
- * @param {string} indent
+ * @param {string} indent The indent driving this step.
  * @param {string} body Text after the leading ` * ` (empty = blank spacer line).
  * @returns {string}
  */
@@ -330,13 +351,14 @@ function instancePropDocStarLine(indent, body)
   {
     return `${indent} *<br/>\n`;
   }
+  // hand back `${indent} * ${body}<br/>\n` to the caller.
   return `${indent} * ${body}<br/>\n`;
 }
 
 /**
- * @param {ClassEntry} entry
- * @param {string} indent
- * @param {string} classPath
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {string} indent The indent driving this step.
+ * @param {string} classPath The class path driving this step.
  * @returns {string}
  */
 function formatInstancePropsBlock(entry, indent, classPath)
@@ -346,28 +368,35 @@ function formatInstancePropsBlock(entry, indent, classPath)
   {
     return '';
   }
+  // policy step inside format instance props block.
   /** @type {string[]} */
   const lines = [];
   for (const propName of [...merged.keys()].sort())
   {
+    // capture ts for downstream policy in this routine.
     const ts = merged.get(propName);
     const meta = entry.instancePropertyUsage.get(propName);
 
+    // policy step inside format instance props block.
     /** @type {string[]} */
     const doc = [];
     doc.push(`${indent}/**\n`);
+    // Append the row to the working collection.
     doc.push(instancePropDocStarLine(indent, 'Inferred engine backing field.'));
     doc.push(instancePropDocStarLine(indent, ''));
     doc.push(instancePropDocStarLine(indent, `Type: \`${ts}\`.`));
 
+    // when meta, take this branch.
     if (meta)
     {
       const init = [...meta.initializedIn].sort();
       const written = [...meta.writtenIn].sort();
+      // capture read for downstream policy in this routine.
       const read = [...meta.readIn].sort();
 
+      // policy step inside format instance props block.
       /**
-       * @param {string[]} methods
+       * @param {string[]} methods The methods driving this step.
        * @returns {string}
        */
       function methodLinks(methods)
@@ -378,22 +407,26 @@ function formatInstancePropsBlock(entry, indent, classPath)
         }
         return methods.map((m) =>
         {
+          // when m  equals  '<constructor>', take this branch.
           if (m === '<constructor>')
           {
             return 'constructor';
           }
           if (m === '<module-init>')
           {
+            // hand back 'module init' to the caller.
             return 'module init';
           }
           return `{@link ${m}}`;
         }).join(', ');
       }
 
+      // Append the row to the working collection.
       doc.push(instancePropDocStarLine(indent, `Initialized in: ${methodLinks(init)}.`));
       doc.push(instancePropDocStarLine(indent, `Written in: ${methodLinks(written)}.`));
       doc.push(instancePropDocStarLine(indent, `Read in: ${methodLinks(read)}.`));
 
+      // capture consume keys for downstream policy in this routine.
       const consumeKeys = [...meta.consumedBy.keys()].sort();
       if (consumeKeys.length > 0)
       {
@@ -411,6 +444,7 @@ function formatInstancePropsBlock(entry, indent, classPath)
     lines.push(`${indent}${propName}: ${ts};\n`);
   }
 
+  // hand back lines.join('') to the caller.
   return lines.join('');
 }
 
@@ -422,18 +456,21 @@ function literalToTsType(node)
     {
       return 'null';
     }
+    // when typeof node.value  equals  'string', take this branch.
     if (typeof node.value === 'string')
     {
       return JSON.stringify(node.value);
     }
     if (typeof node.value === 'number')
     {
+      // hand back String(node.value) to the caller.
       return String(node.value);
     }
     if (typeof node.value === 'boolean')
     {
       return node.value ? 'true' : 'false';
     }
+    // when typeof node.value  equals  'bigint', take this branch.
     if (typeof node.value === 'bigint')
     {
       return `${node.value}n`;
@@ -448,13 +485,13 @@ function literalToTsType(node)
 }
 
 /**
- * @param {import('acorn').Program} ast
- * @param {(stmt: import('acorn').Statement) => void} visitor
+ * @param {import('acorn').Program} ast The ast driving this step.
+ * @param {(stmt: import('acorn').Statement) => void} visitor The visitor driving this step.
  */
 function walkStatementTree(ast, visitor)
 {
   /**
-   * @param {import('acorn').Statement | null | undefined} stmt
+   * @param {import('acorn').Statement | null | undefined} stmt The stmt driving this step.
    */
   function recurse(stmt)
   {
@@ -463,33 +500,42 @@ function walkStatementTree(ast, visitor)
       return;
     }
     visitor(stmt);
+    // dispatch on the discriminant for the next policy branch.
     switch (stmt.type)
     {
       case 'BlockStatement':
         for (const s of stmt.body)
         {
+          // policy step inside recurse.
           recurse(s);
         }
         break;
       case 'IfStatement':
+        // policy step inside recurse.
         recurse(stmt.consequent);
         recurse(stmt.alternate);
         break;
+      // handle this switch arm for the current discriminant.
       case 'WhileStatement':
       case 'DoWhileStatement':
         recurse(stmt.body);
+        // policy step inside recurse.
         break;
       case 'ForStatement':
         recurse(stmt.body);
+        // policy step inside recurse.
         break;
       case 'ForInStatement':
       case 'ForOfStatement':
+        // policy step inside recurse.
         recurse(stmt.body);
         break;
       case 'LabeledStatement':
+        // policy step inside recurse.
         recurse(stmt.body);
         break;
       case 'SwitchStatement':
+        // walk each entry in the iterable for this routine.
         for (const caseClause of stmt.cases)
         {
           for (const cons of caseClause.consequent)
@@ -497,6 +543,7 @@ function walkStatementTree(ast, visitor)
             recurse(cons);
           }
         }
+        // policy step inside recurse.
         break;
       case 'TryStatement':
         recurse(stmt.block);
@@ -514,6 +561,7 @@ function walkStatementTree(ast, visitor)
     }
   }
 
+  // walk each entry in the iterable for this routine.
   for (const stmt of ast.body)
   {
     recurse(stmt);
@@ -521,72 +569,89 @@ function walkStatementTree(ast, visitor)
 }
 
 /**
- * @param {string} enginePath
- * @param {string} stem
+ * @param {string} enginePath The engine path driving this step.
+ * @param {string} stem The stem driving this step.
  */
 function extractFromFile(enginePath, stem)
 {
   /** @type {Map<string, ClassEntry>} */
   const classes = new Map();
   /** @type {Map<string, Map<string, MethodSig>>} */
+  // construct builtin proto for the next step in this routine.
   const builtinProto = new Map();
   /** @type {Map<string, Map<string, MethodSig>>} */
   const builtinStatic = new Map();
+  // policy step inside extract from file.
   /** @type {Map<string, { ts: string, docSummary: string | null }>} */
   const globals = new Map();
 
+  // capture engine source file for downstream policy in this routine.
   const engineSourceFile = path.basename(enginePath);
 
+  // policy step inside extract from file.
   /**
-   * @param {string} pathStr
+   * @param {string} pathStr The path str driving this step.
    * @returns {ClassEntry}
+   // policy step inside extract from file.
    */
   function ensureClass(pathStr)
   {
     let e = classes.get(pathStr);
+    // when not e, take this branch.
     if (!e)
     {
       e = {
+        // policy step inside ensure class.
         instanceMethods: new Map(),
         staticMethods: new Map(),
         literalStatics: new Map(),
+        // policy step inside ensure class.
         instancePropertyBuckets: new Map(),
         instancePropertyUsage: new Map(),
         extendsBase: null,
+      // policy step inside ensure class.
       };
       classes.set(pathStr, e);
     }
     return e;
   }
 
+  // capture src for downstream policy in this routine.
   const src = fs.readFileSync(enginePath, 'utf8');
   const lineStarts = buildLineStarts(src);
 
+  // policy step inside extract from file.
   /** @type {import('acorn').Program} */
   const ast = acorn.parse(src,
     {
       ecmaVersion: 2022,
+      // policy step inside extract from file.
       sourceType: 'script',
       locations: true,
     });
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').AssignmentExpression} node
-   * @param {import('acorn').ExpressionStatement} parentStmt
+   * @param {import('acorn').AssignmentExpression} node The node driving this step.
+   * @param {import('acorn').ExpressionStatement} parentStmt The parent stmt driving this step.
+   // policy step inside extract from file.
    */
   function handleAssign(node, parentStmt)
   {
     if (node.operator !== '=')
     {
+      // exit early without a payload.
       return;
     }
 
+    // capture loc for downstream policy in this routine.
     const loc = parentStmt.loc;
     if (!loc)
     {
       return;
     }
 
+    // capture left for downstream policy in this routine.
     const left = node.left;
     const right = node.right;
 
@@ -596,29 +661,37 @@ function extractFromFile(enginePath, stem)
     if (
       left.type === 'MemberExpression'
       && !left.computed
+      // policy step inside handle assign.
       && left.property.type === 'Identifier'
       && left.property.name === 'prototype'
       && right.type === 'CallExpression'
+      // policy step inside handle assign.
       && right.callee.type === 'MemberExpression'
       && !right.callee.computed
       && right.callee.object.type === 'Identifier'
+      // policy step inside handle assign.
       && right.callee.object.name === 'Object'
       && right.callee.property.type === 'Identifier'
       && right.callee.property.name === 'create'
+      // policy step inside handle assign.
       && right.arguments.length >= 1
     )
     {
       const arg0 = right.arguments[0];
+      // when , take this branch.
       if (
         arg0
         && arg0.type === 'MemberExpression'
+        // policy step inside handle assign.
         && !arg0.computed
         && arg0.property.type === 'Identifier'
         && arg0.property.name === 'prototype'
+      // policy step inside handle assign.
       )
       {
         const childPath = memberChain(left.object);
         const parentPath = memberChain(arg0.object);
+        // when childPath  differs from  null  and  parentPath  differs from  null, take this branch.
         if (childPath !== null && parentPath !== null)
         {
           ensureClass(childPath).extendsBase = parentPath;
@@ -633,20 +706,25 @@ function extractFromFile(enginePath, stem)
     if (
       left.type === 'Identifier'
       && left.name.startsWith('$')
+      // policy step inside handle assign.
       && stem === 'managers'
     )
     {
       const jdText = extractLeadingJsdoc(src, lineStarts, loc);
+      // capture jd for downstream policy in this routine.
       const jd = parseJsdocBlock(jdText);
       const rawTs = jd.typeTag ?? 'unknown';
       const ts = GLOBAL_VAR_TYPE_OVERRIDES[left.name] ?? rawTs;
+      // capture doc summary for downstream policy in this routine.
       const docSummary = jd.summary && jd.summary.trim().length > 0
         ? jd.summary.trim()
         : null;
+      // Register the value on the alias map for runtime lookup.
       globals.set(left.name, { ts, docSummary });
       return;
     }
 
+    // when left.type  differs from  'MemberExpression'  or  left.computed, take this branch.
     if (left.type !== 'MemberExpression' || left.computed)
     {
       return;
@@ -656,59 +734,73 @@ function extractFromFile(enginePath, stem)
     if (
       left.object.type === 'MemberExpression'
       && !left.object.computed
+      // policy step inside handle assign.
       && left.object.property.type === 'Identifier'
       && left.object.property.name === 'prototype'
     )
     {
+      // capture cls path for downstream policy in this routine.
       const clsPath = memberChain(left.object.object);
       const prop = left.property.type === 'Identifier' ? left.property.name : null;
       if (clsPath === null || prop === null)
       {
+        // exit early without a payload.
         return;
       }
 
+      // capture root for downstream policy in this routine.
       const root = clsPath.split('.')[0];
       if (BUILTIN_RECEIVERS.has(root))
       {
         const bucket = builtinProto.get(root) ?? new Map();
+        // when prop  differs from  'constructor', take this branch.
         if (prop !== 'constructor')
         {
           if (right.type === 'FunctionExpression' || right.type === 'ArrowFunctionExpression')
           {
             bucket.set(prop, buildMethodSignature(right, src, lineStarts, loc,
               {
+                // policy step inside handle assign.
                 role: 'builtinProto',
                 assigningClassPath: root,
                 builtinReceiver: root,
+                // policy step inside handle assign.
                 methodName: prop,
                 engineSourceFile,
               }));
           }
+          // otherwise fall back to the alternate path.
           else
           {
             bucket.set(prop, { paramsTs: '', returnTs: 'unknown', docBlock: fallbackMethodDoc(prop, 'unknown') });
           }
         }
         builtinProto.set(root, bucket);
+        // exit early without a payload.
         return;
       }
 
+      // capture fn for downstream policy in this routine.
       const fn = ensureClass(clsPath);
       if (prop === 'constructor')
       {
         return;
       }
 
+      // when right.type  equals  'FunctionExpression'  or  right.type  equals  'Ar..., take this branch.
       if (right.type === 'FunctionExpression' || right.type === 'ArrowFunctionExpression')
       {
         const inferCtx = {
           role: 'instance',
+          // policy step inside extract from file.
           assigningClassPath: clsPath,
           methodName: prop,
           engineSourceFile,
+        // policy step inside extract from file.
         };
         fn.instanceMethods.set(prop, buildMethodSignature(right, src, lineStarts, loc, inferCtx));
         absorbInstanceProps(fn, collectThisUnderscorePropsFromFunction(right, inferCtx));
+        // policy step inside extract from file.
         absorbInstancePropUsage(
           fn,
           collectThisUnderscoreUsageFromFunction(right),
@@ -728,12 +820,14 @@ function extractFromFile(enginePath, stem)
       return;
     }
 
+    // capture chain for downstream policy in this routine.
     const chain = memberChain(left);
     if (chain === null)
     {
       return;
     }
 
+    // capture segments for downstream policy in this routine.
     const segments = chain.split('.');
     const parentPath = segments.slice(0, -1).join('.');
     const last = segments[segments.length - 1];
@@ -795,16 +889,19 @@ function extractFromFile(enginePath, stem)
       return;
     }
 
+    // capture literal ts for downstream policy in this routine.
     const literalTs = (right.type === 'Literal' || right.type === 'UnaryExpression')
       ? literalToTsType(/** @type {*} */ (right))
       : null;
 
+    // when literalTs  differs from  null  and  parentPath.length > 0, take this branch.
     if (literalTs !== null && parentPath.length > 0)
     {
       ensureClass(parentPath).literalStatics.set(last, literalTs);
       return;
     }
 
+    // when right.type  equals  'FunctionExpression'  or  right.type  equals  'Ar..., take this branch.
     if (right.type === 'FunctionExpression' || right.type === 'ArrowFunctionExpression')
     {
       const isNestedCtor = /^[A-Z]/.test(last[0]) && segments.length >= 2;
@@ -821,11 +918,13 @@ function extractFromFile(enginePath, stem)
         return;
       }
 
+      // when parentPath.length  equals  0, take this branch.
       if (parentPath.length === 0)
       {
         return;
       }
 
+      // capture static owner for downstream policy in this routine.
       const staticOwner = ensureClass(parentPath);
       staticOwner.staticMethods.set(last,
         buildMethodSignature(right, src, lineStarts, loc,
@@ -857,8 +956,9 @@ function extractFromFile(enginePath, stem)
     }
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').Property} prop
+   * @param {import('acorn').Property} prop The prop driving this step.
    * @returns {string | null}
    */
   function definePropsKeyName(prop)
@@ -869,6 +969,7 @@ function extractFromFile(enginePath, stem)
     }
     if (prop.key.type === 'Identifier')
     {
+      // hand back prop.key.name to the caller.
       return prop.key.name;
     }
     if (prop.key.type === 'Literal' && typeof prop.key.value === 'string')
@@ -878,8 +979,9 @@ function extractFromFile(enginePath, stem)
     return null;
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').ObjectExpression} descObj
+   * @param {import('acorn').ObjectExpression} descObj The desc obj driving this step.
    * @returns {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression | null}
    */
   function findGetterInDescriptor(descObj)
@@ -890,11 +992,13 @@ function extractFromFile(enginePath, stem)
     }
     for (const p of descObj.properties)
     {
+      // when p.type  differs from  'Property'  or  p.computed, take this branch.
       if (p.type !== 'Property' || p.computed)
       {
         continue;
       }
       const kn = p.key.type === 'Identifier' ? p.key.name : null;
+      // when kn  differs from  'get', take this branch.
       if (kn !== 'get')
       {
         continue;
@@ -907,8 +1011,9 @@ function extractFromFile(enginePath, stem)
     return null;
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').Expression} valueNode
+   * @param {import('acorn').Expression} valueNode The value node driving this step.
    * @returns {string | null}
    */
   function returnTsFromTextManagerGetterFactory(valueNode)
@@ -918,12 +1023,14 @@ function extractFromFile(enginePath, stem)
       return null;
     }
     const c = valueNode.callee;
+    // when c.type  differs from  'MemberExpression'  or  c.computed  or  c.prope..., take this branch.
     if (c.type !== 'MemberExpression' || c.computed || c.property.type !== 'Identifier')
     {
       return null;
     }
     if (c.property.name !== 'getter')
     {
+      // hand back null to the caller.
       return null;
     }
     const owner = memberChain(c.object);
@@ -934,11 +1041,12 @@ function extractFromFile(enginePath, stem)
     return 'string';
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').ObjectExpression} propsObj
-   * @param {string} assigningClassPath
-   * @param {'instance' | 'static'} kind
-   * @param {import('acorn').SourceLocation | null | undefined} stmtLoc
+   * @param {import('acorn').ObjectExpression} propsObj The props obj driving this step.
+   * @param {string} assigningClassPath The assigning class path driving this step.
+   * @param {'instance' | 'static'} kind The kind driving this step.
+   * @param {import('acorn').SourceLocation | null | undefined} stmtLoc The stmt loc driving this step.
    * @returns {void}
    */
   function absorbDefinePropertiesDescriptors(propsObj, assigningClassPath, kind, stmtLoc)
@@ -947,38 +1055,47 @@ function extractFromFile(enginePath, stem)
     const loc = stmtLoc;
     for (const prop of propsObj.properties)
     {
+      // when prop.type  differs from  'Property'  or  prop.computed, take this branch.
       if (prop.type !== 'Property' || prop.computed)
       {
         continue;
       }
       const name = definePropsKeyName(prop);
+      // when name  equals  null, take this branch.
       if (name === null)
       {
         continue;
       }
       const inferCtx = {
+        // policy step inside absorb define properties descriptors.
         role: kind === 'instance' ? 'instance' : 'static',
         assigningClassPath,
         methodName: name,
+        // policy step inside absorb define properties descriptors.
         engineSourceFile,
       };
       if (prop.value.type === 'ObjectExpression')
       {
+        // capture getter fn for downstream policy in this routine.
         const getterFn = findGetterInDescriptor(prop.value);
         if (getterFn)
         {
           const sig = buildMethodSignature(getterFn, src, lineStarts, loc, inferCtx);
+          // capture return ts for downstream policy in this routine.
           const returnTs = refineDefinePropertyGetterReturn(getterFn, sig.returnTs);
           const payload = {
             paramsTs: '',
+            // policy step inside absorb define properties descriptors.
             returnTs,
             docBlock: sig.docBlock,
             isGetter: true,
+          // policy step inside absorb define properties descriptors.
           };
           if (kind === 'instance')
           {
             entry.instanceMethods.set(name, payload);
           }
+          // otherwise fall back to the alternate path.
           else
           {
             entry.staticMethods.set(name, payload);
@@ -1000,8 +1117,9 @@ function extractFromFile(enginePath, stem)
     }
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').ExpressionStatement} stmt
+   * @param {import('acorn').ExpressionStatement} stmt The stmt driving this step.
    * @returns {void}
    */
   function tryConsumeObjectDefineProperties(stmt)
@@ -1011,34 +1129,41 @@ function extractFromFile(enginePath, stem)
       return;
     }
     const ex = stmt.expression;
+    // when ex.type  differs from  'CallExpression'  or  ex.arguments.length < 2, take this branch.
     if (ex.type !== 'CallExpression' || ex.arguments.length < 2)
     {
       return;
     }
     const callee = ex.callee;
+    // when callee.type  differs from  'MemberExpression'  or  callee.computed, take this branch.
     if (callee.type !== 'MemberExpression' || callee.computed)
     {
       return;
     }
     if (callee.object.type !== 'Identifier' || callee.object.name !== 'Object')
     {
+      // exit early without a payload.
       return;
     }
     if (callee.property.type !== 'Identifier' || callee.property.name !== 'defineProperties')
     {
       return;
     }
+    // capture target for downstream policy in this routine.
     const target = ex.arguments[0];
     const propsObj = ex.arguments[1];
     if (!propsObj || propsObj.type !== 'ObjectExpression')
     {
+      // exit early without a payload.
       return;
     }
     if (
       target.type === 'MemberExpression'
+      // policy step inside try consume object define properties.
       && !target.computed
       && target.property.type === 'Identifier'
       && target.property.name === 'prototype'
+    // policy step inside try consume object define properties.
     )
     {
       const clsPath = memberChain(target.object);
@@ -1055,8 +1180,9 @@ function extractFromFile(enginePath, stem)
     }
   }
 
+  // policy step inside extract from file.
   /**
-   * @param {import('acorn').ExpressionStatement} stmt
+   * @param {import('acorn').ExpressionStatement} stmt The stmt driving this step.
    * @returns {void}
    */
   function tryConsumeObjectDefineProperty(stmt)
@@ -1066,71 +1192,87 @@ function extractFromFile(enginePath, stem)
       return;
     }
     const ex = stmt.expression;
+    // when ex.type  differs from  'CallExpression'  or  ex.arguments.length < 3, take this branch.
     if (ex.type !== 'CallExpression' || ex.arguments.length < 3)
     {
       return;
     }
     const callee = ex.callee;
+    // when , take this branch.
     if (
       callee.type !== 'MemberExpression'
       || callee.computed
+      // policy step inside try consume object define property.
       || callee.object.type !== 'Identifier'
       || callee.object.name !== 'Object'
       || callee.property.type !== 'Identifier'
+      // policy step inside try consume object define property.
       || callee.property.name !== 'defineProperty'
     )
     {
       return;
     }
+    // capture target for downstream policy in this routine.
     const target = ex.arguments[0];
     const keyArg = ex.arguments[1];
     const desc = ex.arguments[2];
+    // when not desc  or  desc.type  differs from  'ObjectExpression', take this branch.
     if (!desc || desc.type !== 'ObjectExpression')
     {
       return;
     }
     const getterFn = findGetterInDescriptor(desc);
+    // when not getterFn, take this branch.
     if (!getterFn)
     {
       return;
     }
     let name = null;
+    // when keyArg.type  equals  'Literal'  and  typeof keyArg.value  equals  'st..., take this branch.
     if (keyArg.type === 'Literal' && typeof keyArg.value === 'string')
     {
       name = keyArg.value;
     }
     else if (keyArg.type === 'Identifier')
     {
+      // policy step inside try consume object define property.
       name = keyArg.name;
     }
     if (name === null)
     {
       return;
     }
+    // capture cls path for downstream policy in this routine.
     let clsPath = null;
     let kind = 'instance';
     if (
+      // policy step inside try consume object define property.
       target.type === 'MemberExpression'
       && !target.computed
       && target.property.type === 'Identifier'
+      // policy step inside try consume object define property.
       && target.property.name === 'prototype'
     )
     {
       clsPath = memberChain(target.object);
+      // policy step inside try consume object define property.
       kind = 'instance';
     }
     else if (target.type === 'Identifier')
     {
       clsPath = target.name;
+      // policy step inside try consume object define property.
       kind = 'static';
     }
     if (clsPath === null)
     {
       return;
     }
+    // capture infer ctx for downstream policy in this routine.
     const inferCtx = {
       role: kind === 'instance' ? 'instance' : 'static',
       assigningClassPath: clsPath,
+      // policy step inside try consume object define property.
       methodName: name,
       engineSourceFile,
     };
@@ -1153,6 +1295,7 @@ function extractFromFile(enginePath, stem)
     }
   }
 
+  // policy step inside extract from file.
   walkStatementTree(ast, (stmt) =>
   {
     if (stmt.type === 'ExpressionStatement')
@@ -1185,12 +1328,14 @@ function extractFromFile(enginePath, stem)
       }
     }
 
+    // when stmt.type  equals  'ExpressionStatement'  and  stmt.expression.type  ..., take this branch.
     if (stmt.type === 'ExpressionStatement' && stmt.expression.type === 'AssignmentExpression')
     {
       handleAssign(stmt.expression, stmt);
     }
   });
 
+  // hand back { to the caller.
   return {
     stem,
     sourceLabel: path.relative(REPO_ROOT, enginePath).replace(/\\/g, '/'),
@@ -1202,7 +1347,7 @@ function extractFromFile(enginePath, stem)
 }
 
 /**
- * @param {string[]} segments
+ * @param {string[]} segments The segments driving this step.
  * @returns {string}
  */
 function pathForClassDecl(segments)
@@ -1211,14 +1356,15 @@ function pathForClassDecl(segments)
   {
     return `${segments[0]}.d.ts`;
   }
+  // hand back path.join(...segments.slice(0, -1), `${segments[segme... to the caller.
   return path.join(...segments.slice(0, -1), `${segments[segments.length - 1]}.d.ts`);
 }
 
 /**
  * Relative fragment path for a logical class path (e.g. `Game_Actor` → `objects/Game_Actor.d.ts`).
  *
- * @param {string} stem
- * @param {string} classPathStr
+ * @param {string} stem The stem driving this step.
+ * @param {string} classPathStr The class path str driving this step.
  * @returns {string}
  */
 function fragmentPathForClass(stem, classPathStr)
@@ -1230,7 +1376,7 @@ function fragmentPathForClass(stem, classPathStr)
 /**
  * Topological order so each `extends` parent fragment precedes the child (TS needs the base type in scope).
  *
- * @param {string[]} refs
+ * @param {string[]} refs The refs driving this step.
  * @param {Map<string, string>} extendsGraph child class path → parent class path
  * @param {Map<string, string>} classStem class path → stem dir
  * @returns {string[]}
@@ -1240,49 +1386,60 @@ function topoSortRefsByExtends(refs, extendsGraph, classStem)
   const refSet = new Set(refs);
   /** @type {Map<string, Set<string>>} */
   const adj = new Map();
+  // policy step inside topo sort refs by extends.
   /** @type {Map<string, number>} */
   const indeg = new Map();
   for (const r of refs)
   {
+    // Register the value on the alias map for runtime lookup.
     indeg.set(r, 0);
     adj.set(r, new Set());
   }
   for (const [child, parent] of extendsGraph)
   {
+    // capture cs for downstream policy in this routine.
     const cs = classStem.get(child);
     const ps = classStem.get(parent);
     if (cs === undefined || ps === undefined)
     {
+      // policy step inside topo sort refs by extends.
       continue;
     }
     const childFile = fragmentPathForClass(cs, child);
     const parentFile = fragmentPathForClass(ps, parent);
+    // when not refSet.has(childFile)  or  not refSet.has(parentFile)  or  childF..., take this branch.
     if (!refSet.has(childFile) || !refSet.has(parentFile) || childFile === parentFile)
     {
       continue;
     }
     const outs = adj.get(parentFile);
+    // when outs  and  not outs.has(childFile), take this branch.
     if (outs && !outs.has(childFile))
     {
       outs.add(childFile);
       indeg.set(childFile, (indeg.get(childFile) ?? 0) + 1);
     }
   }
+  // policy step inside topo sort refs by extends.
   /** @type {string[]} */
   const q = [...refs].filter((r) => (indeg.get(r) ?? 0) === 0).sort();
   /** @type {string[]} */
+  // capture out for downstream policy in this routine.
   const out = [];
   /** @type {Set<string>} */
   const seen = new Set();
+  // keep looping while q.length > 0.
   while (q.length > 0)
   {
     const n = /** @type {string} */ (q.shift());
     if (seen.has(n))
     {
+      // policy step inside topo sort refs by extends.
       continue;
     }
     seen.add(n);
     out.push(n);
+    // capture nexts for downstream policy in this routine.
     const nexts = [...(adj.get(n) ?? new Set())].sort();
     for (const v of nexts)
     {
@@ -1308,8 +1465,8 @@ function topoSortRefsByExtends(refs, extendsGraph, classStem)
 }
 
 /**
- * @param {MethodSig} sig
- * @param {string} indent
+ * @param {MethodSig} sig The sig driving this step.
+ * @param {string} indent The indent driving this step.
  * @returns {string}
  */
 function formatMethod(name, sig, indent = '  ')
@@ -1318,11 +1475,13 @@ function formatMethod(name, sig, indent = '  ')
   let docPart = '';
   if (sig.docBlock && sig.docBlock.length > 0)
   {
+    // capture inner lines for downstream policy in this routine.
     const innerLines = sig.docBlock.split('\n').map(l => `${indent}${l}`).join('\n');
     docPart = `${indent}/**\n${innerLines}\n${indent} */\n`;
   }
   if (sig.isGetter === true)
   {
+    // hand back `${docPart}${indent}get ${name}(): ${sig.returnTs};` to the caller.
     return `${docPart}${indent}get ${name}(): ${sig.returnTs};`;
   }
   if (!sig.paramsTs || sig.paramsTs.length === 0)
@@ -1335,9 +1494,9 @@ function formatMethod(name, sig, indent = '  ')
 /**
  * Static functions inside `declare namespace Foo { ... }` (MZ singleton managers).
  *
- * @param {string} name
- * @param {MethodSig} sig
- * @param {string} indent
+ * @param {string} name The name driving this step.
+ * @param {MethodSig} sig The sig driving this step.
+ * @param {string} indent The indent driving this step.
  * @returns {string}
  */
 function formatNamespaceStaticFn(name, sig, indent = '  ')
@@ -1346,11 +1505,13 @@ function formatNamespaceStaticFn(name, sig, indent = '  ')
   let docPart = '';
   if (sig.docBlock && sig.docBlock.length > 0)
   {
+    // capture inner lines for downstream policy in this routine.
     const innerLines = sig.docBlock.split('\n').map(l => `${indent}${l}`).join('\n');
     docPart = `${indent}/**\n${innerLines}\n${indent} */\n`;
   }
   if (sig.isGetter === true)
   {
+    // hand back `${docPart}${indent}get ${name}(): ${sig.returnTs};` to the caller.
     return `${docPart}${indent}get ${name}(): ${sig.returnTs};`;
   }
   const paramsInner = sig.paramsTs && sig.paramsTs.length > 0 ? sig.paramsTs : '';
@@ -1363,9 +1524,9 @@ function formatNamespaceStaticFn(name, sig, indent = '  ')
  * Emit an `interface Name` (instance) plus optional `declare namespace Name` (statics) so types
  * merge with the JS constructor instead of fighting it.
  *
- * @param {string} sourceLabel
- * @param {string} pathStr
- * @param {ClassEntry} entry
+ * @param {string} sourceLabel The source label driving this step.
+ * @param {string} pathStr The path str driving this step.
+ * @param {ClassEntry} entry The entry driving this step.
  * @returns {string}
  */
 function emitMergeableEngineClass(sourceLabel, pathStr, entry)
@@ -1373,14 +1534,18 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
   const hdr = [
     '/**',
     ` * Generated from ${sourceLabel}`,
+    // policy step inside emit mergeable engine class.
     ` * Class: ${pathStr}`,
     ' * Instance/static typings merge with the engine constructor + prototype in project/js.',
     ' * Do not hand-edit; regenerate with bun run defs:generate.',
+    // policy step inside emit mergeable engine class.
     ' * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.',
     ' */',
     '',
+  // Flatten the collection into one delimiter-separated string.
   ].join('\n');
 
+  // capture segments for downstream policy in this routine.
   const segments = pathStr.split('.');
   const name = segments[segments.length - 1];
   const hasInstance = entryHasInstanceSurface(entry);
@@ -1388,6 +1553,7 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
   const parts = [];
   const extendsClause = entry.extendsBase ? ` extends ${entry.extendsBase}` : '';
 
+  // when hasInstance, take this branch.
   if (hasInstance)
   {
     parts.push(`interface ${name}${extendsClause}\n{\n`);
@@ -1399,6 +1565,7 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
     parts.push('}\n');
   }
 
+  // when hasStatic, take this branch.
   if (hasStatic)
   {
     // Static-only engine singletons (`function X(){throw ...}`, methods on `X`) — keep the never-ctor even
@@ -1425,20 +1592,22 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
     parts.push('}\n');
   }
 
+  // when not hasInstance  and  not hasStatic, take this branch.
   if (!hasInstance && !hasStatic)
   {
     parts.push(`interface ${name}\n{\n}\n`);
   }
 
+  // hand back hdr + parts.join('') to the caller.
   return hdr + parts.join('');
 }
 
 /**
- * @param {ExtractResult} bundle
+ * @param {ExtractResult} bundle The bundle driving this step.
  * @returns {string[]}
  */
 /**
- * @param {ExtractResult} bundle
+ * @param {ExtractResult} bundle The bundle driving this step.
  * @param {Map<string, string>} classStemOut class path (e.g. `Game_Actor`) → stem (`objects`)
  * @param {Map<string, string>} extendsGraphOut child class path → parent class path from `Object.create`
  */
@@ -1447,24 +1616,31 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
   const {
     stem,
     sourceLabel,
+    // policy step inside emit bundle.
     classes,
     builtinProto,
     builtinStatic,
+    // policy step inside emit bundle.
     globals,
   } = bundle;
 
+  // capture written for downstream policy in this routine.
   const written = [];
   const stemDir = path.join(OUT_ROOT, stem);
 
+  // policy step inside emit bundle.
   /**
-   * @param {string} relPath
-   * @param {string} body
+   * @param {string} relPath The rel path driving this step.
+   * @param {string} body The body driving this step.
+   // policy step inside emit bundle.
    */
   function write(relPath, body)
   {
     const full = path.join(stemDir, relPath);
+    // policy step inside emit bundle.
     fs.mkdirSync(path.dirname(full), { recursive: true });
     fs.writeFileSync(full, body, 'utf8');
+    // Append the row to the working collection.
     written.push(path.join(stem, relPath).replace(/\\/g, '/'));
   }
 
@@ -1473,52 +1649,63 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
   for (const recv of [...builtinProto.keys()].sort())
   {
     const protoM = builtinProto.get(recv);
+    // when not protoM  or  protoM.size  equals  0, take this branch.
     if (!protoM || protoM.size === 0)
     {
       continue;
     }
     const lines = [`  interface ${recv}\n  {`];
+    // walk each entry in the iterable for this routine.
     for (const name of [...protoM.keys()].sort())
     {
       const sig = protoM.get(name);
       lines.push(formatMethod(name, sig));
     }
+    // Append the row to the working collection.
     lines.push('  }');
     builtinParts.push(lines.join('\n'));
   }
   for (const recv of [...builtinStatic.keys()].sort())
   {
+    // capture stat m for downstream policy in this routine.
     const statM = builtinStatic.get(recv);
     if (!statM || statM.size === 0)
     {
       continue;
     }
+    // capture lines for downstream policy in this routine.
     const lines = [`  interface ${recv}\n  {`];
     for (const name of [...statM.keys()].sort())
     {
       const sig = statM.get(name);
+      // Append the row to the working collection.
       lines.push(formatMethod(name, sig));
     }
     lines.push('  }');
     builtinParts.push(lines.join('\n'));
   }
 
+  // when builtinParts.length > 0, take this branch.
   if (builtinParts.length > 0)
   {
     const hdr = [
       '/**',
+      // policy step inside emit bundle.
       ` * Generated from ${sourceLabel}`,
       ' * Built-in prototype/static augmentations (JsExtensions, Math.randomInt, …).',
       ' */',
+      // policy step inside emit bundle.
       '',
       'declare global',
       '{',
+      // policy step inside emit bundle.
       '',
     ].join('\n');
     const foot = '\n}\n\nexport {};\n';
     write('_builtins-augment.d.ts', hdr + builtinParts.join('\n\n') + foot);
   }
 
+  // when globals.size > 0, take this branch.
   if (globals.size > 0)
   {
     const lines = [
@@ -1539,11 +1726,13 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     write('_globals.d.ts', lines.join(''));
   }
 
+  // policy step inside emit bundle.
   /** @type {Map<string, ClassEntry>} */
   const nestedNsClasses = new Map();
   /** @type {Map<string, ClassEntry>} */
   const topOrStaticOnly = new Map();
 
+  // walk each entry in the iterable for this routine.
   for (const [pathStr, entry] of classes)
   {
     const segments = pathStr.split('.');
@@ -1557,6 +1746,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     }
   }
 
+  // walk each entry in the iterable for this routine.
   for (const [pathStr, entry] of topOrStaticOnly)
   {
     const segments = pathStr.split('.');
@@ -1565,9 +1755,11 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
       continue;
     }
 
+    // policy step inside emit bundle.
     write(pathForClassDecl(segments), emitMergeableEngineClass(sourceLabel, pathStr, entry));
   }
 
+  // walk each entry in the iterable for this routine.
   for (const [pathStr, entry] of nestedNsClasses)
   {
     const segments = pathStr.split('.');
@@ -1576,6 +1768,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     const hdr = `/**\n * Generated from ${sourceLabel}\n * Class: ${pathStr}\n */\n\n`;
     const nestedExtends = entry.extendsBase ? ` extends ${entry.extendsBase}` : '';
 
+    // capture has static for downstream policy in this routine.
     const hasStatic = entry.staticMethods.size > 0 || entry.literalStatics.size > 0;
     const lines = [
       hdr,
@@ -1589,6 +1782,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     }
     lines.push('  }\n');
 
+    // when hasStatic, take this branch.
     if (hasStatic)
     {
       lines.push(`\n  export namespace ${shortName}\n  {\n`);
@@ -1609,6 +1803,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
       lines.push('  }\n');
     }
 
+    // Append the row to the working collection.
     lines.push('}\n');
     write(pathForClassDecl(segments), lines.join(''));
   }
@@ -1624,6 +1819,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     }
   }
 
+  // hand back written to the caller.
   return written;
 }
 
@@ -1635,38 +1831,47 @@ function main()
 {
   const doClean = process.argv.includes('--clean');
 
+  // when doClean  and  fs.existsSync(OUT_ROOT), take this branch.
   if (doClean && fs.existsSync(OUT_ROOT))
   {
     fs.rmSync(OUT_ROOT, { recursive: true, force: true });
   }
   fs.mkdirSync(OUT_ROOT, { recursive: true });
 
+  // capture rpg models dest for downstream policy in this routine.
   const rpgModelsDest = path.join(OUT_ROOT, '_rpg-data-models.d.ts');
   if (!fs.existsSync(RPG_DATA_MODELS_TEMPLATE))
   {
     throw new Error(`Missing RPG data template: ${RPG_DATA_MODELS_TEMPLATE}`);
   }
+  // policy step inside main.
   fs.copyFileSync(RPG_DATA_MODELS_TEMPLATE, rpgModelsDest);
 
+  // policy step inside main.
   /** @type {string[]} */
   const allRefs = [];
   /** @type {Map<string, string>} */
+  // construct class stem meta for the next step in this routine.
   const classStemMeta = new Map();
   /** @type {Map<string, string>} */
   const extendsGraph = new Map();
 
+  // walk each entry in the iterable for this routine.
   for (const { file, stem } of ENGINE_SOURCE_FILES)
   {
     const enginePath = path.join(ENGINE_JS_DIR, file);
     if (!fs.existsSync(enginePath))
     {
+      // abort this pass so the operator sees a hard failure.
       throw new Error(`Missing engine file: ${enginePath}`);
     }
     const bundle = extractFromFile(enginePath, stem);
     const written = emitBundle(bundle, classStemMeta, extendsGraph);
+    // Append the row to the working collection.
     allRefs.push(...written.sort());
   }
 
+  // capture uniq for downstream policy in this routine.
   const uniq = topoSortRefsByExtends([...new Set(allRefs)], extendsGraph, classStemMeta);
   const indexLines = [
     '/**',
@@ -1685,6 +1890,7 @@ function main()
   indexLines.push('export {};');
   fs.writeFileSync(path.join(OUT_ROOT, 'index.d.ts'), indexLines.join('\n'), 'utf8');
 
+  // capture rel out for downstream policy in this routine.
   const relOut = path.relative(REPO_ROOT, OUT_ROOT);
   console.log(
     `defs:generate wrote _rpg-data-models.d.ts, ${uniq.length} fragment(s), index.d.ts → ${relOut}`,

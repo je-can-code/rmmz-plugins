@@ -141,12 +141,14 @@ class Window_AptitudeSourceList
       iconIndex = 2694;
     }
 
+    // construct built window command for the next step in this routine.
     const builtWindowCommand = new WindowCommandBuilder(source.name)
       .setSymbol(`source:${source.implementationType()}`)
       .setExtensionData(source)
       .setIconIndex(iconIndex)
       .build();
 
+    // hand back built window command to the caller.
     return builtWindowCommand;
   }
 }

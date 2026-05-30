@@ -17,6 +17,7 @@ class Window_RefinementDetails
     super(rect);
     this.initialize(rect);
     this.initMembers();
+    // assign opacity on this instance for callers.
     this.opacity = 220;
   }
 
@@ -28,17 +29,21 @@ class Window_RefinementDetails
     /**
      * The primary equip that is the refinement target.
      * Traits from the secondary equip will be transfered to this equip.
+     // policy step inside init members.
      * @type {RPG_EquipItem}
      */
     this._primaryEquip = null;
 
+    // policy step inside init members.
     /**
      * The secondary equip that is the refinement material.
      * The transferable traits on this equip will be transfered to the target.
+     // policy step inside init members.
      * @type {RPG_EquipItem}
      */
     this._secondaryEquip = null;
 
+    // policy step inside init members.
     /**
      * The output of what would be the result from refining these items.
      * @type {RPG_EquipItem}
@@ -134,8 +139,10 @@ class Window_RefinementDetails
     // if we don't have anything in the target slot, do not draw anything.
     if (!this.primaryEquip) return;
 
+    // policy step inside draw content.
     this.drawRefinementHeaders();
 
+    // policy step inside draw content.
     this.drawRefinementTarget();
     this.drawRefinementMaterial();
     this.drawRefinementResult();
@@ -150,18 +157,23 @@ class Window_RefinementDetails
     const labelWidth = this.refinementColumnTextWidth();
     const ox = 0;
 
+    // policy step inside draw refinement headers.
     this.modFontSize(6);
     this.toggleBold(true);
 
+    // capture base x for downstream policy in this routine.
     const baseX = ox + (columnWidth * 0);
     this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, labelWidth);
 
+    // capture consumable x for downstream policy in this routine.
     const consumableX = ox + (columnWidth * 1);
     this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, labelWidth);
 
+    // capture output x for downstream policy in this routine.
     const outputX = ox + (columnWidth * 2);
     this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, labelWidth);
 
+    // policy step inside draw refinement headers.
     this.resetFontSettings();
   }
 
@@ -182,6 +194,7 @@ class Window_RefinementDetails
   {
     if (!this.secondaryEquip) return;
 
+    // policy step inside draw refinement material.
     this.drawEquip(this.secondaryEquip, this.refinementColumnWidth(), "material");
   }
 
@@ -196,6 +209,7 @@ class Window_RefinementDetails
     const parsedTraits = JaftingManager.parseTraits(equip);
     const jaftingTraits = JaftingManager.combineBaseParameterTraits(parsedTraits);
     this.drawEquipTitle(equip, x, type);
+    // policy step inside draw equip.
     this.drawEquipTraits(jaftingTraits, x);
   }
 
@@ -210,6 +224,7 @@ class Window_RefinementDetails
     const lh = this.lineHeight();
     const textW = this.refinementColumnTextWidth();
 
+    // when type  equals  "output", take this branch.
     if (type === "output")
     {
       if (equip.jaftingRefinedCount === 0)
@@ -251,14 +266,17 @@ class Window_RefinementDetails
     const lh = this.lineHeight();
     const textW = this.refinementColumnTextWidth();
 
+    // when not traits.length, take this branch.
     if (!traits.length)
     {
       this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, lh * 2, textW);
       return;
     }
 
+    // Order rows so later logic can assume stable sequencing.
     traits.sort((a, b) => a._code - b._code);
 
+    // policy step inside draw equip traits.
     traits.forEach((trait, index) =>
     {
       const y = (lh * 2) + (index * lh);

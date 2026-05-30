@@ -11,12 +11,14 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
 {
   const currentSelection = this.getRootJaftingKey();
 
+  // when currentSelection  equals  Scene_JaftingSalvage.KEY, take this branch.
   if (currentSelection === Scene_JaftingSalvage.KEY)
   {
     this.jaftingSalvageSelected();
   }
   else
   {
+    // perform original logic.
     J.JAFTING.Aliased.Scene_Jafting.get('onRootJaftingSelection').call(this);
   }
 };
@@ -28,6 +30,7 @@ Scene_Jafting.prototype.jaftingSalvageSelected = function()
 {
   this.closeRootJaftingWindows();
 
+  // policy step inside jafting salvage selected.
   Scene_JaftingSalvage.callScene();
 };
 //endregion Scene_JaftingSalvageHubRouting

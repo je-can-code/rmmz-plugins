@@ -10,6 +10,7 @@ IconManager.critParam = function(paramId)
   {
     case 0:
       return 976;    // cdm
+    // handle this switch arm for the current discriminant.
     case 1:
       return 977;    // cdr
   }

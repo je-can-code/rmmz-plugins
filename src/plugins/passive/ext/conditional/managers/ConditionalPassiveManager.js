@@ -1,40 +1,46 @@
 //region ConditionalPassiveManager
-import ConditionalPassiveRule from '../__models/ConditionalPassiveRule.js';
+import ConditionalPassiveRule from '../models/ConditionalPassiveRule.js';
 
 /**
- * Parses, evaluates, and reconciles conditional passive state rules for map battlers.
+ * Parses conditional passive tags from J-Passive sources, evaluates them against live battler
+ * context, and folds satisfied rules into the passive state tracker during refresh.
  */
 class ConditionalPassiveManager
 {
   /**
-   * Re-checks whether conditional passives changed; refreshes passive state tracking when they did.
-   * @param {Game_Battler} battler
+   * Compares the last cached evaluation against the live one; triggers a passive refresh only
+   * when conditional membership may have changed (HP drift, new sources, etc.).
+   * @param {Game_Battler} battler The battler driving this step.
    */
   static reconcile(battler)
   {
-    const nextIds = ConditionalPassiveManager.resolveActiveStateIds(battler);
+    const nextIds = this.resolveActiveStateIds(battler);
     const previousIds = battler.getConditionalPassiveSnapshot();
 
-    if (ConditionalPassiveManager.#snapshotsEqual(previousIds, nextIds))
+    // when this.#snapshotsEqual(previousIds, nextIds), take this branch.
+    if (this.#snapshotsEqual(previousIds, nextIds))
     {
       return;
     }
 
-    // snapshot updates inside refresh after static passives rebuild.
+    // refreshPassiveStates rebuilds static passives, then appendActiveConditionalPassives
+    // re-evaluates rules and updates the snapshot cache.
     battler.refreshPassiveStates();
   }
 
   /**
-   * Appends currently satisfied conditional passive state ids after J-Passive finishes a refresh.
-   * @param {Game_Battler} battler
+   * Runs after J-Passive finishes its static passive rebuild: evaluates every rule, caches the
+   * result for cheap drift checks, and merges satisfied state ids into the passive tracker.
+   * @param {Game_Battler} battler The battler driving this step.
    */
   static appendActiveConditionalPassives(battler)
   {
-    const activeStateIds = ConditionalPassiveManager.resolveActiveStateIds(battler);
+    const activeStateIds = this.resolveActiveStateIds(battler);
 
-    // cache the live evaluation so throttled reconcile can detect drift cheaply.
+    // throttled reconcile compares against this list instead of re-parsing every source each frame.
     battler.setConditionalPassiveSnapshot(activeStateIds);
 
+    // policy step inside append active conditional passives.
     activeStateIds.forEach(stateId =>
     {
       battler.addPassiveStateId(stateId, false);
@@ -42,59 +48,68 @@ class ConditionalPassiveManager
   }
 
   /**
-   * Collects every conditional passive rule declared on this battler's passive sources.
-   * @param {Game_Battler} battler
+   * Walks every J-Passive source on the battler and collects distinct conditional rules.
+   * @param {Game_Battler} battler The battler driving this step.
    * @returns {ConditionalPassiveRule[]}
    */
   static collectRules(battler)
   {
+    const captures = RPGManager.getAllCapturesFromAllNotesByRegex(
+      battler.getPassiveStateSources(),
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.ConditionalPassive
+    );
+
+    // capture rules for downstream policy in this routine.
     const rules = [];
     const seen = new Set();
 
-    battler.getPassiveStateSources()
-      .forEach(source =>
-      {
-        if (!source || !source.note) return;
+    // policy step inside collect rules.
+    captures.forEach(capture =>
+    {
+      const [stateIdRaw, conditionKind, paramRaw] = capture;
+      const stateId = parseInt(stateIdRaw, 10);
+      const paramValue = paramRaw !== undefined ? parseFloat(paramRaw) : null;
+      const dedupeKey = `${stateId}:${conditionKind}:${paramValue}`;
 
-        ConditionalPassiveManager.#parseRulesFromNote(source.note)
-          .forEach(rule =>
-          {
-            const dedupeKey = `${rule.stateId}:${rule.conditionKind}:${rule.paramValue}`;
+      // when seen.has(dedupeKey), take this branch.
+      if (seen.has(dedupeKey)) return;
 
-            if (seen.has(dedupeKey)) return;
+      // track this key so duplicate work is skipped later.
+      seen.add(dedupeKey);
+      rules.push(new ConditionalPassiveRule(stateId, conditionKind, paramValue));
+    });
 
-            seen.add(dedupeKey);
-            rules.push(rule);
-          });
-      });
-
+    // hand back rules to the caller.
     return rules;
   }
 
   /**
    * Returns passive state ids whose conditions currently pass on this battler.
-   * @param {Game_Battler} battler
+   * @param {Game_Battler} battler The battler driving this step.
    * @returns {number[]}
    */
   static resolveActiveStateIds(battler)
   {
     const activeStateIds = [];
 
-    ConditionalPassiveManager.collectRules(battler)
+    // policy step inside resolve active state ids.
+    this.collectRules(battler)
       .forEach(rule =>
       {
-        if (ConditionalPassiveManager.evaluateRule(battler, rule) === false) return;
+        if (this.evaluateRule(battler, rule) === false) return;
 
+        // Append the row to the working collection.
         activeStateIds.push(rule.stateId);
       });
 
+    // hand back active state ids to the caller.
     return activeStateIds;
   }
 
   /**
-   * Evaluates a single rule against the battler's current runtime context.
-   * @param {Game_Battler} battler
-   * @param {ConditionalPassiveRule} rule
+   * Dispatches a parsed rule to the evaluator registered for its condition kind.
+   * @param {Game_Battler} battler The battler driving this step.
+   * @param {ConditionalPassiveRule} rule The rule driving this step.
    * @returns {boolean}
    */
   static evaluateRule(battler, rule)
@@ -102,98 +117,78 @@ class ConditionalPassiveManager
     switch (rule.conditionKind)
     {
       case 'hpBelow':
-        return ConditionalPassiveManager.#evaluateHpBelow(battler, rule.paramValue);
+        return this.#evaluateHpBelow(battler, rule.paramValue);
+      // handle this switch arm for the current discriminant.
       case 'hpAbove':
-        return ConditionalPassiveManager.#evaluateHpAbove(battler, rule.paramValue);
+        return this.#evaluateHpAbove(battler, rule.paramValue);
       default:
         return false;
     }
   }
 
   /**
-   * @param {string} note
-   * @returns {ConditionalPassiveRule[]}
-   */
-  static #parseRulesFromNote(note)
-  {
-    const rules = [];
-    const regex = J.PASSIVE.EXT.CONDITIONAL.RegExp.ConditionalPassive;
-    const scan = new RegExp(regex.source, regex.flags.replace('g', ''));
-
-    note.split(/[\r\n]+/)
-      .forEach(line =>
-      {
-        scan.lastIndex = 0;
-
-        const match = scan.exec(line);
-
-        if (match === null) return;
-
-        const stateId = parseInt(match[1], 10);
-        const conditionKind = match[2];
-        const paramValue = match[3] !== undefined ? parseFloat(match[3]) : null;
-
-        rules.push(new ConditionalPassiveRule(stateId, conditionKind, paramValue));
-      });
-
-    return rules;
-  }
-
-  /**
-   * @param {Game_Battler} battler
-   * @param {number|null} thresholdPercent
+   * @param {Game_Battler} battler The battler driving this step.
+   * @param {number|null} thresholdPercent The threshold percent driving this step.
    * @returns {boolean}
    */
   static #evaluateHpBelow(battler, thresholdPercent)
   {
     if (thresholdPercent === null || Number.isNaN(thresholdPercent)) return false;
 
-    const hpRatePercent = ConditionalPassiveManager.#hpRatePercent(battler);
+    // capture hp rate percent for downstream policy in this routine.
+    const hpRatePercent = this.#hpRatePercent(battler);
 
+    // hand back hpRatePercent < thresholdPercent to the caller.
     return hpRatePercent < thresholdPercent;
   }
 
   /**
-   * @param {Game_Battler} battler
-   * @param {number|null} thresholdPercent
+   * @param {Game_Battler} battler The battler driving this step.
+   * @param {number|null} thresholdPercent The threshold percent driving this step.
    * @returns {boolean}
    */
   static #evaluateHpAbove(battler, thresholdPercent)
   {
     if (thresholdPercent === null || Number.isNaN(thresholdPercent)) return false;
 
-    const hpRatePercent = ConditionalPassiveManager.#hpRatePercent(battler);
+    // capture hp rate percent for downstream policy in this routine.
+    const hpRatePercent = this.#hpRatePercent(battler);
 
+    // hand back hpRatePercent > thresholdPercent to the caller.
     return hpRatePercent > thresholdPercent;
   }
 
   /**
-   * @param {Game_Battler} battler
+   * @param {Game_Battler} battler The battler driving this step.
    * @returns {number}
    */
   static #hpRatePercent(battler)
   {
-    const mhp = battler.mhp;
+    const { mhp } = battler;
 
+    // when mhp <= 0, take this branch.
     if (mhp <= 0) return 0;
 
+    // hand back (battler.hp / mhp) * 100 to the caller.
     return (battler.hp / mhp) * 100;
   }
 
   /**
-   * @param {number[]} left
-   * @param {number[]} right
+   * @param {number[]} left The left driving this step.
+   * @param {number[]} right The right driving this step.
    * @returns {boolean}
    */
   static #snapshotsEqual(left, right)
   {
     if (left.length !== right.length) return false;
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < left.length; i++)
     {
       if (left[i] !== right[i]) return false;
     }
 
+    // hand back true to the caller.
     return true;
   }
 }

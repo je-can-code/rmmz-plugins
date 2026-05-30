@@ -75,6 +75,7 @@ class Window_PartyFrame
     /**
      * The cached collection of hud sprites.
      * @type {Map<string, Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText>}
+     // policy step inside init members.
      */
     this._hudSprites = new Map();
   }
@@ -192,6 +193,7 @@ class Window_PartyFrame
    */
   makeFaceSpriteKey(actor, isFull)
   {
+    // hand back is full to the caller.
     return isFull
       ? `face-full-${actor.name()}-${actor.actorId()}`
       : `face-mini-${actor.name()}-${actor.actorId()}`;
@@ -280,6 +282,7 @@ class Window_PartyFrame
     return [
       Window_PartyFrame.gaugeTypes.HP,
       Window_PartyFrame.gaugeTypes.MP,
+      // policy step inside gauge types.
       Window_PartyFrame.gaugeTypes.TP,
       Window_PartyFrame.gaugeTypes.XP
     ];
@@ -297,6 +300,7 @@ class Window_PartyFrame
     const gaugeSize = isFull
       ? `full`
       : `mini`;
+    // hand back `gauge-${gaugeType}-${gaugeSize}-${actor.name()}-${ac... to the caller.
     return `gauge-${gaugeType}-${gaugeSize}-${actor.name()}-${actor.actorId()}`;
   }
 
@@ -785,6 +789,7 @@ class Window_PartyFrame
   {
     const playerX = $gamePlayer.screenX();
     const playerY = $gamePlayer.screenY();
+    // hand back (playerX < (this.width - 100)) && (playerY > (this.y ... to the caller.
     return (playerX < (this.width - 100)) && (playerY > (this.y + 200));
   }
 
@@ -836,7 +841,7 @@ class Window_PartyFrame
 
   /**
    * Checks if the given sprite should be handled for interference.
-   * @param {Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText} sprite
+   * @param {Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText} sprite The sprite driving this step.
    * @returns {boolean}
    */
   canHandleSpriteInterference(sprite)
@@ -939,6 +944,7 @@ class Window_PartyFrame
     // grab the leader of the party.
     const leader = $gameParty.leader();
 
+    // capture numbers x for downstream policy in this routine.
     const numbersX = x + 12;
 
     // locate the hp gauge.
@@ -1225,14 +1231,17 @@ class Window_PartyFrame
       timerSprite.show();
     }
 
+    // capture icon sprite for downstream policy in this routine.
     const iconSprite = this.getOrCreateStateIcon(actor, trackedState.stateId);
     iconSprite.move(ox, y);
     iconSprite.show();
 
+    // policy step inside draw state.
     this.modFontSize(-4);
     this.toggleBold();
     this.toggleItalics();
 
+    // capture stack sprite for downstream policy in this routine.
     const stackSprite = this.getOrCreateStateStackCount(actor, trackedState);
     if (trackedState.stackCount > 1)
     {
@@ -1246,6 +1255,7 @@ class Window_PartyFrame
       stackSprite.hide();
     }
 
+    // policy step inside draw state.
     this.resetFontSettings();
   }
 
@@ -1266,6 +1276,7 @@ class Window_PartyFrame
         // the leader is always index 0, and they are being drawn separately.
         if (index === 0) return;
 
+        // capture adjusted index for downstream policy in this routine.
         const adjustedIndex = index - 1;
 
         // draw the ally at the designated coordinates.

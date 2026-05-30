@@ -153,6 +153,7 @@ JABS_Engine.prototype.canBeAlerted = function(attacker, battler)
     if (allyAI && allyAI.isDoNothing()) return false;
   }
 
+  // hand back true to the caller.
   return true;
 };
 //endregion JABS_Engine

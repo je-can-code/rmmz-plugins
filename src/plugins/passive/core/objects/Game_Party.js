@@ -22,19 +22,23 @@ Game_Party.prototype.initPassiveItemStates = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init passive item states.
   this._j ||= {};
 
+  // policy step inside init passive item states.
   /**
    * The grouping of all properties related to passive states.
    */
   this._j._passive ||= {};
 
+  // policy step inside init passive item states.
   /**
    * The tracker for all passive states ids the party has.
    * @type {number[]}
    */
   this._j._passive._states = [];
 
+  // policy step inside init passive item states.
   /**
    * The cache for passive states that have been converted.
    * @type {RPG_State[]}

@@ -1,5 +1,5 @@
 //region Game_Action
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Overwrites {@link #subject}.<br/>
@@ -118,6 +118,7 @@ Game_Action.prototype.preApplyAction = function(target)
   this.subject()
     .clearResult();
 
+  // capture result for downstream policy in this routine.
   const result = target.result();
 
   // NOTE: the action is already cleared as a part of the "executeSkillEffects" function.
@@ -510,6 +511,7 @@ Game_Action.prototype.itemEffectAddState = function(target, effect)
   if (!this.canItemEffectAddState(target, effect)) return;
 
   // if the precise-parry-state-prevention wasn't successful, apply as usual.
+  // perform original logic.
   J.ABS.Aliased.Game_Action.get('itemEffectAddState')
     .call(this, target, effect);
 };
@@ -591,7 +593,7 @@ Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 };
 
 /**
- *
+ * Applies a state when the shouldApplyState roll passes for this action.
  * @param {Game_Battler} target The target.
  * @param {number} stateId The id of the state being applied.
  * @param {number} chance The base chance the state will be applied.
@@ -664,6 +666,7 @@ Game_Action.prototype.shouldTargetApplyResistances = function()
   // certain hits ignore target's state application modifiers and luck impacts!
   if (this.isCertainHit()) return false;
 
+  // hand back true to the caller.
   return true;
 };
 

@@ -9,6 +9,7 @@ HudManager.prototype.initMembers = function()
   J.HUD.EXT.QUEST.Aliased.HudManager.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The request state for the quest data of the HUD.
    * @type {boolean}

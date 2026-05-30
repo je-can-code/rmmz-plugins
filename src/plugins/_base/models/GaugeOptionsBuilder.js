@@ -99,12 +99,15 @@ class GaugeOptionsBuilder
     return new WindowGaugeOptions(
       this.#gaugeType,
       this.#backColor,
+      // policy step inside build.
       this.#leftColor,
       this.#rightColor,
       this.#borderColor,
+      // policy step inside build.
       this.#borderThickness,
       this.#borderGap,
       this.#dividerColor,
+      // policy step inside build.
       this.#segments,
       this.#gap,
       this.#radius,

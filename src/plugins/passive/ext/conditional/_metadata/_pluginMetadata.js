@@ -16,10 +16,9 @@ class JPassiveConditional_PluginMetadata
    */
   postInitialize()
   {
-    // perform original logic.
     super.postInitialize();
 
-    // pull reconcile cadence from plugin parameters.
+    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -28,13 +27,24 @@ class JPassiveConditional_PluginMetadata
    */
   initializeMetadata()
   {
+    const reconcileParsed = parseInt(this.parsedPluginParameters['reconcile-delay-frames'], 10);
+
+    // policy step inside initialize metadata.
     /**
-     * Frames between map-side conditional passive reconciles per {@link JABS_Battler}.
+     * Frames between map-side passive rule reconciles per {@link JABS_Battler}.
      * @type {number}
      */
-    const parsed = parseInt(this.parsedPluginParameters['reconcile-delay-frames'], 10);
+    this.reconcileDelayFrames = Number.isNaN(reconcileParsed) ? 15 : reconcileParsed;
 
-    this.reconcileDelayFrames = Number.isNaN(parsed) ? 15 : parsed;
+    // capture proximity parsed for downstream policy in this routine.
+    const proximityParsed = parseInt(this.parsedPluginParameters['default-proximity-tiles'], 10);
+
+    // policy step inside initialize metadata.
+    /**
+     * Default tile radius for alliesNearby/enemiesNearby rules and stack counts.
+     * @type {number}
+     */
+    this.defaultProximityTiles = Number.isNaN(proximityParsed) ? 5 : proximityParsed;
   }
 }
 

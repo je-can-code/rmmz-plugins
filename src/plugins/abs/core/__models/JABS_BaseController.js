@@ -1,6 +1,6 @@
 //region JABS_BaseController
 import JABS_InputAdapter from './JABS_InputAdapter.js';
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 /**
  * Base class for all JABS input controllers.
  */
@@ -50,6 +50,7 @@ class JABS_BaseController
       throw new Error(`Cannot set the controller's battler to undefined. Use null if you want to clear it.`);
     }
 
+    // assign battler on this instance for callers.
     this.battler = battler;
   }
 }

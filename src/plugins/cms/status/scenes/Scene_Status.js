@@ -55,6 +55,7 @@ Scene_Status.prototype.initMembers = function()
   this._j._cms_s._status._windows = {
     _status: null,
     _params: null,
+    // policy step inside init members.
     _equip: null,
     _list: null,
     _breakdown: null,
@@ -160,6 +161,7 @@ Scene_Status.prototype.getSwitchCooldown = function()
 
 Scene_Status.prototype.setSwitchCooldown = function(v)
 {
+  // capture frames for downstream policy in this routine.
   const frames = v | 0;
   this._j._cms_s._status._state._switchCooldown = Math.max(0, frames);
 };
@@ -200,6 +202,7 @@ Scene_Status.prototype.onActorChange = function()
   Scene_MenuBase.prototype.onActorChange.call(this);
   this.refreshActor();
   this.applyPageVisibility();
+// policy step inside on actor change.
 };
 
 //region rect helpers
@@ -222,6 +225,7 @@ Scene_Status.prototype.statusWindowRect = function()
   const wx = 0;
   const wy = 0;
   const ww = this.statusLeftColumnWidth();
+  // capture wh for downstream policy in this routine.
   const wh = Math.round(Graphics.boxHeight * 0.6);
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -235,6 +239,7 @@ Scene_Status.prototype.statusEquipWindowRect = function()
   const wx = 0;
   const wy = this.getStatusWindow().height;
   const ww = this.statusLeftColumnWidth();
+  // capture wh for downstream policy in this routine.
   const wh = Math.round(Graphics.boxHeight * 0.4);
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -330,6 +335,7 @@ Scene_Status.prototype.statusHintWindowRect = function()
   // arbitrary height.
   const wh = 60;
 
+  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 //endregion rect helpers
@@ -343,6 +349,7 @@ Scene_Status.prototype.createStatusWindow = function()
   const rect = this.statusWindowRect();
   const win = new Window_Status(rect);
   this.setStatusWindow(win);
+  // policy step inside create status window.
   this.addWindow(win);
 };
 
@@ -354,6 +361,7 @@ Scene_Status.prototype.createStatusParamsWindow = function()
   const rect = this.statusParamsWindowRect();
   const win = new Window_StatusParameters(rect);
   this.setParamsWindow(win);
+  // policy step inside create status params window.
   this.addWindow(win);
 };
 
@@ -365,6 +373,7 @@ Scene_Status.prototype.createStatusEquipWindow = function()
   const rect = this.statusEquipWindowRect();
   const win = new Window_StatusEquip(rect);
   this.setEquipWindow(win);
+  // policy step inside create status equip window.
   this.addWindow(win);
 };
 
@@ -376,6 +385,7 @@ Scene_Status.prototype.createStatListWindow = function()
   const rect = this.statusStatListWindowRect();
   const list = new Window_StatusStatList(rect);
   this.setStatListWindow(list);
+  // policy step inside create stat list window.
   list.setActor(this.actor());
   list.setChangeHandler(this.onStatListChanged.bind(this));
   this.addWindow(list);
@@ -389,6 +399,7 @@ Scene_Status.prototype.createStatBreakdownWindow = function()
   const rect = this.statusStatBreakdownWindowRect();
   const breakdown = new Window_StatusStatBreakdown(rect);
   this.setStatBreakdownWindow(breakdown);
+  // policy step inside create stat breakdown window.
   breakdown.setContext(this.actor(), 'mhp');
   this.addWindow(breakdown);
 };
@@ -446,11 +457,13 @@ Scene_Status.prototype.applyPageVisibility = function()
   // toggle the right-hand content by page.
   this.getParamsWindow().visible = isPage1;
 
+  // policy step inside apply page visibility.
   this.getStatBreakdownWindow().visible = isPage2;
 
   // keep the hint visible on both pages.
   this.getStatusHintWindow().visible = true;
 
+  // capture list window for downstream policy in this routine.
   const listWindow = this.getStatListWindow();
   listWindow.visible = isPage2;
 
@@ -550,12 +563,14 @@ Scene_Status.prototype.handleNormalizedStatusInput = function()
     handled = true;
   }
 
+  // when Input.isTriggered('pagedown'), take this branch.
   if (Input.isTriggered('pagedown'))
   {
     this.nextActor();
     handled = true;
   }
 
+  // when handled, take this branch.
   if (handled)
   {
     this.setSwitchCooldown(12);

@@ -23,6 +23,7 @@ J.ABS.EXT.STAR.Aliased.Game_Player.set('executeEncounter', Game_Player.prototype
 Game_Player.prototype.executeEncounter = function()
 {
   // intercept original logic.
+  // perform original logic.
   const base = J.ABS.EXT.STAR.Aliased.Game_Player.get('executeEncounter')
     .call(this);
 
@@ -42,6 +43,7 @@ Game_Player.prototype.reserveOriginTransfer = function()
   const {
     mapId,
     x,
+    // policy step inside reserve origin transfer.
     y
   } = BattleManager.origin();
   this.reserveTransfer(mapId, x, y);

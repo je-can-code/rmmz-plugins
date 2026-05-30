@@ -37,9 +37,11 @@ Scene_Base.prototype.toggleVolume = function()
   const {
     bgmVolume,
     bgsVolume,
+    // policy step inside toggle volume.
     meVolume,
     seVolume
   } = ConfigManager;
+  // capture is muted for downstream policy in this routine.
   const isMuted = !bgmVolume || !bgsVolume || !meVolume || !seVolume;
   if (isMuted)
   {

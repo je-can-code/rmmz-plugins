@@ -9,31 +9,41 @@ Sprite_Character.prototype.initMembers = function()
   J.ESCRIBE.Aliased.Sprite_Character.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init members.
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with escriptions.
    */
+  // policy step inside init members.
   this._j._event = {
     /**
      * A grouping of all properties associated with text-based escriptions.
+     // policy step inside init members.
      */
     _textDescribe: {
       /**
+       // policy step inside init members.
        * The text.
        * @type {string}
        */
+      // policy step inside init members.
       _text: String.empty,
 
+      // policy step inside init members.
       /**
        * The text sprite.
        * @type {Sprite_BaseText}
+       // policy step inside init members.
        */
       _sprite: null,
 
+      // policy step inside init members.
       /**
        * The proximity required to see this text.
        * -1 proximity means the text will always be visible while the character exists.
@@ -51,12 +61,14 @@ Sprite_Character.prototype.initMembers = function()
        */
       _iconIndex: -1,
 
+      // policy step inside init members.
       /**
        * The icon sprite.
        * @type {Sprite_Icon}
        */
       _sprite: null,
 
+      // policy step inside init members.
       /**
        * The proximity required to see this icon.
        * -1 proximity means the icon will always be visible while the character exists.
@@ -83,6 +95,7 @@ Sprite_Character.prototype.allEscriptionData = function()
 Sprite_Character.prototype.escribeTextData = function()
 {
   const escriptionData = this.allEscriptionData();
+  // hand back escriptionData._textDescribe to the caller.
   return escriptionData._textDescribe;
 };
 
@@ -93,6 +106,7 @@ Sprite_Character.prototype.escribeTextData = function()
 Sprite_Character.prototype.escriptionText = function()
 {
   const escriptionTextData = this.escribeTextData();
+  // hand back escriptionTextData._text to the caller.
   return escriptionTextData._text;
 };
 
@@ -102,6 +116,7 @@ Sprite_Character.prototype.escriptionText = function()
  */
 Sprite_Character.prototype.setEscriptionText = function(text)
 {
+  // capture escription text data for downstream policy in this routine.
   const escriptionTextData = this.escribeTextData();
   escriptionTextData._text = text;
 };
@@ -113,6 +128,7 @@ Sprite_Character.prototype.setEscriptionText = function(text)
 Sprite_Character.prototype.escriptionTextSprite = function()
 {
   const escriptionTextData = this.escribeTextData();
+  // hand back escriptionTextData._sprite to the caller.
   return escriptionTextData._sprite;
 };
 
@@ -122,6 +138,7 @@ Sprite_Character.prototype.escriptionTextSprite = function()
  */
 Sprite_Character.prototype.setEscriptionTextSprite = function(textSprite)
 {
+  // capture escription text data for downstream policy in this routine.
   const escriptionTextData = this.escribeTextData();
   escriptionTextData._sprite = textSprite;
 };
@@ -134,6 +151,7 @@ Sprite_Character.prototype.setEscriptionTextSprite = function(textSprite)
 Sprite_Character.prototype.escriptionTextProximity = function()
 {
   const escriptionTextData = this.escribeTextData();
+  // hand back escriptionTextData._proximity to the caller.
   return escriptionTextData._proximity;
 };
 
@@ -144,6 +162,7 @@ Sprite_Character.prototype.escriptionTextProximity = function()
  */
 Sprite_Character.prototype.setEscriptionTextProximity = function(textProximity)
 {
+  // capture escription text data for downstream policy in this routine.
   const escriptionTextData = this.escribeTextData();
   escriptionTextData._proximity = textProximity;
 };
@@ -156,6 +175,7 @@ Sprite_Character.prototype.setEscriptionTextProximity = function(textProximity)
 Sprite_Character.prototype.escribeIconData = function()
 {
   const escriptionData = this.allEscriptionData();
+  // hand back escriptionData._iconDescribe to the caller.
   return escriptionData._iconDescribe;
 };
 
@@ -166,6 +186,7 @@ Sprite_Character.prototype.escribeIconData = function()
 Sprite_Character.prototype.escriptionIconIndex = function()
 {
   const escriptionIconData = this.escribeIconData();
+  // hand back escriptionIconData._iconIndex to the caller.
   return escriptionIconData._iconIndex;
 };
 
@@ -175,6 +196,7 @@ Sprite_Character.prototype.escriptionIconIndex = function()
  */
 Sprite_Character.prototype.setEscriptionIconIndex = function(iconIndex)
 {
+  // capture escription icon data for downstream policy in this routine.
   const escriptionIconData = this.escribeIconData();
   escriptionIconData._iconIndex = iconIndex;
 };
@@ -186,6 +208,7 @@ Sprite_Character.prototype.setEscriptionIconIndex = function(iconIndex)
 Sprite_Character.prototype.escriptionIconSprite = function()
 {
   const escriptionIconData = this.escribeIconData();
+  // hand back escriptionIconData._sprite to the caller.
   return escriptionIconData._sprite;
 };
 
@@ -195,6 +218,7 @@ Sprite_Character.prototype.escriptionIconSprite = function()
  */
 Sprite_Character.prototype.setEscriptionIconSprite = function(iconSprite)
 {
+  // capture escription icon data for downstream policy in this routine.
   const escriptionIconData = this.escribeIconData();
   escriptionIconData._sprite = iconSprite;
 };
@@ -206,6 +230,7 @@ Sprite_Character.prototype.setEscriptionIconSprite = function(iconSprite)
 Sprite_Character.prototype.escriptionIconProximity = function()
 {
   const escriptionIconData = this.escribeIconData();
+  // hand back escriptionIconData._proximity to the caller.
   return escriptionIconData._proximity;
 };
 
@@ -215,6 +240,7 @@ Sprite_Character.prototype.escriptionIconProximity = function()
  */
 Sprite_Character.prototype.setEscriptionIconProximity = function(iconProximity)
 {
+  // capture escription icon data for downstream policy in this routine.
   const escriptionIconData = this.escribeIconData();
   escriptionIconData._proximity = iconProximity;
 };
@@ -667,6 +693,7 @@ Sprite_Character.prototype.updateTextEscribe = function()
   // don't worry about updating for non-proximity-based describe texts.
   if (this.escriptionIconProximity() < 0) return;
 
+  // when this.characterCanSeeText(), take this branch.
   if (this.characterCanSeeText())
   {
     this.fadeInEscribeText();
@@ -685,12 +712,14 @@ Sprite_Character.prototype.fadeOutEscribeText = function()
   const sprite = this.escriptionTextSprite();
   if (sprite.opacity === 0) return;
 
+  // when sprite.opacity < 0, take this branch.
   if (sprite.opacity < 0)
   {
     sprite.opacity = 0;
     return;
   }
 
+  // policy step inside fade out escribe text.
   sprite.opacity -= 17;
 };
 
@@ -702,12 +731,14 @@ Sprite_Character.prototype.fadeInEscribeText = function()
   const sprite = this.escriptionTextSprite();
   if (sprite.opacity === 255) return;
 
+  // when sprite.opacity > 255, take this branch.
   if (sprite.opacity > 255)
   {
     sprite.opacity = 255;
     return;
   }
 
+  // policy step inside fade in escribe text.
   sprite.opacity += 17;
 };
 
@@ -722,6 +753,7 @@ Sprite_Character.prototype.updateIconEscribe = function()
   // don't worry about updating for non-proximity-based describe icons.
   if (this.escriptionIconProximity() < 0) return;
 
+  // when this.characterCanSeeIcon(), take this branch.
   if (this.characterCanSeeIcon())
   {
     this.fadeInEscribeIcon();
@@ -740,12 +772,14 @@ Sprite_Character.prototype.fadeOutEscribeIcon = function()
   const sprite = this.escriptionIconSprite();
   if (sprite.opacity === 0) return;
 
+  // when sprite.opacity < 0, take this branch.
   if (sprite.opacity < 0)
   {
     sprite.opacity = 0;
     return;
   }
 
+  // policy step inside fade out escribe icon.
   sprite.opacity -= 17;
 };
 
@@ -757,12 +791,14 @@ Sprite_Character.prototype.fadeInEscribeIcon = function()
   const sprite = this.escriptionIconSprite();
   if (sprite.opacity === 255) return;
 
+  // when sprite.opacity > 255, take this branch.
   if (sprite.opacity > 255)
   {
     sprite.opacity = 255;
     return;
   }
 
+  // policy step inside fade in escribe icon.
   sprite.opacity += 17;
 };
 //endregion update describe sprites

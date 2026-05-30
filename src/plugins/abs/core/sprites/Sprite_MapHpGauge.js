@@ -10,6 +10,7 @@ class Sprite_MapHpGauge
   {
     super(bitmapWidth, bitmapHeight, gaugeHeight);
 
+    // store  status type on the instance for later reads.
     this._statusType = 'hp';
   }
 

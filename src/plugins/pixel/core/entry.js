@@ -1,5 +1,6 @@
 import './_metadata/initialization.js';
 
+import './_models/PixelDebugSampler.js';
 import './managers/PIXEL_CollisionManager.js';
 import './objects/Game_Character.js';
 import './objects/Game_CharacterBase.js';

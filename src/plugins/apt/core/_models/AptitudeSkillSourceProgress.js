@@ -47,6 +47,7 @@ class AptitudeSkillSourceProgress
     this.#sourceKey = String(sourceKey);
     this.#skillId = Number(skillId);
     this.#currentAp = Number(currentAp);
+    // policy step inside constructor.
     this.#requiredAp = Number(requiredAp);
     this.#learned = Boolean(learned === true);
   }

@@ -1,6 +1,6 @@
 //region JABS_InputAdapter
 import JABS_GlobalCooldown from './JABS_GlobalCooldown.js';
-import JABS_Battler from './JABS_Battler/_initialization.js';
+import JABS_Battler from './JABS_Battler.js';
 import JABS_BaseController from './JABS_BaseController.js';
 /**
  * This static class governs the instructions of what to do regarding input.
@@ -103,6 +103,7 @@ class JABS_InputAdapter
     // if there are none, then do not perform.
     if (!actions || !actions.length) return false;
 
+    // when JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions..., take this branch.
     if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions[0].getBaseSkill().id))
     {
       return false;
@@ -165,6 +166,7 @@ class JABS_InputAdapter
     // if there are none, then do not perform.
     if (!actions || !actions.length) return false;
 
+    // when JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions..., take this branch.
     if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, actions[0].getBaseSkill().id))
     {
       return false;
@@ -296,6 +298,7 @@ class JABS_InputAdapter
     const combatActions = jabsBattler.getAttackData(slot);
     if (combatActions.length === 0) return false;
 
+    // when JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, combatA..., take this branch.
     if (JABS_InputAdapter.#isGlobalCooldownBlockingSkill(jabsBattler, combatActions[0].getBaseSkill().id))
     {
       return false;

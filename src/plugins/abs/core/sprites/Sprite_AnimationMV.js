@@ -9,6 +9,7 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
   // if this is a screen animation, use original logic.
   if (this._animation.position === 3)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_AnimationMV.get('updatePosition')
       .call(this);
     return;

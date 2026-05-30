@@ -34,6 +34,7 @@ class J_PopupsPluginMetadata
     /**
      * When true, queued map popups are suppressed.
      * @type {boolean}
+     // policy step inside initialize metadata.
      */
     this.disablePopups = this.parsedPluginParameters['disablePopups'] === 'true';
   }

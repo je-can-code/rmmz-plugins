@@ -17,9 +17,11 @@ class OtibUnlockRecord
     /**
      * The id of the database item that triggered this unlock.
      * @type {number}
+     // policy step inside constructor.
      */
     this.itemId = itemId;
 
+    // policy step inside constructor.
     /**
      * The passive state ids granted by this unlock.
      * Derived from the item's <otib:[...]> notetag at the time of consumption.

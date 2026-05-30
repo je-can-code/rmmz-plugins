@@ -4,13 +4,14 @@ import TimeMapper from './TimeMapper.js';
 /**
  * Extends {@link meetsConditions}.<br/>
  * Also includes the custom conditions that relate to time.
- * @param {any} page
+ * @param {any} page The page driving this step.
  * @returns {boolean}
  */
 J.TIME.Aliased.Game_Event.set('meetsConditions', Game_Event.prototype.meetsConditions);
 Game_Event.prototype.meetsConditions = function(page)
 {
   // check original conditions.
+  // perform original logic.
   const metOtherPageConditions = J.TIME.Aliased.Game_Event.get('meetsConditions')
     .call(this, page);
 
@@ -68,18 +69,23 @@ Game_Event.filterCommentCommandsByEventTimeConditional = function(command)
   const {
     MinutePage,
     HourPage,
+    // policy step inside filter comment commands by event time conditional.
     DayPage,
     MonthPage,
     YearPage,
+    // policy step inside filter comment commands by event time conditional.
     TimeOfDayPage,
     SeasonOfYearPage,
     TimeRangePage,
+    // policy step inside filter comment commands by event time conditional.
     MinuteRangePage,
     HourRangePage,
     DayRangePage,
+    // policy step inside filter comment commands by event time conditional.
     MonthRangePage,
     YearRangePage,
     FullDateRangePage,
+  // policy step inside filter comment commands by event time conditional.
   } = J.TIME.RegExp;
   return [
     MinutePage,
@@ -115,18 +121,23 @@ Game_Event.filterCommentCommandsByChoiceTimeConditional = function(command)
   const {
     MinuteChoice,
     HourChoice,
+    // policy step inside filter comment commands by choice time conditional.
     DayChoice,
     MonthChoice,
     YearChoice,
+    // policy step inside filter comment commands by choice time conditional.
     TimeOfDayChoice,
     SeasonOfYearChoice,
     TimeRangeChoice,
+    // policy step inside filter comment commands by choice time conditional.
     MinuteRangeChoice,
     HourRangeChoice,
     DayRangeChoice,
+    // policy step inside filter comment commands by choice time conditional.
     MonthRangeChoice,
     YearRangeChoice,
     FullDateRangeChoice,
+  // policy step inside filter comment commands by choice time conditional.
   } = J.TIME.RegExp;
   return [
     MinuteChoice,
@@ -165,21 +176,27 @@ Game_Event.toTimeConditional = function(commentCommand)
     case J.TIME.RegExp.MinutePage.test(comment):
       return TimeMapper.minuteToConditional(comment, J.TIME.RegExp.MinutePage);
     case J.TIME.RegExp.HourPage.test(comment):
+      // hand back TimeMapper.hourToConditional(comment, J.TIME.RegExp.H... to the caller.
       return TimeMapper.hourToConditional(comment, J.TIME.RegExp.HourPage);
     case J.TIME.RegExp.DayPage.test(comment):
       return TimeMapper.dayToConditional(comment, J.TIME.RegExp.DayPage);
+    // handle this switch arm for the current discriminant.
     case J.TIME.RegExp.MonthPage.test(comment):
       return TimeMapper.monthToConditional(comment, J.TIME.RegExp.MonthPage);
     case J.TIME.RegExp.YearPage.test(comment):
+      // hand back TimeMapper.yearToConditional(comment, J.TIME.RegExp.Y... to the caller.
       return TimeMapper.yearToConditional(comment, J.TIME.RegExp.YearPage);
     case J.TIME.RegExp.TimeOfDayPage.test(comment):
       return TimeMapper.timeOfDayToConditional(comment, J.TIME.RegExp.TimeOfDayPage);
+    // handle this switch arm for the current discriminant.
     case J.TIME.RegExp.SeasonOfYearPage.test(comment):
       return TimeMapper.seasonOfYearToConditional(comment, J.TIME.RegExp.SeasonOfYearPage);
     case J.TIME.RegExp.TimeRangePage.test(comment):
+      // hand back TimeMapper.timeRangeToConditional(comment, J.TIME.Reg... to the caller.
       return TimeMapper.timeRangeToConditional(comment, J.TIME.RegExp.TimeRangePage);
     case J.TIME.RegExp.FullDateRangePage.test(comment):
       return TimeMapper.fullDateRangeToConditional(comment, J.TIME.RegExp.FullDateRangePage);
+    // handle this switch arm for the current discriminant.
     case J.TIME.RegExp.MinuteRangePage.test(comment):
       return TimeMapper.minuteRangeToConditional(comment, J.TIME.RegExp.MinuteRangePage);
     case J.TIME.RegExp.HourRangePage.test(comment):
@@ -249,7 +266,7 @@ Game_Event.timeConditionalMet = function(timeConditional)
 
 /**
  * Determines if the conditional comparison was equal.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */
@@ -262,6 +279,7 @@ Game_Event._timeConditionalDirectMet = function(timeConditional)
   const {
     years,
     months,
+    // policy step inside  time conditional direct met.
     days,
     hours,
     minutes,
@@ -286,7 +304,7 @@ Game_Event._timeConditionalDirectMet = function(timeConditional)
 
 /**
  * Determines if the current time was within the conditional time range.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */
@@ -352,7 +370,7 @@ Game_Event._timeConditionalTimeRangeMet = function(timeConditional)
 
 /**
  * Determines if the current full date time was within the conditional full date time range.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */
@@ -365,6 +383,7 @@ Game_Event._timeConditionalFullDateRangeMet = function(timeConditional)
   const startSnapshot = $gameTime.toTimeSnapshot(timeConditional.startRange);
   const endSnapshot = $gameTime.toTimeSnapshot(timeConditional.endRange);
 
+  // hand back currentSnapshot.isBetweenSnapshots(startSnapshot, end... to the caller.
   return currentSnapshot.isBetweenSnapshots(startSnapshot, endSnapshot);
 };
 //endregion Game_Event

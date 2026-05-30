@@ -26,21 +26,25 @@ JABS_Battler.prototype.initPoseInfo = function()
   /**
    * The number of frames to pose for.
    * @type {number}
+   // policy step inside init pose info.
    */
   this._poseFrames = 0;
 
+  // policy step inside init pose info.
   /**
    * Whether or not this battler is currently posing.
    * @type {boolean}
    */
   this._posing = false;
 
+  // policy step inside init pose info.
   /**
    * The name of the file that contains this battler's character sprite (without extension).
    * @type {string}
    */
   this._baseSpriteImage = String.empty;
 
+  // policy step inside init pose info.
   /**
    * The index of this battler's character sprite in the `_baseSpriteImage`.
    * @type {number}
@@ -76,6 +80,7 @@ JABS_Battler.prototype.hasPoseFrames = function()
 JABS_Battler.prototype.setPoseFrames = function(poseFrames)
 {
   this._poseFrames = poseFrames;
+  // hand back this._poseFrames to the caller.
   return this._poseFrames;
 };
 
@@ -87,6 +92,7 @@ JABS_Battler.prototype.setPoseFrames = function(poseFrames)
 JABS_Battler.prototype.modPoseFrames = function(modPoseFrames)
 {
   this._poseFrames += modPoseFrames;
+  // hand back this._poseFrames to the caller.
   return this._poseFrames;
 };
 

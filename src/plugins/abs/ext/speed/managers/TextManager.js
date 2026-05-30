@@ -17,5 +17,6 @@ TextManager.moveSpeedDescription = function()
   return [
     "The percentage modifier against this character's base movespeed.",
     "Higher amounts of this result in faster walk and run speeds." ];
+// policy step inside move speed description.
 };
 //endregion TextManager

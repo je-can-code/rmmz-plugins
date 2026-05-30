@@ -1,5 +1,6 @@
 //region Window_SdpFamilyStrip
 import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
+
 /**
  * Thin strip above the SDP panel list showing the active family filter.
  * Updated by {@link Scene_SDP} when the player cycles with L2/R2.
@@ -24,7 +25,7 @@ class Window_SdpFamilyStrip
 
   /**
    * Sets the active family filter and redraws.
-   * @param {string} filterKey
+   * @param {string} filterKey The filter key driving this step.
    */
   setFilterKey(filterKey)
   {
@@ -41,16 +42,19 @@ class Window_SdpFamilyStrip
     const filterKey = this.#filterKey;
     const label = SdpFamilyFilter.displayNameForFilterKey(filterKey);
     const iconIndex = SdpFamilyFilter.iconIndexForFilterKey(filterKey);
+    // capture icon pad for downstream policy in this routine.
     const iconPad = 4;
     const textX = iconIndex >= 0
       ? ImageManager.iconWidth + iconPad
       : 0;
 
+    // when iconIndex >= 0, take this branch.
     if (iconIndex >= 0)
     {
       this.drawIcon(iconIndex, iconPad, 0);
     }
 
+    // policy step inside draw content.
     this.resetFontSettings();
     this.drawText(label, textX, 0, this.innerWidth - textX, Window_Base.TextAlignments.Left);
     this.resetFontSettings();

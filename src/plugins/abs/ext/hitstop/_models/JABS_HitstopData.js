@@ -21,9 +21,11 @@ class JABS_HitstopData
     /**
      * The remaining hitstop frames for this entity.
      * @type {number}
+     // policy step inside init members.
      */
     this._frames = 0;
 
+    // policy step inside init members.
     /**
      * A short-lived map of actionUuid => remaining frames used to scale multi-hit decay.
      * This is per-character so decay is per-target per-action.
@@ -42,6 +44,7 @@ class JABS_HitstopData
       return;
     }
 
+    // capture raw for downstream policy in this routine.
     const raw = this._flurryWindows;
     const map = new Map();
     if (raw !== undefined && raw !== null && typeof raw === 'object')
@@ -56,6 +59,7 @@ class JABS_HitstopData
       });
     }
 
+    // store  flurry windows on the instance for later reads.
     this._flurryWindows = map;
   }
 

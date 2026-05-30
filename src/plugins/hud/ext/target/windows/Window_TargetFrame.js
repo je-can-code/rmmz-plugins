@@ -45,24 +45,31 @@ class Window_TargetFrame
     /**
      * The over-arching object that contains all properties for this plugin.
      */
+    // policy step inside init members.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * The cached collection of sprites.
      * @type {Map<string, Sprite_Icon|Sprite>}
+     // policy step inside init members.
      */
     this._j._spriteCache = new Map();
 
+    // policy step inside init members.
     /**
      * The name to display in the name field.
      *
+     // policy step inside init members.
      * NOTE:
      * This is separated out from the battler data itself so that it can be
      * separately assigned to something different if the dev wanted to.
+     // policy step inside init members.
      * @type {string}
      */
     this._j._name = String.empty;
 
+    // policy step inside init members.
     /**
      * When set, {@link #drawTargetName} tints the line with this `#RRGGBB` before `drawTextEx`.
      * Populated when a passive extension is active and supplies a name color for the target.
@@ -70,6 +77,7 @@ class Window_TargetFrame
      */
     this._j._nameColorHex = String.empty;
 
+    // policy step inside init members.
     /**
      * The second line associated with the target.
      * Optional.
@@ -77,24 +85,28 @@ class Window_TargetFrame
      */
     this._j._text = String.empty;
 
+    // policy step inside init members.
     /**
      * The icon that this target has.
      * @type {number}
      */
     this._j._icon = 0;
 
+    // policy step inside init members.
     /**
      * The battler of the target.
      * @type {Game_Actor|Game_Enemy}
      */
     this._j._battler = null;
 
+    // policy step inside init members.
     /**
      * Whether or not this window requires a target update.
      * @type {boolean}
      */
     this._j._requestTargetRefresh = true;
 
+    // policy step inside init members.
     /**
      * The duration until this window is deemed inactive.
      * @type {number}
@@ -426,8 +438,10 @@ class Window_TargetFrame
   {
     const gap = 8;
 
+    // capture w for downstream policy in this routine.
     const w = this.contentsWidth() - this.targetFrameLevelColumnWidth() - gap;
 
+    // hand back Math.max(200, w) to the caller.
     return Math.max(200, w);
   }
 
@@ -496,6 +510,7 @@ class Window_TargetFrame
     this.opacity -= 10;
     this.backOpacity -= 10;
     this.contentsOpacity -= 10;
+    // policy step inside fade out window.
     this._j._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
   }
 
@@ -507,6 +522,7 @@ class Window_TargetFrame
     this.opacity += 40;
     this.backOpacity += 40;
     this.contentsOpacity += 40;
+    // policy step inside fade in window.
     this._j._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
   }
 
@@ -518,6 +534,7 @@ class Window_TargetFrame
   {
     if (!this.hasRequestTargetRefresh()) return false;
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -534,9 +551,11 @@ class Window_TargetFrame
       name = `\\*` + name;
     }
 
+    // capture hex for downstream policy in this routine.
     const hex = this._j._nameColorHex;
     const useHex = hex !== String.empty && hex.length > 0;
 
+    // capture w for downstream policy in this routine.
     const w = this.targetFrameNameLineInnerWidth();
 
     // `Window_Base#drawTextEx` begins with `resetFontSettings()`, which calls `resetTextColor()` and would wipe a
@@ -544,6 +563,7 @@ class Window_TargetFrame
     this.contents.fontFace = $gameSystem.mainFontFace();
     this.contents.fontSize = $gameSystem.mainFontSize();
 
+    // when useHex, take this branch.
     if (useHex)
     {
       this.changeTextColor(hex);
@@ -554,6 +574,7 @@ class Window_TargetFrame
       this.resetFontSettings();
     }
 
+    // capture text state for downstream policy in this routine.
     const textState = this.createTextState(name, x, y, w);
     this.processAllText(textState);
     this.resetTextColor();

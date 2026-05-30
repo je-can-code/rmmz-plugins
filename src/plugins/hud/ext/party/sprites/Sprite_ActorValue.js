@@ -35,59 +35,70 @@ class Sprite_ActorValue
     // initialize our namespaced property block.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * The parameter being tracked by this sprite.
      * @type {string}
+     // policy step inside init members.
      */
     this._j._parameter = parameter;
 
+    // policy step inside init members.
     /**
      * The actor being tracked by this sprite.
      * @type {Game_Actor}
      */
     this._j._actor = actor;
 
+    // policy step inside init members.
     /**
      * The font modification from the default font size.
      * @type {number}
      */
     this._j._fontSizeMod = fontSizeMod;
 
+    // policy step inside init members.
     /**
      * A grouping of all the last-known values for this actor.
      */
     this._j._last ||= {};
 
+    // policy step inside init members.
     /**
      * The last known hp value.
      * @type {number}
      */
     this._j._last._hp = actor.hp;
 
+    // policy step inside init members.
     /**
      * The last known mp value.
      * @type {number}
      */
     this._j._last._mp = actor.mp;
 
+    // policy step inside init members.
     /**
      * The last known tp value.
      * @type {number}
      */
     this._j._last._tp = actor.tp;
 
+    // policy step inside init members.
     /**
      * The last known exp value- aka the current exp value.
      * @type {number}
      */
     this._j._last._xp = actor.currentExp();
 
+    // policy step inside init members.
     /**
      * The last known level value- aka the current level.
      * @type {number}
      */
     this._j._last._lvl = actor.level;
 
+    // policy step inside init members.
     /**
      * A counter for auto refreshing the value.
      * @type {number}
@@ -221,6 +232,7 @@ class Sprite_ActorValue
     // each gauge case assigns before return; unknown types fall through to false.
     let changed;
 
+    // capture actor for downstream policy in this routine.
     const actor = this.getActor();
 
     // decide which parameter we are tracking and compare against the cache.
@@ -286,6 +298,7 @@ class Sprite_ActorValue
       }
     }
 
+    // hand back false to the caller.
     return false;
   }
 

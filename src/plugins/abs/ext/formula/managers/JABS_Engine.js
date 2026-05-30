@@ -12,6 +12,7 @@ J.ABS.EXT.FORMULA.Aliased.JABS_Engine.set("applyOnExecutionEffects", JABS_Engine
 JABS_Engine.prototype.applyOnExecutionEffects = function(caster, primaryAction)
 {
   // perform original launch-time responsibilities (costs, cooldowns, etc.).
+  // perform original logic.
   J.ABS.EXT.FORMULA.Aliased.JABS_Engine.get("applyOnExecutionEffects")
     .call(this, caster, primaryAction);
 
@@ -41,6 +42,7 @@ JABS_Engine.prototype.applyOnUseFormulaPackets = function(caster, primaryAction)
   // parent-level packets should execute.
   ctx.suppressCascades = false;
 
+  // attempt the fragile parse or io work inside this block.
   try
   {
     // fire all on-use packets for this action; parentTarget is not defined at launch.
@@ -109,6 +111,7 @@ JABS_Engine.prototype.forceMapAction = function(
 
   // delegate to the original forceMapAction (immediate execution path without costs/cooldowns/cast time),
   // preserving all core behavior (animations, collisions, effects, logs, threat, etc.).
+  // perform original logic.
   J.ABS.EXT.FORMULA.Aliased.JABS_Engine.get("forceMapAction")
     // call original.
     .call(this, caster, skillId, isRetaliation, targetX, targetY, isMapDamage);

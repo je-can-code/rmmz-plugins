@@ -11,7 +11,6 @@ import './__models/PanelRanking.js';
 import './__models/PanelTracking.js';
 
 import './managers/SdpMasteryManager.js';
-import './managers/SdpFamilyFilter.js';
 
 import './_metadata/initialization.js';
 

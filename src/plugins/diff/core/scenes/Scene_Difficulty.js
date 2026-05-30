@@ -37,37 +37,45 @@ class Scene_Difficulty
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init members.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * A grouping of all properties associated with the difficulty layer system.
      */
+    // policy step inside init members.
     this._j._difficulty = {};
 
+    // policy step inside init members.
     /**
      * The window that shows the description of the difficulty layer.
      * @type {Window_Help}
      */
     this._j._difficulty._helpWindow = null;
 
+    // policy step inside init members.
     /**
      * The window for showing the difficulty layer point max, current, and projection.
      * @type {Window_DifficultyPoints}
      */
     this._j._difficulty._pointsWindow = null;
 
+    // policy step inside init members.
     /**
      * The window for displaying the list of difficulty layers the player has not-hidden.
      * @type {Window_DifficultyList}
      */
     this._j._difficulty._listWindow = null;
 
+    // policy step inside init members.
     /**
      * The window for displaying the various enemy effects this difficulty applies.
      * @type {Window_DifficultyEffects}
      */
     this._j._difficulty._enemyEffects = null;
 
+    // policy step inside init members.
     /**
      * The window for displaying the various actor effects this difficulty applies.
      * @type {Window_DifficultyEffects}
@@ -477,6 +485,7 @@ class Scene_Difficulty
     // grab the height from the help window.
     const { height: helpHeight } = this.getHelpWindow();
 
+    // capture left side of enemy effects for downstream policy in this routine.
     const leftSideOfEnemyEffects = enemyEffectsX + effectsEffectsWidth;
 
     // the width should be from the list window to the edge of the screen.

@@ -617,16 +617,19 @@ class RPGManager
       return '';
     }
 
+    // when typeof context.getLevel  equals  'function', take this branch.
     if (typeof context.getLevel === 'function')
     {
       return `::ctxLvl=${context.getLevel()}`;
     }
 
+    // when typeof context.level  equals  'number', take this branch.
     if (typeof context.level === 'number')
     {
       return `::ctxLvl=${context.level}`;
     }
 
+    // hand back '' to the caller.
     return '';
   }
 
@@ -694,6 +697,7 @@ class RPGManager
       }
     });
 
+    // when not val  and  nullIfEmpty, take this branch.
     if (!val && nullIfEmpty)
     {
       return null;

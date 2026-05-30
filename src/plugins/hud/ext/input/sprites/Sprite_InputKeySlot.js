@@ -36,14 +36,18 @@ class Sprite_InputKeySlot
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init members.
     this._j ||= {};
 
+    // policy step inside init members.
     /**
      * The skill slot associated with this sprite.
      * @type {JABS_SkillSlot|null}
+     // policy step inside init members.
      */
     this._j._skillSlot = null;
 
+    // policy step inside init members.
     /**
      * The battler associated with the skill slot.
      * Used for deriving skill costs and skill extensions.
@@ -51,6 +55,7 @@ class Sprite_InputKeySlot
      */
     this._j._battler = null;
 
+    // policy step inside init members.
     /**
      * The cached collection of sprites.
      * @type {Map<string, Sprite_SkillSlotIcon|Sprite_SkillName|Sprite_SkillCost|Sprite_CooldownGauge>}
@@ -113,10 +118,13 @@ class Sprite_InputKeySlot
     // if we have no slot data, then we have no cooldown data.
     if (!this.hasSkillSlot()) return null;
 
+    // capture jabs battler for downstream policy in this routine.
     const jabsBattler = this.jabsBattler();
 
+    // when not jabsBattler, take this branch.
     if (!jabsBattler) return null;
 
+    // capture input type for downstream policy in this routine.
     const inputType = this.skillSlot().key;
 
     // grab the cooldown data from the leader based on this slot.
@@ -212,6 +220,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeyIconSpriteKey(skillSlot, inputType)
   {
+    // hand back `icon-${this.battler() to the caller.
     return `icon-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}`;
@@ -260,6 +269,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeyAbilityCostSpriteKey(amount, colorIndex, inputType)
   {
+    // hand back `cost-${this.battler() to the caller.
     return `cost-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}-${amount}-${colorIndex}`;
@@ -309,6 +319,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeySkillCostSpriteKey(costType, inputType)
   {
+    // hand back `skillcost-${this.battler() to the caller.
     return `skillcost-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${costType}-${inputType}`;
@@ -358,6 +369,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeyCooldownTimerSpriteKey(cooldownData, inputType, isItem)
   {
+    // hand back `cooldown-${this.battler() to the caller.
     return `cooldown-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}-${isItem}`;
@@ -408,6 +420,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeyComboGaugeSpriteKey(cooldownData, inputType)
   {
+    // hand back `combo-${this.battler() to the caller.
     return `combo-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}`;
@@ -459,6 +472,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeySkillNameSpriteKey(inputType)
   {
+    // hand back `skillname-${this.battler() to the caller.
     return `skillname-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}`;
@@ -507,6 +521,7 @@ class Sprite_InputKeySlot
    */
   makeInputKeySlotNameSpriteKey(inputType)
   {
+    // hand back `slotname-${this.battler() to the caller.
     return `slotname-${this.battler()
       .name()}-${this.battler()
       .battlerId()}-${inputType}`;
@@ -577,6 +592,7 @@ class Sprite_InputKeySlot
     // draw skill icon.
     this.drawInputKeySkillIcon(x, y);
 
+    // when not this.skillSlot(), take this branch.
     if (!this.skillSlot()
       .isItem())
     {

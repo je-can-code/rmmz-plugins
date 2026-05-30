@@ -16,6 +16,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
   // if this character does not expose a custom rectangular hitbox, then perform original logic.
   if (typeof this.hasCustomPixelHitbox !== 'function' || this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_CharacterBase.get('isOverlappingSolidTiles').call(this, px, py, radius);
   }
 
@@ -61,6 +62,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
     }
   }
 
+  // hand back false to the caller.
   return false;
 };
 
@@ -136,10 +138,12 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
       // exclude through followers.
       if (f.isThrough()) return;
 
+      // Append the row to the working collection.
       candidates.push(f);
     });
   }
 
+  // policy step inside is character collision at.
   /**
    * Builds a tile-space AABB for collision testing from the character's current
    * PIXEL pivot and hitbox data.
@@ -158,6 +162,7 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     const left = pivotX + hitbox.hx;
     const top = pivotY + hitbox.hy;
 
+    // hand back { to the caller.
     return {
       left,
       right: left + hitbox.w,
@@ -166,6 +171,7 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     };
   };
 
+  // policy step inside is character collision at.
   /**
    * Determines whether or not two tile-space rectangles overlap.
    * Edge-touching is not treated as overlap, matching the legacy scalar logic.
@@ -207,6 +213,7 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
     }
   }
 
+  // hand back false to the caller.
   return false;
 };
 //endregion Game_CharacterBase

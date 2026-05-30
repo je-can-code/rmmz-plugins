@@ -99,6 +99,7 @@ class RPG_Actor
     this.characterIndex = actor.characterIndex;
     this.characterName = actor.characterName;
     this.classId = actor.classId;
+    // assign equips on this instance for callers.
     this.equips = actor.equips;
     this.faceIndex = actor.faceIndex;
     this.faceName = actor.faceName;

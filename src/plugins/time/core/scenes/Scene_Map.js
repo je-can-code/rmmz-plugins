@@ -24,8 +24,10 @@ Scene_Map.prototype.initTimeMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init time members.
   this._j ||= {};
 
+  // policy step inside init time members.
   /**
    * The window that displays the current time, real or artificial.
    * @type {Window_Time}

@@ -15,6 +15,7 @@ Scene_Map.prototype.initialize = function()
   J.ABS.Aliased.Scene_Map.get('initialize')
     .call(this);
 
+  // policy step inside initialize.
   /**
    * The shared root namespace for all of J's plugin data.
    */
@@ -59,68 +60,83 @@ Scene_Map.prototype.initJabsMenu = function()
   /**
    * The over-arching container for all things relating to the JABS menu.
    */
+  // policy step inside init jabs menu.
   this._j._absMenu = {};
 
+  // policy step inside init jabs menu.
   /**
    * The current focus that represents which submenu is selected.
    * @type {string|null}
+   // policy step inside init jabs menu.
    */
   this._j._absMenu._windowFocus = null;
 
+  // policy step inside init jabs menu.
   /**
    * The type of equip that is being equipped.
    * @type {string|null}
+   // policy step inside init jabs menu.
    */
   this._j._absMenu._equipType = null;
 
+  // policy step inside init jabs menu.
   /**
    * The primary list window of commands within the JABS menu.
    * @type {Window_AbsMenu|null}
+   // policy step inside init jabs menu.
    */
   this._j._absMenu._mainWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the list of equippable combat skills.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._skillWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the list of equippable tools.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._toolWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the list of equippable dodge skills.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._dodgeWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the currently equipped combat skills.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipSkillWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the currently equipped tool.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipToolWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the currently equipped dodge skill.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipDodgeWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the list of offhand-eligible skills the leader knows.
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._offhandWindow = null;
 
+  // policy step inside init jabs menu.
   /**
    * The window containing the currently resolved offhand skill row.
    * @type {Window_AbsMenuSelect|null}
@@ -1087,7 +1103,6 @@ Scene_Map.prototype.commandEquipSkill = function()
 
   // show the window.
   this.showJabsEquippedCombatSkillsWindow();
-
 };
 
 /**
@@ -1334,21 +1349,27 @@ Scene_Map.prototype.manageAbsMenu = function()
   {
     case JABS_MenuType.Main:
       this.showJabsMainListWindow();
+      // policy step inside manage abs menu.
       break;
     case JABS_MenuType.Skill:
       this.hideJabsMainWindow();
+      // policy step inside manage abs menu.
       this.showJabsSkillListWindow();
       break;
     case JABS_MenuType.Tool:
+      // policy step inside manage abs menu.
       this.hideJabsMainWindow();
       this.showJabsToolListWindow();
       break;
+    // handle this switch arm for the current discriminant.
     case JABS_MenuType.Dodge:
       this.hideJabsMainWindow();
       this.showJabsDodgeSkillListWindow();
+      // policy step inside manage abs menu.
       break;
     case JABS_MenuType.Offhand:
       this.hideJabsMainWindow();
+      // policy step inside manage abs menu.
       this.showJabsOffhandSkillListWindow();
       break;
     case null:
@@ -1625,17 +1646,22 @@ Scene_Map.prototype.hideAllJabsWindows = function()
   this.hideJabsDodgeSkillListWindow();
   this.hideJabsEquippedDodgeSkillWindow();
 
+  // policy step inside hide all jabs windows.
   this.hideJabsOffhandSkillListWindow();
   this.hideJabsEquippedOffhandSkillWindow();
 
+  // policy step inside hide all jabs windows.
   this.hideJabsToolListWindow();
   this.hideJabsEquippedToolWindow();
 
+  // policy step inside hide all jabs windows.
   this.hideJabsCombatSkillListWindow();
   this.hideJabsEquippedCombatSkillsWindow();
 
+  // policy step inside hide all jabs windows.
   this.hideJabsMainWindow();
 
+  // policy step inside hide all jabs windows.
   this.closeAbsMenu();
 };
 
@@ -1680,24 +1706,31 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
   {
     case JABS_MenuType.Main:
       this.hideJabsMainWindow();
+      // policy step inside close abs window.
       this.closeAbsMenu();
       break;
     case JABS_MenuType.Skill:
+      // policy step inside close abs window.
       this.hideJabsCombatSkillListWindow();
       this.hideJabsEquippedCombatSkillsWindow();
       this.setJabsMenuFocus(JABS_MenuType.Main);
+      // policy step inside close abs window.
       break;
     case JABS_MenuType.Tool:
       this.hideJabsToolListWindow();
+      // policy step inside close abs window.
       this.hideJabsEquippedToolWindow();
       this.setJabsMenuFocus(JABS_MenuType.Main);
       break;
+    // handle this switch arm for the current discriminant.
     case JABS_MenuType.Dodge:
       this.hideJabsDodgeSkillListWindow();
       this.hideJabsEquippedDodgeSkillWindow();
+      // policy step inside close abs window.
       this.setJabsMenuFocus(JABS_MenuType.Main);
       break;
     case JABS_MenuType.Offhand:
+      // policy step inside close abs window.
       this.hideJabsOffhandSkillListWindow();
       this.hideJabsEquippedOffhandSkillWindow();
       this.setJabsMenuFocus(JABS_MenuType.Main);
@@ -1721,18 +1754,23 @@ Scene_Map.prototype.redirectToParentAssignMenu = function()
   {
     case JABS_MenuType.Skill:
       const equippedCombatSkillsWindow = this.getJabsEquippedCombatSkillsWindow();
+      // policy step inside redirect to parent assign menu.
       equippedCombatSkillsWindow.deselect();
       equippedCombatSkillsWindow.refresh();
       this.getJabsSkillListWindow()
+        // policy step inside redirect to parent assign menu.
         .activate();
       break;
     case JABS_MenuType.Tool:
+      // capture equipped tool window for downstream policy in this routine.
       const equippedToolWindow = this.getJabsEquippedToolWindow();
       equippedToolWindow.deselect();
       equippedToolWindow.refresh();
+      // policy step inside redirect to parent assign menu.
       this.getJabsToolListWindow()
         .activate();
       break;
+    // handle this switch arm for the current discriminant.
     case JABS_MenuType.Dodge:
       const equippedDodgeSkillWindow = this.getJabsEquippedDodgeSkillWindow();
       equippedDodgeSkillWindow.deselect();
@@ -1767,9 +1805,11 @@ Scene_Map.prototype.forceCloseAbsMenu = function()
   this.closeAbsWindow(JABS_MenuType.Assign);
   this.closeAbsWindow(JABS_MenuType.Skill);
   this.closeAbsWindow(JABS_MenuType.Tool);
+  // policy step inside force close abs menu.
   this.closeAbsWindow(JABS_MenuType.Dodge);
   this.closeAbsWindow(JABS_MenuType.Offhand);
 
+  // policy step inside force close abs menu.
   this.setJabsMenuEquipType(String.empty);
   this.closeAbsWindow(JABS_MenuType.Main);
   this.setJabsMenuFocus(JABS_MenuType.Main);

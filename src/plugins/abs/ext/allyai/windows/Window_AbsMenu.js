@@ -57,6 +57,7 @@ Window_AbsMenu.prototype.allyAiHelpText = function()
     "Your ally management selection menu.",
     "A general direction or theme of guidance can be assigned to your allies from here." ];
 
+  // hand back description.join("\n") to the caller.
   return description.join("\n");
 };
 

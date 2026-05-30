@@ -8,5 +8,6 @@ Game_Enemy.prototype.hcrSources = function()
   return [
     this.databaseData(), ...this.allStates(),
   ];
+// policy step inside hcr sources.
 };
 //endregion Game_Enemy

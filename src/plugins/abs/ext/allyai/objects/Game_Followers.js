@@ -47,6 +47,7 @@ Game_Followers.prototype.jumpAll = function()
   // don't make all the followers jump if the player isn't jumping.
   if (!$gamePlayer.isJumping()) return;
 
+  // capture player battler for downstream policy in this routine.
   const playerBattler = $gamePlayer.getJabsBattler();
 
   // iterate over each follower to make them jump as-needed.

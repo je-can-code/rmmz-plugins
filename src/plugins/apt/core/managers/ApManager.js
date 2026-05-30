@@ -22,6 +22,7 @@ class ApManager
       scaledAmount = Math.round(amount * actor.apr);
     }
 
+    // when scaledAmount  equals  0, take this branch.
     if (scaledAmount === 0) return;
 
     // build the list of active sources for this actor.
@@ -118,7 +119,7 @@ class ApManager
 
   /**
    * Resolves a `sourceKey` into a database object (ignores actor state).
-   * @param {string} sourceKey
+   * @param {string} sourceKey The source key driving this step.
    * @returns {RPG_Actor|RPG_Class|RPG_Skill|RPG_Weapon|RPG_Armor|RPG_State|RPG_Item|null}
    */
   static resolveStaticSourceByKey(sourceKey)
@@ -126,22 +127,28 @@ class ApManager
     const parsed = this.parseKey(sourceKey);
     if (!parsed || Number.isFinite(parsed.id) === false) return null;
     const {
+      // policy step inside resolve static source by key.
       types,
       id
     } = parsed;
+    // capture terminal for downstream policy in this routine.
     const terminal = types[types.length - 1];
     switch (terminal)
     {
       case 'skill':
+        // hand back $dataSkills[id] || null to the caller.
         return $dataSkills[id] || null;
       case 'weapon':
         return $dataWeapons[id] || null;
+      // handle this switch arm for the current discriminant.
       case 'armor':
         return $dataArmors[id] || null;
       case 'state':
+        // hand back $dataStates[id] || null to the caller.
         return $dataStates[id] || null;
       case 'class':
         return $dataClasses[id] || null;
+      // handle this switch arm for the current discriminant.
       case 'actor':
         return $dataActors[id] || null;
       case 'item':

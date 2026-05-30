@@ -8,6 +8,7 @@ J.SDP.Aliased.Game_Enemy.set("extraDrops", Game_Enemy.prototype.extraDrops);
 Game_Enemy.prototype.extraDrops = function()
 {
   // get the original drop list.
+  // perform original logic.
   const dropList = J.SDP.Aliased.Game_Enemy.get("extraDrops")
     .call(this);
 
@@ -135,6 +136,7 @@ Game_Enemy.prototype.buildSdpLoot = function(drop)
   // identify the panel in question.
   const panel = J.SDP.Metadata.panelsMap.get(drop.sdpKey);
 
+  // capture dynamic loot for downstream policy in this routine.
   const dynamicLoot = {
     // core data.
     id: 0,
@@ -153,6 +155,7 @@ Game_Enemy.prototype.buildSdpLoot = function(drop)
     jabsUseOnPickup: true,
   };
 
+  // hand back dynamic loot to the caller.
   return dynamicLoot;
 };
 

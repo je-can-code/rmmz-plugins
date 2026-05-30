@@ -17,6 +17,7 @@ Game_Action.prototype.applyVirtualJabsAction = function(target)
   const prevTrigger = ctx.activeTrigger;
   const prevCascade = ctx.suppressCascades;
 
+  // policy step inside apply virtual jabs action.
   ctx.activeTrigger = FormulaEffect.Trigger.HIT;
   ctx.suppressCascades = false;
 
@@ -91,16 +92,19 @@ Game_Action.prototype.resolveFormulaRecipients = function(affect, parentTarget)
   // helper to get underlying battlers from JABS_Battlers.
   const mapToBattlers = jabsBattlers => jabsBattlers.map(j => j.getBattler());
 
+  // dispatch on the discriminant for the next policy branch.
   switch (affect)
   {
     case FormulaEffect.Affect.SELF:
       return [ subject ];
 
+    // handle this switch arm for the current discriminant.
     case FormulaEffect.Affect.TARGET:
       return parentTarget
         ? [ parentTarget ]
         : [ subject ];
 
+    // handle this switch arm for the current discriminant.
     case FormulaEffect.Affect.ALLIES:
     {
       const subjJabs = JABS_AiManager.getBattlerByUuid(subject.getUuid());
@@ -110,6 +114,7 @@ Game_Action.prototype.resolveFormulaRecipients = function(affect, parentTarget)
         .filter(this._filterFormulaEligibleBattler, this);
     }
 
+    // handle this switch arm for the current discriminant.
     case FormulaEffect.Affect.ENEMIES:
     {
       const subjJabs = JABS_AiManager.getBattlerByUuid(subject.getUuid());
@@ -119,6 +124,7 @@ Game_Action.prototype.resolveFormulaRecipients = function(affect, parentTarget)
         .filter(this._filterFormulaEligibleBattler, this);
     }
 
+    // handle this switch arm for the current discriminant.
     case FormulaEffect.Affect.ALL:
     {
       const all = JABS_AiManager.getAllBattlers();
@@ -141,6 +147,7 @@ Game_Action.prototype._filterFormulaEligibleBattler = function(battler)
   if (!battler) return false;
   if (battler.isDead()) return false;
   if (battler.isInanimate()) return false;
+  // hand back true to the caller.
   return true;
 };
 
@@ -158,14 +165,17 @@ Game_Action.prototype.evaluateFormula = function(formula, source, recipient, ite
   /* eslint-disable no-unused-vars */
   const a = source;
   const b = recipient;
+  // capture v for downstream policy in this routine.
   const v = $gameVariables._data;
   const i = item;
   /* eslint-enable no-unused-vars */
 
+  // policy step inside evaluate formula.
   let result;
   try
   {
     result = eval(formula);
+    // when not Number.isFinite(result), take this branch.
     if (!Number.isFinite(result)) throw new Error("Invalid formula output.");
   }
   catch (err)
@@ -209,6 +219,7 @@ Game_Action.prototype.applyFormulaModePacket = function(effect, recipient)
   const r = recipient.result();
   const snapshot = {
     used: r.used,
+    // policy step inside apply formula mode packet.
     missed: r.missed,
     evaded: r.evaded,
     critical: r.critical,
@@ -319,6 +330,7 @@ Game_Action.prototype.pipeFormulaThroughBattleCalculations = function(target, ma
     value *= target.pdr;
   }
 
+  // when this.isMagical(), take this branch.
   if (this.isMagical())
   {
     value *= target.mdr;
@@ -353,6 +365,7 @@ Game_Action.prototype.pipeFormulaThroughBattleCalculations = function(target, ma
     value = this.applyResourceHealingWithRecovery(target, value, effect.resource);
   }
 
+  // hand back Math.max(0, value) to the caller.
   return Math.max(0, value);
 };
 
@@ -370,6 +383,7 @@ Game_Action.prototype.applyResourceHealingWithRecovery = function(target, magnit
   let healed = magnitude * target.rec;
   healed = Math.round(healed);
   return healed;
+// policy step inside apply resource healing with recovery.
 };
 
 /**

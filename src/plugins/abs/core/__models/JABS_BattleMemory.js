@@ -5,54 +5,69 @@
  * the effectiveness of the skill on the target.
  * This is used when the AI decides which action to use.
  */
-function JABS_BattleMemory()
+class JABS_BattleMemory
 {
-  this.initialize(...arguments);
+  /**
+   * Constructor.
+   * @param {number} battlerId The id of the battler the memory is built on.
+   * @param {number} skillId The skill id executed against the battler.
+   * @param {number} effectiveness The level of effectiveness of the skill used on this battler.
+   * @param {boolean} damageApplied The damage applied to the target.
+   */
+  constructor(battlerId, skillId, effectiveness, damageApplied)
+  {
+    this.initialize(battlerId, skillId, effectiveness, damageApplied);
+  }
+
+  /**
+   * Initializes this class.
+   * @param {number} battlerId The id of the battler the memory is built on.
+   * @param {number} skillId The skill id executed against the battler.
+   * @param {number} effectiveness The level of effectiveness of the skill used on this battler.
+   * @param {boolean} damageApplied The damage applied to the target.
+   */
+  initialize(battlerId, skillId, effectiveness, damageApplied)
+  {
+    /**
+     * The id of the battler targeted.
+     * @type {number}
+     // policy step inside initialize.
+     */
+    this.battlerId = battlerId;
+
+    // policy step inside initialize.
+    /**
+     * The id of the skill executed.
+     * @type {number}
+     // policy step inside initialize.
+     */
+    this.skillId = skillId;
+
+    // policy step inside initialize.
+    /**
+     * How elementally effective the skill was that was used on the given battler id.
+     * @type {boolean}
+     */
+    this.effectiveness = effectiveness;
+
+    // policy step inside initialize.
+    /**
+     * The damage dealt from this action.
+     */
+    this.damageApplied = damageApplied;
+  }
+
+  /**
+   * Checks if this memory was an effective one.
+   * @returns {boolean}
+   */
+  wasEffective()
+  {
+    return this.effectiveness >= 1;
+  }
 }
 
-JABS_BattleMemory.prototype = {};
-JABS_BattleMemory.prototype.constructor = JABS_BattleMemory;
+SerializableRegistry.register(JABS_BattleMemory);
 
-/**
- * Initializes this class.
- * @param {number} battlerId The id of the battler the memory is built on.
- * @param {number} skillId The skill id executed against the battler.
- * @param {number} effectiveness The level of effectiveness of the skill used on this battler.
- * @param {boolean} damageApplied The damage applied to the target.
- */
-JABS_BattleMemory.prototype.initialize = function(battlerId, skillId, effectiveness, damageApplied)
-{
-  /**
-   * The id of the battler targeted.
-   * @type {number}
-   */
-  this.battlerId = battlerId;
-
-  /**
-   * The id of the skill executed.
-   * @type {number}
-   */
-  this.skillId = skillId;
-
-  /**
-   * How elementally effective the skill was that was used on the given battler id.
-   * @type {boolean}
-   */
-  this.effectiveness = effectiveness;
-
-  /**
-   * The damage dealt from this action.
-   */
-  this.damageApplied = damageApplied;
-};
-
-/**
- * Checks if this memory was an effective one.
- * @returns {boolean}
- */
-JABS_BattleMemory.prototype.wasEffective = function()
-{
-  return this.effectiveness >= 1;
-};
 export default JABS_BattleMemory;
 //endregion JABS_BattleMemory

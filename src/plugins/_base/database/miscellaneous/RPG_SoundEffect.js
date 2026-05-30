@@ -39,6 +39,7 @@ class RPG_SoundEffect
     this.name = name;
     this.pan = pan;
     this.pitch = pitch;
+    // assign volume on this instance for callers.
     this.volume = volume;
   }
 }

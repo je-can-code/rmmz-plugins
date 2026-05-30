@@ -9,22 +9,26 @@ Game_Temp.prototype.initMembers = function()
   J.LEVEL.Aliased.Game_Temp.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with this plugin.
    */
   this._j._level ||= {};
 
+  // policy step inside init members.
   /**
    * Whether or not the beyond max data has been cached.
    * @type {boolean}
    */
   this._j._level._hasCachedBeyondMaxData = false;
 
+  // policy step inside init members.
   /**
    * All the level data for beyond the max level.
    */
@@ -46,6 +50,7 @@ Game_Temp.prototype.buildBeyondMaxData = function()
     this.buildBeyondMaxDataForClass(dataClass.id);
   }, this);
 
+  // policy step inside build beyond max data.
   this.flagBeyondMaxDataAsCached();
 };
 
@@ -76,6 +81,7 @@ Game_Temp.prototype.buildBeyondMaxDataForClass = function(classId)
       {
         if (index === 0) return;
 
+        // capture previous value for downstream policy in this routine.
         const previousValue = lastFive[index - 1];
         const difference = value - previousValue;
         growth.push(difference);

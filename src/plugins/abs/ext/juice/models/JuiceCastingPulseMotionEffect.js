@@ -16,6 +16,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     super();
     this._sprite = sprite;
     this._amplitudeScale = amplitudeScale;
+    // store  continue predicate on the instance for later reads.
     this._continuePredicate = continuePredicate;
     this._phase = 0;
     this._baseScaleX = sprite.scale.x;
@@ -91,6 +92,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     const glowAlpha = Math.round(((wave + 1) / 2) * (glowMax - glowMin) + glowMin);
     this._sprite.setBlendColor([ 180, 220, 255, glowAlpha ]);
 
+    // hand back true to the caller.
     return true;
   }
 }

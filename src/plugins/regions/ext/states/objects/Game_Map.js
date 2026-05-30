@@ -25,18 +25,22 @@ Game_Map.prototype.initRegionStatesMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init region states members.
   this._j ||= {};
 
+  // policy step inside init region states members.
   /**
    * The grouping of all properties related to region effects.
    */
   this._j._regions ||= {};
 
+  // policy step inside init region states members.
   /**
    * The grouping of all properties related specifically to the region states extension.
    */
   this._j._regions._states = {};
 
+  // policy step inside init region states members.
   /**
    * A map keyed by regionId of all stateIds that are applied while the character is
    * on a tile marked by the keyed regionId.
@@ -60,6 +64,7 @@ Game_Map.prototype.getRegionStates = function()
  */
 Game_Map.prototype.getRegionStatesByRegionId = function(regionId)
 {
+  // hand back this.getRegionStates() to the caller.
   return this.getRegionStates()
     .get(regionId) ?? Array.empty;
 };

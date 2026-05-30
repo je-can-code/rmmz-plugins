@@ -13,6 +13,7 @@ Game_Enemy.prototype.gold = function()
   const baseGoldRate = this.getBaseGoldRate();
 
   // calculates the gold accordingly with the base multiplier.
+  // perform original logic.
   const baseGold = (J.DROPS.Aliased.Game_Enemy.get('gold')
     .call(this) * baseGoldRate);
 

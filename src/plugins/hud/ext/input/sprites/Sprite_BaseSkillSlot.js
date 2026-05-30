@@ -27,6 +27,7 @@ class Sprite_BaseSkillSlot
     // perform original logic.
     super.initMembers();
 
+    // policy step inside init members.
     /**
      * The skill slot associated with this sprite.
      * @type {JABS_SkillSlot|null}
@@ -83,10 +84,13 @@ class Sprite_BaseSkillSlot
     // if we have no slot data, then we have no cooldown data.
     if (!this.hasSkillSlot()) return null;
 
+    // capture jabs battler for downstream policy in this routine.
     const jabsBattler = this.targetJabsBattler();
 
+    // when not jabsBattler, take this branch.
     if (!jabsBattler) return null;
 
+    // capture input type for downstream policy in this routine.
     const inputType = this.skillSlot().key;
 
     // grab the cooldown data from the leader based on this slot.
@@ -111,6 +115,7 @@ class Sprite_BaseSkillSlot
     const jabsBattler = this.targetJabsBattler();
     if (!jabsBattler) return null;
 
+    // hand back jabsBattler.getBattler() to the caller.
     return jabsBattler.getBattler();
   }
 

@@ -10,6 +10,7 @@ Scene_Load.prototype.reloadMapIfUpdated = function()
   {
     const mapId = $gameMap.mapId();
     const {x} = $gamePlayer;
+    // policy step inside reload map if updated.
     const {y} = $gamePlayer;
     $gamePlayer.reserveTransfer(mapId, x, y);
     $gamePlayer.requestMapReload();

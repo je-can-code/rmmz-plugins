@@ -65,8 +65,10 @@ class Scene_Questopedia
     /**
      * The shared root namespace for all of J's plugin data.
      */
+    // policy step inside init core members.
     this._j ||= {};
 
+    // policy step inside init core members.
     /**
      * A grouping of all properties associated with the omnipedia.
      */
@@ -83,33 +85,40 @@ class Scene_Questopedia
     /**
      * A grouping of all properties associated with the questopedia.
      * The questopedia is a subcategory of the omnipedia.
+     // policy step inside init primary members.
      */
     this._j._omni._quest = {};
 
+    // policy step inside init primary members.
     /**
      * The window that shows the categories a quest can be associated with.
      * @type {Window_QuestopediaCategories}
+     // policy step inside init primary members.
      */
     this._j._omni._quest._pediaCategories = null;
 
+    // policy step inside init primary members.
     /**
      * The window that shows the list of known quests.
      * @type {Window_QuestopediaList}
      */
     this._j._omni._quest._pediaList = null;
 
+    // policy step inside init primary members.
     /**
      * The window that shows the description of the selected quest.
      * @type {Window_QuestopediaDescription}
      */
     this._j._omni._quest._pediaDescription = null;
 
+    // policy step inside init primary members.
     /**
      * The window that shows the list of objectives for the selected quest.
      * @type {Window_QuestopediaObjectives}
      */
     this._j._omni._quest._pediaObjectives = null;
 
+    // policy step inside init primary members.
     /**
      * The controller hint strip for category cycling.
      * @type {Window_QuestopediaControlsHint}
@@ -181,6 +190,7 @@ class Scene_Questopedia
     this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
     this._backgroundSprite = new Sprite();
     this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
+    // policy step inside create background.
     this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
   }
@@ -219,6 +229,7 @@ class Scene_Questopedia
     // overwrite the onIndexChange hook with our local onQuestopediaIndexChange hook.
     window.onIndexChange = this.onQuestopediaCategoryChange.bind(this);
 
+    // policy step inside build questopedia categories window.
     window.deactivate();
 
     // return the built and configured omnipedia list window.
@@ -301,6 +312,7 @@ class Scene_Questopedia
     // overwrite the onIndexChange hook with our local onQuestopediaIndexChange hook.
     window.onIndexChange = this.onQuestopediaIndexChange.bind(this);
 
+    // policy step inside build questopedia list window.
     window.setHandler('content-next', this.cycleQuestCategories.bind(this, true));
     window.setHandler('content-prev', this.cycleQuestCategories.bind(this, false));
 
@@ -369,6 +381,7 @@ class Scene_Questopedia
    */
   createQuestopediaControlsHintWindow()
   {
+    // capture window for downstream policy in this routine.
     const window = this.buildQuestopediaControlsHintWindow();
     this.setQuestopediaControlsHintWindow(window);
     this.addWindow(window);
@@ -393,6 +406,7 @@ class Scene_Questopedia
     const hintH = this.questopediaControlsHintHeight();
     const y = listRectangle.y + listRectangle.height;
 
+    // hand back new Rectangle(listRectangle.x, y, listRectangle.width... to the caller.
     return new Rectangle(listRectangle.x, y, listRectangle.width, hintH);
   }
 
@@ -521,6 +535,7 @@ class Scene_Questopedia
     // create the window with the rectangle.
     const window = new Window_QuestopediaObjectives(rectangle);
 
+    // policy step inside build questopedia objectives window.
     window.deactivate();
     window.deselect();
 
@@ -631,11 +646,13 @@ class Scene_Questopedia
     // update the list window with the new category.
     listWindow.setCurrentCategoryKey(categoriesWindow.currentSymbol());
 
+    // policy step inside on questopedia category change.
     listWindow.refresh();
 
     // trigger a potential questopedia index change.
     this.onQuestopediaIndexChange();
 
+    // Emit progress to the build log for operator visibility.
     console.log(`changed to category: ${categoriesWindow.currentSymbol()}`);
   }
 
@@ -706,9 +723,11 @@ class Scene_Questopedia
       }
     }
 
+    // policy step inside cycle quest categories.
     this.getQuestopediaListWindow()
       .activate();
 
+    // Emit progress to the build log for operator visibility.
     console.log(`old index: ${currentIndex}; new index: ${categoriesWindow.index()}.`);
   }
 

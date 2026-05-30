@@ -23,15 +23,19 @@ JABS_Battler.prototype.initChargeData = function()
   /**
    * Whether or not this battler is charging up a skill for use.
    * @type {boolean}
+   // policy step inside init charge data.
    */
   this._charging = false;
 
+  // policy step inside init charge data.
   /**
    * The slot associated with the current charging.
    * @type {null|string}
+   // policy step inside init charge data.
    */
   this._chargeSlot = null;
 
+  // policy step inside init charge data.
   /**
    * The tiers of charging that are currently being managed.
    * @type {JABS_ChargingTier[]}
@@ -203,7 +207,6 @@ JABS_Battler.prototype.getHighestChargedTierWithSkillId = function()
 
   // return the highest charged tier.
   return highestChargedTier;
-
 };
 
 /**
@@ -339,7 +342,7 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
 };
 
 /**
- *
+ * Begins charging the given slot after seeding tier data and guards.
  * @param {string} slot The slot to be charged.
  * @param {JABS_ChargingTier[]} chargingTiers The charging tier data.
  */

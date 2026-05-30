@@ -1,5 +1,6 @@
 //region Game_CharacterBase
 import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
+import PixelDebugSampler from './../_models/PixelDebugSampler.js';
 
 //region init
 /**
@@ -27,39 +28,50 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init pixel movement members.
   this._j ||= {};
 
+  // policy step inside init pixel movement members.
   /**
    * The pixel movement namespace, scoped under _j to avoid collisions
    * with properties introduced by other plugins.
+   // policy step inside init pixel movement members.
    */
   this._j._pixel ||= {};
 
+  // policy step inside init pixel movement members.
   /**
    * The collection for tracking the {@link Point} coordinates for all members.
    * This is managed in a first-in-first-out (FIFO) style.
+   // policy step inside init pixel movement members.
    * @type {Point[]}
    */
   this._j._pixel._positionalRecords ??= [];
 
+  // policy step inside init pixel movement members.
   /**
    * Whether or not one of the directional inputs are being held down.
    * @type {boolean} True if at least one direction is being held, false otherwise.
+   // policy step inside init pixel movement members.
    */
   this._j._pixel._movePressing ??= false;
 
+  // policy step inside init pixel movement members.
   /**
    * The move distance for tracking steps.
    * @type {number}
+   // policy step inside init pixel movement members.
    */
   this._j._pixel._moveDistance ??= 0;
 
+  // policy step inside init pixel movement members.
   /**
    * The number of steps this character has taken.
    * @type {number}
    */
   this._j._pixel._steps ??= 0;
 
+  // policy step inside init pixel movement members.
   /**
    * Cooldown frames after a pixel move before another can be issued.
    * Prevents AllyAI from pushing every single frame.
@@ -67,6 +79,7 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
    */
   this._j._pixel._moveCooldown ??= 0;
 
+  // policy step inside init pixel movement members.
   /**
    * Whether a pixel-route repeat is currently active for this character.
    * Used to repeat a single move-route command multiple times to cover the intended distance.
@@ -74,12 +87,14 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
    */
   this._j._pixel._repeatMoveActive ??= false;
 
+  // policy step inside init pixel movement members.
   /**
    * How many remaining repeat-ticks are left for the current route command.
    * @type {number}
    */
   this._j._pixel._repeatMoveCount ??= 0;
 
+  // policy step inside init pixel movement members.
   /**
    * Flag indicating whether a pixel step occurred this frame.
    * Used to preserve walk animation even when render coords snap each update.
@@ -87,12 +102,14 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
    */
   this._j._pixel._movedThisFrame ??= false;
 
+  // policy step inside init pixel movement members.
   /**
    * The cached direction for the micro-route (if any).
    * @type {number}
    */
   this._j._pixel._mrDir ??= 0;
 
+  // policy step inside init pixel movement members.
   /**
    * The remaining frames to apply the cached micro-route direction.
    * @type {number}
@@ -115,6 +132,7 @@ Game_CharacterBase.prototype._pixelState = function()
     this.initPixelMovementMembers();
   }
 
+  // hand back this._j._pixel to the caller.
   return this._j._pixel;
 };
 
@@ -421,6 +439,7 @@ J.PIXEL.Aliased.Game_CharacterBase.set("update", Game_CharacterBase.prototype.up
 Game_CharacterBase.prototype.update = function()
 {
   // Perform original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_CharacterBase.get("update")
     .call(this);
 
@@ -530,6 +549,7 @@ J.PIXEL.Aliased.Game_CharacterBase.set("isMoving", Game_CharacterBase.prototype.
 Game_CharacterBase.prototype.isMoving = function()
 {
   // Determine movement per the original engine behavior.
+  // perform original logic.
   const original = J.PIXEL.Aliased.Game_CharacterBase.get("isMoving")
     .call(this);
 
@@ -746,15 +766,19 @@ Game_CharacterBase.prototype.moveStraightDistance = function(direction, pixelDis
   {
     case J.PIXEL.Directions.DOWN:
       this.moveStraight2Down(pixelDistance);
+      // policy step inside move straight distance.
       break;
     case J.PIXEL.Directions.LEFT:
       this.moveStraight4Left(pixelDistance);
+      // policy step inside move straight distance.
       break;
     case J.PIXEL.Directions.RIGHT:
       this.moveStraight6Right(pixelDistance);
+      // policy step inside move straight distance.
       break;
     case J.PIXEL.Directions.UP:
       this.moveStraight8Up(pixelDistance);
+      // policy step inside move straight distance.
       break;
     default:
       console.warn("attempted to move an invalid straight direction: ", direction);
@@ -773,15 +797,19 @@ Game_CharacterBase.prototype.moveDiagonalDistance = function(direction, pixelDis
   {
     case J.PIXEL.Directions.LOWERLEFT:
       this.moveDiagonal1DownLeft(pixelDistance);
+      // policy step inside move diagonal distance.
       break;
     case J.PIXEL.Directions.LOWERRIGHT:
       this.moveDiagonal3DownRight(pixelDistance);
+      // policy step inside move diagonal distance.
       break;
     case J.PIXEL.Directions.UPPERLEFT:
       this.moveDiagonal7UpLeft(pixelDistance);
+      // policy step inside move diagonal distance.
       break;
     case J.PIXEL.Directions.UPPERRIGHT:
       this.moveDiagonal9UpRight(pixelDistance);
+      // policy step inside move diagonal distance.
       break;
     default:
       console.warn("attempted to move an invalid diagonal direction: ", direction);
@@ -1102,6 +1130,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 J.PIXEL.Aliased.Game_CharacterBase.set('canPass', Game_CharacterBase.prototype.canPass);
 Game_CharacterBase.prototype.canPass = function(x, y, d)
 {
+  // perform original logic.
   return J.PIXEL.Aliased.Game_CharacterBase.get('canPass').call(this, Math.round(x), Math.round(y), d);
 };
 
@@ -1119,6 +1148,7 @@ Game_CharacterBase.prototype.regionId = function()
   const tileX = Math.floor(this._x + this.getCollisionPivotX());
   const tileY = Math.floor(this._y + this.getCollisionPivotY());
 
+  // hand back $gameMap.regionId(tileX, tileY) to the caller.
   return $gameMap.regionId(tileX, tileY);
 };
 
@@ -1163,6 +1193,7 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 {
   this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
 
+  // when this.isMovementSucceeded(), take this branch.
   if (this.isMovementSucceeded())
   {
     const direction = this.directionFromHorzVert(horz, vert);
@@ -1449,8 +1480,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       blockedDir === J.PIXEL.Directions.RIGHT
     );
 
+    // capture radius for downstream policy in this routine.
     const radius = this.getEffectiveRadius();
 
+    // when isHorizontal, take this branch.
     if (isHorizontal)
     {
       // Nudge Y toward the nearest tile-center row.
@@ -1460,6 +1493,7 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       // Already centered; nothing to nudge.
       if (Math.abs(residual) < 0.001) return 0;
 
+      // capture nudge for downstream policy in this routine.
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
       const nudgedY = this._y + nudge;
 
@@ -1494,8 +1528,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       const targetX = Math.round(this._x);
       const residual = targetX - this._x;
 
+      // when Math.abs(residual) < 0.001, take this branch.
       if (Math.abs(residual) < 0.001) return 0;
 
+      // capture nudge for downstream policy in this routine.
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
       const nudgedX = this._x + nudge;
 
@@ -1512,11 +1548,13 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       this._x = nudgedX;
       this._realX = this._x;
 
+      // when this.canPassStraight(blockedDir, straightDistance), take this branch.
       if (this.canPassStraight(blockedDir, straightDistance))
       {
         return doStraightMove(blockedDir);
       }
 
+      // policy step inside pixel move by input.
       this.setMovedThisFrame(true);
       return 0;
     }
@@ -1863,12 +1901,14 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
   const canDown = () => this.canPassStraight(J.PIXEL.Directions.DOWN, straightDistance);
   const canUp = () => this.canPassStraight(J.PIXEL.Directions.UP, straightDistance);
   const canLeft = () => this.canPassStraight(J.PIXEL.Directions.LEFT, straightDistance);
+  // capture can right for downstream policy in this routine.
   const canRight = () => this.canPassStraight(J.PIXEL.Directions.RIGHT, straightDistance);
 
   // Require both legs of the diagonal to be passable.
   let legsOk = false;
   if (diagonalDir === J.PIXEL.Directions.LOWERLEFT) legsOk = (canLeft() && canDown());
   if (diagonalDir === J.PIXEL.Directions.LOWERRIGHT) legsOk = (canRight() && canDown());
+  // when diagonalDir  equals  J.PIXEL.Directions.UPPERLEFT, take this branch.
   if (diagonalDir === J.PIXEL.Directions.UPPERLEFT) legsOk = (canLeft() && canUp());
   if (diagonalDir === J.PIXEL.Directions.UPPERRIGHT) legsOk = (canRight() && canUp());
   if (legsOk === false) return false;
@@ -1877,6 +1917,7 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
   const step = this.diagonalDistancePerFrame();
   let nx = this._x;
   let ny = this._y;
+  // when diagonalDir  equals  J.PIXEL.Directions.LOWERLEFT, take this branch.
   if (diagonalDir === J.PIXEL.Directions.LOWERLEFT)
   {
     nx -= step;
@@ -2121,6 +2162,7 @@ Game_CharacterBase.prototype._pixelCollisionSubCount = function()
     PIXEL_CollisionManager.initConfig();
   }
 
+  // hand back PIXEL_CollisionManager.collisionStepCount to the caller.
   return PIXEL_CollisionManager.collisionStepCount;
 };
 
@@ -2149,6 +2191,7 @@ Game_CharacterBase.prototype._pixelReverseDir = function(d)
   if (d === 2) return 8;
   if (d === 8) return 2;
   if (d === 4) return 6;
+  // when d  equals  6, take this branch.
   if (d === 6) return 4;
   return d;
 };
@@ -2297,9 +2340,9 @@ Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, 
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current left-most subcell must allow moving LEFT (exiting left).
     if (this._pixelIsPositionPassable(curColX, ny, J.PIXEL.Directions.LEFT) === false) return false;
@@ -2360,9 +2403,9 @@ Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb,
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current right-most must allow RIGHT (exiting right).
     if (this._pixelIsPositionPassable(curColX, ny, J.PIXEL.Directions.RIGHT) === false) return false;
@@ -2423,9 +2466,9 @@ Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, co
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current top must allow UP (exiting upward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.PIXEL.Directions.UP)   === false) return false;
@@ -2486,9 +2529,9 @@ Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, 
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current bottom must allow DOWN (exiting downward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.PIXEL.Directions.DOWN) === false) return false;
@@ -2558,7 +2601,7 @@ Game_CharacterBase.prototype._pixelCheckVerticalAtNewXColumn = function(xCurrent
     const ny = row / count;
 
     // DEBUG lane markers (blue).
-    J.PIXEL.Debug.push(columnX, ny, "rgba(0, 128, 255, 0.6)");
+    PixelDebugSampler.push(columnX, ny, "rgba(0, 128, 255, 0.6)");
 
     // Compute lane permissions.
     const upOk   = this._pixelIsPositionPassable(columnX, ny, J.PIXEL.Directions.UP);
@@ -2629,7 +2672,7 @@ Game_CharacterBase.prototype._pixelCheckHorizontalAtNewYRow = function(yCurrent,
     const nx = col / count;
 
     // DEBUG lane markers (blue).
-    J.PIXEL.Debug.push(nx, rowY, "rgba(0, 128, 255, 0.6)");
+    PixelDebugSampler.push(nx, rowY, "rgba(0, 128, 255, 0.6)");
 
     // Compute lane permissions.
     const leftOk  = this._pixelIsPositionPassable(nx, rowY, J.PIXEL.Directions.LEFT);
@@ -2780,12 +2823,14 @@ Game_CharacterBase.prototype.angleToNearestDirection = function(angleDegrees)
     return J.PIXEL.Directions.RIGHT;
   }
 
+  // when normalized >= 45  and  normalized < 135, take this branch.
   if (normalized >= 45 && normalized < 135)
   {
     // down: 45–135.
     return J.PIXEL.Directions.DOWN;
   }
 
+  // when normalized >= 135  and  normalized < 225, take this branch.
   if (normalized >= 135 && normalized < 225)
   {
     // left: 135–225.

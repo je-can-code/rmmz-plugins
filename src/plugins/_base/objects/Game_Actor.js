@@ -172,6 +172,7 @@ J.BASE.Aliased.Game_Actor.set('die', Game_Actor.prototype.die);
 Game_Actor.prototype.die = function()
 {
   // perform original effects.
+  // perform original logic.
   J.BASE.Aliased.Game_Actor.get('die')
     .call(this);
 
@@ -377,6 +378,7 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
     hasDifferentEquips = true;
   });
 
+  // hand back has different equips to the caller.
   return hasDifferentEquips;
 };
 
@@ -388,6 +390,7 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
  */
 Game_Actor.prototype.equippedEquips = function()
 {
+  // hand back this.equips() to the caller.
   return this.equips()
     .filter(equip => !!equip);
 };

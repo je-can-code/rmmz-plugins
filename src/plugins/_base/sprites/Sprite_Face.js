@@ -2,49 +2,66 @@
 /**
  * A sprite that displays a single face.
  */
-function Sprite_Face()
+class Sprite_Face
+  extends Sprite
 {
-  this.initialize(...arguments);
+  /**
+   * Constructor.
+   * @param {...*} args Forwarded to {@link #initialize}.
+   */
+  constructor(...args)
+  {
+    super();
+    this.initialize(...args);
+  }
+
+  /**
+   * Runs after {@link Sprite.prototype.initialize}.
+   * @param {string} faceName The name of the face file.
+   * @param {number} faceIndex The index of the face.
+   */
+  initialize(faceName, faceIndex)
+  {
+    // perform original logic.
+    super.initialize();
+    this.initMembers(faceName, faceIndex);
+    this.loadBitmap();
+  // policy step inside initialize.
+  }
+
+  /**
+   * Initializes the properties associated with this sprite.
+   * @param {string} faceName The name of the face file.
+   * @param {number} faceIndex The index of the face.
+   */
+  initMembers(faceName, faceIndex)
+  {
+    this._j = {
+      _faceName: faceName,
+      _faceIndex: faceIndex,
+    // policy step inside init members.
+    };
+  }
+
+  /**
+   * Loads the bitmap into the sprite.
+   */
+  loadBitmap()
+  {
+    this.bitmap = ImageManager.loadFace(this._j._faceName);
+    const pw = ImageManager.faceWidth;
+    const ph = ImageManager.faceHeight;
+    // capture width for downstream policy in this routine.
+    const width = pw;
+    const height = ph;
+    const sw = Math.min(width, pw);
+    // capture sh for downstream policy in this routine.
+    const sh = Math.min(height, ph);
+    const sx = Math.floor((this._j._faceIndex % 4) * pw + (pw - sw) / 2);
+    const sy = Math.floor(Math.floor(this._j._faceIndex / 4) * ph + (ph - sh) / 2);
+    this.setFrame(sx, sy, pw, ph);
+  }
 }
-
-Sprite_Face.prototype = Object.create(Sprite.prototype);
-Sprite_Face.prototype.constructor = Sprite_Face;
-Sprite_Face.prototype.initialize = function(faceName, faceIndex)
-{
-  Sprite.prototype.initialize.call(this);
-  this.initMembers(faceName, faceIndex);
-  this.loadBitmap();
-};
-
-/**
- * Initializes the properties associated with this sprite.
- * @param {string} faceName The name of the face file.
- * @param {number} faceIndex The index of the face.
- */
-Sprite_Face.prototype.initMembers = function(faceName, faceIndex)
-{
-  this._j = {
-    _faceName: faceName,
-    _faceIndex: faceIndex,
-  };
-};
-
-/**
- * Loads the bitmap into the sprite.
- */
-Sprite_Face.prototype.loadBitmap = function()
-{
-  this.bitmap = ImageManager.loadFace(this._j._faceName);
-  const pw = ImageManager.faceWidth;
-  const ph = ImageManager.faceHeight;
-  const width = pw;
-  const height = ph;
-  const sw = Math.min(width, pw);
-  const sh = Math.min(height, ph);
-  const sx = Math.floor((this._j._faceIndex % 4) * pw + (pw - sw) / 2);
-  const sy = Math.floor(Math.floor(this._j._faceIndex / 4) * ph + (ph - sh) / 2);
-  this.setFrame(sx, sy, pw, ph);
-};
 
 export default Sprite_Face;
 //endregion Sprite_Face

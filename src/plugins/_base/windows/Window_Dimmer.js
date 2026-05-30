@@ -16,6 +16,7 @@ class Window_Dimmer
     super.initialize(rect);
     this.frameVisible = false;
     this.deactivate();
+    // policy step inside initialize.
     this.refresh();
   }
 

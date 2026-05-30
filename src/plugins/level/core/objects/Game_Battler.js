@@ -42,26 +42,32 @@ Game_Battler.prototype.getLevel = function()
   this._j ||= {};
   this._j._level ||= {};
 
+  // capture level slot for downstream policy in this routine.
   const levelSlot = this._j._level;
 
+  // when levelSlot._isComputingGetLevel  equals  true, take this branch.
   if (levelSlot._isComputingGetLevel === true)
   {
     return this.getBattlerBaseLevel() + this.getLevelBalancer();
   }
 
+  // policy step inside get level.
   levelSlot._isComputingGetLevel = true;
 
+  // attempt the fragile parse or io work inside this block.
   try
   {
     const sources = this.getLevelSources();
     let level = this.getBattlerBaseLevel();
     level += this.getLevelBalancer();
 
+    // policy step inside get level.
     sources.forEach(rpgData =>
     {
       level += this.extractLevel(rpgData);
     }, this);
 
+    // hand back level to the caller.
     return level;
   }
   finally

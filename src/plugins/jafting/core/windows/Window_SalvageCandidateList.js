@@ -48,8 +48,10 @@ class Window_SalvageCandidateList
   {
     const prevIndex = this.index();
 
+    // policy step inside refresh.
     this.makeItemList();
 
+    // Invoke the aliased body with the original receiver.
     Window_Selectable.prototype.refresh.call(this);
 
     // after dismantle the list shrinks—clamp so `item()` stays valid and the preview can repaint.
@@ -57,16 +59,20 @@ class Window_SalvageCandidateList
     {
       this.select(-1);
 
+      // exit early without a payload.
       return;
     }
 
+    // when prevIndex < 0, take this branch.
     if (prevIndex < 0)
     {
       this.select(0);
 
+      // exit early without a payload.
       return;
     }
 
+    // when prevIndex >= this.maxItems(), take this branch.
     if (prevIndex >= this.maxItems())
     {
       this.select(this.maxItems() - 1);
@@ -80,13 +86,16 @@ class Window_SalvageCandidateList
   {
     const datum = this._data[index];
 
+    // when datum  equals  undefined  or  datum  equals  null, take this branch.
     if (datum === undefined || datum === null)
     {
       return;
     }
 
+    // capture rect for downstream policy in this routine.
     const rect = this.itemLineRect(index);
 
+    // policy step inside draw item.
     this.resetTextColor();
     this.changePaintOpacity(true);
     this.drawIcon(datum.iconIndex, rect.x + 2, rect.y + 2);

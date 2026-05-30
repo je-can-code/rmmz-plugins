@@ -1,13 +1,17 @@
 //region Scene_Boot
+import SdpParameterRegistration from './../core/registerSdpParameters.js';
+
 /**
  * Extends {@link #onDatabaseLoaded}.<br/>
- * No initialization required for J-SDP on database load at this time;
- * the passive detail window draws J-SDP data directly from the state note.
+ * Registers J-SDP stats with the parameter catalog after vanilla seeding.
  */
 J.SDP.Aliased.Scene_Boot.set('onDatabaseLoaded', Scene_Boot.prototype.onDatabaseLoaded);
 Scene_Boot.prototype.onDatabaseLoaded = function()
 {
   // perform original logic.
   J.SDP.Aliased.Scene_Boot.get('onDatabaseLoaded').call(this);
+
+  // register owner stats with the parameter catalog.
+  SdpParameterRegistration.registerAll();
 };
 //endregion Scene_Boot

@@ -8,9 +8,11 @@ import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 J.JAFTING.Aliased.Game_Party.set('gainItem', Game_Party.prototype.gainItem);
 Game_Party.prototype.gainItem = function(item, amount, includeEquip)
 {
+  // perform original logic.
   J.JAFTING.Aliased.Game_Party.get('gainItem')
     .call(this, item, amount, includeEquip);
 
+  // policy step inside gain item.
   JaftingSalvageManager.afterPartyGainedItem(item, amount);
 };
 
@@ -21,6 +23,7 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
 J.JAFTING.Aliased.Game_Party.set('loseItem', Game_Party.prototype.loseItem);
 Game_Party.prototype.loseItem = function(item, amount, includeEquip)
 {
+  // perform original logic.
   J.JAFTING.Aliased.Game_Party.get('loseItem')
     .call(this, item, amount, includeEquip);
 

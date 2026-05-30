@@ -43,6 +43,7 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('skillMpCost', Game_BattlerBase.prototy
 Game_BattlerBase.prototype.skillMpCost = function(skill)
 {
   // get base cost.
+  // perform original logic.
   const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillMpCost')
     .call(this, skill);
 
@@ -66,6 +67,7 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('skillTpCost', Game_BattlerBase.prototy
 Game_BattlerBase.prototype.skillTpCost = function(skill)
 {
   // get base cost.
+  // perform original logic.
   const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost')
     .call(this, skill);
 

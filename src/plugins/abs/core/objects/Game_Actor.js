@@ -1,6 +1,6 @@
 //region Game_Actor
 import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends {@link #initJabsMembers}.<br/>
@@ -12,16 +12,20 @@ Game_Actor.prototype.initJabsMembers = function()
   // perform original logic.
   Game_Battler.prototype.initJabsMembers.call(this);
 
+  // policy step inside init jabs members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
+  // policy step inside init jabs members.
   this._j ||= {};
 
+  // policy step inside init jabs members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
+  // policy step inside init jabs members.
   /**
    * Whether or not the death effect has been performed.
    * The death effect is defined as "death animation".
@@ -29,6 +33,7 @@ Game_Actor.prototype.initJabsMembers = function()
    */
   this._j._abs._deathEffect = false;
 
+  // policy step inside init jabs members.
   /**
    * The last observed offhand equip's item id, used to detect offhand swaps so we
    * can clear any player-pinned offhand skill the next time equipment changes.
@@ -393,6 +398,7 @@ Game_Actor.prototype.getPinnedOffhandSkillId = function()
   const skillSlotManager = this.getSkillSlotManager();
   if (!skillSlotManager) return 0;
 
+  // hand back skillSlotManager.getOffhandPinnedSkillId() to the caller.
   return skillSlotManager.getOffhandPinnedSkillId();
 };
 
@@ -687,6 +693,7 @@ Game_Actor.prototype.getUuid = function()
     return `actor-${this.actorId()}`;
   }
 
+  // Surface a non-fatal warning for operator triage.
   console.warn("no uuid currently available for this actor.", this);
   return String.empty;
 };
@@ -733,6 +740,7 @@ Game_Actor.prototype.getJabsParameter = function(structure, defaultValue)
     return actorJabsParameter;
   }
 
+  // hand back default value to the caller.
   return defaultValue;
 };
 
@@ -973,6 +981,7 @@ Game_Actor.prototype.stopDying = function()
  */
 Game_Actor.prototype.getAllPrimarySkills = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getAllPrimarySlots();
 };
@@ -983,6 +992,7 @@ Game_Actor.prototype.getAllPrimarySkills = function()
  */
 Game_Actor.prototype.getAllCombatSkillSlots = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getAllSecondarySlots();
 };
@@ -993,6 +1003,7 @@ Game_Actor.prototype.getAllCombatSkillSlots = function()
  */
 Game_Actor.prototype.getToolSkillSlot = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getToolSlot();
 };
@@ -1003,6 +1014,7 @@ Game_Actor.prototype.getToolSkillSlot = function()
  */
 Game_Actor.prototype.getDodgeSkillSlot = function()
 {
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getDodgeSlot();
 };
@@ -1016,6 +1028,7 @@ Game_Actor.prototype.getValidEquippedSkillSlots = function()
   // don't try to get slots if we are not setup yet.
   if (!this.getSkillSlotManager()) return [];
 
+  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getEquippedSlots();
 };
@@ -1381,6 +1394,7 @@ Game_Actor.prototype.turnEndOnMap = function()
   if (!$jabsEngine.absEnabled) return;
 
   // do normal turn-end things while JABS is disabled.
+  // perform original logic.
   J.ABS.Aliased.Game_Actor.get('turnEndOnMap')
     .call(this);
 };

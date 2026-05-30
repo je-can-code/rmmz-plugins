@@ -63,26 +63,32 @@ class Window_InputFrame
     // perform original logic.
     super.initMembers();
 
+    // policy step inside init members.
     /**
      * The battler of which to track inputs for.
      * @type {Game_Actor}
+     // policy step inside init members.
      */
     this._j._battler = null;
 
+    // policy step inside init members.
     /**
      * Whether or not the window needs a refresh internally.
      * This is toggled after all draws are executed and tracked to
+     // policy step inside init members.
      * prevent unnecessary redraws.
      * @type {boolean}
      */
     this._j._needsRefresh = true;
 
+    // policy step inside init members.
     /**
      * A grouping for tracking last-known values used to determine
      * if this HUD requires a refresh.
      */
     this._j._last ||= {};
 
+    // policy step inside init members.
     /**
      * Tracks whether SkillTrigger was held on the last processed frame.
      * Used to request refreshes only when the held state changes so we
@@ -91,6 +97,7 @@ class Window_InputFrame
      */
     this._j._last._skillTriggerHeld = false;
 
+    // policy step inside init members.
     /**
      * Tracks whether the party was considered in combat on the last processed frame.
      * Used to request refresh on combat context changes so the left node can
@@ -99,23 +106,27 @@ class Window_InputFrame
      */
     this._j._last._partyInCombat = false;
 
+    // policy step inside init members.
     /**
      * A grouping for tracking the flip progress and direction.
      */
     this._j._flip ||= {};
 
+    // policy step inside init members.
     /**
      * The current progress for the flip animation.
      * @type {number}
      */
     this._j._flip._progress = 0;
 
+    // policy step inside init members.
     /**
      * The maximum duration for the flip animation.
      * @type {number}
      */
     this._j._flip._max = 10;
 
+    // policy step inside init members.
     /**
      * The current direction of the flip animation.
      * @type {number}
@@ -349,6 +360,7 @@ class Window_InputFrame
     // hide all the sprites.
     this._j._spriteCache.forEach((sprite, _) => sprite.hide());
 
+    // policy step inside hide sprites.
     this.requestInternalRefresh();
   }
 
@@ -476,6 +488,7 @@ class Window_InputFrame
   {
     const playerX = $gamePlayer.screenX();
     const playerY = $gamePlayer.screenY();
+    // hand back (playerX < this.width + 100) && (playerY < this.heigh... to the caller.
     return (playerX < this.width + 100) && (playerY < this.height + 100);
   }
 
@@ -560,9 +573,11 @@ class Window_InputFrame
     {
       const skillsActive = this.isSkillTriggerHeld();
       return {
+        // policy step inside compute flip alphas.
         alphaBase: skillsActive
           ? 0
           : 255,
+        // policy step inside compute flip alphas.
         alphaSkills: skillsActive
           ? 255
           : 0,
@@ -767,6 +782,7 @@ class Window_InputFrame
     const opts = options || {};
     const tint = opts.tint || null;             // e.g., 'rgba(255,64,64,1.0)'
     const tintAlpha = Number(opts.tintAlpha || 0); // 0..1
+    // capture radius for downstream policy in this routine.
     const radius = Math.max(0, Number(opts.cornerPad || 0));
 
     // colors from theme (same family your old panels used).
@@ -782,19 +798,24 @@ class Window_InputFrame
       const rr = Math.min(r, Math.floor(Math.min(rw, rh) / 2));
       if (rr <= 0)
       {
+        // policy step inside draw hud panel fancy.
         ctx.rect(rx, ry, rw, rh);
         return;
       }
       const r2 = rr * 2;
+      // policy step inside draw hud panel fancy.
       ctx.moveTo(rx + rr, ry);
       ctx.lineTo(rx + rw - rr, ry);
       ctx.arc(rx + rw - rr, ry + rr, rr, Math.PI * 1.5, 0);
+      // policy step inside draw hud panel fancy.
       ctx.lineTo(rx + rw, ry + rh - rr);
       ctx.arc(rx + rw - rr, ry + rh - rr, rr, 0, Math.PI * 0.5);
       ctx.lineTo(rx + rr, ry + rh);
+      // policy step inside draw hud panel fancy.
       ctx.arc(rx + rr, ry + rh - rr, rr, Math.PI * 0.5, Math.PI);
       ctx.lineTo(rx, ry + rr);
       ctx.arc(rx + rr, ry + rr, rr, Math.PI, Math.PI * 1.5);
+    // policy step inside draw hud panel fancy.
     };
 
     // 1) soft shadow to contentsBack (subtle, non-accumulating because we clear each refresh).
@@ -802,6 +823,7 @@ class Window_InputFrame
       const sb = this.contentsBack;
       const ctx = sb.context;
       ctx.save();
+      // policy step inside draw hud panel fancy.
       ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
       for (let i = 1; i <= 3; i++)
       {
@@ -864,6 +886,7 @@ class Window_InputFrame
       ctx.fill();
     }
 
+    // policy step inside draw hud panel fancy.
     ctx.restore();
     c._baseTexture.update();
 
@@ -937,6 +960,7 @@ class Window_InputFrame
         break;
       }
 
+      // handle this switch arm for the current discriminant.
       case Window_InputFrame.Modes.Base:
       default:
       {
@@ -1022,6 +1046,7 @@ class Window_InputFrame
     this.contents.outlineWidth = 4;
     this.contents.outlineColor = 'rgba(0, 0, 0, 0.85)';
 
+    // capture text for downstream policy in this routine.
     const text = 'Dash';
     const tw = this.textSizeEx(text).width;
     const labelX = panelX + Math.floor((panelW - tw) / 2) - 5;

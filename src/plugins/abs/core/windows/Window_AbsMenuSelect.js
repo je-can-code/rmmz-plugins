@@ -1,6 +1,6 @@
 //region Window_AbsMenuSelect
 import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 /**
  * A window that is reused to draw all the subwindows of the JABS menu.
  */
@@ -40,6 +40,7 @@ class Window_AbsMenuSelect
     this._j ||= {};
     this._j._menuType = type;
     super.initialize(rect);
+    // policy step inside initialize.
     this.refresh();
     this.select(0);
     this.activate();
@@ -267,7 +268,7 @@ class Window_AbsMenuSelect
 
     // an iterator function for iterating over skill slots and rendering their data.
     /**
-     * @param {JABS_SkillSlot} skillSlot
+     * @param {JABS_SkillSlot} skillSlot The skill slot driving this step.
      */
     const forEacher = skillSlot =>
     {

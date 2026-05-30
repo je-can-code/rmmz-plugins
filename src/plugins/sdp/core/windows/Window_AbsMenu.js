@@ -55,6 +55,7 @@ if (J.ABS)
       "The ever-growing list of stat distribution panels, aka your junction system.",
       "Junction points can be spent here to modify your stats- permanently." ];
 
+    // hand back description.join("\n") to the caller.
     return description.join("\n");
   };
 }

@@ -1,5 +1,5 @@
 //region Game_CharacterBase
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 /**
  * Extends the {@link Game_CharacterBase.initMembers}.<br>
  * Allows custom move speeds and dashing.
@@ -11,16 +11,19 @@ Game_CharacterBase.prototype.initMembers = function()
   J.ABS.Aliased.Game_CharacterBase.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
+  // policy step inside init members.
   /**
    * The calculated move speed of this character based on possible dodge modifications.
    * This defaults to "normal" aka `4`.
@@ -28,6 +31,7 @@ Game_CharacterBase.prototype.initMembers = function()
    */
   this._j._abs._realMoveSpeed = 4;
 
+  // policy step inside init members.
   /**
    * The modification of which this character receives when dodging.
    * @type {number}
@@ -79,6 +83,7 @@ Game_CharacterBase.prototype.getDashSpeedBoost = function()
   return (this.isDashing()
     ? this.dashSpeed()
     : 0);
+// policy step inside get dash speed boost.
 };
 
 /**
@@ -90,6 +95,7 @@ Game_CharacterBase.prototype.getDodgeSpeedModifier = function()
   return (this.isDodging()
     ? this.dodgeModifier()
     : 0);
+// policy step inside get dodge speed modifier.
 };
 
 /**
@@ -143,12 +149,14 @@ Game_CharacterBase.prototype.isDodging = function()
   {
     const battler = this.getJabsBattler();
 
+    // when battler, take this branch.
     if (battler)
     {
       return battler.isDodging();
     }
   }
 
+  // hand back false to the caller.
   return false;
 };
 //endregion Game_CharacterBase

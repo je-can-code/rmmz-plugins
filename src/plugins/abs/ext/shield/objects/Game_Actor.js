@@ -7,6 +7,7 @@ J.ABS.EXT.SHIELD.Aliased.Game_Actor.set('shieldBreakSources', Game_Actor.prototy
 Game_Actor.prototype.shieldBreakSources = function()
 {
   // get the original sources.
+  // perform original logic.
   const originalSources = J.ABS.EXT.SHIELD.Aliased.Game_Actor.get('shieldBreakSources')
     .call(this);
 

@@ -51,10 +51,12 @@ class Window_SdpPoints
     // don't draw the name if the actor is unavailable.
     if (!this._actor) return;
 
+    // capture name x for downstream policy in this routine.
     const nameX = 140;
     const y = this.ribbonTextY();
     const nameMaxWidth = this.sdpWalletAnchorX() - nameX - 8;
 
+    // policy step inside draw actor name.
     this.drawText(this._actor.name(), nameX, y, nameMaxWidth, 'left');
   }
 
@@ -66,6 +68,7 @@ class Window_SdpPoints
     // don't draw the wallet if the actor is unavailable.
     if (!this._actor) return;
 
+    // capture y for downstream policy in this routine.
     const y = this.ribbonTextY();
     const pad = 12;
     const gap = 8;
@@ -76,8 +79,10 @@ class Window_SdpPoints
     // wallet amount (always normal coloring; leading zeros dim).
     this.drawStyledZeroPaddedNumber(amountX, y, wallet, amountW, 8, 8, 0);
 
+    // capture icon x for downstream policy in this routine.
     const iconX = amountX - gap - ImageManager.iconWidth;
 
+    // policy step inside draw sdp wallet.
     this.drawIcon(J.SDP.Metadata.sdpIconIndex, iconX, y);
   }
 
@@ -93,6 +98,7 @@ class Window_SdpPoints
     const iconW = ImageManager.iconWidth;
     const amountX = this.innerWidth - amountW - pad;
 
+    // hand back amountX - gap - iconW to the caller.
     return amountX - gap - iconW;
   }
 
@@ -113,6 +119,7 @@ class Window_SdpPoints
     // don't draw the points if the actor is unavailable.
     if (!this._actor) return;
 
+    // policy step inside draw sdp face.
     this.drawFace(
       this._actor.faceName(),
       this._actor.faceIndex(),

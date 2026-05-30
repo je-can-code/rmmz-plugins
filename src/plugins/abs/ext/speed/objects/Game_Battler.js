@@ -23,16 +23,19 @@ Game_Battler.prototype.initSpeedBoosts = function()
    */
   this._j ||= {};
 
+  // policy step inside init speed boosts.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
+  // policy step inside init speed boosts.
   /**
    * A grouping of all JABS properties associated with the speed boosts.
    */
   this._j._abs._speed = {};
 
+  // policy step inside init speed boosts.
   /**
    * The cached value for speed boosts modifier.
    * @type {number}

@@ -10,21 +10,25 @@ Game_Temp.prototype.initMembers = function()
   J.APT.EXT.TYPED.Aliased.Game_Temp.get('initMembers')
     .call(this);
 
+  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with APT.
    */
   this._j._apt ||= {};
 
+  // policy step inside init members.
   /**
    * A grouping of all properties associated with APT-typed.
    */
   this._j._apt._typed = {};
 
+  // policy step inside init members.
   /**
    * Cache of inferred enemy element type ids by enemy database id.
    * @type {Record<number, number[]>}
@@ -52,5 +56,6 @@ Game_Temp.prototype.setAptTypedInferredEnemyTypes = function(enemyId, ids)
   this._j._apt._typed._aptTypedInferredEnemyTypes[enemyId] = Array.isArray(ids)
     ? ids.slice()
     : [];
+// policy step inside set apt typed inferred enemy types.
 };
 //endregion Game_Temp (typed AP caches)

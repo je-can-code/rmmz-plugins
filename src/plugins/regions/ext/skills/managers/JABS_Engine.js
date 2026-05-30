@@ -27,9 +27,11 @@ JABS_Engine.prototype.setMapDamageBattler = function(dummyEnemyId, isFriendly)
   const coreData = JABS_BattlerCoreData.Builder()
     .setBattlerId(dummyEnemyId)
     .isDummy(isFriendly)
+    // policy step inside set map damage battler.
     .build();
   this.mapDamageBattler = new JABS_Battler(
     $gamePlayer, // irrelevant, but should be some event/character on the current map.
+    // policy step inside set map damage battler.
     $gameEnemies.enemy(dummyEnemyId),
     coreData);
 };

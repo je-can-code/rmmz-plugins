@@ -2,7 +2,7 @@
 import JABS_TeamRules from './JABS_TeamRules.js';
 import JABS_Location from './../__models/JABS_Location.js';
 import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from './../__models/JABS_Battler.js';
 import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
 import JABS_Action from './../__models/JABS_Action.js';
 /**
@@ -20,28 +20,36 @@ class JABS_AiManager
     let x = 0;
     let y = 0;
 
+    // dispatch on the discriminant for the next policy branch.
     switch (dir8)
     {
       case J.ABS.Directions.DOWN:
         y = 1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.UP:
         y = -1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.RIGHT:
         x = 1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.LEFT:
         x = -1;
+        // policy step inside dir8to unit vector.
         break;
       case J.ABS.Directions.LOWERRIGHT:
         x = 1;
+        // policy step inside dir8to unit vector.
         y = 1;
         break;
       case J.ABS.Directions.LOWERLEFT:
+        // policy step inside dir8to unit vector.
         x = -1;
         y = 1;
         break;
+      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.UPPERRIGHT:
         x = 1;
         y = -1;
@@ -55,6 +63,7 @@ class JABS_AiManager
         break;
     }
 
+    // capture len for downstream policy in this routine.
     const len = Math.hypot(x, y);
     return {
       x: x / len,
@@ -86,6 +95,7 @@ class JABS_AiManager
       J.ABS.Directions.UPPERRIGHT,  // 315°
     ];
 
+    // hand back dirs[idx] to the caller.
     return dirs[idx];
   }
 
@@ -108,6 +118,7 @@ class JABS_AiManager
       return fallbackFacing;
     }
 
+    // capture bx for downstream policy in this routine.
     const bx = battler.getX();
     const by = battler.getY();
     const tx = target.getX();
@@ -135,6 +146,7 @@ class JABS_AiManager
     // derive the RMMZ angle in degrees (0=right, 90=down).
     const angleDegrees = Math.atan2(dy, dx) * 180 / Math.PI;
 
+    // hand back this.angleToDir8(angleDegrees) to the caller.
     return this.angleToDir8(angleDegrees);
   }
 
@@ -224,7 +236,7 @@ class JABS_AiManager
 
   /**
    * Gets all followers that the given leader battler has.
-   * @param {JABS_Battler} leaderBattler
+   * @param {JABS_Battler} leaderBattler The leader battler driving this step.
    * @returns {JABS_Battler[]}
    */
   static getLeaderFollowers(leaderBattler)
@@ -235,14 +247,16 @@ class JABS_AiManager
     // determine all nearby battlers of the same team.
     const nearbyBattlers = this.getAlliedBattlersWithinRange(leaderBattler, leaderBattler.getPursuitRadius());
 
+    // policy step inside get leader followers.
     /**
-     * @param {JABS_Battler} battler
+     * @param {JABS_Battler} battler The battler driving this step.
      */
     const filtering = battler =>
     {
       // actors are not considered for leader/follower.
       if (battler.isActor()) return false;
 
+      // policy step inside get leader followers.
       const { follower, leader, solo } = battler.getBattlerRole();
 
       // solo battlers never participate in coordination.
@@ -670,6 +684,7 @@ class JABS_AiManager
    */
   static convertEventsToBattlers(events)
   {
+    // hand back events to the caller.
     return events
       .map(event => this.convertEventToBattler(event))
       .filter(event => !!event);
@@ -696,6 +711,7 @@ class JABS_AiManager
    */
   static convertFollowersToBattlers(followers)
   {
+    // hand back followers to the caller.
     return followers
       .map(this.convertFollowerToBattler, this)
       .filter(follower => !!follower);
@@ -1038,6 +1054,7 @@ class JABS_AiManager
       battler.showBalloon(J.ABS.Balloons.Anger);
     }
 
+    // policy step inside apply guardian targeting.
     battler.setTarget(attacker);
   }
 
@@ -1073,6 +1090,7 @@ class JABS_AiManager
         return enemyTarget && enemyTarget.getUuid() === wardUuid;
       });
 
+      // when attacker, take this branch.
       if (attacker) return attacker;
     }
 
@@ -1382,6 +1400,7 @@ class JABS_AiManager
       .filter(ally => ally.getBattlerRole().ward)
       .reduce((max, ward) => Math.max(max, ward.getPursuitRadius()), 0);
 
+    // hand back Math.max(guardian.getPursuitRadius(), maxWardPursuit) to the caller.
     return Math.max(guardian.getPursuitRadius(), maxWardPursuit);
   }
 
@@ -1420,6 +1439,7 @@ class JABS_AiManager
     // if we are safe, then do nothing.
     if (JABS_Battler.isSafe(distance)) return;
 
+    // dispatch on the discriminant for the next policy branch.
     switch (true)
     {
       case JABS_Battler.isClose(distance):
@@ -1651,6 +1671,7 @@ class JABS_AiManager
         return;
       }
 
+      // policy step inside decide enemy ai phase2action.
       const [followerSkillId] = followerPicks;
       const followerSkill = battler.getSkill(followerSkillId);
       if (!followerSkill)
@@ -1659,6 +1680,7 @@ class JABS_AiManager
         return;
       }
 
+      // capture follower cooldown key for downstream policy in this routine.
       const followerCooldownKey = this.buildEnemyCooldownType(followerSkill);
       this.setupActionForNextPhase(battler, followerSkillId, followerCooldownKey);
       return;
@@ -1679,6 +1701,7 @@ class JABS_AiManager
       return;
     }
 
+    // policy step inside decide enemy ai phase2action.
     const [decidedSkillId] = decidedPicks;
 
     // construct the skill from the battler's perspective.
@@ -1741,6 +1764,7 @@ class JABS_AiManager
     const optionsBuilder = JABS_ActionOptions.Builder()
       .setCooldownKey(cooldownKey);
 
+    // when skill.jabsDirect  and  not skill.jabsDirectLock, take this branch.
     if (skill.jabsDirect && !skill.jabsDirectLock)
     {
       // capture [x,y] at decision time.
@@ -1960,6 +1984,7 @@ class JABS_AiManager
     const target = battler.getAllyTarget() ?? battler.getTarget();
     if (!target) return false;
 
+    // capture bx for downstream policy in this routine.
     const bx = battler.getX();
     const by = battler.getY();
     const tx = target.getX();
@@ -2004,11 +2029,13 @@ class JABS_AiManager
     // grab the relevant target (ally or enemy).
     const target = battler.getAllyTarget() ?? battler.getTarget();
 
+    // capture bx for downstream policy in this routine.
     const bx = battler.getX();
     const by = battler.getY();
     const tx = target.getX();
     const ty = target.getY();
 
+    // capture abs dx for downstream policy in this routine.
     const absDx = Math.abs(tx - bx);
     const absDy = Math.abs(ty - by);
     const character = battler.getCharacter();
@@ -2127,11 +2154,13 @@ class JABS_AiManager
       return;
     }
 
+    // capture gb for downstream policy in this routine.
     const gb = battler.getBattler();
 
     // use the resolved skill id so guard-type classification matches the transformed skill.
     const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
 
+    // when not guardSkillId  or  not JABS_Battler.isGuardSkillById(guardSkillId), take this branch.
     if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
     {
       if (battler.guarding())
@@ -2139,55 +2168,71 @@ class JABS_AiManager
         battler.executeGuard(false, JABS_Button.Offhand);
       }
 
+      // exit early without a payload.
       return;
     }
 
+    // when not battler.guarding(), take this branch.
     if (!battler.guarding())
     {
       return;
     }
 
+    // when battler._aiAllyGuardRaiseFrame  equals  0, take this branch.
     if (battler._aiAllyGuardRaiseFrame === 0)
     {
       battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
     }
 
+    // capture held frames for downstream policy in this routine.
     const heldFrames = Graphics.frameCount - battler._aiAllyGuardRaiseFrame;
 
+    // when heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames, take this branch.
     if (heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames)
     {
       battler.executeGuard(false, JABS_Button.Offhand);
 
+      // exit early without a payload.
       return;
     }
 
+    // when not battler.isEngaged(), take this branch.
     if (!battler.isEngaged())
     {
       battler.executeGuard(false, JABS_Button.Offhand);
 
+      // exit early without a payload.
       return;
     }
 
+    // capture closest hostile for downstream policy in this routine.
     const closestHostile = JABS_AiManager.getClosestOpposingBattler(battler);
 
+    // when not closestHostile  or  closestHostile.isDead(), take this branch.
     if (!closestHostile || closestHostile.isDead())
     {
       battler.executeGuard(false, JABS_Button.Offhand);
 
+      // exit early without a payload.
       return;
     }
 
+    // capture separation for downstream policy in this routine.
     const separation = battler.distanceToDesignatedTarget(closestHostile);
 
+    // when separation  equals  null  or  separation > J.ABS.Metadata.AiAllyDefen..., take this branch.
     if (separation === null || separation > J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles)
     {
       battler.executeGuard(false, JABS_Button.Offhand);
 
+      // exit early without a payload.
       return;
     }
 
+    // capture threat for downstream policy in this routine.
     const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
 
+    // when not threat, take this branch.
     if (!threat)
     {
       battler.executeGuard(false, JABS_Button.Offhand);
@@ -2205,14 +2250,17 @@ class JABS_AiManager
       return;
     }
 
+    // when not battler.isEngaged()  or  battler.guarding(), take this branch.
     if (!battler.isEngaged() || battler.guarding())
     {
       return;
     }
 
+    // capture gb for downstream policy in this routine.
     const gb = battler.getBattler();
     const hpGate = J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent;
 
+    // when hpGate < 1  and  hpGate > 0  and  gb.mhp > 0, take this branch.
     if (hpGate < 1 && hpGate > 0 && gb.mhp > 0)
     {
       if (gb.hp / gb.mhp > hpGate)
@@ -2224,40 +2272,49 @@ class JABS_AiManager
     // use the resolved skill id so guard-type classification matches the transformed skill.
     const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
 
+    // when not guardSkillId  or  not JABS_Battler.isGuardSkillById(guardSkillId), take this branch.
     if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
     {
       return;
     }
 
+    // capture threat for downstream policy in this routine.
     const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
 
+    // when not threat, take this branch.
     if (!threat)
     {
       return;
     }
 
+    // when Graphics.frameCount < battler._aiAllyDefensiveGuardReadyFrame, take this branch.
     if (Graphics.frameCount < battler._aiAllyDefensiveGuardReadyFrame)
     {
       return;
     }
 
+    // when not RPGManager.chanceIn100(J.ABS.Metadata.AiAllyDefensiveGuardChanceP..., take this branch.
     if (!RPGManager.chanceIn100(J.ABS.Metadata.AiAllyDefensiveGuardChancePercent))
     {
       return;
     }
 
+    // when not battler.isGuardSkillByKey(JABS_Button.Offhand), take this branch.
     if (!battler.isGuardSkillByKey(JABS_Button.Offhand))
     {
       return;
     }
 
+    // capture guard data for downstream policy in this routine.
     const guardData = battler.getGuardData(JABS_Button.Offhand);
 
+    // when not guardData  or  not guardData.canGuard(), take this branch.
     if (!guardData || !guardData.canGuard())
     {
       return;
     }
 
+    // policy step inside try raise ally combat guard.
     battler.executeGuard(true, JABS_Button.Offhand);
     battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
     battler._aiAllyDefensiveGuardReadyFrame = Graphics.frameCount
@@ -2279,44 +2336,54 @@ class JABS_AiManager
       return false;
     }
 
+    // when battler.isCasting(), take this branch.
     if (battler.isCasting())
     {
       return false;
     }
 
+    // when battler.isDodging(), take this branch.
     if (battler.isDodging())
     {
       return false;
     }
 
+    // when Graphics.frameCount < battler._aiDefensiveDodgeReadyFrame, take this branch.
     if (Graphics.frameCount < battler._aiDefensiveDodgeReadyFrame)
     {
       return false;
     }
 
+    // capture threat for downstream policy in this routine.
     const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
 
+    // when not threat, take this branch.
     if (!threat)
     {
       return false;
     }
 
+    // when not RPGManager.chanceIn100(J.ABS.Metadata.AiDefensiveDodgeChancePercent), take this branch.
     if (!RPGManager.chanceIn100(J.ABS.Metadata.AiDefensiveDodgeChancePercent))
     {
       return false;
     }
 
+    // capture dodged for downstream policy in this routine.
     const dodged = battler.tryExecuteAiEmergencyDodgeAwayFrom(threat);
 
+    // when not dodged, take this branch.
     if (!dodged)
     {
       return false;
     }
 
+    // policy step inside try defensive interrupt.
     battler._aiDefensiveDodgeReadyFrame = Graphics.frameCount + J.ABS.Metadata.AiDefensiveDodgeCooldownFrames;
     battler.clearDecidedAction();
     battler.setInPosition(false);
 
+    // hand back true to the caller.
     return true;
   }
 
@@ -2331,30 +2398,37 @@ class JABS_AiManager
     const radius = J.ABS.Metadata.AiDefensiveThreatRadiusTiles;
     const candidates = JABS_AiManager.getOpposingBattlersWithinRange(selfBattler, radius);
 
+    // when not candidates.length, take this branch.
     if (!candidates.length)
     {
       return null;
     }
 
+    // capture actions for downstream policy in this routine.
     const actions = $jabsEngine.getAllActionEvents();
 
+    // capture best for downstream policy in this routine.
     let best = null;
     let bestScore = Infinity;
 
+    // iterate the loop counter until the guard exits.
     for (let i = 0; i < candidates.length; i++)
     {
       const other = candidates[i];
       let score = selfBattler.distanceToDesignatedTarget(other);
 
+      // when score  equals  null, take this branch.
       if (score === null)
       {
         continue;
       }
 
+      // iterate the loop counter until the guard exits.
       for (let j = 0; j < actions.length; j++)
       {
         const caster = actions[j].getCaster();
 
+        // when caster  equals  other, take this branch.
         if (caster === other)
         {
           score -= 0.35;
@@ -2362,6 +2436,7 @@ class JABS_AiManager
         }
       }
 
+      // when score < bestScore, take this branch.
       if (score < bestScore)
       {
         bestScore = score;
@@ -2369,6 +2444,7 @@ class JABS_AiManager
       }
     }
 
+    // hand back best to the caller.
     return best;
   }
 

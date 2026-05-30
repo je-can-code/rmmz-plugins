@@ -39,6 +39,36 @@ const GLOBAL_THIS_WRITE = /globalThis\.(\$?[\w$]+)\s*(?:=|\|\|=|\?\?=)/;
 /** Same-ship / hoisted-global mirror onto J.* — bare PascalCase identifier, no `new`. */
 const J_NAMESPACE_CLASS_MIRROR = /^\s*J\.[\w.]+\s*=\s*([A-Z][\w$]*)\s*;?\s*$/;
 
+/** Bootstrap assignment onto the J namespace tree (excludes runtime property writes). */
+const J_NAMESPACE_BOOTSTRAP_ASSIGNMENT = /^\s*J\.[\w.]+\s*=\s*(?:function|\(|class\b|\{|\[|new\b|[A-Z])/;
+
+/** Runtime state writes hanging off J.* (Metadata flags, debug toggles). */
+const J_NAMESPACE_RUNTIME_ASSIGNMENT = /^\s*J\.[\w.]+\.(?:enabled|lastShakeFrame)\s*=/;
+
+/** Named or non-default export forms (one entity per file → export default only). */
+const NON_DEFAULT_EXPORT = /^\s*export\s+(?!default\b)(?:class|const|let|var|function|\{)/;
+
+/**
+ * Whether this source file is allowed to assign onto `J.*` (bootstrap only).
+ * @param {string} filePath Repository-relative plugin source path.
+ * @returns {boolean}
+ */
+function isJNamespaceBootstrapFile(filePath)
+{
+  return filePath.includes('_metadata/initialization.js')
+    || filePath.endsWith('/initialization.js');
+}
+
+/**
+ * Whether this source file is exempt from the export-default-only rule.
+ * @param {string} filePath Repository-relative plugin source path.
+ * @returns {boolean}
+ */
+function isExportDefaultExemptFile(filePath)
+{
+  return filePath.includes('_metadata/meta.js');
+}
+
 /**
  * Grandfathered globalThis property names until $ singleton bootstraps migrate to hoisted `var`.
  * Shrink this set over time; new names must not be added.
@@ -60,8 +90,8 @@ const LEGACY_GLOBAL_THIS_PROPERTIES = new Set([
  */
 
 /**
- * @param {string} filePath
- * @param {string} contents
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
  * @returns {string[]}
  */
 function collectGlobalThisWriteViolations(filePath, contents)
@@ -69,45 +99,54 @@ function collectGlobalThisWriteViolations(filePath, contents)
   const violations = [];
   const lines = contents.split('\n');
 
+  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
+    // when line.includes('globalThis')  equals  false, take this branch.
     if (line.includes('globalThis') === false)
     {
       continue;
     }
 
+    // when ALLOWED_GLOBAL_THIS_J_BOOTSTRAP.test(line), take this branch.
     if (ALLOWED_GLOBAL_THIS_J_BOOTSTRAP.test(line))
     {
       continue;
     }
 
+    // capture write match for downstream policy in this routine.
     const writeMatch = line.match(GLOBAL_THIS_WRITE);
 
+    // when writeMatch  equals  null, take this branch.
     if (writeMatch === null)
     {
       continue;
     }
 
-    const [ , propertyName ] = writeMatch;
+    // capture property name for downstream policy in this routine.
+    const [, propertyName] = writeMatch;
 
+    // when LEGACY_GLOBAL_THIS_PROPERTIES.has(propertyName), take this branch.
     if (LEGACY_GLOBAL_THIS_PROPERTIES.has(propertyName))
     {
       continue;
     }
 
+    // Append the row to the working collection.
     violations.push(
       `${filePath}:${lineIndex + 1}: globalThis write on "${propertyName}" (only "globalThis.J ||= {};" allowed)`
     );
   }
 
+  // hand back violations to the caller.
   return violations;
 }
 
 /**
- * @param {string} filePath
- * @param {string} contents
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
  * @returns {string[]}
  */
 function collectJNamespaceClassMirrorViolations(filePath, contents)
@@ -115,119 +154,248 @@ function collectJNamespaceClassMirrorViolations(filePath, contents)
   const violations = [];
   const lines = contents.split('\n');
 
+  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
+    // when line.includes('J.')  equals  false, take this branch.
     if (line.includes('J.') === false)
     {
       continue;
     }
 
+    // when line.includes('new '), take this branch.
     if (line.includes('new '))
     {
       continue;
     }
 
+    // when /=\s*J\./.test(line), take this branch.
     if (/=\s*J\./.test(line))
     {
       continue;
     }
 
+    // capture mirror match for downstream policy in this routine.
     const mirrorMatch = line.match(J_NAMESPACE_CLASS_MIRROR);
 
+    // when mirrorMatch  equals  null, take this branch.
     if (mirrorMatch === null)
     {
       continue;
     }
 
-    const [ , className ] = mirrorMatch;
+    // capture class name for downstream policy in this routine.
+    const [, className] = mirrorMatch;
     violations.push(
       `${filePath}:${lineIndex + 1}: needless J namespace class mirror (J.* = ${className}; import or use hoisted global)`
     );
   }
 
+  // hand back violations to the caller.
   return violations;
 }
 
 /**
- * @param {string} filePath
- * @param {string} contents
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
  * @returns {string[]}
  */
-function collectShippedModuleSyntaxViolations(filePath, contents)
+function collectShippedModuleAndBundlerViolations(filePath, contents)
 {
   const violations = [];
 
+  // when SHIPPED_MODULE_LINE.test(contents), take this branch.
   if (SHIPPED_MODULE_LINE.test(contents))
   {
     violations.push(`${filePath}: contains import/export (RMMZ cannot load module syntax)`);
   }
 
-  return violations;
-}
-
-/**
- * @param {string} filePath
- * @param {string} contents
- * @returns {string[]}
- */
-function collectShippedBundlerDollarOneViolations(filePath, contents)
-{
-  const violations = [];
+  // capture dollar one matches for downstream policy in this routine.
   const dollarOneMatches = contents.match(new RegExp(BUNDLER_DOLLAR_ONE.source, 'g'));
 
+  // when dollarOneMatches  and  dollarOneMatches.length > 0, take this branch.
   if (dollarOneMatches && dollarOneMatches.length > 0)
   {
     const unique = [ ...new Set(dollarOneMatches) ];
     violations.push(`${filePath}: bundler rename collision(s): ${unique.join(', ')}`);
   }
 
+  // hand back violations to the caller.
   return violations;
 }
 
 /**
- * @param {string} filePath
- * @param {string} contents
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
  * @returns {string[]}
  */
-function collectSourceCrossPluginViolations(filePath, contents)
+function collectExportDefaultOnlyViolations(filePath, contents)
+{
+  if (isExportDefaultExemptFile(filePath))
+  {
+    return [];
+  }
+
+  // capture violations for downstream policy in this routine.
+  const violations = [];
+  const lines = contents.split('\n');
+  let defaultExportCount = 0;
+
+  // iterate the loop counter until the guard exits.
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
+  {
+    const line = lines[lineIndex];
+
+    // when /^\s*export\s+default\b/.test(line), take this branch.
+    if (/^\s*export\s+default\b/.test(line))
+    {
+      defaultExportCount++;
+      continue;
+    }
+
+    // when NON_DEFAULT_EXPORT.test(line), take this branch.
+    if (NON_DEFAULT_EXPORT.test(line))
+    {
+      violations.push(
+        `${filePath}:${lineIndex + 1}: use export default only (one class/object per file; meta.js exempt)`
+      );
+    }
+  }
+
+  // when defaultExportCount > 1, take this branch.
+  if (defaultExportCount > 1)
+  {
+    violations.push(
+      `${filePath}: multiple export default declarations (${defaultExportCount})`
+    );
+  }
+
+  // hand back violations to the caller.
+  return violations;
+}
+
+/**
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
+ * @returns {string[]}
+ */
+function collectJNamespaceBootstrapViolations(filePath, contents)
+{
+  if (isJNamespaceBootstrapFile(filePath))
+  {
+    return [];
+  }
+
+  // capture violations for downstream policy in this routine.
+  const violations = [];
+  const lines = contents.split('\n');
+
+  // iterate the loop counter until the guard exits.
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
+  {
+    const line = lines[lineIndex];
+
+    // when line.includes('J.')  equals  false, take this branch.
+    if (line.includes('J.') === false)
+    {
+      continue;
+    }
+
+    // when J_NAMESPACE_BOOTSTRAP_ASSIGNMENT.test(line)  equals  false, take this branch.
+    if (J_NAMESPACE_BOOTSTRAP_ASSIGNMENT.test(line) === false)
+    {
+      continue;
+    }
+
+    // Append the row to the working collection.
+    violations.push(
+      `${filePath}:${lineIndex + 1}: J namespace bootstrap assignment belongs in initialization.js only`
+    );
+  }
+
+  // hand back violations to the caller.
+  return violations;
+}
+
+/**
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
+ * @returns {string[]}
+ */
+function collectJNamespaceRuntimeViolations(filePath, contents)
+{
+  if (isJNamespaceBootstrapFile(filePath))
+  {
+    return [];
+  }
+
+  // capture violations for downstream policy in this routine.
+  const violations = [];
+  const lines = contents.split('\n');
+
+  // iterate the loop counter until the guard exits.
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
+  {
+    const line = lines[lineIndex];
+
+    // when line.includes('J.')  equals  false, take this branch.
+    if (line.includes('J.') === false)
+    {
+      continue;
+    }
+
+    // when J_NAMESPACE_RUNTIME_ASSIGNMENT.test(line)  equals  false, take this branch.
+    if (J_NAMESPACE_RUNTIME_ASSIGNMENT.test(line) === false)
+    {
+      continue;
+    }
+
+    // Append the row to the working collection.
+    violations.push(
+      `${filePath}:${lineIndex + 1}: runtime state must not mutate J.* (use a runtime class or $gameSystem)`
+    );
+  }
+
+  // hand back violations to the caller.
+  return violations;
+}
+
+/**
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
+ * @returns {string[]}
+ */
+function collectSourceBoundaryViolations(filePath, contents)
 {
   const violations = [];
 
+  // when CROSS_PLUGIN_BASE_IMPORT.test(contents), take this branch.
   if (CROSS_PLUGIN_BASE_IMPORT.test(contents))
   {
     violations.push(`${filePath}: cross-plugin import from _base/ (use hoisted globals from J-Base after load, e.g. ParameterRegistry)`);
   }
 
-  return violations;
-}
-
-/**
- * @param {string} filePath
- * @param {string} contents
- * @returns {string[]}
- */
-function collectSourceEngineGlobalViolations(filePath, contents)
-{
-  const violations = [];
-
+  // when ENGINE_GLOBAL_CLASS.test(contents), take this branch.
   if (ENGINE_GLOBAL_CLASS.test(contents))
   {
     violations.push(`${filePath}: redefines engine global as class (use IconManager.foo = function augmentation)`);
   }
 
+  // when ENGINE_GLOBAL_EXPORT.test(contents), take this branch.
   if (ENGINE_GLOBAL_EXPORT.test(contents))
   {
     violations.push(`${filePath}: export default on engine global (causes IconManager$1-style collisions)`);
   }
 
+  // hand back violations to the caller.
   return violations;
 }
 
 /**
- * @param {string} globPattern
- * @param {import('glob').GlobOptions} [options]
+ * @param {string} globPattern The glob pattern driving this step.
+ * @param {import('glob').GlobOptions} [options] The [options] driving this step.
  * @returns {Promise<string[]>}
  */
 async function listJsFiles(globPattern, options)
@@ -236,41 +404,34 @@ async function listJsFiles(globPattern, options)
 }
 
 /**
- * @param {string[]} files
- * @param {(filePath: string, contents: string) => string[]} collector
+ * @param {string[]} files The files driving this step.
+ * @param {(filePath: string, contents: string) => string[]} collector The collector driving this step.
  * @returns {Promise<string[]>}
  */
 async function scanFiles(files, collector)
 {
   const violations = [];
 
+  // walk each entry in the iterable for this routine.
   for (const filePath of files)
   {
     const contents = await fs.readFile(filePath, 'utf-8');
     violations.push(...collector(path.normalize(filePath), contents));
   }
 
+  // hand back violations to the caller.
   return violations;
 }
 
 /** @type {ShipVerifyCheck[]} */
 const CHECKS = [
   {
-    name: 'shipped-no-module-syntax',
-    description: 'Shipped bundles must not contain import/export.',
+    name: 'shipped-no-module-syntax-or-dollar-one',
+    description: 'Shipped bundles must not contain import/export or $1 bundler collisions.',
     run: async () =>
     {
       const files = await listJsFiles(`${OUT_DIR}/**/*.js`);
-      return scanFiles(files, collectShippedModuleSyntaxViolations);
-    },
-  },
-  {
-    name: 'shipped-no-bundler-dollar-one',
-    description: 'Shipped bundles must not contain $1 bundler rename collisions.',
-    run: async () =>
-    {
-      const files = await listJsFiles(`${OUT_DIR}/**/*.js`);
-      return scanFiles(files, collectShippedBundlerDollarOneViolations);
+      return scanFiles(files, collectShippedModuleAndBundlerViolations);
     },
   },
   {
@@ -299,18 +460,7 @@ const CHECKS = [
       const files = await listJsFiles(`${SRC_PLUGINS_DIR}/**/*.js`, {
         ignore: [ '**/_base/**' ],
       });
-      return scanFiles(files, collectSourceCrossPluginViolations);
-    },
-  },
-  {
-    name: 'source-no-engine-global-class-reexport',
-    description: 'Plugin source must not redefine or default-export engine globals.',
-    run: async () =>
-    {
-      const files = await listJsFiles(`${SRC_PLUGINS_DIR}/**/*.js`, {
-        ignore: [ '**/_base/**' ],
-      });
-      return scanFiles(files, collectSourceEngineGlobalViolations);
+      return scanFiles(files, collectSourceBoundaryViolations);
     },
   },
   {
@@ -331,6 +481,35 @@ const CHECKS = [
       return scanFiles(files, collectJNamespaceClassMirrorViolations);
     },
   },
+  {
+    name: 'source-export-default-only',
+    description: 'Plugin source uses export default only (meta.js exempt).',
+    run: async () =>
+    {
+      const files = await listJsFiles(`${SRC_PLUGINS_DIR}/**/*.js`, {
+        ignore: [ '**/entry.js' ],
+      });
+      return scanFiles(files, collectExportDefaultOnlyViolations);
+    },
+  },
+  {
+    name: 'source-j-namespace-bootstrap-in-init-only',
+    description: 'J.* bootstrap assignments belong in initialization.js only.',
+    run: async () =>
+    {
+      const files = await listJsFiles(`${SRC_PLUGINS_DIR}/**/*.js`);
+      return scanFiles(files, collectJNamespaceBootstrapViolations);
+    },
+  },
+  {
+    name: 'source-j-namespace-no-runtime-state',
+    description: 'Runtime counters/toggles must not hang off J.*.',
+    run: async () =>
+    {
+      const files = await listJsFiles(`${SRC_PLUGINS_DIR}/**/*.js`);
+      return scanFiles(files, collectJNamespaceRuntimeViolations);
+    },
+  },
 ];
 
 /**
@@ -340,14 +519,17 @@ async function main()
 {
   const results = [];
 
+  // walk each entry in the iterable for this routine.
   for (const check of CHECKS)
   {
     const violations = await check.run();
     results.push({ check, violations });
   }
 
+  // capture total violations for downstream policy in this routine.
   const totalViolations = results.reduce((count, entry) => count + entry.violations.length, 0);
 
+  // when totalViolations  equals  0, take this branch.
   if (totalViolations === 0)
   {
     Logger.logAnyway(
@@ -357,8 +539,10 @@ async function main()
     return 0;
   }
 
+  // Emit this message even when logging is muted.
   Logger.logAnyway('Ship verify FAILED:', LogStyle.brightRed);
 
+  // walk each entry in the iterable for this routine.
   for (const { check, violations } of results)
   {
     if (violations.length === 0)
@@ -366,14 +550,17 @@ async function main()
       continue;
     }
 
+    // Emit this message even when logging is muted.
     Logger.logAnyway(`  [${check.name}]`, LogStyle.brightRed);
 
+    // walk each entry in the iterable for this routine.
     for (const message of violations)
     {
       Logger.logAnyway(`    • ${message}`, LogStyle.brightRed);
     }
   }
 
+  // hand back 1 to the caller.
   return 1;
 }
 

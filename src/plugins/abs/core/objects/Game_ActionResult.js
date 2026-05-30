@@ -9,21 +9,25 @@ Game_ActionResult.prototype.initialize = function()
   /**
    * Whether or not the result was guarded.
    * @type {boolean}
+   // policy step inside initialize.
    */
   this.guarded = false;
 
+  // policy step inside initialize.
   /**
    * Whether or not the result was parried.
    * @type {boolean}
    */
   this.parried = false;
 
+  // policy step inside initialize.
   /**
    * Whether or not the result was a glancing blow (implicit parry that still lands but deals reduced damage).
    * @type {boolean}
    */
   this.glancing = false;
 
+  // policy step inside initialize.
   /**
    * The amount of damage reduced by guarding.
    * @type {number}

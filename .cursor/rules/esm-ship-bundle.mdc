@@ -59,7 +59,7 @@ IconManager.critParam = function (paramId) { … };
 ## Mandatory gate (after plugin source changes)
 
 ```bash
-bun run hotfix   # lint → build → verify:ships → copy
+bun run hotfix   # lint → verify:docs → build → verify:ships → copy
 ```
 
 `verify:ships` fails if:
@@ -68,5 +68,17 @@ bun run hotfix   # lint → build → verify:ships → copy
 - any `out/**/*.js` has `$1` suffix collisions
 - any non-`_base` source file imports from `_base/`
 - any non-`_base` source file redefines/exports `TextManager` / `ColorManager` as a class, or exports `IconManager` as a class
+- any plugin source uses `var` (`no-var` in oxlint — **source only**; Rolldown may still emit `var ClassName = class` in ships)
+- any plugin source file exports anything other than `export default` (exempt: `_metadata/meta.js` ship constants)
+- any plugin source assigns bootstrap wiring onto `J.*` outside `_metadata/initialization.js`
+- any plugin source mutates runtime state on `J.*` (use runtime classes or `$gameSystem` instead)
 
 Do **not** skip verification. Do **not** commit shipped output that fails the gate.
+
+## Source module shape
+
+| Rule | Enforcement |
+|---|---|
+| **No `var`** | Oxlint `no-var: error` on `src/plugins` + `src/build-tools` |
+| **`export default` only** | One class/object/entity per file; `verify:ships` (`source-export-default-only`) |
+| **`J.*` bootstrap in init only** | Alias maps, `Metadata`, `Aliased`, helpers, API hooks → `_metadata/initialization.js`; `verify:ships` (`source-j-namespace-in-init-only`) |
