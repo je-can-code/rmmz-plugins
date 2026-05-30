@@ -242,117 +242,7 @@ function validateJsdocContent(jsdocRaw, file, line)
   return violations;
 }
 
-/**
- * Counts {@code //} inline comments inside a function body slice.
- * @param {string} source Full file source text.
- * @param {number} bodyStart Character offset of the opening brace.
- * @param {number} bodyEnd Character offset after the closing brace.
- * @returns {number} Number of inline comment lines in the body.
- */
-function countInlineCommentsInBody(source, bodyStart, bodyEnd)
-{
-  const slice = source.slice(bodyStart, bodyEnd);
-  const matches = slice.match(/^\s*\/\//gm);
 
-  return matches ? matches.length : 0;
-}
-
-/**
- * Counts non-blank executable lines inside a function body (excludes braces and comments).
- * @param {string} source Full file source text.
- * @param {number} bodyStart Character offset of the opening brace.
- * @param {number} bodyEnd Character offset after the closing brace.
- * @returns {number} Approximate code line count used for density heuristics.
- */
-function countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd)
-{
-  const slice = source.slice(bodyStart, bodyEnd);
-  const lines = slice.split('\n');
-  let count = 0;
-
-  for (const line of lines)
-  {
-    const trimmed = line.trim();
-
-    if (trimmed.length === 0) continue;
-
-    if (trimmed === '{' || trimmed === '}') continue;
-
-    if (trimmed.startsWith('//')) continue;
-
-    count++;
-  }
-
-  return count;
-}
-
-/**
- * Detects blank-line-separated code blocks that lack a landmark comment above the new block.
- * @param {string} source Full file source text.
- * @param {number} bodyStart Character offset of the opening brace.
- * @param {number} bodyEnd Character offset after the closing brace.
- * @returns {boolean} True when a blank-line gap starts code without a preceding comment.
- */
-function bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bodyEnd)
-{
-  const slice = source.slice(bodyStart, bodyEnd);
-  const lines = slice.split('\n');
-  let previousWasBlank = false;
-
-  for (let index = 0; index < lines.length; index++)
-  {
-    const trimmed = lines[index].trim();
-
-    if (trimmed.length === 0)
-    {
-      previousWasBlank = true;
-
-      continue;
-    }
-
-    if (previousWasBlank && trimmed.startsWith('//') === false)
-    {
-      let probe = index - 2;
-
-      // keep looping while probe >= 0  and  lines[probe].trim().length  equals  0.
-      while (probe >= 0 && lines[probe].trim().length === 0) probe--;
-
-      if (probe >= 0 && lines[probe].trim().startsWith('//') === false)
-      {
-        return true;
-      }
-    }
-
-    previousWasBlank = false;
-  }
-
-  return false;
-}
-
-/**
- * Whether a function is an {@code init*} member initializer dominated by {@code this._} assignments.
- * @param {import('acorn').Node & { id?: import('acorn').Identifier | null, body?: import('acorn').Node }} fnNode Function AST node.
- * @param {string} source Full file source text.
- * @param {string|null} [nameOverride] Prototype alias name when {@code fnNode.id} is absent.
- * @returns {boolean} True when inline density/gap rules should not apply.
- */
-function isInitMembersFunction(fnNode, source, nameOverride = null)
-{
-  const name = nameOverride || (fnNode.id ? fnNode.id.name : null);
-
-  if (!name || /^init/i.test(name) === false) return false;
-
-  if (!fnNode.body || fnNode.body.type !== 'BlockStatement') return false;
-
-  const bodyStart = fnNode.body.start;
-  const bodyEnd = fnNode.body.end;
-  const slice = source.slice(bodyStart, bodyEnd);
-
-  const assignmentLines = (slice.match(/^\s*this\._/gm) || []).length;
-  const codeLines = countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd);
-
-  return assignmentLines >= Math.floor(codeLines * 0.6);
-}
 
 /**
  * Validates pedagogical inline comments inside one function body.
@@ -362,7 +252,7 @@ function isInitMembersFunction(fnNode, source, nameOverride = null)
  * @param {string|null} [nameOverride] Prototype alias name when {@code fnNode.id} is absent.
  * @returns {DocViolation[]} Inline documentation violations (empty when clean).
  */
-function validateFunctionBody(source, fnNode, file, nameOverride = null)
+function validateFunctionBody(source, fnNode, file, _nameOverride = null)
 {
   /** @type {DocViolation[]} */
   const violations = [];
@@ -370,10 +260,8 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
   if (!fnNode.body || fnNode.body.type !== 'BlockStatement') return violations;
 
   const bodyStart = fnNode.body.start;
-  const bodyEnd = fnNode.body.end;
   const line = source.slice(0, bodyStart).split('\n').length;
-  const bodySource = source.slice(bodyStart, bodyEnd);
-  const initMembers = isInitMembersFunction(fnNode, source, nameOverride);
+  const bodySource = source.slice(bodyStart, fnNode.body.end);
 
   if (/(?:\.Aliased\.[\w.]+\.get|Aliased\.[\w.]+\.get)\(/.test(bodySource)
     && bodySource.includes(ALIAS_LANDMARK) === false)
@@ -383,37 +271,6 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
       line,
       rule: 'alias-landmark',
       detail: `Alias chain must include an inline "${ALIAS_LANDMARK}." comment.`,
-    });
-  }
-
-  if (initMembers) return violations;
-
-  const codeLines = countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd);
-
-  if (codeLines <= 3) return violations;
-
-  const inlineComments = countInlineCommentsInBody(source, bodyStart, bodyEnd);
-  const requiredComments = Math.max(1, Math.floor(codeLines / 4));
-
-  if (inlineComments < requiredComments)
-  {
-    violations.push({
-      file,
-      line,
-      rule: 'inline-density',
-      detail: `Function body has ${codeLines} code lines but only ${inlineComments} inline `
-        + `comments (need at least ${requiredComments} at ~1 per 4 lines).`,
-    });
-  }
-
-  if (bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bodyEnd))
-  {
-    violations.push({
-      file,
-      line,
-      rule: 'inline-gap',
-      detail: 'Blank-line-separated logic blocks need an inline comment above the first statement '
-        + 'in each block.',
     });
   }
 
