@@ -266,13 +266,64 @@ Game_Battler.prototype.findPassiveStateCountTuple = function(baseItem, stateId)
 
 /**
  * Builds a fingerprint of the current passive collection without mutating the tracker.<br/>
- * Re-runs the gated collectors so live rule context is reflected without applying states.
+ * Uses the pre-filtered {@link #passiveCapableSources} list from the last refresh rather than
+ * re-invoking the full collectors — sources like weapon combat skills that carry no passive tags
+ * are already excluded, so only the relevant subset is evaluated against live gate rules.
  * @returns {string} Stable JSON fingerprint of unique ids and stack entries.
  */
 Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
 {
-  const uniqueIds = [ ...this.getAllUniquePassiveStateIds() ].sort((left, right) => left - right);
-  const stackEntries = [ ...this.getAllStackablePassiveStateIds().entries() ]
+  // use the pre-filtered source list built during the last refresh.
+  const sources = this.passiveCapableSources();
+
+  const uniqueIds = [];
+
+  /** @type {Map<number, number>} */
+  const stackMap = new Map();
+
+  sources.forEach(source =>
+  {
+    // build the unique id list for this source; concat avoids mutating the cached getter arrays.
+    let uniqueSourceIds = source.uniquePassiveStateIds || [];
+
+    if (source instanceof RPG_EquipItem)
+    {
+      uniqueSourceIds = uniqueSourceIds.concat(source.uniqueEquippedPassiveStateIds || []);
+    }
+
+    uniqueSourceIds.forEach(id =>
+    {
+      if (this.canIncludePassiveStateFromSource(source, id))
+      {
+        uniqueIds.push(id);
+      }
+    });
+
+    // build the stackable id list for this source in the same non-mutating way.
+    let stackableSourceIds = source.passiveStateIds || [];
+
+    if (source instanceof RPG_EquipItem)
+    {
+      stackableSourceIds = stackableSourceIds.concat(source.equippedPassiveStateIds || []);
+    }
+
+    stackableSourceIds.forEach(id =>
+    {
+      if (this.canIncludePassiveStateFromSource(source, id) === false) return;
+
+      const contribution = this.getPassiveStackContributionFromSource(source, id);
+
+      if (contribution <= 0) return;
+
+      // accumulate stack contributions across all sources that grant this id.
+      const running = stackMap.has(id) ? stackMap.get(id) : 0;
+      stackMap.set(id, running + contribution);
+    });
+  });
+
+  uniqueIds.sort((left, right) => left - right);
+
+  const stackEntries = [ ...stackMap.entries() ]
     .sort((left, right) => left[0] - right[0]);
 
   return JSON.stringify({
