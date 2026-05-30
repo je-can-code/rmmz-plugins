@@ -78,7 +78,6 @@ JABS_Battler.prototype.updatePassiveRuleMovementTracking = function()
     tracker._lastTrackedX = currentX;
     tracker._lastTrackedY = currentY;
 
-    // exit early without a payload.
     return;
   }
 
