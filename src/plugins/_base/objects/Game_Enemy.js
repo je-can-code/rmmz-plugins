@@ -86,6 +86,31 @@ Game_Enemy.prototype.skills = function()
 };
 
 /**
+ * Gets the raw skill ids available to this enemy.
+ * Combines action skill ids with any bonus skill ids granted by traits,
+ * then deduplicates so each id appears at most once.
+ * Mirrors the logic of {@link #skills} but returns ids instead of resolved skill objects,
+ * making it safe to call from inside the skill extension resolver.
+ * @returns {number[]}
+ */
+Game_Enemy.prototype.skillIds = function()
+{
+  // collect skill ids from all actions that can be mapped to skills.
+  const actionIds = this.enemy()
+    .actions
+    .filter(this.canMapActionToSkill, this)
+    .map(action => action.skillId);
+
+  // collect any additional skill ids granted via traits.
+  const traitIds = this.traitObjects()
+    .filter(trait => trait.code === J.BASE.Traits.ADD_SKILL)
+    .map(trait => trait.dataId);
+
+  // combine and deduplicate.
+  return [...new Set(actionIds.concat(traitIds))];
+};
+
+/**
  * Determines whether or not the action can be mapped to a skill.
  * @param {RPG_EnemyAction} action The action being mapped to a skill.
  * @returns {boolean}

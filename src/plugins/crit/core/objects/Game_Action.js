@@ -41,18 +41,147 @@ Game_Action.prototype.targetBattler = function()
 };
 
 /**
- * Extends `apply()` to also set the target for more universal use throughout the calculations.
+ * Extends {@link #apply}.<br/>
+ * Tracks the target for use in critical calculations, then fires any on-crit state effects
+ * when the result confirms a critical hit landed.
  */
 J.CRIT.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
-  // set the target for more universal use.
+  // set the target for more universal use throughout this action's calculations.
   this.setTargetBattler(target);
 
-  // perform whatever the base action application is to the target.
   // perform original logic.
   J.CRIT.Aliased.Game_Action.get('apply')
     .call(this, target);
+
+  // if the hit registered as a critical, trigger any on-crit state effects.
+  if (target.result().critical)
+  {
+    this.applyOnCriticalStateEffects(target);
+  }
+};
+
+/**
+ * Applies all on-crit state effects — states to the target and states to self — from both
+ * the executing skill and any global crit tags present anywhere on the attacker.
+ * Guarded by J-ABS availability since on-chance effects depend on {@link JABS_OnChanceEffect}.
+ * @param {Game_Actor|Game_Enemy} target The target that received the critical hit.
+ */
+Game_Action.prototype.applyOnCriticalStateEffects = function(target)
+{
+  // on-chance state effects require J-ABS to resolve JABS_OnChanceEffect objects.
+  if (!J.ABS) return;
+
+  // apply states to the target sourced from this skill and the attacker's global notes.
+  this.applyOnCriticalTargetStates(target);
+
+  // apply states to the attacker sourced from this skill and the attacker's global notes.
+  this.applyOnCriticalSelfStates();
+};
+
+/**
+ * Rolls and applies all on-crit states that target the enemy that was just critically hit.
+ * Checks both the executing skill ({@link thisCritApply}) and all attacker notes ({@link onCritApply}).
+ * @param {Game_Actor|Game_Enemy} target The target to apply states to.
+ */
+Game_Action.prototype.applyOnCriticalTargetStates = function(target)
+{
+  // apply any per-skill on-crit target states first.
+  this.rollAndApplyCritStates(target, this.thisCritTargetStates());
+
+  // then apply any global (attacker-wide) on-crit target states.
+  this.rollAndApplyCritStates(target, this.onCritTargetStates());
+};
+
+/**
+ * Rolls and applies all on-crit states that target the attacker themselves.
+ * Checks both the executing skill ({@link thisCritSelf}) and all attacker notes ({@link onCritSelf}).
+ */
+Game_Action.prototype.applyOnCriticalSelfStates = function()
+{
+  const attacker = this.subject();
+
+  // apply any per-skill on-crit self states first.
+  this.rollAndApplyCritStates(attacker, this.thisCritSelfStates());
+
+  // then apply any global (attacker-wide) on-crit self states.
+  this.rollAndApplyCritStates(attacker, this.onCritSelfStates());
+};
+
+/**
+ * Iterates a list of on-chance effects and applies any that pass their roll to the recipient.
+ * @param {Game_Actor|Game_Enemy} recipient The battler receiving the state applications.
+ * @param {JABS_OnChanceEffect[]} onChanceEffects The effects to roll and apply.
+ */
+Game_Action.prototype.rollAndApplyCritStates = function(recipient, onChanceEffects)
+{
+  // skip if there is nothing to process.
+  if (onChanceEffects.length === 0) return;
+
+  const attacker = this.subject();
+
+  // roll each effect individually — each has its own state id and chance.
+  onChanceEffects.forEach(effect =>
+  {
+    // only apply if the random roll beats the configured chance.
+    if (effect.shouldTrigger())
+    {
+      recipient.addState(effect.skillId, attacker);
+    }
+  });
+};
+
+/**
+ * Gets all on-crit target states sourced from the executing skill only.
+ * Uses the {@link thisCritApply} tag — independent of what the attacker has globally.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Action.prototype.thisCritTargetStates = function()
+{
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    [ this.item() ],
+    J.CRIT.RegExp.ThisCritApply
+  );
+};
+
+/**
+ * Gets all on-crit self states sourced from the executing skill only.
+ * Uses the {@link thisCritSelf} tag — independent of what the attacker has globally.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Action.prototype.thisCritSelfStates = function()
+{
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    [ this.item() ],
+    J.CRIT.RegExp.ThisCritSelf
+  );
+};
+
+/**
+ * Gets all on-crit target states sourced from anywhere on the attacker.
+ * Uses the {@link onCritApply} tag — fires whenever any crit lands, regardless of the skill used.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Action.prototype.onCritTargetStates = function()
+{
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    this.subject().getAllNotes(),
+    J.CRIT.RegExp.OnCritApply
+  );
+};
+
+/**
+ * Gets all on-crit self states sourced from anywhere on the attacker.
+ * Uses the {@link onCritSelf} tag — fires whenever any crit lands, regardless of the skill used.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Action.prototype.onCritSelfStates = function()
+{
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    this.subject().getAllNotes(),
+    J.CRIT.RegExp.OnCritSelf
+  );
 };
 
 /**

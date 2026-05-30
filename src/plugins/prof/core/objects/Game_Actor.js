@@ -171,12 +171,13 @@ Game_Actor.prototype.executeJsRewards = function(conditional)
   // if we don't actually have any javascript to execute, then don't bother.
   if (!conditional.jsRewards) return;
 
-  const a = this;         // the actor reference.
-  const c = conditional;  // the conditional reference.
+  const a = this;
+  const c = conditional;
   const { jsRewards } = c;
   try
   {
-    eval(jsRewards);
+    // 'a' is the actor, 'c' is the conditional — match the original eval scope.
+    new Function('a', 'c', jsRewards)(a, c);
   }
   catch (error)
   {

@@ -42,5 +42,7 @@ J.ELEM.RegExp = {};
 J.ELEM.RegExp.AttackElementIds = /<attackElements:[ ]?(\[[\d, ]+])>/i;
 J.ELEM.RegExp.AbsorbElementIds = /<absorbElements:[ ]?(\[[\d, ]+])>/i;
 J.ELEM.RegExp.StrictElementIds = /<strictElements:[ ]?(\[[\d, ]+])>/i;
-J.ELEM.RegExp.BoostElement = /<boostElement:(\d+):(-?\+?[\d]+)>/i;
+J.ELEM.RegExp.BoostElement      = /<boostElement:(\d+):(-?\+?[\d]+)>/i;
+J.ELEM.RegExp.PierceElement     = /<pierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
+J.ELEM.RegExp.ThisPierceElement = /<thisPierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
 //endregion Introduction

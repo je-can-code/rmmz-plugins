@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.12.1 JABS] Enables combat to be carried out on the map.
+ * [v4.12.2 JABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.12.2
+ *    Fixed a bug where `JABS_SkillSlot.canBeAutocleared` was missing Mainhand and
+ *    Offhand from its protected-slots list, causing those slots to be wiped by
+ *    `removeInvalidSkills` any time a proficiency conditional taught the actor a new
+ *    skill (or any other mid-refresh skill-learn path).
  * - 4.12.1
  *    Arc hitbox (`<hitbox:arc>`) collision now correctly registers hits against large enemies
  *    whose AABB center falls outside the wedge sweep but whose edge or corner overlaps it.

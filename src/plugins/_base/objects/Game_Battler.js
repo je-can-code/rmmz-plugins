@@ -30,6 +30,16 @@ Game_Battler.prototype.skills = function()
 };
 
 /**
+ * Gets the raw skill ids available to this battler.
+ * Returns an empty array by default; actor and enemy override this for their respective data sources.
+ * @returns {number[]}
+ */
+Game_Battler.prototype.skillIds = function()
+{
+  return Array.empty;
+};
+
+/**
  * The underlying database data for this battler.
  *
  * This allows operations to be performed against both actor and enemy indifferently.
@@ -285,5 +295,55 @@ Game_Battler.prototype.currentHpPercent100 = function()
 Game_Battler.prototype.parameter = function(key)
 {
   return ParameterRegistry.resolveValue(this, key);
+};
+
+/**
+ * Hook fired after any positive resource recovery on this battler.
+ * Extensions alias this instead of gainHp/gainMp/gainTp to react to healing events
+ * without duplicating three separate aliases per plugin.
+ * @param {string} _resource One of {@link J.BASE.Resource}.HP / .MP / .TP.
+ * @param {number} _amount The positive amount that was recovered.
+ */
+Game_Battler.prototype.onHeal = function(_resource, _amount)
+{
+};
+
+/**
+ * Extends {@link #gainHp}.<br/>
+ * Fires {@link #onHeal} after any positive HP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainHp', Game_Battler.prototype.gainHp);
+Game_Battler.prototype.gainHp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainHp').call(this, value);
+  // notify heal listeners when a positive HP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.HP, value);
+};
+
+/**
+ * Extends {@link #gainMp}.<br/>
+ * Fires {@link #onHeal} after any positive MP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainMp', Game_Battler.prototype.gainMp);
+Game_Battler.prototype.gainMp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainMp').call(this, value);
+  // notify heal listeners when a positive MP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.MP, value);
+};
+
+/**
+ * Extends {@link #gainTp}.<br/>
+ * Fires {@link #onHeal} after any positive TP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainTp', Game_Battler.prototype.gainTp);
+Game_Battler.prototype.gainTp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainTp').call(this, value);
+  // notify heal listeners when a positive TP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.TP, value);
 };
 //endregion Game_Battler

@@ -280,12 +280,10 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(`\\C[8]Raw Damage\\C[0]`, 'n/a');
     }
 
-    /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
-    /* eslint-disable no-unused-vars */
+    // a, b, v are the standard RMMZ formula binding names; p is proficiency.
     const a = actor;
     const b = $gameEnemies.enemy(1);
     const v = $gameVariables._data;
-    /* eslint-enable no-unused-vars */
     let p = 0;
     if (J.PROF)
     {
@@ -298,7 +296,7 @@ class Window_SkillDetail
     const sign = [ 3, 4 ].includes(skill.damage.type)
       ? -1
       : 1;
-    const value = Math.round(Math.max(eval(skill.damage.formula), 0));
+    const value = Math.round(Math.max(new Function('a', 'b', 'v', 'p', `return (${skill.damage.formula})`)(a, b, v, p), 0));
     const potential = isNaN(value)
       ? 0
       : value;

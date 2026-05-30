@@ -151,6 +151,39 @@ class ParameterKeys
   {
     return ParameterKeys.LEGACY_LONG_PARAM_TO_KEY[longParamId] ?? null;
   }
+
+  /**
+   * Reverse lookup: returns the engine b-param id (0–7) for the given registry key,
+   * or -1 if the key does not correspond to any b-param.
+   * @param {string} parameterKey The registry key to look up.
+   * @returns {number}
+   */
+  static bparamId(parameterKey)
+  {
+    return ParameterKeys.BPARAM_KEYS.indexOf(parameterKey);
+  }
+
+  /**
+   * Reverse lookup: returns the engine x-param id (0–9) for the given registry key,
+   * or -1 if the key does not correspond to any x-param.
+   * @param {string} parameterKey The registry key to look up.
+   * @returns {number}
+   */
+  static xparamId(parameterKey)
+  {
+    return ParameterKeys.XPARAM_KEYS.indexOf(parameterKey);
+  }
+
+  /**
+   * Reverse lookup: returns the engine s-param id (0–9) for the given registry key,
+   * or -1 if the key does not correspond to any s-param.
+   * @param {string} parameterKey The registry key to look up.
+   * @returns {number}
+   */
+  static sparamId(parameterKey)
+  {
+    return ParameterKeys.SPARAM_KEYS.indexOf(parameterKey);
+  }
 }
 
 export default ParameterKeys;

@@ -218,13 +218,13 @@ Game_Action.prototype.calculateMultipleRawElementalRate = function(target, attac
 };
 
 /**
- * Calculates the element's rate including applicable boosts.
+ * Calculates the element's rate including applicable boosts and resistance piercing.
  *
  * This is effectively a wrapper around `target.elementRate(elementId)` that
  * also includes all of our elemental boosts from various notes around the
- * battlers.
+ * battlers, and now also applies resistance piercing before the boost multiplication.
  * @param {number} attackElementId The element id.
- * @param {Game_Actor|Game_Enemy} target The element id.
+ * @param {Game_Actor|Game_Enemy} target The target being hit.
  * @returns {number}
  */
 Game_Action.prototype.calculateBoostRate = function(attackElementId, target)
@@ -232,14 +232,88 @@ Game_Action.prototype.calculateBoostRate = function(attackElementId, target)
   // the attacker to gauge bonus element rates upon.
   const attacker = this.subject();
 
-  // the base element rate.
+  // the base element rate from the target's traits.
   const baseRate = target.elementRate(attackElementId);
+
+  // apply resistance pierce to the base rate before folding in the attacker's boost.
+  const piercedRate = this.applyElementPierce(attackElementId, target, baseRate);
 
   // the boosted rate if the attacker has any.
   const elementBoostRate = attacker.elementRateBoost(attackElementId);
 
   // return the product.
-  return baseRate * elementBoostRate;
+  return piercedRate * elementBoostRate;
+};
+
+/**
+ * Applies resistance piercing to a target's base element rate for a given element.
+ *
+ * Pierce nudges the rate toward 1.0 (neutral damage), hard-capped there.
+ * Weaknesses (rate >= 1.0) and absorbed elements are never affected.
+ * @param {number} attackElementId The element id being checked.
+ * @param {Game_Actor|Game_Enemy} target The target whose resistance may be pierced.
+ * @param {number} baseRate The raw element rate from the target's traits.
+ * @returns {number} The pierced element rate, or the original if pierce does not apply.
+ */
+Game_Action.prototype.applyElementPierce = function(attackElementId, target, baseRate)
+{
+  // weaknesses and neutral rates have nothing to pierce through.
+  if (baseRate >= 1.0) return baseRate;
+
+  // absorbed elements are handled by a separate system — pierce does not apply.
+  if (target.elementsAbsorbed().includes(attackElementId)) return baseRate;
+
+  // sum all pierce contributions from attacker sources and the current skill.
+  const totalPierce = this.getTotalElementPierce(attackElementId);
+
+  // if there is no pierce at all, skip the clamp math.
+  if (totalPierce <= 0) return baseRate;
+
+  // nudge the resistance toward neutral, but never past it into bonus-damage territory.
+  return Math.min(1.0, baseRate + totalPierce);
+};
+
+/**
+ * Sums all element pierce contributions for the given element from two sources:
+ *  - {@code pierceElement} tags on the attacker's full getAllNotes() collection (global/passive).
+ *  - {@code thisPierceElement} tags on the specific skill being cast right now (skill-only).
+ * @param {number} attackElementId The element id to sum pierce for.
+ * @returns {number} Total pierce as a decimal rate (e.g. 0.30 for 30 pierce percent).
+ */
+Game_Action.prototype.getTotalElementPierce = function(attackElementId)
+{
+  const attacker = this.subject();
+  let totalPercent = 0;
+
+  // accumulate global pierce from all attacker sources (actor, class, equip, states, skills).
+  for (const source of attacker.getAllNotes())
+  {
+    const pairs = RPGManager.getArraysFromNotesByRegex(source, J.ELEM.RegExp.PierceElement);
+
+    for (const pair of pairs)
+    {
+      // each pair is [elementId, percent] — only accumulate when the element id matches.
+      if (Array.isArray(pair) && pair.length === 2 && Number(pair[0]) === attackElementId)
+      {
+        totalPercent += Number(pair[1]);
+      }
+    }
+  }
+
+  // accumulate skill-specific pierce from only the skill being executed right now.
+  const skillPairs = RPGManager.getArraysFromNotesByRegex(this.item(), J.ELEM.RegExp.ThisPierceElement);
+
+  for (const pair of skillPairs)
+  {
+    // same filter — only accumulate when the element id matches.
+    if (Array.isArray(pair) && pair.length === 2 && Number(pair[0]) === attackElementId)
+    {
+      totalPercent += Number(pair[1]);
+    }
+  }
+
+  // convert integer percent to a decimal multiplier.
+  return totalPercent / 100;
 };
 
 /**
@@ -294,9 +368,11 @@ Game_Action.prototype.getAntiNullElementIds = function()
 /**
  * Overwrites {@link #evalDamageFormula}.<br/>
  * Evaluates the damage formula provided by the dev to determine the damage.
- * This now also factors in how to handle elemental absorption.
- * @param {Game_Actor|Game_Enemy} target The `b` of the formula.
- * @returns
+ * This also factors in elemental absorption for sign and floor handling.
+ * Formula evaluation is delegated to {@link Game_Action#evalFormulaWithContext}
+ * so all registered context variables (p, s, …) are available automatically.
+ * @param {Game_Actor|Game_Enemy} target The target battler; the `b` of the formula.
+ * @returns {number} The calculated damage value.
  */
 Game_Action.prototype.evalDamageFormula = function(target)
 {
@@ -306,19 +382,9 @@ Game_Action.prototype.evalDamageFormula = function(target)
   const absorbedElements = target.elementsAbsorbed();
   const targetAbsorbs = attackElements.some(elementId => absorbedElements.includes(elementId));
 
-  /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
-  /* eslint-disable no-unused-vars */
+  // attacker and target — passed to evalFormulaWithContext as a and b.
   const a = this.subject();
   const b = target;
-  const v = $gameVariables._data;
-  /* eslint-enable no-unused-vars */
-  let p = 0;
-
-  // if skill proficiency is present, the p variable represents that value.
-  if (J.PROF)
-  {
-    p = this.skillProficiency();
-  }
 
   // whether or not the damage should be multiplied by -1.
   const sign = this.healingFactor(targetAbsorbs);
@@ -326,16 +392,19 @@ Game_Action.prototype.evalDamageFormula = function(target)
   // attempt the fragile parse or io work inside this block.
   try
   {
+    // evaluate the formula with the full registered context (a, b, v, p, s, …).
+    const raw = this.evalFormulaWithContext(item.damage.formula, a, b);
+
     let value = 0;
     if (targetAbsorbs)
     {
-      // if the target absorbs any of the elements being used, then lift the floor.
-      value = eval(item.damage.formula) * sign;
+      // absorbed elements lift the floor so negative (heal) values are allowed.
+      value = raw * sign;
     }
     else
     {
-      // otherwise, calculate per usual.
-      value = Math.max(eval(item.damage.formula), 0) * sign;
+      // otherwise, clamp to non-negative before applying sign.
+      value = Math.max(raw, 0) * sign;
     }
 
     return isNaN(value)

@@ -4,5 +4,7 @@ import './managers/TextManager.js';
 import './managers/IconManager.js';
 import './objects/Game_Battler.js';
 import './managers/ResourceHitManager.js';
+import './managers/HealEventManager.js';
 import './core/registerResourcesAbsParameters.js';
 import './managers/JABS_Engine.js';
+import './scenes/Scene_Boot.js';

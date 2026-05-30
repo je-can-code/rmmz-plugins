@@ -1,4 +1,5 @@
 //region SdpParameterBinding
+import ParameterKeys from './../core/ParameterKeys.js';
 /**
  * Describes how SDP panel rank bonuses attach to a {@link ParameterDefinition}.
  */
@@ -55,7 +56,8 @@ class SdpParameterBinding
    */
   static bparam(paramId)
   {
-    const parameterKey = J.BASE.ParameterKeys.bparamKey(paramId);
+    // resolve the registry key for this b-param id so byKey can look up SDP panel bonuses.
+    const parameterKey = ParameterKeys.bparamKey(paramId);
 
     return SdpParameterBinding.byKey(parameterKey);
   }
@@ -67,8 +69,6 @@ class SdpParameterBinding
    */
   static xparam(xparamId)
   {
-    const parameterKey = J.BASE.ParameterKeys.xparamKey(xparamId);
-
     return new SdpParameterBinding((actor, base) =>
     {
       if (!J.SDP) return 0;
@@ -84,8 +84,6 @@ class SdpParameterBinding
    */
   static sparam(sparamId)
   {
-    const parameterKey = J.BASE.ParameterKeys.sparamKey(sparamId);
-
     return new SdpParameterBinding((actor, base) =>
     {
       if (!J.SDP) return 0;

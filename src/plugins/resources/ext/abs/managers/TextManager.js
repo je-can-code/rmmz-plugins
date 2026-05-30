@@ -26,7 +26,7 @@ TextManager.lstDescription = function()
  */
 TextManager.mst = function()
 {
-  return 'Manasteal';
+  return 'Magisteal';
 };
 
 /**

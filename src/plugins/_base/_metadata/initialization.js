@@ -107,6 +107,28 @@ J.BASE.Traits = {
 };
 
 /**
+ * String keys representing the three core battler resources.
+ * Passed as the first argument to {@link Game_Battler#onHeal} so listeners
+ * can branch without comparing magic strings themselves.
+ */
+J.BASE.Resource = {
+  /**
+   * Hit points — the primary health resource.
+   */
+  HP: 'hp',
+
+  /**
+   * Magic points — the mana / skill cost resource.
+   */
+  MP: 'mp',
+
+  /**
+   * Tech points — the limit / combo resource.
+   */
+  TP: 'tp',
+};
+
+/**
  * All regular expressions used by this plugin.
  */
 J.BASE.RegExp = {};
@@ -153,6 +175,7 @@ J.BASE.Aliased = {
   Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
+  Scene_Boot: new Map(),
   Scene_MenuBase: new Map(),
   SoundManager: new Map(),
   Window_Base: new Map(),

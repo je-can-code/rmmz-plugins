@@ -19,4 +19,5 @@ import './sprites/Sprite_ActorValue.js';
 import './sprites/Sprite_Character.js';
 import './sprites/Sprite_ShieldMapGauge.js';
 import './core/registerShieldParameters.js';
+import './scenes/Scene_Boot.js';
 import './windows/Window_PartyFrame.js';

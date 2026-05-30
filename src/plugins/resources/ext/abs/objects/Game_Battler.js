@@ -1,4 +1,6 @@
 //region Game_Battler
+import HealEventManager from './../managers/HealEventManager.js';
+
 Object.defineProperties(Game_BattlerBase.prototype, {
   /**
    * Lifesteal rate (% of HP damage dealt recovered as HP).
@@ -110,5 +112,20 @@ Game_Battler.prototype.baseTstRate = function()
   const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.RESOURCES.EXT.ABS.RegExp.Techsteal);
 
   return bonus / 100;
+};
+
+/**
+ * Extends {@link #onHeal}.<br/>
+ * Dispatches resource cascade effects tagged on this battler and its allies
+ * whenever positive resource recovery is applied.
+ */
+J.RESOURCES.EXT.ABS.Aliased.Game_Battler.set('onHeal', Game_Battler.prototype.onHeal);
+Game_Battler.prototype.onHeal = function(resource, amount)
+{
+  // perform original logic.
+  J.RESOURCES.EXT.ABS.Aliased.Game_Battler.get('onHeal').call(this, resource, amount);
+
+  // dispatch resource cascade effects for this heal event.
+  HealEventManager.dispatch(this, resource, amount);
 };
 //endregion Game_Battler

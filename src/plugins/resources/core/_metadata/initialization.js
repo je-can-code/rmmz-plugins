@@ -27,6 +27,7 @@ J.RESOURCES.Metadata = new JResources_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_V
 J.RESOURCES.Aliased = {};
 J.RESOURCES.Aliased.IconManager = new Map();
 J.RESOURCES.Aliased.TextManager = new Map();
+J.RESOURCES.Aliased.Scene_Boot = new Map();
 J.RESOURCES.Aliased.Game_BattlerBase = new Map();
 J.RESOURCES.Aliased.Game_Battler = new Map();
 

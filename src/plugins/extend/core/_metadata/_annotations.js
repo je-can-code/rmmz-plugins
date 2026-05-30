@@ -193,6 +193,28 @@
  * skill successfully hits that target.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.1
+ *    Fixed Game_Actor#hasSkill to compare by skill id rather than object reference.
+ *    Vanilla uses includes($dataSkills[id]) which breaks the moment the overlay system
+ *    returns a clone instead of the original database entry — hasSkill would always
+ *    return false for any overlaid skill, silently blocking JABS action execution.
+ *    Optimized OverlayManager#getExtendedSkill hot path: the per-caster cache is now
+ *    checked before any array allocation, filter, sort, or string construction. Cache
+ *    hits are O(1); the skillId alone is a stable key because the whole per-caster
+ *    cache is invalidated wholesale on every learnSkill / forgetSkill call.
+ * - 1.4.0
+ *    Structural refactor of OverlayManager#getExtendedSkill: overlay candidates are now
+ *    collected via caster.skillIds() (raw IDs, no skill()/skills() involvement) instead of
+ *    caster.skills(). Removed the WeakSet re-entrancy guard. Each overlay id is now
+ *    recursively resolved through getExtendedSkill before being applied, so chained
+ *    extensions (A extends B extends C) produce a fully merged result at every level.
+ *    A per-skillId WeakMap/Set circular-extension guard replaces the old caster-level guard;
+ *    it throws a clear error on circular data rather than silently falling back.
+ * - 1.3.0
+ *    Lifted skill() override from Game_Actor to Game_Battler so enemies also
+ *    receive overlay-merged skills when J-SkillExtend is loaded. Aliased
+ *    Game_Actor#skills to map through this.skill(), making the plural form
+ *    consistent with the singular for all consumers including the passive system.
  * - 1.2.1
  *    Fixed extendEffects to deduplicate addState effects by state ID when merging overlays.
  *    When an extension defines a state application, any prior entry for that state ID is

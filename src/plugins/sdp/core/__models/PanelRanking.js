@@ -143,9 +143,10 @@ class PanelRanking
     rewardEffects.forEach(rewardEffect =>
     {
       // these are raw javascript rewards, so execute them as safely as we can lol.
+      // 'a' is the actor context for reward scripts.
       try
       {
-        eval(rewardEffect.effect);
+        new Function('a', rewardEffect.effect)(a);
       }
       catch (err)
       {

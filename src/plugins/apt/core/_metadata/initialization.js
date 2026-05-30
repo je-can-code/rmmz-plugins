@@ -47,6 +47,7 @@ J.APT.Metadata = new JAptitude_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION_
  * A collection of all aliased methods for this plugin.
  */
 J.APT.Aliased = {};
+J.APT.Aliased.Scene_Boot = new Map();
 J.APT.Aliased.BattleManager = new Map();
 J.APT.Aliased.Game_Action = new Map();
 J.APT.Aliased.Game_Actor = new Map();

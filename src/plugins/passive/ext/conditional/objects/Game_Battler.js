@@ -82,6 +82,24 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
    * @type {number|null}
    */
   this._j._passive._conditional._lastTrackedY = null;
+
+  /**
+   * Last map frame this battler received positive HP recovery.
+   * @type {number}
+   */
+  this._j._passive._conditional._lastHpHealFrame = 0;
+
+  /**
+   * Last map frame this battler received positive MP recovery.
+   * @type {number}
+   */
+  this._j._passive._conditional._lastMpHealFrame = 0;
+
+  /**
+   * Last map frame this battler received positive TP recovery.
+   * @type {number}
+   */
+  this._j._passive._conditional._lastTpHealFrame = 0;
 };
 
 /**
@@ -142,6 +160,60 @@ Game_Battler.prototype.stampPassiveRuleAttackedFrame = function()
 };
 
 /**
+ * Returns the last frame this battler received positive HP recovery.<br/>
+ * Read by the {@code onHealHp} gate kind.
+ * @returns {number} {@link Graphics.frameCount} stamp, or 0 when never healed.
+ */
+Game_Battler.prototype.getPassiveRuleLastHpHealFrame = function()
+{
+  return this._j._passive._conditional._lastHpHealFrame;
+};
+
+/**
+ * Returns the last frame this battler received positive MP recovery.<br/>
+ * Read by the {@code onHealMp} gate kind.
+ * @returns {number} {@link Graphics.frameCount} stamp, or 0 when never healed.
+ */
+Game_Battler.prototype.getPassiveRuleLastMpHealFrame = function()
+{
+  return this._j._passive._conditional._lastMpHealFrame;
+};
+
+/**
+ * Returns the last frame this battler received positive TP recovery.<br/>
+ * Read by the {@code onHealTp} gate kind.
+ * @returns {number} {@link Graphics.frameCount} stamp, or 0 when never healed.
+ */
+Game_Battler.prototype.getPassiveRuleLastTpHealFrame = function()
+{
+  return this._j._passive._conditional._lastTpHealFrame;
+};
+
+/**
+ * Stamps the current frame as the last time this battler received HP healing.
+ */
+Game_Battler.prototype.stampPassiveRuleHpHealFrame = function()
+{
+  this._j._passive._conditional._lastHpHealFrame = Graphics.frameCount;
+};
+
+/**
+ * Stamps the current frame as the last time this battler received MP healing.
+ */
+Game_Battler.prototype.stampPassiveRuleMpHealFrame = function()
+{
+  this._j._passive._conditional._lastMpHealFrame = Graphics.frameCount;
+};
+
+/**
+ * Stamps the current frame as the last time this battler received TP healing.
+ */
+Game_Battler.prototype.stampPassiveRuleTpHealFrame = function()
+{
+  this._j._passive._conditional._lastTpHealFrame = Graphics.frameCount;
+};
+
+/**
  * Extends {@link #gainHp}.<br/>
  * Records damage timestamps for {@link passiveStateRule} kinds that care about hit windows.
  */
@@ -157,6 +229,32 @@ Game_Battler.prototype.gainHp = function(value)
   // perform original logic.
   J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('gainHp')
     .call(this, value);
+};
+
+/**
+ * Extends {@link #onHeal}.<br/>
+ * Stamps the appropriate heal-frame counter so {@link PassiveGateEvaluator} can check
+ * whether a heal occurred recently enough for an {@code onHealHp/Mp/Tp} gate to pass.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set('onHeal', Game_Battler.prototype.onHeal);
+Game_Battler.prototype.onHeal = function(resource, amount)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('onHeal').call(this, resource, amount);
+
+  // stamp the appropriate resource heal frame so gate evaluators can check recency.
+  if (resource === J.BASE.Resource.HP)
+  {
+    this.stampPassiveRuleHpHealFrame();
+  }
+  else if (resource === J.BASE.Resource.MP)
+  {
+    this.stampPassiveRuleMpHealFrame();
+  }
+  else if (resource === J.BASE.Resource.TP)
+  {
+    this.stampPassiveRuleTpHealFrame();
+  }
 };
 
 /**

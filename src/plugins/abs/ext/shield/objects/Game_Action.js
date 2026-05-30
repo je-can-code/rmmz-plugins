@@ -180,18 +180,16 @@ Game_Action.prototype.calculateShieldBonusDamage = function(target, baseDamage)
     return 0;
   }
 
-  // Provide common variables for evaluation.
-  /* eslint-disable no-unused-vars */
+  // provide common variables for evaluation — a (attacker), b (target), o (original damage).
   const a = this.subject();
   const b = target;
   const o = baseDamage;
-  /* eslint-enable no-unused-vars */
 
-  // Sum the evaluated formulas (clamped to non-negative, rounded).
+  // sum the evaluated formulas (clamped to non-negative, rounded).
   const sum = formulas.reduce((total, f) =>
   {
-    // Evaluate the formula in the action context.
-    const result = eval(f);
+    // evaluate the formula with the scoped context variables.
+    const result = new Function('a', 'b', 'o', `return (${f})`)(a, b, o);
 
     // Coerce to number and clamp to non-negative.
     const n = Number(result) || 0;

@@ -27,6 +27,18 @@ Game_Actor.prototype.databaseData = function()
 };
 
 /**
+ * Gets the raw skill ids known to this actor.
+ * Combines the actor's learned skill list with any bonus skill ids granted by traits,
+ * then deduplicates so each id appears at most once.
+ * @returns {number[]}
+ */
+Game_Actor.prototype.skillIds = function()
+{
+  // merge learned skills and trait-granted skill ids into a single deduplicated list.
+  return [...new Set(this._skills.concat(this.addedSkills()))];
+};
+
+/**
  * Determines whether or not this actor is the leader.
  * @returns {boolean}
  */

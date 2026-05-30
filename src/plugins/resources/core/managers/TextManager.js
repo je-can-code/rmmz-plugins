@@ -5,7 +5,7 @@
  */
 TextManager.hcr = function()
 {
-  return 'HP Cost Rate';
+  return 'Life Cost';
 };
 
 /**

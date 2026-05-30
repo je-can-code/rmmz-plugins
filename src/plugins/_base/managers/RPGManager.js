@@ -677,11 +677,11 @@ class RPGManager
       // extract the captured formula.
       const [ , formula ] = result;
 
-      // use diapers when eval-ing.
+      // use diapers when evaluating the formula.
       try
       {
-        // evaluate the formula/value.
-        const evalResult = eval(formula)
+        // evaluate the formula/value with the scoped context variables.
+        const evalResult = new Function('a', 'b', 'v', `return (${formula})`)(a, b, v)
           .toFixed(3);
 
         // add it to the running total.

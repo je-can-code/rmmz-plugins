@@ -18,6 +18,9 @@ class JResourcesAbs_PluginMetadata
   {
     // execute original logic.
     super.postInitialize();
+
+    // parse the heal cascade chain depth from plugin parameters.
+    this.healChainDepth = parseInt(this.parsedPluginParameters['healChainDepth']) || 5;
   }
 }
 

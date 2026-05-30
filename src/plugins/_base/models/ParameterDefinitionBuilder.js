@@ -1,6 +1,7 @@
 //region ParameterDefinitionBuilder
 import ParameterDefinition from './ParameterDefinition.js';
 import ParameterFormat from './../core/ParameterFormat.js';
+import ParameterDisplayPolicy from './../core/ParameterDisplayPolicy.js';
 import SdpParameterBinding from './SdpParameterBinding.js';
 
 /**
@@ -16,6 +17,7 @@ class ParameterDefinitionBuilder
   #iconIndex = () => 0;
   #colorIndex = () => 0;
   #format = ParameterFormat.FLAT;
+  #displayPolicy = ParameterDisplayPolicy.NONE;
   #getValue = _battler => 0;
   #sdpBinding = SdpParameterBinding.none();
 
@@ -100,6 +102,16 @@ class ParameterDefinitionBuilder
   }
 
   /**
+   * @param {string} displayPolicy The display policy driving this step.
+   * @returns {ParameterDefinitionBuilder}
+   */
+  displayPolicy(displayPolicy)
+  {
+    this.#displayPolicy = displayPolicy;
+    return this;
+  }
+
+  /**
    * @param {function(Game_Battler): number} getValue The get value driving this step.
    * @returns {ParameterDefinitionBuilder}
    */
@@ -133,6 +145,7 @@ class ParameterDefinitionBuilder
       this.#iconIndex,
       this.#colorIndex,
       this.#format,
+      this.#displayPolicy,
       this.#getValue,
       this.#sdpBinding
     );

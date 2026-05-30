@@ -49,8 +49,11 @@ JABS_State.prototype.removeFromBattler = function()
  */
 JABS_State.prototype.onShieldBreak = function()
 {
-  // trigger the battler's shield break hook.
-  this.battler.onShieldBreak();
+  // capture the shield's cap before it resets — used as damage formula context 's'.
+  const shieldCap = this.shield ? this.shield.getCap() : 0;
+
+  // trigger the battler's shield break hook with the cap value.
+  this.battler.onShieldBreak(shieldCap);
 
   // force a decrement of stacks.
   this.decrementStacks(1);

@@ -19,6 +19,7 @@ import './managers/ApManager.js';
 import './managers/TextManager.js';
 import './managers/IconManager.js';
 import './core/registerAptParameters.js';
+import './scenes/Scene_Boot.js';
 import './managers/BattleManager.js';
 import './_models/JABS_Battler.js';
 import './windows/Window_AptitudeRibbon.js';

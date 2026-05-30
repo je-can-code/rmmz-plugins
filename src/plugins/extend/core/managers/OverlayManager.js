@@ -36,6 +36,15 @@ class OverlayManager
   static _casterExtendCache = new WeakMap();
 
   /**
+   * Tracks skill ids currently mid-resolution per caster to detect circular extension data
+   * (e.g. skill 2 extends skill 1 AND skill 1 extends skill 2, direct or indirect).
+   * Unlike the old caster-level re-entrancy guard, this is scoped per-skillId so legitimate
+   * recursive chains (A extends B extends C) proceed normally — only actual cycles throw.
+   * @type {WeakMap<Game_Actor|Game_Enemy, Set<number>>}
+   */
+  static #resolving = new WeakMap();
+
+  /**
    * The metrics for this manager.
    * @type {{ hits: number, misses: number }}
    */
@@ -136,26 +145,66 @@ class OverlayManager
     // if we don't have a caster for some reason, don't process anything.
     if (!caster) return $dataSkills[skillId];
 
-    // collect all overlay-capable skills for the provided base skill id.
-    const overlaySkills = caster.skills()
-      .filter(skill => this.#isOverlayForBase(skill, skillId));
-
-    // sort overlays deterministically by their id to ensure stable and predictable results.
-    if (overlaySkills.length > 0)
+    // fast-path: check the per-caster cache before doing any work at all.
+    // the cache is always invalidated wholesale via invalidate(battler) on any
+    // learnSkill / forgetSkill call, so skillId alone is a stable key within one
+    // cache lifetime — encoding the overlay set in the key is redundant overhead.
+    const perCaster = this.getOrCreateCacheForCaster(caster);
+    if (perCaster.has(skillId))
     {
-      overlaySkills.sort((a, b) => a.id - b.id);
+      // increment hit counter and return immediately — no array allocation, no filter.
+      this._metrics.hits++;
+      return perCaster.get(skillId);
     }
 
-    // construct a cache key that represents the base skill and the exact overlay set order.
-    const overlayKey = `${skillId}|${overlaySkills.map(s => s.id)
-      .join(',')}`;
+    // cache miss: now do the work to compute the overlay candidates.
+    const knownIds = caster.skillIds();
 
-    // fetch from cache or compute the extended skill once for this exact combination.
-    return this.cached(
-      caster,
-      overlayKey,
-      () => this.#getExtendedSkill(overlaySkills, skillId)
-    );
+    // find all overlay candidates for this skill from the raw id list, then sort deterministically.
+    const overlayIds = knownIds
+      .filter(id =>
+      {
+        const skill = $dataSkills[id];
+        return skill && this.#isOverlayForBase(skill, skillId);
+      })
+      .sort((a, b) => a - b);
+
+    // get or create the set of skill ids currently being resolved for this caster.
+    let inProgress = this.#resolving.get(caster);
+    if (!inProgress)
+    {
+      inProgress = new Set();
+      this.#resolving.set(caster, inProgress);
+    }
+
+    // a skill id already in the set means we have walked back to it — bad extension data.
+    if (inProgress.has(skillId))
+    {
+      // circular extension detected — this is bad data, not a recoverable state.
+      throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
+    }
+
+    // mark this skill as in-flight before recursing into overlay resolution.
+    inProgress.add(skillId);
+
+    try
+    {
+      // recursively resolve each overlay to its own fully-extended form before applying it.
+      const resolvedOverlays = overlayIds.map(id => this.getExtendedSkill(caster, id));
+      const value = this.#getExtendedSkill(resolvedOverlays, skillId);
+
+      // store under skillId as key — simple and correct given wholesale cache invalidation.
+      perCaster.set(skillId, value);
+      this._metrics.misses++;
+
+      return value;
+    }
+    finally
+    {
+      // always remove the skill from in-flight so sibling and future calls proceed normally.
+      inProgress.delete(skillId);
+      if (inProgress.size === 0) this.#resolving.delete(caster);
+    }
   }
 
   /**

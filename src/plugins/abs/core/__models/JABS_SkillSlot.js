@@ -605,8 +605,15 @@ class JABS_SkillSlot
    */
   canBeAutocleared()
   {
+    // mainhand and offhand are equipment-driven slots managed entirely by
+    // updateMainhandSkill / updateOffhandSkill; they must never be wiped by
+    // the hasSkill validation pass.  tool is a usable-item slot that also
+    // must survive that pass unchanged.
     const noAutoclearSlots = [
-      JABS_Button.Tool ];
+      JABS_Button.Mainhand,
+      JABS_Button.Offhand,
+      JABS_Button.Tool,
+    ];
 
     return !noAutoclearSlots.includes(this.key);
   }

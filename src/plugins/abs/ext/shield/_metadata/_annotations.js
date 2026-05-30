@@ -301,6 +301,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    JABS_State.onShieldBreak now passes the broken shield's cap to Game_Battler.onShieldBreak.
+ *    Game_Battler.onShieldBreak stores the value as lastShieldBreakValue before firing break
+ *    skills, then clears it immediately after. This value is exposed as the formula variable
+ *    's' via Game_Action.registerFormulaContext, so a skill authored with <shieldBreak:[ID]>
+ *    can write its damage formula as e.g. "s * 0.30" to deal 30% of the broken shield's cap.
+ *    's' is 0 for all non-shield-break actions; it never persists across frames.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

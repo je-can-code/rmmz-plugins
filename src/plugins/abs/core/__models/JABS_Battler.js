@@ -4760,12 +4760,12 @@ class JABS_Battler
     // if there isn't one, then we don't do anything.
     if (!skillId) return [];
 
-    // check costs against the resolved skill — that is what will actually fire.
-    if (!battler.meetsSkillConditions(battler.skill(skillId))) return [];
+  // check costs against the resolved skill — that is what will actually fire.
+  if (!battler.meetsSkillConditions(battler.skill(skillId))) return [];
 
-    // check that the battler has permission to use this slot.
-    // the raw base slot id is checked so transforms do not require learning the target skill.
-    if (!this.battlerHasPermissionForSlot(cooldownKey)) return [];
+  // check that the battler has permission to use this slot.
+  // the raw base slot id is checked so transforms do not require learning the target skill.
+  if (!this.battlerHasPermissionForSlot(cooldownKey)) return [];
 
     // build action options with the cooldown key.
     const builder = JABS_ActionOptions.Builder()
@@ -6282,8 +6282,8 @@ class JABS_Battler
     let result;
     try
     {
-      // eval() the formula and default to negative (because "slip" is negative).
-      result = eval(formula) * -1;
+      // evaluate the slip formula with the scoped context — result is negated because slip is negative.
+      result = new Function('a', 'b', 'v', 's', `return (${formula})`)(a, b, v, s) * -1;
 
       // check if the eval() produced garbage output despite not throwing.
       if (!Number.isFinite(result))

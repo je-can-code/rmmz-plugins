@@ -92,6 +92,26 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.4.0
+ *    Added Game_Action.formulaContextProviders registry and Game_Action.registerFormulaContext
+ *    static method. Any plugin can now inject a named variable into damage formula evaluation
+ *    by registering a getter; the variable is available in every formula evaluated by
+ *    evalFormulaWithContext without any plugin needing to patch another plugin's code.
+ *    Added Game_Action.prototype.evalFormulaWithContext(formula, a, b) — evaluates a formula
+ *    string via new Function with the base context (a, b, v) plus all registered providers.
+ *    This replaces all eval() usage in damage/formula paths; see each consumer's changelog.
+ * - 3.3.0
+ *    Added J.BASE.Resource enum (HP/MP/TP string keys).
+ *    Added Game_Battler.prototype.onHeal(resource, amount) stub — a broadcast hook
+ *    fired after any positive resource recovery. Extensions alias onHeal instead of
+ *    the three gainHp/gainMp/gainTp methods individually.
+ *    Aliased gainHp, gainMp, gainTp on Game_Battler to fire onHeal for positive values.
+ * - 3.2.0
+ *    Added skillIds() to Game_Battler (stub returning empty), Game_Actor (learned skills
+ *    plus trait-granted ids, deduplicated), and Game_Enemy (action skill ids plus
+ *    trait-granted ids, deduplicated). This gives the skill-extension resolver a raw-id
+ *    source that is completely outside the skill()/skills() call path, eliminating the
+ *    need for a re-entrancy guard and enabling intentional recursive overlay chains.
  * - 3.1.1
  *    RPG database wrappers expose createEmpty() on item, weapon, armor, skill,
  *    and state classes.

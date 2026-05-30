@@ -51,7 +51,7 @@
     "prefer-const": "error",
     "no-var": "error",
     "prefer-destructuring": "warn",
-    "no-eval": "off",
+    "no-eval": "error",
     "no-unused-expressions": "off"
   },
   "overrides": [

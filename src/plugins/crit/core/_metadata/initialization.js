@@ -48,10 +48,18 @@ J.CRIT.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.CRIT.RegExp = {
-  // this-skill only.
+  // this-skill only: critical chance and damage modifiers.
   ThisCritDamageChance: /<thisCritChance:\[([+\-*/ ().\w]+)]>/gi,
   ThisCritDamageMultiplier: /<thisCritMultiplier:\[([+\-*/ ().\w]+)]>/gi,
   ThisCritsAlways: /<thisCritsAlways>/gi,
+
+  // this-skill only: on-crit state application for target and self.
+  ThisCritApply: /<thisCritApply:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  ThisCritSelf:  /<thisCritSelf:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  // global (any note source on the attacker): on-crit state application for target and self.
+  OnCritApply: /<onCritApply:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  OnCritSelf:  /<onCritSelf:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // base functionality.
   CritDamageReductionBase: /<critReductionBase: ?(\d+)>/gi,

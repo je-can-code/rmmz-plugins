@@ -35,7 +35,7 @@ class JABS_Shield
     {
       try
       {
-        return total + eval(formula);
+        return total + new Function('a', 'b', `return (${formula})`)(a, b);
       }
       catch (e)
       {

@@ -155,22 +155,20 @@ Game_Action.prototype._filterFormulaEligibleBattler = function(battler)
  */
 Game_Action.prototype.evaluateFormula = function(formula, source, recipient, item)
 {
-  /* eslint-disable no-unused-vars */
   const a = source;
   const b = recipient;
   const v = $gameVariables._data;
   const i = item;
-  /* eslint-enable no-unused-vars */
 
   let result;
   try
   {
-    result = eval(formula);
-    if (!Number.isFinite(result)) throw new Error("Invalid formula output.");
+    result = new Function('a', 'b', 'v', 'i', `return (${formula})`)(a, b, v, i);
+    if (!Number.isFinite(result)) throw new Error('Invalid formula output.');
   }
   catch (err)
   {
-    console.warn(`J.FORMULA eval failed: [ ${formula} ]`);
+    console.warn(`J.FORMULA formula failed: [ ${formula} ]`);
     console.trace();
     throw err;
   }

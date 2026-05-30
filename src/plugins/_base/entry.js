@@ -36,6 +36,7 @@ import './managers/TraitManager.js';
 import './core/registerVanillaParameters.js';
 import './core/AffiliationDisplay.js';
 
+import './objects/Game_Action.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Actors.js';
 import './objects/Game_Battler.js';
@@ -55,6 +56,7 @@ import './objects/Game_Timer.js';
 import './objects/Game_Vehicle.js';
 
 import './scenes/Scene_Base.js';
+import './scenes/Scene_Boot.js';
 
 import './sprites/Sprite_BaseText.js';
 import './sprites/Sprite_Character.js';

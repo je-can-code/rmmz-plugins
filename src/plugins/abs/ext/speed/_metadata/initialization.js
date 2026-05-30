@@ -38,6 +38,7 @@ J.ABS.EXT.SPEED.Metadata = new J_SpeedPluginMetadata(__PLUGIN_NAME__, __PLUGIN_V
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.SPEED.Aliased = {
+  Scene_Boot: new Map(),
   Game_Actor: new Map(),
   Game_Character: new Map(),
   Game_Battler: new Map(),

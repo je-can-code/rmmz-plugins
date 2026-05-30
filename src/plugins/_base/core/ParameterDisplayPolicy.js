@@ -28,6 +28,12 @@ class ParameterDisplayPolicy
    * @type {string}
    */
   static SIGNED = 'signed';
+
+  /**
+   * Skill cost reduction rates (HCR, etc.): lower is better, reducing what the battler pays.
+   * @type {string}
+   */
+  static COST_RATE = 'costRate';
 }
 
 export default ParameterDisplayPolicy;

@@ -364,9 +364,8 @@ class Window_PassiveDetail
       // 'a' and 'b' are the RMMZ formula conventions for acting and target battlers.
       // for passive states, the bearer is both — there is no external attacker or target.
       const a = actor;
-      const b = actor; // eslint-disable-line no-unused-vars
-      // eval is intentional here — this mirrors what RMMZ does internally for damage formulas.
-      const result = eval(formula);
+      const b = actor;
+      const result = new Function('a', 'b', `return (${formula})`)(a, b);
       if (typeof result === 'number') return `${Math.round(result)}`;
       return `${result}`;
     }

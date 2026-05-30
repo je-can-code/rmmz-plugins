@@ -146,6 +146,11 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Registers 'p' as a formula context variable via Game_Action.registerFormulaContext.
+ *    Damage formulas can now use 'p' for skill proficiency without J-Elementalistics
+ *    needing to hardcode a J.PROF conditional block. The registration calls
+ *    this.skillProficiency() on the Game_Action instance at formula evaluation time.
  * - 2.0.1
  *    Added flag for showing external file load info.
  *    Removed dead plugin parameters for conditionals.

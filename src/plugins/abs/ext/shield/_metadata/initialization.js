@@ -43,6 +43,7 @@ J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata(__PLUGIN_NAME__, __PLUGIN
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.SHIELD.Aliased = {
+  Scene_Boot: new Map(),
   Game_Action: new Map(),
   Game_Actor: new Map(),
   Game_Battler: new Map(),
@@ -113,4 +114,9 @@ J.ABS.EXT.SHIELD.SdpParamId = {
   SAR: 38,
   SER: 39,
 };
+
+// register 's' as a formula context variable so damage formulas fired on shield break
+// can reference the broken shield's original cap value directly.
+// 's' is 0 for all non-shield-break actions (lastShieldBreakValue is reset after break skills fire).
+Game_Action.registerFormulaContext('s', (_action, a) => a.lastShieldBreakValue);
 //endregion initialization

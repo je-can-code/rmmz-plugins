@@ -56,6 +56,14 @@ class PassiveGateEvaluator
       case 'attackedWithin':
         return this.#framesSince(battler.getPassiveRuleLastAttackedFrame()) <= Number(param);
 
+      // timing gates — heal received within param frames.
+      case 'onHealHp':
+        return this.#framesSince(battler.getPassiveRuleLastHpHealFrame()) <= Number(param);
+      case 'onHealMp':
+        return this.#framesSince(battler.getPassiveRuleLastMpHealFrame()) <= Number(param);
+      case 'onHealTp':
+        return this.#framesSince(battler.getPassiveRuleLastTpHealFrame()) <= Number(param);
+
       default:
         // hpAbove, criBelow, allAlliesHpAbove, etc. fall through to threshold parsing.
         return this.#evaluateThresholdKind(battler, kind, param);

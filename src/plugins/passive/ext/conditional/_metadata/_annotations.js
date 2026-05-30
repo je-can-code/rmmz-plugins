@@ -50,6 +50,12 @@
  * moreIsMoreHp/Mp/Tp, per-{registryKey} (integer points per stack).
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added three new passive gate kinds: onHealHp, onHealMp, onHealTp.
+ *    Each checks whether the battler received healing in that resource within
+ *    a given number of frames: <passiveSourceRule:[onHealHp, 60]>.
+ *    Wired via a new onHeal alias on Game_Battler that stamps
+ *    _lastHpHealFrame / _lastMpHealFrame / _lastTpHealFrame when J-Base fires onHeal.
  * - 1.0.0
  *    Initial release (passive rule framework).
  * ============================================================================

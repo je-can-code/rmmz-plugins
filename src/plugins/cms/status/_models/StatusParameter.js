@@ -70,7 +70,32 @@ class StatusParameter
     // assign name on this instance for callers.
     this.name = definition.label();
     this.iconIndex = definition.iconIndex();
-    this.colorIndex = definition.colorIndex();
+    // color index is value-dependent — rate parameters change color based on magnitude and policy.
+    this.colorIndex = definition.resolveDisplayColorIndex(this.value);
+  }
+
+  /**
+   * Whether this parameter should use styled zero-padding on the status screen.
+   * Returns false when a sentinel label replaces the numeric value, or for regen stats
+   * that already format themselves with a unit suffix.
+   * @returns {boolean}
+   */
+  usesStyledValue()
+  {
+    const definition = ParameterRegistry.get(this.parameterKey);
+
+    if (!definition)
+    {
+      return false;
+    }
+
+    // sentinel states (FREE, IMMUNE, NONE) replace the numeric display entirely.
+    if (definition.resolveDisplaySentinel(this.value))
+    {
+      return false;
+    }
+
+    return definition.format !== ParameterFormat.REGEN_PER_SECOND;
   }
 
   /**

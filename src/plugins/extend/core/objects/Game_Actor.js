@@ -2,14 +2,38 @@
 import OverlayManager from './../managers/OverlayManager.js';
 
 /**
- * Overwrites {@link #skill}.<br/>
- * Overlays the skill with any skill extensions.
- * @param {number} skillId The skill id to get the skill for.
- * @returns {RPG_Skill} The potentially extended skill.
+ * Extends {@link #skills}.<br/>
+ * Routes each skill through the extended skill resolver so that overlay
+ * contributions from learned extension skills are reflected in the returned list.
+ * Vanilla logic handles deduplication and addedSkills; we simply remap the result.
+ * @returns {RPG_Skill[]} The (potentially extended) full skill list.
  */
-Game_Actor.prototype.skill = function(skillId)
+J.EXTEND.Aliased.Game_Actor.set('skills', Game_Actor.prototype.skills);
+Game_Actor.prototype.skills = function()
 {
-  return OverlayManager.getExtendedSkill(this, skillId);
+  // perform original logic.
+  const baseSkills = J.EXTEND.Aliased.Game_Actor.get('skills').call(this);
+
+  // route each through the extended skill resolver so all consumers see overlay-merged skills.
+  return baseSkills.map(skill => this.skill(skill.id));
+};
+
+/**
+ * Extends {@link #hasSkill}.<br/>
+ * Vanilla compares by object reference (`skills().includes($dataSkills[id])`), which
+ * breaks as soon as the overlay system returns a clone instead of the original database
+ * entry.  Compare by id so the result is correct regardless of whether an overlay
+ * is currently active for this skill.
+ * @param {number} skillId The skill id to check for.
+ * @returns {boolean}
+ */
+J.EXTEND.Aliased.Game_Actor.set('hasSkill', Game_Actor.prototype.hasSkill);
+Game_Actor.prototype.hasSkill = function(skillId)
+{
+  // vanilla reference equality fails once the overlay system clones a skill.
+  // check by id instead — the overlay does not change which skills the actor knows,
+  // only how those skills behave.
+  return this.skills().some(skill => skill.id === skillId);
 };
 
 /**
