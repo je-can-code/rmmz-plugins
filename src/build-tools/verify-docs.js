@@ -293,7 +293,6 @@ function verifyFile(filePath, source)
 
   let program;
 
-  // attempt the fragile parse or io work inside this block.
   try
   {
     program = acorn.parse(source, {
@@ -336,11 +335,9 @@ function verifyFile(filePath, source)
         detail: 'Public function/method/alias needs a multiline JSDoc block immediately above it.',
       });
 
-      // exit early without a payload.
       return;
     }
 
-    // Append the row to the working collection.
     violations.push(...validateJsdocContent(`/**${jsdoc.value}*/`, filePath, line));
 
     if (fnNode)
@@ -438,7 +435,6 @@ async function main()
   {
     const matched = await glob(pattern, { nodir: true });
 
-    // Append the row to the working collection.
     files.push(...matched);
   }
 
@@ -449,10 +445,7 @@ async function main()
   {
     if (isExemptFile(filePath)) continue;
 
-    // capture source after async work completes.
     const source = await fs.readFile(filePath, 'utf8');
-
-    // Append the row to the working collection.
     allViolations.push(...verifyFile(filePath, source));
   }
 
@@ -478,14 +471,12 @@ async function main()
   Logger.logAnyway('Doc verify FAILED:', LogStyle.brightRed);
   printViolationStats(allViolations);
 
-  // construct by rule for the next step in this routine.
   const byRule = new Map();
 
   for (const violation of allViolations)
   {
     if (byRule.has(violation.rule) === false) byRule.set(violation.rule, []);
 
-    // Delegate to the aliased implementation for this hook.
     byRule.get(violation.rule).push(violation);
   }
 
