@@ -38,6 +38,14 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
   this._j._passive._conditional._collectionFingerprint = String.empty;
 
   /**
+   * Fingerprint computed by the current drift check, held briefly so the post-refresh
+   * alias can apply it directly instead of re-running both collectors a third time.
+   * Null outside of an active reconcilePassiveRules call.
+   * @type {string|null}
+   */
+  this._j._passive._conditional._pendingFingerprint = null;
+
+  /**
    * Throttled reconcile timer for map-side rule drift.
    * @type {JABS_Timer}
    */
@@ -275,10 +283,25 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
 
 /**
  * Stores the latest passive collection fingerprint after a refresh pass.<br/>
- * Becomes the baseline for subsequent drift checks on the map.
+ * When called from within a {@link reconcilePassiveRules} cycle the pending fingerprint is
+ * reused directly — the drift check already ran both collectors, so running them a third
+ * time would be redundant.  Outside that cycle (e.g. equip/unequip) both collectors run
+ * fresh to produce an accurate baseline.
  */
 Game_Battler.prototype.updatePassiveRuleCollectionFingerprint = function()
 {
+  const pending = this._j._passive._conditional._pendingFingerprint;
+
+  // consume the stashed fingerprint when the drift-check cycle set one — saves a full
+  // third collector pass since the pre-refresh fingerprint is still correct here.
+  if (pending !== null)
+  {
+    this._j._passive._conditional._collectionFingerprint = pending;
+
+    return;
+  }
+
+  // no stash means this refresh was triggered outside the reconcile cycle — recompute.
   this._j._passive._conditional._collectionFingerprint = this.buildPassiveCollectionFingerprint();
 };
 
@@ -294,8 +317,16 @@ Game_Battler.prototype.reconcilePassiveRules = function()
   // no drift — skip the expensive passive rebuild.
   if (nextFingerprint === previousFingerprint) return;
 
+  // stash the fingerprint before the rebuild so the post-refresh alias can apply it directly.
+  // JS is single-threaded: the state that produced nextFingerprint cannot change before
+  // refreshPassiveStates completes, so the stash is the correct post-refresh baseline.
+  this._j._passive._conditional._pendingFingerprint = nextFingerprint;
+
   // rule context changed — rebuild passive tracker from gated sources.
   this.refreshPassiveStates();
+
+  // clear the stash after the refresh alias has consumed it.
+  this._j._passive._conditional._pendingFingerprint = null;
 };
 
 /**
