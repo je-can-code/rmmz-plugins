@@ -22,7 +22,6 @@ DataManager.makeSaveContents = function()
   const contents = J.TIME.Aliased.DataManager.get('makeSaveContents').call(this);
   contents.time = $gameTime;
   return contents;
-// policy step inside make save contents.
 };
 
 /**
@@ -39,7 +38,6 @@ DataManager.extractSaveContents = function(contents)
   $gameTime = contents.time;
   if (!$gameTime)
   {
-    // policy step inside extract save contents.
     $gameTime = new Game_Time();
     console.info('J-Time did not exist in the loaded save file- creating anew.');
   }

@@ -23,7 +23,6 @@ class JaftingSalvageLedgerSnapshot
       return;
     }
 
-    // when rowsSource  and  Array.isArray(rowsSource.rows), take this branch.
     if (rowsSource && Array.isArray(rowsSource.rows))
     {
       this.rows = JaftingSalvageLedgerSnapshot.coerceRows(rowsSource.rows);
@@ -32,7 +31,6 @@ class JaftingSalvageLedgerSnapshot
       return;
     }
 
-    // when Array.isArray(rowsSource), take this branch.
     if (Array.isArray(rowsSource))
     {
       this.rows = JaftingSalvageLedgerSnapshot.coerceRows(rowsSource);
@@ -58,16 +56,13 @@ class JaftingSalvageLedgerSnapshot
       return [];
     }
 
-    // capture out for downstream policy in this routine.
     const out = [];
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < rows.length; i++)
     {
       out.push(JaftingSalvageLedgerRow.coerce(rows[i]));
     }
 
-    // hand back out to the caller.
     return out;
   }
 
@@ -84,7 +79,6 @@ class JaftingSalvageLedgerSnapshot
       return [];
     }
 
-    // hand back JaftingSalvageLedgerSnapshot.coerceRows(ledger.rows) to the caller.
     return JaftingSalvageLedgerSnapshot.coerceRows(ledger.rows);
   }
 
@@ -99,13 +93,11 @@ class JaftingSalvageLedgerSnapshot
     const rows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(ledger);
     const clones = [];
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < rows.length; i++)
     {
       clones.push(rows[i].clone());
     }
 
-    // hand back new JaftingSalvageLedgerSnapshot(clones) to the caller.
     return new JaftingSalvageLedgerSnapshot(clones);
   }
 }

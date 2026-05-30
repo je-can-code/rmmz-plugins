@@ -98,7 +98,6 @@ class Window_MapLog
   {
     if (this.logManager.isHidden()) return false;
 
-    // hand back super.isScrollEnabled() to the caller.
     return super.isScrollEnabled();
   }
 
@@ -165,7 +164,6 @@ class Window_MapLog
   {
     const rect = super.itemRectWithPadding(index);
     rect.x -= 16;
-    // hand back rect to the caller.
     return rect;
   }
 
@@ -417,7 +415,6 @@ class Window_MapLog
     // ensure the window is visible for the current duration.
     this.showWindow();
 
-    // policy step inside handle non interference opacity.
     this.setInactivityTimer(currentDuration);
   }
 

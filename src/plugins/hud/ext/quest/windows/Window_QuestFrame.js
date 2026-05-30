@@ -255,15 +255,12 @@ class Window_QuestFrame
     switch (true)
     {
       case quest.isCompleted():
-        // policy step inside draw non objective.
         noObjectivesText = `✅ Quest is complete.`;
         break;
       case quest.isFailed():
-        // policy step inside draw non objective.
         noObjectivesText = `❌ Quest is failed.`;
         break;
       case quest.isMissed():
-        // policy step inside draw non objective.
         noObjectivesText = `❓ Quest is missed.`;
         break;
       default:

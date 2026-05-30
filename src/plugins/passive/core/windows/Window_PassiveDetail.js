@@ -46,35 +46,30 @@ class Window_PassiveDetail
     // perform original logic.
     super.initialize(rect);
 
-    // policy step inside initialize.
     /**
      * The passive state currently being displayed.
      * @type {RPG_State|null}
      */
     this._state = null;
 
-    // policy step inside initialize.
     /**
      * The actor whose passive states are being browsed.
      * @type {Game_Actor|null}
      */
     this._actor = null;
 
-    // policy step inside initialize.
     /**
      * The running horizontal cursor. 0 for the left column, columnWidth+gutter for the right.
      * @type {number}
      */
     this._currentX = 0;
 
-    // policy step inside initialize.
     /**
      * The running vertical cursor shared by all draw helpers in the active column.
      * @type {number}
      */
     this._currentY = 0;
 
-    // policy step inside initialize.
     /**
      * The y coordinate where both columns begin, recorded after the full-width header.
      * Used by {@link switchToRightColumn} to reset the vertical cursor.
@@ -278,7 +273,6 @@ class Window_PassiveDetail
     this.drawText(label, textX, y, textWidth + 2);
     this.resetTextColor();
 
-    // policy step inside draw detail section header.
     this.currentY += lh;
   }
 
@@ -310,7 +304,6 @@ class Window_PassiveDetail
       labelX = this.currentX + iconW;
     }
 
-    // capture label w for downstream policy in this routine.
     const labelW = this.columnWidth - (labelX - this.currentX) - valueW;
     this.drawText(label, labelX, y, labelW);
 
@@ -330,7 +323,6 @@ class Window_PassiveDetail
       this.resetTextColor();
     }
 
-    // policy step inside draw detail row.
     this.currentY += lh;
   }
 
@@ -434,10 +426,8 @@ class Window_PassiveDetail
     const paramTraits = this.filterTraits(state, [21, 22, 23]);
     const naturalLines = this.collectNaturalParamLines(state);
 
-    // when paramTraits.length  equals  0  and  naturalLines.length  equals  0, take this branch.
     if (paramTraits.length === 0 && naturalLines.length === 0) return;
 
-    // policy step inside draw parameters section.
     this.drawDetailSectionHeader('Parameters');
 
     // standard RMMZ param/xparam/sparam rows with per-stat icons.
@@ -482,11 +472,9 @@ class Window_PassiveDetail
   {
     if (!J.RESOURCES) return null;
 
-    // capture formula for downstream policy in this routine.
     const formula = RPGManager.getStringFromNoteByRegex(state, J.RESOURCES.RegExp.HpCostReduction);
     if (!formula) return null;
 
-    // capture evaluated for downstream policy in this routine.
     const evaluated = Number(this.evaluateFormula(formula, this._actor));
     return {
       icon:  IconManager.param(0),
@@ -507,7 +495,6 @@ class Window_PassiveDetail
   {
     if (!J.CRIT) return [];
 
-    // capture rows for downstream policy in this routine.
     const rows = [];
 
     // crit reduction — protects the bearer from incoming critical hits; more is better.
@@ -532,7 +519,6 @@ class Window_PassiveDetail
       });
     }
 
-    // hand back rows to the caller.
     return rows;
   }
 
@@ -547,11 +533,9 @@ class Window_PassiveDetail
     {
       case 21:
         return IconManager.param(trait.dataId);
-      // handle this switch arm for the current discriminant.
       case 22:
         return IconManager.xparam(trait.dataId);
       case 23:
-        // hand back IconManager.sparam(trait.dataId) to the caller.
         return IconManager.sparam(trait.dataId);
       default:
         return 0;
@@ -571,7 +555,6 @@ class Window_PassiveDetail
   {
     if (!J.NATURAL) return [];
 
-    // capture lines for downstream policy in this routine.
     const lines = [];
 
     // each tuple: [label, regexp, iconIndex, isGrowth]
@@ -585,37 +568,29 @@ class Window_PassiveDetail
       [`${TextManager.param(0)} Buff+`,  J.NATURAL.RegExp.MaxLifeBuffPlus,        IconManager.param(0), false],
       [`${TextManager.param(0)} Buff%`,  J.NATURAL.RegExp.MaxLifeBuffRate,        IconManager.param(0), false],
       [`${TextManager.param(1)} Buff+`,  J.NATURAL.RegExp.MaxMagiBuffPlus,        IconManager.param(1), false],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(1)} Buff%`,  J.NATURAL.RegExp.MaxMagiBuffRate,        IconManager.param(1), false],
       [`${TextManager.param(2)} Buff+`,  J.NATURAL.RegExp.PowerBuffPlus,          IconManager.param(2), false],
       [`${TextManager.param(2)} Buff%`,  J.NATURAL.RegExp.PowerBuffRate,          IconManager.param(2), false],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(3)} Buff+`,  J.NATURAL.RegExp.DefenseBuffPlus,        IconManager.param(3), false],
       [`${TextManager.param(3)} Buff%`,  J.NATURAL.RegExp.DefenseBuffRate,        IconManager.param(3), false],
       [`${TextManager.param(4)} Buff+`,  J.NATURAL.RegExp.ForceBuffPlus,          IconManager.param(4), false],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(4)} Buff%`,  J.NATURAL.RegExp.ForceBuffRate,          IconManager.param(4), false],
       [`${TextManager.param(5)} Buff+`,  J.NATURAL.RegExp.ResistBuffPlus,         IconManager.param(5), false],
       [`${TextManager.param(5)} Buff%`,  J.NATURAL.RegExp.ResistBuffRate,         IconManager.param(5), false],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(6)} Buff+`,  J.NATURAL.RegExp.SpeedBuffPlus,          IconManager.param(6), false],
       [`${TextManager.param(6)} Buff%`,  J.NATURAL.RegExp.SpeedBuffRate,          IconManager.param(6), false],
       [`${TextManager.param(7)} Buff+`,  J.NATURAL.RegExp.LuckBuffPlus,           IconManager.param(7), false],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(7)} Buff%`,  J.NATURAL.RegExp.LuckBuffRate,           IconManager.param(7), false],
       // bparams — growths (additional gain applied each level-up).
       [`${TextManager.param(0)} Growth+`, J.NATURAL.RegExp.MaxLifeGrowthPlus,     IconManager.param(0), true],
       [`${TextManager.param(0)} Growth%`, J.NATURAL.RegExp.MaxLifeGrowthRate,     IconManager.param(0), true],
       [`${TextManager.param(1)} Growth+`, J.NATURAL.RegExp.MaxMagiGrowthPlus,     IconManager.param(1), true],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(1)} Growth%`, J.NATURAL.RegExp.MaxMagiGrowthRate,     IconManager.param(1), true],
       [`${TextManager.param(2)} Growth+`, J.NATURAL.RegExp.PowerGrowthPlus,       IconManager.param(2), true],
       [`${TextManager.param(2)} Growth%`, J.NATURAL.RegExp.PowerGrowthRate,       IconManager.param(2), true],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(3)} Growth+`, J.NATURAL.RegExp.DefenseGrowthPlus,     IconManager.param(3), true],
       [`${TextManager.param(3)} Growth%`, J.NATURAL.RegExp.DefenseGrowthRate,     IconManager.param(3), true],
       [`${TextManager.param(4)} Growth+`, J.NATURAL.RegExp.ForceGrowthPlus,       IconManager.param(4), true],
-      // policy step inside collect natural param lines.
       [`${TextManager.param(4)} Growth%`, J.NATURAL.RegExp.ForceGrowthRate,       IconManager.param(4), true],
       [`${TextManager.param(5)} Growth+`, J.NATURAL.RegExp.ResistGrowthPlus,      IconManager.param(5), true],
       [`${TextManager.param(5)} Growth%`, J.NATURAL.RegExp.ResistGrowthRate,      IconManager.param(5), true],
@@ -689,7 +664,6 @@ class Window_PassiveDetail
       [`${TextManager.maxTp()} Growth%`, J.NATURAL.RegExp.MaxTechGrowthRate,      IconManager.maxTp(), true],
     ];
 
-    // policy step inside collect natural param lines.
     checks.forEach(([label, regexp, icon, isGrowth]) =>
     {
       const formula = RPGManager.getStringFromNoteByRegex(state, regexp);
@@ -704,7 +678,6 @@ class Window_PassiveDetail
       }
     });
 
-    // hand back lines to the caller.
     return lines;
   }
   //endregion parameters section
@@ -728,10 +701,8 @@ class Window_PassiveDetail
     const atkElemTraits   = this.filterTraits(state, [31]);
     const elemLines       = this.collectElemLines(state);
 
-    // when dmgInTraits.length  equals  0  and  atkElemTraits.length  equals  0  ..., take this branch.
     if (dmgInTraits.length === 0 && atkElemTraits.length === 0 && elemLines.length === 0) return;
 
-    // policy step inside draw elements section.
     this.drawDetailSectionHeader('Elements');
 
     // incoming element damage rate — element icon identifies which, "Dmg In" the direction.
@@ -770,7 +741,6 @@ class Window_PassiveDetail
   {
     if (!J.ELEM) return [];
 
-    // capture lines for downstream policy in this routine.
     const lines = [];
 
     // boost element: one row per boosted element — icon identifies it, "Boost" the effect.
@@ -796,7 +766,6 @@ class Window_PassiveDetail
       });
     }
 
-    // hand back lines to the caller.
     return lines;
   }
   //endregion elements section
@@ -813,10 +782,8 @@ class Window_PassiveDetail
     const ailmentTraits = this.filterTraits(state, [12, 13, 14, 32]);
     if (ailmentTraits.length === 0) return;
 
-    // policy step inside draw ailments section.
     this.drawDetailSectionHeader('Ailments');
 
-    // policy step inside draw ailments section.
     ailmentTraits.forEach(rawTrait =>
     {
       const trait = new RPG_Trait(rawTrait);
@@ -835,11 +802,9 @@ class Window_PassiveDetail
     {
       case 12:
         return IconManager.param(trait.dataId);
-      // handle this switch arm for the current discriminant.
       case 13:
       case 14:
         return $dataStates[trait.dataId] ? $dataStates[trait.dataId].iconIndex : 0;
-      // handle this switch arm for the current discriminant.
       case 32:
         return $dataStates[trait.dataId] ? $dataStates[trait.dataId].iconIndex : 0;
       default:
@@ -859,10 +824,8 @@ class Window_PassiveDetail
     const skillTraits = this.filterTraits(state, [41, 42, 43, 44]);
     if (skillTraits.length === 0) return;
 
-    // policy step inside draw skills section.
     this.drawDetailSectionHeader('Skills');
 
-    // policy step inside draw skills section.
     skillTraits.forEach(rawTrait =>
     {
       const trait = new RPG_Trait(rawTrait);
@@ -874,7 +837,6 @@ class Window_PassiveDetail
         icon = $dataSkills[trait.dataId] ? $dataSkills[trait.dataId].iconIndex : 0;
       }
 
-      // policy step inside draw skills section.
       this.drawDetailRow(icon, trait.textName(), trait.textValue());
     });
   }
@@ -892,10 +854,8 @@ class Window_PassiveDetail
     const equipTraits = this.filterTraits(state, [51, 52, 53, 54, 55]);
     if (equipTraits.length === 0) return;
 
-    // policy step inside draw equip section.
     this.drawDetailSectionHeader('Equip');
 
-    // policy step inside draw equip section.
     equipTraits.forEach(rawTrait =>
     {
       const trait = new RPG_Trait(rawTrait);
@@ -916,10 +876,8 @@ class Window_PassiveDetail
     const propTraits = this.filterTraits(state, [33, 34, 35, 61, 62, 64]);
     if (propTraits.length === 0) return;
 
-    // policy step inside draw properties section.
     this.drawDetailSectionHeader('Properties');
 
-    // policy step inside draw properties section.
     propTraits.forEach(rawTrait =>
     {
       const trait = new RPG_Trait(rawTrait);
@@ -943,10 +901,8 @@ class Window_PassiveDetail
     const rows = this.collectRewardRows(state);
     if (rows.length === 0) return;
 
-    // policy step inside draw rewards section.
     this.drawDetailSectionHeader('Rewards');
 
-    // policy step inside draw rewards section.
     rows.forEach(({ icon, label, value }) =>
     {
       this.drawDetailRow(icon, label, value);
@@ -962,7 +918,6 @@ class Window_PassiveDetail
   {
     const rows = [];
 
-    // when J.DROPS, take this branch.
     if (J.DROPS)
     {
       const dropMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.DropMultiplier);
@@ -971,7 +926,6 @@ class Window_PassiveDetail
         rows.push({ icon: 0, label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
       }
 
-      // capture gold mult for downstream policy in this routine.
       const goldMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.GoldMultiplier);
       if (goldMult)
       {
@@ -979,7 +933,6 @@ class Window_PassiveDetail
       }
     }
 
-    // when J.SDP, take this branch.
     if (J.SDP)
     {
       const sdpMult = RPGManager.getNumberFromNoteByRegex(state, J.SDP.RegExp.SdpMultiplier);
@@ -989,14 +942,12 @@ class Window_PassiveDetail
       }
     }
 
-    // when J.PROF, take this branch.
     if (J.PROF)
     {
       const profBonus = RPGManager.getNumberFromNoteByRegex(state, J.PROF.RegExp.ProficiencyBonus);
       if (profBonus) rows.push({ icon: 0, label: 'Proficiency Bonus', value: `+${profBonus}` });
     }
 
-    // when J.NATURAL, take this branch.
     if (J.NATURAL)
     {
       const expFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardExp);
@@ -1005,14 +956,12 @@ class Window_PassiveDetail
         rows.push({ icon: 0, label: 'EXP Bonus', value: this.evaluateFormula(expFormula, this._actor) });
       }
 
-      // capture gold formula for downstream policy in this routine.
       const goldFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardGold);
       if (goldFormula)
       {
         rows.push({ icon: 0, label: 'Gold Bonus', value: this.evaluateFormula(goldFormula, this._actor) });
       }
 
-      // capture sdp formula for downstream policy in this routine.
       const sdpFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardSdps);
       if (sdpFormula)
       {
@@ -1020,7 +969,6 @@ class Window_PassiveDetail
       }
     }
 
-    // hand back rows to the caller.
     return rows;
   }
   //endregion rewards section

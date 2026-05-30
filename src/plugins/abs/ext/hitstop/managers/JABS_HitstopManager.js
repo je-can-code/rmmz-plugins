@@ -194,7 +194,6 @@ class JABS_HitstopManager
     const attackerIsPlayer = attacker.isPlayer && attacker.isPlayer();
     const targetIsPlayer = target.isPlayer && target.isPlayer();
 
-    // when onlyOnPlayer, take this branch.
     if (onlyOnPlayer)
     {
       // allow: player as attacker; optionally: player as target.

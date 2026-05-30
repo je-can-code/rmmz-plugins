@@ -24,26 +24,21 @@ class TrackedOmniObjective
     /**
      * The key of the quest that owns this objective. This is mostly used for metadata lookup.
      * @type {string}
-     // policy step inside initialize.
      */
     this.questKey = questKey;
   
-    // policy step inside initialize.
     /**
      * The id of this objective. This is typically used to indicate order between objectives within a single quest.
      * @type {number}
-     // policy step inside initialize.
      */
     this.id = id;
   
-    // policy step inside initialize.
     /**
      * Whether or not this objective is currently hidden.
      * @type {boolean}
      */
     this.hidden = hidden;
   
-    // policy step inside initialize.
     /**
      * Whether or not this objective is considered "optional", in that it is not strictly required to complete the parent
      * quest. Typically these objectives will end up "missed" if not completed rather than "failed".
@@ -51,14 +46,12 @@ class TrackedOmniObjective
      */
     this.optional = optional;
   
-    // policy step inside initialize.
     /**
      * The current state of this objective, effectively a tracking of its progress.
      * @type {number}
      */
     this.state = OmniObjective.States.Inactive;
   
-    // policy step inside initialize.
     this.initializeFulfillmentData();
     this.populateFulfillmentData(omniFulfillmentData);
   }
@@ -71,60 +64,49 @@ class TrackedOmniObjective
     /**
      * The indiscriminate detail for completing this objective.
      * @type {string}
-     // policy step inside initialize fulfillment data.
      */
     this._indiscriminateTargetData = String.empty;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target mapId that the target coordinates reside for a destination-type objective.
      * @type {number}
-     // policy step inside initialize fulfillment data.
      */
     this._targetMapId = -1;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target coordinate range this objective requires the player to reach in order to fulfill the objective. This is
      * designed to be a pair of coordinates that the player must reach within- and will be calculated as a rectangle
-     // policy step inside initialize fulfillment data.
      * which means if the player is anywhere within the coordinate range, then the objective will be considered fulfilled.
      * @type {[[number, number],[number, number]]}
      */
     // store  target coordinate range on the instance for later reads.
     this._targetCoordinateRange = [];
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target item type that the player must acquire {@link _targetItemFetchQuantity} quantity of in order to fulfill
      * the objective.
-     // policy step inside initialize fulfillment data.
      * @type {number}
      */
     this._targetItemType = -1;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target item id that the player must acquire.
      * @type {number}
      */
     this._targetItemId = -1;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target quantity to fetch of item of type {@link _targetItemType} in order to fulfill the objective.
      * @type {number}
      */
     this._targetItemFetchQuantity = -1;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The current quantity of the target item to fetch.
      * @type {number}
      */
     this._currentItemFetchQuantity = 0;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target enemyId of which the player must defeat {@link _targetEnemyAmount} quantity of in order to fulfill the
      * objective.
@@ -132,21 +114,18 @@ class TrackedOmniObjective
      */
     this._targetEnemyId = 0;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target quantity to slay of enemy of id {@link _targetEnemyId} in order to fulfill the objective.
      * @type {number}
      */
     this._targetEnemyAmount = 0;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The current quantity of the target enemy to slay.
      * @type {number}
      */
     this._currentEnemyAmount = 0;
   
-    // policy step inside initialize fulfillment data.
     /**
      * The target quest keys to complete in order to fulfill this objective.
      * @type {string[]}
@@ -174,7 +153,6 @@ class TrackedOmniObjective
       case OmniObjective.Types.Destination:
         const {
           mapId,
-          // policy step inside populate fulfillment data.
           x1,
           y1,
           x2,
@@ -326,20 +304,16 @@ class TrackedOmniObjective
       case OmniObjective.Types.Indiscriminate:
         return false;
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Destination:
         return this.isPlayerWithinDestinationRange();
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Fetch:
         this.synchronizeFetchTargetItemQuantity();
         return this.hasFetchedEnoughItems();
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Slay:
         return this.hasSlainEnoughEnemies();
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Quest:
         return this.hasCompletedAllQuests();
     }
@@ -365,7 +339,6 @@ class TrackedOmniObjective
     return this.parentQuestMetadata()
       .objectives
       .at(this.id);
-  // policy step inside objective metadata.
   }
   
   /**
@@ -375,7 +348,6 @@ class TrackedOmniObjective
   description()
   {
     const { description } = this.objectiveMetadata();
-    // hand back description to the caller.
     return description;
   }
   //endregion metadata
@@ -395,25 +367,20 @@ class TrackedOmniObjective
       missed
     } = this.objectiveMetadata().logs;
   
-    // dispatch on the discriminant for the next policy branch.
     switch (this.state)
     {
       case OmniObjective.States.Inactive:
         return inactive;
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.States.Active:
         return active;
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.States.Completed:
         return completed;
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.States.Failed:
         return failed;
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.States.Missed:
         return missed;
     }
@@ -426,7 +393,6 @@ class TrackedOmniObjective
   type()
   {
     const { type } = this.objectiveMetadata();
-    // hand back type to the caller.
     return type;
   }
   
@@ -439,31 +405,26 @@ class TrackedOmniObjective
     const enoughColor = 24; //ColorManager.powerUpColor();
     const notEnoughColor = 25; //ColorManager.powerDownColor();
   
-    // dispatch on the discriminant for the next policy branch.
     switch (this.type())
     {
       case OmniObjective.Types.Indiscriminate:
         return OmniObjective.FulfillmentTemplate(this.type(), this._indiscriminateTargetData);
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Destination:
         // TODO: validate this stringifies as intended.
         const point1 = `${this._targetCoordinateRange.at(0)}`;
         const point2 = `${this._targetCoordinateRange.at(1)}`;
         return OmniObjective.FulfillmentTemplate(this.type(), $gameMap.displayName(), point1, point2);
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Fetch:
         const fetchColor = (this._currentItemFetchQuantity < this._targetItemFetchQuantity)
           ? notEnoughColor
           : enoughColor;
   
-        // capture target item text for downstream policy in this routine.
         const targetItemText = `${this.fetchDataSourceTextPrefix()}[${this._targetItemId}]`;
         const quantity = `\\C[${fetchColor}]${this._currentItemFetchQuantity} / ${this._targetItemFetchQuantity}\\C[0]`;
         return OmniObjective.FulfillmentTemplate(this.type(), quantity, targetItemText);
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Slay:
         const slayColor = (this._currentEnemyAmount < this._targetEnemyAmount)
           ? notEnoughColor
@@ -471,7 +432,6 @@ class TrackedOmniObjective
         const targetEnemyText = `\\C[${slayColor}]${this._currentEnemyAmount} / ${this._targetEnemyAmount}\\C[0]`;
         return OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this._targetEnemyId);
   
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Quest:
         const questNames = this._targetQuestKeys
           .map(questKey => `'\\quest[${questKey}]'`);
@@ -492,11 +452,9 @@ class TrackedOmniObjective
       case OmniObjective.States.Inactive:
         return 93;
       case OmniObjective.States.Active:
-        // hand back 92 to the caller.
         return 92;
       case OmniObjective.States.Completed:
         return 91;
-      // handle this switch arm for the current discriminant.
       case OmniObjective.States.Failed:
         return 90;
       case OmniObjective.States.Missed:
@@ -532,7 +490,6 @@ class TrackedOmniObjective
    */
   destinationData()
   {
-    // hand back [ to the caller.
     return [
       this._targetMapId, this._targetCoordinateRange ];
   }
@@ -574,7 +531,6 @@ class TrackedOmniObjective
    */
   fetchData()
   {
-    // hand back [ to the caller.
     return [
       this._targetItemId, this._targetItemFetchQuantity ];
   }
@@ -611,11 +567,9 @@ class TrackedOmniObjective
     {
       case OmniObjective.FetchTypes.Item:
         return `\\Item`;
-      // handle this switch arm for the current discriminant.
       case OmniObjective.FetchTypes.Weapon:
         return `\\Weapon`;
       case OmniObjective.FetchTypes.Armor:
-        // hand back `\\Armor` to the caller.
         return `\\Armor`;
       default:
         throw new Error(`unknown target item type: ${this._targetItemType}`);
@@ -632,11 +586,9 @@ class TrackedOmniObjective
     {
       case OmniObjective.FetchTypes.Item:
         return $dataItems;
-      // handle this switch arm for the current discriminant.
       case OmniObjective.FetchTypes.Weapon:
         return $dataWeapons;
       case OmniObjective.FetchTypes.Armor:
-        // hand back $dataArmors to the caller.
         return $dataArmors;
       default:
         throw new Error(`unknown target item type: ${this._targetItemType}`);
@@ -681,7 +633,6 @@ class TrackedOmniObjective
    */
   slayData()
   {
-    // hand back [ to the caller.
     return [
       this._targetEnemyId, this._targetEnemyAmount ];
   }

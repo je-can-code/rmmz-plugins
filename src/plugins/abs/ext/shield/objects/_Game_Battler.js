@@ -40,7 +40,6 @@ Game_Battler.prototype.getShieldStates = function()
   // convert them to a proper array.
   const states = Array.from(jabsStates.values());
 
-  // hand back states to the caller.
   return states
     .filter(state =>
     {
@@ -162,7 +161,6 @@ Game_Battler.prototype.onShieldBreak = function()
   // identify all the sources from which shield break skills can be pulled from.
   const sources = this.shieldBreakSources().filter(source => !!source);
 
-  // policy step inside on shield break.
   /**
    * A reducer function to grab all the shield break skills.
    * @param {number[]} accumulator The accumulator of skill ids.
@@ -196,6 +194,5 @@ Game_Battler.prototype.shieldBreakSources = function()
   return [
     this.databaseData(), ...this.states(),
   ];
-// policy step inside shield break sources.
 };
 //endregion Game_Battler

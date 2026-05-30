@@ -18,7 +18,6 @@ class JaftingSalvageLedgerRow
     this.id = id;
     this.n = n;
 
-    // when banned  equals  true, take this branch.
     if (banned === true)
     {
       this.banned = true;
@@ -38,7 +37,6 @@ class JaftingSalvageLedgerRow
       return row;
     }
 
-    // hand back new JaftingSalvageLedgerRow(row.t, row.id, row.n, row... to the caller.
     return new JaftingSalvageLedgerRow(row.t, row.id, row.n, row.banned === true);
   }
 

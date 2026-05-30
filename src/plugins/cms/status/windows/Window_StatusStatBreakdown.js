@@ -37,7 +37,6 @@ class Window_StatusStatBreakdown
     if (!this._j) this._j = {};
     if (!this._j._cms_s) this._j._cms_s = {};
     if (!this._j._cms_s._status) this._j._cms_s._status = {};
-    // policy step inside init members.
     this._j._cms_s._status._breakdown = {
       _actor: null,
       _parameterKey: String.empty,
@@ -97,7 +96,6 @@ class Window_StatusStatBreakdown
   refresh()
   {
     this.contents.clear();
-    // when not this.getActor(), take this branch.
     if (!this.getActor()) return;
     this.drawBreakdown();
   }
@@ -162,7 +160,6 @@ class Window_StatusStatBreakdown
     // resolve kind and draw body accordingly.
     const kind = this.resolveKind(parameterKey);
 
-    // dispatch on the discriminant for the next policy branch.
     switch (kind)
     {
       case Window_StatusStatBreakdown.KINDS.Base:
@@ -202,7 +199,6 @@ class Window_StatusStatBreakdown
     if (parameterKey === 'mtp') return Window_StatusStatBreakdown.KINDS.Mtp;
     if (parameterKey === 'cdm' || parameterKey === 'cdr') return Window_StatusStatBreakdown.KINDS.Crit;
     if (ParameterKeys.bparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Base;
-    // when ParameterKeys.xparamId(parameterKey) >= 0, take this branch.
     if (ParameterKeys.xparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Ex;
     if (ParameterKeys.sparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Special;
     return Window_StatusStatBreakdown.KINDS.Custom;
@@ -291,7 +287,6 @@ class Window_StatusStatBreakdown
       value: baseVanilla
     });
 
-    // when natGrowthPlus  differs from  0  or  natGrowthRate  differs from  0  o..., take this branch.
     if (natGrowthPlus !== 0 || natGrowthRate !== 0 || natGrowthDelta !== 0)
     {
       const growthText = this.formatPlusRate(natGrowthPlus, natGrowthRate, natGrowthDelta);
@@ -301,7 +296,6 @@ class Window_StatusStatBreakdown
       });
     }
 
-    // when natBuffPlus  differs from  0  or  natBuffRate  differs from  0  or  n..., take this branch.
     if (natBuffPlus !== 0 || natBuffRate !== 0 || natBuffDelta !== 0)
     {
       const buffText = this.formatPlusRate(natBuffPlus, natBuffRate, natBuffDelta);
@@ -394,7 +388,6 @@ class Window_StatusStatBreakdown
       return this._drawXParamBreakdownRegen(actor, xId, x, y, w);
     }
 
-    // hand back this._drawXParamBreakdownPercent(actor, xId, x, y, w) to the caller.
     return this._drawXParamBreakdownPercent(actor, xId, x, y, w);
   }
 
@@ -497,7 +490,6 @@ class Window_StatusStatBreakdown
         value: this.formatPerFiveFlat(r.valueNative)
       }));
 
-    // policy step inside  draw xparam breakdown regen.
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (+)', traitRows);
 
     // SDP (Panels) for regen — draw in flat-per-5s terms.
@@ -531,7 +523,6 @@ class Window_StatusStatBreakdown
     const addActor = common.adds.actor;
     const addClass = common.adds.class;
     const addEquips = common.adds.equips;
-    // capture add states for downstream policy in this routine.
     const addStates = common.adds.states;
     const { natGrowthDelta } = common;
     const { totalWithSdp } = common;
@@ -548,7 +539,6 @@ class Window_StatusStatBreakdown
     let cursorY = y;
     cursorY = this.drawSectionTitle(x, cursorY, w, 'Baseline');
     this.drawKeyValue(x + 12, cursorY, w - 12, 'Baseline', StatusHelper.toPercentString(0, false), 'left');
-    // policy step inside  draw xparam breakdown percent.
     cursorY += this.lineHeight() + 6;
 
     // Natural (Growths): only if non-zero.
@@ -556,7 +546,6 @@ class Window_StatusStatBreakdown
     {
       cursorY = this.drawSectionTitle(x, cursorY, w, 'Natural');
       this.drawKeyValue(
-        // policy step inside  draw xparam breakdown percent.
         x + 12,
         cursorY,
         w - 12,
@@ -605,7 +594,6 @@ class Window_StatusStatBreakdown
         value: StatusHelper.toPercentString(r.value * 100, true)
       }));
 
-    // policy step inside  draw xparam breakdown percent.
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (+)', traitRows);
 
     // SDP (Panels) for xparams — omit if total is 0 or no non-zero panels; use helper.
@@ -740,33 +728,28 @@ class Window_StatusStatBreakdown
     const showStates = rStates !== 1.0;
     const anyTraits = showActor || showClass || showEquips || showStates;
 
-    // when anyTraits, take this branch.
     if (anyTraits)
     {
       cursorY = this.drawSectionTitle(x, cursorY, w, 'Traits (×)');
 
-      // when showActor, take this branch.
       if (showActor)
       {
         this.drawKeyValue(x + 12, cursorY, w - 12, '× Actor', StatusHelper.toRateString(rActor), 'left');
         cursorY += this.lineHeight();
       }
 
-      // when showClass, take this branch.
       if (showClass)
       {
         this.drawKeyValue(x + 12, cursorY, w - 12, '× Class', StatusHelper.toRateString(rClass), 'left');
         cursorY += this.lineHeight();
       }
 
-      // when showEquips, take this branch.
       if (showEquips)
       {
         this.drawKeyValue(x + 12, cursorY, w - 12, '× Equips', StatusHelper.toRateString(rEquips), 'left');
         cursorY += this.lineHeight();
       }
 
-      // when showStates, take this branch.
       if (showStates)
       {
         this.drawKeyValue(x + 12, cursorY, w - 12, '× States', StatusHelper.toRateString(rStates), 'left');
@@ -780,7 +763,6 @@ class Window_StatusStatBreakdown
         cursorY += this.lineHeight();
       }
 
-      // policy step inside draw sparam breakdown.
       cursorY += 6;
     }
 
@@ -839,7 +821,6 @@ class Window_StatusStatBreakdown
     this.drawKeyValue(x + 12, cursorY, w - 12, 'Base (Actor/Class)', baseMaxTp, 'left');
     cursorY += this.lineHeight();
 
-    // when natGrowthPlus  differs from  0  or  natGrowthRate  differs from  0  o..., take this branch.
     if (natGrowthPlus !== 0 || natGrowthRate !== 0 || growthDelta !== 0)
     {
       const growthText = this.formatPlusRate(natGrowthPlus, natGrowthRate, growthDelta);
@@ -847,7 +828,6 @@ class Window_StatusStatBreakdown
       cursorY += this.lineHeight();
     }
 
-    // when natBuffPlus  differs from  0  or  natBuffRate  differs from  0  or  b..., take this branch.
     if (natBuffPlus !== 0 || natBuffRate !== 0 || buffDelta !== 0)
     {
       const buffText = this.formatPlusRate(natBuffPlus, natBuffRate, buffDelta);
@@ -855,7 +835,6 @@ class Window_StatusStatBreakdown
       cursorY += this.lineHeight();
     }
 
-    // policy step inside draw mtp breakdown.
     cursorY += 6;
 
     // SDP (Panels) for Max TP — use helper to avoid duplication.
@@ -947,7 +926,6 @@ class Window_StatusStatBreakdown
       : J.CRIT.RegExp.CritDamageReductionBuffPlus;
     const buffPlusSum = RPGManager.getSumFromAllNotesByRegex(notesSources, buffPlusRegex);
 
-    // capture buff rate regex for downstream policy in this routine.
     const buffRateRegex = isAmp
       ? J.CRIT.RegExp.CritDamageMultiplierBuffRate
       : J.CRIT.RegExp.CritDamageReductionBuffRate;
@@ -1469,7 +1447,6 @@ class Window_StatusStatBreakdown
     const numerator = totalWithSdp - c;
     const denom = 1 + k;
     const base = denom !== 0
-      // policy step inside  solve pre sdp base core.
       ? Math.round(numerator / denom)
       : 0;
     return Math.max(0, base);
@@ -1487,7 +1464,6 @@ class Window_StatusStatBreakdown
     const numerator = totalWithSdp - c;
     const denom = 1 + k;
     const base = denom !== 0
-      // policy step inside  solve pre sdp base non core.
       ? (numerator / denom)
       : 0;
     return Math.max(0, base);
@@ -1677,7 +1653,6 @@ class Window_StatusStatBreakdown
     const equipTotal = (actor.equippedEquips() || [])
       .filter(e => !!e)
       .reduce((n, e) => n + (e.jabsSpeedBoost | 0), 0);
-    // capture state total for downstream policy in this routine.
     const stateTotal = (actor.states() || [])
       .filter(s => !!s)
       .reduce((n, s) => n + (s.jabsSpeedBoost | 0), 0);
@@ -1689,7 +1664,6 @@ class Window_StatusStatBreakdown
     const rows = [];
     rows.push({
       key: 'Baseline',
-      // policy step inside  draw msb breakdown.
       value: 0
     });
     if (equipTotal !== 0) rows.push({
@@ -1725,21 +1699,16 @@ class Window_StatusStatBreakdown
     const eq = RPGManager.getSumFromAllNotesByRegex(
       actor.equippedEquips()
         .filter(e => !!e),
-      // policy step inside  draw spb breakdown.
       J.PROF.RegExp.ProficiencyBonus
     );
     const st = RPGManager.getSumFromAllNotesByRegex(
-      // policy step inside  draw spb breakdown.
       actor.states()
         .filter(s => !!s),
       J.PROF.RegExp.ProficiencyBonus
-    // policy step inside  draw spb breakdown.
     );
 
-    // capture total for downstream policy in this routine.
     const total = (eq + st); // equals Page 1’s bonusSkillProficiencyGains()
 
-    // capture rows for downstream policy in this routine.
     const rows = [];
     rows.push({
       key: 'Baseline',
@@ -1758,7 +1727,6 @@ class Window_StatusStatBreakdown
       value: total
     });
 
-    // hand back this.drawSectionWithRows(x, y, w, 'Sources (Equips/St... to the caller.
     return this.drawSectionWithRows(x, y, w, 'Sources (Equips/States)', rows);
   }
 
@@ -1812,7 +1780,6 @@ class Window_StatusStatBreakdown
         : txt;
     };
 
-    // capture format signed factor for downstream policy in this routine.
     const formatSignedFactor = n =>
     {
       // Determine sign for the factor delta.
@@ -1897,11 +1864,9 @@ class Window_StatusStatBreakdown
     const plusSign = plus >= 0
       ? '+'
       : String.empty;
-    // capture delta sign for downstream policy in this routine.
     const deltaSign = delta >= 0
       ? '+'
       : String.empty;
-    // capture rate text for downstream policy in this routine.
     const rateText = StatusHelper.toPercentString(rate, true);
     return `${plusSign}${plus}, ${rateText} → ${deltaSign}${Math.round(delta)}`;
   }
@@ -1918,11 +1883,9 @@ class Window_StatusStatBreakdown
     actor.equips()
       .forEach(equip =>
       {
-        // when not equip, take this branch.
         if (!equip) return;
         const arr = equip.params;
         total += arr
-          // policy step inside sum equip bparam flat.
           ? (arr[paramId] | 0)
           : 0;
       });
@@ -1941,11 +1904,9 @@ class Window_StatusStatBreakdown
     actor.states()
       .forEach(state =>
       {
-        // when not state, take this branch.
         if (!state) return;
         const arr = state.params;
         total += arr
-          // policy step inside sum state bparam flat.
           ? (arr[paramId] | 0)
           : 0;
       });
@@ -1964,13 +1925,11 @@ class Window_StatusStatBreakdown
     let rate = 1.0;
     objs.forEach(source =>
     {
-      // when not source  or  not source.traits, take this branch.
       if (!source || !source.traits) return;
       source.traits.forEach(trait =>
       {
         if (trait.code === CODE && trait.dataId === paramId)
         {
-          // policy step inside param rate from traits.
           rate *= trait.value;
         }
       });
@@ -1990,13 +1949,11 @@ class Window_StatusStatBreakdown
     let add = 0.0;
     objs.forEach(source =>
     {
-      // when not source  or  not source.traits, take this branch.
       if (!source || !source.traits) return;
       source.traits.forEach(trait =>
       {
         if (trait.code === CODE && trait.dataId === xId)
         {
-          // policy step inside xparam add from traits.
           add += trait.value;
         }
       });
@@ -2016,13 +1973,11 @@ class Window_StatusStatBreakdown
     let rate = 1.0;
     objs.forEach(source =>
     {
-      // when not source  or  not source.traits, take this branch.
       if (!source || !source.traits) return;
       source.traits.forEach(trait =>
       {
         if (trait.code === CODE && trait.dataId === sId)
         {
-          // policy step inside sparam rate from traits.
           rate *= trait.value;
         }
       });
@@ -2066,7 +2021,6 @@ class Window_StatusStatBreakdown
   drawKeyValue(x, y, w, key, value, align)
   {
     this.drawText(key, x, y, Math.floor(w * 0.6), align || 'left');
-    // capture text for downstream policy in this routine.
     const text = `${value}`;
     this.drawText(text, x, y, w, 'right');
   }
@@ -2205,7 +2159,6 @@ class Window_StatusStatBreakdown
       const pct = panel.delta * 100;
       const valueText = StatusHelper.toPercentString(pct, true);
 
-      // policy step inside draw sdp panels percent section.
       this.drawSdpPanelEntry(x + 24, cursorY, w - 24, name, iconIndex, rarity, valueText);
       cursorY += this.lineHeight();
     });

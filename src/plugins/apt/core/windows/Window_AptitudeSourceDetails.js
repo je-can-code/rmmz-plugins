@@ -163,7 +163,6 @@ class Window_AptitudeSourceDetails
     // y anchor for the header.
     let y = this.nextY();
 
-    // when source.iconIndex > 0, take this branch.
     if (source.iconIndex > 0)
     {
       this.drawIcon(source.iconIndex, 0, y);

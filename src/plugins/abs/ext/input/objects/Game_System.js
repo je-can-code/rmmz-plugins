@@ -23,29 +23,24 @@ Game_System.prototype.initJabsInputConfigMembers = function()
   /**
    * Root namespace for J-related data stored on the system object.
    */
-  // policy step inside init jabs input config members.
   this._j ||= {};
 
-  // policy step inside init jabs input config members.
   /**
    * ABS (JABS) namespace stored under the J-root on the system object.
    */
   this._j._abs ||= {};
 
-  // policy step inside init jabs input config members.
   /**
    * Input extension namespace stored under the ABS namespace on the system object.
    */
   this._j._abs._input ||= {};
 
-  // policy step inside init jabs input config members.
   /**
    * Dictionary of controllerKey -> mapping object `{ [button]: symbol }`.
    * @type {Object<string, Object<string, string>>}
    */
   this._j._abs._input._mappings ||= {};
 
-  // policy step inside init jabs input config members.
   /**
    * Snapshot of the full Input registry bindings across all namespaces.
    * @type {Object<string, Object<string, string[]>>}
@@ -145,16 +140,13 @@ Game_System.prototype.setInputBindingsSnapshot = function(snapshot)
   const namespaces = Object.keys(snapshot || {});
   for (let i = 0; i < namespaces.length; i++)
   {
-    // capture ns for downstream policy in this routine.
     const ns = namespaces[i];
     const map = snapshot[ns] || {};
     const copy = {};
-    // capture keys for downstream policy in this routine.
     const keys = Object.keys(map);
     for (let k = 0; k < keys.length; k++)
     {
       const key = keys[k];
-      // capture arr for downstream policy in this routine.
       const arr = map[key];
       copy[key] = Array.isArray(arr)
         ? arr.slice(0)

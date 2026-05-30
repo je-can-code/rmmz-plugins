@@ -10,18 +10,15 @@ class JCMS_ParameterKvp
     /**
      * The name of the parameter.
      * @type {string}
-     // policy step inside constructor.
      */
     this._name = name;
 
-    // policy step inside constructor.
     /**
      * The value of the parameter.
      * @type {string|number|null}
      */
     this._value = value;
 
-    // policy step inside constructor.
     /**
      * The id of the color for this parameter when drawing.
      * @type {number|null}

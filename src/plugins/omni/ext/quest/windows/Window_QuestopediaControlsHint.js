@@ -30,15 +30,12 @@ class Window_QuestopediaControlsHint
   {
     const padX = 12;
 
-    // policy step inside draw controller hint.
     this.resetFontSettings();
     this.modFontSize(-4);
     this.changeTextColor(ColorManager.normalColor());
 
-    // capture text for downstream policy in this routine.
     const text = 'L2/R2: category';
 
-    // capture y for downstream policy in this routine.
     const y = Math.max(0, Math.floor((this.innerHeight - this.lineHeight()) / 2));
     this.drawText(text, padX, y, this.innerWidth - padX * 2, 'left');
     this.resetFontSettings();

@@ -8,7 +8,6 @@ Game_Actor.prototype.hcrSources = function()
   return [
     this.databaseData(),
     this.currentClass(),
-    // policy step inside hcr sources.
     ...this.equippedEquips(),
     ...this.allStates(),
   ];

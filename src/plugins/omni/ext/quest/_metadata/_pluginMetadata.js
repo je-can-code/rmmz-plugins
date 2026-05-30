@@ -22,7 +22,6 @@ class J_QUEST_PluginMetadata
   {
     const parsedQuests = [];
 
-    // policy step inside classify quests.
     /** @param {OmniQuest} parsedQuest */
     const foreacher = parsedQuest =>
     {
@@ -32,7 +31,6 @@ class J_QUEST_PluginMetadata
       if (questName.startsWith('==')) return;
       if (questName.startsWith('--')) return;
 
-      // capture built quest for downstream policy in this routine.
       const builtQuest = OmniQuest.Builder()
         .name(parsedQuest.name)
         .key(parsedQuest.key)
@@ -48,10 +46,8 @@ class J_QUEST_PluginMetadata
       parsedQuests.push(builtQuest);
     };
 
-    // policy step inside classify quests.
     parsedBlob.forEach(foreacher, this);
 
-    // hand back parsed quests to the caller.
     return parsedQuests;
   }
 
@@ -76,15 +72,12 @@ class J_QUEST_PluginMetadata
     const canLogLoadInfo = J_QUEST_PluginMetadata.#hasMinimumBaseVersion();
     const parsedConfiguration = ExternalJsonConfigLoader.load(
       J_QUEST_PluginMetadata.CONFIG_PATH,
-      // policy step inside initialize quests.
       ExternalJsonConfigLoaderOptions.Builder()
         .pluginName('J-Omni-Questopedia')
         .configName('quest configuration')
-        // policy step inside initialize quests.
         .logSummary(canLogLoadInfo
           ? result => [
             `- ${result.quests.length} quests`,
-            // policy step inside initialize quests.
             `- ${result.categories.length} categories`,
             `- ${result.tags.length} tags`,
           ]
@@ -92,10 +85,8 @@ class J_QUEST_PluginMetadata
         .build()
     );
 
-    // capture classified quests for downstream policy in this routine.
     const classifiedQuests = J_QUEST_PluginMetadata.classifyQuests(parsedConfiguration.quests);
 
-    // policy step inside initialize quests.
     /**
      * A collection of all defined quests.
      * @type {OmniQuest[]}
@@ -106,14 +97,12 @@ class J_QUEST_PluginMetadata
     const questMap = new Map();
     this.quests.forEach(quest => questMap.set(quest.key, quest));
 
-    // policy step inside initialize quests.
     /**
      * A key:quest map of all defined quests.
      * @type {Map<string, OmniQuest>}
      */
     this.questsMap = questMap;
 
-    // policy step inside initialize quests.
     /**
      * A collection of all defined quest categories.
      * @type {OmniCategory[]}
@@ -124,14 +113,12 @@ class J_QUEST_PluginMetadata
     const categoryMap = new Map();
     this.categories.forEach(category => categoryMap.set(category.key, category));
 
-    // policy step inside initialize quests.
     /**
      * A key:questCategory map of all defined categories.
      * @type {Map<string, OmniCategory>}
      */
     this.categoriesMap = categoryMap;
 
-    // policy step inside initialize quests.
     /**
      * A collection of all defined quest tags.
      * @type {OmniTag[]}
@@ -142,7 +129,6 @@ class J_QUEST_PluginMetadata
     const tagMap = new Map();
     this.tags.forEach(tag => tagMap.set(tag.key, tag));
 
-    // policy step inside initialize quests.
     /**
      * A key:questTag map of all defined tags.
      * @type {Map<string, OmniTag>}
@@ -158,19 +144,15 @@ class J_QUEST_PluginMetadata
     /**
      * The id of a switch that represents whether or not this system is accessible in the menu.
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
 
-    // policy step inside initialize metadata.
     /**
      * When this switch is enabled, the command will be rendered into the command list as well.
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.enabledSwitchId = 104; //parseInt(this.parsedPluginParameters['enabled-switch-id']);
 
-    // policy step inside initialize metadata.
     /**
      * The data associated with rendering this plugin's command in a command list.
      */
@@ -180,13 +162,11 @@ class J_QUEST_PluginMetadata
        */
       Name: 'Questopedia',
 
-      // policy step inside initialize metadata.
       /**
        * The symbol of the command in the command list.
        */
       Symbol: 'quest-pedia',
 
-      // policy step inside initialize metadata.
       /**
        * The icon for the command anywhere it is viewed.
        */

@@ -13,7 +13,6 @@ Window_MenuCommand.prototype.addOriginalCommands = function()
   // if we cannot add the command, then do not.
   if (this.canAddJabsRemapCommand() === false) return;
 
-  // policy step inside add original commands.
   this.addJabsRemapCommand();
 };
 

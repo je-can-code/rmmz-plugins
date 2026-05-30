@@ -15,7 +15,6 @@ JABS_Engine.prototype.onSdpRewardGranted = function(sdpPoints, character)
     .isSdpPoints()
     .build();
 
-  // policy step inside on sdp reward granted.
   JABS_PopupMergeController.routeRewardPop(pop, character, {
     rewardType: Map_TextPop.Types.Sdp,
     amount: sdpPoints,
@@ -33,13 +32,11 @@ JABS_Engine.prototype.onSdpPanelUnlocked = function(sdpKey, character)
   J.POPUPS.EXT.SDP.Aliased.JABS_Engine.get('onSdpPanelUnlocked')
     .call(this, sdpKey, character);
 
-  // capture sdp for downstream policy in this routine.
   const sdp = J.SDP.Metadata.panelsMap.get(sdpKey);
   const pop = new TextPopBuilder(sdp.name)
     .isSdpPoints()
     .build();
 
-  // policy step inside on sdp panel unlocked.
   TextPopManager.show(pop, character);
 };
 //endregion JABS_Engine

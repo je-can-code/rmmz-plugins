@@ -32,14 +32,12 @@ JaftingSalvageLedger.getMaterialArmorTypeId = function()
   {
     const v = J.JAFTING.Metadata.materialArmorTypeId;
 
-    // when typeof v  equals  'number'  and  not Number.isNaN(v), take this branch.
     if (typeof v === 'number' && !Number.isNaN(v))
     {
       return v;
     }
   }
 
-  // hand back JaftingSalvageLedger.MaterialArmorTypeId to the caller.
   return JaftingSalvageLedger.MaterialArmorTypeId;
 };
 
@@ -57,14 +55,12 @@ JaftingSalvageLedger.getMaterialWeaponTypeId = function()
   {
     const v = J.JAFTING.Metadata.materialWeaponTypeId;
 
-    // when typeof v  equals  'number'  and  not Number.isNaN(v), take this branch.
     if (typeof v === 'number' && !Number.isNaN(v))
     {
       return v;
     }
   }
 
-  // hand back -1 to the caller.
   return -1;
 };
 
@@ -78,13 +74,11 @@ JaftingSalvageLedger.isMaterialArmorDatum = function(datum)
 {
   const armorTypeId = JaftingSalvageLedger.getMaterialArmorTypeId();
 
-  // when armorTypeId < 0, take this branch.
   if (armorTypeId < 0)
   {
     return false;
   }
 
-  // hand back datum.isArmor() === true && datum.atypeId === armorTy... to the caller.
   return datum.isArmor() === true && datum.atypeId === armorTypeId;
 };
 
@@ -98,13 +92,11 @@ JaftingSalvageLedger.isMaterialWeaponDatum = function(datum)
 {
   const weaponTypeId = JaftingSalvageLedger.getMaterialWeaponTypeId();
 
-  // when weaponTypeId < 0, take this branch.
   if (weaponTypeId < 0)
   {
     return false;
   }
 
-  // hand back datum.isWeapon() === true && datum.wtypeId === weapon... to the caller.
   return datum.isWeapon() === true && datum.wtypeId === weaponTypeId;
 };
 
@@ -116,7 +108,6 @@ JaftingSalvageLedger.isMaterialWeaponDatum = function(datum)
  */
 JaftingSalvageLedger.isStackCountedRefinableEquip = function(datum)
 {
-  // hand back JaftingSalvageLedger.isMaterialArmorDatum(datum) to the caller.
   return JaftingSalvageLedger.isMaterialArmorDatum(datum)
     || JaftingSalvageLedger.isMaterialWeaponDatum(datum);
 };
@@ -143,13 +134,11 @@ JaftingSalvageLedger.cloneRows = function(rows)
   const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
   const out = [];
 
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < list.length; i++)
   {
     out.push(list[i].clone());
   }
 
-  // hand back out to the caller.
   return out;
 };
 
@@ -168,13 +157,11 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
   const bucket = {};
   const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
 
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < list.length; i++)
   {
     const row = list[i];
     const key = JaftingSalvageLedger.rowMergeKey(row);
 
-    // when not bucket[key], take this branch.
     if (!bucket[key])
     {
       bucket[key] = row.clone();
@@ -191,7 +178,6 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
     }
   }
 
-  // hand back Object.keys(bucket).map(k => bucket[k]) to the caller.
   return Object.keys(bucket).map(k => bucket[k]);
 };
 
@@ -206,19 +192,16 @@ JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
 {
   const rows = [];
 
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < ingredients.length; i++)
   {
     const component = ingredients[i];
 
-    // when component.isDatabaseEntry(), take this branch.
     if (component.isDatabaseEntry())
     {
       // mirror {@link CraftingComponent} letter codes into ledger row type letters for stash/refund routing.
       const datum = component.getItem();
       let typeLetter = 'i';
 
-      // when component.isWeapon(), take this branch.
       if (component.isWeapon())
       {
         typeLetter = 'w';
@@ -259,7 +242,6 @@ JaftingSalvageLedger.mergeRowArrays = function(a, b)
   // concat first so identical keys from both sides collide, then dedupe sums counts and merges banned flags.
   const combined = JaftingSalvageLedger.cloneRows(a).concat(JaftingSalvageLedger.cloneRows(b));
 
-  // hand back JaftingSalvageLedger.mergeDuplicateRows(combined) to the caller.
   return JaftingSalvageLedger.mergeDuplicateRows(combined);
 };
 

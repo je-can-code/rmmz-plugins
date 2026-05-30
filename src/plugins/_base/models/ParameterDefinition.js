@@ -66,7 +66,6 @@ class ParameterDefinition
   {
     let num = value;
 
-    // when this.format  equals  ParameterFormat.PERCENT, take this branch.
     if (this.format === ParameterFormat.PERCENT
       || this.format === ParameterFormat.PERCENT_CENTERED
       || this.format === ParameterFormat.PERCENT_SUFFIX
@@ -75,13 +74,11 @@ class ParameterDefinition
       num *= 100;
     }
 
-    // when this.format  equals  ParameterFormat.PERCENT_CENTERED, take this branch.
     if (this.format === ParameterFormat.PERCENT_CENTERED)
     {
       num -= 100;
     }
 
-    // when this.format  equals  ParameterFormat.REGEN_PER_SECOND, take this branch.
     if (this.format === ParameterFormat.REGEN_PER_SECOND)
     {
       const perSecond = (num / 5);
@@ -89,22 +86,18 @@ class ParameterDefinition
         ? perSecond.toString()
         : perSecond.toFixed(1);
 
-      // hand back `${regenStr}/s` to the caller.
       return `${regenStr}/s`;
     }
 
-    // capture base for downstream policy in this routine.
     let base = Number.isInteger(num)
       ? num.toString()
       : num.toFixed(1);
 
-    // when base.endsWith('.0'), take this branch.
     if (base.endsWith('.0'))
     {
       base = base.slice(0, base.length - 2);
     }
 
-    // when withPadding  and  value, take this branch.
     if (withPadding && value)
     {
       if (this.format === ParameterFormat.FLAT_LARGE)
@@ -125,13 +118,11 @@ class ParameterDefinition
       }
     }
 
-    // when this.format  equals  ParameterFormat.PERCENT_SUFFIX, take this branch.
     if (this.format === ParameterFormat.PERCENT_SUFFIX)
     {
       base = `${base}%`;
     }
 
-    // hand back base to the caller.
     return base;
   }
 }

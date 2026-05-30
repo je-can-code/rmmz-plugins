@@ -52,12 +52,10 @@ class Window_QuestopediaObjectives
     // grab all the omnipedia listings available.
     const commands = this.buildCommands();
 
-    // when commands.length  equals  0, take this branch.
     if (commands.length === 0)
     {
       commands.push(this.buildNoObjectivesCommand());
     }
-
 
     // build all the commands.
     commands.forEach(this.addBuiltCommand, this);
@@ -109,7 +107,6 @@ class Window_QuestopediaObjectives
     return new WindowCommandBuilder(String.empty)
       .setSymbol(0)
       .setExtensionData(null)
-      // policy step inside build no objectives command.
       .addTextLine("No known objectives for this quest.")
       .flagAsSubText()
       .build();

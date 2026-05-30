@@ -9,19 +9,16 @@ Game_Temp.prototype.initMembers = function()
   J.UTILS.Aliased.Game_Temp.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._utils ||= {};
 
-  // policy step inside init members.
   /**
    * Whether or not to use the click-to-log-event functionality.
    * @type {boolean}
@@ -60,10 +57,8 @@ Game_Temp.prototype.getAllArmorNames = function()
   {
     if (!armor) return;
 
-    // when armor.name.startsWith(' equals '), take this branch.
     if (armor.name.startsWith('===')) return;
 
-    // hand back { to the caller.
     return {
       key: armor._key(),
       name: armor.name,
@@ -71,6 +66,5 @@ Game_Temp.prototype.getAllArmorNames = function()
     };
   }
 
-  // hand back $dataArmors.map(mapping) to the caller.
   return $dataArmors.map(mapping);
 };

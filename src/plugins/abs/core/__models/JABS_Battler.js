@@ -44,23 +44,18 @@ class JABS_Battler
     /**
      * The character/sprite that represents this battler on the map.
      * @type {Game_Event|Game_Player|Game_Follower}
-     // policy step inside initialize.
      */
     this._event = event;
 
-    // policy step inside initialize.
     /**
      * The battler data that represents this battler's stats and information.
      * @type {Game_Actor|Game_Enemy}
-     // policy step inside initialize.
      */
     this._battler = battler;
 
-    // policy step inside initialize.
     /**
      * Whether or not the battler is hidden.
      * Hidden AI-controlled battlers (like enemies) will not take action, nor will they
-     // policy step inside initialize.
      * be targetable.
      * @type {boolean}
      */
@@ -86,57 +81,45 @@ class JABS_Battler
     /**
      * The id of the battler in the database.
      * @type {number}
-     // policy step inside init core data.
      */
     this._battlerId = battlerCoreData.battlerId();
 
-    // policy step inside init core data.
     /**
      * The team that this battler fights for.
      * @type {number}
-     // policy step inside init core data.
      */
     this._team = battlerCoreData.team();
 
-    // policy step inside init core data.
     /**
      * The distance this battler requires before it will engage with a non-allied target.
      * @type {number}
-     // policy step inside init core data.
      */
     this._sightRadius = battlerCoreData.sightRange();
 
-    // policy step inside init core data.
     /**
      * The boost this battler gains to their sight range while alerted.
      * @type {number}
-     // policy step inside init core data.
      */
     this._alertedSightBoost = battlerCoreData.alertedSightBoost();
 
-    // policy step inside init core data.
     /**
      * The distance this battler will allow for its target to be from itself before it disengages.
      * @type {number}
-     // policy step inside init core data.
      */
     this._pursuitRadius = battlerCoreData.pursuitRange();
 
-    // policy step inside init core data.
     /**
      * The boost this battler gains to their pursuit range while alerted.
      * @type {number}
      */
     this._alertedPursuitBoost = battlerCoreData.alertedPursuitBoost();
 
-    // policy step inside init core data.
     /**
      * The duration in frames that this battler remains in an alerted state.
      * @type {number}
      */
     this._alertDuration = battlerCoreData.alertDuration();
 
-    // policy step inside init core data.
     /**
      * The explicit guardian engagement range for this battler.
      * Null when not tagged; guardian falls back to the largest ward pursuit in that case.
@@ -144,7 +127,6 @@ class JABS_Battler
      */
     this._guardRange = battlerCoreData.guardRange();
 
-    // policy step inside init core data.
     /**
      * The `JABS_EnemyAI` of this battler.
      * Only utilized by AI (duh).
@@ -152,7 +134,6 @@ class JABS_Battler
      */
     this._aiMode = battlerCoreData.ai();
 
-    // policy step inside init core data.
     /**
      * Whether or not this battler is allowed to move around while idle.
      * @type {boolean}
@@ -162,7 +143,6 @@ class JABS_Battler
       ? false
       : battlerCoreData.canIdle();
 
-    // policy step inside init core data.
     /**
      * Whether or not this battler's hp bar is visible.
      * Inanimate battlers do not show their hp bar by default.
@@ -173,7 +153,6 @@ class JABS_Battler
       ? false
       : battlerCoreData.showHpBar();
 
-    // policy step inside init core data.
     /**
      * Whether or not this battler's name is visible.
      * Inanimate battlers do not show their name by default.
@@ -184,7 +163,6 @@ class JABS_Battler
       ? false
       : battlerCoreData.showBattlerName();
 
-    // policy step inside init core data.
     /**
      * Whether or not this battler is invincible, rendering them unable
      * to be collided with by map actions.
@@ -192,7 +170,6 @@ class JABS_Battler
      */
     this._invincible = battlerCoreData.isInvincible();
 
-    // policy step inside init core data.
     /**
      * Whether or not this battler is inanimate.
      * Inanimate battlers don't move, can't be alerted, and have no hp bar.
@@ -201,7 +178,6 @@ class JABS_Battler
      */
     this._inanimate = battlerCoreData.isInanimate();
 
-    // policy step inside init core data.
     /**
      * The structural coordination role for this battler.
      * Enemies read from core data (which reflects event-comment overrides with database fallback).
@@ -219,7 +195,6 @@ class JABS_Battler
     /**
      * The number of frames to fulfill the "prepare" phase of a battler's engagement.
      * Only utilized by AI.
-     // policy step inside init from notes.
      * @type {number}
      */
     this._prepareMax = this.getPrepareTime();
@@ -233,22 +208,18 @@ class JABS_Battler
     /**
      * Whether or not the movement for this battler is locked.
      * @type {boolean}
-     // policy step inside init general info.
      */
     this._movementLock = false;
 
-    // policy step inside init general info.
     /**
      * The timer that designates the "wait" for this battler.
      * While this timer is active, this battler will "wait" until it completes
-     // policy step inside init general info.
      * before taking any action.
      * @type {JABS_Timer}
      */
     // store  wait timer on the instance for later reads.
     this._waitTimer = new JABS_Timer(0);
 
-    // policy step inside init general info.
     /**
      * The timer that designates the duration between engagement updates.
      * This is not a publicly exposed timer, statically defined at 30 frames per update.
@@ -269,19 +240,15 @@ class JABS_Battler
     /**
      * The distance in steps/tiles/squares that the dodge will move the battler.
      * @type {number}
-     // policy step inside init dodge info.
      */
     this._dodgeSteps = 0;
 
-    // policy step inside init dodge info.
     /**
      * Whether or not this battler is dodging.
      * @type {boolean}
-     // policy step inside init dodge info.
      */
     this._dodging = false;
 
-    // policy step inside init dodge info.
     /**
      * The direction of which this battler is dodging.
      * Always `0` until a dodge is executed.
@@ -289,14 +256,12 @@ class JABS_Battler
      */
     this._dodgeDirection = 0;
 
-    // policy step inside init dodge info.
     /**
      * The current frame of the dodge animation.
      * @type {number}
      */
     this._dodgeFrame = 0;
 
-    // policy step inside init dodge info.
     /**
      * The window of frames that the battler is invincible.
      * @type {[number, number]|null}
@@ -312,156 +277,124 @@ class JABS_Battler
     /**
      * The id of the last skill that was executed by this battler.
      * @type {number}
-     // policy step inside init battle info.
      */
     this._lastUsedSkillId = 0;
 
-    // policy step inside init battle info.
     /**
      * The key of the slot that was last performed.
      * @type {string}
-     // policy step inside init battle info.
      */
     this._lastUsedSlot = String.empty;
 
-    // policy step inside init battle info.
     /**
      * First engine frame at which AI may attempt the pending combo follow-up (fair pacing).
      * Zero means no gate is armed.
-     // policy step inside init battle info.
      * @type {number}
      */
     this._aiComboHumanizedReadyFrame = 0;
 
-    // policy step inside init battle info.
     /**
      * Earliest frame ({@link Graphics.frameCount}) at which AI may roll another defensive dodge interrupt.
      * @type {number}
-     // policy step inside init battle info.
      */
     this._aiDefensiveDodgeReadyFrame = 0;
 
-    // policy step inside init battle info.
     /**
      * Earliest frame ({@link Graphics.frameCount}) at which ally AI may roll another defensive guard raise.
      * @type {number}
-     // policy step inside init battle info.
      */
     this._aiAllyDefensiveGuardReadyFrame = 0;
 
-    // policy step inside init battle info.
     /**
      * Engine frame when ally AI last raised guard (for max-hold release); zero when not tracking.
      * @type {number}
-     // policy step inside init battle info.
      */
     this._aiAllyGuardRaiseFrame = 0;
 
-    // policy step inside init battle info.
     /**
      * The current phase of AI battling that this battler is in.
      * Only utilized by AI.
-     // policy step inside init battle info.
      * @type {number}
      */
     this._phase = 1;
 
-    // policy step inside init battle info.
     /**
      * The counter for preparing an action to execute for the AI.
      * Only utilized by AI.
-     // policy step inside init battle info.
      * @type {number}
      */
     this._prepareCounter = 0;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is finished with its "prepare" time and ready to
      * advance to phase 2 of combat.
-     // policy step inside init battle info.
      * @type {boolean}
      */
     this._prepareReady = false;
 
-    // policy step inside init battle info.
     /**
      * The counter for after a battler's action is executed.
      * Only utilized by AI.
-     // policy step inside init battle info.
      * @type {number}
      */
     this._postActionCooldown = 0;
 
-    // policy step inside init battle info.
     /**
      * The number of frames a skill requires as cooldown when executed by AI.
      * Only utilized by AI.
-     // policy step inside init battle info.
      * @type {number}
      */
     this._postActionCooldownMax = 0;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is ready to return to it's prepare phase.
      * Only utilized by AI.
-     // policy step inside init battle info.
      * @type {boolean}
      */
     this._postActionCooldownComplete = true;
 
-    // policy step inside init battle info.
     /**
      * The number of frames a skill requires prior to execution.
      * @type {number}
-     // policy step inside init battle info.
      */
     this._castTimeCountdown = 0;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is currently in a casting state.
      * @type {boolean}
      */
     this._casting = false;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is engaged in combat with a target.
      * @type {boolean}
      */
     this._engaged = false;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler can actually engage with any targets.
      * @type {boolean}
      */
     this._engagementLock = false;
 
-    // policy step inside init battle info.
     /**
      * The targeted `JABS_Battler` that this battler is attempting to battle with.
      * @type {JABS_Battler}
      */
     this._target = null;
 
-    // policy step inside init battle info.
     /**
      * The `JABS_Battler` that was last hit by any action from this battler.
      * @type {JABS_Battler}
      */
     this._lastHit = null;
 
-    // policy step inside init battle info.
     /**
      * The targeted `JABS_Battler` that this battler is aiming to support.
      * @type {JABS_Battler}
      */
     this._allyTarget = null;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this target is alerted. Alerted targets have an expanded
      * sight and pursuit range.
@@ -469,14 +402,12 @@ class JABS_Battler
      */
     this._alerted = false;
 
-    // policy step inside init battle info.
     /**
      * The counter for managing alertedness.
      * @type {number}
      */
     this._alertedCounter = 0;
 
-    // policy step inside init battle info.
     /**
      * A snapshot of the coordinates of the battler who triggered the alert
      * at the time this battler was alerted.
@@ -484,7 +415,6 @@ class JABS_Battler
      */
     this._alertedCoordinates = [ 0, 0 ];
 
-    // policy step inside init battle info.
     /**
      * Whether or not the battler is in position to execute an action.
      * Only utilized by AI.
@@ -492,7 +422,6 @@ class JABS_Battler
      */
     this._inPosition = false;
 
-    // policy step inside init battle info.
     /**
      * The action decided by this battler. Remains `null` until an action is selected
      * in combat.
@@ -501,14 +430,12 @@ class JABS_Battler
      */
     this._decidedAction = null;
 
-    // policy step inside init battle info.
     /**
      * A queue of actions pending execution from a designated leader.
      * @type {number|null}
      */
     this._leaderDecidedAction = null;
 
-    // policy step inside init battle info.
     /**
      * The `uuid` of the leader that is leading this battler.
      * This is only used for followers to prevent multiple leaders for commanding them.
@@ -516,7 +443,6 @@ class JABS_Battler
      */
     this._leaderUuid = String.empty;
 
-    // policy step inside init battle info.
     /**
      * A collection of `uuid`s from all follower battlers this battler is leading.
      * If this battler's AI does not contain the "leader" trait, this is unused.
@@ -524,35 +450,30 @@ class JABS_Battler
      */
     this._followers = [];
 
-    // policy step inside init battle info.
     /**
      * The counter that governs slip effects like regeneration or poison.
      * @type {number}
      */
     this._regenCounter = 1;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is guarding.
      * @type {boolean}
      */
     this._isGuarding = false;
 
-    // policy step inside init battle info.
     /**
      * The flat amount to reduce damage by when guarding.
      * @type {number}
      */
     this._guardFlatReduction = 0;
 
-    // policy step inside init battle info.
     /**
      * The percent amount to reduce damage by when guarding.
      * @type {number}
      */
     this._guardPercReduction = 0;
 
-    // policy step inside init battle info.
     /**
      * The number of frames at the beginning of activating guarding where
      * the first hit will be parried instead.
@@ -560,49 +481,42 @@ class JABS_Battler
      */
     this._parryWindow = 0;
 
-    // policy step inside init battle info.
     /**
      * The id of the skill to retaliate with when successfully precise-parrying.
      * @type {number[]}
      */
     this._counterParryIds = [];
 
-    // policy step inside init battle info.
     /**
      * The id of the skill to retaliate with when successfully guarding.
      * @type {number}
      */
     this._counterGuardIds = 0;
 
-    // policy step inside init battle info.
     /**
      * The id of the skill associated with the guard data.
      * @type {number}
      */
     this._guardSkillId = 0;
 
-    // policy step inside init battle info.
     /**
      * Whether or not this battler is in a state of dying.
      * @type {boolean}
      */
     this._dying = false;
 
-    // policy step inside init battle info.
     /**
      * All currently tracked battler's aggro for this battler.
      * @type {JABS_Aggro[]}
      */
     this._aggros = [];
 
-    // policy step inside init battle info.
     /**
      * Frames remaining that this battler is considered “in combat”.
      * @type {number}
      */
     this._inCombatCountdown = 0;
 
-    // policy step inside init battle info.
     /**
      * Default window for the in‑combat countdown (60fps × seconds).
      * @type {number}
@@ -619,35 +533,29 @@ class JABS_Battler
     /**
      * The initial `x` coordinate of where this battler was placed in the RMMZ editor or
      * was when the map was recreated (in the instance the RM user is leveraging a plugin that persists
-     // policy step inside init idle info.
      * event location after a map transfer).
      * @type {number}
      */
     // store  home x on the instance for later reads.
     this._homeX = this._event._x;
 
-    // policy step inside init idle info.
     /**
      * The initial `y` coordinate of where this battler was placed in the RMMZ editor or
      * was when the map was recreated (in the instance the RM user is leveraging a plugin that persists
-     // policy step inside init idle info.
      * event location after a map transfer).
      * @type {number}
      */
     // store  home y on the instance for later reads.
     this._homeY = this._event._y;
 
-    // policy step inside init idle info.
     /**
      * Whether or not this battler is identified as idle. Idle battlers are not
      * currently engaged, but instead executing their phase 0 movement pattern based on AI.
-     // policy step inside init idle info.
      * Only utilized by AI.
      * @type {boolean}
      */
     this._idle = true;
 
-    // policy step inside init idle info.
     /**
      * The counter for frames until this battler's idle action is ready.
      * Only utilized by AI.
@@ -655,7 +563,6 @@ class JABS_Battler
      */
     this._idleActionCount = 0;
 
-    // policy step inside init idle info.
     /**
      * The number of frames until this battler's idle action is ready.
      * Only utilized by AI.
@@ -663,7 +570,6 @@ class JABS_Battler
      */
     this._idleActionCountMax = 30;
 
-    // policy step inside init idle info.
     /**
      * Whether or not the idle action is ready to execute.
      * Only utilized by AI.
@@ -714,7 +620,6 @@ class JABS_Battler
     // only events can have event commands.
     if (!this.isEvent()) return false;
 
-    // capture event for downstream policy in this routine.
     const event = this.getCharacter();
     return event._pageIndex !== -1;
   };
@@ -870,7 +775,6 @@ class JABS_Battler
     // if there is problems with the battler, return nothing.
     if (!this.getBattler()) return String.empty;
 
-    // hand back this.getBattler() to the caller.
     return this.getBattler()
       .getUuid();
   };
@@ -884,7 +788,6 @@ class JABS_Battler
     // if you don't have a leader, you don't perform the actions.
     if (!this.hasLeader()) return false;
 
-    // hand back this._leaderDecidedAction to the caller.
     return this._leaderDecidedAction;
   };
 
@@ -898,7 +801,6 @@ class JABS_Battler
     const action = this._leaderDecidedAction;
     this.clearLeaderDecidedActionsQueue();
     return action;
-  // policy step inside get next leader decided action.
   };
 
   /**
@@ -937,7 +839,6 @@ class JABS_Battler
       return JABS_AiManager.getBattlerByUuid(this._leaderUuid);
     }
 
-    // hand back null to the caller.
     return null;
 
   };
@@ -952,7 +853,6 @@ class JABS_Battler
     if (leader)
     {
       this._leaderUuid = newLeader;
-      // policy step inside set leader.
       leader.addFollower(this.getUuid());
     }
   };
@@ -994,7 +894,6 @@ class JABS_Battler
       return JABS_AiManager.getBattlerByUuid(foundUuid);
     }
 
-    // hand back null to the caller.
     return null;
 
   };
@@ -1064,11 +963,9 @@ class JABS_Battler
       // in some instances, "this" may not be alive anymore so handle that.
       if (!uuid) return;
 
-      // capture leader for downstream policy in this routine.
       const leader = JABS_AiManager.getBattlerByUuid(leaderUuid);
       if (!leader) return;
 
-      // policy step inside clear leader.
       leader.removeFollowerByUuid(uuid);
     }
   };
@@ -1084,7 +981,6 @@ class JABS_Battler
     {
       this._followers.splice(index, 1);
     }
-  // policy step inside remove follower by uuid.
   };
 
   /**
@@ -1106,7 +1002,6 @@ class JABS_Battler
     // if you're not a leader, you can't have followers.
     if (!this.getBattlerRole().leader) return false;
 
-    // hand back this._followers.length > 0 to the caller.
     return this._followers.length > 0;
   };
 
@@ -1134,12 +1029,10 @@ class JABS_Battler
       .direction();
     const targetDir = target.direction();
 
-    // dispatch on the discriminant for the next policy branch.
     switch (userDir)
     {
       case J.ABS.Directions.DOWN:
         return targetDir === J.ABS.Directions.UP;
-      // handle this switch arm for the current discriminant.
       case J.ABS.Directions.UP:
         return targetDir === J.ABS.Directions.DOWN;
       case J.ABS.Directions.LEFT:
@@ -1148,7 +1041,6 @@ class JABS_Battler
         return targetDir === J.ABS.Directions.LEFT;
     }
 
-    // hand back false to the caller.
     return false;
   };
 
@@ -1158,7 +1050,6 @@ class JABS_Battler
    */
   isPlayer()
   {
-    // hand back this.getCharacter() to the caller.
     return this.getCharacter()
       .isPlayer();
   };
@@ -1179,7 +1070,6 @@ class JABS_Battler
    */
   isFollower()
   {
-    // hand back this.getCharacter() to the caller.
     return this.getCharacter()
       .isFollower();
   };
@@ -1199,7 +1089,6 @@ class JABS_Battler
    */
   isEvent()
   {
-    // hand back this.getCharacter() to the caller.
     return this.getCharacter()
       .isEvent();
   };
@@ -1304,7 +1193,6 @@ class JABS_Battler
     this._postActionCooldownComplete = false;
     this.setDecidedAction(null);
     this.setAllyTarget(null);
-    // policy step inside reset phases.
     this.setInPosition(false);
     this.clearAiComboHumanizedReadyFrame();
     this._aiDefensiveDodgeReadyFrame = 0;
@@ -1408,7 +1296,6 @@ class JABS_Battler
       return false;
     }
 
-    // hand back !!character.event() to the caller.
     return !!character.event();
 
   };
@@ -1425,7 +1312,6 @@ class JABS_Battler
       sight += this._alertedSightBoost;
     }
 
-    // hand back sight to the caller.
     return sight;
   };
 
@@ -1441,7 +1327,6 @@ class JABS_Battler
       pursuit += this._alertedPursuitBoost;
     }
 
-    // hand back pursuit to the caller.
     return pursuit;
   };
 
@@ -1553,7 +1438,6 @@ class JABS_Battler
     // only react to genuine disengagements, not initialization resets.
     if (!this.isEngaged()) return;
 
-    // when J.ABS.Metadata.ShowDisengageBalloon  equals  false, take this branch.
     if (J.ABS.Metadata.ShowDisengageBalloon === false) return;
     this.showBalloon(J.ABS.Metadata.DisengageBalloonId);
   };
@@ -1615,7 +1499,6 @@ class JABS_Battler
       this.setBattlerLastHit(null);
     }
 
-    // hand back this._lastHit to the caller.
     return this._lastHit;
   };
 
@@ -1685,7 +1568,6 @@ class JABS_Battler
       }
     }
 
-    // when this._lastHitCountdown > 0, take this branch.
     if (this._lastHitCountdown > 0)
     {
       this._lastHitCountdown--;
@@ -1700,7 +1582,6 @@ class JABS_Battler
   {
     const battler = this.getBattler();
 
-    // when not battler, take this branch.
     if (!battler)
     {
       // has no battler.
@@ -1750,7 +1631,6 @@ class JABS_Battler
     if ((x2 ?? y2) === null) return null;
     const x1 = this.getX();
     const y1 = this.getY();
-    // capture distance for downstream policy in this routine.
     const distance = Math.hypot(x2 - x1, y2 - y1)
       .toFixed(2);
     return parseFloat(distance);
@@ -1765,7 +1645,6 @@ class JABS_Battler
   {
     if (!target) return null;
 
-    // hand back this.distanceToPoint(target.getX(), target.getY()) to the caller.
     return this.distanceToPoint(target.getX(), target.getY());
   };
 
@@ -1778,7 +1657,6 @@ class JABS_Battler
     const target = this.getTarget();
     if (!target) return null;
 
-    // hand back this.distanceToPoint(target.getX(), target.getY()) to the caller.
     return this.distanceToPoint(target.getX(), target.getY());
   };
 
@@ -1791,7 +1669,6 @@ class JABS_Battler
     const target = this.getAllyTarget();
     if (!target) return null;
 
-    // hand back this.distanceToPoint(target.getX(), target.getY()) to the caller.
     return this.distanceToPoint(target.getX(), target.getY());
   };
 
@@ -1868,7 +1745,6 @@ class JABS_Battler
     if (this._alertedCounter > 0)
     {
       this.setIdle(false);
-      // policy step inside set alerted counter.
       this.setAlerted();
     }
     else if (this._alertedCounter <= 0)
@@ -1969,11 +1845,9 @@ class JABS_Battler
     // if we don't have a leader, don't.
     if (!this.hasLeader()) return null;
 
-    // capture leader for downstream policy in this routine.
     const leader = JABS_AiManager.getBattlerByUuid(this.getLeader());
     if (!leader) return null;
 
-    // hand back leader.getAiMode() to the caller.
     return leader.getAiMode();
   };
 
@@ -1988,7 +1862,6 @@ class JABS_Battler
     if (!target) return;
     const character = target.getCharacter();
 
-    // policy step inside move away from target.
     battler.moveAwayFromCharacter(character);
   };
 
@@ -2010,13 +1883,11 @@ class JABS_Battler
       return;
     }
 
-    // when this.guarding(), take this branch.
     if (this.guarding())
     {
       return;
     }
 
-    // policy step inside smart move away from target.
     battler.moveAwayFromCharacter(target.getCharacter());
     if (!battler.isMovementSucceeded())
     {
@@ -2038,7 +1909,6 @@ class JABS_Battler
     const target = this.getTarget();
     if (!target) return;
 
-    // policy step inside smart move toward target.
     this.smartMoveTowardCoordinates(target.getX(), target.getY());
   };
 
@@ -2050,7 +1920,6 @@ class JABS_Battler
     const target = this.getAllyTarget();
     if (!target) return;
 
-    // policy step inside smart move toward ally target.
     this.smartMoveTowardCoordinates(target.getX(), target.getY());
   };
 
@@ -2067,17 +1936,14 @@ class JABS_Battler
       return;
     }
 
-    // when this.guarding(), take this branch.
     if (this.guarding())
     {
       return;
     }
 
-    // capture character for downstream policy in this routine.
     const character = this.getCharacter();
     const nextDir = character.findDiagonalDirectionTo(x, y);
 
-    // when character.isDiagonalDirection(nextDir), take this branch.
     if (character.isDiagonalDirection(nextDir))
     {
       const [ horz, vert ] = character.getDiagonalDirections(nextDir);
@@ -2098,7 +1964,6 @@ class JABS_Battler
     const target = this.getTarget();
     if (!target) return;
 
-    // policy step inside turn toward target.
     character.turnTowardCharacter(target.getCharacter());
   };
 
@@ -2115,7 +1980,6 @@ class JABS_Battler
       return true;
     }
 
-    // capture disabled for downstream policy in this routine.
     const disabled = states.find(state => (state.jabsDisarmed || state.jabsParalyzed));
     return !disabled;
 
@@ -2134,7 +1998,6 @@ class JABS_Battler
       return true;
     }
 
-    // capture muted for downstream policy in this routine.
     const muted = states.find(state => (state.jabsMuted || state.jabsParalyzed));
     return !muted;
 
@@ -2196,7 +2059,6 @@ class JABS_Battler
       .getSkillSlotManager()
       .getSlotComboId(cooldownKey);
 
-    // hand back next combo id to the caller.
     return nextComboId;
   };
 
@@ -2210,7 +2072,6 @@ class JABS_Battler
     this.getBattler()
       .getSkillSlotManager()
       .setSlotComboId(cooldownKey, nextComboId);
-  // policy step inside set combo next action id.
   };
 
   /**
@@ -2241,7 +2102,6 @@ class JABS_Battler
       return true;
     }
 
-    // hand back Graphics.frameCount >= this._aiComboHumanizedReadyFrame to the caller.
     return Graphics.frameCount >= this._aiComboHumanizedReadyFrame;
   };
 
@@ -2336,7 +2196,6 @@ class JABS_Battler
    */
   getEnemyBasicAttack()
   {
-    // hand back this.getBattler() to the caller.
     return this.getBattler()
       .basicAttackSkillId();
   };
@@ -2385,7 +2244,6 @@ class JABS_Battler
    */
   isShowingAnimation()
   {
-    // hand back this.getCharacter() to the caller.
     return this.getCharacter()
       .isAnimationPlaying();
   };
@@ -2791,7 +2649,6 @@ class JABS_Battler
     // don't update map battlers if JABS is disabled.
     if (!$jabsEngine.absEnabled) return;
 
-    // policy step inside update.
     this.updateCooldowns();
     this.updateTimers();
     this.updateEngagement();
@@ -3045,7 +2902,6 @@ class JABS_Battler
     let closest = null;
     let closestDistance = Infinity;
 
-    // walk each entry in the iterable for this routine.
     for (const candidate of nearby)
     {
       // skip self and same-team battlers.
@@ -3079,7 +2935,6 @@ class JABS_Battler
     // evaluate getTarget() then getBattlerLastHit() in priority order.
     const known = [ this.getTarget(), this.getBattlerLastHit() ];
 
-    // walk each entry in the iterable for this routine.
     for (const candidate of known)
     {
       // skip null slots and inanimate targets.
@@ -3116,7 +2971,6 @@ class JABS_Battler
     let closest = null;
     let closestDistance = Infinity;
 
-    // walk each entry in the iterable for this routine.
     for (const candidate of nearby)
     {
       // skip self, inanimate targets, and same-team battlers.
@@ -3169,7 +3023,6 @@ class JABS_Battler
     this.getBattler()
       .getSkillSlotManager()
       .updateCooldowns();
-  // policy step inside update cooldowns.
   };
 
   /**
@@ -3180,11 +3033,9 @@ class JABS_Battler
     this.processWaitTimer();
     this.processAlertTimer();
     this.processParryTimer();
-    // policy step inside update timers.
     this.processLastHitTimer();
     this.processCombatTimer();
     this.processCastingTimer();
-    // policy step inside update timers.
     this.processEngagementTimer();
   };
 
@@ -3429,7 +3280,6 @@ class JABS_Battler
       if (distanceFromHome > this.getSightRadius()) return false;
     }
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -3694,7 +3544,6 @@ class JABS_Battler
     this.removeAggroIfInvalid(this.getTarget()
       .getUuid());
 
-    // capture all aggros for downstream policy in this routine.
     const allAggros = this.getAggrosSortedHighestToLowest();
 
     // if there is no aggros remaining, disengage.
@@ -3854,7 +3703,6 @@ class JABS_Battler
         return -1;
       }
 
-      // hand back 0 to the caller.
       return 0;
     };
 
@@ -3942,7 +3790,6 @@ class JABS_Battler
       return;
     }
 
-    // capture found aggro for downstream policy in this routine.
     const foundAggro = this.aggroExists(uuid);
     if (foundAggro)
     {
@@ -3970,7 +3817,6 @@ class JABS_Battler
       return;
     }
 
-    // capture found aggro for downstream policy in this routine.
     const foundAggro = this.aggroExists(uuid);
     if (foundAggro)
     {
@@ -4189,7 +4035,6 @@ class JABS_Battler
       dodgeDirection = this.determineDodgeDirection(skill.jabsMoveType);
     }
 
-    // policy step inside execute dodge skill.
     this.setDodgeDirection(dodgeDirection);
 
     // also execute the mobility skill’s action payload.
@@ -4222,43 +4067,35 @@ class JABS_Battler
     // get the resolved skill id for the dodge slot, applying any active transform.
     const skillId = battler.getResolvedSkillId(JABS_Button.Dodge);
 
-    // when not skillId, take this branch.
     if (!skillId)
     {
       return false;
     }
 
-    // when not JABS_Battler.isDodgeSkillById(skillId), take this branch.
     if (!JABS_Battler.isDodgeSkillById(skillId))
     {
       return false;
     }
 
-    // when not this.canExecuteSkill(skillId), take this branch.
     if (!this.canExecuteSkill(skillId))
     {
       return false;
     }
 
-    // capture skill for downstream policy in this routine.
     const skill = this.getSkill(skillId);
 
-    // when not battler.canPaySkillCost(skill), take this branch.
     if (!battler.canPaySkillCost(skill))
     {
       return false;
     }
 
-    // capture chr for downstream policy in this routine.
     const chr = this.getCharacter();
     const threatChr = threatBattler.getCharacter();
     const towardThreat = chr.findDirectionTo(threatChr.x, threatChr.y);
     const awayFromThreat = chr.reverseDir(towardThreat);
 
-    // policy step inside try execute ai emergency dodge away from.
     this.executeDodgeSkill(skill, awayFromThreat);
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -4278,24 +4115,20 @@ class JABS_Battler
         return character.canPassDiagonalByDirection(direction8);
       }
 
-      // when typeof character.getDiagonalDirections  equals  'function', take this branch.
       if (typeof character.getDiagonalDirections === 'function'
         && typeof character.canPassDiagonally === 'function')
       {
         const pair = character.getDiagonalDirections(direction8);
 
-        // hand back character.canPassDiagonally(character._x, character._... to the caller.
         return character.canPassDiagonally(character._x, character._y, pair[0], pair[1]);
       }
     }
 
-    // when typeof character.canPassStraight  equals  'function', take this branch.
     if (typeof character.canPassStraight === 'function')
     {
       return character.canPassStraight(direction8);
     }
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -4310,7 +4143,6 @@ class JABS_Battler
     const rows = [
       { d: J.ABS.Directions.UP, vx: 0, vy: -1 },
       { d: J.ABS.Directions.DOWN, vx: 0, vy: 1 },
-      // policy step inside build directional dodge scores.
       { d: J.ABS.Directions.LEFT, vx: -1, vy: 0 },
       { d: J.ABS.Directions.RIGHT, vx: 1, vy: 0 },
       { d: J.ABS.Directions.UPPERLEFT, vx: -1, vy: -1 },
@@ -4319,7 +4151,6 @@ class JABS_Battler
       { d: J.ABS.Directions.LOWERRIGHT, vx: 1, vy: 1 },
     ];
 
-    // capture scored for downstream policy in this routine.
     const scored = rows.map(({ d, vx, vy }) => ({
       d,
       s: vx * ux + vy * uy,
@@ -4328,7 +4159,6 @@ class JABS_Battler
     // Order rows so later logic can assume stable sequencing.
     scored.sort((a, b) => b.s - a.s);
 
-    // hand back scored to the caller.
     return scored;
   };
 
@@ -4343,32 +4173,27 @@ class JABS_Battler
     const threat = JABS_AiManager.getClosestOpposingBattler(this)
       || JABS_AiManager.findDefensiveThreatBattler(this);
 
-    // when not threat  or  threat.isDead(), take this branch.
     if (!threat || threat.isDead())
     {
       return character.direction();
     }
 
-    // capture tx for downstream policy in this routine.
     const tx = threat.getX();
     const ty = threat.getY();
     const dxAway = character.x - tx;
     const dyAway = character.y - ty;
     const magSq = dxAway * dxAway + dyAway * dyAway;
 
-    // when magSq < 0.0001, take this branch.
     if (magSq < 0.0001)
     {
       return character.reverseDir(character.direction());
     }
 
-    // capture mag for downstream policy in this routine.
     const mag = Math.sqrt(magSq);
     const ux = dxAway / mag;
     const uy = dyAway / mag;
     const scored = JABS_Battler.buildDirectionalDodgeScores(ux, uy);
 
-    // capture pick with floor for downstream policy in this routine.
     const pickWithFloor = minScore =>
     {
       for (let i = 0; i < scored.length; i++)
@@ -4378,45 +4203,36 @@ class JABS_Battler
           continue;
         }
 
-        // when this.canDirectionalDodgeStepPass(character, scored[i].d), take this branch.
         if (this.canDirectionalDodgeStepPass(character, scored[i].d))
         {
           return scored[i].d;
         }
       }
 
-      // hand back 0 to the caller.
       return 0;
     };
 
-    // capture chosen for downstream policy in this routine.
     let chosen = pickWithFloor(0.01);
 
-    // when chosen, take this branch.
     if (chosen)
     {
       return chosen;
     }
 
-    // policy step inside pick ai directional dodge direction.
     chosen = pickWithFloor(-0.2);
 
-    // when chosen, take this branch.
     if (chosen)
     {
       return chosen;
     }
 
-    // policy step inside pick ai directional dodge direction.
     chosen = pickWithFloor(-999);
 
-    // when chosen, take this branch.
     if (chosen)
     {
       return chosen;
     }
 
-    // hand back character.direction() to the caller.
     return character.direction();
   };
 
@@ -4428,17 +4244,14 @@ class JABS_Battler
   {
     const character = this.getCharacter();
 
-    // dispatch on the discriminant for the next policy branch.
     switch (moveType)
     {
       case J.ABS.Notetags.MoveType.Forward:
         return character.direction();
 
-      // handle this switch arm for the current discriminant.
       case J.ABS.Notetags.MoveType.Backward:
         return character.reverseDir(character.direction());
 
-      // handle this switch arm for the current discriminant.
       case J.ABS.Notetags.MoveType.Directional:
         if (character.isPlayer())
         {
@@ -4447,14 +4260,11 @@ class JABS_Battler
             return character.direction();
           }
 
-          // hand back Input.dir8 to the caller.
           return Input.dir8;
         }
 
-        // hand back this.pickAiDirectionalDodgeDirection() to the caller.
         return this.pickAiDirectionalDodgeDirection();
 
-      // handle this switch arm for the current discriminant.
       default:
         return character.direction();
     }
@@ -4514,7 +4324,6 @@ class JABS_Battler
   {
     if (!this.guarding()) return 0;
 
-    // hand back this._guardFlatReduction to the caller.
     return this._guardFlatReduction;
   };
 
@@ -4535,7 +4344,6 @@ class JABS_Battler
   {
     if (!this.guarding()) return 0;
 
-    // hand back this._guardPercReduction to the caller.
     return this._guardPercReduction;
   };
 
@@ -4557,7 +4365,6 @@ class JABS_Battler
     return this.guarding()
       ? this.counterGuardIds()
       : [];
-  // policy step inside counter guard.
   };
 
   /**
@@ -4587,7 +4394,6 @@ class JABS_Battler
     return this.guarding()
       ? this.counterParryIds()
       : [];
-  // policy step inside counter parry.
   };
 
   /**
@@ -4775,7 +4581,6 @@ class JABS_Battler
       this._parryWindow--;
     }
 
-    // when this._parryWindow < 0, take this branch.
     if (this._parryWindow < 0)
     {
       this._parryWindow = 0;
@@ -4833,7 +4638,6 @@ class JABS_Battler
     const scopeAllAllies = scopeAlly && scopeMany;
     const scopeAllOpponents = scopeOpponent && scopeMany;
 
-    // capture target is self for downstream policy in this routine.
     const targetIsSelf = (user.getUuid() === target.getUuid() || (action.getAction()
       .isForUser()));
     const actionIsSameTeam = JABS_TeamRules.isFriendly(user.getTeam(), this.getTeam());
@@ -5085,7 +4889,6 @@ class JABS_Battler
     const scopeAll = gameAction.isForAll();
     const scopeEverything = gameAction.isForEveryone();
 
-    // capture scope all allies for downstream policy in this routine.
     const scopeAllAllies = scopeEverything || (scopeAll && scopeAlly);
     const scopeAllOpponents = scopeEverything || (scopeAll && scopeOpponent);
     const scopeOneAlly = (scopeSingle && scopeAlly);
@@ -5241,7 +5044,6 @@ class JABS_Battler
       jabsBattler = this.getBattlerLastHit();
     }
 
-    // when not jabsBattler, take this branch.
     if (!jabsBattler)
     {
       // if we don't have a last hit battler, then give up on this.
@@ -5561,7 +5363,6 @@ class JABS_Battler
       return null;
     }
 
-    // hand back skillSlot.getCooldown() to the caller.
     return skillSlot.getCooldown();
   };
 
@@ -5576,10 +5377,8 @@ class JABS_Battler
     const skillslot = this.getBattler()
       .getSkillSlot(key);
 
-    // when not cooldown  or  not skillslot, take this branch.
     if (!cooldown || !skillslot) return null;
 
-    // hand back { to the caller.
     return {
       cooldown,
       skillslot
@@ -5598,7 +5397,6 @@ class JABS_Battler
       return true;
     }
 
-    // when this._postActionCooldown <= this._postActionCooldownMax, take this branch.
     if (this._postActionCooldown <= this._postActionCooldownMax)
     {
       // we are still charging up...
@@ -5622,7 +5420,6 @@ class JABS_Battler
     this._postActionCooldownComplete = false;
     this._postActionCooldown = 0;
     this._postActionCooldownMax = cooldown;
-  // policy step inside start post action cooldown.
   };
 
   /**
@@ -5655,7 +5452,6 @@ class JABS_Battler
       return true;
     }
 
-    // when this._idleActionCount <= this._idleActionCountMax, take this branch.
     if (this._idleActionCount <= this._idleActionCountMax)
     {
       // we are still charging up...
@@ -5680,7 +5476,6 @@ class JABS_Battler
     const isAnyReady = this.getBattler()
       .getSkillSlotManager()
       .isAnyCooldownReadyForSlot(cooldownKey);
-    // hand back is any ready to the caller.
     return isAnyReady;
   };
 
@@ -5715,7 +5510,6 @@ class JABS_Battler
     this.getBattler()
       .getSkillSlotManager()
       .getSkillSlotByKey(cooldownKey)
-      // policy step inside reset combo data.
       .resetCombo();
   };
 
@@ -5742,7 +5536,6 @@ class JABS_Battler
       return true;
     }
 
-    // when this._prepareCounter < this._prepareMax, take this branch.
     if (this._prepareCounter < this._prepareMax)
     {
       // we are still charging up...
@@ -5765,7 +5558,6 @@ class JABS_Battler
    */
   getPrepareTime()
   {
-    // hand back this.getBattler() to the caller.
     return this.getBattler()
       .prepareTime();
   };
@@ -5850,7 +5642,6 @@ class JABS_Battler
       return false;
     }
 
-    // when JABS_GlobalCooldown.isGlobalBlockingSkillId(this, chosenSkillId), take this branch.
     if (JABS_GlobalCooldown.isGlobalBlockingSkillId(this, chosenSkillId))
     {
       return false;
@@ -5874,16 +5665,13 @@ class JABS_Battler
       const slot = this.getBattler()
         .findSlotForSkillId(skillId);
 
-      // when slot, take this branch.
       if (slot)
       {
         return slot.key;
       }
 
-      // capture skill for downstream policy in this routine.
       const skill = this.getSkill(skillId);
 
-      // when not skill, take this branch.
       if (!skill)
       {
         return null;
@@ -6036,7 +5824,6 @@ class JABS_Battler
       return false;
     }
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -6052,7 +5839,6 @@ class JABS_Battler
       return true;
     }
 
-    // policy step inside is regen ready.
     this.decrementRegenCounter();
     return false;
   };
@@ -6263,39 +6049,31 @@ class JABS_Battler
       const tpRaw = this.stateSlipTp(state);
       const perResource = [ hpRaw, mpRaw, tpRaw ];
 
-      // iterate the loop counter until the guard exits.
       for (let index = 0; index < 3; index++)
       {
         let regen = perResource[index];
 
-        // when not regen, take this branch.
         if (!regen)
         {
           continue;
         }
 
-        // when regen > 0, take this branch.
         if (regen > 0)
         {
           regen *= rec;
         }
 
-        // policy step inside process state regens.
         regen /= slipDivisor;
 
-        // when not regen, take this branch.
         if (!regen)
         {
           continue;
         }
 
-        // policy step inside process state regens.
         this.applySlipEffect(regen, index);
 
-        // capture display amount for downstream policy in this routine.
         const displayAmount = -regen;
 
-        // policy step inside process state regens.
         this.onSlipRegenTick(displayAmount, index, state.id);
       }
     }
@@ -6331,7 +6109,6 @@ class JABS_Battler
     // the RG from states is a part of the base, now.
     if (!state.meta) return false;
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -6546,7 +6323,6 @@ class JABS_Battler
     {
       case 0:
         battler.gainHp(amount);
-        // policy step inside apply slip effect.
         break;
       case 1:
         battler.gainMp(amount);
@@ -6605,7 +6381,6 @@ class JABS_Battler
       return;
     }
 
-    // when this._castTimeCountdown <= 0, take this branch.
     if (this._castTimeCountdown <= 0)
     {
       this._casting = false;
@@ -6661,7 +6436,6 @@ class JABS_Battler
       this._casting = true;
     }
 
-    // when this.getCastTimeCountdown() <= 0, take this branch.
     if (this.getCastTimeCountdown() <= 0)
     {
       this._casting = false;
@@ -6707,7 +6481,6 @@ class JABS_Battler
       return;
     }
 
-    // when this._alertedCounter <= 0, take this branch.
     if (this._alertedCounter <= 0)
     {
       this.clearAlert();

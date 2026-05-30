@@ -53,11 +53,9 @@ class IconManager
     {
       case  0:
         return 87; // exp
-      // handle this switch arm for the current discriminant.
       case  1:
         return 2048; // gold
       case  2:
-        // hand back 208; // drops to the caller.
         return 208; // drops
       case  3:
         return 914; // encounters
@@ -77,19 +75,15 @@ class IconManager
     {
       case  0:
         return 928; // mhp
-      // handle this switch arm for the current discriminant.
       case  1:
         return 929; // mmp
       case  2:
-        // hand back 931; // atk to the caller.
         return 931; // atk
       case  3:
         return 932; // def
-      // handle this switch arm for the current discriminant.
       case  4:
         return 933; // mat
       case  5:
-        // hand back 934; // mdf to the caller.
         return 934; // mdf
       case  6:
         return 935; // agi
@@ -109,23 +103,18 @@ class IconManager
     {
       case  0:
         return 944; // hit
-      // handle this switch arm for the current discriminant.
       case  1:
         return 945; // eva (parry boost)
       case  2:
-        // hand back 946; // cri to the caller.
         return 946; // cri
       case  3:
         return 947; // cev
-      // handle this switch arm for the current discriminant.
       case  4:
         return 948; // mev
       case  5:
-        // hand back 949; // mrf to the caller.
         return 949; // mrf
       case  6:
         return 950; // cnt (autocounter)
-      // handle this switch arm for the current discriminant.
       case  7:
         return 951; // hrg
       case  8:
@@ -146,23 +135,18 @@ class IconManager
     {
       case  0:
         return 960; // trg (aggro)
-      // handle this switch arm for the current discriminant.
       case  1:
         return 961; // grd (parry)
       case  2:
-        // hand back 962; // rec to the caller.
         return 962; // rec
       case  3:
         return 963; // pha
-      // handle this switch arm for the current discriminant.
       case  4:
         return 964; // mcr (mp cost)
       case  5:
-        // hand back 965; // tcr (tp cost) to the caller.
         return 965; // tcr (tp cost)
       case  6:
         return 966; // pdr
-      // handle this switch arm for the current discriminant.
       case  7:
         return 967; // mdr
       case  8:
@@ -181,13 +165,11 @@ class IconManager
   {
     const definition = ParameterRegistry.get(parameterKey);
 
-    // when not definition, take this branch.
     if (!definition)
     {
       return 0;
     }
 
-    // hand back definition.iconIndex() to the caller.
     return definition.iconIndex();
   }
 
@@ -203,63 +185,48 @@ class IconManager
     {
       case -1:
         return 76;  // inherits element from parent.
-      // handle this switch arm for the current discriminant.
       case  0:
         return 70;  // true
       case  1:
-        // hand back 912; // cut to the caller.
         return 912; // cut
       case  2:
         return 913; // poke
-      // handle this switch arm for the current discriminant.
       case  3:
         return 914; // blunt
       case  4:
-        // hand back 915; // heat to the caller.
         return 915; // heat
       case  5:
         return 916; // liquid
-      // handle this switch arm for the current discriminant.
       case  6:
         return 917; // air
       case  7:
-        // hand back 918; // ground to the caller.
         return 918; // ground
       case  8:
         return 919; // energy
-      // handle this switch arm for the current discriminant.
       case  9:
         return 920; // void
       case 10:
-        // hand back 127; // typeless to the caller.
         return 127; // typeless
       case 11:
         return 302; // vs undead
-      // handle this switch arm for the current discriminant.
       case 12:
         return 321; // vs reptile
       case 13:
-        // hand back 345; // vs aquatic to the caller.
         return 345; // vs aquatic
       case 14:
         return 342; // vs slime
-      // handle this switch arm for the current discriminant.
       case 15:
         return 184; // vs plants
       case 16:
-        // hand back 2112;// vs beast to the caller.
         return 2112;// vs beast
       case 17:
         return 348; // vs insect
-      // handle this switch arm for the current discriminant.
       case 18:
         return 82;  // vs humanoid
       case 19:
-        // hand back 83;  // vs construct to the caller.
         return 83;  // vs construct
       case 20:
         return 2192;// vs deity
-      // handle this switch arm for the current discriminant.
       case 21:
         return 403; // x weaponry
       case 22:
@@ -292,27 +259,21 @@ class IconManager
     {
       case  1:
         return 82;   // dodging skills
-      // handle this switch arm for the current discriminant.
       case  2:
         return 2592; // guarding skills
       case  3:
-        // hand back 77;   // techniques (jerald) to the caller.
         return 77;   // techniques (jerald)
       case  4:
         return 79;   // magecraft (rupert)
-      // handle this switch arm for the current discriminant.
       case  5:
         return 188;  // panelogy
       case  6:
-        // hand back 227;  // tool skills to the caller.
         return 227;  // tool skills
       case  7:
         return 76;   // weapon skills
-      // handle this switch arm for the current discriminant.
       case  8:
         return 68;   // geology (earthie)
       case  9:
-        // hand back 69;   // nephology (skye) to the caller.
         return 69;   // nephology (skye)
       case 10:
         return 64;   // magmology (cynder)
@@ -336,23 +297,18 @@ class IconManager
     {
       case 1:   // blade
         return 401;
-      // handle this switch arm for the current discriminant.
       case 2:   // spear
         return 408;
       case 3:   // gun
-        // hand back 438 to the caller.
         return 438;
       case 4:   // axe
         return 434;
-      // handle this switch arm for the current discriminant.
       case 5:   // wand
         return 442;
       case 6:   // fist
-        // hand back 461 to the caller.
         return 461;
       case 7:   // only-earthie
         return 2074;
-      // handle this switch arm for the current discriminant.
       case 8:   // only-skye
         return 2077;
       case 9:   // only-cynder
@@ -375,7 +331,6 @@ class IconManager
     {
       case 1:
         return 16;
-      // handle this switch arm for the current discriminant.
       default:
         return 16;
     }
@@ -392,7 +347,6 @@ class IconManager
     {
       case 1:
         return 16;
-      // handle this switch arm for the current discriminant.
       default:
         return 16;
     }
@@ -409,7 +363,6 @@ class IconManager
     {
       case 1:
         return 16;
-      // handle this switch arm for the current discriminant.
       default:
         return 16;
     }
@@ -426,7 +379,6 @@ class IconManager
     {
       case 1:
         return 16;
-      // handle this switch arm for the current discriminant.
       default:
         return 16;
     }
@@ -444,51 +396,39 @@ class IconManager
     {
       case 11: // elemental damage rate - stackable.
         return this.element(trait._dataId);
-      // handle this switch arm for the current discriminant.
       case 12: // debuff rate - stackable.
         return this.param(trait._dataId);
       case 13: // state rate - stackable.
-      // handle this switch arm for the current discriminant.
       case 14: // state immunity - don't add the same twice.
         return $dataStates[trait._dataId].iconIndex;
       case 21: // base parameter rate - stackable.
-        // hand back this.param(trait._dataId) to the caller.
         return this.param(trait._dataId);
       case 22: // ex-parameter rate - stackable.
         return this.xparam(trait._dataId);
-      // handle this switch arm for the current discriminant.
       case 23: // sp-parameter rate - stackable.
         return this.sparam(trait._dataId);
       case 31: // attack element - uniquely stackable.
-        // hand back this.element(trait._dataId) to the caller.
         return this.element(trait._dataId);
       case 32: // apply state chance - stackable.
         return $dataStates[trait._dataId].iconIndex;
-      // handle this switch arm for the current discriminant.
       case 33: // skill speed - stackable.
         return 79;
       case 34: // repeat times - stackable.
-        // hand back 399 to the caller.
         return 399;
       case 35: // change basic attack skill - overwrite.
         return $dataSkills[trait._dataId].iconIndex;
-      // handle this switch arm for the current discriminant.
       case 41: // unlock skill type - one or the other or none.
         return this.skillType(trait._dataId);
       case 42: // lock skill type - one or the other or none.
-        // hand back this.skillType(trait._dataId) to the caller.
         return this.skillType(trait._dataId);
       case 43: // learn skill while equipped - one or the other or none.
         return $dataSkills[trait._dataId].iconIndex;
-      // handle this switch arm for the current discriminant.
       case 44: // unlearn skill while equipped - one or the other or none.
         return $dataSkills[trait._dataId].iconIndex;
       case 51: // can use new weapon type - don't add the same twice.
-        // hand back this.weaponType(trait._dataId) to the caller.
         return this.weaponType(trait._dataId);
       case 52: // can use new armor type - don't add the same twice.
         return this.armorType(trait._dataId);
-      // handle this switch arm for the current discriminant.
       case 53: // (lock)cannot change equipment from slot.
         return this.equipType(trait._dataId);
       case 54: // (seal) slot is not equippable while equipped.
@@ -504,7 +444,6 @@ class IconManager
       case 64: // party ability - don't add the same twice.
         return this.partyAbility(trait._dataId);
 
-      // handle this switch arm for the current discriminant.
       default:
         console.error(`all traits are accounted for- is this a custom trait code: [${trait._code}]?`);
         return false;
@@ -531,7 +470,6 @@ class IconManager
     {
       case this.JABS_PARAMETER.BONUS_HITS:
         return 399;
-      // handle this switch arm for the current discriminant.
       case this.JABS_PARAMETER.SPEED_BOOST:
         return 82;
       case this.JABS_PARAMETER.ATTACK_SKILL:
@@ -562,15 +500,12 @@ class IconManager
     {
       case this.JAFTING_PARAMETER.MAX_REFINE:
         return 86;
-      // handle this switch arm for the current discriminant.
       case this.JAFTING_PARAMETER.MAX_TRAITS:
         return 86;
       case this.JAFTING_PARAMETER.NOT_BASE:
-        // hand back 90 to the caller.
         return 90;
       case this.JAFTING_PARAMETER.NOT_MATERIAL:
         return 90;
-      // handle this switch arm for the current discriminant.
       case this.JAFTING_PARAMETER.TIMES_REFINED:
         return 223;
       case this.JAFTING_PARAMETER.UNREFINABLE:
@@ -589,7 +524,6 @@ class IconManager
     {
       case 0: // ally
         return 38;
-      // handle this switch arm for the current discriminant.
       case 1: // enemy
         return 21;
       case 2: // neutral

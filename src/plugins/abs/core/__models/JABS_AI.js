@@ -51,7 +51,6 @@ class JABS_AI
     // respect humanized pacing so AI does not mash at frame-perfect earliest legality vs human reflex.
     if (!user.isAiComboHumanizationTimingReady()) return false;
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -193,7 +192,6 @@ class JABS_AI
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 
-    // hand back skillsToUse.filter(skillId => to the caller.
     return skillsToUse.filter(skillId =>
     {
       const testAction = new Game_Action(user.getBattler());
@@ -215,7 +213,6 @@ class JABS_AI
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 
-    // capture elemental skill collection for downstream policy in this routine.
     const elementalSkillCollection = [];
     skillsToUse.forEach(skillId =>
     {
@@ -251,14 +248,12 @@ class JABS_AI
     const nearbyAllies = user.getAllNearbyAllies();
     let bestSkillId = 0;
 
-    // policy step inside decide cleansing.
     nearbyAllies.forEach(ally =>
     {
       const allyBattler = ally.getBattler();
       const allyStates = allyBattler.states();
       if (allyStates.length === 0) return;
 
-      // capture cleansable state for downstream policy in this routine.
       const cleansableState = allyStates.find(state =>
       {
         const isNegative = state.jabsNegative;
@@ -266,14 +261,12 @@ class JABS_AI
         return isNegative && canBeCleansed;
       });
 
-      // when cleansableState, take this branch.
       if (cleansableState)
       {
         bestSkillId = this.determineBestSkillForStateCleansing(availableSkills, cleansableState.id, user);
       }
     });
 
-    // hand back best skill id to the caller.
     return bestSkillId;
   }
 
@@ -293,30 +286,23 @@ class JABS_AI
       return (testAction.isForAliveFriend() && testAction.isRecover() && testAction.isHpEffect());
     });
 
-    // when healingTypeSkills.length  equals  0, take this branch.
     if (healingTypeSkills.length === 0) return 0;
 
-    // capture lowest ally for downstream policy in this routine.
     const lowestAlly = this.determineLowestHpAlly(user);
     user.setAllyTarget(lowestAlly);
 
-    // capture below60 for downstream policy in this routine.
     const below60 = this.countLowHpAllies(user);
 
-    // when below60  equals  0, take this branch.
     if (below60 === 0) return 0;
 
-    // capture lowest ally battler for downstream policy in this routine.
     const lowestAllyBattler = lowestAlly.getBattler();
     const healerBattler = user.getBattler();
 
-    // when below60  equals  1, take this branch.
     if (below60 === 1)
     {
       return this.bestFitHealingOneSkill(healingTypeSkills, healerBattler, lowestAllyBattler);
     }
 
-    // hand back this.bestFitHealingAllSkill(healingTypeSkills, healer... to the caller.
     return this.bestFitHealingAllSkill(healingTypeSkills, healerBattler, lowestAllyBattler);
   }
 
@@ -333,20 +319,17 @@ class JABS_AI
     let bestSkillId = 0;
     let chosenAlly = null;
 
-    // policy step inside decide buffing.
     availableSkills.forEach(skillId =>
     {
       const skill = user.getSkill(skillId);
       const stateAddingEffects = skill.effects.filter(fx => fx.code === 21);
       if (stateAddingEffects.length === 0) return;
 
-      // capture ready for downstream policy in this routine.
       let ready = false;
       stateAddingEffects.forEach(effect =>
       {
         if (ready) return;
 
-        // policy step inside decide buffing.
         nearbyAllies.forEach(ally =>
         {
           const trackedState = $jabsEngine.getJabsStateByUuidAndStateId(ally.getUuid(), effect.dataId);
@@ -360,13 +343,11 @@ class JABS_AI
       });
     });
 
-    // when chosenAlly, take this branch.
     if (chosenAlly)
     {
       user.setAllyTarget(chosenAlly);
     }
 
-    // hand back best skill id to the caller.
     return bestSkillId;
   }
 
@@ -380,7 +361,6 @@ class JABS_AI
     const nearbyAllies = healer.getAllNearbyAllies();
     let lowestAlly = null;
 
-    // policy step inside determine lowest hp ally.
     nearbyAllies.forEach(ally =>
     {
       if (!lowestAlly)
@@ -393,7 +373,6 @@ class JABS_AI
       }
     });
 
-    // hand back lowest ally to the caller.
     return lowestAlly;
   }
 
@@ -408,7 +387,6 @@ class JABS_AI
     const nearbyAllies = healer.getAllNearbyAllies();
     let belowThreshold = 0;
 
-    // policy step inside count low hp allies.
     nearbyAllies.forEach(ally =>
     {
       if (ally.getBattler().currentHpPercent() < threshold)
@@ -417,7 +395,6 @@ class JABS_AI
       }
     });
 
-    // hand back below threshold to the caller.
     return belowThreshold;
   }
 
@@ -433,7 +410,6 @@ class JABS_AI
     let bestSkillId = 0;
     let smallestDifference = Number.MAX_SAFE_INTEGER;
 
-    // policy step inside best fit healing one skill.
     healingTypeSkills.forEach(skillId =>
     {
       const skill = healerBattler.skill(skillId);
@@ -446,7 +422,6 @@ class JABS_AI
       // only consider skills targeting one, all, or dead allies.
       if (!testAction.isForOne() && !testAction.isForAll() && !testAction.isForDeadFriend()) return;
 
-      // capture heal amount for downstream policy in this routine.
       const healAmount = Math.abs(testAction.makeDamageValue(lowestAllyBattler, false));
       const differenceFromMax = Math.abs((lowestAllyBattler.hp + healAmount) - lowestAllyBattler.mhp);
       if (differenceFromMax < smallestDifference)
@@ -456,7 +431,6 @@ class JABS_AI
       }
     });
 
-    // hand back best skill id to the caller.
     return bestSkillId;
   }
 
@@ -478,27 +452,22 @@ class JABS_AI
       return testAction.isForAll();
     });
 
-    // when multiTargetSkills.length  equals  0, take this branch.
     if (multiTargetSkills.length === 0)
     {
       return this.bestFitHealingOneSkill(healingTypeSkills, healerBattler, lowestAllyBattler);
     }
 
-    // when multiTargetSkills.length  equals  1, take this branch.
     if (multiTargetSkills.length === 1) return multiTargetSkills[0];
 
-    // capture best skill id for downstream policy in this routine.
     let bestSkillId = 0;
     let smallestDifference = 99999999;
 
-    // policy step inside best fit healing all skill.
     multiTargetSkills.forEach(skillId =>
     {
       const skill = healerBattler.skill(skillId);
       const testAction = new Game_Action(healerBattler);
       testAction.setItemObject(skill);
 
-      // capture heal amount for downstream policy in this routine.
       const healAmount = Math.abs(testAction.makeDamageValue(lowestAllyBattler, false));
       const differenceFromMax = Math.abs((lowestAllyBattler.hp + healAmount) - lowestAllyBattler.mhp);
       if (differenceFromMax < smallestDifference)
@@ -508,7 +477,6 @@ class JABS_AI
       }
     });
 
-    // hand back best skill id to the caller.
     return bestSkillId;
   }
 
@@ -524,13 +492,11 @@ class JABS_AI
     let bestSkillForStateCleansing = null;
     let highestCleanseRate = 0.0;
 
-    // policy step inside determine best skill for state cleansing.
     availableSkills.forEach(skillId =>
     {
       const skill = healer.getSkill(skillId);
       const stateCleansingEffects = skill.effects.filter(fx => fx.code === 22 && fx.dataId === stateIdToBeCleansed);
 
-      // when stateCleansingEffects.length > 0, take this branch.
       if (stateCleansingEffects.length > 0)
       {
         stateCleansingEffects.forEach(effect =>
@@ -544,7 +510,6 @@ class JABS_AI
       }
     });
 
-    // hand back best skill for state cleansing to the caller.
     return bestSkillForStateCleansing;
   }
   //endregion support decisions
@@ -628,7 +593,6 @@ class JABS_AI
       return false;
     };
 
-    // hand back usableSkills.filter(filtering, this) to the caller.
     return usableSkills.filter(filtering, this);
   }
   //endregion battle memory

@@ -20,7 +20,6 @@ class J_AbsPluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -32,15 +31,12 @@ class J_AbsPluginMetadata
     this.initializeCoreRangeMetadata();
     this.initializeDefaultMapAndSkillMetadata();
     this.initializeAiTuningMetadata();
-    // policy step inside initialize metadata.
     this.initializeEnemyDefaultMetadata();
     this.initializeElementalIconMetadata();
     this.initializeActionDecidedMetadata();
-    // policy step inside initialize metadata.
     this.initializeAggroMetadata();
     this.initializeStateMetadata();
     this.initializeMiscMovementMetadata();
-    // policy step inside initialize metadata.
     this.initializeHitboxMeleeOriginMetadata();
     this.initializeDisengageMetadata();
     this.initializeParryMetadata();
@@ -199,23 +195,19 @@ class J_AbsPluginMetadata
     const hitboxMeleeOxRaw = this.parsedPluginParameters['hitboxMeleeOriginOffsetPxX'];
     const hitboxMeleeOyRaw = this.parsedPluginParameters['hitboxMeleeOriginOffsetPxY'];
     this.HitboxMeleeOriginOffsetPxX = Number(hitboxMeleeOxRaw);
-    // when Number.isFinite(this.HitboxMeleeOriginOffsetPxX)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginOffsetPxX) === false)
     {
       this.HitboxMeleeOriginOffsetPxX = 0;
     }
     this.HitboxMeleeOriginOffsetPxY = Number(hitboxMeleeOyRaw);
-    // when Number.isFinite(this.HitboxMeleeOriginOffsetPxY)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginOffsetPxY) === false)
     {
       this.HitboxMeleeOriginOffsetPxY = -10;
     }
 
-    // capture hitbox melee extra down raw for downstream policy in this routine.
     const hitboxMeleeExtraDownRaw = this.parsedPluginParameters['hitboxMeleeOriginExtraPxYFacingDown'];
     const hitboxMeleeExtraUpRaw = this.parsedPluginParameters['hitboxMeleeOriginExtraPxYFacingUp'];
     this.HitboxMeleeOriginExtraPxYFacingDown = Number(hitboxMeleeExtraDownRaw);
-    // when Number.isFinite(this.HitboxMeleeOriginExtraPxYFacingDown)  equals  false, take this branch.
     if (Number.isFinite(this.HitboxMeleeOriginExtraPxYFacingDown) === false)
     {
       this.HitboxMeleeOriginExtraPxYFacingDown = 0;
@@ -226,7 +218,6 @@ class J_AbsPluginMetadata
       this.HitboxMeleeOriginExtraPxYFacingUp = 0;
     }
 
-    // capture hitbox melee lift red down raw for downstream policy in this routine.
     const hitboxMeleeLiftRedDownRaw = this.parsedPluginParameters['hitboxMeleeOriginLiftReductionPxFacingDown'];
     this.HitboxMeleeOriginLiftReductionPxFacingDown = Number(hitboxMeleeLiftRedDownRaw);
     if (Number.isFinite(this.HitboxMeleeOriginLiftReductionPxFacingDown) === false)
@@ -252,33 +243,27 @@ class J_AbsPluginMetadata
     const parryCharacterAnimationRaw = this.parsedPluginParameters['parryCharacterAnimationId'];
     const parryCharacterAnimationParsed = Number(parryCharacterAnimationRaw);
     this.ParryCharacterAnimationId = 122;
-    // when Number.isFinite(parryCharacterAnimationParsed)  equals  true  and  pa..., take this branch.
     if (Number.isFinite(parryCharacterAnimationParsed) === true && parryCharacterAnimationParsed >= 0)
     {
       this.ParryCharacterAnimationId = Math.floor(parryCharacterAnimationParsed);
     }
 
-    // capture implicit parry dom raw for downstream policy in this routine.
     const implicitParryDomRaw = this.parsedPluginParameters['implicitParryDominanceMultiplier'];
     const implicitParryDomParsed = Number(implicitParryDomRaw);
     this.ImplicitParryDominanceMultiplier = 2;
-    // when Number.isFinite(implicitParryDomParsed)  equals  true  and  implicitP..., take this branch.
     if (Number.isFinite(implicitParryDomParsed) === true && implicitParryDomParsed > 1)
     {
       this.ImplicitParryDominanceMultiplier = implicitParryDomParsed;
     }
 
-    // capture implicit parry baseline floor raw for downstream policy in this routine.
     const implicitParryBaselineFloorRaw = this.parsedPluginParameters['implicitParryBaselineFloor'];
     const implicitParryBaselineFloorParsed = Number(implicitParryBaselineFloorRaw);
     this.ImplicitParryBaselineFloor = 50;
-    // when Number.isFinite(implicitParryBaselineFloorParsed)  equals  true  and ..., take this branch.
     if (Number.isFinite(implicitParryBaselineFloorParsed) === true && implicitParryBaselineFloorParsed >= 0)
     {
       this.ImplicitParryBaselineFloor = implicitParryBaselineFloorParsed;
     }
 
-    // capture implicit parry baseline per level raw for downstream policy in this routine.
     const implicitParryBaselinePerLevelRaw = this.parsedPluginParameters['implicitParryBaselinePerLevel'];
     const implicitParryBaselinePerLevelParsed = Number(implicitParryBaselinePerLevelRaw);
     this.ImplicitParryBaselinePerLevel = 0.25;
@@ -344,33 +329,27 @@ class J_AbsPluginMetadata
     /**
      * Global cooldown (GCD) plugin state: master switch, default duration in frames, and whitelist of skill {@code stypeId} values.
      * {@link this.GlobalCooldownSkillTypeSet} is built from {@code globalCooldownSkillTypes} as JSON array or comma-separated legacy text.
-     // policy step inside initialize global cooldown metadata.
      */
     this.EnableGlobalCooldown = this.parsedPluginParameters['enableGlobalCooldown'] === 'true';
     this.GlobalCooldownFrames = Number(this.parsedPluginParameters['globalCooldownFrames']) || 30;
 
-    // capture raw for downstream policy in this routine.
     const raw = this.parsedPluginParameters['globalCooldownSkillTypes'] ?? '';
     const set = new Set();
     const ingest = v =>
     {
-      // capture n for downstream policy in this routine.
       const n = parseInt(String(v), 10);
       if (Number.isFinite(n))
       {
         set.add(n);
       }
-    // policy step inside initialize global cooldown metadata.
     };
     const str = String(raw)
       .trim();
-    // when str.startsWith('['), take this branch.
     if (str.startsWith('['))
     {
       try
       {
         const arr = JSON.parse(str);
-        // when Array.isArray(arr), take this branch.
         if (Array.isArray(arr))
         {
           arr.forEach(ingest);
@@ -401,7 +380,6 @@ class J_AbsPluginMetadata
         fillColor: 0xFFA500,
         fillAlpha: 0.35,
         lineColor: 0xE08000,
-        // policy step inside initialize hitbox overlay style metadata.
         lineAlpha: 0.9,
         lineWidth: 2,
       },
@@ -421,23 +399,18 @@ class J_AbsPluginMetadata
           fillColor: 0xFFA64D,
         },
         line: {
-          // policy step inside initialize hitbox overlay style metadata.
           lineWidth: 3,
         },
         wall: {
-          // policy step inside initialize hitbox overlay style metadata.
           lineColor: 0xCC6600,
         },
         cross: {
-          // policy step inside initialize hitbox overlay style metadata.
           fillAlpha: 0.25,
         },
         arc: {
-          // policy step inside initialize hitbox overlay style metadata.
           fillColor: 0xFFB84D,
         },
       },
-
 
       // Battler overrides by kind (player/follower/battler)
       byKind:

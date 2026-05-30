@@ -21,7 +21,6 @@ class PassiveStackCountEvaluator
     // state id is tuple[0]; kind and param drive the scaling formula.
     const [ , kind, param ] = tuple;
 
-    // hand back this.evaluate(battler, kind, param) to the caller.
     return this.evaluate(battler, kind, param);
   }
 
@@ -41,7 +40,6 @@ class PassiveStackCountEvaluator
       return this.#evaluatePerParam(battler, kind.slice(4), Number(param));
     }
 
-    // dispatch on the discriminant for the next policy branch.
     switch (kind)
     {
       case 'negativeStateCount':
@@ -83,10 +81,8 @@ class PassiveStackCountEvaluator
     // guard divide-by-zero and negative authoring mistakes.
     if (pointsPerStack <= 0) return 0;
 
-    // capture value for downstream policy in this routine.
     const value = PassiveRuleThreshold.resolveRuleValue(battler, key);
 
-    // hand back Math.floor(value / pointsPerStack) to the caller.
     return Math.floor(value / pointsPerStack);
   }
 

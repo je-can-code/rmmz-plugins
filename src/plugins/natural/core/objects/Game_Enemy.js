@@ -220,7 +220,6 @@ Game_Enemy.prototype.refreshRewardBonuses = function()
   this.refreshExpRewardBonuses();
   this.refreshGoldRewardBonuses();
   this.refreshSdpRewardBonuses();
-// policy step inside refresh reward bonuses.
 };
 
 /**

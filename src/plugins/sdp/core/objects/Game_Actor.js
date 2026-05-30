@@ -12,40 +12,34 @@ Game_Actor.prototype.initMembers = function()
   J.SDP.Aliased.Game_Actor.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with the SDP system.
    */
   this._j._sdp ||= {}
 
-  // policy step inside init members.
   /**
    * The accumulative total number of points this actor has ever gained.
    * @type {number}
    */
   this._j._sdp._pointsEverGained = 0;
 
-  // policy step inside init members.
   /**
    * The accumulative total number of points this actor has ever spent.
    * @type {number}
    */
   this._j._sdp._pointsSpent = 0;
 
-  // policy step inside init members.
   /**
    * The points that this current actor has.
    * @type {number}
    */
   this._j._sdp._points = 0;
 
-  // policy step inside init members.
   /**
    * A collection of the ranks for each panel that have had points invested.
    * @type {PanelRanking[]}
@@ -108,7 +102,6 @@ Game_Actor.prototype.getAllSdpRankings = function()
  */
 Game_Actor.prototype.getTotalSdpRanks = function()
 {
-  // hand back this.getAllSdpRankings() to the caller.
   return this.getAllSdpRankings()
     .reduce((total, panelRanking) => total + panelRanking.currentRank, 0);
 };
@@ -119,7 +112,6 @@ Game_Actor.prototype.getTotalSdpRanks = function()
  */
 Game_Actor.prototype.getAllUnlockedSdps = function()
 {
-  // hand back this.getAllSdpRankings() to the caller.
   return this.getAllSdpRankings()
     .filter(panelRanking => panelRanking.isUnlocked());
 };
@@ -144,7 +136,6 @@ Game_Actor.prototype.unlockSdpByKey = function(key)
  */
 Game_Actor.prototype.isSdpUnlocked = function(key)
 {
-  // hand back this.getSdpByKey(key) to the caller.
   return this.getSdpByKey(key)
     .isUnlocked();
 };
@@ -301,24 +292,19 @@ Game_Actor.prototype.getSdpBonusForParameterKey = function(parameterKey, basePar
   if (!J.SDP) return 0;
   if (!parameterKey) return 0;
 
-  // capture panel rankings for downstream policy in this routine.
   const panelRankings = this.getAllSdpRankings();
   if (!panelRankings.length) return 0;
 
-  // capture val for downstream policy in this routine.
   let val = 0;
 
-  // policy step inside get sdp bonus for parameter key.
   panelRankings.forEach(panelRanking =>
   {
     const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
     if (!panel) return;
 
-    // policy step inside get sdp bonus for parameter key.
     val += panel.calculateBonusByRank(parameterKey, panelRanking.currentRank, baseParam, false);
   });
 
-  // hand back val to the caller.
   return val;
 };
 
@@ -332,7 +318,6 @@ Game_Actor.prototype.getSdpBonusForCustomParam = function(paramId, baseParam)
 {
   const parameterKey = ParameterKeys.legacyLongParamKey(paramId);
 
-  // hand back this.getSdpBonusForParameterKey(parameterKey, baseParam) to the caller.
   return this.getSdpBonusForParameterKey(parameterKey, baseParam);
 };
 
@@ -349,7 +334,6 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
   if (!panelRankings.length) return 0;
   if (!parameterKey) return 0;
 
-  // capture panel modifications for downstream policy in this routine.
   let panelModifications = 0;
   // for each of the panel rankings this actor has established-
   panelRankings.forEach(panelRanking =>
@@ -361,11 +345,9 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
       return;
     }
 
-    // capture panel parameters for downstream policy in this routine.
     const panelParameters = panel.getPanelParameterByKey(parameterKey);
     if (!panelParameters.length) return;
 
-    // policy step inside get sdp bonus for core param.
     panelParameters.forEach(panelParameter =>
     {
       const { perRank } = panelParameter;
@@ -381,7 +363,6 @@ Game_Actor.prototype.getSdpBonusForCoreParam = function(paramId, baseParam)
     });
   });
 
-  // hand back panel modifications to the caller.
   return panelModifications;
 };
 
@@ -401,7 +382,6 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
   if (!panelRankings.length) return 0;
   if (!parameterKey) return 0;
 
-  // capture panel modifications for downstream policy in this routine.
   let panelModifications = 0;
   // for each of the panel rankings this actor has established-
   panelRankings.forEach(panelRanking =>
@@ -413,11 +393,9 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
       return;
     }
 
-    // capture panel parameters for downstream policy in this routine.
     const panelParameters = panel.getPanelParameterByKey(parameterKey);
     if (!panelParameters.length) return;
 
-    // policy step inside get sdp bonus for non core param.
     panelParameters.forEach(panelParameter =>
     {
       const { perRank } = panelParameter;
@@ -433,7 +411,6 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
     });
   });
 
-  // hand back panel modifications to the caller.
   return panelModifications;
 };
 
@@ -447,7 +424,6 @@ Game_Actor.prototype.param = function(paramId)
   const baseParam = J.SDP.Aliased.Game_Actor.get("param")
     .call(this, paramId);
 
-  // capture panel modifications for downstream policy in this routine.
   const panelModifications = this.getSdpBonusForCoreParam(paramId, baseParam);
   const result = baseParam + panelModifications;
   return result;
@@ -463,7 +439,6 @@ Game_Actor.prototype.xparam = function(xparamId)
   const baseParam = J.SDP.Aliased.Game_Actor.get("xparam")
     .call(this, xparamId);
 
-  // capture panel modifications for downstream policy in this routine.
   const panelModifications = this.getSdpBonusForNonCoreParam(xparamId, baseParam, 8);
   const result = baseParam + panelModifications;
   return result;
@@ -479,7 +454,6 @@ Game_Actor.prototype.sparam = function(sparamId)
   const baseParam = J.SDP.Aliased.Game_Actor.get("sparam")
     .call(this, sparamId);
 
-  // capture panel modifications for downstream policy in this routine.
   const panelModifications = this.getSdpBonusForNonCoreParam(sparamId, baseParam, 18);
   const result = baseParam + panelModifications;
   return result;

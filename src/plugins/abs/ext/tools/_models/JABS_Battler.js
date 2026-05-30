@@ -9,14 +9,12 @@ JABS_Battler.prototype.initGeneralInfo = function()
   J.ABS.EXT.TOOLS.Aliased.JABS_Battler.get('initGeneralInfo')
     .call(this);
 
-  // policy step inside init general info.
   /**
    * The counter for how long this battler is waiting.
    * @type {boolean}
    */
   this._gapClosing = false;
 
-  // policy step inside init general info.
   /**
    * The destination coordinates of where this battler is gap closing to.
    * @type {[number, number]}
@@ -232,19 +230,16 @@ JABS_Battler.prototype.determineGapCloseCoordinates = function(target, position)
 {
   const targetCharacter = target.getCharacter();
 
-  // policy step inside determine gap close coordinates.
   const [ x, y ] = [ this.getX(), this.getY() ];
   const goalX = targetCharacter.deltaXFrom(x);
   const goalY = targetCharacter.deltaYFrom(y);
 
-  // when position  equals  J.ABS.EXT.TOOLS.GapClosePositions.Behind, take this branch.
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Behind)
   {
     // TODO: adjust goal x,y based on position w/ target.
     return [ goalX, goalY ];
   }
 
-  // when position  equals  J.ABS.EXT.TOOLS.GapClosePositions.Infront, take this branch.
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Infront)
   {
     // TODO: adjust goal x,y based on position w/ target.

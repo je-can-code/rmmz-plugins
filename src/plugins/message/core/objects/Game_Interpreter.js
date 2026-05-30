@@ -58,13 +58,10 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
     {
       if (index < startShowChoiceIndex || index > endShowChoiceIndex) return null;
 
-      // when currentCommand.indent  differs from  command.indent, take this branch.
       if (currentCommand.indent !== command.indent) return null;
 
-      // when command.code  equals  402  or  command.code  equals  404, take this branch.
       if (command.code === 402 || command.code === 404) return index;
 
-      // hand back null to the caller.
       return null;
     })
     .filter(choiceIndex => choiceIndex !== null);
@@ -76,7 +73,6 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
     const startIndex = choiceIndex;
     const endIndex = showChoiceIndices.at(index + 1);
 
-    // capture counter index for downstream policy in this routine.
     let counterIndex = startIndex;
     const choiceGroup = [];
     while (counterIndex < endIndex)
@@ -88,7 +84,6 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
     // Append the row to the working collection.
     runningCollection.push(choiceGroup);
 
-    // hand back running collection to the caller.
     return runningCollection;
   }, []);
 

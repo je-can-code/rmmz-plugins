@@ -12,19 +12,15 @@ class ProfParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key('prof')
-        // policy step inside register all.
         .group(ParameterGroups.FATE)
         .sortOrder(4)
         .label(() => TextManager.proficiencyBonus())
-        // policy step inside register all.
         .description(() => TextManager.proficiencyDescription())
         .iconIndex(() => IconManager.proficiencyBoost())
         .format(ParameterFormat.FLAT)
-        // policy step inside register all.
         .getValue(battler => battler.prof)
         .sdpBinding(SdpParameterBinding.byKey(
           'prof',
-          // policy step inside register all.
           actor => actor.baseSkillProficiencyAmount()
         ))
         .build()

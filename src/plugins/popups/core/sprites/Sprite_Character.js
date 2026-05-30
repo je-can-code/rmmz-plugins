@@ -12,25 +12,21 @@ Sprite_Character.prototype.initMembers = function()
   /**
    * The master reference to the `_j` object containing all plugin properties.
    * @type {{}}
-   // policy step inside init members.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * This plugins' relevant data points.
    * @type {{}}
    */
   this._j._popups ||= {};
 
-  // policy step inside init members.
   /**
    * The currently tracked damage pops, like weapon attacks or skills.
    * @type {Sprite_Damage[]}
    */
   this._j._popups._damagePopSprites = [];
 
-  // policy step inside init members.
   /**
    * The currently tracked non-damage pops, like found loot or earned experience.
    * @type {Sprite_Damage[]}
@@ -104,7 +100,6 @@ Sprite_Character.prototype.update = function()
   J.POPUPS.Aliased.Sprite_Character.get('update')
     .call(this);
 
-  // policy step inside update.
   this.processIncomingTextPops();
   this.updateTextPops();
 };
@@ -117,7 +112,6 @@ Sprite_Character.prototype.processIncomingTextPops = function()
 {
   const character = this.character();
 
-  // when character.hasTextPops(), take this branch.
   if (character.hasTextPops())
   {
     this.createIncomingTextPops();
@@ -133,7 +127,6 @@ Sprite_Character.prototype.createIncomingTextPops = function()
   const character = this.character();
   const newPopups = character.getTextPops();
 
-  // when newPopups.length, take this branch.
   if (newPopups.length)
   {
     newPopups.forEach(this.createIncomingTextPop, this);
@@ -155,16 +148,13 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
                        popup.popupType === Map_TextPop.Types.TpDamage ||
                        popup.healing === true;
 
-  // capture use motion for downstream policy in this routine.
   const useMotion = J.POPUPS.Layout.Motion.Enabled === true && isMotionType;
 
-  // capture ring extra for downstream policy in this routine.
   const ringExtra = useMotion
     ? PopupLayoutHelper.resolveMotionOffset(popup)
     : PopupLayoutHelper.consumeLayoutRingOffset(character, popup.layoutRing);
   const sprite = TextPopSpriteManager.convert(popup, ringExtra);
 
-  // when sprite.isDamage(), take this branch.
   if (sprite.isDamage())
   {
     this._j._popups._damagePopSprites.push(sprite);
@@ -174,7 +164,6 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
     this._j._popups._nonDamagePopSprites.push(sprite);
   }
 
-  // policy step inside create incoming text pop.
   this.parent.addChild(sprite);
   J.POPUPS.notifyPopupSpriteSpawned(character, popup, sprite);
 };
@@ -196,7 +185,6 @@ Sprite_Character.prototype.attachConvertedDamagePopupSprite = function(sprite, p
     this._j._popups._nonDamagePopSprites.push(sprite);
   }
 
-  // policy step inside attach converted damage popup sprite.
   this.parent.addChild(sprite);
   J.POPUPS.notifyPopupSpriteSpawned(this.character(), popup, sprite);
 };
@@ -213,7 +201,6 @@ Sprite_Character.prototype.updateTextPops = function()
     this.updateDamagePops();
   }
 
-  // when this.hasNonDamagePops(), take this branch.
   if (this.hasNonDamagePops())
   {
     this.updateNonDamagePops();
@@ -247,28 +234,23 @@ Sprite_Character.prototype._updateTrackedPopupBucket = function(bucket, updateLo
   {
     if (!pop) return false;
 
-    // policy step inside  update tracked popup bucket.
     pop.update();
     updateLocationFn.call(this, pop);
 
-    // when not pop.isPlaying(), take this branch.
     if (!pop.isPlaying())
     {
       this._removeTrackedPopSprite(pop, index, bucket);
       return true;
     }
 
-    // hand back false to the caller.
     return false;
   }, this);
 
-  // when deletedFlags.some(flag => flag  equals  true), take this branch.
   if (deletedFlags.some(flag => flag === true))
   {
     const next = bucket.filter(entry => !!entry);
     bucket.length = 0;
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < next.length; i++)
     {
       bucket.push(next[i]);
@@ -286,7 +268,6 @@ Sprite_Character.prototype._removeTrackedPopSprite = function(sprite, index, buc
 {
   const character = this.character();
 
-  // policy step inside  remove tracked pop sprite.
   this.parent.removeChild(sprite);
   J.POPUPS.notifyPopupSpriteFinished(character, sprite._j._popups._sourcePopup, sprite);
   sprite.destroy();
@@ -302,7 +283,6 @@ Sprite_Character.prototype.updateTextPopAnchorPosition = function(popSprite)
   const ox = J.POPUPS.Layout.AnchorOffsetX + J.POPUPS.Layout.HorizontalOffset;
   popSprite.x = this.x + ox + popSprite.getXVariance();
   popSprite.y = this.y + popSprite.getYVariance();
-// policy step inside update text pop anchor position.
 };
 
 /**

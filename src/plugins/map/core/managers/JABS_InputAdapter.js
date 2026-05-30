@@ -30,7 +30,6 @@ if (J.ABS)
       return false;
     }
 
-    // hand back true to the caller.
     return true;
   };
 
@@ -45,7 +44,6 @@ if (J.ABS)
     // only active on the Map scene.
     if (!(SceneManager._scene instanceof Scene_Map)) return;
 
-    // capture mini for downstream policy in this routine.
     const mini = SceneManager._scene.getMiniMap();
     if (!mini) return;
 
@@ -61,7 +59,6 @@ if (J.ABS)
     // only active on the Map scene.
     if (!(SceneManager._scene instanceof Scene_Map)) return;
 
-    // capture mini for downstream policy in this routine.
     const mini = SceneManager._scene.getMiniMap();
     if (!mini) return;
 

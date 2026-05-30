@@ -64,7 +64,6 @@ Game_Battler.prototype.baseSarFactor = function()
     J.ABS.EXT.SHIELD.RegExp.ShieldAmplification
   );
 
-  // hand back (100 + bonus) / 100 to the caller.
   return (100 + bonus) / 100;
 };
 
@@ -79,7 +78,6 @@ Game_Battler.prototype.baseSerFactor = function()
     J.ABS.EXT.SHIELD.RegExp.ShieldEffectiveness
   );
 
-  // hand back (100 + bonus) / 100 to the caller.
   return (100 + bonus) / 100;
 };
 //endregion Game_Battler

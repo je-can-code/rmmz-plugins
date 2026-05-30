@@ -18,40 +18,33 @@ class JABS_GuardData
     /**
      * The skill this guard data is associated with.
      * @type {number}
-     // policy step inside constructor.
      */
     this.skillId = skillId;
 
-    // policy step inside constructor.
     /**
      * The flat amount of damage reduced when guarding, if any.
      * @type {number}
-     // policy step inside constructor.
      */
     this.flatGuardReduction = flatGuardReduction;
 
-    // policy step inside constructor.
     /**
      * The percent amount of damage mitigated when guarding, if any.
      * @type {number}
      */
     this.percGuardReduction = percGuardReduction;
 
-    // policy step inside constructor.
     /**
      * The skill ids to counter with when guarding, if any.
      * @type {number[]}
      */
     this.counterGuardIds = counterGuardIds;
 
-    // policy step inside constructor.
     /**
      * The skill ids to counter with when precise-parrying, if any.
      * @type {number[]}
      */
     this.counterParryIds = counterParryIds;
 
-    // policy step inside constructor.
     /**
      * The duration of which a precise-parry is available, if any.
      * @type {number}

@@ -22,7 +22,6 @@ Game_Action.prototype.calcElementRate = function(target)
   // filter the action's elements down by what is available according to the strict elements.
   const attackElements = elements.filter(elementId => targetStrictElements.includes(elementId));
 
-  // policy step inside calc element rate.
   let factor;
   switch (attackElements.length)
   {
@@ -40,7 +39,6 @@ Game_Action.prototype.calcElementRate = function(target)
       break;
   }
 
-  // hand back factor to the caller.
   return factor;
 };
 
@@ -54,7 +52,6 @@ Game_Action.prototype.calculateRawElementRate = function(target)
   const elements = this.getApplicableElements(target);
   const result = this.calculateMultipleRawElementalRate(target, elements);
   return result;
-// policy step inside calculate raw element rate.
 };
 
 /**
@@ -309,7 +306,6 @@ Game_Action.prototype.evalDamageFormula = function(target)
   const absorbedElements = target.elementsAbsorbed();
   const targetAbsorbs = attackElements.some(elementId => absorbedElements.includes(elementId));
 
-  // policy step inside eval damage formula.
   /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
   /* eslint-disable no-unused-vars */
   const a = this.subject();
@@ -342,7 +338,6 @@ Game_Action.prototype.evalDamageFormula = function(target)
       value = Math.max(eval(item.damage.formula), 0) * sign;
     }
 
-    // hand back isNaN(value) to the caller.
     return isNaN(value)
       ? 0
       : value;
@@ -369,7 +364,6 @@ Game_Action.prototype.healingFactor = function(targetAbsorbs)
   const isHealingAction = [ 3, 4 ].includes(this.item().damage.type);
   return isHealingAction && !targetAbsorbs
     ? -1
-    // policy step inside healing factor.
     : 1;
 };
 //endregion Game_Action

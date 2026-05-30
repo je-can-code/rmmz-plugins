@@ -13,17 +13,13 @@ Game_Event.prototype.initMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init members.
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with JABS.
    */
-  // policy step inside init members.
   this._j._abs ||= {};
 
-  // policy step inside init members.
   /**
    * The various parameters extracted from the event on the field.
    * These parameters describe a battler's core data points so that
@@ -32,13 +28,11 @@ Game_Event.prototype.initMembers = function()
    */
   this._j._abs._battlerData = null;
 
-  // policy step inside init members.
   /**
    * The initial direction this event is facing.
    */
   this._j._abs._initialDirection = 0;
 
-  // policy step inside init members.
   /**
    * The caster's map facing when the skill was executed (cardinal row hint for action art).
    * Only applicable to action events.
@@ -60,7 +54,6 @@ Game_Event.prototype.setCastedDirection = function(direction)
   // don't turn if direction is fixed.
   if (this.isDirectionFixed()) return;
 
-  // policy step inside set casted direction.
   this._j._abs._castedDirection = direction;
 };
 
@@ -115,7 +108,6 @@ Game_Event.prototype.findProperPageIndex = function()
     console.trace();
     console.error(`could not find page index for this event.`, err, this);
 
-    // hand back -1 to the caller.
     return -1;
   }
 };
@@ -220,7 +212,6 @@ Game_Event.prototype.transformBattler = function()
     battler.revealHiddenBattler();
   }
 
-  // policy step inside transform battler.
   $gameMap.refreshOneBattler(this);
 };
 
@@ -268,7 +259,6 @@ Game_Event.prototype.parseEnemyComments = function()
   let teamId = this.getTeamIdOverrides() ?? enemyBattler.teamId();
   const ai = this.getBattlerAiOverrides() ?? enemyBattler.ai();
   const battlerRole = this.getBattlerRoleOverrides() ?? enemyBattler.jabsBattlerRole;
-  // capture sight range for downstream policy in this routine.
   const sightRange = this.getSightRangeOverrides() ?? enemyBattler.sightRange();
   const alertedSightBoost = this.getAlertedSightBoostOverrides() ?? enemyBattler.alertedSightBoost();
   const pursuitRange = this.getPursuitRangeOverrides() ?? enemyBattler.pursuitRange();
@@ -690,7 +680,6 @@ Game_Event.prototype.getCanIdleOverrides = function()
         canIdle = false;
       }
 
-
       // check if this battler has the "canIdle" config option.
       if (J.ABS.RegExp.ConfigCanIdle.test(comment))
       {
@@ -874,35 +863,30 @@ Game_Event.prototype.getBattlerRoleOverrides = function()
         found = true;
       }
 
-      // when J.ABS.RegExp.AiRoleFollower.test(comment), take this branch.
       if (J.ABS.RegExp.AiRoleFollower.test(comment))
       {
         follower = true;
         found = true;
       }
 
-      // when J.ABS.RegExp.AiRoleGuardian.test(comment), take this branch.
       if (J.ABS.RegExp.AiRoleGuardian.test(comment))
       {
         guardian = true;
         found = true;
       }
 
-      // when J.ABS.RegExp.AiRoleWard.test(comment), take this branch.
       if (J.ABS.RegExp.AiRoleWard.test(comment))
       {
         ward = true;
         found = true;
       }
 
-      // when J.ABS.RegExp.AiRoleSolo.test(comment), take this branch.
       if (J.ABS.RegExp.AiRoleSolo.test(comment))
       {
         solo = true;
         found = true;
       }
 
-      // when J.ABS.RegExp.AiRoleSentinel.test(comment), take this branch.
       if (J.ABS.RegExp.AiRoleSentinel.test(comment))
       {
         sentinel = true;
@@ -916,7 +900,6 @@ Game_Event.prototype.getBattlerRoleOverrides = function()
         found = true;
       }
 
-      // when J.ABS.RegExp.AiTraitFollower.test(comment), take this branch.
       if (J.ABS.RegExp.AiTraitFollower.test(comment))
       {
         follower = true;
@@ -927,7 +910,6 @@ Game_Event.prototype.getBattlerRoleOverrides = function()
   // return null when no role tags were present so the caller can fall back to the database.
   if (found === false) return null;
 
-  // hand back new JABS_BattlerRole(leader, follower, guardian, ward... to the caller.
   return new JABS_BattlerRole(leader, follower, guardian, ward, solo, sentinel);
 };
 //endregion overrides
@@ -1012,7 +994,6 @@ Game_Event.prototype.getBattlerId = function()
   const data = this.getBattlerCoreData();
   if (!data) return 0;
 
-  // hand back data.battlerId() to the caller.
   return data.battlerId();
 };
 

@@ -70,10 +70,8 @@ class JABS_ActionBuilder
       mapAction.setActionOptions(this.#actionOptions);
     }
 
-    // policy step inside build.
     this.clear();
 
-    // hand back map action to the caller.
     return mapAction;
   }
 

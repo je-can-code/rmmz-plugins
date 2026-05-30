@@ -50,7 +50,6 @@ class Sprite_CooldownTimer
     this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
     this.bitmap.fontFace = this.fontFace();
     this.bitmap.fontSize = this.fontSize();
-    // policy step inside load bitmap.
     this.bitmap.drawText(this._j._text, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
   }
 
@@ -69,12 +68,10 @@ class Sprite_CooldownTimer
       baseCooldown = 0;
     }
 
-    // capture cooldown base text for downstream policy in this routine.
     const cooldownBaseText = baseCooldown > 0
       ? baseCooldown
       : String.empty;
 
-    // policy step inside update cooldown text.
     this.bitmap.drawText(cooldownBaseText, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
   }
 

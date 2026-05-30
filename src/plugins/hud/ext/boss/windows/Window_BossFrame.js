@@ -32,7 +32,6 @@ class Window_BossFrame
   {
     this._j._hud._boss._requestHide = true;
 
-    // policy step inside request hide boss frame.
     this.beginConcealing();
   }
 
@@ -45,7 +44,6 @@ class Window_BossFrame
   {
     this._j._hud._boss._concealing = false;
 
-    // policy step inside end concealing.
     this.acknowledgeBossFrameHidden();
   }
 
@@ -63,7 +61,6 @@ class Window_BossFrame
   {
     this._j._hud._boss._requestShow = true;
 
-    // policy step inside request show boss frame.
     this.beginRevealing();
   }
 
@@ -139,7 +136,6 @@ class Window_BossFrame
   {
     super.update();
 
-    // policy step inside update.
     this.manageBossFrameVisibility();
   }
 
@@ -150,7 +146,6 @@ class Window_BossFrame
       this.fadeOutWindow();
     }
 
-    // when this.isStillRevealing(), take this branch.
     if (this.isStillRevealing())
     {
       this.fadeInWindow();
@@ -216,13 +211,10 @@ class Window_BossFrame
       name = `\\*` + name;
     }
 
-    // capture text width for downstream policy in this routine.
     const textWidth = this.textWidth(name);
 
-    // capture center x for downstream policy in this routine.
     const centerX = (this.contentsWidth() / 2) - (textWidth / 2);
 
-    // policy step inside draw target name.
     this.drawTextEx(name, centerX, y, textWidth);
   }
 

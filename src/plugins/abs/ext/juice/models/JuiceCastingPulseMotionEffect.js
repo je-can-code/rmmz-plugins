@@ -92,7 +92,6 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     const glowAlpha = Math.round(((wave + 1) / 2) * (glowMax - glowMin) + glowMin);
     this._sprite.setBlendColor([ 180, 220, 255, glowAlpha ]);
 
-    // hand back true to the caller.
     return true;
   }
 }

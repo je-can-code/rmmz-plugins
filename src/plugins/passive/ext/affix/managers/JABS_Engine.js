@@ -18,7 +18,6 @@ JABS_Engine.prototype.determineExperienceGained = function(defeatedEnemy, victor
   // apply any reward multiplier tags for exp.
   const rewardMultiplier = defeatedEnemy.getRewardMultiplierByType('exp');
 
-  // hand back Math.ceil(base * rewardMultiplier) to the caller.
   return Math.ceil(base * rewardMultiplier);
 };
 
@@ -41,7 +40,6 @@ JABS_Engine.prototype.determineGoldGained = function(defeatedEnemy, victoriousAc
   // apply any reward multiplier tags for gold.
   const rewardMultiplier = defeatedEnemy.getRewardMultiplierByType('gold');
 
-  // hand back Math.ceil(base * rewardMultiplier) to the caller.
   return Math.ceil(base * rewardMultiplier);
 };
 
@@ -64,7 +62,6 @@ JABS_Engine.prototype.determineSdpGained = function(defeatedEnemy, actor)
   // apply any reward multiplier tags for sdp.
   const rewardMultiplier = defeatedEnemy.getRewardMultiplierByType('sdp');
 
-  // hand back Math.ceil(base * rewardMultiplier) to the caller.
   return Math.ceil(base * rewardMultiplier);
 };
 
@@ -86,7 +83,6 @@ JABS_Engine.prototype.determineApGained = function(defeatedEnemy)
   // apply any reward multiplier tags for ap.
   const rewardMultiplier = defeatedEnemy.getRewardMultiplierByType('ap');
 
-  // hand back Math.ceil(base * rewardMultiplier) to the caller.
   return Math.ceil(base * rewardMultiplier);
 };
 //endregion JABS_Engine

@@ -35,11 +35,9 @@ class Window_Time
     const c1 = ColorManager.dimColor1();
     const c2 = ColorManager.dimColor2();
     const x = -4;
-    // capture y for downstream policy in this routine.
     const y = -4;
     const w = this.contentsBack.width + 8;
     const h = this.contentsBack.height + 8;
-    // policy step inside generate background.
     this.contentsBack.gradientFillRect(x, y, w, h, c1, c2, true);
     this.contentsBack.strokeRect(x, y, w, h, c1);
   };
@@ -52,11 +50,9 @@ class Window_Time
     /**
      * The TIME rendered by this window.
      * @type {Time_Snapshot}
-     // policy step inside init members.
      */
     this.time = null;
 
-    // policy step inside init members.
     /**
      * The boolean managing the alternating colon for this window.
      * @type {boolean}
@@ -137,18 +133,14 @@ class Window_Time
     const colon1 = this._alternating
       ? ":"
       : " ";
-    // capture colon2 for downstream policy in this routine.
     const colon2 = this._alternating
       ? " "
       : ":";
-    // capture ampm for downstream policy in this routine.
     const ampm = this.time.hours > 11
       ? "PM"
       : "AM";
-    // capture lh for downstream policy in this routine.
     const lh = this.lineHeight();
 
-    // capture seconds for downstream policy in this routine.
     const seconds = this.time.seconds.padZero(2);
     const minutes = this.time.minutes.padZero(2);
     const hours = this.time.hours.padZero(2);
@@ -157,12 +149,10 @@ class Window_Time
     const seasonName = this.time.seasonOfTheYearName;
     const seasonIcon = this.time.seasonOfTheYearIcon;
 
-    // capture days for downstream policy in this routine.
     const days = this.time.days.padZero(2);
     const months = this.time.months.padZero(2);
     const years = this.time.years.padZero(4);
 
-    // policy step inside draw content.
     this.drawTextEx(`\\I[2784]${hours}${colon1}${minutes}${colon2}${seconds} \\}${ampm}`, 0, lh * 0, 200);
     this.drawTextEx(`\\I[${timeOfDayIcon}]${timeOfDayName}`, 0, lh * 1, 200);
     this.drawTextEx(`\\I[${seasonIcon}]${seasonName}`, 0, lh * 2, 200);

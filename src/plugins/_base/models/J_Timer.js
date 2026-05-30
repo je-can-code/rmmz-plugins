@@ -17,18 +17,15 @@ class J_Timer
     /**
      * The maximum count this timer can reach.
      * @type {number}
-     // policy step inside constructor.
      */
     this._timerMax = timerMax;
 
-    // policy step inside constructor.
     /**
      * Whether or not to stop counting after we've reached the max.
      * @type {boolean}
      */
     this._stopCounting = stopCounting;
 
-    // policy step inside constructor.
     /**
      * The callback function to execute when the timer completes.
      * If none is provided, nothing will happen, though the {@link #onComplete} will still execute
@@ -37,7 +34,6 @@ class J_Timer
      */
     this._callback = callback;
 
-    // policy step inside constructor.
     this.initMembers();
   }
 
@@ -49,21 +45,18 @@ class J_Timer
     /**
      * A key or name for this timer.
      * This is not strictly enforced by the timer, so this is for
-     // policy step inside init members.
      * developer convenience if needed.
      * @type {string}
      */
     // store  key on the instance for later reads.
     this._key = String.empty;
 
-    // policy step inside init members.
     /**
      * The counter on this timer that ticks up to the max.
      * @type {number}
      */
     this._timer = 0;
 
-    // policy step inside init members.
     /**
      * The maximum count this timer can reach.
      * @type {number}

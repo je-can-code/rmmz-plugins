@@ -31,7 +31,6 @@ class Sprite_MapCastGauge
     // initialize as a map gauge.
     super.initialize(bitmapWidth, bitmapHeight, gaugeHeight);
 
-    // policy step inside initialize.
     /**
      * The JABS battler providing cast state.
      * @type {JABS_Battler|null}
@@ -65,7 +64,6 @@ class Sprite_MapCastGauge
     // retain the JABS battler for cast-time logic.
     this._jabsBattler = jabsBattler;
 
-    // policy step inside setup jabs.
     /**
      * The character this gauge expects the JABS battler to be bound to.
      * (kept for reference but not used for validity gating)
@@ -73,7 +71,6 @@ class Sprite_MapCastGauge
      */
     this._expectedCharacter = expectedCharacter ?? null;
 
-    // policy step inside setup jabs.
     /**
      * The UUID we expect this gauge to track. Stable across leader/follower swaps.
      * @type {string}
@@ -142,7 +139,6 @@ class Sprite_MapCastGauge
     const max = action.getCastTime();
     if (!max) return NaN; // zero-cast means do not draw.
 
-    // capture remaining for downstream policy in this routine.
     const remaining = jabsBattler.getCastTimeCountdown();
     const elapsed = Math.max(0, max - remaining);
     return elapsed;
@@ -164,7 +160,6 @@ class Sprite_MapCastGauge
     if (!decided || decided.length === 0) return NaN;
     if (jabsBattler.getCastTimeCountdown() <= 0) return NaN;
 
-    // policy step inside current max value.
     const [ action ] = decided;
     const max = action.getCastTime();
     return max || NaN;
@@ -215,7 +210,6 @@ class Sprite_MapCastGauge
     const decided = this.getJabsBattler()
       .getDecidedAction();
 
-    // when decided  and  decided.length > 0, take this branch.
     if (decided && decided.length > 0)
     {
       const [ action ] = decided;
@@ -253,7 +247,6 @@ class Sprite_MapCastGauge
     const w = this.bitmapWidth() - x;
     const h = this.bitmapHeight();
 
-    // policy step inside draw label.
     this.bitmap.drawText(
       this._gauge._label,
       Math.floor(x),

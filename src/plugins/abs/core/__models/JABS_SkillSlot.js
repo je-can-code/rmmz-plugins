@@ -23,14 +23,12 @@ class JABS_SkillSlot
     /**
      * The key of this skill slot.
      *
-     // policy step inside initialize.
      * Maps 1:1 to one of the possible skill slot button combinations.
      * @type {string}
      */
     // assign key on this instance for callers.
     this.key = key;
 
-    // policy step inside initialize.
     /**
      * The id of the skill.
      *
@@ -51,29 +49,23 @@ class JABS_SkillSlot
     /**
      * The combo id that comes after the current id; default is 0.
      * @type {number}
-     // policy step inside init members.
      */
     this.comboId = 0;
 
-    // policy step inside init members.
     /**
      * The cooldown associated with this slot.
      * @type {JABS_Cooldown}
-     // policy step inside init members.
      */
     this.cooldown = new JABS_Cooldown(this.key);
 
-    // policy step inside init members.
     /**
      * Whether or not this skill slot is locked.
      *
-     // policy step inside init members.
      * Locked slots cannot be changed until unlocked.
      * @type {boolean}
      */
     this.locked = false;
 
-    // policy step inside init members.
     /**
      * The skill id that the player has explicitly pinned into this slot.
      *
@@ -97,42 +89,33 @@ class JABS_SkillSlot
     /**
      * Whether or not this skill slot's name needs refreshing.
      * @type {boolean}
-     // policy step inside init visual refreshes.
      */
     this.needsNameRefresh = true;
 
-    // policy step inside init visual refreshes.
     /**
      * Whether or not this skill slot's item cost needs refreshing.
      * @type {boolean}
-     // policy step inside init visual refreshes.
      */
     this.needsItemCostRefresh = true;
 
-    // policy step inside init visual refreshes.
     /**
      * Whether or not this skill slot's hp cost needs refreshing.
      * @type {boolean}
      */
     this.needsHpCostRefresh = true;
 
-    // policy step inside init visual refreshes.
     /**
      * Whether or not this skill slot's mp cost needs refreshing.
      * @type {boolean}
      */
     this.needsMpCostRefresh = true;
 
-
-    // policy step inside init visual refreshes.
     /**
      * Whether or not this skill slot's tp cost needs refreshing.
      * @type {boolean}
      */
     this.needsTpCostRefresh = true;
 
-
-    // policy step inside init visual refreshes.
     /**
      * Whether or not this skill slot's icon needs refreshing.
      * @type {boolean}
@@ -182,11 +165,9 @@ class JABS_SkillSlot
     {
       case (Sprite_SkillCost.Types.HP):
         return this.needsHpCostRefresh;
-      // handle this switch arm for the current discriminant.
       case (Sprite_SkillCost.Types.MP):
         return this.needsMpCostRefresh;
       case (Sprite_SkillCost.Types.TP):
-        // hand back this.needsTpCostRefresh to the caller.
         return this.needsTpCostRefresh;
       case (Sprite_SkillCost.Types.Item):
         return this.needsItemCostRefresh;
@@ -206,19 +187,15 @@ class JABS_SkillSlot
     {
       case (Sprite_SkillCost.Types.HP):
         this.needsHpCostRefresh = false;
-        // policy step inside acknowledge cost refresh by type.
         break;
       case (Sprite_SkillCost.Types.MP):
         this.needsMpCostRefresh = false;
-        // policy step inside acknowledge cost refresh by type.
         break;
       case (Sprite_SkillCost.Types.TP):
         this.needsTpCostRefresh = false;
-        // policy step inside acknowledge cost refresh by type.
         break;
       case (Sprite_SkillCost.Types.Item):
         this.needsItemCostRefresh = false;
-        // policy step inside acknowledge cost refresh by type.
         break;
       default:
         console.warn(`attempted to acknowledge a refresh of type: ${costType}, but it isn't implemented.`);
@@ -392,7 +369,6 @@ class JABS_SkillSlot
     const slots = [
       JABS_Button.Mainhand, JABS_Button.Offhand, JABS_Button.Tool, JABS_Button.Dodge ];
 
-    // hand back slots.includes(this.key) to the caller.
     return slots.includes(this.key);
   }
 
@@ -406,7 +382,6 @@ class JABS_SkillSlot
     const slots = [
       JABS_Button.CombatSkill1, JABS_Button.CombatSkill2, JABS_Button.CombatSkill3, JABS_Button.CombatSkill4, ];
 
-    // hand back slots.includes(this.key) to the caller.
     return slots.includes(this.key);
   }
 
@@ -448,7 +423,6 @@ class JABS_SkillSlot
       this.locked = locked;
     }
 
-    // hand back this to the caller.
     return this;
   }
 
@@ -461,7 +435,6 @@ class JABS_SkillSlot
     const lockproofSlots = [
       JABS_Button.Mainhand, JABS_Button.Offhand ];
 
-    // hand back !lockproofSlots.includes(this.key) to the caller.
     return !lockproofSlots.includes(this.key);
   }
 
@@ -472,7 +445,6 @@ class JABS_SkillSlot
   lock()
   {
     this.setLock(true);
-    // hand back this to the caller.
     return this;
   }
 
@@ -483,7 +455,6 @@ class JABS_SkillSlot
   unlock()
   {
     this.setLock(false);
-    // hand back this to the caller.
     return this;
   }
 
@@ -608,7 +579,6 @@ class JABS_SkillSlot
     this.unlock();
     this.setSkillId(0);
     return this;
-  // policy step inside clear.
   }
 
   /**
@@ -625,7 +595,6 @@ class JABS_SkillSlot
       return this;
     }
 
-    // hand back this.setSkillId(0) to the caller.
     return this.setSkillId(0);
   }
 
@@ -639,7 +608,6 @@ class JABS_SkillSlot
     const noAutoclearSlots = [
       JABS_Button.Tool ];
 
-    // hand back !noAutoclearSlots.includes(this.key) to the caller.
     return !noAutoclearSlots.includes(this.key);
   }
 }

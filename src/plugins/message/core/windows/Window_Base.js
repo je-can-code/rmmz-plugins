@@ -66,7 +66,6 @@ Window_Base.prototype.translateWeaponTextCode = function(text)
   {
     const weaponColor = 4;
     const weapon = $dataWeapons[parseInt(p1)];
-    // hand back `\\I[${weapon.iconIndex}]\\C[${weaponColor}]${weapon.... to the caller.
     return `\\I[${weapon.iconIndex}]\\C[${weaponColor}]${weapon.name}\\C[0]`;
   });
 };
@@ -82,7 +81,6 @@ Window_Base.prototype.translateArmorTextCode = function(text)
   {
     const armorColor = 5;
     const armor = $dataArmors[parseInt(p1)];
-    // hand back `\\I[${armor.iconIndex}]\\C[${armorColor}]${armor.nam... to the caller.
     return `\\I[${armor.iconIndex}]\\C[${armorColor}]${armor.name}\\C[0]`;
   });
 };
@@ -98,7 +96,6 @@ Window_Base.prototype.translateItemTextCode = function(text)
   {
     const itemColor = 3;
     const item = $dataItems[parseInt(p1)];
-    // hand back `\\I[${item.iconIndex}]\\C[${itemColor}]${item.name}\... to the caller.
     return `\\I[${item.iconIndex}]\\C[${itemColor}]${item.name}\\C[0]`;
   });
 };
@@ -125,7 +122,6 @@ Window_Base.prototype.translateStateTextCode = function(text)
       iconIndex = state.iconIndex;
     }
 
-    // hand back `\\I[${iconIndex}]\\C[${stateColor}]${name}\\C[0]` to the caller.
     return `\\I[${iconIndex}]\\C[${stateColor}]${name}\\C[0]`;
   });
 };
@@ -141,7 +137,6 @@ Window_Base.prototype.translateSkillTextCode = function(text)
   {
     const skillColor = 1;
     const skill = $dataSkills[parseInt(p1)];
-    // hand back `\\I[${skill.iconIndex}]\\C[${skillColor}]${skill.nam... to the caller.
     return `\\I[${skill.iconIndex}]\\C[${skillColor}]${skill.name}\\C[0]`;
   });
 };
@@ -158,7 +153,6 @@ Window_Base.prototype.translateEnemyTextCode = function(text)
   {
     const enemyColor = 2;
     const enemy = $dataEnemies[parseInt(p1)];
-    // hand back `\\C[${enemyColor}]${enemy.name}\\C[0]` to the caller.
     return `\\C[${enemyColor}]${enemy.name}\\C[0]`;
   });
 };
@@ -288,7 +282,6 @@ Window_Base.prototype.translateSdpTextCode = function(text)
   // if not using the SDP system, then don't try to process the text.
   if (!J.SDP) return text;
 
-  // hand back text.replace(/\\sdp\[(.*)]/gi, (_, p1) => to the caller.
   return text.replace(/\\sdp\[(.*)]/gi, (_, p1) =>
   {
     // determine the sdp key.
@@ -325,7 +318,6 @@ Window_Base.prototype.translateQuestTextCode = function(text)
   // if not using the Questopedia system, then don't try to process the text.
   if (!J.OMNI?.EXT?.QUEST) return text;
 
-  // hand back text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) => to the caller.
   return text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) =>
   {
     // determine the quest key.

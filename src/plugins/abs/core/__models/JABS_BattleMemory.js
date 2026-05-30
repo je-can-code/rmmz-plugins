@@ -31,26 +31,21 @@ class JABS_BattleMemory
     /**
      * The id of the battler targeted.
      * @type {number}
-     // policy step inside initialize.
      */
     this.battlerId = battlerId;
 
-    // policy step inside initialize.
     /**
      * The id of the skill executed.
      * @type {number}
-     // policy step inside initialize.
      */
     this.skillId = skillId;
 
-    // policy step inside initialize.
     /**
      * How elementally effective the skill was that was used on the given battler id.
      * @type {boolean}
      */
     this.effectiveness = effectiveness;
 
-    // policy step inside initialize.
     /**
      * The damage dealt from this action.
      */

@@ -30,13 +30,11 @@ class AffiliationDisplay
     const absorbed = flags.absorbed === true;
     const immune = flags.immune === true;
 
-    // when absorbed, take this branch.
     if (absorbed)
     {
       const magnitude = Math.round(ratePercent);
       const diff = magnitude - 100;
 
-      // when diff  equals  0, take this branch.
       if (diff === 0)
       {
         return {
@@ -45,14 +43,12 @@ class AffiliationDisplay
         };
       }
 
-      // hand back { to the caller.
       return {
         value: `ABSORB (${ParameterDefinition.padSignedMagnitude(diff, AffiliationDisplay.padDigits, true, true)}%)`,
         colorIndex: 5,
       };
     }
 
-    // when immune  or  ratePercent <= 0, take this branch.
     if (immune || ratePercent <= 0)
     {
       return {
@@ -61,16 +57,13 @@ class AffiliationDisplay
       };
     }
 
-    // capture diff for downstream policy in this routine.
     const diff = Math.round(ratePercent) - 100;
 
-    // when diff  equals  0, take this branch.
     if (diff === 0)
     {
       return null;
     }
 
-    // when diff <= -100, take this branch.
     if (diff <= -100)
     {
       return {
@@ -79,10 +72,8 @@ class AffiliationDisplay
       };
     }
 
-    // capture color index for downstream policy in this routine.
     let colorIndex = 0;
 
-    // when diff > 0, take this branch.
     if (diff > 0)
     {
       colorIndex = 10;
@@ -92,7 +83,6 @@ class AffiliationDisplay
       colorIndex = 3;
     }
 
-    // hand back { to the caller.
     return {
       value: `${ParameterDefinition.padSignedMagnitude(diff, AffiliationDisplay.padDigits, true, true)}%`,
       colorIndex,
@@ -109,13 +99,11 @@ class AffiliationDisplay
   {
     const formatted = AffiliationDisplay.formatDelta(ratePercent, flags);
 
-    // when formatted, take this branch.
     if (formatted)
     {
       return formatted;
     }
 
-    // hand back { to the caller.
     return {
       value: `${ParameterDefinition.padSignedMagnitude(0, AffiliationDisplay.padDigits, true, true)}%`,
       colorIndex: 0,

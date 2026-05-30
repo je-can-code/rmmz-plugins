@@ -94,10 +94,8 @@ class Scene_Monsterpedia
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init core members.
     this._j ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with the omnipedia.
      */
@@ -114,26 +112,21 @@ class Scene_Monsterpedia
     /**
      * A grouping of all properties associated with the monsterpedia.
      * The monsterpedia is a subcategory of the omnipedia..
-     // policy step inside init primary members.
      */
     this._j._omni._monster = {};
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of percieved monsters.
      * @type {Window_MonsterpediaList}
-     // policy step inside init primary members.
      */
     this._j._omni._monster._pediaList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the details observed of a perceived monster.
      * @type {Window_MonsterpediaDetail}
      */
     this._j._omni._monster._pediaDetail = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the teriary information of a perceived monster.
      * @type {Window_MonsterpediaList}

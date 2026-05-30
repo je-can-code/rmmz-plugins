@@ -8,11 +8,9 @@ Scene_Menu.prototype.commandWindowRect = function()
   const ww = this.mainCommandWidth();
   const wh = this.mainAreaHeight() - this.goldWindowRect().height;
   const wx = this.isRightInputMode()
-    // policy step inside command window rect.
     ? Graphics.boxWidth - ww
     : 0;
   const wy = this.mainAreaTop();
-  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -26,11 +24,9 @@ Scene_Menu.prototype.statusWindowRect = function()
   const ww = Graphics.boxWidth - this.mainCommandWidth();
   const wh = this.mainAreaHeight();
   const wx = this.isRightInputMode()
-    // policy step inside status window rect.
     ? 0
     : Graphics.boxWidth - ww;
   const wy = this.mainAreaTop();
-  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 

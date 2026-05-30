@@ -181,14 +181,12 @@ J.BASE.Helpers.satisfies = function(currentVersion, minimumVersion)
   const minimumVersionParts = minimumVersion.split('.');
   for (const i in currentVersionParts)
   {
-    // capture a for downstream policy in this routine.
     const a = ~~currentVersionParts[i];
     const b = ~~minimumVersionParts[i];
     if (a > b) return true;
     if (a < b) return false;
   }
 
-  // hand back true; // must be the same to the caller.
   return true; // must be the same
 };
 
@@ -206,16 +204,13 @@ J.BASE.Helpers.parsePluginInt = function(value, fallback)
     return fallback;
   }
 
-  // capture parsed for downstream policy in this routine.
   const parsed = Number.parseInt(String(value), 10);
 
-  // when Number.isFinite(parsed), take this branch.
   if (Number.isFinite(parsed))
   {
     return parsed;
   }
 
-  // hand back fallback to the caller.
   return fallback;
 };
 
@@ -229,11 +224,9 @@ J.BASE.Helpers.generateUuid = function()
     .replace(/[xy]/g, c =>
     {
       const r = Math.random() * 16 | 0, v = c === 'x'
-        // policy step inside generate uuid.
         ? r
         : (r & 0x3 | 0x8);
       return v.toString(16);
-    // policy step inside generate uuid.
     });
 };
 
@@ -247,11 +240,9 @@ J.BASE.Helpers.shortUuid = function()
     .replace(/[xy]/g, c =>
     {
       const r = Math.random() * 16 | 0, v = c === 'x'
-        // policy step inside short uuid.
         ? r
         : (r & 0x3 | 0x8);
       return v.toString(16);
-    // policy step inside short uuid.
     });
 };
 
@@ -267,7 +258,6 @@ J.BASE.Helpers.modVariable = function(variableId, amount)
   const oldValue = $gameVariables.value(variableId);
   const newValue = oldValue + amount;
   $gameVariables.setValue(variableId, newValue);
-// policy step inside mod variable.
 };
 
 /**
@@ -292,11 +282,9 @@ J.BASE.Helpers.translateItem = function(id, type)
   {
     case "i":
       return $dataItems[id];
-    // handle this switch arm for the current discriminant.
     case "w":
       return $dataWeapons[id];
     case "a":
-      // hand back $dataArmors[id] to the caller.
       return $dataArmors[id];
   }
 };
@@ -320,11 +308,9 @@ J.BASE.Helpers.getKeyFromRegexp = function(structure, asBoolean = false)
   const stringifiedStructure = structure.toString();
   const openChar = '<';
   const closeChar = asBoolean
-    // policy step inside get key from regexp.
     ? '>'
     : ':';
   return stringifiedStructure
-    // policy step inside get key from regexp.
     .substring(stringifiedStructure.indexOf(openChar) + 1, stringifiedStructure.indexOf(closeChar));
 };
 
@@ -384,7 +370,6 @@ Date.prototype.addDays = function(days)
   const result = new Date(this.valueOf());
   result.setDate(result.getDate() + days);
   return result;
-// policy step inside add days.
 };
 
 /**
@@ -395,7 +380,6 @@ Date.prototype.addDays = function(days)
 Date.prototype.addHours = function(hours)
 {
   this.setTime(this.getTime() + (hours * 60 * 60 * 1000));
-  // hand back this to the caller.
   return this;
 };
 
@@ -407,7 +391,6 @@ Date.prototype.addHours = function(hours)
 Date.prototype.addMinutes = function(minutes)
 {
   this.setTime(this.getTime() + (minutes * 60 * 1000));
-  // hand back this to the caller.
   return this;
 };
 
@@ -440,19 +423,16 @@ if (![].at)
   {
     index = Math.trunc(index) || 0;
 
-    // when index < 0, take this branch.
     if (index < 0)
     {
       index += this.length;
     }
 
-    // when index < 0  or  index >= this.length, take this branch.
     if (index < 0 || index >= this.length)
     {
       return undefined;
     }
 
-    // hand back this[index] to the caller.
     return this[index];
   };
   /* eslint-enable */

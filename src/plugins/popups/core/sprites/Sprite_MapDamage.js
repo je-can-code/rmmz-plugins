@@ -25,45 +25,36 @@ class Sprite_MapDamage
   {
     super.initialize();
 
-    // policy step inside initialize.
     /**
      * When true, child motion is frozen so totals can climb in place on the anchor.
      * @type {boolean}
-     // policy step inside initialize.
      */
     this._j._popups._mapAccumulatePhase = true;
 
-    // policy step inside initialize.
     /**
      * Frame index into {@link #kickMergeCombinePulse}; {@link #_mergePulseTotalFrames} or greater means idle.
      * @type {number}
-     // policy step inside initialize.
      */
     this._j._popups._mergePulseFrameIndex = 10;
 
-    // policy step inside initialize.
     /**
      * How many frames the merge tally scale pulse currently runs.
      * @type {number}
-     // policy step inside initialize.
      */
     this._j._popups._mergePulseTotalFrames = 10;
 
-    // policy step inside initialize.
     /**
      * The baseline duration of a normal merge pulse.
      * @type {number}
      */
     this._j._popups._mergePulseBaseFrames = 10;
 
-    // policy step inside initialize.
     /**
      * The number of frames to hold the current merge pulse at peak scale before easing down.
      * @type {number}
      */
     this._j._popups._mergePulseHoldFrames = 0;
 
-    // policy step inside initialize.
     /**
      * The current peak scale for the active merge pulse.
      *
@@ -73,14 +64,12 @@ class Sprite_MapDamage
      */
     this._j._popups._mergePulsePeakScale = 1.33;
 
-    // policy step inside initialize.
     /**
      * The maximum alpha for the transient merge pulse flash.
      * @type {number}
      */
     this._j._popups._mergePulseFlashMaxAlpha = 0;
 
-    // policy step inside initialize.
     /**
      * The current alpha for the transient merge pulse flash.
      * @type {number}
@@ -101,7 +90,6 @@ class Sprite_MapDamage
   {
     Sprite.prototype.update.call(this);
 
-    // when this._duration > 0, take this branch.
     if (this._duration > 0)
     {
       if (this._j._popups._mapAccumulatePhase !== true)
@@ -109,18 +97,15 @@ class Sprite_MapDamage
         this._duration--;
       }
 
-      // iterate the loop counter until the guard exits.
       for (let i = 0; i < this.children.length; i++)
       {
         this.updateChild(this.children[i]);
       }
     }
 
-    // policy step inside update.
     this.updateFlash();
     this.updateOpacity();
 
-    // policy step inside update.
     this.updateMergeCombinePulse();
   }
 
@@ -133,7 +118,6 @@ class Sprite_MapDamage
     const total = this._j._popups._mergePulseTotalFrames;
     const holdFrames = this._j._popups._mergePulseHoldFrames;
 
-    // when idx >= total, take this branch.
     if (idx >= total)
     {
       this.scale.x = 1;
@@ -144,7 +128,6 @@ class Sprite_MapDamage
       return;
     }
 
-    // capture peak for downstream policy in this routine.
     const peak = this._j._popups._mergePulsePeakScale;
     let scale = peak;
 
@@ -170,7 +153,6 @@ class Sprite_MapDamage
       this._j._popups._mergePulseFlashAlpha = 0;
     }
 
-    // policy step inside update merge combine pulse.
     this.scale.x = scale;
     this.scale.y = scale;
     this._j._popups._mergePulseFrameIndex = idx + 1;
@@ -206,7 +188,6 @@ class Sprite_MapDamage
       ? 192
       : 0;
 
-    // policy step inside kick merge combine pulse.
     this._j._popups._mergePulseFrameIndex = 0;
   }
 
@@ -217,10 +198,8 @@ class Sprite_MapDamage
   {
     this._j._popups._mapAccumulatePhase = false;
 
-    // capture base duration for downstream policy in this routine.
     const baseDuration = J.POPUPS.Layout.BaseDuration;
 
-    // when this._duration < baseDuration, take this branch.
     if (this._duration < baseDuration)
     {
       this._duration = baseDuration;
@@ -237,45 +216,35 @@ class Sprite_MapDamage
   {
     let healingPopup = false;
 
-    // when this._j._popups._sourcePopup  and  this._j._popups._sourcePopup.heali..., take this branch.
     if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
     {
       healingPopup = true;
     }
 
-    // capture display string for downstream policy in this routine.
     const displayString = PopupNumericDisplay.formatNumericPopupDisplayString(valueString, healingPopup);
 
-    // when this._j._popups._sourcePopup, take this branch.
     if (this._j._popups._sourcePopup)
     {
       this._j._popups._sourcePopup.value = displayString;
     }
 
-    // capture icon ref for downstream policy in this routine.
     const iconRef = this._j._popups._iconSprite;
 
-    // capture text sprite for downstream policy in this routine.
     const textSprite = this.children.find(child =>
       child !== iconRef && child.bitmap && child.bitmap.width === J.POPUPS.Layout.ValueBitmapWidth);
 
-    // when not textSprite  or  not textSprite.bitmap, take this branch.
     if (!textSprite || !textSprite.bitmap)
     {
       return;
     }
 
-    // capture w for downstream policy in this routine.
     const w = J.POPUPS.Layout.ValueBitmapWidth;
     const h = this.fontSize();
 
-    // policy step inside refresh displayed value.
     textSprite.bitmap.clear();
 
-    // capture font size for downstream policy in this routine.
     let fontSize = 20;
 
-    // when this._j._popups._isCritical, take this branch.
     if (this._j._popups._isCritical)
     {
       fontSize += 12;
@@ -291,7 +260,6 @@ class Sprite_MapDamage
         || displayString.includes('Evaded')
         || displayString.includes('Parry');
 
-      // when accentSmallItalic  or  legacyItalic, take this branch.
       if (accentSmallItalic || legacyItalic)
       {
         fontSize -= 6;
@@ -305,11 +273,9 @@ class Sprite_MapDamage
       }
     }
 
-    // policy step inside refresh displayed value.
     textSprite.bitmap.fontSize = fontSize;
     textSprite.bitmap.drawText(displayString, 0, 0, w, h, 'center');
 
-    // policy step inside refresh displayed value.
     this.repositionChildren();
     this.kickMergeCombinePulse(largePulse);
   }
@@ -337,7 +303,6 @@ class Sprite_MapDamage
       return;
     }
 
-    // policy step inside update child.
     super.updateChild(sprite);
   }
 }

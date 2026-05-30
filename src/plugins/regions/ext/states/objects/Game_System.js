@@ -21,7 +21,6 @@ Game_System.prototype.updateRegionStatesAfterLoad = function()
   $gameMap.initRegionStatesMembers();
   $gameMap.setupRegionStates();
   $gamePlayer.initRegionStatesMembers();
-  // policy step inside update region states after load.
   $gamePlayer.followers()
     .data()
     .forEach(follower => follower.initRegionStatesMembers());

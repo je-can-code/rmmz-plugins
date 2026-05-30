@@ -103,7 +103,6 @@ Game_Enemy.prototype.canMapActionToSkill = function(action)
  */
 Game_Enemy.prototype.hasSkill = function(skillId)
 {
-  // hand back this.skills() to the caller.
   return this.skills()
     .some(skill => skill.id === skillId);
 };

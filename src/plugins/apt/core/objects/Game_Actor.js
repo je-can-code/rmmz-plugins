@@ -28,23 +28,19 @@ Game_Actor.prototype.initAptitudeMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init aptitude members.
   this._j ||= {};
 
-  // policy step inside init aptitude members.
   /**
    * A grouping of all properties associated with this plugin.
    */
   this._j._aptitude ||= {};
 
-  // policy step inside init aptitude members.
   /**
    * A collection of all aptitudes that are presently being learned.
    * @type {Record<string, AptitudeProgress>}
    */
   this._j._aptitude._progress = {};
 
-  // policy step inside init aptitude members.
   /**
    * The aptitude skills for this actor.
    * @type {Record<number, AptitudeSkill>}
@@ -61,7 +57,6 @@ Game_Actor.prototype.getAllAptitudeProgresses = function()
   // emergency initialize for existing saves.
   if (!this._j._aptitude) this.initAptitudeMembers();
 
-  // hand back this._j._aptitude._progress to the caller.
   return this._j._aptitude._progress;
 };
 
@@ -74,7 +69,6 @@ Game_Actor.prototype.getAllAptitudeSkillsLearned = function()
   // emergency initialize for existing saves.
   if (!this._j._aptitude) this.initAptitudeMembers();
 
-  // hand back this._j._aptitude._learned to the caller.
   return this._j._aptitude._learned;
 };
 

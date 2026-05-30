@@ -11,26 +11,22 @@ Game_Enemy.prototype.initMembers = function()
   J.LEVEL.Aliased.Game_Enemy.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with levels.
    */
   this._j._level ||= {};
 
-  // policy step inside init members.
   /**
    * All skill learnings this enemy has for it recorded as a dictionary.
    * @type {Record<number, number>}
    */
   this._j._level._skillLearnings = {};
 
-  // policy step inside init members.
   /**
    * The cached level override for this enemy if one exists.
    * @type {number|null}
@@ -81,7 +77,6 @@ Game_Enemy.prototype.setupSkillLearnings = function()
   const learnings = RPGManager.getArraysFromNotesByRegex(this.enemy(), J.LEVEL.RegExp.Learning) ?? [];
   if (learnings.length === 0) return;
 
-  // policy step inside setup skill learnings.
   learnings.forEach(learning => this.setSkillLearning(learning.at(0), learning.at(1)));
 };
 

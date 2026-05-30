@@ -26,7 +26,6 @@ class Sprite_Face
     super.initialize();
     this.initMembers(faceName, faceIndex);
     this.loadBitmap();
-  // policy step inside initialize.
   }
 
   /**
@@ -39,7 +38,6 @@ class Sprite_Face
     this._j = {
       _faceName: faceName,
       _faceIndex: faceIndex,
-    // policy step inside init members.
     };
   }
 
@@ -51,11 +49,9 @@ class Sprite_Face
     this.bitmap = ImageManager.loadFace(this._j._faceName);
     const pw = ImageManager.faceWidth;
     const ph = ImageManager.faceHeight;
-    // capture width for downstream policy in this routine.
     const width = pw;
     const height = ph;
     const sw = Math.min(width, pw);
-    // capture sh for downstream policy in this routine.
     const sh = Math.min(height, ph);
     const sx = Math.floor((this._j._faceIndex % 4) * pw + (pw - sw) / 2);
     const sy = Math.floor(Math.floor(this._j._faceIndex / 4) * ph + (ph - sh) / 2);

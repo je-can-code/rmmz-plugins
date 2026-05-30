@@ -18,25 +18,21 @@ class Window_SkillDetail
     /**
      * The skill id this window is currently presenting data for.
      * @type {number}
-     // policy step inside init members.
      */
     this._skillId = null;
 
-    // policy step inside init members.
     /**
      * The sprites for this skill.
      * @type {Map<string, Sprite>}
      */
     this._skillSprites = new Map();
 
-    // policy step inside init members.
     /**
      * The actor who owns the skill of this skill.
      * @type {Game_Actor}
      */
     this._actor = null;
 
-    // policy step inside init members.
     this.refresh();
   }
 
@@ -50,7 +46,6 @@ class Window_SkillDetail
     if (this._skillId < 1)
     {
       this._skillId = 0;
-      // policy step inside set skill id.
       this.clear();
     }
     else
@@ -128,7 +123,6 @@ class Window_SkillDetail
   {
     if (!this.skill()) return;
 
-    // policy step inside draw contents.
     this.drawHeader();
     this.drawSkillLogo();
     this.drawLeftColumn();
@@ -144,7 +138,6 @@ class Window_SkillDetail
     this.resetFontSettings();
     this.contents.fontSize += 12;
     this.toggleBold();
-    // policy step inside draw header.
     this.drawText(this.skill().name, 0, 0, this.width);
     this.resetFontSettings();
   }
@@ -167,7 +160,6 @@ class Window_SkillDetail
     const key = `skill-${skill.id}-icon-image`;
     const sprite = this.createIconSprite(key, skill.iconIndex);
     const y = this.height - (sprite.height * (sprite.scale.x + 1));
-    // policy step inside place skill icon.
     sprite.move(x, y);
     sprite.show();
   }
@@ -189,7 +181,6 @@ class Window_SkillDetail
     {
       sprite = new Sprite_Icon(iconIndex);
       sprite.scale.x = 4.0;
-      // policy step inside create icon sprite.
       sprite.scale.y = 4.0;
       this._skillSprites.set(key, sprite);
       this.addInnerChild(sprite);
@@ -210,7 +201,6 @@ class Window_SkillDetail
     params.push(this.makeSkillTypeParam(skill));
     params.push(this.makeDividerParam());
 
-    // when J.RESOURCES, take this branch.
     if (J.RESOURCES)
     {
       params.push(this.makeHpCostParam(skill, actor));
@@ -220,11 +210,9 @@ class Window_SkillDetail
     params.push(this.makeMpCostParam(skill, actor));
     params.push(this.makeTpCostParam(skill, actor));
 
-    // capture col for downstream policy in this routine.
     const col = Math.floor(this.innerWidth / 3);
     const ox = 4;
     const oy = 60;
-    // capture lh for downstream policy in this routine.
     const lh = this.lineHeight();
     const nameWidth = Math.floor(col * 0.42);
     const valueOffset = Math.floor(col * 0.44);
@@ -257,15 +245,12 @@ class Window_SkillDetail
     // Append the row to the working collection.
     params.push(...this.makeAttackStates(skill, actor));
 
-    // capture col for downstream policy in this routine.
     const col = Math.floor(this.innerWidth / 3);
     const ox = col + 4;
     const oy = 60;
-    // capture lh for downstream policy in this routine.
     const lh = this.lineHeight();
     const nameWidth = Math.floor(col * 0.44);
     const valueOffset = Math.floor(col * 0.46);
-    // capture value width for downstream policy in this routine.
     const valueWidth = col - valueOffset - 4;
     params.forEach((param, index) =>
     {
@@ -295,27 +280,22 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(`\\C[8]Raw Damage\\C[0]`, 'n/a');
     }
 
-    // policy step inside make projected damage param.
     /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
     /* eslint-disable no-unused-vars */
     const a = actor;
-    // capture b for downstream policy in this routine.
     const b = $gameEnemies.enemy(1);
     const v = $gameVariables._data;
     /* eslint-enable no-unused-vars */
-    // capture p for downstream policy in this routine.
     let p = 0;
     if (J.PROF)
     {
       const skillProficiency = actor.skillProficiencyBySkillId(skill.id);
-      // when skillProficiency, take this branch.
       if (skillProficiency)
       {
         p = skillProficiency.proficiency;
       }
     }
     const sign = [ 3, 4 ].includes(skill.damage.type)
-      // policy step inside make projected damage param.
       ? -1
       : 1;
     const value = Math.round(Math.max(eval(skill.damage.formula), 0));
@@ -353,7 +333,6 @@ class Window_SkillDetail
     const stateEffects = skill.effects.filter(effect => effect.code === 21);
     if (!stateEffects.length) return [];
 
-    // capture attack state params for downstream policy in this routine.
     const attackStateParams = [];
     attackStateParams.push(new JCMS_ParameterKvp(`\\C[17]Applies States\\C[0]`, `\\C[1]\\}CHANCE\\{\\C[0]`));
     stateEffects.forEach(effect =>
@@ -363,7 +342,6 @@ class Window_SkillDetail
       attackStateParams.push(new JCMS_ParameterKvp(name, chance));
     });
 
-    // hand back attack state params to the caller.
     return attackStateParams;
   }
 
@@ -375,7 +353,6 @@ class Window_SkillDetail
     const skill = this.skill();
     const actor = this._actor;
     /** @type {JCMS_ParameterKvp[]} */
-    // capture params for downstream policy in this routine.
     const params = [];
 
     // add the skill proficiency of this skill.
@@ -387,7 +364,6 @@ class Window_SkillDetail
     // Append the row to the working collection.
     params.push(...this.makeAttackElementsList(skill, actor));
 
-    // capture col for downstream policy in this routine.
     const col = Math.floor(this.innerWidth / 3);
     const ox = col * 2 + 4;
     const oy = 0;
@@ -416,7 +392,6 @@ class Window_SkillDetail
     const proficiencyParams = [];
     const skillProficiency = actor.tryGetSkillProficiencyBySkillId(skill.id);
 
-    // capture proficiency key for downstream policy in this routine.
     const proficiencyKey = '\\C[21]Proficiency:\\C[0]';
     const proficiencyValue = `${skillProficiency.proficiency}`;
     const proficiencyParam = new JCMS_ParameterKvp(proficiencyKey, proficiencyValue);
@@ -424,7 +399,6 @@ class Window_SkillDetail
     proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill));
     proficiencyParams.push(this.makeDividerParam());
 
-    // hand back proficiency params to the caller.
     return proficiencyParams;
   }
 
@@ -443,7 +417,6 @@ class Window_SkillDetail
       // if there are no rewards, then don't even draw the "related" section.
       if (!conditional.skillRewards.length) return;
 
-      // policy step inside make related proficiency conditionals.
       conditional.skillRewards.forEach(skillRewardId =>
       {
         if (!skillRewardId)
@@ -457,7 +430,6 @@ class Window_SkillDetail
         const proficiencyRequirement = conditional.requirements
           .find(requirement => requirement.skillId === skill.id);
 
-        // capture actor knows skill for downstream policy in this routine.
         const actorKnowsSkill = actor.isLearnedSkill(skillRewardId);
         const extendedSkill = actor.skill(skillRewardId);
         const learnedIcon = actorKnowsSkill
@@ -477,7 +449,6 @@ class Window_SkillDetail
       params.unshift(new JCMS_ParameterKvp(`\\C[17]Related Skills\\C[0]`, `\\C[1]\\}REQUIRED\\{\\C[0]`));
     }
 
-    // hand back params to the caller.
     return params;
   }
 
@@ -503,7 +474,6 @@ class Window_SkillDetail
       elementParams.push(new JCMS_ParameterKvp(paramName))
     });
 
-    // hand back element params to the caller.
     return elementParams;
   }
 
@@ -525,23 +495,18 @@ class Window_SkillDetail
     const support = [ 0 ];
     const damage = [ 1, 2 ];
     const healer = [ 3, 4 ];
-    // capture drain for downstream policy in this routine.
     const drain = [ 5, 6 ];
 
-    // capture name for downstream policy in this routine.
     let name = "";
     let color = ColorManager.normalColor();
     switch (true)
     {
-      // handle this switch arm for the current discriminant.
       case support.includes(skill.damage.type):
         name = `Support`;
         color = ColorManager.textColor(0);
-        // policy step inside make skill type param.
         break;
       case damage.includes(skill.damage.type):
         name = "Offensive";
-        // policy step inside make skill type param.
         color = ColorManager.textColor(2);
         break;
       case healer.includes(skill.damage.type):
@@ -554,7 +519,6 @@ class Window_SkillDetail
         break;
     }
 
-    // hand back new JCMS_ParameterKvp(name, null, color) to the caller.
     return new JCMS_ParameterKvp(name, null, color);
   }
 
@@ -582,7 +546,6 @@ class Window_SkillDetail
     const parts = [];
     if (flat !== 0) parts.push(`${Math.round(flat)}`);
     if (percent !== 0) parts.push(`${percent}% (${Math.round(calculatedPercent)})`);
-    // when formula  differs from  0, take this branch.
     if (formula !== 0) parts.push(`${Math.round(formula)}`);
     if (parts.length === 0) return '0';
     return parts.join(' + ');
@@ -600,11 +563,9 @@ class Window_SkillDetail
     const hpName = TextManager.parameterLabel('hcr');
     const { flat, percent, calculatedPercent, formula } = ResourceCostManager.hpCostBreakdown(actor, skill);
     const hasAnyCost = flat !== 0 || percent !== 0 || formula !== 0;
-    // capture hp color for downstream policy in this routine.
     const hpColor = hasAnyCost
       ? ColorManager.hpCostColor()
       : ColorManager.damageColor();
-    // capture value for downstream policy in this routine.
     const value = this.buildCostBreakdownValue(flat, percent, calculatedPercent, formula);
     return new JCMS_ParameterKvp(hpName, value, hpColor);
   }
@@ -625,15 +586,12 @@ class Window_SkillDetail
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillMpCost').call(actor, skill);
       const {
         flat: extraFlat,
-        // policy step inside make mp cost param.
         percent,
         calculatedPercent,
         formula,
-      // policy step inside make mp cost param.
       } = ResourceCostManager.extraMpCostBreakdown(actor, skill);
       const combinedFlat = baseCost + extraFlat;
       const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
-      // capture mp color for downstream policy in this routine.
       const mpColor = hasAnyCost
         ? ColorManager.mpCostColor()
         : ColorManager.damageColor();
@@ -641,7 +599,6 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(mpName, value, mpColor);
     }
 
-    // capture mp cost for downstream policy in this routine.
     const mpCost = parseFloat(actor.skillMpCost(skill).toFixed(2));
     const mpColor = mpCost === 0
       ? ColorManager.damageColor()
@@ -665,15 +622,12 @@ class Window_SkillDetail
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost').call(actor, skill);
       const {
         flat: extraFlat,
-        // policy step inside make tp cost param.
         percent,
         calculatedPercent,
         formula,
-      // policy step inside make tp cost param.
       } = ResourceCostManager.extraTpCostBreakdown(actor, skill);
       const combinedFlat = baseCost + extraFlat;
       const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
-      // capture tp color for downstream policy in this routine.
       const tpColor = hasAnyCost
         ? ColorManager.tpCostColor()
         : ColorManager.damageColor();
@@ -681,7 +635,6 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(tpName, value, tpColor);
     }
 
-    // capture tp cost for downstream policy in this routine.
     const tpCost = parseFloat(actor.skillTpCost(skill).toFixed(2));
     const tpColor = tpCost === 0
       ? ColorManager.damageColor()

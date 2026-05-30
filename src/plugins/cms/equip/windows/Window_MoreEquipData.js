@@ -126,16 +126,12 @@ class Window_MoreEquipData
     const basicHits = item.jabsBonusHitsScopeBasic;
     const skillHits = item.jabsBonusHitsScopeSkill;
 
-    // capture has any scope for downstream policy in this routine.
     const hasAnyScope = globalHits > 0 || basicHits > 0 || skillHits > 0;
 
-    // when hasAnyScope  equals  false  and  isWeapon  equals  false, take this branch.
     if (hasAnyScope === false && isWeapon === false) return;
 
-    // capture hit bonus icon for downstream policy in this routine.
     const hitBonusIcon = IconManager.jabsParameterIcon(IconManager.JABS_PARAMETER.BONUS_HITS);
 
-    // capture push scope row for downstream policy in this routine.
     const pushScopeRow = (label, value) =>
     {
       const text = `${label}: +${value}`;
@@ -145,12 +141,10 @@ class Window_MoreEquipData
       this.addBuiltCommand(row);
     };
 
-    // when globalHits > 0, take this branch.
     if (globalHits > 0) pushScopeRow('Bonus hits (global)', globalHits);
     if (basicHits > 0) pushScopeRow('Bonus hits (basic)', basicHits);
     if (skillHits > 0) pushScopeRow('Bonus hits (skill)', skillHits);
 
-    // when isWeapon, take this branch.
     if (isWeapon)
     {
       const weaponHitTotal = 1 + globalHits + basicHits;
@@ -270,15 +264,12 @@ class Window_MoreEquipData
     const {
       jaftingMaxRefineCount,
       jaftingMaxTraitCount,
-      // policy step inside add jafting refinement data.
       jaftingNotRefinementBase,
       jaftingNotRefinementMaterial,
       jaftingRefinedCount,
-      // policy step inside add jafting refinement data.
       jaftingUnrefinable,
     } = this.item;
 
-    // when jaftingUnrefinable, take this branch.
     if (jaftingUnrefinable)
     {
       const unrefinableCommand = `Unrefinable`;
@@ -288,7 +279,6 @@ class Window_MoreEquipData
       return;
     }
 
-    // when jaftingNotRefinementBase, take this branch.
     if (jaftingNotRefinementBase)
     {
       const unrefinableCommand = `Only Refine as Material`;
@@ -297,7 +287,6 @@ class Window_MoreEquipData
       this.addCommand(unrefinableCommand, null, true, null, unrefinableIcon, unrefinableColor);
     }
 
-    // when jaftingNotRefinementMaterial, take this branch.
     if (jaftingNotRefinementMaterial)
     {
       const unrefinableCommand = `Only Refine as Base`;
@@ -306,7 +295,6 @@ class Window_MoreEquipData
       this.addCommand(unrefinableCommand, null, true, null, unrefinableIcon, unrefinableColor);
     }
 
-    // capture max refine command for downstream policy in this routine.
     let maxRefineCommand = `Refinement: ${jaftingRefinedCount}`;
     let maxRefineIcon = IconManager.jaftingParameterIcon(IconManager.JAFTING_PARAMETER.TIMES_REFINED);
     if (jaftingMaxRefineCount)
@@ -318,10 +306,8 @@ class Window_MoreEquipData
       }
     }
 
-    // policy step inside add jafting refinement data.
     this.addCommand(maxRefineCommand, null, true, null, maxRefineIcon);
 
-    // capture max trait icon for downstream policy in this routine.
     const maxTraitIcon = IconManager.jaftingParameterIcon(IconManager.JAFTING_PARAMETER.MAX_TRAITS);
     const currentTraitCount = JaftingManager.parseTraits(this.item).length;
     let maxTraitCommand = `Transferable Traits: ${currentTraitCount}`;
@@ -330,7 +316,6 @@ class Window_MoreEquipData
       maxTraitCommand += ` / ${jaftingMaxTraitCount}`;
     }
 
-    // policy step inside add jafting refinement data.
     this.addCommand(maxTraitCommand, null, true, null, maxTraitIcon);
   }
 
@@ -343,28 +328,23 @@ class Window_MoreEquipData
     const allTraits = this.item.traits;
     if (!allTraits.length) return;
 
-    // capture xparam no percents for downstream policy in this routine.
     const xparamNoPercents = [ 0, 2, 7, 8, 9 ]; // code 22
     const sparamNoPercents = [ 1 ]; // code 23
     const dividerIndex = allTraits.findIndex(trait => trait.code === J.BASE.Traits.NO_DISAPPEAR);
-    // capture has divider for downstream policy in this routine.
     const hasDivider = dividerIndex !== -1;
     if (hasDivider)
     {
       this.addCommand(`BASE TRAITS`, null, true, null, 16, 30);
     }
 
-    // policy step inside add equipment trait data.
     allTraits.forEach(t =>
     {
       const convertedTrait = new JAFTING_Trait(t.code, t.dataId, t.value);
       let commandName = convertedTrait.nameAndValue;
-      // capture command color for downstream policy in this routine.
       let commandColor = 0;
       switch (convertedTrait._code)
       {
         case 21:
-          // capture param id for downstream policy in this routine.
           const paramId = convertedTrait._dataId;
           const paramBase = this.actor.paramBase(paramId);
           const bonus = paramBase * (convertedTrait._value - 1);
@@ -380,7 +360,6 @@ class Window_MoreEquipData
             commandName = commandName.replace("%", String.empty);
           }
 
-          // policy step inside add equipment trait data.
           break;
         case 23:
           const sparamId = convertedTrait._dataId;
@@ -389,7 +368,6 @@ class Window_MoreEquipData
             commandName = commandName.replace("%", String.empty);
           }
 
-          // policy step inside add equipment trait data.
           break;
         case 63:
           commandName = convertedTrait.name;
@@ -397,7 +375,6 @@ class Window_MoreEquipData
           break;
       }
 
-      // capture command icon for downstream policy in this routine.
       const commandIcon = IconManager.trait(convertedTrait);
       this.addCommand(commandName, null, true, null, commandIcon, commandColor);
     });

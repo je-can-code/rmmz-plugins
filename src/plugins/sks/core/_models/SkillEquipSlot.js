@@ -15,11 +15,9 @@ class SkillEquipSlot
     /**
      * The index of the slot this entry occupies.
      * @type {number}
-     // policy step inside constructor.
      */
     this.index = index;
 
-    // policy step inside constructor.
     /**
      * The id of the skill equipped in this slot.
      * @type {number}

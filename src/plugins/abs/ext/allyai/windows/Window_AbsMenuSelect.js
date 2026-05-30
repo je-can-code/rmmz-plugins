@@ -24,7 +24,6 @@ Window_AbsMenuSelect.prototype.initJabsAllyAiMenuMembers = function()
   /**
    * The actor id of the ally currently being managed via this window.
    * @type {number}
-   // policy step inside init jabs ally ai menu members.
    */
   this._j._chosenActorId = 0;
 };
@@ -62,7 +61,6 @@ Window_AbsMenuSelect.prototype.makeCommandList = function()
   {
     case "ai-party-list":
       this.addAggroPassiveToggleCommand();
-      // policy step inside make command list.
       this.makeAllyList();
       this.addAllyFormationCommand();
       break;
@@ -109,12 +107,10 @@ Window_AbsMenuSelect.prototype.addAggroPassiveToggleCommand = function()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex
     : J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex;
 
-  // capture description for downstream policy in this routine.
   const description = $gameParty.isAggro()
     ? "The party is currently 'aggro'.\nAllies will engage in any enemy that comes within their range."
     : "The party is currently 'passive'.\nAllies will not engage until the leader strikes or is struck.";
 
-  // capture text color for downstream policy in this routine.
   const textColor = $gameParty.isAggro()
     ? 2
     : 3;
@@ -156,24 +152,19 @@ Window_AbsMenuSelect.prototype.makeAllyAiDoNothingToggle = function()
   const currentActor = $gameActors.actor(this.getActorId());
   if (!currentActor) return;
 
-  // capture ally ai for downstream policy in this routine.
   const allyAI = currentActor.getAllyAI();
   const isDoNothing = allyAI.isDoNothing();
 
-  // capture command name for downstream policy in this routine.
   const commandName = isDoNothing
     ? 'Do Nothing: ON'
     : 'Do Nothing: OFF';
 
-  // capture description for downstream policy in this routine.
   const description = isDoNothing
     ? 'This ally hangs back and takes no actions.\nToggle off to restore their preset behavior.'
     : 'This ally acts according to their preset.\nToggle on to make them stand down entirely.';
 
-  // capture color index for downstream policy in this routine.
   const colorIndex = isDoNothing ? 3 : 2;
 
-  // capture icon index for downstream policy in this routine.
   const iconIndex = isDoNothing
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex
     : J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex;
@@ -187,7 +178,6 @@ Window_AbsMenuSelect.prototype.makeAllyAiDoNothingToggle = function()
     .setIconIndex(iconIndex)
     .build();
 
-  // policy step inside make ally ai do nothing toggle.
   this.addBuiltCommand(command);
 };
 
@@ -199,19 +189,15 @@ Window_AbsMenuSelect.prototype.makeAllyAiPresetList = function()
   const currentActor = $gameActors.actor(this.getActorId());
   if (!currentActor) return;
 
-  // capture presets for downstream policy in this routine.
   const presets = JABS_AllyAI.getPresets();
   const currentAi = currentActor.getAllyAI();
 
-  // capture for eacher for downstream policy in this routine.
   const forEacher = preset =>
   {
     const { key, name, description } = preset;
 
-    // capture is equipped for downstream policy in this routine.
     const isEquipped = currentAi.getPresetKey() === key;
 
-    // capture icon index for downstream policy in this routine.
     const iconIndex = isEquipped
       ? J.ABS.EXT.ALLYAI.Metadata.AiModeEquippedIconIndex
       : J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex;
@@ -226,11 +212,9 @@ Window_AbsMenuSelect.prototype.makeAllyAiPresetList = function()
       .setExtensionData(preset)
       .build();
 
-    // policy step inside make ally ai preset list.
     this.addBuiltCommand(command);
   };
 
-  // policy step inside make ally ai preset list.
   presets.forEach(forEacher, this);
 };
 

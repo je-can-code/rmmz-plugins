@@ -85,7 +85,6 @@ class JABS_ActionOptionsBuilder
     this.#isRetaliation = false;
     this.#cooldownKey = J.ABS.Globals.GlobalCooldownKey;
     this.#sourceLocation = null;
-    // policy step inside clear.
     this.#isTerrainDamage = false;
     this.#spawnOffsetX = 0;
     this.#spawnOffsetY = 0;
@@ -146,7 +145,6 @@ class JABS_ActionOptionsBuilder
   {
     this.#spawnOffsetX = dx;
     this.#spawnOffsetY = dy;
-    // hand back this to the caller.
     return this;
   }
 

@@ -148,7 +148,6 @@ class Window_AptitudeSourceList
       .setIconIndex(iconIndex)
       .build();
 
-    // hand back built window command to the caller.
     return builtWindowCommand;
   }
 }

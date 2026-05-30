@@ -36,7 +36,6 @@ Window_Base.prototype.translateTimeOfDayTextCode = function(text)
   // if not using the TIME system, then don't try to process the text.
   if (!J.TIME) return text;
 
-  // hand back text.replace(/\\timeOfDay\[(\d+)]/gi, (_, p1) => to the caller.
   return text.replace(/\\timeOfDay\[(\d+)]/gi, (_, p1) =>
   {
     // determine the time of day id.
@@ -69,7 +68,6 @@ Window_Base.prototype.translateSeasonOfYearTextCode = function(text)
   // if not using the TIME system, then don't try to process the text.
   if (!J.TIME) return text;
 
-  // hand back text.replace(/\\seasonOfYear\[(\d+)]/gi, (_, p1) => to the caller.
   return text.replace(/\\seasonOfYear\[(\d+)]/gi, (_, p1) =>
   {
     // determine the season of year id.
@@ -102,7 +100,6 @@ Window_Base.prototype.translateCurrentTimeTextCode = function(text)
   // if not using the TIME system, then don't try to process the text.
   if (!J.TIME) return text;
 
-  // hand back text.replace(/\\currentTime/gi, (_) => to the caller.
   return text.replace(/\\currentTime/gi, (_) =>
   {
     // grab the current time.

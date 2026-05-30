@@ -23,7 +23,6 @@ class PopupNumericDisplay
     const text = raw === undefined || raw === null ? '' : String(raw);
     const trimmed = text.trim();
 
-    // when trimmed.length  equals  0, take this branch.
     if (trimmed.length === 0)
     {
       return text;
@@ -35,25 +34,20 @@ class PopupNumericDisplay
       return text;
     }
 
-    // capture n for downstream policy in this routine.
     const n = Number(trimmed);
 
-    // when not Number.isFinite(n), take this branch.
     if (!Number.isFinite(n))
     {
       return text;
     }
 
-    // capture rounded for downstream policy in this routine.
     const rounded = Math.round(n);
 
-    // when isHealingPopup  equals  true, take this branch.
     if (isHealingPopup === true)
     {
       return `+${Math.abs(rounded)}`;
     }
 
-    // hand back String(rounded) to the caller.
     return String(rounded);
   }
 }

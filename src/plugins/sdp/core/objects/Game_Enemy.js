@@ -136,7 +136,6 @@ Game_Enemy.prototype.buildSdpLoot = function(drop)
   // identify the panel in question.
   const panel = J.SDP.Metadata.panelsMap.get(drop.sdpKey);
 
-  // capture dynamic loot for downstream policy in this routine.
   const dynamicLoot = {
     // core data.
     id: 0,
@@ -155,7 +154,6 @@ Game_Enemy.prototype.buildSdpLoot = function(drop)
     jabsUseOnPickup: true,
   };
 
-  // hand back dynamic loot to the caller.
   return dynamicLoot;
 };
 

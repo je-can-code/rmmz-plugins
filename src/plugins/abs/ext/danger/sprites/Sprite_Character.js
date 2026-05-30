@@ -8,10 +8,8 @@ Sprite_Character.prototype.initMembers = function()
   /**
    * The J object where all my additional properties live.
    */
-  // policy step inside init members.
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * The danger indicator sprite for this character.
    * @type {Sprite_Icon}

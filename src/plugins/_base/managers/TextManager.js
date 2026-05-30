@@ -48,15 +48,12 @@ TextManager.rewardParam = function(paramId)
   {
     case  0:
       return this.exp; // exp
-    // handle this switch arm for the current discriminant.
     case  1:
       return this.currencyUnit; // gold
     case  2:
-      // hand back "Drop Rate"; // drops to the caller.
       return "Drop Rate"; // drops
     case  3:
       return "Encounter Rate"; // encounters
-    // handle this switch arm for the current discriminant.
     case  4:
       return "SDP Point Rate"; // sdp
   }
@@ -73,23 +70,18 @@ TextManager.rewardDescription = function(paramId)
   {
     case 0:
       return [
-        // policy step inside reward description.
         "The resource required to accumulate to rise in level.", "Levels give unseen advantages."
       ];
     case 1:
-      // hand back [ to the caller.
       return [
         "The primary currency of the universe.", "Most vendors happily take this in exchange for goods."
       ];
-    // handle this switch arm for the current discriminant.
     case 2:
       return [
         "The rate at which enemies will drop loot.", "Higher rates yield more frequent drops."
-      // policy step inside reward description.
       ];
     case 3:
       return [
-        // policy step inside reward description.
         "The frequency of which the party will be engage in battles.", "Lower rates result in less random encounters."
       ];
     case 4:
@@ -108,13 +100,11 @@ TextManager.parameterLabel = function(parameterKey)
 {
   const definition = ParameterRegistry.get(parameterKey);
 
-  // when not definition, take this branch.
   if (!definition)
   {
     return parameterKey;
   }
 
-  // hand back definition.label() to the caller.
   return definition.label();
 };
 
@@ -127,13 +117,11 @@ TextManager.parameterDescription = function(parameterKey)
 {
   const definition = ParameterRegistry.get(parameterKey);
 
-  // when not definition, take this branch.
   if (!definition)
   {
     return [ String.empty ];
   }
 
-  // hand back definition.description() to the caller.
   return definition.description();
 };
 
@@ -150,7 +138,6 @@ TextManager.bparamDescription = function(paramId)
     case 0:
       return [
         "The base resource that defines life and death.", "Enemies and allies alike obey the rule of '0hp = dead'."
-      // policy step inside bparam description.
       ];
     // MMP (Max Magic Points)
     case 1:
@@ -368,23 +355,18 @@ TextManager.sparam = function(sParamId)
   {
     case 0:
       return "Aggro";// J.Param.TGR_text;
-    // handle this switch arm for the current discriminant.
     case 1:
       return "Parry";//J.Param.GRD_text;
     case 2:
-      // hand back "Healing Rate"; //J.Param.REC_text to the caller.
       return "Healing Rate"; //J.Param.REC_text;
     case 3:
       return "Item Effects"; //J.Param.PHA_text;
-    // handle this switch arm for the current discriminant.
     case 4:
       return "Magi Cost"; //J.Param.MCR_text;
     case 5:
-      // hand back "Tech Cost"; //J.Param.TCR_text to the caller.
       return "Tech Cost"; //J.Param.TCR_text;
     case 6:
       return "Phys Dmg Rate"; //J.Param.PDR_text;
-    // handle this switch arm for the current discriminant.
     case 7:
       return "Magi Dmg Rate"; //J.Param.MDR_text;
     case 8:
@@ -405,23 +387,18 @@ TextManager.xparam = function(xParamId)
   {
     case 0:
       return "Accuracy"; //J.Param.HIT_text;
-    // handle this switch arm for the current discriminant.
     case 1:
       return "Parry Extend"; //J.Param.EVA_text;
     case 2:
-      // hand back "Crit Rate"; //J.Param.CRI_text to the caller.
       return "Crit Rate"; //J.Param.CRI_text;
     case 3:
       return "Crit Dodge"; //J.Param.CEV_text;
-    // handle this switch arm for the current discriminant.
     case 4:
       return "Magic Evade"; //J.Param.MEV_text;
     case 5:
-      // hand back "Magic Reflect"; //J.Param.MRF_text to the caller.
       return "Magic Reflect"; //J.Param.MRF_text;
     case 6:
       return "Autocounter"; //J.Param.CNT_text;
-    // handle this switch arm for the current discriminant.
     case 7:
       return "HP Regen"; //J.Param.HRG_text;
     case 8:
@@ -489,11 +466,9 @@ TextManager.element = function(id)
   {
     case (id === -1):
       return this.weaponElementsName();
-    // handle this switch arm for the current discriminant.
     case (id === 0):
       return this.neutralElementName();
     default:
-      // hand back this.getTypeNameByIdAndType(id, $dataSystem.elements) to the caller.
       return this.getTypeNameByIdAndType(id, $dataSystem.elements);
   }
 };
@@ -569,31 +544,24 @@ TextManager.usableEffectByCode = function(code)
   {
     case 11:
       return "Recover Life";
-    // handle this switch arm for the current discriminant.
     case 12:
       return "Recover Magi";
     case 13:
-      // hand back "Recover Tech" to the caller.
       return "Recover Tech";
     case 21:
       return "Add State";
-    // handle this switch arm for the current discriminant.
     case 22:
       return "Remove State";
     case 31:
-      // hand back "Add Buff" to the caller.
       return "Add Buff";
     case 32:
       return "Add Debuff";
-    // handle this switch arm for the current discriminant.
     case 33:
       return "Remove Buff";
     case 34:
-      // hand back "Remove Debuff" to the caller.
       return "Remove Debuff";
     case 41:
       return "Special";
-    // handle this switch arm for the current discriminant.
     case 42:
       return "Core Stat Growth";
     case 43:

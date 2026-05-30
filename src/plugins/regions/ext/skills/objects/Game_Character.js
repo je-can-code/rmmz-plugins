@@ -23,22 +23,18 @@ Game_Character.prototype.initRegionSkillsMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init region skills members.
   this._j ||= {};
 
-  // policy step inside init region skills members.
   /**
    * A grouping of all properties associated with REGIONS.
    */
   this._j._regions ||= {};
 
-  // policy step inside init region skills members.
   /**
    * A grouping of all properties associated with the region skills plugin extension.
    */
   this._j._regions._skills = {};
 
-  // policy step inside init region skills members.
   /**
    * The timer that manages the (re)execution of region-derived skills.
    * @type {JABS_Timer}

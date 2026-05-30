@@ -21,11 +21,9 @@ class ResourceHitManager
     const caster = action.getCaster()
       .getBattler();
     const skill = action.getBaseSkill();
-    // capture target battler for downstream policy in this routine.
     const targetBattler = target.getBattler();
     const result = targetBattler.result();
 
-    // capture hp gain for downstream policy in this routine.
     let hpGain = ResourceHitManager.onAttackHpGain(caster, skill);
     let mpGain = ResourceHitManager.onAttackMpGain(caster, skill);
     let tpGain = ResourceHitManager.onAttackTpGain(caster, skill);
@@ -39,7 +37,6 @@ class ResourceHitManager
       tpGain += Math.floor(damage * caster.tst);
     }
 
-    // when hpGain  differs from  0, take this branch.
     if (hpGain !== 0) caster.gainHpFromResource(hpGain);
     if (mpGain !== 0) caster.gainMpFromResource(mpGain);
     if (tpGain !== 0) caster.gainTpFromResource(tpGain);
@@ -56,12 +53,10 @@ class ResourceHitManager
     const targetBattler = target.getBattler();
     const damage = targetBattler.result().hpDamage;
 
-    // capture hp gain for downstream policy in this routine.
     const hpGain = ResourceHitManager.whenHitHpGain(targetBattler, damage);
     const mpGain = ResourceHitManager.whenHitMpGain(targetBattler, damage);
     const tpGain = ResourceHitManager.whenHitTpGain(targetBattler, damage);
 
-    // when hpGain  differs from  0, take this branch.
     if (hpGain !== 0) targetBattler.gainHpFromResource(hpGain);
     if (mpGain !== 0) targetBattler.gainMpFromResource(mpGain);
     if (tpGain !== 0) targetBattler.gainTpFromResource(tpGain);
@@ -79,11 +74,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySkill(
       caster,
       skill,
-      // policy step inside on attack hp gain.
       J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFlat,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFormula,
-      // policy step inside on attack hp gain.
       caster.mhp
     );
   }
@@ -99,11 +92,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySkill(
       caster,
       skill,
-      // policy step inside on attack mp gain.
       J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFlat,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFormula,
-      // policy step inside on attack mp gain.
       caster.mmp
     );
   }
@@ -119,11 +110,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySkill(
       caster,
       skill,
-      // policy step inside on attack tp gain.
       J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFlat,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFormula,
-      // policy step inside on attack tp gain.
       caster.mtp
     );
   }
@@ -142,11 +131,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySources(
       targetBattler,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitHpGainFlat,
-      // policy step inside when hit hp gain.
       J.RESOURCES.EXT.ABS.RegExp.WhenHitHpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitHpGainFormula,
       targetBattler.mhp,
-      // policy step inside when hit hp gain.
       damage
     );
   }
@@ -162,11 +149,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySources(
       targetBattler,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitMpGainFlat,
-      // policy step inside when hit mp gain.
       J.RESOURCES.EXT.ABS.RegExp.WhenHitMpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitMpGainFormula,
       targetBattler.mmp,
-      // policy step inside when hit mp gain.
       damage
     );
   }
@@ -182,11 +167,9 @@ class ResourceHitManager
     return ResourceHitManager.#gainBySources(
       targetBattler,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainFlat,
-      // policy step inside when hit tp gain.
       J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainPercent,
       J.RESOURCES.EXT.ABS.RegExp.WhenHitTpGainFormula,
       targetBattler.mtp,
-      // policy step inside when hit tp gain.
       damage
     );
   }
@@ -213,11 +196,9 @@ class ResourceHitManager
     const calculatedPercent = maxStat * (percent / 100);
     const formula = RPGManager.getResultFromNoteByRegex(skill, formulaRegex, (flat + calculatedPercent), caster);
 
-    // capture total for downstream policy in this routine.
     const total = flat + calculatedPercent + formula;
     if (total === 0) return 0;
 
-    // hand back total * caster.rec to the caller.
     return total * caster.rec;
   }
 
@@ -239,10 +220,8 @@ class ResourceHitManager
   {
     const sources = targetBattler.hcrSources();
 
-    // capture total flat for downstream policy in this routine.
     const totalFlat = sources.reduce((acc, source) => acc + RPGManager.getNumberFromNoteByRegex(source, flatRegex), 0);
 
-    // capture total percent for downstream policy in this routine.
     const totalPercent = sources.reduce((acc, source) => acc + RPGManager.getNumberFromNoteByRegex(
       source,
       percentRegex
@@ -257,11 +236,9 @@ class ResourceHitManager
       targetBattler
     ), 0);
 
-    // capture total for downstream policy in this routine.
     const total = totalFlat + calculatedPercent + totalFormula;
     if (total === 0) return 0;
 
-    // hand back total * targetBattler.rec to the caller.
     return total * targetBattler.rec;
   }
 

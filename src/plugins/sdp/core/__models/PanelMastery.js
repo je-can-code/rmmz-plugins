@@ -18,19 +18,15 @@ class PanelMastery
     /**
      * Subgroup key from the SDP configuration registry (empty when not enrolled).
      * @type {string}
-     // policy step inside constructor.
      */
     this.subgroupKey = subgroupKey;
 
-    // policy step inside constructor.
     /**
      * Tier within the subgroup used for intra-subgroup mastery replacement.
      * @type {number}
-     // policy step inside constructor.
      */
     this.subgroupTier = subgroupTier;
 
-    // policy step inside constructor.
     /**
      * Wrapper skill id granted when this panel is maxed; J-Passive owns passive state(s).
      * Zero means the panel is organized under the subgroup but grants no mastery skill.
@@ -95,7 +91,6 @@ class PanelMastery
       return true;
     }
 
-    // hand back false to the caller.
     return false;
   }
 
@@ -130,12 +125,10 @@ class PanelMastery
   {
     const nested = parsedPanel.mastery;
 
-    // when nested  and  typeof nested  equals  'object', take this branch.
     if (nested && typeof nested === 'object')
     {
       return PanelMastery.fromFlat(
         nested.subgroupKey ?? String.empty,
-        // policy step inside from config panel.
         PanelMastery.#parseIntField(nested.subgroupTier, 0),
         PanelMastery.#parseIntField(nested.masterySkillId, 0)
       );
@@ -161,16 +154,13 @@ class PanelMastery
       return defaultValue;
     }
 
-    // capture parsed for downstream policy in this routine.
     const parsed = Number.parseInt(String(value), 10);
 
-    // when Number.isNaN(parsed), take this branch.
     if (Number.isNaN(parsed))
     {
       return defaultValue;
     }
 
-    // hand back parsed to the caller.
     return parsed;
   }
 
@@ -183,7 +173,6 @@ class PanelMastery
     return {
       subgroupKey: this.subgroupKey,
       subgroupTier: this.subgroupTier,
-      // policy step inside to config json.
       masterySkillId: this.masterySkillId,
     };
   }

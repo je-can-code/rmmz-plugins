@@ -246,10 +246,8 @@ Window_Base.prototype.modFontSizeForText = function(modifier, text)
 {
   const currentFontSize = this.contents.fontSize;
 
-  // capture modified font size for downstream policy in this routine.
   const modifiedFontSize = currentFontSize + modifier;
 
-  // hand back `\\FS[${modifiedFontSize}]${text}\\FS[${currentFontSi... to the caller.
   return `\\FS[${modifiedFontSize}]${text}\\FS[${currentFontSize}]`;
 };
 
@@ -285,12 +283,10 @@ Window_Base.prototype.customEscapeCodes = function(textState)
 {
   if (!textState) return String.empty;
 
-  // capture reg exp for downstream policy in this routine.
   const regExp = this.escapeCodes();
   const arr = regExp.exec(textState.text.slice(textState.index));
   if (arr)
   {
-    // policy step inside custom escape codes.
     textState.index += arr[0].length;
     return arr[0].toUpperCase();
   }
@@ -324,7 +320,6 @@ Window_Base.prototype.processEscapeCharacter = function(code, textState)
     .call(this, code, textState);
   switch (code)
   {
-    // handle this switch arm for the current discriminant.
     case "_":
       this.toggleItalics();
       break;
@@ -395,13 +390,11 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
 {
   const mask = [];
 
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < value.length; i++)
   {
     mask.push(false);
   }
 
-  // capture i for downstream policy in this routine.
   let i = 0;
 
   // keep looping while i < value.length.
@@ -409,7 +402,6 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
   {
     const ch = value[i];
 
-    // when ch >= '0'  and  ch <= '9', take this branch.
     if (ch >= '0' && ch <= '9')
     {
       const runStart = i;
@@ -420,15 +412,12 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
         i++;
       }
 
-      // capture first significant for downstream policy in this routine.
       let firstSignificant = -1;
 
-      // iterate the loop counter until the guard exits.
       for (let j = runStart; j < i; j++)
       {
         const c = value[j];
 
-        // when c >= '1'  and  c <= '9', take this branch.
         if (c >= '1' && c <= '9')
         {
           firstSignificant = j;
@@ -436,7 +425,6 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
         }
       }
 
-      // when firstSignificant  equals  -1, take this branch.
       if (firstSignificant === -1)
       {
         for (let j = runStart; j < i; j++)
@@ -458,7 +446,6 @@ Window_Base.prototype.buildLeadingPadZeroMask = function(value)
     }
   }
 
-  // hand back mask to the caller.
   return mask;
 };
 
@@ -489,7 +476,6 @@ Window_Base.prototype.drawStyledPaddedValue = function(
   const totalCharWidth = value.length * charWidth;
   let startX = x;
 
-  // when align  equals  'right', take this branch.
   if (align === 'right')
   {
     startX = x + width - totalCharWidth;
@@ -500,7 +486,6 @@ Window_Base.prototype.drawStyledPaddedValue = function(
   }
   const leadingPadZeroMask = this.buildLeadingPadZeroMask(value);
 
-  // policy step inside draw styled padded value.
   [ ...value ].forEach((char, index) =>
   {
     const isDigit = char >= '0' && char <= '9';
@@ -524,10 +509,8 @@ Window_Base.prototype.drawStyledPaddedValue = function(
       this.processColorChange(0);
     }
 
-    // policy step inside draw styled padded value.
     this.toggleBold(isSignificantDigit);
 
-    // capture char x for downstream policy in this routine.
     const charX = startX + (index * charWidth);
     this.drawText(char, charX, y, charWidth, Window_Base.TextAlignments.Left);
 
@@ -535,7 +518,6 @@ Window_Base.prototype.drawStyledPaddedValue = function(
     this.toggleBold(false);
   });
 
-  // policy step inside draw styled padded value.
   this.processColorChange(0);
 };
 
@@ -558,7 +540,6 @@ Window_Base.prototype.drawStyledZeroPaddedNumber = function(
   zeroColorIndex = 8,
   valueColorIndex = 0)
 {
-  // capture padded for downstream policy in this routine.
   const padded = number.padZero(padZeroCount);
   this.drawStyledPaddedValue(x, y, padded, width, zeroColorIndex, valueColorIndex);
 };
@@ -585,7 +566,6 @@ Window_Base.prototype.drawStyledZeroPaddedCost = function(
   const padded = cost.padZero(padZeroCount);
   const text = `(-${padded})`;
   this.drawStyledPaddedValue(x, y, text, width, zeroColorIndex, valueColorIndex);
-// policy step inside draw styled zero padded cost.
 };
 
 //endregion styled padded values
@@ -667,7 +647,6 @@ Window_Base.prototype.drawGaugeRect = function(rect, rate, options)
   const {
     x,
     y,
-    // policy step inside draw gauge rect.
     width,
     height
   } = inner;
@@ -841,7 +820,6 @@ Window_Base.prototype.drawGaugePill = function(x, y, w, h, rate, options)
   const ctx = this.contents._context;
   const grad = ctx.createLinearGradient(x, y, x + w, y);
   grad.addColorStop(0, options.leftGradientColor);
-  // policy step inside draw gauge pill.
   grad.addColorStop(1, options.rightGradientColor);
 
   // helper to draw a rounded-rect path.
@@ -849,11 +827,9 @@ Window_Base.prototype.drawGaugePill = function(x, y, w, h, rate, options)
   {
     const x2 = x + w;
     const y2 = y + h;
-    // policy step inside draw gauge pill.
     ctx.beginPath();
     ctx.moveTo(x + r, y);
     ctx.lineTo(x2 - r, y);
-    // policy step inside draw gauge pill.
     ctx.arcTo(x2, y, x2, y + r, r);
     ctx.lineTo(x2, y2 - r);
     ctx.arcTo(x2, y2, x2 - r, y2, r);
@@ -907,7 +883,6 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   const rx = Math.max(2, Math.floor(w / 2) - 1);
   const ry = Math.max(2, Math.floor(h / 2) - 1);
   const cx = x + Math.floor(w / 2);
-  // capture cy for downstream policy in this routine.
   const cy = y + Math.floor(h / 2);
 
   // clamp rate and angles.
@@ -929,11 +904,9 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   const ctx = this.contents._context;
   const midAngle = a0 + (a1 - a0) / 2;
   const gx0 = cx + Math.cos(a0) * irx;
-  // capture gy0 for downstream policy in this routine.
   const gy0 = cy + Math.sin(a0) * iry;
   const gx1 = cx + Math.cos(midAngle) * rx;
   const gy1 = cy + Math.sin(midAngle) * ry;
-  // capture grad for downstream policy in this routine.
   const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
   grad.addColorStop(0, options.leftGradientColor);
   grad.addColorStop(1, options.rightGradientColor);
@@ -942,11 +915,9 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   ctx.save();
   ctx.beginPath();
   ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2, false);
-  // policy step inside draw gauge radial.
   ctx.ellipse(cx, cy, irx, iry, 0, Math.PI * 2, 0, true);
   ctx.closePath();
   ctx.fillStyle = backColor;
-  // policy step inside draw gauge radial.
   ctx.fill();
   ctx.restore();
 
@@ -955,11 +926,9 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   {
     ctx.save();
     ctx.beginPath();
-    // policy step inside draw gauge radial.
     ctx.ellipse(cx, cy, rx, ry, 0, a0, a1, false);
     ctx.ellipse(cx, cy, irx, iry, 0, a1, a0, true);
     ctx.closePath();
-    // policy step inside draw gauge radial.
     ctx.fillStyle = grad;
     ctx.fill();
     ctx.restore();
@@ -974,11 +943,9 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   ctx.beginPath();
   ctx.ellipse(
     cx,
-    // policy step inside draw gauge radial.
     cy,
     rx - (borderThickness % 2
       ? 0.5
-      // policy step inside draw gauge radial.
       : 0),
     ry - (borderThickness % 2
       ? 0.5

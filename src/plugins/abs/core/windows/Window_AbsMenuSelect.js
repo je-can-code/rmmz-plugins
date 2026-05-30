@@ -40,7 +40,6 @@ class Window_AbsMenuSelect
     this._j ||= {};
     this._j._menuType = type;
     super.initialize(rect);
-    // policy step inside initialize.
     this.refresh();
     this.select(0);
     this.activate();

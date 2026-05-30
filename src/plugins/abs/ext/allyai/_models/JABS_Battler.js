@@ -100,7 +100,6 @@ JABS_Battler.prototype.getAllyAiMode = function()
   // enemies do not have ally ai.
   if (this.isEnemy()) return null;
 
-  // hand back this.getBattler() to the caller.
   return this.getBattler()
     .getAllyAI();
 };
@@ -115,7 +114,6 @@ JABS_Battler.prototype.getCloseDistance = function()
   if (this.isEnemy()) return JABS_Battler.closeDistance;
   const allyAI = this.getAllyAiMode();
   if (!allyAI) return JABS_Battler.closeDistance;
-  // hand back allyAI.getCloseDistance() to the caller.
   return allyAI.getCloseDistance();
 };
 
@@ -129,7 +127,6 @@ JABS_Battler.prototype.getFarDistance = function()
   if (this.isEnemy()) return JABS_Battler.farDistance;
   const allyAI = this.getAllyAiMode();
   if (!allyAI) return JABS_Battler.farDistance;
-  // hand back allyAI.getFarDistance() to the caller.
   return allyAI.getFarDistance();
 };
 
@@ -143,7 +140,6 @@ JABS_Battler.prototype.getAllyLeashRange = function()
   const allyAI = this.getAllyAiMode();
   if (!allyAI) return JABS_Battler.allyRubberbandRange();
   return JABS_Battler.allyRubberbandRange() * allyAI.getLeashMultiplier();
-// policy step inside get ally leash range.
 };
 
 /**
@@ -156,7 +152,6 @@ JABS_Battler.prototype.applyBattleMemories = function(newMemory)
   // enemies do not (yet) track battle memories.
   if (this.isEnemy()) return;
 
-  // hand back this.getBattler() to the caller.
   return this.getBattler()
     .getAllyAI()
     .applyMemory(newMemory);

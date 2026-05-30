@@ -11,22 +11,18 @@ Scene_Map.prototype.initHudMembers = function()
   J.HUD.EXT.TARGET.Aliased.Scene_Map.get('initHudMembers')
     .call(this);
 
-  // policy step inside init hud members.
   /**
    * A grouping of all properties that belong to target extension
    * of the HUD.
-   // policy step inside init hud members.
    */
   this._j._hud._target = {};
 
-  // policy step inside init hud members.
   /**
    * The target frame showing enemy data.
    * @type {Window_TargetFrame}
    */
   this._j._hud._target._targetFrame = null;
 
-  // policy step inside init hud members.
   /**
    * The target frame showing boss data.
    * This is much bigger than the regular target frame.

@@ -12,48 +12,40 @@ Game_Event.prototype.initMembers = function()
   J.ESCRIBE.Aliased.Game_Event.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init members.
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with escriptions.
    */
   this._j._event ||= {};
 
-  // policy step inside init members.
   /**
    * The describe data for this event.
    * @type {Escription}
    */
   this._j._event._describe = null;
 
-  // policy step inside init members.
   /**
    * Whether or not the player is in-proximity for the text.
    * @type {boolean}
    */
   this._j._event._playerNearbyText = null;
 
-  // policy step inside init members.
   /**
    * Whether or not the player is in-proximity for the icon.
    * @type {boolean}
    */
   this._j._event._playerNearbyIcon = null;
 
-  // policy step inside init members.
   /**
    * Whether or not the escription needs adding.
    * @type {boolean}
    */
   this._j._event._needsAdding = false;
 
-  // policy step inside init members.
   /**
    * Whether or not the escription needs removal.
    * @type {boolean}
@@ -296,7 +288,6 @@ Game_Event.prototype.update = function()
   J.ESCRIBE.Aliased.Game_Event.get('update')
     .call(this);
 
-  // when this.eventId()  equals  3, take this branch.
   if (this.eventId() === 3)
   {
     console.log();

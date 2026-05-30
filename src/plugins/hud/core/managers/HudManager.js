@@ -97,7 +97,6 @@ class HudManager
     // if we're already setup, then don't do it again.
     if (this.#isReady()) return;
 
-    // policy step inside setup.
     this.initMembers();
 
     // configure the hud based on what we remember from settings.
@@ -128,21 +127,18 @@ class HudManager
       this.requestRefreshHud();
     }
 
-    // when this.#hasRequestHideHud(), take this branch.
     if (this.#hasRequestHideHud())
     {
       this.#hideHud();
       this.requestRefreshHud();
     }
 
-    // when this.#hasRequestShowAllies(), take this branch.
     if (this.#hasRequestShowAllies())
     {
       this.#showAllies();
       this.requestRefreshHud();
     }
 
-    // when this.#hasRequestHideAllies(), take this branch.
     if (this.#hasRequestHideAllies())
     {
       this.#hideAllies();

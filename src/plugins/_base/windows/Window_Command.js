@@ -29,13 +29,11 @@ Window_Command.prototype.commandEntryAt = function(index)
   const entry = this.commandList()
     .at(index);
 
-  // when entry  equals  undefined  or  entry  equals  null, take this branch.
   if (entry === undefined || entry === null)
   {
     return null;
   }
 
-  // hand back entry to the caller.
   return entry;
 };
 
@@ -267,13 +265,11 @@ Window_Command.prototype.commandSubtext = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return [];
   }
 
-  // hand back command.subText ?? [] to the caller.
   return command.subText ?? [];
 };
 
@@ -286,13 +282,11 @@ Window_Command.prototype.commandLines = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return [];
   }
 
-  // hand back command.lines ?? [] to the caller.
   return command.lines ?? [];
 };
 
@@ -300,13 +294,11 @@ Window_Command.prototype.isCommandSubtext = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return true;
   }
 
-  // hand back command.isSubtext ?? true to the caller.
   return command.isSubtext ?? true;
 };
 
@@ -337,13 +329,11 @@ Window_Command.prototype.commandRightText = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return String.empty;
   }
 
-  // hand back command.rightText to the caller.
   return command.rightText;
 };
 
@@ -356,13 +346,11 @@ Window_Command.prototype.commandRightColorIndex = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return 0;
   }
 
-  // hand back command.rightColor to the caller.
   return command.rightColor;
 };
 
@@ -375,13 +363,11 @@ Window_Command.prototype.commandHelpText = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return String.empty;
   }
 
-  // hand back command.helpText to the caller.
   return command.helpText;
 };
 
@@ -408,7 +394,6 @@ Window_Command.prototype.handleColor = function(command, index)
     return `\\C[${commandColor}]${command}\\C[0]`;
   }
 
-  // hand back command to the caller.
   return command;
 };
 
@@ -421,13 +406,11 @@ Window_Command.prototype.commandIcon = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return 0;
   }
 
-  // hand back command.icon to the caller.
   return command.icon;
 };
 
@@ -440,13 +423,11 @@ Window_Command.prototype.commandColor = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return 0;
   }
 
-  // hand back command.color to the caller.
   return command.color;
 };
 
@@ -454,13 +435,11 @@ Window_Command.prototype.commandFaceData = function(index)
 {
   const command = this.commandEntryAt(index);
 
-  // when command  equals  null, take this branch.
   if (command === null)
   {
     return [ String.empty, -1 ];
   }
 
-  // hand back command.faceData ?? [ String.empty, -1 ] to the caller.
   return command.faceData ?? [ String.empty, -1 ];
 };
 
@@ -480,11 +459,9 @@ Window_Command.prototype.addCommand = function(name, symbol, enabled = true, ext
   this.commandList()
     .push({
       name,
-      // policy step inside add command.
       symbol,
       enabled,
       ext,
-      // policy step inside add command.
       icon,
       color
     });
@@ -516,11 +493,9 @@ Window_Command.prototype.prependCommand = function(name, symbol, enabled = true,
   this.commandList()
     .unshift({
       name,
-      // policy step inside prepend command.
       symbol,
       enabled,
       ext,
-      // policy step inside prepend command.
       icon,
       color
     });

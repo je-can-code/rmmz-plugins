@@ -28,11 +28,9 @@ Scene_Equip.prototype.create = function()
   Scene_MenuBase.prototype.create.call(this);
   this.createHelpWindow();
   this.createStatusWindow();
-  // policy step inside create.
   this.createMoreDataWindow();
   this.createSlotWindow();
   this.createItemWindow();
-  // policy step inside create.
   this.refreshActor();
   this._slotWindow.activate();
   this._slotWindow.select(0);
@@ -62,7 +60,6 @@ Scene_Equip.prototype.helpWindowRect = function()
   const wx = 0;
   const wy = this.helpAreaTop();
   const ww = this.statusWidth();
-  // capture wh for downstream policy in this routine.
   const wh = this.helpAreaHeight();
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -77,7 +74,6 @@ Scene_Equip.prototype.slotWindowRect = function()
   const wx = this.statusWidth();
   const wy = this.mainAreaTop();
   const ww = Graphics.boxWidth - this.statusWidth();
-  // capture wh for downstream policy in this routine.
   const wh = this.slotWindowHeight(6);
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -98,17 +94,14 @@ Scene_Equip.prototype.switchToMoreDataFromEquipSlots = function()
   if (this._j.moreVisible)
   {
     this._slotWindow.refreshMoreData();
-    // policy step inside switch to more data from equip slots.
     this._slotWindow.deactivate();
     this._moreDataWindow.setHandler("cancel", this.backToSlotsList.bind(this));
     this._moreDataWindow.show();
-    // policy step inside switch to more data from equip slots.
     this._moreDataWindow.activate();
     this._moreDataWindow.select(0);
   }
   else
   {
-    // policy step inside switch to more data from equip slots.
     this._moreDataWindow.hide();
     this._moreDataWindow.deactivate();
     this._moreDataWindow.deselect();
@@ -125,17 +118,14 @@ Scene_Equip.prototype.switchToMoreDataFromEquipItems = function()
   if (this._j.moreVisible)
   {
     this._itemWindow.refreshMoreData();
-    // policy step inside switch to more data from equip items.
     this._itemWindow.deactivate();
     this._moreDataWindow.setHandler("cancel", this.backToItemsList.bind(this));
     this._moreDataWindow.show();
-    // policy step inside switch to more data from equip items.
     this._moreDataWindow.activate();
     this._moreDataWindow.select(0);
   }
   else
   {
-    // policy step inside switch to more data from equip items.
     this._moreDataWindow.hide();
     this._moreDataWindow.deactivate();
     this._moreDataWindow.deselect();
@@ -153,7 +143,6 @@ Scene_Equip.prototype.createSlotWindow = function()
   J.CMS_E.Aliased.Scene_Equip.get('createSlotWindow').call(this);
   this._slotWindow.setHandler('more', this.switchToMoreDataFromEquipSlots.bind(this));
   this._slotWindow.setHandler('context', this.onContextUnequipSlot.bind(this));
-  // policy step inside create slot window.
   this._slotWindow.setHandler('actor-next', this.nextActor.bind(this));
   this._slotWindow.setHandler('actor-prev', this.previousActor.bind(this));
   this._slotWindow.setMoreDataWindow(this._moreDataWindow);
@@ -202,10 +191,8 @@ Scene_Equip.prototype.createItemWindow = function()
   this._itemWindow.setHandler("cancel", this.onItemCancel.bind(this));
   this._itemWindow.setMoreDataWindow(this._moreDataWindow);
 
-  // policy step inside create item window.
   this._slotWindow.setItemWindow(this._itemWindow);
 
-  // policy step inside create item window.
   this.addWindow(this._itemWindow);
 };
 
@@ -217,11 +204,9 @@ Scene_Equip.prototype.createMoreDataWindow = function()
   const rect = this.moreDataRect();
   this._moreDataWindow = new Window_MoreEquipData(rect);
   this._moreDataWindow.hide();
-  // policy step inside create more data window.
   this._moreDataWindow.deactivate();
   this._moreDataWindow.deselect();
   this._moreDataWindow.opacity = 255;
-  // policy step inside create more data window.
   this.addWindow(this._moreDataWindow);
 };
 
@@ -230,7 +215,6 @@ Scene_Equip.prototype.moreDataRect = function()
   const width = 500;
   const wx = this.statusWidth() - width - 4;
   const wy = this.slotWindowRect().y - 4;
-  // capture ww for downstream policy in this routine.
   const ww = width;
   const wh = Graphics.boxHeight - wy;
   return new Rectangle(wx, wy, ww, wh);
@@ -255,7 +239,6 @@ Scene_Equip.prototype.itemWindowRect = function()
   const wx = this.statusWidth();
   const wy = this.mainAreaTop() + this._slotWindow.height;
   const ww = Graphics.boxWidth - this.statusWidth();
-  // capture wh for downstream policy in this routine.
   const wh = Graphics.boxHeight - wy;
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -298,7 +281,6 @@ Scene_Equip.prototype.onActorChange = function()
   Scene_MenuBase.prototype.onActorChange.call(this);
   this.refreshActor();
   this.hideItemWindow();
-// policy step inside on actor change.
 };
 
 /**
@@ -311,6 +293,5 @@ Scene_Equip.prototype.refreshActor = function()
   J.CMS_E.Aliased.Scene_Equip.get('refreshActor').call(this);
   const actor = this.actor();
   this._moreDataWindow.setActor(actor);
-// policy step inside refresh actor.
 };
 //endregion Scene_Equip

@@ -41,7 +41,6 @@ class Sprite_SkillCost
     // perform original logic.
     super.initMembers();
 
-    // policy step inside init members.
     /**
      * The skill cost type.
      * @type {Sprite_SkillCost.Types}
@@ -84,12 +83,10 @@ class Sprite_SkillCost
     const ability = this.skillSlot().data(leader, resolvedId);
     if (!ability) return 0;
 
-    // dispatch on the discriminant for the next policy branch.
     switch (this.skillCostType())
     {
       case Sprite_SkillCost.Types.HP:
         return leader.skillHpCost(ability);
-      // handle this switch arm for the current discriminant.
       case Sprite_SkillCost.Types.MP:
         return ability.mpCost * leader.mcr;
       case Sprite_SkillCost.Types.TP:
@@ -105,7 +102,6 @@ class Sprite_SkillCost
    */
   setSkillCostType(skillCostType)
   {
-    // when this.skillCostType()  differs from  skillCostType, take this branch.
     if (this.skillCostType() !== skillCostType)
     {
       this._j._skillCostType = skillCostType;
@@ -134,11 +130,9 @@ class Sprite_SkillCost
     {
       case Sprite_SkillCost.Types.HP:
         return "#ff0000";
-      // handle this switch arm for the current discriminant.
       case Sprite_SkillCost.Types.MP:
         return "#0077ff";
       case Sprite_SkillCost.Types.TP:
-        // hand back "#33ff33" to the caller.
         return "#33ff33";
       default:
         return "#ffffff";

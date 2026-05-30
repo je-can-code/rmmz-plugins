@@ -20,13 +20,11 @@ class Scene_JaftingCreate
   {
     const categories = $gameParty.getUnlockedCategories();
 
-    // when categories.length  equals  0, take this branch.
     if (categories.length === 0)
     {
       return false;
     }
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < categories.length; i++)
     {
       if (categories[i].hasAnyRecipes())
@@ -35,7 +33,6 @@ class Scene_JaftingCreate
       }
     }
 
-    // hand back false to the caller.
     return false;
   }
 
@@ -115,10 +112,8 @@ class Scene_JaftingCreate
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init core members.
     this._j ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with this JAFTING scene.
      */
@@ -133,69 +128,57 @@ class Scene_JaftingCreate
     /**
      * A grouping of all properties associated with the jafting type of creation.
      * Creation is a subcategory of the jafting system.
-     // policy step inside init primary members.
      */
     this._j._crafting._create = {};
 
-    // policy step inside init primary members.
     /**
      * Workflow state and craft attempts for this scene (keeps UI handlers thin).
      * @type {CraftingCreationSession}
-     // policy step inside init primary members.
      */
     this._j._crafting._create._session = new CraftingCreationSession();
 
-    // policy step inside init primary members.
     /**
      * The window that shows the tertiary information about a recipe or category.
      * @type {Window_CreationDescription}
-     // policy step inside init primary members.
      */
     this._j._crafting._create._creationDescription = null;
 
-    // policy step inside init primary members.
     /**
      * Recipe-browsing chrome: icon + name for the active category (aligned with the help band).
      * @type {Window_CreationCategoryBadge}
      */
     this._j._crafting._create._creationCategoryBadge = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of unlocked categories.
      * @type {Window_CategoryList}
      */
     this._j._crafting._create._categoryList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of unlocked recipes.
      * @type {Window_RecipeList}
      */
     this._j._crafting._create._recipeList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the details of the currently-selected recipe.
      * @type {Window_RecipeDetails}
      */
     this._j._crafting._create._recipeDetails = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of ingredients on the currently selected recipe.
      * @type {Window_RecipeIngredientList}
      */
     this._j._crafting._create._recipeIngredientList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of tools on the currently selected recipe.
      * @type {Window_RecipeToolList}
      */
     this._j._crafting._create._recipeToolList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of outputs on the currently selected recipe.
      * @type {Window_RecipeOutputList}
@@ -250,7 +233,6 @@ class Scene_JaftingCreate
     this.createCreationDescriptionWindow();
     this.createCreationCategoryBadgeWindow();
     this.createCategoryListWindow();
-    // policy step inside create all windows.
     this.createRecipeListWindow();
     this.createRecipeDetailsWindow();
     this.createRecipeIngredientListWindow();
@@ -353,7 +335,6 @@ class Scene_JaftingCreate
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = this.creationHeaderBandHeight();
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -381,7 +362,6 @@ class Scene_JaftingCreate
   {
     const window = this.buildCreationCategoryBadgeWindow();
 
-    // policy step inside create creation category badge window.
     this.setCreationCategoryBadgeWindow(window);
     window.hide();
     window.deactivate();
@@ -395,7 +375,6 @@ class Scene_JaftingCreate
   {
     const rectangle = this.getCreationCategoryBadgeRectangle();
 
-    // hand back new Window_CreationCategoryBadge(rectangle) to the caller.
     return new Window_CreationCategoryBadge(rectangle);
   }
 
@@ -410,7 +389,6 @@ class Scene_JaftingCreate
     const w = this.getCreationListColumnWidth();
     const h = this.creationHeaderBandHeight();
 
-    // hand back new Rectangle(ox, oy, w, h) to the caller.
     return new Rectangle(ox, oy, w, h);
   }
 
@@ -478,7 +456,6 @@ class Scene_JaftingCreate
     // the window's origin coordinates are the box window's origin as well.
     const [ x, y ] = Graphics.boxOrigin;
 
-    // capture width for downstream policy in this routine.
     const width = Math.round(300 * 1.1);
 
     // define the height of the window.
@@ -509,7 +486,6 @@ class Scene_JaftingCreate
     const helpText = this.getCategoryListWindow()
       .currentHelpText();
 
-    // policy step inside on category list index change.
     this.getCreationDescriptionWindow()
       .setText(helpText ?? String.empty);
   }
@@ -528,7 +504,6 @@ class Scene_JaftingCreate
     // the category key is also the symbol of the category commands.
     const currentCategory = categoryListWindow.currentSymbol();
 
-    // policy step inside on category list selection.
     this.craftingCreationSession().enterRecipeBrowsing(currentCategory);
 
     // grab the recipe list window.
@@ -569,7 +544,6 @@ class Scene_JaftingCreate
     categoryListWindow.show();
     categoryListWindow.activate();
 
-    // policy step inside select category list window.
     this.getCreationDescriptionWindow()
       .setText(categoryListWindow.currentHelpText());
   }
@@ -643,7 +617,6 @@ class Scene_JaftingCreate
     const y = oy + header + gap;
     const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // hand back new Rectangle(ox, y, w, height) to the caller.
     return new Rectangle(ox, y, w, height);
   }
 
@@ -684,12 +657,10 @@ class Scene_JaftingCreate
     // reveal that window, too.
     detailsWindow.show();
 
-    // capture badge window for downstream policy in this routine.
     const badgeWindow = this.getCreationCategoryBadgeWindow();
     const categoryKey = recipeListWindow.getCurrentCategory();
     const category = $gameParty.getCategoryByKey(categoryKey);
 
-    // policy step inside select recipe list window.
     badgeWindow.setCategory(category);
     badgeWindow.show();
   }
@@ -707,10 +678,8 @@ class Scene_JaftingCreate
     listWindow.hide();
     listWindow.deactivate();
 
-    // capture badge window for downstream policy in this routine.
     const badgeWindow = this.getCreationCategoryBadgeWindow();
 
-    // policy step inside deselect recipe list window.
     badgeWindow.hide();
     badgeWindow.clearCategory();
 
@@ -770,10 +739,8 @@ class Scene_JaftingCreate
   {
     this.craftingCreationSession().returnToCategoryBrowsing();
 
-    // policy step inside on recipe list cancel.
     this.deselectRecipeListWindow();
 
-    // policy step inside on recipe list cancel.
     this.selectCategoryListWindow();
   }
 
@@ -782,16 +749,13 @@ class Scene_JaftingCreate
     const recipe = this.getRecipeListWindow().currentExt();
     const outcome = this.craftingCreationSession().tryCraftRecipe(recipe);
 
-    // when outcome.playedSuccessSound  equals  true, take this branch.
     if (outcome.playedSuccessSound === true)
     {
       SoundManager.playShop();
     }
 
-    // capture list window for downstream policy in this routine.
     const listWindow = this.getRecipeListWindow();
 
-    // policy step inside on recipe list selection.
     listWindow.refresh();
     this.onRecipeListIndexChange();
     listWindow.activate();
@@ -839,14 +803,12 @@ class Scene_JaftingCreate
     const [ ox, oy ] = Graphics.boxOrigin;
     const listRect = this.getRecipeListRectangle();
 
-    // policy step inside get recipe details rectangle.
     const { x: listX, y: listY } = listRect;
     const x = listX + listRect.width + Graphics.horizontalPadding;
     const y = listY;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -913,7 +875,6 @@ class Scene_JaftingCreate
     const detailsR = this.getRecipeDetailsRectangle();
     const detailsWindow = this.getRecipeDetailsWindow();
     const pad = detailsWindow.padding;
-    // capture inner w for downstream policy in this routine.
     const innerW = detailsR.width - pad * 2;
     const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(innerW);
     const leftX = detailsR.x + pad;
@@ -921,7 +882,6 @@ class Scene_JaftingCreate
     const listInnerTop = detailsR.y + pad + detailsWindow.componentListRowsInnerStartY() - rowInset;
     const height = detailsR.y + detailsR.height - listInnerTop - pad;
 
-    // hand back { leftX, y: listInnerTop, colW: cw, remainder, height } to the caller.
     return { leftX, y: listInnerTop, colW: cw, remainder, height };
   }
 
@@ -933,7 +893,6 @@ class Scene_JaftingCreate
   {
     const L = this.getCreationLowerPanelLayout();
 
-    // hand back new Rectangle(L.leftX, L.y, L.colW, L.height) to the caller.
     return new Rectangle(L.leftX, L.y, L.colW, L.height);
   }
 
@@ -998,7 +957,6 @@ class Scene_JaftingCreate
     const L = this.getCreationLowerPanelLayout();
     const x = L.leftX + L.colW;
 
-    // hand back new Rectangle(x, L.y, L.colW, L.height) to the caller.
     return new Rectangle(x, L.y, L.colW, L.height);
   }
 
@@ -1065,7 +1023,6 @@ class Scene_JaftingCreate
     const x = L.leftX + L.colW * 2;
     const w = L.colW + L.remainder;
 
-    // hand back new Rectangle(x, L.y, w, L.height) to the caller.
     return new Rectangle(x, L.y, w, L.height);
   }
 

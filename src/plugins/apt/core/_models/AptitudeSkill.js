@@ -16,19 +16,15 @@ class AptitudeSkill
     /**
      * The skill id that was learned.
      * @type {number}
-     // policy step inside initialize.
      */
     this.skillId = skillId;
 
-    // policy step inside initialize.
     /**
      * Whether or not this aptitude skill is learned.
      * @type {boolean}
-     // policy step inside initialize.
      */
     this.learned = learned;
 
-    // policy step inside initialize.
     /**
      * The "type:id" key of the aptitude that this skill was learned from.
      * @type {string}

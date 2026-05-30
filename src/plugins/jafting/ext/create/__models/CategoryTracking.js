@@ -16,20 +16,16 @@ class CategoryTracking
     /**
      * The key of this category that is being tracked.
      * @type {string}
-     // policy step inside initialize.
      */
     this.key = key;
 
-    // policy step inside initialize.
     /**
      * True if the category associated with this key is unlocked,
      * false otherwise.
-     // policy step inside initialize.
      * @type {boolean}
      */
     this.unlocked = unlocked;
 
-    // policy step inside initialize.
     /**
      * The number of times a recipe with this category key has been crafted.
      * @type {number}

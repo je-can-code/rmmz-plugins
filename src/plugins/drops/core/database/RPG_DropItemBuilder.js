@@ -105,7 +105,6 @@ class RPG_DropItemBuilder
     this.setType(RPG_DropItem.Types.Item);
     this.setId(databaseId);
     this.setChance(percentChance);
-    // hand back this.build() to the caller.
     return this.build();
   }
 
@@ -120,7 +119,6 @@ class RPG_DropItemBuilder
     this.setType(RPG_DropItem.Types.Weapon);
     this.setId(databaseId);
     this.setChance(percentChance);
-    // hand back this.build() to the caller.
     return this.build();
   }
 
@@ -135,7 +133,6 @@ class RPG_DropItemBuilder
     this.setType(RPG_DropItem.Types.Armor);
     this.setId(databaseId);
     this.setChance(percentChance);
-    // hand back this.build() to the caller.
     return this.build();
   }
 

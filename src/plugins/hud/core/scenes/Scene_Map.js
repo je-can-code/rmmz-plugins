@@ -23,10 +23,8 @@ Scene_Map.prototype.initHudMembers = function()
   /**
    * A grouping of all properties that are associated with J's plugins.
    */
-  // policy step inside init hud members.
   this._j ||= {};
 
-  // policy step inside init hud members.
   /**
    * A grouping of all properties that belong to the HUD.
    */

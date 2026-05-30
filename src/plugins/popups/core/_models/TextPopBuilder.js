@@ -183,13 +183,11 @@ class TextPopBuilder
   {
     let valuePart = this.#value;
 
-    // when valuePart.indexOf(`-`)  differs from  -1, take this branch.
     if (valuePart.indexOf(`-`) !== -1)
     {
       valuePart = valuePart.substring(1);
     }
 
-    // hand back `${this.#prefix}${valuePart}${this.#suffix}` to the caller.
     return `${this.#prefix}${valuePart}${this.#suffix}`;
   }
 
@@ -387,7 +385,6 @@ class TextPopBuilder
   {
     this.setXVariance(xVariance);
     this.setYVariance(yVariance);
-    // hand back this to the caller.
     return this;
   }
 
@@ -402,7 +399,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -414,7 +410,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.IncomingHeal;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -426,7 +421,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.SlipDamage;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -438,7 +432,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.Regen;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -450,7 +443,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.RewardUp;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -462,7 +454,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.LootDown;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -474,7 +465,6 @@ class TextPopBuilder
     this.#layoutRing = Map_TextPop.LayoutRings.CenterFocus;
     this.setXVariance(0);
     this.setYVariance(0);
-    // hand back this to the caller.
     return this;
   }
 
@@ -655,7 +645,6 @@ class TextPopBuilder
     // set the icon to our experience icon.
     this.setIconIndex(125);
 
-    // policy step inside is experience.
     this.forRewardUpRing();
 
     // return the builder for fluent chaining.
@@ -677,7 +666,6 @@ class TextPopBuilder
     // set the icon to our experience icon.
     this.setIconIndex(2048);
 
-    // policy step inside is gold.
     this.forRewardUpRing();
 
     // return the builder for fluent chaining.
@@ -699,7 +687,6 @@ class TextPopBuilder
     // set the icon index to the learned skill's icon.
     this.setIconIndex(306);
 
-    // policy step inside is sdp points.
     this.forRewardUpRing();
 
     // return the builder for fluent chaining.
@@ -735,7 +722,6 @@ class TextPopBuilder
     // set the icon index to our level up icon.
     this.setIconIndex(86);
 
-    // policy step inside is level up.
     this.forRewardUpRing();
 
     // return the builder for fluent chaining.
@@ -758,7 +744,6 @@ class TextPopBuilder
     // set the icon index to the used skill's icon.
     this.setIconIndex(skillIconIndex);
 
-    // policy step inside is skill used.
     this.forCenterFocusRing();
 
     // return the builder for fluent chaining.
@@ -784,7 +769,6 @@ class TextPopBuilder
     // add a suffix to indicate the skill was learned.
     this.setSuffix(` LEARNED!`);
 
-    // policy step inside is skill learned.
     this.forRewardUpRing();
 
     // return the builder for fluent chaining.

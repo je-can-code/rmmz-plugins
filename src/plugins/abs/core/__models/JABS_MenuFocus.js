@@ -13,7 +13,6 @@ class JABS_MenuType
     console.warn(`Attempted to instantiate the JABS_MenuType class.`);
     console.warn(`Please directly use the static properties on it instead of instantiating it.`);
     console.warn(`Consider adding additional static properties if new menu items are being added.`);
-    // policy step inside constructor.
     console.trace();
     throw new Error(`JABS_MenuType is a static class that cannot be instantiated.`);
   }

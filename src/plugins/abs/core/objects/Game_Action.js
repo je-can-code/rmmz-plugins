@@ -118,7 +118,6 @@ Game_Action.prototype.preApplyAction = function(target)
   this.subject()
     .clearResult();
 
-  // capture result for downstream policy in this routine.
   const result = target.result();
 
   // NOTE: the action is already cleared as a part of the "executeSkillEffects" function.
@@ -666,7 +665,6 @@ Game_Action.prototype.shouldTargetApplyResistances = function()
   // certain hits ignore target's state application modifiers and luck impacts!
   if (this.isCertainHit()) return false;
 
-  // hand back true to the caller.
   return true;
 };
 

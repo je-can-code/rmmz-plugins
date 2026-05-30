@@ -24,7 +24,6 @@ class PassiveGateEvaluator
       case 'alliesNearby':
         return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length >= Number(param);
       case 'enemiesNearby':
-        // hand back PassiveRuleJabsAccess.nearbyEnemies(battler).length >... to the caller.
         return PassiveRuleJabsAccess.nearbyEnemies(battler).length >= Number(param);
 
       // discrete state and cooldown gates.
@@ -57,7 +56,6 @@ class PassiveGateEvaluator
       case 'attackedWithin':
         return this.#framesSince(battler.getPassiveRuleLastAttackedFrame()) <= Number(param);
 
-      // handle this switch arm for the current discriminant.
       default:
         // hpAbove, criBelow, allAlliesHpAbove, etc. fall through to threshold parsing.
         return this.#evaluateThresholdKind(battler, kind, param);
@@ -76,7 +74,6 @@ class PassiveGateEvaluator
   {
     const allAllies = PassiveRuleThreshold.parseAllAlliesThresholdKind(kind);
 
-    // when allAllies, take this branch.
     if (allAllies)
     {
       // every allied battler (including self) must satisfy the same threshold.
@@ -85,13 +82,11 @@ class PassiveGateEvaluator
           PassiveRuleThreshold.compare(allyBattler, allAllies.key, allAllies.direction, Number(param)));
     }
 
-    // capture threshold for downstream policy in this routine.
     const threshold = PassiveRuleThreshold.parseThresholdKind(kind);
 
     // unknown kinds fail closed so typos do not silently grant passives.
     if (!threshold) return false;
 
-    // hand back PassiveRuleThreshold.compare(battler, threshold.key, ... to the caller.
     return PassiveRuleThreshold.compare(battler, threshold.key, threshold.direction, Number(param));
   }
 
@@ -103,7 +98,6 @@ class PassiveGateEvaluator
    */
   static countNegativeStates(battler)
   {
-    // hand back battler.allStates() to the caller.
     return battler.allStates()
       .filter(state => state && state.jabsNegative === true)
       .length;
@@ -123,7 +117,6 @@ class PassiveGateEvaluator
     // off-map battlers treat slots as never on cooldown for gate purposes.
     if (!jabsBattler) return false;
 
-    // capture slot key for downstream policy in this routine.
     const slotKey = PassiveRuleJabsAccess.resolveSlotKey(slotParam);
 
     // JABS reports ready === false while the slot is still cooling down.
@@ -140,13 +133,10 @@ class PassiveGateEvaluator
   {
     const jabsBattler = PassiveRuleJabsAccess.getJabsBattler(battler);
 
-    // when not jabsBattler, take this branch.
     if (!jabsBattler) return false;
 
-    // capture slot manager for downstream policy in this routine.
     const slotManager = jabsBattler.getBattler().getSkillSlotManager();
 
-    // when not slotManager, take this branch.
     if (!slotManager) return false;
 
     // every registered JABS skill slot must be on cooldown for allOnCooldown to pass.
@@ -165,7 +155,6 @@ class PassiveGateEvaluator
     // never stamped means "since forever" for sinceLast* and a large window for *Within rules.
     if (stampFrame <= 0) return Graphics.frameCount;
 
-    // hand back Graphics.frameCount - stampFrame to the caller.
     return Graphics.frameCount - stampFrame;
   }
 }

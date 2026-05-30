@@ -44,12 +44,10 @@ class Window_RefinementStepHint
   {
     this.contents.clear();
 
-    // capture x for downstream policy in this routine.
     const x = 0;
     const y = 0;
     const { innerWidth } = this;
 
-    // policy step inside refresh.
     this.changeTextColor(ColorManager.systemColor());
     this.drawText(this._text, x, y, innerWidth, 'left');
     this.resetTextColor();

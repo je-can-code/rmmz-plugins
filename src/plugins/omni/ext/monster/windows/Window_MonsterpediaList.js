@@ -106,7 +106,6 @@ class Window_MonsterpediaList
       enemyName = J.BASE.Helpers.maskString(enemyName);
     }
 
-    // capture enemy monster family icon index for downstream policy in this routine.
     let enemyMonsterFamilyIconIndex = enemy.monsterFamilyIcon;
 
     // check if the player doesn't know the family, or has never defeated the monster.

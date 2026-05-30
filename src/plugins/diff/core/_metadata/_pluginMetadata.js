@@ -176,16 +176,13 @@ class J_DiffPluginMetadata
     const classifiedMetadatas = ExternalJsonConfigLoader.load(
       J_DiffPluginMetadata.CONFIG_PATH,
       ExternalJsonConfigLoaderOptions.Builder()
-        // policy step inside initialize difficulties.
         .pluginName('J-Difficulty')
         .configName('difficulty configuration')
         .mapper(J_DiffPluginMetadata.classifyDifficulties.bind(J_DiffPluginMetadata))
-        // policy step inside initialize difficulties.
         .logSummary(result => [ `- ${result.size} difficulty layers` ])
         .build()
     );
 
-    // policy step inside initialize difficulties.
     /**
      * A map of difficulty layer metadatas by their key.
      * @type {Map<string, DifficultyMetadata>}
@@ -201,7 +198,6 @@ class J_DiffPluginMetadata
      */
     this.defaultKey = this.parsedPluginParameters['defaultDifficulty'] || "default_undefined";
 
-    // policy step inside initialize metadata.
     /**
      * The default point max for allocating difficulty layers.
      */

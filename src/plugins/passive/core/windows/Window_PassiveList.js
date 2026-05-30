@@ -31,14 +31,12 @@ class Window_PassiveList
     // perform original logic.
     super.initialize(rect);
 
-    // policy step inside initialize.
     /**
      * The actor whose passive states are being displayed.
      * @type {Game_Actor|null}
      */
     this._actor = null;
 
-    // policy step inside initialize.
     /**
      * The filter function for the active tab.
      * When null, all passive states are shown.
@@ -46,7 +44,6 @@ class Window_PassiveList
      */
     this._tabFilter = null;
 
-    // policy step inside initialize.
     /**
      * The working list of passive states matching the current filter.
      * @type {RPG_State[]}

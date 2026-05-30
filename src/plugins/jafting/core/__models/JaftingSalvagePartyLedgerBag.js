@@ -13,16 +13,13 @@ class JaftingSalvagePartyLedgerBag
     /**
      * Per stack slot lineage (null when that copy has no stamp).
      *
-     // policy step inside constructor.
      * @type {(JaftingSalvageLedgerSnapshot|null)[]}
      */
     this.unitLedgers = [];
 
-    // policy step inside constructor.
     /**
      * Merged dismantle rows (union of every non-empty {@link #unitLedgers} slot).
      *
-     // policy step inside constructor.
      * @type {JaftingSalvageLedgerRow[]}
      */
     this.rows = [];
@@ -39,13 +36,11 @@ class JaftingSalvagePartyLedgerBag
     {
       const u = bag.unitLedgers[i];
 
-      // when u  equals  null  or  u  equals  undefined, take this branch.
       if (u === null || u === undefined)
       {
         continue;
       }
 
-      // when (u instanceof JaftingSalvageLedgerSnapshot)  equals  false, take this branch.
       if ((u instanceof JaftingSalvageLedgerSnapshot) === false)
       {
         bag.unitLedgers[i] = new JaftingSalvageLedgerSnapshot(u.rows || []);
@@ -71,27 +66,23 @@ class JaftingSalvagePartyLedgerBag
       raw.rows = JaftingSalvageLedgerSnapshot.coerceRows(raw.rows);
       JaftingSalvagePartyLedgerBag.coerceUnitLedgerSlots(raw);
 
-      // hand back raw to the caller.
       return raw;
     }
 
     // construct bag for the next step in this routine.
     const bag = new JaftingSalvagePartyLedgerBag();
 
-    // when not raw, take this branch.
     if (!raw)
     {
       return bag;
     }
 
-    // when Array.isArray(raw.unitLedgers), take this branch.
     if (Array.isArray(raw.unitLedgers))
     {
       for (let i = 0; i < raw.unitLedgers.length; i++)
       {
         const u = raw.unitLedgers[i];
 
-        // when u  equals  null  or  u  equals  undefined, take this branch.
         if (u === null || u === undefined)
         {
           bag.unitLedgers.push(null);
@@ -107,10 +98,8 @@ class JaftingSalvagePartyLedgerBag
       }
     }
 
-    // policy step inside coerce.
     bag.rows = JaftingSalvageLedgerSnapshot.coerceRows(raw.rows || []);
 
-    // hand back bag to the caller.
     return bag;
   }
 }

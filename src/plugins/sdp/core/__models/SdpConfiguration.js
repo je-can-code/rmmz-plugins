@@ -73,7 +73,6 @@ class SdpConfiguration
     this.#panels = panels;
     this.#subgroups = subgroups;
     this.#families = families;
-    // policy step inside constructor.
     this.#subgroupsMap = subgroupsMap;
     this.#familiesMap = familiesMap;
     this.#familyKeyBySubgroupKey = familyKeyBySubgroupKey;
@@ -207,10 +206,8 @@ class SdpConfiguration
         this.#panelsBySubgroupKey
       );
 
-      // policy step inside build.
       this.#clear();
 
-      // hand back new config to the caller.
       return newConfig;
     }
 

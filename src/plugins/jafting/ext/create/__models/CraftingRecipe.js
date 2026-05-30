@@ -159,7 +159,6 @@ class CraftingRecipe
    */
   getProficiency()
   {
-    // hand back $gameParty to the caller.
     return $gameParty
       .getRecipeTrackingByKey(this.key)
       .craftingProficiency();

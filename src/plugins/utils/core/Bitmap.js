@@ -15,7 +15,6 @@ Bitmap.prototype._createCanvas = function(width, height)
   // applies the new attribute to change it to software rendering.
   this._context = this._canvas.getContext("2d", { willReadFrequently: true });
 
-  // policy step inside  create canvas.
   this._canvas.width = width;
   this._canvas.height = height;
   this._createBaseTexture(this._canvas);

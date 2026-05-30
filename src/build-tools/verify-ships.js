@@ -99,36 +99,29 @@ function collectGlobalThisWriteViolations(filePath, contents)
   const violations = [];
   const lines = contents.split('\n');
 
-  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
-    // when line.includes('globalThis')  equals  false, take this branch.
     if (line.includes('globalThis') === false)
     {
       continue;
     }
 
-    // when ALLOWED_GLOBAL_THIS_J_BOOTSTRAP.test(line), take this branch.
     if (ALLOWED_GLOBAL_THIS_J_BOOTSTRAP.test(line))
     {
       continue;
     }
 
-    // capture write match for downstream policy in this routine.
     const writeMatch = line.match(GLOBAL_THIS_WRITE);
 
-    // when writeMatch  equals  null, take this branch.
     if (writeMatch === null)
     {
       continue;
     }
 
-    // capture property name for downstream policy in this routine.
     const [, propertyName] = writeMatch;
 
-    // when LEGACY_GLOBAL_THIS_PROPERTIES.has(propertyName), take this branch.
     if (LEGACY_GLOBAL_THIS_PROPERTIES.has(propertyName))
     {
       continue;
@@ -140,7 +133,6 @@ function collectGlobalThisWriteViolations(filePath, contents)
     );
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -154,46 +146,38 @@ function collectJNamespaceClassMirrorViolations(filePath, contents)
   const violations = [];
   const lines = contents.split('\n');
 
-  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
-    // when line.includes('J.')  equals  false, take this branch.
     if (line.includes('J.') === false)
     {
       continue;
     }
 
-    // when line.includes('new '), take this branch.
     if (line.includes('new '))
     {
       continue;
     }
 
-    // when /=\s*J\./.test(line), take this branch.
     if (/=\s*J\./.test(line))
     {
       continue;
     }
 
-    // capture mirror match for downstream policy in this routine.
     const mirrorMatch = line.match(J_NAMESPACE_CLASS_MIRROR);
 
-    // when mirrorMatch  equals  null, take this branch.
     if (mirrorMatch === null)
     {
       continue;
     }
 
-    // capture class name for downstream policy in this routine.
     const [, className] = mirrorMatch;
     violations.push(
       `${filePath}:${lineIndex + 1}: needless J namespace class mirror (J.* = ${className}; import or use hoisted global)`
     );
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -206,23 +190,19 @@ function collectShippedModuleAndBundlerViolations(filePath, contents)
 {
   const violations = [];
 
-  // when SHIPPED_MODULE_LINE.test(contents), take this branch.
   if (SHIPPED_MODULE_LINE.test(contents))
   {
     violations.push(`${filePath}: contains import/export (RMMZ cannot load module syntax)`);
   }
 
-  // capture dollar one matches for downstream policy in this routine.
   const dollarOneMatches = contents.match(new RegExp(BUNDLER_DOLLAR_ONE.source, 'g'));
 
-  // when dollarOneMatches  and  dollarOneMatches.length > 0, take this branch.
   if (dollarOneMatches && dollarOneMatches.length > 0)
   {
     const unique = [ ...new Set(dollarOneMatches) ];
     violations.push(`${filePath}: bundler rename collision(s): ${unique.join(', ')}`);
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -238,24 +218,20 @@ function collectExportDefaultOnlyViolations(filePath, contents)
     return [];
   }
 
-  // capture violations for downstream policy in this routine.
   const violations = [];
   const lines = contents.split('\n');
   let defaultExportCount = 0;
 
-  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
-    // when /^\s*export\s+default\b/.test(line), take this branch.
     if (/^\s*export\s+default\b/.test(line))
     {
       defaultExportCount++;
       continue;
     }
 
-    // when NON_DEFAULT_EXPORT.test(line), take this branch.
     if (NON_DEFAULT_EXPORT.test(line))
     {
       violations.push(
@@ -264,7 +240,6 @@ function collectExportDefaultOnlyViolations(filePath, contents)
     }
   }
 
-  // when defaultExportCount > 1, take this branch.
   if (defaultExportCount > 1)
   {
     violations.push(
@@ -272,7 +247,6 @@ function collectExportDefaultOnlyViolations(filePath, contents)
     );
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -288,22 +262,18 @@ function collectJNamespaceBootstrapViolations(filePath, contents)
     return [];
   }
 
-  // capture violations for downstream policy in this routine.
   const violations = [];
   const lines = contents.split('\n');
 
-  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
-    // when line.includes('J.')  equals  false, take this branch.
     if (line.includes('J.') === false)
     {
       continue;
     }
 
-    // when J_NAMESPACE_BOOTSTRAP_ASSIGNMENT.test(line)  equals  false, take this branch.
     if (J_NAMESPACE_BOOTSTRAP_ASSIGNMENT.test(line) === false)
     {
       continue;
@@ -315,7 +285,6 @@ function collectJNamespaceBootstrapViolations(filePath, contents)
     );
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -331,22 +300,18 @@ function collectJNamespaceRuntimeViolations(filePath, contents)
     return [];
   }
 
-  // capture violations for downstream policy in this routine.
   const violations = [];
   const lines = contents.split('\n');
 
-  // iterate the loop counter until the guard exits.
   for (let lineIndex = 0; lineIndex < lines.length; lineIndex++)
   {
     const line = lines[lineIndex];
 
-    // when line.includes('J.')  equals  false, take this branch.
     if (line.includes('J.') === false)
     {
       continue;
     }
 
-    // when J_NAMESPACE_RUNTIME_ASSIGNMENT.test(line)  equals  false, take this branch.
     if (J_NAMESPACE_RUNTIME_ASSIGNMENT.test(line) === false)
     {
       continue;
@@ -358,7 +323,6 @@ function collectJNamespaceRuntimeViolations(filePath, contents)
     );
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -371,25 +335,21 @@ function collectSourceBoundaryViolations(filePath, contents)
 {
   const violations = [];
 
-  // when CROSS_PLUGIN_BASE_IMPORT.test(contents), take this branch.
   if (CROSS_PLUGIN_BASE_IMPORT.test(contents))
   {
     violations.push(`${filePath}: cross-plugin import from _base/ (use hoisted globals from J-Base after load, e.g. ParameterRegistry)`);
   }
 
-  // when ENGINE_GLOBAL_CLASS.test(contents), take this branch.
   if (ENGINE_GLOBAL_CLASS.test(contents))
   {
     violations.push(`${filePath}: redefines engine global as class (use IconManager.foo = function augmentation)`);
   }
 
-  // when ENGINE_GLOBAL_EXPORT.test(contents), take this branch.
   if (ENGINE_GLOBAL_EXPORT.test(contents))
   {
     violations.push(`${filePath}: export default on engine global (causes IconManager$1-style collisions)`);
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -412,14 +372,12 @@ async function scanFiles(files, collector)
 {
   const violations = [];
 
-  // walk each entry in the iterable for this routine.
   for (const filePath of files)
   {
     const contents = await fs.readFile(filePath, 'utf-8');
     violations.push(...collector(path.normalize(filePath), contents));
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -519,17 +477,14 @@ async function main()
 {
   const results = [];
 
-  // walk each entry in the iterable for this routine.
   for (const check of CHECKS)
   {
     const violations = await check.run();
     results.push({ check, violations });
   }
 
-  // capture total violations for downstream policy in this routine.
   const totalViolations = results.reduce((count, entry) => count + entry.violations.length, 0);
 
-  // when totalViolations  equals  0, take this branch.
   if (totalViolations === 0)
   {
     Logger.logAnyway(
@@ -542,7 +497,6 @@ async function main()
   // Emit this message even when logging is muted.
   Logger.logAnyway('Ship verify FAILED:', LogStyle.brightRed);
 
-  // walk each entry in the iterable for this routine.
   for (const { check, violations } of results)
   {
     if (violations.length === 0)
@@ -553,14 +507,12 @@ async function main()
     // Emit this message even when logging is muted.
     Logger.logAnyway(`  [${check.name}]`, LogStyle.brightRed);
 
-    // walk each entry in the iterable for this routine.
     for (const message of violations)
     {
       Logger.logAnyway(`    • ${message}`, LogStyle.brightRed);
     }
   }
 
-  // hand back 1 to the caller.
   return 1;
 }
 

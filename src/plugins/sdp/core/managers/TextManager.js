@@ -26,7 +26,6 @@ TextManager.sdpMultiplierDescription = function()
   return [
     'The percentage bonuses being applied against SDP point gain.',
     'Higher amounts of this yields greater SDP point generation.'
-  // policy step inside sdp multiplier description.
   ];
 };
 //endregion TextManager

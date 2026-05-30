@@ -56,71 +56,57 @@ class JABS_BattlerCoreData
     /**
      * The id of the enemy that this battler represents.
      * @type {number}
-     // policy step inside initialize.
      */
     this._battlerId = battlerId;
 
-    // policy step inside initialize.
     /**
      * The id of the team this battler belongs to.
      * @type {number}
-     // policy step inside initialize.
      */
     this._teamId = teamId;
 
-    // policy step inside initialize.
     /**
      * The converted-from-binary AI of this battler.
      * @type {JABS_EnemyAI}
-     // policy step inside initialize.
      */
     this._battlerAI = battlerAI;
 
-    // policy step inside initialize.
     /**
      * The structural coordination role of this battler.
      * @type {JABS_BattlerRole}
-     // policy step inside initialize.
      */
     this._battlerRole = battlerRole ?? new JABS_BattlerRole();
 
-    // policy step inside initialize.
     /**
      * The base range that this enemy can and engage targets within.
      * @type {number}
-     // policy step inside initialize.
      */
     this._sightRange = sightRange;
 
-    // policy step inside initialize.
     /**
      * The boost to sight range this enemy gains while alerted.
      * @type {number}
      */
     this._alertedSightBoost = alertedSightBoost;
 
-    // policy step inside initialize.
     /**
      * The base range that this enemy will pursue it's engaged target.
      * @type {number}
      */
     this._pursuitRange = pursuitRange;
 
-    // policy step inside initialize.
     /**
      * The boost to pursuit range this enemy gains while alerted.
      * @type {number}
      */
     this._alertedPursuitBoost = alertedPursuitBoost;
 
-    // policy step inside initialize.
     /**
      * The duration in frames that this enemy will remain alerted.
      * @type {number}
      */
     this._alertDuration = alertDuration;
 
-    // policy step inside initialize.
     /**
      * The explicit engagement range for guardian-role battlers.
      * When null, the guardian falls back to the largest ward pursuit radius among its allies.
@@ -128,28 +114,24 @@ class JABS_BattlerCoreData
      */
     this._guardRange = guardRange ?? null;
 
-    // policy step inside initialize.
     /**
      * Whether or not this battler will move around while idle.
      * @type {boolean} True if the battler can move while idle, false otherwise.
      */
     this._canIdle = canIdle;
 
-    // policy step inside initialize.
     /**
      * Whether or not this battler's hp bar will be visible.
      * @type {boolean} True if the battler's hp bar should show, false otherwise.
      */
     this._showHpBar = showHpBar;
 
-    // policy step inside initialize.
     /**
      * Whether or not this battler's name will be visible.
      * @type {boolean} True if the battler's name should show, false otherwise.
      */
     this._showBattlerName = showBattlerName;
 
-    // policy step inside initialize.
     /**
      * Whether or not this battler is invincible.
      *
@@ -158,7 +140,6 @@ class JABS_BattlerCoreData
      */
     this._isInvincible = isInvincible;
 
-    // policy step inside initialize.
     /**
      * Whether or not this battler is inanimate. Inanimate battlers have a few
      * unique traits, those being: cannot idle, hp bar is hidden, cannot be alerted,
@@ -167,7 +148,6 @@ class JABS_BattlerCoreData
      */
     this._isInanimate = isInanimate;
 
-    // policy step inside initialize.
     this.initMembers()
   }
 

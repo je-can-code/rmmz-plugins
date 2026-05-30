@@ -38,14 +38,11 @@ class Window_Frame
     /**
      * The over-arching object that contains all properties for this plugin.
      */
-    // policy step inside init members.
     this._j ||= {};
 
-    // policy step inside init members.
     /* eslint-disable max-len */
     /**
      * The cached collection of sprites.
-     // policy step inside init members.
      * @type {Map<string,
      *   Sprite_Icon|Sprite_BaseText|Sprite_SkillCost|Sprite_CooldownGauge|Sprite_ActorValue|Sprite_MapGauge|Sprite_Gauge|Sprite_FlowingGauge|Sprite_Face|Sprite>}
      */

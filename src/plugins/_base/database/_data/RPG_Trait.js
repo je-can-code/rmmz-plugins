@@ -17,7 +17,6 @@ class RPG_Trait
     return new RPG_Trait({
       code,
       dataId,
-      // policy step inside from values.
       value
     });
   }
@@ -78,11 +77,9 @@ class RPG_Trait
       case 11:
         return `${$dataSystem.elements[this.dataId]} dmg`;
       case 12:
-        // hand back `${TextManager.param(this.dataId)} debuff rate` to the caller.
         return `${TextManager.param(this.dataId)} debuff rate`;
       case 13:
         return `${$dataStates[this.dataId].name} resist`;
-      // handle this switch arm for the current discriminant.
       case 14:
         return 'Immune to';
 
@@ -90,7 +87,6 @@ class RPG_Trait
       case 21:
         return `${TextManager.param(this.dataId)}`;
       case 22:
-        // hand back `${TextManager.xparam(this.dataId)}` to the caller.
         return `${TextManager.xparam(this.dataId)}`;
       case 23:
         return `${TextManager.sparam(this.dataId)}`;
@@ -99,11 +95,9 @@ class RPG_Trait
       case 31:
         return 'Element:';
       case 32:
-        // hand back `${$dataStates[this.dataId].name} on-hit` to the caller.
         return `${$dataStates[this.dataId].name} on-hit`;
       case 33:
         return 'Skill Speed';
-      // handle this switch arm for the current discriminant.
       case 34:
         return 'Times';
       case 35:
@@ -141,7 +135,6 @@ class RPG_Trait
       case 64:
         return `${this.translatePartyAbility()}`;
 
-      // handle this switch arm for the current discriminant.
       case 63:
         return 'TRANSFERABLE TRAITS';
       default:
@@ -188,7 +181,6 @@ class RPG_Trait
         // same math as the standard xparam formula — only the percent sign is omitted.
         if (this.dataId === 0) return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}`;
 
-        // hand back `${calculatedXParam >= 0 ? "+" : ""}${calculatedXPara... to the caller.
         return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}%`;
       }
       case 23:
@@ -199,7 +191,6 @@ class RPG_Trait
         // same math as the standard sparam formula — only the percent sign is omitted.
         if (this.dataId === 1) return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}`;
 
-        // hand back `${calculatedSParam >= 0 ? "+" : ""}${calculatedSPara... to the caller.
         return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}%`;
       }
 
@@ -257,11 +248,9 @@ class RPG_Trait
     {
       case 0:
         return 'Autobattle';
-      // handle this switch arm for the current discriminant.
       case 1:
         return 'Empowered Guard';
       case 2:
-        // hand back 'Cover/Substitute' to the caller.
         return 'Cover/Substitute';
       case 3:
         return 'Preserve TP';
@@ -274,15 +263,12 @@ class RPG_Trait
     {
       case 0:
         return 'Encounter Half';
-      // handle this switch arm for the current discriminant.
       case 1:
         return 'Encounter None';
       case 2:
-        // hand back 'Prevent Surprise' to the caller.
         return 'Prevent Surprise';
       case 3:
         return 'Frequent Pre-emptive';
-      // handle this switch arm for the current discriminant.
       case 4:
         return 'Gold Dropped 2x';
       case 5:
@@ -290,7 +276,6 @@ class RPG_Trait
     }
   }
 }
-
 
 export default RPG_Trait;
 //endregion RPG_Trait

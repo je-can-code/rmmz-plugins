@@ -11,7 +11,6 @@ Game_Action.prototype.initialize = function(subject, forcing)
   J.CRIT.Aliased.Game_Action.get('initialize')
     .call(this, subject, forcing);
 
-  // policy step inside initialize.
   /**
    * The target of this action.
    * This remains null until the `apply()` function is executed.

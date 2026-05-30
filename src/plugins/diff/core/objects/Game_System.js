@@ -21,31 +21,25 @@ Game_System.prototype.initDifficultyMembers = function()
   /**
    * The over-arching object that contains all properties for this plugin.
    */
-  // policy step inside init difficulty members.
   this._j ||= {};
 
-  // policy step inside init difficulty members.
   /**
    * A grouping of all properties associated with the difficulty system.
    */
-  // policy step inside init difficulty members.
   this._j._difficulty ||= {};
 
-  // policy step inside init difficulty members.
   /**
    * The collection of difficulty configurations tracked by this player.
    * @type {DifficultyConfig[]}
    */
   this._j._difficulty._configurations = [];
 
-  // policy step inside init difficulty members.
   /**
    * The max points available to allocate to difficulty layers.
    * @type {number}
    */
   this._j._difficulty._layerPointMax = J.DIFFICULTY.Metadata.initialPoints;
 
-  // policy step inside init difficulty members.
   /**
    * The current number of points allocated to difficulty layers.
    * @type {number}
@@ -97,7 +91,6 @@ Game_System.prototype.addDifficultyConfig = function(config)
  */
 Game_System.prototype.getDifficultyConfigByKey = function(key)
 {
-  // hand back this.getAllDifficultyConfigs() to the caller.
   return this.getAllDifficultyConfigs()
     .find(config => config.key === key);
 };

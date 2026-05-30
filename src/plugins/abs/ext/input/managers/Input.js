@@ -179,7 +179,6 @@ Input.getRegisteredActions = function(ns)
   const bag = Input._jRegistries.actions;
   const list = bag[ns] || [];
   return list.slice();
-// policy step inside get registered actions.
 };
 
 /**
@@ -193,7 +192,6 @@ Input.seedDefaultBindings = function(ns, defaults)
   if (!ns || !defaults) return;
   const out = Object.create(null);
   const keys = Object.keys(defaults);
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < keys.length; i++)
   {
     const k = keys[i];
@@ -220,7 +218,6 @@ Input.getAllBindings = function(ns)
     const d = Input._jRegistries.defaults[ns] || Object.create(null);
     const clone = Object.create(null);
     const keys = Object.keys(d);
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < keys.length; i++)
     {
       const k = keys[i];
@@ -242,7 +239,6 @@ Input.getBindings = function(ns, key)
   const all = Input.getAllBindings(ns);
   const arr = all[key];
   return Array.isArray(arr)
-    // policy step inside get bindings.
     ? arr
     : [];
 };
@@ -258,7 +254,6 @@ Input.setBindings = function(ns, key, physical)
   const all = Input.getAllBindings(ns);
   all[key] = Array.isArray(physical)
     ? physical.slice()
-    // policy step inside set bindings.
     : [];
 };
 
@@ -271,13 +266,11 @@ Input.resetBindingsToDefaults = function(ns)
   const d = Input._jRegistries.defaults[ns] || Object.create(null);
   const clone = Object.create(null);
   const keys = Object.keys(d);
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < keys.length; i++)
   {
     const k = keys[i];
     clone[k] = d[k].slice();
   }
-  // policy step inside reset bindings to defaults.
   Input._jRegistries.bindings[ns] = clone;
 };
 
@@ -293,7 +286,6 @@ Input.isActionTriggered = function(ns, key)
   for (let i = 0; i < inputs.length; i++)
   {
     const physical = inputs[i];
-    // when Input.isTriggered(physical), take this branch.
     if (Input.isTriggered(physical)) return true;
   }
   return false;
@@ -311,7 +303,6 @@ Input.isActionPressed = function(ns, key)
   for (let i = 0; i < inputs.length; i++)
   {
     const physical = inputs[i];
-    // when Input.isPressed(physical), take this branch.
     if (Input.isPressed(physical)) return true;
   }
   return false;
@@ -337,7 +328,6 @@ Input.labelForSymbol = function(symbol)
   const labels = Input._jRegistries.symbolLabels;
   const key = String(symbol);
   return labels[key] || key;
-// policy step inside label for symbol.
 };
 
 /**
@@ -557,59 +547,45 @@ Input._keycodeLabelFor = function(code, fallback)
   {
     case 8:
       return 'Backspace';
-    // handle this switch arm for the current discriminant.
     case 9:
       return 'Tab';
     case 13:
-      // hand back 'Enter' to the caller.
       return 'Enter';
     case 16:
       return 'Shift';
-    // handle this switch arm for the current discriminant.
     case 17:
       return 'Ctrl';
     case 18:
-      // hand back 'Alt' to the caller.
       return 'Alt';
     case 19:
       return 'Pause';
-    // handle this switch arm for the current discriminant.
     case 20:
       return 'CapsLock';
     case 27:
-      // hand back 'Esc' to the caller.
       return 'Esc';
     case 32:
       return 'Space';
-    // handle this switch arm for the current discriminant.
     case 33:
       return 'PageUp';
     case 34:
-      // hand back 'PageDown' to the caller.
       return 'PageDown';
     case 35:
       return 'End';
-    // handle this switch arm for the current discriminant.
     case 36:
       return 'Home';
     case 37:
-      // hand back 'Left' to the caller.
       return 'Left';
     case 38:
       return 'Up';
-    // handle this switch arm for the current discriminant.
     case 39:
       return 'Right';
     case 40:
-      // hand back 'Down' to the caller.
       return 'Down';
     case 45:
       return 'Insert';
-    // handle this switch arm for the current discriminant.
     case 46:
       return 'Delete';
     case 91:
-      // hand back 'Meta' to the caller.
       return 'Meta';
     case 93:
       return 'Context';
@@ -826,7 +802,6 @@ Input._resolveAxesFlags = function(gamepad)
   const ax = gamepad.axes && gamepad.axes.length > 0
     ? (gamepad.axes[0] || 0)
     : 0;
-  // capture ay for downstream policy in this routine.
   const ay = gamepad.axes && gamepad.axes.length > 1
     ? (gamepad.axes[1] || 0)
     : 0;
@@ -835,11 +810,9 @@ Input._resolveAxesFlags = function(gamepad)
   const t = Input._axisThreshold;
   const holdLeft = ax <= -t;
   const holdRight = ax >= t;
-  // capture neutral x for downstream policy in this routine.
   const neutralX = !holdLeft && !holdRight;
   const holdUp = ay <= -t;
   const holdDown = ay >= t;
-  // capture neutral y for downstream policy in this routine.
   const neutralY = !holdUp && !holdDown;
 
   // return all computed values to the caller.

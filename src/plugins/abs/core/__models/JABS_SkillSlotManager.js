@@ -32,14 +32,12 @@ class JABS_SkillSlotManager
     /**
      * All skill slots that a battler possesses.
      *
-     // policy step inside init members.
      * These are in a fixed order.
      * @type {JABS_SkillSlot[]}
      */
     // store  slots on the instance for later reads.
     this._slots = [];
 
-    // policy step inside init members.
     /**
      * A single flip that gets toggled when this class no longer requires a setup.
      * @type {boolean}
@@ -159,7 +157,6 @@ class JABS_SkillSlotManager
     // dedupe so we never register the same skill twice under different keys.
     const uniqueSkillIds = [];
 
-    // policy step inside setup enemy slots.
     skillIds.forEach(skillId =>
     {
       if (!uniqueSkillIds.includes(skillId))
@@ -172,7 +169,6 @@ class JABS_SkillSlotManager
     let dodgeSkillId = 0;
     let guardSkillId = 0;
 
-    // policy step inside setup enemy slots.
     uniqueSkillIds.forEach(skillId =>
     {
       if (!dodgeSkillId && JABS_Battler.isDodgeSkillById(skillId))
@@ -180,7 +176,6 @@ class JABS_SkillSlotManager
         dodgeSkillId = skillId;
       }
 
-      // when not guardSkillId  and  JABS_Battler.isGuardSkillById(skillId), take this branch.
       if (!guardSkillId && JABS_Battler.isGuardSkillById(skillId))
       {
         guardSkillId = skillId;
@@ -254,7 +249,6 @@ class JABS_SkillSlotManager
    */
   getAllPrimarySlots()
   {
-    // hand back this.getAllSlots() to the caller.
     return this.getAllSlots()
       .filter(slot => slot.isPrimarySlot());
   }
@@ -265,7 +259,6 @@ class JABS_SkillSlotManager
    */
   getAllSecondarySlots()
   {
-    // hand back this.getAllSlots() to the caller.
     return this.getAllSlots()
       .filter(slot => slot.isSecondarySlot());
   }
@@ -294,7 +287,6 @@ class JABS_SkillSlotManager
    */
   getEquippedSlots()
   {
-    // hand back this.getAllSlots() to the caller.
     return this.getAllSlots()
       .filter(skillSlot => skillSlot.isUsable());
   }
@@ -305,7 +297,6 @@ class JABS_SkillSlotManager
    */
   getEmptySecondarySlots()
   {
-    // hand back this.getAllSecondarySlots() to the caller.
     return this.getAllSecondarySlots()
       .filter(skillSlot => skillSlot.isEmpty());
   }
@@ -317,7 +308,6 @@ class JABS_SkillSlotManager
    */
   getSkillSlotByKey(key)
   {
-    // hand back this.getAllSlots() to the caller.
     return this.getAllSlots()
       .find(skillSlot => skillSlot.key === key);
   }
@@ -356,7 +346,6 @@ class JABS_SkillSlotManager
     this.getSkillSlotByKey(key)
       .setSkillId(skillId)
       .setLock(locked);
-  // policy step inside set slot.
   }
 
   /**
@@ -369,17 +358,14 @@ class JABS_SkillSlotManager
     // grab the slot once; callers treat 0 as "no combo" (see getSkillIdForAction, canExecuteSkill).
     const jabsSkillSlot = this.getSkillSlotByKey(key);
 
-    // when not jabsSkillSlot, take this branch.
     if (!jabsSkillSlot)
     {
       // never return a real database skill id here — a bad key or desync must not execute skill #1 (or any arbitrary id).
       console.warn(`[J-ABS] getSlotComboId: no skill slot for key "${key}". Returning 0 (no combo).`);
 
-      // hand back 0 to the caller.
       return 0;
     }
 
-    // hand back jabsSkillSlot.getComboId() to the caller.
     return jabsSkillSlot.getComboId();
   }
 

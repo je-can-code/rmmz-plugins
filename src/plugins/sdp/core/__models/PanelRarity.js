@@ -93,15 +93,12 @@ class PanelRarity
     {
       case PanelRarity.Common:
         return PanelRarity.RARITY_COMMON;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.Magical:
         return PanelRarity.RARITY_MAGICAL;
       case PanelRarity.Rare:
-        // hand back PanelRarity.RARITY_RARE to the caller.
         return PanelRarity.RARITY_RARE;
       case PanelRarity.Epic:
         return PanelRarity.RARITY_EPIC;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.Legendary:
         return PanelRarity.RARITY_LEGENDARY;
       case PanelRarity.Godlike:
@@ -123,19 +120,15 @@ class PanelRarity
     {
       case PanelRarity.RARITY_COMMON:
         return 0;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.RARITY_MAGICAL:
         return PanelRarity.WindowColorMagical;
       case PanelRarity.RARITY_RARE:
-        // hand back PanelRarity.WindowColorRare to the caller.
         return PanelRarity.WindowColorRare;
       case PanelRarity.RARITY_EPIC:
         return PanelRarity.WindowColorEpic;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.RARITY_LEGENDARY:
         return PanelRarity.WindowColorLegendary;
       case PanelRarity.RARITY_GODLIKE:
-        // hand back PanelRarity.WindowColorGodlike to the caller.
         return PanelRarity.WindowColorGodlike;
       default:
         console.warn(`PanelRarity.rarityIndexToColorIndex: unknown rarity index [ ${rarityIndex} ].`);
@@ -155,13 +148,11 @@ class PanelRarity
     {
       const trimmed = raw.trim();
 
-      // when trimmed  equals  "", take this branch.
       if (trimmed === "")
       {
         return PanelRarity.RARITY_COMMON;
       }
 
-      // dispatch on the discriminant for the next policy branch.
       switch (trimmed)
       {
         case PanelRarity.Common:
@@ -180,10 +171,8 @@ class PanelRarity
           break;
       }
 
-      // capture parsed from string for downstream policy in this routine.
       const parsedFromString = parseInt(trimmed, 10);
 
-      // when not Number.isNaN(parsedFromString), take this branch.
       if (!Number.isNaN(parsedFromString))
       {
         return PanelRarity.normalizeRarityFromJson(parsedFromString);
@@ -194,16 +183,13 @@ class PanelRarity
       return PanelRarity.RARITY_COMMON;
     }
 
-    // capture n for downstream policy in this routine.
     const n = parseInt(raw, 10);
 
-    // when Number.isNaN(n), take this branch.
     if (Number.isNaN(n))
     {
       return PanelRarity.RARITY_COMMON;
     }
 
-    // dispatch on the discriminant for the next policy branch.
     switch (n)
     {
       case PanelRarity.WindowColorRare:
@@ -218,7 +204,6 @@ class PanelRarity
         break;
     }
 
-    // when n >= PanelRarity.RARITY_COMMON  and  n <= PanelRarity.RARITY_MAX, take this branch.
     if (n >= PanelRarity.RARITY_COMMON && n <= PanelRarity.RARITY_MAX)
     {
       return n;

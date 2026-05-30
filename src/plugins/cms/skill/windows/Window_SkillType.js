@@ -14,15 +14,12 @@ Window_SkillType.prototype.makeCommandList = function()
   /** @type {Game_Actor} */
   const currentActor = this._actor;
 
-  // when not currentActor, take this branch.
   if (!currentActor) return;
 
-  // policy step inside make command list.
   /** @type {number[]} */
   const skillTypeIds = currentActor.addedSkillTypes()
     .filter((x, i, self) => self.indexOf(x) === i);
 
-  // policy step inside make command list.
   skillTypeIds.forEach(skillTypeId =>
   {
     const name = $dataSystem.skillTypes[skillTypeId];

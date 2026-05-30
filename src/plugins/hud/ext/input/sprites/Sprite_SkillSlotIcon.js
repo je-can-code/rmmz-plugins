@@ -27,7 +27,6 @@ class Sprite_SkillSlotIcon
     // perform original logic.
     super.initMembers();
 
-    // policy step inside init members.
     /**
      * The skill slot that this sprite is watching.
      * @type {JABS_SkillSlot|null}

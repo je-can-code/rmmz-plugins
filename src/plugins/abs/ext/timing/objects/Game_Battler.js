@@ -21,58 +21,48 @@ Game_Battler.prototype.initActionUpgrades1 = function()
   /**
    * The J object where all my additional properties live.
    */
-  // policy step inside init action upgrades1.
   this._j ||= {};
 
-  // policy step inside init action upgrades1.
   /**
    * A grouping of all properties associated with JABS.
    */
-  // policy step inside init action upgrades1.
   this._j._abs ||= {};
 
-  // policy step inside init action upgrades1.
   /**
    * A grouping of all JABS properties associated with the set-1 of action upgrades.
    */
   this._j._abs._timing = {};
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for fast cooldown's base modifier.
    * @type {number}
    */
   this._j._abs._timing._baseFastCooldown = 0;
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for fast cooldown's flat modifier.
    * @type {number}
    */
   this._j._abs._timing._fastCooldownFlat = 0;
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for the fast cooldown's multiplicative modifier.
    * @type {number}
    */
   this._j._abs._timing._fastCooldownRate = 0;
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for the cast speed's base modifier.
    * @type {number}
    */
   this._j._abs._timing._baseCastSpeed = 0;
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for the cast speed's flat modifier.
    * @type {number}
    */
   this._j._abs._timing._castSpeedFlat = 0;
 
-  // policy step inside init action upgrades1.
   /**
    * The cached value for the cast speed's multiplicative modifier.
    * @type {number}
@@ -110,7 +100,6 @@ Game_Battler.prototype.updateBaseFastCooldown = function()
   // update the fast cooldown base modifier.
   this.setBaseFastCooldown(currentFastCooldownFlat);
 };
-
 
 /**
  * Gets the cached fast cooldown flat value.
@@ -274,7 +263,6 @@ Game_Battler.prototype.baseCastSpeed = function()
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
-  // capture base param for downstream policy in this routine.
   const baseParam = J.ABS.EXT.TIMING.Metadata.BaseCastSpeed;
 
   // sum together all the csp flat modifiers.
@@ -399,7 +387,6 @@ Game_Battler.prototype.baseFastCooldown = function()
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
-  // capture base param for downstream policy in this routine.
   const baseParam = J.ABS.EXT.TIMING.Metadata.BaseFastCooldown;
 
   // sum together all the fcd flat modifiers.

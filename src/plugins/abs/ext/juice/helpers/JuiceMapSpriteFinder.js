@@ -17,14 +17,12 @@ class JuiceMapSpriteFinder
       return null;
     }
 
-    // capture spriteset for downstream policy in this routine.
     const spriteset = scene._spriteset;
     if (!spriteset)
     {
       return null;
     }
 
-    // hand back spriteset.findTargetSprite(mapCharacter) to the caller.
     return spriteset.findTargetSprite(mapCharacter);
   }
 }

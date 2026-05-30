@@ -39,77 +39,63 @@ class Sprite_BaseText
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init members.
     this._j ||= {};
 
-    // policy step inside init members.
     /**
      * A test bitmap for measuring text width upon.
      * @type {Bitmap}
-     // policy step inside init members.
      */
     this._j._testBitmap = new Bitmap(512, 128);
 
-    // policy step inside init members.
     /**
      * The text to render in this sprite.
      * @type {string}
-     // policy step inside init members.
      */
     this._j._text = String.empty;
 
-    // policy step inside init members.
     /**
      * The text color index of this sprite.
      * This should be a hexcode.
-     // policy step inside init members.
      * @type {string}
      */
     this._j._color = '#ffffff';
 
-    // policy step inside init members.
     /**
      * The alignment of text in this sprite.
      * @type {Sprite_BaseText.Alignments}
      */
     this._j._alignment = Sprite_BaseText.Alignments.Left;
 
-    // policy step inside init members.
     /**
      * Whether or not the text should be italics.
      * @type {boolean}
      */
     this._j._italics = false;
 
-    // policy step inside init members.
     /**
      * Whether or not the text should be bolded.
      * @type {boolean}
      */
     this._j._bold = false;
 
-    // policy step inside init members.
     /**
      * The font face of the text in this sprite.
      * @type {string}
      */
     this._j._fontFace = $gameSystem.mainFontFace();
 
-    // policy step inside init members.
     /**
      * The font size of the text in this sprite.
      * @type {number}
      */
     this._j._fontSize = $gameSystem.mainFontSize();
 
-    // policy step inside init members.
     /**
      * The minimum width of the text.
      * @type {number}
      */
     this._j._minWidth = 0;
 
-    // policy step inside init members.
     /**
      * Some systems that leverage {@link Sprite_BaseText} may have automation to manage the opacity of their text.
      * Setting this flag to true will disable that automation and allow you to manage the opacity yourself.
@@ -145,13 +131,11 @@ class Sprite_BaseText
     this.bitmap.clear();
     this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
     this.bitmap.fontFace = this.fontFace();
-    // policy step inside configure bitmap.
     this.bitmap.fontSize = this.fontSize();
     this.bitmap.fontBold = this.isBold();
     this.bitmap.fontItalic = this.isItalics();
     this.bitmap.textColor = this.color();
 
-    // policy step inside configure bitmap.
     this.bitmap.outlineColor = '#000000'; // or a theme color
     this.bitmap.outlineWidth = Math.max(2, Math.floor(this.fontSize() / 6));
   }
@@ -259,7 +243,6 @@ class Sprite_BaseText
     // if we do not have a valid hex color, then do not assign it.
     if (!this.isValidColor(color)) return;
 
-    // when this.color()  differs from  color, take this branch.
     if (this.color() !== color)
     {
       this._j._color = color;
@@ -312,7 +295,6 @@ class Sprite_BaseText
     // if we do not have a valid alignment, then do not assign it.
     if (!this.isValidAlignment(alignment)) return;
 
-    // when this.alignment()  differs from  alignment, take this branch.
     if (this.alignment() !== alignment)
     {
       this._j._alignment = alignment;
@@ -334,7 +316,6 @@ class Sprite_BaseText
       Sprite_BaseText.Alignments.Left, Sprite_BaseText.Alignments.Center, Sprite_BaseText.Alignments.Right
     ];
 
-    // hand back validAlignments.includes(alignment) to the caller.
     return validAlignments.includes(alignment);
   }
 
@@ -463,7 +444,6 @@ class Sprite_BaseText
     // guard to make sure the width isn't being set to something negative.
     const w = Math.max(0, width);
 
-    // when this._j._minWidth  differs from  w, take this branch.
     if (this._j._minWidth !== w)
     {
       this._j._minWidth = w;
@@ -513,7 +493,6 @@ class Sprite_BaseText
     this.bitmap.drawText(this.text(), 0, 0, drawWidth, this.bitmapHeight(), this.alignment());
   }
 }
-
 
 export default Sprite_BaseText;
 //endregion Sprite_BaseText

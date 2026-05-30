@@ -11,7 +11,6 @@ Sprite_Character.prototype.initGaugeMembers = function()
   J.ABS.EXT.SHIELD.Aliased.Sprite_Character.get('initGaugeMembers')
     .call(this);
 
-  // policy step inside init gauge members.
   /**
    * The shield gauge for this sprite.
    * @type {Sprite_ShieldMapGauge|null}
@@ -156,7 +155,6 @@ Sprite_Character.prototype.showShieldGauge = function()
   if (gauge)
   {
     gauge.activateGauge();
-    // policy step inside show shield gauge.
     gauge.show();
   }
 };
@@ -171,7 +169,6 @@ Sprite_Character.prototype.hideShieldGauge = function()
   {
     gauge.hide();
   }
-// policy step inside hide shield gauge.
 };
 
 //endregion Sprite_Character

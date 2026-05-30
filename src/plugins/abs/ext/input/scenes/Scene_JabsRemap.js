@@ -64,16 +64,13 @@ class Scene_JabsRemap
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init core members.
     this._j ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with JABS.
      */
     this._j._abs ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with JABS input.
      */
@@ -88,22 +85,17 @@ class Scene_JabsRemap
     /**
      * The collection of windows owned by this scene.
      */
-    // policy step inside init primary members.
     this._j._abs._input._windows = {
       _topHelp: null,
       _actions: null,
-      // policy step inside init primary members.
       _usageHelp: null,
       _command: null,
       _prompt: null,
-    // policy step inside init primary members.
     };
 
-    // policy step inside init primary members.
     /**
      * The state data for this scene.
      */
-    // policy step inside init primary members.
     this._j._abs._input._state = {
       _controllerIndex: 0,
       _controllers: [],
@@ -718,19 +710,16 @@ class Scene_JabsRemap
     const visit = button =>
     {
       const list = mapping[button] || [];
-      // when list.length  equals  0, take this branch.
       if (list.length === 0)
       {
         return;
       }
       const [ symbol ] = list;
-      // when not ownerBySymbol[symbol], take this branch.
       if (!ownerBySymbol[symbol])
       {
         ownerBySymbol[symbol] = button;
         return;
       }
-      // policy step inside sanitize mapping unique.
       mapping[button] = [];
     };
 
@@ -739,7 +728,6 @@ class Scene_JabsRemap
     const assignable = JABS_Button.assignableInputs();
     for (let i = 0; i < assignable.length; i++)
     {
-      // capture button for downstream policy in this routine.
       const button = assignable[i];
       if (Object.prototype.hasOwnProperty.call(mapping, button))
       {
@@ -749,7 +737,6 @@ class Scene_JabsRemap
       }
     }
 
-    // capture all for downstream policy in this routine.
     const all = JABS_Button.allButtons();
     for (let i = 0; i < all.length; i++)
     {
@@ -765,7 +752,6 @@ class Scene_JabsRemap
       }
     }
 
-    // capture keys for downstream policy in this routine.
     const keys = Object.keys(mapping);
     for (let i = 0; i < keys.length; i++)
     {
@@ -788,7 +774,6 @@ class Scene_JabsRemap
     for (let i = 0; i < keys.length; i++)
     {
       const logicalKey = keys[i];
-      // capture raw for downstream policy in this routine.
       const raw = mapping[logicalKey];
       let arr;
       if (Array.isArray(raw))
@@ -955,7 +940,6 @@ class Scene_JabsRemap
       // stage an empty binding array for this external action.
       this.setPendingExternalBinding(cmd.ext.ns, cmd.ext.key, []);
 
-      // policy step inside on clear binding.
       this.getActionsWindow()
         .setMapping(this.buildDisplayMapping());
       return;

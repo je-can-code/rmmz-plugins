@@ -11,26 +11,22 @@ Game_Event.prototype.initMembers = function()
   J.MAP.Aliased.Game_Event.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with minimaps.
    */
   this._j._map ||= {};
 
-  // policy step inside init members.
   /**
    * The cached event type to display on the minimap.
    * @type {MinimapEventType|null}
    */
   this._j._map._cachedMinimapEventType = null;
 
-  // policy step inside init members.
   /**
    * The cached check of whether or not to show the event on the minimap.
    * @type {boolean}
@@ -289,7 +285,6 @@ Game_Event.prototype.isTeleportEvent = function()
   // command code 201 is "Transfer Player" in RMMZ event commands.
   const hasTransfer = !!list.find(cmd => cmd && cmd.code === 201);
 
-  // hand back !!hasTransfer to the caller.
   return !!hasTransfer;
 };
 
@@ -341,7 +336,6 @@ Game_Event.prototype.getAreaEventRect = function()
     const [ comment, ] = commands[i].parameters;
     if (!comment) continue;
 
-    // policy step inside get area event rect.
     J.MAP.RegExp.AreaEvent.lastIndex = 0;
     const match = J.MAP.RegExp.AreaEvent.exec(comment);
     if (match)
@@ -353,7 +347,6 @@ Game_Event.prototype.getAreaEventRect = function()
     }
   }
 
-  // hand back { to the caller.
   return {
     w,
     h

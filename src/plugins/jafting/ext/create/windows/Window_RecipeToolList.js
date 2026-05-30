@@ -28,7 +28,6 @@ class Window_RecipeToolList
      */
     this._components = [];
 
-    // policy step inside initialize.
     super.initialize(rect);
   }
 
@@ -85,7 +84,6 @@ class Window_RecipeToolList
       : 18;
     const needQuantity = `x${need}`;
 
-    // capture subtexts for downstream policy in this routine.
     const subtexts = [];
 
     // determine the subtext messages for the command.
@@ -140,10 +138,8 @@ class Window_RecipeToolList
   {
     const rect = Window_Selectable.prototype.itemLineRect.call(this, index);
 
-    // policy step inside item line rect.
     rect.y += this.recipeComponentRowTopInset();
 
-    // hand back rect to the caller.
     return rect;
   }
 
@@ -169,7 +165,6 @@ class Window_RecipeToolList
       this.resetFontSettings();
       this.changeTextColor(ColorManager.normalColor());
 
-      // capture y for downstream policy in this routine.
       const y = this.recipeComponentRowTopInset();
       this.drawText(
         'No tools required.',

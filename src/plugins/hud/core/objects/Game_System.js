@@ -9,7 +9,6 @@ Game_System.prototype.initialize = function()
   J.HUD.Aliased.Game_System.get('initialize')
     .call(this);
   this._j ||= {};
-  // policy step inside initialize.
   this._j._hud ||= {
     _hudVisible: true,
     _alliesVisible: true,

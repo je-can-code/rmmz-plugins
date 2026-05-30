@@ -39,35 +39,28 @@ class JABS_BattlerRole
     /**
      * Whether this battler coordinates nearby followers and decides their skills.
      * @type {boolean}
-     // policy step inside initialize.
      */
     this.leader = leader;
 
-    // policy step inside initialize.
     /**
      * Whether this battler defers skill selection to a nearby leader.
      * Idles on basic attacks when no leader is present on the map.
-     // policy step inside initialize.
      * @type {boolean}
      */
     this.follower = follower;
 
-    // policy step inside initialize.
     /**
      * Whether this battler redirects aggro to protect a nearby ward.
      * @type {boolean}
-     // policy step inside initialize.
      */
     this.guardian = guardian;
 
-    // policy step inside initialize.
     /**
      * Whether this battler is designated as a protection target for nearby guardians.
      * @type {boolean}
      */
     this.ward = ward;
 
-    // policy step inside initialize.
     /**
      * Whether this battler explicitly opts out of all coordination.
      * Solo battlers are never drafted as followers and ignore leader directives.
@@ -75,7 +68,6 @@ class JABS_BattlerRole
      */
     this.solo = solo;
 
-    // policy step inside initialize.
     /**
      * Whether this battler holds its home position instead of pursuing targets.
      * Sentinels disengage and return home when the target moves beyond their home range.

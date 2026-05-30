@@ -10,10 +10,8 @@ JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
   J.POPUPS.EXT.APT.Aliased.JABS_Engine.get('gainAptitudeReward')
     .call(this, ap, actor, enemy);
 
-  // when ap  equals  0, take this branch.
   if (ap === 0) return;
 
-  // policy step inside gain aptitude reward.
   $gameParty.members()
     .filter(member => this.canGainAptitudeReward(member, enemy))
     .forEach(member =>
@@ -21,14 +19,12 @@ JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
       const jabsBattler = JABS_AiManager.getBattlerByUuid(member.getUuid());
       if (!jabsBattler) return;
 
-      // capture level multiplier for downstream policy in this routine.
       const levelMultiplier = this.getRewardScalingMultiplier(enemy, jabsBattler);
       const actualAp = Math.ceil(ap * levelMultiplier);
       const pop = new TextPopBuilder(actualAp)
         .isAptitude()
         .build();
 
-      // policy step inside gain aptitude reward.
       JABS_PopupMergeController.routeRewardPop(pop, jabsBattler.getCharacter(), {
         rewardType: Map_TextPop.Types.Ap,
         amount: actualAp,
@@ -47,7 +43,6 @@ JABS_Engine.prototype.onTypedApGained = function(apPoints, character, apTypeKey)
   J.POPUPS.EXT.APT.Aliased.JABS_Engine.get('onTypedApGained')
     .call(this, apPoints, character, apTypeKey);
 
-  // policy step inside on typed ap gained.
   const {
     name,
     icon
@@ -57,7 +52,6 @@ JABS_Engine.prototype.onTypedApGained = function(apPoints, character, apTypeKey)
     .setIconIndex(icon)
     .build();
 
-  // policy step inside on typed ap gained.
   TextPopManager.show(pop, character);
 };
 //endregion JABS_Engine

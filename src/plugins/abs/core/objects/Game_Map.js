@@ -305,7 +305,6 @@ Game_Map.prototype.clearLeaderDataByUuid = function(followerUuid)
   {
     battler.clearLeaderData();
   }
-// policy step inside clear leader data by uuid.
 };
 
 /**
@@ -313,7 +312,6 @@ Game_Map.prototype.clearLeaderDataByUuid = function(followerUuid)
  */
 Game_Map.prototype.getJabsLootDrops = function()
 {
-  // hand back this.events() to the caller.
   return this.events()
     .filter(event => event.isJabsLoot());
 };
@@ -355,7 +353,6 @@ Game_Map.prototype.addEvent = function(event)
   // whether or not we found a spot to insert.
   let inserted = false;
 
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < this._events.length; i++)
   {
     // if the slot is empty/nullish, then reuse it.
@@ -515,7 +512,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const x2 = $gameMap.roundXWithDirection(x1, direction);
   const y2 = $gameMap.roundYWithDirection(y1, direction);
 
-  // capture triggers for downstream policy in this routine.
   const triggers = [ 0, 1, 2 ];
 
   // look over events directly infront of the player.
@@ -524,7 +520,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     // if the player is mashing the button at an enemy, let them continue.
     if (event.isJabsBattler()) return false;
 
-    // when event.isTriggerIn(triggers)  and  event.isNormalPriority()  equals  true, take this branch.
     if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
     {
       return true;
@@ -541,7 +536,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
       // if the player is mashing the button at an enemy, let them continue.
       if (event.isJabsBattler()) return false;
 
-      // when event.isTriggerIn(triggers)  and  event.isNormalPriority()  equals  true, take this branch.
       if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
       {
         return true;
@@ -549,7 +543,6 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
     }
   }
 
-  // hand back false to the caller.
   return false;
 };
 //endregion Game_Map

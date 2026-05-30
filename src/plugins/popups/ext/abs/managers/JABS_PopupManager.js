@@ -18,13 +18,11 @@ class JABS_PopupManager
     const character = target.getCharacter();
     const pop = this.buildDamagePop(action, target, engine);
     const caster = action.getCaster();
-    // capture attacker uuid for downstream policy in this routine.
     const attackerUuid = caster.getUuid();
     const targetUuid = character.getJabsBattlerUuid();
     const actionResult = target.getBattler()
       .result();
 
-    // when actionResult.parried, take this branch.
     if (actionResult.parried)
     {
       JABS_PopupMergeController.routeMitigationPop(pop, character, {
@@ -36,7 +34,6 @@ class JABS_PopupManager
       return;
     }
 
-    // when actionResult.evaded, take this branch.
     if (actionResult.evaded)
     {
       JABS_PopupMergeController.routeMitigationPop(pop, character, {
@@ -48,10 +45,8 @@ class JABS_PopupManager
       return;
     }
 
-    // policy step inside show attack pop.
     let amount;
 
-    // when actionResult.hpDamage  differs from  0, take this branch.
     if (actionResult.hpDamage !== 0)
     {
       amount = actionResult.hpDamage;
@@ -69,7 +64,6 @@ class JABS_PopupManager
       amount = actionResult.hpDamage;
     }
 
-    // policy step inside show attack pop.
     JABS_PopupMergeController.routeStrikePop(pop, character, {
       attackerUuid,
       targetUuid,
@@ -89,11 +83,9 @@ class JABS_PopupManager
     const skill = action.getBaseSkill();
     const caster = action.getCaster();
     const gameAction = action.getAction();
-    // capture target battler for downstream policy in this routine.
     const targetBattler = target.getBattler();
     const actionResult = targetBattler.result();
 
-    // policy step inside build damage pop.
     let elementalRate;
     if (J.ELEM)
     {
@@ -105,42 +97,33 @@ class JABS_PopupManager
       elementalRate = gameAction.calcElementRate(targetBattler);
     }
 
-    // capture elemental icon for downstream policy in this routine.
     const elementalIcon = engine.determineElementalIcon(skill, caster);
     const iconIndex = actionResult.parried
       ? 128
-      // policy step inside build damage pop.
       : elementalIcon;
 
     // construct text pop builder for the next step in this routine.
     const textPopBuilder = new TextPopBuilder(0);
 
-    // dispatch on the discriminant for the next policy branch.
     switch (true)
     {
       case actionResult.parried:
         textPopBuilder
-          // policy step inside build damage pop.
           .setValue(`PARRY!`)
           .setPopupType(Map_TextPop.Types.Parry)
           .forCenterFocusRing()
-          // policy step inside build damage pop.
           .setTextAccent(`parry`);
         break;
       case actionResult.evaded:
-        // policy step inside build damage pop.
         textPopBuilder
           .setValue(`DODGE`)
           .setPopupType(Map_TextPop.Types.Evade)
-          // policy step inside build damage pop.
           .forCenterFocusRing()
           .setTextAccent(`evade`);
         break;
-      // handle this switch arm for the current discriminant.
       case actionResult.hpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.hpDamage)
-          // policy step inside build damage pop.
           .isHpDamage();
         if (actionResult.hpDamage < 0)
         {
@@ -157,7 +140,6 @@ class JABS_PopupManager
           textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
         }
         break;
-      // handle this switch arm for the current discriminant.
       case actionResult.mpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.mpDamage)
@@ -192,7 +174,6 @@ class JABS_PopupManager
         break;
     }
 
-    // hand back text pop builder to the caller.
     return textPopBuilder
       .setIconIndex(iconIndex)
       .isElemental(elementalRate)
@@ -211,21 +192,18 @@ class JABS_PopupManager
       return;
     }
 
-    // capture caster for downstream policy in this routine.
     const caster = action.getCaster();
     if (caster.isInanimate())
     {
       return;
     }
 
-    // capture skill for downstream policy in this routine.
     const skill = action.getBaseSkill();
     const character = caster.getCharacter();
     const pop = new TextPopBuilder(skill.name)
       .isSkillUsed(skill.iconIndex)
       .build();
 
-    // policy step inside show skill used pop.
     TextPopManager.show(pop, character);
   }
 
@@ -240,7 +218,6 @@ class JABS_PopupManager
       .isExperience()
       .build();
 
-    // policy step inside show experience pop.
     JABS_PopupMergeController.routeRewardPop(pop, character, {
       rewardType: Map_TextPop.Types.Experience,
       amount: Math.round(experience),
@@ -258,7 +235,6 @@ class JABS_PopupManager
       .isGold()
       .build();
 
-    // policy step inside show gold pop.
     JABS_PopupMergeController.routeRewardPop(pop, character, {
       rewardType: Map_TextPop.Types.Gold,
       amount: Math.round(gold),
@@ -279,7 +255,6 @@ class JABS_PopupManager
         .build()
     );
 
-    // policy step inside show item picked up pops.
     TextPopManager.showBatch(pops, character);
   }
 
@@ -293,7 +268,6 @@ class JABS_PopupManager
       .isLevelUp()
       .build();
 
-    // policy step inside show level up pop.
     J.POPUPS.notifyMergeFlushAll('level-up');
     TextPopManager.show(pop, character);
   }
@@ -309,7 +283,6 @@ class JABS_PopupManager
       .isSkillLearned(skill.iconIndex)
       .build();
 
-    // policy step inside show skill learn pop.
     J.POPUPS.notifyMergeFlushAll('skill-learn');
     TextPopManager.show(pop, character);
   }
@@ -327,42 +300,33 @@ class JABS_PopupManager
     const targetBattler = target.getBattler();
     const actionResult = targetBattler.result();
 
-    // capture elemental icon for downstream policy in this routine.
     const elementalIcon = $jabsEngine.determineElementalIcon(itemData, caster);
     const iconIndex = actionResult.parried
       ? 128
-      // policy step inside show item applied pop.
       : elementalIcon;
 
     // construct text pop builder for the next step in this routine.
     const textPopBuilder = new TextPopBuilder(0);
 
-    // dispatch on the discriminant for the next policy branch.
     switch (true)
     {
       case actionResult.parried:
         textPopBuilder
-          // policy step inside show item applied pop.
           .setValue(`PARRY!`)
           .setPopupType(Map_TextPop.Types.Parry)
           .forCenterFocusRing()
-          // policy step inside show item applied pop.
           .setTextAccent(`parry`);
         break;
       case actionResult.evaded:
-        // policy step inside show item applied pop.
         textPopBuilder
           .setValue(`DODGE`)
           .setPopupType(Map_TextPop.Types.Evade)
-          // policy step inside show item applied pop.
           .forCenterFocusRing()
           .setTextAccent(`evade`);
         break;
-      // handle this switch arm for the current discriminant.
       case actionResult.hpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.hpDamage)
-          // policy step inside show item applied pop.
           .isHpDamage();
         if (actionResult.hpDamage < 0)
         {
@@ -379,7 +343,6 @@ class JABS_PopupManager
           textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
         }
         break;
-      // handle this switch arm for the current discriminant.
       case actionResult.mpDamage !== 0:
         textPopBuilder
           .setValue(actionResult.mpDamage)
@@ -414,18 +377,15 @@ class JABS_PopupManager
         break;
     }
 
-    // capture pop for downstream policy in this routine.
     const pop = textPopBuilder
       .setIconIndex(iconIndex)
       .setCritical(actionResult.critical)
       .build();
 
-    // capture attacker uuid for downstream policy in this routine.
     const attackerUuid = caster.getUuid();
     const targetUuid = target.getCharacter()
       .getJabsBattlerUuid();
 
-    // when actionResult.parried, take this branch.
     if (actionResult.parried)
     {
       JABS_PopupMergeController.routeMitigationPop(pop, character, {
@@ -437,7 +397,6 @@ class JABS_PopupManager
       return;
     }
 
-    // when actionResult.evaded, take this branch.
     if (actionResult.evaded)
     {
       JABS_PopupMergeController.routeMitigationPop(pop, character, {
@@ -449,10 +408,8 @@ class JABS_PopupManager
       return;
     }
 
-    // policy step inside show item applied pop.
     let amount;
 
-    // when actionResult.hpDamage  differs from  0, take this branch.
     if (actionResult.hpDamage !== 0)
     {
       amount = actionResult.hpDamage;
@@ -470,7 +427,6 @@ class JABS_PopupManager
       amount = actionResult.hpDamage;
     }
 
-    // policy step inside show item applied pop.
     JABS_PopupMergeController.routeStrikePop(pop, character, {
       attackerUuid,
       targetUuid,
@@ -490,12 +446,10 @@ class JABS_PopupManager
     const character = battler.getCharacter();
     const textPopBuilder = new TextPopBuilder(displayAmount);
 
-    // dispatch on the discriminant for the next policy branch.
     switch (type)
     {
       case 0:
         textPopBuilder.isHpDamage();
-        // policy step inside show slip pop.
         break;
       case 1:
         textPopBuilder.isMpDamage();
@@ -505,7 +459,6 @@ class JABS_PopupManager
         break;
     }
 
-    // when displayAmount < 0, take this branch.
     if (displayAmount < 0)
     {
       textPopBuilder.forRegenRing();
@@ -515,10 +468,8 @@ class JABS_PopupManager
       textPopBuilder.forSlipDamageRing();
     }
 
-    // capture pop for downstream policy in this routine.
     const pop = textPopBuilder.build();
 
-    // policy step inside show slip pop.
     JABS_PopupMergeController.routeSlipPop(pop, character, {
       type,
       stateId,

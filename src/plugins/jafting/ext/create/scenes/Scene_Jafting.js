@@ -11,7 +11,6 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
 {
   const currentSelection = this.getRootJaftingKey();
 
-  // when currentSelection  equals  Scene_JaftingCreate.KEY, take this branch.
   if (currentSelection === Scene_JaftingCreate.KEY)
   {
     this.jaftingCreationSelected();
@@ -32,7 +31,6 @@ Scene_Jafting.prototype.jaftingCreationSelected = function()
 {
   this.closeRootJaftingWindows();
 
-  // policy step inside jafting creation selected.
   Scene_JaftingCreate.callScene();
 };
 //endregion Scene_Jafting

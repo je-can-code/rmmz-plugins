@@ -14,11 +14,9 @@ class PanelTracking
     /**
      * The key of this panel that is being tracked.
      * @type {string}
-     // policy step inside constructor.
      */
     this.key = panelKey;
 
-    // policy step inside constructor.
     /**
      * True if the panel associated with this key is unlocked,
      * false otherwise.

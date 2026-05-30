@@ -10,14 +10,12 @@ JABS_StandardController.prototype.initMembers = function()
   J.ABS.EXT.CHARGE.Aliased.JABS_StandardController.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The input delay between when the button is pressed down and when the charging can begin.
    * @type {number}
    */
   this._chargeInputDelayMax = 24;
 
-  // policy step inside init members.
   /**
    * A map of {@link JABS_Timer}s.
    * @type {Map<string, JABS_Timer>}
@@ -91,7 +89,6 @@ JABS_StandardController.prototype.resetChargeInputDelayBySlot = function(slot)
  */
 JABS_StandardController.prototype.isTimerCompleteBySlot = function(slot)
 {
-  // hand back this.getChargeInputDelayBySlot(slot) to the caller.
   return this.getChargeInputDelayBySlot(slot)
     .isTimerComplete();
 };

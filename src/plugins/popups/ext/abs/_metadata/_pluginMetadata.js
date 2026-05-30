@@ -33,23 +33,18 @@ class J_PopupsAbs_PluginMetadata
   {
     const params = this.parsedPluginParameters;
 
-    // policy step inside initialize metadata.
     /**
      * When true, {@link JABS_PopupManager.showSkillUsedPop} returns early.
      * @type {boolean}
-     // policy step inside initialize metadata.
      */
     this.disableSkillUsedPopups = params['disableSkillUsedPopups'] === 'true';
 
-    // policy step inside initialize metadata.
     /**
      * Parsed merge toggles and idle flush tuning for {@link JABS_PopupMergeController}.
      * @type {{
-     // policy step inside initialize metadata.
      *   enableCombat: boolean,
      *   enableSlip: boolean,
      *   enableRewards: boolean,
-     // policy step inside initialize metadata.
      *   enableMitigation: boolean,
      *   idleFlushFrames: number,
      * }}

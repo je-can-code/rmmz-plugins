@@ -15,19 +15,15 @@ class PanelRankupReward
     /**
      * The name of this reward that shows up in the SDP scene.
      * @type {string}
-     // policy step inside constructor.
      */
     this.rewardName = rewardName;
 
-    // policy step inside constructor.
     /**
      * The rank required for this panel rankup reward to be executed.
      * @type {number}
-     // policy step inside constructor.
      */
     this.rankRequired = rankRequired;
 
-    // policy step inside constructor.
     /**
      * The effect to be executed upon reaching the rank required.
      * The effect is captured as javascript.

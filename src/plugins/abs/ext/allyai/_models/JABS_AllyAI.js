@@ -184,7 +184,6 @@ class JABS_AllyAI
    */
   static getPresets()
   {
-    // hand back object to the caller.
     return Object
       .keys(JABS_AllyAI.presets)
       .map(key => JABS_AllyAI.presets[key]);
@@ -197,7 +196,6 @@ class JABS_AllyAI
    */
   static getPresetByKey(key)
   {
-    // hand back jabs ally ai to the caller.
     return JABS_AllyAI
       .getPresets()
       .find(preset => preset.key === key) ?? null;
@@ -232,7 +230,6 @@ class JABS_AllyAI
   initialize(presetKey)
   {
     this.initMembers();
-    // when presetKey, take this branch.
     if (presetKey)
     {
       this.applyPreset(presetKey);
@@ -247,41 +244,34 @@ class JABS_AllyAI
     /**
      * When true this ally takes no actions and backs away from all targets.
      * Overrides all axis behavior.
-     // policy step inside init members.
      * @type {boolean}
      */
     this._doNothing = false;
 
-    // policy step inside init members.
     /**
      * The risk axis: how aggressively this ally picks offensive skills.
      * @type {number}
-     // policy step inside init members.
      */
     this._risk = JABS_AllyAI.Risk.BALANCED;
 
-    // policy step inside init members.
     /**
      * The support axis: how much this ally weighs healing/buffing vs offense.
      * @type {number}
      */
     this._support = JABS_AllyAI.Support.BALANCED;
 
-    // policy step inside init members.
     /**
      * The spacing axis: how close this ally positions itself relative to its target.
      * @type {number}
      */
     this._spacing = JABS_AllyAI.Spacing.MIDLINE;
 
-    // policy step inside init members.
     /**
      * The key of the last applied preset, or the default preset key.
      * @type {string}
      */
     this._presetKey = JABS_AllyAI.presets.GENERALIST.key;
 
-    // policy step inside init members.
     /**
      * The collection of memories this ally AI possesses.
      * @type {JABS_BattleMemory[]}
@@ -474,11 +464,9 @@ class JABS_AllyAI
     const cleansePick = this.wrapSupportSkillId(this.decideCleansing(user, usableSkills));
     if (cleansePick.length) return cleansePick;
 
-    // capture heal pick for downstream policy in this routine.
     const healPick = this.wrapSupportSkillId(this.decideHealing(user, usableSkills));
     if (healPick.length) return healPick;
 
-    // capture buff pick for downstream policy in this routine.
     const buffPick = this.wrapSupportSkillId(this.decideBuffing(user, usableSkills));
     if (buffPick.length) return buffPick;
 
@@ -501,14 +489,12 @@ class JABS_AllyAI
     const nearbyAllies = user.getAllNearbyAllies();
     const anyInDanger = nearbyAllies.some(ally => ally.getBattler().currentHpPercent() < 0.6);
 
-    // when anyInDanger  and  Math.randomInt(2)  equals  0, take this branch.
     if (anyInDanger && Math.randomInt(2) === 0)
     {
       const supportPick = this.decideSupportFirst(usableSkills, user, target);
       if (supportPick.length) return supportPick;
     }
 
-    // hand back this.decideOffense(usableSkills, user, target) to the caller.
     return this.decideOffense(usableSkills, user, target);
   }
   //endregion balanced support
@@ -525,12 +511,10 @@ class JABS_AllyAI
   {
     if (!usableSkills.length) return [];
 
-    // dispatch on the discriminant for the next policy branch.
     switch (this._risk)
     {
       case JABS_AllyAI.Risk.RECKLESS:
         return this.decideRecklessOffense(usableSkills, user, target);
-      // handle this switch arm for the current discriminant.
       case JABS_AllyAI.Risk.CAREFUL:
         return this.decideCautiousOffense(usableSkills, user, target);
       case JABS_AllyAI.Risk.BALANCED:
@@ -552,19 +536,16 @@ class JABS_AllyAI
     const strongestSkillId = this.determineStrongestSkill(usableSkills, user, target);
     const memoriesOfTarget = this.memory.filter(mem => mem.battlerId === target.getBattlerId());
 
-    // when memoriesOfTarget.length, take this branch.
     if (memoriesOfTarget.length)
     {
       const effectiveSkills = this.filterMemoriesByEffectiveness(usableSkills, memoriesOfTarget);
 
-      // when effectiveSkills.length  equals  1  and  effectiveSkills[0]  differs f..., take this branch.
       if (effectiveSkills.length === 1 && effectiveSkills[0] !== strongestSkillId)
       {
         const chosen = RPGManager.chanceIn100(50) ? strongestSkillId : effectiveSkills[0];
         return this.isSkillIdValid(chosen) ? [ chosen ] : [];
       }
 
-      // when effectiveSkills.length > 1, take this branch.
       if (effectiveSkills.length > 1)
       {
         const chosen = effectiveSkills[Math.randomInt(effectiveSkills.length)];
@@ -572,7 +553,6 @@ class JABS_AllyAI
       }
     }
 
-    // hand back this.isSkillIdValid(strongestSkillId) ? [ strongestSk... to the caller.
     return this.isSkillIdValid(strongestSkillId) ? [ strongestSkillId ] : [];
   }
 
@@ -589,16 +569,13 @@ class JABS_AllyAI
     const memoriesOfTarget = this.memory.filter(mem => mem.battlerId === target.getBattlerId());
     let tempSkills = usableSkills;
 
-    // when memoriesOfTarget.length, take this branch.
     if (memoriesOfTarget.length)
     {
       tempSkills = this.filterMemoriesByEffectiveness(usableSkills, memoriesOfTarget);
     }
 
-    // policy step inside decide balanced offense.
     let chosenSkillId;
 
-    // when tempSkills.length  equals  0, take this branch.
     if (tempSkills.length === 0)
     {
       chosenSkillId = usableSkills[Math.randomInt(usableSkills.length)];
@@ -614,7 +591,6 @@ class JABS_AllyAI
       chosenSkillId = tempSkills[Math.randomInt(tempSkills.length)];
     }
 
-    // hand back this.isSkillIdValid(chosenSkillId) ? [ chosenSkillId ... to the caller.
     return this.isSkillIdValid(chosenSkillId) ? [ chosenSkillId ] : [];
   }
 
@@ -630,10 +606,8 @@ class JABS_AllyAI
   {
     if (!usableSkills.length) return [];
 
-    // capture memories of target for downstream policy in this routine.
     const memoriesOfTarget = this.memory.filter(mem => mem.battlerId === target.getBattlerId());
 
-    // when memoriesOfTarget.length, take this branch.
     if (memoriesOfTarget.length)
     {
       const effectiveSkills = this.filterMemoriesByEffectiveness(usableSkills, memoriesOfTarget);

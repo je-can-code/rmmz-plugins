@@ -17,7 +17,6 @@ TextManager.sarDescription = function()
   return [
     'Multiplier on shield points this battler applies to allies.',
     'Higher values create stronger outgoing shields.',
-  // policy step inside sar description.
   ];
 };
 
@@ -39,7 +38,6 @@ TextManager.serDescription = function()
   return [
     'Multiplier on shield points received on this battler.',
     'Higher values strengthen incoming shields.',
-  // policy step inside ser description.
   ];
 };
 //endregion TextManager

@@ -39,7 +39,6 @@ class Window_DiaLog
     const actualWidth = width || ImageManager.faceWidth;
     const actualHeight = height || ImageManager.faceHeight;
     const bitmap = ImageManager.loadFace(faceName);
-    // capture pw for downstream policy in this routine.
     const pw = ImageManager.faceWidth;
     const ph = ImageManager.faceHeight;
     const sw = Math.min(actualWidth, pw);

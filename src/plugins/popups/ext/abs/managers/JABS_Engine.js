@@ -12,7 +12,6 @@ JABS_Engine.prototype.postPrimaryBattleEffects = function(action, target)
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('postPrimaryBattleEffects')
     .call(this, action, target);
 
-  // policy step inside post primary battle effects.
   JABS_PopupManager.showAttackPop(action, target, this);
   JABS_PopupManager.showSkillUsedPop(action);
 };
@@ -28,10 +27,8 @@ JABS_Engine.prototype.gainExperienceReward = function(experience, casterCharacte
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('gainExperienceReward')
     .call(this, experience, casterCharacter);
 
-  // when not experience, take this branch.
   if (!experience) return;
 
-  // policy step inside gain experience reward.
   JABS_PopupManager.showExperiencePop(experience, casterCharacter);
 };
 
@@ -46,10 +43,8 @@ JABS_Engine.prototype.gainGoldReward = function(gold, character)
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('gainGoldReward')
     .call(this, gold, character);
 
-  // when not gold, take this branch.
   if (!gold) return;
 
-  // policy step inside gain gold reward.
   JABS_PopupManager.showGoldPop(gold, character);
 };
 
@@ -64,7 +59,6 @@ JABS_Engine.prototype.onItemPickedUp = function(itemDataList, character)
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('onItemPickedUp')
     .call(this, itemDataList, character);
 
-  // policy step inside on item picked up.
   JABS_PopupManager.showItemPickedUpPops(itemDataList, character);
 };
 
@@ -79,7 +73,6 @@ JABS_Engine.prototype.battlerLevelup = function(uuid)
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('battlerLevelup')
     .call(this, uuid);
 
-  // capture battler for downstream policy in this routine.
   const battler = JABS_AiManager.getBattlerByUuid(uuid);
   if (battler)
   {
@@ -98,7 +91,6 @@ JABS_Engine.prototype.battlerSkillLearn = function(skill, uuid)
   J.POPUPS.EXT.ABS.Aliased.JABS_Engine.get('battlerSkillLearn')
     .call(this, skill, uuid);
 
-  // capture battler for downstream policy in this routine.
   const battler = JABS_AiManager.getBattlerByUuid(uuid);
   if (battler)
   {

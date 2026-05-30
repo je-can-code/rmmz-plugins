@@ -36,11 +36,9 @@ Scene_Skill.prototype.skillTypeWindowRect = function()
   const ww = this.mainCommandWidth();
   const wh = this.calcWindowHeight(4, true);
   const wx = this.isRightInputMode()
-    // policy step inside skill type window rect.
     ? Graphics.boxWidth - ww
     : 0;
   const wy = this.mainAreaTop();
-  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -52,7 +50,6 @@ Scene_Skill.prototype.createSkillDetailWindow = function()
   const rect = this.skillDetailRect();
   this._skillDetailWindow = new Window_SkillDetail(rect);
   this._itemWindow.setSkillDetailWindow(this._skillDetailWindow);
-  // policy step inside create skill detail window.
   this.addWindow(this._skillDetailWindow);
 };
 
@@ -65,11 +62,9 @@ Scene_Skill.prototype.skillDetailRect = function()
   const ww = Graphics.boxWidth - this.mainCommandWidth();
   const wh = this.mainAreaHeight() - this._statusWindow.height
   const wx = this.isRightInputMode()
-    // policy step inside skill detail rect.
     ? 0
     : Graphics.boxWidth - ww;
   const wy = this.mainAreaTop() + this._statusWindow.height;
-  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -95,11 +90,9 @@ Scene_Skill.prototype.itemWindowRect = function()
   const ww = this.mainCommandWidth();
   const wh = this.mainAreaHeight() - this._statusWindow.height;
   const wx = this.isRightInputMode()
-    // policy step inside item window rect.
     ? Graphics.boxWidth - ww
     : 0;
   const wy = this._statusWindow.y + this._statusWindow.height;
-  // hand back new Rectangle(wx, wy, ww, wh) to the caller.
   return new Rectangle(wx, wy, ww, wh);
 };
 //endregion Scene_Skill

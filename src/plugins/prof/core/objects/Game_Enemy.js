@@ -12,13 +12,11 @@ Game_Enemy.prototype.initMembers = function()
   J.PROF.Aliased.Game_Enemy.get("initMembers")
     .call(this);
 
-  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all boosts this actor has can potentially consume.
    * @type {SkillProficiency[]}
@@ -45,7 +43,6 @@ Game_Enemy.prototype.skillProficiencyBySkillId = function(skillId)
   return this
     .skillProficiencies()
     .find(prof => prof.skillId === skillId);
-// policy step inside skill proficiency by skill id.
 };
 
 /**
@@ -60,7 +57,6 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
   if (exists)
   {
     console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
-    // hand back exists to the caller.
     return exists;
   }
 
@@ -109,7 +105,6 @@ Game_Enemy.prototype.increaseSkillProficiency = function(skillId, amount = 1)
     proficiency = this.addSkillProficiency(skillId);
   }
 
-  // policy step inside increase skill proficiency.
   proficiency.improve(amount);
 };
 //endregion Game_Enemy

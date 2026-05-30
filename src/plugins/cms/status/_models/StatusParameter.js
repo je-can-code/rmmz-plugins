@@ -59,7 +59,6 @@ class StatusParameter
   {
     const definition = ParameterRegistry.get(this.parameterKey);
 
-    // when not definition, take this branch.
     if (!definition)
     {
       this.name = this.parameterKey;
@@ -83,13 +82,11 @@ class StatusParameter
   {
     const definition = ParameterRegistry.get(this.parameterKey);
 
-    // when not definition, take this branch.
     if (!definition)
     {
       return this.value.toString();
     }
 
-    // hand back definition.prettyValue(this.value, withPadding) to the caller.
     return definition.prettyValue(this.value, withPadding);
   }
 }

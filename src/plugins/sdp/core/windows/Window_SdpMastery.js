@@ -34,7 +34,6 @@ class Window_SdpMastery
       return;
     }
 
-    // policy step inside draw content.
     const { mastery } = panel;
 
     // panels outside the mastery program get a muted placeholder so layout stays stable.
@@ -46,7 +45,6 @@ class Window_SdpMastery
       return;
     }
 
-    // capture subgroup for downstream policy in this routine.
     const subgroup = J.SDP.Metadata.subgroupsMap.get(mastery.subgroupKey);
     const subgroupName = subgroup
       ? subgroup.name
@@ -61,13 +59,11 @@ class Window_SdpMastery
       ? Window_Base._iconWidth + iconPad
       : 0;
 
-    // when subgroupIcon >= 0, take this branch.
     if (subgroupIcon >= 0)
     {
       this.drawIcon(subgroupIcon, iconPad, 0);
     }
 
-    // policy step inside draw content.
     this.resetFontSettings();
     const tintedSubgroup = this.colorizeText(14, subgroupName);
     this.drawTextEx(tintedSubgroup, textX, 0, this.innerWidth - textX);

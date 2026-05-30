@@ -10,19 +10,16 @@ Game_System.prototype.initMembers = function()
   // perform original logic.
   J.MAP.Aliased.Game_System.get('initMembers').call(this);
 
-  // policy step inside init members.
   /**
    * The shared root namespace for all J-plugins temporary data.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with the map/minimap plugin.
    */
   this._j._map ||= {};
 
-  // policy step inside init members.
   /**
    * Current desired minimap visibility.
    * @type {boolean}

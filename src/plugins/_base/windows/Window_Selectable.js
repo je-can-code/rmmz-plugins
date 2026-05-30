@@ -11,7 +11,6 @@ Window_Selectable.prototype.initialize = function(rect)
   J.BASE.Aliased.Window_Selectable.get('initialize').call(this, rect);
   /**
    * The "more data" window. Used for further elaborating on a particular selection.
-   // policy step inside initialize.
    *
    * @type {Window_MoreData}
    */
@@ -29,38 +28,32 @@ Window_Selectable.prototype.processHandling = function()
       return this.processMore();
     }
 
-    // when this.isContextEnabled()  and  this.isContextTriggered(), take this branch.
     if (this.isContextEnabled() && this.isContextTriggered())
     {
       return this.processContext();
     }
 
-    // when this.isContentPrevEnabled()  and  this.isContentPrevTriggered(), take this branch.
     if (this.isContentPrevEnabled() && this.isContentPrevTriggered())
     {
       return this.processContentPrev();
     }
 
-    // when this.isContentNextEnabled()  and  this.isContentNextTriggered(), take this branch.
     if (this.isContentNextEnabled() && this.isContentNextTriggered())
     {
       return this.processContentNext();
     }
 
-    // when this.isActorPrevEnabled()  and  this.isActorPrevTriggered(), take this branch.
     if (this.isActorPrevEnabled() && this.isActorPrevTriggered())
     {
       return this.processActorPrev();
     }
 
-    // when this.isActorNextEnabled()  and  this.isActorNextTriggered(), take this branch.
     if (this.isActorNextEnabled() && this.isActorNextTriggered())
     {
       return this.processActorNext();
     }
   }
 
-  // hand back J.BASE.Aliased.Window_Selectable.processHandling.call... to the caller.
   // perform original logic.
   return J.BASE.Aliased.Window_Selectable.get('processHandling').call(this);
 };
@@ -83,7 +76,6 @@ Window_Selectable.prototype.isMoreTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('shift')
     : Input.isTriggered('shift');
-// policy step inside is more triggered.
 };
 
 /**
@@ -94,7 +86,6 @@ Window_Selectable.prototype.processMore = function()
   this.playCursorSound();
   this.updateInputData();
   this.callMoreHandler();
-// policy step inside process more.
 };
 
 /**
@@ -123,7 +114,6 @@ Window_Selectable.prototype.isContextTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('tab')
     : Input.isTriggered('tab');
-// policy step inside is context triggered.
 };
 
 /**
@@ -134,7 +124,6 @@ Window_Selectable.prototype.processContext = function()
   this.playCursorSound();
   this.updateInputData();
   this.callContextHandler();
-// policy step inside process context.
 };
 
 /**
@@ -163,7 +152,6 @@ Window_Selectable.prototype.isContentPrevTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('l2')
     : Input.isTriggered('l2');
-// policy step inside is content prev triggered.
 };
 
 /**
@@ -174,7 +162,6 @@ Window_Selectable.prototype.processContentPrev = function()
   this.playCursorSound();
   this.updateInputData();
   this.callContentPrevHandler();
-// policy step inside process content prev.
 };
 
 /**
@@ -203,7 +190,6 @@ Window_Selectable.prototype.isContentNextTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('r2')
     : Input.isTriggered('r2');
-// policy step inside is content next triggered.
 };
 
 /**
@@ -214,7 +200,6 @@ Window_Selectable.prototype.processContentNext = function()
   this.playCursorSound();
   this.updateInputData();
   this.callContentNextHandler();
-// policy step inside process content next.
 };
 
 /**
@@ -243,7 +228,6 @@ Window_Selectable.prototype.isActorPrevTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('pageup')
     : Input.isTriggered('pageup');
-// policy step inside is actor prev triggered.
 };
 
 /**
@@ -254,7 +238,6 @@ Window_Selectable.prototype.processActorPrev = function()
   this.playCursorSound();
   this.updateInputData();
   this.callActorPrevHandler();
-// policy step inside process actor prev.
 };
 
 /**
@@ -283,7 +266,6 @@ Window_Selectable.prototype.isActorNextTriggered = function()
   return this._canRepeat
     ? Input.isRepeated('pagedown')
     : Input.isTriggered('pagedown');
-// policy step inside is actor next triggered.
 };
 
 /**
@@ -294,7 +276,6 @@ Window_Selectable.prototype.processActorNext = function()
   this.playCursorSound();
   this.updateInputData();
   this.callActorNextHandler();
-// policy step inside process actor next.
 };
 
 /**
@@ -316,7 +297,6 @@ Window_Selectable.prototype.select = function(index)
   J.BASE.Aliased.Window_Selectable.get('select').call(this, index);
   if (previousIndex !== this._index)
   {
-    // policy step inside select.
     this.onIndexChange();
   }
 };

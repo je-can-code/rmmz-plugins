@@ -23,23 +23,19 @@ Game_Map.prototype.initRegionEffectsMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init region effects members.
   this._j ||= {};
 
-  // policy step inside init region effects members.
   /**
    * The grouping of all properties related to region effects.
    */
   this._j._regions = {};
 
-  // policy step inside init region effects members.
   /**
    * The collection of region ids that deny passage.
    * @type {number[]}
    */
   this._j._regions._deny = Array.empty;
 
-  // policy step inside init region effects members.
   /**
    * The collection of region ids that allow passage.
    * @type {number[]}
@@ -313,7 +309,6 @@ Game_Map.prototype.projectCoordinatesByDirection = function(x, y, d)
   {
     case 2:
       projectedY += 1;
-      // policy step inside project coordinates by direction.
       break;
     case 4:
       projectedX -= 1;

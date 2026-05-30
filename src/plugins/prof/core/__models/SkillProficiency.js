@@ -14,11 +14,9 @@ class SkillProficiency
     /**
      * The skill id of the skill for this prof.
      * @type {number}
-     // policy step inside initialize.
      */
     this.skillId = skillId;
 
-    // policy step inside initialize.
     /**
      * The prof the owning battler bears with this skill.
      * @type {number}
@@ -46,7 +44,6 @@ class SkillProficiency
     {
       this.proficiency = 0;
     }
-  // policy step inside improve.
   }
 }
 

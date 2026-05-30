@@ -79,7 +79,6 @@ class PIXEL_CollisionManager
         const canEnterFromLeft  = $gameMap.isPassable(x - 1, y, J.PIXEL.Directions.RIGHT);
         const canEnterFromRight = $gameMap.isPassable(x + 1, y, J.PIXEL.Directions.LEFT);
 
-        // capture can be entered for downstream policy in this routine.
         const canBeEntered = canEnterFromBelow || canEnterFromAbove || canEnterFromLeft || canEnterFromRight;
 
         // If this tile is unreachable from every direction, mark it completely solid.

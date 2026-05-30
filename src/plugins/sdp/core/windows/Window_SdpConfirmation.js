@@ -37,22 +37,18 @@ class Window_SdpConfirmation
     /**
      * The current mode of this confirmation window.
      * - single: upgrade hovered panel once.
-     // policy step inside init members.
      * - cart: checkout the queued cart.
      * @type {string}
      */
     // assign mode on this instance for callers.
     this.mode = 'single';
 
-    // policy step inside init members.
     /**
      * The summary of the current cart checkout, if applicable.
      * @type {{
-     // policy step inside init members.
      *   panelCount: number,
      *   levelCount: number,
      *   totalCost: number,
-     // policy step inside init members.
      *   wallet: number,
      *   remaining: number,
      *   canAfford: boolean,
@@ -61,7 +57,6 @@ class Window_SdpConfirmation
      */
     this.cartSummary = null;
 
-    // policy step inside init members.
     /**
      * The summary of the current single-panel upgrade, if applicable.
      * @type {{ panelName: string, cost: number, wallet: number, remaining: number, canAfford: boolean }|null}
@@ -145,11 +140,9 @@ class Window_SdpConfirmation
     const remaining = wallet - cost;
     const canAfford = remaining >= 0;
     this.singleSummary = {
-      // policy step inside set single summary.
       panelName,
       cost,
       wallet,
-      // policy step inside set single summary.
       remaining,
       canAfford,
     };
@@ -184,7 +177,6 @@ class Window_SdpConfirmation
     const rect = Window_Selectable.prototype.itemRect.call(this, index);
     rect.y += this.confirmationSummaryHeight();
 
-    // hand back rect to the caller.
     return rect;
   }
 
@@ -198,14 +190,12 @@ class Window_SdpConfirmation
       return;
     }
 
-    // policy step inside paint.
     this.contents.clear();
     if (this.contentsBack)
     {
       this.contentsBack.clear();
     }
 
-    // policy step inside paint.
     this.drawConfirmationSummary();
     this.drawAllItems();
   }
@@ -219,10 +209,8 @@ class Window_SdpConfirmation
     const w = this.innerWidth - padX * 2;
     let y = this.itemPadding();
 
-    // policy step inside draw confirmation summary.
     this.resetFontSettings();
 
-    // policy step inside draw confirmation summary.
     /**
      * Draws a labeled row with a right-aligned numeric amount.
      * @param {number} iconIndex The icon index, or 0 for none.
@@ -239,7 +227,6 @@ class Window_SdpConfirmation
       const textX = padX + iconSpace;
       const textW = w - iconSpace;
 
-      // when hasIcon, take this branch.
       if (hasIcon)
       {
         this.drawIcon(iconIndex, padX, y + 2);
@@ -251,11 +238,9 @@ class Window_SdpConfirmation
       // right amount (styled zeros + bold significant digits).
       this.drawStyledZeroPaddedNumber(textX, y, amount, textW, 8, 8, colorIndex);
 
-      // policy step inside draw confirmation summary.
       y += this.lineHeight();
     };
 
-    // when this.mode  equals  'cart', take this branch.
     if (this.mode === 'cart')
     {
       const summary = this.cartSummary;
@@ -267,7 +252,6 @@ class Window_SdpConfirmation
       // line 1: one panel in the cart reads like single-upgrade copy; multiple panels stay aggregate.
       let lineA;
 
-      // when summary.panelCount  equals  1  and  summary.solePanelName, take this branch.
       if (summary.panelCount === 1 && summary.solePanelName)
       {
         const levelWord = summary.levelCount === 1
@@ -275,7 +259,6 @@ class Window_SdpConfirmation
           : 'ranks';
         const nameMarked = this.boldenText(summary.solePanelName);
 
-        // policy step inside draw confirmation summary.
         lineA = `${nameMarked} will be upgraded by ${summary.levelCount} ${levelWord}.`;
       }
       else
@@ -285,11 +268,9 @@ class Window_SdpConfirmation
           ? 'upgrade'
           : 'upgrades';
 
-        // policy step inside draw confirmation summary.
         lineA = `${summary.levelCount} ${upgradeWord} on ${summary.panelCount} ${unitPlural}; confirm?`;
       }
 
-      // policy step inside draw confirmation summary.
       this.drawTextEx(lineA, padX, y, w);
       y += this.lineHeight();
 
@@ -324,7 +305,6 @@ class Window_SdpConfirmation
       const nameMarked = this.boldenText(summary.panelName);
       const lineA = `${nameMarked} will be upgraded by 1 rank.`;
 
-      // policy step inside draw confirmation summary.
       this.drawTextEx(lineA, padX, y, w);
       y += this.lineHeight();
 
@@ -348,7 +328,6 @@ class Window_SdpConfirmation
         summary.remaining,);
     }
 
-    // policy step inside draw confirmation summary.
     this.resetFontSettings();
   }
 
@@ -362,11 +341,9 @@ class Window_SdpConfirmation
     const isCart = this.mode === 'cart';
     const summary = isCart
       ? this.cartSummary
-      // policy step inside make command list.
       : this.singleSummary;
     const canAfford = summary
       ? summary.canAfford
-      // policy step inside make command list.
       : false;
 
     // construct upgrade for the next step in this routine.

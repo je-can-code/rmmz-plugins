@@ -72,7 +72,6 @@ class CraftingCreationSession
     return {
       phase: this.#phase,
       categoryKey: this.#categoryKey,
-      // policy step inside snapshot.
       lastCraftOutcome: this.#lastCraftOutcome,
     };
   }
@@ -109,27 +108,22 @@ class CraftingCreationSession
     {
       this.#lastCraftOutcome = {
         crafted: false,
-        // policy step inside try craft recipe.
         playedSuccessSound: false,
         reason: 'no_recipe',
       };
-      // hand back this.#lastCraftOutcome to the caller.
       return this.#lastCraftOutcome;
     }
 
-    // when recipe.canCraft()  equals  false, take this branch.
     if (recipe.canCraft() === false)
     {
       this.#lastCraftOutcome = {
         crafted: false,
-        // policy step inside try craft recipe.
         playedSuccessSound: false,
         reason: 'requirements_not_met',
       };
       return this.#lastCraftOutcome;
     }
 
-    // policy step inside try craft recipe.
     recipe.craft();
     this.#lastCraftOutcome = {
       crafted: true,

@@ -27,10 +27,8 @@ Game_Character.prototype.initJabsMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init jabs members.
   this._j ||= {};
 
-  // policy step inside init jabs members.
   /**
    * A grouping of all properties associated with JABS.
    */
@@ -51,32 +49,26 @@ Game_Character.prototype.initJabsActionMembers = function()
   /**
    * The block of all action-related data associated with this character.
    */
-  // policy step inside init jabs action members.
   this._j._abs._action = {};
 
-  // policy step inside init jabs action members.
   /**
    * The actual action for this character.
    * @type {JABS_Action|null}
-   // policy step inside init jabs action members.
    */
   this._j._abs._action.actionData = null;
 
-  // policy step inside init jabs action members.
   /**
    * Whether or not this action needs to be added to the map visually.
    * @type {boolean}
    */
   this._j._abs._action.needsAdding = false;
 
-  // policy step inside init jabs action members.
   /**
    * Whether or not this action needs to be removed from the map visually.
    * @type {boolean}
    */
   this._j._abs._action.needsRemoving = false;
 
-  // policy step inside init jabs action members.
   /**
    * The uuid for this character.
    * @type {string|String.empty}
@@ -92,11 +84,9 @@ Game_Character.prototype.initJabsBattlerMembers = function()
   /**
    * The block of all battler-related data associated with this character.
    * This is not combat battler data, but map battler data.
-   // policy step inside init jabs battler members.
    */
   this._j._abs._battler = {};
 
-  // policy step inside init jabs battler members.
   /**
    * Whether or not this battler needs to be added to the map visually.
    * @type {boolean}
@@ -112,25 +102,20 @@ Game_Character.prototype.initJabsLootMembers = function()
   /**
    * The block of all loot-related data associated with this character.
    */
-  // policy step inside init jabs loot members.
   this._j._abs._loot = {};
 
-  // policy step inside init jabs loot members.
   /**
    * Whether or not this loot needs to be added to the map visually.
    * @type {boolean}
-   // policy step inside init jabs loot members.
    */
   this._j._abs._loot._needsAdding = false;
 
-  // policy step inside init jabs loot members.
   /**
    * Whether or not this loot needs to be removed from the map visually.
    * @type {boolean}
    */
   this._j._abs._loot._needsRemoving = false;
 
-  // policy step inside init jabs loot members.
   /**
    * The underlying loot data.
    * @type {JABS_LootDrop|null}
@@ -447,41 +432,33 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
   const deltaY2 = this.deltaYFrom(goalY);
   if (deltaX2 === 0 && deltaY2 === 0)
   {
-    // hand back 0 to the caller.
     return 0;
   }
 
-  // when Math.abs(deltaX2) > Math.abs(deltaY2), take this branch.
   if (Math.abs(deltaX2) > Math.abs(deltaY2))
   {
     if (deltaX2 > 0)
     {
       return deltaY2 === 0
-        // policy step inside find diagonal direction to heuristic.
         ? 4
         : deltaY2 > 0
           ? 7
-          // policy step inside find diagonal direction to heuristic.
           : 1;
     }
     else if (deltaX2 < 0)
     {
       return deltaY2 === 0
-        // policy step inside find diagonal direction to heuristic.
         ? 6
         : deltaY2 > 0
           ? 9
-          // policy step inside find diagonal direction to heuristic.
           : 3;
     }
     else
     {
       return deltaY2 === 0
-        // policy step inside find diagonal direction to heuristic.
         ? 0
         : deltaY2 > 0
           ? 8
-          // policy step inside find diagonal direction to heuristic.
           : 2;
     }
   }
@@ -489,11 +466,9 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
   {
     if (deltaY2 > 0)
     {
-      // hand back deltaX2 === 0 to the caller.
       return deltaX2 === 0
         ? 8
         : deltaX2 > 0
-          // policy step inside find diagonal direction to heuristic.
           ? 7
           : 9;
     }
@@ -529,35 +504,27 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     return this.findDiagonalDirectionToHeuristic(goalX, goalY);
   }
 
-  // capture search limit for downstream policy in this routine.
   const searchLimit = this.searchLimit();
   const mapWidth = $gameMap.width();
   const nodeList = [];
-  // capture open list for downstream policy in this routine.
   const openList = [];
   const closedList = [];
   const start = {};
-  // capture best for downstream policy in this routine.
   let best = start;
 
-  // capture start xi for downstream policy in this routine.
   const startXi = Math.round(this.x);
   const startYi = Math.round(this.y);
   const goalXi = Math.round(goalX);
-  // capture goal yi for downstream policy in this routine.
   const goalYi = Math.round(goalY);
 
-  // when startXi  equals  goalXi  and  startYi  equals  goalYi, take this branch.
   if (startXi === goalXi && startYi === goalYi)
   {
     return 0;
   }
 
-  // policy step inside find diagonal direction to.
   start.parent = null;
   start.x = startXi;
   start.y = startYi;
-  // policy step inside find diagonal direction to.
   start.g = 0;
   start.f = $gameMap.distance(start.x, start.y, goalXi, goalYi);
   nodeList.push(start);
@@ -570,18 +537,15 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     let bestIndex = 0;
     for (let i = 0; i < nodeList.length; i++)
     {
-      // when nodeList[i].f < nodeList[bestIndex].f, take this branch.
       if (nodeList[i].f < nodeList[bestIndex].f)
       {
         bestIndex = i;
       }
     }
 
-    // capture current for downstream policy in this routine.
     const current = nodeList[bestIndex];
     const x1 = current.x;
     const y1 = current.y;
-    // capture pos1 for downstream policy in this routine.
     const pos1 = y1 * mapWidth + x1;
     const g1 = current.g;
 
@@ -590,20 +554,17 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     openList.splice(openList.indexOf(pos1), 1);
     closedList.push(pos1);
 
-    // when current.x  equals  goalXi  and  current.y  equals  goalYi, take this branch.
     if (current.x === goalXi && current.y === goalYi)
     {
       best = current;
       break;
     }
 
-    // when g1 >= searchLimit, take this branch.
     if (g1 >= searchLimit)
     {
       continue;
     }
 
-    // iterate the loop counter until the guard exits.
     for (let j = 1; j <= 9; j++)
     {
       if (j === 5)
@@ -620,19 +581,16 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
         directions = [ j, j ];
       }
 
-      // policy step inside find diagonal direction to.
       const [ horz, vert ] = directions;
       const x2 = $gameMap.roundXWithDirection(x1, horz);
       const y2 = $gameMap.roundYWithDirection(y1, vert);
       const pos2 = y2 * mapWidth + x2;
 
-      // when closedList.contains(pos2), take this branch.
       if (closedList.contains(pos2))
       {
         continue;
       }
 
-      // when this.isStraightDirection(j), take this branch.
       if (this.isStraightDirection(j))
       {
         if (!this.canPass(x1, y1, j))
@@ -648,11 +606,9 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
         }
       }
 
-      // capture g2 for downstream policy in this routine.
       let g2 = g1 + 1;
       let index2 = openList.indexOf(pos2);
 
-      // when index2 < 0  or  g2 < nodeList[index2].g, take this branch.
       if (index2 < 0 || g2 < nodeList[index2].g)
       {
         let neighbor;
@@ -679,14 +635,12 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     }
   }
 
-  // capture node for downstream policy in this routine.
   let node = best;
   while (node.parent && node.parent !== start)
   {
     node = node.parent;
   }
 
-  // capture delta x1 for downstream policy in this routine.
   const deltaX1 = $gameMap.deltaX(node.x, start.x);
   const deltaY1 = $gameMap.deltaY(node.y, start.y);
   if (deltaY1 > 0)
@@ -715,7 +669,6 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     }
   }
 
-  // hand back this.findDiagonalDirectionToHeuristic(goalX, goalY) to the caller.
   return this.findDiagonalDirectionToHeuristic(goalX, goalY);
 };
 /* eslint-enable */

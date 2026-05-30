@@ -10,13 +10,11 @@ Scene_Map.prototype.initialize = function()
   J.HUD.EXT.PARTY.Aliased.Scene_Map.get('initialize')
     .call(this);
 
-  // policy step inside initialize.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
-  // policy step inside initialize.
   /**
    * The hud window on the map.
    * @type {Window_PartyFrame}
@@ -86,7 +84,6 @@ Scene_Map.prototype.mapNameWindowRect = function()
   const wx = 400;
   const wy = 0;
   const ww = 360;
-  // capture wh for downstream policy in this routine.
   const wh = this.calcWindowHeight(1, false);
   return new Rectangle(wx, wy, ww, wh);
 };

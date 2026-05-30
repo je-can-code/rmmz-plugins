@@ -9,7 +9,6 @@ JABS_Battler.prototype.initIdleInfo = function()
   // perform original logic.
   J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('initIdleInfo').call(this);
 
-  // policy step inside init idle info.
   /**
    * The pixel-space destination this battler is currently wandering toward.
    * Null when the battler has no current wander target.
@@ -17,14 +16,12 @@ JABS_Battler.prototype.initIdleInfo = function()
    */
   this._pixelIdleDest ??= null;
 
-  // policy step inside init idle info.
   /**
    * The number of frames remaining before this battler picks a new wander destination.
    * @type {number}
    */
   this._pixelIdleWait ??= 0;
 
-  // policy step inside init idle info.
   /**
    * The number of consecutive frames this battler has been unable to reach its
    * current wander destination. Used to detect and escape stuck states.
@@ -84,7 +81,6 @@ JABS_Battler.prototype.updatePixelIdleWander = function()
     // arrived when within a comfortable fraction of a tile.
     const arrived = Math.hypot(this.getX() - x, this.getY() - y) < 0.25;
 
-    // when arrived  equals  false, take this branch.
     if (arrived === false)
     {
       // count consecutive frames spent trying to reach this destination.
@@ -136,7 +132,6 @@ JABS_Battler.prototype._rollIdleWaitDuration = function()
   // 4–10 inclusive, each unit = 30 frames; range is 2 to 5 seconds at 60 fps.
   const multiplier = Math.randomInt(7) + 4;
 
-  // hand back multiplier * 30 to the caller.
   return multiplier * 30;
 };
 
@@ -152,18 +147,15 @@ JABS_Battler.prototype._rollIdleDestination = function()
   const homeY = this.getHomeY();
   const range = J.PIXEL.EXT.ABS.Metadata.IdleWanderRadius;
 
-  // iterate the loop counter until the guard exits.
   for (let attempt = 0; attempt < 5; attempt++)
   {
     // random offset along each axis within [-range, range].
     const dx = (Math.random() * range * 2) - range;
     const dy = (Math.random() * range * 2) - range;
 
-    // capture dest x for downstream policy in this routine.
     const destX = homeX + dx;
     const destY = homeY + dy;
 
-    // capture tx for downstream policy in this routine.
     const tx = Math.round(destX);
     const ty = Math.round(destY);
 
@@ -173,7 +165,6 @@ JABS_Battler.prototype._rollIdleDestination = function()
       || $gameMap.isPassable(tx, ty, 6)
       || $gameMap.isPassable(tx, ty, 8);
 
-    // when walkable, take this branch.
     if (walkable)
     {
       return { x: destX, y: destY };
@@ -254,7 +245,6 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
     return;
   }
 
-  // when this.guarding(), take this branch.
   if (this.guarding())
   {
     return;
@@ -522,7 +512,6 @@ JABS_Battler.prototype.smartMoveTowardCoordinates = function(targetX, targetY)
     return;
   }
 
-  // when this.guarding(), take this branch.
   if (this.guarding())
   {
     return;
@@ -784,7 +773,6 @@ JABS_Battler.prototype.angleToDirection = function(angle)
   // Fold into (-180, 180] so sector math matches both angle producers.
   let a = angle;
 
-  // when a > 180, take this branch.
   if (a > 180)
   {
     a -= 360;
@@ -903,10 +891,8 @@ JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
       return J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('getProjectileSpawnBaseDirection').call(this);
     }
 
-    // capture vector angle for downstream policy in this routine.
     const vectorAngle = chr.getVectorInputAngle();
 
-    // when vectorAngle  differs from  null, take this branch.
     if (vectorAngle !== null)
     {
       return this.angleToDirection(vectorAngle);

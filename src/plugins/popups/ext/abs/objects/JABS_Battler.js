@@ -12,7 +12,6 @@ JABS_Battler.prototype.onSlipRegenTick = function(displayAmount, type, stateId)
   J.POPUPS.EXT.ABS.Aliased.JABS_Battler.get('onSlipRegenTick')
     .call(this, displayAmount, type, stateId);
 
-  // policy step inside on slip regen tick.
   JABS_PopupManager.showSlipPop(displayAmount, type, this, stateId);
 };
 
@@ -27,10 +26,8 @@ JABS_Battler.prototype.onItemApplied = function(gameAction, itemId, target = thi
   J.POPUPS.EXT.ABS.Aliased.JABS_Battler.get('onItemApplied')
     .call(this, gameAction, itemId, target);
 
-  // capture tool data for downstream policy in this routine.
   const toolData = $dataItems.at(itemId);
 
-  // when toolData.sdpKey  differs from  String.empty, take this branch.
   if (toolData.sdpKey !== String.empty)
   {
     // show item pickup popup for SDP unlock items used as tools.

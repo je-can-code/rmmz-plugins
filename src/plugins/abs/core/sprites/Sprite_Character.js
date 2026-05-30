@@ -29,13 +29,11 @@ Sprite_Character.prototype.initJabsMembers = function()
    */
   this._j ||= {};
 
-  // policy step inside init jabs members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside init jabs members.
   this._j._abs._visDebugGizmo = null;
 
   // initialize all extraneous members.
@@ -52,26 +50,21 @@ Sprite_Character.prototype.initCombatMembers = function()
   /**
    * Whether or not the map sprite setup has been completed.
    * @type {boolean}
-   // policy step inside init combat members.
    */
   this._j._abs._jabsBattlerSetupComplete = false;
 
-  // policy step inside init combat members.
   /**
    * The state overlay sprite associated with this character's battler.
    * @type {Sprite_StateOverlay|null}
-   // policy step inside init combat members.
    */
   this._j._abs._stateOverlaySprite = null;
 
-  // policy step inside init combat members.
   /**
    * The text sprite displaying the name of this character's battler.
    * @type {Sprite_BaseText|null}
    */
   this._j._abs._battlerName = null;
 
-  // policy step inside init combat members.
   /**
    * Thin vertical tier color stripe drawn to the left of the map name text (optional).
    * @type {Sprite|null}
@@ -87,39 +80,32 @@ Sprite_Character.prototype.initLootMembers = function()
   /**
    * The umbrella object for loot information.
    */
-  // policy step inside init loot members.
   this._j._abs._loot = {};
 
-  // policy step inside init loot members.
   /**
    * Whether or not the loot sprite setup has been completed.
    * @type {boolean}
-   // policy step inside init loot members.
    */
   this._j._abs._loot._lootSetupComplete = false;
 
-  // policy step inside init loot members.
   /**
    * The icon sprite that represents this character if it is loot.
    * @type {Sprite_Icon|null}
    */
   this._j._abs._loot._sprite = null;
 
-  // policy step inside init loot members.
   /**
    * Whether this is on the up or the down swing.
    * @type {boolean} True if on the upswing, false if on the downswing.
    */
   this._j._abs._loot._swing = false;
 
-  // policy step inside init loot members.
   /**
    * The modified x coordinate to draw this character as a result of swinging.
    * @type {number}
    */
   this._j._abs._loot._ox = 0;
 
-  // policy step inside init loot members.
   /**
    * The modified y coordinate to draw this character as a result of swinging.
    * @type {number}
@@ -135,17 +121,14 @@ Sprite_Character.prototype.initGaugeMembers = function()
   /**
    * A grouping of all gauges associated with JABS.
    */
-  // policy step inside init gauge members.
   this._j._abs._gauges ||= {};
 
-  // policy step inside init gauge members.
   /**
    * The hp guage for this sprite.
    * @type {Sprite_MapGauge|null}
    */
   this._j._abs._gauges._hpGauge = null;
 
-  // policy step inside init gauge members.
   /**
    * The cast gauge for this sprite.
    */
@@ -419,7 +402,6 @@ Sprite_Character.prototype.applyActionVisuals = function()
   const jabsAction = character.getJabsAction(); // JABS_Action for this sprite.
   if (!jabsAction) return; // nothing to apply.
 
-  // capture skill for downstream policy in this routine.
   const skill = jabsAction.getBaseSkill(); // RPG_Skill of this action.
   if (!skill) return; // cannot resolve visuals without the skill.
 
@@ -536,21 +518,17 @@ Sprite_Character.prototype.directionToRadians = function(dir)
   const RAD_0 = 0; // down
   const RAD_45 = Math.PI / 4;
   const RAD_90 = Math.PI / 2;
-  // capture rad 180 for downstream policy in this routine.
   const RAD_180 = Math.PI;
   const RAD_N90 = -Math.PI / 2;
   const RAD_N45 = -Math.PI / 4;
 
-  // dispatch on the discriminant for the next policy branch.
   switch (dir)
   {
     case 2:
       return RAD_0;            // down
-    // handle this switch arm for the current discriminant.
     case 3:
       return RAD_45;           // down-right
     case 6:
-      // hand back RAD_90;           // right to the caller.
       return RAD_90;           // right
     case 9:
       return RAD_90 + RAD_45;  // up-right (135°)
@@ -625,11 +603,9 @@ Sprite_Character.prototype.createJabsVisDebugGizmo = function()
   /** @type {PIXI.Graphics} */
   const g = new PIXI.Graphics();
   g.clear();
-  // policy step inside create jabs vis debug gizmo.
   g.lineStyle(1, 0xFF3366, 1.0);
   g.moveTo(-4, 0);
   g.lineTo(4, 0);
-  // policy step inside create jabs vis debug gizmo.
   g.moveTo(0, -4);
   g.lineTo(0, 4);
   g.endFill();
@@ -928,7 +904,6 @@ Sprite_Character.prototype.updateCastGauge = function()
       ? currentJabs.getUuid()
       : null));
 
-    // when needsRebind, take this branch.
     if (needsRebind)
     {
       // bind JABS battler (for casting state) + expected character (host guard) + underlying battler.
@@ -965,7 +940,6 @@ Sprite_Character.prototype.showCastGauge = function()
   if (gauge)
   {
     gauge.activateGauge();
-    // policy step inside show cast gauge.
     gauge.show();
   }
 };
@@ -980,7 +954,6 @@ Sprite_Character.prototype.hideCastGauge = function()
   {
     gauge.hide();
   }
-// policy step inside hide cast gauge.
 };
 //endregion gauges
 
@@ -1020,7 +993,6 @@ Sprite_Character.prototype.setupBattlerName = function()
     this.addChild(this._j._abs._battlerNameTierStripe);
   }
 
-  // policy step inside setup battler name.
   this.addChild(this._j._abs._battlerName);
 };
 
@@ -1041,13 +1013,10 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     .setAlignment(Sprite_BaseText.Alignments.Left)
     .setColor('#ffffff');
 
-  // policy step inside create battler name sprite.
   textSprite.move(-70, 0);
 
-  // policy step inside create battler name sprite.
   this._j._abs._battlerNameTierStripe = null;
 
-  // when this.shouldDrawMapTierStripe(colorHex), take this branch.
   if (this.shouldDrawMapTierStripe(colorHex))
   {
     const stripeSprite = new Sprite();
@@ -1060,7 +1029,6 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     this._j._abs._battlerNameTierStripe = stripeSprite;
   }
 
-  // hand back text sprite to the caller.
   return textSprite;
 };
 
@@ -1073,16 +1041,12 @@ Sprite_Character.prototype.shouldDrawMapTierStripe = function(colorHex)
 {
   if (colorHex === String.empty) return false;
 
-  // when this.isValidMapTierStripeHex(colorHex)  equals  false, take this branch.
   if (this.isValidMapTierStripeHex(colorHex) === false) return false;
 
-  // capture lower for downstream policy in this routine.
   const lower = colorHex.toLowerCase();
 
-  // when lower  equals  '#ffffff'  or  lower  equals  '#fff', take this branch.
   if (lower === '#ffffff' || lower === '#fff') return false;
 
-  // hand back true to the caller.
   return true;
 };
 
@@ -1095,7 +1059,6 @@ Sprite_Character.prototype.isValidMapTierStripeHex = function(color)
 {
   const structure = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
 
-  // hand back structure.test(color) to the caller.
   return structure.test(color);
 };
 
@@ -1113,16 +1076,12 @@ Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSiz
   const outerH = fontSize;
   const bitmap = new Bitmap(outerW, outerH);
 
-  // policy step inside build map tier stripe bitmap.
   bitmap.fillRect(0, 0, outerW, outerH, '#000000');
 
-  // capture inner h for downstream policy in this routine.
   const innerH = outerH - BORDER * 2;
 
-  // policy step inside build map tier stripe bitmap.
   bitmap.fillRect(BORDER, BORDER, INNER_W, innerH, colorHex);
 
-  // hand back bitmap to the caller.
   return bitmap;
 };
 
@@ -1138,7 +1097,6 @@ Sprite_Character.prototype.computeMapTierStripeY = function(textSprite, outerH)
     ? textSprite.bitmap.height
     : textSprite.fontSize() * 3;
 
-  // hand back Math.max(0, Math.floor((textH - outerH) / 2)) to the caller.
   return Math.max(0, Math.floor((textH - outerH) / 2));
 };
 
@@ -1213,7 +1171,6 @@ Sprite_Character.prototype.showBattlerName = function()
 {
   this._j._abs._battlerName.show();
 
-  // when this._j._abs._battlerNameTierStripe, take this branch.
   if (this._j._abs._battlerNameTierStripe)
   {
     this._j._abs._battlerNameTierStripe.show();
@@ -1227,7 +1184,6 @@ Sprite_Character.prototype.hideBattlerName = function()
 {
   this._j._abs._battlerName.hide();
 
-  // when this._j._abs._battlerNameTierStripe, take this branch.
   if (this._j._abs._battlerNameTierStripe)
   {
     this._j._abs._battlerNameTierStripe.hide();
@@ -1364,7 +1320,6 @@ Sprite_Character.prototype.performLootDurationCountdown = function()
  */
 Sprite_Character.prototype.deleteLootSprite = function()
 {
-  // when this.children.length > 0, take this branch.
   if (this.children.length > 0)
   {
     this.children.splice(0, this.children.length);
@@ -1397,7 +1352,6 @@ Sprite_Character.prototype.lootSwingUp = function(amount = 0)
 {
   this._j._abs._loot._swing = true;
 
-  // policy step inside loot swing up.
   this._j._abs._loot._oy -= amount;
 };
 
@@ -1409,7 +1363,6 @@ Sprite_Character.prototype.lootSwingDown = function(amount = 0)
 {
   this._j._abs._loot._swing = false;
 
-  // policy step inside loot swing down.
   this._j._abs._loot._oy += amount;
 };
 

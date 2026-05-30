@@ -175,7 +175,6 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
       $gameVariables.setValue(J.CAMods.Tracking.HighestDamageTaken, hpDamage);
     }
 
-    // when critical, take this branch.
     if (critical)
     {
       // count of landed critical hits.
@@ -196,7 +195,6 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
     // count of all types of successful parries.
     J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfParries, 1);
 
-    // when preciseParried, take this branch.
     if (preciseParried)
     {
       // count of all types of successful parries.
@@ -272,7 +270,6 @@ JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
   // insert them at the secondary index.
   $gameParty._actors.splice(1, 0, originalLeaderActorId);
 
-  // policy step inside handle party cycle member changes.
   $gamePlayer.refresh();
 
   // recreate the JABS player battler and set it to the player character.

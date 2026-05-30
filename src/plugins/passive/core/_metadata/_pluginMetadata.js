@@ -31,14 +31,12 @@ class JPassive_PluginMetadata
     /**
      * The id of a switch that controls whether the Passives command is visible in the menu.
      * A value of 0 means always show, regardless of switch state.
-     // policy step inside initialize metadata.
      * Configured via plugin parameter "menuSwitch".
      * @type {number}
      */
     // assign menu switch id on this instance for callers.
     this.menuSwitchId = parseInt(this.parsedPluginParameters['menuSwitch']);
 
-    // policy step inside initialize metadata.
     /**
      * The label shown for the Passives command in the main menu.
      * Configured via plugin parameter "menuCommandName".
@@ -46,7 +44,6 @@ class JPassive_PluginMetadata
      */
     this.commandName = this.parsedPluginParameters['menuCommandName'] ?? 'Passives';
 
-    // policy step inside initialize metadata.
     /**
      * The icon index shown beside the Passives command in the main menu.
      * Configured via plugin parameter "menuCommandIcon".

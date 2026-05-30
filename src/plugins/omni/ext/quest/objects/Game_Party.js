@@ -30,24 +30,19 @@ Game_Party.prototype.initQuestopediaMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init questopedia members.
   this._j ||= {};
 
-  // policy step inside init questopedia members.
   /**
    * The grouping of all properties related to the omnipedia.
    */
-  // policy step inside init questopedia members.
   this._j._omni ||= {};
 
-  // policy step inside init questopedia members.
   /**
    * A collection of the current quests and their state.
    * @type {TrackedOmniQuest[]}
    */
   this._j._omni._questopediaSaveables = [];
 
-  // policy step inside init questopedia members.
   /**
    * A more friendly cache of quests to work with.
    * This is what is kept up-to-date until saving.
@@ -87,10 +82,8 @@ Game_Party.prototype.toTrackedOmniQuest = function(omniquest)
     omniObjective.hiddenByDefault,
     omniObjective.isOptional);
 
-  // capture tracked objectives for downstream policy in this routine.
   const trackedObjectives = omniquest.objectives.map(objectivesMapper, this);
 
-  // hand back new TrackedOmniQuest(omniquest.key, omniquest.categor... to the caller.
   return new TrackedOmniQuest(omniquest.key, omniquest.categoryKey, trackedObjectives);
 };
 
@@ -112,7 +105,6 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     // find one by the same key in the existing trackings.
     const foundTracking = trackings.find(tracking => tracking.key === omniquest.key);
 
-    // capture new tracking for downstream policy in this routine.
     const newTracking = this.toTrackedOmniQuest(omniquest);
 
     // if the tracking already exists, it should be updated.
@@ -129,7 +121,6 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
         foundTracking.objectives.splice(foundTracking.objectives.length, 0, ...objectivesToAdd);
       }
 
-      // policy step inside update tracked omni quests from config.
       foundTracking.objectives.forEach((objective, index) =>
       {
         // if the new objectives don't go as far as they previously did, don't process it.
@@ -292,7 +283,6 @@ Game_Party.prototype.getQuestopediaEntryByKey = function(questKey)
  */
 Game_Party.prototype.getQuestopediaEntries = function()
 {
-  // hand back Array.from(this.getQuestopediaEntriesCache() to the caller.
   return Array.from(this.getQuestopediaEntriesCache()
     .values());
 };
@@ -361,7 +351,6 @@ Game_Party.prototype.processItemCheck = function(item)
   // if there are none, don't try to process this.
   if (fetchObjectives.length === 0) return;
 
-  // policy step inside process item check.
   fetchObjectives
     // filter out irrelevant items being gained.
     .filter(objective =>
@@ -378,7 +367,6 @@ Game_Party.prototype.processItemCheck = function(item)
       // synchronize the current with target quantities for this object.
       objective.synchronizeFetchTargetItemQuantity();
 
-      // when objective.hasFetchedEnoughItems(), take this branch.
       if (objective.hasFetchedEnoughItems())
       {
         // grab the quest for reference.

@@ -18,7 +18,6 @@ class J_TimingPluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -30,26 +29,21 @@ class J_TimingPluginMetadata
     /**
      * The base cast speed modifier applied globally before notetags.
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.BaseCastSpeed = Number(this.parsedPluginParameters['baseCastSpeed'] ?? 0);
 
-    // policy step inside initialize metadata.
     /**
      * The minimum cast time in frames.
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.MinimumCastTime = Number(this.parsedPluginParameters['minimumCastTime'] ?? 0);
 
-    // policy step inside initialize metadata.
     /**
      * The base fast cooldown modifier applied globally before notetags.
      * @type {number}
      */
     this.BaseFastCooldown = Number(this.parsedPluginParameters['baseFastCooldown'] ?? 0);
 
-    // policy step inside initialize metadata.
     /**
      * The minimum cooldown in frames.
      * @type {number}

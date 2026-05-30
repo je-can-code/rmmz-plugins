@@ -32,40 +32,33 @@ class StatDistributionPanel
     /**
      * Unique identifier key that represents this SDP (root-level in config.sdp.json).
      * @type {string}
-     // policy step inside constructor.
      */
     this.key = key;
 
-    // policy step inside constructor.
     /**
      * Presentation and unlock metadata for this panel.
      * @type {PanelIdentity}
-     // policy step inside constructor.
      */
     this.identity = identity;
 
-    // policy step inside constructor.
     /**
      * Rank cap, rarity tier, and rank-up cost offsets for this panel.
      * @type {PanelProgression}
      */
     this.progression = progression;
 
-    // policy step inside constructor.
     /**
      * The collection of all parameters that this panel affects when ranking it up.
      * @returns {PanelParameter[]}
      */
     this.panelParameters = panelParameters;
 
-    // policy step inside constructor.
     /**
      * The collection of all rewards this panel can grant by ranking it up.
      * @type {PanelRankupReward[]}
      */
     this.panelRewards = panelRewards;
 
-    // policy step inside constructor.
     /**
      * Subgroup mastery enrollment for this panel.
      * @type {PanelMastery}
@@ -192,13 +185,11 @@ class StatDistributionPanel
     {
       const rankExponent = currentRank + 1;
 
-      // capture parts for downstream policy in this routine.
       const parts = J.SDP.Metadata.resolveEffectiveRankUpCostParts(this);
 
       // Use ** here; Vitest stubs global Math (Math.pow may be missing) while ** stays native.
       const growth = Math.floor(parts.flatGrowthCost * (parts.multGrowthCost ** rankExponent));
 
-      // hand back parts.baseCost + growth to the caller.
       return parts.baseCost + growth;
     }
   }
@@ -321,15 +312,12 @@ class StatDistributionPanel
     {
       case PanelRarity.RARITY_COMMON:
         return PanelRarity.Common;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.RARITY_MAGICAL:
         return PanelRarity.Magical;
       case PanelRarity.RARITY_RARE:
-        // hand back PanelRarity.Rare to the caller.
         return PanelRarity.Rare;
       case PanelRarity.RARITY_EPIC:
         return PanelRarity.Epic;
-      // handle this switch arm for the current discriminant.
       case PanelRarity.RARITY_LEGENDARY:
         return PanelRarity.Legendary;
       case PanelRarity.RARITY_GODLIKE:

@@ -35,13 +35,11 @@ class JABS_PopupMergeController
                          popup.healing === true;
     const useMotion = J.POPUPS.Layout.Motion.Enabled === true && isMotionType;
 
-    // when useMotion, take this branch.
     if (useMotion)
     {
       return PopupLayoutHelper.resolveMotionOffset(popup);
     }
 
-    // hand back J.POPUPS.consumeLayoutRingOffset(character, popup.lay... to the caller.
     return PopupLayoutHelper.consumeLayoutRingOffset(character, popup.layoutRing);
   }
 
@@ -53,7 +51,6 @@ class JABS_PopupMergeController
   {
     let bucket = JABS_PopupMergeController.#characterStore.get(character);
 
-    // when not bucket, take this branch.
     if (!bucket)
     {
       bucket = {
@@ -62,7 +59,6 @@ class JABS_PopupMergeController
       JABS_PopupMergeController.#characterStore.set(character, bucket);
     }
 
-    // hand back bucket to the caller.
     return bucket;
   }
 
@@ -92,7 +88,6 @@ class JABS_PopupMergeController
   {
     const bucket = JABS_PopupMergeController.#characterStore.get(character);
 
-    // when not bucket  or  bucket.sessions.size  equals  0, take this branch.
     if (!bucket || bucket.sessions.size === 0)
     {
       JABS_PopupMergeController.#trackedCharacters.delete(character);
@@ -164,7 +159,6 @@ class JABS_PopupMergeController
   {
     const healOrHarm = pop.healing === true ? 'heal' : 'harm';
 
-    // hand back [ 'strike', pop.popupType, healOrHarm ].join('|') to the caller.
     return [ 'strike', pop.popupType, healOrHarm ].join('|');
   }
 
@@ -178,7 +172,6 @@ class JABS_PopupMergeController
   {
     const healOrHarm = pop.healing === true ? 'heal' : 'harm';
 
-    // hand back [ 'slip', pop.popupType, healOrHarm ].join('|') to the caller.
     return [ 'slip', pop.popupType, healOrHarm ].join('|');
   }
 
@@ -218,11 +211,9 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JABS_PopupMergeController.buildStrikeMergeKey(pop);
     const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
-    // when not spriteCharacter, take this branch.
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
@@ -231,13 +222,10 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture bucket for downstream policy in this routine.
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    // capture session for downstream policy in this routine.
     let session = bucket.sessions.get(key);
 
-    // when not session, take this branch.
     if (!session)
     {
       const template = JABS_PopupMergeController.#clonePopTemplate(pop);
@@ -256,7 +244,6 @@ class JABS_PopupMergeController
         sprite.kickMergeCombinePulse(true);
       }
 
-      // policy step inside route strike pop.
       session = {
         kind: 'strike',
         sprite,
@@ -273,18 +260,15 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside route strike pop.
     session.runningTotal += ctx.amount;
     pop.value = String(Math.round(session.runningTotal));
 
-    // when session.sprite  and  session.sprite.refreshDisplayedValue, take this branch.
     if (session.sprite && session.sprite.refreshDisplayedValue)
     {
       session.sprite.refreshDisplayedValue(pop.value, pop.critical === true);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
 
-    // policy step inside route strike pop.
     JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
@@ -305,11 +289,9 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JABS_PopupMergeController.buildSlipMergeKey(pop);
     const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
-    // when not spriteCharacter, take this branch.
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
@@ -318,23 +300,18 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture bucket for downstream policy in this routine.
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    // capture session for downstream policy in this routine.
     let session = bucket.sessions.get(key);
 
-    // when not session, take this branch.
     if (!session)
     {
       const template = JABS_PopupMergeController.#clonePopTemplate(pop);
 
-      // policy step inside route slip pop.
       template.value = String(Math.round(ctx.amount));
       const ringExtra = JABS_PopupMergeController.#ringExtraFor(spriteCharacter, template);
       const sprite = TextPopSpriteManager.convert(template, ringExtra);
 
-      // policy step inside route slip pop.
       session = {
         kind: 'slip',
         sprite,
@@ -351,18 +328,15 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside route slip pop.
     session.runningTotal += ctx.amount;
     pop.value = String(Math.round(session.runningTotal));
 
-    // when session.sprite  and  session.sprite.refreshDisplayedValue, take this branch.
     if (session.sprite && session.sprite.refreshDisplayedValue)
     {
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
 
-    // policy step inside route slip pop.
     JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
@@ -383,11 +357,9 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JABS_PopupMergeController.buildMitigationMergeKey(ctx.mitigationType);
     const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
-    // when not spriteCharacter, take this branch.
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
@@ -396,23 +368,18 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture bucket for downstream policy in this routine.
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    // capture session for downstream policy in this routine.
     let session = bucket.sessions.get(key);
 
-    // when not session, take this branch.
     if (!session)
     {
       const template = JABS_PopupMergeController.#clonePopTemplate(pop);
 
-      // policy step inside route mitigation pop.
       template.value = `${ctx.labelPrefix} x1`;
       const ringExtra = JABS_PopupMergeController.#ringExtraFor(spriteCharacter, template);
       const sprite = TextPopSpriteManager.convert(template, ringExtra);
 
-      // policy step inside route mitigation pop.
       session = {
         kind: 'mitigation',
         sprite,
@@ -430,18 +397,15 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside route mitigation pop.
     session.count += 1;
     pop.value = `${session.labelPrefix} x${session.count}`;
 
-    // when session.sprite  and  session.sprite.refreshDisplayedValue, take this branch.
     if (session.sprite && session.sprite.refreshDisplayedValue)
     {
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
 
-    // policy step inside route mitigation pop.
     JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
@@ -462,11 +426,9 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JABS_PopupMergeController.buildRewardMergeKey(ctx.rewardType);
     const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
-    // when not spriteCharacter, take this branch.
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
@@ -475,23 +437,18 @@ class JABS_PopupMergeController
       return;
     }
 
-    // capture bucket for downstream policy in this routine.
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    // capture session for downstream policy in this routine.
     let session = bucket.sessions.get(key);
 
-    // when not session, take this branch.
     if (!session)
     {
       const template = JABS_PopupMergeController.#clonePopTemplate(pop);
 
-      // policy step inside route reward pop.
       template.value = String(Math.round(ctx.amount));
       const ringExtra = JABS_PopupMergeController.#ringExtraFor(spriteCharacter, template);
       const sprite = TextPopSpriteManager.convert(template, ringExtra);
 
-      // policy step inside route reward pop.
       session = {
         kind: 'reward',
         sprite,
@@ -508,18 +465,15 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside route reward pop.
     session.runningTotal += ctx.amount;
     pop.value = String(Math.round(session.runningTotal));
 
-    // when session.sprite  and  session.sprite.refreshDisplayedValue, take this branch.
     if (session.sprite && session.sprite.refreshDisplayedValue)
     {
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
 
-    // policy step inside route reward pop.
     JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
@@ -532,16 +486,13 @@ class JABS_PopupMergeController
   {
     const bucket = JABS_PopupMergeController.#characterStore.get(character);
 
-    // when not bucket, take this branch.
     if (!bucket)
     {
       return;
     }
 
-    // capture sprite character for downstream policy in this routine.
     const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
-    // when not spriteCharacter, take this branch.
     if (!spriteCharacter)
     {
       bucket.sessions.clear();
@@ -551,13 +502,11 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside flush character.
     bucket.sessions.forEach(session =>
     {
       JABS_PopupMergeController.#finishMergeSessionVisualRelease(session.sprite);
     });
 
-    // policy step inside flush character.
     bucket.sessions.clear();
     JABS_PopupMergeController.#untrackIfEmpty(character);
   }
@@ -571,27 +520,22 @@ class JABS_PopupMergeController
     const idleFrames = J.POPUPS.EXT.ABS.Metadata.mergeParams.idleFlushFrames;
     const now = Graphics.frameCount;
 
-    // policy step inside tick idle flush.
     JABS_PopupMergeController.#trackedCharacters.forEach(character =>
     {
       const bucket = JABS_PopupMergeController.#characterStore.get(character);
 
-      // when not bucket, take this branch.
       if (!bucket)
       {
         return;
       }
 
-      // capture sprite character for downstream policy in this routine.
       const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
       const keys = Array.from(bucket.sessions.keys());
 
-      // policy step inside tick idle flush.
       keys.forEach(key =>
       {
         const session = bucket.sessions.get(key);
 
-        // when not session  or  not spriteCharacter, take this branch.
         if (!session || !spriteCharacter)
         {
           bucket.sessions.delete(key);
@@ -603,18 +547,15 @@ class JABS_PopupMergeController
         // each session tracks its own activity timestamp; only flush when this specific stream is idle.
         const lastAct = session.lastActivityFrame ?? 0;
 
-        // when now - lastAct < idleFrames, take this branch.
         if (now - lastAct < idleFrames)
         {
           return;
         }
 
-        // policy step inside tick idle flush.
         JABS_PopupMergeController.#finishMergeSessionVisualRelease(session.sprite);
         bucket.sessions.delete(key);
       });
 
-      // policy step inside tick idle flush.
       JABS_PopupMergeController.#untrackIfEmpty(character);
     });
   }
@@ -626,7 +567,6 @@ class JABS_PopupMergeController
   {
     const list = Array.from(JABS_PopupMergeController.#trackedCharacters);
 
-    // policy step inside flush all characters.
     list.forEach(character =>
     {
       JABS_PopupMergeController.flushCharacter(character);
@@ -650,10 +590,8 @@ class JABS_PopupMergeController
       return;
     }
 
-    // policy step inside start.
     JABS_PopupMergeController.#emitterStarted = true;
 
-    // policy step inside start.
     J.POPUPS.Helpers.PopupEmitter.on(J.POPUPS.EventNames.MergeFlushAll, () =>
     {
       JABS_PopupMergeController.flushAllCharacters();

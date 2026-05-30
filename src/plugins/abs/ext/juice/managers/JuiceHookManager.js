@@ -43,7 +43,6 @@ class JuiceHookManager
     const prior = JuiceHookManager.#flurryState.get(key);
     let count = 1;
 
-    // when prior  and  frame - prior.frame <= 2, take this branch.
     if (prior && frame - prior.frame <= 2)
     {
       count = prior.count + 1;
@@ -52,7 +51,6 @@ class JuiceHookManager
     // Register the value on the alias map for runtime lookup.
     JuiceHookManager.#flurryState.set(key, new JuiceFlurryStrikeRecord(count, frame));
 
-    // capture decay for downstream policy in this routine.
     const decay = md.flurryDecayPercent / 100;
     return Math.pow(decay, count - 1);
   }
@@ -66,50 +64,41 @@ class JuiceHookManager
   {
     JuiceHookManager.#maybeGarbageCollectFlurry();
 
-    // capture result for downstream policy in this routine.
     const result = target.getBattler()
       .result();
 
-    // when result.parried  equals  true, take this branch.
     if (result.parried === true)
     {
       return;
     }
 
-    // when result.evaded  equals  true, take this branch.
     if (result.evaded === true)
     {
       return;
     }
 
-    // capture sprite for downstream policy in this routine.
     const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(target.getCharacter());
     if (!sprite)
     {
       return;
     }
 
-    // capture md for downstream policy in this routine.
     const md = J.ABS.EXT.JUICE.Metadata;
     const ga = action.getAction();
     let intensity = md.targetMagicalSquishIntensity;
 
-    // when ga.isPhysical(), take this branch.
     if (ga.isPhysical())
     {
       intensity = md.targetPhysicalSquishIntensity;
     }
 
-    // when action.isHealing(), take this branch.
     if (action.isHealing())
     {
       intensity *= md.healingRecipientSquishScale;
     }
 
-    // policy step inside on post primary battle effects.
     intensity *= JuiceHookManager.#computeFlurryAmplitudeScale(action, target);
 
-    // policy step inside on post primary battle effects.
     JuiceMotionManager.scheduleSquish(sprite, intensity, md.targetSquishFrames);
   }
 
@@ -125,19 +114,16 @@ class JuiceHookManager
       ? JABS_Button.Dodge
       : 'Dodge';
 
-    // when cooldownKey  equals  dodgeKey, take this branch.
     if (cooldownKey === dodgeKey)
     {
       JuiceHookManager.#applyDodgeJuice(caster);
       return;
     }
 
-    // when action.isHealing(), take this branch.
     if (action.isHealing())
     {
       const strikeMotionRequested = action.getBaseSkill().jabsJuiceMotion !== String.empty;
 
-      // when strikeMotionRequested  equals  false, take this branch.
       if (strikeMotionRequested === false)
       {
         JuiceHookManager.#applySupportCasterJuice(caster);
@@ -147,7 +133,6 @@ class JuiceHookManager
       // authored `<juiceMotion:…>` wins over the healing shortcut — same path as strikes (tilt + overlay).
     }
 
-    // policy step inside on execute map action.
     JuiceHookManager.#applyStrikeJuice(caster, action);
   }
 
@@ -200,7 +185,6 @@ class JuiceHookManager
       return;
     }
 
-    // capture style key for downstream policy in this routine.
     const styleKey = JuiceProfileResolver.resolveWeaponStyleKey(caster, action);
     const mul = JuiceProfileResolver.resolveStyleMultipliers(styleKey);
 
@@ -212,7 +196,6 @@ class JuiceHookManager
       md.casterStrikeTiltFrames
     );
 
-    // capture icon index for downstream policy in this routine.
     const iconIndex = JuiceProfileResolver.resolveWeaponIconIndex(caster, action);
     if (iconIndex >= 0)
     {
@@ -263,20 +246,16 @@ class JuiceHookManager
       return;
     }
 
-    // capture sprite for downstream policy in this routine.
     const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(battler.getCharacter());
     if (!sprite)
     {
       return;
     }
 
-    // policy step inside tick casting juice.
     battler._juiceCastingScheduled = true;
 
-    // capture md for downstream policy in this routine.
     const md = J.ABS.EXT.JUICE.Metadata;
 
-    // policy step inside tick casting juice.
     JuiceMotionManager.scheduleCastingPulse(
       sprite,
       md.castingPulseAmplitude,
@@ -292,14 +271,12 @@ class JuiceHookManager
   {
     battler._juiceCastingScheduled = false;
 
-    // capture sprite for downstream policy in this routine.
     const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(battler.getCharacter());
     if (!sprite)
     {
       return;
     }
 
-    // policy step inside end casting juice.
     JuiceMotionManager.cancelForSprite(sprite);
   }
 }

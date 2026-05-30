@@ -60,7 +60,6 @@ SoundManager.playMaxChargeReadySE = function()
  */
 SoundManager.chargeTierCompleteSE = function()
 {
-  // hand back J.ABS.EXT.CHARGE.Metadata.TierCompleteSE to the caller.
   return J.ABS.EXT.CHARGE.Metadata.TierCompleteSE
     ?? new RPG_SoundEffect("Heal6", 40, 130, 0);
 };
@@ -71,7 +70,6 @@ SoundManager.chargeTierCompleteSE = function()
  */
 SoundManager.maxChargeReadySE = function()
 {
-  // hand back J.ABS.EXT.CHARGE.Metadata.ChargeReadySE to the caller.
   return J.ABS.EXT.CHARGE.Metadata.ChargeReadySE
     ?? new RPG_SoundEffect("Item3", 50, 110, 0);
 };

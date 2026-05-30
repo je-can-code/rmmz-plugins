@@ -24,16 +24,13 @@ Game_Battler.prototype.initResourcesMembers = function()
   /**
    * The J object where all my additional properties live.
    */
-  // policy step inside init resources members.
   this._j ||= {};
 
-  // policy step inside init resources members.
   /**
    * A grouping of all properties associated with resources.
    */
   this._j._resources ||= {};
 
-  // policy step inside init resources members.
   /**
    * The hp cost reduction for this battler.
    * @type {number}
@@ -53,7 +50,6 @@ Game_Battler.prototype._ensureHcrInitializedForResources = function()
   this._j._resources ||= {};
   if (typeof this._j._hcr !== 'number' || Number.isNaN(this._j._hcr))
   {
-    // policy step inside  ensure hcr initialized for resources.
     this.refreshHcr();
   }
 };
@@ -79,7 +75,6 @@ Game_Battler.prototype.hcrFactor = function()
   this._ensureHcrInitializedForResources();
   const hrcFactor = this._j._hcr / 100;
   return hrcFactor;
-// policy step inside hcr factor.
 };
 
 /**
@@ -169,7 +164,6 @@ Game_Battler.prototype.canPaySkillCost = function(skill)
     }
   }
 
-  // hand back true to the caller.
   return true;
 };
 

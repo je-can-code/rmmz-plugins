@@ -43,7 +43,6 @@ Game_Player.prototype.reserveOriginTransfer = function()
   const {
     mapId,
     x,
-    // policy step inside reserve origin transfer.
     y
   } = BattleManager.origin();
   this.reserveTransfer(mapId, x, y);

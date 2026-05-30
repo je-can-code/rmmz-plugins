@@ -170,7 +170,6 @@ class Logger
     let out = '';
     let i = startOffset % palette.length;
 
-    // iterate the loop counter until the guard exits.
     for (let idx = 0; idx < text.length; idx++)
     {
       // Grab the current character.

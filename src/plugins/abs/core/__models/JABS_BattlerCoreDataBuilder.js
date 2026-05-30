@@ -170,7 +170,6 @@ class JABS_BattlerCoreDataBuilder
       core.setDangerIndicator(this.#showDangerIndicator);
     }
 
-    // hand back core to the caller.
     return core;
   }
 
@@ -186,14 +185,12 @@ class JABS_BattlerCoreDataBuilder
     this.#teamId = battler.teamId();
     this.#battlerAi = battler.ai();
 
-    // policy step inside set battler.
     this.#sightRange = battler.sightRange();
     this.#alertedSightBoost = battler.alertedSightBoost();
     this.#pursuitRange = battler.pursuitRange();
     this.#alertedPursuitBoost = battler.alertedPursuitBoost();
     this.#alertDuration = battler.alertDuration();
 
-    // policy step inside set battler.
     this.#canIdle = battler.canIdle();
     this.#showHpBar = battler.showHpBar();
     this.#showDangerIndicator = battler.showDangerIndicator();
@@ -201,7 +198,6 @@ class JABS_BattlerCoreDataBuilder
     this.#isInvincible = battler.isInvincible();
     this.#isInanimate = battler.isInanimate();
 
-    // hand back this to the caller.
     return this;
   }
 
@@ -214,21 +210,18 @@ class JABS_BattlerCoreDataBuilder
   {
     this.#teamId = JABS_Battler.allyTeamId();
 
-    // policy step inside is player.
     this.#sightRange = 0;
     this.#alertedSightBoost = 0;
     this.#pursuitRange = 0;
     this.#alertedPursuitBoost = 0;
     this.#alertDuration = 0;
 
-    // policy step inside is player.
     this.#canIdle = false;
     this.#showHpBar = false;
     this.#showBattlerName = false;
     this.#isInvincible = false;
     this.#isInanimate = false;
 
-    // hand back this to the caller.
     return this;
   }
 
@@ -243,7 +236,6 @@ class JABS_BattlerCoreDataBuilder
     this.#teamId = isFriendly
       ? JABS_Battler.allyTeamId()
       : JABS_Battler.enemyTeamId();
-    // hand back this to the caller.
     return this;
   }
 

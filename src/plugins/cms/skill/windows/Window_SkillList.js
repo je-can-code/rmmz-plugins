@@ -9,7 +9,6 @@ Window_SkillList.prototype.initialize = function(rect)
   // perform original logic.
   J.CMS_K.Aliased.Window_SkillList.get('initialize').call(this, rect);
 
-  // policy step inside initialize.
   /**
    * The detail window for the skill.
    *  @type {Window_SkillDetail}
@@ -34,12 +33,10 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
 {
   if (!this._skillDetailWindow) return;
 
-  // capture id for downstream policy in this routine.
   let id = 0;
   const item = this.item();
   if (item)
   {
-    // policy step inside refresh skill detail window.
     ({ id } = item);
   }
   this._skillDetailWindow.setActor(this._actor);

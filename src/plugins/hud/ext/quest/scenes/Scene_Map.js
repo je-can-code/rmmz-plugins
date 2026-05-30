@@ -11,13 +11,11 @@ Scene_Map.prototype.initHudMembers = function()
   J.HUD.EXT.QUEST.Aliased.Scene_Map.get('initHudMembers')
     .call(this);
 
-  // policy step inside init hud members.
   /**
    * A grouping of all properties that belong to quest extension of the HUD.
    */
   this._j._hud._quest = {};
 
-  // policy step inside init hud members.
   /**
    * The quest frame for tracking quests and their objectives.
    * @type {Window_QuestFrame}

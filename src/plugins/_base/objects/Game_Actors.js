@@ -34,7 +34,6 @@ Game_Actors.prototype.actorIds = function()
  */
 Game_Actors.prototype.actors = function()
 {
-  // hand back this.actorIds() to the caller.
   return this.actorIds()
     .map(id => this.actor(id), this);
 };

@@ -28,7 +28,6 @@ Game_System.prototype.gainAllEverything = function(count = 1)
   this.gainAllItems(count);
   this.gainAllWeapons(count);
   this.gainAllArmors(count);
-// policy step inside gain all everything.
 };
 
 Game_System.prototype.gainAllItems = function(count = 1)
@@ -36,7 +35,6 @@ Game_System.prototype.gainAllItems = function(count = 1)
   $dataItems
     .filter(this.canGainEntry)
     .forEach(entry => $gameParty.gainItem(entry, count));
-// policy step inside gain all items.
 };
 
 Game_System.prototype.gainAllWeapons = function(count = 1)
@@ -44,7 +42,6 @@ Game_System.prototype.gainAllWeapons = function(count = 1)
   $dataWeapons
     .filter(this.canGainEntry)
     .forEach(entry => $gameParty.gainItem(entry, count));
-// policy step inside gain all weapons.
 };
 
 Game_System.prototype.gainAllArmors = function(count = 1)
@@ -52,7 +49,6 @@ Game_System.prototype.gainAllArmors = function(count = 1)
   $dataArmors
     .filter(this.canGainEntry)
     .forEach(entry => $gameParty.gainItem(entry, count));
-// policy step inside gain all armors.
 };
 
 /**

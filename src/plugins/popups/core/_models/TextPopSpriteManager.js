@@ -27,7 +27,6 @@ class TextPopSpriteManager
     // start by creating a blank damage sprite with accumulation-capable subclass.
     const sprite = new Sprite_MapDamage();
 
-    // capture rx for downstream policy in this routine.
     const rx = ringExtra.x || 0;
     const ry = ringExtra.y || 0;
 
@@ -63,11 +62,9 @@ class TextPopSpriteManager
       sprite.setupCriticalEffect();
     }
 
-    // policy step inside convert.
     sprite._j._popups._textAccent = popup.textAccent || null;
     sprite._j._popups._sourcePopup = popup;
 
-    // policy step inside convert.
     sprite.createValue(popup.value);
 
     // reposition children if both icon and text exist.
@@ -94,23 +91,18 @@ class TextPopSpriteManager
     {
       case Map_TextPop.Types.HpDamage:
       case Map_TextPop.Types.MpDamage:
-      // handle this switch arm for the current discriminant.
       case Map_TextPop.Types.TpDamage:
         return 30;
       case Map_TextPop.Types.Experience:
-      // handle this switch arm for the current discriminant.
       case Map_TextPop.Types.Gold:
       case Map_TextPop.Types.Sdp:
       case Map_TextPop.Types.Item:
-        // hand back 30 to the caller.
         return 30;
       case Map_TextPop.Types.Learn:
         return 60;
-      // handle this switch arm for the current discriminant.
       case Map_TextPop.Types.Levelup:
         return 90;
       case Map_TextPop.Types.Parry:
-      // handle this switch arm for the current discriminant.
       case Map_TextPop.Types.SkillUsage:
       case Map_TextPop.Types.Slip:
         return 0;
@@ -130,7 +122,6 @@ class TextPopSpriteManager
     {
       case Map_TextPop.Types.HpDamage:
       case Map_TextPop.Types.MpDamage:
-      // handle this switch arm for the current discriminant.
       case Map_TextPop.Types.TpDamage:
         return true;
       default:

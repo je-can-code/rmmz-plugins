@@ -87,7 +87,6 @@ Game_Battler.prototype.baseLstRate = function()
 {
   const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.RESOURCES.EXT.ABS.RegExp.Lifesteal);
 
-  // hand back bonus / 100 to the caller.
   return bonus / 100;
 };
 
@@ -99,7 +98,6 @@ Game_Battler.prototype.baseMstRate = function()
 {
   const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.RESOURCES.EXT.ABS.RegExp.Manasteal);
 
-  // hand back bonus / 100 to the caller.
   return bonus / 100;
 };
 
@@ -111,7 +109,6 @@ Game_Battler.prototype.baseTstRate = function()
 {
   const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.RESOURCES.EXT.ABS.RegExp.Techsteal);
 
-  // hand back bonus / 100 to the caller.
   return bonus / 100;
 };
 //endregion Game_Battler

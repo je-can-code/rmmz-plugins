@@ -29,11 +29,9 @@ Window_JaftingList.prototype.buildRefinementCommand = function()
   return new WindowCommandBuilder(J.JAFTING.EXT.REFINE.Metadata.commandName)
     .setSymbol(Scene_JaftingRefine.KEY)
     .setEnabled(Scene_JaftingRefine.isRefineCommandEnabled())
-    // policy step inside build refinement command.
     .addTextLine("Give your equipment a personal touch.")
     .addTextLine("Modify your equips with trait transferrence and reach for godlihood!")
     .setIconIndex(J.JAFTING.EXT.REFINE.Metadata.commandIconIndex)
-    // policy step inside build refinement command.
     .build();
 };
 //endregion Window_JaftingList

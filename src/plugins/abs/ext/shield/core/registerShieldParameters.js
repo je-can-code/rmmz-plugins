@@ -12,26 +12,20 @@ class ShieldParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key('sar')
-        // policy step inside register all.
         .group(ParameterGroups.SUPPORT)
         .sortOrder(0)
         .label(() => TextManager.sar())
-        // policy step inside register all.
         .description(() => TextManager.sarDescription())
         .iconIndex(() => IconManager.sar())
         .format(ParameterFormat.MULTIPLIER_PERCENT)
-        // policy step inside register all.
         .getValue(battler => battler.sar)
         .sdpBinding(SdpParameterBinding.byKey('sar', () => 1))
         .build()
-    // policy step inside register all.
     );
 
-    // policy step inside register all.
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key('ser')
-        // policy step inside register all.
         .group(ParameterGroups.SUPPORT)
         .sortOrder(1)
         .label(() => TextManager.ser())

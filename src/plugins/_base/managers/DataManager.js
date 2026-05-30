@@ -62,7 +62,6 @@ DataManager.isDatabaseLoaded = function()
     this.onDatabaseLoad();
   }
 
-  // hand back is loaded to the caller.
   return isLoaded;
 };
 

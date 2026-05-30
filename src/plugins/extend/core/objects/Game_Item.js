@@ -9,7 +9,6 @@ Game_Item.prototype.initialize = function(item)
   J.EXTEND.Aliased.Game_Item.get('initialize')
     .call(this, item);
 
-  // policy step inside initialize.
   /**
    * The underlying object associated with this item.
    * @type {RPG_EquipItem|RPG_UsableItem}

@@ -36,7 +36,6 @@ class SdpMasteryManager
       // only the winning panel's wrapper skill may remain learned on this actor.
       const shouldKeepSkill = winningPanel !== null && panel.key === winningPanel.key;
 
-      // when shouldKeepSkill  equals  false  and  actor.isLearnedSkill(mastery.mas..., take this branch.
       if (shouldKeepSkill === false && actor.isLearnedSkill(mastery.masterySkillId))
       {
         // drop the superseded wrapper skill; J-Passive will refresh states on forget.
@@ -47,7 +46,6 @@ class SdpMasteryManager
     // if the actor hasn't maxed any mastery panel in this subgroup yet, we are done forgetting.
     if (winningPanel === null) return;
 
-    // capture winning mastery for downstream policy in this routine.
     const winningMastery = winningPanel.mastery;
 
     // grant the winning wrapper skill if the actor doesn't already have it from a prior reconcile.
@@ -74,13 +72,11 @@ class SdpMasteryManager
       {
         const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
 
-        // when not panel, take this branch.
         if (!panel) return;
 
         // continue the routine with the next policy step.
         const { mastery } = panel;
 
-        // when mastery.subgroupKey  differs from  subgroupKey, take this branch.
         if (mastery.subgroupKey !== subgroupKey) return;
         if (mastery.masterySkillId <= 0) return;
 
@@ -91,7 +87,6 @@ class SdpMasteryManager
         }
       });
 
-    // hand back winning panel to the caller.
     return winningPanel;
   }
 }

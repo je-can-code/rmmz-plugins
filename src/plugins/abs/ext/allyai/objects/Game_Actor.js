@@ -24,22 +24,18 @@ Game_Actor.prototype.initAllyAiMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init ally ai members.
   this._j ||= {};
 
-  // policy step inside init ally ai members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside init ally ai members.
   /**
    * A grouping of all properties associated with the ally AI extension.
    */
   this._j._abs._allyAi ||= {};
 
-  // policy step inside init ally ai members.
   /**
    * The currently selected Ally AI mode.
    * @type {JABS_AllyAI|null}
@@ -85,7 +81,6 @@ Game_Actor.prototype.getAllyAI = function()
     this.initAllyAiMembers();
   }
 
-  // hand back this._j._abs._allyAi._mode to the caller.
   return this._j._abs._allyAi._mode;
 }
 
@@ -140,7 +135,6 @@ Game_Actor.prototype.getDefaultAllyAI = function()
  */
 Game_Actor.prototype.getValidSkillSlotsForAlly = function()
 {
-  // hand back this.getSkillSlotManager() to the caller.
   return this.getSkillSlotManager()
     .getEquippedAllySlots();
 };

@@ -17,7 +17,6 @@ TextManager.goldRateDescription = function()
   return [
     'Bonus multiplier applied to gold rewards.',
     'Higher values yield more gold from battles and chests.',
-  // policy step inside gold rate description.
   ];
 };
 
@@ -39,7 +38,6 @@ TextManager.dropRateDescription = function()
   return [
     'Bonus multiplier applied to item drop chances.',
     'Higher values improve the odds of extra loot.',
-  // policy step inside drop rate description.
   ];
 };
 //endregion TextManager

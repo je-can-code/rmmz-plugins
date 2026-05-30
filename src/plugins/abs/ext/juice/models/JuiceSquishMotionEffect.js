@@ -59,7 +59,6 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
     this._sprite.scale.x = this._baseScaleX * mul;
     this._sprite.scale.y = this._baseScaleY * (1 / mul);
 
-    // when this._frame >= this._durationFrames, take this branch.
     if (this._frame >= this._durationFrames)
     {
       this.restore();
@@ -67,7 +66,6 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
       return false;
     }
 
-    // hand back true to the caller.
     return true;
   }
 }

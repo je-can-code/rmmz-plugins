@@ -23,22 +23,18 @@ function refinableEquipTemplateSortHasSalvageLineage(equip)
     return true;
   }
 
-  // capture ledger for downstream policy in this routine.
   const ledger = JaftingSalvageManager.getLedgerForDatum(equip);
 
-  // when ledger  equals  null  or  ledger  equals  undefined, take this branch.
   if (ledger === null || ledger === undefined)
   {
     return false;
   }
 
-  // when not ledger.rows  or  ledger.rows.length  equals  0, take this branch.
   if (!ledger.rows || ledger.rows.length === 0)
   {
     return false;
   }
 
-  // hand back true to the caller.
   return true;
 }
 
@@ -53,19 +49,16 @@ function refinableEquipHasSalvageStamp(equip, unitOrdinal)
 {
   const ledger = JaftingSalvageManager.getLedgerUnitForDatum(equip, unitOrdinal);
 
-  // when ledger  equals  null  or  ledger  equals  undefined, take this branch.
   if (ledger === null || ledger === undefined)
   {
     return false;
   }
 
-  // when not ledger.rows  or  ledger.rows.length  equals  0, take this branch.
   if (!ledger.rows || ledger.rows.length === 0)
   {
     return false;
   }
 
-  // hand back true to the caller.
   return true;
 }
 
@@ -95,33 +88,27 @@ class Window_RefinableList
     /**
      * The currently selected index of this equip selection window.
      * @type {number}
-     // policy step inside init members.
      */
     this._currentIndex = null;
 
-    // policy step inside init members.
     /**
      * Whether or not this equip list window is the primary equip or not.
      * @type {boolean}
-     // policy step inside init members.
      */
     this._isPrimaryEquipWindow = false;
 
-    // policy step inside init members.
     /**
      * The current equip that is selected as the base for refinement.
      * @type {RPG_EquipItem}
      */
     this._primarySelection = null;
 
-    // policy step inside init members.
     /**
      * The projected result of refining the base item with the selected material.
      * @type {RPG_EquipItem}
      */
     this._projectedOutput = null;
 
-    // policy step inside init members.
     /**
      * Ordinal of the base row the player confirmed (per expanded copy); null when not tracking a slot.
      * @type {number|null}
@@ -212,13 +199,11 @@ class Window_RefinableList
           return false;
         }
 
-        // when JaftingSalvageLedger.isMaterialWeaponDatum(equip), take this branch.
         if (JaftingSalvageLedger.isMaterialWeaponDatum(equip))
         {
           return false;
         }
 
-        // hand back true to the caller.
         return true;
       });
     }
@@ -229,19 +214,16 @@ class Window_RefinableList
       const stampA = refinableEquipTemplateSortHasSalvageLineage(a) ? 1 : 0;
       const stampB = refinableEquipTemplateSortHasSalvageLineage(b) ? 1 : 0;
 
-      // when stampA  differs from  stampB, take this branch.
       if (stampA !== stampB)
       {
         return stampB - stampA;
       }
 
-      // when a.etypeId > b.etypeId, take this branch.
       if (a.etypeId > b.etypeId) return 1;
       if (a.etypeId < b.etypeId) return -1;
       if (a.id > b.id) return 1;
       if (a.id < b.id) return -1;
 
-      // hand back 0 to the caller.
       return 0;
     });
 
@@ -253,17 +235,14 @@ class Window_RefinableList
         return;
       }
 
-      // capture is stack counted row for downstream policy in this routine.
       const isStackCountedRow = JaftingSalvageLedger.isStackCountedRefinableEquip(equip);
       const count = $gameParty.numItems(equip);
 
-      // when count < 1, take this branch.
       if (count < 1)
       {
         return;
       }
 
-      // when isStackCountedRow, take this branch.
       if (isStackCountedRow)
       {
         this.addRefinableEquipCommand(equip, null);
@@ -272,7 +251,6 @@ class Window_RefinableList
         return;
       }
 
-      // iterate the loop counter until the guard exits.
       for (let u = 0; u < count; u++)
       {
         this.addRefinableEquipCommand(equip, { unitOrdinal: u, unitsTotal: count });
@@ -295,27 +273,22 @@ class Window_RefinableList
       return;
     }
 
-    // capture equip count for downstream policy in this routine.
     const equipCount = $gameParty.numItems(equip);
     const isStackCountedRow = JaftingSalvageLedger.isStackCountedRefinableEquip(equip);
     const hasUnit = unitSlot !== null && unitSlot !== undefined;
 
-    // when isStackCountedRow  and  hasUnit, take this branch.
     if (isStackCountedRow && hasUnit)
     {
       return;
     }
 
-    // when not isStackCountedRow  and  not hasUnit, take this branch.
     if (!isStackCountedRow && !hasUnit)
     {
       return;
     }
 
-    // capture right text for downstream policy in this routine.
     let rightText = String.empty;
 
-    // when isStackCountedRow, take this branch.
     if (isStackCountedRow)
     {
       rightText = `x${equipCount}`;
@@ -331,15 +304,12 @@ class Window_RefinableList
       : equip.name;
     const nameColorIndex = stamped ? 6 : 0;
 
-    // capture same template for downstream policy in this routine.
     const sameTemplate = equip === this.baseSelection;
     const rowOrdinal = hasUnit ? unitSlot.unitOrdinal : null;
     const baseOrdinal = this.baseSelectionUnitOrdinal;
 
-    // capture same physical unit for downstream policy in this routine.
     let samePhysicalUnit = false;
 
-    // when sameTemplate, take this branch.
     if (sameTemplate)
     {
       if (rowOrdinal !== null && rowOrdinal !== undefined
@@ -349,22 +319,18 @@ class Window_RefinableList
       }
     }
 
-    // capture template stack for downstream policy in this routine.
     const templateStack = this.baseSelection
       ? $gameParty.numItems(this.baseSelection)
       : 0;
     const canSelectThisMaterial = sameTemplate === false
       || (templateStack > 1 && samePhysicalUnit === false);
 
-    // capture enabled for downstream policy in this routine.
     let enabled = this.isPrimary
       ? true
       : canSelectThisMaterial;
 
-    // policy step inside add refinable equip command.
     let { iconIndex } = equip;
 
-    // capture error text for downstream policy in this routine.
     let errorText = "";
 
     // if the equipment is completely unable to
@@ -441,7 +407,6 @@ class Window_RefinableList
         errorText += `${J.JAFTING.EXT.REFINE.Messages.AlreadyMaxRefineCount}\n`;
       }
 
-      // when equipHasMaxTraits, take this branch.
       if (equipHasMaxTraits)
       {
         enabled = false;
@@ -457,25 +422,21 @@ class Window_RefinableList
       }
     }
 
-    // capture is chosen base row for downstream policy in this routine.
     const isChosenBaseRow = sameTemplate
       && rowOrdinal !== null && rowOrdinal !== undefined
       && baseOrdinal !== null && baseOrdinal !== undefined
       && rowOrdinal === baseOrdinal;
 
-    // when isChosenBaseRow, take this branch.
     if (isChosenBaseRow)
     {
       iconIndex = 91;
     }
 
-    // capture ext data for downstream policy in this routine.
     const extData = {
       data: equip,
       error: errorText,
     };
 
-    // when hasUnit, take this branch.
     if (hasUnit)
     {
       extData.unitOrdinal = unitSlot.unitOrdinal;
@@ -493,7 +454,6 @@ class Window_RefinableList
       .setHelpText(equip.description)
       .build();
 
-    // policy step inside add refinable equip command.
     this.addBuiltCommand(command);
   }
 }

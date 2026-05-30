@@ -73,11 +73,9 @@ class RPG_Weapon
     const raw = {
       id: index,
       animationId: 0,
-      // policy step inside create empty.
       wtypeId: 0,
       etypeId: 1,
       params: [ 0, 0, 0, 0, 0, 0, 0, 0 ],
-      // policy step inside create empty.
       price: 0,
       traits: [],
       description: String.empty,
@@ -87,11 +85,9 @@ class RPG_Weapon
       meta: {},
     };
 
-    // hand back new RPG_Weapon(raw, index) to the caller.
     return new RPG_Weapon(raw, index);
   }
 }
-
 
 export default RPG_Weapon;
 //endregion RPG_Weapon

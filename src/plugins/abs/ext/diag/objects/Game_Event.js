@@ -22,22 +22,18 @@ Game_Event.prototype.initDiagMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init diag members.
   this._j ||= {};
 
-  // policy step inside init diag members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside init diag members.
   /**
    * A grouping of all properties associated with the diagonal extension.
    */
   this._j._abs._diag = {};
 
-  // policy step inside init diag members.
   /**
    * The initial direction this event is facing.
    */
@@ -53,7 +49,6 @@ Game_Event.prototype.setCustomDirection = function(direction)
   // don't turn if direction is fixed.
   if (this.isDirectionFixed()) return;
 
-  // policy step inside set custom direction.
   this._j._abs._diag._initialDirection = direction;
 };
 
@@ -173,7 +168,6 @@ Game_Event.prototype.turnRight90 = function()
   {
     case 1:
       this.setCustomDirection(7);
-      // policy step inside turn right90.
       break;
     case 3:
       this.setCustomDirection(1);
@@ -206,7 +200,6 @@ Game_Event.prototype.turnLeft90 = function()
   {
     case 1:
       this.setDirection(3);
-      // policy step inside turn left90.
       break;
     case 3:
       this.setDirection(9);
@@ -233,31 +226,24 @@ Game_Event.prototype.turnRight45 = function()
   {
     case 1:
       this.setCustomDirection(4);
-      // policy step inside turn right45.
       this.setDirection(4);
       break;
     case 2:
-      // policy step inside turn right45.
       this.setCustomDirection(1);
       break;
     case 3:
-      // policy step inside turn right45.
       this.setCustomDirection(2);
       this.setDirection(2);
       break;
-    // handle this switch arm for the current discriminant.
     case 4:
       this.setCustomDirection(7);
       break;
-    // handle this switch arm for the current discriminant.
     case 6:
       this.setCustomDirection(3);
       break;
-    // handle this switch arm for the current discriminant.
     case 7:
       this.setCustomDirection(8);
       this.setDirection(8);
-      // policy step inside turn right45.
       break;
     case 8:
       this.setCustomDirection(9);
@@ -280,31 +266,24 @@ Game_Event.prototype.turnLeft45 = function()
   {
     case 1:
       this.setCustomDirection(2);
-      // policy step inside turn left45.
       this.setDirection(2);
       break;
     case 2:
-      // policy step inside turn left45.
       this.setCustomDirection(3);
       break;
     case 3:
-      // policy step inside turn left45.
       this.setCustomDirection(6);
       this.setDirection(6);
       break;
-    // handle this switch arm for the current discriminant.
     case 4:
       this.setCustomDirection(1);
       break;
-    // handle this switch arm for the current discriminant.
     case 6:
       this.setCustomDirection(9);
       break;
-    // handle this switch arm for the current discriminant.
     case 7:
       this.setCustomDirection(4);
       this.setDirection(4);
-      // policy step inside turn left45.
       break;
     case 8:
       this.setCustomDirection(7);
@@ -324,7 +303,6 @@ Game_Event.prototype.turnRightOrLeft45 = function()
   Math.randomInt(2)
     ? this.turnLeft45()
     : this.turnRight45();
-// policy step inside turn right or left45.
 };
 
 /**
@@ -423,7 +401,6 @@ Game_Event.prototype.homeIntoTargetBattler = function(target)
     return;
   }
 
-  // policy step inside home into target battler.
   this.homeIntoBattler(target);
 };
 
@@ -441,7 +418,6 @@ Game_Event.prototype.homeIntoLastHitBattler = function(lastHit)
     return;
   }
 
-  // policy step inside home into last hit battler.
   this.homeIntoBattler(lastHit);
 };
 
@@ -539,7 +515,6 @@ Game_Event.prototype.seekLastHitBattler = function(lastHit)
     return;
   }
 
-  // policy step inside seek last hit battler.
   this.seekBattler(lastHit);
 };
 
@@ -557,7 +532,6 @@ Game_Event.prototype.seekTargetBattler = function(target)
     return;
   }
 
-  // policy step inside seek target battler.
   this.seekBattler(target);
 };
 
@@ -573,7 +547,6 @@ Game_Event.prototype.seekBattler = function(battler)
   // get the next direction to the last hit, diagonal directions included.
   const finalDir = this.findDiagonalDirectionTo(x, y);
 
-  // policy step inside seek battler.
   this.gradualRotateToDirection(currDir, finalDir);
   this.moveStraight(this.direction());
 };
@@ -593,19 +566,15 @@ Game_Event.prototype.gradualRotateToDirection = function(currentDirection, final
   switch (currentDirection)
   {
     case 1:
-      // policy step inside gradual rotate to direction.
       needLeft = [ 2, 3, 6 ];
       break;
     case 2:
-      // policy step inside gradual rotate to direction.
       needLeft = [ 3, 6, 9 ];
       break;
     case 3:
-      // policy step inside gradual rotate to direction.
       needLeft = [ 6, 9, 8 ];
       break;
     case 4:
-      // policy step inside gradual rotate to direction.
       needLeft = [ 1, 2, 3 ];
       break;
     case 6:

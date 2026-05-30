@@ -22,16 +22,13 @@ Game_Troop.prototype.initMembers = function()
   /**
    * The J object where all my additional properties live.
    */
-  // policy step inside init members.
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside init members.
   /**
    * The number of living enemies remaining on this battle map.
    * @type {number}

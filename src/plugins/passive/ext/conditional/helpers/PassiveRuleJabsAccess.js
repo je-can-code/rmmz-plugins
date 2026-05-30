@@ -40,7 +40,6 @@ class PassiveRuleJabsAccess
     // grab the map wrapper — no wrapper means nobody is nearby on the abs map.
     const jabsBattler = this.getJabsBattler(battler);
 
-    // when not jabsBattler, take this branch.
     if (!jabsBattler) return [];
 
     // pull the shared default radius from plugin metadata.
@@ -62,7 +61,6 @@ class PassiveRuleJabsAccess
     // grab the map wrapper — no wrapper means no enemies to count.
     const jabsBattler = this.getJabsBattler(battler);
 
-    // when not jabsBattler, take this branch.
     if (!jabsBattler) return [];
 
     // pull the shared default radius from plugin metadata.
@@ -96,7 +94,6 @@ class PassiveRuleJabsAccess
       allies.push(battler);
     }
 
-    // hand back allies to the caller.
     return allies;
   }
 
@@ -110,24 +107,19 @@ class PassiveRuleJabsAccess
   {
     const normalized = String(slotParam).toLowerCase();
 
-    // dispatch on the discriminant for the next policy branch.
     switch (normalized)
     {
       case 'main':
       case 'mainhand':
-        // hand back JABS_Button.Mainhand to the caller.
         return JABS_Button.Mainhand;
       case 'offhand':
         return JABS_Button.Offhand;
-      // handle this switch arm for the current discriminant.
       case 'tool':
         return JABS_Button.Tool;
       case 'dodge':
-        // hand back JABS_Button.Dodge to the caller.
         return JABS_Button.Dodge;
       case 'combatskill1':
       case 'skill1':
-        // hand back JABS_Button.CombatSkill1 to the caller.
         return JABS_Button.CombatSkill1;
       case 'combatskill2':
       case 'skill2':

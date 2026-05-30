@@ -288,20 +288,17 @@ class OverlayManager
       return;
     }
 
-    // when baseSkill.damage.critical  differs from  skillOverlay.damage.critical, take this branch.
     if (baseSkill.damage.critical !== skillOverlay.damage.critical)
     {
       // overwrite the critical toggle.
       baseSkill.damage.critical = skillOverlay.damage.critical;
     }
 
-    // when baseSkill.damage.elementId  differs from  skillOverlay.damage.elementId, take this branch.
     if (baseSkill.damage.elementId !== skillOverlay.damage.elementId)
     {
       baseSkill.damage.elementId = skillOverlay.damage.elementId;
     }
 
-    // when baseSkill.damage.type  differs from  skillOverlay.damage.type, take this branch.
     if (baseSkill.damage.type !== skillOverlay.damage.type)
     {
       // allow upgrading hp-damage >> hp-drain.
@@ -323,7 +320,6 @@ class OverlayManager
       baseSkill.damage.variance = skillOverlay.damage.variance;
     }
 
-    // when skillOverlay.damage.formula  and  baseSkill.damage.formula  differs f..., take this branch.
     if (skillOverlay.damage.formula && baseSkill.damage.formula !== skillOverlay.damage.formula)
     {
       // overwrite the formula.
@@ -352,7 +348,6 @@ class OverlayManager
     const overlayAddStates = skillOverlay.effects
       .filter(e => e.code === Game_Action.EFFECT_ADD_STATE);
 
-    // when overlayAddStates.length > 0, take this branch.
     if (overlayAddStates.length > 0)
     {
       // build the set of state ids the overlay will own going forward.

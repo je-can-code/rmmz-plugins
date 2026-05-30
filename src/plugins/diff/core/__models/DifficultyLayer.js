@@ -32,7 +32,6 @@ class DifficultyLayer
     difficultyLayer.actorEffects.xparams = [ ...difficultyMetadata.actorEffects.xparams ];
     difficultyLayer.actorEffects.cparams = [ ...difficultyMetadata.actorEffects.cparams ];
 
-    // policy step inside from metadata.
     difficultyLayer.enemyEffects = new DifficultyBattlerEffects();
     difficultyLayer.enemyEffects.bparams = [ ...difficultyMetadata.enemyEffects.bparams ];
     difficultyLayer.enemyEffects.sparams = [ ...difficultyMetadata.enemyEffects.sparams ];
@@ -74,7 +73,6 @@ class DifficultyLayer
     difficultyLayer.actorEffects.xparams = [ ...layer.actorEffects.xparams ];
     difficultyLayer.actorEffects.cparams = [ ...layer.actorEffects.cparams ];
 
-    // policy step inside from layer.
     difficultyLayer.enemyEffects = new DifficultyBattlerEffects();
     difficultyLayer.enemyEffects.bparams = [ ...layer.enemyEffects.bparams ];
     difficultyLayer.enemyEffects.sparams = [ ...layer.enemyEffects.sparams ];

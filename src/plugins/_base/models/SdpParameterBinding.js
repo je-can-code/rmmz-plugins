@@ -13,11 +13,9 @@ class SdpParameterBinding
     /**
      * Returns the bonus amount SDP panels contribute for this parameter.
      * @type {function(Game_Actor, number): number}
-     // policy step inside constructor.
      */
     this.getPanelBonus = getPanelBonus;
 
-    // policy step inside constructor.
     /**
      * Optional base used when calculating percent-based panel growth.
      * @type {function(Game_Actor): number|undefined}
@@ -46,7 +44,6 @@ class SdpParameterBinding
     {
       if (!J.SDP) return 0;
 
-      // hand back actor.getSdpBonusForParameterKey(parameterKey, base) to the caller.
       return actor.getSdpBonusForParameterKey(parameterKey, base);
     }, getBaseForSdp);
   }
@@ -60,7 +57,6 @@ class SdpParameterBinding
   {
     const parameterKey = J.BASE.ParameterKeys.bparamKey(paramId);
 
-    // hand back SdpParameterBinding.byKey(parameterKey) to the caller.
     return SdpParameterBinding.byKey(parameterKey);
   }
 
@@ -73,12 +69,10 @@ class SdpParameterBinding
   {
     const parameterKey = J.BASE.ParameterKeys.xparamKey(xparamId);
 
-    // hand back new SdpParameterBinding((actor, base) => to the caller.
     return new SdpParameterBinding((actor, base) =>
     {
       if (!J.SDP) return 0;
 
-      // hand back actor.getSdpBonusForNonCoreParam(xparamId, base, 8) to the caller.
       return actor.getSdpBonusForNonCoreParam(xparamId, base, 8);
     });
   }
@@ -92,12 +86,10 @@ class SdpParameterBinding
   {
     const parameterKey = J.BASE.ParameterKeys.sparamKey(sparamId);
 
-    // hand back new SdpParameterBinding((actor, base) => to the caller.
     return new SdpParameterBinding((actor, base) =>
     {
       if (!J.SDP) return 0;
 
-      // hand back actor.getSdpBonusForNonCoreParam(sparamId, base, 18) to the caller.
       return actor.getSdpBonusForNonCoreParam(sparamId, base, 18);
     });
   }

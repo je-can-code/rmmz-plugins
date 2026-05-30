@@ -35,7 +35,6 @@ class SerializableRegistry
       ? options.aliases
       : [];
 
-    // policy step inside register.
     aliases.forEach(alias =>
     {
       this._constructors.set(alias, constructor);
@@ -54,7 +53,6 @@ class SerializableRegistry
       return this._constructors.get(id);
     }
 
-    // hand back null to the caller.
     return null;
   }
 }

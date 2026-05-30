@@ -12,7 +12,6 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
   J.JAFTING.Aliased.Game_Party.get('gainItem')
     .call(this, item, amount, includeEquip);
 
-  // policy step inside gain item.
   JaftingSalvageManager.afterPartyGainedItem(item, amount);
 };
 

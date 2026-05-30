@@ -63,16 +63,12 @@ function isExemptFile(filePath)
 {
   const base = path.basename(filePath);
 
-  // when EXEMPT_BASENAMES.has(base), take this branch.
   if (EXEMPT_BASENAMES.has(base)) return true;
 
-  // when EXEMPT_SUFFIXES.some(suffix => base.includes(suffix)), take this branch.
   if (EXEMPT_SUFFIXES.some(suffix => base.includes(suffix))) return true;
 
-  // when EXEMPT_PATH_PARTS.some(part => filePath.includes(part)), take this branch.
   if (EXEMPT_PATH_PARTS.some(part => filePath.includes(part))) return true;
 
-  // hand back false to the caller.
   return false;
 }
 
@@ -86,13 +82,11 @@ function parseJsdocBlock(raw)
   const body = raw.replace(/^\/\*\*/, '').replace(/\*\/$/, '');
   const lines = body.split('\n').map(line => line.replace(/^\s*\*\s?/, '').trim());
 
-  // policy step inside parse jsdoc block.
   /** @type {string[]} */
   const descriptionLines = [];
   /** @type {string[]} */
   const tags = [];
 
-  // walk each entry in the iterable for this routine.
   for (const line of lines)
   {
     if (line.startsWith('@'))
@@ -105,7 +99,6 @@ function parseJsdocBlock(raw)
     }
   }
 
-  // hand back { to the caller.
   return {
     description: descriptionLines.join(' ').trim(),
     tags,
@@ -121,16 +114,13 @@ function tagHasProseAfterName(tagLine)
 {
   const paramMatch = tagLine.match(/^@param\s+\{[^}]+\}\s+(\S+)\s*(.*)$/);
 
-  // when paramMatch, take this branch.
   if (paramMatch)
   {
     return paramMatch[2].trim().length >= 3;
   }
 
-  // capture returns match for downstream policy in this routine.
   const returnsMatch = tagLine.match(/^@returns?\s+\{[^}]+\}\s*(.*)$/);
 
-  // when returnsMatch, take this branch.
   if (returnsMatch)
   {
     return returnsMatch[1].trim().length >= 3;
@@ -149,13 +139,11 @@ function isGarbageDescription(description)
 {
   if (description.length < MIN_DESCRIPTION_LENGTH) return true;
 
-  // when /^(gets?|returns?|sets?|initializes?|creates?|handles?|checks?)\s+(th..., take this branch.
   if (/^(gets?|returns?|sets?|initializes?|creates?|handles?|checks?)\s+(the\s+)?[\w.]+\.?$/i.test(description))
   {
     return true;
   }
 
-  // hand back false to the caller.
   return false;
 }
 
@@ -170,25 +158,20 @@ function findJsdocBefore(comments, nodeStart)
   /** @type {import('acorn').Comment|null} */
   let candidate = null;
 
-  // walk each entry in the iterable for this routine.
   for (const comment of comments)
   {
     if (comment.type !== 'Block') continue;
 
-    // when comment.start >= nodeStart, take this branch.
     if (comment.start >= nodeStart) continue;
 
-    // when comment.value.startsWith('*')  equals  false, take this branch.
     if (comment.value.startsWith('*') === false) continue;
 
-    // when comment.end <= nodeStart  and  (candidate  equals  null  or  comment...., take this branch.
     if (comment.end <= nodeStart && (candidate === null || comment.end > candidate.end))
     {
       candidate = comment;
     }
   }
 
-  // hand back candidate to the caller.
   return candidate;
 }
 
@@ -203,7 +186,6 @@ function isNestedInFunction(ancestors)
   return ancestors.some(ancestor =>
     ancestor.type === 'FunctionDeclaration'
     || ancestor.type === 'FunctionExpression'
-    // policy step inside is nested in function.
     || ancestor.type === 'MethodDefinition');
 }
 
@@ -230,20 +212,16 @@ function validateJsdocContent(jsdocRaw, file, line)
   const violations = [];
   const { description, tags } = parseJsdocBlock(jsdocRaw);
 
-  // when isGarbageDescription(description), take this branch.
   if (isGarbageDescription(description))
   {
     violations.push({
       file,
-      // policy step inside validate jsdoc content.
       line,
       rule: 'jsdoc-summary',
       detail: 'JSDoc needs a substantive summary before @tags (intent/policy, not type echo).',
-    // policy step inside validate jsdoc content.
     });
   }
 
-  // walk each entry in the iterable for this routine.
   for (const tag of tags)
   {
     // @returns carries type only — intent lives in the summary and @param tags.
@@ -261,7 +239,6 @@ function validateJsdocContent(jsdocRaw, file, line)
     }
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -277,7 +254,6 @@ function countInlineCommentsInBody(source, bodyStart, bodyEnd)
   const slice = source.slice(bodyStart, bodyEnd);
   const matches = slice.match(/^\s*\/\//gm);
 
-  // hand back matches ? matches.length : 0 to the caller.
   return matches ? matches.length : 0;
 }
 
@@ -294,25 +270,19 @@ function countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd)
   const lines = slice.split('\n');
   let count = 0;
 
-  // walk each entry in the iterable for this routine.
   for (const line of lines)
   {
     const trimmed = line.trim();
 
-    // when trimmed.length  equals  0, take this branch.
     if (trimmed.length === 0) continue;
 
-    // when trimmed  equals  '{'  or  trimmed  equals  '}', take this branch.
     if (trimmed === '{' || trimmed === '}') continue;
 
-    // when trimmed.startsWith('//'), take this branch.
     if (trimmed.startsWith('//')) continue;
 
-    // policy step inside count non blank code lines in body.
     count++;
   }
 
-  // hand back count to the caller.
   return count;
 }
 
@@ -329,21 +299,17 @@ function bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bodyE
   const lines = slice.split('\n');
   let previousWasBlank = false;
 
-  // iterate the loop counter until the guard exits.
   for (let index = 0; index < lines.length; index++)
   {
     const trimmed = lines[index].trim();
 
-    // when trimmed.length  equals  0, take this branch.
     if (trimmed.length === 0)
     {
       previousWasBlank = true;
 
-      // policy step inside body has blank line separated blocks without comments.
       continue;
     }
 
-    // when previousWasBlank  and  trimmed.startsWith('//')  equals  false, take this branch.
     if (previousWasBlank && trimmed.startsWith('//') === false)
     {
       let probe = index - 2;
@@ -351,18 +317,15 @@ function bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bodyE
       // keep looping while probe >= 0  and  lines[probe].trim().length  equals  0.
       while (probe >= 0 && lines[probe].trim().length === 0) probe--;
 
-      // when probe >= 0  and  lines[probe].trim().startsWith('//')  equals  false, take this branch.
       if (probe >= 0 && lines[probe].trim().startsWith('//') === false)
       {
         return true;
       }
     }
 
-    // policy step inside body has blank line separated blocks without comments.
     previousWasBlank = false;
   }
 
-  // hand back false to the caller.
   return false;
 }
 
@@ -377,22 +340,17 @@ function isInitMembersFunction(fnNode, source, nameOverride = null)
 {
   const name = nameOverride || (fnNode.id ? fnNode.id.name : null);
 
-  // when not name  or  /^init/i.test(name)  equals  false, take this branch.
   if (!name || /^init/i.test(name) === false) return false;
 
-  // when not fnNode.body  or  fnNode.body.type  differs from  'BlockStatement', take this branch.
   if (!fnNode.body || fnNode.body.type !== 'BlockStatement') return false;
 
-  // capture body start for downstream policy in this routine.
   const bodyStart = fnNode.body.start;
   const bodyEnd = fnNode.body.end;
   const slice = source.slice(bodyStart, bodyEnd);
 
-  // capture assignment lines for downstream policy in this routine.
   const assignmentLines = (slice.match(/^\s*this\._/gm) || []).length;
   const codeLines = countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd);
 
-  // hand back assignmentLines >= Math.floor(codeLines * 0.6) to the caller.
   return assignmentLines >= Math.floor(codeLines * 0.6);
 }
 
@@ -409,17 +367,14 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
   /** @type {DocViolation[]} */
   const violations = [];
 
-  // when not fnNode.body  or  fnNode.body.type  differs from  'BlockStatement', take this branch.
   if (!fnNode.body || fnNode.body.type !== 'BlockStatement') return violations;
 
-  // capture body start for downstream policy in this routine.
   const bodyStart = fnNode.body.start;
   const bodyEnd = fnNode.body.end;
   const line = source.slice(0, bodyStart).split('\n').length;
   const bodySource = source.slice(bodyStart, bodyEnd);
   const initMembers = isInitMembersFunction(fnNode, source, nameOverride);
 
-  // when /(?:\.Aliased\.[\w.]+\.get|Aliased\.[\w.]+\.get)\(/.test(bodySource), take this branch.
   if (/(?:\.Aliased\.[\w.]+\.get|Aliased\.[\w.]+\.get)\(/.test(bodySource)
     && bodySource.includes(ALIAS_LANDMARK) === false)
   {
@@ -431,20 +386,15 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
     });
   }
 
-  // when initMembers, take this branch.
   if (initMembers) return violations;
 
-  // capture code lines for downstream policy in this routine.
   const codeLines = countNonBlankCodeLinesInBody(source, bodyStart, bodyEnd);
 
-  // when codeLines <= 3, take this branch.
   if (codeLines <= 3) return violations;
 
-  // capture inline comments for downstream policy in this routine.
   const inlineComments = countInlineCommentsInBody(source, bodyStart, bodyEnd);
   const requiredComments = Math.max(1, Math.floor(codeLines / 4));
 
-  // when inlineComments < requiredComments, take this branch.
   if (inlineComments < requiredComments)
   {
     violations.push({
@@ -456,7 +406,6 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
     });
   }
 
-  // when bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bod..., take this branch.
   if (bodyHasBlankLineSeparatedBlocksWithoutComments(source, bodyStart, bodyEnd))
   {
     violations.push({
@@ -468,7 +417,6 @@ function validateFunctionBody(source, fnNode, file, nameOverride = null)
     });
   }
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -483,11 +431,9 @@ function verifyFile(filePath, source)
   /** @type {DocViolation[]} */
   const violations = [];
 
-  // policy step inside verify file.
   /** @type {import('acorn').Comment[]} */
   const comments = [];
 
-  // policy step inside verify file.
   let program;
 
   // attempt the fragile parse or io work inside this block.
@@ -509,11 +455,9 @@ function verifyFile(filePath, source)
       detail: `Could not parse: ${error.message}`,
     });
 
-    // hand back violations to the caller.
     return violations;
   }
 
-  // policy step inside verify file.
   /**
    * Applies JSDoc and inline body checks to one documentable AST anchor.
    * @param {import('acorn').Node} node AST node whose start position anchors JSDoc lookup.
@@ -526,7 +470,6 @@ function verifyFile(filePath, source)
     const line = source.slice(0, anchorStart).split('\n').length;
     const jsdoc = findJsdocBefore(comments, anchorStart);
 
-    // when not jsdoc, take this branch.
     if (!jsdoc)
     {
       violations.push({
@@ -543,27 +486,23 @@ function verifyFile(filePath, source)
     // Append the row to the working collection.
     violations.push(...validateJsdocContent(`/**${jsdoc.value}*/`, filePath, line));
 
-    // when fnNode, take this branch.
     if (fnNode)
     {
       violations.push(...validateFunctionBody(source, fnNode, filePath, nameOverride));
     }
   }
 
-  // policy step inside verify file.
   walkAncestor(program, {
     FunctionDeclaration(node, _state, ancestors)
     {
       if (isNestedInFunction(ancestors)) return;
 
-      // policy step inside verify file.
       checkDocumentedNode(node, node);
     },
     MethodDefinition(node, _state, ancestors)
     {
       if (isNestedInFunction(ancestors)) return;
 
-      // when node.value.type  equals  'FunctionExpression', take this branch.
       if (node.value.type === 'FunctionExpression')
       {
         checkDocumentedNode(node, node.value);
@@ -573,23 +512,18 @@ function verifyFile(filePath, source)
     {
       if (isTopLevelAssignment(ancestors) === false) return;
 
-      // when node.right.type  differs from  'FunctionExpression', take this branch.
       if (node.right.type !== 'FunctionExpression') return;
 
-      // when node.left.type  differs from  'MemberExpression', take this branch.
       if (node.left.type !== 'MemberExpression') return;
 
-      // capture name override for downstream policy in this routine.
       const nameOverride = node.left.property.type === 'Identifier'
         ? node.left.property.name
         : null;
 
-      // policy step inside verify file.
       checkDocumentedNode(node, node.right, nameOverride);
     },
   });
 
-  // hand back violations to the caller.
   return violations;
 }
 
@@ -602,13 +536,11 @@ function resolveGlobPatterns(args)
 {
   const globFlagIndex = args.indexOf('--glob');
 
-  // when globFlagIndex >= 0, take this branch.
   if (globFlagIndex >= 0)
   {
     return [ args[globFlagIndex + 1] ];
   }
 
-  // hand back default globs to the caller.
   return DEFAULT_GLOBS;
 }
 
@@ -621,13 +553,11 @@ function printViolationStats(violations)
   /** @type {Map<string, number>} */
   const counts = new Map();
 
-  // walk each entry in the iterable for this routine.
   for (const violation of violations)
   {
     counts.set(violation.rule, (counts.get(violation.rule) || 0) + 1);
   }
 
-  // walk each entry in the iterable for this routine.
   for (const [ rule, count ] of [ ...counts.entries() ].sort((a, b) => b[1] - a[1]))
   {
     Logger.logAnyway(`  ${rule}: ${count}`, LogStyle.dim);
@@ -644,11 +574,9 @@ async function main()
   const statsOnly = args.includes('--stats');
   const globPatterns = resolveGlobPatterns(args);
 
-  // policy step inside main.
   /** @type {string[]} */
   const files = [];
 
-  // walk each entry in the iterable for this routine.
   for (const pattern of globPatterns)
   {
     const matched = await glob(pattern, { nodir: true });
@@ -657,11 +585,9 @@ async function main()
     files.push(...matched);
   }
 
-  // policy step inside main.
   /** @type {DocViolation[]} */
   const allViolations = [];
 
-  // walk each entry in the iterable for this routine.
   for (const filePath of [ ...new Set(files) ].sort())
   {
     if (isExemptFile(filePath)) continue;
@@ -673,17 +599,14 @@ async function main()
     allViolations.push(...verifyFile(filePath, source));
   }
 
-  // when statsOnly, take this branch.
   if (statsOnly)
   {
     Logger.logAnyway(`Doc verify stats (${files.length} files scanned):`, LogStyle.cyan);
     printViolationStats(allViolations);
 
-    // hand back allViolations.length === 0 ? 0 : 1 to the caller.
     return allViolations.length === 0 ? 0 : 1;
   }
 
-  // when allViolations.length  equals  0, take this branch.
   if (allViolations.length === 0)
   {
     Logger.logAnyway(
@@ -691,7 +614,6 @@ async function main()
       LogStyle.brightGreen
     );
 
-    // hand back 0 to the caller.
     return 0;
   }
 
@@ -702,7 +624,6 @@ async function main()
   // construct by rule for the next step in this routine.
   const byRule = new Map();
 
-  // walk each entry in the iterable for this routine.
   for (const violation of allViolations)
   {
     if (byRule.has(violation.rule) === false) byRule.set(violation.rule, []);
@@ -711,19 +632,16 @@ async function main()
     byRule.get(violation.rule).push(violation);
   }
 
-  // walk each entry in the iterable for this routine.
   for (const [ rule, items ] of byRule)
   {
     Logger.logAnyway(`  [${rule}]`, LogStyle.brightRed);
 
-    // walk each entry in the iterable for this routine.
     for (const item of items)
     {
       Logger.logAnyway(`    • ${item.file}:${item.line}: ${item.detail}`, LogStyle.brightRed);
     }
   }
 
-  // hand back 1 to the caller.
   return 1;
 }
 

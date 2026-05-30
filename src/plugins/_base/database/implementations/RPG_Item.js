@@ -80,27 +80,21 @@ class RPG_Item
     const raw = {
       id: index,
       animationId: 0,
-      // policy step inside create empty.
       consumable: true,
       damage: {
         critical: false,
-        // policy step inside create empty.
         elementId: 0,
         formula: '0',
         type: 0,
-        // policy step inside create empty.
         variance: 20,
       },
       description: String.empty,
-      // policy step inside create empty.
       effects: [],
       hitType: 0,
       iconIndex: 0,
-      // policy step inside create empty.
       itypeId: 1,
       name: String.empty,
       note: String.empty,
-      // policy step inside create empty.
       occasion: 0,
       price: 0,
       repeats: 1,
@@ -111,11 +105,9 @@ class RPG_Item
       meta: {},
     };
 
-    // hand back new RPG_Item(raw, index) to the caller.
     return new RPG_Item(raw, index);
   }
 }
-
 
 export default RPG_Item;
 //endregion RPG_Item

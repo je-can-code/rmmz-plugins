@@ -37,37 +37,30 @@ class JAptitudeTyped_PluginMetadata
     /**
      * Integer percent applied to inferred enemy element types per kill (0-100).
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.ImplicitEnemyElementPercent = JsonMapper
       .parseObject(this.parsedPluginParameters['implicitEnemyElementPercent']);
 
-    // policy step inside initialize metadata.
     /**
      * The strict resistance threshold (elements with rate < this are alignments).
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.ResistThreshold = JsonMapper
       .parseObject(this.parsedPluginParameters['resistThreshold']);
 
-    // policy step inside initialize metadata.
     /**
      * The strict slayer/attribute threshold (elements with rate > this qualify).
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.SlayerWeaknessThreshold = JsonMapper
       .parseObject(this.parsedPluginParameters['slayerWeaknessThreshold']);
 
-    // policy step inside initialize metadata.
     /**
      * Names or ids to exclude from resistance-as-alignment.
      * @type {string[]}
      */
     this.ExcludedAlignmentElements = JsonMapper.parseObject(this.parsedPluginParameters['excludedAlignmentElements']);
 
-    // policy step inside initialize metadata.
     /**
      * Whether to include auto-states in inference (reserved for future use).
      * @type {boolean}

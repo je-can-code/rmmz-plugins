@@ -23,18 +23,15 @@ class TrackedOmniQuest
     /**
      * The primary key of the quest. This is a unique representation used for managing the quest.
      * @type {string}
-     // policy step inside initialize.
      */
     this.key = key;
   
-    // policy step inside initialize.
     /**
      * The category key of the quest. This is used for organizing where in the UI the quest will show up.
      * @type {string}
      */
     this.categoryKey = categoryKey;
   
-    // policy step inside initialize.
     /**
      * The various objectives that can/must be fulfilled in order to complete the quest. These are sorted by id from
      * lowest to highest, indicating sequence.
@@ -42,7 +39,6 @@ class TrackedOmniQuest
      */
     this.objectives = objectives.sort((a, b) => a.id - b.id);
   
-    // policy step inside initialize.
     this.initMembers();
   }
   
@@ -54,11 +50,9 @@ class TrackedOmniQuest
     /**
      * The current state of this quest.
      * @type {number}
-     // policy step inside init members.
      */
     this.state = OmniQuest.States.Inactive;
   
-    // policy step inside init members.
     /**
      * Whether or not this quest is being tracked.
      * @type {boolean}
@@ -125,7 +119,6 @@ class TrackedOmniQuest
   name()
   {
     const { name } = this.questMetadata();
-    // hand back name to the caller.
     return name;
   }
   
@@ -136,7 +129,6 @@ class TrackedOmniQuest
   recommendedLevel()
   {
     const { recommendedLevel } = this.questMetadata();
-    // hand back recommended level to the caller.
     return recommendedLevel;
   }
   
@@ -147,7 +139,6 @@ class TrackedOmniQuest
   tagKeys()
   {
     const { tagKeys } = this.questMetadata();
-    // hand back tagKeys ?? [] to the caller.
     return tagKeys ?? [];
   }
   
@@ -157,7 +148,6 @@ class TrackedOmniQuest
    */
   tags()
   {
-    // hand back this.tagKeys() to the caller.
     return this.tagKeys()
       .map(tagKey => J.OMNI.EXT.QUEST.Metadata.tagsMap.get(tagKey));
   }
@@ -169,7 +159,6 @@ class TrackedOmniQuest
   unknownHint()
   {
     const { unknownHint } = this.questMetadata();
-    // hand back unknown hint to the caller.
     return unknownHint;
   }
   
@@ -181,7 +170,6 @@ class TrackedOmniQuest
   overview()
   {
     const { overview } = this.questMetadata();
-    // hand back overview to the caller.
     return overview;
   }
   //endregion metadata
@@ -471,7 +459,6 @@ class TrackedOmniQuest
    */
   activeObjectives()
   {
-    // hand back this.objectives to the caller.
     return this.objectives
       .filter(objective => objective.state === OmniObjective.States.Active);
   }
@@ -482,7 +469,6 @@ class TrackedOmniQuest
    */
   immediateObjective()
   {
-    // hand back this.activeObjectives() to the caller.
     return this.activeObjectives()
       ?.at(0);
   }
@@ -553,11 +539,9 @@ class TrackedOmniQuest
   {
     if (objectiveId !== null) return objectiveId;
   
-    // capture immediate for downstream policy in this routine.
     const immediate = this.immediateObjective() ?? null;
     if (immediate !== null) return immediate.id;
   
-    // hand back 0 to the caller.
     return 0;
   }
   
@@ -696,7 +680,6 @@ class TrackedOmniQuest
       return;
     }
   
-    // policy step inside refresh state.
     console.info(`refreshed state without changing state for quest key: ${this.key}`);
   }
   

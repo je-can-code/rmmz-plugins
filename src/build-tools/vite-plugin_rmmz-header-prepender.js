@@ -22,13 +22,11 @@ async function resolveShipMeta(config)
     throw new Error('prepend-mz-header: config.configFile is required (use vite build --config …).');
   }
 
-  // capture ship root for downstream policy in this routine.
   const shipRoot = path.dirname(entry);
   const metaPath = path.join(shipRoot, '_metadata', 'meta.js');
   const metaUrl = pathToFileURL(metaPath).href;
   const meta = await import(metaUrl);
 
-  // policy step inside resolve ship meta.
   const { PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_DESC_TAG } = meta;
   if (typeof PLUGIN_NAME !== 'string' || PLUGIN_NAME.length === 0)
   {
@@ -43,7 +41,6 @@ async function resolveShipMeta(config)
     throw new Error(`prepend-mz-header: PLUGIN_DESC_TAG missing or invalid in ${metaPath}`);
   }
 
-  // hand back { shipRoot, meta: { PLUGIN_NAME, PLUGIN_VERSION, PLUG... to the caller.
   return { shipRoot, meta: { PLUGIN_NAME, PLUGIN_VERSION, PLUGIN_DESC_TAG } };
 }
 
@@ -60,20 +57,16 @@ export function prependMzHeaderPlugin()
   let header = '';
   return {
     name: 'prepend-mz-header',
-    // policy step inside prepend mz header plugin.
     enforce: 'post',
     /**
      * Injects compile-time constants from meta.js so initialization.js never imports meta into the ship bundle.
-     // policy step inside prepend mz header plugin.
      * @param {import('vite').UserConfig} config The config driving this step.
      * @returns {Promise<import('vite').UserConfig>}
      */
-    // policy step inside prepend mz header plugin.
     async config(config)
     {
       const { meta } = await resolveShipMeta(config);
 
-      // hand back { to the caller.
       return {
         define: {
           [RMMZ_SHIP_DEFINE_PLUGIN_NAME]: JSON.stringify(meta.PLUGIN_NAME),
@@ -81,30 +74,24 @@ export function prependMzHeaderPlugin()
           [RMMZ_SHIP_DEFINE_PLUGIN_VERSION]: JSON.stringify(meta.PLUGIN_VERSION),
         },
       };
-    // policy step inside prepend mz header plugin.
     },
     /**
      * Reads annotations and meta.js, substitutes version/tag placeholders, and guards against meta.js in the ship graph.
-     // policy step inside prepend mz header plugin.
      * @param {import('vite').ResolvedConfig} config The config driving this step.
      */
     async configResolved(config)
     {
-      // policy step inside prepend mz header plugin.
       const { shipRoot, meta } = await resolveShipMeta(config);
       const initializationPath = path.join(shipRoot, '_metadata', 'initialization.js');
       const initializationSource = fs.readFileSync(initializationPath, 'utf8');
-      // capture imports meta at runtime for downstream policy in this routine.
       const importsMetaAtRuntime = /from\s+['"]\.\/meta\.js['"]/.test(initializationSource);
       if (importsMetaAtRuntime === true)
       {
         throw new Error(
-          // policy step inside prepend mz header plugin.
           `prepend-mz-header: ${initializationPath} must not import meta.js; use ${RMMZ_SHIP_DEFINE_PLUGIN_NAME} and ${RMMZ_SHIP_DEFINE_PLUGIN_VERSION} instead.`
         );
       }
 
-      // capture annotations path for downstream policy in this routine.
       const annotationsPath = path.join(shipRoot, '_metadata', '_annotations.js');
       header = fs.readFileSync(annotationsPath, 'utf8');
       if (/^import\s/m.test(header))

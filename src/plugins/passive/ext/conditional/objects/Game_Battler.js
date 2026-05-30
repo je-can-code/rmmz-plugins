@@ -29,46 +29,51 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
   /**
    * A grouping of passive rule runtime data.
    */
-  // policy step inside init passive rule members.
   this._j._passive._conditional = {};
 
-  // policy step inside init passive rule members.
   /**
    * Cached passive collection fingerprint for cheap drift checks on the map.
    * @type {string}
    */
   this._j._passive._conditional._collectionFingerprint = String.empty;
 
-  // policy step inside init passive rule members.
   /**
    * Throttled reconcile timer for map-side rule drift.
    * @type {JABS_Timer}
    */
   const delay = J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames || 15;
 
-  // policy step inside init passive rule members.
   this._j._passive._conditional._timer = new JABS_Timer(delay);
 
-  // policy step inside init passive rule members.
   /**
    * Last map frame this battler moved.
    * @type {number}
    */
   this._j._passive._conditional._lastMovedFrame = 0;
 
-  // policy step inside init passive rule members.
   /**
    * Last map frame this battler took damage.
    * @type {number}
    */
   this._j._passive._conditional._lastHitFrame = 0;
 
-  // policy step inside init passive rule members.
   /**
    * Last map frame this battler executed a map skill.
    * @type {number}
    */
   this._j._passive._conditional._lastAttackedFrame = 0;
+
+  /**
+   * Last known real X coordinate of the map character; seeded on first JABS update.
+   * @type {number|null}
+   */
+  this._j._passive._conditional._lastTrackedX = null;
+
+  /**
+   * Last known real Y coordinate of the map character; seeded on first JABS update.
+   * @type {number|null}
+   */
+  this._j._passive._conditional._lastTrackedY = null;
 };
 
 /**
@@ -188,7 +193,6 @@ Game_Battler.prototype.getPassiveStackContributionFromSource = function(baseItem
       .call(this, baseItem, stateId);
   }
 
-  // hand back PassiveStackCountEvaluator.evaluateTuple(this, countT... to the caller.
   return PassiveStackCountEvaluator.evaluateTuple(this, countTuple);
 };
 
@@ -213,7 +217,6 @@ Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, st
     const kind = tuple.length === 2 ? tuple[0] : tuple[1];
     const param = tuple.length === 2 ? tuple[1] : tuple[2];
 
-    // hand back PassiveGateEvaluator.evaluate(this, kind, param) to the caller.
     return PassiveGateEvaluator.evaluate(this, kind, param);
   });
 };
@@ -247,7 +250,6 @@ Game_Battler.prototype.findPassiveStateCountTuple = function(baseItem, stateId)
   const matches = (baseItem.passiveStateCounts || [])
     .filter(tuple => Number(tuple[0]) === stateId);
 
-  // when matches.length  equals  0, take this branch.
   if (matches.length === 0) return null;
 
   // first matching scaler wins when authors accidentally duplicate tags.
@@ -265,11 +267,9 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
   const stackEntries = [ ...this.getAllStackablePassiveStateIds().entries() ]
     .sort((left, right) => left[0] - right[0]);
 
-  // hand back JSON.stringify({ to the caller.
   return JSON.stringify({
     uniqueIds,
     stackEntries,
-  // policy step inside build passive collection fingerprint.
   });
 };
 
@@ -316,16 +316,12 @@ Game_Battler.prototype.updatePassiveRuleReconcileTimer = function()
 {
   const timer = this.passiveRuleReconcileTimer();
 
-  // policy step inside update passive rule reconcile timer.
   timer.update();
 
-  // when timer.isTimerComplete()  equals  false, take this branch.
   if (timer.isTimerComplete() === false) return;
 
-  // policy step inside update passive rule reconcile timer.
   timer.reset();
 
-  // policy step inside update passive rule reconcile timer.
   this.reconcilePassiveRules();
 };
 

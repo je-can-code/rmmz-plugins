@@ -76,7 +76,6 @@ Game_Actor.prototype.getNaturalGrowthsRegexForCrit = function()
   return [
     J.CRIT.RegExp.CritDamageReductionGrowthPlus,
     J.CRIT.RegExp.CritDamageReductionGrowthRate,
-    // policy step inside get natural growths regex for crit.
     J.CRIT.RegExp.CritDamageMultiplierGrowthPlus,
     J.CRIT.RegExp.CritDamageMultiplierGrowthRate,
   ];
@@ -94,7 +93,6 @@ Game_Actor.prototype.critSdpBonuses = function(critParamId, baseParam)
     ? 'cdm'
     : 'cdr';
 
-  // hand back this.getSdpBonusForParameterKey(parameterKey, baseParam) to the caller.
   return this.getSdpBonusForParameterKey(parameterKey, baseParam);
 };
 //endregion Game_Actor

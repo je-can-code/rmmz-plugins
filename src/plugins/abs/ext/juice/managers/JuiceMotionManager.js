@@ -124,7 +124,6 @@ class JuiceMotionManager
       return;
     }
 
-    // capture survivors for downstream policy in this routine.
     const survivors = [];
     for (let i = 0; i < JuiceMotionManager.#effects.length; i++)
     {
@@ -137,14 +136,12 @@ class JuiceMotionManager
         continue;
       }
 
-      // when effect.tick(), take this branch.
       if (effect.tick())
       {
         survivors.push(effect);
       }
     }
 
-    // policy step inside frame tick.
     JuiceMotionManager.#effects.length = 0;
     survivors.forEach(s => JuiceMotionManager.#effects.push(s));
   }

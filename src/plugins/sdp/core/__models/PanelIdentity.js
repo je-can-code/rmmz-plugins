@@ -18,33 +18,27 @@ class PanelIdentity
     /**
      * Friendly name for this SDP.
      * @type {string}
-     // policy step inside constructor.
      */
     this.name = name;
 
-    // policy step inside constructor.
     /**
      * Icon index for this SDP.
      * @type {number}
-     // policy step inside constructor.
      */
     this.iconIndex = iconIndex;
 
-    // policy step inside constructor.
     /**
      * Whether this SDP is unlocked by default.
      * @type {boolean}
      */
     this.unlockedByDefault = unlockedByDefault;
 
-    // policy step inside constructor.
     /**
      * Long description for the details window.
      * @type {string}
      */
     this.description = description;
 
-    // policy step inside constructor.
     /**
      * Short flavor line under the name in the details window.
      * @type {string}
@@ -71,16 +65,13 @@ class PanelIdentity
   {
     const nested = parsedPanel.identity;
 
-    // when nested  and  typeof nested  equals  'object', take this branch.
     if (nested && typeof nested === 'object')
     {
       return new PanelIdentity(
         nested.name ?? String.empty,
-        // policy step inside from config panel.
         PanelIdentity.#parseIntField(nested.iconIndex, 0),
         nested.unlockedByDefault === true,
         nested.description ?? String.empty,
-        // policy step inside from config panel.
         nested.topFlavorText ?? String.empty
       );
     }
@@ -107,16 +98,13 @@ class PanelIdentity
       return defaultValue;
     }
 
-    // capture parsed for downstream policy in this routine.
     const parsed = Number.parseInt(String(value), 10);
 
-    // when Number.isNaN(parsed), take this branch.
     if (Number.isNaN(parsed))
     {
       return defaultValue;
     }
 
-    // hand back parsed to the caller.
     return parsed;
   }
 
@@ -135,7 +123,6 @@ class PanelIdentity
     return {
       name: this.name,
       iconIndex: this.iconIndex,
-      // policy step inside to config json.
       unlockedByDefault: this.unlockedByDefault,
       description: this.description,
       topFlavorText: this.topFlavorText,

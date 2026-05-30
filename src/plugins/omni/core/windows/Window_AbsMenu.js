@@ -54,7 +54,6 @@ if (J.ABS)
       "An encyclopedia-like system full of data-driven entries.",
       "It can contain many sub-categories, such as the Monsterpedia." ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   };
 }

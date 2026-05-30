@@ -31,13 +31,11 @@ class Scene_JaftingSalvage
   {
     const switchId = J.JAFTING.Metadata.salvageMenuSwitchId;
 
-    // when switchId  equals  0, take this branch.
     if (switchId === 0)
     {
       return true;
     }
 
-    // hand back $gameSwitches.value(switchId) to the caller.
     return $gameSwitches.value(switchId);
   }
 
@@ -78,7 +76,6 @@ class Scene_JaftingSalvage
     this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
     this._backgroundSprite = new Sprite();
     this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    // policy step inside create background.
     this._backgroundSprite.filters = [ this._backgroundFilter ];
     this.addChild(this._backgroundSprite);
   }
@@ -116,12 +113,10 @@ class Scene_JaftingSalvage
     this._confirmationWindow.hide();
     this._confirmationWindow.deactivate();
 
-    // policy step inside create salvage windows.
     this.addWindow(this._candidateWindow);
     this.addWindow(this._previewWindow);
     this.addWindow(this._confirmationWindow);
 
-    // policy step inside create salvage windows.
     this._previewWindow.setDismantleAmount(Scene_JaftingSalvage.DismantleBatchSize);
     // initial rects come from salvage*WindowRect(); real panel placement waits for start() after refresh()
     // so the candidate cursor (and thus refund row counts) exist—see refreshPreviewFromSelection().
@@ -165,7 +160,6 @@ class Scene_JaftingSalvage
     const bandBottom = confirmRect.y - 16;
     const bandH = Math.max(160, bandBottom - topY);
 
-    // hand back { topY, bandH } to the caller.
     return { topY, bandH };
   }
 
@@ -181,23 +175,19 @@ class Scene_JaftingSalvage
     const margin = 18;
     const gapMid = 16;
     const { topY, bandH } = this.salvageClusterVerticalBand();
-    // capture list w for downstream policy in this routine.
     const listW = this.salvageCandidateListWidth();
     // seed from the old left rail—usually settles in one or two passes once the capped preview width is known.
     let listX = margin;
 
-    // iterate the loop counter until the guard exits.
     for (let iter = 0; iter < 8; iter++)
     {
       const previewX = listX + listW + gapMid;
       const previewW = this.salvagePreviewBandWidth(previewX);
-      // capture total w for downstream policy in this routine.
       const totalW = listW + gapMid + previewW;
       const idealX = Math.floor((Graphics.boxWidth - totalW) / 2);
       const maxLeft = Graphics.boxWidth - margin - totalW;
       const nextX = Math.max(margin, Math.min(idealX, maxLeft));
 
-      // when nextX  equals  listX, take this branch.
       if (nextX === listX)
       {
         return {
@@ -210,15 +200,12 @@ class Scene_JaftingSalvage
         };
       }
 
-      // policy step inside salvage cluster strip layout.
       listX = nextX;
     }
 
-    // capture preview x for downstream policy in this routine.
     const previewX = listX + listW + gapMid;
     const previewW = this.salvagePreviewBandWidth(previewX);
 
-    // hand back { to the caller.
     return {
       listX,
       listW,
@@ -239,10 +226,8 @@ class Scene_JaftingSalvage
       listX, listW, previewX, previewW, topY, bandH,
     } = strip;
 
-    // policy step inside layout salvage panels.
     this._candidateWindow.move(listX, topY, listW, bandH);
 
-    // capture preview for downstream policy in this routine.
     const preview = this._previewWindow;
     const item = this._candidateWindow.item();
     const n = JaftingSalvageManager.visibleExpandedRefundRowCount(item);
@@ -251,10 +236,8 @@ class Scene_JaftingSalvage
     const desiredSingle = preview.fittingHeight(linesSingle);
     const desiredTwo = preview.fittingHeight(linesTwo);
 
-    // capture use two col for downstream policy in this routine.
     let useTwoCol = false;
 
-    // when desiredSingle > bandH  and  n > 1  and  desiredTwo <= bandH, take this branch.
     if (desiredSingle > bandH && n > 1 && desiredTwo <= bandH)
     {
       useTwoCol = true;
@@ -264,7 +247,6 @@ class Scene_JaftingSalvage
       useTwoCol = true;
     }
 
-    // policy step inside layout salvage panels.
     preview.setRefundTwoColumnMode(useTwoCol);
     preview.move(previewX, topY, previewW, bandH);
   }
@@ -276,7 +258,6 @@ class Scene_JaftingSalvage
   {
     const s = this.salvageClusterStripLayout();
 
-    // hand back new Rectangle(s.listX, s.topY, s.listW, s.bandH) to the caller.
     return new Rectangle(s.listX, s.topY, s.listW, s.bandH);
   }
 
@@ -287,7 +268,6 @@ class Scene_JaftingSalvage
   {
     const s = this.salvageClusterStripLayout();
 
-    // hand back new Rectangle(s.previewX, s.topY, s.previewW, s.bandH) to the caller.
     return new Rectangle(s.previewX, s.topY, s.previewW, s.bandH);
   }
 
@@ -301,7 +281,6 @@ class Scene_JaftingSalvage
     const x = (Graphics.boxWidth - width) / 2;
     const y = Graphics.boxHeight - height - 24;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -327,13 +306,11 @@ class Scene_JaftingSalvage
   {
     Scene_MenuBase.prototype.update.call(this);
 
-    // when this._candidateWindow  and  this._candidateWindow.active, take this branch.
     if (this._candidateWindow && this._candidateWindow.active)
     {
       const item = this._candidateWindow.item();
       const stack = item ? $gameParty.numItems(item) : 0;
 
-      // when item  differs from  this._lastPreviewDatum  or  stack  differs from  ..., take this branch.
       if (item !== this._lastPreviewDatum || stack !== this._lastPreviewStack)
       {
         this._lastPreviewDatum = item;
@@ -351,7 +328,6 @@ class Scene_JaftingSalvage
   {
     const datum = this._candidateWindow.item();
 
-    // when datum  equals  undefined  or  datum  equals  null, take this branch.
     if (datum === undefined || datum === null)
     {
       SoundManager.playBuzzer();
@@ -360,7 +336,6 @@ class Scene_JaftingSalvage
       return;
     }
 
-    // policy step inside on salvage candidate ok.
     this._confirmationWindow.show();
     this._confirmationWindow.select(0);
     this._confirmationWindow.activate();
@@ -374,7 +349,6 @@ class Scene_JaftingSalvage
   {
     const datum = this._candidateWindow.item();
 
-    // when datum  equals  undefined  or  datum  equals  null, take this branch.
     if (datum === undefined || datum === null)
     {
       SoundManager.playBuzzer();
@@ -384,10 +358,8 @@ class Scene_JaftingSalvage
       return;
     }
 
-    // capture ok for downstream policy in this routine.
     const ok = JaftingSalvageManager.executeSalvage(datum, Scene_JaftingSalvage.DismantleBatchSize);
 
-    // when ok  equals  false, take this branch.
     if (ok === false)
     {
       SoundManager.playBuzzer();
@@ -397,10 +369,8 @@ class Scene_JaftingSalvage
       SoundManager.playUseItem();
     }
 
-    // policy step inside on salvage confirm ok.
     this._candidateWindow.refresh();
 
-    // policy step inside on salvage confirm ok.
     this.refreshPreviewFromSelection();
     this.onSalvageConfirmCancel();
   }

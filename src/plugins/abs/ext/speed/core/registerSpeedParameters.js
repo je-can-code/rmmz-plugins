@@ -12,15 +12,12 @@ class SpeedParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key('msb')
-        // policy step inside register all.
         .group(ParameterGroups.MOBILITY)
         .sortOrder(0)
         .label(() => TextManager.movespeed())
-        // policy step inside register all.
         .description(() => TextManager.moveSpeedDescription())
         .iconIndex(() => IconManager.movespeed())
         .format(ParameterFormat.FLAT)
-        // policy step inside register all.
         .getValue(battler => battler.msb)
         .sdpBinding(SdpParameterBinding.byKey('msb', () => 0))
         .build()

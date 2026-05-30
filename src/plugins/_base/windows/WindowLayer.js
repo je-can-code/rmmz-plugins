@@ -43,13 +43,11 @@ WindowLayer.prototype.render = function(renderer)
     }
   }
 
-  // policy step inside render.
   gl.disable(gl.STENCIL_TEST);
   gl.clear(gl.STENCIL_BUFFER_BIT);
   gl.clearStencil(0);
   renderer.batch.flush();
 
-  // walk each entry in the iterable for this routine.
   for (const child of this.children)
   {
     if (!child._isWindow && child.visible)
@@ -58,7 +56,6 @@ WindowLayer.prototype.render = function(renderer)
     }
   }
 
-  // policy step inside render.
   renderer.batch.flush();
 }
 //endregion WindowLayer

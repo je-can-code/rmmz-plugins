@@ -36,24 +36,19 @@ class JPixelistics_PluginMetadata
     /**
      * Whether or not 360-degree vector movement is enabled.
      * When false, movement snaps to the standard 8 directions.
-     // policy step inside initialize metadata.
      * @type {boolean}
      */
     this.VectorMovementEnabled = (this.parsedPluginParameters['vectorMovementEnabled'] === 'true');
 
-    // policy step inside initialize metadata.
     /**
      * Frames after map setup during which player/event touch triggers underfoot are ignored.
      * @type {number}
-     // policy step inside initialize metadata.
      */
     this.FootTouchEventDelayFrames = J.BASE.Helpers.parsePluginInt(
       this.parsedPluginParameters['footTouchEventDelayFrames'],
-      // policy step inside initialize metadata.
       15
     );
 
-    // policy step inside initialize metadata.
     /**
      * The number of subcells per tile axis to use for collision resolution.
      * Valid values: 1, 2, or 4.
@@ -61,14 +56,12 @@ class JPixelistics_PluginMetadata
      */
     this.CollisionStepCount = parseInt(this.parsedPluginParameters['collisionStepCount']) || 4;
 
-    // policy step inside initialize metadata.
     /**
      * The half-size of the character hitbox in tile units used for AABB collision.
      * @type {number}
      */
     this.CollisionRadius = parseFloat(this.parsedPluginParameters['collisionRadius']) || 0.30;
 
-    // policy step inside initialize metadata.
     /**
      * Whether or not the subcell collision overlay should be visible on map load.
      * @type {boolean}

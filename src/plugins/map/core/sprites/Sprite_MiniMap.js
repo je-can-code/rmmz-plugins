@@ -98,7 +98,6 @@ class Sprite_MiniMap
   {
     super();
 
-    // policy step inside constructor.
     this.initCoreData();
     this.initCacheData();
     this.initOverlayLayer();
@@ -111,12 +110,10 @@ class Sprite_MiniMap
     /**
      * The number of padding tiles applied on each side of the cached map.
      * This is equal to MAP_RANGE and allows player-centered scrolling near edges.
-     // policy step inside init core data.
      * @type {number}
      */
     this._cacheOffsetTiles = 0;
 
-    // policy step inside init core data.
     /**
      * Viewport dimension, in tiles, along a single axis (width or height).
      * Computed as (MAP_RANGE * 2 + 1).
@@ -124,21 +121,18 @@ class Sprite_MiniMap
      */
     this._viewTiles = (this.MAP_RANGE * 2) + 1;
 
-    // policy step inside init core data.
     /**
      * Viewport width in pixels.
      * @type {number}
      */
     this._width = this._viewTiles * this.SCALE;
 
-    // policy step inside init core data.
     /**
      * Viewport height in pixels.
      * @type {number}
      */
     this._height = this._viewTiles * this.SCALE;
 
-    // policy step inside init core data.
     /**
      * The displayed bitmap containing only the visible window (cache slice + player marker).
      * @type {Bitmap}
@@ -161,14 +155,12 @@ class Sprite_MiniMap
     // assign z on this instance for callers.
     this.z = 200;
 
-    // policy step inside init core data.
     /**
      * Last known player x tile; used to detect when to re-blit the window.
      * @type {number}
      */
     this._lastX = -1;
 
-    // policy step inside init core data.
     /**
      * Last known player y tile; used to detect when to re-blit the window.
      * @type {number}
@@ -181,18 +173,15 @@ class Sprite_MiniMap
     /**
      * Full-map cached bitmap (map + padding around it), rebuilt per-map.
      * @type {Bitmap}
-     // policy step inside init cache data.
      */
     this._cacheBitmap = new Bitmap(1, 1);
 
-    // policy step inside init cache data.
     /**
      * Whether the full-map cache is currently built.
      * @type {boolean}
      */
     this._cacheReady = false;
 
-    // policy step inside init cache data.
     /**
      * The mapId associated with the current cache.
      * @type {number}
@@ -209,15 +198,12 @@ class Sprite_MiniMap
     /**
      * Dynamic overlay bitmap drawn every frame (enemies, followers, etc.).
      * @type {Bitmap}
-     // policy step inside init overlay layer.
      */
     this._overlay = new Bitmap(this._width, this._height);
 
-    // policy step inside init overlay layer.
     /**
      * Sprite child for the overlay bitmap.
      * @type {Sprite}
-     // policy step inside init overlay layer.
      */
     this._overlaySprite = new Sprite(this._overlay);
     this._overlaySprite.anchor.set(0.5, 0.5);
@@ -245,11 +231,9 @@ class Sprite_MiniMap
     /**
      * The minimap's frame sprite.
      * @type {Sprite}
-     // policy step inside init frame layer.
      */
     this._minimapFrameSprite = new Sprite(new Bitmap(this._width, this._height));
     this._minimapFrameSprite.anchor.set(0.5, 0.5);
-    // policy step inside init frame layer.
     this._minimapFrameSprite.x = 0; // or align to minimap container offsets
     this._minimapFrameSprite.y = 0;
     this.addChild(this._minimapFrameSprite);
@@ -289,7 +273,6 @@ class Sprite_MiniMap
     super.update();
     if (!$gameMap) return;
 
-    // capture map id for downstream policy in this routine.
     const mapId = $gameMap.mapId
       ? $gameMap.mapId()
       : 0;
@@ -317,7 +300,6 @@ class Sprite_MiniMap
       this._lastY = -99999;
     }
 
-    // when this.SMOOTH_SCROLL, take this branch.
     if (this.SMOOTH_SCROLL)
     {
       // Always redraw to follow sub-tile movement
@@ -345,7 +327,6 @@ class Sprite_MiniMap
   {
     if (!this._minimapFrameSprite) return;
 
-    // capture w for downstream policy in this routine.
     const w = this.bitmap.width;
     const h = this.bitmap.height;
     if (this._minimapFrameSprite.bitmap.width !== w || this._minimapFrameSprite.bitmap.height !== h)
@@ -361,7 +342,6 @@ class Sprite_MiniMap
       this._minimapFrameSprite.bitmap.clear();
     }
 
-    // policy step inside refresh minimap frame.
     this.drawPixelArtMinimapFrame(this._minimapFrameSprite.bitmap, 0, 0, w, h);
   }
 
@@ -560,11 +540,9 @@ class Sprite_MiniMap
     const mapWidth = $gameMap.width();
     const mapHeight = $gameMap.height();
 
-    // capture pad for downstream policy in this routine.
     const pad = this.MAP_RANGE; // padding tiles around the map in the cache
     this._cacheOffsetTiles = pad;
 
-    // capture cache tiles w for downstream policy in this routine.
     const cacheTilesW = mapWidth + (pad * 2);
     const cacheTilesH = mapHeight + (pad * 2);
     const pixelWidth = cacheTilesW * this.SCALE;
@@ -619,10 +597,8 @@ class Sprite_MiniMap
   {
     if (!this._cacheBitmap) return;
 
-    // policy step inside redraw window.
     this.bitmap.clear();
 
-    // policy step inside redraw window.
     const {
       srcX,
       srcY
@@ -639,11 +615,9 @@ class Sprite_MiniMap
   {
     if (!this._chromeBitmap) return;
 
-    // policy step inside redraw chrome.
     this._chromeBitmap.clear();
     this.drawNorthNotch(this._chromeBitmap);
 
-    // policy step inside redraw chrome.
     this.setChildIndex(this._chromeSprite, this.children.length - 1);
   }
 
@@ -691,7 +665,6 @@ class Sprite_MiniMap
     const dx = -(sfx - srcX); // fractional remainder, negative to keep player centered
     const dy = -(sfy - srcY);
 
-    // policy step inside redraw window smooth.
     this.bitmap.clear();
 
     // If your runtime floors dx/dy, wrap with Math.round(dx/dy)
@@ -735,7 +708,6 @@ class Sprite_MiniMap
     const s = this.SCALE;
     const t = 2; // edge thickness
 
-    // when mask & 0x01, take this branch.
     if (mask & 0x01) targetBitmap.fillRect(sx, sy + s - t, s, t, c); // bottom
     if (mask & 0x02) targetBitmap.fillRect(sx, sy, t, s, c);         // left
     if (mask & 0x04) targetBitmap.fillRect(sx + s - t, sy, t, s, c); // right
@@ -754,7 +726,6 @@ class Sprite_MiniMap
     const mapWidth = $gameMap.width();
     const mapHeight = $gameMap.height();
 
-    // iterate the loop counter until the guard exits.
     for (let y = 0; y < mapHeight; y++)
     {
       for (let x = 0; x < mapWidth; x++)
@@ -762,13 +733,10 @@ class Sprite_MiniMap
         const sx = (originTileX + x) * this.SCALE;
         const sy = (originTileY + y) * this.SCALE;
 
-        // capture mask for downstream policy in this routine.
         const mask = this.blockedMaskAt(x, y, flags);
 
-        // when this.drawCell(x, y, sx, sy, mask), take this branch.
         if (this.drawCell(x, y, sx, sy, mask)) continue;
 
-        // when mask  equals  0x0f, take this branch.
         if (mask === 0x0f)
         {
           this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
@@ -791,19 +759,15 @@ class Sprite_MiniMap
     switch (type.shape)
     {
       case MinimapEventType.Shapes.Square:
-        // policy step inside draw by type.
         this.drawSquareOn(targetBitmap, lx, ly, size, type.color);
         break;
       case MinimapEventType.Shapes.Diamond:
-        // policy step inside draw by type.
         this.drawDiamondOn(targetBitmap, lx, ly, size, type.color);
         break;
       case MinimapEventType.Shapes.Plus:
-        // policy step inside draw by type.
         this.drawPlusOn(targetBitmap, lx, ly, size, type.color);
         break;
       case MinimapEventType.Shapes.HollowSquare:
-        // policy step inside draw by type.
         this.drawHollowSquareOn(targetBitmap, lx, ly, size, type.color);
         break;
       case MinimapEventType.Shapes.Disk:
@@ -859,7 +823,6 @@ class Sprite_MiniMap
   {
     if (!$gameMap || !$gamePlayer) return;
 
-    // policy step inside draw overlay.
     this.drawFollowers(overlayBitmap);
     this.drawEvents(overlayBitmap);
   }
@@ -871,11 +834,9 @@ class Sprite_MiniMap
   {
     const scale = this.SCALE;
 
-    // capture followers for downstream policy in this routine.
     const followers = $gamePlayer.followers()
       .visibleFollowers();
 
-    // policy step inside draw followers.
     followers.forEach(follower =>
     {
       const wx = (follower._realX ?? follower.x);
@@ -886,7 +847,6 @@ class Sprite_MiniMap
       } = this.worldToLocalAroundPlayer(wx, wy);
       if (!this.inView(lx, ly)) return;
 
-      // policy step inside draw followers.
       this.drawByType(overlayBitmap, lx, ly, Math.max(2, scale - 4), MinimapEventType.Follower);
     }, this);
   }
@@ -909,7 +869,6 @@ class Sprite_MiniMap
   {
     if (!this.isEventRenderable(event)) return;
 
-    // capture wx for downstream policy in this routine.
     const wx = (event._realX ?? event.x);
     const wy = (event._realY ?? event.y);
     const {
@@ -918,7 +877,6 @@ class Sprite_MiniMap
     } = this.worldToLocalAroundPlayer(wx, wy);
     if (!this.inView(lx, ly)) return;
 
-    // capture type for downstream policy in this routine.
     const type = event.minimapEventType();
 
     // Special handling for teleport markers with area.
@@ -997,11 +955,9 @@ class Sprite_MiniMap
     const s = this.SCALE;
     const size = Math.max(this.MARKER_MIN, Math.min(s, Math.floor(sizePx)));
     const ox = Math.floor((s - size) / 2);
-    // capture oy for downstream policy in this routine.
     const oy = Math.floor((s - size) / 2);
     const r = Math.floor(size / 2);
     return {
-      // policy step inside inner box.
       size,
       ox,
       oy,
@@ -1023,7 +979,6 @@ class Sprite_MiniMap
     const s = this.SCALE;
     return {
       lx: Math.floor((wx - leftTile) * s),
-      // policy step inside world to local.
       ly: Math.floor((wy - topTile) * s),
     };
   }
@@ -1039,7 +994,6 @@ class Sprite_MiniMap
     const s = this.SCALE;
     return {
       leftPx: tx * s,
-      // policy step inside tile left top px.
       topPx: ty * s
     };
   }
@@ -1057,16 +1011,13 @@ class Sprite_MiniMap
     if (!this.inView(lx, ly)) return;
     const {
       ox,
-      // policy step inside draw disk on.
       oy,
       r
     } = this.innerBox(sizePx);
-    // capture cx for downstream policy in this routine.
     const cx = lx + ox + r;
     const cy = ly + oy + r;
     const col = this.toCss(color);
 
-    // iterate the loop counter until the guard exits.
     for (let dy = -r; dy <= r; dy++)
     {
       const span = Math.floor(Math.sqrt(r * r - dy * dy));
@@ -1087,16 +1038,13 @@ class Sprite_MiniMap
     if (!this.inView(lx, ly)) return;
     const {
       ox,
-      // policy step inside draw diamond on.
       oy,
       r
     } = this.innerBox(sizePx);
-    // capture cx for downstream policy in this routine.
     const cx = lx + ox + r;
     const cy = ly + oy + r;
     const col = this.toCss(color);
 
-    // iterate the loop counter until the guard exits.
     for (let dy = -r; dy <= r; dy++)
     {
       const span = r - Math.abs(dy);
@@ -1117,7 +1065,6 @@ class Sprite_MiniMap
     if (!this.inView(lx, ly)) return;
     const {
       size,
-      // policy step inside draw square on.
       ox,
       oy
     } = this.innerBox(sizePx);
@@ -1235,11 +1182,9 @@ class Sprite_MiniMap
     const {
       size,
       ox,
-      // policy step inside draw facing perp line on.
       oy,
       r
     } = this.innerBox(sizePx);
-    // capture cx for downstream policy in this routine.
     const cx = lx + ox + r;
     const cy = ly + oy + r;
     const col = this.toCss(color);
@@ -1248,7 +1193,6 @@ class Sprite_MiniMap
     const ix0 = lx + ox;
     const iy0 = ly + oy;
     const ix1 = ix0 + size - 1;
-    // capture iy1 for downstream policy in this routine.
     const iy1 = iy0 + size - 1;
 
     // Match the plus arm thickness for harmony, but make the cap a bit slimmer.
@@ -1261,16 +1205,13 @@ class Sprite_MiniMap
     // 1px margin from inner box edge.
     const margin = 1;
 
-    // dispatch on the discriminant for the next policy branch.
     switch (dir)
     {
       case 8:
       { // Up: faced arm vertical; draw a horizontal line near top.
-        // capture y for downstream policy in this routine.
         const y = iy0 + margin;
         const x = cx - Math.floor(capLen / 2);
         targetBitmap.fillRect(x, y, capLen, capThickness, col);
-        // policy step inside draw facing perp line on.
         break;
       }
       case 2:
@@ -1320,11 +1261,9 @@ class Sprite_MiniMap
   {
     if (!$gameMap.isValid(x, y)) return 0x0f; // treat OOB as blocked
 
-    // capture flags for downstream policy in this routine.
     const flags = flagsRef || $gameMap.tilesetFlags();
     const tiles = $gameMap.allTiles(x, y); // tile-graphic events first, then layers 3..0
 
-    // walk each entry in the iterable for this routine.
     for (const tileId of tiles)
     {
       const flag = flags[tileId] || 0;
@@ -1350,10 +1289,8 @@ class Sprite_MiniMap
     const clean = hex.replace(/\s+/g, String.empty);
     if (!clean.startsWith('#')) return '#ff00ff';
 
-    // when clean.length  equals  7, take this branch.
     if (clean.length === 7) return clean; // #rrggbb
 
-    // when clean.length  equals  9, take this branch.
     if (clean.length === 9)
     { // #rrggbbaa
       const r = parseInt(clean.slice(1, 3), 16);
@@ -1363,7 +1300,6 @@ class Sprite_MiniMap
       return `rgba(${r},${g},${b},${a})`;
     }
 
-    // hand back '#ff00ff'; // error/magenta to the caller.
     return '#ff00ff'; // error/magenta
   }
 
@@ -1399,7 +1335,6 @@ class Sprite_MiniMap
     const pad = this._cacheOffsetTiles; // tiles
     const srcX = (($gamePlayer.x - this.MAP_RANGE) + pad) * this.SCALE;
     const srcY = (($gamePlayer.y - this.MAP_RANGE) + pad) * this.SCALE;
-    // hand back { to the caller.
     return {
       srcX,
       srcY
@@ -1415,7 +1350,6 @@ class Sprite_MiniMap
     const fx = ((rx - this.MAP_RANGE) + pad) * this.SCALE; // pixels
     const fy = ((ry - this.MAP_RANGE) + pad) * this.SCALE; // pixels
     return {
-      // policy step inside src float from player.
       fx,
       fy
     };
@@ -1437,11 +1371,9 @@ class Sprite_MiniMap
     const px = ($gamePlayer._realX ?? $gamePlayer.x);
     const py = ($gamePlayer._realY ?? $gamePlayer.y);
 
-    // capture dx for downstream policy in this routine.
     let dx = wx - px;
     let dy = wy - py;
 
-    // capture loop h for downstream policy in this routine.
     const loopH = $gameMap.isLoopHorizontal();
     const loopV = $gameMap.isLoopVertical();
     const mapW = $gameMap.width();
@@ -1465,7 +1397,6 @@ class Sprite_MiniMap
     const tileX = this.MAP_RANGE + dx;
     const tileY = this.MAP_RANGE + dy;
 
-    // hand back { to the caller.
     return {
       lx: Math.floor(tileX * s),
       ly: Math.floor(tileY * s),
@@ -1525,7 +1456,6 @@ class Sprite_MiniMap
     const half = this.MAP_RANGE;
     const leftTile = $gamePlayer.x - half;
     const topTile = $gamePlayer.y - half;
-    // hand back [ leftTile, topTile ] to the caller.
     return [ leftTile, topTile ];
   }
 
@@ -1594,7 +1524,6 @@ class Sprite_MiniMap
     const ihW = innerW - thickness * 2;
     const ihH = innerH - thickness * 2;
 
-    // when ihW > 0  and  ihH > 0, take this branch.
     if (ihW > 0 && ihH > 0)
     {
       // top

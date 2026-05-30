@@ -20,7 +20,6 @@ class J_OmniMonster_PluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -36,11 +35,9 @@ class J_OmniMonster_PluginMetadata
     this.Command = {
       Name: 'Monsterpedia',
       Symbol: 'monster-pedia',
-      // policy step inside initialize metadata.
       IconIndex: 14,
     };
 
-    // policy step inside initialize metadata.
     /**
      * The id of the switch that will represent whether or not the command
      * should be visible in the Omnipedia menu.

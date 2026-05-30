@@ -13,7 +13,6 @@ Window_ChoiceList.prototype.makeCommandList = function()
   J.MESSAGE.Aliased.Window_ChoiceList.get('makeCommandList')
     .call(this);
 
-  // capture needs update for downstream policy in this routine.
   let needsUpdate = false;
 
   // iterate over all the choices in this list in reverse to avoid index issues.
@@ -61,6 +60,5 @@ Window_ChoiceList.prototype.callOkHandler = function()
   $gameMessage.onChoice(this._choiceMap[this.index()]);
   this._messageWindow.terminateMessage();
   this.close();
-// policy step inside call ok handler.
 };
 //endregion Window_ChoiceList

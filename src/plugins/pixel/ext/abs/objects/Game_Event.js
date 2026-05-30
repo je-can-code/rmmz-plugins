@@ -59,7 +59,6 @@ Game_Event.prototype.getPixelAbsHitboxSizeData = function()
     this.initPixelAbsHitboxData();
   }
 
-  // hand back this._j._pixel._abs._hitboxSizeData to the caller.
   return this._j._pixel._abs._hitboxSizeData;
 };
 
@@ -124,7 +123,6 @@ Game_Event.prototype.canUsePixelAbsEnemyHitboxData = function()
   if (typeof this.getBattlerId !== 'function') return false;
   if (this.getBattlerId() <= 0) return false;
 
-  // hand back true to the caller.
   return true;
 };
 
@@ -172,7 +170,6 @@ Game_Event.prototype.getPixelAbsHitboxRevealRange = function()
     this.initPixelAbsHitboxData();
   }
 
-  // hand back this._j._pixel._abs._hitboxRevealRange to the caller.
   return this._j._pixel._abs._hitboxRevealRange;
 };
 
@@ -249,7 +246,6 @@ Game_Event.prototype.getPixelAbsHitboxSizeEnemyFallback = function()
   // if the enemy data is unavailable, then skip this fallback.
   if (!enemyData) return null;
 
-  // hand back enemyData.hitboxSizeData to the caller.
   return enemyData.hitboxSizeData;
 };
 
@@ -265,7 +261,6 @@ Game_Event.prototype.getPixelAbsHitboxRevealEnemyFallback = function()
   // if the enemy data is unavailable, then skip this fallback.
   if (!enemyData) return null;
 
-  // hand back enemyData.hitboxRevealRange to the caller.
   return enemyData.hitboxRevealRange;
 };
 
@@ -300,7 +295,6 @@ Game_Event.prototype.getPixelAbsDefaultHitboxSizeData = function()
   return {
     widthTiles: J.PIXEL.EXT.ABS.Metadata.DefaultEnemyHitboxWidth,
     heightTiles: J.PIXEL.EXT.ABS.Metadata.DefaultEnemyHitboxHeight,
-  // policy step inside get pixel abs default hitbox size data.
   };
 };
 
@@ -371,11 +365,9 @@ Game_Event.prototype.getPixelAbsHitboxTileAabb = function(logicalX = this.x, log
   const pivotX = logicalX + this.getCollisionPivotX();
   const pivotY = logicalY + this.getCollisionPivotY();
   const hitbox = this._pixelHitbox(this.getEffectiveRadius());
-  // capture left for downstream policy in this routine.
   const left = pivotX + hitbox.hx;
   const top = pivotY + hitbox.hy;
 
-  // hand back { to the caller.
   return {
     left,
     top,
@@ -402,7 +394,6 @@ Game_Event.prototype.getPixelAbsBattlerAabbModel = function()
   const left = this.screenX() - (widthPixels / 2);
   const top = this.screenY() - heightPixels;
 
-  // hand back new JABS_Aabb(left, top, widthPixels, heightPixels) to the caller.
   return new JABS_Aabb(left, top, widthPixels, heightPixels);
 };
 
@@ -485,7 +476,6 @@ Game_Event.prototype._pixelHitbox = function(radius)
   // grab the canonical rectangle dimensions.
   const { widthTiles, heightTiles } = this.getPixelAbsHitboxSizeData();
 
-  // hand back { to the caller.
   return {
     w: widthTiles,
     h: heightTiles,

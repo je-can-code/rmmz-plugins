@@ -32,7 +32,6 @@ class Game_Time
   };
   //endregion statics
 
-
   /**
    * Initializes the members of this class.
    */
@@ -41,135 +40,111 @@ class Game_Time
     /**
      * The number of frames that must pass before we execute a tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._tickFrames ??= J.TIME.Metadata.FramesPerTick;
 
-    // policy step inside init members.
     /**
      * The number of seconds per tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._secondsPerTick ??= J.TIME.Metadata.SecondsPerIncrement;
 
-    // policy step inside init members.
     /**
      * The number of minutes per tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._minutesPerTick ??= J.TIME.Metadata.MinutesPerIncrement;
 
-    // policy step inside init members.
     /**
      * The number of hours per tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._hoursPerTick ??= J.TIME.Metadata.HoursPerIncrement;
 
-    // policy step inside init members.
     /**
      * The number of days per tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._daysPerTick ??= J.TIME.Metadata.DaysPerIncrement;
 
-    // policy step inside init members.
     /**
      * The number of months per tick.
      * @type {number}
-     // policy step inside init members.
      */
     this._monthsPerTick ??= J.TIME.Metadata.MonthsPerIncrement;
 
-    // policy step inside init members.
     /**
      * The number of years per tick.
      * @type {number}
      */
     this._yearsPerTick ??= J.TIME.Metadata.YearsPerIncrement;
 
-    // policy step inside init members.
     /**
      * The current second.
      * @type {number}
      */
     this._seconds ??= J.TIME.Metadata.StartingSecond;
 
-    // policy step inside init members.
     /**
      * The current minute.
      * @type {number}
      */
     this._minutes ??= J.TIME.Metadata.StartingMinute;
 
-    // policy step inside init members.
     /**
      * The current hour.
      * @type {number}
      */
     this._hours ??= J.TIME.Metadata.StartingHour;
 
-    // policy step inside init members.
     /**
      * The current day (number).
      * @type {number}
      */
     this._days ??= J.TIME.Metadata.StartingDay;
 
-    // policy step inside init members.
     /**
      * The current month (number).
      * @type {number}
      */
     this._months ??= J.TIME.Metadata.StartingMonth;
 
-    // policy step inside init members.
     /**
      * The current year.
      * @type {number}
      */
     this._years ??= J.TIME.Metadata.StartingYear;
 
-    // policy step inside init members.
     /**
      * Whether or not the screen's tone needs to be changed based on the time.
      * @type {boolean}
      */
     this._needsToneChange = false;
 
-    // policy step inside init members.
     /**
      * The current tone of the screen.
      * @type {[number, number, number, number]}
      */
     this._currentTone = [];
 
-    // policy step inside init members.
     /**
      * Whether or not the tone is able to be changed.
      * @type {boolean}
      */
     this._toneLocked ??= !J.TIME.Metadata.ChangeToneByTime;
 
-    // policy step inside init members.
     /**
      * Whether or not the time window is visible on the map.
      * @type {boolean}
      */
     this._visible ??= J.TIME.Metadata.StartVisible;
 
-    // policy step inside init members.
     /**
      * Whether or not time is currently flowing.
      * @type {boolean}
      */
     this._active ??= J.TIME.Metadata.StartActivated;
 
-    // policy step inside init members.
     /**
      * Whether or not time is blocked from flowing for some predetermined reason.
      * This is typically used for manually stopping artificial time with with
@@ -178,7 +153,6 @@ class Game_Time
      */
     this._blocked ??= false;
 
-    // policy step inside init members.
     /**
      * Whether or not this has been updated. This is primarily for HUD elements keeping in-sync with TIME.
      * @type {boolean}
@@ -193,7 +167,6 @@ class Game_Time
   getTickSpeed()
   {
 
-    // hand back this._tickFrames to the caller.
     return this._tickFrames;
   }
 
@@ -220,7 +193,6 @@ class Game_Time
       flow = 0.1;
     }
 
-    // capture new tick speed for downstream policy in this routine.
     const newTickSpeed = Math.ceil(60 / flow);
     this._tickFrames = newTickSpeed;
   }
@@ -232,7 +204,6 @@ class Game_Time
   isMapWindowVisible()
   {
 
-    // hand back this._visible to the caller.
     return this._visible;
   }
 
@@ -243,7 +214,6 @@ class Game_Time
   isActive()
   {
 
-    // hand back this._active to the caller.
     return this._active;
   }
 
@@ -274,7 +244,6 @@ class Game_Time
   isBlocked()
   {
 
-    // hand back this._blocked to the caller.
     return this._blocked;
   }
 
@@ -305,7 +274,6 @@ class Game_Time
   isToneLocked()
   {
 
-    // hand back this._toneLocked to the caller.
     return this._toneLocked;
   }
 
@@ -355,7 +323,6 @@ class Game_Time
   toggleMapWindow()
   {
 
-    // when this._visible  equals  true, take this branch.
     if (this._visible === true)
     {
       this._visible = false;
@@ -372,7 +339,6 @@ class Game_Time
   flagForHudUpdate()
   {
 
-    // when this._hasBeenUpdated  equals  undefined, take this branch.
     if (this._hasBeenUpdated === undefined)
     {
       this._hasBeenUpdated = true;
@@ -389,7 +355,6 @@ class Game_Time
   acknowledgeHudUpdate()
   {
 
-    // when this._hasBeenUpdated  equals  undefined, take this branch.
     if (this._hasBeenUpdated === undefined)
     {
       this._hasBeenUpdated = false;
@@ -407,13 +372,11 @@ class Game_Time
   needsHudUpdate()
   {
 
-    // when this._hasBeenUpdated  equals  undefined, take this branch.
     if (this._hasBeenUpdated === undefined)
     {
       this._hasBeenUpdated = false;
     }
 
-    // hand back this._hasBeenUpdated to the caller.
     return this._hasBeenUpdated;
   }
 
@@ -488,7 +451,6 @@ class Game_Time
   getNeedsToneChange()
   {
 
-    // when not J.TIME.Metadata.ChangeToneByTime, take this branch.
     if (!J.TIME.Metadata.ChangeToneByTime)
     {
       return false;
@@ -507,7 +469,6 @@ class Game_Time
       return false;
     }
 
-    // hand back this._needsToneChange to the caller.
     return this._needsToneChange;
   }
 
@@ -529,7 +490,6 @@ class Game_Time
   getCurrentTone()
   {
 
-    // hand back this._currentTone to the caller.
     return this._currentTone;
   }
 
@@ -550,7 +510,6 @@ class Game_Time
   updateCurrentTone()
   {
 
-    // when not this.canUpdateTone(), take this branch.
     if (!this.canUpdateTone()) return;
 
     // if we reached this point, then grab the target tone
@@ -581,7 +540,6 @@ class Game_Time
       return false;
     }
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -599,72 +557,55 @@ class Game_Time
     const hours = J.TIME.Metadata.UseRealTime
       ? new Date().getHours()
       : this._hours;
-    // capture tone for downstream policy in this routine.
     let tone = [ 0, 0, 0, 0 ];
     switch (hours)
     {
       case  0: // night
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.25);
         break;
       case  1: // night
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.50);
         break;
       case  2: // night
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.75);
         break;
       case  3: // night
-        // policy step inside translate hour to tone.
         tone = Game_Time.toneOfDay.Night;
         break;
       case  4: // dawn
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.25);
         break;
       case  5: // dawn
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.50);
         break;
       case  6: // dawn
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.75);
         break;
       case  7: // dawn
-        // policy step inside translate hour to tone.
         tone = Game_Time.toneOfDay.Dawn;
         break;
       case  8: // morning
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.25);
         break;
       case  9: // morning
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.50);
         break;
       case 10: // morning
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.75);
         break;
       case 11: // morning
-        // policy step inside translate hour to tone.
         tone = Game_Time.toneOfDay.Morning;
         break;
       case 12: // afternoon
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.25);
         break;
       case 13: // afternoon
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.50);
         break;
       case 14: // afternoon
-        // policy step inside translate hour to tone.
         tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.75);
         break;
       case 15: // afternoon
-        // policy step inside translate hour to tone.
         tone = Game_Time.toneOfDay.Afternoon;
         break;
       case 16: // evening
@@ -693,7 +634,6 @@ class Game_Time
         break;
     }
   
-    // hand back tone to the caller.
     return tone;
   }
 
@@ -710,11 +650,9 @@ class Game_Time
   toneBetweenTones(tone1, tone2, rate)
   {
 
-    // capture diff for downstream policy in this routine.
     const diff = (a, b) => a > b
       ? a - b
       : b - a;
-    // capture new tone for downstream policy in this routine.
     const newTone = [];
     tone1.forEach((color1, index) =>
     {
@@ -727,7 +665,6 @@ class Game_Time
       newTone.push(newRgbValue);
     });
 
-    // hand back new tone to the caller.
     return newTone;
   }
 
@@ -739,7 +676,6 @@ class Game_Time
   isSameTone(targetTone)
   {
 
-    // when this._currentTone.length < 4, take this branch.
     if (this._currentTone.length < 4) return false;
 
     // individually compare each of the RGBA elements with the new tone's elements.
@@ -748,7 +684,6 @@ class Game_Time
     if (this._currentTone[2] !== targetTone[2]) return false;
     if (this._currentTone[3] !== targetTone[3]) return false;
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -759,7 +694,6 @@ class Game_Time
   processToneChange(skip = false)
   {
 
-    // when skip, take this branch.
     if (skip)
     {
       $gameScreen.startTint(this._currentTone, 1);
@@ -810,15 +744,12 @@ class Game_Time
   toTimeSnapshot(fromArray)
   {
 
-    // policy step inside to time snapshot.
     const [ seconds, minutes, hours, days, months, years ] = fromArray;
     const timeOfDayId = this.timeOfDay(hours);
     const seasonOfYearId = this.seasonOfYear(months);
-    // hand back new Time_Snapshot( to the caller.
     return new Time_Snapshot(
       seconds,
       minutes,
-      // policy step inside to time snapshot.
       hours,
       days,
       months,
@@ -873,11 +804,9 @@ class Game_Time
   determineArtificialTime()
   {
 
-    // capture time of day id for downstream policy in this routine.
     const timeOfDayId = this.timeOfDay(this._hours);
     const seasonOfYearId = this.seasonOfYear(this._months);
     return new Time_Snapshot(
-      // policy step inside determine artificial time.
       this._seconds,
       this._minutes,
       this._hours,
@@ -899,7 +828,6 @@ class Game_Time
     const date = new Date();
     const seconds = date.getSeconds();
     const minutes = date.getMinutes();
-    // capture hours for downstream policy in this routine.
     const hours = date.getHours();
     const days = date.getDate();
     const months = date.getMonth() + 1; //? returns 0-11 for some reason instead of 1-12.
@@ -916,16 +844,13 @@ class Game_Time
   timeOfDay(hours)
   {
 
-    // dispatch on the discriminant for the next policy branch.
     switch (true)
     {
       case (hours <= 3):
         return 0;
-      // handle this switch arm for the current discriminant.
       case (hours > 3 && hours <= 7):
         return 1;
       case (hours > 7 && hours <= 11):
-        // hand back 2 to the caller.
         return 2;
       case (hours > 11 && hours <= 15):
         return 3;
@@ -946,7 +871,6 @@ class Game_Time
   startOfTimeOfDay(timeOfDayId)
   {
 
-    // hand back (timeOfDayId * 4) to the caller.
     return (timeOfDayId * 4);
   }
 
@@ -957,16 +881,13 @@ class Game_Time
   seasonOfYear(months)
   {
 
-    // capture spring months for downstream policy in this routine.
     const springMonths = [ 3, 4, 5 ];
     const summerMonths = [ 6, 7, 8 ];
     const autumnMonths = [ 9, 10, 11 ];
-    // capture winter months for downstream policy in this routine.
     const winterMonths = [ 1, 2, 12 ];
     switch (true)
     {
       case (springMonths.includes(months)):
-        // hand back 0 to the caller.
         return 0;
       case (summerMonths.includes(months)):
         return 1;
@@ -1013,11 +934,9 @@ class Game_Time
   jumpToTimeOfDay(targetTimeOfDayId)
   {
 
-    // capture current time of day for downstream policy in this routine.
     const currentTimeOfDay = this.timeOfDay(this._hours);
     let timeUntilTargetTimeOfDay;
 
-    // when currentTimeOfDay >= targetTimeOfDayId, take this branch.
     if (currentTimeOfDay >= targetTimeOfDayId)
     {
       const timeToEndOfDay = 24 - this._hours;
@@ -1030,7 +949,6 @@ class Game_Time
       timeUntilTargetTimeOfDay = startingHourTargetTimeOfday - this._hours;
     }
 
-    // policy step inside jump to time of day.
     this.addHours(timeUntilTargetTimeOfDay);
     this._seconds = 0;
     this._minutes = 0;
@@ -1045,7 +963,6 @@ class Game_Time
   tickTime()
   {
 
-    // policy step inside tick time.
     this.addSeconds();
   }
 
@@ -1086,7 +1003,6 @@ class Game_Time
   addMinutes(minutes = this._minutesPerTick)
   {
 
-    // policy step inside add minutes.
     this.updateCurrentTone();
     let potentialMinutes = this._minutes + minutes;
     if (potentialMinutes >= 60)
@@ -1113,7 +1029,6 @@ class Game_Time
   addHours(hours = this._hoursPerTick)
   {
 
-    // capture potential hours for downstream policy in this routine.
     let potentialHours = this._hours + hours;
     if (potentialHours >= 24)
     {
@@ -1139,7 +1054,6 @@ class Game_Time
   addDays(days = this._daysPerTick)
   {
 
-    // capture potential days for downstream policy in this routine.
     let potentialDays = this._days + days;
     if (potentialDays > 30)
     {
@@ -1165,7 +1079,6 @@ class Game_Time
   addMonths(months = this._monthsPerTick)
   {
 
-    // capture potential months for downstream policy in this routine.
     let potentialMonths = this._months + months;
     if (potentialMonths > 12)
     {
@@ -1191,7 +1104,6 @@ class Game_Time
   addYears(years = this._yearsPerTick)
   {
 
-    // policy step inside add years.
     this._years += years;
   }
 }

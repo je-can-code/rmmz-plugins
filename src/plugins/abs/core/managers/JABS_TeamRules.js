@@ -22,26 +22,21 @@ class JABS_TeamRules
     const allyId = JABS_Battler.allyTeamId();
     const enemyId = JABS_Battler.enemyTeamId();
     const neutralId = JABS_Battler.neutralTeamId();
-    // hand back [ to the caller.
     return [
       {
         id: allyId,
         key: 'ALLY',
-        // policy step inside default teams.
         name: 'Allies',
         opposes: [ enemyId, neutralId ],
       },
       {
-        // policy step inside default teams.
         id: enemyId,
         key: 'ENEMY',
         name: 'Enemies',
-        // policy step inside default teams.
         opposes: [ allyId, neutralId ],
       },
       {
         id: neutralId,
-        // policy step inside default teams.
         key: 'NEUTRAL',
         name: 'Neutral',
         opposes: [ allyId, enemyId ],

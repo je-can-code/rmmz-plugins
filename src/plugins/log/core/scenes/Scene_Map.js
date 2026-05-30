@@ -13,26 +13,22 @@ Scene_Map.prototype.initialize = function()
   J.LOG.Aliased.Scene_Map.get('initialize')
     .call(this);
 
-  // policy step inside initialize.
   /**
    * The shared root namespace for all of J's plugin data.
    */
   this._j ||= {};
 
-  // policy step inside initialize.
   /**
    * A grouping of all properties associated with this plugin.
    */
   this._j._log = {};
 
-  // policy step inside initialize.
   /**
    * The action log for the map.
    * @type {Window_MapLog}
    */
   this._j._log._actionLog = null;
 
-  // policy step inside initialize.
   /**
    * The chat-centric log for the map.
    * @type {Window_DiaLog}

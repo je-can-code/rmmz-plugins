@@ -16,20 +16,16 @@ class RecipeTracking
     /**
      * The key of this recipe that is being tracked.
      * @type {string}
-     // policy step inside initialize.
      */
     this.key = recipeKey;
 
-    // policy step inside initialize.
     /**
      * True if the recipe associated with this key is unlocked,
      * false otherwise.
-     // policy step inside initialize.
      * @type {boolean}
      */
     this.unlocked = unlocked;
 
-    // policy step inside initialize.
     /**
      * The number of times a recipe with this key has been crafted.
      * @type {number}

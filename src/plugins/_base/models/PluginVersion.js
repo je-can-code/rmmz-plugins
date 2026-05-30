@@ -126,7 +126,6 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#major = parsedVersion;
-      // hand back this to the caller.
       return this;
     }
 
@@ -140,7 +139,6 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#minor = parsedVersion;
-      // hand back this to the caller.
       return this;
     }
 
@@ -154,7 +152,6 @@ class PluginVersion
     {
       const parsedVersion = parseInt(version);
       this.#patch = parsedVersion;
-      // hand back this to the caller.
       return this;
     }
 
@@ -169,7 +166,6 @@ class PluginVersion
     }
   }
 }
-
 
 export default PluginVersion;
 //endregion PluginVersion

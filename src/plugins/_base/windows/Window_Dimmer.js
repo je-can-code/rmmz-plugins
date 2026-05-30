@@ -16,7 +16,6 @@ class Window_Dimmer
     super.initialize(rect);
     this.frameVisible = false;
     this.deactivate();
-    // policy step inside initialize.
     this.refresh();
   }
 
@@ -52,7 +51,6 @@ class Window_Dimmer
     this.contents.fillRect(0, 0, this.contentsWidth(), this.contentsHeight(), '#000000');
   }
 }
-
 
 export default Window_Dimmer;
 //endregion Window_Dimmer

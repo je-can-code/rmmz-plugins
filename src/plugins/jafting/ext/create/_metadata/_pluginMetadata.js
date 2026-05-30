@@ -80,11 +80,9 @@ class J_CraftingCreatePluginMetadata
         parsedOutputs
       );
 
-      // hand back new jafting recipe to the caller.
       return newJaftingRecipe;
     };
 
-    // policy step inside parse recipes.
     /** @type {CraftingRecipe[]} */
     const jaftingRecipes = parsedRecipesBlob.map(recipeMapper, this);
 
@@ -151,15 +149,12 @@ class J_CraftingCreatePluginMetadata
     const canLogLoadInfo = J_CraftingCreatePluginMetadata.#hasMinimumBaseVersion();
     const classifiedCraftingConfig = ExternalJsonConfigLoader.load(
       J_CraftingCreatePluginMetadata.CONFIG_PATH,
-      // policy step inside initialize configuration.
       ExternalJsonConfigLoaderOptions.Builder()
         .pluginName('J-JAFTING-Creation')
         .configName('crafting configuration')
-        // policy step inside initialize configuration.
         .mapper(J_CraftingCreatePluginMetadata.classify.bind(J_CraftingCreatePluginMetadata))
         .logSummary(canLogLoadInfo
           ? result => [
-            // policy step inside initialize configuration.
             `- ${result.recipes().length} recipes`,
             `- ${result.categories().length} categories`,
           ]
@@ -167,7 +162,6 @@ class J_CraftingCreatePluginMetadata
         .build()
     );
 
-    // policy step inside initialize configuration.
     /**
      * The collection of all defined jafting recipes.
      * @type {CraftingRecipe[]}
@@ -178,14 +172,12 @@ class J_CraftingCreatePluginMetadata
     const recipeMap = new Map();
     this.recipes.forEach(recipe => recipeMap.set(recipe.key, recipe));
 
-    // policy step inside initialize configuration.
     /**
      * A key:recipe map of all defined recipes.
      * @type {Map<string, CraftingRecipe>}
      */
     this.recipesMap = recipeMap;
 
-    // policy step inside initialize configuration.
     /**
      * The collection of all defined jafting categories.
      * @type {CraftingCategory[]}
@@ -196,7 +188,6 @@ class J_CraftingCreatePluginMetadata
     const categoriesMap = new Map();
     this.categories.forEach(category => categoriesMap.set(category.key, category));
 
-    // policy step inside initialize configuration.
     /**
      * A key:category map of all defined categories.
      * @type {Map<string, CraftingCategory>}
@@ -212,20 +203,16 @@ class J_CraftingCreatePluginMetadata
     /**
      * The id of a switch that represents whether or not this system is accessible
      * in the menu.
-     // policy step inside initialize metadata.
      * @type {number}
      */
     this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
 
-    // policy step inside initialize metadata.
     /**
      * The name used for the command when visible in a menu.
      * @type {string}
-     // policy step inside initialize metadata.
      */
     this.commandName = this.parsedPluginParameters['menu-name'] ?? 'Creation';
 
-    // policy step inside initialize metadata.
     /**
      * The icon used alongside the command's name when visible in the menu.
      * @type {number}

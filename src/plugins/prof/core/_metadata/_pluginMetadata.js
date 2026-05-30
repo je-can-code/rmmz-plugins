@@ -22,14 +22,11 @@ class J_ProficiencyPluginMetadata
     {
       const requirements = conditional.requirements
         .map(requirement => new ProficiencyRequirement(
-          // policy step inside classify conditionals.
           requirement.skillId,
           requirement.proficiency,
           requirement.secondarySkillIds
-        // policy step inside classify conditionals.
         ));
 
-      // hand back new ProficiencyConditional( to the caller.
       return new ProficiencyConditional(
         conditional.key,
         conditional.actorIds,
@@ -63,14 +60,12 @@ class J_ProficiencyPluginMetadata
         .build()
     );
 
-    // policy step inside initialize proficiencies.
     /**
      * The collection of all defined skill proficiencies.
      * @type {ProficiencyConditional[]}
      */
     this.conditionals = classifiedConditionalData;
 
-    // policy step inside initialize proficiencies.
     /**
      * A map of actorId:conditional[] for more easily accessing all conditionals associated with a given actor.
      * @type {Map<number, ProficiencyConditional[]>}

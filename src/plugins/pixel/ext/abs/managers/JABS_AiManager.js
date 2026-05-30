@@ -55,7 +55,6 @@ JABS_AiManager.rubberbandAlly = function(allyBattler)
   // Acquire characters and compute fractional distance.
   const allyCharacter = allyBattler.getCharacter();
 
-  // policy step inside rubberband ally.
   allyBattler.lockEngagement();
   allyBattler.disengageTarget();
   allyBattler.resetAllAggro(null, true);
@@ -83,7 +82,6 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
     return;
   }
 
-  // when allyBattler.guarding(), take this branch.
   if (allyBattler.guarding())
   {
     return;
@@ -99,7 +97,6 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   // extra ring outside tolerance for gentle throttling near target.
   const hysteresis = 0.25;
 
-  // when J.ABS.EXT.ALLYAI  and  J.ABS.EXT.ALLYAI.Metadata, take this branch.
   if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
   {
     // use the configured formation tolerance if available.

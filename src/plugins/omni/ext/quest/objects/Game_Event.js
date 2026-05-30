@@ -64,10 +64,8 @@ Game_Event.toQuestConditional = function(commentCommand)
   // shorthand the comment into a variable.
   const [ comment, ] = commentCommand.parameters;
 
-  // capture result for downstream policy in this routine.
   let result = null;
 
-  // dispatch on the discriminant for the next policy branch.
   switch (true)
   {
     // FOR WHOLE EVENTS:
@@ -119,7 +117,6 @@ Game_Event.toQuestConditional = function(commentCommand)
       const targetQuestState = OmniQuest.FromStringToStateId(parsedVal.at(2));
       return new OmniConditional(parsedVal.at(0), parsedVal.at(1), targetQuestState);
 
-    // handle this switch arm for the current discriminant.
     default:
       throw new Error(`unknown parsedVal length in quest event tag: ${comment}`);
   }

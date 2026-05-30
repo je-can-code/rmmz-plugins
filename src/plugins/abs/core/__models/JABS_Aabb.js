@@ -17,40 +17,33 @@ class JABS_Aabb
     /**
      * The top-left x coordinate in pixels.
      * @type {number}
-     // policy step inside constructor.
      */
     this.x = x;
 
-    // policy step inside constructor.
     /**
      * The top-left y coordinate in pixels.
      * @type {number}
-     // policy step inside constructor.
      */
     this.y = y;
 
-    // policy step inside constructor.
     /**
      * The width in pixels.
      * @type {number}
      */
     this.w = w;
 
-    // policy step inside constructor.
     /**
      * The height in pixels.
      * @type {number}
      */
     this.h = h;
 
-    // policy step inside constructor.
     /**
      * The center x coordinate in pixels.
      * @type {number}
      */
     this.cx = x + (w / 2);
 
-    // policy step inside constructor.
     /**
      * The center y coordinate in pixels.
      * @type {number}

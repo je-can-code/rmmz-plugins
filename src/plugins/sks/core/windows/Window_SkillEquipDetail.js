@@ -29,7 +29,6 @@ class Window_SkillEquipDetail
      */
     this._actor = null;
 
-    // policy step inside init members.
     /**
      * The skill id this window is showing.
      * @type {number}

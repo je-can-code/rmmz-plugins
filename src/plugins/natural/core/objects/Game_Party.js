@@ -25,6 +25,5 @@ Game_Party.prototype.refreshAllParameterBuffsForAll = function()
   this
     .members()
     .forEach(member => member.refreshAllParameterBuffs());
-// policy step inside refresh all parameter buffs for all.
 };
 //endregion Game_Party

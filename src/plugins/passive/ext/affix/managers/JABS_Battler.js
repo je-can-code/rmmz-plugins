@@ -23,13 +23,11 @@ if (J.HUD && J.HUD.EXT.TARGET)
     // derive the same stripe hex the map uses, then tint the HUD name row to match the stripe.
     const tierStripeHex = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battlerLastHit.getBattler());
 
-    // when ColorManager.isValidHexColor(tierStripeHex), take this branch.
     if (ColorManager.isValidHexColor(tierStripeHex))
     {
       framedTarget.nameColorHex = tierStripeHex;
     }
 
-    // hand back framed target to the caller.
     return framedTarget;
   };
 
@@ -60,7 +58,6 @@ if (J.HUD && J.HUD.EXT.TARGET)
       return state.isEnemyPrefix === true || state.isEnemySuffix === true;
     });
 
-    // when hasAnyAffix  equals  false, take this branch.
     if (hasAnyAffix === false) return;
 
     // walk passive state order so the first qualifying prefix/suffix wins (same policy as the old map nameplate).
@@ -72,15 +69,12 @@ if (J.HUD && J.HUD.EXT.TARGET)
     // when the tier hex is meaningful, tint the label to the nearest windowskin palette match (icons stay un-tinted).
     let prefixTierHudMessageColorIndex = null;
 
-    // capture display name for downstream policy in this routine.
     let displayName = framedTarget.name;
 
-    // walk each entry in the iterable for this routine.
     for (const passiveStateId of passiveStatesIds)
     {
       const state = battler.state(passiveStateId);
 
-      // when not state, take this branch.
       if (!state) continue;
 
       // apply at most one tier prefix (state name before the enemy name).
@@ -122,13 +116,11 @@ if (J.HUD && J.HUD.EXT.TARGET)
     // build optional icon escapes (two icons max: prefix tier, then suffix tier).
     let iconEscapes = String.empty;
 
-    // when prefixIconIndex  differs from  null, take this branch.
     if (prefixIconIndex !== null)
     {
       iconEscapes += `\\I[${prefixIconIndex}]`;
     }
 
-    // when suffixIconIndex  differs from  null, take this branch.
     if (suffixIconIndex !== null)
     {
       iconEscapes += `\\I[${suffixIconIndex}]`;
@@ -137,7 +129,6 @@ if (J.HUD && J.HUD.EXT.TARGET)
     // label body; may gain colorizeText (\\C…\\C[0]) when the tier note sets a palette index.
     let labeledBody = displayName;
 
-    // when J.MESSAGE  and  prefixTierHudMessageColorIndex  differs from  null, take this branch.
     if (J.MESSAGE && prefixTierHudMessageColorIndex !== null)
     {
       // \\C[n] + \\C[0] so the default name color returns after this span.

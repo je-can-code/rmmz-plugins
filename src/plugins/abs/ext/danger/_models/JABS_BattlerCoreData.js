@@ -9,7 +9,6 @@ JABS_BattlerCoreData.prototype.initMembers = function()
   J.ABS.EXT.DANGER.Aliased.JABS_BattlerCoreData.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * Whether or not this battler's danger indicator will be visible.
    * @type {boolean} True if the battler's danger indicator should show, false otherwise.
@@ -33,7 +32,6 @@ JABS_BattlerCoreData.prototype.showDangerIndicator = function()
   // danger indicators NEVER show on inanimate enemies.
   if (this.isInanimate()) return false;
 
-  // hand back this._showDangerIndicator to the caller.
   return this._showDangerIndicator;
 };
 //endregion JABS_BattlerCoreData

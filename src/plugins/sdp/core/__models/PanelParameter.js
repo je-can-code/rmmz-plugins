@@ -16,26 +16,21 @@ class PanelParameter
     /**
      * The registry key of the parameter this class represents.
      * @type {string}
-     // policy step inside constructor.
      */
     this.parameterKey = parameterKey;
 
-    // policy step inside constructor.
     /**
      * The amount per rank this parameter gives.
      * @type {number}
-     // policy step inside constructor.
      */
     this.perRank = perRank;
 
-    // policy step inside constructor.
     /**
      * Whether or not the growth per rank for this parameter is flat or percent.
      * @type {boolean}
      */
     this.isFlat = isFlat;
 
-    // policy step inside constructor.
     /**
      * Whether or not this is a core parameter.
      * Core parameters are emphasized on the SDP scene.

@@ -11,7 +11,6 @@ Scene_Map.prototype.update = function()
   J.POPUPS.Aliased.Scene_Map.get('update')
     .call(this);
 
-  // policy step inside update.
   JABS_PopupMergeController.tickIdleFlush();
 };
 
@@ -25,7 +24,6 @@ Scene_Map.prototype.stop = function()
   J.POPUPS.Aliased.Scene_Map.get('stop')
     .call(this);
 
-  // policy step inside stop.
   J.POPUPS.notifyMergeFlushAll('scene-map-stop');
 };
 //endregion Scene_Map

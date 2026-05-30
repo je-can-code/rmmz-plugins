@@ -24,26 +24,21 @@ Scene_Map.prototype.initAllyAiMembers = function()
   /**
    * The window containing the list of party members to adjust the AI for.
    * @type {Window_AbsMenuSelect|null}
-   // policy step inside init ally ai members.
    */
   this._j._absMenu._allyAiPartyWindow = null;
 
-  // policy step inside init ally ai members.
   /**
    * The window containing the list of AI strategies for use.
    * @type {Window_AbsMenuSelect|null}
-   // policy step inside init ally ai members.
    */
   this._j._absMenu._allyAiEquipWindow = null;
 
-  // policy step inside init ally ai members.
   /**
    * The window containing the list of ally formations available.
    * @type {Window_Formations|null}
    */
   this._j._absMenu._allyAiFormationWindow = null;
 
-  // policy step inside init ally ai members.
   /**
    * The currently-selected ally actorId.
    * @type {number}
@@ -316,7 +311,6 @@ Scene_Map.prototype.commandEquipMemberAi = function()
   const newPreset = this._j._absMenu._allyAiEquipWindow.currentExt();
   const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
   allyAi.applyPreset(newPreset.key);
-  // policy step inside command equip member ai.
   this._j._absMenu._allyAiEquipWindow.refresh();
 };
 
@@ -328,7 +322,6 @@ Scene_Map.prototype.commandToggleDoNothing = function()
   SoundManager.playRecovery();
   const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
   allyAi.setDoNothing(!allyAi.isDoNothing());
-  // policy step inside command toggle do nothing.
   this._j._absMenu._allyAiEquipWindow.refresh();
 };
 
@@ -341,11 +334,9 @@ Scene_Map.prototype.commandSelectAllyFormation = function()
 {
   const window = this.getAllyFormationWindow();
 
-  // policy step inside command select ally formation.
   /**
    * @type {JABS_Formation}
    */
-  // capture selected formation for downstream policy in this routine.
   const selectedFormation = window.currentExt();
   $gameParty.setPartyFormation(selectedFormation.key);
   window.refresh();
@@ -368,19 +359,15 @@ Scene_Map.prototype.manageAbsMenu = function()
   {
     case "ai-party-list":
       this._j._absMenu._mainWindow.hide();
-      // policy step inside manage abs menu.
       this._j._absMenu._mainWindow.close();
       this._j._absMenu._mainWindow.deactivate();
       this._j._absMenu._allyAiPartyWindow.show();
-      // policy step inside manage abs menu.
       this._j._absMenu._allyAiPartyWindow.open();
       this._j._absMenu._allyAiPartyWindow.activate();
       break;
-    // handle this switch arm for the current discriminant.
     case "select-ai":
       this._j._absMenu._allyAiPartyWindow.hide();
       this._j._absMenu._allyAiPartyWindow.close();
-      // policy step inside manage abs menu.
       this._j._absMenu._allyAiPartyWindow.deactivate();
       this._j._absMenu._allyAiEquipWindow.show();
       this._j._absMenu._allyAiEquipWindow.open();
@@ -392,7 +379,6 @@ Scene_Map.prototype.manageAbsMenu = function()
       this._j._absMenu._allyAiPartyWindow.close();
       this._j._absMenu._allyAiPartyWindow.deactivate();
 
-      // capture window for downstream policy in this routine.
       const window = this.getAllyFormationWindow();
       window.show();
       window.open();
@@ -418,23 +404,18 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
   {
     case "ai-party-list":
       this._j._absMenu._allyAiPartyWindow.hide();
-      // policy step inside close abs window.
       this._j._absMenu._allyAiPartyWindow.close();
       this._j._absMenu._allyAiPartyWindow.deactivate();
       this._j._absMenu._mainWindow.activate();
-      // policy step inside close abs window.
       this._j._absMenu._mainWindow.open();
       this._j._absMenu._mainWindow.show();
       this.setJabsMenuFocus("main");
-      // policy step inside close abs window.
       break;
     case "select-ai":
       this._j._absMenu._allyAiEquipWindow.hide();
-      // policy step inside close abs window.
       this._j._absMenu._allyAiEquipWindow.close();
       this._j._absMenu._allyAiEquipWindow.deactivate();
       this._j._absMenu._allyAiPartyWindow.activate();
-      // policy step inside close abs window.
       this._j._absMenu._allyAiPartyWindow.open();
       this._j._absMenu._allyAiPartyWindow.show();
       this.setJabsMenuFocus("ai-party-list");
@@ -446,7 +427,6 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       window.close();
       window.deactivate();
 
-      // policy step inside close abs window.
       this._j._absMenu._allyAiPartyWindow.activate();
       this._j._absMenu._allyAiPartyWindow.open();
       this._j._absMenu._allyAiPartyWindow.show();

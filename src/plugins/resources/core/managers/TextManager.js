@@ -17,7 +17,6 @@ TextManager.hcrDescription = function()
   return [
     'Percent reduction applied to HP skill costs.',
     'Higher values make life-cost skills cheaper to use.',
-  // policy step inside hcr description.
   ];
 };
 //endregion TextManager

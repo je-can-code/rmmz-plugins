@@ -24,22 +24,18 @@ Game_Map.prototype.initQuestopediaMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init questopedia members.
   this._j ||= {};
 
-  // policy step inside init questopedia members.
   /**
    * A grouping of all properties associated with the omnipedia.
    */
   this._j._omni ||= {};
 
-  // policy step inside init questopedia members.
   /**
    * A grouping of all properties associated with the questopedia portion of the omnipedia.
    */
   this._j._omni._quest = {};
 
-  // policy step inside init questopedia members.
   /**
    * The timer for tracking when to check the destination- prevents expensive repeated coordinate checking.
    * @type {J_Timer}

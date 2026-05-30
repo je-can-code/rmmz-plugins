@@ -82,7 +82,6 @@ class JABS_ActionOptions
     this.#isRetaliation = isRetaliation;
     this.#cooldownKey = cooldownKey;
     this.#location = location;
-    // policy step inside constructor.
     this.#terrainDamage = terrainDamage;
     this.#spawnOffsetX = spawnOffsetX;
     this.#spawnOffsetY = spawnOffsetY;

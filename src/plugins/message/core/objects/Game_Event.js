@@ -21,7 +21,6 @@ Game_Event.filterCommentCommandsForBasicConditionals = function(command)
     SwitchOffChoiceConditional
   } = J.MESSAGE.RegExp;
 
-  // hand back [ to the caller.
   return [
     LeaderChoiceConditional, NotLeaderChoiceConditional, SwitchOnChoiceConditional, SwitchOffChoiceConditional ].some(
     regex => regex.test(comment));
@@ -37,13 +36,10 @@ Game_Event.toBasicConditional = function(commentCommand)
   // shorthand the comment into a variable.
   const [ comment, ] = commentCommand.parameters;
 
-  // capture result for downstream policy in this routine.
   let result = null;
 
-  // capture type for downstream policy in this routine.
   let type = String.empty;
 
-  // dispatch on the discriminant for the next policy branch.
   switch (true)
   {
     // check if the leader is in fact the desired leader.

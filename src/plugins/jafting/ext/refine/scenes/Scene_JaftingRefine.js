@@ -95,10 +95,8 @@ class Scene_JaftingRefine
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init core members.
     this._j ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with this JAFTING scene.
      */
@@ -113,84 +111,69 @@ class Scene_JaftingRefine
     /**
      * A grouping of all properties associated with the jafting type of refinement.
      * Refinement is a subcategory of the jafting system.
-     // policy step inside init primary members.
      */
     this._j._crafting._refine = {};
 
-    // policy step inside init primary members.
     /**
      * Phase tracking and atomic refine commit (keeps confirmation handler thin).
      * @type {RefinementWorkflowSession}
-     // policy step inside init primary members.
      */
     this._j._crafting._refine._session = new RefinementWorkflowSession();
 
-    // policy step inside init primary members.
     /**
      * Explains the current refinement step above the left-hand lists.
      * @type {Window_RefinementStepHint}
-     // policy step inside init primary members.
      */
     this._j._crafting._refine._refinementStepHint = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the tertiary information about a refinable.
      * @type {Window_RefinementDescription}
-     // policy step inside init primary members.
      */
     this._j._crafting._refine._refinementDescription = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of equips that can be used as a base for refinement.
      * @type {Window_RefinableList}
      */
     this._j._crafting._refine._baseRefinableList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the list of equips that can be used as fodder for refinement.
      * @type {Window_RefinableList}
      */
     this._j._crafting._refine._consumedRefinableList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that shows the details of the refinement given the selected entries.
      * @type {Window_RefinementDetails}
      */
     this._j._crafting._refine._refinementDetails = null;
 
-    // policy step inside init primary members.
     /**
      * Confirms or cancels the pending refinement.
      * @type {Window_RefinementConfirmation|null}
      */
     this._j._crafting._refine._confirmationPrompt = null;
 
-    // policy step inside init primary members.
     /**
      * The base equip currently selected for refinement.
      * @type {Game_Item|null}
      */
     this._j._crafting._refine._baseSelected = null;
 
-    // policy step inside init primary members.
     /**
      * The material equip currently selected for refinement.
      * @type {Game_Item|null}
      */
     this._j._crafting._refine._consumedSelected = null;
 
-    // policy step inside init primary members.
     /**
      * Ordinal of the chosen base row when stacks expand (matches {@link Window_RefinableList} extension data).
      * @type {number|null}
      */
     this._j._crafting._refine._baseSelectedUnitOrdinal = null;
 
-    // policy step inside init primary members.
     /**
      * Lazily computed outer height for {@link Window_RefinementStepHint} (one text line).
      * @type {number|undefined}
@@ -284,18 +267,15 @@ class Scene_JaftingRefine
   {
     const listWindow = this.getBaseRefinableListWindow();
 
-    // policy step inside configure all windows.
     listWindow.refresh();
 
     // also update with the currently selected item, if one exists.
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText() ?? String.empty);
 
-    // capture selected for downstream policy in this routine.
     const selected = listWindow.currentExt();
     const detailsWindow = this.getRefinementDetailsWindow();
 
-    // when selected  equals  undefined  or  selected  equals  null, take this branch.
     if (selected === undefined || selected === null)
     {
       this.setBaseSelected(null);
@@ -305,7 +285,6 @@ class Scene_JaftingRefine
       return;
     }
 
-    // policy step inside configure all windows.
     this.setBaseSelected(selected.data);
     this.setBaseSelectedUnitOrdinal(
       selected.unitOrdinal === undefined || selected.unitOrdinal === null
@@ -314,7 +293,6 @@ class Scene_JaftingRefine
     );
     detailsWindow.primaryEquip = selected.data;
 
-    // policy step inside configure all windows.
     this.refreshRefinementStepHint();
   }
 
@@ -359,7 +337,6 @@ class Scene_JaftingRefine
     this._cachedRefinementStepHintHeight = probe.fittingHeight(1);
     probe.destroy();
 
-    // hand back this._cachedRefinementStepHintHeight to the caller.
     return this._cachedRefinementStepHintHeight;
   }
 
@@ -381,7 +358,6 @@ class Scene_JaftingRefine
     const width = Graphics.boxWidth - Graphics.horizontalPadding * 2;
     const height = this.getRefinementStepHintHeight();
 
-    // hand back new Rectangle(x, oy, width, height) to the caller.
     return new Rectangle(x, oy, width, height);
   }
 
@@ -394,7 +370,6 @@ class Scene_JaftingRefine
     const phase = this.refinementSession().getPhase();
     let text = String.empty;
 
-    // when phase  equals  RefinementWorkflowSession.Phase.PickingBase, take this branch.
     if (phase === RefinementWorkflowSession.Phase.PickingBase)
     {
       text = J.JAFTING.EXT.REFINE.Messages.RefinementStepHintPickingBase;
@@ -408,7 +383,6 @@ class Scene_JaftingRefine
       text = J.JAFTING.EXT.REFINE.Messages.RefinementStepHintConfirming;
     }
 
-    // policy step inside refresh refinement step hint.
     hintWindow.setText(text);
   }
 
@@ -419,7 +393,6 @@ class Scene_JaftingRefine
   {
     const window = this.buildRefinementStepHintWindow();
 
-    // policy step inside create refinement step hint window.
     this.setRefinementStepHintWindow(window);
     this.addWindow(window);
   }
@@ -428,7 +401,6 @@ class Scene_JaftingRefine
   {
     const rectangle = this.getRefinementStepHintRectangle();
 
-    // hand back new Window_RefinementStepHint(rectangle) to the caller.
     return new Window_RefinementStepHint(rectangle);
   }
 
@@ -491,7 +463,6 @@ class Scene_JaftingRefine
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = 100;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -564,7 +535,6 @@ class Scene_JaftingRefine
     const width = this.getBaseRefinableListColumnWidth();
     const height = Graphics.boxHeight - Graphics.verticalPadding - hintHeight;
 
-    // hand back new Rectangle(ox, oy + hintHeight, width, height) to the caller.
     return new Rectangle(ox, oy + hintHeight, width, height);
   }
 
@@ -593,11 +563,9 @@ class Scene_JaftingRefine
     listWindow.show();
     listWindow.activate();
 
-    // policy step inside select base refinable list window.
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText());
 
-    // policy step inside select base refinable list window.
     this.refreshRefinementStepHint();
   }
 
@@ -615,12 +583,10 @@ class Scene_JaftingRefine
   {
     const listWindow = this.getBaseRefinableListWindow();
 
-    // capture help text for downstream policy in this routine.
     const helpText = listWindow.currentHelpText();
     this.getRefinementDescriptionWindow()
       .setText(helpText ?? String.empty);
 
-    // capture base refinable for downstream policy in this routine.
     const baseRefinable = listWindow.currentExt();
     this.getRefinementDetailsWindow().primaryEquip = baseRefinable?.data;
   }
@@ -635,10 +601,8 @@ class Scene_JaftingRefine
   {
     this.refinementSession().beginMaterialSelection();
 
-    // capture base refinable list window for downstream policy in this routine.
     const baseRefinableListWindow = this.getBaseRefinableListWindow();
 
-    // capture base refinable for downstream policy in this routine.
     const baseRefinable = baseRefinableListWindow.currentExt();
     this.setBaseSelected(baseRefinable.data);
     this.setBaseSelectedUnitOrdinal(
@@ -647,7 +611,6 @@ class Scene_JaftingRefine
         : baseRefinable.unitOrdinal,
     );
 
-    // policy step inside on base refinable list selection.
     this.deselectBaseRefinableListWindow();
     this.selectConsumableRefinableListWindow();
   }
@@ -732,16 +695,13 @@ class Scene_JaftingRefine
     listWindow.show();
     listWindow.activate();
 
-    // capture selected for downstream policy in this routine.
     const selected = listWindow.currentExt()?.data;
     this.setConsumedSelected(selected);
     this.getRefinementDetailsWindow().secondaryEquip = selected;
 
-    // policy step inside select consumable refinable list window.
     this.getRefinementDescriptionWindow()
       .setText(listWindow.currentHelpText());
 
-    // policy step inside select consumable refinable list window.
     this.refreshRefinementStepHint();
   }
 
@@ -759,12 +719,10 @@ class Scene_JaftingRefine
   {
     const listWindow = this.getConsumableRefinableListWindow();
 
-    // capture help text for downstream policy in this routine.
     const helpText = listWindow.currentHelpText();
     this.getRefinementDescriptionWindow()
       .setText(helpText ?? String.empty);
 
-    // capture consumed refinable for downstream policy in this routine.
     const consumedRefinable = listWindow.currentExt();
     this.getRefinementDetailsWindow().secondaryEquip = consumedRefinable.data;
   }
@@ -773,10 +731,8 @@ class Scene_JaftingRefine
   {
     this.refinementSession().returnToBaseSelection();
 
-    // policy step inside on consumable refinable list cancel.
     this.deselectConsumableRefinableListWindow();
 
-    // policy step inside on consumable refinable list cancel.
     this.selectBaseRefinableListWindow();
   }
 
@@ -784,14 +740,11 @@ class Scene_JaftingRefine
   {
     this.refinementSession().beginConfirmation();
 
-    // capture list window for downstream policy in this routine.
     const listWindow = this.getConsumableRefinableListWindow();
 
-    // capture consumed refinable for downstream policy in this routine.
     const consumedRefinable = listWindow.currentExt().data;
     this.setConsumedSelected(consumedRefinable);
 
-    // policy step inside on consumable refinable list selection.
     this.selectRefinementConfirmationWindow();
   }
 
@@ -835,13 +788,11 @@ class Scene_JaftingRefine
     const listRect = this.getBaseRefinableListRectangle();
     const descWindow = this.getRefinementDescriptionWindow();
 
-    // capture x for downstream policy in this routine.
     const x = listRect.x + listRect.width + Graphics.horizontalPadding;
     const y = listRect.y + descWindow.height + Graphics.verticalPadding;
     const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
     const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -913,7 +864,6 @@ class Scene_JaftingRefine
     const x = ox + Math.floor((Graphics.boxWidth - width) / 2);
     const y = oy + Math.floor((Graphics.boxHeight - height) / 2);
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -934,7 +884,6 @@ class Scene_JaftingRefine
     listWindow.show();
     listWindow.activate();
 
-    // policy step inside select refinement confirmation window.
     this.refreshRefinementStepHint();
   }
 
@@ -960,7 +909,6 @@ class Scene_JaftingRefine
   {
     this.refinementSession().returnToMaterialSelection();
 
-    // policy step inside on refinement confirmation cancel.
     this.deselectRefinementConfirmationWindow();
     this.selectConsumableRefinableListWindow();
   }
@@ -975,32 +923,26 @@ class Scene_JaftingRefine
       output,
     );
 
-    // when outcome.ok  equals  false, take this branch.
     if (outcome.ok === false)
     {
       return;
     }
 
-    // policy step inside on refinement confirmation selection.
     detailsWindow.primaryEquip = null;
     detailsWindow.secondaryEquip = null;
 
-    // policy step inside on refinement confirmation selection.
     this.deselectConsumableRefinableListWindow();
     this.deselectRefinementConfirmationWindow();
     this.selectBaseRefinableListWindow();
 
-    // policy step inside on refinement confirmation selection.
     this.setBaseSelected(null);
     this.setBaseSelectedUnitOrdinal(null);
     this.setConsumedSelected(null);
 
-    // capture list window for downstream policy in this routine.
     const listWindow = this.getBaseRefinableListWindow();
     listWindow.refresh();
     listWindow.select(0);
 
-    // policy step inside on refinement confirmation selection.
     this.getConsumableRefinableListWindow()
       .refresh();
   }

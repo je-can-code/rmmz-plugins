@@ -176,7 +176,6 @@ class Window_DifficultyEffects
     battlerEffectsCommands.push(...xparamCommands);
     battlerEffectsCommands.push(...sparamCommands);
 
-    // capture bonus commands for downstream policy in this routine.
     const bonusCommands = this.bonusEffectsCommands();
 
     // Append the row to the working collection.
@@ -396,7 +395,6 @@ class Window_DifficultyEffects
     // initialize the bonuses collection.
     const bonusCommands = Array.empty;
 
-    // when bonuses.encounters  differs from  100, take this branch.
     if (bonuses.encounters !== 100)
     {
       // determine the value.
@@ -446,7 +444,6 @@ class Window_DifficultyEffects
     {
       case Window_DifficultyEffects.EffectsTypes.ACTOR:
         return this.buildActorTitleCommand();
-      // handle this switch arm for the current discriminant.
       case Window_DifficultyEffects.EffectsTypes.ENEMY:
         return this.buildEnemyTitleCommand();
     }
@@ -604,23 +601,19 @@ class Window_DifficultyEffects
   {
     const comparison = this.determineComparisonType(biggerIsBetter, paramValue, comparisonValue);
 
-    // when this.getEffectsType()  equals  Window_DifficultyEffects.EffectsTypes...., take this branch.
     if (this.getEffectsType() === Window_DifficultyEffects.EffectsTypes.ENEMY)
     {
       switch (comparison)
       {
         case Window_DifficultyEffects.ComparisonTypes.SAME:
-          // hand back 0 to the caller.
           return 0;
         case Window_DifficultyEffects.ComparisonTypes.EASIER:
           return 29;
-        // handle this switch arm for the current discriminant.
         case Window_DifficultyEffects.ComparisonTypes.HARDER:
           return 10;
       }
     }
 
-    // when this.getEffectsType()  equals  Window_DifficultyEffects.EffectsTypes...., take this branch.
     if (this.getEffectsType() === Window_DifficultyEffects.EffectsTypes.ACTOR)
     {
       switch (comparison)
@@ -641,11 +634,9 @@ class Window_DifficultyEffects
     switch (comparison)
     {
       case Window_DifficultyEffects.ComparisonTypes.SAME:
-        // hand back 0 to the caller.
         return 0;
       case Window_DifficultyEffects.ComparisonTypes.EASIER:
         return 29;
-      // handle this switch arm for the current discriminant.
       case Window_DifficultyEffects.ComparisonTypes.HARDER:
         return 10;
     }
@@ -692,7 +683,6 @@ class Window_DifficultyEffects
     const biggerIsBetterBParameters = [
       false, // mhp
       false, // mmp
-      // policy step inside bigger is better bparameters.
       false, // atk
       false, // def
       false, // mat
@@ -701,7 +691,6 @@ class Window_DifficultyEffects
       false, // luk
     ];
 
-    // hand back biggerIsBetterBParameters.at(bparamId) ?? false to the caller.
     return biggerIsBetterBParameters.at(bparamId) ?? false;
   }
 
@@ -715,11 +704,9 @@ class Window_DifficultyEffects
     const biggerIsBetterSParameters = [
       false,  // tgr - aggro rate - used by JABS.
       false,  // grd - guard rate - parry rate in JABS.
-      // policy step inside bigger is better sparameters.
       false,  // rec - recovery effectiveness rate.
       false,  // pha - item effectiveness rate - not usually used by enemies.
       true,   // mcr - mp cost reduction.
-      // policy step inside bigger is better sparameters.
       true,   // tcr - tp cost reduction - not usually used by enemies.
       true,   // pdr - physical damage reduction.
       true,   // mdr - magic damage reduction.
@@ -727,7 +714,6 @@ class Window_DifficultyEffects
       false,  // exr - experience rate - not usually used by enemies.
     ];
 
-    // hand back biggerIsBetterSParameters[sparamId] ?? true to the caller.
     return biggerIsBetterSParameters[sparamId] ?? true;
   }
 
@@ -741,11 +727,9 @@ class Window_DifficultyEffects
     const biggerIsBetterXParameters = [
       false, // hit - hit rate
       false, // eva - parry rate boost %
-      // policy step inside bigger is better xparameters.
       false, // cri - crit rate
       false, // cev - crit evade
       false, // mev - magic evade ; not used in JABS
-      // policy step inside bigger is better xparameters.
       false, // mrf - magic reflect ; not used in JABS
       false, // cnt - counter rate
       false, // hrg - hp regen per 5
@@ -753,7 +737,6 @@ class Window_DifficultyEffects
       false, // trg - tp regen per 5
     ];
 
-    // hand back biggerIsBetterXParameters[xparamId] ?? true to the caller.
     return biggerIsBetterXParameters[xparamId] ?? true;
   }
 

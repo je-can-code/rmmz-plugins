@@ -53,19 +53,16 @@ class JaftingSalvageManager
       return `i:${datum.id}`;
     }
 
-    // when datum.isWeapon(), take this branch.
     if (datum.isWeapon())
     {
       return `w:${datum.id}`;
     }
 
-    // when datum.isArmor(), take this branch.
     if (datum.isArmor())
     {
       return `a:${datum.id}`;
     }
 
-    // hand back null to the caller.
     return null;
   }
 
@@ -81,7 +78,6 @@ class JaftingSalvageManager
       return;
     }
 
-    // policy step inside init party salvage storage.
     $gameParty._j ||= {};
     $gameParty._j._jafting ||= {};
     $gameParty._j._jafting._salvageLedgers ||= {};
@@ -98,14 +94,12 @@ class JaftingSalvageManager
     // `unitLedgers[]` one by one. Rebuild from slots so losing the top copy does not leave stale merged totals behind.
     let acc = [];
 
-    // when bag.unitLedgers  and  bag.unitLedgers.length > 0, take this branch.
     if (bag.unitLedgers && bag.unitLedgers.length > 0)
     {
       for (let i = 0; i < bag.unitLedgers.length; i++)
       {
         const unit = bag.unitLedgers[i];
 
-        // when unit  and  unit.rows  and  unit.rows.length > 0, take this branch.
         if (unit && unit.rows && unit.rows.length > 0)
         {
           acc = JaftingSalvageLedger.mergeRowArrays(acc, JaftingSalvageLedger.cloneRows(unit.rows));
@@ -113,7 +107,6 @@ class JaftingSalvageManager
       }
     }
 
-    // policy step inside recompute merged rows from party ledger bag.
     bag.rows = JaftingSalvageLedger.mergeDuplicateRows(acc);
   }
 
@@ -127,7 +120,6 @@ class JaftingSalvageManager
   {
     const n = $gameParty.numItems(datum);
 
-    // when not Array.isArray(bag.unitLedgers), take this branch.
     if (!Array.isArray(bag.unitLedgers))
     {
       bag.unitLedgers = [];
@@ -145,7 +137,6 @@ class JaftingSalvageManager
       bag.unitLedgers.pop();
     }
 
-    // policy step inside sync party ledger unit count to stack.
     JaftingSalvageManager.recomputeMergedRowsFromPartyLedgerBag(bag);
   }
 
@@ -167,13 +158,11 @@ class JaftingSalvageManager
       $gameParty._j._jafting._salvageLedgers[key] = working;
     }
 
-    // when not Array.isArray(working.unitLedgers), take this branch.
     if (!Array.isArray(working.unitLedgers))
     {
       working.unitLedgers = [];
     }
 
-    // policy step inside coerce party ledger bag shape for datum.
     JaftingSalvageManager.syncPartyLedgerUnitCountToStack(working, datum);
   }
 
@@ -188,32 +177,26 @@ class JaftingSalvageManager
     // saves stay lean and `getLedgerForDatum` stops returning ghost bags.
     let bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // when not bag, take this branch.
     if (!bag)
     {
       return;
     }
 
-    // policy step inside prune empty party ledger bag.
     bag = JaftingSalvagePartyLedgerBag.coerce(bag);
 
-    // when bag  differs from  $gameParty._j._jafting._salvageLedgers[key], take this branch.
     if (bag !== $gameParty._j._jafting._salvageLedgers[key])
     {
       $gameParty._j._jafting._salvageLedgers[key] = bag;
     }
 
-    // capture any unit rows for downstream policy in this routine.
     let anyUnitRows = false;
 
-    // when Array.isArray(bag.unitLedgers), take this branch.
     if (Array.isArray(bag.unitLedgers))
     {
       for (let i = 0; i < bag.unitLedgers.length; i++)
       {
         const u = bag.unitLedgers[i];
 
-        // when u  and  u.rows  and  u.rows.length > 0, take this branch.
         if (u && u.rows && u.rows.length > 0)
         {
           anyUnitRows = true;
@@ -222,10 +205,8 @@ class JaftingSalvageManager
       }
     }
 
-    // capture merged empty for downstream policy in this routine.
     const mergedEmpty = !bag.rows || bag.rows.length === 0;
 
-    // when mergedEmpty  and  anyUnitRows  equals  false, take this branch.
     if (mergedEmpty && anyUnitRows === false)
     {
       delete $gameParty._j._jafting._salvageLedgers[key];
@@ -254,7 +235,6 @@ class JaftingSalvageManager
         datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(datum._jaftingSalvageLedger);
       }
 
-      // hand back datum._jaftingSalvageLedger to the caller.
       return datum._jaftingSalvageLedger;
     }
 
@@ -262,20 +242,17 @@ class JaftingSalvageManager
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
     let bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // when bag, take this branch.
     if (bag)
     {
       JaftingSalvageManager.coercePartyLedgerBagShapeForDatum(bag, datum);
       bag = $gameParty._j._jafting._salvageLedgers[key];
     }
 
-    // when bag  and  bag.rows  and  bag.rows.length > 0, take this branch.
     if (bag && bag.rows && bag.rows.length > 0)
     {
       return bag;
     }
 
-    // hand back null to the caller.
     return null;
   }
 
@@ -299,16 +276,13 @@ class JaftingSalvageManager
       return JaftingSalvageManager.getLedgerForDatum(datum);
     }
 
-    // when unitOrdinal  equals  null  or  unitOrdinal  equals  undefined, take this branch.
     if (unitOrdinal === null || unitOrdinal === undefined)
     {
       return JaftingSalvageManager.getLedgerForDatum(datum);
     }
 
-    // capture key for downstream policy in this routine.
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
 
-    // when not key, take this branch.
     if (!key)
     {
       return null;
@@ -318,26 +292,21 @@ class JaftingSalvageManager
     // the player expanded in salvage UI—merged `bag.rows` stays the shared summary for the whole stack.
     let bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // when not bag, take this branch.
     if (!bag)
     {
       return null;
     }
 
-    // policy step inside get ledger unit for datum.
     JaftingSalvageManager.coercePartyLedgerBagShapeForDatum(bag, datum);
     bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // capture unit for downstream policy in this routine.
     const unit = bag.unitLedgers[unitOrdinal];
 
-    // when not unit  or  not unit.rows  or  unit.rows.length  equals  0, take this branch.
     if (!unit || !unit.rows || unit.rows.length === 0)
     {
       return null;
     }
 
-    // hand back unit to the caller.
     return unit;
   }
 
@@ -353,10 +322,8 @@ class JaftingSalvageManager
       datum._jaftingSalvageLedger = null;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
 
-    // when key, take this branch.
     if (key)
     {
       delete $gameParty._j._jafting._salvageLedgers[key];
@@ -376,32 +343,26 @@ class JaftingSalvageManager
       return;
     }
 
-    // when itemDatum.id >= JaftingSalvageManager.DynamicEquipIndexMin, take this branch.
     if (itemDatum.id >= JaftingSalvageManager.DynamicEquipIndexMin)
     {
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JaftingSalvageManager.containerKeyFromDatum(itemDatum);
 
-    // when not key, take this branch.
     if (!key)
     {
       return;
     }
 
-    // policy step inside after party gained item.
     JaftingSalvageManager.initPartySalvageStorage();
     const bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // when not bag, take this branch.
     if (!bag)
     {
       return;
     }
 
-    // policy step inside after party gained item.
     JaftingSalvageManager.coercePartyLedgerBagShapeForDatum(bag, itemDatum);
     JaftingSalvageManager.pruneEmptyPartyLedgerBag(key);
   }
@@ -416,12 +377,10 @@ class JaftingSalvageManager
     const ingredientRows = JaftingSalvageLedger.rowsFromCraftingComponents(recipe.ingredients);
     const shell = new JaftingSalvageLedgerSnapshot(ingredientRows);
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < recipe.outputs.length; i++)
     {
       const component = recipe.outputs[i];
 
-      // when component.isDatabaseEntry(), take this branch.
       if (component.isDatabaseEntry())
       {
         const datum = component.getItem();
@@ -429,7 +388,6 @@ class JaftingSalvageManager
         // clone per output row so multi-output recipes cannot accidentally share one mutable array reference.
         const snapshot = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(shell);
 
-        // policy step inside apply craft recipe outputs.
         JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshot, component.quantity());
       }
     }
@@ -451,7 +409,6 @@ class JaftingSalvageManager
       const existingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(datum._jaftingSalvageLedger);
       const incomingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(incomingLedger);
 
-      // policy step inside merge ledger into party or datum.
       datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(
         JaftingSalvageLedger.mergeRowArrays(existingRows, incomingRows),
       );
@@ -460,7 +417,6 @@ class JaftingSalvageManager
       return;
     }
 
-    // policy step inside merge ledger into party or datum.
     JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, incomingLedger, 1);
   }
 
@@ -479,38 +435,31 @@ class JaftingSalvageManager
       return;
     }
 
-    // capture key for downstream policy in this routine.
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
 
-    // when not key, take this branch.
     if (!key)
     {
       return;
     }
 
-    // when stampedCount < 1, take this branch.
     if (stampedCount < 1)
     {
       return;
     }
 
-    // policy step inside append stamped units to party stack.
     JaftingSalvageManager.initPartySalvageStorage();
     const ledgers = $gameParty._j._jafting._salvageLedgers;
     let bag = ledgers[key];
 
-    // when not bag, take this branch.
     if (!bag)
     {
       bag = new JaftingSalvagePartyLedgerBag();
       ledgers[key] = bag;
     }
 
-    // policy step inside append stamped units to party stack.
     JaftingSalvageManager.coercePartyLedgerBagShapeForDatum(bag, datum);
     bag = $gameParty._j._jafting._salvageLedgers[key];
 
-    // capture n for downstream policy in this routine.
     const n = $gameParty.numItems(datum);
     const start = Math.max(0, n - stampedCount);
 
@@ -520,7 +469,6 @@ class JaftingSalvageManager
       bag.unitLedgers[i] = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(incomingLedger);
     }
 
-    // policy step inside append stamped units to party stack.
     JaftingSalvageManager.recomputeMergedRowsFromPartyLedgerBag(bag);
   }
 
@@ -552,7 +500,6 @@ class JaftingSalvageManager
       return false;
     }
 
-    // when JaftingSalvageLedger.isMaterialWeaponDatum(materialDatum), take this branch.
     if (JaftingSalvageLedger.isMaterialWeaponDatum(materialDatum))
     {
       return false;
@@ -564,7 +511,6 @@ class JaftingSalvageManager
       return true;
     }
 
-    // hand back false to the caller.
     return false;
   }
 
@@ -592,14 +538,12 @@ class JaftingSalvageManager
       ? JaftingSalvageLedger.cloneRows(baseLedger.rows)
       : [];
 
-    // when JaftingSalvageManager.refinementMaterialHasNoRecoverableRows(material..., take this branch.
     if (JaftingSalvageManager.refinementMaterialHasNoRecoverableRows(materialDatum))
     {
       // vendor weapon/armor donor with no stamp and no ingredient-type pass-through—output inherits base stamp only.
       return new JaftingSalvageLedgerSnapshot(JaftingSalvageLedger.mergeDuplicateRows(baseRows));
     }
 
-    // capture material ledger for downstream policy in this routine.
     const materialLedger = JaftingSalvageManager.getLedgerForDatum(materialDatum);
 
     // another crafted piece donated its whole stamped ledger—concatenate lineage for dismantle tracking.
@@ -610,7 +554,6 @@ class JaftingSalvageManager
       );
     }
 
-    // when materialDatum.isArmor(), take this branch.
     if (materialDatum.isArmor()
       && materialDatum.atypeId === JaftingSalvageLedger.getMaterialArmorTypeId())
     {
@@ -619,18 +562,15 @@ class JaftingSalvageManager
         new JaftingSalvageLedgerRow('a', materialDatum.id, 1),
       ];
 
-      // hand back new JaftingSalvageLedgerSnapshot(JaftingSalvageLedger... to the caller.
       return new JaftingSalvageLedgerSnapshot(JaftingSalvageLedger.mergeRowArrays(baseRows, partRows));
     }
 
-    // when JaftingSalvageLedger.isMaterialWeaponDatum(materialDatum), take this branch.
     if (JaftingSalvageLedger.isMaterialWeaponDatum(materialDatum))
     {
       const partRows = [
         new JaftingSalvageLedgerRow('w', materialDatum.id, 1),
       ];
 
-      // hand back new JaftingSalvageLedgerSnapshot(JaftingSalvageLedger... to the caller.
       return new JaftingSalvageLedgerSnapshot(JaftingSalvageLedger.mergeRowArrays(baseRows, partRows));
     }
 
@@ -649,7 +589,6 @@ class JaftingSalvageManager
   {
     const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(datum);
 
-    // hand back !!(snap && snap.rows && snap.rows.length > 0) to the caller.
     return !!(snap && snap.rows && snap.rows.length > 0);
   }
 
@@ -664,7 +603,6 @@ class JaftingSalvageManager
   {
     const raw = JaftingSalvageManager.getLedgerForDatum(datum);
 
-    // when not raw  or  not raw.rows  or  raw.rows.length  equals  0, take this branch.
     if (!raw || !raw.rows || raw.rows.length === 0)
     {
       return null;
@@ -675,7 +613,6 @@ class JaftingSalvageManager
     // step two: unpack nested weapon/armor history so dismantle never pays whole vendor shells for crafted donors.
     const expanded = JaftingSalvageManager.expandWeaponArmorRowsForSalvage(merged, {});
 
-    // hand back new JaftingSalvageLedgerSnapshot(expanded) to the caller.
     return new JaftingSalvageLedgerSnapshot(expanded);
   }
 
@@ -689,16 +626,13 @@ class JaftingSalvageManager
   {
     const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(datum);
 
-    // when not snap  or  not snap.rows, take this branch.
     if (!snap || !snap.rows)
     {
       return 0;
     }
 
-    // capture n for downstream policy in this routine.
     let n = 0;
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < snap.rows.length; i++)
     {
       if (snap.rows[i].banned === true)
@@ -706,11 +640,9 @@ class JaftingSalvageManager
         continue;
       }
 
-      // policy step inside visible expanded refund row count.
       n++;
     }
 
-    // hand back n to the caller.
     return n;
   }
 
@@ -725,16 +657,13 @@ class JaftingSalvageManager
       return 1;
     }
 
-    // capture n for downstream policy in this routine.
     const n = JaftingSalvageManager.visibleExpandedRefundRowCount(datum);
 
-    // when n < 1, take this branch.
     if (n < 1)
     {
       return 1;
     }
 
-    // hand back 3 + n to the caller.
     return 3 + n;
   }
 
@@ -746,13 +675,11 @@ class JaftingSalvageManager
   {
     const n = JaftingSalvageManager.visibleExpandedRefundRowCount(datum);
 
-    // when n < 1, take this branch.
     if (n < 1)
     {
       return JaftingSalvageManager.layoutPreviewLineCountSingle(datum);
     }
 
-    // hand back 3 + Math.ceil(n / 2) to the caller.
     return 3 + Math.ceil(n / 2);
   }
 
@@ -773,7 +700,6 @@ class JaftingSalvageManager
       && equipDatum.isWeapon()
       && JaftingSalvageLedger.isMaterialWeaponDatum(equipDatum);
 
-    // when isArmorMaterial  equals  false  and  isWeaponMaterial  equals  false, take this branch.
     if (isArmorMaterial === false && isWeaponMaterial === false)
     {
       return false;
@@ -782,7 +708,6 @@ class JaftingSalvageManager
     // Append the row to the working collection.
     flat.push(new JaftingSalvageLedgerRow(row.t, row.id, row.n));
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -802,7 +727,6 @@ class JaftingSalvageManager
   {
     const flat = [];
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < rows.length; i++)
     {
       const row = rows[i];
@@ -813,7 +737,6 @@ class JaftingSalvageManager
       {
         flat.push(new JaftingSalvageLedgerRow(row.t, row.id, row.n, true));
 
-        // policy step inside expand weapon armor rows for salvage.
         continue;
       }
 
@@ -822,26 +745,21 @@ class JaftingSalvageManager
       {
         flat.push(new JaftingSalvageLedgerRow(row.t, row.id, row.n));
 
-        // policy step inside expand weapon armor rows for salvage.
         continue;
       }
 
       // equipment rows are the only ones that might hide a whole nested stamp under `$dataWeapons` / `$dataArmors`.
       const visitKey = `${row.t}:${row.id}`;
 
-      // when visited[visitKey]  equals  true, take this branch.
       if (visited[visitKey] === true)
       {
         continue;
       }
 
-      // policy step inside expand weapon armor rows for salvage.
       visited[visitKey] = true;
 
-      // policy step inside expand weapon armor rows for salvage.
       let equipDatum;
 
-      // when row.t  equals  'w', take this branch.
       if (row.t === 'w')
       {
         equipDatum = $dataWeapons[row.id];
@@ -851,33 +769,27 @@ class JaftingSalvageManager
         equipDatum = $dataArmors[row.id];
       }
 
-      // when not equipDatum, take this branch.
       if (!equipDatum)
       {
         continue;
       }
 
-      // capture sub for downstream policy in this routine.
       const sub = JaftingSalvageManager.getLedgerForDatum(equipDatum);
 
-      // when not sub  or  not sub.rows  or  sub.rows.length  equals  0, take this branch.
       if (!sub || !sub.rows || sub.rows.length === 0)
       {
         // refinement stamps monster-part donors as bare rows—those templates usually have **no** nested ledger.
         // treat them like `i` rows here so dismantle still refunds the physical gear instead of vanishing the row.
         JaftingSalvageManager.tryPushMaterialEquipmentPassThrough(flat, row, equipDatum);
 
-        // policy step inside expand weapon armor rows for salvage.
         continue;
       }
 
-      // capture inner merged for downstream policy in this routine.
       const innerMerged = JaftingSalvageLedger.mergeDuplicateRows(JaftingSalvageLedger.cloneRows(sub.rows));
       const innerExpanded = JaftingSalvageManager.expandWeaponArmorRowsForSalvage(innerMerged, visited);
       // outer row count stacks identical stamped units—scale every unpacked ingredient line by that stack factor.
       const mult = row.n;
 
-      // iterate the loop counter until the guard exits.
       for (let j = 0; j < innerExpanded.length; j++)
       {
         const ir = innerExpanded[j];
@@ -888,7 +800,6 @@ class JaftingSalvageManager
       }
     }
 
-    // hand back JaftingSalvageLedger.mergeDuplicateRows(flat) to the caller.
     return JaftingSalvageLedger.mergeDuplicateRows(flat);
   }
 
@@ -903,24 +814,20 @@ class JaftingSalvageManager
     const all = $gameParty.allItems();
     const out = [];
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < all.length; i++)
     {
       const datum = all[i];
 
-      // when not datum, take this branch.
       if (!datum)
       {
         continue;
       }
 
-      // when $gameParty.numItems(datum) < 1, take this branch.
       if ($gameParty.numItems(datum) < 1)
       {
         continue;
       }
 
-      // when JaftingSalvageManager.datumHasSalvageLedger(datum)  equals  false, take this branch.
       if (JaftingSalvageManager.datumHasSalvageLedger(datum) === false)
       {
         continue;
@@ -930,7 +837,6 @@ class JaftingSalvageManager
       out.push(datum);
     }
 
-    // hand back out to the caller.
     return out;
   }
 
@@ -953,12 +859,10 @@ class JaftingSalvageManager
       return;
     }
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < ledger.rows.length; i++)
     {
       const row = ledger.rows[i];
 
-      // when row.banned  equals  true, take this branch.
       if (row.banned === true)
       {
         continue;
@@ -1004,7 +908,6 @@ class JaftingSalvageManager
   {
     const raw = JaftingSalvageManager.getLedgerForDatum(datum);
 
-    // when not raw  or  not raw.rows  or  raw.rows.length  equals  0, take this branch.
     if (!raw || !raw.rows || raw.rows.length === 0)
     {
       return false;
@@ -1014,19 +917,16 @@ class JaftingSalvageManager
     // storage still had a stamp for UI history.
     const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(datum);
 
-    // when not snap  or  not snap.rows  or  snap.rows.length  equals  0, take this branch.
     if (!snap || !snap.rows || snap.rows.length === 0)
     {
       return false;
     }
 
-    // when amount < 1, take this branch.
     if (amount < 1)
     {
       return false;
     }
 
-    // when $gameParty.numItems(datum) < amount, take this branch.
     if ($gameParty.numItems(datum) < amount)
     {
       return false;
@@ -1037,7 +937,6 @@ class JaftingSalvageManager
     JaftingSalvageManager.refundLedgerRows(snap, amount);
     $gameParty.loseItem(datum, amount);
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -1054,24 +953,20 @@ class JaftingSalvageManager
       return;
     }
 
-    // when amountLost < 1, take this branch.
     if (amountLost < 1)
     {
       return;
     }
 
-    // when itemDatum.id < JaftingSalvageManager.DynamicEquipIndexMin, take this branch.
     if (itemDatum.id < JaftingSalvageManager.DynamicEquipIndexMin)
     {
       const key = JaftingSalvageManager.containerKeyFromDatum(itemDatum);
 
-      // when key, take this branch.
       if (key)
       {
         JaftingSalvageManager.initPartySalvageStorage();
         const bag = $gameParty._j._jafting._salvageLedgers[key];
 
-        // when bag, take this branch.
         if (bag)
         {
           JaftingSalvageManager.coercePartyLedgerBagShapeForDatum(bag, itemDatum);
@@ -1086,10 +981,8 @@ class JaftingSalvageManager
       return;
     }
 
-    // policy step inside after party lost item.
     JaftingSalvageManager.clearLedgerForDatum(itemDatum);
 
-    // when itemDatum.isWeapon()  and  itemDatum.id >= JaftingSalvageManager.Dyna..., take this branch.
     if (itemDatum.isWeapon() && itemDatum.id >= JaftingSalvageManager.DynamicEquipIndexMin)
     {
       JaftingSalvageManager.reclaimDynamicWeaponSlot(itemDatum);
@@ -1098,7 +991,6 @@ class JaftingSalvageManager
       return;
     }
 
-    // when itemDatum.isArmor()  and  itemDatum.id >= JaftingSalvageManager.Dynam..., take this branch.
     if (itemDatum.isArmor() && itemDatum.id >= JaftingSalvageManager.DynamicEquipIndexMin)
     {
       JaftingSalvageManager.reclaimDynamicArmorSlot(itemDatum);
@@ -1124,7 +1016,6 @@ class JaftingSalvageManager
       }
     }
 
-    // policy step inside reclaim dynamic weapon slot.
     $dataWeapons[weaponDatum.id] = RPG_Weapon.createEmpty(weaponDatum.id);
     JaftingSalvageManager.onAfterDynamicSlotReclaimed('weapon', weaponDatum.id);
   }
@@ -1148,7 +1039,6 @@ class JaftingSalvageManager
       }
     }
 
-    // policy step inside reclaim dynamic armor slot.
     $dataArmors[armorDatum.id] = RPG_Armor.createEmpty(armorDatum.id);
     JaftingSalvageManager.onAfterDynamicSlotReclaimed('armor', armorDatum.id);
   }

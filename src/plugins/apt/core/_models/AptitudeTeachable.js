@@ -14,11 +14,9 @@ class AptitudeTeachable
     /**
      * The id of the skill to learn.
      * @type {number}
-     // policy step inside initialize.
      */
     this.skillId = skillId;
 
-    // policy step inside initialize.
     /**
      * The required AP to learn the skill.
      * @type {number}

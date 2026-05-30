@@ -18,13 +18,11 @@ Game_Interpreter.prototype.character = function(param)
     {
       const id = param > 0
         ? param
-        // policy step inside character.
         : this._eventId;
       return $gameMap.event(id);
     }
     else
     {
-      // hand back null to the caller.
       return null;
     }
   }
@@ -47,24 +45,20 @@ Game_Interpreter.prototype.command201 = function(params)
   {
     if ($gameMessage.isBusy()) return false;
 
-    // policy step inside command201.
     let mapId;
     let x;
     let y;
-    // when params[0]  equals  0, take this branch.
     if (params[0] === 0)
     {
       [, mapId, x, y] = params;
     }
     else
     {
-      // policy step inside command201.
       mapId = $gameVariables.value(params[1]);
       x = $gameVariables.value(params[2]);
       y = $gameVariables.value(params[3]);
     }
 
-    // policy step inside command201.
     $gamePlayer.reserveTransfer(mapId, x, y, params[4], params[5]);
     this.setWaitMode("transfer");
     return true;
@@ -92,14 +86,12 @@ Game_Interpreter.prototype.command204 = function(params)
       return false;
     }
 
-    // policy step inside command204.
     $gameMap.startScroll(params[0], params[1], params[2]);
     if (params[3])
     {
       this.setWaitMode("scroll");
     }
 
-    // hand back true to the caller.
     return true;
   }
   else
@@ -139,7 +131,6 @@ Game_Interpreter.prototype.command301 = function(params)
         break;
     }
 
-    // when $dataTroops[troopId], take this branch.
     if ($dataTroops[troopId])
     {
       BattleManager.setup(troopId, params[2], params[3]);
@@ -148,7 +139,6 @@ Game_Interpreter.prototype.command301 = function(params)
       SceneManager.push(Scene_Battle);
     }
 
-    // hand back true to the caller.
     return true;
   }
   else
@@ -171,7 +161,6 @@ Game_Interpreter.prototype.command302 = function(params)
     const goods = [ params ];
     while (this.nextEventCode() === 605)
     {
-      // policy step inside command302.
       this._index++;
       goods.push(this.currentCommand().parameters);
     }
@@ -204,12 +193,10 @@ Game_Interpreter.prototype.command303 = function(params)
       SceneManager.prepareNextScene(params[0], params[1]);
     }
 
-    // hand back true to the caller.
     return true;
   }
 
   // perform original logic.
-  // hand back J.ABS.Aliased.Game_Interpreter.get('command303').call(this, ... to the caller.
   // perform original logic.
   return J.ABS.Aliased.Game_Interpreter.get('command303').call(this, params);
 };

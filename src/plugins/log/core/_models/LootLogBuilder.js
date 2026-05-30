@@ -135,11 +135,9 @@ class LootLogBuilder
     {
       case "armor":
         return `\\Armor[${lootId}] (${$gameParty.numItems($dataArmors.at(lootId))})`;
-      // handle this switch arm for the current discriminant.
       case "weapon":
         return `\\Weapon[${lootId}] (${$gameParty.numItems($dataWeapons.at(lootId))})`;
       case "item":
-        // hand back `\\Item[${lootId}] (${$gameParty.numItems($dataItems.... to the caller.
         return `\\Item[${lootId}] (${$gameParty.numItems($dataItems.at(lootId))})`;
       default:
         return String.empty;

@@ -27,15 +27,12 @@ class VanillaParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key(key)
-        // policy step inside register bparam.
         .group(group)
         .sortOrder(sortOrder)
         .label(() => TextManager.param(paramId))
-        // policy step inside register bparam.
         .description(() => TextManager.bparamDescription(paramId))
         .iconIndex(() => IconManager.param(paramId))
         .format(format)
-        // policy step inside register bparam.
         .getValue(battler => battler.param(paramId))
         .sdpBinding(SdpParameterBinding.bparam(paramId))
         .build()
@@ -55,15 +52,12 @@ class VanillaParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key(key)
-        // policy step inside register xparam.
         .group(group)
         .sortOrder(sortOrder)
         .label(() => TextManager.xparam(xparamId))
-        // policy step inside register xparam.
         .description(() => TextManager.xparamDescription(xparamId))
         .iconIndex(() => IconManager.xparam(xparamId))
         .format(format)
-        // policy step inside register xparam.
         .getValue(battler => battler.xparam(xparamId))
         .sdpBinding(SdpParameterBinding.xparam(xparamId))
         .build()
@@ -90,15 +84,12 @@ class VanillaParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key(key)
-        // policy step inside register sparam.
         .group(group)
         .sortOrder(sortOrder)
         .label(() => TextManager.sparam(sparamId))
-        // policy step inside register sparam.
         .description(() => TextManager.sparamDescription(sparamId))
         .iconIndex(() => IconManager.sparam(sparamId))
         .format(format)
-        // policy step inside register sparam.
         .displayPolicy(displayPolicy)
         .getValue(battler => battler.sparam(sparamId))
         .sdpBinding(SdpParameterBinding.sparam(sparamId))
@@ -115,37 +106,29 @@ class VanillaParameterRegistration
     VanillaParameterRegistration.registerBparam('mhp', 0, ParameterGroups.VITALITY, 0, ParameterFormat.FLAT_LARGE);
     VanillaParameterRegistration.registerXparam('hrg', 7, ParameterGroups.VITALITY, 1, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerBparam('mmp', 1, ParameterGroups.VITALITY, 2, ParameterFormat.FLAT_LARGE);
-    // policy step inside register all.
     VanillaParameterRegistration.registerXparam('mrg', 8, ParameterGroups.VITALITY, 3, ParameterFormat.REGEN_PER_SECOND);
     ParameterRegistry.register(
       ParameterDefinition.Builder()
-        // policy step inside register all.
         .key('mtp')
         .group(ParameterGroups.VITALITY)
         .sortOrder(4)
-        // policy step inside register all.
         .label(() => TextManager.maxTp())
         .description(() => TextManager.bparamDescription(30))
         .iconIndex(() => IconManager.maxTp())
-        // policy step inside register all.
         .format(ParameterFormat.FLAT)
         .getValue(battler => battler.maxTp())
         .sdpBinding(SdpParameterBinding.custom(
-          // policy step inside register all.
           (actor, base) =>
           {
             if (!J.SDP) return 0;
             if (!actor.maxTpSdpBonuses) return 0;
 
-            // hand back actor.maxTpSdpBonuses(base) to the caller.
             return actor.maxTpSdpBonuses(base);
           },
           actor => actor.getBaseMaxTp()
-        // policy step inside register all.
         ))
         .build()
     );
-    // policy step inside register all.
     VanillaParameterRegistration.registerXparam('trg', 9, ParameterGroups.VITALITY, 5, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerSparam('rec', 2, ParameterGroups.VITALITY, 6, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
     VanillaParameterRegistration.registerSparam('pha', 3, ParameterGroups.VITALITY, 7, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
@@ -154,23 +137,18 @@ class VanillaParameterRegistration
     VanillaParameterRegistration.registerBparam('atk', 2, ParameterGroups.COMBAT, 0);
     VanillaParameterRegistration.registerBparam('mat', 4, ParameterGroups.COMBAT, 1);
     ParameterRegistry.register(
-      // policy step inside register all.
       ParameterDefinition.Builder()
         .key('cnt')
         .group(ParameterGroups.COMBAT)
-        // policy step inside register all.
         .sortOrder(2)
         .label(() => TextManager.xparam(6))
         .description(() => TextManager.xparamDescription(6))
-        // policy step inside register all.
         .iconIndex(() => IconManager.xparam(6))
         .format(ParameterFormat.PERCENT_SUFFIX)
         .displayPolicy(ParameterDisplayPolicy.REWARD_RATE)
-        // policy step inside register all.
         .getValue(battler => battler.cnt)
         .sdpBinding(SdpParameterBinding.xparam(6))
         .build()
-    // policy step inside register all.
     );
     ParameterRegistry.register(
       ParameterDefinition.Builder()

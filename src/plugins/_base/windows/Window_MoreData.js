@@ -39,7 +39,6 @@ class Window_MoreData
     super(rect);
     this.initialize(rect);
     this.initMembers();
-    // policy step inside constructor.
     this.refresh();
   }
 
@@ -51,18 +50,15 @@ class Window_MoreData
     /**
      * The item we're displaying more data for.
      * @type {RPG_EquipItem|RPG_UsableItem|null}
-     // policy step inside init members.
      */
     this.item = null;
 
-    // policy step inside init members.
     /**
      * The type of item we're displaying in the more data window.
      * @type {string}
      */
     this.type = null;
 
-    // policy step inside init members.
     /**
      * The actor used to perform parameter calculations against.
      * @type {Game_Actor}
@@ -96,7 +92,6 @@ class Window_MoreData
   refresh()
   {
     super.refresh();
-    // when this.item, take this branch.
     if (this.item)
     {
       this.determineItemType();
@@ -112,19 +107,15 @@ class Window_MoreData
     {
       case DataManager.isItem(this.item):
         this.type = Window_MoreData.Types.Item;
-        // policy step inside determine item type.
         break;
       case DataManager.isSkill(this.item):
         this.type = Window_MoreData.Types.Skill;
-        // policy step inside determine item type.
         break;
       case DataManager.isArmor(this.item):
         this.type = Window_MoreData.Types.Armor;
-        // policy step inside determine item type.
         break;
       case DataManager.isWeapon(this.item):
         this.type = Window_MoreData.Types.Weapon;
-        // policy step inside determine item type.
         break;
       default:
         this.type = Window_MoreData.Types.Unknown;
@@ -200,7 +191,6 @@ class Window_MoreData
     }
   }
 }
-
 
 export default Window_MoreData;
 //endregion Window_MoreData

@@ -59,7 +59,6 @@ Sprite_Character.prototype.canApplyPassiveMapTierAccent = function()
   // if the battler isn't an enemy, then don't worry about the name.
   if (battler.isEnemy() === false) return false;
 
-  // hand back true to the caller.
   return true;
 };
 //endregion Sprite_Character

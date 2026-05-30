@@ -9,7 +9,6 @@ Window_EquipItem.prototype.initialize = function(rect)
   J.CMS_E.Aliased.Window_EquipItem.get('initialize').call(this, rect);
   /**
    * The more data window to manipulate.
-   // policy step inside initialize.
    * @type {Window_MoreEquipData}
    */
   this._moreDataWindow = null;

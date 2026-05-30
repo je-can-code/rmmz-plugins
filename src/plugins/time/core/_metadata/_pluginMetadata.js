@@ -17,7 +17,6 @@ class J_TIME_PluginMetadata extends PluginMetadata
   {
     super.postInitialize();
 
-    // capture pp for downstream policy in this routine.
     const pp = this.parsedPluginParameters;
 
     // assign time window x on this instance for callers.

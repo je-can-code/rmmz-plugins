@@ -49,10 +49,8 @@ class Scene_Jafting
     /**
      * The shared root namespace for all of J's plugin data.
      */
-    // policy step inside init core members.
     this._j ||= {};
 
-    // policy step inside init core members.
     /**
      * A grouping of all properties associated with this JAFTING scene.
      */
@@ -68,11 +66,9 @@ class Scene_Jafting
     /**
      * The window that lists Salvage, Creation, Refinement, and other registered JAFTING modes.
      * @type {Window_JaftingList}
-     // policy step inside init primary members.
      */
     this._j._crafting._commandList = null;
 
-    // policy step inside init primary members.
     /**
      * The window that displays at the top while the JAFTING list is active.
      * @type {Window_JaftingListHeader}
@@ -155,10 +151,8 @@ class Scene_Jafting
     // create the window with the rectangle.
     const window = new Window_JaftingListHeader(rectangle);
 
-    // policy step inside build jafting list header window.
     window.refresh();
 
-    // hand back window to the caller.
     return window;
   }
 
@@ -264,7 +258,6 @@ class Scene_Jafting
     // assign on-select functionality.
     window.setHandler('ok', this.onRootJaftingSelection.bind(this));
 
-    // hand back window to the caller.
     return window;
   }
 

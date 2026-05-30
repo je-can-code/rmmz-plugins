@@ -30,11 +30,9 @@ Scene_Base.prototype.initMembers = function()
 {
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * Lazy-built on first {@link #getModalDimmerWindow}; {@link Scene_Boot} runs {@link #initMembers} before
    * {@link $gameSystem} exists, so constructing {@link Window_Base} during init would crash in
-   // policy step inside init members.
    * {@link Window_Base#resetFontSettings}.
    * @type {Window_Dimmer|null}
    */
@@ -57,7 +55,6 @@ Scene_Base.prototype.buildModalDimmerWindow = function()
   // {@link Window#_clientArea}, so dim strength must use {@link Window#contentsOpacity}.
   win.contentsOpacity = Scene_Base.MODAL_DIMMER_CONTENTS_OPACITY_DEFAULT;
 
-  // hand back win to the caller.
   return win;
 };
 
@@ -73,7 +70,6 @@ Scene_Base.prototype.getModalDimmerWindow = function()
     this._j._modalDimmerWindow = this.buildModalDimmerWindow();
   }
 
-  // hand back this._j._modalDimmerWindow to the caller.
   return this._j._modalDimmerWindow;
 };
 
@@ -88,16 +84,13 @@ Scene_Base.prototype.ensureModalDimmerBeforeWindow = function(anchorWindow)
   const dimmer = this.getModalDimmerWindow();
   const wl = this._windowLayer;
 
-  // when dimmer.parent  differs from  null, take this branch.
   if (dimmer.parent !== null)
   {
     dimmer.parent.removeChild(dimmer);
   }
 
-  // capture insert at for downstream policy in this routine.
   const insertAt = wl.getChildIndex(anchorWindow);
 
-  // policy step inside ensure modal dimmer before window.
   wl.addChildAt(dimmer, insertAt);
 };
 
@@ -113,10 +106,8 @@ Scene_Base.prototype.showModalDimmer = function(
 {
   this.ensureModalDimmerBeforeWindow(layerAboveWindow);
 
-  // capture win for downstream policy in this routine.
   const win = this.getModalDimmerWindow();
 
-  // policy step inside show modal dimmer.
   win.contentsOpacity = opacity.clamp(0, 255);
   win.show();
   win.openness = 255;
@@ -134,7 +125,6 @@ Scene_Base.prototype.hideModalDimmer = function()
     return;
   }
 
-  // policy step inside hide modal dimmer.
   this._j._modalDimmerWindow.visible = false;
 };
 

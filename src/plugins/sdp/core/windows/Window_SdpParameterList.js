@@ -63,10 +63,8 @@ class Window_SdpParameterList
   {
     if (!this.panelParameters) return [];
 
-    // capture commands for downstream policy in this routine.
     const commands = this.panelParameters.map(this.#buildPanelParameterCommand, this);
 
-    // hand back commands to the caller.
     return commands;
   }
 
@@ -79,7 +77,6 @@ class Window_SdpParameterList
     // continue the routine with the next policy step.
     } = panelParameter;
 
-    // capture definition for downstream policy in this routine.
     const definition = ParameterRegistry.get(parameterKey);
 
     // determine the item color.
@@ -148,7 +145,6 @@ class Window_SdpParameterList
       // determine if smaller is better.
       const smallerIsBetter = this.isNegativeGood(parameterKey);
 
-      // capture color index for downstream policy in this routine.
       let colorIndex = 0;
 
       // check if the parameter is going down when we want it to go up.

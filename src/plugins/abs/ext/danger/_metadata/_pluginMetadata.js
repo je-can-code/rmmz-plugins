@@ -18,7 +18,6 @@ class J_DangerPluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 

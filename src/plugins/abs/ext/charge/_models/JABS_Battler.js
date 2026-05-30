@@ -23,19 +23,15 @@ JABS_Battler.prototype.initChargeData = function()
   /**
    * Whether or not this battler is charging up a skill for use.
    * @type {boolean}
-   // policy step inside init charge data.
    */
   this._charging = false;
 
-  // policy step inside init charge data.
   /**
    * The slot associated with the current charging.
    * @type {null|string}
-   // policy step inside init charge data.
    */
   this._chargeSlot = null;
 
-  // policy step inside init charge data.
   /**
    * The tiers of charging that are currently being managed.
    * @type {JABS_ChargingTier[]}

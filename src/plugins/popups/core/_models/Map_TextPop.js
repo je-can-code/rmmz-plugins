@@ -109,35 +109,27 @@ class Map_TextPop
     /**
      * The id of the icon to display alongside this `Map_TextPop`.
      * @type {number}
-     // policy step inside initialize.
      */
     this.iconIndex = iconIndex;
 
-    // policy step inside initialize.
     /**
      * The color index for the text color.
      * @type {number}
-     // policy step inside initialize.
      */
     this.textColorIndex = textColorIndex;
 
-    // policy step inside initialize.
     /**
      * The type of popup this is, such as damage, experience, loot, etc.
      * @type {Map_TextPop.Types}
-     // policy step inside initialize.
      */
     this.popupType = popupType;
 
-    // policy step inside initialize.
     /**
      * The value to display on the sprite for this popup.
      * @type {string}
-     // policy step inside initialize.
      */
     this.value = value || String.empty;
 
-    // policy step inside initialize.
     /**
      * Whether or not this popup is critical.
      * For non-damage popups, this is always false.
@@ -145,14 +137,12 @@ class Map_TextPop
      */
     this.critical = critical || false;
 
-    // policy step inside initialize.
     /**
      * The x and y coordinate variances into a single `[x,y]` array.
      * @type {[number, number]}
      */
     this.coordinateVariance = coordinateVariance;
 
-    // policy step inside initialize.
     /**
      * Whether or not this popup is healing.
      * Healing popups' motion is handled a bit differently.
@@ -160,21 +150,18 @@ class Map_TextPop
      */
     this.healing = healing;
 
-    // policy step inside initialize.
     /**
      * Optional typography hint for the value line (e.g. miss, evade, parry).
      * @type {string|null|undefined}
      */
     this.textAccent = textAccent;
 
-    // policy step inside initialize.
     /**
      * Which layout ring advances for this pop (stacking); see {@link Map_TextPop.LayoutRings}.
      * @type {string}
      */
     this.layoutRing = layoutRing;
 
-    // policy step inside initialize.
     /**
      * When false, {@link Sprite_MapDamage} stays in accumulation phase until merge policy releases motion.
      * When true (default), motion plays immediately like legacy {@link Sprite_Damage} pops.

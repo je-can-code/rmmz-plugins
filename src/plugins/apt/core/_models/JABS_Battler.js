@@ -33,7 +33,6 @@ if (J.ABS)
     // check the reward policy gate; no actor is available at this call site so pass null.
     if (this.canGainReward(defeatedEnemy, null) === false) return 0;
 
-    // hand back defeatedEnemy.apPoints() to the caller.
     return defeatedEnemy.apPoints();
   };
 

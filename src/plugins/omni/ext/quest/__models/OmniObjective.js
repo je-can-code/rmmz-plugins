@@ -193,23 +193,18 @@ class OmniObjective
       case OmniObjective.Types.Indiscriminate:
         return templateDetails.at(0);
 
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Destination:
         return `Navigate to ${templateDetails.at(0)} at [${templateDetails.at(1)}, ${templateDetails.at(2)}].`;
 
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Fetch:
         return `Acquire \\*${templateDetails.at(0)}\\* ${templateDetails.at(1)}.`;
 
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Slay:
         return `Defeat \\*${templateDetails.at(0)}\\* \\Enemy[${templateDetails.at(1)}].`;
 
-      // handle this switch arm for the current discriminant.
       case OmniObjective.Types.Quest:
         return `Complete the other quest(s): ${templateDetails.at(0)}.`;
 
-      // handle this switch arm for the current discriminant.
       default:
         return 'This objective is not defined.';
     }

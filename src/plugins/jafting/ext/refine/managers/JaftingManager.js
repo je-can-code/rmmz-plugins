@@ -66,7 +66,6 @@ class JaftingManager
     return this.combineSpParameterTraits(
       this.combineExParameterTraits(
         this.combineBaseParameterTraits(traitList),
-      // policy step inside combine all parameter traits.
       ),
     );
   }
@@ -86,7 +85,6 @@ class JaftingManager
     {
       if (trait._code !== canCombineCode) return;
 
-      // when not traitTracker[trait._dataId], take this branch.
       if (!traitTracker[trait._dataId])
       {
         // if we haven't started tracking it yet, add it.
@@ -120,7 +118,6 @@ class JaftingManager
       tempTraitList.push(newTrait);
     }
 
-    // hand back temp trait list to the caller.
     return tempTraitList;
   }
 
@@ -139,7 +136,6 @@ class JaftingManager
     {
       if (trait._code !== canCombineCode) return;
 
-      // when not traitTracker[trait._dataId], take this branch.
       if (!traitTracker[trait._dataId])
       {
         // if we haven't started tracking it yet, add it.
@@ -173,7 +169,6 @@ class JaftingManager
       tempTraitList.push(newTrait);
     }
 
-    // hand back temp trait list to the caller.
     return tempTraitList;
   }
 
@@ -192,7 +187,6 @@ class JaftingManager
     {
       if (trait._code !== canCombineCode) return;
 
-      // when not traitTracker[trait._dataId], take this branch.
       if (!traitTracker[trait._dataId])
       {
         // if we haven't started tracking it yet, add it.
@@ -226,7 +220,6 @@ class JaftingManager
       tempTraitList.push(newTrait);
     }
 
-    // hand back temp trait list to the caller.
     return tempTraitList;
   }
 
@@ -241,14 +234,11 @@ class JaftingManager
     // don't process if we are missing a parameter.
     if (!base || !material) return null;
 
-    // capture base traits for downstream policy in this routine.
     let baseTraits = this.parseTraits(base);
     let materialTraits = this.parseTraits(material);
 
-    // policy step inside determine refinement output.
     [ baseTraits, materialTraits ] = this.removeIncompatibleTraits(baseTraits, materialTraits);
 
-    // policy step inside determine refinement output.
     [ baseTraits, materialTraits ] = this.#overwriteAllOverwritableTraits(baseTraits, materialTraits);
 
     // copy of primary equip that represents the projected result.
@@ -287,14 +277,12 @@ class JaftingManager
       output.traits.push(newTrait);
     });
 
-    // when material.jaftingRefinedCount > 0, take this branch.
     if (material.jaftingRefinedCount > 0)
     {
       // the -1 at the end is to accommodate the default of +1 that occurs when an equip is refined.
       output.jaftingRefinedCount += material.jaftingRefinedCount - 1;
     }
 
-    // hand back output to the caller.
     return output;
   }
 
@@ -331,7 +319,6 @@ class JaftingManager
     // overwrite enable/disable of dual-wield (unique case!)
     [ a, b ] = this.replaceTrait(a, b, 55);
 
-    // hand back [ a, b ] to the caller.
     return [ a, b ];
   }
 
@@ -347,7 +334,6 @@ class JaftingManager
     while (!donePurging)
     {
       const index = rollingJaftingTraitList.findIndex(trait => trait._code === potentialJaftingTrait._code);
-      // when index > -1  and  rollingJaftingTraitList[index]._dataId  equals  pote..., take this branch.
       if (index > -1 && rollingJaftingTraitList[index]._dataId === potentialJaftingTrait._dataId)
       {
         rollingJaftingTraitList.splice(index, 1);
@@ -430,7 +416,6 @@ class JaftingManager
     const prunedBase = baseTraitList.filter(trait => !!trait);
     const prunedMaterial = materialTraitList.filter(trait => !!trait);
 
-    // hand back [ prunedBase, prunedMaterial ] to the caller.
     return [ prunedBase, prunedMaterial ];
   }
 
@@ -479,7 +464,6 @@ class JaftingManager
       [ a, b ] = this.#overwriteIfBetter(a, b, code);
     });
 
-    // hand back [ a, b ] to the caller.
     return [ a, b ];
   }
 
@@ -523,7 +507,6 @@ class JaftingManager
     let tempBaseList = JsonEx.makeDeepCopy(baseTraitList);
     let tempMaterialList = JsonEx.makeDeepCopy(materialTraitList);
 
-    // capture higher is better codes for downstream policy in this routine.
     const higherIsBetterCodes = [ 32, 33, 34, 61 ];
     const lowerIsBetterCodes = [ 11, 12, 13 ];
 
@@ -572,7 +555,6 @@ class JaftingManager
       .filter(t => !!t)
       .map(t => new JAFTING_Trait(t._code, t._dataId, t._value));
 
-    // hand back [ tempBaseList, tempMaterialList ] to the caller.
     return [ tempBaseList, tempMaterialList ];
   }
 
@@ -590,19 +572,15 @@ class JaftingManager
     {
       case 11: // elemental damage rate - stackable.
       case 12: // debuff rate - stackable.
-      // handle this switch arm for the current discriminant.
       case 13: // state rate - stackable.
       case 14: // state immunity - don't add the same twice.
       case 21: // base parameter rate - stackable.
-      // handle this switch arm for the current discriminant.
       case 22: // ex-parameter rate - stackable.
       case 23: // sp-parameter rate - stackable.
       case 31: // attack element - uniquely stackable.
-      // handle this switch arm for the current discriminant.
       case 32: // apply state chance - stackable.
       case 33: // skill speed - stackable.
       case 34: // repeat times - stackable.
-      // handle this switch arm for the current discriminant.
       case 35: // change basic attack skill - overwrite.
       case 41: // unlock skill type - one or the other or none.
       case 42: // lock skill type - one or the other or none.
@@ -617,7 +595,6 @@ class JaftingManager
       case 64: // party ability - don't add the same twice.
         return true;
 
-      // handle this switch arm for the current discriminant.
       case 54: // (seal) slot is not equippable while equipped.
         const sealingOwnEquipType = (jaftingTrait._dataId === output.etypeId);
         // don't transfer over slot sealing if it would seal the slot the equip is on.
@@ -641,7 +618,6 @@ class JaftingManager
     }
     else if (outputEquip.atypeId)
     {
-      // policy step inside create refined output.
       this.generateRefinedEquip($dataArmors, outputEquip, this.RefinementTypes.Armor);
     }
   };
@@ -713,7 +689,6 @@ class JaftingManager
   {
     let equips = $gameParty.equipItems();
 
-    // when equips.length  equals  0, take this branch.
     if (equips.length === 0)
     {
       return false;
@@ -727,60 +702,49 @@ class JaftingManager
         return false;
       }
 
-      // when JaftingSalvageLedger.isMaterialWeaponDatum(equip), take this branch.
       if (JaftingSalvageLedger.isMaterialWeaponDatum(equip))
       {
         return false;
       }
 
-      // hand back true to the caller.
       return true;
     });
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < equips.length; i++)
     {
       const equip = equips[i];
 
-      // when equip.jaftingUnrefinable, take this branch.
       if (equip.jaftingUnrefinable)
       {
         continue;
       }
 
-      // capture equip is max refined for downstream policy in this routine.
       const equipIsMaxRefined = (equip.jaftingMaxRefineCount === 0)
         ? false
         : equip.jaftingMaxRefineCount <= equip.jaftingRefinedCount;
 
-      // when equipIsMaxRefined, take this branch.
       if (equipIsMaxRefined)
       {
         continue;
       }
 
-      // capture equip has max traits for downstream policy in this routine.
       const equipHasMaxTraits = equip.jaftingMaxTraitCount === 0
         ? false
         : equip.jaftingMaxTraitCount <= JaftingManager.parseTraits(equip).length;
 
-      // when equipHasMaxTraits, take this branch.
       if (equipHasMaxTraits)
       {
         continue;
       }
 
-      // when equip.jaftingNotRefinementBase, take this branch.
       if (equip.jaftingNotRefinementBase)
       {
         continue;
       }
 
-      // hand back true to the caller.
       return true;
     }
 
-    // hand back false to the caller.
     return false;
   }
 }

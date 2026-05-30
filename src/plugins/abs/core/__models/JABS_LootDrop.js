@@ -123,7 +123,6 @@ class JABS_LootDrop
   {
     if (!this.canCountdownDuration()) return;
 
-    // policy step inside countdown duration.
     this._duration--;
   }
 

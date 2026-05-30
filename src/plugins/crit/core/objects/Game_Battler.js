@@ -12,40 +12,34 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
   J.CRIT.Aliased.Game_Battler.get('initNaturalGrowthParameters')
     .call(this);
 
-  // policy step inside init natural growth parameters.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init natural growth parameters.
   /**
    * A grouping of all properties associated with natural growth.
    */
   this._j._natural ||= {};
 
-  // policy step inside init natural growth parameters.
   /**
    * The permanent flat bonus for CDM.
    * @type {number}
    */
   this._j._natural._cdmPlus = 0;
 
-  // policy step inside init natural growth parameters.
   /**
    * The permanent multiplier bonus for CDR.
    * @type {number}
    */
   this._j._natural._cdmRate = 0;
 
-  // policy step inside init natural growth parameters.
   /**
    * The permanent flat bonus for CDM.
    * @type {number}
    */
   this._j._natural._cdrPlus = 0;
 
-  // policy step inside init natural growth parameters.
   /**
    * The permanent multiplier bonus for CDR.
    * @type {number}

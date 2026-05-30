@@ -77,18 +77,14 @@ J.JAFTING.EXT.CREATE.Debug.gainMaxOfAllItemWeaponArmor = function()
   {
     if (data === null || data === undefined) return;
 
-    // iterate the loop counter until the guard exits.
     for (let i = 1; i < data.length; i++)
     {
       const datum = data[i];
 
-      // when datum  equals  null, take this branch.
       if (datum === null) continue;
 
-      // capture cap for downstream policy in this routine.
       const cap = $gameParty.maxItems(datum);
 
-      // when cap > 0, take this branch.
       if (cap > 0)
       {
         $gameParty.gainItem(datum, cap);
@@ -96,7 +92,6 @@ J.JAFTING.EXT.CREATE.Debug.gainMaxOfAllItemWeaponArmor = function()
     }
   };
 
-  // policy step inside gain max of all item weapon armor.
   grantTable($dataItems);
   grantTable($dataWeapons);
   grantTable($dataArmors);
@@ -113,7 +108,6 @@ J.JAFTING.EXT.CREATE.Debug.gainGoldForTesting = function(amount)
     ? 999999
     : amount;
 
-  // policy step inside gain gold for testing.
   $gameParty.gainGold(value);
 };
 
@@ -126,12 +120,10 @@ J.JAFTING.EXT.CREATE.Debug.gainBulkSdpIfAvailable = function(points)
 {
   if (J.JAFTING.EXT.CREATE.Metadata.usingSdp() === false) return;
 
-  // capture value for downstream policy in this routine.
   const value = (points === undefined || points === null)
     ? 999999
     : points;
 
-  // policy step inside gain bulk sdp if available.
   $gameParty.members()
     .forEach(actor => actor.modSdpPoints(value));
 };
@@ -147,45 +139,37 @@ J.JAFTING.EXT.CREATE.Debug.gainStockFromAllRecipes = function(multiplier)
     ? 10
     : Math.floor(multiplier);
 
-  // policy step inside gain stock from all recipes.
   const { recipes } = J.JAFTING.EXT.CREATE.Metadata;
 
-  // capture feed component for downstream policy in this routine.
   const feedComponent = component =>
   {
     const total = component.quantity() * mult;
 
-    // when component.isDatabaseEntry(), take this branch.
     if (component.isDatabaseEntry())
     {
       $gameParty.gainItem(component.getItem(), total);
       return;
     }
 
-    // when component.isGold(), take this branch.
     if (component.isGold())
     {
       $gameParty.gainGold(total);
       return;
     }
 
-    // when component.isSdp(), take this branch.
     if (component.isSdp())
     {
       if (J.JAFTING.EXT.CREATE.Metadata.usingSdp() === false) return;
 
-      // policy step inside gain stock from all recipes.
       $gameParty.members()
         .forEach(actor => actor.modSdpPoints(total));
     }
   };
 
-  // policy step inside gain stock from all recipes.
   recipes.forEach(recipe =>
   {
     if ($gameParty.canGainEntry(recipe.key) === false) return;
 
-    // policy step inside gain stock from all recipes.
     recipe.ingredients.forEach(feedComponent);
     recipe.tools.forEach(feedComponent);
   });
@@ -201,7 +185,6 @@ J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest = function(recipeStockMultipl
   J.JAFTING.EXT.CREATE.Debug.unlockEverythingForTesting();
   J.JAFTING.EXT.CREATE.Debug.gainMaxOfAllItemWeaponArmor();
   J.JAFTING.EXT.CREATE.Debug.gainGoldForTesting();
-  // policy step inside prepare full creation test.
   J.JAFTING.EXT.CREATE.Debug.gainBulkSdpIfAvailable();
   J.JAFTING.EXT.CREATE.Debug.gainStockFromAllRecipes(recipeStockMultiplier);
 };

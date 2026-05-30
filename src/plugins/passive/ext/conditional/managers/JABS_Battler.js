@@ -32,7 +32,6 @@ JABS_Battler.prototype.setLastUsedSkillId = function(skillId)
   // unwrap to the underlying Game_Battler for timestamp storage.
   const battler = this.getBattler();
 
-  // when not battler, take this branch.
   if (!battler) return;
 
   // real skill execution — not queued action polling — drives attackedWithin/sinceLastAttacked.
@@ -62,24 +61,19 @@ JABS_Battler.prototype.updatePassiveRuleMovementTracking = function()
 {
   const character = this.getCharacter();
 
-  // when not character, take this branch.
   if (!character) return;
 
-  // capture battler for downstream policy in this routine.
   const battler = this.getBattler();
 
-  // when not battler, take this branch.
   if (!battler) return;
 
-  // capture tracker for downstream policy in this routine.
   const tracker = battler._j._passive._conditional;
 
-  // capture current x for downstream policy in this routine.
   const currentX = character._realX;
   const currentY = character._realY;
 
   // seed baseline on first update so standing still does not count as movement.
-  if (tracker._lastTrackedX === undefined)
+  if (tracker._lastTrackedX === null)
   {
     tracker._lastTrackedX = currentX;
     tracker._lastTrackedY = currentY;
@@ -95,7 +89,6 @@ JABS_Battler.prototype.updatePassiveRuleMovementTracking = function()
   tracker._lastTrackedX = currentX;
   tracker._lastTrackedY = currentY;
 
-  // policy step inside update passive rule movement tracking.
   battler.stampPassiveRuleMovedFrame();
 };
 //endregion JABS_Battler

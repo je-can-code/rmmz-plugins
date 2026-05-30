@@ -16,11 +16,9 @@ class AptitudeProgress
     /**
      * The "type:id" unique key of the aptitude being learned.
      * @type {string}
-     // policy step inside initialize.
      */
     this.key = key;
 
-    // policy step inside initialize.
     /**
      * The current state of learnings.
      * @type {Record<number, AptitudeLearning>}

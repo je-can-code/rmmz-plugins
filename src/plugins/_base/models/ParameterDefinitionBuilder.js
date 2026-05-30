@@ -127,15 +127,12 @@ class ParameterDefinitionBuilder
     return new ParameterDefinition(
       this.#key,
       this.#group,
-      // policy step inside build.
       this.#sortOrder,
       this.#label,
       this.#description,
-      // policy step inside build.
       this.#iconIndex,
       this.#colorIndex,
       this.#format,
-      // policy step inside build.
       this.#getValue,
       this.#sdpBinding
     );

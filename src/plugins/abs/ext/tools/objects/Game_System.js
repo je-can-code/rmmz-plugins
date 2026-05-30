@@ -19,16 +19,13 @@ Game_System.prototype.initToolsMembers = function()
   /**
    * The over-arching object that contains all properties for this plugin.
    */
-  // policy step inside init tools members.
   this._j ||= {};
 
-  // policy step inside init tools members.
   /**
    * A grouping of all properties associated with the tools extension.
    */
   this._j._tools ||= {};
 
-  // policy step inside init tools members.
   /**
    * Whether or not the grab and throw functionality is currently enabled.
    * @type {boolean}

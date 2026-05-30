@@ -17,7 +17,6 @@ TextManager.lstDescription = function()
   return [
     'Percent of HP damage dealt recovered as HP on a successful hit.',
     'Stacks with on-attack skill resource tags.',
-  // policy step inside lst description.
   ];
 };
 
@@ -39,7 +38,6 @@ TextManager.mstDescription = function()
   return [
     'Percent of HP damage dealt recovered as MP on a successful hit.',
     'Stacks with on-attack skill resource tags.',
-  // policy step inside mst description.
   ];
 };
 
@@ -61,7 +59,6 @@ TextManager.tstDescription = function()
   return [
     'Percent of HP damage dealt recovered as TP on a successful hit.',
     'Stacks with on-attack skill resource tags.',
-  // policy step inside tst description.
   ];
 };
 //endregion TextManager

@@ -30,27 +30,23 @@ Spriteset_Map.prototype.createJabsLayer = function ()
    */
   this._j ||= {};
 
-  // policy step inside create jabs layer.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside create jabs layer.
   /**
    * The container for all debug-centric hitbox sprites.
    * @type {Sprite}
    */
   this._j._abs._debugHitboxLayer = new Sprite();
 
-  // policy step inside create jabs layer.
   /**
    * Direct tracking for individual sprites by their uuid.
    * @type {Record<string, Sprite>}
    */
   this._j._abs._debugActionHitboxSprites = {};
 
-  // policy step inside create jabs layer.
   /**
    * Direct tracking for battler hitbox sprites by their stable key.
    * Keys include enemy battler uuids, and fixed keys for player/followers.
@@ -58,7 +54,6 @@ Spriteset_Map.prototype.createJabsLayer = function ()
    */
   this._j._abs._debugBattlerHitboxSprites = {};
 
-  // policy step inside create jabs layer.
   /**
    * Direct tracking for cast preview sprites by battler uuid.
    * Keys are of the form: `castpreview:${uuid}`.
@@ -66,14 +61,12 @@ Spriteset_Map.prototype.createJabsLayer = function ()
    */
   this._j._abs._castPreviewSprites = {};
 
-  // policy step inside create jabs layer.
   /**
    * The container for cast preview sprites.
    * @type {Sprite}
    */
   this._j._abs._castPreviewLayer = new Sprite();
 
-  // policy step inside create jabs layer.
   /**
    * The container for transient hitbox pulses.
    * @type {Sprite}
@@ -333,13 +326,11 @@ Spriteset_Map.prototype.purgeActionSpritesByUuid = function (uuid)
   const hitboxSprite = hitboxDict[uuid];
   if (hitboxSprite)
   {
-    // capture layer for downstream policy in this routine.
     const layer = this.getJabsHitboxLayer();
     if (hitboxSprite.parent === layer)
     {
       layer.removeChild(hitboxSprite);
     }
-    // policy step inside purge action sprites by uuid.
     this.destroyActionHitboxSprite(hitboxSprite);
     delete hitboxDict[uuid];
   }
@@ -367,7 +358,6 @@ Spriteset_Map.prototype.purgeActionSpritesByUuid = function (uuid)
  */
 Spriteset_Map.prototype.handleBattlerSprites = function ()
 {
-  // when $jabsEngine.requestBattlerRendering, take this branch.
   if ($jabsEngine.requestBattlerRendering)
   {
     this.addBattlerSprites();
@@ -584,14 +574,12 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
   let playerSprite = null;
   const followerSprites = [];
 
-  // policy step inside refresh all character sprites.
   this._characterSprites.forEach(
     (sprite) =>
     {
       // skip non-character or unexpected entries.
       if (!sprite || !sprite.character()) return;
 
-      // capture ch for downstream policy in this routine.
       const ch = sprite.character();
 
       // Is this the player sprite?
@@ -739,7 +727,6 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
       });
     });
 
-  // hand back items; // provide the preview candidates. to the caller.
   return items; // provide the preview candidates.
 };
 
@@ -899,7 +886,6 @@ Spriteset_Map.prototype.createCastPreviewSprite = function (item)
   // create a container sprite + graphics to draw into.
   const sprite = new Sprite();
 
-  // policy step inside create cast preview sprite.
   /** @type {PIXI.Graphics} */
   const g = new PIXI.Graphics();
 
@@ -913,7 +899,6 @@ Spriteset_Map.prototype.createCastPreviewSprite = function (item)
   // center origin so our drawing at (0,0) aligns to battler feet center.
   sprite.anchor.set(0.5, 0.5);
 
-  // hand back sprite to the caller.
   return sprite;
 };
 
@@ -927,7 +912,6 @@ Spriteset_Map.prototype.destroyCastPreviewSprite = function (sprite)
   if (sprite._jabsCastPreviewG)
   {
     sprite._jabsCastPreviewG.clear();
-    // policy step inside destroy cast preview sprite.
     sprite._jabsCastPreviewG.destroy({ children: true });
   }
   sprite.destroy();
@@ -1003,14 +987,12 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Rhombus:
     {
       this.drawRhombusG(g, range * tw, range * th);
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Square:
     {
       const w = (2 * range + 1) * tw;
@@ -1019,7 +1001,6 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Line:
     {
       const lengthPx = range * Math.max(tw, th);
@@ -1042,7 +1023,6 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Wall:
     {
       const lenTiles = (2 * range + 1);
@@ -1059,7 +1039,6 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Cross:
     {
       const w = (2 * range + 1) * tw;
@@ -1069,7 +1048,6 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Arc:
     default:
     {
@@ -1079,7 +1057,6 @@ Spriteset_Map.prototype.drawCastPreviewInto = function (
       if (facing === J.ABS.Directions.LEFT) centerRad = Math.PI;
       if (facing === J.ABS.Directions.UP) centerRad = -Math.PI / 2;
 
-      // capture r for downstream policy in this routine.
       const r = range * tw;
       this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
       break;
@@ -1113,7 +1090,6 @@ Spriteset_Map.prototype.handleHitboxOverlay = function ()
     $jabsEngine.requestToggleHitboxOverlays = false;
   }
 
-  // capture show full overlays for downstream policy in this routine.
   const showFullOverlays = !!$jabsEngine.hitboxOverlaysVisible;
   const pulseColliderHighlight = J.ABS.Metadata.HitboxPulse.enabled === true
     && J.ABS.Metadata.HitboxPulse.highlightColliderBattlers === true;
@@ -1121,13 +1097,11 @@ Spriteset_Map.prototype.handleHitboxOverlay = function ()
   // full debug overlays on, or pulse mode requests collider outlines only.
   layer.visible = showFullOverlays || pulseColliderHighlight;
 
-  // when layer.visible  equals  false, take this branch.
   if (layer.visible === false)
   {
     return;
   }
 
-  // when showFullOverlays, take this branch.
   if (showFullOverlays)
   {
     this.handleActionHitboxes();
@@ -1260,7 +1234,6 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
     // guard: no action model means nothing to collide with.
     if (!jabsAction) continue; // skip invalid action entries.
 
-    // capture shape for downstream policy in this routine.
     const shape = jabsAction.getShape();
     const range = jabsAction.getRange();
     const facing = jabsAction.direction();
@@ -1270,77 +1243,62 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
     {
       const actionSprite = jabsAction.getActionSprite();
 
-      // when actionSprite, take this branch.
       if (actionSprite)
       {
         const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionSprite, range, shape);
 
-        // when overlapped, take this branch.
         if (overlapped)
         {
           return true;
         }
 
-        // policy step inside is battler colliding with any action.
         continue;
       }
 
-      // capture game action for downstream policy in this routine.
       const gameAction = jabsAction.getAction();
 
-      // when gameAction.isForUser(), take this branch.
       if (gameAction.isForUser())
       {
         const casterChar = jabsAction.getCaster()
           .getCharacter();
 
-        // when target  equals  casterChar, take this branch.
         if (target === casterChar)
         {
           return true;
         }
 
-        // policy step inside is battler colliding with any action.
         continue;
       }
 
-      // capture caster jb for downstream policy in this routine.
       const casterJb = jabsAction.getCaster();
       const targetJb = typeof target.getJabsBattler === 'function'
         ? target.getJabsBattler()
         : null;
 
-      // when not targetJb, take this branch.
       if (!targetJb)
       {
         continue;
       }
 
-      // capture max distance for downstream policy in this routine.
       const maxDistance = jabsAction.getProximity();
       const distance = casterJb.distanceToDesignatedTarget(targetJb);
 
-      // when distance <= maxDistance, take this branch.
       if (distance <= maxDistance)
       {
         return true;
       }
 
-      // policy step inside is battler colliding with any action.
       continue;
     }
 
-    // capture overlapped for downstream policy in this routine.
     const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape);
 
-    // when overlapped, take this branch.
     if (overlapped)
     {
       return true;
     }
   }
 
-  // hand back false to the caller.
   return false;
 };
 
@@ -1438,7 +1396,6 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
     const jabsAction = actionEvent.getJabsAction(); // the underlying JABS action model.
     if (!jabsAction) return; // guard: no action means nothing to draw.
 
-    // capture shape for downstream policy in this routine.
     const shape = jabsAction.getShape(); // the action's hitbox shape.
     const range = jabsAction.getRange(); // the action's range.
     // logical travel dir8 on the action model (map event direction may be cardinal for `$` sheet rows).
@@ -1472,7 +1429,6 @@ Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function ()
   const dict = this.getActionHitboxSprites(); // existing sprites.
   const layer = this.getJabsHitboxLayer(); // parent container.
 
-  // policy step inside purge orphaned action hitbox sprites.
   Object.keys(dict)
     .forEach(key =>
     {
@@ -1485,7 +1441,6 @@ Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function ()
         layer.removeChild(sprite); // remove from layer.
       }
 
-      // policy step inside purge orphaned action hitbox sprites.
       this.destroyActionHitboxSprite(sprite); // fully destroy internals.
       delete dict[key]; // remove from dict.
     });
@@ -1537,7 +1492,6 @@ Spriteset_Map.prototype.createActionHitboxSprite = function (actionEvent)
   // center the sprite so drawing at (0,0) will align to action center.
   sprite.anchor.set(0.5, 0.5); // center origin if available on Sprite.
 
-  // hand back sprite; // return the prepared sprite. to the caller.
   return sprite; // return the prepared sprite.
 };
 
@@ -1579,19 +1533,15 @@ Spriteset_Map.prototype.drawOrientedHitboxQuadG = function (
   const { x: fx, y: fy } = $jabsEngine.dir8ToUnitVector(facing);
   const px = fy;
   const py = -fx;
-  // capture ax for downstream policy in this routine.
   const ax = -px * halfBreadthPx;
   const ay = -py * halfBreadthPx;
   const bx = px * halfBreadthPx;
-  // capture by for downstream policy in this routine.
   const by = py * halfBreadthPx;
   const cx = (fx * lengthPx) + bx;
   const cy = (fy * lengthPx) + by;
-  // capture dx for downstream policy in this routine.
   const dx = (fx * lengthPx) + ax;
   const dy = (fy * lengthPx) + ay;
 
-  // policy step inside draw oriented hitbox quad g.
   g.moveTo(ax, ay);
   g.lineTo(bx, by);
   g.lineTo(cx, cy);
@@ -1649,7 +1599,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Rhombus:
     {
       // diamond visualization.
@@ -1657,7 +1606,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Square:
     {
       // full square centered at the origin.
@@ -1667,7 +1615,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Line:
     {
       // length uses major axis regardless of orientation.
@@ -1680,7 +1627,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Wall:
     {
       // breadth spans (2*range+1) tiles across the perpendicular axis.
@@ -1695,7 +1641,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Cross:
     {
       // cross is the union of a vertical and horizontal bar.
@@ -1706,7 +1651,6 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       break;
     }
 
-    // handle this switch arm for the current discriminant.
     case J.ABS.Shapes.Arc:
     default:
     {
@@ -1744,7 +1688,6 @@ Spriteset_Map.prototype.drawRhombusG = function (
   g.moveTo(0, -ry); // top.
   g.lineTo(rx, 0); // right.
   g.lineTo(0, ry); // bottom.
-  // policy step inside draw rhombus g.
   g.lineTo(-rx, 0); // left.
   g.closePath(); // close.
 };
@@ -1824,13 +1767,11 @@ Spriteset_Map.prototype.collectBattlerOverlayItems = function (itemMode = 'all')
 {
   const items = this.collectActiveBattlerOverlayItems();
 
-  // when itemMode  equals  'colliding', take this branch.
   if (itemMode === 'colliding')
   {
     return items.filter(entry => this.isBattlerCollidingWithAnyAction(entry));
   }
 
-  // hand back items to the caller.
   return items;
 };
 
@@ -1910,7 +1851,6 @@ Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function (itemMode =
   const dict = this.getBattlerHitboxSprites(); // existing sprites.
   const layer = this.getJabsHitboxLayer(); // parent container.
 
-  // policy step inside purge orphaned battler hitbox sprites.
   Object.keys(dict)
     .forEach(key =>
     {
@@ -1923,7 +1863,6 @@ Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function (itemMode =
         layer.removeChild(sprite); // remove from layer.
       }
 
-      // policy step inside purge orphaned battler hitbox sprites.
       this.destroyBattlerHitboxSprite(sprite); // dispose internals.
       delete dict[key]; // remove from dict.
     });
@@ -1944,11 +1883,9 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function ()
   if (player)
   {
     items.push({
-      // policy step inside collect active battler overlay items.
       key: 'battler:player',
       type: 'player',
       source: player
-    // policy step inside collect active battler overlay items.
     }); // add player.
   }
 
@@ -1984,7 +1921,6 @@ Spriteset_Map.prototype.collectActiveBattlerOverlayItems = function ()
       }); // add enemy battler event.
     });
 
-  // hand back items; // provide the collection. to the caller.
   return items; // provide the collection.
 };
 
@@ -2035,7 +1971,6 @@ Spriteset_Map.prototype.createBattlerHitboxSprite = function (item)
   // center the sprite so drawing at (0,0) will align to center.
   sprite.anchor.set(0.5, 0.5); // center origin.
 
-  // hand back sprite; // return the prepared sprite. to the caller.
   return sprite; // return the prepared sprite.
 };
 

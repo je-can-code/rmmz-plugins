@@ -38,7 +38,6 @@ class JuiceWeaponSwingOverlay
       return 1;
     }
 
-    // hand back spin count to the caller.
     return spinCount;
   }
 
@@ -54,24 +53,19 @@ class JuiceWeaponSwingOverlay
   {
     const ph = parentSprite.patternHeight();
 
-    // capture tight orbit for downstream policy in this routine.
     const tightOrbit = motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Arc
       || motionType === JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse;
 
-    // capture tw for downstream policy in this routine.
     const tw = tightOrbit ? 20 : 26;
     const ySide = -ph * (tightOrbit ? 0.48 : 0.52);
     const yDown = -ph * (tightOrbit ? 0.18 : 0.22);
-    // capture y up for downstream policy in this routine.
     const yUp = -ph * (tightOrbit ? 0.76 : 0.82);
 
-    // capture card for downstream policy in this routine.
     const card = (horiz, vert, sc) =>
     {
       return { x: horiz, y: vert, scale: sc };
     };
 
-    // capture blend prof for downstream policy in this routine.
     const blendProf = (a, b, t) =>
     {
       return {
@@ -83,18 +77,15 @@ class JuiceWeaponSwingOverlay
     // continue the routine with the next policy step.
     };
 
-    // capture left for downstream policy in this routine.
     const left = card(-tw, ySide, 1.65);
     const right = card(tw, ySide, 1.65);
     const down = card(tightOrbit ? 6 : 10, yDown, 1.5);
-    // capture up for downstream policy in this routine.
     const up = card(0, yUp, 1.5);
 
     // continue the routine with the next policy step.
     /** @type {{ x: number, y: number, scale: number }} */
     let prof;
 
-    // dispatch on the discriminant for the next policy branch.
     switch (direction)
     {
       case 2:
@@ -127,7 +118,6 @@ class JuiceWeaponSwingOverlay
         break;
     }
 
-    // hand back { x: prof.x, y: prof.y, scale: prof.scale } to the caller.
     return { x: prof.x, y: prof.y, scale: prof.scale };
   }
 
@@ -167,11 +157,9 @@ class JuiceWeaponSwingOverlay
       spanDeg = 120;
     }
 
-    // capture pw for downstream policy in this routine.
     const pw = ImageManager.iconWidth;
     const ph = ImageManager.iconHeight;
     const bitmap = ImageManager.loadSystem('IconSet');
-    // capture sx for downstream policy in this routine.
     const sx = (iconIndex % 16) * pw;
     const sy = Math.floor(iconIndex / 16) * ph;
 
@@ -179,59 +167,47 @@ class JuiceWeaponSwingOverlay
     const overlay = new Sprite();
     overlay.bitmap = bitmap;
     overlay.setFrame(sx, sy, pw, ph);
-    // when motionType  equals  JuiceWeaponSwingMotionEffect.MotionTypes.Spin, take this branch.
     if (motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Spin
       || motionType === JuiceWeaponSwingMotionEffect.MotionTypes.SpinReverse)
     {
       overlay.anchor.x = 1.15;
-      // policy step inside play.
       overlay.anchor.y = 1.15;
     }
     else
     {
       overlay.anchor.x = 0.78;
-      // policy step inside play.
       overlay.anchor.y = 0.92;
     }
 
-    // capture swing dir for downstream policy in this routine.
     let swingDir = swingDirection;
     if (JuiceWeaponSwingOverlay.#isValidSwingDirection(swingDir) === false)
     {
       swingDir = parentSprite._character.direction();
     }
 
-    // capture weapon tip resolved for downstream policy in this routine.
     let weaponTipResolved = weaponTipRadians;
     if (weaponTipResolved === undefined || weaponTipResolved === null || Number.isFinite(weaponTipResolved) === false)
     {
       weaponTipResolved = JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
     }
 
-    // capture spin count resolved for downstream policy in this routine.
     const spinCountResolved = JuiceWeaponSwingOverlay.#coalesceSpinCount(spinCount);
 
-    // capture profile gun resolved for downstream policy in this routine.
     const profileGunResolved = profileGun === true;
 
-    // capture phy for downstream policy in this routine.
     const phy = parentSprite.patternHeight();
 
-    // policy step inside play.
     let neutralForCtorX;
     let neutralForCtorY;
 
-    // when JuiceWeaponSwingOverlay.#isArcMotion(motionType)  equals  true, take this branch.
     if (JuiceWeaponSwingOverlay.#isArcMotion(motionType) === true)
     {
       const reverse = motionType === JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse;
       const pose0 = JuiceWeaponSwingMotionEffect.computeArcPose(swingDir, phy, spanDeg, reverse, 0);
 
-      // policy step inside play.
       overlay.x = pose0.x;
       overlay.y = pose0.y;
 
-      // when reverse  equals  true, take this branch.
       if (reverse === true)
       {
         const travel0 = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(swingDir, phy, spanDeg, true, 0);
@@ -243,30 +219,24 @@ class JuiceWeaponSwingOverlay
         overlay.rotation = JuiceWeaponSwingMotionEffect.bladeRotationArcForward(pose0.theta);
       }
       overlay.scale.x = 1.6;
-      // policy step inside play.
       overlay.scale.y = 1.6;
     }
     else
     {
       const profile = JuiceWeaponSwingOverlay.#buildSwingProfile(parentSprite, motionType, swingDir);
-      // capture juice dy for downstream policy in this routine.
       const juiceDy = J.ABS.EXT.JUICE.Metadata.spriteJuiceVerticalOffsetPixels;
       const neutralX = profile.x;
       const neutralY = profile.y + juiceDy;
 
-      // when motionType  equals  JuiceWeaponSwingMotionEffect.MotionTypes.Bash, take this branch.
       if (motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Bash)
       {
         const bash0 = JuiceWeaponSwingMotionEffect.computeBashOffset(swingDir, phy, 0);
         const bashAlign = JuiceWeaponSwingMotionEffect.weaponTipAlign(
-          // policy step inside play.
           swingDir,
           weaponTipResolved,
           profileGunResolved
-        // policy step inside play.
         );
 
-        // policy step inside play.
         overlay.x = neutralX + bash0.x;
         overlay.y = neutralY + bash0.y;
         overlay.rotation = bashAlign.rotation + JuiceWeaponSwingMotionEffect.bashWhipRotationRadians(0);
@@ -284,7 +254,6 @@ class JuiceWeaponSwingOverlay
           profileGunResolved
         );
 
-        // policy step inside play.
         overlay.x = neutralX + recoil0.x;
         overlay.y = neutralY + recoil0.y;
         overlay.rotation = recoilAlign.rotation + recoil0.rotationDelta;
@@ -301,7 +270,6 @@ class JuiceWeaponSwingOverlay
           profileGunResolved
         );
 
-        // policy step inside play.
         overlay.x = neutralX;
         overlay.y = neutralY;
         overlay.rotation = stabAlign.rotation;
@@ -315,7 +283,6 @@ class JuiceWeaponSwingOverlay
         const px = presentProf.x;
         const py = presentProf.y + presentJuiceDy;
 
-        // policy step inside play.
         overlay.x = px;
         overlay.y = py;
         overlay.rotation = JuiceWeaponSwingMotionEffect.IconDiagonalRestRadians;
@@ -332,17 +299,13 @@ class JuiceWeaponSwingOverlay
       }
     }
 
-    // policy step inside play.
     overlay.opacity = 200;
     overlay.blendMode = 0;
 
-    // policy step inside play.
     parentSprite.addChild(overlay);
 
-    // capture base rotation for downstream policy in this routine.
     const baseRotation = overlay.rotation;
 
-    // capture swing dir for motion for downstream policy in this routine.
     let swingDirForMotion = swingDir;
     if (motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Present)
     {
@@ -366,7 +329,6 @@ class JuiceWeaponSwingOverlay
       profileGunResolved
     );
 
-    // policy step inside play.
     JuiceMotionManager.pushExternalEffect(motion);
   }
 }

@@ -20,7 +20,6 @@ class J_Omnipedia_PluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -36,21 +35,17 @@ class J_Omnipedia_PluginMetadata
     this.Command = {
       Name: 'The Omnipedia',
       Symbol: 'omni-menu',
-      // policy step inside initialize metadata.
       IconIndex: 232,
       ColorIndex: 5,
     };
 
-    // policy step inside initialize metadata.
     /**
      * The id of the switch that will represent whether or not the command
      * should be visible in the JABS menu.
-     // policy step inside initialize metadata.
      * @type {number}
      */
     this.InJabsMenuSwitch = 102;
 
-    // policy step inside initialize metadata.
     /**
      * The id of the switch that will represent whether or not the command
      * should be visible in the main menu.

@@ -23,19 +23,15 @@ class JABS_Aggro
     /**
      * The unique identifier of the battler this aggro is tracked for.
      * @type {string}
-     // policy step inside initialize.
      */
     this.battlerUuid = uuid;
 
-    // policy step inside initialize.
     /**
      * The numeric measurement of aggro from this battler.
      * @type {number}
-     // policy step inside initialize.
      */
     this.aggro = 0;
 
-    // policy step inside initialize.
     /**
      * Whether or not the aggro is locked at it's current value.
      * @type {boolean}
@@ -76,7 +72,6 @@ class JABS_Aggro
    */
   resetAggro(forced = false)
   {
-    // when this.locked  and  not forced, take this branch.
     if (this.locked && !forced) return;
     this.aggro = 0;
   }
@@ -104,7 +99,6 @@ class JABS_Aggro
   {
     if (this.locked && !forced) return;
 
-    // policy step inside mod aggro.
     this.aggro += modAggro;
     if (this.aggro < 0) this.aggro = 0;
   }

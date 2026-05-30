@@ -141,12 +141,10 @@ class Window_StatusParameters
     // if we don't have an actor to render the parameters for, don't.
     if (!this.actor) return;
 
-    // policy step inside draw content.
     const { rowGap } = Window_StatusParameters.PAGE_LAYOUT;
     const columnLayout = this.computeThreeColumnLayout();
     let cursorY = 0;
 
-    // when columnLayout, take this branch.
     if (columnLayout)
     {
       const { columnWidth, leftX, middleX, rightX, rightColumnWidth } = columnLayout;
@@ -160,12 +158,10 @@ class Window_StatusParameters
           return this.drawParameterGroup(columnXs[columnIndex], cursorY, groupId, columnWidth);
         });
 
-        // capture tallest section for downstream policy in this routine.
         const tallestSection = Math.max(...rowHeights);
         cursorY += tallestSection + rowGap;
       });
 
-      // capture elements bottom y for downstream policy in this routine.
       const elementsBottomY = this.drawElementalRates(rightX, 0, 10, rightColumnWidth);
       this.drawStateRates(rightX, elementsBottomY + 16, rightColumnWidth);
     }
@@ -174,7 +170,6 @@ class Window_StatusParameters
       // when the window is too narrow for three columns, fall back to two columns below the grid.
       const fallbackWidth = Math.floor((this.innerWidth - 24) / 2);
 
-      // policy step inside draw content.
       Window_StatusParameters.PAGE_GROUP_ROW_GROUPS.forEach(rowGroups =>
       {
         const rowHeights = rowGroups.map((groupId, columnIndex) =>
@@ -183,16 +178,13 @@ class Window_StatusParameters
             ? 0
             : fallbackWidth + 24;
 
-          // hand back this.drawParameterGroup(x, cursorY, groupId, fallback... to the caller.
           return this.drawParameterGroup(x, cursorY, groupId, fallbackWidth);
         });
 
-        // capture tallest section for downstream policy in this routine.
         const tallestSection = Math.max(...rowHeights);
         cursorY += tallestSection + rowGap;
       });
 
-      // capture half width for downstream policy in this routine.
       const halfWidth = Math.floor((this.innerWidth - 16) / 2);
       const elementsHeight = this.drawElementalRates(0, cursorY + 8, 10, halfWidth);
       this.drawStateRates(halfWidth + 16, cursorY + 8, halfWidth);
@@ -208,17 +200,14 @@ class Window_StatusParameters
     const edgePad = 8;
     const usable = this.innerWidth - (edgePad * 2);
     const gap = Window_StatusParameters.COLUMN_LINE_BLEED + Window_StatusParameters.COLUMN_CLEAR_GAP;
-    // capture min column width for downstream policy in this routine.
     const minColumnWidth = 200;
     const columnWidth = Math.floor((usable - (gap * 2)) / 3);
 
-    // when columnWidth < minColumnWidth, take this branch.
     if (columnWidth < minColumnWidth)
     {
       return null;
     }
 
-    // capture left x for downstream policy in this routine.
     const leftX = edgePad;
     const middleX = leftX + columnWidth + gap;
     const rightX = middleX + columnWidth + gap;
@@ -226,7 +215,6 @@ class Window_StatusParameters
     // absorb rounding slack; values may use the full inner width through the right edge.
     const rightColumnWidth = this.innerWidth - rightX;
 
-    // hand back { to the caller.
     return {
       edgePad,
       gap,
@@ -269,7 +257,6 @@ class Window_StatusParameters
   {
     const first = value.charAt(0);
 
-    // hand back first === ' ' || first === '+' || first === '-' to the caller.
     return first === ' ' || first === '+' || first === '-';
   }
 
@@ -287,7 +274,6 @@ class Window_StatusParameters
       return this.catalogValueHasSignColumn(value) === false;
     }
 
-    // hand back is sentinel to the caller.
     return isSentinel;
   }
 
@@ -305,7 +291,6 @@ class Window_StatusParameters
       return this.styledValuePixelWidth(value);
     }
 
-    // hand back this.textWidth(value) to the caller.
     return this.textWidth(value);
   }
 
@@ -321,13 +306,11 @@ class Window_StatusParameters
   {
     const measureWidth = this.catalogValueRightMeasureWidth(value, withPadding, isSentinel);
 
-    // when this.catalogValueRightReservesSignColumn(value, withPadding, isSentinel), take this branch.
     if (this.catalogValueRightReservesSignColumn(value, withPadding, isSentinel))
     {
       return measureWidth + this.textWidth('0');
     }
 
-    // hand back measure width to the caller.
     return measureWidth;
   }
 
@@ -346,7 +329,6 @@ class Window_StatusParameters
       return halfX + this.textWidth('0');
     }
 
-    // hand back half x to the caller.
     return halfX;
   }
 
@@ -370,7 +352,6 @@ class Window_StatusParameters
     const rowBaseY = sectionY + 8;
     const firstRowY = (rowBaseY - 2) + this.lineHeight();
 
-    // hand back firstRowY - 4 to the caller.
     return firstRowY - 4;
   }
 
@@ -390,7 +371,6 @@ class Window_StatusParameters
       .forEach((elementName, index) =>
       {
         const absorbed = J.ELEM && this.actor.isElementAbsorbed(index);
-        // capture combat rate for downstream policy in this routine.
         const combatRate = this.actor.elementRate(index);
         const magnitudePercent = Math.round(Math.abs(combatRate) * 100);
         const formatted = AffiliationDisplay.formatDelta(magnitudePercent, {
@@ -398,13 +378,11 @@ class Window_StatusParameters
           immune: absorbed === false && magnitudePercent <= 0,
         });
 
-        // when not formatted, take this branch.
         if (!formatted)
         {
           return;
         }
 
-        // capture name for downstream policy in this routine.
         const name = (elementName === String.empty)
           ? 'Neutral'
           : elementName;
@@ -418,7 +396,6 @@ class Window_StatusParameters
         });
       });
 
-    // hand back rows to the caller.
     return rows;
   }
 
@@ -438,7 +415,6 @@ class Window_StatusParameters
       {
         if (!state) return;
 
-        // capture immune for downstream policy in this routine.
         const immune = this.actor.isStateResist(state.id);
         const ratePercent = immune
           ? 0
@@ -447,7 +423,6 @@ class Window_StatusParameters
           immune,
         });
 
-        // when not formatted, take this branch.
         if (!formatted)
         {
           return;
@@ -462,7 +437,6 @@ class Window_StatusParameters
         });
       });
 
-    // hand back rows to the caller.
     return rows;
   }
 
@@ -477,7 +451,6 @@ class Window_StatusParameters
     this.resetFontSettings();
     this.makeFontSmaller();
     this.changeTextColor(ColorManager.textColor(7));
-    // policy step inside draw affiliation baseline row.
     this.drawText('All standard', x, y, sectionWidth, 'center');
     this.resetFontSettings();
   }
@@ -497,18 +470,15 @@ class Window_StatusParameters
       const rowY = y + this.lineHeight() + 8;
       this.drawAffiliationBaselineRow(x, rowY, sectionWidth);
 
-      // hand back rowY + this.lineHeight() to the caller.
       return rowY + this.lineHeight();
     }
 
-    // policy step inside draw affiliation rows.
     rows.forEach((row, index) =>
     {
       const rowY = y + ((index + 1) * this.lineHeight()) + 8;
       this.drawParameter(row.name, row.value, row.iconIndex, x, rowY, row.colorIndex, sectionWidth);
     });
 
-    // hand back y + ((rows.length + 1) * this.lineHeight()) + 8 to the caller.
     return y + ((rows.length + 1) * this.lineHeight()) + 8;
   }
 
@@ -525,13 +495,11 @@ class Window_StatusParameters
     const chrome = Window_StatusParameters.GROUP_CHROME[groupId];
     const definitions = ParameterRegistry.byGroup(groupId);
 
-    // when not chrome  or  not definitions.length, take this branch.
     if (!chrome || !definitions.length)
     {
       return 0;
     }
 
-    // capture row count for downstream policy in this routine.
     const rowCount = Math.ceil(definitions.length / 2);
     const titleY = y - 15;
     const rowBaseY = y + 8;
@@ -559,19 +527,16 @@ class Window_StatusParameters
     const lh = this.lineHeight();
     const dividerX = this.centerDividerX(x, sectionWidth);
     const pairGap = Window_StatusParameters.CATALOG_PAIR_GAP;
-    // capture left inner right for downstream policy in this routine.
     const leftInnerRight = dividerX - Math.floor(pairGap / 2);
     const rightHalfX = dividerX + Math.ceil(pairGap / 2);
     const rowRight = this.catalogRowRight(x, sectionWidth);
 
-    // policy step inside draw group parameters.
     definitions.forEach((definition, index) =>
     {
       const row = Math.floor(index / 2) + 1;
       const rowY = y + (lh * row);
       const parameter = this.makeParameter(definition.key);
 
-      // when index % 2  equals  0, take this branch.
       if (index % 2 === 0)
       {
         this.drawParameterLeft(x, rowY, leftInnerRight, parameter);
@@ -629,7 +594,6 @@ class Window_StatusParameters
     const withPadding = parameter.usesStyledValue();
     const value = parameter.prettyValue(withPadding);
 
-    // when withPadding, take this branch.
     if (withPadding)
     {
       this.drawStyledPaddedValue(x, y, value, width, 8, parameter.colorIndex, align);
@@ -638,13 +602,11 @@ class Window_StatusParameters
     {
       const valueColorIndex = parameter.colorIndex;
 
-      // when valueColorIndex  differs from  0, take this branch.
       if (valueColorIndex !== 0)
       {
         this.contents.fontBold = true;
       }
 
-      // policy step inside draw catalog parameter value.
       this.changeTextColor(ColorManager.textColor(valueColorIndex));
       this.drawText(value, x, y, width, align);
       this.resetTextColor();
@@ -684,7 +646,6 @@ class Window_StatusParameters
     // reduce the font size a bit.
     this.makeFontSmaller();
 
-    // capture icon pad for downstream policy in this routine.
     const iconPad = ImageManager.iconWidth + 4;
     const gap = Window_StatusParameters.CATALOG_NAME_VALUE_GAP;
     const rowSpan = innerRight - halfX;
@@ -719,7 +680,6 @@ class Window_StatusParameters
     // reduce the font size a bit.
     this.makeFontSmaller();
 
-    // capture gap for downstream policy in this routine.
     const gap = Window_StatusParameters.CATALOG_NAME_VALUE_GAP;
     const iconX = outerRight - ImageManager.iconWidth;
     const withPadding = parameter.usesStyledValue();
@@ -786,10 +746,8 @@ class Window_StatusParameters
     // draw a visual separator aligned with the affiliation value edge.
     this.drawHorizontalLine(x, separatorY, sectionWidth, 3);
 
-    // capture rows for downstream policy in this routine.
     const rows = this.collectElementAffiliationRows(limit);
 
-    // hand back this.drawAffiliationRows(x, y, sectionWidth, rows) to the caller.
     return this.drawAffiliationRows(x, y, sectionWidth, rows);
   }
 
@@ -811,10 +769,8 @@ class Window_StatusParameters
     // draw a visual separator aligned with the affiliation value edge.
     this.drawHorizontalLine(x, separatorY, sectionWidth, 3);
 
-    // capture rows for downstream policy in this routine.
     const rows = this.collectAilmentAffiliationRows();
 
-    // hand back this.drawAffiliationRows(x, y, sectionWidth, rows) to the caller.
     return this.drawAffiliationRows(x, y, sectionWidth, rows);
   }
 
@@ -833,20 +789,17 @@ class Window_StatusParameters
     this.resetFontSettings();
     this.makeFontSmaller();
 
-    // capture modified x for downstream policy in this routine.
     const modifiedX = x + ImageManager.iconWidth + 4;
     const gap = Window_StatusParameters.CATALOG_NAME_VALUE_GAP;
     const valuePixelWidth = this.styledValuePixelWidth(value);
     const nameWidth = Math.max(48, sectionWidth - (modifiedX - x) - valuePixelWidth - gap);
 
-    // policy step inside draw parameter.
     this.drawIcon(iconIndex, x, y);
     this.drawText(`${name}`, modifiedX, y, nameWidth, 'left');
 
     // span the full section so digits hug the inner window edge (no fixed value inset).
     this.drawStyledPaddedValue(x, y, value, sectionWidth, 8, colorIndex);
 
-    // policy step inside draw parameter.
     this.resetFontSettings();
   }
 

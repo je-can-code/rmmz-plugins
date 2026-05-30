@@ -104,13 +104,11 @@ class RefinementWorkflowSession
       return null;
     }
 
-    // when partyItem instanceof Game_Item, take this branch.
     if (partyItem instanceof Game_Item)
     {
       return partyItem.object();
     }
 
-    // hand back party item to the caller.
     return partyItem;
   }
 
@@ -132,13 +130,11 @@ class RefinementWorkflowSession
       return { ok: false, reason: 'missing_base' };
     }
 
-    // when materialItem  equals  null  or  materialItem  equals  undefined, take this branch.
     if (materialItem === null || materialItem === undefined)
     {
       return { ok: false, reason: 'missing_material' };
     }
 
-    // when outputEquip  equals  null  or  outputEquip  equals  undefined, take this branch.
     if (outputEquip === null || outputEquip === undefined)
     {
       return { ok: false, reason: 'missing_output' };
@@ -152,18 +148,15 @@ class RefinementWorkflowSession
     // resync `unitLedgers` once counts drop, which would otherwise merge from an empty base and drop craft stamps.
     const mergedLedger = JaftingSalvageManager.buildRefinementOutputLedger(baseDatum, materialDatum);
 
-    // policy step inside commit refinement.
     $gameParty.gainItem(baseItem, -1);
     $gameParty.gainItem(materialItem, -1);
 
-    // policy step inside commit refinement.
     outputEquip._jaftingSalvageLedger = mergedLedger;
 
     // hands the stamped RPG row to JAFTING core so it picks the next dynamic weapon/armor slot and `gainItem`s it.
     JaftingManager.createRefinedOutput(outputEquip);
     this.markCommittedReturnToBase();
 
-    // hand back { ok: true, reason: null } to the caller.
     return { ok: true, reason: null };
   }
 }

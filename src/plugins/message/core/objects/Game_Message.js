@@ -10,14 +10,12 @@ Game_Message.prototype.clear = function()
   J.MESSAGE.Aliased.Game_Message.get('clear')
     .call(this);
 
-  // policy step inside clear.
   /**
    * An object tracking key:value (index:boolean) pairs for whether or not an index of a choice is hidden.
    * @type {Map<number, boolean>}
    */
   this._hiddenChoiceConditions = new Map();
 
-  // policy step inside clear.
   /**
    * A container for backing up the choice collection.
    * @type {string[]}
@@ -54,7 +52,6 @@ Game_Message.prototype.isChoiceHidden = function(choiceIndex)
     return this._hiddenChoiceConditions.get(choiceIndex);
   }
 
-  // hand back false to the caller.
   return false;
 };
 

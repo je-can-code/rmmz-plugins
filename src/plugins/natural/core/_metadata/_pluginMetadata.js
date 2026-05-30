@@ -18,7 +18,6 @@ class J_NaturalGrowthPluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeNaturalGrowth();
   }
 
@@ -30,11 +29,9 @@ class J_NaturalGrowthPluginMetadata
     /**
      * The default base max TP for actors when notetag does not override.
      * @type {number}
-     // policy step inside initialize natural growth.
      */
     this.BaseTpMaxActors = Number(this.parsedPluginParameters['actorBaseTp']);
 
-    // policy step inside initialize natural growth.
     /**
      * The default base max TP for enemies when notetag does not override.
      * @type {number}

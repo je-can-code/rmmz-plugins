@@ -10,19 +10,16 @@ Game_Actor.prototype.initMembers = function()
   J.LEVEL.Aliased.Game_Actor.get('initMembers')
     .call(this);
 
-  // policy step inside init members.
   /**
    * The J object where all my additional properties live.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * A grouping of all properties associated with this plugin.
    */
   this._j._level ||= {};
 
-  // policy step inside init members.
   /**
    * The calculated max level of this actor.
    * @type {number}
@@ -47,13 +44,11 @@ Game_Actor.prototype.onBattlerDataChange = function()
   J.LEVEL.Aliased.Game_Actor.get('onBattlerDataChange')
     .call(this);
 
-  // policy step inside on battler data change.
   this.updateRealMaxLevel();
 };
 
 Game_Actor.prototype.updateRealMaxLevel = function()
 {
-  // capture new max level for downstream policy in this routine.
   const newMaxLevel = this.calculateRealMaxLevel();
   this.setRealMaxLevel(newMaxLevel);
 };
@@ -126,7 +121,6 @@ Game_Actor.prototype.paramBase = function(paramId)
   const rawLevel = Math.floor(this.getLevel());
   const editorMax = J.LEVEL.EditorMaxLevel;
 
-  // when rawLevel <= editorMax, take this branch.
   if (rawLevel <= editorMax)
   {
     const row = this.currentClass().params[paramId];
@@ -134,13 +128,11 @@ Game_Actor.prototype.paramBase = function(paramId)
     return row[idx];
   }
 
-  // when $gameTemp.hasCachedBeyondMaxData()  equals  false, take this branch.
   if ($gameTemp.hasCachedBeyondMaxData() === false)
   {
     $gameTemp.buildBeyondMaxData();
   }
 
-  // capture params for downstream policy in this routine.
   const params = $gameTemp.getBeyondMaxData(this.currentClass().id);
   const beyondRow = params[paramId];
   const beyondIdx = Math.min(rawLevel, beyondRow.length - 1);

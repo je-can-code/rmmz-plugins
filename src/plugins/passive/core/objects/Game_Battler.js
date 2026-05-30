@@ -22,23 +22,19 @@ Game_Battler.prototype.initPassiveStatesMembers = function()
   /**
    * The shared root namespace for all of J's plugin data.
    */
-  // policy step inside init passive states members.
   this._j ||= {};
 
-  // policy step inside init passive states members.
   /**
    * A grouping of all properties associated with passive states.
    */
   this._j._passive ||= {};
 
-  // policy step inside init passive states members.
   /**
    * A cached list of all currently applied passive state ids.
    * @type {number[]|null}
    */
   this._j._passive._stateIds = [];
 
-  // policy step inside init passive states members.
   /**
    * A group of all external sources that are associated with this battler's passive states.
    * @type {RPG_BaseItem[]}
@@ -180,7 +176,6 @@ Game_Battler.prototype.canAddPassiveStateId = function(stateId, allowDuplicates)
  */
 Game_Battler.prototype.getPassiveStates = function()
 {
-  // hand back this.getPassiveStateIds() to the caller.
   return this.getPassiveStateIds()
     .map(this.state, this);
 };
@@ -233,6 +228,33 @@ Game_Battler.prototype.refreshPassiveStates = function()
 };
 
 /**
+ * Determines whether a passive state from a specific source may be included
+ * in this battler's passive collection right now.<br/>
+ * Returns true unconditionally in the base; extension plugins override to apply gate rules.
+ * @param {RPG_BaseItem} baseItem Database row that declares the passive state id.
+ * @param {number} stateId Passive state id being evaluated for inclusion.
+ * @returns {boolean} Whether this source/state pair passes all gate conditions.
+ */
+Game_Battler.prototype.canIncludePassiveStateFromSource = function(_baseItem, _stateId)
+{
+  // base implementation always allows — conditional ext overrides with gate rule logic.
+  return true;
+};
+
+/**
+ * Returns how many stacks one source contributes for a given passive state id.<br/>
+ * Returns 1 unconditionally in the base; extension plugins override to scale by runtime context.
+ * @param {RPG_BaseItem} baseItem Database row that declares the passive state id.
+ * @param {number} stateId Passive state id being evaluated for stack contribution.
+ * @returns {number} Stack contribution from this source (0 excludes it from the stack map).
+ */
+Game_Battler.prototype.getPassiveStackContributionFromSource = function(_baseItem, _stateId)
+{
+  // base implementation contributes a flat 1 stack — conditional ext overrides for scaling.
+  return 1;
+};
+
+/**
  * Gets all unique passive state ids that are present across all sources this
  * battler owns.
  * @returns {Set<number>}
@@ -258,8 +280,14 @@ Game_Battler.prototype.getAllUniquePassiveStateIds = function()
       uniqueIds.push(...baseItem.uniqueEquippedPassiveStateIds);
     }
 
-    // add them uniquely to the set.
-    uniqueIds.forEach(id => uniquePassiveStateIds.add(id));
+    // gate each candidate through the virtual inclusion hook before committing to the set.
+    uniqueIds.forEach(id =>
+    {
+      if (this.canIncludePassiveStateFromSource(baseItem, id) === false) return;
+
+      // add the gated id to the unique passive set.
+      uniquePassiveStateIds.add(id);
+    }, this);
   });
 
   // return the completed unique set.
@@ -296,22 +324,31 @@ Game_Battler.prototype.getAllStackablePassiveStateIds = function()
     // iterate over each of the stackable passive state ids on this item.
     stackableIds.forEach(id =>
     {
+      // gate each candidate through the virtual inclusion hook — conditional ext may veto.
+      if (this.canIncludePassiveStateFromSource(baseItem, id) === false) return;
+
+      // ask the virtual contribution hook for the stack amount — conditional ext may scale.
+      const contribution = this.getPassiveStackContributionFromSource(baseItem, id);
+
+      // zero contribution means this source/state pair is excluded from the stack map.
+      if (contribution <= 0) return;
+
       // check if we are already tracking this passive state id.
       if (stackablePassiveStateIds.has(id))
       {
         // grab the running stack total for this passive state id.
         const stack = stackablePassiveStateIds.get(id);
 
-        // increment the stack.
-        stackablePassiveStateIds.set(id, stack + 1);
+        // add the source contribution to the running total.
+        stackablePassiveStateIds.set(id, stack + contribution);
       }
       // we aren't tracking this passive state id yet.
       else
       {
-        // start the stack for this passive state id at 1.
-        stackablePassiveStateIds.set(id, 1);
+        // start the stack at the contribution amount for this source.
+        stackablePassiveStateIds.set(id, contribution);
       }
-    });
+    }, this);
   });
 
   // return the completed stackable map.

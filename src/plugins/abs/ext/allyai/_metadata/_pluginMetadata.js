@@ -19,7 +19,6 @@ class J_AllyAiPluginMetadata
   {
     super.postInitialize();
 
-    // policy step inside post initialize.
     this.initializeMetadata();
   }
 
@@ -50,41 +49,32 @@ class J_AllyAiPluginMetadata
     // assign formation tolerance on this instance for callers.
     this.FormationTolerance = 0.5;
 
-    // policy step inside initialize metadata.
     /**
      * All available formations that a party can take.
      * @type {JABS_Formation[]}
-     // policy step inside initialize metadata.
      */
     this.FormationTypes = [
       {
         key: "fan-behind",
-        // policy step inside initialize metadata.
         name: "Rear Support",
         description: "The rear-wedge formation.\nAllies will fan out behind you for support.",
         formation:
-          // policy step inside initialize metadata.
           [
             [ -1, -1 ],
             [  1, -1 ],
-            // policy step inside initialize metadata.
             [  0, -2 ],
             [ -1, -2 ],
             [  1, -2 ],
-            // policy step inside initialize metadata.
             [  0, -4 ],
           ],
         effects: [],
-      // policy step inside initialize metadata.
       },
       {
         key: "flank-sides",
         name: "Wings",
-        // policy step inside initialize metadata.
         description: "A side- flank formation.\nAllies will flank you at either side to look extra menacing.",
         formation:
           [
-            // policy step inside initialize metadata.
             [ -1,  0 ],
             [  1,  0 ],
             [ -2,  0 ],
@@ -113,7 +103,6 @@ class J_AllyAiPluginMetadata
       },
     ];
 
-  // policy step inside initialize metadata.
   /**
    * The default formation type if none is selected.
    * @type {string}

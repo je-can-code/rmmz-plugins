@@ -87,50 +87,42 @@ class Scene_Passive
     // perform original logic.
     super.initMembers();
 
-    // policy step inside init members.
     this._j ||= {};
 
-    // policy step inside init members.
     /**
      * A grouping of all properties associated with the passive viewer.
      */
     this._j._passive = {};
 
-    // policy step inside init members.
     /**
      * A grouping of all windows associated with this scene.
      */
     this._j._passive._windows = {};
 
-    // policy step inside init members.
     /**
      * The tab header strip window.
      * @type {Window_PassiveTabHeader}
      */
     this._j._passive._windows._tabHeader = null;
 
-    // policy step inside init members.
     /**
      * The actor identity ribbon above the state list.
      * @type {Window_PassiveActorRibbon}
      */
     this._j._passive._windows._actorRibbon = null;
 
-    // policy step inside init members.
     /**
      * The scrollable list of passive states for the active tab.
      * @type {Window_PassiveList}
      */
     this._j._passive._windows._list = null;
 
-    // policy step inside init members.
     /**
      * The detail panel for the currently highlighted passive state.
      * @type {Window_PassiveDetail}
      */
     this._j._passive._windows._detail = null;
 
-    // policy step inside init members.
     /**
      * The index of the currently active tab in the registry.
      * Index 0 is always the built-in "All" tab.
@@ -265,7 +257,6 @@ class Scene_Passive
     const width = Graphics.boxWidth - this.passiveListWidth();
     const height = this.passiveTabHeaderHeight();
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -337,7 +328,6 @@ class Scene_Passive
     const width = this.passiveListWidth();
     const height = this.passiveActorRibbonHeight();
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -421,7 +411,6 @@ class Scene_Passive
     const width = this.passiveListWidth();
     const height = Graphics.boxHeight - y;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 
@@ -496,7 +485,6 @@ class Scene_Passive
     const width = Graphics.boxWidth - listWidth;
     const height = Graphics.boxHeight - y;
 
-    // hand back new Rectangle(x, y, width, height) to the caller.
     return new Rectangle(x, y, width, height);
   }
 

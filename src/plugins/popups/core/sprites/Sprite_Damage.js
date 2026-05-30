@@ -21,69 +21,57 @@ Sprite_Damage.prototype.initMembers = function()
   /**
    * The master reference to the `_j` object containing all plugin properties.
    * @type {{}}
-   // policy step inside init members.
    */
   this._j ||= {};
 
-  // policy step inside init members.
   /**
    * This plugins' relevant data points.
    * @type {{}}
-   // policy step inside init members.
    */
   this._j._popups ||= {};
 
-  // policy step inside init members.
   /**
    * Whether or not this damage is flagged as critical.
    * @type {boolean}
-   // policy step inside init members.
    */
   this._j._popups._isCritical = false;
 
-  // policy step inside init members.
   /**
    * Whether or not this damage is flagged as healing.
    * @type {boolean}
    */
   this._j._popups._isHealing = false;
 
-  // policy step inside init members.
   /**
    * Whether or not this sprite is actually a damage popup, or a non-damage popup.
    * @type {boolean}
    */
   this._j._popups._isDamage = false;
 
-  // policy step inside init members.
   /**
    * The text color index for this sprite's text.
    * @type {number}
    */
   this._j._popups._damageColor = 0;
 
-  // policy step inside init members.
   /**
    * The x coordinate variance on this sprite.
    * @type {number}
    */
   this._j._popups._xVariance = 0;
 
-  // policy step inside init members.
   /**
    * The y coordinate variance on this sprite.
    * @type {number}
    */
   this._j._popups._yVariance = 0;
 
-  // policy step inside init members.
   /**
    * Typography hint from {@link Map_TextPop#textAccent}.
    * @type {string|null}
    */
   this._j._popups._textAccent = null;
 
-  // policy step inside init members.
   /**
    * Source popup for lifecycle events (read-only for observers).
    * @type {Map_TextPop|null}
@@ -193,7 +181,6 @@ Sprite_Damage.prototype.setupMotionData = function(sprite)
   {
     sprite.y = 0; // children start at the parent's baseline.
     sprite.dy = J.POPUPS.Layout.Motion.InitialJump; // starting jump.
-    // policy step inside setup motion data.
     sprite.zt = 0;
     sprite.ry = sprite.y;
     sprite.yf = 0;
@@ -217,30 +204,24 @@ Sprite_Damage.prototype.createValue = function(value)
 {
   let healingPopup = false;
 
-  // when this._j._popups._sourcePopup  and  this._j._popups._sourcePopup.heali..., take this branch.
   if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
   {
     healingPopup = true;
   }
 
-  // capture display value for downstream policy in this routine.
   const displayValue = PopupNumericDisplay.formatNumericPopupDisplayString(value, healingPopup);
 
-  // when this._j._popups._sourcePopup, take this branch.
   if (this._j._popups._sourcePopup)
   {
     this._j._popups._sourcePopup.value = displayValue;
   }
 
-  // capture w for downstream policy in this routine.
   const w = J.POPUPS.Layout.ValueBitmapWidth;
   const h = this.fontSize();
   const sprite = this.createChildSprite(w, h);
 
-  // capture font size for downstream policy in this routine.
   let fontSize = 20;
 
-  // when this._j._popups._isCritical, take this branch.
   if (this._j._popups._isCritical)
   {
     fontSize += 12;
@@ -256,7 +237,6 @@ Sprite_Damage.prototype.createValue = function(value)
       || displayValue.includes('Evaded')
       || displayValue.includes('Parry');
 
-    // when accentSmallItalic  or  legacyItalic, take this branch.
     if (accentSmallItalic || legacyItalic)
     {
       fontSize -= 6;
@@ -300,7 +280,6 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
   // blit the icon onto the sprite's bitmap directly.
   sprite.bitmap.blt(bitmap, sx, sy, pw, ph, 0, 0);
 
-  // capture icon scale for downstream policy in this routine.
   const iconScale = J.POPUPS.Layout.IconScale;
   sprite.scale.x = iconScale;
   sprite.scale.y = iconScale;
@@ -312,7 +291,6 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
   // since both text and icon now use the same y-offset and anchor=0.5, they align automatically.
   sprite.anchor.y = 0.5; 
   
-  // policy step inside add icon.
   sprite.x = 0;
 };
 
@@ -326,7 +304,6 @@ Sprite_Damage.prototype.repositionChildren = function()
   const text = this.children.find(child =>
     child !== icon && child.bitmap && child.bitmap.width === J.POPUPS.Layout.ValueBitmapWidth);
 
-  // when icon  and  text, take this branch.
   if (icon && text)
   {
     const spacing = 4;
@@ -421,7 +398,6 @@ Sprite_Damage.prototype.updateNonDamageSpriteMotion = function(sprite)
     sprite.x += drift;
   }
 
-  // policy step inside update non damage sprite motion.
   sprite.y = Math.round(sprite.ry);
 };
 
@@ -437,7 +413,6 @@ Sprite_Damage.prototype.updateDamageSpriteMotion = function(sprite)
   }
   else
   {
-    // policy step inside update damage sprite motion.
     this.defaultDamageSpriteMotion(sprite);
   }
 };
@@ -469,7 +444,6 @@ Sprite_Damage.prototype.defaultDamageSpriteMotion = function(sprite)
     sprite.x += drift;
   }
 
-  // policy step inside default damage sprite motion.
   sprite.y = Math.round(sprite.ry);
 };
 
@@ -484,7 +458,6 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
   sprite.y = -sprite.yf2 + sprite.yf3;
   if (this._duration > 30)
   {
-    // policy step inside flyaway damage sprite motion.
     sprite.opacity += 10;
   }
   else
@@ -504,7 +477,6 @@ Sprite_Damage.prototype.updateOpacity = function()
   {
     this.opacity = (255 * this._duration) / baseDuration;
   }
-// policy step inside update opacity.
 };
 
 /**

@@ -21,37 +21,31 @@ class JuiceProfileResolver
       return JuiceProfileResolver.MotionArcKey;
     }
 
-    // when motion  equals  'swing-top-down', take this branch.
     if (motion === 'swing-top-down')
     {
       return JuiceProfileResolver.MotionArcKey;
     }
 
-    // when motion  equals  'swing-bottom-up', take this branch.
     if (motion === 'swing-bottom-up')
     {
       return JuiceProfileResolver.MotionArcReverseKey;
     }
 
-    // when motion  equals  'spin-360', take this branch.
     if (motion === 'spin-360')
     {
       return JuiceWeaponSwingMotionEffect.MotionTypes.Spin;
     }
 
-    // when motion  equals  'spin-720', take this branch.
     if (motion === 'spin-720')
     {
       return JuiceWeaponSwingMotionEffect.MotionTypes.Spin;
     }
 
-    // when motion  equals  'spin-360-reverse', take this branch.
     if (motion === 'spin-360-reverse')
     {
       return JuiceWeaponSwingMotionEffect.MotionTypes.SpinReverse;
     }
 
-    // hand back motion to the caller.
     return motion;
   }
 
@@ -65,22 +59,18 @@ class JuiceProfileResolver
     const skill = action.getBaseSkill();
     const tagged = skill.jabsJuiceSpinCount;
 
-    // when tagged >= 1  and  tagged <= 8, take this branch.
     if (tagged >= 1 && tagged <= 8)
     {
       return Math.floor(tagged);
     }
 
-    // capture motion for downstream policy in this routine.
     const motion = skill.jabsJuiceMotion;
 
-    // when motion  equals  'spin-720', take this branch.
     if (motion === 'spin-720')
     {
       return 2;
     }
 
-    // hand back 1 to the caller.
     return 1;
   }
 
@@ -110,7 +100,6 @@ class JuiceProfileResolver
       return n;
     }
 
-    // hand back 120 to the caller.
     return 120;
   }
 
@@ -141,14 +130,12 @@ class JuiceProfileResolver
       return (deg * Math.PI) / 180;
     }
 
-    // when motionKey  equals  JuiceWeaponSwingMotionEffect.MotionTypes.StabForward, take this branch.
     if (motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.StabForward
       || motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.Present)
     {
       return JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
     }
 
-    // hand back JuiceWeaponSwingMotionEffect.BashRecoilIconTipAngleRa... to the caller.
     return JuiceWeaponSwingMotionEffect.BashRecoilIconTipAngleRadians;
   }
 
@@ -165,31 +152,25 @@ class JuiceProfileResolver
   {
     const gb = caster.getBattler();
 
-    // when gb.isActor()  equals  false, take this branch.
     if (gb.isActor() === false)
     {
       return null;
     }
 
-    // capture weapons for downstream policy in this routine.
     const weapons = gb.weapons();
 
-    // when weapons.length  equals  0, take this branch.
     if (weapons.length === 0)
     {
       return null;
     }
 
-    // capture slot key for downstream policy in this routine.
     const slotKey = action.getCooldownType();
 
-    // when slotKey  equals  JABS_Button.Offhand  and  weapons.length > 1  and  w..., take this branch.
     if (slotKey === JABS_Button.Offhand && weapons.length > 1 && weapons[1])
     {
       return { kind: 'weapon', item: weapons[1] };
     }
 
-    // when slotKey  equals  JABS_Button.Offhand  and  weapons.length  equals  1, take this branch.
     if (slotKey === JABS_Button.Offhand && weapons.length === 1)
     {
       const executingId = action.getBaseSkill().id;
@@ -202,20 +183,16 @@ class JuiceProfileResolver
         return { kind: 'weapon', item: w0 };
       }
 
-      // capture orb armor for downstream policy in this routine.
       const orbArmor = JuiceProfileResolver.#armorRowForOffhandSingleWeapon(gb, executingId);
 
-      // when orbArmor, take this branch.
       if (orbArmor)
       {
         return { kind: 'armor', item: orbArmor };
       }
 
-      // hand back { kind: 'weapon', item: w0 } to the caller.
       return { kind: 'weapon', item: w0 };
     }
 
-    // hand back { kind: 'weapon', item: weapons[0] } to the caller.
     return { kind: 'weapon', item: weapons[0] };
   }
 
@@ -230,41 +207,34 @@ class JuiceProfileResolver
   {
     const armors = gb.armors();
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < armors.length; i++)
     {
       const row = armors[i];
 
-      // when row.jabsOffhandSkillId > 0  and  row.jabsOffhandSkillId  equals  exec..., take this branch.
       if (row.jabsOffhandSkillId > 0 && row.jabsOffhandSkillId === executingId)
       {
         return row;
       }
 
-      // when row.jabsSkillId > 0  and  row.jabsSkillId  equals  executingId, take this branch.
       if (row.jabsSkillId > 0 && row.jabsSkillId === executingId)
       {
         return row;
       }
     }
 
-    // capture equips for downstream policy in this routine.
     const equips = gb.equips();
     const [ , slot1 ] = equips;
 
-    // when slot1  and  DataManager.isArmor(slot1), take this branch.
     if (slot1 && DataManager.isArmor(slot1))
     {
       return slot1;
     }
 
-    // when armors.length > 0  and  armors[0], take this branch.
     if (armors.length > 0 && armors[0])
     {
       return armors[0];
     }
 
-    // hand back null to the caller.
     return null;
   }
 
@@ -285,14 +255,12 @@ class JuiceProfileResolver
       return tagged;
     }
 
-    // capture gear for downstream policy in this routine.
     const gear = JuiceProfileResolver.#equippedGearForJuiceInference(caster, action);
     if (!gear)
     {
       return -1;
     }
 
-    // hand back gear.item.iconIndex to the caller.
     return gear.item.iconIndex;
   }
 
@@ -313,20 +281,17 @@ class JuiceProfileResolver
       return noteStyle;
     }
 
-    // capture gear for downstream policy in this routine.
     const gear = JuiceProfileResolver.#equippedGearForJuiceInference(caster, action);
     if (!gear)
     {
       return 'default';
     }
 
-    // when gear.kind  equals  'weapon', take this branch.
     if (gear.kind === 'weapon')
     {
       return String(gear.item.wtypeId);
     }
 
-    // hand back `a${gear.item.atypeId}` to the caller.
     return `a${gear.item.atypeId}`;
   }
 
@@ -345,7 +310,6 @@ class JuiceProfileResolver
       return new JuiceStyleMultiplierRow(1, 1);
     }
 
-    // hand back new JuiceStyleMultiplierRow(raw.tiltMul, raw.swingMul) to the caller.
     return new JuiceStyleMultiplierRow(raw.tiltMul, raw.swingMul);
   }
 }

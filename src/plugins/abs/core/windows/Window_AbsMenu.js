@@ -37,7 +37,6 @@ class Window_AbsMenu
     const mainMenuCommand = new WindowCommandBuilder(J.ABS.Metadata.MainMenuText)
       .setSymbol('main-menu')
       .setEnabled($gameSystem.isMenuEnabled())
-      // policy step inside build commands.
       .setIconIndex(189)
       .setHelpText(this.mainMenuHelpText())
       .build();
@@ -46,11 +45,9 @@ class Window_AbsMenu
     const offhandSkillCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipOffhandText)
       .setSymbol('offhand-assign')
       .setEnabled(true)
-      // policy step inside build commands.
       .setIconIndex(81)
       .setColorIndex(4)
       .setHelpText(this.offhandSkillHelpText())
-      // policy step inside build commands.
       .build();
 
     // build the combat skills command.
@@ -97,7 +94,6 @@ class Window_AbsMenu
       "This is colloquially referred to as the 'The Main Menu™' by protagonists all across the universe."
     ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   }
 
@@ -112,7 +108,6 @@ class Window_AbsMenu
       "Typical things like sword techs and magic spells will show up here."
     ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   }
 
@@ -127,7 +122,6 @@ class Window_AbsMenu
       "It is encouraged to use these liberally to maneuver around the field, in and out of combat."
     ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   }
 
@@ -143,7 +137,6 @@ class Window_AbsMenu
       "Equipping a different offhand item clears the pin and restores its granted skill."
     ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   }
 
@@ -158,7 +151,6 @@ class Window_AbsMenu
       "Not all items will show up in the list- only ones usable in combat somehow will be available."
     ];
 
-    // hand back description.join("\n") to the caller.
     return description.join("\n");
   }
 
@@ -172,7 +164,6 @@ class Window_AbsMenu
       this.close();
     }
 
-    // policy step inside close menu.
     $jabsEngine.absPause = false;
     $jabsEngine.requestAbsMenu = false;
   }

@@ -41,41 +41,33 @@ class JABS_Cooldown
     /**
      * The frames of the cooldown.
      * @type {number}
-     // policy step inside init members.
      */
     this.frames = 0;
 
-    // policy step inside init members.
     /**
      * Whether or not the base cooldown is ready.
      * @type {boolean}
-     // policy step inside init members.
      */
     this.ready = false;
 
-    // policy step inside init members.
     /**
      * The number of frames in which the combo action can be executed instead.
      * @type {number}
-     // policy step inside init members.
      */
     this.comboFrames = 0;
 
-    // policy step inside init members.
     /**
      * Whether or not the combo cooldown is ready.
      * @type {boolean}
      */
     this.comboReady = false;
 
-    // policy step inside init members.
     /**
      * Whether or not this cooldown is locked from changing.
      * @type {boolean}
      */
     this.locked = false;
 
-    // policy step inside init members.
     /**
      * Whether or not the skill manager needs to clear the combo data for the
      * slot that this cooldown is attached to.

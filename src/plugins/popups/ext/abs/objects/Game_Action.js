@@ -10,22 +10,18 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onFormulaResourceDelta')
     .call(this, recipient, amount, resource);
 
-  // capture jabs for downstream policy in this routine.
   const jabs = JABS_AiManager.getBattlerByUuid(recipient.getUuid());
   if (!jabs) return;
 
-  // capture signed for downstream policy in this routine.
   const signed = Math.round(amount);
   const magnitude = Math.abs(signed);
   if (magnitude === 0) return;
 
-  // capture popup value for downstream policy in this routine.
   const popupValue = signed < 0
     ? -magnitude
     : magnitude;
   const textPopBuilder = new TextPopBuilder(popupValue);
 
-  // dispatch on the discriminant for the next policy branch.
   switch (resource)
   {
     case FormulaEffect.Resource.HP:
@@ -39,7 +35,6 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
       break;
   }
 
-  // when signed < 0, take this branch.
   if (signed < 0)
   {
     textPopBuilder.forIncomingHealRing();
@@ -49,7 +44,6 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
     textPopBuilder.forEnemyDamageRing();
   }
 
-  // policy step inside on formula resource delta.
   TextPopManager.show(textPopBuilder.build(), jabs.getCharacter());
 };
 
@@ -64,7 +58,6 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldDamageAbsorbed')
     .call(this, target, value);
 
-  // capture jabs battler for downstream policy in this routine.
   const jabsBattler = JABS_AiManager.getBattlerByUuid(target.getUuid());
   if (!jabsBattler) return;
 
@@ -73,7 +66,6 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
     .isShieldDamage()
     .build();
 
-  // policy step inside on shield damage absorbed.
   TextPopManager.show(pop, jabsBattler.getCharacter());
 };
 
@@ -88,7 +80,6 @@ Game_Action.prototype.onShieldBroken = function(target)
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldBroken')
     .call(this, target);
 
-  // capture jabs battler for downstream policy in this routine.
   const jabsBattler = JABS_AiManager.getBattlerByUuid(target.getUuid());
   if (!jabsBattler) return;
 
@@ -97,7 +88,6 @@ Game_Action.prototype.onShieldBroken = function(target)
     .isShieldBreak()
     .build();
 
-  // policy step inside on shield broken.
   TextPopManager.show(pop, jabsBattler.getCharacter());
 };
 //endregion Game_Action

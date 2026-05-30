@@ -34,13 +34,11 @@ class JabsJuiceConfigValidation
       ? raw
       : Number.parseFloat(String(raw));
 
-    // when Number.isFinite(parsed)  equals  false, take this branch.
     if (Number.isFinite(parsed) === false)
     {
       throw new Error(`[J-ABS-Juice] non-finite number at config.jabs.json -> ${path} (got: ${String(raw)})`);
     }
 
-    // hand back parsed to the caller.
     return parsed;
   }
 
@@ -57,7 +55,6 @@ class JabsJuiceConfigValidation
     // share the float path so authors writing "10" (string) vs 10 (number) both work; reject anything non-finite.
     const f = JabsJuiceConfigValidation.requireFloat(raw, path);
 
-    // hand back Math.trunc(f) to the caller.
     return Math.trunc(f);
   }
 
@@ -80,7 +77,6 @@ class JabsJuiceConfigValidation
     const tiltMul = JabsJuiceConfigValidation.requireFloat(row.tiltMul, `${path}.tiltMul`);
     const swingMul = JabsJuiceConfigValidation.requireFloat(row.swingMul, `${path}.swingMul`);
 
-    // hand back { tiltMul, swingMul } to the caller.
     return { tiltMul, swingMul };
   }
 
@@ -102,7 +98,6 @@ class JabsJuiceConfigValidation
     const table = {};
     const keys = Object.keys(profiles);
 
-    // iterate the loop counter until the guard exits.
     for (let i = 0; i < keys.length; i++)
     {
       const key = keys[i];
@@ -116,7 +111,6 @@ class JabsJuiceConfigValidation
         );
       }
 
-      // policy step inside require profiles.
       table[key] = JabsJuiceConfigValidation.requireStyleRow(profiles[key], `juice.profiles.${key}`);
     }
 
@@ -126,7 +120,6 @@ class JabsJuiceConfigValidation
       throw new Error('[J-ABS-Juice] missing required row at config.jabs.json -> juice.profiles.default');
     }
 
-    // hand back table to the caller.
     return table;
   }
 
@@ -145,10 +138,8 @@ class JabsJuiceConfigValidation
       throw new Error('[J-ABS-Juice] config.jabs.json is missing or unreadable; the juice block cannot be loaded.');
     }
 
-    // policy step inside require block.
     const { juice } = root;
 
-    // when juice  equals  undefined  or  juice  equals  null  or  typeof juice  ..., take this branch.
     if (juice === undefined || juice === null || typeof juice !== 'object')
     {
       throw new Error(
@@ -163,19 +154,16 @@ class JabsJuiceConfigValidation
       throw new Error('[J-ABS-Juice] config.jabs.json -> juice is missing the required "target" section.');
     }
 
-    // when typeof juice.caster  differs from  'object'  or  juice.caster  equals..., take this branch.
     if (typeof juice.caster !== 'object' || juice.caster === null)
     {
       throw new Error('[J-ABS-Juice] config.jabs.json -> juice is missing the required "caster" section.');
     }
 
-    // when typeof juice.casting  differs from  'object'  or  juice.casting  equa..., take this branch.
     if (typeof juice.casting !== 'object' || juice.casting === null)
     {
       throw new Error('[J-ABS-Juice] config.jabs.json -> juice is missing the required "casting" section.');
     }
 
-    // hand back juice to the caller.
     return juice;
   }
 }

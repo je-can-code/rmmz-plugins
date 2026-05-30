@@ -27,7 +27,6 @@ export function safeParam(name)
   {
     return `_${name}`;
   }
-  // hand back name to the caller.
   return name;
 }
 
@@ -61,7 +60,6 @@ export function locStartToOffset(lineStarts, pos)
     return 0;
   }
   const row = lineStarts[pos.line - 1];
-  // when row  equals  undefined, take this branch.
   if (row === undefined)
   {
     return 0;
@@ -78,13 +76,11 @@ function splitUnionTop(s)
   const out = [];
   let depth = 0;
   let cur = '';
-  // iterate the loop counter until the guard exits.
   for (let i = 0; i < s.length; i++)
   {
     const c = s[i];
     if (c === '<' || c === '(' || c === '{')
     {
-      // policy step inside split union top.
       depth++;
     }
     else if (c === '>' || c === ')' || c === '}')
@@ -96,7 +92,6 @@ function splitUnionTop(s)
     {
       out.push(cur.trim());
       cur = '';
-      // policy step inside split union top.
       continue;
     }
     cur += c;
@@ -117,39 +112,33 @@ export function jsdocTypeToTs(raw)
     return 'unknown';
   }
 
-  // when s.startsWith('[')  and  s.endsWith(']'), take this branch.
   if (s.startsWith('[') && s.endsWith(']'))
   {
     s = s.slice(1, -1).trim();
     const eq = s.indexOf('=');
-    // when eq >= 0, take this branch.
     if (eq >= 0)
     {
       s = s.slice(0, eq).trim();
     }
   }
 
-  // capture lower for downstream policy in this routine.
   const lower = s.toLowerCase();
   if (lower === '*')
   {
     return 'unknown';
   }
-  // when lower  equals  'any', take this branch.
   if (lower === 'any')
   {
     return 'any';
   }
   if (lower === 'void')
   {
-    // hand back 'void' to the caller.
     return 'void';
   }
   if (lower === 'null')
   {
     return 'null';
   }
-  // when lower  equals  'undefined', take this branch.
   if (lower === 'undefined')
   {
     return 'undefined';
@@ -175,20 +164,17 @@ export function jsdocTypeToTs(raw)
     return 'unknown[]';
   }
 
-  // capture array angle for downstream policy in this routine.
   const arrayAngle = /^array\.<(.+)>$/i.exec(s);
   if (arrayAngle)
   {
     return `Array<${jsdocTypeToTs(arrayAngle[1])}>`;
   }
 
-  // when /^array$/i.test(s), take this branch.
   if (/^array$/i.test(s))
   {
     return 'unknown[]';
   }
 
-  // capture union parts for downstream policy in this routine.
   const unionParts = splitUnionTop(s);
   if (unionParts.length > 1)
   {
@@ -197,13 +183,11 @@ export function jsdocTypeToTs(raw)
     return uniq.join(' | ');
   }
 
-  // when /^function\b/i.test(s), take this branch.
   if (/^function\b/i.test(s))
   {
     return '(...args: unknown[]) => unknown';
   }
 
-  // when s  equals  'Object', take this branch.
   if (s === 'Object')
   {
     return 'object';
@@ -221,7 +205,6 @@ export function jsdocTypeToTs(raw)
     return 'boolean';
   }
 
-  // hand back s to the caller.
   return s;
 }
 
@@ -238,24 +221,20 @@ function parseParamLine(line)
   {
     return null;
   }
-  // capture i for downstream policy in this routine.
   let i = m.index + m[0].length;
   while (i < line.length && /\s/.test(line[i]))
   {
     i++;
   }
-  // when line[i]  differs from  '{', take this branch.
   if (line[i] !== '{')
   {
     return null;
   }
   let depth = 0;
-  // capture start for downstream policy in this routine.
   const start = i;
   let j = i;
   for (; j < line.length; j++)
   {
-    // capture c for downstream policy in this routine.
     const c = line[j];
     if (c === '{')
     {
@@ -267,7 +246,6 @@ function parseParamLine(line)
       depth--;
       if (depth === 0)
       {
-        // policy step inside parse param line.
         break;
       }
     }
@@ -276,11 +254,9 @@ function parseParamLine(line)
   {
     return null;
   }
-  // capture type raw for downstream policy in this routine.
   const typeRaw = line.slice(start + 1, j);
   const rest = line.slice(j + 1).trim();
   const nameM = /^([\w$]+)\s*(?:-\s*)?(.*)$/.exec(rest);
-  // when not nameM, take this branch.
   if (!nameM)
   {
     return null;
@@ -313,23 +289,19 @@ export function parseJsdocBlock(jsdoc)
   let returns = null;
   let typeTag = null;
 
-  // when not jsdoc  or  jsdoc.length  equals  0, take this branch.
   if (!jsdoc || jsdoc.length === 0)
   {
     return { params, paramDescriptions, returns, typeTag, summary: '' };
   }
 
-  // capture inner for downstream policy in this routine.
   const inner = jsdoc.replace(/^\/\*\*\s*/, '').replace(/\s*\*\/$/, '');
   const lines = inner.split(/\r?\n/).map(l => l.replace(/^\s*\*?\s?/, ''));
 
-  // policy step inside parse jsdoc block.
   /** @type {string[]} */
   const summaryParts = [];
   /** @type {boolean} */
   let blankAfterSummaryText = false;
 
-  // walk each entry in the iterable for this routine.
   for (const line of lines)
   {
     if (/^\s*@/.test(line))
@@ -352,10 +324,8 @@ export function parseJsdocBlock(jsdoc)
     summaryParts.push(t);
   }
 
-  // capture summary for downstream policy in this routine.
   const summary = summaryParts.join(' ');
 
-  // walk each entry in the iterable for this routine.
   for (const line of lines)
   {
     const pl = parseParamLine(line);
@@ -369,7 +339,6 @@ export function parseJsdocBlock(jsdoc)
       continue;
     }
 
-    // capture ret brace for downstream policy in this routine.
     const retBrace = line.match(/@returns?\s+\{([^}]+)\}/);
     if (retBrace)
     {
@@ -377,7 +346,6 @@ export function parseJsdocBlock(jsdoc)
       continue;
     }
 
-    // capture ret bare for downstream policy in this routine.
     const retBare = line.match(/@returns?\s+(\w+)/);
     if (retBare && returns === null)
     {
@@ -385,7 +353,6 @@ export function parseJsdocBlock(jsdoc)
       continue;
     }
 
-    // capture type brace for downstream policy in this routine.
     const typeBrace = line.match(/@type\s+\{([^}]+)\}/);
     if (typeBrace)
     {
@@ -393,7 +360,6 @@ export function parseJsdocBlock(jsdoc)
       continue;
     }
 
-    // capture type bare for downstream policy in this routine.
     const typeBare = line.match(/@type\s+(\w+)/);
     if (typeBare && typeTag === null)
     {
@@ -401,7 +367,6 @@ export function parseJsdocBlock(jsdoc)
     }
   }
 
-  // hand back { params, paramDescriptions, returns, typeTag, summary } to the caller.
   return { params, paramDescriptions, returns, typeTag, summary };
 }
 
@@ -425,7 +390,6 @@ export function extractLeadingJsdoc(src, lineStarts, stmtLoc, maxGap = 900)
     blocks.push({ text: m[0], end: m.index + m[0].length });
   }
 
-  // iterate the loop counter until the guard exits.
   for (let i = blocks.length - 1; i >= 0; i--)
   {
     const { text, end } = blocks[i];
@@ -442,11 +406,9 @@ export function extractLeadingJsdoc(src, lineStarts, stmtLoc, maxGap = 900)
       continue;
     }
 
-    // hand back text to the caller.
     return text;
   }
 
-  // hand back '' to the caller.
   return '';
 }
 
@@ -471,7 +433,6 @@ function gatherReturns(node, out)
     return;
   }
 
-  // dispatch on the discriminant for the next policy branch.
   switch (node.type)
   {
     case 'ReturnStatement':
@@ -481,38 +442,31 @@ function gatherReturns(node, out)
     case 'BlockStatement':
       for (const st of node.body)
       {
-        // policy step inside gather returns.
         gatherReturns(st, out);
       }
       return;
     case 'IfStatement':
-      // policy step inside gather returns.
       gatherReturns(node.consequent, out);
       gatherReturns(node.alternate, out);
       return;
-    // handle this switch arm for the current discriminant.
     case 'SwitchStatement':
       for (const sc of node.cases)
       {
         for (const st of sc.consequent)
         {
-          // policy step inside gather returns.
           gatherReturns(st, out);
         }
       }
       return;
     case 'TryStatement':
-      // policy step inside gather returns.
       gatherReturns(node.block, out);
       if (node.handler)
       {
         gatherReturns(node.handler.body, out);
       }
-      // policy step inside gather returns.
       gatherReturns(node.finalizer, out);
       return;
     case 'WhileStatement':
-    // handle this switch arm for the current discriminant.
     case 'DoWhileStatement':
     case 'ForStatement':
     case 'ForInStatement':
@@ -711,7 +665,6 @@ function interpreterCommandParamsTs(methodName)
     return tuple;
   }
 
-  // hand back rmmz event command parameters to the caller.
   return RMMZ_EVENT_COMMAND_PARAMETERS;
 }
 
@@ -731,7 +684,6 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     return null;
   }
 
-  // capture n for downstream policy in this routine.
   const n = methodName;
 
   // `textSizeEx` returns width/height from `textState`; literal `{ ... }` inference is only `object`.
@@ -752,7 +704,6 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     }
   }
 
-  // capture allow promise refinement for downstream policy in this routine.
   const allowPromiseRefinement = cls === 'StorageManager' && currentTs === 'Promise';
 
   // when , take this branch.
@@ -789,7 +740,6 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     }
   }
 
-  // when cls  equals  'Game_Actor'  and  n  equals  'armors', take this branch.
   if (cls === 'Game_Actor' && n === 'armors')
   {
     if (currentTs === 'unknown' || currentTs === 'unknown[]')
@@ -816,7 +766,6 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     }
   }
 
-  // when cls  equals  'Game_Party'  and  n  equals  'armors', take this branch.
   if (cls === 'Game_Party' && n === 'armors')
   {
     if (currentTs === 'unknown' || currentTs === 'unknown[]')
@@ -825,10 +774,8 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
     }
   }
 
-  // hand back null to the caller.
   return null;
 }
-
 
 /**
  * Last pass after JSDoc + `inferReturnFromBody`. v1.1 removed broad name-shape heuristics; only
@@ -846,11 +793,9 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     return currentTs;
   }
 
-  // capture n for downstream policy in this routine.
   const n = methodName;
   const cls = inferCtx.assigningClassPath;
 
-  // when currentTs  equals  'unknown'  or  currentTs  equals  'null', take this branch.
   if (currentTs === 'unknown' || currentTs === 'null')
   {
     if (cls === 'Game_Actors' && n === 'actor')
@@ -858,19 +803,16 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
       return 'Game_Actor | null';
     }
 
-    // when cls  equals  'Game_Map'  and  n  equals  'event', take this branch.
     if (cls === 'Game_Map' && n === 'event')
     {
       return 'Game_Event | undefined';
     }
 
-    // when cls  equals  'Game_Map'  and  n  equals  'vehicle', take this branch.
     if (cls === 'Game_Map' && n === 'vehicle')
     {
       return 'Game_Vehicle | null';
     }
 
-    // capture engine hit for downstream policy in this routine.
     const engineHit = refineReturnTsByEngineClass(cls, n, currentTs);
     if (engineHit !== null)
     {
@@ -878,7 +820,6 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     }
   }
 
-  // when currentTs  equals  'Promise', take this branch.
   if (currentTs === 'Promise')
   {
     const engineHit = refineReturnTsByEngineClass(cls, n, currentTs);
@@ -889,7 +830,6 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     return currentTs;
   }
 
-  // when currentTs  equals  'unknown'  or  currentTs  equals  'unknown[]', take this branch.
   if (currentTs === 'unknown' || currentTs === 'unknown[]')
   {
     const engineHit = refineReturnTsByEngineClass(cls, n, currentTs);
@@ -903,7 +843,6 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     }
   }
 
-  // when currentTs  equals  'void', take this branch.
   if (currentTs === 'void')
   {
     const engineVoidHit = refineReturnTsByEngineClass(cls, n, currentTs);
@@ -925,7 +864,6 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     return currentTs;
   }
 
-  // when currentTs  differs from  'unknown'  and  currentTs  differs from  'un..., take this branch.
   if (currentTs !== 'unknown' && currentTs !== 'unknown[]')
   {
     return currentTs;
@@ -937,7 +875,6 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
     return 'boolean';
   }
 
-  // hand back current ts to the caller.
   return currentTs;
 }
 
@@ -955,11 +892,9 @@ function refineParamTsByEnginePrototype(paramName, inferCtx)
     return null;
   }
 
-  // capture cls for downstream policy in this routine.
   const cls = inferCtx.assigningClassPath;
   const methodName = inferCtx.methodName;
 
-  // when paramName  equals  'textState'  and  (cls  equals  'Window_Base'  or ..., take this branch.
   if (paramName === 'textState' && (cls === 'Window_Base' || cls === 'Window_Message'))
   {
     return 'RPG_TextState';
@@ -972,19 +907,16 @@ function refineParamTsByEnginePrototype(paramName, inferCtx)
     return 'string';
   }
 
-  // when cls  equals  'PluginManager'  and  methodName  equals  'setParameters..., take this branch.
   if (cls === 'PluginManager' && methodName === 'setParameters' && paramName === 'parameters')
   {
     return 'RPG_PluginParameterMap';
   }
 
-  // when cls  equals  'PluginManager'  and  methodName  equals  'registerComma..., take this branch.
   if (cls === 'PluginManager' && methodName === 'registerCommand' && paramName === 'func')
   {
     return '(args: unknown) => void';
   }
 
-  // hand back null to the caller.
   return null;
 }
 
@@ -1003,14 +935,12 @@ function refineParamTsByParamName(paramName, currentTs, inferCtx)
     return currentTs;
   }
 
-  // capture proto ts for downstream policy in this routine.
   const protoTs = refineParamTsByEnginePrototype(paramName, inferCtx);
   if (protoTs !== null)
   {
     return protoTs;
   }
 
-  // hand back current ts to the caller.
   return currentTs;
 }
 
@@ -1025,14 +955,12 @@ function resolveParamTs(jsdocTs, paramName, inferCtx)
   /** @type {string} */
   let resolved;
   const vagueJsdoc =
-    // policy step inside resolve param ts.
     jsdocTs === null
     || jsdocTs === undefined
     || jsdocTs === ''
     || jsdocTs === 'unknown'
     || jsdocTs === 'unknown[]';
 
-  // when vagueJsdoc, take this branch.
   if (vagueJsdoc)
   {
     const seed = jsdocTs === 'unknown[]' ? 'unknown[]' : 'unknown';
@@ -1053,7 +981,6 @@ function resolveParamTs(jsdocTs, paramName, inferCtx)
     }
   }
 
-  // hand back resolved to the caller.
   return resolved;
 }
 
@@ -1069,112 +996,91 @@ export function inferExprType(expr, ctx)
     return 'void';
   }
 
-  // dispatch on the discriminant for the next policy branch.
   switch (expr.type)
   {
     case 'Literal':
       if (expr.value === null)
       {
-        // hand back 'null' to the caller.
         return 'null';
       }
       if (typeof expr.value === 'boolean')
       {
         return 'boolean';
       }
-      // when typeof expr.value  equals  'number', take this branch.
       if (typeof expr.value === 'number')
       {
         return 'number';
       }
       if (typeof expr.value === 'string')
       {
-        // hand back 'string' to the caller.
         return 'string';
       }
       if (typeof expr.value === 'bigint')
       {
         return 'bigint';
       }
-      // hand back null to the caller.
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'TemplateLiteral':
       return 'string';
 
-    // handle this switch arm for the current discriminant.
     case 'UnaryExpression':
       if (expr.operator === '!')
       {
         return 'boolean';
       }
-      // when expr.operator  equals  'void', take this branch.
       if (expr.operator === 'void')
       {
         return 'undefined';
       }
       if (expr.operator === 'typeof')
       {
-        // hand back 'string' to the caller.
         return 'string';
       }
       return inferExprType(expr.argument, ctx);
 
-    // handle this switch arm for the current discriminant.
     case 'BinaryExpression':
       if (
         expr.operator === '=='
-        // policy step inside infer expr type.
         || expr.operator === '==='
         || expr.operator === '!='
         || expr.operator === '!=='
-        // policy step inside infer expr type.
         || expr.operator === '<'
         || expr.operator === '>'
         || expr.operator === '<='
-        // policy step inside infer expr type.
         || expr.operator === '>='
         || expr.operator === 'in'
         || expr.operator === 'instanceof'
-      // policy step inside infer expr type.
       )
       {
         return 'boolean';
       }
       if (
-        // policy step inside infer expr type.
         expr.operator === '+'
         || expr.operator === '-'
         || expr.operator === '*'
-        // policy step inside infer expr type.
         || expr.operator === '/'
         || expr.operator === '%'
       )
       {
-        // capture lt for downstream policy in this routine.
         const lt = inferExprType(expr.left, ctx);
         const rt = inferExprType(expr.right, ctx);
         if (lt === 'number' && rt === 'number')
         {
-          // hand back 'number' to the caller.
           return 'number';
         }
         if (expr.operator === '+' && (lt === 'string' || rt === 'string'))
         {
           return 'string';
         }
-        // hand back null to the caller.
         return null;
       }
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'LogicalExpression':
     {
       const lt = inferExprType(expr.left, ctx);
       const rt = inferExprType(expr.right, ctx);
-      // policy step inside infer expr type.
       /** @type {string[]} */
       const parts = [];
       if (lt !== null && lt !== undefined)
@@ -1186,7 +1092,6 @@ export function inferExprType(expr, ctx)
       {
         parts.push(rt);
       }
-      // when parts.length  equals  0, take this branch.
       if (parts.length === 0)
       {
         return null;
@@ -1194,25 +1099,21 @@ export function inferExprType(expr, ctx)
       return mergeReturnTypes(parts);
     }
 
-    // handle this switch arm for the current discriminant.
     case 'ConditionalExpression':
     {
       const ct = inferExprType(expr.consequent, ctx);
       const at = inferExprType(expr.alternate, ctx);
-      // when ct  and  at  and  ct  equals  at, take this branch.
       if (ct && at && ct === at)
       {
         return ct;
       }
       if (ct && at)
       {
-        // hand back `${ct} | ${at}` to the caller.
         return `${ct} | ${at}`;
       }
       return ct ?? at;
     }
 
-    // handle this switch arm for the current discriminant.
     case 'CallExpression':
       if (expr.callee.type === 'MemberExpression' && !expr.callee.computed)
       {
@@ -1221,52 +1122,43 @@ export function inferExprType(expr, ctx)
         if (
           expr.callee.object.type === 'ThisExpression'
           && (prop === 'slice' || prop === 'concat')
-          // policy step inside infer expr type.
           && expr.arguments.length === 0
         )
         {
           return 'unknown[]';
         }
       }
-      // when expr.callee.type  equals  'Identifier', take this branch.
       if (expr.callee.type === 'Identifier')
       {
         const name = expr.callee.name;
         if (name === 'Boolean' || name === 'isFinite' || name === 'isNaN')
         {
-          // hand back 'boolean' to the caller.
           return 'boolean';
         }
         if (name === 'Number' || name === 'parseInt' || name === 'parseFloat')
         {
           return 'number';
         }
-        // when name  equals  'String', take this branch.
         if (name === 'String')
         {
           return 'string';
         }
       }
       if (
-        // policy step inside infer expr type.
         expr.callee.type === 'MemberExpression'
         && !expr.callee.computed
         && expr.callee.property.type === 'Identifier'
-        // policy step inside infer expr type.
         && expr.callee.object.type === 'Identifier'
         && expr.callee.object.name === 'Utils'
         && expr.callee.property.name === 'isOptionValid'
-      // policy step inside infer expr type.
       )
       {
         return 'boolean';
       }
       if (
-        // policy step inside infer expr type.
         expr.callee.type === 'MemberExpression'
         && !expr.callee.computed
         && expr.callee.property.type === 'Identifier'
-        // policy step inside infer expr type.
         && expr.callee.property.name === 'getPixel'
       )
       {
@@ -1285,7 +1177,6 @@ export function inferExprType(expr, ctx)
       }
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'NewExpression':
       if (expr.callee.type === 'Identifier')
       {
@@ -1308,7 +1199,6 @@ export function inferExprType(expr, ctx)
       }
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'ThisExpression':
       if (ctx.role === 'builtinProto')
       {
@@ -1338,7 +1228,6 @@ export function inferExprType(expr, ctx)
       }
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'ArrayExpression':
       if (expr.elements.length === 0)
       {
@@ -1369,11 +1258,9 @@ export function inferExprType(expr, ctx)
       }
       return 'unknown[]';
 
-    // handle this switch arm for the current discriminant.
     case 'ObjectExpression':
       return 'object';
 
-    // handle this switch arm for the current discriminant.
     case 'Identifier':
       if (expr.name === 'undefined')
       {
@@ -1385,7 +1272,6 @@ export function inferExprType(expr, ctx)
       }
       return resolveParamTs(null, expr.name, ctx);
 
-    // handle this switch arm for the current discriminant.
     case 'MemberExpression':
       if (
         !expr.computed
@@ -1401,20 +1287,16 @@ export function inferExprType(expr, ctx)
       }
       return null;
 
-    // handle this switch arm for the current discriminant.
     case 'AssignmentExpression':
       return inferExprType(expr.right, ctx);
 
-    // handle this switch arm for the current discriminant.
     case 'SequenceExpression':
       return inferExprType(expr.expressions[expr.expressions.length - 1], ctx);
 
-    // handle this switch arm for the current discriminant.
     case 'YieldExpression':
     case 'AwaitExpression':
       return null;
 
-    // handle this switch arm for the current discriminant.
     default:
       return null;
   }
@@ -1432,14 +1314,12 @@ export function mergeReturnTypes(types)
   const uniq = [...new Set(filtered)];
   if (uniq.some(t => t === 'unknown'))
   {
-    // hand back 'unknown' to the caller.
     return 'unknown';
   }
   if (uniq.length === 1)
   {
     return uniq[0];
   }
-  // when uniq.length <= 6, take this branch.
   if (uniq.length <= 6)
   {
     return uniq.join(' | ');
@@ -1458,13 +1338,11 @@ function dedupeUnionTypeMembers(chunks)
   /** @type {string[]} */
   const order = [];
   const seen = new Set();
-  // walk each entry in the iterable for this routine.
   for (const chunk of chunks)
   {
     const parts = chunk.split(/\s*\|\s*/).map(p => p.trim()).filter(Boolean);
     for (const p of parts)
     {
-      // when seen.has(p)  equals  false, take this branch.
       if (seen.has(p) === false)
       {
         seen.add(p);
@@ -1488,7 +1366,6 @@ function widenNumericLiteralInstanceProp(ts)
   {
     return 'number';
   }
-  // when /^-?\d+n$/.test(t), take this branch.
   if (/^-?\d+n$/.test(t))
   {
     return 'bigint';
@@ -1509,7 +1386,6 @@ function collapseNumericLiteralWithNumber(members)
   {
     return members;
   }
-  // hand back members.filter((m) => /^-?\d+(?:\.\d+)?$/.test(m.trim... to the caller.
   return members.filter((m) => /^-?\d+(?:\.\d+)?$/.test(m.trim()) === false);
 }
 
@@ -1526,7 +1402,6 @@ function collapseBoolLiteralWithBoolean(members)
   {
     return members;
   }
-  // hand back members.filter((m) => m !== 'true' && m !== 'false') to the caller.
   return members.filter((m) => m !== 'true' && m !== 'false');
 }
 
@@ -1545,31 +1420,26 @@ export function refineInstanceBackingFieldTs(classPath, propName, currentTs)
     return currentTs;
   }
 
-  // when classPath  equals  'Game_Interpreter'  and  propName  equals  '_branch', take this branch.
   if (classPath === 'Game_Interpreter' && propName === '_branch')
   {
     return 'RPG_InterpreterBranchMap';
   }
 
-  // when classPath  equals  'Window_Selectable'  and  propName  equals  '_hand..., take this branch.
   if (classPath === 'Window_Selectable' && propName === '_handlers')
   {
     return 'RPG_WindowSelectableHandlers';
   }
 
-  // when classPath  equals  'PluginManager'  and  propName  equals  '_parameters', take this branch.
   if (classPath === 'PluginManager' && propName === '_parameters')
   {
     return 'RPG_PluginParameterRegistry';
   }
 
-  // when classPath  equals  'PluginManager'  and  propName  equals  '_commands', take this branch.
   if (classPath === 'PluginManager' && propName === '_commands')
   {
     return 'RPG_PluginCommandRegistry';
   }
 
-  // hand back current ts to the caller.
   return currentTs;
 }
 
@@ -1585,18 +1455,15 @@ export function mergeInstancePropRhsObservations(types)
   const filtered = types.filter(Boolean).map(t => t.trim()).filter(Boolean);
   const concrete = filtered.filter(t => t !== 'unknown');
   const chosen = concrete.length > 0 ? concrete : filtered;
-  // capture uniq for downstream policy in this routine.
   const uniq = [...new Set(chosen)];
   if (uniq.some(t => t === 'unknown'))
   {
     return 'unknown';
   }
-  // capture members for downstream policy in this routine.
   let members = dedupeUnionTypeMembers(uniq);
   members = collapseBoolLiteralWithBoolean(collapseNumericLiteralWithNumber(members));
   if (members.some(t => t === 'unknown'))
   {
-    // hand back 'unknown' to the caller.
     return 'unknown';
   }
   if (members.length === 1)
@@ -1625,20 +1492,17 @@ export function walkAstRecursive(node, visitor)
   }
   if (typeof node.type === 'string')
   {
-    // policy step inside walk ast recursive.
     visitor(/** @type {import('acorn').AnyNode} */ (node));
   }
   for (const key of Object.keys(node))
   {
     if (key === 'loc' || key === 'range' || key === 'start' || key === 'end')
     {
-      // policy step inside walk ast recursive.
       continue;
     }
     const child = /** @type {*} */ (node)[key];
     if (Array.isArray(child))
     {
-      // iterate the loop counter until the guard exits.
       for (let i = 0; i < child.length; i++)
       {
         walkAstRecursive(child[i], visitor);
@@ -1669,29 +1533,24 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
   /** @type {Map<string, string[]>} */
   const bucket = new Map();
 
-  // policy step inside collect this underscore props from function.
   /**
    * @param {string} propName The prop name driving this step.
    * @param {string} rhsTs The rhs ts driving this step.
-   // policy step inside collect this underscore props from function.
    * @returns {void}
    */
   function pushProp(propName, rhsTs)
   {
-    // capture arr for downstream policy in this routine.
     const arr = bucket.get(propName) ?? [];
     arr.push(rhsTs);
     bucket.set(propName, arr);
   }
 
-  // capture body for downstream policy in this routine.
   const body = funcNode.body;
   if (!body || body.type !== 'BlockStatement')
   {
     return new Map();
   }
 
-  // policy step inside collect this underscore props from function.
   walkAstRecursive(body, (node) =>
   {
     if (node.type === 'UpdateExpression')
@@ -1701,12 +1560,10 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
       if (
         arg.type === 'MemberExpression'
         && !arg.computed
-        // policy step inside collect this underscore props from function.
         && arg.object.type === 'ThisExpression'
         && arg.property.type === 'Identifier'
       )
       {
-        // capture prop name for downstream policy in this routine.
         const propName = arg.property.name;
         if (propName.startsWith('_'))
         {
@@ -1720,21 +1577,17 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
     {
       return;
     }
-    // capture op for downstream policy in this routine.
     const op = node.operator;
     if (
       op !== '='
-      // policy step inside collect this underscore props from function.
       && op !== '||='
       && op !== '&&='
       && op !== '??='
-      // policy step inside collect this underscore props from function.
       && !INSTANCE_PROP_COMPOUND_ASSIGNS.has(op)
     )
     {
       return;
     }
-    // capture left for downstream policy in this routine.
     const left = node.left;
     if (left.type !== 'MemberExpression' || left.computed)
     {
@@ -1757,7 +1610,6 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
     pushProp(propName, rhsTs);
   });
 
-  // policy step inside collect this underscore props from function.
   /** @type {Map<string, string>} */
   const out = new Map();
   for (const [k, rhss] of bucket)
@@ -1793,21 +1645,17 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
   /** @type {Map<string, ThisUnderscoreUsage>} */
   const out = new Map();
 
-  // policy step inside collect this underscore usage from function.
   /**
    * @param {string} propName The prop name driving this step.
    * @returns {ThisUnderscoreUsage}
-   // policy step inside collect this underscore usage from function.
    */
   function ensure(propName)
   {
     let cur = out.get(propName);
-    // when not cur, take this branch.
     if (!cur)
     {
       cur = {
         reads: new Set(),
-        // policy step inside collect this underscore usage from function.
         writes: new Set(),
         consumes: new Set(),
       };
@@ -1817,16 +1665,13 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
     return cur;
   }
 
-  // policy step inside collect this underscore usage from function.
   /**
    * @param {import('acorn').AnyNode | null | undefined} node The node driving this step.
    * @param {import('acorn').AnyNode | null} parent The parent driving this step.
-   // policy step inside collect this underscore usage from function.
    * @returns {void}
    */
   function walk(node, parent)
   {
-    // when not node  or  typeof node  differs from  'object', take this branch.
     if (!node || typeof node !== 'object')
     {
       return;
@@ -1836,12 +1681,10 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
     if (
       node.type === 'MemberExpression'
       && !node.computed
-      // policy step inside collect this underscore usage from function.
       && node.object.type === 'ThisExpression'
       && node.property.type === 'Identifier'
     )
     {
-      // capture prop name for downstream policy in this routine.
       const propName = node.property.name;
       if (propName.startsWith('_'))
       {
@@ -1851,7 +1694,6 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         if (
           parent
           && parent.type === 'AssignmentExpression'
-          // policy step inside collect this underscore usage from function.
           && /** @type {*} */ (parent).left === node
         )
         {
@@ -1861,7 +1703,6 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         else if (
           parent
           && parent.type === 'UpdateExpression'
-          // policy step inside collect this underscore usage from function.
           && /** @type {*} */ (parent).argument === node
         )
         {
@@ -1880,16 +1721,13 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
     {
       const left = node.left;
       if (
-        // policy step inside collect this underscore usage from function.
         left.type === 'MemberExpression'
         && !left.computed
         && left.object.type === 'ThisExpression'
-        // policy step inside collect this underscore usage from function.
         && left.property.type === 'Identifier'
       )
       {
         const propName = left.property.name;
-        // when propName.startsWith('_'), take this branch.
         if (propName.startsWith('_'))
         {
           ensure(propName).writes.add(node.operator);
@@ -1898,15 +1736,12 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
     }
     if (node.type === 'UpdateExpression')
     {
-      // capture arg for downstream policy in this routine.
       const arg = node.argument;
       if (
         arg.type === 'MemberExpression'
-        // policy step inside collect this underscore usage from function.
         && !arg.computed
         && arg.object.type === 'ThisExpression'
         && arg.property.type === 'Identifier'
-      // policy step inside collect this underscore usage from function.
       )
       {
         const propName = arg.property.name;
@@ -1992,14 +1827,12 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
     }
   }
 
-  // capture body for downstream policy in this routine.
   const body = funcNode.body;
   if (!body || body.type !== 'BlockStatement')
   {
     return out;
   }
 
-  // policy step inside collect this underscore usage from function.
   walk(body, null);
   return out;
 }
@@ -2022,13 +1855,11 @@ function inferReturnFromBody(funcNode, ctx)
     gatherReturns(funcNode.body, outs);
   }
 
-  // when outs.length  equals  0, take this branch.
   if (outs.length === 0)
   {
     return 'void';
   }
 
-  // capture inferred for downstream policy in this routine.
   const inferred = outs.map(e => inferExprType(e, ctx));
   const usable = inferred.filter(t => t !== null && t !== undefined);
   if (usable.length === 0)
@@ -2036,7 +1867,6 @@ function inferReturnFromBody(funcNode, ctx)
     return 'unknown';
   }
 
-  // hand back mergeReturnTypes(usable) to the caller.
   return mergeReturnTypes(usable);
 }
 
@@ -2052,7 +1882,6 @@ function buildParamsTs(params, jsdocParams, inferCtx)
   for (let i = 0; i < params.length; i++)
   {
     const p = params[i];
-    // when p.type  equals  'Identifier', take this branch.
     if (p.type === 'Identifier')
     {
       const jt = jsdocParams.get(p.name);
@@ -2092,23 +1921,18 @@ export function buildMethodSignature(funcNode, src, lineStarts, stmtLoc, inferCt
   const jdText = extractLeadingJsdoc(src, lineStarts, stmtLoc);
   const jd = parseJsdocBlock(jdText);
 
-  // capture params ts for downstream policy in this routine.
   const paramsTs = buildParamsTs(funcNode.params, jd.params, inferCtx);
 
-  // capture return ts for downstream policy in this routine.
   let returnTs = jd.returns;
   if (returnTs === null || returnTs === undefined || returnTs === '')
   {
     returnTs = inferReturnFromBody(funcNode, inferCtx);
   }
 
-  // policy step inside build method signature.
   returnTs = refineReturnTsByMethodName(returnTs, inferCtx);
 
-  // capture doc block for downstream policy in this routine.
   const docBlock = buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs);
 
-  // hand back { paramsTs, returnTs, docBlock } to the caller.
   return { paramsTs, returnTs, docBlock };
 }
 
@@ -2131,7 +1955,6 @@ function collectFormalParamNames(funcNode)
   const out = [];
   for (let i = 0; i < funcNode.params.length; i++)
   {
-    // capture p for downstream policy in this routine.
     const p = funcNode.params[i];
     if (p.type === 'Identifier')
     {
@@ -2158,11 +1981,9 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
   /** @type {string[]} */
   const starLines = [];
 
-  // policy step inside build method doc star lines.
   /**
    * @param {string} methodName The method name driving this step.
    * @returns {string}
-   // policy step inside build method doc star lines.
    */
   function methodNameToWords(methodName)
   {
@@ -2176,36 +1997,29 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
       .toLowerCase();
   }
 
-  // policy step inside build method doc star lines.
   /**
    * @param {string} raw The raw driving this step.
    * @returns {string}
-   // policy step inside build method doc star lines.
    */
   function titleFromName(raw)
   {
     const w = methodNameToWords(raw);
-    // when not w, take this branch.
     if (!w)
     {
       return 'this action';
     }
-    // hand back w to the caller.
     return w;
   }
 
-  // when jd.summary  and  jd.summary.trim().length > 0, take this branch.
   if (jd.summary && jd.summary.trim().length > 0)
   {
     starLines.push(` * ${escapeDocStarText(jd.summary.trim())}`);
   }
   else if (inferCtx && inferCtx.methodName)
   {
-    // capture m for downstream policy in this routine.
     const m = inferCtx.methodName;
     const words = titleFromName(m);
 
-    // when /^is[A-Z]/.test(m)  or  /^can[A-Z]/.test(m)  or  /^has[A-Z]/.test(m), take this branch.
     if (/^is[A-Z]/.test(m) || /^can[A-Z]/.test(m) || /^has[A-Z]/.test(m))
     {
       starLines.push(` * Determines whether ${escapeDocStarText(words.replace(/^(is|can|has) /, ''))}.`);
@@ -2258,7 +2072,6 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
     }
   }
 
-  // capture names for downstream policy in this routine.
   const names = collectFormalParamNames(funcNode);
   for (const pname of names)
   {
@@ -2273,7 +2086,6 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
     }
   }
 
-  // when jd.returnsDescription  and  jd.returnsDescription.trim().length > 0, take this branch.
   if (jd.returnsDescription && jd.returnsDescription.trim().length > 0)
   {
     starLines.push(` * @returns ${escapeDocStarText(jd.returnsDescription.trim())}`);
@@ -2293,12 +2105,10 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
     }
   }
 
-  // when starLines.length  equals  0, take this branch.
   if (starLines.length === 0)
   {
     return '';
   }
 
-  // hand back starLines.join('\n') to the caller.
   return starLines.join('\n');
 }

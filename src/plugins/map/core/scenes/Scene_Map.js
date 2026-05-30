@@ -24,16 +24,13 @@ Scene_Map.prototype.initMiniMapMembers = function()
   /**
    * The J object where all my additional properties live.
    */
-  // policy step inside init mini map members.
   this._j ||= {};
 
-  // policy step inside init mini map members.
   /**
    * A grouping of all properties associated with this plugin.
    */
   this._j._map ||= {};
 
-  // policy step inside init mini map members.
   /**
    * The tracked minimap.
    * @type {Sprite_MiniMap}

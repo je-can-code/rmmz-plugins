@@ -10,7 +10,6 @@ Game_Timer.prototype.initialize = function()
   J.BASE.Aliased.Game_Timer.get('start')
     .call(this);
 
-  // policy step inside initialize.
   /**
    * Also initialize the duration of the timer.
    * @type {number}

@@ -29,16 +29,13 @@ class SdpFamilyFilter
       return SdpFamilyFilter.UNKNOWN;
     }
 
-    // capture family key for downstream policy in this routine.
     const familyKey = J.SDP.Metadata.familyKeyBySubgroupKey.get(panel.mastery.subgroupKey);
 
-    // when not familyKey, take this branch.
     if (!familyKey)
     {
       return SdpFamilyFilter.UNKNOWN;
     }
 
-    // hand back family key to the caller.
     return familyKey;
   }
 
@@ -55,7 +52,6 @@ class SdpFamilyFilter
       return true;
     }
 
-    // hand back SdpFamilyFilter.resolvePanelFamilyFilterKey(panel) ==... to the caller.
     return SdpFamilyFilter.resolvePanelFamilyFilterKey(panel) === filterKey;
   }
 
@@ -73,29 +69,24 @@ class SdpFamilyFilter
     ];
     const familiesWithUnlockedPanels = new Set();
 
-    // policy step inside build cycle for actor.
     actor.getAllUnlockedSdps()
       .forEach(panelRanking =>
       {
         const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
 
-        // when not panel, take this branch.
         if (!panel)
         {
           return;
         }
 
-        // capture filter key for downstream policy in this routine.
         const filterKey = SdpFamilyFilter.resolvePanelFamilyFilterKey(panel);
 
-        // when filterKey  differs from  SdpFamilyFilter.UNKNOWN, take this branch.
         if (filterKey !== SdpFamilyFilter.UNKNOWN)
         {
           familiesWithUnlockedPanels.add(filterKey);
         }
       });
 
-    // policy step inside build cycle for actor.
     J.SDP.Metadata.families.forEach(family =>
     {
       if (familiesWithUnlockedPanels.has(family.key))
@@ -104,7 +95,6 @@ class SdpFamilyFilter
       }
     });
 
-    // hand back cycle to the caller.
     return cycle;
   }
 
@@ -120,16 +110,13 @@ class SdpFamilyFilter
       return 'All families';
     }
 
-    // when filterKey  equals  SdpFamilyFilter.UNKNOWN, take this branch.
     if (filterKey === SdpFamilyFilter.UNKNOWN)
     {
       return 'Unsorted';
     }
 
-    // capture family for downstream policy in this routine.
     const family = J.SDP.Metadata.familiesMap.get(filterKey);
 
-    // hand back family to the caller.
     return family
       ? family.name
       : filterKey;
@@ -147,22 +134,18 @@ class SdpFamilyFilter
       return J.SDP.Metadata.sdpIconIndex;
     }
 
-    // when filterKey  equals  SdpFamilyFilter.UNKNOWN, take this branch.
     if (filterKey === SdpFamilyFilter.UNKNOWN)
     {
       return 8;
     }
 
-    // capture family for downstream policy in this routine.
     const family = J.SDP.Metadata.familiesMap.get(filterKey);
 
-    // when family  and  family.iconIndex >= 0, take this branch.
     if (family && family.iconIndex >= 0)
     {
       return family.iconIndex;
     }
 
-    // hand back J.SDP.Metadata.sdpIconIndex to the caller.
     return J.SDP.Metadata.sdpIconIndex;
   }
 }

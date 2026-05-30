@@ -42,19 +42,16 @@ class Window_SdpFamilyStrip
     const filterKey = this.#filterKey;
     const label = SdpFamilyFilter.displayNameForFilterKey(filterKey);
     const iconIndex = SdpFamilyFilter.iconIndexForFilterKey(filterKey);
-    // capture icon pad for downstream policy in this routine.
     const iconPad = 4;
     const textX = iconIndex >= 0
       ? ImageManager.iconWidth + iconPad
       : 0;
 
-    // when iconIndex >= 0, take this branch.
     if (iconIndex >= 0)
     {
       this.drawIcon(iconIndex, iconPad, 0);
     }
 
-    // policy step inside draw content.
     this.resetFontSettings();
     this.drawText(label, textX, 0, this.innerWidth - textX, Window_Base.TextAlignments.Left);
     this.resetFontSettings();

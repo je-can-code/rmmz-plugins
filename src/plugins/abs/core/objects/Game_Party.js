@@ -23,17 +23,14 @@ Game_Party.prototype.initJabsPartyData = function()
   /**
    * The master reference to the `_j` object containing all plugin properties.
    * @type {{}}
-   // policy step inside init jabs party data.
    */
   this._j ||= {};
 
-  // policy step inside init jabs party data.
   /**
    * A grouping of all properties associated with JABS.
    */
   this._j._abs ||= {};
 
-  // policy step inside init jabs party data.
   /**
    * Whether or not the party is allowed to party cycle.
    * @type {boolean}

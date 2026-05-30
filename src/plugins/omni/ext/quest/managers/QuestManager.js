@@ -103,7 +103,6 @@ class QuestManager
    */
   static categories(asMap = true)
   {
-    // hand back as map to the caller.
     return asMap
       ? J.OMNI.EXT.QUEST.Metadata.categoriesMap
       : J.OMNI.EXT.QUEST.Metadata.categories;
@@ -138,7 +137,6 @@ class QuestManager
    */
   static tags(asMap = true)
   {
-    // hand back as map to the caller.
     return asMap
       ? J.OMNI.EXT.QUEST.Metadata.tagsMap
       : J.OMNI.EXT.QUEST.Metadata.tags;
@@ -256,11 +254,9 @@ class QuestManager
     const quests = $gameParty.getQuestopediaEntriesCache()
       .values();
 
-    // capture evaluateable states for downstream policy in this routine.
     const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
     const destinationObjectives = [];
 
-    // policy step inside get valid destination objectives.
     quests.forEach(quest =>
     {
       // do not evaluate the state if its not one of the ones that can be evaluated.
@@ -291,7 +287,6 @@ class QuestManager
       destinationObjectives.push(...validObjectives);
     });
 
-    // hand back destination objectives to the caller.
     return destinationObjectives;
   }
 
@@ -305,11 +300,9 @@ class QuestManager
     const quests = $gameParty.getQuestopediaEntriesCache()
       .values();
 
-    // capture evaluateable states for downstream policy in this routine.
     const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
     const fetchObjectives = [];
 
-    // policy step inside get valid fetch objectives.
     quests.forEach(quest =>
     {
       // do not evaluate the state if its not one of the ones that can be evaluated.
@@ -333,7 +326,6 @@ class QuestManager
       fetchObjectives.push(...validObjectives);
     });
 
-    // hand back fetch objectives to the caller.
     return fetchObjectives;
   }
 
@@ -347,11 +339,9 @@ class QuestManager
     const quests = $gameParty.getQuestopediaEntriesCache()
       .values();
 
-    // capture evaluateable states for downstream policy in this routine.
     const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
     const slayObjectives = [];
 
-    // policy step inside get valid slay objectives.
     quests.forEach(quest =>
     {
       // do not evaluate the state if its not one of the ones that can be evaluated.
@@ -375,7 +365,6 @@ class QuestManager
       slayObjectives.push(...validObjectives);
     });
 
-    // hand back slay objectives to the caller.
     return slayObjectives;
   }
 
@@ -389,11 +378,9 @@ class QuestManager
     const quests = $gameParty.getQuestopediaEntriesCache()
       .values();
 
-    // capture evaluateable states for downstream policy in this routine.
     const evaluateableStates = [ OmniQuest.States.Inactive, OmniQuest.States.Active ];
     const questCompletionObjectives = [];
 
-    // policy step inside get valid quest completion objectives.
     quests.forEach(quest =>
     {
       // do not evaluate the state if its not one of the ones that can be evaluated.
@@ -425,7 +412,6 @@ class QuestManager
       questCompletionObjectives.push(...validObjectives);
     });
 
-    // hand back quest completion objectives to the caller.
     return questCompletionObjectives;
   }
 }

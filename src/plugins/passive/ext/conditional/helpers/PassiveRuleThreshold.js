@@ -83,7 +83,6 @@ class PassiveRuleThreshold
         // guard divide-by-zero on dead or zero-max battlers.
         if (mhp <= 0) return 0;
 
-        // hand back Math.round((battler.hp / mhp) * 100) to the caller.
         return Math.round((battler.hp / mhp) * 100);
       }
       case 'mp':
@@ -93,7 +92,6 @@ class PassiveRuleThreshold
         // guard divide-by-zero when the battler has no mp pool.
         if (mmp <= 0) return 0;
 
-        // hand back Math.round((battler.mp / mmp) * 100) to the caller.
         return Math.round((battler.mp / mmp) * 100);
       }
       case 'tp':
@@ -103,7 +101,6 @@ class PassiveRuleThreshold
         // guard divide-by-zero when tp max resolves to zero.
         if (mtp <= 0) return 0;
 
-        // hand back Math.round((battler.tp / mtp) * 100) to the caller.
         return Math.round((battler.tp / mtp) * 100);
       }
       default:
@@ -124,7 +121,6 @@ class PassiveRuleThreshold
     // unknown registry keys compare as zero so gates fail closed.
     if (!definition) return 0;
 
-    // capture raw for downstream policy in this routine.
     const raw = definition.resolveValue(battler);
 
     // percent-style registry formats are authored as whole integers in tags.
@@ -133,7 +129,6 @@ class PassiveRuleThreshold
       return Math.round(raw * 100);
     }
 
-    // hand back raw to the caller.
     return raw;
   }
 
@@ -170,7 +165,6 @@ class PassiveRuleThreshold
       };
     }
 
-    // when kind.endsWith('Below'), take this branch.
     if (kind.endsWith('Below'))
     {
       // strip the Below suffix to recover the comparison key.
@@ -197,7 +191,6 @@ class PassiveRuleThreshold
     // strip the allAllies prefix and reuse single-battler threshold parsing.
     const remainder = kind.slice('allAllies'.length);
 
-    // hand back this.parseThresholdKind(remainder) to the caller.
     return this.parseThresholdKind(remainder);
   }
 }

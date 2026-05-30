@@ -15,19 +15,15 @@ class AptitudeLearning
     /**
      * The id of the skill learned when achieving this learning.
      * @type {number}
-     // policy step inside initialize.
      */
     this.skillId = skillId;
 
-    // policy step inside initialize.
     /**
      * The current AP towards achieving this learning.
      * @type {number}
-     // policy step inside initialize.
      */
     this.currentAp = currentAp;
 
-    // policy step inside initialize.
     /**
      * The required amount of AP to achieve this learning.
      * @type {number}

@@ -26,7 +26,6 @@ class StatDistributionPanelBuilder
     return new StatDistributionPanel(
       this.#key,
       this.#identity,
-      // policy step inside build.
       this.#progression,
       this.#parameters,
       this.#rewards,

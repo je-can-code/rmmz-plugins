@@ -166,7 +166,6 @@ class JABS_HitboxPulseManager
       return;
     }
 
-    // capture layer for downstream policy in this routine.
     const layer = JABS_HitboxPulseManager.getLayer();
 
     // early-map bootstrap: skip quietly until Spriteset_Map wires the layer.
@@ -175,29 +174,24 @@ class JABS_HitboxPulseManager
       return;
     }
 
-    // when jabsAction.getNeedsRemoval(), take this branch.
     if (jabsAction.getNeedsRemoval())
     {
       JABS_HitboxPulseManager.releaseSustainedPulse(jabsAction.getUuid());
       return;
     }
 
-    // when jabsAction.isDelayCompleted()  equals  false, take this branch.
     if (jabsAction.isDelayCompleted() === false)
     {
       JABS_HitboxPulseManager.releaseSustainedPulse(jabsAction.getUuid());
       return;
     }
 
-    // capture uuid for downstream policy in this routine.
     const uuid = jabsAction.getUuid();
     const plain = jabsAction.composeHitboxPulsePlainOptions();
 
-    // capture pulse for downstream policy in this routine.
     let pulse = JABS_HitboxPulseManager._sustainedByUuid[uuid];
     const pool = JABS_HitboxPulseManager.getPool();
 
-    // when not pulse, take this branch.
     if (!pulse)
     {
       pulse = pool.length > 0
@@ -207,7 +201,6 @@ class JABS_HitboxPulseManager
       layer.addChild(pulse);
     }
 
-    // policy step inside sync sustained action pulse.
     pulse.reset();
     pulse.setup(plain);
     pulse.setWorldPosition(plain.x, plain.y);
@@ -222,25 +215,20 @@ class JABS_HitboxPulseManager
   {
     const pulse = JABS_HitboxPulseManager._sustainedByUuid[uuid];
 
-    // when not pulse, take this branch.
     if (!pulse)
     {
       return;
     }
 
-    // policy step inside release sustained pulse.
     delete JABS_HitboxPulseManager._sustainedByUuid[uuid];
 
-    // capture layer for downstream policy in this routine.
     const layer = JABS_HitboxPulseManager.getLayer();
 
-    // when layer  and  pulse.parent  equals  layer, take this branch.
     if (layer && pulse.parent === layer)
     {
       layer.removeChild(pulse);
     }
 
-    // policy step inside release sustained pulse.
     JABS_HitboxPulseManager.getPool()
       .push(pulse);
   }
@@ -393,7 +381,6 @@ class JABS_HitboxPulseManager
     const RAD_N90 = -Math.PI / 2;
     const RAD_N45 = -Math.PI / 4;
 
-    // dispatch on the discriminant for the next policy branch.
     switch (dir)
     {
       // right.

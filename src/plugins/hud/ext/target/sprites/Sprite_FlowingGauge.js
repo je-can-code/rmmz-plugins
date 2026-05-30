@@ -266,7 +266,6 @@ class Sprite_FlowingGauge
     }
     else
     {
-      // hand back 0 to the caller.
       return 0;
     }
   }
@@ -281,11 +280,9 @@ class Sprite_FlowingGauge
     {
       case Sprite_FlowingGauge.Types.HP:
         return this._battler.hp;
-      // handle this switch arm for the current discriminant.
       case Sprite_FlowingGauge.Types.MP:
         return this._battler.mp;
       case Sprite_FlowingGauge.Types.TP:
-        // hand back this._battler.tp to the caller.
         return this._battler.tp;
       default:
         return 0;
@@ -305,7 +302,6 @@ class Sprite_FlowingGauge
     }
     else
     {
-      // hand back 0 to the caller.
       return 0;
     }
   }
@@ -320,11 +316,9 @@ class Sprite_FlowingGauge
     {
       case Sprite_FlowingGauge.Types.HP:
         return this._battler.mhp;
-      // handle this switch arm for the current discriminant.
       case Sprite_FlowingGauge.Types.MP:
         return this._battler.mmp;
       case Sprite_FlowingGauge.Types.TP:
-        // hand back this._battler.maxTp() to the caller.
         return this._battler.maxTp();
       default:
         return 0;
@@ -356,12 +350,10 @@ class Sprite_FlowingGauge
   {
     this._gaugeCurrentSprite.setColorTone(this.greyTone());
 
-    // dispatch on the discriminant for the next policy branch.
     switch (this._gaugeType)
     {
       case Sprite_FlowingGauge.Types.HP:
         this.setupGaugeAsHp();
-        // policy step inside setup gauge by type.
         break;
       case Sprite_FlowingGauge.Types.MP:
         this.setupGaugeAsMp();
@@ -380,7 +372,6 @@ class Sprite_FlowingGauge
     this._gaugeCurrent = this._battler.hp;
     this._gaugeTarget = this._battler.hp;
     this._gaugeMax = this._battler.mhp;
-    // policy step inside setup gauge as hp.
     this._gaugeActualSprite.setHue(this.hpGaugeHue());
   }
 
@@ -397,7 +388,6 @@ class Sprite_FlowingGauge
     this._gaugeCurrent = this._battler.mp;
     this._gaugeTarget = this._battler.mp;
     this._gaugeMax = this._battler.mmp;
-    // policy step inside setup gauge as mp.
     this._gaugeActualSprite.setHue(this.mpGaugeHue());
   }
 
@@ -414,7 +404,6 @@ class Sprite_FlowingGauge
     this._gaugeCurrent = this._battler.tp;
     this._gaugeTarget = this._battler.tp;
     this._gaugeMax = this._battler.maxTp();
-    // policy step inside setup gauge as tp.
     this._gaugeActualSprite.setHue(this.tpGaugeHue());
   }
 
@@ -439,7 +428,6 @@ class Sprite_FlowingGauge
     // perform original logic.
     super.update();
 
-    // when not this.isReady(), take this branch.
     if (!this.isReady()) return;
 
     // update the current value for this.
@@ -607,7 +595,6 @@ class Sprite_FlowingGauge
   {
     if (!this._battler) return false;
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -620,10 +607,8 @@ class Sprite_FlowingGauge
   {
     if (this._gaugeType !== Sprite_FlowingGauge.Types.HP) return false;
 
-    // when this.target()  differs from  0, take this branch.
     if (this.target() !== 0) return false;
 
-    // hand back true to the caller.
     return true;
   }
 
@@ -679,7 +664,6 @@ class Sprite_FlowingGauge
   {
     const divisor = 10;
     const rate = Math.abs((this.target() - this.current()) / divisor);
-    // hand back rate to the caller.
     return rate;
   }
 
@@ -776,14 +760,11 @@ class Sprite_FlowingGauge
     this._gaugeBackgroundTrackMinX = 0;
     this._gaugeBackgroundTrackInnerWidth = 1;
 
-    // when not this._gaugeBitmap, take this branch.
     if (!this._gaugeBitmap) return;
 
-    // capture slice w for downstream policy in this routine.
     const sliceW = this.gaugeWidth();
     const sliceH = this.gaugeHeight();
 
-    // when sliceW  equals  0  or  sliceH  equals  0, take this branch.
     if (sliceW === 0 || sliceH === 0) return;
 
     // store  gauge slice fill inner width on the instance for later reads.
@@ -792,7 +773,6 @@ class Sprite_FlowingGauge
       ? this._backgroundBitmap.width
       : sliceW;
 
-    // when not this._backgroundBitmap, take this branch.
     if (!this._backgroundBitmap) return;
 
     // Caps on the frame art read as "bright" while the trough reads as near-black; a naive bright min/max would span
@@ -806,7 +786,6 @@ class Sprite_FlowingGauge
       80
     );
 
-    // capture top track for downstream policy in this routine.
     const topTrack = this.measureBrightHorizontalExtent(
       this._gaugeBitmap,
       0,
@@ -816,7 +795,6 @@ class Sprite_FlowingGauge
       24
     );
 
-    // capture bottom track for downstream policy in this routine.
     const bottomTrack = this.measureBrightHorizontalExtent(
       this._gaugeBitmap,
       0,
@@ -826,12 +804,10 @@ class Sprite_FlowingGauge
       24
     );
 
-    // capture fill min x for downstream policy in this routine.
     const fillMinX = Math.min(topTrack.minX, bottomTrack.minX);
     const fillMaxX = Math.max(topTrack.maxX, bottomTrack.maxX);
     const fillInnerW = Math.max(1, fillMaxX - fillMinX + 1);
 
-    // capture track inner w for downstream policy in this routine.
     const trackInnerW = Math.max(1, bgTrack.maxX - bgTrack.minX + 1);
 
     // store  gauge slice fill min x on the instance for later reads.
@@ -848,10 +824,8 @@ class Sprite_FlowingGauge
   {
     if (!this._gaugeCurrentSprite || !this._gaugeActualSprite) return;
 
-    // when this._gaugeSliceFillInnerWidth <= 0  or  this._gaugeBackgroundTrackIn..., take this branch.
     if (this._gaugeSliceFillInnerWidth <= 0 || this._gaugeBackgroundTrackInnerWidth <= 0) return;
 
-    // capture bg x for downstream policy in this routine.
     const bgX = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageX;
 
     // Left edge of the fill must share the same origin as the measured trough (`bgX + troughMinX`). Using the plugin
@@ -861,23 +835,18 @@ class Sprite_FlowingGauge
     // differed between layers. One `fillLeftX` and one `ratio` keeps both strips locked.
     const fillLeftX = bgX + this._gaugeBackgroundTrackMinX;
 
-    // capture trough right exclusive for downstream policy in this routine.
     const troughRightExclusive = bgX + this._gaugeBackgroundTrackMinX + this._gaugeBackgroundTrackInnerWidth;
 
-    // capture effective bar width for downstream policy in this routine.
     const effectiveBarWidth = Math.max(
       1,
       Math.min(this._gaugeBackgroundTrackInnerWidth, troughRightExclusive - fillLeftX)
     );
 
-    // capture ratio for downstream policy in this routine.
     const ratio = effectiveBarWidth / this._gaugeSliceFillInnerWidth;
 
-    // policy step inside align gauge foreground to background track.
     this._gaugeCurrentSprite.scale.x = ratio;
     this._gaugeActualSprite.scale.x = ratio;
 
-    // policy step inside align gauge foreground to background track.
     this._gaugeCurrentSprite.x = fillLeftX;
     this._gaugeActualSprite.x = fillLeftX;
   }
@@ -898,7 +867,6 @@ class Sprite_FlowingGauge
     let minX = rectW;
     let maxX = -1;
 
-    // iterate the loop counter until the guard exits.
     for (let y = 0; y < rectH; y++)
     {
       for (let x = 0; x < rectW; x++)
@@ -906,29 +874,23 @@ class Sprite_FlowingGauge
         const px = rectX + x;
         const py = rectY + y;
 
-        // when bitmap.getAlphaPixel(px, py) < 8, take this branch.
         if (bitmap.getAlphaPixel(px, py) < 8) continue;
 
-        // capture hex for downstream policy in this routine.
         const hex = bitmap.getPixel(px, py);
         const bright = this.sumRgbFromHexString(hex);
 
-        // when bright <= minBrightSum, take this branch.
         if (bright <= minBrightSum) continue;
 
-        // policy step inside measure bright horizontal extent.
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
       }
     }
 
-    // when maxX < 0, take this branch.
     if (maxX < 0)
     {
       return { minX: 0, maxX: rectW - 1 };
     }
 
-    // hand back { minX, maxX } to the caller.
     return { minX, maxX };
   }
 
@@ -950,24 +912,20 @@ class Sprite_FlowingGauge
     let bestMaxX = rectW - 1;
     let bestLen = 0;
 
-    // iterate the loop counter until the guard exits.
     for (let y = 0; y < rectH; y++)
     {
       const py = rectY + y;
       let runStart = -1;
 
-      // iterate the loop counter until the guard exits.
       for (let x = 0; x <= rectW; x++)
       {
         const atEnd = x === rectW;
         let isDark = false;
 
-        // when atEnd  equals  false, take this branch.
         if (atEnd === false)
         {
           const px = rectX + x;
 
-          // when bitmap.getAlphaPixel(px, py) < 8, take this branch.
           if (bitmap.getAlphaPixel(px, py) < 8)
           {
             isDark = false;
@@ -976,24 +934,20 @@ class Sprite_FlowingGauge
           {
             const sum = this.sumRgbFromHexString(bitmap.getPixel(px, py));
 
-            // policy step inside measure longest opaque dark horizontal run.
             isDark = sum <= maxDarkSum;
           }
         }
 
-        // when isDark  and  runStart < 0, take this branch.
         if (isDark && runStart < 0)
         {
           runStart = x;
         }
 
-        // when (isDark  equals  false  or  atEnd)  and  runStart >= 0, take this branch.
         if ((isDark === false || atEnd) && runStart >= 0)
         {
           const runEnd = x - 1;
           const len = runEnd - runStart + 1;
 
-          // when len > bestLen, take this branch.
           if (len > bestLen)
           {
             bestLen = len;
@@ -1001,19 +955,16 @@ class Sprite_FlowingGauge
             bestMaxX = runEnd;
           }
 
-          // policy step inside measure longest opaque dark horizontal run.
           runStart = -1;
         }
       }
     }
 
-    // when bestLen  equals  0, take this branch.
     if (bestLen === 0)
     {
       return { minX: 0, maxX: rectW - 1 };
     }
 
-    // hand back { minX: bestMinX, maxX: bestMaxX } to the caller.
     return { minX: bestMinX, maxX: bestMaxX };
   }
 
@@ -1026,12 +977,10 @@ class Sprite_FlowingGauge
   {
     if (!hex || hex.length < 7) return 0;
 
-    // capture r for downstream policy in this routine.
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
 
-    // hand back r + g + b to the caller.
     return r + g + b;
   }
 }
