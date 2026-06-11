@@ -49,6 +49,7 @@ describe('J-CriticalFactors Game_Battler (out/crit/J-CriticalFactors.js)', () =>
   it('exposes critical damage multiplier and reduction as numeric stats', () =>
   {
     const actor = new sandbox.Game_Actor();
+    actor.getSdpBonusForParameterKey = () => 0;
     actor.initMembers();
 
     expect(typeof actor.criticalDamageMultiplier()).toBe('number');

@@ -1,9 +1,20 @@
 import './_metadata/initialization.js';
 
+import './database/RPG_BaseBattler.js';
 import './database/RPG_BaseItem.js';
+import './database/RPG_State.js';
 import './helpers/PassiveRuleThreshold.js';
 import './helpers/PassiveRuleJabsAccess.js';
+import './managers/AutoApplyStateManager.js';
+import './managers/AutoExecuteSkillManager.js';
+import './managers/SkillExecutionStateRemovalManager.js';
+import './managers/MoveStateRemovalManager.js';
 import './managers/PassiveGateEvaluator.js';
 import './managers/PassiveStackCountEvaluator.js';
 import './objects/Game_Battler.js';
+import './objects/Game_Action.js';
+import './objects/Game_CharacterBase.js';
 import './managers/JABS_Battler.js';
+import './__models/AutoApplyStateDisplay.js';
+import './__models/RemoveStateOnMoveDisplay.js';
+import './windows/Window_PassiveDetail.js';

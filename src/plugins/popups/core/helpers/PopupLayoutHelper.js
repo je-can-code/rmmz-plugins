@@ -180,7 +180,7 @@ class PopupLayoutHelper
       switch (popup.popupType)
       {
         case Map_TextPop.Types.HpDamage: y -= 16; break;
-        case Map_TextPop.Types.MpDamage: y += 0; break;
+        case Map_TextPop.Types.MpDamage: break;
         case Map_TextPop.Types.TpDamage: y += 16; break;
       }
     }

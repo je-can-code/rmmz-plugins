@@ -67,6 +67,10 @@ describe('J-SkillExtend Game_Action skill layering (out/extend/J-SkillExtend.js)
       {
         return [ sandbox.$dataSkills[2], sandbox.$dataSkills[3] ];
       },
+      skillIds()
+      {
+        return [ 2, 3 ];
+      },
     };
 
     const action = new sandbox.Game_Action();

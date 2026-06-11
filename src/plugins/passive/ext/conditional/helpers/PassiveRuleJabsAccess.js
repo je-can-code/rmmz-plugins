@@ -51,20 +51,21 @@ class PassiveRuleJabsAccess
   }
 
   /**
-   * Opposing battlers within default proximity.<br/>
-   * Used by {@code enemiesNearby} gate rules that require a minimum threat count.
+   * Opposing battlers within proximity of this battler.<br/>
+   * Used by {@code enemiesNearby} gate rules and auto-execute trigger gates.
    * @param {Game_Battler} battler The battler whose neighborhood we measure.
-   * @returns {JABS_Battler[]} Opposing JABS battlers within the default tile radius.
+   * @param {number|null} proximityTiles Optional tile radius; defaults to plugin param.
+   * @returns {JABS_Battler[]} Opposing JABS battlers within the requested tile radius.
    */
-  static nearbyEnemies(battler)
+  static nearbyEnemies(battler, proximityTiles = null)
   {
     // grab the map wrapper — no wrapper means no enemies to count.
     const jabsBattler = this.getJabsBattler(battler);
 
     if (!jabsBattler) return [];
 
-    // pull the shared default radius from plugin metadata.
-    const proximity = this.defaultProximity();
+    // use the tag override when provided; otherwise fall back to plugin default radius.
+    const proximity = proximityTiles ?? this.defaultProximity();
 
     // query every opposing battler JABS considers in range of this evaluator.
     return JABS_AiManager.getOpposingBattlersWithinRange(jabsBattler, proximity);

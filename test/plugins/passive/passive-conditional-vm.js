@@ -24,6 +24,7 @@ export function installPassiveConditionalPluginManagerBridge(
   const strings = passiveConditionalPluginParameterStrings ?? {
     'reconcile-delay-frames': '15',
     'default-proximity-tiles': '5',
+    'auto-execute-skill-max-depth': '1',
   };
 
   const prev = sandbox.PluginManager.parameters.bind(sandbox.PluginManager);

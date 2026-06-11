@@ -383,6 +383,23 @@ describe('J-SDP mastery', () =>
       expect(ranking.isPanelMaxed()).toBe(true);
       expect(freshActor.isLearnedSkill(901)).toBe(true);
     });
+
+    it('reconcileAllForActor learns mastery for maxed panels without another rankUp', () =>
+    {
+      applyMasteryConfiguration(sandbox, JSON.parse(buildMasteryConfigJson()));
+      const freshActor = createTestActor(sandbox);
+      const ranking = new sandbox.PanelRanking('mastery_t1', freshActor.actorId());
+
+      ranking.currentRank = 1;
+      ranking.maxed = true;
+      freshActor.getAllSdpRankings().push(ranking);
+
+      expect(freshActor.isLearnedSkill(901)).toBe(false);
+
+      sandbox.SdpMasteryManager.reconcileAllForActor(freshActor);
+
+      expect(freshActor.isLearnedSkill(901)).toBe(true);
+    });
     it('does not learn a skill for subgroup-only panels without a mastery skill', () =>
     {
       applyMasteryConfiguration(sandbox, JSON.parse(buildMasteryConfigJson({

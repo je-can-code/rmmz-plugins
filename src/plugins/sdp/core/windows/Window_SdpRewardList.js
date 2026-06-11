@@ -1,5 +1,5 @@
 //region Window_SdpRewardList
-import PanelRankupReward from './../__models/PanelRankupReward.js';
+import PanelRankupReward from '../models/PanelRankupReward.js';
 class Window_SdpRewardList
   extends Window_Command
 {

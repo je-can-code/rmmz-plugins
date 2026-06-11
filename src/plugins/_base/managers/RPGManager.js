@@ -1127,10 +1127,13 @@ class RPGManager
     const mapper = data =>
     {
       // extract the data points from the array found.
-      const [ skillId, chance ] = data;
+      const [ skillId, chance, hitTypeString ] = data;
+
+      // resolve the optional hit type string to its numeric constant.
+      const hitType = RPGManager.resolveHitTypeString(hitTypeString);
 
       // return the built on-chance effect with the given data.
-      return new JABS_OnChanceEffect(skillId, chance ?? 100, key);
+      return new JABS_OnChanceEffect(skillId, chance ?? 100, key, hitType);
     };
 
     // map all the found on-chance effects.
@@ -1138,6 +1141,26 @@ class RPGManager
 
     // return what we found.
     return mappedOnChanceEffects;
+  }
+
+  /**
+   * Resolves an optional hit type string from a notetag into its numeric constant.
+   * Accepts "physical", "magical", or "certain" (case-insensitive).
+   * Returns null when the string is absent or unrecognised, meaning any hit type matches.
+   * @param {string|undefined} str The raw string from the parsed notetag array.
+   * @returns {number|null}
+   */
+  static resolveHitTypeString(str)
+  {
+    if (!str || typeof str !== 'string') return null;
+
+    switch (str.toLowerCase())
+    {
+      case 'physical': return Game_Action.HITTYPE_PHYSICAL;
+      case 'magical':  return Game_Action.HITTYPE_MAGICAL;
+      case 'certain':  return Game_Action.HITTYPE_CERTAIN;
+      default:         return null;
+    }
   }
 
   /**

@@ -1,5 +1,5 @@
 //region Scene_SDP
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
 import Window_SdpList from '../windows/Window_SdpList.js';
 import Window_SdpHeader from '../windows/Window_SdpHeader.js';
@@ -346,9 +346,12 @@ class Scene_SDP
       return;
     }
 
-    if (listWindow.index() >= commandCount)
+    const index = listWindow.index();
+
+    // after an empty filter (deselect → -1), the next non-empty filter must pick a row again.
+    if (index < 0 || index >= commandCount)
     {
-      listWindow.select(commandCount - 1);
+      listWindow.select(Math.max(0, Math.min(index, commandCount - 1)));
     }
   }
 
@@ -1397,6 +1400,33 @@ class Scene_SDP
   }
 
   /**
+   * Clears the detail strip when the filter list is empty or nothing is selected.
+   */
+  clearPanelDetailWindows()
+  {
+    this.getSdpHeaderWindow()
+      .setPanel(null);
+    this.getSdpHeaderWindow()
+      .refresh();
+
+    this.getSdpMasteryWindow()
+      .setPanel(null);
+    this.getSdpMasteryWindow()
+      .refresh();
+
+    const parameterListWindow = this.getSdpParameterListWindow();
+    parameterListWindow.setParameters(null);
+    parameterListWindow.refresh();
+
+    const rewardListWindow = this.getSdpRewardListWindow();
+    rewardListWindow.setRewards(null);
+    rewardListWindow.refresh();
+
+    this.getSdpHelpWindow()
+      .setText(String.empty);
+  }
+
+  /**
    * Refreshes all windows in this scene on change of index in the list.
    */
   onPanelHoveredChange()
@@ -1406,14 +1436,7 @@ class Scene_SDP
       .hasCommands();
     if (!hasPanels)
     {
-      this.getSdpHeaderWindow()
-        .setPanel(null);
-      this.getSdpHeaderWindow()
-        .refresh();
-      this.getSdpMasteryWindow()
-        .setPanel(null);
-      this.getSdpMasteryWindow()
-        .refresh();
+      this.clearPanelDetailWindows();
       return;
     }
 
@@ -1421,6 +1444,13 @@ class Scene_SDP
     /** @type {StatDistributionPanel} */
     const currentPanel = this.getSdpListWindow()
       .currentExt();
+
+    // stale index (-1) can survive a filter refresh when the prior filter had zero rows.
+    if (currentPanel === null)
+    {
+      this.clearPanelDetailWindows();
+      return;
+    }
 
     // grab the current actor of the menu.
     const currentActor = $gameParty.menuActor();

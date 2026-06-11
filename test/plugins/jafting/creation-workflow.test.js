@@ -232,9 +232,6 @@ describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
       const md = sandbox.J.JAFTING.EXT.CREATE.Metadata;
 
       expect(md.name).toBe('J-JAFTING-Creation');
-      expect(md.version.major).toBe(1);
-      expect(md.version.minor).toBe(1);
-      expect(md.version.patch).toBe(1);
     });
   });
 

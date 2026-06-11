@@ -46,6 +46,7 @@ J.HUD.EXT.TARGET.Aliased = {
   Hud_Manager: new Map(),
   JABS_Battler: new Map(),
   Scene_Map: new Map(),
+  Window_TargetFrame: new Map(),
 };
 
 /**

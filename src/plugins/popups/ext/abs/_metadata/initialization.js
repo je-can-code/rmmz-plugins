@@ -23,4 +23,6 @@ J.POPUPS.EXT.ABS.Aliased.JABS_Engine = new Map();
 J.POPUPS.EXT.ABS.Aliased.JABS_Battler = new Map();
 J.POPUPS.EXT.ABS.Aliased.Game_Action = new Map();
 J.POPUPS.EXT.ABS.Aliased.JABS_SkillSlot = new Map();
+J.POPUPS.EXT.ABS.Aliased.Sprite_Damage = new Map();
+J.POPUPS.EXT.ABS.Aliased.PopupLayoutHelper = new Map();
 //endregion initialization

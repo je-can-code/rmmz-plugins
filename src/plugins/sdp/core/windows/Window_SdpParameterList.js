@@ -1,5 +1,5 @@
 //region Window_SdpParameterList
-import PanelParameter from './../__models/PanelParameter.js';
+import PanelParameter from '../models/PanelParameter.js';
 class Window_SdpParameterList
   extends Window_Command
 {

@@ -42,6 +42,22 @@
  * @default 90
  * @min 1
  * @desc Release after this many frames with no merge **on this battler** (any stream counts).
+ * @param damageOutlineWidth
+ * @text Harm outline width
+ * @type number
+ * @min 0
+ * @max 8
+ * @decimals 0
+ * @default 2
+ * @desc Pixel width of the outline on harm HP/MP/TP combat damage numbers.
+ * @param healingOutlineWidth
+ * @text Heal outline width
+ * @type number
+ * @min 0
+ * @max 8
+ * @decimals 0
+ * @default 4
+ * @desc Pixel width of the outline on heal HP/MP/TP combat regen numbers.
  * @help
  * ============================================================================
  * OVERVIEW

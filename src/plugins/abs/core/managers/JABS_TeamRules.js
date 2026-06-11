@@ -1,5 +1,5 @@
 //region JABS_TeamRules
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * A static class for resolving team relationships between battlers.
  *

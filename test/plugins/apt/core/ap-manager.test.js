@@ -73,6 +73,7 @@ describe('J-Aptitude ApManager (out/apt/J-Aptitude.js)', () =>
     {
       return [ source ];
     };
+    Object.defineProperty(actor, 'apr', { get() { return 1; }, configurable: true });
 
     ApManager.gainAp(actor, 3, 'test');
     ApManager.gainAp(actor, 2, 'test');

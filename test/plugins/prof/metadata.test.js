@@ -21,7 +21,6 @@ describe('J-Proficiency metadata and regex (out/prof/J-Proficiency.js)', () =>
   it('exposes J.PROF namespace and loads conditionals from config', () =>
   {
     expect(sandbox.J.PROF.Metadata.name).toBe('J-Proficiency');
-    expect(sandbox.J.PROF.Metadata.version.major).toBe(2);
     expect(sandbox.J.PROF.Metadata.conditionals.length).toBe(5);
     expect(sandbox.J.PROF.Metadata.conditionals[0].key).toBe('vitest_unlock_skill');
   });

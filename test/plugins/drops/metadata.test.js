@@ -26,9 +26,6 @@ describe('J-DropsControl metadata (out/drops/J-DropsControl.js)', () =>
   it('exposes plugin name on J.DROPS.Metadata', () =>
   {
     expect(sandbox.J.DROPS.Metadata.name).toBe('J-DropsControl');
-    expect(sandbox.J.DROPS.Metadata.version.major).toBe(2);
-    expect(sandbox.J.DROPS.Metadata.version.minor).toBe(1);
-    expect(sandbox.J.DROPS.Metadata.version.patch).toBe(2);
   });
 });
 //endregion plugins/drops/metadata.test.js

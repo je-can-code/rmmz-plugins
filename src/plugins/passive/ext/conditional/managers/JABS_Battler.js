@@ -1,4 +1,9 @@
 //region JABS_Battler
+import AutoApplyStateManager from './AutoApplyStateManager.js';
+import AutoExecuteSkillManager from './AutoExecuteSkillManager.js';
+import MoveStateRemovalManager from './MoveStateRemovalManager.js';
+import SkillExecutionStateRemovalManager from './SkillExecutionStateRemovalManager.js';
+
 /**
  * Extends {@link JABS_Battler#update}.<br/>
  * Throttles passive rule reconciles and stamps movement timestamps for sinceLast/movedWithin rules.
@@ -36,6 +41,8 @@ JABS_Battler.prototype.setLastUsedSkillId = function(skillId)
 
   // real skill execution — not queued action polling — drives attackedWithin/sinceLastAttacked.
   battler.stampPassiveRuleAttackedFrame();
+
+  SkillExecutionStateRemovalManager.process(battler, skillId);
 };
 
 /**
@@ -51,6 +58,19 @@ JABS_Battler.prototype.updatePassiveRuleReconcile = function()
 
   // advance the battler-owned timer; refresh happens when drift is detected.
   battler.updatePassiveRuleReconcileTimer();
+
+  // periodic auto-apply rules (time condition) run every JABS tick while on the map.
+  AutoApplyStateManager.processTimeRules(battler);
+
+  // proximity-gated auto-execute rules run on the same tick cadence as time rules.
+  AutoExecuteSkillManager.processTimeRules(battler);
+  AutoExecuteSkillManager.processEnemiesNearbyRules(battler);
+
+  // idle auto-apply rules (stand condition) run when this battler has not moved this frame.
+  AutoApplyStateManager.processStandRules(battler);
+
+  // idle auto-execute rules mirror the stand auto-apply path.
+  AutoExecuteSkillManager.processStandRules(battler);
 };
 
 /**
@@ -89,5 +109,7 @@ JABS_Battler.prototype.updatePassiveRuleMovementTracking = function()
   tracker._lastTrackedY = currentY;
 
   battler.stampPassiveRuleMovedFrame();
+
+  MoveStateRemovalManager.process(battler);
 };
 //endregion JABS_Battler

@@ -21,7 +21,10 @@ J.PASSIVE.EXT.CONDITIONAL.Metadata = new JPassiveConditional_PluginMetadata(__PL
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased = {};
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Action = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_CharacterBase = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Window_PassiveDetail = new Map();
 
 /**
  * All regular expressions used by this plugin.
@@ -46,7 +49,7 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp = {};
  * </p>
  * @type {RegExp}
  */
-J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveSourceRule = /<passiveSourceRule:[ ]?(\[[^]]+])>/gi;
+J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveSourceRule = /<passiveSourceRule:[ ]?(\[[^\]]+])>/gi;
 
 /**
  * Captures {@code passiveStateRule} bracket tuples from database notes.<br/>
@@ -66,7 +69,7 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveSourceRule = /<passiveSourceRule:[ ]?(\[
  * </p>
  * @type {RegExp}
  */
-J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateRule = /<passiveStateRule:[ ]?(\[[^]]+])>/gi;
+J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateRule = /<passiveStateRule:[ ]?(\[[^\]]+])>/gi;
 
 /**
  * Captures {@code passiveStateCount} bracket tuples from database notes.<br/>
@@ -86,5 +89,77 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateRule = /<passiveStateRule:[ ]?(\[[^
  * </p>
  * @type {RegExp}
  */
-J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateCount = /<passiveStateCount:[ ]?(\[[^]]+])>/gi;
+J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateCount = /<passiveStateCount:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code autoApplyState} bracket tuples from database notes.<br/>
+ * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
+ * Each match schedules a real JABS state application (not a passive grant).
+ * <p>
+ * Author shape: {@code <autoApplyState:[stateId, condition, param]>}.<br/>
+ * The third value is condition-specific — see plugin help for the glossary.
+ * After parsing, tuples look like:
+ * </p>
+ * <ul>
+ *   <li>{@code [12, 'time', 900]} — every 900 frames while on the ABS map</li>
+ *   <li>{@code [14, 'hpDmg', 60]} — on HP damage, at most once per 60 frames</li>
+ *   <li>{@code [15, 'whenCrit', 120]} — when this battler is critically hit (victim)</li>
+ *   <li>{@code [16, 'anyDmg', 90]} — when HP, MP, or TP takes damage</li>
+ *   <li>{@code [17, 'posiStateAdded', 180]} — when a non-negative state is added</li>
+ *   <li>{@code [18, 'anyStateAdded', 60]} — when any combat state is added</li>
+ *   <li>{@code [42, 'move', 2]} — one apply per 2 whole tiles traveled (Pixelistics updatePixelStepping)</li>
+ *   <li>{@code [43, 'stand', 120]} — while idle on map, at most once per 120 frames</li>
+ * </ul>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState = /<autoApplyState:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code autoExecuteSkill} bracket tuples from database notes.<br/>
+ * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
+ * Each match schedules a map skill via {@link AutoExecuteSkillManager} and {@link JABS_Engine#forceMapAction}.
+ * <p>
+ * Author shape: {@code <autoExecuteSkill:[skillId, condition, param]>}, or a four- or five-value
+ * {@code enemiesNearby} tuple. After parsing, tuples look like:
+ * </p>
+ * <ul>
+ *   <li>{@code [1021, 'time', 60]} — every 60 frames while on the ABS map</li>
+ *   <li>{@code [1022, 'enemiesNearby', 1, 60]} — every 60 frames when at least one enemy is in range</li>
+ *   <li>{@code [1023, 'enemiesNearby', 1, 30, 2]} — same with a 2-tile trigger gate radius</li>
+ *   <li>{@code [1024, 'move', 1]} — one execution per whole tile traveled</li>
+ *   <li>{@code [1025, 'stand', 120]} — while idle, at most once per 120 frames</li>
+ * </ul>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code removeOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
+ * On skill execution, rolls chance and may peel stacks via {@link Game_Battler#decrementStateStacks}.
+ * <p>
+ * Author shape: {@code <removeOnSkillExecution:[stypeId, chance]>}.<br/>
+ * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+ * </p>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution = /<removeOnSkillExecution:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code removeStateOnMove} bracket tuples from <strong>state</strong> notes only.<br/>
+ * When the owning battler moves, strips the target state via {@link Game_Battler#decrementStateStacks}.
+ * Respects {@code jabsLoseAllStacksAtOnce} on the target state — one call collapses all stacks if set.
+ * <p>
+ * Author shape: {@code <removeStateOnMove:[stateId]>}.<br/>
+ * After parsing, tuples look like:
+ * </p>
+ * <ul>
+ *   <li>{@code [1031]} — strip state 1031 when this battler moves</li>
+ * </ul>
+ * <p>
+ * Intended use: mastery states pair {@code autoApplyState:[PAYLOAD, stand, F]} with
+ * {@code removeStateOnMove:[PAYLOAD]} to build a movement-reset stack counter.
+ * </p>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove = /<removeStateOnMove:[ ]?(\[[^\]]+])>/gi;
 //endregion initialization

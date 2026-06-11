@@ -1,5 +1,5 @@
 //region Window_SdpCart
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 /**
  * A controller-first "shopping cart" window for queued SDP rankups.
  * This window is display-only; selection happens in {@link Window_SdpList}.

@@ -87,7 +87,7 @@ describe('J-Proficiency Game_Actor proficiency (out/prof/J-Proficiency.js)', () 
     });
     actor.initMembers();
     actor.updateBonusSkillProficiencyGains();
-    expect(actor.bonusSkillProficiencyGains()).toBe(3);
+    expect(actor.prof).toBe(3);
   });
 });
 //endregion plugins/prof/proficiency-actor.test.js

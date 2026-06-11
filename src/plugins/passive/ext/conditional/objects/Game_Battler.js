@@ -1,4 +1,6 @@
 //region Game_Battler
+import AutoApplyStateManager from '../managers/AutoApplyStateManager.js';
+import AutoExecuteSkillManager from '../managers/AutoExecuteSkillManager.js';
 import PassiveGateEvaluator from '../managers/PassiveGateEvaluator.js';
 import PassiveStackCountEvaluator from '../managers/PassiveStackCountEvaluator.js';
 
@@ -100,6 +102,164 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
    * @type {number}
    */
   this._j._passive._conditional._lastTpHealFrame = 0;
+
+  /**
+   * Per-rule cooldown stamps for {@link AutoApplyStateManager} (rule key → frame).
+   * @type {Map<string, number>}
+   */
+  this._j._passive._conditional._autoApplyLastFrame = new Map();
+
+  /**
+   * Per-rule whole-tile credit toward {@code move} auto-apply rules (rule key → tiles).
+   * @type {Map<string, number>}
+   */
+  this._j._passive._conditional._autoApplyTileCredit = new Map();
+
+  /**
+   * Per-rule cooldown stamps for {@link AutoExecuteSkillManager} (rule key → frame).
+   * @type {Map<string, number>}
+   */
+  this._j._passive._conditional._autoExecuteSkillLastFrame = new Map();
+
+  /**
+   * Per-rule whole-tile credit toward {@code move} auto-execute rules (rule key → tiles).
+   * @type {Map<string, number>}
+   */
+  this._j._passive._conditional._autoExecuteSkillTileCredit = new Map();
+};
+
+/**
+ * Returns per-rule whole-tile credit toward {@code move} auto-apply rules.
+ * @returns {Map<string, number>}
+ */
+Game_Battler.prototype.getAutoApplyTileCreditMap = function()
+{
+  return this._j._passive._conditional._autoApplyTileCredit;
+};
+
+/**
+ * Reads accumulated whole-tile credit for one {@code move} rule key.
+ * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getAutoApplyTileCredit = function(ruleKey)
+{
+  return this.getAutoApplyTileCreditMap().get(ruleKey) || 0;
+};
+
+/**
+ * Stores accumulated whole-tile credit for one {@code move} rule key.
+ * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * @param {number} tiles Whole tiles credited toward the next apply.
+ */
+Game_Battler.prototype.setAutoApplyTileCredit = function(ruleKey, tiles)
+{
+  this.getAutoApplyTileCreditMap().set(ruleKey, tiles);
+};
+
+/**
+ * Returns per-rule frame cooldown stamps for auto-apply rules.
+ * @returns {Map<string, number>}
+ */
+Game_Battler.prototype.getAutoApplyLastFrameMap = function()
+{
+  return this._j._passive._conditional._autoApplyLastFrame;
+};
+
+/**
+ * Reads the last map frame an auto-apply rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getAutoApplyLastFrame = function(ruleKey)
+{
+  return this.getAutoApplyLastFrameMap().get(ruleKey) || 0;
+};
+
+/**
+ * Stamps the last map frame an auto-apply rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * @param {number} frame {@link Graphics.frameCount} when the rule last applied.
+ */
+Game_Battler.prototype.setAutoApplyLastFrame = function(ruleKey, frame)
+{
+  this.getAutoApplyLastFrameMap().set(ruleKey, frame);
+};
+
+/**
+ * Delegates auto-apply scheduling for one condition kind to {@link AutoApplyStateManager}.
+ * @param {string} conditionKind The condition kind to evaluate (time, hpDmg, whenCrit, etc.).
+ */
+Game_Battler.prototype.tryAutoApplyStates = function(conditionKind)
+{
+  AutoApplyStateManager.tryApply(this, conditionKind);
+};
+
+/**
+ * Returns per-rule whole-tile credit toward {@code move} auto-execute rules.
+ * @returns {Map<string, number>}
+ */
+Game_Battler.prototype.getAutoExecuteSkillTileCreditMap = function()
+{
+  return this._j._passive._conditional._autoExecuteSkillTileCredit;
+};
+
+/**
+ * Reads accumulated whole-tile credit for one {@code move} auto-execute rule key.
+ * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getAutoExecuteSkillTileCredit = function(ruleKey)
+{
+  return this.getAutoExecuteSkillTileCreditMap().get(ruleKey) || 0;
+};
+
+/**
+ * Stores accumulated whole-tile credit for one {@code move} auto-execute rule key.
+ * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
+ * @param {number} tiles Whole tiles credited toward the next execution.
+ */
+Game_Battler.prototype.setAutoExecuteSkillTileCredit = function(ruleKey, tiles)
+{
+  this.getAutoExecuteSkillTileCreditMap().set(ruleKey, tiles);
+};
+
+/**
+ * Returns per-rule frame cooldown stamps for auto-execute rules.
+ * @returns {Map<string, number>}
+ */
+Game_Battler.prototype.getAutoExecuteSkillLastFrameMap = function()
+{
+  return this._j._passive._conditional._autoExecuteSkillLastFrame;
+};
+
+/**
+ * Reads the last map frame an auto-execute rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getAutoExecuteSkillLastFrame = function(ruleKey)
+{
+  return this.getAutoExecuteSkillLastFrameMap().get(ruleKey) || 0;
+};
+
+/**
+ * Stamps the last map frame an auto-execute rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
+ * @param {number} frame {@link Graphics.frameCount} when the rule last executed.
+ */
+Game_Battler.prototype.setAutoExecuteSkillLastFrame = function(ruleKey, frame)
+{
+  this.getAutoExecuteSkillLastFrameMap().set(ruleKey, frame);
+};
+
+/**
+ * Delegates auto-execute scheduling for one condition kind to {@link AutoExecuteSkillManager}.
+ * @param {string} conditionKind The condition kind to evaluate (time, hpDmg, whenCrit, etc.).
+ */
+Game_Battler.prototype.tryAutoExecuteSkills = function(conditionKind)
+{
+  AutoExecuteSkillManager.tryExecute(this, conditionKind);
 };
 
 /**
@@ -229,6 +389,51 @@ Game_Battler.prototype.gainHp = function(value)
   // perform original logic.
   J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('gainHp')
     .call(this, value);
+
+  // schedule hp + any-damage auto-apply rules after the resource change lands.
+  if (value < 0)
+  {
+    AutoApplyStateManager.scheduleDamageTriggers(this, 'hpDmg');
+    AutoExecuteSkillManager.scheduleDamageTriggers(this, 'hpDmg');
+  }
+};
+
+/**
+ * Extends {@link #gainMp}.<br/>
+ * Fires mpDmg auto-apply rules when MP is reduced.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set('gainMp', Game_Battler.prototype.gainMp);
+Game_Battler.prototype.gainMp = function(value)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('gainMp')
+    .call(this, value);
+
+  // schedule mp + any-damage auto-apply rules after the resource change lands.
+  if (value < 0)
+  {
+    AutoApplyStateManager.scheduleDamageTriggers(this, 'mpDmg');
+    AutoExecuteSkillManager.scheduleDamageTriggers(this, 'mpDmg');
+  }
+};
+
+/**
+ * Extends {@link #gainTp}.<br/>
+ * Fires tpDmg auto-apply rules when TP is reduced.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set('gainTp', Game_Battler.prototype.gainTp);
+Game_Battler.prototype.gainTp = function(value)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('gainTp')
+    .call(this, value);
+
+  // schedule tp + any-damage auto-apply rules after the resource change lands.
+  if (value < 0)
+  {
+    AutoApplyStateManager.scheduleDamageTriggers(this, 'tpDmg');
+    AutoExecuteSkillManager.scheduleDamageTriggers(this, 'tpDmg');
+  }
 };
 
 /**
@@ -521,5 +726,20 @@ Game_Battler.prototype.refreshPassiveStates = function()
 
   // snapshot the post-refresh collection so drift checks have a baseline.
   this.updatePassiveRuleCollectionFingerprint();
+};
+
+/**
+ * Extends {@link #onStateAdded}.<br/>
+ * Fires anyStateAdded plus posi/nega polarity auto-apply when a combat state lands.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set('onStateAdded', Game_Battler.prototype.onStateAdded);
+Game_Battler.prototype.onStateAdded = function(stateId)
+{
+  // perform original logic.
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('onStateAdded')
+    .call(this, stateId);
+
+  AutoApplyStateManager.scheduleStateAddedTriggers(this, stateId);
+  AutoExecuteSkillManager.scheduleStateAddedTriggers(this, stateId);
 };
 //endregion Game_Battler

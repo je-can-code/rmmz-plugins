@@ -274,6 +274,9 @@ class Sprite_MapDamage
     }
 
     textSprite.bitmap.fontSize = fontSize;
+    textSprite.bitmap.textColor = this.damageColor();
+    textSprite.bitmap.outlineColor = this.outlineColor();
+    textSprite.bitmap.outlineWidth = this.outlineWidth();
     textSprite.bitmap.drawText(displayString, 0, 0, w, h, 'center');
 
     this.repositionChildren();

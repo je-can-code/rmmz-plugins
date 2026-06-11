@@ -1,5 +1,5 @@
 //region Game_Action
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Overwrites {@link #subject}.<br/>
@@ -229,6 +229,8 @@ Game_Action.prototype.itemHit = function()
 /**
  * Extends {@link #makeDamageValue}.<br/>
  * Includes consideration of guard effects of the target.
+ * Also applies state damage multipliers and cast-time direct damage bonuses before guard,
+ * then skill history bonuses from both thisSkillHistoryBonus and skillHistoryBonus tags.
  */
 J.ABS.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
 Game_Action.prototype.makeDamageValue = function(target, critical)
@@ -236,6 +238,13 @@ Game_Action.prototype.makeDamageValue = function(target, critical)
   // perform original logic.
   let base = J.ABS.Aliased.Game_Action.get('makeDamageValue')
     .call(this, target, critical);
+
+  // apply state-based damage multipliers before guard so flat guard reduction
+  // cannot fully negate the bonus (guard bites into the already-amplified pool).
+  base = this.applyStateDamageMultipliers(base, target);
+
+  // scale direct damage by resolved cast duration when cast-time bonus tags are present.
+  base = this.applyCastTimeDamageBonus(base);
 
   // validate we have a target.
   if (this.canHandleGuardEffects(target))
@@ -246,6 +255,9 @@ Game_Action.prototype.makeDamageValue = function(target, critical)
     // apply guard damage modifiers.
     base = this.handleGuardEffects(base, guardingJabsBattler);
   }
+
+  // apply any skill history bonuses derived from both tag scopes.
+  base = this.applySkillHistoryBonus(base);
 
   // return the damage output.
   return base;
@@ -682,5 +694,344 @@ Game_Action.prototype.applyStateEffect = function(target, stateId)
   this.makeSuccess(target);
 };
 //endregion state-related effect application
+
+//region state damage multipliers
+/**
+ * Applies damage multipliers derived from the current states of the target.
+ * Combines perDebuffBuff (per-negative-state bonus) and bonusDamageIfState (specific-state bonus).
+ * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
+ * @param {number} baseDamage The damage value before state multipliers.
+ * @param {Game_Battler} target The target whose states are evaluated.
+ * @returns {number} The damage value after state multipliers have been applied.
+ */
+Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
+{
+  // non-positive damage has no multiplicative state bonus.
+  if (baseDamage <= 0) return baseDamage;
+
+  // sum contributions from both tag types.
+  const debuffPct = this.calculatePerDebuffBonusPct(target);
+  const specificPct = this.calculateBonusIfStatePct(target);
+
+  const combinedPct = debuffPct + specificPct;
+
+  // if neither source contributed a bonus, return damage unchanged.
+  if (combinedPct === 0) return baseDamage;
+
+  // build the final multiplier and apply it.
+  return Math.round(baseDamage * (1 + combinedPct / 100));
+};
+
+/**
+ * Calculates the total damage bonus percent from perDebuffBuff tags on the caster's notes.
+ * Counts every active state on the target that is tagged with jabsNegative and multiplies
+ * the summed N value by that count.
+ * @param {Game_Battler} target The target whose negative states are counted.
+ * @returns {number} The total bonus percent from this tag type.
+ */
+Game_Action.prototype.calculatePerDebuffBonusPct = function(target)
+{
+  // sum all perDebuffBuff:N values from the caster's note sources.
+  const totalN = RPGManager.getSumFromAllNotesByRegex(
+    this.subject().getAllNotes(),
+    J.ABS.RegExp.PerDebuffBuff) ?? 0;
+
+  // if no tags exist on this caster, there is no bonus.
+  if (totalN === 0) return 0;
+
+  // count the target's active states that bear the <negative> notetag.
+  const debuffCount = target.states()
+    .filter(s => s.jabsNegative)
+    .length;
+
+  // multiply the per-debuff rate by the number of debuffs on the target.
+  return totalN * debuffCount;
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamageIfState tags on the caster's notes.
+ * Each tag contributes its PCT value if the target currently has the specified state active.
+ * Multiple tags for different state ids each fire independently and stack additively.
+ * @param {Game_Battler} target The target whose active states are checked.
+ * @returns {number} The total bonus percent from all matching state tags.
+ */
+Game_Action.prototype.calculateBonusIfStatePct = function(target)
+{
+  // collect all [STATE_ID, PCT] pairs from every note source on the caster.
+  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [number, number] arrays.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfState));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // accumulate the percent from each tag whose state is active on the target.
+  let totalPct = 0;
+  allPairs.forEach(([stateId, percent]) =>
+  {
+    // check if the target currently has this specific state.
+    if (target.isStateAffected(stateId))
+    {
+      totalPct += percent;
+    }
+  });
+
+  return totalPct;
+};
+//endregion state damage multipliers
+
+//region skill history bonus
+/**
+ * Applies any skill history bonuses to the given base damage amount.
+ * Reads from two sources: thisSkillHistoryBonus on this.item() (skill-specific)
+ * and skillHistoryBonus from getAllNotes() (passive/equipment/state sources).
+ * If neither source yields a bonus the base damage is returned unchanged.
+ * @param {number} baseDamage The damage value before history bonuses.
+ * @returns {number} The damage value after history bonuses have been applied.
+ */
+Game_Action.prototype.applySkillHistoryBonus = function(baseDamage)
+{
+  // negative or zero base damage has no multiplicative history bonus.
+  if (baseDamage <= 0) return baseDamage;
+
+  // grab the subject's uuid for querying the skill history log.
+  const uuid = this.subject()
+    .getUuid();
+
+  // if there is no uuid, this is not a JABS battler and there is nothing to do.
+  if (!uuid) return baseDamage;
+
+  // calculate the bonus percent from the "this" skill's own tag.
+  const thisPct = this.calculateThisSkillHistoryBonusPct(uuid);
+
+  // calculate the combined bonus percent from all passive/state/equip sources.
+  const generalPct = this.calculateGeneralSkillHistoryBonusPct(uuid);
+
+  // if both sources contributed no bonus, return the damage unchanged.
+  const combinedPct = thisPct + generalPct;
+  if (combinedPct === 0) return baseDamage;
+
+  // build the final multiplier and apply it.
+  const multiplier = 1 + (combinedPct / 100);
+  return Math.round(baseDamage * multiplier);
+};
+
+/**
+ * Calculates the total bonus percent from the thisSkillHistoryBonus tag on this action's item.
+ * Only fires when this specific skill is the action being resolved.
+ * History scope is limited to this skill's own id.
+ * @param {string} uuid The caster's uuid for log queries.
+ * @returns {number} The total bonus percent contribution from this tag.
+ */
+Game_Action.prototype.calculateThisSkillHistoryBonusPct = function(uuid)
+{
+  // grab the skill item being resolved.
+  const item = this.item();
+
+  // pull the raw bracket text for the "this" variant from the skill's own note.
+  // nullIfEmpty = true so we get null back when the tag is absent.
+  const rawTag = RPGManager.getStringFromNoteByRegex(
+    item,
+    J.ABS.RegExp.ThisSkillHistoryBonus,
+    true);
+
+  // if the tag is not present on this skill, there is no bonus.
+  if (!rawTag) return 0;
+
+  // parse the bracket content — [WINDOW, PCT, COUNT_MODE].
+  const parsed = this.parseSkillHistoryBracket(rawTag);
+
+  // if the bracket was malformed, skip this tag.
+  if (!parsed) return 0;
+
+  const { window, pct, countMode } = parsed;
+
+  // query the history log: scope is this specific skill id only.
+  const count = $jabsEngine.querySkillExecutionLog(uuid, item.id, 0, window, countMode);
+
+  return pct * count;
+};
+
+/**
+ * Calculates the total bonus percent from all skillHistoryBonus tags on the subject's notes.
+ * Reads from getAllNotes() and sums contributions from every matching tag.
+ * @param {string} uuid The caster's uuid for log queries.
+ * @returns {number} The summed bonus percent from all passive sources.
+ */
+Game_Action.prototype.calculateGeneralSkillHistoryBonusPct = function(uuid)
+{
+  // accumulate the total general bonus percent from all matching tags.
+  let totalPct = 0;
+
+  // collect all captures from every note source for the general variant tag.
+  // each entry in the returned array is a single-element array [ bracketString ].
+  const allCaptures = RPGManager.getAllCapturesFromAllNotesByRegex(
+    this.subject()
+      .getAllNotes(),
+    J.ABS.RegExp.SkillHistoryBonus);
+
+  // if there are no tags anywhere, there is nothing to sum.
+  if (!allCaptures.length) return 0;
+
+  // iterate over each tag capture and accumulate its contribution.
+  allCaptures.forEach(captureGroup =>
+  {
+    // the first capture group is the full bracket string.
+    const [ rawTag ] = captureGroup;
+
+    // parse the bracket content — [TYPE_ID, WINDOW, PCT, COUNT_MODE].
+    const parsed = this.parseGeneralSkillHistoryBracket(rawTag);
+
+    // if the bracket was malformed, skip this tag.
+    if (!parsed) return;
+
+    const { typeId, window, pct, countMode } = parsed;
+
+    // query the history: scope is any skill id, filtered by type.
+    const count = $jabsEngine.querySkillExecutionLog(uuid, 0, typeId, window, countMode);
+
+    totalPct += pct * count;
+  });
+
+  return totalPct;
+};
+
+/**
+ * Parses the bracket string from a thisSkillHistoryBonus tag into its component values.
+ * Expected format: [WINDOW, PCT, COUNT_MODE]
+ * @param {string} bracket The captured bracket string, e.g. "[3, 8, streak]".
+ * @returns {{window:number, pct:number, countMode:string}|null} Parsed values, or null if malformed.
+ */
+Game_Action.prototype.parseSkillHistoryBracket = function(bracket)
+{
+  // strip the outer square brackets and split on comma to get each part.
+  const parts = bracket.replace(/[[\]]/g, '')
+    .split(',')
+    .map(p => p.trim());
+
+  // validate that we have exactly the three required parts.
+  if (parts.length !== 3) return null;
+
+  // coerce the numeric parts and read the count mode string.
+  const window = Number(parts[0]);
+  const pct = Number(parts[1]);
+  const countMode = parts[2].toLowerCase();
+
+  return { window, pct, countMode };
+};
+
+/**
+ * Parses the bracket string from a skillHistoryBonus tag into its component values.
+ * Expected format: [TYPE_ID, WINDOW, PCT, COUNT_MODE]
+ * @param {string} bracket The captured bracket string, e.g. "[7, 5, 5, streak]".
+ * @returns {{typeId:number, window:number, pct:number, countMode:string}|null} Parsed values, or null if malformed.
+ */
+Game_Action.prototype.parseGeneralSkillHistoryBracket = function(bracket)
+{
+  // strip the outer square brackets and split on comma to get each part.
+  const parts = bracket.replace(/[[\]]/g, '')
+    .split(',')
+    .map(p => p.trim());
+
+  // validate that we have exactly the four required parts.
+  if (parts.length !== 4) return null;
+
+  // coerce the numeric parts and read the count mode string.
+  const typeId = Number(parts[0]);
+  const window = Number(parts[1]);
+  const pct = Number(parts[2]);
+  const countMode = parts[3].toLowerCase();
+
+  return { typeId, window, pct, countMode };
+};
+//endregion skill history bonus
+
+//region cast time damage bonus
+/**
+ * Stores the resolved cast duration in frames on this action payload.
+ * Stamped once when the parent JABS action is created; shared by volley spokes
+ * and every hit tick from the same skill execution.
+ * @param {number} frames The cast duration in frames (0 when the skill is instant).
+ */
+Game_Action.prototype.setResolvedCastTimeFrames = function(frames)
+{
+  this._resolvedCastTimeFrames = Math.max(0, Math.round(frames));
+};
+
+/**
+ * Returns the resolved cast duration stamped on this action payload.
+ * @returns {number} Cast frames, or 0 when unstamped or instant.
+ */
+Game_Action.prototype.getResolvedCastTimeFrames = function()
+{
+  if (this._resolvedCastTimeFrames === undefined) return 0;
+
+  return this._resolvedCastTimeFrames;
+};
+
+/**
+ * Applies direct damage scaling from cast-time bonus tags on the caster and skill.
+ * Uses the stamped resolved cast duration; does not affect healing, recovery, or slip DoT.
+ * @param {number} baseDamage The damage value before cast-time scaling.
+ * @returns {number} The damage value after cast-time scaling has been applied.
+ */
+Game_Action.prototype.applyCastTimeDamageBonus = function(baseDamage)
+{
+  // non-positive damage has no multiplicative cast-time bonus.
+  if (baseDamage <= 0) return baseDamage;
+
+  // only skills participate; items and other usables are out of scope.
+  if (!this.isSkill()) return baseDamage;
+
+  // only hp and mp damage effect types qualify (not recovery or drain-only edge cases).
+  const damageType = this.item().damage.type;
+  if (damageType !== 1 && damageType !== 2) return baseDamage;
+
+  // instant skills carry no cast duration and earn no bonus.
+  const castFrames = this.getResolvedCastTimeFrames();
+  if (castFrames <= 0) return baseDamage;
+
+  // sum percent-per-second contributions from both tag scopes.
+  const thisPctPerSec = this.calculateThisCastTimeDamageBonusPctPerSec();
+  const generalPctPerSec = this.calculateGeneralCastTimeDamageBonusPctPerSec();
+  const combinedPctPerSec = thisPctPerSec + generalPctPerSec;
+
+  // if neither source contributed a rate, return the damage unchanged.
+  if (combinedPctPerSec === 0) return baseDamage;
+
+  // convert stamped frames to seconds and build the total bonus percent.
+  const castSeconds = castFrames / 60;
+  const totalBonusPct = combinedPctPerSec * castSeconds;
+
+  // build the final multiplier and apply it.
+  const multiplier = 1 + (totalBonusPct / 100);
+  return Math.round(baseDamage * multiplier);
+};
+
+/**
+ * Calculates the percent-per-second bonus from thisCastTimeDamageBonus on this skill only.
+ * @returns {number} The summed percent-per-second rate from the skill note.
+ */
+Game_Action.prototype.calculateThisCastTimeDamageBonusPctPerSec = function()
+{
+  // pull the skill row being resolved.
+  const item = this.item();
+
+  // sum every matching tag on this skill's note.
+  return RPGManager.getSumFromAllNotesByRegex([item], J.ABS.RegExp.ThisCastTimeDamageBonus) ?? 0;
+};
+
+/**
+ * Calculates the percent-per-second bonus from castTimeDamageBonus on all note sources.
+ * @returns {number} The summed percent-per-second rate from passive/equipment/state sources.
+ */
+Game_Action.prototype.calculateGeneralCastTimeDamageBonusPctPerSec = function()
+{
+  // sum every matching tag across the caster's full note stack.
+  return RPGManager.getSumFromAllNotesByRegex(
+    this.subject().getAllNotes(),
+    J.ABS.RegExp.CastTimeDamageBonus) ?? 0;
+};
+//endregion cast time damage bonus
 //endregion action application
 //endregion Game_Action

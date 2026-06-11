@@ -1,6 +1,6 @@
 //region Game_Actor
-import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends {@link #initJabsMembers}.<br/>
@@ -848,6 +848,15 @@ Game_Actor.prototype.showHpBar = function()
   if (this.isLeader()) return false;
 
   // show the HP!
+  return true;
+};
+
+/**
+ * Actors always show their map affliction strip when states are active.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.showStates = function()
+{
   return true;
 };
 

@@ -6,6 +6,45 @@
 class SdpMasteryManager
 {
   /**
+   * Reconciles mastery wrapper skills for every subgroup this actor has maxed.
+   * Idempotent — safe when content or plugin wiring changes mid dev save.
+   * @param {Game_Actor} actor The actor whose mastery skills are being reconciled.
+   */
+  static reconcileAllForActor(actor)
+  {
+    if (!actor) return;
+
+    const subgroupKeys = new Set();
+
+    // collect subgroup keys from maxed rankings only — rank alone does not grant mastery.
+    actor.getAllSdpRankings()
+      .filter(panelRanking => panelRanking.isPanelMaxed())
+      .forEach(panelRanking =>
+      {
+        const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
+
+        if (!panel) return;
+        if (panel.mastery.subgroupKey === String.empty) return;
+
+        subgroupKeys.add(panel.mastery.subgroupKey);
+      });
+
+    subgroupKeys.forEach(subgroupKey =>
+    {
+      SdpMasteryManager.reconcileSubgroupMastery(actor, subgroupKey);
+    });
+  }
+
+  /**
+   * Reconciles mastery wrapper skills for every party member.
+   */
+  static reconcileAllForParty()
+  {
+    $gameParty.members()
+      .forEach(actor => SdpMasteryManager.reconcileAllForActor(actor));
+  }
+
+  /**
    * Reconciles which mastery skill should be active for a subgroup on an actor.
    * Forgets every lower-tier mastery skill in the subgroup, then learns the winner.
    * @param {Game_Actor} actor The actor whose mastery skills are being reconciled.

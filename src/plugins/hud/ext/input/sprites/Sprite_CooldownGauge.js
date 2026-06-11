@@ -83,7 +83,7 @@ class Sprite_CooldownGauge
     this._j._gcdMergeSkillId = 0;
     if (!jabsBattler || !skillSlot) return;
     const { key } = skillSlot;
-    if (key === JABS_Button.Tool || key === JABS_Button.Dodge) return;
+    if (key === JABS_Button.Tool || key === JABS_Button.UsableItem || key === JABS_Button.Dodge) return;
     if (skillSlot.isItem()) return;
     this._j._gcdMergeBattler = jabsBattler;
     this._j._gcdMergeSkillId = skillSlot.id;

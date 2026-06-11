@@ -1,14 +1,14 @@
-import './__models/PanelFamily.js';
-import './__models/PanelMastery.js';
-import './__models/PanelParameter.js';
-import './__models/PanelRankupReward.js';
-import './__models/PanelRarity.js';
-import './__models/PanelSubgroup.js';
-import './__models/SdpConfiguration.js';
-import './__models/StatDistributionPanel.js';
-import './__models/StatDistributionPanelBuilder.js';
-import './__models/PanelRanking.js';
-import './__models/PanelTracking.js';
+import './models/PanelFamily.js';
+import './models/PanelMastery.js';
+import './models/PanelParameter.js';
+import './models/PanelRankupReward.js';
+import './models/PanelRarity.js';
+import './models/PanelSubgroup.js';
+import './models/SdpConfiguration.js';
+import './models/StatDistributionPanel.js';
+import './models/StatDistributionPanelBuilder.js';
+import './models/PanelRanking.js';
+import './models/PanelTracking.js';
 
 import './managers/SdpMasteryManager.js';
 

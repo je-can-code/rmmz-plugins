@@ -1,5 +1,5 @@
 //region Window_SdpList
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
 /**
  * The SDP window containing the list of all unlocked panels.

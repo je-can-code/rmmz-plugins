@@ -1,6 +1,6 @@
 //region RPG_Skill effects
-import JABS_GuardData from './../__models/JABS_GuardData.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_GuardData from '../models/JABS_GuardData.js';
+import JABS_Action from '../models/JABS_Action.js';
 //region range
 /**
  * The JABS range for this skill.

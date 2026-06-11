@@ -36,7 +36,7 @@ describe('J-Popups TextPopSpriteManager (out/popups/J-Popups.js)', () =>
     expect(sprite._j._popups._yVariance).toBe(3);
     expect(sprite._j._popups._damageColor).toBe(4);
     expect(sprite._j._popups._isDamage).toBe(false);
-    expect(sprite._duration).toBe(120);
+    expect(sprite._duration).toBe(60);
   });
 });
 //endregion plugins/popups/text-pop-sprite-manager.test.js

@@ -182,28 +182,47 @@ function collectJNamespaceClassMirrorViolations(filePath, contents)
 }
 
 /**
+ * Checks that the shipped bundle contains no ESM import/export syntax.
+ * RMMZ loads plugins as classic scripts — module syntax is a hard runtime failure.
  * @param {string} filePath The file path driving this step.
  * @param {string} contents The contents driving this step.
  * @returns {string[]}
  */
-function collectShippedModuleAndBundlerViolations(filePath, contents)
+function collectShippedModuleSyntaxViolations(filePath, contents)
 {
-  const violations = [];
-
   if (SHIPPED_MODULE_LINE.test(contents))
   {
-    violations.push(`${filePath}: contains import/export (RMMZ cannot load module syntax)`);
+    return [ `${filePath}: contains import/export (RMMZ cannot load module syntax)` ];
   }
 
+  return [];
+}
+
+/**
+ * Checks that the shipped bundle contains no Rolldown $1 rename collisions.
+ * These appear when a same-ship class is instantiated or referenced in a source file
+ * that does not import it — Rolldown cannot deduplicate the binding and appends $1.
+ * Fix: add `import ClassName from '../path/to/ClassName.js';` in the offending source file.
+ * @param {string} filePath The file path driving this step.
+ * @param {string} contents The contents driving this step.
+ * @returns {string[]}
+ */
+function collectShippedDollarOneViolations(filePath, contents)
+{
   const dollarOneMatches = contents.match(new RegExp(BUNDLER_DOLLAR_ONE.source, 'g'));
 
-  if (dollarOneMatches && dollarOneMatches.length > 0)
+  if (!dollarOneMatches || dollarOneMatches.length === 0)
   {
-    const unique = [ ...new Set(dollarOneMatches) ];
-    violations.push(`${filePath}: bundler rename collision(s): ${unique.join(', ')}`);
+    return [];
   }
 
-  return violations;
+  const unique = [ ...new Set(dollarOneMatches) ];
+  return [
+    `${filePath}: bundler rename collision(s): ${unique.join(', ')}`,
+    `  ^^^ FIX: a same-ship class was used with \`new\` (or referenced) in a source file` +
+    ` without being imported. Add \`import ClassName from '../path/to/ClassName.js';\`` +
+    ` at the top of every source file that instantiates or references it directly.`,
+  ];
 }
 
 /**
@@ -384,12 +403,21 @@ async function scanFiles(files, collector)
 /** @type {ShipVerifyCheck[]} */
 const CHECKS = [
   {
-    name: 'shipped-no-module-syntax-or-dollar-one',
-    description: 'Shipped bundles must not contain import/export or $1 bundler collisions.',
+    name: 'shipped-no-module-syntax',
+    description: 'Shipped bundles must not contain import/export — RMMZ loads plugins as classic scripts.',
     run: async () =>
     {
       const files = await listJsFiles(`${OUT_DIR}/**/*.js`);
-      return scanFiles(files, collectShippedModuleAndBundlerViolations);
+      return scanFiles(files, collectShippedModuleSyntaxViolations);
+    },
+  },
+  {
+    name: 'shipped-no-dollar-one-collisions',
+    description: 'Shipped bundles must not contain $1 bundler rename collisions (missing same-ship imports in source).',
+    run: async () =>
+    {
+      const files = await listJsFiles(`${OUT_DIR}/**/*.js`);
+      return scanFiles(files, collectShippedDollarOneViolations);
     },
   },
   {

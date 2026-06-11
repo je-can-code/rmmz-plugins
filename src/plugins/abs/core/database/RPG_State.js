@@ -1,5 +1,6 @@
 //region RPG_State effects
-import JABS_State from './../__models/JABS_State.js';
+import JABS_State from '../models/JABS_State.js';
+import JABS_StateExpireData from '../models/JABS_StateExpireData.js';
 //region paralysis
 /**
  * Whether or not this state is also a JABS paralysis state.
@@ -263,6 +264,120 @@ Object.defineProperty(RPG_State.prototype, 'jabsLoseAllStacksAtOnce', {
 });
 //endregion reapplication type
 
+//region applyStateOnExpire
+/**
+ * The follow-up state to apply when this state expires naturally by frame counter.<br/>
+ * Returns a {@link JABS_StateExpireData} describing the follow-up, or null when no
+ * tag is present. Does NOT fire on forced removal or dispel.
+ * @type {JABS_StateExpireData|null}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsApplyStateOnExpire', {
+  get: function()
+  {
+    // grab all matching bracket-pairs from the note.
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.ApplyStateOnExpire, true);
+
+    // if nothing was found, there is no follow-up state.
+    if (!arrays || arrays.length === 0) return null;
+
+    // only the first tag is respected; destructure the pair.
+    const [stateId, chance] = arrays.at(0);
+
+    // wrap in a proper model so callers have typed access to each field.
+    return new JABS_StateExpireData(stateId, chance);
+  },
+});
+//endregion applyStateOnExpire
+
+//region state spread
+/**
+ * Spread rule for this state row: chance and range in tiles.<br/>
+ * Returns null when no {@code <spread:[CHANCE, RANGE]>} tag is present.
+ * @type {{ chance: number, range: number }|null}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSpreadRule', {
+  get: function()
+  {
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.Spread, true);
+
+    if (!arrays || arrays.length === 0) return null;
+
+    const tuple = arrays.at(0);
+    const chance = Number(tuple[0]);
+    const range = Number(tuple[1]);
+
+    if (Number.isNaN(chance) || chance <= 0) return null;
+
+    if (Number.isNaN(range) || range <= 0) return null;
+
+    return { chance, range };
+  },
+});
+
+/**
+ * When true, spread candidates include all battlers in range, not only same-side allies.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsViral', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Viral, true) === true;
+  },
+});
+
+/**
+ * Per-state spread pulse interval in frames when {@code <spreadTick:N>} is present.
+ * @type {number}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSpreadTickFrames', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SpreadTick, true) || 0;
+  },
+});
+
+/**
+ * Max successful spreads per pulse when {@code <spreadPerTick:N>} is present.
+ * @type {number}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSpreadPerTick', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SpreadPerTick, true) || 0;
+  },
+});
+
+/**
+ * When true, spread tries battlers not already afflicted with this state id before others.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSpreadPreferUnafflicted', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      this,
+      J.ABS.RegExp.SpreadPreferUnafflicted,
+      true
+    ) === true;
+  },
+});
+
+/**
+ * When true, spread pulses skip battlers who already have this state id (no spread reapplication).
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSpreadSkipAfflicted', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(
+      this,
+      J.ABS.RegExp.SpreadSkipAfflicted,
+      true
+    ) === true;
+  },
+});
+//endregion state spread
+
 //region slipHp
 /**
  * The flat slip hp amount- per 5 seconds.
@@ -373,4 +488,100 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFormulaPerFive', {
   },
 });
 //endregion slipTp
+
+//region jabsIndefiniteState
+/**
+ * When true, this state never expires on the map (J-ABS duration {@code -1}).<br/>
+ * Authors use {@code <indefiniteState>} instead of MZ {@code removeByWalking}, which
+ * only existed to unlock the {@code stepsToRemove} field in the database editor.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsIndefiniteState', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.IndefiniteState, true);
+  },
+});
+//endregion jabsIndefiniteState
+
+//region jabsStateHasMapTimer
+/**
+ * Whether J-ABS should run a finite map timer when this state is applied.<br/>
+ * True when {@code <stateDuration>} or {@code <stateDurationSec>} is present with a
+ * positive value and {@link #jabsIndefiniteState} is false.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsStateHasMapTimer', {
+  get: function()
+  {
+    if (this.jabsIndefiniteState)
+    {
+      return false;
+    }
+
+    const framesFromTag = RPGManager.getNumberFromNoteByRegex(
+      this,
+      J.ABS.RegExp.StateDuration,
+      true,
+    );
+
+    if (framesFromTag !== null && framesFromTag > 0)
+    {
+      return true;
+    }
+
+    const secondsFromTag = RPGManager.getNumberFromNoteByRegex(
+      this,
+      J.ABS.RegExp.StateDurationSec,
+      true,
+    );
+
+    if (secondsFromTag !== null && secondsFromTag > 0)
+    {
+      return true;
+    }
+
+    return false;
+  },
+});
+//endregion jabsStateHasMapTimer
+
+//region jabsStateDurationFrames
+/**
+ * Effective map-state duration in frames for this database row.<br/>
+ * Authors use {@code <stateDuration:FRAMES>} or {@code <stateDurationSec:SECONDS>}
+ * when {@code stepsToRemove} must exceed the RPG Maker MZ editor cap (9999).
+ * When no tag is present, falls back to {@code stepsToRemove} for display/legacy only;
+ * {@link #jabsStateHasMapTimer} does not treat {@code stepsToRemove} alone as a timer.
+ * @type {number}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsStateDurationFrames', {
+  get: function()
+  {
+    const framesFromTag = RPGManager.getNumberFromNoteByRegex(
+      this,
+      J.ABS.RegExp.StateDuration,
+      true,
+    );
+
+    if (framesFromTag !== null && framesFromTag > 0)
+    {
+      return framesFromTag;
+    }
+
+    const secondsFromTag = RPGManager.getNumberFromNoteByRegex(
+      this,
+      J.ABS.RegExp.StateDurationSec,
+      true,
+    );
+
+    if (secondsFromTag !== null && secondsFromTag > 0)
+    {
+      return secondsFromTag * 60;
+    }
+
+    return this.stepsToRemove;
+  },
+});
+//endregion jabsStateDurationFrames
 //endregion RPG_State effects

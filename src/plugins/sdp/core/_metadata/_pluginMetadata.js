@@ -1,14 +1,14 @@
 //region plugin metadata
-import PanelFamily from '../__models/PanelFamily.js';
-import PanelIdentity from '../__models/PanelIdentity.js';
-import PanelMastery from '../__models/PanelMastery.js';
-import PanelParameter from '../__models/PanelParameter.js';
-import PanelProgression from '../__models/PanelProgression.js';
-import PanelRankupReward from '../__models/PanelRankupReward.js';
-import PanelRarity from '../__models/PanelRarity.js';
-import PanelSubgroup from '../__models/PanelSubgroup.js';
-import SdpConfiguration from '../__models/SdpConfiguration.js';
-import StatDistributionPanel from '../__models/StatDistributionPanel.js';
+import PanelFamily from '../models/PanelFamily.js';
+import PanelIdentity from '../models/PanelIdentity.js';
+import PanelMastery from '../models/PanelMastery.js';
+import PanelParameter from '../models/PanelParameter.js';
+import PanelProgression from '../models/PanelProgression.js';
+import PanelRankupReward from '../models/PanelRankupReward.js';
+import PanelRarity from '../models/PanelRarity.js';
+import PanelSubgroup from '../models/PanelSubgroup.js';
+import SdpConfiguration from '../models/SdpConfiguration.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 
 class J_SdpPluginMetadata
   extends PluginMetadata
@@ -18,6 +18,18 @@ class J_SdpPluginMetadata
    * @type {string}
    */
   static CONFIG_PATH = 'data/config.sdp.json';
+
+  /**
+   * Minimum Max HP after SDP panel downs (0 MHP bricks the actor).
+   * @type {number}
+   */
+  static PanelStatFloorMhp = 1;
+
+  /**
+   * Minimum value for every other stat after SDP panel downs.
+   * @type {number}
+   */
+  static PanelStatFloorDefault = 0;
 
   /**
    * Classifies the anonymous object from the parsed json into panels and subgroups.
@@ -302,7 +314,7 @@ class J_SdpPluginMetadata
       // validate the name is not one of the organizational names for the editor-only.
       const panelName = parsedPanel.identity?.name ?? parsedPanel.name ?? String.empty;
       if (panelName.startsWith('__')) return;
-      if (panelName.startsWith('==')) return;
+      // if (panelName.startsWith('==')) return;
       if (panelName.startsWith('--')) return;
 
       // destructure the details we care about.
@@ -609,6 +621,18 @@ class J_SdpPluginMetadata
      * @type {string}
      */
     this.sdpPointsDisplayName = this.parsedPluginParameters['sdpPointsDisplayName'] ?? 'SDP';
+
+    /**
+     * Minimum Max HP after SDP panel downs (0 MHP bricks the actor).
+     * @type {number}
+     */
+    this.panelStatFloorMhp = J_SdpPluginMetadata.PanelStatFloorMhp;
+
+    /**
+     * Minimum value for every other stat after SDP panel downs.
+     * @type {number}
+     */
+    this.panelStatFloorDefault = J_SdpPluginMetadata.PanelStatFloorDefault;
   }
 
   /**

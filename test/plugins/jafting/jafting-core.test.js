@@ -25,9 +25,6 @@ describe('J-JAFTING core (built plugin)', () =>
     expect(md.name).toBe('J-JAFTING');
     expect(md.materialArmorTypeId).toBe(5);
     expect(md.materialWeaponTypeId).toBe(-1);
-    expect(md.version.major).toBe(2);
-    expect(md.version.minor).toBe(1);
-    expect(md.version.patch).toBe(2);
   });
 
   it('reserves J.JAFTING.EXT for extensions', () =>

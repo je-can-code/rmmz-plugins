@@ -56,6 +56,25 @@ class J_PopupsAbs_PluginMetadata
       enableMitigation: params['enableMergeMitigation'] !== 'false',
       idleFlushFrames: Number(params['mergeIdleFlushFrames'] ?? 90),
     };
+
+    const damageOutlineWidth = Number(params['damageOutlineWidth'] ?? 2);
+    const healingOutlineWidth = Number(params['healingOutlineWidth'] ?? 4);
+
+    /**
+     * Outline width for harm HP/MP/TP combat map pops.
+     * @type {number}
+     */
+    this.damageOutlineWidth = Number.isFinite(damageOutlineWidth) && damageOutlineWidth >= 0
+      ? damageOutlineWidth
+      : 2;
+
+    /**
+     * Outline width for heal HP/MP/TP combat map pops.
+     * @type {number}
+     */
+    this.healingOutlineWidth = Number.isFinite(healingOutlineWidth) && healingOutlineWidth >= 0
+      ? healingOutlineWidth
+      : 4;
   }
 }
 

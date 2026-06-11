@@ -21,15 +21,16 @@ describe('J-Passive party, equipment, and enemy sources (out/J-Passive.js)', () 
   beforeEach(() =>
   {
     resetPassivePluginSandbox(sandbox);
+    const { stateData } = sandbox.__passiveTestFixtures;
     sandbox.$dataStates = [
       null,
-      { id: 1, name: 'S1', note: '' },
-      { id: 2, name: 'S2', note: '' },
-      { id: 5, name: 'Eq', note: '' },
-      { id: 6, name: 'Uq', note: '' },
-      { id: 8, name: 'P8', note: '' },
-      { id: 9, name: 'P9', note: '' },
+      stateData({ id: 1, name: 'S1', note: '' }),
+      stateData({ id: 2, name: 'S2', note: '' }),
     ];
+    sandbox.$dataStates[5] = stateData({ id: 5, name: 'Eq', note: '' });
+    sandbox.$dataStates[6] = stateData({ id: 6, name: 'Uq', note: '' });
+    sandbox.$dataStates[8] = stateData({ id: 8, name: 'P8', note: '' });
+    sandbox.$dataStates[9] = stateData({ id: 9, name: 'P9', note: '' });
   });
 
   it('equipped weapon equippedPassive and uniqueEquippedPassive merge into passive refresh', () =>

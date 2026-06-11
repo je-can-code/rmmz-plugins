@@ -78,6 +78,14 @@ export function installPassiveEngineStubs(sandbox)
 
   sandbox.Game_Battler = Game_Battler;
 
+  function Game_Action()
+  {
+  }
+
+  Game_Action.prototype.initialize = noop;
+  Game_Action.prototype.apply = noop;
+  sandbox.Game_Action = Game_Action;
+
   function Game_Actor()
   {
   }
@@ -126,9 +134,58 @@ export function installPassiveEngineStubs(sandbox)
     return [];
   };
 
+  Game_Actor.prototype.isLearnedSkill = function(skillId)
+  {
+    if (!this._skills)
+    {
+      return false;
+    }
+
+    return this._skills.includes(skillId);
+  };
+
   Game_Actor.prototype.skills = function()
   {
-    return [];
+    if (!this._skills)
+    {
+      return [];
+    }
+
+    return this._skills
+      .map(id => sandbox.$dataSkills[id])
+      .filter(Boolean);
+  };
+
+  Game_Actor.prototype.onLearnNewSkill = noop;
+
+  Game_Actor.prototype.onForgetSkill = noop;
+
+  Game_Actor.prototype.learnSkill = function(skillId)
+  {
+    if (!this._skills)
+    {
+      this._skills = [];
+    }
+
+    if (this.isLearnedSkill(skillId) === false)
+    {
+      this.onLearnNewSkill(skillId);
+      this._skills.push(skillId);
+    }
+  };
+
+  Game_Actor.prototype.forgetSkill = function(skillId)
+  {
+    if (!this._skills)
+    {
+      return;
+    }
+
+    if (this.isLearnedSkill(skillId))
+    {
+      this.onForgetSkill(skillId);
+      this._skills = this._skills.filter(id => id !== skillId);
+    }
   };
 
   Game_Actor.prototype.onBattlerDataChange = noop;

@@ -1,5 +1,5 @@
 //region Window_SdpMastery
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 /**
  * Read-only mastery summary for the hovered panel.
  * Mastery is separate from {@link Window_SdpRewardList} — it reflects subgroup tier

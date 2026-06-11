@@ -1,5 +1,5 @@
 //region Game_Actor
-import PanelRanking from './../__models/PanelRanking.js';
+import PanelRanking from '../models/PanelRanking.js';
 
 /**
  * Extends {@link #initMembers}.<br/>
@@ -415,48 +415,78 @@ Game_Actor.prototype.getSdpBonusForNonCoreParam = function(sparamId, baseParam, 
 };
 
 /**
+ * Combines pre-SDP base with panel delta and enforces stat floors after downs.
+ * @param {number} baseParam Pre-SDP base.
+ * @param {number} panelModifications Net SDP panel delta.
+ * @param {number} minResult Minimum allowed total (MHP uses {@link J.SDP.Metadata#panelStatFloorMhp}).
+ * @returns {number}
+ */
+Game_Actor.prototype.applySdpPanelStatFloor = function(baseParam, panelModifications, minResult)
+{
+  const raw = baseParam + panelModifications;
+
+  if (raw >= minResult)
+  {
+    return raw;
+  }
+
+  return minResult;
+};
+
+/**
  * Extends the base parameters with the SDP bonuses.
  */
-J.SDP.Aliased.Game_Actor.set("param", Game_Actor.prototype.param);
+J.SDP.Aliased.Game_Actor.set('param', Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("param")
+  const baseParam = J.SDP.Aliased.Game_Actor.get('param')
     .call(this, paramId);
 
   const panelModifications = this.getSdpBonusForCoreParam(paramId, baseParam);
-  const result = baseParam + panelModifications;
-  return result;
+  const minResult = paramId === 0
+    ? J.SDP.Metadata.panelStatFloorMhp
+    : J.SDP.Metadata.panelStatFloorDefault;
+
+  return this.applySdpPanelStatFloor(baseParam, panelModifications, minResult);
 };
 
 /**
  * Extends the ex-parameters with the SDP bonuses.
  */
-J.SDP.Aliased.Game_Actor.set("xparam", Game_Actor.prototype.xparam);
+J.SDP.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("xparam")
+  const baseParam = J.SDP.Aliased.Game_Actor.get('xparam')
     .call(this, xparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(xparamId, baseParam, 8);
-  const result = baseParam + panelModifications;
-  return result;
+
+  return this.applySdpPanelStatFloor(
+    baseParam,
+    panelModifications,
+    J.SDP.Metadata.panelStatFloorDefault,
+  );
 };
 
 /**
  * Extends the sp-parameters with the SDP bonuses.
  */
-J.SDP.Aliased.Game_Actor.set("sparam", Game_Actor.prototype.sparam);
+J.SDP.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // perform original logic.
-  const baseParam = J.SDP.Aliased.Game_Actor.get("sparam")
+  const baseParam = J.SDP.Aliased.Game_Actor.get('sparam')
     .call(this, sparamId);
 
   const panelModifications = this.getSdpBonusForNonCoreParam(sparamId, baseParam, 18);
-  const result = baseParam + panelModifications;
-  return result;
+
+  return this.applySdpPanelStatFloor(
+    baseParam,
+    panelModifications,
+    J.SDP.Metadata.panelStatFloorDefault,
+  );
 };
 
 /**
@@ -464,21 +494,21 @@ Game_Actor.prototype.sparam = function(sparamId)
  * Includes bonuses from panels as well.
  * @returns {number}
  */
-J.SDP.Aliased.Game_Actor.set("maxTp", Game_Actor.prototype.maxTp);
+J.SDP.Aliased.Game_Actor.set('maxTp', Game_Actor.prototype.maxTp);
 Game_Actor.prototype.maxTp = function()
 {
   // perform original logic.
-  const baseMaxTp = J.SDP.Aliased.Game_Actor.get("maxTp")
+  const baseMaxTp = J.SDP.Aliased.Game_Actor.get('maxTp')
     .call(this);
 
   // calculate the bonus max tp from the panels.
   const bonusMaxTpFromSdp = this.maxTpSdpBonuses(baseMaxTp);
 
-  // combine the two for the total max tp.
-  const result = bonusMaxTpFromSdp + baseMaxTp;
-
-  // return our calculations.
-  return result;
+  return this.applySdpPanelStatFloor(
+    baseMaxTp,
+    bonusMaxTpFromSdp,
+    J.SDP.Metadata.panelStatFloorDefault,
+  );
 };
 
 /**

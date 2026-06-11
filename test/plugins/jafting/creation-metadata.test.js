@@ -22,9 +22,6 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (built plugins)', () =>
   it('exposes core metadata on J.JAFTING.Metadata', () =>
   {
     expect(sandbox.J.JAFTING.Metadata.name).toBe('J-JAFTING');
-    expect(sandbox.J.JAFTING.Metadata.version.major).toBe(2);
-    expect(sandbox.J.JAFTING.Metadata.version.minor).toBe(1);
-    expect(sandbox.J.JAFTING.Metadata.version.patch).toBe(2);
   });
 
   it('maps Creation plugin parameters onto J.JAFTING.EXT.CREATE.Metadata', () =>

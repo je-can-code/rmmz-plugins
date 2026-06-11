@@ -635,6 +635,10 @@ class Window_InputFrame
     // reset paint opacity for any future draws this frame.
     this.contents.paintOpacity = 255;
 
+    // draw the usable-item slot to the right of the diamond at full opacity.
+    // it is always visible (when equipped) regardless of which diamond mode is active.
+    this.drawUsableItemSlot();
+
     // draw the mode labels with their own fading alphas.
     this.drawModeLabels(alphaBase, alphaSkills);
 
@@ -1035,6 +1039,115 @@ class Window_InputFrame
   }
 
   /**
+   * Draws the usable-item slot to the right of the diamond's rightmost node.
+   * Uses the same coordinate geometry as {@link drawDiamond} to stay in sync.
+   * The panel is always visible; an empty slot shows a placeholder icon and label.
+   */
+  drawUsableItemSlot()
+  {
+    // geometry constants — must match drawDiamond exactly.
+    const ikw = this.inputKeyWidth();
+    const ikh = this.inputKeyHeight();
+    const desiredGap = Window_InputFrame.DiamondGap;
+
+    // horizontal center of the window (same anchor drawDiamond uses).
+    const cx = Math.floor(this.width / 2) + 4;
+
+    // vertical center of the window side-row (shared with left/right diamond nodes).
+    const cy = Math.floor(this.height / 2) - 10;
+
+    // half-sizes for converting between centers and sprite origins.
+    const halfIkw = Math.floor(ikw / 2);
+    const halfIkh = Math.floor(ikh / 2);
+
+    // the right diamond node is centered at cx + (ikw + desiredGap).
+    const rightCenterX = cx + (ikw + desiredGap);
+
+    // place the usable-item slot one full key-width + gap to the right of the right node's center.
+    const usableItemX = rightCenterX + halfIkw + desiredGap;
+
+    // share the same vertical origin as the left/right diamond nodes.
+    const sideY = cy - halfIkh - 20;
+
+    const panelWidth = ikw - 10;
+    const panelHeight = ikh;
+    const panelX = usableItemX - 10;
+    const panelY = sideY + 20;
+
+    // always draw the slot panel so the usable-item position is visible even when empty.
+    this.drawHudPanelFancy(panelX, panelY, panelWidth, panelHeight, {
+      tint: null,
+      tintAlpha: 0,
+    });
+
+    // grab the leader's usable-item slot directly — do not require an equipped item id.
+    const leader = $gameParty.leader();
+    if (!leader)
+    {
+      this.drawEmptyUsableItemSlotContent(panelX, panelY, panelWidth, panelHeight);
+      return;
+    }
+
+    const skillSlot = leader.getUsableItemSkillSlot();
+    if (!skillSlot)
+    {
+      this.drawEmptyUsableItemSlotContent(panelX, panelY, panelWidth, panelHeight);
+      return;
+    }
+
+    // hide any prior frame's equipped sprite when the slot is empty.
+    const sprite = this.getOrCreateInputKeySlotSprite(skillSlot, JABS_Button.UsableItem);
+    if (skillSlot.isEmpty())
+    {
+      sprite.hide();
+      this.drawEmptyUsableItemSlotContent(panelX, panelY, panelWidth, panelHeight);
+      return;
+    }
+
+    // equipped — draw the live slot contents; the panel was already drawn above.
+    this.drawInputKeySlotSprite(skillSlot, JABS_Button.UsableItem, usableItemX, sideY, 255, true);
+  }
+
+  /**
+   * Draws placeholder contents inside an empty usable-item slot panel.
+   * @param {number} panelX The panel left edge in contents space.
+   * @param {number} panelY The panel top edge in contents space.
+   * @param {number} panelWidth The panel width.
+   * @param {number} panelHeight The panel height.
+   */
+  drawEmptyUsableItemSlotContent(panelX, panelY, panelWidth, panelHeight)
+  {
+    // blank icon centered in the panel, biased upward to leave label room.
+    const iconW = ImageManager.iconWidth;
+    const iconH = ImageManager.iconHeight;
+    const labelReserve = 18;
+    const iconX = panelX + Math.floor((panelWidth - iconW) / 2);
+    const iconY = panelY + Math.max(0, Math.floor((panelHeight - labelReserve - iconH) / 2));
+    this.drawIcon(0, iconX, iconY);
+
+    // small dimmed label beneath the icon.
+    const originalSize = this.contents.fontSize;
+    const originalOutlineW = this.contents.outlineWidth;
+    const originalOutlineC = this.contents.outlineColor;
+
+    this.setFontSize(originalSize - 10);
+    this.contents.outlineWidth = 4;
+    this.contents.outlineColor = 'rgba(0, 0, 0, 0.85)';
+    this.changeTextColor(ColorManager.dimColor1());
+
+    const text = 'Item';
+    const tw = this.textSizeEx(text).width;
+    const labelX = panelX + Math.floor((panelWidth - tw) / 2) - 5;
+    const labelY = panelY + panelHeight - labelReserve - 16;
+    this.drawText(text, labelX, labelY, tw, 'left');
+
+    this.resetTextColor();
+    this.setFontSize(originalSize);
+    this.contents.outlineWidth = originalOutlineW;
+    this.contents.outlineColor = originalOutlineC;
+  }
+
+  /**
    * Draws a single input key of the input frame.
    * @param {string} inputType The type of input key this is.
    * @param {number} x The x coordinate.
@@ -1066,13 +1179,14 @@ class Window_InputFrame
    * @param {number} x The x coordinate (CONTENTS space).
    * @param {number} y The y coordinate (CONTENTS space).
    * @param {number} opacity The per-pass opacity (0..255) for the slot sprite.
+   * @param {boolean} skipPanel When true, the caller already drew the HUD panel (usable-item slot).
    */
-  drawInputKeySlotSprite(skillSlot, inputType, x, y, opacity)
+  drawInputKeySlotSprite(skillSlot, inputType, x, y, opacity, skipPanel = false)
   {
     const sprite = this.getOrCreateInputKeySlotSprite(skillSlot, inputType);
 
-    // draw the panel background when the slot isn’t empty.
-    if (!skillSlot.isEmpty())
+    // draw the panel background when the slot isn’t empty and the caller did not draw it already.
+    if (skipPanel === false && !skillSlot.isEmpty())
     {
       const width = this.inputKeyWidth() - 10;
       const height = this.inputKeyHeight();

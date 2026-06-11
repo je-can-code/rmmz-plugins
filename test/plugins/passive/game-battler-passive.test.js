@@ -21,7 +21,17 @@ describe('J-Passive Game_Battler / Game_Actor (out/J-Passive.js)', () =>
   beforeEach(() =>
   {
     resetPassivePluginSandbox(sandbox);
-    sandbox.$dataStates = [ null, { id: 1, name: 'P1', note: '' }, { id: 2, name: 'P2', note: '' } ];
+    const { stateData } = sandbox.__passiveTestFixtures;
+    sandbox.$dataStates = [
+      null,
+      stateData({ id: 1, name: 'P1', note: '' }),
+      stateData({ id: 2, name: 'P2', note: '' }),
+      stateData({ id: 3, name: 'P3', note: '' }),
+      stateData({ id: 4, name: 'P4', note: '' }),
+      stateData({ id: 5, name: 'P5', note: '' }),
+      stateData({ id: 6, name: 'P6', note: '' }),
+    ];
+    sandbox.$dataStates[99] = stateData({ id: 99, name: 'P99', note: '' });
   });
 
   it('refreshPassiveStates collects stackable passive ids from class and actor notes', () =>
@@ -144,6 +154,33 @@ describe('J-Passive Game_Battler / Game_Actor (out/J-Passive.js)', () =>
 
     expect(actor.isPassiveState(2)).toBe(true);
     expect(actor.isStateAddable(2)).toBe(false);
+  });
+
+  it('refreshPassiveStates collects skill passives after learnSkill commits the skill', () =>
+  {
+    const { actorData, classData, skillData } = sandbox.__passiveTestFixtures;
+    const actor = new sandbox.Game_Actor();
+    actor.__actorDb = actorData({
+      id: 1,
+      name: '',
+      note: '',
+      classId: 1,
+      traits: [],
+    });
+    actor.currentClass = function()
+    {
+      return classData({ id: 1, note: '' });
+    };
+    actor.equippedEquips = function()
+    {
+      return [];
+    };
+    actor._skills = [];
+    actor.initMembers();
+    sandbox.$dataSkills[901] = skillData({ id: 901, note: '<passive:[1]>' });
+    actor.learnSkill(901);
+
+    expect(actor.getPassiveStateIds()).toContain(1);
   });
 
   it('traitObjects appends passive database states and party passives', () =>

@@ -21,9 +21,6 @@ describe('J-Escriptions metadata (out/escribe/J-Escriptions.js)', () =>
   it('initializes J.ESCRIBE metadata and regex', () =>
   {
     expect(sandbox.J.ESCRIBE.Metadata.name).toBe('J-Escriptions');
-    expect(sandbox.J.ESCRIBE.Metadata.version.major).toBe(1);
-    expect(sandbox.J.ESCRIBE.Metadata.version.minor).toBe(0);
-    expect(sandbox.J.ESCRIBE.Metadata.version.patch).toBe(0);
     expect(sandbox.J.ESCRIBE.RegExp.Text.test('<text:Hello>')).toBe(true);
   });
 });

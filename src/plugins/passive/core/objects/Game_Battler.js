@@ -100,6 +100,8 @@ Game_Battler.prototype.cachePassiveCapableSources = function()
  */
 Game_Battler.prototype.sourceHasAnyPassiveIds = function(source)
 {
+  if (!source) return false;
+
   if (source.passiveStateIds && source.passiveStateIds.length > 0) return true;
   if (source.uniquePassiveStateIds && source.uniquePassiveStateIds.length > 0) return true;
 
@@ -253,11 +255,11 @@ Game_Battler.prototype.refreshPassiveStates = function()
   // grab all the unique ids.
   const uniqueIds = this.getAllUniquePassiveStateIds();
 
-  // grab all the stackable ids.
-  const stackableIds = this.getAllStackablePassiveStateIds();
-
-  // add all the unique ids to the tracker.
+  // commit unique passives first so nested stack grants on mastery state rows resolve this pass.
   uniqueIds.forEach(stateId => this.addPassiveStateId(stateId, false), this);
+
+  // grab stackable ids after unique rows are in the tracker — mastery states can own passiveStateCount.
+  const stackableIds = this.getAllStackablePassiveStateIds();
 
   // add all the stackable ids to the tracker.
   stackableIds.forEach((stackCount, stateId) =>

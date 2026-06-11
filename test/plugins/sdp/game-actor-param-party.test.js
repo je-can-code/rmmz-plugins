@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { loadSdpPluginVm } from './sdp-vm.js';
 
 const ATK_PARAM_ID = 2;
+const MHP_PARAM_ID = 0;
 
 /**
  * @param {object} s
@@ -14,6 +15,23 @@ function hookBaseAtk100(s)
   s.J.SDP.Aliased.Game_Actor.set('param', function(paramId)
   {
     if (paramId === ATK_PARAM_ID)
+    {
+      return 100;
+    }
+
+    return inner.call(this, paramId);
+  });
+}
+
+/**
+ * @param {object} s
+ */
+function hookBaseMhp100(s)
+{
+  const inner = s.J.SDP.Aliased.Game_Actor.get('param');
+  s.J.SDP.Aliased.Game_Actor.set('param', function(paramId)
+  {
+    if (paramId === MHP_PARAM_ID)
     {
       return 100;
     }
@@ -91,6 +109,29 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (out/sdp/J-SDP
     actor.unlockSdpByKey('vitest_atk_pct_neg');
     actor.rankUpPanel('vitest_atk_pct_neg');
     expect(actor.param(ATK_PARAM_ID)).toBe(92);
+  });
+
+  it('floors ATK at 0 when panel downs would go negative', () =>
+  {
+    const actor = makeActor(sandbox, 1);
+    actor.unlockSdpByKey('vitest_atk_crush');
+    for (let i = 0; i < 10; i++)
+    {
+      actor.rankUpPanel('vitest_atk_crush');
+    }
+    expect(actor.param(ATK_PARAM_ID)).toBe(0);
+  });
+
+  it('floors MHP at 1 when panel downs would go negative', () =>
+  {
+    hookBaseMhp100(sandbox);
+    const actor = makeActor(sandbox, 1);
+    actor.unlockSdpByKey('vitest_mhp_crush');
+    for (let i = 0; i < 10; i++)
+    {
+      actor.rankUpPanel('vitest_mhp_crush');
+    }
+    expect(actor.param(MHP_PARAM_ID)).toBe(1);
   });
 
   it('stacks multiple panels that target ATK', () =>

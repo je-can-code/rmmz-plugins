@@ -41,6 +41,14 @@ class JPassiveConditional_PluginMetadata
      * @type {number}
      */
     this.defaultProximityTiles = Number.isNaN(proximityParsed) ? 5 : proximityParsed;
+
+    const depthParsed = parseInt(this.parsedPluginParameters['auto-execute-skill-max-depth'], 10);
+
+    /**
+     * Maximum nested {@link AutoExecuteSkillManager} executions per synchronous call stack.
+     * @type {number}
+     */
+    this.autoExecuteSkillMaxDepth = Number.isNaN(depthParsed) ? 1 : depthParsed;
   }
 }
 

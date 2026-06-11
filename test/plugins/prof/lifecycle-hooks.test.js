@@ -54,9 +54,9 @@ describe('J-Proficiency lifecycle hooks (out/prof/J-Proficiency.js)', () =>
     });
     actor.initMembers();
 
-    expect(actor.bonusSkillProficiencyGains()).toBe(0);
+    expect(actor.prof).toBe(0);
     actor.onBattlerDataChange();
-    expect(actor.bonusSkillProficiencyGains()).toBe(3);
+    expect(actor.prof).toBe(3);
   });
 });
 //endregion plugins/prof/lifecycle-hooks.test.js

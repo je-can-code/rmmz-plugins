@@ -99,15 +99,18 @@ class Window_PassiveList
     // grab all passive states currently applied to this actor.
     const all = this._actor.getPassiveStates();
 
-    // if there is no filter, show every passive state.
+    // drop implementation-only amplifiers; they still contribute traits via the passive pipeline.
+    const visible = all.filter(state => state.hideFromPassiveList === false);
+
+    // if there is no filter, show every visible passive state.
     if (this._tabFilter === null)
     {
-      this._data = all;
+      this._data = visible;
       return;
     }
 
     // apply the tab filter; only keep states the filter claims for this tab.
-    this._data = all.filter(state => this._tabFilter(state.id, this._actor));
+    this._data = visible.filter(state => this._tabFilter(state.id, this._actor));
 
     // always guarantee at least one row so the cursor has somewhere to land.
     if (this._data.length === 0)

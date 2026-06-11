@@ -5,12 +5,10 @@
  * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Provides core functionality for this HUD system.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
- * @base J-ABS
  * @base J-Base
- * @base J-HUD
- * @orderAfter J-ABS
+ * @base J-ABS
  * @orderAfter J-Base
- * @orderAfter J-HUD
+ * @orderAfter J-ABS
  * @help
  * ============================================================================
  * OVERVIEW

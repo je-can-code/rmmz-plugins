@@ -49,4 +49,38 @@ Object.defineProperty(RPG_BaseItem.prototype, 'passiveStateCounts', {
     );
   },
 });
+
+/**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState} tuples from this row.<br/>
+ * Each tuple schedules a real state via {@link AutoApplyStateManager} (not the passive pipeline).
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_BaseItem.prototype, 'autoApplyStateRules', {
+  get()
+  {
+    // pull every auto-apply scheduler tuple from notes on this row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState,
+      true
+    );
+  },
+});
+
+/**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill} tuples from this row.<br/>
+ * Each tuple schedules a map skill via {@link AutoExecuteSkillManager}.
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_BaseItem.prototype, 'autoExecuteSkillRules', {
+  get()
+  {
+    // pull every auto-execute scheduler tuple from notes on this row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill,
+      true
+    );
+  },
+});
 //endregion RPG_BaseItem

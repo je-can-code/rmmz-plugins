@@ -1,6 +1,6 @@
 //region JABS_HitboxPulseManager (static)
-import JABS_HitboxPulseOptions from './../__models/JABS_HitboxPulseOptions.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_HitboxPulseOptions from '../models/JABS_HitboxPulseOptions.js';
+import JABS_Action from '../models/JABS_Action.js';
 import Sprite_HitboxPulse from './../sprites/Sprite_HitboxPulse.js';
 /**
  * A static manager that owns lightweight hitbox "pulses" for resolved JABS actions.

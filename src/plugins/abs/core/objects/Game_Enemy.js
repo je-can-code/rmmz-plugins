@@ -1,6 +1,6 @@
 //region Game_Enemy
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * Extends {@link Game_Enemy.setup}.<br/>
  * Includes JABS skill initialization.
@@ -323,6 +323,9 @@ Game_Enemy.prototype.canIdle = function()
   // prohibition tag present → not idle (invert presence to "can idle").
   if (cannotIdle !== null) return !cannotIdle;
 
+  // inanimate battlers do not idle unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
+
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyCanIdle;
 };
@@ -349,8 +352,36 @@ Game_Enemy.prototype.showHpBar = function()
   // prohibition tag present → hide bar.
   if (noHpBar !== null) return !noHpBar;
 
+  // inanimate battlers hide their hp bar unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
+
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowHpBar;
+};
+
+/**
+ * Gets whether or not an enemy shows the map affliction strip from their notes.
+ * This will be overwritten by values provided from an event.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.showStates = function()
+{
+  const referenceData = this.databaseData();
+  const showStates = referenceData.jabsConfigShowStates;
+
+  if (showStates !== null)
+  {
+    return showStates;
+  }
+
+  const hideStates = referenceData.jabsConfigHideStates;
+
+  if (hideStates !== null)
+  {
+    return !hideStates;
+  }
+
+  return true;
 };
 
 /**
@@ -374,6 +405,9 @@ Game_Enemy.prototype.showBattlerName = function()
 
   // prohibition tag present → hide name.
   if (noName !== null) return !noName;
+
+  // inanimate battlers hide their name unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowBattlerName;

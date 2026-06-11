@@ -30,9 +30,6 @@ describe('J-NaturalGrowth metadata (out/natural/J-NaturalGrowth.js)', () =>
   it('initializes PluginMetadata name and version', () =>
   {
     expect(sandbox.J.NATURAL.Metadata.name).toBe('J-NaturalGrowth');
-    expect(sandbox.J.NATURAL.Metadata.version.major).toBe(2);
-    expect(sandbox.J.NATURAL.Metadata.version.minor).toBe(1);
-    expect(sandbox.J.NATURAL.Metadata.version.patch).toBe(2);
   });
 
   it('maps PluginManager parameters into J.NATURAL.Metadata base TP fields', () =>

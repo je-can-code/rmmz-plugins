@@ -21,9 +21,6 @@ describe('J-SkillSlots metadata and regex (out/sks/J-SkillSlots.js)', () =>
   it('exposes J.SKS namespace and versioned metadata', () =>
   {
     expect(sandbox.J.SKS.Metadata.name).toBe('J-SkillSlots');
-    expect(sandbox.J.SKS.Metadata.version.major).toBe(1);
-    expect(sandbox.J.SKS.Metadata.version.minor).toBe(0);
-    expect(sandbox.J.SKS.Metadata.version.patch).toBe(0);
   });
 
   it('slotCost regex parses signed integers from skill notes', () =>

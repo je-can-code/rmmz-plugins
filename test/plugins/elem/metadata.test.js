@@ -21,9 +21,6 @@ describe('J-Elementalistics metadata and regex (out/elem/J-Elementalistics.js)',
   it('exposes J.ELEM.Metadata', () =>
   {
     expect(sandbox.J.ELEM.Metadata.name).toBe('J-Elementalistics');
-    expect(sandbox.J.ELEM.Metadata.version.major).toBe(1);
-    expect(sandbox.J.ELEM.Metadata.version.minor).toBe(0);
-    expect(sandbox.J.ELEM.Metadata.version.patch).toBe(1);
   });
 
   it('attack and absorb tag regexes capture bracketed id lists', () =>

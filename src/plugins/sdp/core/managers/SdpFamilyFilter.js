@@ -1,7 +1,7 @@
 //region SdpFamilyFilter
 /**
  * Family-filter symbols and helpers for the SDP panel list.
- * Cycle order is built per actor: All → Unsorted → families with unlocked panels.
+ * Cycle order is built per actor: All → Unsorted (when non-empty) → families with unlocked panels.
  */
 class SdpFamilyFilter
 {
@@ -57,7 +57,7 @@ class SdpFamilyFilter
 
   /**
    * Builds the L2/R2 cycle for the current actor.
-   * Families with no unlocked panels for this actor are omitted.
+   * Unsorted and family tabs with no unlocked panels for this actor are omitted.
    * @param {Game_Actor} actor The actor driving this step.
    * @returns {string[]}
    */
@@ -65,9 +65,9 @@ class SdpFamilyFilter
   {
     const cycle = [
       SdpFamilyFilter.ALL,
-      SdpFamilyFilter.UNKNOWN,
     ];
     const familiesWithUnlockedPanels = new Set();
+    let hasUnknownPanels = false;
 
     actor.getAllUnlockedSdps()
       .forEach(panelRanking =>
@@ -81,11 +81,19 @@ class SdpFamilyFilter
 
         const filterKey = SdpFamilyFilter.resolvePanelFamilyFilterKey(panel);
 
-        if (filterKey !== SdpFamilyFilter.UNKNOWN)
+        if (filterKey === SdpFamilyFilter.UNKNOWN)
         {
-          familiesWithUnlockedPanels.add(filterKey);
+          hasUnknownPanels = true;
+          return;
         }
+
+        familiesWithUnlockedPanels.add(filterKey);
       });
+
+    if (hasUnknownPanels)
+    {
+      cycle.push(SdpFamilyFilter.UNKNOWN);
+    }
 
     J.SDP.Metadata.families.forEach(family =>
     {

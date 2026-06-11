@@ -7,7 +7,7 @@ import { repoRoot } from '../../../setup/repo-root.js';
 
 import { stripEsmForVm } from './strip-esm-for-vm.js';
 
-const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/__models');
+const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/models');
 
 /**
  * Reads an SDP `__models` source file and strips ESM for VM evaluation.
@@ -135,7 +135,39 @@ export function buildVitestSdpConfigJson()
       .rewards([])
       .build();
 
-    const allPanels = [ basePanel, atkFlat, atkPct, atkFlatNeg, atkPctNeg ];
+    const atkCrush = StatDistributionPanel.Builder()
+      .name('Vitest ATK crush')
+      .key('vitest_atk_crush')
+      .iconIndex(1)
+      .rarity(PanelRarity.RARITY_COMMON)
+      .unlockedByDefault(true)
+      .description('test')
+      .flavorText('test')
+      .maxRank(10)
+      .baseCost(0)
+      .flatGrowth(0)
+      .multGrowth(1)
+      .parameters([ new PanelParameter('atk', -50, false, false) ])
+      .rewards([])
+      .build();
+
+    const mhpCrush = StatDistributionPanel.Builder()
+      .name('Vitest MHP crush')
+      .key('vitest_mhp_crush')
+      .iconIndex(1)
+      .rarity(PanelRarity.RARITY_COMMON)
+      .unlockedByDefault(true)
+      .description('test')
+      .flavorText('test')
+      .maxRank(10)
+      .baseCost(0)
+      .flatGrowth(0)
+      .multGrowth(1)
+      .parameters([ new PanelParameter('mhp', -50, false, false) ])
+      .rewards([])
+      .build();
+
+    const allPanels = [ basePanel, atkFlat, atkPct, atkFlatNeg, atkPctNeg, atkCrush, mhpCrush ];
 
     globalThis.__vitestSdpConfigJson = JSON.stringify({
       subgroups: [],

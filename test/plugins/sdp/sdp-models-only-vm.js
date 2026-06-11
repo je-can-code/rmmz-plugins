@@ -7,7 +7,7 @@ import { repoRoot } from '../../setup/repo-root.js';
 
 import { stripEsmForVm } from './fixtures/strip-esm-for-vm.js';
 
-const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/__models');
+const SDP_MODELS_DIR = path.join(repoRoot, 'src/plugins/sdp/core/models');
 
 /**
  * @param {string} filename

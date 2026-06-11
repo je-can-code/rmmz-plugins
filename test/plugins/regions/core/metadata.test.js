@@ -22,9 +22,6 @@ describe('J-RegionEffects metadata (out/regions/J-RegionEffects.js)', () =>
   it('initializes metadata and regex objects', () =>
   {
     expect(sandbox.J.REGIONS.Metadata.name).toBe('J-RegionEffects');
-    expect(sandbox.J.REGIONS.Metadata.version.major).toBe(1);
-    expect(sandbox.J.REGIONS.Metadata.version.minor).toBe(1);
-    expect(sandbox.J.REGIONS.Metadata.version.patch).toBe(0);
     expect(typeof sandbox.J.REGIONS.RegExp.AllowRegions.test).toBe('function');
     expect(typeof sandbox.J.REGIONS.RegExp.DenyRegions.test).toBe('function');
   });

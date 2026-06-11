@@ -1,5 +1,5 @@
 //region Game_Party
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends the initialize to include additional objects for JABS.

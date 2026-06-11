@@ -1,6 +1,6 @@
 //region Game_Map
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends `Game_Map.setup()` to parse out battlers and populate enemies.

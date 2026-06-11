@@ -48,6 +48,14 @@ class JABS_Button
    * @type {string}
    */
   static Dodge = 'Dodge';
+
+  /**
+   * The usable-item slot input (R2 by default).
+   * Executes whatever consumable item is currently equipped in the usable-item slot.
+   * This slot is agnostic to item type — tools are excluded, everything else is fair game.
+   * @type {string}
+   */
+  static UsableItem = 'UsableItem';
   //endregion primary
 
   //region mobility & modifiers
@@ -127,7 +135,7 @@ class JABS_Button
     // the valid set of assignable inputs.
     const okInputs = [
       // primary
-      this.Mainhand, this.Offhand, this.Tool,
+      this.Mainhand, this.Offhand, this.Tool, this.UsableItem,
 
       // modifiers & mobility
       this.SkillTrigger, this.Sprint, this.Strafe, this.Rotate,
@@ -152,7 +160,7 @@ class JABS_Button
   {
     return [
       // primary
-      this.Mainhand, this.Offhand, this.Tool, this.Sprint,
+      this.Mainhand, this.Offhand, this.Tool, this.UsableItem, this.Sprint,
 
 
       // mobility & modifiers

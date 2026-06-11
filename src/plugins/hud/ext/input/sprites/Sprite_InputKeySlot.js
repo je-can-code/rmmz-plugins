@@ -371,8 +371,8 @@ class Sprite_InputKeySlot
    */
   getOrCreateInputKeyCooldownTimerSprite(cooldownData, inputType)
   {
-    // we always are working with items when assigning
-    const isItem = inputType === JABS_Button.Tool;
+    // item slots (tool and usable-item) store $dataItems ids, not skill ids.
+    const isItem = this.hasSkillSlot() && this.skillSlot().isItem();
 
     // determine the key for this sprite.
     const key = this.makeInputKeyCooldownTimerSpriteKey(cooldownData, inputType, isItem);

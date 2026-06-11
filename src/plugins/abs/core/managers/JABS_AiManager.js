@@ -1,10 +1,10 @@
 //region JABS_AiManager
 import JABS_TeamRules from './JABS_TeamRules.js';
-import JABS_Location from './../__models/JABS_Location.js';
-import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
-import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_Location from '../models/JABS_Location.js';
+import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
+import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
+import JABS_Action from '../models/JABS_Action.js';
 /**
  * This static class tracks and manages all {@link JABS_Battler}s on the map.
  */
@@ -931,8 +931,8 @@ class JABS_AiManager
     // do not manage the player.
     if (battler.isPlayer()) return false;
 
-    // do not manage inanimate battlers.
-    if (battler.isInanimate()) return false;
+    // inanimate battlers only need AI when they can idle about.
+    if (battler.isInanimate() && battler.canIdle() === false) return false;
 
     // invisible followers are not combat-eligible; the battler object persists for party cycling,
     // but AI should not tick while the follower is hidden.
@@ -950,6 +950,13 @@ class JABS_AiManager
   {
     // no AI is executed when waiting.
     if (battler.isWaiting()) return;
+
+    // inanimate battlers may only wander idly; all combat AI stays suppressed.
+    if (battler.isInanimate())
+    {
+      this.aiPhase0(battler);
+      return;
+    }
 
     // drop ally guard when idle, missing guard skill, or threat disappeared while engaged.
     this.releaseAllyCombatGuardIfStale(battler);

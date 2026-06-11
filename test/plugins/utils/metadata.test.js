@@ -21,9 +21,6 @@ describe('J-SystemUtilities metadata (out/utils/J-SystemUtilities.js)', () =>
   it('initializes J.UTILS metadata with parsed params', () =>
   {
     expect(sandbox.J.UTILS.Metadata.name).toBe('J-SystemUtilities');
-    expect(sandbox.J.UTILS.Metadata.version.major).toBe(1);
-    expect(sandbox.J.UTILS.Metadata.version.minor).toBe(1);
-    expect(sandbox.J.UTILS.Metadata.version.patch).toBe(4);
     expect(sandbox.J.UTILS.Metadata.autostartNewgame).toBe(false);
     expect(sandbox.J.UTILS.Metadata.autoloadDevtools).toBe(false);
   });

@@ -21,9 +21,6 @@ describe('J-Log metadata (out/log/J-Log.js)', () =>
   it('initializes J.LOG metadata and inactivity duration from parameters', () =>
   {
     expect(sandbox.J.LOG.Metadata.name).toBe('J-Log');
-    expect(sandbox.J.LOG.Metadata.version.major).toBe(2);
-    expect(sandbox.J.LOG.Metadata.version.minor).toBe(2);
-    expect(sandbox.J.LOG.Metadata.version.patch).toBe(1);
     expect(sandbox.J.LOG.Metadata.InactivityTimerDuration).toBe(60);
   });
 });

@@ -155,6 +155,17 @@
  * along with 11 and 12 being applied once, too.
  *
  * ============================================================================
+ * HIDE FROM PASSIVES LIST:
+ * Stack amplifiers and other implementation-only passive duplicates can stay
+ * out of the Passives menu while still contributing traits in combat.
+ *
+ * TAG USAGE:
+ * - States only.
+ *
+ * TAG FORMAT:
+ *  <hideFromPassiveList>
+ *
+ * ============================================================================
  * CHANGELOG:
  * - 2.1.0
  *    Added Scene_Passive viewer scene with actor ribbon, state list, and semantic detail window.

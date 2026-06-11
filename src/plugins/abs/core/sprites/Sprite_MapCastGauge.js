@@ -1,5 +1,5 @@
 //region Sprite_MapCastGauge
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * A dedicated cast-time gauge for JABS battlers.
  * Extends {@link Sprite_MapGauge} and binds to a {@link JABS_Battler}.

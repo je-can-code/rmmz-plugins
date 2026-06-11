@@ -48,5 +48,14 @@
 
     globalThis.JABS_Battler = JABS_Battler;
   }
+
+  // conditional aliases updatePixelStepping — seed a noop when J-Pixelistics is not in the test prelude.
+  if (typeof globalThis.Game_CharacterBase !== 'undefined'
+    && typeof globalThis.Game_CharacterBase.prototype.updatePixelStepping !== 'function')
+  {
+    globalThis.Game_CharacterBase.prototype.updatePixelStepping = function()
+    {
+    };
+  }
 })();
 //endregion passive-conditional-engine-prelude

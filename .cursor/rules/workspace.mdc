@@ -12,7 +12,7 @@ Three git repos live side-by-side under `/var/mnt/exdrive/dev/gaming/`:
 | Folder | What it is |
 |---|---|
 | `rmmz-plugins` | Monorepo of RPG Maker MZ plugins (ESM source → Vite single-file ships). Primary project. |
-| `ca` | Consumer test game ("Chef Adventure"). The actual RMMZ project lives at `ca/chef-adventure/`. |
+| `ca` | Consumer test game ("Chef Adventure"). The actual RMMZ project lives at `ca/chef-adventure/`. **Database JSON decode:** `ca/docs/database-decode-cheatsheet.md` + `bun chef-adventure/tools/decode-db-trait.mjs`. |
 | `jmz-data-editor` | React + Neutralino.js GUI for editing plugin data. TypeScript + Vite + Bun. |
 
 ## Author & Style
@@ -108,6 +108,7 @@ Namespaces mirror the directory path and ownership chain. The rule is:
 - **Push everything in both repos.** When plugin work lands via `bun run hotfix`, commit and push **every** remaining local change in **`rmmz-plugins`** and **`ca`** on the branches you are using (including `chef-adventure/data/*.json`, `plugins.js`, and any other files the tools or editor touched). Nothing that belongs in git should stay uncommitted or unpushed in either repo. Session-only noise (e.g. `.cursor/debug-*.log`) stays out of git via `.gitignore`, not by leaving the branch “partial.”
 - **PR commits: full tree.** PR scope is explained in the PR description, not by omitting files from the commit. Include all built output under `rmmz-plugins/project/js/plugins/` that `hotfix` produced.
 - **Build & copy: always use `bun run hotfix`.** Do **not** run `bun run build:<plugin>` (e.g. `build:sdp`) plus manual `cp` to “save time” — full `hotfix` is already sub-second in practice, and single-plugin runs risk a partial `out/`, skipped destinations, and drift from what gets committed. Never copy built plugin files manually. If `hotfix` fails, fix the root cause — do not fall back to manual copies. (Exception: Jeremy explicitly asks for a one-off `build:<plugin>` only, with no expectation that artifacts are fully mirrored.)
+- **Plugin version bumps and changelogs: PR time only.** While building a feature, do **not** edit `meta.js` (`PLUGIN_VERSION`), `_annotations.js` (`CHANGELOG:` blocks), or ship version strings. Author the code and help text for new behavior; leave the published version at whatever is already on the branch. When spinning up a PR, **reverse-analyze the diff** per touched ship (`git diff` on `src/plugins/<ship>/` and built `out/` / `project/js/plugins/`) to decide **major / minor / patch** per plugin and write changelog bullets then. One PR may touch multiple plugins — each ship gets its own version section only if that ship’s tree changed.
 
 ### Enemy decade normalization (Chef Adventure)
 

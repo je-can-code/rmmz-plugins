@@ -87,8 +87,11 @@ Scene_Map.prototype.inputFrameWindowRect = function()
   const marginX = 24;
   const marginY = 24;
 
-  // Final window size: body span + label reserves + visual margins.
-  const width = Math.ceil(diamondBodyWidth + (labelReserveEachSide * 2) + marginX);
+  // Reserve space for the extra usable-item slot rendered to the right of the diamond.
+  const usableItemSlotReserve = ikw + 16;
+
+  // Final window size: body span + label reserves + visual margins + usable-item slot.
+  const width = Math.ceil(diamondBodyWidth + (labelReserveEachSide * 2) + marginX + usableItemSlotReserve);
   const height = Math.ceil(diamondBodyHeight + marginY);
 
   // Center horizontally; anchor bottom.

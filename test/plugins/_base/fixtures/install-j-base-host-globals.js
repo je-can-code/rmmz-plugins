@@ -253,6 +253,7 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
   };
 
   const placeholderNames = [
+    'Game_Action',
     'Game_Actor',
     'Game_Actors',
     'Game_Battler',

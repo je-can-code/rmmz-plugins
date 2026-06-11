@@ -1,9 +1,11 @@
 //region Sprite_Character
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_BattlerName from './../__models/JABS_BattlerName.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_BattlerName from '../models/JABS_BattlerName.js';
+import JABS_Action from '../models/JABS_Action.js';
 import Sprite_MapCastGauge from './Sprite_MapCastGauge.js';
 import Sprite_MapHpGauge from './Sprite_MapHpGauge.js';
+import Sprite_MapAfflictionStrip from './Sprite_MapAfflictionStrip.js';
+import StateAfflictionMapLayoutConfig from '../models/StateAfflictionMapLayoutConfig.js';
 //region init
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.
@@ -133,6 +135,12 @@ Sprite_Character.prototype.initGaugeMembers = function()
    * The cast gauge for this sprite.
    */
   this._j._abs._gauges._castGauge = null;
+
+  /**
+   * The affliction strip for this sprite.
+   * @type {Sprite_MapAfflictionStrip|null}
+   */
+  this._j._abs._gauges._afflictionStrip = null;
 };
 //endregion init
 
@@ -355,6 +363,9 @@ Sprite_Character.prototype.setupMapSprite = function()
 
   // setup a text sprite to display the name of the battler on the map.
   this.setupBattlerName();
+
+  // setup the affliction strip beneath the hp gauge.
+  this.setupAfflictionStrip();
 
   // flag this character as finalized for the purpose of jabs battler-related updates.
   this.finalizeJabsBattlerSetup();
@@ -814,6 +825,135 @@ Sprite_Character.prototype.updateGauges = function()
     // then hide it.
     this.hideCastGauge();
   }
+
+  // refresh the affliction strip beneath the hp gauge.
+  if (this.canUpdateAfflictionStrip() === true)
+  {
+    this.updateAfflictionStrip();
+  }
+  else
+  {
+    this.hideAfflictionStrip();
+  }
+};
+
+/**
+ * Sets up the affliction strip beneath the hp gauge when applicable.
+ */
+Sprite_Character.prototype.setupAfflictionStrip = function()
+{
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    const strip = new Sprite_MapAfflictionStrip();
+
+    this._j._abs._gauges._afflictionStrip = strip;
+    this.addChild(strip);
+  }
+
+  this._j._abs._gauges._afflictionStrip.setupBattler(this.getBattler());
+  this.repositionAfflictionStrip();
+};
+
+/**
+ * Updates the affliction strip for this battler.
+ */
+Sprite_Character.prototype.updateAfflictionStrip = function()
+{
+  const { _afflictionStrip: strip } = this._j._abs._gauges;
+
+  strip.updateStrip();
+  this.repositionAfflictionStrip();
+};
+
+/**
+ * Repositions the affliction strip below the hp gauge, left-aligned to the hp bar.
+ */
+Sprite_Character.prototype.repositionAfflictionStrip = function()
+{
+  const { _afflictionStrip: strip, _hpGauge: hpGauge } = this._j._abs._gauges;
+
+  if (!strip)
+  {
+    return;
+  }
+
+  let x = 0;
+
+  if (hpGauge)
+  {
+    x = hpGauge.x;
+  }
+
+  const y = this.mapAfflictionStripY();
+
+  strip.move(x, y);
+};
+
+/**
+ * Resolves the y coordinate for the affliction strip beneath the hp gauge.
+ * @returns {number}
+ */
+Sprite_Character.prototype.mapAfflictionStripY = function()
+{
+  const layoutConfig = StateAfflictionMapLayoutConfig.fromMetadata();
+  const { gapBelowHpBar } = layoutConfig;
+  const hpGauge = this._j._abs._gauges._hpGauge;
+
+  if (this.canUpdateHpGauge() === true && hpGauge)
+  {
+    return hpGauge.y + hpGauge.bitmapHeight() + gapBelowHpBar;
+  }
+
+  return gapBelowHpBar;
+};
+
+/**
+ * Whether the affliction strip can update for this sprite.
+ * @returns {boolean}
+ */
+Sprite_Character.prototype.canUpdateAfflictionStrip = function()
+{
+  if (this.canUpdate() === false)
+  {
+    return false;
+  }
+
+  if (this.isJabsBattler() === false)
+  {
+    return false;
+  }
+
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    return false;
+  }
+
+  const jabsBattler = this._character.getJabsBattler();
+
+  if (!jabsBattler)
+  {
+    return false;
+  }
+
+  if (jabsBattler.showStates() === false)
+  {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Hides the affliction strip when it cannot update.
+ */
+Sprite_Character.prototype.hideAfflictionStrip = function()
+{
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    return;
+  }
+
+  this._j._abs._gauges._afflictionStrip.hide();
 };
 
 /**

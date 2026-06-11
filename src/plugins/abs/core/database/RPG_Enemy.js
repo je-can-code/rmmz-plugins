@@ -1,6 +1,6 @@
 //region teamId
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_BattlerRole from './../__models/JABS_BattlerRole.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_BattlerRole from '../models/JABS_BattlerRole.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * The JABS team id for this battler.
@@ -434,6 +434,32 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowHpBar', {
   },
 });
 //endregion config:showHpBar
+
+//region config:showStates
+/**
+ * The JABS config option for enabling showing the map affliction strip.
+ * @type {boolean|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigShowStates', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ConfigShowStates, true);
+  },
+});
+//endregion config:showStates
+
+//region config:hideStates
+/**
+ * The JABS config option for disabling the map affliction strip.
+ * @type {boolean|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsConfigHideStates', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ConfigHideStates, true);
+  },
+});
+//endregion config:hideStates
 
 //region config:noHpBar
 /**

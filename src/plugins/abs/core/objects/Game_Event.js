@@ -1,8 +1,8 @@
 //region Game_Event
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_BattlerRole from './../__models/JABS_BattlerRole.js';
-import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_BattlerRole from '../models/JABS_BattlerRole.js';
+import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * Extends {@link Game_Event.initMembers}.<br/>
  * Bootstraps JABS battler storage on map events.
@@ -267,20 +267,21 @@ Game_Event.prototype.parseEnemyComments = function()
   const guardRange = this.getGuardRangeOverrides() ?? enemyBattler.guardRange();
   let canIdle = this.getCanIdleOverrides() ?? enemyBattler.canIdle();
   let showHpBar = this.getShowHpBarOverrides() ?? enemyBattler.showHpBar();
+  const showStates = this.getShowStatesOverrides() ?? enemyBattler.showStates();
   let showBattlerName = this.getShowBattlerNameOverrides() ?? enemyBattler.showBattlerName();
   const isInvincible = this.getInvincibleOverrides() ?? enemyBattler.isInvincible();
   const isInanimate = this.getInanimateOverrides() ?? enemyBattler.isInanimate();
 
-  // if inanimate, override the overrides with these instead.
+  // if inanimate, apply inanimate defaults unless an explicit page tag overrides them.
   if (isInanimate)
   {
     // inanimate objects belong to the neutral team.
     teamId = JABS_Battler.neutralTeamId();
 
-    // inanimate objects cannot idle, lack hp bars, and won't display their name.
-    canIdle = false;
-    showHpBar = false;
-    showBattlerName = false;
+    // inanimate suppresses idle, hp bar, and name unless this page forces otherwise.
+    if (this.getCanIdleOverrides() === null) canIdle = false;
+    if (this.getShowHpBarOverrides() === null) showHpBar = false;
+    if (this.getShowBattlerNameOverrides() === null) showBattlerName = false;
   }
 
   // build the core data.
@@ -297,6 +298,7 @@ Game_Event.prototype.parseEnemyComments = function()
     .setGuardRange(guardRange)
     .setCanIdle(canIdle)
     .setShowHpBar(showHpBar)
+    .setShowStates(showStates)
     .setShowBattlerName(showBattlerName)
     .setIsInvincible(isInvincible)
     .setIsInanimate(isInanimate)
@@ -725,6 +727,33 @@ Game_Event.prototype.getShowHpBarOverrides = function()
 
   // return the truth.
   return showHpBar;
+};
+
+/**
+ * Parses out the override for whether or not this battler can show its affliction strip.
+ * @returns {boolean|null} True if we force-allow showing, false if we force-disallow, null if no overrides.
+ */
+Game_Event.prototype.getShowStatesOverrides = function()
+{
+  let showStates = null;
+
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      const [ comment, ] = command.parameters;
+
+      if (J.ABS.RegExp.ConfigHideStates.test(comment))
+      {
+        showStates = false;
+      }
+
+      if (J.ABS.RegExp.ConfigShowStates.test(comment))
+      {
+        showStates = true;
+      }
+    });
+
+  return showStates;
 };
 
 /**

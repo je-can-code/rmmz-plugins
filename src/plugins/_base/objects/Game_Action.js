@@ -47,4 +47,53 @@ Game_Action.prototype.evalFormulaWithContext = function(formula, a, b)
   // build and immediately invoke a function whose parameters match the context names.
   return new Function(...names, `return (${formula})`)(...values);
 };
+
+/**
+ * Sets the triggering damage values that caused this action to fire (e.g. a retaliation).
+ * These are exposed as `d` (HP), `m` (MP), and `t` (TP) inside damage formulas via
+ * {@link Game_Action.registerFormulaContext}.
+ * @param {number} hpDamage The HP damage that triggered this action.
+ * @param {number} mpDamage The MP damage that triggered this action.
+ * @param {number} tpDamage The TP damage that triggered this action.
+ */
+Game_Action.prototype.setTriggerDamage = function(hpDamage, mpDamage, tpDamage)
+{
+  this._triggerHpDamage = hpDamage;
+  this._triggerMpDamage = mpDamage;
+  this._triggerTpDamage = tpDamage;
+};
+
+/**
+ * Gets the triggering HP damage stamped onto this action, defaulting to 0.
+ * @returns {number}
+ */
+Game_Action.prototype.getTriggerHpDamage = function()
+{
+  return this._triggerHpDamage ?? 0;
+};
+
+/**
+ * Gets the triggering MP damage stamped onto this action, defaulting to 0.
+ * @returns {number}
+ */
+Game_Action.prototype.getTriggerMpDamage = function()
+{
+  return this._triggerMpDamage ?? 0;
+};
+
+/**
+ * Gets the triggering TP damage stamped onto this action, defaulting to 0.
+ * @returns {number}
+ */
+Game_Action.prototype.getTriggerTpDamage = function()
+{
+  return this._triggerTpDamage ?? 0;
+};
+
+// Register d/m/t as formula context variables available in every skill formula.
+// They default to 0 for all non-retaliation skills; the retaliate system stamps
+// real values before firing payload skills.
+Game_Action.registerFormulaContext('d', action => action.getTriggerHpDamage());
+Game_Action.registerFormulaContext('m', action => action.getTriggerMpDamage());
+Game_Action.registerFormulaContext('t', action => action.getTriggerTpDamage());
 //endregion Game_Action

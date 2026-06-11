@@ -1,6 +1,6 @@
 //region Window_AbsMenuSelect
-import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * A window that is reused to draw all the subwindows of the JABS menu.
  */
@@ -192,9 +192,9 @@ class Window_AbsMenuSelect
       commands.push(toolCommand);
     };
 
-    // grab all the tools that are visiblie in this menu.
+    // grab all the tools that are visible in this menu.
     const tools = $gameParty.allItems()
-      .filter(JABS_Battler.isItemVisibleInToolMenu);
+      .filter(item => this.isItemVisibleInToolMenu(item));
 
     // iterate over each of the tools and add them to the list.
     tools.forEach(forEacher, this);
@@ -489,6 +489,31 @@ class Window_AbsMenuSelect
 
   /* eslint-enable prefer-destructuring */
 }
+
+/**
+ * Determines whether or not an item should be visible
+ * in the JABS tool assignment menu.
+ *
+ * Other plugins may alias this method to add additional conditions.
+ * @param {RPG_Item} item The item to evaluate.
+ * @returns {boolean} True if the item belongs in the tool list; false otherwise.
+ */
+Window_AbsMenuSelect.prototype.isItemVisibleInToolMenu = function(item)
+{
+  // invalid items are not visible in the tool menu.
+  if (!item) return false;
+
+  // explicitly hidden items are not visible in the tool menu.
+  if (item.jabsHiddenFromMenus) return false;
+
+  // only regular, always-occasion consumable items qualify as tools.
+  const isItem = DataManager.isItem(item) && item.itypeId === 1;
+  const isUsable = isItem && (item.occasion === 0);
+  if (!isItem || !isUsable) return false;
+
+  // show this item!
+  return true;
+};
 
 export default Window_AbsMenuSelect;
 //endregion Window_AbsMenuSelect

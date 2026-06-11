@@ -1,11 +1,11 @@
 //region Game_Battler
-import JABS_StateBuilder from './../__models/JABS_StateBuilder.js';
-import JABS_State from './../__models/JABS_State.js';
-import JABS_SkillSlotManager from './../__models/JABS_SkillSlotManager.js';
-import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_OnChanceEffect from './../__models/JABS_OnChanceEffect.js';
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_StateBuilder from '../models/JABS_StateBuilder.js';
+import JABS_State from '../models/JABS_State.js';
+import JABS_SkillSlotManager from '../models/JABS_SkillSlotManager.js';
+import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
+import JABS_OnChanceEffect from '../models/JABS_OnChanceEffect.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * Extends {@link Game_Battler.initMembers}.<br/>
  * Includes JABS parameter initialization.
@@ -245,6 +245,15 @@ Game_Battler.prototype.canIdle = function()
  * @returns {boolean}
  */
 Game_Battler.prototype.showHpBar = function()
+{
+  return true;
+};
+
+/**
+ * All battlers show their map affliction strip by default.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.showStates = function()
 {
   return true;
 };
@@ -725,25 +734,18 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
 
   // extract the base duration and icon index.
   const {
-    removeByWalking,
-    stepsToRemove: baseDuration,
-    iconIndex
+    iconIndex,
+    jabsStateHasMapTimer: hasMapTimer,
+    jabsStateDurationFrames: baseDuration,
   } = state;
 
-  // calculate the total duration of the state.
-  let totalDuration = baseDuration;
+  // default to eternal; finite timers come from stateDuration tags (not MZ removeByWalking).
+  let totalDuration = -1;
 
-  // check if the state is removable by duration.
-  if (removeByWalking)
+  if (hasMapTimer)
   {
-    // extend our states per the one applying the states.
-    totalDuration += assailant.getStateDurationBoost(baseDuration);
-  }
-  // the state is not removable, so it is an eternal state.
-  else
-  {
-    // set the duration to -1 to flag it as an eternal state.
-    totalDuration = -1;
+    // extend outgoing duration per the battler applying this state.
+    totalDuration = baseDuration + assailant.getStateDurationBoost(baseDuration);
   }
 
   // grab the number of stacks to apply at once.
@@ -1031,8 +1033,8 @@ Game_Battler.prototype.resolveEquippedSkillId = function(baseSkillId)
  */
 Game_Battler.prototype.getResolvedSkillId = function(slot)
 {
-  // the tool slot stores item ids; transforms do not apply to it.
-  if (slot === JABS_Button.Tool)
+  // item-based slots store item ids, not skill ids; transforms do not apply to them.
+  if (slot === JABS_Button.Tool || slot === JABS_Button.UsableItem)
   {
     return this.getEquippedSkillId(slot);
   }

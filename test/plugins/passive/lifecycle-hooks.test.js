@@ -13,12 +13,6 @@ describe('J-Passive lifecycle hooks (out/J-Passive.js)', () =>
     loadPassivePluginVm(sandbox);
 
     // isolate these extension points from host behavior.
-    sandbox.J.PASSIVE.Aliased.Game_Actor.set('onLearnNewSkill', function()
-    {
-    });
-    sandbox.J.PASSIVE.Aliased.Game_Actor.set('onForgetSkill', function()
-    {
-    });
     sandbox.J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', function()
     {
     });
@@ -51,7 +45,7 @@ describe('J-Passive lifecycle hooks (out/J-Passive.js)', () =>
     actor.onEquipChange();
     actor.onClassChange();
 
-    expect(actor.refreshPassiveStates).toHaveBeenCalledTimes(4);
+    expect(actor.refreshPassiveStates).toHaveBeenCalledTimes(2);
   });
 
   it('Game_Party.gainItem triggers refreshPassiveStates', () =>

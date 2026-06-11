@@ -1,15 +1,17 @@
 //region JABS_Engine
 import JABS_TeamRules from './JABS_TeamRules.js';
-import JABS_State from './../__models/JABS_State.js';
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_Location from './../__models/JABS_Location.js';
-import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
-import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
-import JABS_Battler from './../__models/JABS_Battler.js';
+import JABS_SkillExecution from '../models/JABS_SkillExecution.js';
+import JABS_State from '../models/JABS_State.js';
+import JABS_Timer from '../models/JABS_Timer.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_Location from '../models/JABS_Location.js';
+import JABS_InputAdapter from '../models/JABS_InputAdapter.js';
+import JABS_GlobalCooldown from '../models/JABS_GlobalCooldown.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './JABS_AiManager.js';
-import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
-import JABS_Action from './../__models/JABS_Action.js';
-import JABS_Aabb from './../__models/JABS_Aabb.js';
+import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
+import JABS_Action from '../models/JABS_Action.js';
+import JABS_Aabb from '../models/JABS_Aabb.js';
 /**
  * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
@@ -522,6 +524,21 @@ class JABS_Engine
       ? this._jabsStates ?? new Map()
       : new Map();
 
+    /**
+     * A log of recent skill executions per battler, keyed by battler uuid.
+     * Survives map transfer so that cooldown-asymmetric history rewards are not lost mid-transition.
+     * @type {Map<string, JABS_SkillExecution[]>}
+     */
+    this._skillExecutionLog = isMapTransfer
+      ? this._skillExecutionLog ?? new Map()
+      : new Map();
+
+    /**
+     * The once-per-second throttle timer for aging and pruning skill execution log entries.
+     * @type {JABS_Timer}
+     */
+    this._skillExecutionTimer = this._skillExecutionTimer ?? new JABS_Timer(60);
+
     // assign hitbox overlays visible on this instance for callers.
     this.hitboxOverlaysVisible = isMapTransfer
       ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
@@ -748,6 +765,9 @@ class JABS_Engine
 
     // update all JABS states being tracked.
     this.updateJabsStates();
+
+    // age and prune the skill execution history log.
+    this.updateSkillExecutionLog();
 
     // handle input from the player(s).
     this.updateInput();
@@ -1140,6 +1160,179 @@ class JABS_Engine
   }
 
   //endregion state tracking
+
+  //region skill execution log
+  /**
+   * Gets the full skill execution log for all battlers.
+   * @returns {Map<string, JABS_SkillExecution[]>}
+   */
+  getSkillExecutionLog()
+  {
+    return this._skillExecutionLog;
+  }
+
+  /**
+   * Gets the skill execution log entries for a specific battler by uuid.
+   * Lazily initializes the entry array if the battler has no log yet.
+   * @param {string} uuid The uuid of the battler to retrieve the log for.
+   * @returns {JABS_SkillExecution[]}
+   */
+  getSkillExecutionLogByUuid(uuid)
+  {
+    // grab a reference to the full execution log.
+    const log = this.getSkillExecutionLog();
+
+    // lazily initialize the array for this battler if it does not yet exist.
+    if (!log.has(uuid))
+    {
+      // start with an empty history for this battler.
+      log.set(uuid, []);
+    }
+
+    // return the battler's execution log.
+    return log.get(uuid);
+  }
+
+  /**
+   * Records a skill execution in the given battler's history log.
+   * Skills whose type id is in the excluded set are silently ignored.
+   * @param {string} uuid The uuid of the battler that executed the skill.
+   * @param {number} skillId The id of the skill executed.
+   * @param {number} skillTypeId The skill type id of the executed skill.
+   */
+  logSkillExecution(uuid, skillId, skillTypeId)
+  {
+    // check whether this skill type is excluded from history tracking.
+    if (J.ABS.Metadata.SkillExecutionExcludedSkillTypeSet.has(skillTypeId)) return;
+
+    // grab the battler's log and append the new execution entry.
+    const log = this.getSkillExecutionLogByUuid(uuid);
+
+    // push the new execution entry to the end of the log.
+    log.push(new JABS_SkillExecution(skillId, skillTypeId));
+  }
+
+  /**
+   * Queries the skill execution log for a battler and returns a count based on
+   * the given filters and count mode.
+   *
+   * COUNT_MODE values:
+   *  'all'            — total entries matching the scope filter within the window.
+   *  'unique'         — distinct skill ids matching the filter within the window.
+   *  'streak'         — consecutive matching entries from the tail of the log backward.
+   *  'distinct_types' — distinct skill type ids matching the filter within the window.
+   *
+   * @param {string} uuid The uuid of the battler to query.
+   * @param {number} skillId The skill id scope filter (0 = any skill).
+   * @param {number} typeId The skill type id filter (0 = any type).
+   * @param {number} windowSeconds The number of seconds to look back.
+   * @param {string} countMode One of: all | unique | streak | distinct_types
+   * @returns {number} The count result for the given parameters.
+   */
+  querySkillExecutionLog(uuid, skillId, typeId, windowSeconds, countMode)
+  {
+    // grab the log for this battler.
+    const log = this.getSkillExecutionLogByUuid(uuid);
+
+    // streak is computed directly from the log tail — no pre-filter needed.
+    if (countMode === 'streak')
+    {
+      return this.#countSkillExecutionStreak(log, skillId, typeId, windowSeconds);
+    }
+
+    // build the working set: entries within the window that match the scope filter.
+    const workingSet = log.filter(entry =>
+      entry.isWithinWindow(windowSeconds) &&
+      entry.matchesSkillId(skillId) &&
+      entry.matchesTypeId(typeId));
+
+    // apply the appropriate count mode to the working set.
+    switch (countMode)
+    {
+      case 'unique':
+        // count how many distinct skill ids appear in the filtered window.
+        return new Set(workingSet.map(entry => entry.skillId)).size;
+      case 'distinct_types':
+        // count how many distinct skill type ids appear in the filtered window.
+        return new Set(workingSet.map(entry => entry.skillTypeId)).size;
+      case 'all':
+      default:
+        // count every entry in the filtered window.
+        return workingSet.length;
+    }
+  }
+
+  /**
+   * Counts consecutive matching entries from the tail of the log backward.
+   * Iteration stops at the first entry that does not match all filters or
+   * falls outside the window.
+   * @param {JABS_SkillExecution[]} log The full execution log for this battler.
+   * @param {number} skillId The skill id scope filter (0 = any skill).
+   * @param {number} typeId The skill type id filter (0 = any type).
+   * @param {number} windowSeconds The number of seconds to look back.
+   * @returns {number} The length of the consecutive matching streak.
+   */
+  #countSkillExecutionStreak(log, skillId, typeId, windowSeconds)
+  {
+    // track the count of consecutive matching entries.
+    let streak = 0;
+
+    // iterate from the most recent entry backward.
+    for (let i = log.length - 1; i >= 0; i--)
+    {
+      const entry = log[i];
+
+      // stop if this entry is outside the time window.
+      if (entry.isWithinWindow(windowSeconds) === false) break;
+
+      // stop if this entry does not match the scope filters.
+      if (entry.matchesSkillId(skillId) === false) break;
+
+      // stop if this entry does not match the type filter.
+      if (entry.matchesTypeId(typeId) === false) break;
+
+      // this entry is consecutive and valid — count it.
+      streak++;
+    }
+
+    return streak;
+  }
+
+  /**
+   * Ages all skill execution log entries by one second and prunes expired ones.
+   * Gated by a once-per-second throttle timer to avoid per-frame overhead.
+   */
+  updateSkillExecutionLog()
+  {
+    // tick the throttle timer forward by one frame.
+    this._skillExecutionTimer.update();
+
+    // only process the log once per second when the timer completes.
+    if (this._skillExecutionTimer.isTimerComplete() === false) return;
+
+    // grab the maximum window from metadata for pruning decisions.
+    const maxWindow = J.ABS.Metadata.SkillExecutionMaxWindowSeconds;
+
+    // grab the full log for all battlers.
+    const log = this.getSkillExecutionLog();
+
+    // iterate over each battler's log.
+    log.forEach((entries, uuid) =>
+    {
+      // age every entry by one second.
+      entries.forEach(entry => entry.tick());
+
+      // remove entries that have exceeded the global max window.
+      const pruned = entries.filter(entry => entry.isExpired(maxWindow) === false);
+
+      // write the pruned array back to the log for this battler.
+      log.set(uuid, pruned);
+    });
+
+    // reset the throttle timer for the next one-second interval.
+    this._skillExecutionTimer.reset();
+  }
+  //endregion skill execution log
   //endregion update player
 
   //region update ai battlers
@@ -1570,12 +1763,13 @@ class JABS_Engine
 
   /**
    * Applies any on-execution effects to the caster based on the actions.
+   * Also records the skill in the caster's execution history log for skill history bonuses.
    * @param {JABS_Battler} caster The battler executing the skill.
    * @param {JABS_Action} primaryAction The 0th index action.
    */
   applyOnExecutionEffects(caster, primaryAction)
   {
-    // retaliation skills are exempt from execution effects.
+    // retaliation skills are exempt from execution effects and history tracking.
     if (primaryAction.isRetaliation()) return;
 
     // pay the primary action's skill costs.
@@ -1583,6 +1777,10 @@ class JABS_Engine
 
     // apply the necessary cooldowns for the action against the caster.
     this.applyCooldownCounters(caster, primaryAction);
+
+    // record this execution in the caster's skill history for history-based bonuses.
+    const skill = primaryAction.getBaseSkill();
+    this.logSkillExecution(caster.getUuid(), skill.id, skill.stypeId);
   }
 
   /**
@@ -3309,21 +3507,22 @@ class JABS_Engine
     if (targetBattler.isActor())
     {
       // handle player retaliations.
-      this.handleActorRetaliation(targetBattler);
+      this.handleActorRetaliation(targetBattler, action);
     }
     // they must be an enemy.
     else
     {
       // handle non-player retaliations.
-      this.handleEnemyRetaliation(targetBattler);
+      this.handleEnemyRetaliation(targetBattler, action);
     }
   }
 
   /**
    * Executes any retaliation the player may have when receiving a hit.
    * @param {JABS_Battler} battler The battler doing the retaliating.
+   * @param {JABS_Action} triggeringAction The action that struck the battler.
    */
-  handleActorRetaliation(battler)
+  handleActorRetaliation(battler, triggeringAction)
   {
     // grab the action result.
     const actionResult = battler.getBattler()
@@ -3357,13 +3556,7 @@ class JABS_Engine
     if (retaliationSkills.length)
     {
       // ...perform them!
-      retaliationSkills.forEach(skillChance =>
-      {
-        if (skillChance.shouldTrigger())
-        {
-          this.forceMapAction(battler, skillChance.skillId, true);
-        }
-      });
+      this.executeRetaliationSkills(battler, retaliationSkills, triggeringAction);
     }
   }
 
@@ -3516,7 +3709,12 @@ class JABS_Engine
    * Executes any retaliation the enemy may have when receiving a hit at any time.
    * @param {JABS_Battler} enemy The enemy's `JABS_Battler`.
    */
-  handleEnemyRetaliation(enemy)
+  /**
+   * Executes any retaliation an enemy may have when receiving a hit.
+   * @param {JABS_Battler} enemy The enemy doing the retaliating.
+   * @param {JABS_Action} triggeringAction The action that struck the enemy.
+   */
+  handleEnemyRetaliation(enemy, triggeringAction)
   {
     // assumes enemy battler is enemy.
     const retaliationSkills = enemy.getBattler()
@@ -3526,14 +3724,70 @@ class JABS_Engine
     if (retaliationSkills.length)
     {
       // ...perform them!
-      retaliationSkills.forEach(skillChance =>
-      {
-        if (skillChance.shouldTrigger())
-        {
-          this.forceMapAction(enemy, skillChance.skillId, true);
-        }
-      });
+      this.executeRetaliationSkills(enemy, retaliationSkills, triggeringAction);
     }
+  }
+
+  /**
+   * Fires all retaliation skills that pass their chance roll and hit type filter,
+   * stamping the triggering damage onto each outgoing action so payload formulas
+   * can reference `d` (HP), `m` (MP), and `t` (TP).
+   * @param {JABS_Battler} retaliator The battler firing the retaliation skills.
+   * @param {JABS_OnChanceEffect[]} retaliationSkills The retaliation skill candidates.
+   * @param {JABS_Action} triggeringAction The action that struck the retaliator.
+   */
+  executeRetaliationSkills(retaliator, retaliationSkills, triggeringAction)
+  {
+    // grab the incoming skill's hit type for filtering.
+    const incomingHitType = triggeringAction.getBaseSkill().hitType;
+
+    // grab the damage values from the result to stamp onto outgoing actions.
+    const { hpDamage, mpDamage, tpDamage } = retaliator.getBattler().result();
+
+    retaliationSkills.forEach(skillChance =>
+    {
+      // skip if the hit type filter doesn't match.
+      if (!skillChance.matchesHitType(incomingHitType)) return;
+
+      // skip if the chance roll fails.
+      if (!skillChance.shouldTrigger()) return;
+
+      // build the outgoing retaliation actions.
+      const retaliationActions = retaliator.createJabsActionFromSkill(
+        skillChance.skillId,
+        JABS_ActionOptions.Builder().setIsRetaliation(true).build()
+      );
+
+      // stamp the triggering damage onto each action so formulas can use d/m/t.
+      retaliationActions.forEach(retaliationAction =>
+        retaliationAction.getAction().setTriggerDamage(hpDamage, mpDamage, tpDamage));
+
+      // for direct actions, freeze the target location on the action options so
+      // syncDirectActionSpriteToCaster leaves the sprite at the attacker's tile
+      // instead of body-anchoring it to the retaliator every frame.
+      const isAnyDirect = retaliationActions.some(a => a.isDirectAction());
+      if (isAnyDirect)
+      {
+        const attackerX = triggeringAction.getCaster().getX();
+        const attackerY = triggeringAction.getCaster().getY();
+        const frozenLocation = JABS_Location.Builder().setX(attackerX).setY(attackerY).build();
+        const frozenOptions = JABS_ActionOptions.Builder()
+          .setIsRetaliation(true)
+          .setLocation(frozenLocation)
+          .build();
+        retaliationActions.forEach(a => a.setActionOptions(frozenOptions));
+      }
+
+      const targetX = isAnyDirect ? triggeringAction.getCaster().getX() : null;
+      const targetY = isAnyDirect ? triggeringAction.getCaster().getY() : null;
+
+      // fire each action if executable.
+      if (this.canExecuteMapActions(retaliator, retaliationActions))
+      {
+        retaliationActions.forEach(retaliationAction =>
+          this.executeMapAction(retaliator, retaliationAction, targetX, targetY));
+      }
+    });
   }
 
   /**
@@ -3756,13 +4010,12 @@ class JABS_Engine
       // if the attacker is an enemy, do not consider inanimate targets.
       if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
 
-      // this battler is potentially hit-able.
       return true;
     };
 
     // a few definitions used within collision processing.
     const actionSprite = jabsAction.getActionSprite();
-    const range = jabsAction.getRange();
+    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? jabsAction.getProximity() : null);
     const shape = jabsAction.getShape();
 
     const targetsHit = [];
@@ -3784,7 +4037,6 @@ class JABS_Engine
         const maxX = Math.ceil(cx + range);
         const maxY = Math.ceil(cy + range);
 
-        // return the candidates from the spatial index.
         return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
       }
 
@@ -3804,7 +4056,6 @@ class JABS_Engine
         const maxX = cx + radius;
         const maxY = cy + radius;
 
-        // return the candidates from the spatial index.
         return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
       }
 
@@ -3956,8 +4207,8 @@ class JABS_Engine
         // shallow depth, broad breadth wall immediately in front.
         return this.collisionWall(targetCharacter, actionEvent, range, facing);
       default:
-        // unknown shape → no collision.
-        return false;
+        // null/unknown shape — fall back to circle so direct skills without <hitbox> still land.
+        return this.collisionCircle(targetCharacter, actionEvent, range);
     }
   }
 
@@ -3993,20 +4244,9 @@ class JABS_Engine
    */
   getActionThicknessTiles(actionEvent)
   {
-    // attempt to retrieve the underlying JABS_Action model.
-    const jabsAction = actionEvent.getJabsAction();
-
-    // retrieve the base skill for this action.
-    const baseSkill = jabsAction.getBaseSkill();
-
-    // read the capture from the notes using the canonical <thickness:N> tag.
-    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Thickness, true);
-
-    // if nothing found, return null to allow defaulting upstream.
-    if (found === null) return null;
-
-    // ensure non-negative thickness (0 is allowed but clamped later in px space).
-    return Math.max(0, found);
+    // delegate to the canonical JABS_Action accessor, which applies range modifiers.
+    // callers already do ?? 1 on the result so the untagged default of 1 is safe.
+    return actionEvent.getJabsAction().getThicknessTiles();
   }
 
   /**

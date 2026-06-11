@@ -1,6 +1,4 @@
 //region plugin metadata
-import JABS_State from './../__models/JABS_State.js';
-
 class J_AbsPluginMetadata
   extends PluginMetadata
 {
@@ -42,7 +40,9 @@ class J_AbsPluginMetadata
     this.initializeParryMetadata();
     this.initializeQuickMenuTextMetadata();
     this.initializeGlobalCooldownMetadata();
+    this.initializeSkillExecutionMetadata();
     this.initializeHitboxOverlayStyleMetadata();
+    this.initializeMapAfflictionMetadata();
   }
 
   /**
@@ -159,11 +159,12 @@ class J_AbsPluginMetadata
    */
   initializeStateMetadata()
   {
-    this.DefaultStateReapplyType = this.parsedPluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
+    this.DefaultStateReapplyType = this.parsedPluginParameters['defaultStateReapplyType'] || 'refresh';
 
     // assign default state refresh diminish on this instance for callers.
     this.DefaultStateRefreshDiminish = Number(this.parsedPluginParameters['defaultStateRefreshDiminish']) || 120;
     this.DefaultStateRefreshReset = Number(this.parsedPluginParameters['defaultStateRefreshReset']) || 900;
+    this.DefaultStateSpreadTickInterval = Number(this.parsedPluginParameters['defaultStateSpreadTickInterval']) || 30;
 
     // assign default state extend amount on this instance for callers.
     this.DefaultStateExtendAmount = Number(this.parsedPluginParameters['defaultStateExtendAmount']) || 180;
@@ -369,6 +370,43 @@ class J_AbsPluginMetadata
   }
 
   /**
+   * Maps skill execution history tracking configuration from plugin parameters.
+   * The max window is the global prune threshold; individual tag windows must be <= this value.
+   * The excluded skill type set contains stypeIds never recorded in the skill history log.
+   */
+  initializeSkillExecutionMetadata()
+  {
+    // the maximum number of seconds a skill execution entry is kept before pruning.
+    this.SkillExecutionMaxWindowSeconds = Number(
+      this.parsedPluginParameters['skillExecutionMaxWindowSeconds']) || 15;
+
+    // build the set of excluded skill type ids from the raw JSON array parameter.
+    const rawExcluded = this.parsedPluginParameters['skillExecutionExcludedSkillTypes'] ?? '[]';
+    const excludedSet = new Set();
+    try
+    {
+      const arr = JSON.parse(rawExcluded);
+      if (Array.isArray(arr))
+      {
+        arr.forEach(v =>
+        {
+          // coerce each element to a finite integer before adding to the set.
+          const n = parseInt(String(v), 10);
+          if (Number.isFinite(n))
+          {
+            excludedSet.add(n);
+          }
+        });
+      }
+    }
+    catch (e)
+    {
+      console.warn('J-ABS: skillExecutionExcludedSkillTypes JSON parse failed.', e);
+    }
+    this.SkillExecutionExcludedSkillTypeSet = excludedSet;
+  }
+
+  /**
    * Maps hitbox overlay style and pulse defaults used by debug overlays.
    */
   initializeHitboxOverlayStyleMetadata()
@@ -457,6 +495,36 @@ class J_AbsPluginMetadata
       // PIXI.BLEND_MODES.NORMAL or ADD
       blendMode: PIXI.BLEND_MODES.ADD,
     };
+  }
+
+  /**
+   * Parses the map affliction max slot parameter, ignoring corrupted export noise.
+   * @param {string|number|undefined} rawValue The plugin parameter value.
+   * @returns {number}
+   */
+  static parseMapAfflictionMaxSlots(rawValue)
+  {
+    const parsedValue = Number.parseInt(String(rawValue).trim(), 10);
+
+    if (Number.isFinite(parsedValue) === false || parsedValue < 1)
+    {
+      return 8;
+    }
+
+    return Math.min(parsedValue, 16);
+  }
+
+  /**
+   * Maps map affliction strip layout parameters from plugin parameters.
+   */
+  initializeMapAfflictionMetadata()
+  {
+    this.mapAfflictionIconScale = Number(this.parsedPluginParameters['mapAfflictionIconScale'] ?? 0.5);
+    this.mapAfflictionGaugeHeight = Number(this.parsedPluginParameters['mapAfflictionGaugeHeight'] ?? 3);
+    this.mapAfflictionGapBelowHpBar = Number(this.parsedPluginParameters['mapAfflictionGapBelowHpBar'] ?? 2);
+    this.mapAfflictionMaxSlots = J_AbsPluginMetadata.parseMapAfflictionMaxSlots(
+      this.parsedPluginParameters['mapAfflictionMaxSlots'],
+    );
   }
 }
 
