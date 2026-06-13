@@ -183,7 +183,6 @@ Game_Actor.prototype.onForgetSkill = function(skillId)
 J.BASE.Aliased.Game_Actor.set('die', Game_Actor.prototype.die);
 Game_Actor.prototype.die = function()
 {
-  // perform original effects.
   // perform original logic.
   J.BASE.Aliased.Game_Actor.get('die')
     .call(this);
@@ -391,6 +390,44 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
   });
 
   return hasDifferentEquips;
+};
+
+/**
+ * Overwrites the vanilla {@link #traitObjects} defined on {@link Game_Actor}.<br/>
+ * Routes all calls through the cache wrapper on {@link Game_BattlerBase} so the
+ * vanilla implementation — which pushes directly into the returned array — can never
+ * shadow our cache layer or cause accidental mutation.
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_State)[]}
+ */
+Game_Actor.prototype.traitObjects = function()
+{
+  return Game_BattlerBase.prototype.traitObjects.call(this);
+};
+
+/**
+ * Overwrites {@link #buildTraitObjects}.<br/>
+ * Actors have additional trait-bearing sources beyond states: their actor data,
+ * current class, and all currently equipped items.
+ *
+ * Returns a fresh array — never mutates the result of any super call — so the
+ * cache in {@link #traitObjects} remains safe.
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_State)[]}
+ */
+Game_Actor.prototype.buildTraitObjects = function()
+{
+  return [
+    // states are the base trait source for all battlers.
+    ...this.states(),
+
+    // the actor's own database entry carries traits.
+    this.actor(),
+
+    // the actor's current class also carries traits.
+    this.currentClass(),
+
+    // all currently equipped items carry traits; nulls are excluded.
+    ...this.equippedEquips(),
+  ];
 };
 
 /**

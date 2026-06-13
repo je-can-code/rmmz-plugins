@@ -2638,6 +2638,13 @@
  * @desc The text that shows up in the JABS quickmenu for the "equip tools" command.
  * @default Equip Tools
  *
+ * @param equipUsableItemText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Usable Item Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip usable item" command.
+ * @default Equip Usable Item
+ *
  * @param mainMenuText
  * @parent quickmenuConfigs
  * @type string
@@ -2761,6 +2768,7 @@
  * @text Choose Slot
  * @desc The slot to assign the skill to for this actor.
  * @option Tool
+ * @option UsableItem
  * @option Dodge
  * @option Offhand
  * @option L1A
@@ -2781,6 +2789,7 @@
  * @arg Slot
  * @type select
  * @option Tool
+ * @option UsableItem
  * @option Dodge
  * @option Offhand
  * @option L1A

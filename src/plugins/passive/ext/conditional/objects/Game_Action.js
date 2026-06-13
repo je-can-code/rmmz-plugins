@@ -1,4 +1,6 @@
 //region Game_Action
+import AutoApplyStateManager from '../managers/AutoApplyStateManager.js';
+import AutoExecuteSkillManager from '../managers/AutoExecuteSkillManager.js';
 /**
  * Extends {@link #apply}.<br/>
  * When the target is critically hit, runs {@code whenCrit} auto-apply rules on the victim.
@@ -13,7 +15,7 @@ Game_Action.prototype.apply = function(target)
   // victim-only reactive buffs — distinct from J-CriticalFactors onCritApply (attacker lands crit).
   if (target.result().critical === false) return;
 
-  target.tryAutoApplyStates('whenCrit');
-  target.tryAutoExecuteSkills('whenCrit');
+  AutoApplyStateManager.scheduleCritTriggers(target);
+  AutoExecuteSkillManager.scheduleCritTriggers(target);
 };
 //endregion Game_Action

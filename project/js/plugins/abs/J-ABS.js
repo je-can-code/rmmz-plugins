@@ -2638,6 +2638,13 @@
  * @desc The text that shows up in the JABS quickmenu for the "equip tools" command.
  * @default Equip Tools
  *
+ * @param equipUsableItemText
+ * @parent quickmenuConfigs
+ * @type string
+ * @text Equip Usable Item Text
+ * @desc The text that shows up in the JABS quickmenu for the "equip usable item" command.
+ * @default Equip Usable Item
+ *
  * @param mainMenuText
  * @parent quickmenuConfigs
  * @type string
@@ -2761,6 +2768,7 @@
  * @text Choose Slot
  * @desc The slot to assign the skill to for this actor.
  * @option Tool
+ * @option UsableItem
  * @option Dodge
  * @option Offhand
  * @option L1A
@@ -2781,6 +2789,7 @@
  * @arg Slot
  * @type select
  * @option Tool
+ * @option UsableItem
  * @option Dodge
  * @option Offhand
  * @option L1A
@@ -3122,6 +3131,7 @@ var J_AbsPluginMetadata = class J_AbsPluginMetadata extends PluginMetadata {
 		this.EquipDodgeSkillsText = this.parsedPluginParameters["equipDodgeSkillsText"];
 		this.EquipOffhandText = this.parsedPluginParameters["equipOffhandText"];
 		this.EquipToolsText = this.parsedPluginParameters["equipToolsText"];
+		this.EquipUsableItemText = this.parsedPluginParameters["equipUsableItemText"];
 		this.MainMenuText = this.parsedPluginParameters["mainMenuText"];
 		this.CancelText = this.parsedPluginParameters["cancelText"];
 		this.ClearSlotText = this.parsedPluginParameters["clearSlotText"];
@@ -3299,6 +3309,7 @@ J.ABS.Helpers.PluginManager = {};
 J.ABS.Helpers.PluginManager.TranslateOptionToSlot = (slot) => {
 	switch (slot) {
 		case "Tool": return JABS_Button.Tool;
+		case "UsableItem": return JABS_Button.UsableItem;
 		case "Dodge": return JABS_Button.Dodge;
 		case "Offhand": return JABS_Button.Offhand;
 		case "L1A": return JABS_Button.CombatSkill1;
@@ -3713,6 +3724,7 @@ J.ABS.RegExp = {
 	IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
 	UseOnPickup: /<useOnPickup>/gi,
 	Expires: /<expires:[ ]?(\d+)>/gi,
+	JabsTool: /<jabsTool>/i,
 	Negative: /<negative>/gi,
 	ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
 	ReapplyRefreshDiminish: /<stateRefreshDiminish:[ ]?(-?\d+)>/gi,
@@ -14178,6 +14190,7 @@ var JABS_State = class {
 		if (this.stackCount < maxStacks) {
 			const projectedStackCount = this.stackCount + stackIncrease;
 			this.stackCount = Math.min(maxStacks, projectedStackCount);
+			this.battler.onBattlerDataChange();
 		}
 	}
 	/**
@@ -14832,6 +14845,90 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	*/
 	static #canPerformMenuAction() {
 		return true;
+	}
+};
+
+//#endregion
+//#region src/plugins/abs/core/models/JABS_DeathContext.js
+/**
+* A snapshot of the conditions under which a battler died.
+* Populated immediately after the killing blow lands; available to all {@link Game_Battler#onDeath}
+* aliases and cleared on {@link Game_Actor#onRevive}.
+*/
+var JABS_DeathContext = class {
+	/**
+	* @param {number[]} elementIds The element ids of the killing action.
+	* @param {string} hitType One of "physical", "magical", or "certain".
+	* @param {number} stypeId The skill type id of the killing skill.
+	* @param {string} killerUuid The uuid of the battler that landed the killing blow.
+	*/
+	constructor(elementIds, hitType, stypeId, killerUuid) {
+		this.initMembers(elementIds, hitType, stypeId, killerUuid);
+	}
+	/**
+	* Initializes the members of this class.
+	* @param {number[]} elementIds The element ids of the killing action.
+	* @param {string} hitType One of "physical", "magical", or "certain".
+	* @param {number} stypeId The skill type id of the killing skill.
+	* @param {string} killerUuid The uuid of the battler that landed the killing blow.
+	*/
+	initMembers(elementIds, hitType, stypeId, killerUuid) {
+		/**
+		* All element ids carried by the killing action.
+		* @type {number[]}
+		*/
+		this.elementIds = elementIds;
+		/**
+		* The hit type of the killing action: "physical", "magical", or "certain".
+		* @type {string}
+		*/
+		this.hitType = hitType;
+		/**
+		* The skill type id of the killing skill.
+		* @type {number}
+		*/
+		this.stypeId = stypeId;
+		/**
+		* The uuid of the battler that landed the killing blow.
+		* @type {string}
+		*/
+		this.killerUuid = killerUuid;
+	}
+	/**
+	* Whether the killing blow was physical.
+	* @returns {boolean}
+	*/
+	isPhysical() {
+		return this.hitType === "physical";
+	}
+	/**
+	* Whether the killing blow was magical.
+	* @returns {boolean}
+	*/
+	isMagical() {
+		return this.hitType === "magical";
+	}
+	/**
+	* Whether the killing blow was certain-hit.
+	* @returns {boolean}
+	*/
+	isCertain() {
+		return this.hitType === "certain";
+	}
+	/**
+	* Whether the killing blow carried the given element id.
+	* @param {number} elementId
+	* @returns {boolean}
+	*/
+	hasElement(elementId) {
+		return this.elementIds.includes(elementId);
+	}
+	/**
+	* Gets the {@link JABS_Battler} that landed the killing blow.
+	* @returns {JABS_Battler|undefined}
+	*/
+	killer() {
+		return JABS_AiManager.getBattlerByUuid(this.killerUuid);
 	}
 };
 
@@ -16579,6 +16676,16 @@ var JABS_Engine = class JABS_Engine {
 		}
 		const gameAction = action.getAction();
 		gameAction.apply(targetBattler);
+		if (targetBattler.isDead()) {
+			const elementIds = gameAction.getApplicableElements(targetBattler);
+			let hitType;
+			if (gameAction.isPhysical()) hitType = "physical";
+			else if (gameAction.isMagical()) hitType = "magical";
+			else hitType = "certain";
+			const { stypeId } = gameAction.item();
+			const killerUuid = action.getCaster().getBattler().getUuid();
+			targetBattler.setDeathContext(new JABS_DeathContext(elementIds, hitType, stypeId, killerUuid));
+		}
 		this.postExecuteSkillEffects(action, target);
 	}
 	/**
@@ -19153,6 +19260,12 @@ var JABS_MenuType = class {
 	*/
 	static Offhand = "offhand";
 	/**
+	* The "usable-item" window is the list of consumable items (potions, food, etc.) that the
+	* player can equip into the R2 usable-item slot. Tools (hookshot, bombs, etc.) are separate.
+	* @type {string}
+	*/
+	static UsableItem = "usable-item";
+	/**
 	* The "assign" window is one of multiple types of windows where items or skills are assigned
 	* via the concept of "combat skills", "dodge skills", "offhand skills", and "tools".
 	* @type {string}
@@ -20673,6 +20786,18 @@ Object.defineProperty(RPG_Item.prototype, "jabsUseOnPickup", { get: function() {
 */
 Object.defineProperty(RPG_Item.prototype, "jabsExpiration", { get: function() {
 	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Expires, true);
+} });
+/**
+* Whether this item is a JABS tool (hookshot, bomb, etc.) that belongs in the tool slot.<br/>
+* Tagged with {@code <jabsTool>}. Items without this tag are treated as consumables and land
+* in the usable-item slot instead.<br/>
+* Note: the tag alone is not sufficient — {@link Window_AbsMenuSelect#isItemVisibleInToolMenu}
+* also enforces itypeId===1 and occasion===0 as a safety rail, since only RPG_Item entries
+* are ever iterated for either menu list.
+* @type {boolean}
+*/
+Object.defineProperty(RPG_Item.prototype, "jabsTool", { get: function() {
+	return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.JabsTool, true);
 } });
 
 //#endregion
@@ -23140,6 +23265,7 @@ J.ABS.Aliased.Game_Actor.set("onRevive", Game_Actor.prototype.onRevive);
 Game_Actor.prototype.onRevive = function() {
 	J.ABS.Aliased.Game_Actor.get("onRevive").call(this);
 	this.stopDying();
+	this.clearDeathContext();
 };
 /**
 * Stops this actor from being in the death effect flagged state.
@@ -23438,6 +23564,12 @@ Game_Battler.prototype.initJabsMembers = function() {
 	* @type {JABS_SkillSlotManager}
 	*/
 	this._j._abs._equippedSkills = new JABS_SkillSlotManager();
+	/**
+	* A snapshot of the conditions under which this battler last died.
+	* Populated immediately after the killing blow lands; cleared on revive.
+	* @type {JABS_DeathContext|null}
+	*/
+	this._j._abs._deathContext = null;
 };
 /**
 * Gets the `uuid` of this battler.
@@ -23604,6 +23736,26 @@ Game_Battler.prototype.isInanimate = function() {
 */
 Game_Battler.prototype.isAggroLocked = function() {
 	return this.states().some((state) => state.jabsAggroLock ?? false);
+};
+/**
+* Gets the death context snapshot for this battler.
+* @returns {JABS_DeathContext|null}
+*/
+Game_Battler.prototype.getDeathContext = function() {
+	return this._j._abs._deathContext;
+};
+/**
+* Sets the death context snapshot for this battler.
+* @param {JABS_DeathContext} context The death context to store.
+*/
+Game_Battler.prototype.setDeathContext = function(context) {
+	this._j._abs._deathContext = context;
+};
+/**
+* Clears the death context snapshot for this battler.
+*/
+Game_Battler.prototype.clearDeathContext = function() {
+	this._j._abs._deathContext = null;
 };
 /**
 * Gets the battler's skill slot manager directly.
@@ -23911,10 +24063,14 @@ Game_Battler.prototype.refreshBonusHits = function() {
 };
 /**
 * Gets all collections of sources that will be scanned for bonus hits.
+*
+* Uses {@link #getAllNotes} so the result benefits from the notes cache and
+* naturally includes passives that were previously missed when this called
+* {@link #states} directly.
 * @returns {RPG_BaseItem[][]}
 */
 Game_Battler.prototype.getBonusHitsSources = function() {
-	return [this.states(), [this.databaseData()]];
+	return [this.getAllNotes()];
 };
 /**
 * Gets the cached global-scope per-connection bonus hits total for this battler.
@@ -26232,12 +26388,14 @@ var Window_AbsMenu = class extends Window_Command {
 		const combatSkillsCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipCombatSkillsText).setSymbol("skill-assign").setEnabled(true).setIconIndex(77).setColorIndex(10).setHelpText(this.combatSkillsHelpText()).build();
 		const dodgeSkillCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipDodgeSkillsText).setSymbol("dodge-assign").setEnabled(true).setIconIndex(82).setColorIndex(24).setHelpText(this.dodgeSkillHelpText()).build();
 		const toolCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipToolsText).setSymbol("item-assign").setEnabled(true).setIconIndex(83).setColorIndex(17).setHelpText(this.toolHelpText()).build();
+		const usableItemCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipUsableItemText).setSymbol("usable-item-assign").setEnabled(true).setIconIndex(210).setColorIndex(29).setHelpText(this.usableItemHelpText()).build();
 		return [
 			mainMenuCommand,
 			offhandSkillCommand,
 			combatSkillsCommand,
 			dodgeSkillCommand,
-			toolCommand
+			toolCommand,
+			usableItemCommand
 		];
 	}
 	/**
@@ -26285,6 +26443,14 @@ var Window_AbsMenu = class extends Window_Command {
 		return description.join("\n");
 	}
 	/**
+	* The help text for the JABS usable-item menu.
+	* @returns {string}
+	*/
+	usableItemHelpText() {
+		const description = ["Your consumable item list — potions, food, and other usable items.", "Items tagged <jabsTool> belong in the tool slot instead and won't appear here."];
+		return description.join("\n");
+	}
+	/**
 	* Closes the Abs menu.
 	*/
 	closeMenu() {
@@ -26310,7 +26476,9 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 		DodgeList: "dodge",
 		DodgeEquip: "equip-dodge",
 		OffhandList: "offhand",
-		OffhandEquip: "equip-offhand"
+		OffhandEquip: "equip-offhand",
+		UsableItemList: "usable-item",
+		UsableItemEquip: "equip-usable-item"
 	};
 	/**
 	* @constructor
@@ -26363,6 +26531,12 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 			case Window_AbsMenuSelect.SelectionTypes.OffhandEquip:
 				this.makeEquippedOffhandList();
 				break;
+			case Window_AbsMenuSelect.SelectionTypes.UsableItemList:
+				this.makeUsableItemList();
+				break;
+			case Window_AbsMenuSelect.SelectionTypes.UsableItemEquip:
+				this.makeEquippedUsableItemList();
+				break;
 		}
 	}
 	/**
@@ -26398,6 +26572,41 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 		const tools = $gameParty.allItems().filter((item) => this.isItemVisibleInToolMenu(item));
 		tools.forEach(forEacher, this);
 		commands.forEach(this.addBuiltCommand, this);
+	}
+	/**
+	* Determines whether or not an item should be visible in the JABS tool assignment menu.
+	* Tools are items explicitly tagged with {@code <jabsTool>} (hookshot, bombs, etc.).
+	*
+	* Other plugins may alias this method to add additional conditions.
+	* @param {RPG_Item} item The item to evaluate.
+	* @returns {boolean} True if the item belongs in the tool list; false otherwise.
+	*/
+	isItemVisibleInToolMenu(item) {
+		if (!item) return false;
+		if (item.jabsHiddenFromMenus) return false;
+		const isItem = DataManager.isItem(item) && item.itypeId === 1;
+		const isUsable = isItem && item.occasion === 0;
+		if (!isItem || !isUsable) return false;
+		if (!item.jabsTool) return false;
+		return true;
+	}
+	/**
+	* Determines whether or not an item should be visible in the JABS usable-item menu.
+	* Consumables that are NOT tools (i.e. lack {@code <jabsTool>}) land here — potions,
+	* food, and any other always-usable regular item.
+	*
+	* Other plugins may alias this method to add additional conditions.
+	* @param {RPG_Item} item The item to evaluate.
+	* @returns {boolean} True if the item belongs in the usable-item list; false otherwise.
+	*/
+	isItemVisibleInUsableItemMenu(item) {
+		if (!item) return false;
+		if (item.jabsHiddenFromMenus) return false;
+		const isItem = DataManager.isItem(item) && item.itypeId === 1;
+		const isUsable = isItem && item.occasion === 0;
+		if (!isItem || !isUsable) return false;
+		if (item.jabsTool) return false;
+		return true;
 	}
 	/**
 	* Fills the list with the currently assigned dodge.
@@ -26477,6 +26686,44 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 		this.addBuiltCommand(command);
 	}
 	/**
+	* Fills the list with consumable items in the party's possession to assign to the R2 slot.
+	* Mirrors {@link makeToolList} but filters by {@link isItemVisibleInUsableItemMenu}.
+	*/
+	makeUsableItemList() {
+		const commands = Array.empty;
+		const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText).setSymbol("usable-item").setTextLines(["Remove the existing usable item from the slot."]).setColorIndex(16).build();
+		commands.push(clearSlotCommand);
+		const forEacher = (item) => {
+			const { name, id, iconIndex, description } = item;
+			const amount = item.consumable ? $gameParty.numItems(item).padZero(3) : "♾";
+			const itemCommand = new WindowCommandBuilder(name).setSymbol("usable-item").setExtensionData(id).setIconIndex(iconIndex).setHelpText(description).setRightText(`x${amount}`).setTextLines(description.split(/[\r\n]+/)).build();
+			commands.push(itemCommand);
+		};
+		const items = $gameParty.allItems().filter((item) => this.isItemVisibleInUsableItemMenu(item));
+		items.forEach(forEacher, this);
+		commands.forEach(this.addBuiltCommand, this);
+	}
+	/**
+	* Fills the list with the currently assigned usable item in the R2 slot.
+	* Mirrors {@link makeEquippedToolList} but reads the usable-item slot.
+	*/
+	makeEquippedUsableItemList() {
+		const usableItemSlot = $gameParty.leader().getSkillSlotManager().getUsableItemSlot();
+		let name = `${usableItemSlot.key}: ${J.ABS.Metadata.UnassignedText}`;
+		let iconIndex = 0;
+		let description = String.empty;
+		let amount = String.empty;
+		if (usableItemSlot.isUsable()) {
+			const equippedItem = $dataItems.at(usableItemSlot.id);
+			amount = equippedItem.consumable ? $gameParty.numItems(equippedItem).padZero(3) : "♾";
+			name = equippedItem.name;
+			iconIndex = equippedItem.iconIndex;
+			description = equippedItem.description;
+		}
+		const command = new WindowCommandBuilder(name).setSymbol("slot").setExtensionData(usableItemSlot.key).setIconIndex(iconIndex).setRightText(`x${amount}`).build();
+		this.addBuiltCommand(command);
+	}
+	/**
 	* Fills the list with skills eligible for pinning into the offhand slot.
 	*
 	* Includes a leading "clear slot" entry so the player can drop the pin and fall back
@@ -26516,22 +26763,6 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 		const command = new WindowCommandBuilder(name).setSymbol("slot").setExtensionData(offhandSkillSlot.key).setIconIndex(iconIndex).build();
 		this.addBuiltCommand(command);
 	}
-};
-/**
-* Determines whether or not an item should be visible
-* in the JABS tool assignment menu.
-*
-* Other plugins may alias this method to add additional conditions.
-* @param {RPG_Item} item The item to evaluate.
-* @returns {boolean} True if the item belongs in the tool list; false otherwise.
-*/
-Window_AbsMenuSelect.prototype.isItemVisibleInToolMenu = function(item) {
-	if (!item) return false;
-	if (item.jabsHiddenFromMenus) return false;
-	const isItem = DataManager.isItem(item) && item.itypeId === 1;
-	const isUsable = isItem && item.occasion === 0;
-	if (!isItem || !isUsable) return false;
-	return true;
 };
 
 //#endregion
@@ -26629,6 +26860,16 @@ Scene_Map.prototype.initJabsMenu = function() {
 	* @type {Window_AbsMenuSelect|null}
 	*/
 	this._j._absMenu._equipOffhandWindow = null;
+	/**
+	* The window containing the list of equippable usable items (consumables).
+	* @type {Window_AbsMenuSelect|null}
+	*/
+	this._j._absMenu._usableItemWindow = null;
+	/**
+	* The window containing the currently equipped usable item.
+	* @type {Window_AbsMenuSelect|null}
+	*/
+	this._j._absMenu._equipUsableItemWindow = null;
 };
 /**
 * Gets the current window focus of the JABS menu.
@@ -26805,6 +27046,8 @@ Scene_Map.prototype.createJabsAbsMenu = function() {
 	this.createJabsAbsMenuEquipToolWindow();
 	this.createJabsAbsMenuEquipDodgeWindow();
 	this.createJabsAbsMenuEquipOffhandWindow();
+	this.createJabsAbsMenuUsableItemListWindow();
+	this.createJabsAbsMenuEquipUsableItemWindow();
 };
 /**
 * Creates the JABS main menu window containing the list of other options
@@ -26827,6 +27070,7 @@ Scene_Map.prototype.buildJabsMenuMainWindow = function() {
 	window.setHandler("dodge-assign", this.commandDodge.bind(this));
 	window.setHandler("offhand-assign", this.commandOffhand.bind(this));
 	window.setHandler("item-assign", this.commandItem.bind(this));
+	window.setHandler("usable-item-assign", this.commandUsableItem.bind(this));
 	window.setHandler("main-menu", this.commandMenu.bind(this));
 	window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Main));
 	window.close();
@@ -27116,6 +27360,102 @@ Scene_Map.prototype.jabsEquippedOffhandSkillWindowRectangle = function() {
 	return new Rectangle(x, y, width, height);
 };
 /**
+* Gets the window containing the list of equippable usable items.
+* @returns {Window_AbsMenuSelect|null}
+*/
+Scene_Map.prototype.getJabsUsableItemListWindow = function() {
+	return this._j._absMenu._usableItemWindow;
+};
+/**
+* Set the currently tracked JABS menu usable item list window to the given window.
+* @param {Window_AbsMenuSelect} window The usable item list window to track.
+*/
+Scene_Map.prototype.setJabsUsableItemListWindow = function(window) {
+	this._j._absMenu._usableItemWindow = window;
+};
+/**
+* Gets the window containing the equipped usable item.
+* @returns {Window_AbsMenuSelect|null}
+*/
+Scene_Map.prototype.getJabsEquippedUsableItemWindow = function() {
+	return this._j._absMenu._equipUsableItemWindow;
+};
+/**
+* Set the currently tracked JABS menu equipped usable item window to the given window.
+* @param {Window_AbsMenuSelect} window The equipped usable item window to track.
+*/
+Scene_Map.prototype.setJabsEquippedUsableItemWindow = function(window) {
+	this._j._absMenu._equipUsableItemWindow = window;
+};
+/**
+* Creates the usable item list window of the JABS menu.
+*/
+Scene_Map.prototype.createJabsAbsMenuUsableItemListWindow = function() {
+	const window = this.buildJabsUsableItemListWindow();
+	this.setJabsUsableItemListWindow(window);
+	this.addWindow(window);
+};
+/**
+* Sets up and defines the usable item list of the JABS menu.
+* @returns {Window_AbsMenuSelect}
+*/
+Scene_Map.prototype.buildJabsUsableItemListWindow = function() {
+	const rectangle = this.jabsUsableItemListWindowRectangle();
+	const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.UsableItemList);
+	window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.UsableItem));
+	window.setHandler("usable-item", this.commandEquipUsableItem.bind(this));
+	window.close();
+	window.hide();
+	return window;
+};
+/**
+* Get the rectangle associated with the usable item list of the JABS menu.
+* Mirrors the tool list dimensions.
+* @returns {Rectangle}
+*/
+Scene_Map.prototype.jabsUsableItemListWindowRectangle = function() {
+	const width = Math.round(Graphics.boxWidth * .66);
+	const commandHeight = 72;
+	const height = commandHeight * 10 + 40;
+	const x = Graphics.boxWidth - width;
+	const y = 0;
+	return new Rectangle(x, y, width, height);
+};
+/**
+* Creates the equip usable item window of the JABS menu.
+*/
+Scene_Map.prototype.createJabsAbsMenuEquipUsableItemWindow = function() {
+	const window = this.buildJabsEquippedUsableItemWindow();
+	this.setJabsEquippedUsableItemWindow(window);
+	this.addWindow(window);
+};
+/**
+* Sets up and defines the equipped usable item window of the JABS menu.
+* @returns {Window_AbsMenuSelect}
+*/
+Scene_Map.prototype.buildJabsEquippedUsableItemWindow = function() {
+	const rectangle = this.jabsEquippedUsableItemWindowRectangle();
+	const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.UsableItemEquip);
+	window.setHandler("cancel", this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+	window.setHandler("slot", this.commandAssign.bind(this));
+	window.close();
+	window.hide();
+	return window;
+};
+/**
+* Get the rectangle associated with the equipped usable item of the JABS menu.
+* Mirrors the equipped tool window dimensions.
+* @returns {Rectangle}
+*/
+Scene_Map.prototype.jabsEquippedUsableItemWindowRectangle = function() {
+	const width = 400;
+	const height = 96;
+	const x = Graphics.boxWidth - width;
+	const parentRectangle = this.jabsUsableItemListWindowRectangle();
+	const y = parentRectangle.y + parentRectangle.height;
+	return new Rectangle(x, y, width, height);
+};
+/**
 * Brings up the main menu.
 */
 Scene_Map.prototype.commandMenu = function() {
@@ -27146,6 +27486,29 @@ Scene_Map.prototype.commandItem = function() {
 	this.getJabsEquippedToolWindow().deactivate();
 	this.showJabsToolListWindow();
 	this.setJabsMenuEquipType(JABS_MenuType.Tool);
+};
+/**
+* When the "assign usable item" option is chosen, it prioritizes this window.
+*/
+Scene_Map.prototype.commandUsableItem = function() {
+	this.setJabsMenuFocus(JABS_MenuType.UsableItem);
+	this.getJabsUsableItemListWindow().refresh();
+	this.getJabsEquippedUsableItemWindow().refresh();
+	this.showJabsEquippedUsableItemWindow();
+	this.getJabsEquippedUsableItemWindow().deselect();
+	this.getJabsEquippedUsableItemWindow().deactivate();
+	this.showJabsUsableItemListWindow();
+	this.setJabsMenuEquipType(JABS_MenuType.UsableItem);
+};
+/**
+* When a decision is made in usable item assign, prioritize the equip window.
+*/
+Scene_Map.prototype.commandEquipUsableItem = function() {
+	this.setJabsMenuFocus(JABS_MenuType.Assign);
+	const window = this.getJabsEquippedUsableItemWindow();
+	window.refresh();
+	window.select(0);
+	this.showJabsEquippedUsableItemWindow();
 };
 /**
 * When the "assign dodge" option is chosen, it prioritizes this window.
@@ -27241,6 +27604,10 @@ Scene_Map.prototype.commandAssign = function() {
 			equippedActionSlot = this.getJabsEquippedOffhandSkillWindow().currentExt();
 			nextActionSkill = this.getJabsOffhandSkillListWindow().currentExt() ?? 0;
 			break;
+		case JABS_MenuType.UsableItem:
+			equippedActionSlot = this.getJabsEquippedUsableItemWindow().currentExt();
+			nextActionSkill = this.getJabsUsableItemListWindow().currentExt();
+			break;
 	}
 	if (this.getJabsMenuEquipType() === JABS_MenuType.Offhand) {
 		actor.pinOffhandSkill(nextActionSkill);
@@ -27317,6 +27684,10 @@ Scene_Map.prototype.manageAbsMenu = function() {
 		case JABS_MenuType.Offhand:
 			this.hideJabsMainWindow();
 			this.showJabsOffhandSkillListWindow();
+			break;
+		case JABS_MenuType.UsableItem:
+			this.hideJabsMainWindow();
+			this.showJabsUsableItemListWindow();
 			break;
 		case null:
 			this.setJabsMenuFocus(JABS_MenuType.Main);
@@ -27463,6 +27834,34 @@ Scene_Map.prototype.hideJabsEquippedOffhandSkillWindow = function() {
 	this.hideJabsMenuWindow(window);
 };
 /**
+* Shows the JABS menu usable item list window.
+*/
+Scene_Map.prototype.showJabsUsableItemListWindow = function() {
+	const window = this.getJabsUsableItemListWindow();
+	this.showJabsMenuWindow(window);
+};
+/**
+* Hides the JABS menu usable item list window.
+*/
+Scene_Map.prototype.hideJabsUsableItemListWindow = function() {
+	const window = this.getJabsUsableItemListWindow();
+	this.hideJabsMenuWindow(window);
+};
+/**
+* Shows the JABS menu equip usable item window.
+*/
+Scene_Map.prototype.showJabsEquippedUsableItemWindow = function() {
+	const window = this.getJabsEquippedUsableItemWindow();
+	this.showJabsMenuWindow(window);
+};
+/**
+* Hides the JABS menu equip usable item window.
+*/
+Scene_Map.prototype.hideJabsEquippedUsableItemWindow = function() {
+	const window = this.getJabsEquippedUsableItemWindow();
+	this.hideJabsMenuWindow(window);
+};
+/**
 * Hides all windows of the JABS menu.
 */
 Scene_Map.prototype.hideAllJabsWindows = function() {
@@ -27472,6 +27871,8 @@ Scene_Map.prototype.hideAllJabsWindows = function() {
 	this.hideJabsEquippedOffhandSkillWindow();
 	this.hideJabsToolListWindow();
 	this.hideJabsEquippedToolWindow();
+	this.hideJabsUsableItemListWindow();
+	this.hideJabsEquippedUsableItemWindow();
 	this.hideJabsCombatSkillListWindow();
 	this.hideJabsEquippedCombatSkillsWindow();
 	this.hideJabsMainWindow();
@@ -27528,6 +27929,11 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow) {
 			this.hideJabsEquippedOffhandSkillWindow();
 			this.setJabsMenuFocus(JABS_MenuType.Main);
 			break;
+		case JABS_MenuType.UsableItem:
+			this.hideJabsUsableItemListWindow();
+			this.hideJabsEquippedUsableItemWindow();
+			this.setJabsMenuFocus(JABS_MenuType.Main);
+			break;
 		case JABS_MenuType.Assign:
 			this.redirectToParentAssignMenu();
 			break;
@@ -27563,6 +27969,12 @@ Scene_Map.prototype.redirectToParentAssignMenu = function() {
 			equippedOffhandSkillWindow.refresh();
 			this.getJabsOffhandSkillListWindow().activate();
 			break;
+		case JABS_MenuType.UsableItem:
+			const equippedUsableItemWindow = this.getJabsEquippedUsableItemWindow();
+			equippedUsableItemWindow.deselect();
+			equippedUsableItemWindow.refresh();
+			this.getJabsUsableItemListWindow().activate();
+			break;
 	}
 };
 /**
@@ -27580,6 +27992,7 @@ Scene_Map.prototype.forceCloseAbsMenu = function() {
 	this.closeAbsWindow(JABS_MenuType.Tool);
 	this.closeAbsWindow(JABS_MenuType.Dodge);
 	this.closeAbsWindow(JABS_MenuType.Offhand);
+	this.closeAbsWindow(JABS_MenuType.UsableItem);
 	this.setJabsMenuEquipType(String.empty);
 	this.closeAbsWindow(JABS_MenuType.Main);
 	this.setJabsMenuFocus(JABS_MenuType.Main);

@@ -958,6 +958,9 @@ Game_Actor.prototype.onRevive = function()
 
   // stops this battler from being flagged as dead by JABS.
   this.stopDying();
+
+  // the death context is no longer relevant after revival.
+  this.clearDeathContext();
 };
 
 /**

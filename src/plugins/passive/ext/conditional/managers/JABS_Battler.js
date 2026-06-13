@@ -1,5 +1,6 @@
 //region JABS_Battler
 import AutoApplyStateManager from './AutoApplyStateManager.js';
+import AutoApplyStateOnNearbyManager from './AutoApplyStateOnNearbyManager.js';
 import AutoExecuteSkillManager from './AutoExecuteSkillManager.js';
 import MoveStateRemovalManager from './MoveStateRemovalManager.js';
 import SkillExecutionStateRemovalManager from './SkillExecutionStateRemovalManager.js';
@@ -62,9 +63,18 @@ JABS_Battler.prototype.updatePassiveRuleReconcile = function()
   // periodic auto-apply rules (time condition) run every JABS tick while on the map.
   AutoApplyStateManager.processTimeRules(battler);
 
+  // proximity-gated auto-apply-self rules mirror the auto-execute proximity path.
+  AutoApplyStateManager.processEnemiesNearbyRules(battler);
+  AutoApplyStateManager.processAlliesNearbyRules(battler);
+
+  // proximity-gated aura rules apply states onto nearby battlers rather than the bearer.
+  AutoApplyStateOnNearbyManager.processEnemiesNearbyRules(battler);
+  AutoApplyStateOnNearbyManager.processAlliesNearbyRules(battler);
+
   // proximity-gated auto-execute rules run on the same tick cadence as time rules.
   AutoExecuteSkillManager.processTimeRules(battler);
   AutoExecuteSkillManager.processEnemiesNearbyRules(battler);
+  AutoExecuteSkillManager.processAlliesNearbyRules(battler);
 
   // idle auto-apply rules (stand condition) run when this battler has not moved this frame.
   AutoApplyStateManager.processStandRules(battler);

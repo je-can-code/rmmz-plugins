@@ -1,6 +1,6 @@
 //region Window_PassiveDetail
-import AutoApplyStateDisplay from '../__models/AutoApplyStateDisplay.js';
-import RemoveStateOnMoveDisplay from '../__models/RemoveStateOnMoveDisplay.js';
+import AutoApplyStateDisplay from '../models/AutoApplyStateDisplay.js';
+import RemoveStateOnMoveDisplay from '../models/RemoveStateOnMoveDisplay.js';
 /**
  * Extends {@link Window_PassiveDetail#drawStateHeader}.<br/>
  * Injects autoApplyState (stand condition) and removeStateOnMove prose under the header.

@@ -33,6 +33,7 @@ J.LEVEL.Aliased = {
   Game_Action: new Map(),
   Game_Actor: new Map(),
   Game_Battler: new Map(),
+  Game_BattlerBase: new Map(),
   Game_Enemy: new Map(),
   Game_Event: new Map(),
   Game_System: new Map(),

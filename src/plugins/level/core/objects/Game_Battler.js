@@ -35,23 +35,41 @@ Object.defineProperty(Game_Battler.prototype, 'lvl', {
 
 /**
  * Gets the level for this battler.
+ *
+ * Returns the cached value when available; computes and caches on the first call or after
+ * {@link #refreshLevel} invalidates the cache via {@link #onBattlerDataChange}.
  * @returns {number}
  */
 Game_Battler.prototype.getLevel = function()
 {
-  this._j ||= {};
-  this._j._level ||= {};
+  if (this._j._level._cachedLevel !== null)
+  {
+    return this._j._level._cachedLevel;
+  }
 
-  const levelSlot = this._j._level;
+  const computed = this.computeLevel();
+  this._j._level._cachedLevel = computed;
+  return computed;
+};
 
-  if (levelSlot._isComputingGetLevel === true)
+/**
+ * Computes the level for this battler from all registered sources.
+ *
+ * Separated from {@link #getLevel} so the cache layer stays clean.
+ * Includes a re-entrancy guard for cases where computing the level would
+ * otherwise trigger another level computation (e.g. a state whose note
+ * calls back into level logic).
+ * @returns {number}
+ */
+Game_Battler.prototype.computeLevel = function()
+{
+  if (this._j._level._isComputingGetLevel === true)
   {
     return this.getBattlerBaseLevel() + this.getLevelBalancer();
   }
 
-  levelSlot._isComputingGetLevel = true;
+  this._j._level._isComputingGetLevel = true;
 
-  // attempt the fragile parse or io work inside this block.
   try
   {
     const sources = this.getLevelSources();
@@ -67,8 +85,20 @@ Game_Battler.prototype.getLevel = function()
   }
   finally
   {
-    levelSlot._isComputingGetLevel = false;
+    this._j._level._isComputingGetLevel = false;
   }
+};
+
+/**
+ * Invalidates the cached level and immediately re-primes it.
+ *
+ * Called by {@link #onBattlerDataChange} hooks in both {@link Game_Actor} and
+ * {@link Game_Enemy} so that the HUD's per-frame reads of {@link #level} remain O(1).
+ */
+Game_Battler.prototype.refreshLevel = function()
+{
+  this._j._level._cachedLevel = null;
+  this.getLevel();
 };
 
 /**

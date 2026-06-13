@@ -33,15 +33,20 @@ class RPGManager
    */
   static getOrCreateCacheForObject(object)
   {
+    // resolve to the underlying source object so clones share a cache entry with their original.
+    const cacheTarget = object instanceof RPG_Base
+      ? object._original()
+      : object;
+
     // check if the cache for this object already exists.
-    const cacheHit = this._cache.get(object);
+    const cacheHit = this._cache.get(cacheTarget);
 
     // if it does exist, return it.
     if (cacheHit) return cacheHit;
 
     // it doesn't exist yet, so create it.
     const newCache = new Map();
-    this._cache.set(object, newCache);
+    this._cache.set(cacheTarget, newCache);
 
     // return the newly created cache.
     return newCache;

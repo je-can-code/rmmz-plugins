@@ -62,6 +62,37 @@ Game_Enemy.prototype.onSetup = function(enemyId)
 };
 
 /**
+ * Overwrites the vanilla {@link #traitObjects} defined on {@link Game_Enemy}.<br/>
+ * Routes all calls through the cache wrapper on {@link Game_BattlerBase} so the
+ * vanilla implementation — which concatenates directly onto the returned array — can never
+ * shadow our cache layer or cause accidental mutation.
+ * @returns {(RPG_Enemy|RPG_State)[]}
+ */
+Game_Enemy.prototype.traitObjects = function()
+{
+  return Game_BattlerBase.prototype.traitObjects.call(this);
+};
+
+/**
+ * Overwrites {@link #buildTraitObjects}.<br/>
+ * Enemies have one additional trait-bearing source beyond states: their own enemy database entry.
+ *
+ * Returns a fresh array — never mutates the result of any super call — so the
+ * cache in {@link #traitObjects} remains safe.
+ * @returns {(RPG_Enemy|RPG_State)[]}
+ */
+Game_Enemy.prototype.buildTraitObjects = function()
+{
+  return [
+    // states are the base trait source for all battlers.
+    ...this.states(),
+
+    // the enemy's own database entry carries traits.
+    this.enemy(),
+  ];
+};
+
+/**
  * Converts all "actions" from an enemy into their collection of known skills.
  * This includes both skills listed in their skill list, and any added skills via traits.
  * @returns {RPG_Skill[]}
@@ -168,7 +199,6 @@ Game_Enemy.prototype.learnSkill = function(skillId)
 J.BASE.Aliased.Game_Enemy.set('die', Game_Enemy.prototype.die);
 Game_Enemy.prototype.die = function()
 {
-  // perform original effects.
   // perform original logic.
   J.BASE.Aliased.Game_Enemy.get('die')
     .call(this);

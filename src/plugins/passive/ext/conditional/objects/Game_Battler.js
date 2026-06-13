@@ -104,162 +104,56 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
   this._j._passive._conditional._lastTpHealFrame = 0;
 
   /**
-   * Per-rule cooldown stamps for {@link AutoApplyStateManager} (rule key → frame).
+   * Per-rule cooldown stamps shared across all {@link AutoRuleManager} subclasses (rule key → frame).
    * @type {Map<string, number>}
    */
-  this._j._passive._conditional._autoApplyLastFrame = new Map();
+  this._j._passive._conditional._autoRuleLastFrame = new Map();
 
   /**
-   * Per-rule whole-tile credit toward {@code move} auto-apply rules (rule key → tiles).
+   * Per-rule whole-tile credit shared across all {@link AutoRuleManager} subclasses (rule key → tiles).
    * @type {Map<string, number>}
    */
-  this._j._passive._conditional._autoApplyTileCredit = new Map();
-
-  /**
-   * Per-rule cooldown stamps for {@link AutoExecuteSkillManager} (rule key → frame).
-   * @type {Map<string, number>}
-   */
-  this._j._passive._conditional._autoExecuteSkillLastFrame = new Map();
-
-  /**
-   * Per-rule whole-tile credit toward {@code move} auto-execute rules (rule key → tiles).
-   * @type {Map<string, number>}
-   */
-  this._j._passive._conditional._autoExecuteSkillTileCredit = new Map();
+  this._j._passive._conditional._autoRuleTileCredit = new Map();
 };
 
 /**
- * Returns per-rule whole-tile credit toward {@code move} auto-apply rules.
- * @returns {Map<string, number>}
- */
-Game_Battler.prototype.getAutoApplyTileCreditMap = function()
-{
-  return this._j._passive._conditional._autoApplyTileCredit;
-};
-
-/**
- * Reads accumulated whole-tile credit for one {@code move} rule key.
- * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * Reads the last map frame an auto rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoRuleManager.buildRuleKey}.
  * @returns {number}
  */
-Game_Battler.prototype.getAutoApplyTileCredit = function(ruleKey)
+Game_Battler.prototype.getAutoRuleLastFrame = function(ruleKey)
 {
-  return this.getAutoApplyTileCreditMap().get(ruleKey) || 0;
+  return this._j._passive._conditional._autoRuleLastFrame.get(ruleKey) || 0;
 };
 
 /**
- * Stores accumulated whole-tile credit for one {@code move} rule key.
- * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
- * @param {number} tiles Whole tiles credited toward the next apply.
+ * Stamps the last map frame an auto rule key fired.
+ * @param {string} ruleKey Stable key from {@link AutoRuleManager.buildRuleKey}.
+ * @param {number} frame {@link Graphics.frameCount} when the rule last fired.
  */
-Game_Battler.prototype.setAutoApplyTileCredit = function(ruleKey, tiles)
+Game_Battler.prototype.setAutoRuleLastFrame = function(ruleKey, frame)
 {
-  this.getAutoApplyTileCreditMap().set(ruleKey, tiles);
+  this._j._passive._conditional._autoRuleLastFrame.set(ruleKey, frame);
 };
 
 /**
- * Returns per-rule frame cooldown stamps for auto-apply rules.
- * @returns {Map<string, number>}
- */
-Game_Battler.prototype.getAutoApplyLastFrameMap = function()
-{
-  return this._j._passive._conditional._autoApplyLastFrame;
-};
-
-/**
- * Reads the last map frame an auto-apply rule key fired.
- * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
+ * Reads accumulated whole-tile credit for one {@code move} auto rule key.
+ * @param {string} ruleKey Stable key from {@link AutoRuleManager.buildRuleKey}.
  * @returns {number}
  */
-Game_Battler.prototype.getAutoApplyLastFrame = function(ruleKey)
+Game_Battler.prototype.getAutoRuleTileCredit = function(ruleKey)
 {
-  return this.getAutoApplyLastFrameMap().get(ruleKey) || 0;
+  return this._j._passive._conditional._autoRuleTileCredit.get(ruleKey) || 0;
 };
 
 /**
- * Stamps the last map frame an auto-apply rule key fired.
- * @param {string} ruleKey Stable key from {@link AutoApplyStateManager.buildRuleKey}.
- * @param {number} frame {@link Graphics.frameCount} when the rule last applied.
+ * Stores accumulated whole-tile credit for one {@code move} auto rule key.
+ * @param {string} ruleKey Stable key from {@link AutoRuleManager.buildRuleKey}.
+ * @param {number} tiles Whole tiles credited toward the next dispatch.
  */
-Game_Battler.prototype.setAutoApplyLastFrame = function(ruleKey, frame)
+Game_Battler.prototype.setAutoRuleTileCredit = function(ruleKey, tiles)
 {
-  this.getAutoApplyLastFrameMap().set(ruleKey, frame);
-};
-
-/**
- * Delegates auto-apply scheduling for one condition kind to {@link AutoApplyStateManager}.
- * @param {string} conditionKind The condition kind to evaluate (time, hpDmg, whenCrit, etc.).
- */
-Game_Battler.prototype.tryAutoApplyStates = function(conditionKind)
-{
-  AutoApplyStateManager.tryApply(this, conditionKind);
-};
-
-/**
- * Returns per-rule whole-tile credit toward {@code move} auto-execute rules.
- * @returns {Map<string, number>}
- */
-Game_Battler.prototype.getAutoExecuteSkillTileCreditMap = function()
-{
-  return this._j._passive._conditional._autoExecuteSkillTileCredit;
-};
-
-/**
- * Reads accumulated whole-tile credit for one {@code move} auto-execute rule key.
- * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
- * @returns {number}
- */
-Game_Battler.prototype.getAutoExecuteSkillTileCredit = function(ruleKey)
-{
-  return this.getAutoExecuteSkillTileCreditMap().get(ruleKey) || 0;
-};
-
-/**
- * Stores accumulated whole-tile credit for one {@code move} auto-execute rule key.
- * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
- * @param {number} tiles Whole tiles credited toward the next execution.
- */
-Game_Battler.prototype.setAutoExecuteSkillTileCredit = function(ruleKey, tiles)
-{
-  this.getAutoExecuteSkillTileCreditMap().set(ruleKey, tiles);
-};
-
-/**
- * Returns per-rule frame cooldown stamps for auto-execute rules.
- * @returns {Map<string, number>}
- */
-Game_Battler.prototype.getAutoExecuteSkillLastFrameMap = function()
-{
-  return this._j._passive._conditional._autoExecuteSkillLastFrame;
-};
-
-/**
- * Reads the last map frame an auto-execute rule key fired.
- * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
- * @returns {number}
- */
-Game_Battler.prototype.getAutoExecuteSkillLastFrame = function(ruleKey)
-{
-  return this.getAutoExecuteSkillLastFrameMap().get(ruleKey) || 0;
-};
-
-/**
- * Stamps the last map frame an auto-execute rule key fired.
- * @param {string} ruleKey Stable key from {@link AutoExecuteSkillManager.buildRuleKey}.
- * @param {number} frame {@link Graphics.frameCount} when the rule last executed.
- */
-Game_Battler.prototype.setAutoExecuteSkillLastFrame = function(ruleKey, frame)
-{
-  this.getAutoExecuteSkillLastFrameMap().set(ruleKey, frame);
-};
-
-/**
- * Delegates auto-execute scheduling for one condition kind to {@link AutoExecuteSkillManager}.
- * @param {string} conditionKind The condition kind to evaluate (time, hpDmg, whenCrit, etc.).
- */
-Game_Battler.prototype.tryAutoExecuteSkills = function(conditionKind)
-{
-  AutoExecuteSkillManager.tryExecute(this, conditionKind);
+  this._j._passive._conditional._autoRuleTileCredit.set(ruleKey, tiles);
 };
 
 /**
@@ -390,7 +284,6 @@ Game_Battler.prototype.gainHp = function(value)
   J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('gainHp')
     .call(this, value);
 
-  // schedule hp + any-damage auto-apply rules after the resource change lands.
   if (value < 0)
   {
     AutoApplyStateManager.scheduleDamageTriggers(this, 'hpDmg');
@@ -451,14 +344,20 @@ Game_Battler.prototype.onHeal = function(resource, amount)
   if (resource === J.BASE.Resource.HP)
   {
     this.stampPassiveRuleHpHealFrame();
+    AutoApplyStateManager.scheduleHealTriggers(this, 'onHealHp');
+    AutoExecuteSkillManager.scheduleHealTriggers(this, 'onHealHp');
   }
   else if (resource === J.BASE.Resource.MP)
   {
     this.stampPassiveRuleMpHealFrame();
+    AutoApplyStateManager.scheduleHealTriggers(this, 'onHealMp');
+    AutoExecuteSkillManager.scheduleHealTriggers(this, 'onHealMp');
   }
   else if (resource === J.BASE.Resource.TP)
   {
     this.stampPassiveRuleTpHealFrame();
+    AutoApplyStateManager.scheduleHealTriggers(this, 'onHealTp');
+    AutoExecuteSkillManager.scheduleHealTriggers(this, 'onHealTp');
   }
 };
 

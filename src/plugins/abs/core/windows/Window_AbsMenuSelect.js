@@ -1,6 +1,6 @@
 //region Window_AbsMenuSelect
-import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
 import JABS_Battler from '../models/JABS_Battler.js';
+
 /**
  * A window that is reused to draw all the subwindows of the JABS menu.
  */
@@ -17,6 +17,8 @@ class Window_AbsMenuSelect
     DodgeEquip: 'equip-dodge',
     OffhandList: 'offhand',
     OffhandEquip: 'equip-offhand',
+    UsableItemList: 'usable-item',
+    UsableItemEquip: 'equip-usable-item',
   };
 
   /**
@@ -83,6 +85,14 @@ class Window_AbsMenuSelect
       case Window_AbsMenuSelect.SelectionTypes.OffhandEquip:
         // the offhand equip menu, where the offhand pin slot is shown for assignment.
         this.makeEquippedOffhandList();
+        break;
+      case Window_AbsMenuSelect.SelectionTypes.UsableItemList:
+        // the list of all consumable items (potions, food, etc.) in the party's possession.
+        this.makeUsableItemList();
+        break;
+      case Window_AbsMenuSelect.SelectionTypes.UsableItemEquip:
+        // the usable-item equip menu, showing the current R2 slot assignment.
+        this.makeEquippedUsableItemList();
         break;
     }
   }
@@ -201,6 +211,67 @@ class Window_AbsMenuSelect
 
     // iterate over all of the commands found and render them.
     commands.forEach(this.addBuiltCommand, this);
+  }
+
+  /**
+   * Determines whether or not an item should be visible in the JABS tool assignment menu.
+   * Tools are items explicitly tagged with {@code <jabsTool>} (hookshot, bombs, etc.).
+   *
+   * Other plugins may alias this method to add additional conditions.
+   * @param {RPG_Item} item The item to evaluate.
+   * @returns {boolean} True if the item belongs in the tool list; false otherwise.
+   */
+  isItemVisibleInToolMenu(item)
+  {
+    // invalid items are not visible in the tool menu.
+    if (!item) return false;
+
+    // explicitly hidden items are not visible in the tool menu.
+    if (item.jabsHiddenFromMenus) return false;
+
+    // Both gates are required: the tag is the opt-in, but the item type check is a safety
+    // rail — weapons/armors cannot become tools even if someone adds the tag, because only
+    // RPG_Item entries (itypeId===1, always-occasion) are ever iterated for this menu.
+    const isItem = DataManager.isItem(item) && item.itypeId === 1;
+    const isUsable = isItem && (item.occasion === 0);
+    if (!isItem || !isUsable) return false;
+
+    // only explicitly tagged tools belong in the tool slot.
+    if (!item.jabsTool) return false;
+
+    // show this item!
+    return true;
+  }
+
+  /**
+   * Determines whether or not an item should be visible in the JABS usable-item menu.
+   * Consumables that are NOT tools (i.e. lack {@code <jabsTool>}) land here — potions,
+   * food, and any other always-usable regular item.
+   *
+   * Other plugins may alias this method to add additional conditions.
+   * @param {RPG_Item} item The item to evaluate.
+   * @returns {boolean} True if the item belongs in the usable-item list; false otherwise.
+   */
+  isItemVisibleInUsableItemMenu(item)
+  {
+    // invalid items are not visible in the usable-item menu.
+    if (!item) return false;
+
+    // explicitly hidden items are excluded from all menus.
+    if (item.jabsHiddenFromMenus) return false;
+
+    // Same safety rail as isItemVisibleInToolMenu — only RPG_Item entries with itypeId===1
+    // and always-occasion are ever iterated here, but the explicit check documents the
+    // invariant and guards against future callers.
+    const isItem = DataManager.isItem(item) && item.itypeId === 1;
+    const isUsable = isItem && (item.occasion === 0);
+    if (!isItem || !isUsable) return false;
+
+    // tools belong in the tool slot, not here.
+    if (item.jabsTool) return false;
+
+    // show this item!
+    return true;
   }
 
   /**
@@ -391,6 +462,114 @@ class Window_AbsMenuSelect
   }
 
   /**
+   * Fills the list with consumable items in the party's possession to assign to the R2 slot.
+   * Mirrors {@link makeToolList} but filters by {@link isItemVisibleInUsableItemMenu}.
+   */
+  makeUsableItemList()
+  {
+    // initialize our blank list of items to view.
+    const commands = Array.empty;
+
+    // build the clear slot command.
+    const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText)
+      .setSymbol('usable-item')
+      .setTextLines([ 'Remove the existing usable item from the slot.' ])
+      .setColorIndex(16)
+      .build();
+
+    // add the clear slot command to the list.
+    commands.push(clearSlotCommand);
+
+    // an iterator function for building usable-item commands.
+    const forEacher = item =>
+    {
+      // destruct the data out of the database data.
+      const {
+        name,
+        id,
+        iconIndex,
+        description
+      } = item;
+
+      // items only get an amount if they are consumable.
+      const amount = item.consumable
+        ? $gameParty.numItems(item)
+          .padZero(3)
+        : '♾';
+
+      // build the command.
+      const itemCommand = new WindowCommandBuilder(name)
+        .setSymbol('usable-item')
+        .setExtensionData(id)
+        .setIconIndex(iconIndex)
+        .setHelpText(description)
+        .setRightText(`x${amount}`)
+        .setTextLines(description.split(/[\r\n]+/))
+        .build();
+
+      // add the built command to the list.
+      commands.push(itemCommand);
+    };
+
+    // grab all the items that are visible in this menu.
+    const items = $gameParty.allItems()
+      .filter(item => this.isItemVisibleInUsableItemMenu(item));
+
+    // iterate over each of the items and add them to the list.
+    items.forEach(forEacher, this);
+
+    // iterate over all of the commands found and render them.
+    commands.forEach(this.addBuiltCommand, this);
+  }
+
+  /**
+   * Fills the list with the currently assigned usable item in the R2 slot.
+   * Mirrors {@link makeEquippedToolList} but reads the usable-item slot.
+   */
+  makeEquippedUsableItemList()
+  {
+    // grab the usable-item skill slot.
+    const usableItemSlot = $gameParty.leader()
+      .getSkillSlotManager()
+      .getUsableItemSlot();
+
+    // initialize the command variables.
+    let name = `${usableItemSlot.key}: ${J.ABS.Metadata.UnassignedText}`;
+    let iconIndex = 0;
+    let description = String.empty;
+    let amount = String.empty;
+
+    // check if the usable-item slot has anything in it.
+    if (usableItemSlot.isUsable())
+    {
+      // determine the currently equipped usable item.
+      const equippedItem = $dataItems.at(usableItemSlot.id);
+
+      // items only get an amount if they are consumable.
+      amount = equippedItem.consumable
+        ? $gameParty.numItems(equippedItem)
+          .padZero(3)
+        : '♾';
+
+      // update the command variables with the equipped item data.
+      name = equippedItem.name;
+      iconIndex = equippedItem.iconIndex;
+      description = equippedItem.description;
+    }
+
+    // build the command.
+    const command = new WindowCommandBuilder(name)
+      .setSymbol('slot')
+      .setExtensionData(usableItemSlot.key)
+      .setIconIndex(iconIndex)
+      .setRightText(`x${amount}`)
+      .build();
+
+    // add the built command.
+    this.addBuiltCommand(command);
+  }
+
+  /**
    * Fills the list with skills eligible for pinning into the offhand slot.
    *
    * Includes a leading "clear slot" entry so the player can drop the pin and fall back
@@ -489,31 +668,6 @@ class Window_AbsMenuSelect
 
   /* eslint-enable prefer-destructuring */
 }
-
-/**
- * Determines whether or not an item should be visible
- * in the JABS tool assignment menu.
- *
- * Other plugins may alias this method to add additional conditions.
- * @param {RPG_Item} item The item to evaluate.
- * @returns {boolean} True if the item belongs in the tool list; false otherwise.
- */
-Window_AbsMenuSelect.prototype.isItemVisibleInToolMenu = function(item)
-{
-  // invalid items are not visible in the tool menu.
-  if (!item) return false;
-
-  // explicitly hidden items are not visible in the tool menu.
-  if (item.jabsHiddenFromMenus) return false;
-
-  // only regular, always-occasion consumable items qualify as tools.
-  const isItem = DataManager.isItem(item) && item.itypeId === 1;
-  const isUsable = isItem && (item.occasion === 0);
-  if (!isItem || !isUsable) return false;
-
-  // show this item!
-  return true;
-};
 
 export default Window_AbsMenuSelect;
 //endregion Window_AbsMenuSelect

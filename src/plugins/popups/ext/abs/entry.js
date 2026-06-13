@@ -1,5 +1,7 @@
 import './_metadata/initialization.js';
 
+import './database/RPG_State.js';
+
 import './_models/Map_TextPop.js';
 import './_models/TextPopBuilder.js';
 import './helpers/PopupResourceDisplayColor.js';

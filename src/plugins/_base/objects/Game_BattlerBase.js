@@ -1,5 +1,91 @@
 //region Game_BattlerBase
 /**
+ * Extends {@link #initMembers}.<br/>
+ * Initializes the trait objects cache for this battler.
+ */
+J.BASE.Aliased.Game_BattlerBase.set('initMembers', Game_BattlerBase.prototype.initMembers);
+Game_BattlerBase.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_BattlerBase.get('initMembers')
+    .call(this);
+
+  /**
+   * The J object where all my additional properties live.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with the base plugin.
+   */
+  this._j._base ||= {};
+
+  /**
+   * The cached result of {@link #buildTraitObjects} for this battler.
+   * Null when the cache is cold; populated on the first {@link #traitObjects} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * @type {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
+   */
+  this._j._base._cachedTraitObjects = null;
+};
+
+/**
+ * Gets the cached trait objects for this battler, or null if the cache is cold.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
+ */
+Game_BattlerBase.prototype.getCachedTraitObjects = function()
+{
+  return this._j._base._cachedTraitObjects;
+};
+
+/**
+ * Sets the cached trait objects for this battler.
+ * @param {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null} traitObjects The new cached value, or null to invalidate.
+ */
+Game_BattlerBase.prototype.setCachedTraitObjects = function(traitObjects)
+{
+  this._j._base._cachedTraitObjects = traitObjects;
+};
+
+/**
+ * Gets all objects that bear traits for this battler.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * The cache is invalidated by {@link #onBattlerDataChange}, which fires whenever states,
+ * equipment, skills, or any other trait-bearing data changes on this battler.
+ *
+ * Subclasses define their full trait object list via {@link #buildTraitObjects} rather than
+ * pushing into the returned array — this keeps the cache safe from accidental mutation.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]}
+ */
+Game_BattlerBase.prototype.traitObjects = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedTraitObjects() !== null)
+  {
+    return this.getCachedTraitObjects();
+  }
+
+  // build the trait objects collection and cache it for all subsequent callers this cycle.
+  this.setCachedTraitObjects(this.buildTraitObjects());
+
+  return this.getCachedTraitObjects();
+};
+
+/**
+ * Builds the complete list of objects that bear traits for this battler.
+ *
+ * This is the extension point for subclasses — override this instead of {@link #traitObjects}
+ * so the cache layer in {@link #traitObjects} remains intact. Return a fresh array each call;
+ * never mutate the result of a super call.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]}
+ */
+Game_BattlerBase.prototype.buildTraitObjects = function()
+{
+  // states are the only trait-bearing sources at the base battler level.
+  return [ ...this.states() ];
+};
+/**
  * Returns a list of known base parameter ids.
  * @returns {number[]}
  */

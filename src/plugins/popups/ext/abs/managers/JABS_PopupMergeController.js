@@ -226,6 +226,7 @@ class JABS_PopupMergeController
 
     let session = bucket.sessions.get(key);
 
+
     if (!session)
     {
       const template = JABS_PopupMergeController.#clonePopTemplate(pop);

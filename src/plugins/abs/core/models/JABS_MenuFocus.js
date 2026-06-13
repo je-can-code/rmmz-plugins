@@ -49,6 +49,13 @@ class JABS_MenuType
   static Offhand = "offhand";
 
   /**
+   * The "usable-item" window is the list of consumable items (potions, food, etc.) that the
+   * player can equip into the R2 usable-item slot. Tools (hookshot, bombs, etc.) are separate.
+   * @type {string}
+   */
+  static UsableItem = "usable-item";
+
+  /**
    * The "assign" window is one of multiple types of windows where items or skills are assigned
    * via the concept of "combat skills", "dodge skills", "offhand skills", and "tools".
    * @type {string}

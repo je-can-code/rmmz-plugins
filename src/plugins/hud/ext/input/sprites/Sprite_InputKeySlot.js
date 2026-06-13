@@ -502,14 +502,18 @@ class Sprite_InputKeySlot
 
   /**
    * Creates the key for the input key skill name sprite based on the parameters.
+   * The offhand slot includes the equipped skill id so that swapping between a guard
+   * skill and an action skill produces a fresh sprite with the correct label.
+   * @param {JABS_SkillSlot} skillSlot The slot being labelled.
    * @param {string} inputType The type of input for this key.
    * @returns {string}
    */
-  makeInputKeySlotNameSpriteKey(inputType)
+  makeInputKeySlotNameSpriteKey(skillSlot, inputType)
   {
+    const slotId = (inputType === JABS_Button.Offhand) ? skillSlot.id : 0;
     return `slotname-${this.battler()
       .name()}-${this.battler()
-      .battlerId()}-${inputType}`;
+      .battlerId()}-${inputType}-${slotId}`;
   }
 
   /**
@@ -521,7 +525,7 @@ class Sprite_InputKeySlot
   getOrCreateInputKeySlotNameSprite(skillSlot, inputType)
   {
     // determine the key for this sprite.
-    const key = this.makeInputKeySlotNameSpriteKey(inputType);
+    const key = this.makeInputKeySlotNameSpriteKey(skillSlot, inputType);
 
     // check if the key already maps to a cached sprite.
     if (this._j._spriteCache.has(key))
@@ -538,6 +542,13 @@ class Sprite_InputKeySlot
     {
       // parse out the word "combat" from the input if it exists.
       labelText = labelText.replace("COMBAT", String.empty);
+    }
+
+    // when the offhand slot holds a guard skill, label it GUARD — it is triggered
+    // by the guard/pivot button (R1), not the offhand button, so OFFHAND would mislead.
+    if (inputType === JABS_Button.Offhand && skillSlot.id && JABS_Battler.isGuardSkillById(skillSlot.id))
+    {
+      labelText = 'GUARD';
     }
 
     // create a new sprite.

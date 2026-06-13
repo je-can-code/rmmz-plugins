@@ -15,6 +15,7 @@ import './models/JABS_BattlerCoreDataBuilder.js';
 import './models/JABS_BattlerName.js';
 import './models/JABS_BattlerRole.js';
 import './models/JABS_Cooldown.js';
+import './models/JABS_DeathContext.js';
 import './models/JABS_EnemyAI.js';
 import './models/JABS_GlobalCooldown.js';
 import './models/JABS_GuardData.js';

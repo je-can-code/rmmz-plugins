@@ -43,24 +43,22 @@ Game_Actor.prototype.getPassiveStateSources = function()
 };
 
 /**
- * Extends {@link #traitObjects}.<br/>
+ * Extends {@link #buildTraitObjects}.<br/>
  * When considering traits, also include the actor's and party's passive states.
+ *
+ * Returns a fresh array by spreading the base result and appending passives — never
+ * mutates the base result so the {@link #traitObjects} cache stays safe.
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_State)[]}
  */
-J.PASSIVE.Aliased.Game_Actor.set('traitObjects', Game_Actor.prototype.traitObjects);
-Game_Actor.prototype.traitObjects = function()
+J.PASSIVE.Aliased.Game_Actor.set('buildTraitObjects', Game_Actor.prototype.buildTraitObjects);
+Game_Actor.prototype.buildTraitObjects = function()
 {
   // perform original logic.
-  const originalObjects = J.PASSIVE.Aliased.Game_Actor.get('traitObjects')
+  const baseObjects = J.PASSIVE.Aliased.Game_Actor.get('buildTraitObjects')
     .call(this);
 
-  // add our own passive states.
-  originalObjects.push(...this.getPassiveStates());
-
-  // add our passive items/weapons/armors states.
-  originalObjects.push(...$gameParty.passiveStates());
-
-  // return the new combined collection.
-  return originalObjects;
+  // return a new array that includes the actor's and party's passive states.
+  return [ ...baseObjects, ...this.getPassiveStates(), ...$gameParty.passiveStates() ];
 };
 
 /**

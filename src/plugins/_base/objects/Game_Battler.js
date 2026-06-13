@@ -113,7 +113,60 @@ Game_Battler.prototype.getBaseMaxTpBonuses = function()
 };
 
 /**
+ * Extends {@link #initMembers}.<br/>
+ * Initializes the notes cache for this battler.
+ */
+J.BASE.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
+Game_Battler.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('initMembers')
+    .call(this);
+
+  /**
+   * The J object where all my additional properties live.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with the base plugin.
+   */
+  this._j._base ||= {};
+
+  /**
+   * The cached result of {@link #getNotesSources} for this battler.
+   * Null when the cache is cold; populated on the first {@link #getAllNotes} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * @type {RPG_BaseItem[]|null}
+   */
+  this._j._base._cachedAllNotes = null;
+};
+
+/**
+ * Gets the cached all-notes collection for this battler, or null if the cache is cold.
+ * @returns {RPG_BaseItem[]|null}
+ */
+Game_Battler.prototype.getCachedAllNotes = function()
+{
+  return this._j._base._cachedAllNotes;
+};
+
+/**
+ * Sets the cached all-notes collection for this battler.
+ * @param {RPG_BaseItem[]|null} notes The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedAllNotes = function(notes)
+{
+  this._j._base._cachedAllNotes = notes;
+};
+
+/**
  * Gets everything that this battler has with notes on it.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * The cache is invalidated by {@link #onBattlerDataChange}, which fires whenever states,
+ * equipment, skills, or any other note-bearing data changes on this battler.
+ *
  * All battlers have their own database data, along with all their states.
  * Actors also get their class, skills, and equips added.
  * Enemies also get their skills added.
@@ -121,11 +174,16 @@ Game_Battler.prototype.getBaseMaxTpBonuses = function()
  */
 Game_Battler.prototype.getAllNotes = function()
 {
-  // initialize the container.
-  const objectsWithNotes = this.getNotesSources();
+  // return the cached result if the cache is still warm.
+  if (this.getCachedAllNotes() !== null)
+  {
+    return this.getCachedAllNotes();
+  }
 
-  // return this combined collection of note-containing objects.
-  return objectsWithNotes;
+  // build the notes collection and cache it for all subsequent callers this cycle.
+  this.setCachedAllNotes(this.getNotesSources());
+
+  return this.getCachedAllNotes();
 };
 
 /**
@@ -153,6 +211,11 @@ Game_Battler.prototype.getNotesSources = function()
  */
 Game_Battler.prototype.onBattlerDataChange = function()
 {
+  // invalidate the notes cache so the next getAllNotes() call rebuilds from current data.
+  this.setCachedAllNotes(null);
+
+  // invalidate the trait objects cache so the next traitObjects() call rebuilds from current data.
+  this.setCachedTraitObjects(null);
 };
 
 //region state management

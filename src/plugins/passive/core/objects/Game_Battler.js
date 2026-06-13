@@ -283,6 +283,9 @@ Game_Battler.prototype.refreshPassiveStates = function()
 
   // rebuild the filtered source cache so drift checks skip non-passive sources next cycle.
   this.cachePassiveCapableSources();
+
+  // flag that battler data has changed.
+  this.onBattlerDataChange();
 };
 
 /**

@@ -315,6 +315,7 @@ class J_AbsPluginMetadata
     this.EquipOffhandText = this.parsedPluginParameters['equipOffhandText'];
     // assign equip tools text on this instance for callers.
     this.EquipToolsText = this.parsedPluginParameters['equipToolsText'];
+    this.EquipUsableItemText = this.parsedPluginParameters['equipUsableItemText'];
     this.MainMenuText = this.parsedPluginParameters['mainMenuText'];
     this.CancelText = this.parsedPluginParameters['cancelText'];
     // assign clear slot text on this instance for callers.

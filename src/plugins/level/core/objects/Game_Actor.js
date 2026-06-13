@@ -45,6 +45,7 @@ Game_Actor.prototype.onBattlerDataChange = function()
     .call(this);
 
   this.updateRealMaxLevel();
+  this.refreshLevel();
 };
 
 Game_Actor.prototype.updateRealMaxLevel = function()
@@ -151,21 +152,16 @@ Game_Actor.prototype.getBattlerBaseLevel = function()
 
 /**
  * Gets all database sources we can get levels from.
+ *
+ * Uses {@link #getAllNotes} so the result benefits from the notes cache and
+ * includes all note-bearing sources — database data, class, skills, equips,
+ * and all states (including passives). This also opens the door for skills
+ * to grant level bonuses via the level tag, which is intentional.
  * @returns {RPG_BaseItem[]}
  */
 Game_Actor.prototype.getLevelSources = function()
 {
-  // our sources of data that a level can be retrieved from.
-  return [
-    // add the actor/enemy to the source list.
-    this.databaseData(),
-
-    // add all actor equipment to the source list.
-    ...this.equips(),
-
-    // add all currently applied states to the source list.
-    ...this.allStates(),
-  ];
+  return this.getAllNotes();
 };
 
 /**

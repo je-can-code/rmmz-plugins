@@ -115,6 +115,24 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateCount = /<passiveStateCount:[ ]?(\[
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState = /<autoApplyState:[ ]?(\[[^\]]+])>/gi;
 
 /**
+ * Captures {@code autoApplyStateOnNearby} bracket tuples from database notes.<br/>
+ * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
+ * Each match schedules a real JABS state application onto nearby battlers (aura-style).
+ * <p>
+ * Unlike {@code autoApplyState} which applies to the rule bearer, this tag applies the state to
+ * every enemy or ally within proximity on each pulse. Only {@code enemiesNearby} and
+ * {@code alliesNearby} conditions are meaningful here.
+ * </p>
+ * <ul>
+ *   <li>{@code [1061, 'enemiesNearby', 1, 60]} — apply to all nearby enemies every 60 frames</li>
+ *   <li>{@code [1062, 'alliesNearby', 1, 120]} — apply to all nearby allies every 120 frames</li>
+ *   <li>{@code [1063, 'enemiesNearby', 2, 60, 3]} — apply when 2+ enemies within 3 tiles, every 60 frames</li>
+ * </ul>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby = /<autoApplyStateOnNearby:[ ]?(\[[^\]]+])>/gi;
+
+/**
  * Captures {@code autoExecuteSkill} bracket tuples from database notes.<br/>
  * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
  * Each match schedules a map skill via {@link AutoExecuteSkillManager} and {@link JABS_Engine#forceMapAction}.

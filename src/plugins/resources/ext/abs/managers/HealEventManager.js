@@ -173,9 +173,9 @@ class HealEventManager
    */
   static #applySecondaryHeal(battler, outputKey, amount)
   {
-    if (outputKey === 'Hp') battler.gainHp(amount);
-    else if (outputKey === 'Mp') battler.gainMp(amount);
-    else battler.gainTp(amount);
+    if (outputKey === 'Hp') battler.gainHpFromResource(amount);
+    else if (outputKey === 'Mp') battler.gainMpFromResource(amount);
+    else battler.gainTpFromResource(amount);
   }
 
   /**

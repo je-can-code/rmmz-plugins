@@ -55,6 +55,20 @@ Game_Enemy.prototype.setCachedLevelOverride = function(level)
 };
 
 /**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Refreshes the cached level when this enemy's battler data changes.
+ */
+J.LEVEL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);
+Game_Enemy.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.LEVEL.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
+
+  this.refreshLevel();
+};
+
+/**
  * Extends {@link Game_Enemy.setup}.<br/>
  * Includes setting up the learned level map for skills.
  */
@@ -182,14 +196,16 @@ Game_Enemy.prototype.shouldHideLevel = function()
 
 /**
  * Gets all database sources we can get levels from.
+ *
+ * Uses {@link #getAllNotes} so the result benefits from the notes cache and
+ * includes all note-bearing sources — database data, skills, and all states
+ * (including passives). This also opens the door for skills to grant level
+ * bonuses via the level tag, which is intentional.
  * @returns {RPG_BaseItem[]}
  */
 Game_Enemy.prototype.getLevelSources = function()
 {
-  // our sources of data that a level can be retrieved from.
-  return [
-    ...this.states(), // all states applied to this enemy are sources.
-  ];
+  return this.getAllNotes();
 };
 
 /**

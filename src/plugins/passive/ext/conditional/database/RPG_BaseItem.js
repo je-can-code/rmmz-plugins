@@ -68,6 +68,25 @@ Object.defineProperty(RPG_BaseItem.prototype, 'autoApplyStateRules', {
 });
 
 /**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby} tuples from this row.<br/>
+ * Each tuple schedules a real state application onto nearby battlers via
+ * {@link AutoApplyStateOnNearbyManager} — aura-style, targeting enemies or allies in proximity
+ * rather than the rule bearer itself.
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_BaseItem.prototype, 'autoApplyStateOnNearbyRules', {
+  get()
+  {
+    // pull every auto-apply-on-nearby scheduler tuple from notes on this row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby,
+      true
+    );
+  },
+});
+
+/**
  * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill} tuples from this row.<br/>
  * Each tuple schedules a map skill via {@link AutoExecuteSkillManager}.
  * @type {any[][]}

@@ -25,4 +25,13 @@ J.POPUPS.EXT.ABS.Aliased.Game_Action = new Map();
 J.POPUPS.EXT.ABS.Aliased.JABS_SkillSlot = new Map();
 J.POPUPS.EXT.ABS.Aliased.Sprite_Damage = new Map();
 J.POPUPS.EXT.ABS.Aliased.PopupLayoutHelper = new Map();
+
+/**
+ * A collection of all regexp patterns for notetags parsed by this plugin.
+ */
+J.POPUPS.EXT.ABS.RegExp = {};
+J.POPUPS.EXT.ABS.RegExp.NoHpSlipPopup  = /<noHpPopup>/i;
+J.POPUPS.EXT.ABS.RegExp.NoMpSlipPopup  = /<noMpPopup>/i;
+J.POPUPS.EXT.ABS.RegExp.NoTpSlipPopup  = /<noTpPopup>/i;
+J.POPUPS.EXT.ABS.RegExp.NoAnySlipPopup = /<noSlipPopup>/i;
 //endregion initialization

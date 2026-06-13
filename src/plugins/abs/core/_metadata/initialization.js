@@ -53,6 +53,8 @@ J.ABS.Helpers.PluginManager.TranslateOptionToSlot = slot =>
   {
     case 'Tool':
       return JABS_Button.Tool;
+    case 'UsableItem':
+      return JABS_Button.UsableItem;
     case 'Dodge':
       return JABS_Button.Dodge;
     case 'Offhand':
@@ -608,6 +610,9 @@ J.ABS.RegExp = {
   //region ON ITEMS
   UseOnPickup: /<useOnPickup>/gi,
   Expires: /<expires:[ ]?(\d+)>/gi,
+  // marks an item as a tool (hookshot, bomb, etc.) for the tool slot; without
+  // this tag, regular consumables land in the usable-item slot instead.
+  JabsTool: /<jabsTool>/i,
   //endregion ON ITEMS
 
   //region ON STATES

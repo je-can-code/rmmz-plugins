@@ -12,6 +12,7 @@ import JABS_AiManager from './JABS_AiManager.js';
 import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
 import JABS_Action from '../models/JABS_Action.js';
 import JABS_Aabb from '../models/JABS_Aabb.js';
+import JABS_DeathContext from '../models/JABS_DeathContext.js';
 /**
  * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
@@ -2879,6 +2880,21 @@ class JABS_Engine
     // apply the action to the target.
     const gameAction = action.getAction();
     gameAction.apply(targetBattler);
+
+    // if the action killed the target, snapshot the death context while the action is still live.
+    if (targetBattler.isDead())
+    {
+      const elementIds = gameAction.getApplicableElements(targetBattler);
+      let hitType;
+      if (gameAction.isPhysical())      hitType = 'physical';
+      else if (gameAction.isMagical())  hitType = 'magical';
+      else                              hitType = 'certain';
+      const { stypeId } = gameAction.item();
+      const killerUuid = action.getCaster()
+        .getBattler()
+        .getUuid();
+      targetBattler.setDeathContext(new JABS_DeathContext(elementIds, hitType, stypeId, killerUuid));
+    }
 
     // handle any post-execution effects.
     this.postExecuteSkillEffects(action, target);

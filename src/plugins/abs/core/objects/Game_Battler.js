@@ -6,6 +6,7 @@ import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
 import JABS_OnChanceEffect from '../models/JABS_OnChanceEffect.js';
 import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
 import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_DeathContext from '../models/JABS_DeathContext.js';
 /**
  * Extends {@link Game_Battler.initMembers}.<br/>
  * Includes JABS parameter initialization.
@@ -69,6 +70,13 @@ Game_Battler.prototype.initJabsMembers = function()
    * @type {JABS_SkillSlotManager}
    */
   this._j._abs._equippedSkills = new JABS_SkillSlotManager();
+
+  /**
+   * A snapshot of the conditions under which this battler last died.
+   * Populated immediately after the killing blow lands; cleared on revive.
+   * @type {JABS_DeathContext|null}
+   */
+  this._j._abs._deathContext = null;
 };
 
 //region JABS battler properties
@@ -303,6 +311,31 @@ Game_Battler.prototype.isAggroLocked = function()
 {
   return this.states()
     .some(state => state.jabsAggroLock ?? false);
+};
+/**
+ * Gets the death context snapshot for this battler.
+ * @returns {JABS_DeathContext|null}
+ */
+Game_Battler.prototype.getDeathContext = function()
+{
+  return this._j._abs._deathContext;
+};
+
+/**
+ * Sets the death context snapshot for this battler.
+ * @param {JABS_DeathContext} context The death context to store.
+ */
+Game_Battler.prototype.setDeathContext = function(context)
+{
+  this._j._abs._deathContext = context;
+};
+
+/**
+ * Clears the death context snapshot for this battler.
+ */
+Game_Battler.prototype.clearDeathContext = function()
+{
+  this._j._abs._deathContext = null;
 };
 //endregion JABS battler properties
 
@@ -847,12 +880,16 @@ Game_Battler.prototype.refreshBonusHits = function()
 
 /**
  * Gets all collections of sources that will be scanned for bonus hits.
+ *
+ * Uses {@link #getAllNotes} so the result benefits from the notes cache and
+ * naturally includes passives that were previously missed when this called
+ * {@link #states} directly.
  * @returns {RPG_BaseItem[][]}
  */
 Game_Battler.prototype.getBonusHitsSources = function()
 {
   return [
-    this.states(), [ this.databaseData() ],
+    this.getAllNotes(),
   ];
 };
 

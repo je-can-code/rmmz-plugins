@@ -219,7 +219,6 @@ SdpMasteryManager.reconcileSubgroupMastery(actor, subgroupKey);
 
 When constructing new extensions, typically the structure defined is as such:
 
-- `__models` for models that may need to exist in a part of the `initialization.js` file for some reason.
 - `_metadata` for the plugin metadata including the `_annotations.js`, `initialization.js`, `pluginMetadata.js` and
   `pluginCommands.js`.
 - `database` for RPG_* files.

@@ -440,6 +440,9 @@ class JABS_State
 
       // increment the stack counter within threshold.
       this.stackCount = Math.min(maxStacks, projectedStackCount);
+
+      // notify the battler that its data changed so parameter caches (like msb) refresh.
+      this.battler.onBattlerDataChange();
     }
   }
 

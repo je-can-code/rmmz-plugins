@@ -49,9 +49,6 @@ J.ABS.EXT.FOOD.Aliased = {
   Game_Actor: new Map(),
   Input: new Map(),
   Scene_Boot: new Map(),
-  Scene_Map: new Map(),
-  Window_AbsMenu: new Map(),
-  Window_AbsMenuSelect: new Map(),
   Window_JabsRemapActions: new Map(),
 };
 
@@ -96,14 +93,5 @@ J.ABS.EXT.FOOD.ChainType = {
    */
   Overstuffed: 'overstuffed',
 };
-
-// extend the JABS_MenuType static enum with the food focus type.
-// this assignment is safe here because initialization.js runs at plugin-load time,
-// after J-ABS core has already defined and exported JABS_MenuType as a hoisted global.
-JABS_MenuType.Food = 'food';
-
-// extend Window_AbsMenuSelect.SelectionTypes with food list and equip entries.
-Window_AbsMenuSelect.SelectionTypes.FoodList = 'food';
-Window_AbsMenuSelect.SelectionTypes.FoodEquip = 'equip-food';
 
 //endregion initialization

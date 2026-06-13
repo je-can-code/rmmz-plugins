@@ -17,10 +17,6 @@ import './input/Window_JabsRemapActions.js';
 
 import './objects/Game_Actor.js';
 
-import './windows/Window_AbsMenu.js';
-import './windows/Window_AbsMenuSelect.js';
-
 import './scenes/Scene_Boot.js';
-import './scenes/Scene_Map.js';
 
 import './allyai/JABS_SkillSlotManager.js';
