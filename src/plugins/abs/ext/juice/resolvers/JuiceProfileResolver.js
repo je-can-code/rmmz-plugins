@@ -21,6 +21,11 @@ class JuiceProfileResolver
       return JuiceProfileResolver.MotionArcKey;
     }
 
+    if (motion === 'arc-oscillate')
+    {
+      return JuiceWeaponSwingMotionEffect.MotionTypes.ArcOscillate;
+    }
+
     if (motion === 'swing-top-down')
     {
       return JuiceProfileResolver.MotionArcKey;
@@ -50,25 +55,19 @@ class JuiceProfileResolver
   }
 
   /**
-   * Full rotations for spin / spin-reverse (1–8). Tag overrides legacy `spin-720` (=2 when tag omitted).
+   * Number of times to repeat the motion within the juice duration (1–8).
+   * Applies universally: rotations for spin, sweeps for arc-oscillate, replays for all others.
    * @param {JABS_Action} action The executing action.
    * @returns {number}
    */
-  static resolveJuiceSpinCount(action)
+  static resolveJuiceRepeatCount(action)
   {
     const skill = action.getBaseSkill();
-    const tagged = skill.jabsJuiceSpinCount;
+    const tagged = skill.jabsJuiceRepeatCount;
 
-    if (tagged >= 1 && tagged <= 8)
+    if (tagged >= 1)
     {
       return Math.floor(tagged);
-    }
-
-    const motion = skill.jabsJuiceMotion;
-
-    if (motion === 'spin-720')
-    {
-      return 2;
     }
 
     return 1;
@@ -101,6 +100,16 @@ class JuiceProfileResolver
     }
 
     return 120;
+  }
+
+  /**
+   * Override swing duration in frames from `<juiceDuration:N>`, or null to use the metadata default.
+   * @param {JABS_Action} action The executing action.
+   * @returns {number|null}
+   */
+  static resolveJuiceDuration(action)
+  {
+    return action.getBaseSkill().jabsJuiceDuration;
   }
 
   /**

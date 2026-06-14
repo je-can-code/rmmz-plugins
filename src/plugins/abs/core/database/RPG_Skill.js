@@ -554,7 +554,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsPierceCount', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsPierceDelay', {
   get: function()
   {
-    return Math.max(this.jabsPiercingData[1], 5);
+    return Math.max(this.jabsPiercingData[1], 0);
   },
 });
 //endregion piercing
@@ -1166,4 +1166,30 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
 };
 //endregion directional
 //endregion visual metadata
+
+//region purgeStates
+/**
+ * The parsed {@code <purgeStates>} parameter tuple from this skill's notes, if present.
+ *
+ * <pre>
+ * Structure:
+ *  <purgeStates:[TYPE, ALLOW_DEATH, COUNT]>
+ *
+ * Example:
+ *  <purgeStates:[negative, false, 2]>
+ *
+ * Translation:
+ *  On hit: remove the 2 highest-priority negative states from the target.
+ *  Death state is not eligible. Passive states are never eligible.
+ * </pre>
+ * @type {any[]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsPurgeStatesParams', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.PurgeStates, true, true);
+  },
+});
+//endregion purgeStates
+
 //endregion RPG_Skill effects

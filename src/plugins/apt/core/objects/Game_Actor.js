@@ -46,6 +46,46 @@ Game_Actor.prototype.initAptitudeMembers = function()
    * @type {Record<number, AptitudeSkill>}
    */
   this._j._aptitude._learned = {};
+
+  /**
+   * The cached result of the {@link #apr} property getter.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._aptitude._cachedApr = null;
+};
+
+/**
+ * Gets the cached APR factor for this actor, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Actor.prototype.getCachedApr = function()
+{
+  return this._j._aptitude._cachedApr;
+};
+
+/**
+ * Sets the cached APR factor for this actor.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Actor.prototype.setCachedApr = function(value)
+{
+  this._j._aptitude._cachedApr = value;
+};
+
+/**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Invalidates the APR factor cache.
+ */
+J.APT.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
+Game_Actor.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.APT.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
+
+  // invalidate the APR factor cache.
+  this.setCachedApr(null);
 };
 
 /**

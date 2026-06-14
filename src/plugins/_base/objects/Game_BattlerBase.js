@@ -27,6 +27,16 @@ Game_BattlerBase.prototype.initMembers = function()
    * @type {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
    */
   this._j._base._cachedTraitObjects = null;
+
+  /**
+   * The cached result of {@link #allTraits} for this battler.
+   * Null when the cache is cold; populated on the first {@link #allTraits} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * Every downstream trait query ({@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+   * {@link #traitsDeltaSum}, {@link #traitsSum}) benefits automatically.
+   * @type {MV.Trait[]|null}
+   */
+  this._j._base._cachedAllTraits = null;
 };
 
 /**
@@ -85,6 +95,50 @@ Game_BattlerBase.prototype.buildTraitObjects = function()
   // states are the only trait-bearing sources at the base battler level.
   return [ ...this.states() ];
 };
+
+/**
+ * Gets the cached flat trait list for this battler, or null if the cache is cold.
+ * @returns {MV.Trait[]|null}
+ */
+Game_BattlerBase.prototype.getCachedAllTraits = function()
+{
+  return this._j._base._cachedAllTraits;
+};
+
+/**
+ * Sets the cached flat trait list for this battler.
+ * @param {MV.Trait[]|null} allTraits The new cached value, or null to invalidate.
+ */
+Game_BattlerBase.prototype.setCachedAllTraits = function(allTraits)
+{
+  this._j._base._cachedAllTraits = allTraits;
+};
+
+/**
+ * Gets the flat list of all traits from all trait-bearing objects for this battler.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * Every downstream trait query — {@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+ * {@link #traitsDeltaSum}, {@link #traitsSum} — benefits automatically since they all
+ * call this method first.
+ *
+ * The cache is invalidated by {@link #onBattlerDataChange}.
+ * @returns {MV.Trait[]}
+ */
+Game_BattlerBase.prototype.allTraits = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedAllTraits() !== null)
+  {
+    return this.getCachedAllTraits();
+  }
+
+  // flatten all traits from all trait-bearing objects and cache the result.
+  this.setCachedAllTraits(this.traitObjects().reduce((r, obj) => r.concat(obj.traits), []));
+
+  return this.getCachedAllTraits();
+};
+
 /**
  * Returns a list of known base parameter ids.
  * @returns {number[]}

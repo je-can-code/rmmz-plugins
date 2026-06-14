@@ -3718,6 +3718,7 @@ J.ABS.RegExp = {
 	VisOffsetDL: /<visOffsetDL:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
 	NoCastPreviewSkill: /<noCastPreview>/gi,
 	CastPreviewWarnAt: /<castPreviewWarnAt:[ ]?(\d+)>/gi,
+	PurgeStates: /<purgeStates:[ ]?(\[.*?])>/i,
 	SkillId: /<skillId:[ ]?(\d+)>/gi,
 	OffhandSkillId: /<offhandSkillId:[ ]?(\d+)>/gi,
 	KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
@@ -5601,7 +5602,7 @@ var JABS_AI = class {
 	* @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
 	* @returns {number[]} Empty stub; subclasses return `[]` or `[skillId]`.
 	*/
-	decideAction(user, target, availableSkills) {
+	decideAction(_user, _target, _availableSkills) {
 		return [];
 	}
 	/**
@@ -6214,7 +6215,7 @@ var JABS_EnemyAI = class extends JABS_AI {
 	* @param {JABS_Battler} target The battler being targeted.
 	* @returns {number[]}
 	*/
-	filterForTacticalSkills(skillsToUse, user, target) {
+	filterForTacticalSkills(skillsToUse, user, _target) {
 		if (skillsToUse.length <= 1) return skillsToUse;
 		const statusSkills = skillsToUse.filter((skillId) => {
 			const skill = user.getSkill(skillId);
@@ -7770,6 +7771,7 @@ var JABS_AiManager = class JABS_AiManager {
 	* @param {JABS_Battler} battler The battler seeking for the alerter.
 	*/
 	static seekForAlerter(battler) {
+		if (battler.isMovementLockedByState()) return;
 		const [alertX, alertY] = battler.getAlertedCoordinates();
 		battler.smartMoveTowardCoordinates(alertX, alertY);
 	}
@@ -7778,6 +7780,7 @@ var JABS_AiManager = class JABS_AiManager {
 	* @param {JABS_Battler} battler The battler going home.
 	*/
 	static goHome(battler) {
+		if (battler.isMovementLockedByState()) return;
 		const character = battler.getCharacter();
 		const nextDir = character.findDirectionTo(battler.getHomeX(), battler.getHomeY());
 		character.moveStraight(nextDir);
@@ -12766,7 +12769,7 @@ var JABS_Battler = class JABS_Battler {
 	* @param {number} itemId The id of the item/tool used.
 	* @param {JABS_Battler} target The target for calculating damage; defaults to self.
 	*/
-	onItemApplied(gameAction, itemId, target = this) {}
+	onItemApplied(_gameAction, _itemId, _target = this) {}
 	/**
 	* Applies the effects of the tool against all allies on the team.
 	* @param {number} toolId The id of the tool/item being used.
@@ -12903,7 +12906,7 @@ var JABS_Battler = class JABS_Battler {
 	* Executes the post-defeat processing for a defeated battler.
 	* @param {JABS_Battler} victor The battler that defeated this battler.
 	*/
-	performPostdefeatEffects(victor) {
+	performPostdefeatEffects(_victor) {
 		if (this.isActor()) {
 			this.setDying(true);
 		}
@@ -13530,7 +13533,7 @@ var JABS_Battler = class JABS_Battler {
 	* @param {0|1|2} type HP / MP / TP index.
 	* @param {number} [stateId] Database state id when this tick came from {@link #processStateRegens}.
 	*/
-	onSlipRegenTick(displayAmount, type, stateId) {}
+	onSlipRegenTick(_displayAmount, _type, _stateId) {}
 	/**
 	* Sets the battler's wait duration to a number. If this number is greater than
 	* zero, then the battler must wait before doing anything else.
@@ -14749,7 +14752,7 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	* @returns {boolean} True if they can, false otherwise.
 	*/
-	static #canPerformSprint(jabsBattler) {
+	static #canPerformSprint(_jabsBattler) {
 		return true;
 	}
 	/**
@@ -14767,7 +14770,7 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	* @returns {boolean} True if they can, false otherwise.
 	*/
-	static #canPerformStrafe(jabsBattler) {
+	static #canPerformStrafe(_jabsBattler) {
 		return true;
 	}
 	/**
@@ -14785,7 +14788,7 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	* @returns {boolean} True if they can, false otherwise.
 	*/
-	static #canPerformRotate(jabsBattler) {
+	static #canPerformRotate(_jabsBattler) {
 		return true;
 	}
 	/**
@@ -17222,6 +17225,48 @@ var JABS_Engine = class JABS_Engine {
 	*/
 	postPrimaryBattleEffects(action, target) {
 		this.createAttackLog(action, target);
+		this.processPurgeStates(action, target);
+	}
+	/**
+	* Processes the {@code <purgeStates>} tag on the executed skill, removing states from the target
+	* by priority order according to the tag parameters.
+	*
+	* This only fires when the action landed a hit. Parried and evaded actions are skipped.
+	*
+	* @param {JABS_Action} action - The action being executed.
+	* @param {JABS_Battler} target - The target having states removed.
+	*/
+	processPurgeStates(action, target) {
+		const result = target.getBattler().result();
+		if (result.isHit() === false) {
+			return;
+		}
+		const skill = action.getBaseSkill();
+		const params = skill.jabsPurgeStatesParams;
+		if (params === null) {
+			return;
+		}
+		const [rawType, rawAllowDeath, rawCount] = params;
+		const type = rawType ?? "negative";
+		const allowDeath = rawAllowDeath === true;
+		const count = rawCount !== undefined ? parseInt(rawCount) : 1;
+		const purged = target.getBattler().removeStatesByPriority(type, allowDeath, count);
+		this.createPurgeStateLogs(target, purged);
+	}
+	/**
+	* Generates one log entry per purged state, naming the target and the state that was removed.
+	* Only fires when J.LOG is active and at least one state was actually removed.
+	* @param {JABS_Battler} target - The battler that had states removed.
+	* @param {RPG_State[]} purged - The states that were removed.
+	*/
+	createPurgeStateLogs(target, purged) {
+		if (!J.LOG) return;
+		if (purged.length === 0) return;
+		const targetName = target.getBattlerDatabaseData().name;
+		purged.forEach((state) => {
+			const log = new ActionLogBuilder().setupStatePurged(targetName, state.id).build();
+			$actionLogManager.addLog(log);
+		});
 	}
 	/**
 	* Generates a log in the `Map_TextLog` if applicable.
@@ -17248,6 +17293,7 @@ var JABS_Engine = class JABS_Engine {
 			const retaliationLog = new ActionLogBuilder().setupRetaliation(casterName).build();
 			$actionLogManager.addLog(retaliationLog);
 		} else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length) {
+			if (skill.damage.type === 0) return;
 			const undamagedLog = new ActionLogBuilder().setupUndamaged(targetName, casterName, skill.id).build();
 			$actionLogManager.addLog(undamagedLog);
 			return;
@@ -18318,15 +18364,12 @@ var JABS_Action = class JABS_Action {
 	* @returns {number}
 	*/
 	makeHitsPerConnectionBonus() {
-		const gameBattler = this._caster.getBattler();
-		const isBasicAttack = this._caster.isSkillIdBasicAttack(this._baseSkill.id);
-		let bonusHits = gameBattler.getBonusHitsGlobal();
-		if (isBasicAttack) {
-			bonusHits += gameBattler.getBonusHitsBasic();
-		} else {
-			bonusHits += gameBattler.getBonusHitsSkill();
-		}
-		bonusHits += this._baseSkill.jabsBonusHitsFromSkillNote;
+		const gameBattler = this.getCaster().getBattler();
+		const isBasicAttack = this.getCaster().isSkillIdBasicAttack(this.getBaseSkill().id);
+		const hitsGlobal = gameBattler.getBonusHitsGlobal();
+		const hitsBasicOrSkill = isBasicAttack ? gameBattler.getBonusHitsBasic() : gameBattler.getBonusHitsSkill();
+		const hitsFromNote = this._baseSkill.jabsBonusHitsFromSkillNote;
+		const bonusHits = hitsGlobal + hitsBasicOrSkill + hitsFromNote;
 		if (bonusHits < 0) {
 			return 0;
 		}
@@ -19423,7 +19466,7 @@ var JABS_SkillSlotManager = class {
 		this.completeSetup();
 	}
 	/**
-	* Gets all skill slots, regardless of whether or not their are assigned.
+	* Gets all skill slots, regardless of whether they're assigned or not.
 	* @returns {JABS_SkillSlot[]}
 	*/
 	getAllSlots() {
@@ -19495,7 +19538,7 @@ var JABS_SkillSlotManager = class {
 	* @param {Game_Enemy} enemy The enemy to check.
 	* @param {RPG_EnemyAction} action The action to check.
 	*/
-	filterActionSkills(enemy, action) {
+	filterActionSkills(_enemy, _action) {
 		return true;
 	}
 	/**
@@ -21125,7 +21168,7 @@ Object.defineProperty(RPG_Skill.prototype, "jabsPierceCount", { get: function() 
 * @type {number}
 */
 Object.defineProperty(RPG_Skill.prototype, "jabsPierceDelay", { get: function() {
-	return Math.max(this.jabsPiercingData[1], 5);
+	return Math.max(this.jabsPiercingData[1], 0);
 } });
 /**
 * Extra per-connection bonus hits parsed from this skill note, additive with battler scope tags.
@@ -21503,6 +21546,25 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
 	}
 	return def || [0, 0];
 };
+/**
+* The parsed {@code <purgeStates>} parameter tuple from this skill's notes, if present.
+*
+* <pre>
+* Structure:
+*  <purgeStates:[TYPE, ALLOW_DEATH, COUNT]>
+*
+* Example:
+*  <purgeStates:[negative, false, 2]>
+*
+* Translation:
+*  On hit: remove the 2 highest-priority negative states from the target.
+*  Death state is not eligible. Passive states are never eligible.
+* </pre>
+* @type {any[]|null}
+*/
+Object.defineProperty(RPG_Skill.prototype, "jabsPurgeStatesParams", { get: function() {
+	return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.PurgeStates, true, true);
+} });
 
 //#endregion
 //#region src/plugins/abs/core/database/RPG_State.js
@@ -22699,7 +22761,6 @@ Game_Actor.prototype.setup = function(actorId) {
 Game_Actor.prototype.jabsRefresh = function() {
 	this.reconcileOffhandPinAgainstEquip();
 	this.refreshBasicAttackSkills();
-	this.refreshBonusHits();
 };
 /**
 * Extends {@link #onBattlerDataChange}.<br/>
@@ -22708,6 +22769,8 @@ Game_Actor.prototype.jabsRefresh = function() {
 J.ABS.Aliased.Game_Actor.set("onBattlerDataChange", Game_Actor.prototype.onBattlerDataChange);
 Game_Actor.prototype.onBattlerDataChange = function() {
 	J.ABS.Aliased.Game_Actor.get("onBattlerDataChange").call(this);
+	this.setCachedVisionModifier(null);
+	this.refreshBonusHits();
 	this.jabsRefresh();
 };
 /**
@@ -23478,7 +23541,7 @@ Game_Actor.prototype.refreshAutoEquippedSkills = function() {
 */
 Game_Actor.prototype.getBonusHitsSources = function() {
 	return [
-		this.states(),
+		this.allStates(),
 		[this.databaseData()],
 		this.equips(),
 		[this.currentClass()]
@@ -23570,6 +23633,12 @@ Game_Battler.prototype.initJabsMembers = function() {
 	* @type {JABS_DeathContext|null}
 	*/
 	this._j._abs._deathContext = null;
+	/**
+	* The cached result of {@link #getVisionModifier}.
+	* Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+	* @type {number|null}
+	*/
+	this._j._abs._cachedVisionModifier = null;
 };
 /**
 * Gets the `uuid` of this battler.
@@ -23638,18 +23707,35 @@ Game_Battler.prototype.pursuitRange = function() {
 	return 6;
 };
 /**
+* Gets the cached vision modifier for this battler, or null if the cache is cold.
+* @returns {number|null}
+*/
+Game_Battler.prototype.getCachedVisionModifier = function() {
+	return this._j._abs._cachedVisionModifier;
+};
+/**
+* Sets the cached vision modifier for this battler.
+* @param {number|null} value The new cached value, or null to invalidate.
+*/
+Game_Battler.prototype.setCachedVisionModifier = function(value) {
+	this._j._abs._cachedVisionModifier = value;
+};
+/**
 * A multiplier against the vision of an enemy target.
 * This may increase/decrease the sight and pursuit range of an enemy attempting to
 * perceive the actor.
+* Result is cached and invalidated by {@link #onBattlerDataChange}.
 * @returns {number}
 */
 Game_Battler.prototype.getVisionModifier = function() {
-	const objectsToCheck = this.getAllNotes();
+	if (this.getCachedVisionModifier() !== null) {
+		return this.getCachedVisionModifier();
+	}
 	const baseVisionRate = 100;
-	const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.VisionMultiplier);
-	const totalVisionMultiplier = baseVisionRate + visionMultiplier;
-	const constrainedVisionMultiplier = Math.max(totalVisionMultiplier / 100, 0);
-	return constrainedVisionMultiplier;
+	const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VisionMultiplier);
+	const constrainedVisionMultiplier = Math.max((baseVisionRate + visionMultiplier) / 100, 0);
+	this.setCachedVisionModifier(constrainedVisionMultiplier);
+	return this.getCachedVisionModifier();
 };
 /**
 * All battlers have a default alerted pursuit boost.
@@ -23992,6 +24078,57 @@ Game_Battler.prototype.decrementStateStacks = function(stateId, stacksRemoved = 
 		return;
 	}
 	trackedState.removeFromBattler();
+};
+/**
+* Removes up to {@link count} states from this battler, selected by highest priority first.
+*
+* States are filtered by {@link type}: {@code negative} selects only states tagged {@code <negative>};
+* {@code positive} selects only states not tagged {@code <negative>}; {@code all} applies no filter.
+* Death (state 1) is excluded unless {@link allowDeath} is {@code true}.
+* The pool of eligible states is provided by {@link getPurgeableStates}, which upstream plugins
+* (such as J-Passive) may override to exclude states this layer should not know about.
+*
+* @param {string} [type='negative'] - Which states to target: {@code negative}, {@code positive}, or {@code all}.
+* @param {boolean} [allowDeath=false] - When {@code true}, state 1 (death) is eligible for removal.
+* @param {number} [count=1] - Maximum number of states to remove; pass {@code Infinity} to remove all matching.
+*/
+Game_Battler.prototype.removeStatesByPriority = function(type = "negative", allowDeath = false, count = 1) {
+	const candidates = this.getPurgeableStates().filter((state) => this.isRemovableCandidate(state, type, allowDeath));
+	candidates.sort((a, b) => b.priority - a.priority);
+	const toRemove = candidates.slice(0, count);
+	toRemove.forEach((state) => this.removeState(state.id));
+	return toRemove;
+};
+/**
+* Returns the pool of states eligible for priority-based removal via {@link removeStatesByPriority}.
+*
+* Base implementation returns all currently active states. Upstream plugins that manage state
+* categories invisible to this layer (e.g. passive states) should override this method to exclude
+* states that must never be forcibly removed.
+*
+* @returns {RPG_State[]} - The candidate pool before type and death filters are applied.
+*/
+Game_Battler.prototype.getPurgeableStates = function() {
+	return this.allStates();
+};
+/**
+* Determines whether a state qualifies as a removal candidate given the requested type filter.
+* @param {RPG_State} state - The state to evaluate.
+* @param {string} type - {@code negative}, {@code positive}, or {@code all}.
+* @param {boolean} allowDeath - Whether state 1 (death) is eligible.
+* @returns {boolean} - {@code true} when the state passes all filters.
+*/
+Game_Battler.prototype.isRemovableCandidate = function(state, type, allowDeath) {
+	if (state.id === 1 && allowDeath === false) {
+		return false;
+	}
+	if (type === "negative") {
+		return state.jabsNegative === true;
+	}
+	if (type === "positive") {
+		return state.jabsNegative !== true;
+	}
+	return true;
 };
 /**
 * Adds a particular state to become tracked by the tracker for this battler.
@@ -24780,9 +24917,7 @@ Game_Enemy.prototype.initAbsSkills = function() {
 /**
 * Refreshes aspects associated with this battler in the context of JABS.
 */
-Game_Enemy.prototype.jabsRefresh = function() {
-	this.refreshBonusHits();
-};
+Game_Enemy.prototype.jabsRefresh = function() {};
 /**
 * Extends {@link #onBattlerDataChange}.<br/>
 * Adds a hook for performing actions when the battler's data hase changed.
@@ -24790,6 +24925,7 @@ Game_Enemy.prototype.jabsRefresh = function() {
 J.ABS.Aliased.Game_Enemy.set("onBattlerDataChange", Game_Enemy.prototype.onBattlerDataChange);
 Game_Enemy.prototype.onBattlerDataChange = function() {
 	J.ABS.Aliased.Game_Enemy.get("onBattlerDataChange").call(this);
+	this.refreshBonusHits();
 	this.jabsRefresh();
 };
 /**
@@ -25022,7 +25158,7 @@ Game_Enemy.prototype.isInanimate = function() {
 * @returns {RPG_BaseItem[][]}
 */
 Game_Enemy.prototype.getBonusHitsSources = function() {
-	return [this.states(), [this.databaseData()]];
+	return [this.allStates(), [this.databaseData()]];
 };
 
 //#endregion
@@ -29106,7 +29242,7 @@ Sprite_Character.prototype.repositionAfflictionStrip = function() {
 	}
 	let x = 0;
 	if (hpGauge) {
-		x = hpGauge.x;
+		({x} = hpGauge);
 	}
 	const y = this.mapAfflictionStripY();
 	strip.move(x, y);

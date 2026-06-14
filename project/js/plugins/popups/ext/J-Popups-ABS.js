@@ -906,6 +906,7 @@ var JABS_PopupManager = class {
 	* @param {JABS_Engine} engine The live engine instance (for elemental icon resolution).
 	*/
 	static showAttackPop(action, target, engine) {
+		if (action.getBaseSkill().damage.type === 0) return;
 		const character = target.getCharacter();
 		const pop = this.buildDamagePop(action, target, engine);
 		const caster = action.getCaster();

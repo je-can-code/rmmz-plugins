@@ -593,6 +593,9 @@ J.ABS.RegExp = {
   // cast preview (skill-level).
   NoCastPreviewSkill: /<noCastPreview>/gi,
   CastPreviewWarnAt: /<castPreviewWarnAt:[ ]?(\d+)>/gi,
+
+  // on-hit state purge.
+  PurgeStates: /<purgeStates:[ ]?(\[.*?])>/i,
   //endregion ON SKILLS
 
   //region ON EQUIPS

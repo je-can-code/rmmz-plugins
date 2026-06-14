@@ -317,9 +317,10 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
   // if there is no slot provided, do not charge.
   if (!slot) return false;
 
+  const battler = this.getBattler();
+
   // shorthand the skill slot.
-  const skillSlot = this
-    .getBattler()
+  const skillSlot = battler
     .getSkillSlotManager()
     .getSkillSlotByKey(slot);
 
@@ -327,10 +328,14 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
   if (!skillSlot) return false;
 
   // cannot charge slots with skills you do not know.
-  if (!this.getBattler()
-    .hasSkill(skillSlot.id))
+  if (!battler.hasSkill(skillSlot.id)) return false;
+
+  // check each charge tier's release skill — if none are affordable, don't charge.
+  const chargingTiers = this.getChargingTiers(slot);
+  if (chargingTiers)
   {
-    return false;
+    const anyTierAffordable = chargingTiers.some(tier => tier.skillId && battler.meetsSkillConditions(battler.skill(tier.skillId)));
+    if (!anyTierAffordable) return false;
   }
 
   // we can charge this slot!

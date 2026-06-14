@@ -1135,6 +1135,9 @@ class JABS_AiManager
    */
   static seekForAlerter(battler)
   {
+    // rooted/paralyzed battlers cannot move toward the alerter.
+    if (battler.isMovementLockedByState()) return;
+
     // grab the x:y coordinates that we last "heard" the one triggering the alert from.
     const [ alertX, alertY ] = battler.getAlertedCoordinates();
 
@@ -1148,6 +1151,9 @@ class JABS_AiManager
    */
   static goHome(battler)
   {
+    // rooted/paralyzed battlers cannot move, even to return home.
+    if (battler.isMovementLockedByState()) return;
+
     // grab the character of the battler trying to go home.
     const character = battler.getCharacter();
 

@@ -77,6 +77,13 @@ Game_Battler.prototype.initJabsMembers = function()
    * @type {JABS_DeathContext|null}
    */
   this._j._abs._deathContext = null;
+
+  /**
+   * The cached result of {@link #getVisionModifier}.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._abs._cachedVisionModifier = null;
 };
 
 //region JABS battler properties
@@ -176,30 +183,51 @@ Game_Battler.prototype.pursuitRange = function()
 };
 
 /**
+ * Gets the cached vision modifier for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedVisionModifier = function()
+{
+  return this._j._abs._cachedVisionModifier;
+};
+
+/**
+ * Sets the cached vision modifier for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedVisionModifier = function(value)
+{
+  this._j._abs._cachedVisionModifier = value;
+};
+
+/**
  * A multiplier against the vision of an enemy target.
  * This may increase/decrease the sight and pursuit range of an enemy attempting to
  * perceive the actor.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
  * @returns {number}
  */
 Game_Battler.prototype.getVisionModifier = function()
 {
-  // grab all the notes.
-  const objectsToCheck = this.getAllNotes();
+  // return the cached result if the cache is still warm.
+  if (this.getCachedVisionModifier() !== null)
+  {
+    return this.getCachedVisionModifier();
+  }
 
   // define the base vision rate for this battler.
   const baseVisionRate = 100;
 
   // get the vision multiplier from anything this battler has available.
-  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.VisionMultiplier);
-
-  // calculate the multiplier.
-  const totalVisionMultiplier = baseVisionRate + visionMultiplier;
+  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VisionMultiplier);
 
   // constrain the multiplier to never go below 0.
-  const constrainedVisionMultiplier = Math.max((totalVisionMultiplier / 100), 0);
+  const constrainedVisionMultiplier = Math.max(((baseVisionRate + visionMultiplier) / 100), 0);
 
-  // return our constrainted multiplier.
-  return constrainedVisionMultiplier;
+  // cache and return the result.
+  this.setCachedVisionModifier(constrainedVisionMultiplier);
+
+  return this.getCachedVisionModifier();
 };
 
 /**
@@ -743,6 +771,82 @@ Game_Battler.prototype.decrementStateStacks = function(stateId, stacksRemoved = 
 
   // remove the state now that all stacks are gone.
   trackedState.removeFromBattler();
+};
+
+/**
+ * Removes up to {@link count} states from this battler, selected by highest priority first.
+ *
+ * States are filtered by {@link type}: {@code negative} selects only states tagged {@code <negative>};
+ * {@code positive} selects only states not tagged {@code <negative>}; {@code all} applies no filter.
+ * Death (state 1) is excluded unless {@link allowDeath} is {@code true}.
+ * The pool of eligible states is provided by {@link getPurgeableStates}, which upstream plugins
+ * (such as J-Passive) may override to exclude states this layer should not know about.
+ *
+ * @param {string} [type='negative'] - Which states to target: {@code negative}, {@code positive}, or {@code all}.
+ * @param {boolean} [allowDeath=false] - When {@code true}, state 1 (death) is eligible for removal.
+ * @param {number} [count=1] - Maximum number of states to remove; pass {@code Infinity} to remove all matching.
+ */
+Game_Battler.prototype.removeStatesByPriority = function(type = 'negative', allowDeath = false, count = 1)
+{
+  // collect purgeable states from the extensible pool, then apply type and death filters.
+  const candidates = this.getPurgeableStates()
+    .filter(state => this.isRemovableCandidate(state, type, allowDeath));
+
+  // sort by priority descending so the most impactful state is removed first.
+  candidates.sort((a, b) => b.priority - a.priority);
+
+  // select the top candidates up to count, then remove each and collect what was actually removed.
+  const toRemove = candidates.slice(0, count);
+  toRemove.forEach(state => this.removeState(state.id));
+
+  // return the removed states so callers can log or react to what was cleansed.
+  return toRemove;
+};
+
+/**
+ * Returns the pool of states eligible for priority-based removal via {@link removeStatesByPriority}.
+ *
+ * Base implementation returns all currently active states. Upstream plugins that manage state
+ * categories invisible to this layer (e.g. passive states) should override this method to exclude
+ * states that must never be forcibly removed.
+ *
+ * @returns {RPG_State[]} - The candidate pool before type and death filters are applied.
+ */
+Game_Battler.prototype.getPurgeableStates = function()
+{
+  // base pool: all states currently active on this battler.
+  return this.allStates();
+};
+
+/**
+ * Determines whether a state qualifies as a removal candidate given the requested type filter.
+ * @param {RPG_State} state - The state to evaluate.
+ * @param {string} type - {@code negative}, {@code positive}, or {@code all}.
+ * @param {boolean} allowDeath - Whether state 1 (death) is eligible.
+ * @returns {boolean} - {@code true} when the state passes all filters.
+ */
+Game_Battler.prototype.isRemovableCandidate = function(state, type, allowDeath)
+{
+  // death state is excluded unless the caller explicitly allows it.
+  if (state.id === 1 && allowDeath === false)
+  {
+    return false;
+  }
+
+  // negative type: only states tagged <negative>.
+  if (type === 'negative')
+  {
+    return state.jabsNegative === true;
+  }
+
+  // positive type: only states NOT tagged <negative>.
+  if (type === 'positive')
+  {
+    return state.jabsNegative !== true;
+  }
+
+  // all type: no polarity filter applied.
+  return true;
 };
 
 /**

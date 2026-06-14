@@ -15,6 +15,9 @@ class JABS_PopupManager
    */
   static showAttackPop(action, target, engine)
   {
+    // support skills (damage.type 0 = None) have no damage to pop — skip entirely.
+    if (action.getBaseSkill().damage.type === 0) return;
+
     const character = target.getCharacter();
     const pop = this.buildDamagePop(action, target, engine);
     const caster = action.getCaster();

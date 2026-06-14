@@ -281,21 +281,14 @@ class JABS_Action
    */
   makeHitsPerConnectionBonus()
   {
-    const gameBattler = this._caster.getBattler();
-    const isBasicAttack = this._caster.isSkillIdBasicAttack(this._baseSkill.id);
+    const gameBattler = this.getCaster().getBattler();
+    const isBasicAttack = this.getCaster().isSkillIdBasicAttack(this.getBaseSkill().id);
 
-    let bonusHits = gameBattler.getBonusHitsGlobal();
+    const hitsGlobal = gameBattler.getBonusHitsGlobal();
+    const hitsBasicOrSkill = isBasicAttack ? gameBattler.getBonusHitsBasic() : gameBattler.getBonusHitsSkill();
+    const hitsFromNote = this._baseSkill.jabsBonusHitsFromSkillNote;
 
-    if (isBasicAttack)
-    {
-      bonusHits += gameBattler.getBonusHitsBasic();
-    }
-    else
-    {
-      bonusHits += gameBattler.getBonusHitsSkill();
-    }
-
-    bonusHits += this._baseSkill.jabsBonusHitsFromSkillNote;
+    const bonusHits = hitsGlobal + hitsBasicOrSkill + hitsFromNote;
 
     if (bonusHits < 0)
     {

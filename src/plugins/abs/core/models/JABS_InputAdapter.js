@@ -370,7 +370,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformSprint(jabsBattler)
+  static #canPerformSprint(_jabsBattler)
   {
     return true;
   }
@@ -396,7 +396,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformStrafe(jabsBattler)
+  static #canPerformStrafe(_jabsBattler)
   {
     return true;
   }
@@ -421,7 +421,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformRotate(jabsBattler)
+  static #canPerformRotate(_jabsBattler)
   {
     return true;
   }

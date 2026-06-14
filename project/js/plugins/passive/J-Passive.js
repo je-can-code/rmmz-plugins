@@ -808,6 +808,15 @@ Game_Battler.prototype.allStates = function() {
 	return states;
 };
 /**
+* Overrides {@link #getPurgeableStates}.<br/>
+* Excludes passive states from the pool so forced removal via {@code removeStatesByPriority}
+* can never strip states that are granted by passive skills.
+* @returns {RPG_State[]}
+*/
+Game_Battler.prototype.getPurgeableStates = function() {
+	return this.allStates().filter((state) => this.isPassiveState(state.id) === false);
+};
+/**
 * Extends {@link #isStateAddable}.<br/>
 * Prevents adding states if they are identified as passive.
 */

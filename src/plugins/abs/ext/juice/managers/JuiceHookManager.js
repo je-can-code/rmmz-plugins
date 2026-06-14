@@ -85,6 +85,14 @@ class JuiceHookManager
 
     const md = J.ABS.EXT.JUICE.Metadata;
     const ga = action.getAction();
+
+    // support / utility skills (damage.type 0 = None) do not produce a target hit-reaction squish.
+    // the caster-side juice handles their motion; squishing here would cancel it mid-cycle.
+    if (ga.item().damage.type === 0)
+    {
+      return;
+    }
+
     let intensity = md.targetMagicalSquishIntensity;
 
     if (ga.isPhysical())
@@ -109,6 +117,7 @@ class JuiceHookManager
    */
   static onExecuteMapAction(caster, action)
   {
+    const skill = action.getBaseSkill();
     const cooldownKey = action.getCooldownType();
     const dodgeKey = typeof JABS_Button !== 'undefined'
       ? JABS_Button.Dodge
@@ -120,17 +129,75 @@ class JuiceHookManager
       return;
     }
 
+    // <noJuice> suppresses all caster motion for this skill.
+    if (skill.jabsNoJuice === true)
+    {
+      return;
+    }
+
+    const motionKey = skill.jabsJuiceMotion;
+
+    // <juiceMotion:none> is an inline opt-out equivalent to <noJuice>.
+    if (motionKey === 'none')
+    {
+      return;
+    }
+
+    // <juiceMotion:squish> fires a body squash on the caster, repeated per <juiceRepeatCount:N>.
+    // <juiceDuration:N> overrides the per-cycle frame count.
+    if (motionKey === 'squish')
+    {
+      const repeatCount = JuiceProfileResolver.resolveJuiceRepeatCount(action);
+      const duration = JuiceProfileResolver.resolveJuiceDuration(action);
+      JuiceHookManager.#applySquishCasterJuice(caster, repeatCount, duration);
+      return;
+    }
+
+    // <juiceMotion:pulse> fires the casting shimmer pulse on the caster, repeated per <juiceRepeatCount:N>.
+    // <juiceDuration:N> overrides the per-cycle frame count.
+    if (motionKey === 'pulse')
+    {
+      const repeatCount = JuiceProfileResolver.resolveJuiceRepeatCount(action);
+      const duration = JuiceProfileResolver.resolveJuiceDuration(action);
+      JuiceHookManager.#applySupportCasterJuice(caster, repeatCount, duration);
+      return;
+    }
+
+    // <juiceMotion:flip> spins the caster sprite clockwise N full rotations over the duration.
+    if (motionKey === 'flip')
+    {
+      const repeatCount = JuiceProfileResolver.resolveJuiceRepeatCount(action);
+      const duration = JuiceProfileResolver.resolveJuiceDuration(action);
+      JuiceHookManager.#applyFlipBodyJuice(caster, 1, repeatCount, duration);
+      return;
+    }
+
+    // <juiceMotion:flip-reverse> spins the caster sprite counter-clockwise N full rotations over the duration.
+    if (motionKey === 'flip-reverse')
+    {
+      const repeatCount = JuiceProfileResolver.resolveJuiceRepeatCount(action);
+      const duration = JuiceProfileResolver.resolveJuiceDuration(action);
+      JuiceHookManager.#applyFlipBodyJuice(caster, -1, repeatCount, duration);
+      return;
+    }
+
     if (action.isHealing())
     {
-      const strikeMotionRequested = action.getBaseSkill().jabsJuiceMotion !== String.empty;
-
-      if (strikeMotionRequested === false)
+      // healing without an explicit weapon motion tag gets the gentle support pulse.
+      if (motionKey === String.empty)
       {
         JuiceHookManager.#applySupportCasterJuice(caster);
         return;
       }
 
-      // authored `<juiceMotion:…>` wins over the healing shortcut — same path as strikes (tilt + overlay).
+      // authored <juiceMotion:…> wins over the healing shortcut — same path as strikes (tilt + overlay).
+    }
+
+    // support skills (damage.type 0 = None) without an explicit motion tag get the support pulse.
+    if (skill.damage.type === 0 && motionKey === String.empty)
+    {
+      JuiceHookManager.#applySupportCasterJuice(caster);
+      return;
     }
 
     JuiceHookManager.#applyStrikeJuice(caster, action);
@@ -154,10 +221,19 @@ class JuiceHookManager
   }
 
   /**
-   * Applies gentle caster pulse for healing actions.
-   * @param {JABS_Battler} caster The healing caster.
+   * Applies a body squash on the caster, optionally repeated {@link repeatCount} times.
+   * Used by <juiceMotion:squish> for skills that want a punchy caster reaction without a weapon overlay.
+   * @param {JABS_Battler} caster The caster.
+   * @param {number} [repeatCount=1] How many times to cycle the squish.
    */
-  static #applySupportCasterJuice(caster)
+  /**
+   * Applies a body squash on the caster, optionally repeated {@link repeatCount} times.
+   * Used by <juiceMotion:squish> for skills that want a punchy caster reaction without a weapon overlay.
+   * @param {JABS_Battler} caster The caster.
+   * @param {number} [repeatCount=1] How many times to cycle the squish.
+   * @param {number|null} [totalDuration=null] Total frame budget; divided evenly across cycles. Defaults to metadata value.
+   */
+  static #applySquishCasterJuice(caster, repeatCount = 1, totalDuration = null)
   {
     const md = J.ABS.EXT.JUICE.Metadata;
     const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(caster.getCharacter());
@@ -166,8 +242,54 @@ class JuiceHookManager
       return;
     }
 
-    // continue the routine with the next policy step.
-    JuiceMotionManager.scheduleSquish(sprite, md.supportCasterPulseIntensity, md.supportCasterPulseFrames);
+    // divide the total duration evenly across all cycles.
+    const baseDuration = totalDuration ?? md.unarmedStrikeSquishFrames;
+    const perCycleDuration = Math.max(1, Math.floor(baseDuration / repeatCount));
+
+    JuiceMotionManager.scheduleSquish(sprite, md.unarmedStrikeSquishIntensity, perCycleDuration, repeatCount);
+  }
+
+  /**
+   * Applies gentle caster pulse for healing or support actions, optionally repeated {@link repeatCount} times.
+   * @param {JABS_Battler} caster The healing caster.
+   * @param {number} [repeatCount=1] How many times to cycle the pulse.
+   * @param {number|null} [totalDuration=null] Total frame budget; divided evenly across cycles. Defaults to metadata value.
+   */
+  static #applySupportCasterJuice(caster, repeatCount = 1, totalDuration = null)
+  {
+    const md = J.ABS.EXT.JUICE.Metadata;
+    const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(caster.getCharacter());
+    if (!sprite)
+    {
+      return;
+    }
+
+    // divide the total duration evenly across all cycles.
+    const baseDuration = totalDuration ?? md.supportCasterPulseFrames;
+    const perCycleDuration = Math.max(1, Math.floor(baseDuration / repeatCount));
+
+    JuiceMotionManager.scheduleSquish(sprite, md.supportCasterPulseIntensity, perCycleDuration, repeatCount);
+  }
+
+  /**
+   * Spins the caster sprite through N full 360° rotations over the total duration.
+   * Used by <juiceMotion:flip> (clockwise) and <juiceMotion:flip-reverse> (counter-clockwise).
+   * @param {JABS_Battler} caster The caster.
+   * @param {number} directionSign +1 for clockwise, -1 for counter-clockwise.
+   * @param {number} [repeatCount=1] Number of full rotations to complete.
+   * @param {number|null} [totalDuration=null] Total frame budget. Defaults to metadata unarmed squish frames.
+   */
+  static #applyFlipBodyJuice(caster, directionSign, repeatCount = 1, totalDuration = null)
+  {
+    const md = J.ABS.EXT.JUICE.Metadata;
+    const sprite = JuiceMapSpriteFinder.findSpriteCharacterFor(caster.getCharacter());
+    if (!sprite)
+    {
+      return;
+    }
+
+    const duration = totalDuration ?? md.unarmedStrikeSquishFrames;
+    JuiceMotionManager.scheduleFlipBody(sprite, directionSign, duration, repeatCount);
   }
 
   /**
@@ -208,15 +330,17 @@ class JuiceHookManager
       const motionType = JuiceProfileResolver.resolveJuiceMotion(action);
       const arcSpanDegrees = JuiceProfileResolver.resolveJuiceArcSpanDegrees(action);
       const weaponTipRadians = JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, motionType);
-      const spinCount = JuiceProfileResolver.resolveJuiceSpinCount(action);
+      const spinCount = JuiceProfileResolver.resolveJuiceRepeatCount(action);
       const profileGun = JuiceProfileResolver.resolveJuiceProfileGun(action);
+      const juiceDuration = JuiceProfileResolver.resolveJuiceDuration(action)
+        ?? (md.weaponSwingFrames * swingDurationMultiplier);
 
       // continue the routine with the next policy step.
       JuiceWeaponSwingOverlay.play(
         sprite,
         iconIndex,
         md.weaponSwingPeakRadians * mul.swingMul * swingWidthMultiplier,
-        md.weaponSwingFrames * swingDurationMultiplier,
+        juiceDuration,
         motionType,
         arcSpanDegrees,
         action.direction(),

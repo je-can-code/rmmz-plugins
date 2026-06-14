@@ -11,30 +11,20 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    * @returns {{ x: number, y: number }}
    */
   /**
-   * Clamps spin preset rotation count (full turns) for spin / spin-reverse.
-   * @param {number} spinCount Candidate count from skill notes or resolver.
+   * Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
+   * @param {number} repeatCount Candidate count from skill notes or resolver.
    * @returns {number}
    */
-  static #clampSpinCount(spinCount)
+  static #clampRepeatCount(repeatCount)
   {
-    if (spinCount === undefined || spinCount === null || Number.isFinite(spinCount) === false)
+    if (repeatCount === undefined || repeatCount === null || Number.isFinite(repeatCount) === false)
     {
       return 1;
     }
 
-    const k = Math.floor(spinCount);
+    const k = Math.floor(repeatCount);
 
-    if (k < 1)
-    {
-      return 1;
-    }
-
-    if (k > 8)
-    {
-      return 8;
-    }
-
-    return k;
+    return k < 1 ? 1 : k;
   }
 
   static #forwardUnit(dir)
@@ -384,6 +374,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    */
   static MotionTypes = {
     Arc: 'arc',
+    ArcOscillate: 'arc-oscillate',
     ArcReverse: 'arc-reverse',
     Bash: 'bash',
     Present: 'present',
@@ -412,7 +403,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    * @param {number} stabTipAngleRadians Resolved radians from +x to tip/bore at rotation 0 (stab / bash / recoil).
    * @param {number} neutralBaseX Hand-neutral overlay X when spawn pose includes preset offset (bash / recoil).
    * @param {number} neutralBaseY Hand-neutral overlay Y (same).
-   * @param {number} spinCount Full rotations for spin / spin-reverse (clamped 1–8; ignored for other presets).
+   * @param {number} repeatCount Times to repeat the motion within duration (clamped 1–8).
    * @param {boolean} profileGun Skill `<juiceProfileGun>` — mirror for E/W aim instead of π rotation.
    */
   constructor(
@@ -427,7 +418,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     stabTipAngleRadians,
     neutralBaseX,
     neutralBaseY,
-    spinCount,
+    repeatCount,
     profileGun
   )
   {
@@ -477,10 +468,10 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     this._trail = [];
 
     /**
-     * Full rotations for spin / spin-reverse ({@link MotionTypes.Spin}, {@link MotionTypes.SpinReverse}).
+     * Times to repeat the motion within the duration window (all motion types).
      * @type {number}
      */
-    this._spinCount = JuiceWeaponSwingMotionEffect.#clampSpinCount(spinCount);
+    this._repeatCount = JuiceWeaponSwingMotionEffect.#clampRepeatCount(repeatCount);
 
     /**
      * Profile gun: horizontal mirror replaces full 180° rotation for side-view IconSet art.
@@ -552,11 +543,14 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       case JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse:
         this.#tickArc(phy, dir, ease, true);
         break;
+      case JuiceWeaponSwingMotionEffect.MotionTypes.ArcOscillate:
+        this.#tickArcOscillate(phy, dir, t);
+        break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.Spin:
-        this.#tickSpin(phy, t, this._spinCount, 1);
+        this.#tickSpin(phy, t, this._repeatCount, 1);
         break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.SpinReverse:
-        this.#tickSpin(phy, t, this._spinCount, -1);
+        this.#tickSpin(phy, t, this._repeatCount, -1);
         break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.StabForward:
         this.#tickStabForward(phy, dir, ease);
@@ -633,6 +627,22 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
     // continue the routine with the next policy step.
     this._overlay.rotation = JuiceWeaponSwingMotionEffect.bladeRotationArcForward(pose.theta);
+  }
+
+  /**
+   * Alternating arc sweeps: arc → arc-reverse → arc … for `_repeatCount` total passes.
+   * Each pass occupies an equal slice of the total duration; direction flips each slice.
+   * @param {number} phy Pattern height.
+   * @param {number} dir Facing direction.
+   * @param {number} t Linear progress (0..1).
+   */
+  #tickArcOscillate(phy, dir, t)
+  {
+    const sliceT = (t * this._repeatCount) % 1;
+    const sliceIndex = Math.floor(t * this._repeatCount);
+    const reverse = (sliceIndex % 2) === 1;
+    const ease = 1 - Math.pow(1 - sliceT, 3);
+    this.#tickArc(phy, dir, ease, reverse);
   }
 
   /**

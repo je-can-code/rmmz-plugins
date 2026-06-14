@@ -696,6 +696,30 @@ var PassiveRuleJabsAccess = class {
 		return allies;
 	}
 	/**
+	* Allied JABS battlers within an explicit tile radius, excluding self.<br/>
+	* Used by scoped resource threshold gates ({@code anyAlly}, {@code allAllies} scope).
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {number} range Tile radius.
+	* @returns {JABS_Battler[]} Allied JABS battlers in range, never including the evaluator.
+	*/
+	static alliedBattlersWithinRange(battler, range) {
+		const jabsBattler = this.getJabsBattler(battler);
+		if (!jabsBattler) return [];
+		return JABS_AiManager.getAlliedBattlersWithinRange(jabsBattler, range).filter((ally) => ally.getUuid() !== jabsBattler.getUuid());
+	}
+	/**
+	* Opposing JABS battlers within an explicit tile radius.<br/>
+	* Used by scoped resource threshold gates ({@code anyEnemy}, {@code allEnemies} scope).
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {number} range Tile radius.
+	* @returns {JABS_Battler[]} Opposing JABS battlers within range.
+	*/
+	static opposingBattlersWithinRange(battler, range) {
+		const jabsBattler = this.getJabsBattler(battler);
+		if (!jabsBattler) return [];
+		return JABS_AiManager.getOpposingBattlersWithinRange(jabsBattler, range);
+	}
+	/**
 	* Maps author-facing slot names to {@link JABS_Button} keys.<br/>
 	* Accepts shorthand like {@code mainhand} / {@code skill1} as well as raw button keys.
 	* @param {string|number} slotParam Author tag value for a skill slot.
@@ -1255,21 +1279,34 @@ var PassiveGateEvaluator = class {
 	/**
 	* Evaluates one gate rule kind against the battler's current map context.<br/>
 	* Discrete kinds dispatch in the switch; threshold kinds fall through to {@link #evaluateThresholdKind}.
+	* Variadic params mirror the tag tuple slots after the kind: [threshold, scope?, range?] for
+	* resource gates; a single scalar for most other gates.
 	* @param {Game_Battler} battler The battler whose context we evaluate.
 	* @param {string} kind Rule kind from a parsed note tuple.
-	* @param {number|string|null} param Optional tag parameter (count, threshold, slot name, frame count).
+	* @param {...(number|string)} params Remaining tuple slots after the kind.
 	* @returns {boolean} Whether this single tuple passes right now.
 	*/
-	static evaluate(battler, kind, param) {
+	static evaluate(battler, kind, ...params) {
+		const [param, scope, range] = params;
 		switch (kind) {
 			case "alliesNearby": return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length >= Number(param);
 			case "enemiesNearby": return PassiveRuleJabsAccess.nearbyEnemies(battler).length >= Number(param);
+			case "hpAbove": return this.#evaluateResourceThreshold(battler, "hp", "above", Number(param), scope, range);
+			case "hpBelow": return this.#evaluateResourceThreshold(battler, "hp", "below", Number(param), scope, range);
+			case "mpAbove": return this.#evaluateResourceThreshold(battler, "mp", "above", Number(param), scope, range);
+			case "mpBelow": return this.#evaluateResourceThreshold(battler, "mp", "below", Number(param), scope, range);
+			case "tpAbove": return this.#evaluateResourceThreshold(battler, "tp", "above", Number(param), scope, range);
+			case "tpBelow": return this.#evaluateResourceThreshold(battler, "tp", "below", Number(param), scope, range);
+			case "anyAbove": return this.#evaluateAnyResourceThreshold(battler, "above", Number(param), scope, range);
+			case "anyBelow": return this.#evaluateAnyResourceThreshold(battler, "below", Number(param), scope, range);
+			case "allAbove": return this.#evaluateAllResourcesThreshold(battler, "above", Number(param), scope, range);
+			case "allBelow": return this.#evaluateAllResourcesThreshold(battler, "below", Number(param), scope, range);
 			case "hasState": return battler.isStateAffected(Number(param));
 			case "negativeStateCount": return this.countNegativeStates(battler) >= Number(param);
 			case "slotOnCooldown": return this.#isSlotOnCooldown(battler, param) === true;
 			case "slotOffCooldown": return this.#isSlotOnCooldown(battler, param) === false;
-			case "allOnCooldown": return this.#areAllSlotsOnCooldown(battler) === true;
-			case "allOffCooldown": return this.#areAllSlotsOnCooldown(battler) === false;
+			case "allOnCooldown": return this.#areAllCombatSlotsOnCooldown(battler) === true;
+			case "allOffCooldown": return this.#areAllCombatSlotsReady(battler) === true;
 			case "sinceLastMoved": return this.#framesSince(battler.getPassiveRuleLastMovedFrame()) >= Number(param);
 			case "sinceLastHit": return this.#framesSince(battler.getPassiveRuleLastHitFrame()) >= Number(param);
 			case "sinceLastAttacked": return this.#framesSince(battler.getPassiveRuleLastAttackedFrame()) >= Number(param);
@@ -1322,17 +1359,113 @@ var PassiveGateEvaluator = class {
 		return jabsBattler.isSkillTypeCooldownReady(slotKey) === false;
 	}
 	/**
-	* Whether every registered JABS skill slot is on cooldown simultaneously.<br/>
-	* Used by {@code allOnCooldown} / {@code allOffCooldown} source-wide gate kinds.
+	* Whether every assigned combat skill slot is on cooldown simultaneously.<br/>
+	* Only secondary slots (CombatSkill1–4) with an assigned skill are checked —
+	* mainhand, offhand, tool, and dodge have no meaningful player-managed cooldowns
+	* and must not pollute the result. Empty secondary slots are skipped for the same reason.<br/>
+	* Used by {@code allOnCooldown} source-wide gate kind.
 	* @param {Game_Battler} battler The battler whose slot manager we inspect.
-	* @returns {boolean} True only when every slot reports not-ready.
+	* @returns {boolean} True only when every assigned combat slot is still cooling down.
 	*/
-	static #areAllSlotsOnCooldown(battler) {
+	static #areAllCombatSlotsOnCooldown(battler) {
 		const jabsBattler = PassiveRuleJabsAccess.getJabsBattler(battler);
 		if (!jabsBattler) return false;
 		const slotManager = jabsBattler.getBattler().getSkillSlotManager();
 		if (!slotManager) return false;
-		return slotManager.getAllSlots().every((slot) => jabsBattler.isSkillTypeCooldownReady(slot.key) === false);
+		const assignedCombatSlots = slotManager.getAllSecondarySlots().filter((slot) => slot.isEmpty() === false);
+		if (assignedCombatSlots.length === 0) return false;
+		return assignedCombatSlots.every((slot) => jabsBattler.isSkillTypeCooldownReady(slot.key) === false);
+	}
+	/**
+	* Whether every assigned combat skill slot is ready (off cooldown).<br/>
+	* Only secondary slots (CombatSkill1–4) with an assigned skill are checked —
+	* mainhand, offhand, tool, and dodge are excluded for the same reason as
+	* {@link #areAllCombatSlotsOnCooldown}. Empty secondary slots are skipped.<br/>
+	* Used by {@code allOffCooldown} source-wide gate kind.
+	* @param {Game_Battler} battler The battler whose slot manager we inspect.
+	* @returns {boolean} True only when every assigned combat slot is ready to fire.
+	*/
+	static #areAllCombatSlotsReady(battler) {
+		const jabsBattler = PassiveRuleJabsAccess.getJabsBattler(battler);
+		if (!jabsBattler) return false;
+		const slotManager = jabsBattler.getBattler().getSkillSlotManager();
+		if (!slotManager) return false;
+		const assignedCombatSlots = slotManager.getAllSecondarySlots().filter((slot) => slot.isEmpty() === false);
+		if (assignedCombatSlots.length === 0) return true;
+		return assignedCombatSlots.every((slot) => jabsBattler.isSkillTypeCooldownReady(slot.key) === true);
+	}
+	/**
+	* Evaluates a single-resource threshold gate ({@code hpAbove}, {@code mpBelow}, etc.)
+	* against the resolved scope of battlers.<br/>
+	* Scope {@code anyAlly}/{@code anyEnemy} passes when at least one battler in range satisfies
+	* the threshold; {@code allAllies}/{@code allEnemies} requires every battler to satisfy it.
+	* Self scope (default) evaluates the evaluating battler only.
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {string} resource One of {@code hp}, {@code mp}, {@code tp}.
+	* @param {string} direction {@code 'above'} or {@code 'below'}.
+	* @param {number} threshold Tag threshold integer (0–100 percent).
+	* @param {string} [scope] {@code self} (default), {@code anyAlly}, {@code allAllies}, {@code anyEnemy}, {@code allEnemies}.
+	* @param {number|string} [range] Tile radius for ally/enemy scopes; defaults to plugin proximity param.
+	* @returns {boolean} Whether the gate passes.
+	*/
+	static #evaluateResourceThreshold(battler, resource, direction, threshold, scope, range) {
+		const resolvedScope = scope ?? "self";
+		const resolvedRange = range !== undefined ? Number(range) : PassiveRuleJabsAccess.defaultProximity();
+		const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+		if (resolvedScope === "anyAlly" || resolvedScope === "anyEnemy") {
+			return targets.some((target) => PassiveRuleThreshold.compare(target, resource, direction, threshold));
+		}
+		return targets.every((target) => PassiveRuleThreshold.compare(target, resource, direction, threshold));
+	}
+	/**
+	* Evaluates {@code anyAbove}/{@code anyBelow} — passes when any of HP, MP, or TP
+	* satisfies the threshold across the resolved scope.
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {string} direction {@code 'above'} or {@code 'below'}.
+	* @param {number} threshold Threshold percent (0–100).
+	* @param {string} [scope] Scope string; defaults to {@code self}.
+	* @param {number|string} [range] Tile radius; defaults to plugin proximity param.
+	* @returns {boolean} Whether at least one resource on any in-scope target satisfies the threshold.
+	*/
+	static #evaluateAnyResourceThreshold(battler, direction, threshold, scope, range) {
+		const resolvedScope = scope ?? "self";
+		const resolvedRange = range !== undefined ? Number(range) : PassiveRuleJabsAccess.defaultProximity();
+		const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+		return targets.some((target) => PassiveRuleThreshold.CURRENT_RESOURCE_KEYS.some((key) => PassiveRuleThreshold.compare(target, key, direction, threshold)));
+	}
+	/**
+	* Evaluates {@code allAbove}/{@code allBelow} — passes when all of HP, MP, and TP
+	* satisfy the threshold across the resolved scope.
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {string} direction {@code 'above'} or {@code 'below'}.
+	* @param {number} threshold Threshold percent (0–100).
+	* @param {string} [scope] Scope string; defaults to {@code self}.
+	* @param {number|string} [range] Tile radius; defaults to plugin proximity param.
+	* @returns {boolean} Whether every resource on every in-scope target satisfies the threshold.
+	*/
+	static #evaluateAllResourcesThreshold(battler, direction, threshold, scope, range) {
+		const resolvedScope = scope ?? "self";
+		const resolvedRange = range !== undefined ? Number(range) : PassiveRuleJabsAccess.defaultProximity();
+		const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+		return targets.every((target) => PassiveRuleThreshold.CURRENT_RESOURCE_KEYS.every((key) => PassiveRuleThreshold.compare(target, key, direction, threshold)));
+	}
+	/**
+	* Resolves the set of battlers to test for a scoped resource threshold gate.<br/>
+	* Scope controls who is evaluated; range limits the neighbourhood for ally/enemy scopes.
+	* @param {Game_Battler} battler The evaluating battler.
+	* @param {string} scope One of {@code self}, {@code anyAlly}, {@code allAllies}, {@code anyEnemy}, {@code allEnemies}.
+	* @param {number} range Tile radius for ally/enemy scopes.
+	* @returns {Game_Battler[]} The battlers to test against the threshold.
+	*/
+	static #resolveScopedBattlers(battler, scope, range) {
+		switch (scope) {
+			case "anyAlly":
+			case "allAllies": return PassiveRuleJabsAccess.alliedBattlersWithinRange(battler, range).map((jabs) => jabs.getBattler()).filter((b) => !!b);
+			case "anyEnemy":
+			case "allEnemies": return PassiveRuleJabsAccess.opposingBattlersWithinRange(battler, range).map((jabs) => jabs.getBattler()).filter((b) => !!b);
+			case "self":
+			default: return [battler];
+		}
 	}
 	/**
 	* Frames elapsed since a passive-rule timestamp was stamped.<br/>
@@ -1708,31 +1841,20 @@ Game_Battler.prototype.getPassiveStackContributionFromSource = function(baseItem
 };
 /**
 * Evaluates every gate rule on a source that applies to the given passive state id.<br/>
-* Returns true when no rules apply (unconditional passive) or when every tuple passes.
+* Source rules ({@code [kind, param?]}) and state rules ({@code [stateId, kind, param?]}) are
+* evaluated separately with explicit destructuring — no length heuristics.<br/>
+* All rules AND together; any failure short-circuits and excludes the passive.
 * @param {RPG_BaseItem} baseItem Database row carrying passive and rule tags.
-* @param {number} stateId Passive state id being collected from this source.
+* @param {number} stateId Passive state id being evaluated for this source.
 * @returns {boolean} Whether this source may contribute the given passive state right now.
 */
 Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, stateId) {
-	const rules = this.collectPassiveGateRuleTuples(baseItem, stateId);
-	if (rules.length === 0) return true;
-	return rules.every((tuple) => {
-		const kind = tuple.length === 2 ? tuple[0] : tuple[1];
-		const param = tuple.length === 2 ? tuple[1] : tuple[2];
-		return PassiveGateEvaluator.evaluate(this, kind, param);
-	});
-};
-/**
-* Collects source-wide and state-specific gate tuples for one passive state id.<br/>
-* Source rules always apply; state rules are filtered to the requested state id.
-* @param {RPG_BaseItem} baseItem Database row carrying passive and rule tags.
-* @param {number} stateId Passive state id being collected from this source.
-* @returns {any[][]} Combined gate tuples in evaluation order.
-*/
-Game_Battler.prototype.collectPassiveGateRuleTuples = function(baseItem, stateId) {
 	const sourceRules = baseItem.passiveSourceRules || [];
-	const stateRules = (baseItem.passiveStateRules || []).filter((tuple) => Number(tuple[0]) === stateId);
-	return sourceRules.concat(stateRules);
+	const passesSourceRules = sourceRules.every(([kind, ...params]) => PassiveGateEvaluator.evaluate(this, kind, ...params));
+	if (passesSourceRules === false) return false;
+	const stateRules = (baseItem.passiveStateRules || []).filter(([ruleStateId]) => Number(ruleStateId) === stateId);
+	const passesStateRules = stateRules.every(([, kind, ...params]) => PassiveGateEvaluator.evaluate(this, kind, ...params));
+	return passesStateRules;
 };
 /**
 * Finds the first passiveStateCount tuple targeting a passive state id on this source.<br/>

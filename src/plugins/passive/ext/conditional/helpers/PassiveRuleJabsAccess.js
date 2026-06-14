@@ -99,6 +99,39 @@ class PassiveRuleJabsAccess
   }
 
   /**
+   * Allied JABS battlers within an explicit tile radius, excluding self.<br/>
+   * Used by scoped resource threshold gates ({@code anyAlly}, {@code allAllies} scope).
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {number} range Tile radius.
+   * @returns {JABS_Battler[]} Allied JABS battlers in range, never including the evaluator.
+   */
+  static alliedBattlersWithinRange(battler, range)
+  {
+    const jabsBattler = this.getJabsBattler(battler);
+
+    if (!jabsBattler) return [];
+
+    return JABS_AiManager.getAlliedBattlersWithinRange(jabsBattler, range)
+      .filter(ally => ally.getUuid() !== jabsBattler.getUuid());
+  }
+
+  /**
+   * Opposing JABS battlers within an explicit tile radius.<br/>
+   * Used by scoped resource threshold gates ({@code anyEnemy}, {@code allEnemies} scope).
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {number} range Tile radius.
+   * @returns {JABS_Battler[]} Opposing JABS battlers within range.
+   */
+  static opposingBattlersWithinRange(battler, range)
+  {
+    const jabsBattler = this.getJabsBattler(battler);
+
+    if (!jabsBattler) return [];
+
+    return JABS_AiManager.getOpposingBattlersWithinRange(jabsBattler, range);
+  }
+
+  /**
    * Maps author-facing slot names to {@link JABS_Button} keys.<br/>
    * Accepts shorthand like {@code mainhand} / {@code skill1} as well as raw button keys.
    * @param {string|number} slotParam Author tag value for a skill slot.

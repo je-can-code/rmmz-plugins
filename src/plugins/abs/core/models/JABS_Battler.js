@@ -5120,7 +5120,7 @@ class JABS_Battler
    * @param {number} itemId The id of the item/tool used.
    * @param {JABS_Battler} target The target for calculating damage; defaults to self.
    */
-  onItemApplied(gameAction, itemId, target = this) 
+  onItemApplied(_gameAction, _itemId, _target = this)
   {};
 
   /**
@@ -5370,7 +5370,7 @@ class JABS_Battler
    * Executes the post-defeat processing for a defeated battler.
    * @param {JABS_Battler} victor The battler that defeated this battler.
    */
-  performPostdefeatEffects(victor)
+  performPostdefeatEffects(_victor)
   {
     // check if the defeated battler is an actor.
     if (this.isActor())
@@ -6455,7 +6455,7 @@ class JABS_Battler
    * @param {0|1|2} type HP / MP / TP index.
    * @param {number} [stateId] Database state id when this tick came from {@link #processStateRegens}.
    */
-  onSlipRegenTick(displayAmount, type, stateId)
+  onSlipRegenTick(_displayAmount, _type, _stateId)
   {
   };
   //endregion regeneration

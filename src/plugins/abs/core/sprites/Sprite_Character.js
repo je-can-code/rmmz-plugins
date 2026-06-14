@@ -881,7 +881,7 @@ Sprite_Character.prototype.repositionAfflictionStrip = function()
 
   if (hpGauge)
   {
-    x = hpGauge.x;
+    ({ x } = hpGauge);
   }
 
   const y = this.mapAfflictionStripY();

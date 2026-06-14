@@ -15,10 +15,15 @@ Object.defineProperties(Game_BattlerBase.prototype, {
 Object.defineProperty(Game_Actor.prototype, 'apr', {
   get: function()
   {
-    const multiplier = 100;
-    const objectsToCheck = this.getAllNotes();
-    const bonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.APT.RegExp.AptMultiplier);
+    // return the cached result if the cache is still warm.
+    if (this.getCachedApr() !== null)
+    {
+      return this.getCachedApr();
+    }
 
+    // compute and cache the result.
+    const multiplier = 100;
+    const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.APT.RegExp.AptMultiplier);
     let factor = (multiplier + bonus) / 100;
 
     if (this.getSdpBonusForParameterKey)
@@ -26,7 +31,9 @@ Object.defineProperty(Game_Actor.prototype, 'apr', {
       factor += this.getSdpBonusForParameterKey('apr', 1);
     }
 
-    return factor;
+    this.setCachedApr(factor);
+
+    return this.getCachedApr();
   },
   configurable: true,
 });

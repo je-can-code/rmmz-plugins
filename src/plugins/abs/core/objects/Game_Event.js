@@ -237,6 +237,7 @@ Game_Event.prototype.setupPageSettings = function()
  *  2) from the notes of the enemy in the database (requires at least enemy id in comments).
  *  3) from the defaults of all enemies.
  */
+// oxlint-disable-next-line complexity
 Game_Event.prototype.parseEnemyComments = function()
 {
   // apply the custom move speeds from this event if any are available.

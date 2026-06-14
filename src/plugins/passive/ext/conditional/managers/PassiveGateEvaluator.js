@@ -11,13 +11,18 @@ class PassiveGateEvaluator
   /**
    * Evaluates one gate rule kind against the battler's current map context.<br/>
    * Discrete kinds dispatch in the switch; threshold kinds fall through to {@link #evaluateThresholdKind}.
+   * Variadic params mirror the tag tuple slots after the kind: [threshold, scope?, range?] for
+   * resource gates; a single scalar for most other gates.
    * @param {Game_Battler} battler The battler whose context we evaluate.
    * @param {string} kind Rule kind from a parsed note tuple.
-   * @param {number|string|null} param Optional tag parameter (count, threshold, slot name, frame count).
+   * @param {...(number|string)} params Remaining tuple slots after the kind.
    * @returns {boolean} Whether this single tuple passes right now.
    */
-  static evaluate(battler, kind, param)
+  static evaluate(battler, kind, ...params)
   {
+    // unpack the first param for gates that take a single scalar.
+    const [param, scope, range] = params;
+
     switch (kind)
     {
       // proximity gates — default radius from plugin param default-proximity-tiles.
@@ -25,6 +30,30 @@ class PassiveGateEvaluator
         return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length >= Number(param);
       case 'enemiesNearby':
         return PassiveRuleJabsAccess.nearbyEnemies(battler).length >= Number(param);
+
+      // resource threshold gates — [threshold, scope?, range?].
+      // scope: self (default), anyAlly, allAllies, anyEnemy, allEnemies.
+      // range: tile radius; defaults to plugin default-proximity-tiles when scope is not self.
+      case 'hpAbove':
+        return this.#evaluateResourceThreshold(battler, 'hp', 'above', Number(param), scope, range);
+      case 'hpBelow':
+        return this.#evaluateResourceThreshold(battler, 'hp', 'below', Number(param), scope, range);
+      case 'mpAbove':
+        return this.#evaluateResourceThreshold(battler, 'mp', 'above', Number(param), scope, range);
+      case 'mpBelow':
+        return this.#evaluateResourceThreshold(battler, 'mp', 'below', Number(param), scope, range);
+      case 'tpAbove':
+        return this.#evaluateResourceThreshold(battler, 'tp', 'above', Number(param), scope, range);
+      case 'tpBelow':
+        return this.#evaluateResourceThreshold(battler, 'tp', 'below', Number(param), scope, range);
+      case 'anyAbove':
+        return this.#evaluateAnyResourceThreshold(battler, 'above', Number(param), scope, range);
+      case 'anyBelow':
+        return this.#evaluateAnyResourceThreshold(battler, 'below', Number(param), scope, range);
+      case 'allAbove':
+        return this.#evaluateAllResourcesThreshold(battler, 'above', Number(param), scope, range);
+      case 'allBelow':
+        return this.#evaluateAllResourcesThreshold(battler, 'below', Number(param), scope, range);
 
       // discrete state and cooldown gates.
       case 'hasState':
@@ -36,9 +65,9 @@ class PassiveGateEvaluator
       case 'slotOffCooldown':
         return this.#isSlotOnCooldown(battler, param) === false;
       case 'allOnCooldown':
-        return this.#areAllSlotsOnCooldown(battler) === true;
+        return this.#areAllCombatSlotsOnCooldown(battler) === true;
       case 'allOffCooldown':
-        return this.#areAllSlotsOnCooldown(battler) === false;
+        return this.#areAllCombatSlotsReady(battler) === true;
 
       // timing gates — frames since last stamp must meet or exceed param.
       case 'sinceLastMoved':
@@ -132,12 +161,15 @@ class PassiveGateEvaluator
   }
 
   /**
-   * Whether every registered JABS skill slot is on cooldown simultaneously.<br/>
-   * Used by {@code allOnCooldown} / {@code allOffCooldown} source-wide gate kinds.
+   * Whether every assigned combat skill slot is on cooldown simultaneously.<br/>
+   * Only secondary slots (CombatSkill1–4) with an assigned skill are checked —
+   * mainhand, offhand, tool, and dodge have no meaningful player-managed cooldowns
+   * and must not pollute the result. Empty secondary slots are skipped for the same reason.<br/>
+   * Used by {@code allOnCooldown} source-wide gate kind.
    * @param {Game_Battler} battler The battler whose slot manager we inspect.
-   * @returns {boolean} True only when every slot reports not-ready.
+   * @returns {boolean} True only when every assigned combat slot is still cooling down.
    */
-  static #areAllSlotsOnCooldown(battler)
+  static #areAllCombatSlotsOnCooldown(battler)
   {
     const jabsBattler = PassiveRuleJabsAccess.getJabsBattler(battler);
 
@@ -147,9 +179,158 @@ class PassiveGateEvaluator
 
     if (!slotManager) return false;
 
-    // every registered JABS skill slot must be on cooldown for allOnCooldown to pass.
-    return slotManager.getAllSlots()
+    // only assigned secondary (combat) slots have cooldowns worth checking.
+    const assignedCombatSlots = slotManager.getAllSecondarySlots()
+      .filter(slot => slot.isEmpty() === false);
+
+    // no assigned combat skills means nothing is on cooldown.
+    if (assignedCombatSlots.length === 0) return false;
+
+    return assignedCombatSlots
       .every(slot => jabsBattler.isSkillTypeCooldownReady(slot.key) === false);
+  }
+
+  /**
+   * Whether every assigned combat skill slot is ready (off cooldown).<br/>
+   * Only secondary slots (CombatSkill1–4) with an assigned skill are checked —
+   * mainhand, offhand, tool, and dodge are excluded for the same reason as
+   * {@link #areAllCombatSlotsOnCooldown}. Empty secondary slots are skipped.<br/>
+   * Used by {@code allOffCooldown} source-wide gate kind.
+   * @param {Game_Battler} battler The battler whose slot manager we inspect.
+   * @returns {boolean} True only when every assigned combat slot is ready to fire.
+   */
+  static #areAllCombatSlotsReady(battler)
+  {
+    const jabsBattler = PassiveRuleJabsAccess.getJabsBattler(battler);
+
+    if (!jabsBattler) return false;
+
+    const slotManager = jabsBattler.getBattler().getSkillSlotManager();
+
+    if (!slotManager) return false;
+
+    // only assigned secondary (combat) slots have cooldowns worth checking.
+    const assignedCombatSlots = slotManager.getAllSecondarySlots()
+      .filter(slot => slot.isEmpty() === false);
+
+    // no assigned combat skills means nothing to wait for — treat as ready.
+    if (assignedCombatSlots.length === 0) return true;
+
+    return assignedCombatSlots
+      .every(slot => jabsBattler.isSkillTypeCooldownReady(slot.key) === true);
+  }
+
+  /**
+   * Evaluates a single-resource threshold gate ({@code hpAbove}, {@code mpBelow}, etc.)
+   * against the resolved scope of battlers.<br/>
+   * Scope {@code anyAlly}/{@code anyEnemy} passes when at least one battler in range satisfies
+   * the threshold; {@code allAllies}/{@code allEnemies} requires every battler to satisfy it.
+   * Self scope (default) evaluates the evaluating battler only.
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {string} resource One of {@code hp}, {@code mp}, {@code tp}.
+   * @param {string} direction {@code 'above'} or {@code 'below'}.
+   * @param {number} threshold Tag threshold integer (0–100 percent).
+   * @param {string} [scope] {@code self} (default), {@code anyAlly}, {@code allAllies}, {@code anyEnemy}, {@code allEnemies}.
+   * @param {number|string} [range] Tile radius for ally/enemy scopes; defaults to plugin proximity param.
+   * @returns {boolean} Whether the gate passes.
+   */
+  static #evaluateResourceThreshold(battler, resource, direction, threshold, scope, range)
+  {
+    const resolvedScope = scope ?? 'self';
+    const resolvedRange = range !== undefined
+      ? Number(range)
+      : PassiveRuleJabsAccess.defaultProximity();
+
+    const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+
+    if (resolvedScope === 'anyAlly' || resolvedScope === 'anyEnemy')
+    {
+      return targets.some(target => PassiveRuleThreshold.compare(target, resource, direction, threshold));
+    }
+
+    // self, allAllies, allEnemies — every target must satisfy the threshold.
+    return targets.every(target => PassiveRuleThreshold.compare(target, resource, direction, threshold));
+  }
+
+  /**
+   * Evaluates {@code anyAbove}/{@code anyBelow} — passes when any of HP, MP, or TP
+   * satisfies the threshold across the resolved scope.
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {string} direction {@code 'above'} or {@code 'below'}.
+   * @param {number} threshold Threshold percent (0–100).
+   * @param {string} [scope] Scope string; defaults to {@code self}.
+   * @param {number|string} [range] Tile radius; defaults to plugin proximity param.
+   * @returns {boolean} Whether at least one resource on any in-scope target satisfies the threshold.
+   */
+  static #evaluateAnyResourceThreshold(battler, direction, threshold, scope, range)
+  {
+    const resolvedScope = scope ?? 'self';
+    const resolvedRange = range !== undefined
+      ? Number(range)
+      : PassiveRuleJabsAccess.defaultProximity();
+
+    const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+
+    // any resource on any target passes — widest possible gate.
+    return targets.some(target =>
+      PassiveRuleThreshold.CURRENT_RESOURCE_KEYS
+        .some(key => PassiveRuleThreshold.compare(target, key, direction, threshold)));
+  }
+
+  /**
+   * Evaluates {@code allAbove}/{@code allBelow} — passes when all of HP, MP, and TP
+   * satisfy the threshold across the resolved scope.
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {string} direction {@code 'above'} or {@code 'below'}.
+   * @param {number} threshold Threshold percent (0–100).
+   * @param {string} [scope] Scope string; defaults to {@code self}.
+   * @param {number|string} [range] Tile radius; defaults to plugin proximity param.
+   * @returns {boolean} Whether every resource on every in-scope target satisfies the threshold.
+   */
+  static #evaluateAllResourcesThreshold(battler, direction, threshold, scope, range)
+  {
+    const resolvedScope = scope ?? 'self';
+    const resolvedRange = range !== undefined
+      ? Number(range)
+      : PassiveRuleJabsAccess.defaultProximity();
+
+    const targets = this.#resolveScopedBattlers(battler, resolvedScope, resolvedRange);
+
+    // every resource on every target must pass — strictest possible gate.
+    return targets.every(target =>
+      PassiveRuleThreshold.CURRENT_RESOURCE_KEYS
+        .every(key => PassiveRuleThreshold.compare(target, key, direction, threshold)));
+  }
+
+  /**
+   * Resolves the set of battlers to test for a scoped resource threshold gate.<br/>
+   * Scope controls who is evaluated; range limits the neighbourhood for ally/enemy scopes.
+   * @param {Game_Battler} battler The evaluating battler.
+   * @param {string} scope One of {@code self}, {@code anyAlly}, {@code allAllies}, {@code anyEnemy}, {@code allEnemies}.
+   * @param {number} range Tile radius for ally/enemy scopes.
+   * @returns {Game_Battler[]} The battlers to test against the threshold.
+   */
+  static #resolveScopedBattlers(battler, scope, range)
+  {
+    switch (scope)
+    {
+      case 'anyAlly':
+      case 'allAllies':
+        // allied battlers within range, excluding self — self is handled by the default self scope.
+        return PassiveRuleJabsAccess.alliedBattlersWithinRange(battler, range)
+          .map(jabs => jabs.getBattler())
+          .filter(b => !!b);
+
+      case 'anyEnemy':
+      case 'allEnemies':
+        return PassiveRuleJabsAccess.opposingBattlersWithinRange(battler, range)
+          .map(jabs => jabs.getBattler())
+          .filter(b => !!b);
+
+      case 'self':
+      default:
+        return [ battler ];
+    }
   }
 
   /**

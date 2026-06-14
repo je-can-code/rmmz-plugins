@@ -101,15 +101,22 @@ Game_Battler.prototype.getBaseMaxTp = function()
 
 /**
  * The base bonus to max tech on this battler.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
  * @returns {number}
  */
 Game_Battler.prototype.getBaseMaxTpBonuses = function()
 {
-  // grab all the notes.
-  const objectsToCheck = this.getAllNotes();
+  // return the cached result if the cache is still warm.
+  if (this.getCachedMaxTpBonuses() !== null)
+  {
+    return this.getCachedMaxTpBonuses();
+  }
 
-  // determine the sum of all max tech values from the available notes- if any.
-  return RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.BASE.RegExp.MaxTp);
+  // compute and cache the result.
+  const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.BASE.RegExp.MaxTp);
+  this.setCachedMaxTpBonuses(bonus);
+
+  return this.getCachedMaxTpBonuses();
 };
 
 /**
@@ -140,6 +147,32 @@ Game_Battler.prototype.initMembers = function()
    * @type {RPG_BaseItem[]|null}
    */
   this._j._base._cachedAllNotes = null;
+
+  /**
+   * The cached result of {@link #getBaseMaxTpBonuses} for this battler.
+   * Null when the cache is cold; populated on the first call and invalidated by
+   * {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._base._cachedMaxTpBonuses = null;
+};
+
+/**
+ * Gets the cached max-tp-bonuses value for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedMaxTpBonuses = function()
+{
+  return this._j._base._cachedMaxTpBonuses;
+};
+
+/**
+ * Sets the cached max-tp-bonuses value for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedMaxTpBonuses = function(value)
+{
+  this._j._base._cachedMaxTpBonuses = value;
 };
 
 /**
@@ -216,6 +249,12 @@ Game_Battler.prototype.onBattlerDataChange = function()
 
   // invalidate the trait objects cache so the next traitObjects() call rebuilds from current data.
   this.setCachedTraitObjects(null);
+
+  // invalidate the all-traits cache so the next allTraits() call rebuilds from current data.
+  this.setCachedAllTraits(null);
+
+  // invalidate the max-tp-bonuses cache so the next getBaseMaxTpBonuses() call recomputes.
+  this.setCachedMaxTpBonuses(null);
 };
 
 //region state management

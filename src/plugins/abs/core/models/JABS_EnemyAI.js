@@ -319,7 +319,7 @@ class JABS_EnemyAI
    * @param {JABS_Battler} target The battler being targeted.
    * @returns {number[]}
    */
-  filterForTacticalSkills(skillsToUse, user, target)
+  filterForTacticalSkills(skillsToUse, user, _target)
   {
     if (skillsToUse.length <= 1) return skillsToUse;
 

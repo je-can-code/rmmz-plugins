@@ -408,44 +408,30 @@ Game_Battler.prototype.getPassiveStackContributionFromSource = function(baseItem
 
 /**
  * Evaluates every gate rule on a source that applies to the given passive state id.<br/>
- * Returns true when no rules apply (unconditional passive) or when every tuple passes.
+ * Source rules ({@code [kind, param?]}) and state rules ({@code [stateId, kind, param?]}) are
+ * evaluated separately with explicit destructuring — no length heuristics.<br/>
+ * All rules AND together; any failure short-circuits and excludes the passive.
  * @param {RPG_BaseItem} baseItem Database row carrying passive and rule tags.
- * @param {number} stateId Passive state id being collected from this source.
+ * @param {number} stateId Passive state id being evaluated for this source.
  * @returns {boolean} Whether this source may contribute the given passive state right now.
  */
 Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, stateId)
 {
-  const rules = this.collectPassiveGateRuleTuples(baseItem, stateId);
-
-  // unconditional passives (no rules on the row) always pass.
-  if (rules.length === 0) return true;
-
-  // every applicable tuple must pass — per-source AND semantics.
-  return rules.every(tuple =>
-  {
-    // source rules are [kind, param?]; state rules are [stateId, kind, param?].
-    const kind = tuple.length === 2 ? tuple[0] : tuple[1];
-    const param = tuple.length === 2 ? tuple[1] : tuple[2];
-
-    return PassiveGateEvaluator.evaluate(this, kind, param);
-  });
-};
-
-/**
- * Collects source-wide and state-specific gate tuples for one passive state id.<br/>
- * Source rules always apply; state rules are filtered to the requested state id.
- * @param {RPG_BaseItem} baseItem Database row carrying passive and rule tags.
- * @param {number} stateId Passive state id being collected from this source.
- * @returns {any[][]} Combined gate tuples in evaluation order.
- */
-Game_Battler.prototype.collectPassiveGateRuleTuples = function(baseItem, stateId)
-{
+  // source rules gate every passive on this row; shape is [kind, ...params].
   const sourceRules = baseItem.passiveSourceRules || [];
-  const stateRules = (baseItem.passiveStateRules || [])
-    .filter(tuple => Number(tuple[0]) === stateId);
+  const passesSourceRules = sourceRules.every(([kind, ...params]) =>
+    PassiveGateEvaluator.evaluate(this, kind, ...params));
 
-  // source-wide gates apply to every passive on the row; state gates add per-id conditions.
-  return sourceRules.concat(stateRules);
+  // bail early — no need to check state rules if a source rule already failed.
+  if (passesSourceRules === false) return false;
+
+  // state rules target a specific passive id; shape is [stateId, kind, ...params].
+  const stateRules = (baseItem.passiveStateRules || [])
+    .filter(([ruleStateId]) => Number(ruleStateId) === stateId);
+  const passesStateRules = stateRules.every(([, kind, ...params]) =>
+    PassiveGateEvaluator.evaluate(this, kind, ...params));
+
+  return passesStateRules;
 };
 
 /**

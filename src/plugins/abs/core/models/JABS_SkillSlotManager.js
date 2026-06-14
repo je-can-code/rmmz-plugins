@@ -92,7 +92,7 @@ class JABS_SkillSlotManager
   }
 
   /**
-   * Gets all skill slots, regardless of whether or not their are assigned.
+   * Gets all skill slots, regardless of whether they're assigned or not.
    * @returns {JABS_SkillSlot[]}
    */
   getAllSlots()
@@ -213,7 +213,7 @@ class JABS_SkillSlotManager
    * @param {Game_Enemy} enemy The enemy to check.
    * @param {RPG_EnemyAction} action The action to check.
    */
-  filterActionSkills(enemy, action)
+  filterActionSkills(_enemy, _action)
   {
     return true;
   }

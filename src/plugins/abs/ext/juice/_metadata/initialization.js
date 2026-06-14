@@ -42,6 +42,7 @@ J.ABS.EXT.JUICE.Aliased = {};
 J.ABS.EXT.JUICE.Aliased.JABS_Engine = new Map();
 J.ABS.EXT.JUICE.Aliased.JABS_Battler = new Map();
 J.ABS.EXT.JUICE.Aliased.Scene_Map = new Map();
+J.ABS.EXT.JUICE.Aliased.Sprite_Character = new Map();
 
 /**
  * All regular expressions used by this plugin.
@@ -58,7 +59,15 @@ J.ABS.EXT.JUICE.RegExp = {
   JuiceWeaponStyle: /<jabsJuiceWeaponStyle:[ ]?([a-zA-Z0-9_-]+)>/i,
 
   /**
+   * Skill: `<noJuice>` — suppresses all juice motion on the caster when this skill executes.
+   */
+  NoJuice: /<noJuice>/i,
+
+  /**
    * Skill: `<juiceMotion:NAME>` — selects a preset weapon motion (kebab-case).
+   * Weapon overlay: arc | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
+   * Caster-body: squish | pulse | flip | flip-reverse
+   * Suppress: none (equivalent to <noJuice>)
    */
   JuiceMotion: /<juiceMotion:[ ]?([a-zA-Z0-9_-]+)>/i,
 
@@ -68,9 +77,17 @@ J.ABS.EXT.JUICE.RegExp = {
   JuiceSpan: /<juiceSpan:[ ]?(\d+)>/i,
 
   /**
-   * Skill: `<juiceSpinCount:N>` — full rotations for spin / spin-reverse (default 1; range 1–8).
+   * Skill: `<juiceRepeatCount:N>` — number of times to repeat the motion within the juice duration (default 1).
+   * For spin / spin-reverse: full rotations. For arc-oscillate: number of arc sweeps (alternating direction).
+   * For all other motions: number of full replays within the duration window.
    */
-  JuiceSpinCount: /<juiceSpinCount:[ ]?(\d+)>/i,
+  JuiceRepeatCount: /<juiceRepeatCount:[ ]?(\d+)>/i,
+
+  /**
+   * Skill: `<juiceDuration:N>` — overrides the swing animation duration in frames.
+   * When omitted, the global `weaponSwingFrames * 2` metadata default is used.
+   */
+  JuiceDuration: /<juiceDuration:[ ]?(\d+)>/i,
 
   /**
    * Skill: `<juiceStabTipDegrees:N>` — tip/bore bearing from Pixi +x at rotation 0 (stab / bash / recoil; see help).

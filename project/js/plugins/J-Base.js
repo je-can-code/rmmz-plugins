@@ -7376,11 +7376,16 @@ Game_Battler.prototype.getBaseMaxTp = function() {
 };
 /**
 * The base bonus to max tech on this battler.
+* Result is cached and invalidated by {@link #onBattlerDataChange}.
 * @returns {number}
 */
 Game_Battler.prototype.getBaseMaxTpBonuses = function() {
-	const objectsToCheck = this.getAllNotes();
-	return RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.BASE.RegExp.MaxTp);
+	if (this.getCachedMaxTpBonuses() !== null) {
+		return this.getCachedMaxTpBonuses();
+	}
+	const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.BASE.RegExp.MaxTp);
+	this.setCachedMaxTpBonuses(bonus);
+	return this.getCachedMaxTpBonuses();
 };
 /**
 * Extends {@link #initMembers}.<br/>
@@ -7404,6 +7409,27 @@ Game_Battler.prototype.initMembers = function() {
 	* @type {RPG_BaseItem[]|null}
 	*/
 	this._j._base._cachedAllNotes = null;
+	/**
+	* The cached result of {@link #getBaseMaxTpBonuses} for this battler.
+	* Null when the cache is cold; populated on the first call and invalidated by
+	* {@link #onBattlerDataChange}.
+	* @type {number|null}
+	*/
+	this._j._base._cachedMaxTpBonuses = null;
+};
+/**
+* Gets the cached max-tp-bonuses value for this battler, or null if the cache is cold.
+* @returns {number|null}
+*/
+Game_Battler.prototype.getCachedMaxTpBonuses = function() {
+	return this._j._base._cachedMaxTpBonuses;
+};
+/**
+* Sets the cached max-tp-bonuses value for this battler.
+* @param {number|null} value The new cached value, or null to invalidate.
+*/
+Game_Battler.prototype.setCachedMaxTpBonuses = function(value) {
+	this._j._base._cachedMaxTpBonuses = value;
 };
 /**
 * Gets the cached all-notes collection for this battler, or null if the cache is cold.
@@ -7458,6 +7484,8 @@ Game_Battler.prototype.getNotesSources = function() {
 Game_Battler.prototype.onBattlerDataChange = function() {
 	this.setCachedAllNotes(null);
 	this.setCachedTraitObjects(null);
+	this.setCachedAllTraits(null);
+	this.setCachedMaxTpBonuses(null);
 };
 /**
 * Gets the state associated with the given state id.
@@ -7609,6 +7637,15 @@ Game_BattlerBase.prototype.initMembers = function() {
 	* @type {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
 	*/
 	this._j._base._cachedTraitObjects = null;
+	/**
+	* The cached result of {@link #allTraits} for this battler.
+	* Null when the cache is cold; populated on the first {@link #allTraits} call after
+	* construction or after {@link #onBattlerDataChange} invalidates it.
+	* Every downstream trait query ({@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+	* {@link #traitsDeltaSum}, {@link #traitsSum}) benefits automatically.
+	* @type {MV.Trait[]|null}
+	*/
+	this._j._base._cachedAllTraits = null;
 };
 /**
 * Gets the cached trait objects for this battler, or null if the cache is cold.
@@ -7652,6 +7689,38 @@ Game_BattlerBase.prototype.traitObjects = function() {
 */
 Game_BattlerBase.prototype.buildTraitObjects = function() {
 	return [...this.states()];
+};
+/**
+* Gets the cached flat trait list for this battler, or null if the cache is cold.
+* @returns {MV.Trait[]|null}
+*/
+Game_BattlerBase.prototype.getCachedAllTraits = function() {
+	return this._j._base._cachedAllTraits;
+};
+/**
+* Sets the cached flat trait list for this battler.
+* @param {MV.Trait[]|null} allTraits The new cached value, or null to invalidate.
+*/
+Game_BattlerBase.prototype.setCachedAllTraits = function(allTraits) {
+	this._j._base._cachedAllTraits = allTraits;
+};
+/**
+* Gets the flat list of all traits from all trait-bearing objects for this battler.
+*
+* The result is cached and shared across all callers within a single data-change cycle.
+* Every downstream trait query — {@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+* {@link #traitsDeltaSum}, {@link #traitsSum} — benefits automatically since they all
+* call this method first.
+*
+* The cache is invalidated by {@link #onBattlerDataChange}.
+* @returns {MV.Trait[]}
+*/
+Game_BattlerBase.prototype.allTraits = function() {
+	if (this.getCachedAllTraits() !== null) {
+		return this.getCachedAllTraits();
+	}
+	this.setCachedAllTraits(this.traitObjects().reduce((r, obj) => r.concat(obj.traits), []));
+	return this.getCachedAllTraits();
 };
 /**
 * Returns a list of known base parameter ids.

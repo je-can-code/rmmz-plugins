@@ -69,8 +69,7 @@ Game_Actor.prototype.jabsRefresh = function()
   // refresh the currently equipped skills to ensure they are still valid.
   this.refreshBasicAttackSkills();
 
-  // refresh the bonus hits to ensure they are still accurate.
-  this.refreshBonusHits();
+  // bonus hits are refreshed by onBattlerDataChange, which always fires before jabsRefresh.
 };
 
 /**
@@ -83,6 +82,13 @@ Game_Actor.prototype.onBattlerDataChange = function()
   // perform original logic.
   J.ABS.Aliased.Game_Actor.get('onBattlerDataChange')
     .call(this);
+
+  // invalidate the vision modifier cache — enemies use this to scale pursuit radius against the actor.
+  this.setCachedVisionModifier(null);
+
+  // bonus hits are derived from getAllNotes() which changes whenever battler data changes
+  // (equips, states, passives, etc.) — recompute the cache to stay current.
+  this.refreshBonusHits();
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -1337,8 +1343,8 @@ Game_Actor.prototype.refreshAutoEquippedSkills = function()
 Game_Actor.prototype.getBonusHitsSources = function()
 {
   return [
-    // states may contain bonus hits.
-    this.states(),
+    // allStates includes passive states; states() only returns regular states.
+    this.allStates(),
 
     // the actor itself may contain bonus hits.
     [ this.databaseData() ],

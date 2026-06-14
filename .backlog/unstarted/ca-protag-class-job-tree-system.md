@@ -3,6 +3,9 @@ status: open
 area: architecture
 ---
 
+> **Brainstorm complete (2026-06-13):** Class trees for both protagonists fully sketched.
+> Design doc: [`ca/docs/classes/main.md`](../../ca/docs/classes/main.md)
+
 # Chef Adventure — protag class / job tree system (SD3-style)
 
 ## Source

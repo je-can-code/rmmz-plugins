@@ -24,7 +24,7 @@ class JABS_AI
    * @param {number[]} availableSkills A collection of all skill ids to potentially pick from.
    * @returns {number[]} Empty stub; subclasses return `[]` or `[skillId]`.
    */
-  decideAction(user, target, availableSkills)
+  decideAction(_user, _target, _availableSkills)
   {
     return [];
   }

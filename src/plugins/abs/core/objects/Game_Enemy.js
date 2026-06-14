@@ -33,8 +33,7 @@ Game_Enemy.prototype.initAbsSkills = function()
  */
 Game_Enemy.prototype.jabsRefresh = function()
 {
-  // refresh the bonus hits to ensure they are still accurate.
-  this.refreshBonusHits();
+  // bonus hits are refreshed by onBattlerDataChange, which always fires before jabsRefresh.
 };
 
 /**
@@ -47,6 +46,10 @@ Game_Enemy.prototype.onBattlerDataChange = function()
   // perform original logic.
   J.ABS.Aliased.Game_Enemy.get('onBattlerDataChange')
     .call(this);
+
+  // bonus hits are derived from getAllNotes() which changes whenever battler data changes
+  // (equips, states, passives, etc.) — recompute the cache to stay current.
+  this.refreshBonusHits();
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -478,8 +481,8 @@ Game_Enemy.prototype.isInanimate = function()
 Game_Enemy.prototype.getBonusHitsSources = function()
 {
   return [
-    // states may contain bonus hits.
-    this.states(),
+    // allStates includes passive states; states() only returns regular states.
+    this.allStates(),
 
     // the enemy itself may contain bonus hits.
     [ this.databaseData() ],

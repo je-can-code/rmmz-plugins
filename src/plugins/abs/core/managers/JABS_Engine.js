@@ -3816,6 +3816,79 @@ class JABS_Engine
     // generate log for this action.
     this.createAttackLog(action, target);
 
+    // apply any purge-states effects defined on the skill.
+    this.processPurgeStates(action, target);
+  }
+
+  /**
+   * Processes the {@code <purgeStates>} tag on the executed skill, removing states from the target
+   * by priority order according to the tag parameters.
+   *
+   * This only fires when the action landed a hit. Parried and evaded actions are skipped.
+   *
+   * @param {JABS_Action} action - The action being executed.
+   * @param {JABS_Battler} target - The target having states removed.
+   */
+  processPurgeStates(action, target)
+  {
+    // only process on a real hit.
+    const result = target.getBattler()
+      .result();
+
+    if (result.isHit() === false)
+    {
+      return;
+    }
+
+    // read the purgeStates tag params from the base skill.
+    const skill = action.getBaseSkill();
+    const params = skill.jabsPurgeStatesParams;
+
+    // if the tag is absent, nothing to do.
+    if (params === null)
+    {
+      return;
+    }
+
+    // destructure tag params: [type, allowDeath, count].
+    const [ rawType, rawAllowDeath, rawCount ] = params;
+
+    // resolve each parameter with its default when omitted.
+    const type = rawType ?? 'negative';
+    const allowDeath = rawAllowDeath === true;
+    const count = rawCount !== undefined ? parseInt(rawCount) : 1;
+
+    // perform the state removal and collect what was actually purged.
+    const purged = target.getBattler()
+      .removeStatesByPriority(type, allowDeath, count);
+
+    // log each purged state as its own entry.
+    this.createPurgeStateLogs(target, purged);
+  }
+
+  /**
+   * Generates one log entry per purged state, naming the target and the state that was removed.
+   * Only fires when J.LOG is active and at least one state was actually removed.
+   * @param {JABS_Battler} target - The battler that had states removed.
+   * @param {RPG_State[]} purged - The states that were removed.
+   */
+  createPurgeStateLogs(target, purged)
+  {
+    // skip if logging is not enabled or nothing was purged.
+    if (!J.LOG) return;
+    if (purged.length === 0) return;
+
+    // grab the target's display name once for all entries.
+    const targetName = target.getBattlerDatabaseData().name;
+
+    // emit one log entry per removed state.
+    purged.forEach(state =>
+    {
+      const log = new ActionLogBuilder()
+        .setupStatePurged(targetName, state.id)
+        .build();
+      $actionLogManager.addLog(log);
+    });
   }
 
   /**
@@ -3865,8 +3938,12 @@ class JABS_Engine
       $actionLogManager.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
+    // skills with no damage type (support skills) skip this — they have their own log paths.
     else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length)
     {
+      // damage.type 0 = None — a support skill with no damage formula; suppress the undamaged entry.
+      if (skill.damage.type === 0) return;
+
       const undamagedLog = new ActionLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
