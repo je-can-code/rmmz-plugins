@@ -48,9 +48,6 @@ Game_Enemy.prototype.getNotesSources = function()
 
   // newly defined sources for passives.
   const passiveSources = [
-    // then add all those currently applied passive skill states, too.
-    ...this.getPassiveStates(),
-
     // add all sources from events.
     ...this.passiveExternalStateSources(),
   ];

@@ -2,6 +2,7 @@ import './_metadata/initialization.js';
 
 import './managers/OverlayManager.js';
 import './database/RPG_Skill.js';
+import './database/RPG_State.js';
 import './managers/DataManager.js';
 import './objects/Game_Action.js';
 import './objects/Game_Battler.js';

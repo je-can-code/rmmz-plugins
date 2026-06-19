@@ -3,10 +3,10 @@ import { installJabsOnChanceEffectGlobalStub } from '../_base/fixtures/install-j
 import { installExtendEngineStubs } from './fixtures/engine-stubs.js';
 import { evaluateShippedPlugin } from '../../setup/shipped-plugin-vm.js';
 
-export const SKILL_EXTEND_OUT_FILENAME = 'extend/J-SkillExtend.js';
+export const SKILL_EXTEND_OUT_FILENAME = 'extend/J-Extend.js';
 
 /**
- * Loads {@link out/extend/J-SkillExtend.js} with J-Base and harness.
+ * Loads {@link out/extend/J-Extend.js} with J-Base and harness.
  *
  * @param {object} sandbox
  */

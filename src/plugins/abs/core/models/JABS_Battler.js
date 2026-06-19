@@ -2169,14 +2169,10 @@ class JABS_Battler
       jabsComboAction,
       jabsComboStarter,
       jabsAiSkillExclusion,
-      isSkillExtender
     } = skill;
 
     // this skill is explicitly excluded from the skill pool.
     if (jabsAiSkillExclusion) return false;
-
-    // skill extender skills are excluded from the skill pool.
-    if (isSkillExtender) return false;
 
     // determine if this skill is a combo action.
     const isCombo = !!jabsComboAction;

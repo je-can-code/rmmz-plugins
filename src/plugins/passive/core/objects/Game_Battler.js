@@ -430,7 +430,7 @@ Game_Battler.prototype.getPassiveStateSources = function()
     // ones own data from the database, such as the actor or enemy data.
     this.databaseData(),
 
-    // all states currently applied to the battler- this won't include own any passive states.
+    // all states currently applied to the battler, including passive states via the allStates() override.
     ...this.allStates(),
 
     // all skills available to this battler.
@@ -463,7 +463,6 @@ Game_Battler.prototype.isPassiveState = function(stateId)
 J.PASSIVE.Aliased.Game_Battler.set('allStates', Game_Battler.prototype.allStates);
 Game_Battler.prototype.allStates = function()
 {
-  // get all original states.
   // perform original logic.
   const states = J.PASSIVE.Aliased.Game_Battler.get('allStates')
     .call(this);
@@ -473,6 +472,25 @@ Game_Battler.prototype.allStates = function()
 
   // return that combined collection.
   return states;
+};
+
+/**
+ * Extends {@link #allStateIds}.<br/>
+ * Includes state ids from passive skills as well.
+ * @returns {number[]}
+ */
+J.PASSIVE.Aliased.Game_Battler.set('allStateIds', Game_Battler.prototype.allStateIds);
+Game_Battler.prototype.allStateIds = function()
+{
+  // perform original logic.
+  const ids = J.PASSIVE.Aliased.Game_Battler.get('allStateIds')
+    .call(this);
+
+  // add in all passive state ids, including stacks.
+  ids.push(...this.getPassiveStateIds());
+
+  // return that combined collection.
+  return ids;
 };
 
 /**

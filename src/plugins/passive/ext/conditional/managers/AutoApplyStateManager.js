@@ -18,6 +18,18 @@ class AutoApplyStateManager extends AutoRuleManager
   static get rulesProperty() { return 'autoApplyStateRules'; }
 
   /**
+   * Evaluates every rule matching the given condition kind — delegates to {@link tryDispatch}.
+   * Exposed as a named method so callers can invoke condition-scoped evaluations without
+   * knowing the base class method name.
+   * @param {Game_Actor|Game_Enemy} battler - The battler whose rules are evaluated.
+   * @param {string} conditionKind - The condition kind to evaluate (e.g. 'move', 'time').
+   */
+  static tryApply(battler, conditionKind)
+  {
+    return this.tryDispatch(battler, conditionKind);
+  }
+
+  /**
    * Pushes a real combat state onto the battler through the JABS addState path.
    * @param {Game_Actor|Game_Enemy} battler - The battler receiving the state.
    * @param {number} stateId - The database id of the state to apply.

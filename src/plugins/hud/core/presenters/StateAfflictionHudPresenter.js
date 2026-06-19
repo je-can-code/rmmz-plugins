@@ -17,6 +17,12 @@ class StateAfflictionHudPresenter
   #spriteCache = null;
 
   /**
+   * The battler rendered in the previous frame, used to detect target switches.
+   * @type {Game_Battler|null}
+   */
+  #lastBattler = null;
+
+  /**
    * Constructor.
    * @param {Window_Base} hostWindow The window that parents affliction sprites.
    * @param {Map<string, Sprite_Icon|Sprite_BaseText|Sprite>} spriteCache The host sprite cache.
@@ -34,6 +40,14 @@ class StateAfflictionHudPresenter
    */
   render(battler, layoutSpec)
   {
+    // when the target changes, hide every sprite from the previous battler so they don't
+    // persist as ghost icons behind the new target's afflictions.
+    if (this.#lastBattler !== battler)
+    {
+      this.#hideAllSpritesForBattler(this.#lastBattler);
+      this.#lastBattler = battler;
+    }
+
     const collection = StateAfflictionProvider.collectForBattler(battler);
 
     this.hideStaleSlots(battler, collection);
@@ -59,6 +73,31 @@ class StateAfflictionHudPresenter
       const y = layoutSpec.positiveRowY();
 
       this.renderSlot(battler, viewModel, x, y);
+    }
+  }
+
+  /**
+   * Hides all affliction sprites belonging to the given battler.
+   * Called when the presenter switches to a different battler so ghost sprites
+   * from the previous target do not persist in the shared sprite cache.
+   * @param {Game_Battler|null} battler The battler whose sprites should be hidden.
+   */
+  #hideAllSpritesForBattler(battler)
+  {
+    // nothing to clean up if there was no previous battler.
+    if (!battler) return;
+
+    const uuid = battler.getUuid();
+
+    // all affliction sprite keys are suffixed with the owning battler's uuid,
+    // so filtering by suffix correctly isolates every icon, timer, and stack
+    // sprite that belongs to the departing battler.
+    for (const [ key, sprite ] of this.#spriteCache)
+    {
+      if (key.endsWith(`-${uuid}`))
+      {
+        sprite.hide();
+      }
     }
   }
 

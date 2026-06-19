@@ -10,10 +10,13 @@ class RPG_Base
 {
   //region properties
   /**
-   * The original object that this data was built from.
-   * @type {any}
+   * Stores the original underlying data per-instance, keyed by the instance.
+   * Using a static WeakMap instead of a private instance field makes _original()
+   * safe to call on objects created via Object.create(RPG_Base.prototype) (which
+   * never run the constructor and therefore cannot initialize private fields).
+   * @type {WeakMap<RPG_Base, any>}
    */
-  #original = null;
+  static #originals = new WeakMap();
 
   /**
    * The index of this entry in the database.
@@ -56,7 +59,7 @@ class RPG_Base
    */
   constructor(baseItem, index)
   {
-    this.#original = baseItem;
+    RPG_Base.#originals.set(this, baseItem);
     this.index = index;
 
     // map the core data that all database objects have.
@@ -107,7 +110,7 @@ class RPG_Base
    */
   _original()
   {
-    return this.#original;
+    return RPG_Base.#originals.get(this) ?? this;
   }
 
   //endregion accessors

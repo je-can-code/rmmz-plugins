@@ -54,8 +54,12 @@ export function installDropsEngineStubs(sandbox)
 
   Game_Battler.prototype.initMembers = function()
   {
+    sandbox.Game_BattlerBase.prototype.initMembers.call(this);
     this._states = [];
   };
+
+  // maintain the BattlerBase chain so J-Base prototype extensions remain accessible.
+  Object.setPrototypeOf(Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
 
   sandbox.Game_Battler = Game_Battler;
 

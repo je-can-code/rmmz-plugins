@@ -18,10 +18,10 @@ class PassiveStackCountEvaluator
    */
   static evaluateTuple(battler, tuple)
   {
-    // state id is tuple[0]; kind and param drive the scaling formula.
-    const [ , kind, param ] = tuple;
+    // state id is tuple[0]; kind and param drive the scaling formula; scope is optional range in tiles.
+    const [ , kind, param, scope ] = tuple;
 
-    return this.evaluate(battler, kind, param);
+    return this.evaluate(battler, kind, param, scope);
   }
 
   /**
@@ -30,9 +30,10 @@ class PassiveStackCountEvaluator
    * @param {Game_Battler} battler The battler whose live context drives the count.
    * @param {string} kind Stack scaler kind from the note tuple.
    * @param {number|string|null} param Divisor or points-per-stack from the note tuple.
+   * @param {number|string|null} [scope] Optional tile radius for proximity kinds; defaults to plugin default-proximity-tiles.
    * @returns {number} Stack contribution from this source (0 when kind is unknown).
    */
-  static evaluate(battler, kind, param)
+  static evaluate(battler, kind, param, scope = null)
   {
     // per-{registryKey} kinds scale by floor(value / pointsPerStack).
     if (kind.startsWith('per-'))
@@ -40,12 +41,17 @@ class PassiveStackCountEvaluator
       return this.#evaluatePerParam(battler, kind.slice(4), Number(param));
     }
 
+    // resolve optional tile radius for proximity kinds.
+    const proximityTiles = scope ? Number(scope) : null;
+
     switch (kind)
     {
       case 'negativeStateCount':
         return Math.floor(PassiveGateEvaluator.countNegativeStates(battler) / Number(param));
       case 'alliesNearby':
-        return Math.floor(PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length / Number(param));
+        return Math.floor(PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, proximityTiles).length / Number(param));
+      case 'enemiesNearby':
+        return Math.floor(PassiveRuleJabsAccess.nearbyEnemies(battler, proximityTiles).length / Number(param));
 
       // lessIsMore* — missing resource percent drives stacks (low hp → more stacks).
       case 'lessIsMoreHp':

@@ -25,11 +25,11 @@ class PassiveGateEvaluator
 
     switch (kind)
     {
-      // proximity gates — default radius from plugin param default-proximity-tiles.
+      // proximity gates — optional radius as second param; defaults to plugin default-proximity-tiles.
       case 'alliesNearby':
-        return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length >= Number(param);
+        return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, scope ? Number(scope) : null).length >= Number(param);
       case 'enemiesNearby':
-        return PassiveRuleJabsAccess.nearbyEnemies(battler).length >= Number(param);
+        return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length >= Number(param);
 
       // resource threshold gates — [threshold, scope?, range?].
       // scope: self (default), anyAlly, allAllies, anyEnemy, allEnemies.

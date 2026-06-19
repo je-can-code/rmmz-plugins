@@ -5,7 +5,7 @@
  */
 TextManager.goldRate = function()
 {
-  return 'Gold Rate';
+  return 'Gold UP';
 };
 
 /**
@@ -26,7 +26,7 @@ TextManager.goldRateDescription = function()
  */
 TextManager.dropRate = function()
 {
-  return 'Drop Rate';
+  return 'Drops UP';
 };
 
 /**

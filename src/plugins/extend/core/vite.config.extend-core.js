@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'extend/J-SkillExtend': path.resolve(_dirname, './entry.js'),
+        'extend/J-Extend': path.resolve(_dirname, './entry.js'),
       },
     },
   },

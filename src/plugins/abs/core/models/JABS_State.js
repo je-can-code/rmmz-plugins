@@ -575,7 +575,7 @@ class JABS_State
    */
   getSpreadTickInterval()
   {
-    const stateRow = $dataStates[this.stateId];
+    const stateRow = this.source.state(this.stateId);
 
     // per-state override wins when present.
     if (stateRow && stateRow.jabsSpreadTickFrames > 0)
@@ -600,7 +600,7 @@ class JABS_State
 
     if (!this.battler || !this.source) return;
 
-    const stateRow = $dataStates[this.stateId];
+    const stateRow = this.source.state(this.stateId);
 
     // no spread tag means the cadence counter still runs but does nothing else.
     if (!stateRow || !stateRow.jabsSpreadRule) return;

@@ -1,6 +1,4 @@
 //region RPGManager
-import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
-import RPG_BaseBattler from './../database/core/RPG_BaseBattler.js';
 import RPG_Base from './../database/base/RPG_Base.js';
 import JsonMapper from './../_utilities/JsonMapper.js';
 import ArrayHelper from './../_utilities/ArrayHelper.js';

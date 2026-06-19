@@ -15,4 +15,16 @@ Game_Battler.prototype.skill = function(skillId)
   // resolve through OverlayManager so any active extensions for this battler are applied.
   return OverlayManager.getExtendedSkill(this, skillId);
 };
+
+/**
+ * Overwrites {@link #state}.<br/>
+ * Routes state resolution through OverlayManager so any active state extensions for this battler
+ * are folded into the returned state before callers inspect it.
+ * @param {number} stateId The state id to resolve.
+ * @returns {RPG_State} The potentially extended state.
+ */
+Game_Battler.prototype.state = function(stateId)
+{
+  return OverlayManager.getExtendedState(this, stateId);
+};
 //endregion Game_Battler

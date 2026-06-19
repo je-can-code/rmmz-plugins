@@ -207,6 +207,12 @@ Game_Battler.prototype.setCachedAllNotes = function(notes)
  */
 Game_Battler.prototype.getAllNotes = function()
 {
+  // test hook: skip the cache and return the caller-supplied sources directly.
+  if (this.__testNoteSources !== undefined)
+  {
+    return this.__testNoteSources;
+  }
+
   // return the cached result if the cache is still warm.
   if (this.getCachedAllNotes() !== null)
   {
@@ -366,6 +372,16 @@ Game_Battler.prototype.allStates = function()
 
   // return that combined collection.
   return states;
+};
+
+/**
+ * Gets the ids of all states on the battler as raw numbers.
+ * This can include other state ids from other plugins, too.
+ * @returns {number[]}
+ */
+Game_Battler.prototype.allStateIds = function()
+{
+  return [...this._states];
 };
 //endregion state management
 

@@ -27,19 +27,19 @@
  * gain additional upgrades/capabilities as a battler learns more skills!
  *
  * TAG USAGE:
- * - Skills only.
+ * - Skills and states.
  *
  * TAG FORMAT:
- *  <skillExtend:[NUM]>
- *  <skillExtend:[NUM,NUM,...]>
- * Where NUM is the skill id to extend.
+ *  <extend:[NUM]>
+ *  <extend:[NUM,NUM,...]>
+ * Where NUM is the skill or state id to extend.
  *
  * TAG EXAMPLES:
- *  <skillExtend:[40]>
- * This skill will act as an extension to skill of id 40.
+ *  <extend:[40]>
+ * This skill/state will act as an extension to skill/state of id 40.
  *
- *  <skillExtend:[7,8,9,10,11]>
- * This skill will act as an extension to all skills of id 7, 8, 9, 10, and 11.
+ *  <extend:[7,8,9,10,11]>
+ * This skill/state will act as an extension to all skills/states of id 7, 8, 9, 10, and 11.
  * ============================================================================
  * WHAT DOES "ACT AS AN EXTENSION" MEAN?
  * ============================================================================

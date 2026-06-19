@@ -5,7 +5,7 @@
 Object.defineProperty(RPG_Skill.prototype, "isSkillExtension", {
   get: function()
   {
-    return !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.SkillExtend, true, true);
+    return !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true, true);
   },
 });
 
@@ -16,7 +16,7 @@ Object.defineProperty(RPG_Skill.prototype, "isSkillExtension", {
 Object.defineProperty(RPG_Skill.prototype, "getSkillExtensions", {
   get: function()
   {
-    return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.SkillExtend, true);
+    return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true);
   },
 });
 //endregion RPG_Skill

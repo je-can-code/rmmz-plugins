@@ -614,6 +614,17 @@ Game_Battler.prototype.refreshPassiveStates = function()
 };
 
 /**
+ * Manually triggers auto-execute skill rules for the given condition kind on this battler.<br/>
+ * Delegates to {@link AutoExecuteSkillManager.tryDispatch}, which applies the depth guard to
+ * prevent infinite re-entry when a forced skill itself triggers further auto-executes.
+ * @param {string} conditionKind - The condition kind to evaluate (e.g. 'time', 'stand').
+ */
+Game_Battler.prototype.tryAutoExecuteSkills = function(conditionKind)
+{
+  AutoExecuteSkillManager.tryDispatch(this, conditionKind);
+};
+
+/**
  * Extends {@link #onStateAdded}.<br/>
  * Fires anyStateAdded plus posi/nega polarity auto-apply when a combat state lands.
  */

@@ -45,16 +45,26 @@ class Window_PassiveList
     this._tabFilter = null;
 
     /**
-     * The working list of passive states matching the current filter.
-     * @type {RPG_State[]}
+     * The working list of deduplicated passive state entries matching the current filter.
+     * Each entry is { state: RPG_State, count: number }, or null for the empty sentinel.
+     * @type {Array<{state: RPG_State, count: number}|null>}
      */
     this._data = [];
   }
   //endregion init
 
-  //region update
+  //region accessors
   /**
-   * Updates the actor and rebuilds the list.
+   * Gets the actor whose passives are being displayed.
+   * @returns {Game_Actor|null}
+   */
+  getActor()
+  {
+    return this._actor;
+  }
+
+  /**
+   * Sets the actor and rebuilds the list.
    * @param {Game_Actor} actor The actor whose passives to display.
    */
   setActor(actor)
@@ -64,7 +74,16 @@ class Window_PassiveList
   }
 
   /**
-   * Updates the active tab filter and rebuilds the list.
+   * Gets the active tab filter function.
+   * @returns {Function|null}
+   */
+  getTabFilter()
+  {
+    return this._tabFilter;
+  }
+
+  /**
+   * Sets the active tab filter and rebuilds the list.
    * @param {Function|null} filter A function(stateId, actor) => boolean, or null for no filter.
    */
   setTabFilter(filter)
@@ -72,7 +91,25 @@ class Window_PassiveList
     this._tabFilter = filter;
     this.refresh();
   }
-  //endregion update
+
+  /**
+   * Gets the working data list.
+   * @returns {Array<{state: RPG_State, count: number}|null>}
+   */
+  getData()
+  {
+    return this._data;
+  }
+
+  /**
+   * Replaces the working data list.
+   * @param {Array<{state: RPG_State, count: number}|null>} data
+   */
+  setData(data)
+  {
+    this._data = data;
+  }
+  //endregion accessors
 
   //region list data
   /**
@@ -81,7 +118,7 @@ class Window_PassiveList
    */
   maxItems()
   {
-    return this._data.length;
+    return this.getData().length;
   }
 
   /**
@@ -90,34 +127,49 @@ class Window_PassiveList
   makeItemList()
   {
     // cannot build a list without an actor.
-    if (!this._actor)
+    if (this.getActor() === null)
     {
-      this._data = [];
+      this.setData([]);
       return;
     }
 
     // grab all passive states currently applied to this actor.
-    const all = this._actor.getPassiveStates();
+    const all = this.getActor().getPassiveStates();
 
     // drop implementation-only amplifiers; they still contribute traits via the passive pipeline.
-    const visible = all.filter(state => state.hideFromPassiveList === false);
-
-    // if there is no filter, show every visible passive state.
-    if (this._tabFilter === null)
-    {
-      this._data = visible;
-      return;
-    }
+    let visible = all.filter(state => state.hideFromPassiveList === false);
 
     // apply the tab filter; only keep states the filter claims for this tab.
-    this._data = visible.filter(state => this._tabFilter(state.id, this._actor));
+    if (this.getTabFilter() !== null)
+    {
+      visible = visible.filter(state => this.getTabFilter()(state.id, this.getActor()));
+    }
+
+    // deduplicate by state id, tracking how many times each appears.
+    const countById = new Map();
+    for (const state of visible)
+    {
+      const existing = countById.get(state.id);
+      countById.set(state.id, (existing === undefined ? 0 : existing) + 1);
+    }
+
+    const seen = new Set();
+    const data = [];
+    for (const state of visible)
+    {
+      if (seen.has(state.id) === true) continue;
+      seen.add(state.id);
+      data.push({ state, count: countById.get(state.id) });
+    }
 
     // always guarantee at least one row so the cursor has somewhere to land.
-    if (this._data.length === 0)
+    if (data.length === 0)
     {
       // push a null sentinel; drawItem renders this as a dimmed placeholder.
-      this._data.push(null);
+      data.push(null);
     }
+
+    this.setData(data);
   }
 
   /**
@@ -126,7 +178,11 @@ class Window_PassiveList
    */
   currentPassiveState()
   {
-    return this._data[this.index()] ?? null;
+    const entry = this.getData()[this.index()];
+
+    if (entry === null) return null;
+
+    return entry.state;
   }
   //endregion list data
 
@@ -150,14 +206,14 @@ class Window_PassiveList
    */
   drawItem(index)
   {
-    // grab the state at this index.
-    const state = this._data[index];
+    // grab the entry at this index.
+    const entry = this.getData()[index];
 
     // get the usable rectangle for this row.
     const rect = this.itemLineRect(index);
 
     // render the null sentinel as a dimmed informational placeholder.
-    if (!state)
+    if (entry === null)
     {
       this.changeTextColor(ColorManager.textColor(8));
       this.drawText('No passives.', rect.x, rect.y, rect.width);
@@ -165,15 +221,25 @@ class Window_PassiveList
       return;
     }
 
+    const { state, count } = entry;
+
     // draw the state icon at the left edge.
     this.drawIcon(state.iconIndex, rect.x, rect.y);
 
     // draw the state name beside the icon.
-    this.drawText(state.name, rect.x + ImageManager.iconWidth + 4, rect.y, rect.width - ImageManager.iconWidth - 4);
+    const nameX = rect.x + ImageManager.iconWidth + 4;
+    const nameWidth = rect.width - ImageManager.iconWidth - 4;
+    this.drawText(state.name, nameX, rect.y, nameWidth);
+
+    // draw a stack counter on the right when the state appears more than once.
+    if (count > 1)
+    {
+      this.changeTextColor(ColorManager.textColor(6));
+      this.drawText(`×${count}`, nameX, rect.y, nameWidth, 'right');
+      this.resetTextColor();
+    }
   }
   //endregion draw
-
-  //endregion input
 }
 
 export default Window_PassiveList;

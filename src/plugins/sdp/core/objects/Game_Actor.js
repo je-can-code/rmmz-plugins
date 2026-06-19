@@ -262,11 +262,13 @@ Object.defineProperty(Game_Actor.prototype, 'sdpMultiplier', {
     // get the vision multiplier from anything this battler has available.
     const sdpMultiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.SDP.RegExp.SdpMultiplier);
 
-    // get the sum of the base and bonus multipliers.
-    const sdpMultiplier = (multiplier + sdpMultiplierBonus);
+    // add SDP panel bonuses (percent-points, same unit as sdpMultiplierBonus).
+    const sdpPanelBonus = this.getSdpBonusForParameterKey
+      ? this.getSdpBonusForParameterKey('sdr', 1)
+      : 0;
 
-    // return the factor form by now dividing by 100.
-    return (sdpMultiplier / 100);
+    // return the factor form by dividing by 100 (all values are percent-points).
+    return ((multiplier + sdpMultiplierBonus + sdpPanelBonus) / 100);
   },
   configurable: true,
 });

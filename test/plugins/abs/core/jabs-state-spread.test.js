@@ -25,6 +25,11 @@ function registerStateRow(sandbox, stateId, note)
   row.name = `State ${stateId}`;
   row.iconIndex = 0;
 
+  // RPG_Base#original is a private field set only via the constructor.
+  // Objects created with Object.create() skip the constructor, so _original() would throw.
+  // Shadow it at the instance level so RPGManager's cache key resolves to this mock object.
+  row._original = function() { return this; };
+
   sandbox.$dataStates[stateId] = row;
 
   return row;

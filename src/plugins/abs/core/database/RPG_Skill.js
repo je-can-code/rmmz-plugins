@@ -391,21 +391,6 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboStarter', {
 });
 
 /**
- * Whether or not this skill is a "skill extend" skill.
- * @returns {boolean} True if this is a "skill extend" skill, false otherwise.
- */
-Object.defineProperty(RPG_Skill.prototype, 'isSkillExtender', {
-  get: function()
-  {
-    // if we're not using the extend plugin, then this is an automatic no.
-    if (!J.EXTEND) return false;
-
-    // if the skill doesn't have the extend tag, then it's not an extend skill.
-    return J.EXTEND.RegExp.SkillExtend.test(this.note);
-  },
-});
-
-/**
  * Whether or not this skill can be chosen at all by the JABS AI.
  * Combo skills can still be executed as they are chosen by different means.
  */

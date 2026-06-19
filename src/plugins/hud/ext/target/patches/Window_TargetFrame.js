@@ -31,9 +31,19 @@ if (J.HUD && J.HUD.EXT.TARGET)
   {
     const layout = new StateAfflictionHudLayoutSpec();
 
-    // line up with the battler gauge column (same x as drawTargetBattlerInfo).
+    // base indent keeps afflictions off the window's left edge.
     layout.originX = 32;
-    layout.originY = this.targetBattlerGaugesY() + ImageManager.iconHeight;
+
+    // when a family/type icon is drawn to the left of the afflictions, push them
+    // right by one icon width so they don't crowd against the icon.
+    if (this.hasTargetIcon())
+    {
+      layout.originX += ImageManager.iconWidth;
+    }
+
+    // gauge stack: HP at+0, MP at+22; each gauge is 16px tall.
+    // MP ends at +38; add 6px gap = +44.
+    layout.originY = this.targetBattlerGaugesY() + 44;
 
     // extra breathing room so the positive row clears the negative row timer text.
     layout.rowGap = 24;

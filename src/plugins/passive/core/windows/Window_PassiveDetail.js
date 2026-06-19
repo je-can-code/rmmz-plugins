@@ -922,13 +922,13 @@ class Window_PassiveDetail
       const dropMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.DropMultiplier);
       if (dropMult)
       {
-        rows.push({ icon: 0, label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('dor'), label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
       }
 
       const goldMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.GoldMultiplier);
       if (goldMult)
       {
-        rows.push({ icon: 0, label: 'Gold', value: `${goldMult > 0 ? '+' : ''}${goldMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('gdr'), label: 'Gold', value: `${goldMult > 0 ? '+' : ''}${goldMult}%` });
       }
     }
 
@@ -937,14 +937,23 @@ class Window_PassiveDetail
       const sdpMult = RPGManager.getNumberFromNoteByRegex(state, J.SDP.RegExp.SdpMultiplier);
       if (sdpMult)
       {
-        rows.push({ icon: 0, label: 'SDP Points', value: `${sdpMult > 0 ? '+' : ''}${sdpMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('sdr'), label: 'SDP Points', value: `${sdpMult > 0 ? '+' : ''}${sdpMult}%` });
+      }
+    }
+
+    if (J.APT)
+    {
+      const aptMult = RPGManager.getNumberFromNoteByRegex(state, J.APT.RegExp.AptMultiplier);
+      if (aptMult)
+      {
+        rows.push({ icon: IconManager.parameterIcon('apr'), label: 'APT Rate', value: `${aptMult > 0 ? '+' : ''}${aptMult}%` });
       }
     }
 
     if (J.PROF)
     {
       const profBonus = RPGManager.getNumberFromNoteByRegex(state, J.PROF.RegExp.ProficiencyBonus);
-      if (profBonus) rows.push({ icon: 0, label: 'Proficiency Bonus', value: `+${profBonus}` });
+      if (profBonus) rows.push({ icon: IconManager.parameterIcon('prof'), label: 'Proficiency Bonus', value: `+${profBonus}` });
     }
 
     if (J.NATURAL)

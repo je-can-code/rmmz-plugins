@@ -36,6 +36,7 @@ describe('J-LevelMaster Game_Enemy getLevel from states (out/J-LevelMaster.js)',
     {
       return [ { id: 1, note: '<lvl:+3>' } ];
     };
+    enemy.refreshLevel();
 
     expect(enemy.level).toBe(7);
   });

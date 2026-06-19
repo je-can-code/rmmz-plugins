@@ -52,8 +52,8 @@ describe('J-SkillExtend Game_Action skill layering (out/extend/J-SkillExtend.js)
         }
 
         $dataSkills[1] = dataSkill(1, '', { mpCost: 1, damage: { elementId: 0, type: 1, formula: '0' } });
-        $dataSkills[2] = dataSkill(2, '<skillExtend:[1]>', { mpCost: 5 });
-        $dataSkills[3] = dataSkill(3, '<skillExtend:[1]>', { damage: { elementId: 0, type: 1, formula: '1+1' }, effects: [ { code: 11 } ] });
+        $dataSkills[2] = dataSkill(2, '<extend:[1]>', { mpCost: 5 });
+        $dataSkills[3] = dataSkill(3, '<extend:[1]>', { damage: { elementId: 0, type: 1, formula: '1+1' }, effects: [ { code: 11 } ] });
       })()
     `, sandbox);
     clearRpgManagerCacheInVm(sandbox);

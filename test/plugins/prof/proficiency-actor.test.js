@@ -71,6 +71,7 @@ describe('J-Proficiency Game_Actor proficiency (out/prof/J-Proficiency.js)', () 
     {
       return blocked;
     };
+    actor.onBattlerDataChange();
     expect(actor.canGainProficiency()).toBe(false);
   });
 

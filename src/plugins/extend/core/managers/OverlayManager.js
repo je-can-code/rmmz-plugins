@@ -45,6 +45,18 @@ class OverlayManager
   static #resolving = new WeakMap();
 
   /**
+   * A cache for battler-state extensions, parallel to {@link _casterExtendCache} for skills.
+   * @type {WeakMap<Game_Battler, Map<number, RPG_State>>}
+   */
+  static _stateExtendCache = new WeakMap();
+
+  /**
+   * Tracks state ids currently mid-resolution per battler to detect circular state extension data.
+   * @type {WeakMap<Game_Battler, Set<number>>}
+   */
+  static #resolvingState = new WeakMap();
+
+  /**
    * The metrics for this manager.
    * @type {{ hits: number, misses: number }}
    */
@@ -60,7 +72,8 @@ class OverlayManager
    */
   static invalidate(battler)
   {
-    return this._casterExtendCache.delete(battler);
+    this._casterExtendCache.delete(battler);
+    this._stateExtendCache.delete(battler);
   }
 
   /**
@@ -69,6 +82,7 @@ class OverlayManager
   static clearCache()
   {
     this._casterExtendCache = new WeakMap();
+    this._stateExtendCache = new WeakMap();
   }
 
   /**
@@ -91,6 +105,21 @@ class OverlayManager
 
     // return the newly created cache.
     return newCasterCache;
+  }
+
+  /**
+   * Gets the existing state-extension cache for a battler, or creates it.
+   * @param {Game_Battler} battler The battler.
+   * @returns {Map<number, RPG_State>}
+   */
+  static #getOrCreateStateCacheForBattler(battler)
+  {
+    const hit = this._stateExtendCache.get(battler);
+    if (hit) return hit;
+
+    const newCache = new Map();
+    this._stateExtendCache.set(battler, newCache);
+    return newCache;
   }
 
   /**
@@ -207,6 +236,118 @@ class OverlayManager
     }
   }
 
+  //region state extension
+  /**
+   * Gets the extended state for the given battler and state id.
+   *
+   * Extension states are gathered from the battler's full {@link Game_Battler#allStateIds} list
+   * (preserving passive stacks/duplicates) and applied in two passes:
+   * 1. Type-based overlays ({@code <extendStateType:TYPE>}) in ascending state-id order — familial.
+   * 2. Id-based overlays ({@code <extend:[IDs]>}) in ascending state-id order — specific.
+   *
+   * Each candidate is itself recursively resolved before being applied, so extension chains work.
+   * Results are cached per-battler and invalidated by {@link OverlayManager.invalidate} on any
+   * state change (via {@link Game_Battler#onBattlerDataChange}).
+   * @param {Game_Battler} battler The battler whose active states supply potential overlays.
+   * @param {number} stateId The base state id to potentially extend.
+   * @returns {RPG_State} The extended (or unmodified) state.
+   */
+  static getExtendedState(battler, stateId)
+  {
+    // validate the incoming base id.
+    if (stateId <= 0) throw new Error('Invalid state id for extension.');
+
+    // if we don't have a battler for some reason, don't process anything.
+    if (!battler) return $dataStates[stateId];
+
+    // fast-path: check the per-battler state cache before doing any work at all.
+    const perBattler = this.#getOrCreateStateCacheForBattler(battler);
+    if (perBattler.has(stateId))
+    {
+      this._metrics.hits++;
+      return perBattler.get(stateId);
+    }
+
+    // cache miss: get all raw state ids, preserving stacks and duplicates.
+    const allIds = battler.allStateIds();
+
+    // get the target state's type classifiers for type-based candidate matching.
+    const targetState = $dataStates[stateId];
+    const targetTypes = targetState
+      ? targetState.stateTypes()
+      : [];
+
+    // bucket candidates: type-based first (familial), id-based second (specific).
+    const typeCandidates = [];
+    const idCandidates = [];
+
+    for (const id of allIds)
+    {
+      // skip the target itself.
+      if (id === stateId) continue;
+
+      // skip invalid or non-extension states.
+      const candidate = $dataStates[id];
+      if (!candidate || !candidate.isStateExtension) continue;
+
+      // type-based: candidate declares a type that intersects with the target's types.
+      if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes))
+      {
+        typeCandidates.push(id);
+        continue;
+      }
+
+      // id-based: candidate explicitly lists this stateId as a target.
+      if (candidate.getStateExtensions.includes(stateId))
+      {
+        idCandidates.push(id);
+      }
+    }
+
+    // sort each bucket ascending by id (duplicate stacks of the same id remain consecutive).
+    typeCandidates.sort((a, b) => a - b);
+    idCandidates.sort((a, b) => a - b);
+
+    // combine: type-based overlays first, id-based overlays second.
+    const overlayIds = [ ...typeCandidates, ...idCandidates ];
+
+    // get or create the circular-guard set for this battler.
+    let inProgressState = this.#resolvingState.get(battler);
+    if (!inProgressState)
+    {
+      inProgressState = new Set();
+      this.#resolvingState.set(battler, inProgressState);
+    }
+
+    // a stateId already in the set means we have walked back to it — circular data.
+    if (inProgressState.has(stateId))
+    {
+      throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
+    }
+
+    // mark this state as in-flight before recursing into overlay resolution.
+    inProgressState.add(stateId);
+
+    try
+    {
+      // recursively resolve each overlay to its own fully-extended form before applying it.
+      const resolvedOverlays = overlayIds.map(id => this.getExtendedState(battler, id));
+      const value = this.#getExtendedState(resolvedOverlays, stateId);
+
+      perBattler.set(stateId, value);
+      this._metrics.misses++;
+
+      return value;
+    }
+    finally
+    {
+      // always clear the in-flight marker so siblings and future calls proceed normally.
+      inProgressState.delete(stateId);
+      if (inProgressState.size === 0) this.#resolvingState.delete(battler);
+    }
+  }
+  //endregion state extension
+
   /**
    * Checks if a given skill is an extension skill that can overlay the given base skill.
    * @param {RPG_Skill} skill The skill that potentially is the overlay.
@@ -246,6 +387,24 @@ class OverlayManager
 
     // return the final extended skill.
     return extended;
+  }
+
+  /**
+   * Extends the base state with the given overlay states in sequential order.
+   * @param {RPG_State[]} overlayStates The state overlays to apply.
+   * @param {number} stateId The id of the base state to extend.
+   * @returns {RPG_State} The extended state.
+   */
+  static #getExtendedState(overlayStates, stateId)
+  {
+    // if there are no overlays, return the original state without incurring clone cost.
+    if (overlayStates.length === 0) return $dataStates[stateId];
+
+    // clone the base state so overlays can safely mutate the clone without affecting the database.
+    const baseClone = $dataStates[stateId]._clone();
+
+    // apply all overlays in order to produce the final extended state.
+    return overlayStates.reduce((working, overlay) => this.extendState(working, overlay), baseClone);
   }
 
   /**
@@ -498,11 +657,11 @@ class OverlayManager
    */
   static sanitizeExtensions(baseSkill)
   {
-    // remove the skill extend from the metadata.
-    delete baseSkill.meta['skillExtend'];
+    // remove the extend tag from the metadata.
+    delete baseSkill.meta['extend'];
 
-    // remove the skill extend from the notedata.
-    baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.SkillExtend, String.empty);
+    // remove the extend tag from the notedata.
+    baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.Extend, String.empty);
 
     // cleanup any duplicate newlines.
     baseSkill.note = baseSkill.note.replace(/\n\n/gmi, '\n');
@@ -511,6 +670,134 @@ class OverlayManager
     // we changed the note – invalidate cached parses for this skill.
     RPGManager.invalidate(baseSkill);
   }
+
+  //region state extensions
+  /**
+   * Merges the state overlay onto the base state and returns the updated base state.
+   * @param {RPG_State} baseState The base state to be overlaid.
+   * @param {RPG_State} stateOverlay The state to overlay with.
+   * @returns {RPG_State} The updated base state.
+   */
+  static extendState(baseState, stateOverlay)
+  {
+    this.extendStateGeneral(baseState, stateOverlay);
+    this.extendStateRemoval(baseState, stateOverlay);
+    this.extendStateMessages(baseState, stateOverlay);
+    this.extendStateTraits(baseState, stateOverlay);
+    this.extendStateMetadata(baseState, stateOverlay);
+    this.sanitizeStateExtensions(baseState);
+    return baseState;
+  }
+
+  /**
+   * Extends the general section of a state (restriction, priority, overlay icon, battler motion).
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateGeneral(baseState, stateOverlay)
+  {
+    // overwrite restriction only when the overlay declares one (0 = "none"/default).
+    if (stateOverlay.restriction !== 0)
+    {
+      baseState.restriction = stateOverlay.restriction;
+    }
+
+    // overwrite priority only when the overlay declares a non-default value (50 = default).
+    if (stateOverlay.priority !== 50)
+    {
+      baseState.priority = stateOverlay.priority;
+    }
+
+    // overwrite the visual overlay icon only when the overlay declares one (0 = none/default).
+    if (stateOverlay.overlay !== 0)
+    {
+      baseState.overlay = stateOverlay.overlay;
+    }
+
+    // overwrite the battler motion only when the overlay declares one (0 = none/default).
+    if (stateOverlay.motion !== 0)
+    {
+      baseState.motion = stateOverlay.motion;
+    }
+  }
+
+  /**
+   * Extends the removal conditions of a state (timing, turns, damage, walk, restriction, battle-end).
+   * Last wins for all fields; numeric fields only replace when the overlay differs from default.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateRemoval(baseState, stateOverlay)
+  {
+    // overwrite timing when the overlay declares a non-default value (0 = "none"/default).
+    if (stateOverlay.autoRemovalTiming !== 0)
+    {
+      baseState.autoRemovalTiming = stateOverlay.autoRemovalTiming;
+    }
+
+    // overwrite turn range when the overlay declares non-default values (1/1 = defaults).
+    if (stateOverlay.minTurns !== 1) baseState.minTurns = stateOverlay.minTurns;
+    if (stateOverlay.maxTurns !== 1) baseState.maxTurns = stateOverlay.maxTurns;
+
+    // last wins for all boolean removal flags.
+    baseState.removeAtBattleEnd = stateOverlay.removeAtBattleEnd;
+    baseState.removeByRestriction = stateOverlay.removeByRestriction;
+    baseState.removeByDamage = stateOverlay.removeByDamage;
+    baseState.removeByWalking = stateOverlay.removeByWalking;
+
+    // overwrite numeric removal params only when they differ from their defaults.
+    if (stateOverlay.chanceByDamage !== 100) baseState.chanceByDamage = stateOverlay.chanceByDamage;
+    if (stateOverlay.stepsToRemove !== 100) baseState.stepsToRemove = stateOverlay.stepsToRemove;
+  }
+
+  /**
+   * Extends the messages of a state; only overwrites when the overlay provides a non-empty string.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateMessages(baseState, stateOverlay)
+  {
+    if (stateOverlay.message1) baseState.message1 = stateOverlay.message1;
+    if (stateOverlay.message2) baseState.message2 = stateOverlay.message2;
+    if (stateOverlay.message3) baseState.message3 = stateOverlay.message3;
+    if (stateOverlay.message4) baseState.message4 = stateOverlay.message4;
+  }
+
+  /**
+   * Extends the traits of a state using {@link TraitResolver.overlayTraits} (last wins per code+dataId).
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateTraits(baseState, stateOverlay)
+  {
+    baseState.traits = TraitResolver.overlayTraits(baseState.traits, stateOverlay.traits);
+  }
+
+  /**
+   * Extends the metadata and note of a state.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateMetadata(baseState, stateOverlay)
+  {
+    baseState.meta = { ...baseState.meta, ...stateOverlay.meta };
+    baseState.note = this.overwriteNote(baseState.note, stateOverlay.note);
+    RPGManager.invalidate(baseState);
+  }
+
+  /**
+   * Purges all state-extension tags from the note of the given state to prevent recursive extension.
+   * @param {RPG_State} baseState The state to sanitize.
+   */
+  static sanitizeStateExtensions(baseState)
+  {
+    baseState.note = baseState.note.replace(J.EXTEND.RegExp.Extend, String.empty);
+    baseState.note = baseState.note.replace(J.EXTEND.RegExp.StateExtendType, String.empty);
+    baseState.note = baseState.note.replace(/\n\n/gmi, '\n');
+    baseState.note = baseState.note.replace(/\r\r/gmi, '\r');
+    RPGManager.invalidate(baseState);
+  }
+  //endregion state extensions
 
   //region extend note
   // TODO: make this configurable.

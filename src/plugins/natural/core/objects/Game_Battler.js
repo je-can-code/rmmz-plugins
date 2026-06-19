@@ -564,7 +564,7 @@ Game_Battler.prototype.refreshMaxTpBuffs = function()
   const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
 
   // determine buff rate for this param.
-  const buffRate = (this.naturalParamBuff(rateStructure, baseParam) / 100);
+  const buffRate = this.naturalParamBuff(rateStructure, baseParam);
 
   // set the max tp buff flat modifier to this amount.
   this.setMaxTpBuffPlus(buffPlus);
@@ -596,7 +596,7 @@ Game_Battler.prototype.refreshBParamBuffs = function()
     // determine buff plus for this param.
     const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
 
-    // determine buff rate for this param.
+    // determine buff rate for this param; divided by 100 because calculateBParamBuff scales by baseParam.
     const buffRate = (this.naturalParamBuff(rateStructure, baseParam) / 100);
 
     // set the b-param buff flat modifier to this amount.
@@ -630,8 +630,8 @@ Game_Battler.prototype.refreshXParamBuffs = function()
     // determine buff plus for this param- divided by 100 because its fractional.
     const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
 
-    // determine buff rate for this param.
-    const buffRate = (this.naturalParamBuff(rateStructure, baseParam) / 100);
+    // determine buff rate for this param; stored as raw percent for calculatePlusRate.
+    const buffRate = this.naturalParamBuff(rateStructure, baseParam);
 
     // set the x-param buff flat modifier to this amount.
     this.setXparamBuffPlus(paramId, buffPlus);
@@ -664,8 +664,8 @@ Game_Battler.prototype.refreshSParamBuffs = function()
     // determine buff plus for this param- divided by 100 because its fractional.
     const buffPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
 
-    // determine buff rate for this param.
-    const buffRate = (this.naturalParamBuff(rateStructure, baseParam) / 100);
+    // determine buff rate for this param; stored as raw percent for calculatePlusRate.
+    const buffRate = this.naturalParamBuff(rateStructure, baseParam);
 
     // set the s-param buff flat modifier to this amount.
     this.setSparamBuffPlus(paramId, buffPlus);
@@ -824,8 +824,8 @@ Game_Battler.prototype.calculateBParamBuff = function(paramId, baseParam)
   // get the plus rate for this param.
   const buffPlus = this.bParamBuffPlus(paramId);
 
-  // get the plus rate for this param.
-  const buffRate = this.bParamBuffRate(paramId) / 100;
+  // already stored as a fraction (naturalParamBuff / 100) — do not divide again.
+  const buffRate = this.bParamBuffRate(paramId);
 
   // calculate the result into a variable for debugging.
   return (baseParam * buffRate) + buffPlus;

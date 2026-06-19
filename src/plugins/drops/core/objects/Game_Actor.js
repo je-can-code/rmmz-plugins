@@ -54,13 +54,17 @@ Game_Actor.prototype.getDropMultiplierBonus = function()
   // get the multiplier from anything this battler has available.
   const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.DropMultiplier);
 
-  // calculate the multiplier factor.
-  const factor = (multiplierBonus + baseMultiplier) / 100;
+  // add SDP panel bonuses (percent-points, same unit as multiplierBonus).
+  const sdpBonus = this.getSdpBonusForParameterKey
+    ? this.getSdpBonusForParameterKey('dor', 1)
+    : 0;
+
+  // calculate the multiplier factor including panel bonuses.
+  const factor = (multiplierBonus + baseMultiplier + sdpBonus) / 100;
 
   // add any natural growth bonuses.
   const naturalBonus = this.dorNaturalBonuses();
 
-  // return the factor including natural bonuses.
   return factor + naturalBonus;
 };
 
@@ -117,10 +121,12 @@ Game_Actor.prototype.getGoldMultiplier = function()
   // get the multiplier from anything this battler has available.
   const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.GoldMultiplier);
 
-  // calculate the multiplier factor.
-  const factor = (multiplierBonus + baseMultiplier) / 100;
+  // add SDP panel bonuses (percent-points, same unit as multiplierBonus).
+  const sdpBonus = this.getSdpBonusForParameterKey
+    ? this.getSdpBonusForParameterKey('gdr', 1)
+    : 0;
 
-  // return the factor.
-  return factor;
+  // calculate the multiplier factor including panel bonuses.
+  return (multiplierBonus + baseMultiplier + sdpBonus) / 100;
 };
 //endregion Game_Actor

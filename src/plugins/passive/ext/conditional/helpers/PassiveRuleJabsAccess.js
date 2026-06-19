@@ -30,20 +30,21 @@ class PassiveRuleJabsAccess
   }
 
   /**
-   * Allied battlers within default proximity, excluding self.<br/>
+   * Allied battlers within proximity, excluding self.<br/>
    * Used by {@code alliesNearby} gates and stack counts — self never counts toward the tally.
    * @param {Game_Battler} battler The battler whose neighborhood we measure.
+   * @param {number|null} proximityTiles Optional tile radius; defaults to plugin param.
    * @returns {JABS_Battler[]} Allied JABS battlers in range, never including the evaluator.
    */
-  static nearbyAlliesExcludingSelf(battler)
+  static nearbyAlliesExcludingSelf(battler, proximityTiles = null)
   {
     // grab the map wrapper — no wrapper means nobody is nearby on the abs map.
     const jabsBattler = this.getJabsBattler(battler);
 
     if (!jabsBattler) return [];
 
-    // pull the shared default radius from plugin metadata.
-    const proximity = this.defaultProximity();
+    // use the tag override when provided; otherwise fall back to plugin default radius.
+    const proximity = proximityTiles ?? this.defaultProximity();
 
     // query allied battlers in range, then strip self from the tally.
     return JABS_AiManager.getAlliedBattlersWithinRange(jabsBattler, proximity)

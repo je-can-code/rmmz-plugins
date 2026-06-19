@@ -1,4 +1,5 @@
 import RPG_Traited from '../base/RPG_Traited.js';
+import RPGManager from '../../managers/RPGManager.js';
 
 //region RPG_State
 /**
@@ -179,6 +180,17 @@ class RPG_State
   implementationType()
   {
     return `${super.implementationType()}:state`;
+  }
+
+  /**
+   * Gets all type classifiers assigned to this state via notetag.
+   * Returns every value matched by a {@code <type:CLASSIFIER>} tag in the notebox.
+   * Multiple tags on the same state are all collected and returned together.
+   * @returns {string[]} The array of classifier strings, or an empty array if none are defined.
+   */
+  stateTypes()
+  {
+    return RPGManager.getStringsFromNoteByRegex(this, J.BASE.RegExp.StateType);
   }
 
   /**

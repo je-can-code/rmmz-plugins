@@ -126,6 +126,7 @@ describe('J-LevelMaster Game_Actor getLevel and paramBase (out/J-LevelMaster.js)
     expect(actor.paramBase(2)).toBe(70);
 
     actor._level = 60;
+    actor.refreshLevel();
 
     expect(actor.paramBase(2)).toBe(78);
   });
@@ -144,6 +145,8 @@ describe('J-LevelMaster Game_Actor getLevel and paramBase (out/J-LevelMaster.js)
     actor.initMembers();
     actor._level = 3;
     sandbox.$gameVariables.setValue(141, 2);
+    // pin sources to only the actor database row so the re-entrancy math is predictable.
+    actor.__testNoteSources = [ actor.__actorDb ];
     const prevExtract = sandbox.Game_Battler.prototype.extractLevel;
 
     actor.extractLevel = function(rpgData)

@@ -158,6 +158,24 @@ J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
 J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
 
 /**
+ * One or more type classifiers assigned to a state.
+ * Multiple tags on the same state are all collected.
+ *
+ * <pre>
+ * Structure:
+ *  <type:CLASSIFIER>
+ *
+ * Example:
+ *  <type:poison>
+ *
+ * Translation:
+ *  This state belongs to the "poison" classifier category.
+ * </pre>
+ * @type {RegExp}
+ */
+J.BASE.RegExp.StateType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
+
+/**
  * A collection of all aliased methods for this plugin.
  */
 J.BASE.Aliased = {

@@ -147,9 +147,6 @@ Game_Actor.prototype.getNotesSources = function()
 
   // newly defined sources for passives.
   const passiveSources = [
-    // then add all those currently applied passive states, too.
-    ...this.getPassiveStates(),
-
     // also apply the party's effects.
     ...$gameParty.passiveStates(), ];
 

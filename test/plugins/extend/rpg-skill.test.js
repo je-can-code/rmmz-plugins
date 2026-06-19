@@ -26,13 +26,13 @@ describe('J-SkillExtend RPG_Skill (out/extend/J-SkillExtend.js)', () =>
     clearRpgManagerCacheInVm(sandbox);
   });
 
-  it('detects skillExtend tags via isSkillExtension and getSkillExtensions', () =>
+  it('detects extend tags via isSkillExtension and getSkillExtensions', () =>
   {
     const skill = vm.runInContext(`
       (() =>
       {
         const s = Object.create(RPG_Skill.prototype);
-        s.note = '<skillExtend:[2, 3]>';
+        s.note = '<extend:[2, 3]>';
         return s;
       })()
     `, sandbox);

@@ -44,6 +44,9 @@ export function installNaturalEngineStubs(sandbox, pluginParameterStrings)
     return [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ];
   };
 
+  // no-op so J.BASE.Aliased.Game_BattlerBase has a real function to save (not undefined).
+  Game_BattlerBase.prototype.initMembers = function() {};
+
   sandbox.Game_BattlerBase = Game_BattlerBase;
 
   function noop()
@@ -56,6 +59,7 @@ export function installNaturalEngineStubs(sandbox, pluginParameterStrings)
 
   Game_Battler.prototype.initMembers = function()
   {
+    Game_BattlerBase.prototype.initMembers.call(this);
     this._states = [];
   };
   Game_Battler.prototype.paramBase = function()
@@ -80,6 +84,9 @@ export function installNaturalEngineStubs(sandbox, pluginParameterStrings)
   {
     return 0;
   };
+
+  // maintain the BattlerBase chain so J-Base prototype extensions remain accessible.
+  Object.setPrototypeOf(Game_Battler.prototype, Game_BattlerBase.prototype);
 
   sandbox.Game_Battler = Game_Battler;
 

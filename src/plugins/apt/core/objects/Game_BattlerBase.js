@@ -24,12 +24,10 @@ Object.defineProperty(Game_Actor.prototype, 'apr', {
     // compute and cache the result.
     const multiplier = 100;
     const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.APT.RegExp.AptMultiplier);
-    let factor = (multiplier + bonus) / 100;
-
-    if (this.getSdpBonusForParameterKey)
-    {
-      factor += this.getSdpBonusForParameterKey('apr', 1);
-    }
+    const sdpBonus = this.getSdpBonusForParameterKey
+      ? this.getSdpBonusForParameterKey('apr', 1)
+      : 0;
+    const factor = (multiplier + bonus + sdpBonus) / 100;
 
     this.setCachedApr(factor);
 

@@ -14,7 +14,7 @@ TextManager.sdpPoints = function()
  */
 TextManager.sdpMultiplier = function()
 {
-  return 'SDP Multiplier';
+  return 'Node Points UP';
 };
 
 /**

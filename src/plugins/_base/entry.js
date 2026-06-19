@@ -32,6 +32,7 @@ import './managers/RPGManager.js';
 import './managers/SoundManager.js';
 import './managers/TextManager.js';
 import './managers/TraitManager.js';
+import './managers/TraitResolver.js';
 
 import './core/registerVanillaParameters.js';
 import './core/AffiliationDisplay.js';

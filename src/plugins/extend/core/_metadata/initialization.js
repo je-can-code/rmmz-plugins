@@ -41,28 +41,50 @@ J.EXTEND.Aliased.Game_Item = new Map();
 J.EXTEND.Aliased.JABS_SkillSlotManager = new Map();
 
 /**
+ * A namespace for all J.EXTEND extension plugins.
+ */
+J.EXTEND.EXT = {};
+
+/**
  * All regular expressions used by this plugin.
  */
 J.EXTEND.RegExp = {};
 
 /**
- * The structure of a skill extension tag.
+ * The structure of a skill or state extension tag.
  *
  * <pre>
  * Structure:
- *  <skillExtend:[BASE_SKILL_ID,...]>
+ *  <extend:[ID,...]>
  *
- * Example:
- *  <skillExtend:[7, 8, 9]>
+ * Example (on a skill):
+ *  <extend:[7, 8, 9]>
  *
  * Translation:
- *  Extends skill id 7.
- *  Extends skill id 8.
- *  Extends skill id 9.
+ *  Extends skill/state id 7.
+ *  Extends skill/state id 8.
+ *  Extends skill/state id 9.
  * </pre>
  * @type {RegExp}
  */
-J.EXTEND.RegExp.SkillExtend = /<skillExtend:[ ]?(\[[ ]?\d+(?:,[ ]?\d+)*[ ]?])>/i;
+J.EXTEND.RegExp.Extend = /<extend:[ ]?(\[[ ]?\d+(?:,[ ]?\d+)*[ ]?])>/i;
+
+/**
+ * The structure of a state-type extension tag.
+ *
+ * <pre>
+ * Structure:
+ *  <extendStateType:TYPE>
+ *
+ * Example:
+ *  <extendStateType:poison>
+ *
+ * Translation:
+ *  Extends all states bearing the type classifier "poison".
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.StateExtendType = /<extendStateType:[ ]?(.+?)>/i;
 
 /**
  * The structure of an on-hit self-state application tag.

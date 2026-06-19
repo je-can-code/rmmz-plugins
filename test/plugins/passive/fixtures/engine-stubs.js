@@ -63,6 +63,7 @@ export function installPassiveEngineStubs(sandbox)
 
   Game_Battler.prototype.initMembers = function()
   {
+    sandbox.Game_BattlerBase.prototype.initMembers.call(this);
     this._states = [];
   };
 
@@ -75,6 +76,9 @@ export function installPassiveEngineStubs(sandbox)
   {
     return sandbox.$dataStates.at(stateId);
   };
+
+  // maintain the BattlerBase chain so J-Base prototype extensions remain accessible.
+  Object.setPrototypeOf(Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
 
   sandbox.Game_Battler = Game_Battler;
 

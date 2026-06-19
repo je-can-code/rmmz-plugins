@@ -767,6 +767,46 @@ J.ABS.RegExp = {
   BonusDamageIfState: /<bonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   /**
+   * Flat percent damage bonus applied when the target has at least one active state
+   * carrying the given type classifier (see RPG_State's stateTypes()).
+   * Reads from getAllNotes(). Multiple tags for different types each fire independently.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfStateType:[TYPE, PCT]>
+   *
+   * Example:
+   *  <bonusDamageIfStateType:[poison, 25]>
+   *
+   * Translation:
+   *  +25% damage if the target has any active state classified as "poison".
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfStateType: /<bonusDamageIfStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Percent damage bonus per active state carrying the given type classifier
+   * (see RPG_State's stateTypes()). Each tag's PCT is multiplied by the count of
+   * distinct active states on the target bearing that type, then summed across tags.
+   * Reads from getAllNotes(). Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamagePerStateType:[TYPE, PCT]>
+   *
+   * Example:
+   *  <bonusDamagePerStateType:[poison, 10]>
+   *
+   * Translation:
+   *  +10% damage for every active state classified as "poison" on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamagePerStateType: /<bonusDamagePerStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
    * Flat tile addition applied to radius, proximity, and thickness before the rate multiplier.
    * Signed decimal; negative values shrink reach. Reads from getAllNotes().
    *

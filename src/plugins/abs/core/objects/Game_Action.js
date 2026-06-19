@@ -521,7 +521,6 @@ Game_Action.prototype.itemEffectAddState = function(target, effect)
   // check if we are able to apply state-related effects.
   if (!this.canItemEffectAddState(target, effect)) return;
 
-  // if the precise-parry-state-prevention wasn't successful, apply as usual.
   // perform original logic.
   J.ABS.Aliased.Game_Action.get('itemEffectAddState')
     .call(this, target, effect);
@@ -698,7 +697,9 @@ Game_Action.prototype.applyStateEffect = function(target, stateId)
 //region state damage multipliers
 /**
  * Applies damage multipliers derived from the current states of the target.
- * Combines perDebuffBuff (per-negative-state bonus) and bonusDamageIfState (specific-state bonus).
+ * Combines perDebuffBuff (per-negative-state bonus), bonusDamageIfState (specific-state bonus),
+ * bonusDamageIfStateType (type-classifier presence bonus), and bonusDamagePerStateType
+ * (type-classifier count bonus).
  * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
  * @param {number} baseDamage The damage value before state multipliers.
  * @param {Game_Battler} target The target whose states are evaluated.
@@ -709,13 +710,15 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   // non-positive damage has no multiplicative state bonus.
   if (baseDamage <= 0) return baseDamage;
 
-  // sum contributions from both tag types.
+  // sum contributions from all four tag types.
   const debuffPct = this.calculatePerDebuffBonusPct(target);
   const specificPct = this.calculateBonusIfStatePct(target);
+  const typePresencePct = this.calculateBonusIfStateTypePct(target);
+  const typeCountPct = this.calculatePerStateTypePct(target);
 
-  const combinedPct = debuffPct + specificPct;
+  const combinedPct = debuffPct + specificPct + typePresencePct + typeCountPct;
 
-  // if neither source contributed a bonus, return damage unchanged.
+  // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
 
   // build the final multiplier and apply it.
@@ -774,6 +777,85 @@ Game_Action.prototype.calculateBonusIfStatePct = function(target)
     {
       totalPct += percent;
     }
+  });
+
+  return totalPct;
+};
+
+/**
+ * Checks whether the target has at least one active state carrying the given type
+ * classifier. The comparison is case-insensitive.
+ * @param {Game_Battler} target The target whose active states are checked.
+ * @param {string} type The type classifier to look for.
+ * @returns {boolean} True if any active state on the target carries this type.
+ */
+Game_Action.prototype.targetHasActiveStateType = function(target, type)
+{
+  // check the target's active states for a case-insensitive type classifier match.
+  return target.states()
+    .some(state => state.stateTypes().some(stateType => stateType.toLowerCase() === type.toLowerCase()));
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamageIfStateType tags on the caster's notes.
+ * Each tag contributes its PCT value if the target has at least one active state carrying the
+ * specified type classifier. Multiple tags for different types each fire independently and stack
+ * additively.
+ * @param {Game_Battler} target The target whose active states are checked.
+ * @returns {number} The total bonus percent from all matching type classifier tags.
+ */
+Game_Action.prototype.calculateBonusIfStateTypePct = function(target)
+{
+  // collect all [TYPE, PCT] pairs from every note source on the caster.
+  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfStateType));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // accumulate the percent from each tag whose type is present on the target.
+  let totalPct = 0;
+  allPairs.forEach(([ type, percent ]) =>
+  {
+    // check if the target currently has any state carrying this type.
+    if (this.targetHasActiveStateType(target, type))
+    {
+      totalPct += percent;
+    }
+  });
+
+  return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamagePerStateType tags on the caster's notes.
+ * Each tag's PCT is multiplied by the count of distinct active states on the target carrying the
+ * specified type classifier, then summed across all tags.
+ * @param {Game_Battler} target The target whose active states are counted.
+ * @returns {number} The total bonus percent from all type classifier tags.
+ */
+Game_Action.prototype.calculatePerStateTypePct = function(target)
+{
+  // collect all [TYPE, PCT] pairs from every note source on the caster.
+  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateType));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // accumulate percent contributions, scaled by matching state count per tag.
+  let totalPct = 0;
+  allPairs.forEach(([ type, percent ]) =>
+  {
+    // count the target's distinct active states that carry this type classifier.
+    const matchingStateCount = target.states()
+      .filter(state => state.stateTypes().some(stateType => stateType.toLowerCase() === type.toLowerCase()))
+      .length;
+
+    // multiply this tag's rate by the number of matching states on the target.
+    totalPct += percent * matchingStateCount;
   });
 
   return totalPct;

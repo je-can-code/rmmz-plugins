@@ -35,7 +35,7 @@ describe('J-SkillExtend JABS_SkillSlotManager (out/extend/J-SkillExtend.js)', ()
           return row;
         }
 
-        $dataSkills[1] = dataSkill(1, '<skillExtend:[2]>');
+        $dataSkills[1] = dataSkill(1, '<extend:[2]>');
         $dataSkills[2] = dataSkill(2, '');
       })()
     `, sandbox);

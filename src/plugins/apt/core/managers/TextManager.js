@@ -5,7 +5,7 @@
  */
 TextManager.aptRate = function()
 {
-  return 'APT Rate';
+  return 'Aptitude UP';
 };
 
 /**

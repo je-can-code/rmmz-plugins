@@ -282,6 +282,7 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
     'Window_EquipItem',
     'Window_Help',
     'Window_Selectable',
+    'Window_StatusBase',
     'WindowLayer',
   ];
 
@@ -295,8 +296,26 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
     sandbox[name] = Placeholder;
   }
 
+  // Wire the standard RMMZ inheritance chain so J-Base prototype extensions on
+  // Game_BattlerBase (e.g. setCachedTraitObjects) are reachable from Game_Battler,
+  // Game_Actor, and Game_Enemy instances in all test VMs that use these placeholders.
+  Object.setPrototypeOf(sandbox.Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
+  Object.setPrototypeOf(sandbox.Game_Actor.prototype, sandbox.Game_Battler.prototype);
+  Object.setPrototypeOf(sandbox.Game_Enemy.prototype, sandbox.Game_Battler.prototype);
+  sandbox.Game_Actor.prototype.constructor = sandbox.Game_Actor;
+  sandbox.Game_Enemy.prototype.constructor = sandbox.Game_Enemy;
+
+  // Provide no-op initMembers on BattlerBase so J.BASE.Aliased.Game_BattlerBase has a real
+  // function to save (not undefined), preventing "cannot read .call of undefined" when
+  // plugin alias chains invoke it.
+  sandbox.Game_BattlerBase.prototype.initMembers = function() {};
+
+  // In real RMMZ, Game_Battler.prototype.initMembers calls Game_BattlerBase.prototype.initMembers.
+  // Replicate that so plugin extensions on Game_BattlerBase (e.g. J-LevelMaster's _j._level setup)
+  // are properly invoked whenever a test actor or enemy calls initMembers().
   sandbox.Game_Battler.prototype.initMembers = function()
   {
+    sandbox.Game_BattlerBase.prototype.initMembers.call(this);
     this._states = [];
   };
 
