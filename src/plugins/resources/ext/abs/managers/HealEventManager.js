@@ -17,6 +17,14 @@ class HealEventManager
   static _currentDepth = 0;
 
   /**
+   * Tracks which (outputKey + battler uuid) combinations are currently mid-dispatch
+   * for their own secondary self-heal, preventing a tag from echoing itself.
+   * Key format: "${outputKey}:${uuid}" — e.g. "Hp:abc123".
+   * @type {Set<string>}
+   */
+  static _selfBlockedTags = new Set();
+
+  /**
    * The three output resource keys used for looping over possible output resources.
    * @type {string[]}
    */
@@ -74,6 +82,13 @@ class HealEventManager
   /**
    * Reads onSelf tags from the recipient's notes and applies secondary heals.
    * Self always receives the secondary heal; allies within the tag's range also receive it.
+   *
+   * Self-echo prevention: the secondary self-heal is applied under a block keyed by
+   * "${outputKey}:${uuid}". If that key is already blocked when we try to apply the
+   * self-heal, we skip it — preventing a tag from infinitely echoing itself. The block
+   * is cleared before ally-heals are applied so cross-battler ping-pong is still allowed
+   * up to the per-tag MAX_DEPTH limit.
+   *
    * @param {Game_Battler} recipient The battler whose onSelf tags are evaluated.
    * @param {string} triggerKey PascalCase trigger resource ('Hp', 'Mp', 'Tp').
    * @param {number} amount The amount that triggered this event.
@@ -86,15 +101,32 @@ class HealEventManager
     {
       const tuples = this.#getTuples(notes, false, triggerKey, outputKey);
 
-      for (const [percent, range] of tuples)
+      for (const [percent, range, maxDepth] of tuples)
       {
+        // per-tag depth gate: cross-battler chain length limit.
+        if (this._currentDepth > maxDepth) continue;
+
         const secondary = Math.floor(amount * percent / 100);
         if (secondary <= 0) continue;
 
-        // self always gets the secondary heal.
-        this.#applySecondaryHeal(recipient, outputKey, secondary);
+        // self-heal: blocked if this tag's own previous secondary triggered this re-entry.
+        const selfBlockKey = `${outputKey}:${recipient.getUuid()}`;
+        if (!this._selfBlockedTags.has(selfBlockKey))
+        {
+          this._selfBlockedTags.add(selfBlockKey);
+          try
+          {
+            this.#applySecondaryHeal(recipient, outputKey, secondary);
+          }
+          finally
+          {
+            // clear before ally-heals so cross-battler splashes back to this recipient
+            // are not blocked by our own self-echo guard.
+            this._selfBlockedTags.delete(selfBlockKey);
+          }
+        }
 
-        // if range > 0, splash to allies within that tile radius too.
+        // ally splash: self-block is cleared by here, so ping-pong is allowed.
         if (range > 0)
         {
           const jabsBattler = JABS_AiManager.getBattlerByUuid(recipient.getUuid());
@@ -150,8 +182,11 @@ class HealEventManager
       {
         const tuples = this.#getTuples(notes, true, triggerKey, outputKey);
 
-        for (const [percent, range] of tuples)
+        for (const [percent, range, maxDepth] of tuples)
         {
+          // per-tag depth gate: cross-battler chain length limit.
+          if (this._currentDepth > maxDepth) continue;
+
           // the observer only reacts if the healed ally is within the tag's range.
           if (distance > range) continue;
 
@@ -179,13 +214,14 @@ class HealEventManager
   }
 
   /**
-   * Collects all [percent, range] tuples from notes for a given family/trigger/output combination.
+   * Collects all [percent, range, maxDepth] tuples from notes for a given family/trigger/output combination.
    * Checks both the specific trigger regexp and the "Any" trigger variant.
+   * maxDepth defaults to the healChainDepth plugin parameter when the tag omits the third value.
    * @param {RPG_BaseItem[]} notes The array of database objects to scan.
    * @param {boolean} isAlly True when looking for onAlly tags; false for onSelf tags.
    * @param {string} triggerKey PascalCase trigger resource ('Hp', 'Mp', 'Tp').
    * @param {string} outputKey PascalCase output resource ('Hp', 'Mp', 'Tp').
-   * @returns {Array<[number, number]>} Array of [percent, range] pairs.
+   * @returns {Array<[number, number, number]>} Array of [percent, range, maxDepth] triples.
    */
   static #getTuples(notes, isAlly, triggerKey, outputKey)
   {
@@ -196,6 +232,7 @@ class HealEventManager
     const specificRegexp = J.RESOURCES.EXT.ABS.RegExp[specificKey];
     const anyRegexp = J.RESOURCES.EXT.ABS.RegExp[anyKey];
 
+    const globalMaxDepth = J.RESOURCES.EXT.ABS.Metadata.healChainDepth;
     const tuples = [];
 
     for (const databaseData of notes)
@@ -207,7 +244,11 @@ class HealEventManager
 
         for (const result of results)
         {
-          if (Array.isArray(result) && result.length === 2) tuples.push([Number(result[0]), Number(result[1])]);
+          if (Array.isArray(result) && result.length >= 2)
+          {
+            const maxDepth = result.length >= 3 ? Number(result[2]) : globalMaxDepth;
+            tuples.push([Number(result[0]), Number(result[1]), maxDepth]);
+          }
         }
       }
 
@@ -218,7 +259,11 @@ class HealEventManager
 
         for (const result of results)
         {
-          if (Array.isArray(result) && result.length === 2) tuples.push([Number(result[0]), Number(result[1])]);
+          if (Array.isArray(result) && result.length >= 2)
+          {
+            const maxDepth = result.length >= 3 ? Number(result[2]) : globalMaxDepth;
+            tuples.push([Number(result[0]), Number(result[1]), maxDepth]);
+          }
         }
       }
     }

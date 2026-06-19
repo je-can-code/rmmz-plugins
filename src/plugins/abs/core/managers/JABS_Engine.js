@@ -3778,6 +3778,16 @@ class JABS_Engine
       retaliationActions.forEach(retaliationAction =>
         retaliationAction.getAction().setTriggerDamage(hpDamage, mpDamage, tpDamage));
 
+      // for direct retaliations, enforce proximity before firing — the normal skill-use gate
+      // is bypassed by retaliations, so without this check a direct skill hits at any range.
+      const attackerBattler = triggeringAction.getCaster();
+      const attackerDistance = retaliator.distanceToDesignatedTarget(attackerBattler);
+      const directRetaliationActions = retaliationActions.filter(a => a.isDirectAction());
+      const blockedByProximity = directRetaliationActions.some(
+        a => attackerDistance > a.getProximity()
+      );
+      if (blockedByProximity) return;
+
       // for direct actions, freeze the target location on the action options so
       // syncDirectActionSpriteToCaster leaves the sprite at the attacker's tile
       // instead of body-anchoring it to the retaliator every frame.
@@ -3790,6 +3800,7 @@ class JABS_Engine
         const frozenOptions = JABS_ActionOptions.Builder()
           .setIsRetaliation(true)
           .setLocation(frozenLocation)
+          .setRetaliationTarget(triggeringAction.getCaster())
           .build();
         retaliationActions.forEach(a => a.setActionOptions(frozenOptions));
       }
@@ -4087,6 +4098,18 @@ class JABS_Engine
       {
         // hit the ally only.
         return [ allyTarget ];
+      }
+    }
+
+    // retaliation target takes THIRD PRIORITY.
+    // direct one-enemy retaliations stamp the triggering attacker so spatial sorting cannot
+    // redirect the counter to a bystander.
+    const retaliationTarget = jabsAction.getActionOptions()?.getRetaliationTarget() ?? null;
+    if (retaliationTarget !== null && gameAction.isForOne())
+    {
+      if (retaliationTarget.canActionConnect() && retaliationTarget.isWithinScope(jabsAction, retaliationTarget, false))
+      {
+        return [ retaliationTarget ];
       }
     }
 

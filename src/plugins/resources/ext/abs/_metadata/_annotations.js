@@ -161,17 +161,22 @@
  *
  * TAG FORMAT (onSelf):
  *  <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE]>
- *    Trigger: Hp | Mp | Tp | Any
- *    Output:  Hp | Mp | Tp
- *    PERCENT: integer percentage of the heal amount to apply as secondary
- *    RANGE:   tile radius; 0 = self only, >0 includes allies within radius
+ *  <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
+ *    Trigger:   Hp | Mp | Tp | Any
+ *    Output:    Hp | Mp | Tp
+ *    PERCENT:   integer percentage of the heal amount to apply as secondary
+ *    RANGE:     tile radius; 0 = self only, >0 includes allies within radius
+ *    MAX_DEPTH: max cross-battler cascade hops (default: healChainDepth plugin param).
+ *               The tag never echoes itself on the same battler regardless of this value.
  *
  * TAG FORMAT (onAlly):
  *  <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE]>
- *    Trigger: Hp | Mp | Tp | Any
- *    Output:  Hp | Mp | Tp
- *    PERCENT: integer percentage of the ally's heal to apply to self
- *    RANGE:   tile radius; observer only reacts if healed ally is within range
+ *  <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
+ *    Trigger:   Hp | Mp | Tp | Any
+ *    Output:    Hp | Mp | Tp
+ *    PERCENT:   integer percentage of the ally's heal to apply to self
+ *    RANGE:     tile radius; observer only reacts if healed ally is within range
+ *    MAX_DEPTH: max cross-battler cascade hops (default: healChainDepth plugin param)
  *
  * TAG EXAMPLES:
  *  <onSelfHpHealMp:[50, 0]>

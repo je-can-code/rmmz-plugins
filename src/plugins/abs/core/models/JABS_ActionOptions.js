@@ -59,6 +59,14 @@ class JABS_ActionOptions
   #projectileTravelAngleDegrees = null;
 
   /**
+   * The specific battler that triggered this retaliation action.<br/>
+   * When set on a one-enemy direct retaliation, collision bypasses spatial sorting and
+   * returns this battler directly — guaranteeing the counter lands on who hit you.
+   * @type {JABS_Battler|null}
+   */
+  #retaliationTarget = null;
+
+  /**
    * Constructor.<br/>
    * Use the {@link JABS_ActionOptionsBuilder} to fluently and properly build these.
    * @param {boolean} isRetaliation Whether or not the action is a retaliation of another battler.
@@ -68,6 +76,7 @@ class JABS_ActionOptions
    * @param {number} spawnOffsetX The X spawn offset in tiles relative to caster fire-time position.
    * @param {number} spawnOffsetY The Y spawn offset in tiles relative to caster fire-time position.
    * @param {number|null} projectileTravelAngleDegrees Optional vector angle for projectile motion.
+   * @param {JABS_Battler|null} retaliationTarget The specific battler who triggered this retaliation.
    */
   constructor(
     isRetaliation,
@@ -76,7 +85,8 @@ class JABS_ActionOptions
     terrainDamage,
     spawnOffsetX = 0,
     spawnOffsetY = 0,
-    projectileTravelAngleDegrees = null
+    projectileTravelAngleDegrees = null,
+    retaliationTarget = null
   )
   {
     this.#isRetaliation = isRetaliation;
@@ -86,6 +96,7 @@ class JABS_ActionOptions
     this.#spawnOffsetX = spawnOffsetX;
     this.#spawnOffsetY = spawnOffsetY;
     this.#projectileTravelAngleDegrees = projectileTravelAngleDegrees;
+    this.#retaliationTarget = retaliationTarget;
   }
 
   /**
@@ -157,6 +168,17 @@ class JABS_ActionOptions
   getProjectileTravelAngleDegrees()
   {
     return this.#projectileTravelAngleDegrees;
+  }
+
+  /**
+   * The specific battler that triggered this retaliation action, if any.<br/>
+   * When present on a one-enemy direct retaliation, collision bypasses spatial sorting and
+   * returns this battler directly.
+   * @returns {JABS_Battler|null}
+   */
+  getRetaliationTarget()
+  {
+    return this.#retaliationTarget;
   }
 
   /**

@@ -50,6 +50,12 @@ class JABS_ActionOptionsBuilder
   #projectileTravelAngleDegrees = null;
 
   /**
+   * The specific battler who triggered the retaliation, if any.
+   * @type {JABS_Battler|null}
+   */
+  #retaliationTarget = null;
+
+  /**
    * Builds a new instance of the options based on the built parameters.
    * @returns {JABS_ActionOptions}
    */
@@ -67,7 +73,8 @@ class JABS_ActionOptionsBuilder
       this.#isTerrainDamage,
       this.#spawnOffsetX,
       this.#spawnOffsetY,
-      this.#projectileTravelAngleDegrees);
+      this.#projectileTravelAngleDegrees,
+      this.#retaliationTarget);
 
     // clear out the previous data.
     this.clear();
@@ -89,6 +96,7 @@ class JABS_ActionOptionsBuilder
     this.#spawnOffsetX = 0;
     this.#spawnOffsetY = 0;
     this.#projectileTravelAngleDegrees = null;
+    this.#retaliationTarget = null;
   }
 
   /**
@@ -158,6 +166,18 @@ class JABS_ActionOptionsBuilder
   setProjectileTravelAngleDegrees(degrees)
   {
     this.#projectileTravelAngleDegrees = degrees;
+    return this;
+  }
+
+  /**
+   * Sets the specific battler who triggered the retaliation.<br/>
+   * When set, one-enemy direct retaliations bypass spatial sorting and hit this battler directly.
+   * @param {JABS_Battler} battler The battler to lock as the retaliation target.
+   * @returns {JABS_ActionOptionsBuilder}
+   */
+  setRetaliationTarget(battler)
+  {
+    this.#retaliationTarget = battler;
     return this;
   }
 }

@@ -62,35 +62,36 @@ J.RESOURCES.EXT.ABS.RegExp.Manasteal = /<mst:(-?\d+)>/gi;
 J.RESOURCES.EXT.ABS.RegExp.Techsteal = /<tst:(-?\d+)>/gi;
 
 // heal-event onSelf tags — when THIS battler's trigger resource is healed, cascade to output resource.
-// format: <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE]>
+// format: <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE]> or <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
 // RANGE=0 means self only; RANGE>0 also applies to allies within that tile radius.
-J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealHp  = /<onSelfHpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealMp  = /<onSelfHpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealTp  = /<onSelfHpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealHp  = /<onSelfMpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealMp  = /<onSelfMpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealTp  = /<onSelfMpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealHp  = /<onSelfTpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealMp  = /<onSelfTpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealTp  = /<onSelfTpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealHp = /<onSelfAnyHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealMp = /<onSelfAnyHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealTp = /<onSelfAnyHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
+// MAX_DEPTH overrides the healChainDepth plugin param for this tag only; omit to use the global default.
+J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealHp  = /<onSelfHpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealMp  = /<onSelfHpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfHpHealTp  = /<onSelfHpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealHp  = /<onSelfMpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealMp  = /<onSelfMpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfMpHealTp  = /<onSelfMpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealHp  = /<onSelfTpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealMp  = /<onSelfTpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfTpHealTp  = /<onSelfTpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealHp = /<onSelfAnyHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealMp = /<onSelfAnyHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnSelfAnyHealTp = /<onSelfAnyHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
 
 // heal-event onAlly tags — when an ally's trigger resource is healed within RANGE tiles, cascade to observer.
-// format: <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE]>
-J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealHp  = /<onAllyHpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealMp  = /<onAllyHpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealTp  = /<onAllyHpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealHp  = /<onAllyMpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealMp  = /<onAllyMpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealTp  = /<onAllyMpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealHp  = /<onAllyTpHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealMp  = /<onAllyTpHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealTp  = /<onAllyTpHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealHp = /<onAllyAnyHealHp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealMp = /<onAllyAnyHealMp:[ ]?(\[\d+,[ ]?\d+])>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealTp = /<onAllyAnyHealTp:[ ]?(\[\d+,[ ]?\d+])>/gi;
+// format: <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE]> or <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
+J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealHp  = /<onAllyHpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealMp  = /<onAllyHpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyHpHealTp  = /<onAllyHpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealHp  = /<onAllyMpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealMp  = /<onAllyMpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyMpHealTp  = /<onAllyMpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealHp  = /<onAllyTpHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealMp  = /<onAllyTpHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyTpHealTp  = /<onAllyTpHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealHp = /<onAllyAnyHealHp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealMp = /<onAllyAnyHealMp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAllyAnyHealTp = /<onAllyAnyHealTp:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)?])>/gi;
 
 /** Legacy SDP panel parameter ids for on-attack drain stats. */
 J.RESOURCES.EXT.ABS.SdpParamId = {
