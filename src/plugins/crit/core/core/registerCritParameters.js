@@ -5,7 +5,7 @@
 class CritParameterRegistration
 {
   /**
-   * Registers CDM and CDR with the parameter catalog.
+   * Registers CDM and CTR with the parameter catalog.
    */
   static registerAll()
   {
@@ -28,16 +28,16 @@ class CritParameterRegistration
 
     ParameterRegistry.register(
       ParameterDefinition.Builder()
-        .key('cdr')
+        .key('ctr')
         .group(ParameterGroups.PRECISION)
         .sortOrder(7)
         .label(() => TextManager.critParam(1))
         .description(() => TextManager.critParamDescription(1))
         .iconIndex(() => IconManager.critParam(1))
         .format(ParameterFormat.PERCENT_SUFFIX)
-        .getValue(battler => battler.cdr)
+        .getValue(battler => battler.ctr)
         .sdpBinding(SdpParameterBinding.byKey(
-          'cdr',
+          'ctr',
           actor => actor.baseCriticalReduction()
         ))
         .build()

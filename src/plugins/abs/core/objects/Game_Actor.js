@@ -90,6 +90,12 @@ Game_Actor.prototype.onBattlerDataChange = function()
   // (equips, states, passives, etc.) — recompute the cache to stay current.
   this.refreshBonusHits();
 
+  // recompute cached CDR from note sources.
+  this.refreshCdr();
+
+  // recompute cached PER from note sources.
+  this.refreshPer();
+
   // update JABS-related things.
   this.jabsRefresh();
 };
@@ -370,7 +376,18 @@ Game_Actor.prototype.isMainhandProvidedOffhandSkill = function(skillId)
 
   // transformed match against the state-upgraded result of the mainhand's provided skill.
   const transformedMainhandSkillId = this.getTransformedOffhandSkillId(mainhandProvidedSkillId);
-  return transformedMainhandSkillId === skillId;
+  if (transformedMainhandSkillId === skillId) return true;
+
+  // combo chain match — the executing skill may be a combo descendent of the root offhand skill
+  // (e.g. row 5 follows row 4 via <combo>); walk the full chain and accept any member.
+  const rootSkill = $dataSkills.at(mainhandProvidedSkillId);
+  if (rootSkill)
+  {
+    const comboChain = rootSkill.getComboSkillIdList();
+    if (comboChain.includes(skillId)) return true;
+  }
+
+  return false;
 };
 
 /**

@@ -58,6 +58,17 @@ Game_ActionResult.prototype.clear = function()
  */
 Game_ActionResult.prototype.isHit = function()
 {
-  return this.used && !this.parried && !this.evaded;
+  return this.used &&
+    this.parried === false &&
+    this.isEvaded() === false;
+};
+
+/**
+ * Whether or not the action was evaded.
+ * @returns {boolean}
+ */
+Game_ActionResult.prototype.isEvaded = function()
+{
+  return this.evaded;
 };
 //endregion Game_ActionResult

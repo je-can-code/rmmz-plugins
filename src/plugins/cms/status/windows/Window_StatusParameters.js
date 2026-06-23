@@ -35,7 +35,7 @@ class Window_StatusParameters
       colorIndex: 26,
     },
     mobility: {
-      title: 'Mobility',
+      title: 'Haste',
       iconIndex: 82,
       colorIndex: 20,
     },

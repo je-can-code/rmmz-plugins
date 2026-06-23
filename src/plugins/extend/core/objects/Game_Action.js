@@ -79,6 +79,9 @@ Game_Action.prototype.applyOnHitStateEffects = function(target)
   // apply our on-hit lose-states if we have any.
   this.applyOnHitLoseStates();
 
+  // apply our on-hit apply-states (with optional duration/stack overrides) if we have any.
+  this.applyOnHitApplyStates(target);
+
   // apply our on-hit strip-states if we have any.
   this.applyOnHitStripStates(target);
 
@@ -203,6 +206,51 @@ Game_Action.prototype.onHitRemoveStates = function()
 
   // return what we found.
   return stateChances;
+};
+
+/**
+ * Applies all on-hit apply-states to the target, drawing from two sources:
+ * the executing skill ({@code <thisApplyState>}) and the caster's full notes
+ * ({@code <applyState>}). Caster-wide entries fire first; skill-scoped entries
+ * fire second and win on any same-state conflict via force-replace semantics.
+ *
+ * Each entry is evaluated independently: the chance is rolled, and on success a
+ * {@link JABS_StateOverrides} is constructed and passed to
+ * {@link Game_Battler#addStateWithOverrides}.
+ * Target state resistance is still respected inside {@link Game_Battler#handleAddingJabsState}.
+ * @param {Game_Actor|Game_Enemy} target The target being hit with the action.
+ */
+Game_Action.prototype.applyOnHitApplyStates = function(target)
+{
+  // grab caster-wide applyState entries from all of the attacker's notes.
+  const casterEntries = RPGManager.getAllCapturesFromAllNotesByRegex(
+    this.subject().getAllNotes(),
+    J.EXTEND.RegExp.ApplyState);
+
+  // grab skill-scoped thisApplyState entries from the executing skill only.
+  const skillEntries = RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ThisApplyState);
+
+  // combine both lists; caster-wide fires first, skill-scoped fires last and wins conflicts.
+  const allEntries = [...casterEntries, ...skillEntries];
+
+  // if there are no entries from either source, there is nothing to do.
+  if (!allEntries.length) return;
+
+  // grab the attacker for attribution when tracking the applied state.
+  const attacker = this.subject();
+
+  // iterate over every entry and conditionally apply.
+  allEntries.forEach(([stateId, chance, duration = null, stacks = null]) =>
+  {
+    // roll the chance; if it doesn't pass, this state does not apply on this hit.
+    if (!RPGManager.chanceIn100(chance)) return;
+
+    // build the overrides object from whatever the tag provided.
+    const overrides = new JABS_StateOverrides(duration, stacks);
+
+    // apply the state to the target with the overrides; resistance is checked inside.
+    target.addStateWithOverrides(stateId, attacker, overrides);
+  });
 };
 
 /**

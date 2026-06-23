@@ -51,6 +51,10 @@ SDP panels map enemies to **ten archetypes** (Berserker, Medic, Cleric, Wizard, 
 6. **jmz-data-editor** (if needed): class/skill authoring surfaces — defer until data shape is stable
 7. **Acceptance:** A player on **Myrmidon → Paladin** (or Rupert **Cleric** branch) has **skills that do medic/cleric things**; Medic SDP panels on that build have **verbs to amplify**, not vibes alone
 
+## Prerequisites
+
+- **Weapon families migration** (`weapon-families-migration.md`) must complete first. The current Jerald/Rupert exclusive skills occupying IDs 101–199 are **not being relocated** — they are being deleted entirely to make room for axe (91–120) and wand (121–150) weapon lots. Class-specific skills will be authored from scratch as part of this item, likely bearing little resemblance to what exists today.
+
 ## Notes
 
 - Weapon redesign receipt continues under `ca/docs/weapons/` — **staff / wand / tome** = protag **kill / sustain-cast** mindsets; **not** primary heal delivery

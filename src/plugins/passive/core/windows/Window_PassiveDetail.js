@@ -456,6 +456,13 @@ class Window_PassiveDetail
     {
       this.drawDetailRow(icon, label, value);
     });
+
+    // CDR row from J-ABS: global cooldown rate reduction.
+    const cdrLine = this.collectCdrLine(state);
+    if (cdrLine)
+    {
+      this.drawDetailRow(cdrLine.icon, cdrLine.label, cdrLine.value);
+    }
   }
 
   /**
@@ -519,6 +526,28 @@ class Window_PassiveDetail
     }
 
     return rows;
+  }
+
+  /**
+   * Collects the CDR (global cooldown rate reduction) display row from J-ABS.
+   * Positive values shorten GCD (green); negative lengthen it.
+   * Returns null when J-ABS is not loaded or the state has no CDR tag.
+   * @param {RPG_State} state The state to check.
+   * @returns {{icon: number, label: string, value: string}|null}
+   */
+  collectCdrLine(state)
+  {
+    if (!J.ABS) return null;
+
+    const formula = RPGManager.getStringFromNoteByRegex(state, J.ABS.RegExp.GlobalCooldownReduction);
+    if (!formula) return null;
+
+    const evaluated = Number(this.evaluateFormula(formula, this._actor));
+    return {
+      icon:  IconManager.cdr(),
+      label: 'Cooldown Rate',
+      value: `${evaluated > 0 ? '+' : ''}${evaluated}%`,
+    };
   }
 
   /**

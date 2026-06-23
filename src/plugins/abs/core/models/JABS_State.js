@@ -62,12 +62,6 @@ class JABS_State
   #baseDuration = 0;
 
   /**
-   * The number of frames that defines "recently applied".
-   * @type {number}
-   */
-  #recentlyAppliedCounter = 0;
-
-  /**
    * Whether or not this tracked state is identified as `expired`.
    * Expired states do not apply to the battler, but are kept in the tracking collection
    * to grant the ability to refresh the state duration or whatever we choose to do.
@@ -130,7 +124,6 @@ class JABS_State
 
     // mirror the duration as base duration for stacks.
     this.setBaseDuration(duration);
-    this.refreshRecentlyAppliedCounter();
 
     // start the spread cadence so the first pulse fires after one full interval.
     this.#spreadTickCounter = this.getSpreadTickInterval();
@@ -182,15 +175,6 @@ class JABS_State
   }
 
   /**
-   * Refresh the recently applied counter.
-   */
-  refreshRecentlyAppliedCounter()
-  {
-    // reset the recently applied counter.
-    this.#recentlyAppliedCounter = 6;
-  }
-
-  /**
    * Refresh the refresh reset counter.
    * @param {number=} newRefreshResetAmount The count to refresh the refresh reset counter to.
    */
@@ -219,14 +203,11 @@ class JABS_State
   }
 
   /**
-   * Handle all the counters that countdown on this state, like the recently applied counter, the refresh reset counter,
+   * Handle all the counters that countdown on this state, like the refresh reset counter
    * and the actual duration counter.
    */
   handleCounters()
   {
-    // countdown the recently applied timer for this state.
-    this.decrementRecentlyAppliedCounter();
-
     // countdown the refresh reset timer for this state.
     this.decrementRefreshResetCounter();
 
@@ -235,19 +216,6 @@ class JABS_State
 
     // countdown the spread pulse timer (no-op at pulse time when the state row has no spread tag).
     this.decrementSpreadTickCounter();
-  }
-
-  /**
-   * Decrements the recently applied counter as-needed.
-   */
-  decrementRecentlyAppliedCounter()
-  {
-    // check if we still have any counter left.
-    if (this.#recentlyAppliedCounter > 0)
-    {
-      // decrement it as-needed.
-      this.#recentlyAppliedCounter--;
-    }
   }
 
   /**
@@ -354,10 +322,7 @@ class JABS_State
     // unexpire the tracker.
     this.expired = false;
 
-    // flag this as recently applied.
-    this.refreshRecentlyAppliedCounter();
-
-    // also reset the refresh reset counter.
+    // reset the refresh reset counter.
     this.refreshRefreshResetCounter();
 
     // when new states are revived, they may be revived with zero stacks.
@@ -407,7 +372,7 @@ class JABS_State
     if (!RPGManager.chanceIn100(chance)) return;
 
     // apply the follow-up state, inheriting the source of the expiring state.
-    this.battler.addNewState(nextStateId, this.source);
+    this.battler.addState(nextStateId, this.source);
   }
 
   /**
@@ -530,16 +495,6 @@ class JABS_State
 
     // return whether or not the current duration is less than that.
     return (this.duration <= aboutToExpireThreshold && !this.hasEternalDuration());
-  }
-
-  /**
-   * Determines whether or not this state was recently applied.
-   * @returns {boolean} True if it was recently applied, false otherwise.
-   */
-  wasRecentlyApplied()
-  {
-    // return whether or not this state has been recently applied.
-    return (this.#recentlyAppliedCounter > 0);
   }
 
   /**

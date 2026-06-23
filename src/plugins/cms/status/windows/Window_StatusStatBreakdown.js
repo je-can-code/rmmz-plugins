@@ -197,7 +197,7 @@ class Window_StatusStatBreakdown
   resolveKind(parameterKey)
   {
     if (parameterKey === 'mtp') return Window_StatusStatBreakdown.KINDS.Mtp;
-    if (parameterKey === 'cdm' || parameterKey === 'cdr') return Window_StatusStatBreakdown.KINDS.Crit;
+    if (parameterKey === 'cdm' || parameterKey === 'ctr') return Window_StatusStatBreakdown.KINDS.Crit;
     if (ParameterKeys.bparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Base;
     if (ParameterKeys.xparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Ex;
     if (ParameterKeys.sparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Special;
@@ -246,7 +246,7 @@ class Window_StatusStatBreakdown
     const natBuffDeltaRaw = this.calcPlusRate(actor, baseVanilla, natBuffPlus, natBuffRate);
     const natBuffDelta = Math.round(natBuffDeltaRaw);
 
-    // NATURAL-inclusive base we’ll use as the baseline for flats/traits (Growths + Buffs).
+    // NATURAL-inclusive base we'll use as the baseline for flats/traits (Growths + Buffs).
     const baseNatural = baseVanilla + natGrowthDelta + natBuffDelta;
 
     // Flats by source (equips/states) from core param arrays.
@@ -354,7 +354,7 @@ class Window_StatusStatBreakdown
     }
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (×)', traitsRows);
 
-    // SDP section (only if any non-zero panel rows contribute and net isn’t neutral).
+    // SDP section (only if any non-zero panel rows contribute and net isn't neutral).
     if (sdpTotalDelta !== 0 && sdpPanelDeltas.length > 0)
     {
       const totalSign = sdpTotalDelta >= 0
@@ -623,8 +623,7 @@ class Window_StatusStatBreakdown
     // Aggregate trait adds for each source group.
     const addActor = this.xparamAddFromTraits([ actor.actor() ], xId);
     const addClass = this.xparamAddFromTraits([ actor.currentClass() ], xId);
-    const addEquips = this.xparamAddFromTraits(actor.equips()
-      .filter(e => !!e), xId);
+    const addEquips = this.xparamAddFromTraits(actor.equips(), xId);
     const addStates = this.xparamAddFromTraits(actor.states(), xId);
 
     // Compute NATURAL delta on the 0.0 baseline (plus/rate → concrete delta).
@@ -923,12 +922,12 @@ class Window_StatusStatBreakdown
     // Buff plus/rate regex per mode.
     const buffPlusRegex = isAmp
       ? J.CRIT.RegExp.CritDamageMultiplierBuffPlus
-      : J.CRIT.RegExp.CritDamageReductionBuffPlus;
+      : J.CRIT.RegExp.CritTakenRateBuffPlus;
     const buffPlusSum = RPGManager.getSumFromAllNotesByRegex(notesSources, buffPlusRegex);
 
     const buffRateRegex = isAmp
       ? J.CRIT.RegExp.CritDamageMultiplierBuffRate
-      : J.CRIT.RegExp.CritDamageReductionBuffRate;
+      : J.CRIT.RegExp.CritTakenRateBuffRate;
     const buffRateSum = RPGManager.getSumFromAllNotesByRegex(notesSources, buffRateRegex);
 
     // Solve the delta against the base.
@@ -969,11 +968,13 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * Draws a breakdown for custom long parameters that don’t fit the base/x/s/crit/mtp families.
+   * Draws a breakdown for custom long parameters that don't fit the base/x/s/crit/mtp families.
    * Currently supported custom params:
    * - 31: Move Speed Boost (MSB)
    * - 32: Skill Proficiency Boost (SPB)
    * - 33: SDP Multiplier Bonus (SMB)
+   * - 44: Cooldown Rate Reduction (CDR)
+   * - 45: Parry Extension Rate (PER)
    * @param {Game_Actor} actor The actor whose stat is being explained.
    * @param {string} parameterKey The registry key to render.
    * @param {number} x The x coordinate to start drawing.
@@ -983,27 +984,26 @@ class Window_StatusStatBreakdown
    */
   drawCustomBreakdown(actor, parameterKey, x, y, w)
   {
-    // Dispatch to the appropriate custom renderer.
-    if (parameterKey === 'msb')
+    switch (parameterKey)
     {
-      return this._drawMsbBreakdown(actor, x, y, w);
+      case 'msb':
+        return this._drawMsbBreakdown(actor, x, y, w);
+      case 'prof':
+        return this._drawSpbBreakdown(actor, x, y, w);
+      case 'sdr':
+        return this._drawSmbBreakdown(actor, x, y, w);
+      case 'cdr':
+        return this._drawCdrBreakdown(actor, x, y, w);
+      case 'per':
+        return this._drawPerBreakdown(actor, x, y, w);
+      default:
+        return this.drawSectionWithRows(x, y, w, 'Details', [
+          {
+            key: 'Info',
+            value: 'No breakdown available for this custom stat.'
+          },
+        ]);
     }
-    if (parameterKey === 'prof')
-    {
-      return this._drawSpbBreakdown(actor, x, y, w);
-    }
-    if (parameterKey === 'sdr')
-    {
-      return this._drawSmbBreakdown(actor, x, y, w);
-    }
-
-    // Fallback if an unknown custom id sneaks in.
-    return this.drawSectionWithRows(x, y, w, 'Details', [
-      {
-        key: 'Info',
-        value: 'No breakdown available for this custom stat.'
-      },
-    ]);
   }
 
   //endregion drawing
@@ -1094,7 +1094,7 @@ class Window_StatusStatBreakdown
 
   /**
    * Computes each core panel's exact delta against the pre‑SDP base.
-   * Floors percent pieces to match J.SDP’s behavior for core params.
+   * Floors percent pieces to match J.SDP's behavior for core params.
    * Carries icon/rarity for rendering.
    * @param {number} basePreSdp The pre-SDP base value.
    * @param {Array} rows The rows from _sdpCoreCoefficients().
@@ -1176,7 +1176,7 @@ class Window_StatusStatBreakdown
       // get panel metadata for this ranking.
       const panel = J.SDP.Metadata.panelsMap.get(ranking.key);
 
-      // if panel doesn’t exist, skip it.
+      // if panel doesn't exist, skip it.
       if (!panel) return;
 
       // fetch panel parameters for this non-core id (offset by idExtra).
@@ -1258,7 +1258,7 @@ class Window_StatusStatBreakdown
       // get panel metadata for this ranking.
       const panel = J.SDP.Metadata.panelsMap.get(ranking.key);
 
-      // if panel doesn’t exist, skip it.
+      // if panel doesn't exist, skip it.
       if (!panel) return;
 
       // fetch panel parameters for this regen sub-id.
@@ -1372,7 +1372,7 @@ class Window_StatusStatBreakdown
       let delta;
       let rateDec = 0;
 
-      // if flat, delta is the flat amount in the caller’s native space.
+      // if flat, delta is the flat amount in the caller's native space.
       if (row.isFlat)
       {
         delta = row.amount;
@@ -1650,14 +1650,12 @@ class Window_StatusStatBreakdown
   _drawMsbBreakdown(actor, x, y, w)
   {
     // Gather equip/state contributions directly from note properties.
-    const equipTotal = (actor.equippedEquips() || [])
-      .filter(e => !!e)
+    const equipTotal = actor.equippedEquips()
       .reduce((n, e) => n + (e.jabsSpeedBoost | 0), 0);
-    const stateTotal = (actor.states() || [])
-      .filter(s => !!s)
+    const stateTotal = actor.states()
       .reduce((n, s) => n + (s.jabsSpeedBoost | 0), 0);
 
-    // Total should match Page 1’s msb value.
+    // Total should match Page 1's msb value.
     const total = (equipTotal + stateTotal);
 
     // Build rows — MSB is shown as whole numbers (Page 1 omits % for 31).
@@ -1697,17 +1695,15 @@ class Window_StatusStatBreakdown
   {
     // Sum SPB bonuses by regex over equips/states only.
     const eq = RPGManager.getSumFromAllNotesByRegex(
-      actor.equippedEquips()
-        .filter(e => !!e),
+      actor.equippedEquips(),
       J.PROF.RegExp.ProficiencyBonus
     );
     const st = RPGManager.getSumFromAllNotesByRegex(
-      actor.states()
-        .filter(s => !!s),
+      actor.states(),
       J.PROF.RegExp.ProficiencyBonus
     );
 
-    const total = (eq + st); // equals Page 1’s bonusSkillProficiencyGains()
+    const total = (eq + st); // equals Page 1's bonusSkillProficiencyGains()
 
     const rows = [];
     rows.push({
@@ -1744,13 +1740,11 @@ class Window_StatusStatBreakdown
   {
     // Sum percent-point bonuses by regex over equips/states only.
     const eqPct = RPGManager.getSumFromAllNotesByRegex(
-      actor.equippedEquips()
-        .filter(e => !!e),
+      actor.equippedEquips(),
       J.SDP.RegExp.SdpMultiplier
     );
     const stPct = RPGManager.getSumFromAllNotesByRegex(
-      actor.states()
-        .filter(s => !!s),
+      actor.states(),
       J.SDP.RegExp.SdpMultiplier
     );
 
@@ -1797,7 +1791,7 @@ class Window_StatusStatBreakdown
     const stFactor = stPct / 100;       // => e.g., -0.03
     const totalFactor = totalPct / 100;   // => e.g., 1.37
 
-    // Build rows rendered in factor space to match Page 1’s display.
+    // Build rows rendered in factor space to match Page 1's display.
     const rows = [];
 
     // Baseline shown as factor (not percent).
@@ -1832,6 +1826,74 @@ class Window_StatusStatBreakdown
 
     // Render the section.
     return this.drawSectionWithRows(x, y, w, 'Sources (Equips/States)', rows);
+  }
+
+  /**
+   * Renders the breakdown for Cooldown Rate Reduction (CDR).
+   * Sources are any note-bearing objects that carry `<cdr:[FORMULA]>` tags.
+   * Values are signed percent-points (positive = GCD shortened, negative = lengthened).
+   * @param {Game_Actor} actor The actor whose stat is being explained.
+   * @param {number} x The x coordinate to start drawing.
+   * @param {number} y The y coordinate to start drawing.
+   * @param {number} w The width available to draw within.
+   * @returns {number} The next y position after finishing this section.
+   */
+  _drawCdrBreakdown(actor, x, y, w)
+  {
+    const regex = J.ABS.RegExp.GlobalCooldownReduction;
+
+    const stateTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.allStates(),
+      regex, 0, actor
+    );
+    const equipTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.equippedEquips(),
+      regex, 0, actor
+    );
+    const actorClassTotal = RPGManager.getResultsFromAllNotesByRegex(
+      [ actor.databaseData(), actor.currentClass() ],
+      regex, 0, actor
+    );
+
+    const total = stateTotal + equipTotal + actorClassTotal;
+
+    const rows = [];
+    rows.push({ key: 'Baseline', value: '0%' });
+    if (stateTotal !== 0) rows.push({ key: '+ States', value: `${stateTotal > 0 ? '+' : ''}${stateTotal}%` });
+    if (equipTotal !== 0) rows.push({ key: '+ Equips', value: `${equipTotal > 0 ? '+' : ''}${equipTotal}%` });
+    if (actorClassTotal !== 0) rows.push({ key: '+ Actor/Class', value: `${actorClassTotal > 0 ? '+' : ''}${actorClassTotal}%` });
+    rows.push({ key: '= Total', value: `${total}%` });
+
+    return this.drawSectionWithRows(x, y, w, 'Sources', rows);
+  }
+
+  _drawPerBreakdown(actor, x, y, w)
+  {
+    const regex = J.ABS.RegExp.ParryExtensionRate;
+
+    const stateTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.allStates(),
+      regex, 0, actor
+    );
+    const equipTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.equippedEquips(),
+      regex, 0, actor
+    );
+    const actorClassTotal = RPGManager.getResultsFromAllNotesByRegex(
+      [ actor.databaseData(), actor.currentClass() ],
+      regex, 0, actor
+    );
+
+    const total = stateTotal + equipTotal + actorClassTotal;
+
+    const rows = [];
+    rows.push({ key: 'Baseline', value: '0%' });
+    if (stateTotal !== 0) rows.push({ key: '+ States', value: `${stateTotal > 0 ? '+' : ''}${stateTotal}%` });
+    if (equipTotal !== 0) rows.push({ key: '+ Equips', value: `${equipTotal > 0 ? '+' : ''}${equipTotal}%` });
+    if (actorClassTotal !== 0) rows.push({ key: '+ Actor/Class', value: `${actorClassTotal > 0 ? '+' : ''}${actorClassTotal}%` });
+    rows.push({ key: '= Total', value: `${total}%` });
+
+    return this.drawSectionWithRows(x, y, w, 'Sources', rows);
   }
 
   //endregion custom

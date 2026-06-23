@@ -2,60 +2,53 @@
 // Minimal engine surface so {@link out/passive/ext/J-Passive-Conditional.js} can evaluate in the test VM.
 (function()
 {
-  if (typeof globalThis.JABS_Timer !== 'function')
+  globalThis.JABS_Timer = function JABS_Timer(delay)
   {
-    globalThis.JABS_Timer = function JABS_Timer(delay)
-    {
-      this._delay = delay;
-      this._frames = 0;
-    };
+    this._delay = delay;
+    this._frames = 0;
+  };
 
-    globalThis.JABS_Timer.prototype.update = function()
-    {
-      this._frames++;
-    };
-
-    globalThis.JABS_Timer.prototype.isTimerComplete = function()
-    {
-      return this._frames >= this._delay;
-    };
-
-    globalThis.JABS_Timer.prototype.reset = function()
-    {
-      this._frames = 0;
-    };
-  }
-
-  if (typeof globalThis.Graphics === 'undefined')
+  globalThis.JABS_Timer.prototype.update = function()
   {
-    globalThis.Graphics = { frameCount: 0 };
-  }
+    this._frames++;
+  };
 
-  if (typeof globalThis.JABS_Battler !== 'function')
+  globalThis.JABS_Timer.prototype.isTimerComplete = function()
   {
-    function JABS_Battler()
-    {
-    }
+    return this._frames >= this._delay;
+  };
 
-    JABS_Battler.prototype.update = function()
-    {
-    };
+  globalThis.JABS_Timer.prototype.reset = function()
+  {
+    this._frames = 0;
+  };
 
-    JABS_Battler.prototype.getBattler = function()
-    {
-      return null;
-    };
+  globalThis.Graphics = { frameCount: 0 };
 
-    globalThis.JABS_Battler = JABS_Battler;
-  }
+  globalThis.JABS_Battler = function JABS_Battler()
+  {
+  };
+
+  globalThis.JABS_Battler.prototype.update = function()
+  {
+  };
+
+  globalThis.JABS_Battler.prototype.getBattler = function()
+  {
+    return null;
+  };
+
+  globalThis.JABS_Action = function JABS_Action()
+  {
+  };
+
+  globalThis.JABS_Action.prototype.preCleanupHook = function()
+  {
+  };
 
   // conditional aliases updatePixelStepping — seed a noop when J-Pixelistics is not in the test prelude.
-  if (typeof globalThis.Game_CharacterBase !== 'undefined'
-    && typeof globalThis.Game_CharacterBase.prototype.updatePixelStepping !== 'function')
+  globalThis.Game_CharacterBase.prototype.updatePixelStepping = function()
   {
-    globalThis.Game_CharacterBase.prototype.updatePixelStepping = function()
-    {
-    };
-  }
+  };
 })();
 //endregion passive-conditional-engine-prelude

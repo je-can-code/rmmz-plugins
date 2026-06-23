@@ -51,6 +51,12 @@ Game_Enemy.prototype.onBattlerDataChange = function()
   // (equips, states, passives, etc.) — recompute the cache to stay current.
   this.refreshBonusHits();
 
+  // recompute cached CDR from note sources.
+  this.refreshCdr();
+
+  // recompute cached PER from note sources.
+  this.refreshPer();
+
   // update JABS-related things.
   this.jabsRefresh();
 };

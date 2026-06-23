@@ -451,6 +451,9 @@ J.ABS.RegExp = {
   Ogcd: /<ogcd>/gi,
   // optional per-skill GCD duration override in frames.
   GlobalCooldownFrames: /<gcd:[ ]?(\d+)>/gi,
+  // battler-wide GCD reduction rate; positive values shorten GCD, negative lengthen it.
+  GlobalCooldownReduction: /<cdr:\[([+\-*/ ().\w]+)]>/gi,
+  ParryExtensionRate: /<per:\[([+\-*/ ().\w]+)]>/gi,
 
   // action size/shape/count related.
   Degrees: /<degrees:[ ]?(\d+)>/gi,
@@ -476,7 +479,7 @@ J.ABS.RegExp = {
   OnCastAnimationId: /<onCastAnimationId:[ ]?(\d+)>/gi,
 
   // combo-related.
-  ComboAction: /<combo:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  ComboAction: /<combo:[ ]?(\[\d+(?:,[ ]?\d+){0,2}])>/gi,
   ComboStarter: /<comboStarter>/gi,
   AiSkillExclusion: /<aiSkillExclusion>/gi,
   FreeCombo: /<freeCombo>/gi,
@@ -728,6 +731,11 @@ J.ABS.RegExp = {
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
 
+  // evasion-related (on-chance-effect)
+  OnEvadeApply: /<onEvadeApply:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnEvadeApplySelf: /<onEvadeApplySelf:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnEvadeExecute: /<onEvadeExecute:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+
   /**
    * Percent damage bonus per negative state (jabsNegative) currently active on the target.
    * All PerDebuffBuff values from getAllNotes() are summed, then multiplied by the debuff count.
@@ -765,6 +773,45 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusDamageIfState: /<bonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the target has a specific state active.
+   * Reads from this.item() only — fires only when THIS skill is the action being resolved.
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfState:[14, 100]>
+   *
+   * Translation:
+   *  +100% damage from this skill if the target currently has state 14 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfState: /<thisBonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Unconditional flat percent damage bonus applied when THIS skill is the action being resolved.
+   * Reads from this.item() only — does not read from getAllNotes() and does not affect other skills.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamage:PCT>
+   *
+   * Example:
+   *  <thisBonusDamage:20>
+   *
+   * Translation:
+   *  This skill always deals +20% damage, regardless of target state.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamage: /<thisBonusDamage:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 
   /**
    * Flat percent damage bonus applied when the target has at least one active state
@@ -843,6 +890,123 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   RangeRate: /<rangeRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to radius (AoE splash zone), after rangeBuff but before rate.
+   * Negative values shrink the splash zone.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <radiusBuff:N>
+   *
+   * Example:
+   *  <radiusBuff:2>
+   *
+   * Translation:
+   *  Adds 2 tiles flat to every outgoing action's radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  RadiusBuff: /<radiusBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to radius (AoE splash zone), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <radiusRate:N>
+   *
+   * Example:
+   *  <radiusRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  RadiusRate: /<radiusRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to proximity (targeting reach), after rangeBuff but before rate.
+   * Negative values shorten targeting reach.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <proximityBuff:N>
+   *
+   * Example:
+   *  <proximityBuff:2>
+   *
+   * Translation:
+   *  Adds 2 tiles flat to every outgoing action's proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ProximityBuff: /<proximityBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to proximity (targeting reach), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <proximityRate:N>
+   *
+   * Example:
+   *  <proximityRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ProximityRate: /<proximityRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to thickness (LINE/WALL hitbox width), after rangeBuff but before rate.
+   * Negative values narrow the hitbox.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <thicknessBuff:N>
+   *
+   * Example:
+   *  <thicknessBuff:1>
+   *
+   * Translation:
+   *  Adds 1 tile flat to every outgoing action's thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThicknessBuff: /<thicknessBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to thickness (LINE/WALL hitbox width), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <thicknessRate:N>
+   *
+   * Example:
+   *  <thicknessRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThicknessRate: /<thicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   /**
    * Passive/state/equip skill history damage bonus.
@@ -972,6 +1136,7 @@ J.ABS.Aliased = {
   RPG_Enemy: new Map(),
   RPG_Skill: new Map(),
 
+  Scene_Boot: new Map(),
   Scene_Load: new Map(),
   Scene_Map: new Map(),
 

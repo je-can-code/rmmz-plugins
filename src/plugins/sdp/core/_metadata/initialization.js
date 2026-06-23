@@ -48,6 +48,7 @@ J.SDP.Aliased = {
 J.SDP.RegExp = {
   SdpPoints: /<sdpPoints: ?-?([0-9]+)>/i,
   SdpMultiplier: /<sdpMultiplier: ?([-.\d]+)>/i,
+  SdpBonusFormula: /<sdpBonusFormula:\[(.+?)]>/i,
   SdpDropData: /<sdpDropData: ?(\[[-\w]+,[ ]?\d+])>/i,
   SdpUnlockKey: /<sdpUnlock: ?(.+)>/i,
 };

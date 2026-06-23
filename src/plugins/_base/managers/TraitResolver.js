@@ -204,15 +204,15 @@ class TraitResolver
   static #combineAllParameterTraits(traits)
   {
     // code 21 (base param rate): neutral value 1.0 — (1.1 + 1.2) - 1 = 1.3.
-    traits = this.#combineParameterTraitsForCode(traits, 21, 1);
+    let combined = this.#combineParameterTraitsForCode(traits, 21, 1);
 
     // code 22 (ex-param): neutral value 0.0 — 0.1 + 0.2 = 0.3.
-    traits = this.#combineParameterTraitsForCode(traits, 22, 0);
+    combined = this.#combineParameterTraitsForCode(combined, 22, 0);
 
     // code 23 (sp-param rate): neutral value 1.0 — same offset as code 21.
-    traits = this.#combineParameterTraitsForCode(traits, 23, 1);
+    combined = this.#combineParameterTraitsForCode(combined, 23, 1);
 
-    return traits;
+    return combined;
   }
 
   /**
@@ -374,17 +374,20 @@ class TraitResolver
    */
   static #keepBetterAll(base, material)
   {
+    let resultBase = base;
+    let resultMaterial = material;
+
     for (const code of this.#HigherIsBetterCodes)
     {
-      [ base, material ] = this.#keepBetter(base, material, code, true);
+      [ resultBase, resultMaterial ] = this.#keepBetter(resultBase, resultMaterial, code, true);
     }
 
     for (const code of this.#LowerIsBetterCodes)
     {
-      [ base, material ] = this.#keepBetter(base, material, code, false);
+      [ resultBase, resultMaterial ] = this.#keepBetter(resultBase, resultMaterial, code, false);
     }
 
-    return [ base, material ];
+    return [ resultBase, resultMaterial ];
   }
 
   /**

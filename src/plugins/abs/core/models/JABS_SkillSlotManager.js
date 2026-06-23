@@ -115,7 +115,11 @@ class JABS_SkillSlotManager
    */
   setupActorSlots()
   {
-    this._slots.push(new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0));
+    // the GCD slot has no skill, so it would never pass isUsable() and enter the normal update loop;
+    // initialize its cooldown as ready so it doesn't permanently block before the first stamp.
+    const gcdSlot = new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0);
+    gcdSlot.getCooldown().enableBase();
+    this._slots.push(gcdSlot);
     this._slots.push(new JABS_SkillSlot(JABS_Button.Mainhand, 0));
     this._slots.push(new JABS_SkillSlot(JABS_Button.Offhand, 0));
     // Append the row to the working collection.
@@ -404,6 +408,11 @@ class JABS_SkillSlotManager
     // this.getAllSlots() // use this if slots should update when there is no skill in them.
     this.getEquippedSlots()
       .forEach(slot => slot.updateCooldown());
+
+    // the GCD slot holds skillId 0 and is never "equipped", so it falls outside the loop above;
+    // tick it explicitly so GCD stamps actually count down after a skill fires.
+    const gcdSlot = this.getSkillSlotByKey(J.ABS.Globals.GlobalCooldownKey);
+    if (gcdSlot) gcdSlot.updateCooldown();
   }
 
   /**

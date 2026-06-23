@@ -1430,9 +1430,8 @@ class JABS_Action
     const base = this.getBaseSkill().jabsRadius;
     if (base === null) return null;
 
-    // apply buff and rate modifiers from the caster's note sources.
-    const notes = this.getAction().subject().getAllNotes();
-    return this.applyRangeModifiers(base, notes);
+    // apply buff and rate modifiers sourced from the caster's battler getters.
+    return this.applyRadiusModifiers(base);
   }
 
   /**
@@ -1462,9 +1461,8 @@ class JABS_Action
     const base = this.getBaseSkill().jabsProximity;
     if (base === null) return 0;
 
-    // apply buff and rate modifiers from the caster's note sources.
-    const notes = this.getAction().subject().getAllNotes();
-    return this.applyRangeModifiers(base, notes);
+    // apply buff and rate modifiers sourced from the caster's battler getters.
+    return this.applyProximityModifiers(base);
   }
 
   /**
@@ -1499,28 +1497,53 @@ class JABS_Action
     // skip modifiers when no explicit tag exists; use the default unmodified.
     if (base === null) return 1;
 
-    // apply buff and rate modifiers from the caster's note sources.
-    const notes = this.getAction().subject().getAllNotes();
-    return this.applyRangeModifiers(base, notes);
+    // apply buff and rate modifiers sourced from the caster's battler getters.
+    return this.applyThicknessModifiers(base);
   }
 
   /**
-   * Applies the caster's rangeBuff (flat, before rate) and rangeRate (base-1.0 multiplicative) tags
-   * to a base tile value. Each rangeRate tag contributes (N - 1.0) to the rate accumulator so that
-   * multiple rate tags stack additively rather than compounding exponentially.
-   * Result is floored at 0 to prevent negative values from breaking collision geometry.
-   * @param {number} base The unmodified tile value to scale.
-   * @param {RPG_Base[]} notes The collection of note-bearing objects from the caster's getAllNotes().
-   * @returns {number} The scaled tile value.
+   * Applies the caster's shared and radius-specific range modifiers to a base radius tile value.
+   * @param {number} base The unmodified radius tile value.
+   * @returns {number} The scaled radius tile value, floored at 0.
    */
-  applyRangeModifiers(base, notes)
+  applyRadiusModifiers(base)
   {
-    // sum all flat tile additions across the caster's note sources.
-    const totalBuff = RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.RangeBuff) ?? 0;
+    // ask the caster for each modifier component — shared buff/rate plus radius-axis extras.
+    const caster = this.getAction().subject();
+    const totalBuff = caster.getRangeBuff() + caster.getRadiusBuff();
+    const totalRate = caster.getRangeRate() + caster.getRadiusRate();
 
-    // collect each rate tag's value and accumulate deltas from 1.0.
-    const rateCaptures = RPGManager.getAllCapturesFromAllNotesByRegex(notes, J.ABS.RegExp.RangeRate);
-    const totalRate = rateCaptures.reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 1.0);
+    // floor at 0 — a negative tile value breaks collision geometry.
+    return Math.max(0, (base + totalBuff) * totalRate);
+  }
+
+  /**
+   * Applies the caster's shared and proximity-specific range modifiers to a base proximity tile value.
+   * @param {number} base The unmodified proximity tile value.
+   * @returns {number} The scaled proximity tile value, floored at 0.
+   */
+  applyProximityModifiers(base)
+  {
+    // ask the caster for each modifier component — shared buff/rate plus proximity-axis extras.
+    const caster = this.getAction().subject();
+    const totalBuff = caster.getRangeBuff() + caster.getProximityBuff();
+    const totalRate = caster.getRangeRate() + caster.getProximityRate();
+
+    // floor at 0 — a negative tile value breaks collision geometry.
+    return Math.max(0, (base + totalBuff) * totalRate);
+  }
+
+  /**
+   * Applies the caster's shared and thickness-specific range modifiers to a base thickness tile value.
+   * @param {number} base The unmodified thickness tile value.
+   * @returns {number} The scaled thickness tile value, floored at 0.
+   */
+  applyThicknessModifiers(base)
+  {
+    // ask the caster for each modifier component — shared buff/rate plus thickness-axis extras.
+    const caster = this.getAction().subject();
+    const totalBuff = caster.getRangeBuff() + caster.getThicknessBuff();
+    const totalRate = caster.getRangeRate() + caster.getThicknessRate();
 
     // floor at 0 — a negative tile value breaks collision geometry.
     return Math.max(0, (base + totalBuff) * totalRate);

@@ -221,4 +221,49 @@ J.EXTEND.RegExp.OnCastStripState = /<onCastStripState:[ ]?(\[\d+,[ ]?\d+])>/i;
  * @type {RegExp}
  */
 J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
+
+/**
+ * The structure of a skill-scoped on-hit apply-state tag with optional duration and stack overrides.
+ * Reads from the executing skill only ({@code this.item()}).
+ *
+ * <pre>
+ * Structure:
+ *  <thisApplyState:[STATE_ID, CHANCE]>
+ *  <thisApplyState:[STATE_ID, CHANCE, DURATION]>
+ *  <thisApplyState:[STATE_ID, CHANCE, DURATION, STACKS]>
+ *
+ * Example (duration override only):
+ *  <thisApplyState:[8, 25, 240]>
+ *
+ * Translation:
+ *  On hit, 25% chance to apply state id 8 for 240 frames (4 seconds at 60fps).
+ *  When DURATION is omitted, the state's own jabsStateDurationFrames value is used.
+ *  When STACKS is omitted, the state's own jabsStateStacksApplied value is used.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>/gi;
+
+/**
+ * The structure of a caster-wide on-hit apply-state tag with optional duration and stack overrides.
+ * Reads from all of the caster's notes ({@code getAllNotes()}), so it can live on states, equips,
+ * actor data, or skills — wherever the caster's notes are sourced from.
+ *
+ * <pre>
+ * Structure:
+ *  <applyState:[STATE_ID, CHANCE]>
+ *  <applyState:[STATE_ID, CHANCE, DURATION]>
+ *  <applyState:[STATE_ID, CHANCE, DURATION, STACKS]>
+ *
+ * Example (passive state that applies poison for 10 seconds on hit):
+ *  <applyState:[12, 100, 600]>
+ *
+ * Translation:
+ *  On hit, always apply state id 12 for 600 frames (10 seconds at 60fps).
+ *  When DURATION is omitted, the state's own jabsStateDurationFrames value is used.
+ *  When STACKS is omitted, the state's own jabsStateStacksApplied value is used.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>/gi;
 //endregion Metadata

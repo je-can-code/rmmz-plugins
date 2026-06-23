@@ -1054,9 +1054,6 @@ class JABS_Engine
    */
   refreshJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
-
     // grab the database data of the state being refreshed.
     const state = jabsState.battler.state(jabsState.stateId);
 
@@ -1084,9 +1081,6 @@ class JABS_Engine
    */
   extendJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
-
     // grab the database data of the state being extended.
     const state = jabsState.battler.state(newJabsState.stateId);
 
@@ -1111,9 +1105,6 @@ class JABS_Engine
    */
   stackJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
-
     // grab the added stacks from the state if applicable.
     const addedStackAmount = newJabsState.battler.state(newJabsState.stateId).jabsStateStacksApplied;
 
@@ -2496,6 +2487,9 @@ class JABS_Engine
     {
       // if the skill is unique, only apply the cooldown to the slot assigned.
       caster.setCooldownCounter(cooldownType, cooldownValue);
+
+      // stamp the overlay mode so the HUD knows how to display the lock icon for this cycle.
+      this.applyComboModeForSkill(caster, cooldownType, skill);
     }
     else
     {
@@ -2510,6 +2504,9 @@ class JABS_Engine
         if (battler.resolveEquippedSkillId(skillSlot.id) === skill.id)
         {
           caster.setCooldownCounter(skillSlot.key, cooldownValue);
+
+          // stamp the overlay mode on each affected slot.
+          this.applyComboModeForSkill(caster, skillSlot.key, skill);
         }
       });
     }
@@ -2517,7 +2514,58 @@ class JABS_Engine
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
     {
       const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
-      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, gcdFrames);
+      const reducedFrames = JABS_GlobalCooldown.reducedFramesForCaster(caster, gcdFrames);
+      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, reducedFrames);
+    }
+  }
+
+  /**
+   * Stamps the HUD overlay combo mode on a cooldown from the skill that just fired.
+   * Called once per affected slot key immediately after the slot's cooldown counter is set.
+   *
+   * Modes (written to {@link JABS_Cooldown.comboMode}):
+   *   'none'     — skill has no combo link; the lock icon shows immediately.
+   *   'expiring' — skill has a combo link with an authored expire window; lock shows after the window closes.
+   *   'infinite' — skill has a combo link with no expire window; lock never shows (the whole CD is the window).
+   *
+   * @param {JABS_Battler} caster The battler whose cooldown to stamp.
+   * @param {string} cooldownKey The slot key of the cooldown to stamp.
+   * @param {RPG_Skill} skill The skill that was just executed.
+   */
+  applyComboModeForSkill(caster, cooldownKey, skill)
+  {
+    // fetch the cooldown object for this slot.
+    const cooldown = caster.getCooldown(cooldownKey);
+
+    // bail if the cooldown somehow does not exist for this key.
+    if (!cooldown) return;
+
+    // determine the mode from the skill's authored combo data.
+    // jabsComboSkillId and jabsComboExpire both dereference jabsComboAction, which is null when the
+    // skill has no <combo> tag — guard against null before touching any of the sub-properties.
+    if (!skill.jabsComboAction)
+    {
+      // no combo tag on this skill; show the lock icon right away.
+      cooldown.setComboMode('none');
+    }
+    else if (skill.jabsComboExpire > 0)
+    {
+      // combo with a hard expiry window; show the lock icon once the window closes.
+      cooldown.setComboMode('expiring');
+
+      // pre-arm both the delay and the expiry window at fire time so the HUD has no gap between
+      // "button pressed" and "hitbox registers its first collision."
+      // updateComboSequence will overwrite these with the same values on hit — harmless redundancy.
+      cooldown.setComboFrames(skill.jabsComboDelay);
+      cooldown.setComboExpireFrames(skill.jabsComboExpire);
+    }
+    else
+    {
+      // combo with no expiry; the entire cooldown acts as the window.
+      cooldown.setComboMode('infinite');
+
+      // pre-arm the delay so the HUD knows the combo is incoming even before the first hit.
+      cooldown.setComboFrames(skill.jabsComboDelay);
     }
   }
 
@@ -3256,6 +3304,9 @@ class JABS_Engine
     // drop back to starter routing on this cooldown key; AI pacing latch dies with the chain.
     caster.setComboNextActionId(cooldownKey, 0);
     caster.clearAiComboHumanizedReadyFrame();
+
+    // clear any active expiry window; the chain is over so the window is no longer meaningful.
+    caster.setComboExpireFrames(cooldownKey, 0);
   }
 
   /**
@@ -3296,27 +3347,25 @@ class JABS_Engine
     const skill = action.getBaseSkill();
     const {
       jabsComboSkillId,
-      jabsComboDelay
+      jabsComboDelay,
+      jabsComboExpire
     } = skill;
 
     // determine which slot to apply cooldowns to.
     const cooldownKey = action.getCooldownType();
 
-    // clarifies that this check is whether or not the next combo skill is a continuation of the combo.
-    const isComboAction = (caster.getComboNextActionId(cooldownKey) !== jabsComboSkillId);
-
-    // check if this is actually a combo action to the last action.
-    if (isComboAction)
+    // advancing to a new step in the combo chain — signal the AI state machine to move to the action phase.
+    if (caster.getComboNextActionId(cooldownKey) !== jabsComboSkillId)
     {
-      // its a combo skill, so also extend the base cooldown by the combo cooldown.
-      caster.modCooldownCounter(cooldownKey, jabsComboDelay);
-
       caster.setPhase(2);
     }
 
     // update the next combo data.
     caster.setComboFrames(cooldownKey, jabsComboDelay);
     caster.setComboNextActionId(cooldownKey, jabsComboSkillId);
+
+    // apply an expiry window if one was authored; zero means no deadline (cleared immediately if set).
+    caster.setComboExpireFrames(cooldownKey, jabsComboExpire);
 
     // arm fair pacing so AI does not mash the follow-up at the earliest legal frame every time.
     caster.setAiComboHumanizedReadyFrame(JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill));

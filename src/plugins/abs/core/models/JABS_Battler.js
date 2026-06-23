@@ -4546,7 +4546,7 @@ class JABS_Battler
    */
   getBonusParryFrames(guardData)
   {
-    return Math.floor((this.getBattler().eva) * guardData.parryDuration);
+    return Math.floor((1 + this.getBattler().per) * guardData.parryDuration);
   };
 
   /**
@@ -5363,6 +5363,46 @@ class JABS_Battler
   };
 
   /**
+   * Handles the execution of any on-evade skills this battler may possess.
+   * The attacker who was evaded is used as the seed target; the skill's own scope
+   * determines actual targeting, so AoE or self-targeting skills ignore the seed.
+   * @param {JABS_Battler|null} jabsAttacker The battler whose attack was evaded, or null.
+   */
+  handleOnEvadeSkills(jabsAttacker)
+  {
+    // grab all the execute-on-evade skills from the underlying battler's notes.
+    const executeEffects = this.getBattler().onEvadeExecuteEffects();
+
+    // if there are none, there is nothing to do.
+    if (executeEffects.length === 0) return;
+
+    // an iterator function for firing all relevant on-evade skills.
+    const forEacher = executeEffect =>
+    {
+      // extract the skill id from the effect.
+      const { skillId } = executeEffect;
+
+      // check if this effect should trigger based on its chance.
+      if (executeEffect.shouldTrigger() === false) return;
+
+      // if we have an attacker, fire the skill toward their position as the seed target.
+      if (jabsAttacker)
+      {
+        // use the attacker's map position as the seed; skill scope takes over from there.
+        $jabsEngine.forceMapAction(this, skillId, false, jabsAttacker.getX(), jabsAttacker.getY());
+      }
+      else
+      {
+        // no attacker reference available — fire from the evader with no seed target.
+        $jabsEngine.forceMapAction(this, skillId, false);
+      }
+    };
+
+    // iterate over each on-evade execute effect.
+    executeEffects.forEach(forEacher, this);
+  };
+
+  /**
    * Executes the post-defeat processing for a defeated battler.
    * @param {JABS_Battler} victor The battler that defeated this battler.
    */
@@ -5634,6 +5674,19 @@ class JABS_Battler
   {
     this.getCooldown(cooldownKey)
       .setComboFrames(duration);
+  };
+
+  /**
+   * Sets the combo expiry window on the cooldown for the given slot.
+   * The countdown begins immediately — from the moment the skill fires — regardless of the combo delay.
+   * Pass zero to set no deadline.
+   * @param {string} cooldownKey The slot key.
+   * @param {number} frames Frames until the combo auto-clears if unused.
+   */
+  setComboExpireFrames(cooldownKey, frames)
+  {
+    this.getCooldown(cooldownKey)
+      .setComboExpireFrames(frames);
   };
 
   /**

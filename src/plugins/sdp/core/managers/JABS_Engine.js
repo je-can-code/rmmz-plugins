@@ -60,14 +60,16 @@ if (J.ABS)
     // don't do anything if the enemy didn't grant any sdp points.
     if (!sdpPoints) return;
 
-    // sdp points are obtained by all members in the party.
-    $gameParty.members()
-      .forEach(member => member.modSdpPoints(sdpPoints));
-
-    // get the true amount obtained after multipliers for the leader.
+    // sdp points are obtained by all members in the party; capture the defeating actor's final amount for the popup.
     const battler = actor.getBattler();
-    const { sdpMultiplier } = battler;
-    const multipliedSdpPoints = Math.round(sdpMultiplier * sdpPoints);
+    let multipliedSdpPoints = 0;
+    $gameParty.members()
+      .forEach(member =>
+      {
+        // grant points to every party member and track the final scaled amount for the defeating actor.
+        const gained = member.modSdpPoints(sdpPoints);
+        if (member === battler) multipliedSdpPoints = gained;
+      });
 
     // notify that SDP points were rewarded so optional extensions can respond.
     this.onSdpRewardGranted(multipliedSdpPoints, actor.getCharacter());

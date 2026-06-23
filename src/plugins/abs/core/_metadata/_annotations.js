@@ -1028,19 +1028,34 @@
  * ----------------------------------------------------------------------------
  * COMBOS:
  * COMBO ACTION:
- * Defines what skill can be followed up after using this skill, and how
- * long until that follow-up becomes available.
- *    <combo:[COMBO_SKILL_ID,LINK_TIME]>
+ * Defines what skill can be followed up after using this skill, how long
+ * until that follow-up becomes available, and optionally how long the window
+ * stays open before the combo is auto-cleared.
+ *    <combo:[COMBO_SKILL_ID]>
+ *    <combo:[COMBO_SKILL_ID, LINK_TIME]>
+ *    <combo:[COMBO_SKILL_ID, LINK_TIME, EXPIRE_FRAMES]>
  *  Where COMBO_SKILL_ID is the skill ID that will be combo'd into.
- *  Where LINK_TIME is the number of frames until the combo is available.
+ *  Where LINK_TIME is frames until the combo becomes pressable (default 0).
+ *  Where EXPIRE_FRAMES is the total frames from skill fire until the combo
+ *  auto-clears if unused (default 0 = no expiry; window stays open until
+ *  the slot's base cooldown resets).
  *
  * The combo-starter's cooldown must be longer than the LINK_TIME, or
  * the combo will never be reachable. Each executed combo action extends
  * the remaining cooldown by LINK_TIME, keeping the chain going.
  *
+ * EXPIRE_FRAMES counts from the moment the opener fires — not from when
+ * the combo becomes pressable. For a tight follow-up window on a slow skill,
+ * set EXPIRE_FRAMES close to LINK_TIME so the player must press quickly
+ * once the combo opens.
+ *
  * EXAMPLE:
  *      <combo:[2,10]>
- * Using this skill makes skill ID 2 available after 10 frames.
+ * Using this skill makes skill ID 2 available after 10 frames (no expiry).
+ *
+ *      <combo:[5,8,60]>
+ * Makes skill ID 5 available after 8 frames; auto-clears after 60 frames
+ * total if the player has not pressed it.
  *
  * COMBO STARTER:
  * AI-controlled battlers ignore skills with combo tags by default.
@@ -1191,6 +1206,39 @@
  * With this flag, the visual effect appears where the target fell.
  * Use this to create effects like "on kill: play animation on corpse".
  *
+ * ----------------------------------------------------------------------------
+ * ON EVADE APPLY:
+ * When this battler evades an incoming attack, they may inflict a state on
+ * the attacker who missed them.
+ *    <onEvadeApply:[STATE_ID, CHANCE]>
+ *  Where STATE_ID is the id of the state to apply to the attacker.
+ *  Where CHANCE is the integer percent chance to apply it (0-100).
+ *
+ * Use this for retributive effects — punishing the attacker for missing.
+ *
+ * ----------------------------------------------------------------------------
+ * ON EVADE APPLY SELF:
+ * When this battler evades an incoming attack, they may apply a state to
+ * themselves (the one who evaded).
+ *    <onEvadeApplySelf:[STATE_ID, CHANCE]>
+ *  Where STATE_ID is the id of the state to apply to the evader.
+ *  Where CHANCE is the integer percent chance to apply it (0-100).
+ *
+ * Use this for self-buff effects — rewarding the evader for successfully
+ * dodging an attack.
+ *
+ * ----------------------------------------------------------------------------
+ * ON EVADE EXECUTE:
+ * When this battler evades an incoming attack, they may fire a skill.
+ * The attacker is used as the seed target; the skill's own scope determines
+ * actual targeting (an AoE or self-targeting skill ignores the seed target).
+ *    <onEvadeExecute:[SKILL_ID, CHANCE]>
+ *  Where SKILL_ID is the id of the skill to execute on evasion.
+ *  Where CHANCE is the integer percent chance to execute it (0-100).
+ *
+ * Use this for counter-attacks, gap-closers, or any skill that should
+ * trigger automatically when the battler successfully evades.
+ *
  * ============================================================================
  * SKILL HISTORY BONUS:
  * These tags apply a damage multiplier based on a battler's recent skill
@@ -1285,28 +1333,30 @@
  * explicit tag for that dimension (e.g. a skill with no <proximity:N> is
  * not affected by rangeBuff/rangeRate on the proximity axis).
  *
- * STACKING FORMULA:
- *   finalValue = max(0, (base + totalBuff) * totalRate)
+ * STACKING FORMULA (shared, per-axis, and combined):
+ *   finalValue = max(0, (base + sharedBuff + axisBuff) * (sharedRate + axisRateDelta))
  *
- * Where totalBuff is the sum of every <rangeBuff:N> value and
- * totalRate accumulates as: 1.0 + sum(each rateTag - 1.0).
+ * Where sharedBuff = sum of every <rangeBuff:N>, axisBuff = sum of every axis-specific buff,
+ * sharedRate accumulates as: 1.0 + sum(each rangeRate - 1.0),
+ * and axisRateDelta = sum(each axis-specific rate - 1.0) added on top.
  *   <rangeRate:1.5> alone → 1.5x
  *   <rangeRate:1.5> + <rangeRate:1.5> → 2.0x  (each contributes +0.5)
+ *   <rangeRate:1.5> + <radiusRate:1.2> on radius → (1.0 + 0.5 + 0.2) = 1.7x
  *   <rangeRate:0.8> → 0.8x  (contributes -0.2, acts as a range penalty)
  *
  * ----------------------------------------------------------------------------
- * RANGE BUFF (flat additive, applied before rate):
+ * RANGE BUFF (flat additive, applied before rate — affects ALL dimensions):
  * Adds N tiles to the base value before the rate multiplier is applied.
  * Negative values reduce reach (range penalty).
  *    <rangeBuff:N>
  *  Where N is a signed decimal tile count (e.g. 1.5, -0.5).
  *
  * Example:
- *  Hazard mastery — +2 tiles on every outgoing action:
+ *  +2 tiles on every outgoing action's radius, proximity, and thickness:
  *    <rangeBuff:2>
  *
  * ----------------------------------------------------------------------------
- * RANGE RATE (multiplicative, base-1.0 delta model):
+ * RANGE RATE (multiplicative, base-1.0 delta model — affects ALL dimensions):
  * Multiplies the buffed value. The tag value IS the rate, not the delta;
  * each tag contributes (N - 1.0) to the rate accumulator so that stacking
  * multiple rates behaves additively rather than compounding exponentially.
@@ -1314,8 +1364,68 @@
  *  Where N is a non-negative decimal multiplier (1.0 = no change).
  *
  * Example:
- *  Hazard mastery — 1.5x reach on all actions:
+ *  1.5x reach on all actions (radius, proximity, and thickness):
  *    <rangeRate:1.5>
+ *
+ * ----------------------------------------------------------------------------
+ * RADIUS BUFF (flat additive, radius only — stacks with rangeBuff):
+ * Adds N tiles to the radius (AoE splash zone) only; does not affect proximity or thickness.
+ *    <radiusBuff:N>
+ *  Where N is a signed decimal tile count.
+ *
+ * Example:
+ *  Hazard mastery — +2 tiles to AoE splash zone only:
+ *    <radiusBuff:2>
+ *
+ * ----------------------------------------------------------------------------
+ * RADIUS RATE (multiplicative, radius only — stacks with rangeRate):
+ * Adds (N - 1.0) to the rate accumulator for radius only.
+ *    <radiusRate:N>
+ *  Where N is a non-negative decimal multiplier (1.0 = no change).
+ *
+ * Example:
+ *  Hazard mastery — 1.5x AoE splash zone, targeting reach unchanged:
+ *    <radiusRate:1.5>
+ *
+ * ----------------------------------------------------------------------------
+ * PROXIMITY BUFF (flat additive, proximity only — stacks with rangeBuff):
+ * Adds N tiles to proximity (targeting reach) only; does not affect radius or thickness.
+ *    <proximityBuff:N>
+ *  Where N is a signed decimal tile count.
+ *
+ * Example:
+ *  +2 tiles of targeting reach, splash zone unchanged:
+ *    <proximityBuff:2>
+ *
+ * ----------------------------------------------------------------------------
+ * PROXIMITY RATE (multiplicative, proximity only — stacks with rangeRate):
+ * Adds (N - 1.0) to the rate accumulator for proximity only.
+ *    <proximityRate:N>
+ *  Where N is a non-negative decimal multiplier (1.0 = no change).
+ *
+ * Example:
+ *  1.5x targeting reach, splash zone unchanged:
+ *    <proximityRate:1.5>
+ *
+ * ----------------------------------------------------------------------------
+ * THICKNESS BUFF (flat additive, thickness only — stacks with rangeBuff):
+ * Adds N tiles to thickness (LINE/WALL hitbox width) only; does not affect radius or proximity.
+ *    <thicknessBuff:N>
+ *  Where N is a signed decimal tile count.
+ *
+ * Example:
+ *  +1 tile of LINE/WALL width, radius and proximity unchanged:
+ *    <thicknessBuff:1>
+ *
+ * ----------------------------------------------------------------------------
+ * THICKNESS RATE (multiplicative, thickness only — stacks with rangeRate):
+ * Adds (N - 1.0) to the rate accumulator for thickness only.
+ *    <thicknessRate:N>
+ *  Where N is a non-negative decimal multiplier (1.0 = no change).
+ *
+ * Example:
+ *  1.5x LINE/WALL width, radius and proximity unchanged:
+ *    <thicknessRate:1.5>
  *
  * ============================================================================
  * STATE DAMAGE MULTIPLIERS:
@@ -1367,6 +1477,39 @@
  *    <bonusDamageIfState:[STATE_ID_DISABLED, 25]>
  *
  * If the target has all three, specificStateBonusPct = 75 (each fires independently).
+ *
+ * ----------------------------------------------------------------------------
+ * THIS BONUS DAMAGE:
+ * Skill-scoped unconditional flat percent damage bonus. Fires whenever THIS skill
+ * is the action being resolved, with no target state requirement. Useful for
+ * prof extend rows that need to boost a specific skill's damage without touching
+ * its formula or leaking the bonus to the rest of the caster's kit.
+ * Multiple tags on the same skill stack additively.
+ *    <thisBonusDamage:PCT>
+ *  Where PCT is the integer (or decimal) percent bonus to add unconditionally.
+ *
+ * Example:
+ *  Blade of the Mouse row 6 — +20% damage on mainchain skills:
+ *    placed on the extend skill targeting [11,12,13]:
+ *    <thisBonusDamage:20>
+ *
+ * ----------------------------------------------------------------------------
+ * THIS BONUS DAMAGE IF STATE:
+ * Skill-scoped variant of BONUS DAMAGE IF STATE. Adds PCT% bonus damage if the
+ * target currently has a specific state active, but only when THIS skill is the
+ * action being resolved. Put on a specific skill to avoid bleeding the bonus
+ * across the entire kit (unlike the caster-wide bonusDamageIfState tag).
+ * Multiple tags for different state ids each contribute independently.
+ *    <thisBonusDamageIfState:[STATE_ID, PCT]>
+ *  Where STATE_ID is the database id of the state to check.
+ *  Where PCT is the integer percent bonus to add when the state is present.
+ *
+ * Example:
+ *  Blade of the Dragon row 9 — +100% damage from this skill vs stunned enemies:
+ *    <thisBonusDamageIfState:[STATE_ID_STUN, 100]>
+ *
+ * If this tag appears multiple times on the same skill (different state ids),
+ * each matching state adds PCT independently to the total.
  *
  * ----------------------------------------------------------------------------
  * BONUS DAMAGE IF STATE TYPE:

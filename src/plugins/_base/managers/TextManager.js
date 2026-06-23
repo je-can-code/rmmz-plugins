@@ -200,10 +200,8 @@ TextManager.xparamDescription = function(paramId)
     // EVA (physical hit EVasion)
     case 1:
       return [
-        // "The stat representing skill in physically evading attacks.",  // original function.
-        // "Having higher evasion is often seen as a form of tanking.",   // original function.
-        "The stat governing one's uncanny ability to parry precisely.",
-        "An optional stat, but having more will make parrying easier."
+        "The stat representing skill in physically evading attacks.",
+        "Having higher evasion will cause incoming hits to be dodged."
       ];
 
     // CRI (CRItical hit chance)
@@ -388,7 +386,7 @@ TextManager.xparam = function(xParamId)
     case 0:
       return "Accuracy"; //J.Param.HIT_text;
     case 1:
-      return "Parry Extend"; //J.Param.EVA_text;
+      return "Phys Evade"; //J.Param.EVA_text;
     case 2:
       return "Crit Rate"; //J.Param.CRI_text;
     case 3:

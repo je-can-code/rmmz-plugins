@@ -68,10 +68,10 @@ J.CRIT.RegExp = {
   CritDamageMultiplier: /<critMultiplier: ?(\d+)>/gi,
 
   // for natural growths compatability.
-  CritDamageReductionBuffPlus: /<cdrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
-  CritDamageReductionBuffRate: /<cdrBuffRate:\[([+\-*/ ().\w]+)]>/gi,
-  CritDamageReductionGrowthPlus: /<cdrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
-  CritDamageReductionGrowthRate: /<cdrGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+  CritTakenRateBuffPlus: /<ctrBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  CritTakenRateBuffRate: /<ctrBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  CritTakenRateGrowthPlus: /<ctrGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  CritTakenRateGrowthRate: /<ctrGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 
   // for natural growths compatability.
   CritDamageMultiplierBuffPlus: /<cdmBuffPlus:\[([+\-*/ ().\w]+)]>/gi,

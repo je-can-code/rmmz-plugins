@@ -33,8 +33,8 @@ describe('J-CriticalFactors Game_Battler (out/crit/J-CriticalFactors.js)', () =>
 
     expect(actor._j._natural._cdmPlus).toBe(0);
     expect(actor._j._natural._cdmRate).toBe(0);
-    expect(actor._j._natural._cdrPlus).toBe(0);
-    expect(actor._j._natural._cdrRate).toBe(0);
+    expect(actor._j._natural._ctrPlus).toBe(0);
+    expect(actor._j._natural._ctrRate).toBe(0);
   });
 
   it('derives base critical multiplier from critMultiplierBase notes', () =>

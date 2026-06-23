@@ -21,7 +21,7 @@
  *
  * This plugin requires JABS.
  * This plugin requires the base HUD.
- * This plugin has no additional configuration required.
+ * See plugin parameters below for configuration options.
  * ----------------------------------------------------------------------------
  * DETAILS:
  * This includes the following data points for the currently selected leader:
@@ -31,6 +31,14 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.2.0
+ *    Cooldown overlay icon: a configurable icon renders over skill slots that
+ *    are currently on cooldown, making unavailability obvious at a glance.
+ *    Pulse animation: a brief scale pop fires whenever a slot becomes newly
+ *    available (base cooldown finished or combo window opens).
+ *    Combo expire gauge: the cooldown gauge switches to a warm orange-to-yellow
+ *    color and counts down the combo expiry window while a follow-up is live,
+ *    then returns to the base cooldown display after the window closes.
  * - 1.1.2
  *    Combo cooldown gauge merges J-ABS global cooldown (GCD) for GCD-subject
  *    skill slots (not tool/dodge).
@@ -43,4 +51,10 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
+ *
+ * @param cooldownOverlayIconIndex
+ * @type number
+ * @text Cooldown Overlay Icon
+ * @desc Icon index to overlay on skill slots that are currently on cooldown.
+ * @default 90
  */

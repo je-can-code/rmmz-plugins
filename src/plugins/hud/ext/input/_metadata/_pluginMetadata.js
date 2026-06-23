@@ -10,6 +10,16 @@ class JHudInput_PluginMetadata extends PluginMetadata
   {
     super(name, version);
   }
+
+  /**
+   * Extends {@link PluginMetadata.postInitialize}.<br/>
+   * Reads plugin parameters and stores them as typed metadata properties.
+   */
+  postInitialize()
+  {
+    // read the cooldown overlay icon index; default to 90 if unset.
+    this.CooldownOverlayIconIndex = Number(this.parsedPluginParameters['cooldownOverlayIconIndex']) || 90;
+  }
 }
 
 export default JHudInput_PluginMetadata;

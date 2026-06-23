@@ -87,7 +87,7 @@ class ParameterKeys
     26: 'fdr',
     27: 'exr',
     28: 'cdm',
-    29: 'cdr',
+    29: 'ctr',
     30: 'mtp',
     31: 'msb',
     32: 'prof',
@@ -101,6 +101,8 @@ class ParameterKeys
     41: 'gdr',
     42: 'dor',
     43: 'hcr',
+    44: 'cdr',
+    45: 'per',
   };
 
   /**

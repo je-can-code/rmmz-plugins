@@ -23,6 +23,8 @@ J.PASSIVE.EXT.CONDITIONAL.Aliased = {};
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Action = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Battler = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Action = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_CharacterBase = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Window_PassiveDetail = new Map();
 
@@ -161,6 +163,19 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^
  * @type {RegExp}
  */
 J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution = /<removeOnSkillExecution:[ ]?(\[[^\]]+])>/gi;
+
+/**
+ * Captures {@code removeOnSkillResolution} bracket tuples from <strong>state</strong> notes only.<br/>
+ * When the owning battler's action resolves against a target, rolls chance and may peel stacks
+ * via {@link Game_Battler#decrementStateStacks}. Fires after {@link Game_Action#apply} so that
+ * state traits are still active during damage calculation.
+ * <p>
+ * Author shape: {@code <removeOnSkillResolution:[stypeId, chance]>}.<br/>
+ * {@code stypeId} 0 matches any skill type. {@code chance} is 1–100 for {@link RPGManager.chanceIn100}.
+ * </p>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution = /<removeOnSkillResolution:[ ]?(\[[^\]]+])>/gi;
 
 /**
  * Captures {@code removeStateOnMove} bracket tuples from <strong>state</strong> notes only.<br/>

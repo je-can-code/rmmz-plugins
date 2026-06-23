@@ -107,6 +107,20 @@ class JABS_GlobalCooldown
     }
     return null;
   }
+
+  /**
+   * Applies the caster's CDR to a base GCD frame count and returns the reduced value.
+   * CDR is in percent-point space: 15 CDR → GCD runs at 85% of base; 100 CDR → 0 frames (no GCD).
+   * Negative CDR lengthens the GCD. Result is clamped to a minimum of 0 frames.
+   * @param {JABS_Battler} jabsBattler The battler whose CDR is applied.
+   * @param {number} baseFrames The unmodified GCD frame count.
+   * @returns {number} The frame count after CDR is applied.
+   */
+  static reducedFramesForCaster(jabsBattler, baseFrames)
+  {
+    const { cdr } = jabsBattler.getBattler();
+    return Math.max(0, Math.round(baseFrames * (1 - cdr)));
+  }
 }
 
 export default JABS_GlobalCooldown;

@@ -109,11 +109,25 @@ class Sprite_CooldownGauge
   }
 
   /**
+   * Gets whether or not this gauge is currently showing the combo expiry countdown.
+   * While true, the gauge reflects the shrinking follow-up window rather than the base cooldown.
+   * @returns {boolean}
+   */
+  isInComboExpireMode()
+  {
+    return this.cooldownData().comboExpireFrames > 0;
+  }
+
+  /**
    * Gets whether or not this gauge has a max value currently.
+   * In combo expire mode the max is always the original window size, so we never treat it as unassigned.
    * @returns {boolean}
    */
   isMaxUnassigned()
   {
+    // the expire-mode max is derived dynamically and is always valid while the window is live.
+    if (this.isInComboExpireMode()) return false;
+
     return this._j._valueMax === 0;
   }
 
@@ -137,10 +151,15 @@ class Sprite_CooldownGauge
 
   /**
    * Gets the current value for this gauge.
+   * During the combo expiry window this is the remaining frames of that window rather than the base cooldown,
+   * so the gauge reads as "time left to press the follow-up."
    * @returns {number}
    */
   currentValue()
   {
+    // while a combo expiry window is live, show how much of it remains.
+    if (this.isInComboExpireMode()) return this.cooldownData().comboExpireFrames;
+
     const cd = this.cooldownData();
     const g = this.globalHudFrames();
     return Math.max(cd.frames, g);
@@ -148,10 +167,14 @@ class Sprite_CooldownGauge
 
   /**
    * Gets the max value for this gauge.
+   * During the combo expiry window this is the original window size rather than the base cooldown peak.
    * @returns {number}
    */
   maxValue()
   {
+    // while a combo expiry window is live, the max is the window size it started with.
+    if (this.isInComboExpireMode()) return this.cooldownData().comboExpireFramesMax;
+
     return this._j._valueMax;
   }
 
@@ -190,21 +213,27 @@ class Sprite_CooldownGauge
 
   /**
    * The color to gradient from.
-   * Defaults to blue.
+   * Defaults to blue; switches to orange during the combo expiry window.
    * @returns {string}
    */
   gaugeColor1()
   {
+    // warm start color for the combo expiry window to distinguish it from the base cooldown.
+    if (this.isInComboExpireMode()) return 'rgba(255, 165, 0, 1)';
+
     return 'rgba(0, 0, 255, 1)';
   }
 
   /**
    * The color to gradient into.
-   * Defaults to green.
+   * Defaults to green; switches to yellow during the combo expiry window.
    * @returns {string}
    */
   gaugeColor2()
   {
+    // warm end color for the combo expiry window.
+    if (this.isInComboExpireMode()) return 'rgba(255, 255, 0, 1)';
+
     return 'rgba(0, 255, 0, 1)';
   }
 
@@ -326,12 +355,28 @@ class Sprite_CooldownGauge
    * Shows or hides the gauge and updates its max from slot cooldown and optional merged GCD.
    * Hides only when both the slot base cooldown and merged GCD are finished; otherwise keeps the peak max for a smooth
    * drain.
+   * During a combo expiry window the gauge stays visible in expire-mode colors; the peak is still tracked so the
+   * base-cooldown display resumes correctly once the window closes.
    */
   handleActionReadiness()
   {
     const cooldown = this.cooldownData();
     const g = this.globalHudFrames();
     const eff = Math.max(cooldown.frames, g);
+
+    // always keep the base-cooldown peak up to date, even while in expire mode,
+    // so the bar starts at 100% fill when we switch back to base-cooldown display.
+    if (eff > this._j._gcdHudPeak)
+    {
+      this._j._gcdHudPeak = eff;
+    }
+
+    // during the combo expiry window: stay visible and let currentValue/maxValue/colors handle the rest.
+    if (this.isInComboExpireMode())
+    {
+      this.bitmap.paintOpacity = 255;
+      return;
+    }
 
     if (cooldown.isComboReady() && this.isMaxUnassigned())
     {
@@ -346,10 +391,6 @@ class Sprite_CooldownGauge
 
     if (cooldown.isBaseReady() === false || g > 0)
     {
-      if (this._j._gcdHudPeak < eff)
-      {
-        this._j._gcdHudPeak = eff;
-      }
       this.setMaxValue(this._j._gcdHudPeak);
       this.bitmap.paintOpacity = 255;
     }

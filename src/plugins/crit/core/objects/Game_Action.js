@@ -240,7 +240,7 @@ Game_Action.prototype.applyCriticalDamageReduction = function(criticalDamage)
   if (!defender) return criticalDamage;
 
   // this gives us a multiplier representing how reduced the crit damage is.
-  const baseCriticalReductionRate = (1 - defender.cdr)
+  const baseCriticalReductionRate = (1 - defender.ctr)
 
   // this cannot reduce the crit bonus damage below 0.
   const criticalReductionRate = Math.max(baseCriticalReductionRate, 0);

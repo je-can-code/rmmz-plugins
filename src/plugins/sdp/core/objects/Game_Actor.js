@@ -107,6 +107,18 @@ Game_Actor.prototype.getTotalSdpRanks = function()
 };
 
 /**
+ * The number of panels this actor has reached max rank on.
+ * @returns {number}
+ */
+Game_Actor.prototype.getMasteryCount = function()
+{
+  // count every panel ranking where the actor has hit max rank.
+  return this.getAllSdpRankings()
+    .filter(panelRanking => panelRanking.isPanelMaxed() === true)
+    .length;
+};
+
+/**
  * Gets all unlocked panels for this actor.
  * @returns {PanelRanking[]}
  */
@@ -229,8 +241,22 @@ Game_Actor.prototype.modSdpPoints = function(points)
   // if the modification is a positive amount...
   if (gainedSdpPoints > 0)
   {
-    // then add apply the multiplier to the gained points.
+    // then apply the SDR multiplier (panels, tags, and SDP gear) to the gained points.
     gainedSdpPoints = Math.round(gainedSdpPoints * this.sdpMultiplier);
+
+    // evaluate any formula-based bonus multipliers sourced from all note objects on this actor.
+    const formulaBonus = RPGManager.getResultsFromAllNotesByRegex(
+      this.getAllNotes(),
+      J.SDP.RegExp.SdpBonusFormula,
+      0,
+      this
+    );
+
+    // if any formula tags contributed a bonus, layer their multiplier on top of SDR.
+    if (formulaBonus !== 0)
+    {
+      gainedSdpPoints = Math.round(gainedSdpPoints * (1 + formulaBonus));
+    }
 
     // add to the running accumulative total.
     this.modAccumulatedTotalSdpPoints(gainedSdpPoints);
@@ -245,6 +271,9 @@ Game_Actor.prototype.modSdpPoints = function(points)
     // return it back to 0.
     this._j._sdp._points = 0;
   }
+
+  // return the final amount so callers can surface accurate feedback (e.g. popups).
+  return gainedSdpPoints;
 };
 
 /**

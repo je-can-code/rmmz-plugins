@@ -78,6 +78,10 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
       {
         return states;
       },
+      getAllNotes()
+      {
+        return [];
+      },
       addState(stateId)
       {
         this.__addedStates.push(stateId);

@@ -110,6 +110,23 @@
  *  <removeOnSkillExecution:[7, 100]>
  *  <removeOnSkillExecution:[0, 25]>
  * ============================================================================
+ * REMOVE ON SKILL RESOLUTION (state note only)
+ *  <removeOnSkillResolution:[STYPE_ID, CHANCE]>
+ *
+ * When the action fired by this battler fully expires — after its last hit lands,
+ * or after it travels its full duration without contacting any target — rolls CHANCE
+ * (1–100). STYPE_ID 0 = any type. On success, peels stacks via decrementStateStacks
+ * (respects loseAllStacksAtOnce on this state row). Tag lives on the state that may
+ * be removed — not on skills/equip.
+ *
+ * Unlike removeOnSkillExecution, removal fires at action expiry (after damage is
+ * already resolved), so state traits such as ATK bonuses are still present during
+ * damage calculation.
+ *
+ * EXAMPLES:
+ *  <removeOnSkillResolution:[7, 100]>
+ *  <removeOnSkillResolution:[0, 25]>
+ * ============================================================================
  * CHANGELOG:
  * - 1.0.0
  *    Initial release. Passive gates (passiveSourceRule, passiveStateRule,
@@ -118,7 +135,9 @@
  *    hpDmg/mpDmg/tpDmg/anyDmg (combat gain* loss only, not skill pay), whenCrit
  *    (victim), negaStateAdded/posiStateAdded/anyStateAdded, move (whole tiles via
  *    Pixelistics updatePixelStepping), and stand (idle on map). removeOnSkillExecution on state
- *    rows (stype filter, chance, stack-aware decrementStateStacks).
+ *    rows (stype filter, chance, stack-aware decrementStateStacks). removeOnSkillResolution on
+ *    state rows — same shape as removeOnSkillExecution but fires at action expiry so state
+ *    traits are active during damage calculation.
  * ============================================================================
  *
  * @param parentConfigPassiveConditional

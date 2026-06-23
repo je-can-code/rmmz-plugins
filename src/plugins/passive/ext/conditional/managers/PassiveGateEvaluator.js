@@ -18,6 +18,7 @@ class PassiveGateEvaluator
    * @param {...(number|string)} params Remaining tuple slots after the kind.
    * @returns {boolean} Whether this single tuple passes right now.
    */
+  // oxlint-disable-next-line complexity
   static evaluate(battler, kind, ...params)
   {
     // unpack the first param for gates that take a single scalar.

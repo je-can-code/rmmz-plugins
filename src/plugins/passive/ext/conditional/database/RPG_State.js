@@ -17,6 +17,24 @@ Object.defineProperty(RPG_State.prototype, 'removeOnSkillExecutionRules', {
 });
 
 /**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution} tuples from this state row.<br/>
+ * Each tuple is {@code [stypeId, chance]}; {@code stypeId} 0 matches any skill type.
+ * Fires after {@link Game_Action#apply} so state traits are active during damage calculation.
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_State.prototype, 'removeOnSkillResolutionRules', {
+  get()
+  {
+    // pull every skill-resolution removal tuple from notes on this state row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution,
+      true
+    );
+  },
+});
+
+/**
  * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove} tuples from this state row.<br/>
  * Each tuple is {@code [stateId]}; when the owning battler moves, that state is stripped.
  * @type {any[][]}

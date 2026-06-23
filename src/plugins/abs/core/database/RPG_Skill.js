@@ -415,12 +415,27 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboSkillId', {
 
 /**
  * The JABS combo delay in frames before the combo skill can be triggered.
- * @type {number|null}
+ * Defaults to 0 when the second parameter is omitted from the combo tag.
+ * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsComboDelay', {
   get: function()
   {
-    return this.jabsComboAction[1];
+    return this.jabsComboAction[1] ?? 0;
+  },
+});
+
+/**
+ * The JABS combo expire window in frames, counted from the moment the skill fires.
+ * When non-zero, the combo skill is cleared from the slot if it has not been used
+ * before this many frames elapse — even if the combo delay has not yet completed.
+ * Defaults to 0 (no expiry) when the third parameter is omitted from the combo tag.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsComboExpire', {
+  get: function()
+  {
+    return this.jabsComboAction[2] ?? 0;
   },
 });
 //endregion comboAction

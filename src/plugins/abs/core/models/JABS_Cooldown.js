@@ -63,6 +63,33 @@ class JABS_Cooldown
     this.comboReady = false;
 
     /**
+     * Frames remaining in the combo expiry window, counted from when the skill fired.
+     * Zero means no expiry is set; when it counts down to zero from a positive value,
+     * the combo is cleared even if the player has not pressed the follow-up.
+     * @type {number}
+     */
+    this.comboExpireFrames = 0;
+
+    /**
+     * The original expiry window size set when the skill fired.
+     * Stored alongside {@link comboExpireFrames} so the HUD gauge can compute a fill rate.
+     * Reset to zero when the window closes or the combo is cleared.
+     * @type {number}
+     */
+    this.comboExpireFramesMax = 0;
+
+    /**
+     * Describes how the HUD should display the cooldown-overlay icon for this slot.
+     * Set at skill-fire time from the executed skill's authored combo data:
+     *   'none'     — no combo link; show the overlay immediately.
+     *   'expiring' — combo with an authored expire window; show the overlay once the window closes.
+     *   'infinite' — combo with no expire window; never show the overlay (the whole CD is the window).
+     * Reset to 'none' when the base cooldown finishes.
+     * @type {'none'|'expiring'|'infinite'}
+     */
+    this.comboMode = 'none';
+
+    /**
      * Whether or not this cooldown is locked from changing.
      * @type {boolean}
      */
@@ -86,6 +113,9 @@ class JABS_Cooldown
     this.ready = false;
     this.comboFrames = 0;
     this.comboReady = false;
+    this.comboExpireFrames = 0;
+    this.comboExpireFramesMax = 0;
+    this.comboMode = 'none';
     this.locked = false;
     this.mustComboClear = false;
   }
@@ -174,6 +204,17 @@ class JABS_Cooldown
   }
 
   /**
+   * Sets how the HUD overlay icon behaves for this cooldown cycle.
+   * Called by the engine at skill-fire time from the executed skill's authored combo data.
+   * @param {'none'|'expiring'|'infinite'} mode The overlay mode.
+   */
+  setComboMode(mode)
+  {
+    // record the overlay behavior for this cooldown cycle.
+    this.comboMode = mode;
+  }
+
+  /**
    * Enables the flag to indicate the base skill is ready for this cooldown.
    * This also clears the combo data, as they both cannot be available at the same time.
    */
@@ -184,6 +225,9 @@ class JABS_Cooldown
 
     // toggles the base ready flag.
     this.ready = true;
+
+    // reset the overlay mode so the next skill fire starts clean.
+    this.comboMode = 'none';
   }
 
   /**
@@ -209,6 +253,14 @@ class JABS_Cooldown
 
     // check if the base cooldown is now not ready.
     this.handleIfBaseUnready();
+
+    // a positive value means a new skill just fired on this slot.
+    // clear the previous combo expiry window immediately — it belongs to the skill that just finished,
+    // and the hit-side updateComboSequence will set a fresh window if the new skill has one.
+    if (frames > 0)
+    {
+      this.setComboExpireFrames(0);
+    }
   }
 
   /**
@@ -265,18 +317,58 @@ class JABS_Cooldown
    */
   updateComboCooldown()
   {
-    // if the combo cooldown is ready, do not update.
-    if (this.comboReady) return;
-
-    // decrement the combo cooldown.
-    if (this.comboFrames > 0)
+    // tick the delay countdown only while the combo is not yet pressable.
+    if (!this.comboReady)
     {
-      // decrement the combo cooldown.
-      this.comboFrames--;
+      // decrement the combo delay.
+      if (this.comboFrames > 0)
+      {
+        this.comboFrames--;
+      }
+
+      // open the combo window once the delay has elapsed.
+      this.handleIfComboReady();
     }
 
-    // handle if the base cooldown is now ready.
-    this.handleIfComboReady();
+    // tick the expiry window only once the delay has elapsed and the follow-up is pressable.
+    // the expire window represents time the player *can* press the button, not time since the skill fired.
+    if (this.comboReady)
+    {
+      this.updateComboExpire();
+    }
+  }
+
+  /**
+   * Ticks the combo expiry countdown and clears the combo when the window closes.
+   * Has no effect when no expiry was set ({@link comboExpireFrames} is zero).
+   */
+  updateComboExpire()
+  {
+    // no expiry set; nothing to do.
+    if (this.comboExpireFrames <= 0) return;
+
+    // count down toward the deadline.
+    this.comboExpireFrames--;
+
+    // when the window closes, clear the combo as if the player missed it.
+    if (this.comboExpireFrames <= 0)
+    {
+      this.resetCombo();
+    }
+  }
+
+  /**
+   * Sets the combo expiry window in frames, counted from the moment the skill fires.
+   * Pass zero to remove any active expiry (no deadline).
+   * @param {number} frames Frames until the combo is auto-cleared.
+   */
+  setComboExpireFrames(frames)
+  {
+    // store the countdown starting value.
+    this.comboExpireFrames = frames;
+
+    // also record the original value so the HUD gauge knows the full window size.
+    this.comboExpireFramesMax = frames;
   }
 
   /**
@@ -362,6 +454,12 @@ class JABS_Cooldown
 
     // disable the ready flag.
     this.comboReady = false;
+
+    // clear any active expiry window so it does not fire again on the next skill.
+    this.comboExpireFrames = 0;
+
+    // clear the original window size now that the window is closed.
+    this.comboExpireFramesMax = 0;
 
     // requests the slot containing this cooldown to clear the combo id.
     this.requestComboClear();

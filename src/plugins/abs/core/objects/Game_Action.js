@@ -95,12 +95,19 @@ Game_Action.prototype.applyVirtualJabsAction = function(target)
   // do the preliminary
   this.preApplyAction(target);
 
+  const result = target.result();
+
   // validate we landed a hit.
-  if (target.result()
-    .isHit())
+  if (result.isHit())
   {
     // applies common events that may be a part of a skill's effect.
     this.executeJabsAction(target);
+  }
+  // check if this was evaded.
+  else if (result.isEvaded())
+  {
+    // execute evasion hooks.
+    target.onEvade(this.subject(), this);
   }
 
   // also update the last target hit.
@@ -379,17 +386,16 @@ Game_Action.prototype.calculateParryDamageReduction = function(jabsBattler, orig
 
 /**
  * Scales the given damage value down to the glancing blow fraction defined by plugin parameters.
- * Glancing blows always deal at least 1 damage so the hit registers visibly.
  * @param {number} originalDamage The calculated damage before the glancing reduction.
- * @returns {number} The reduced damage, floored at 1.
+ * @returns {number} The reduced damage, rounded to the nearest integer.
  */
 Game_Action.prototype.applyGlancingDamageReduction = function(originalDamage)
 {
   // retrieve the configured fraction of damage a glancing blow deals.
   const damageFactor = J.ABS.Metadata.GlancingBlowDamageFactor;
 
-  // scale the damage down and ensure the hit always registers as non-zero.
-  return Math.max(1, Math.round(originalDamage * damageFactor));
+  // scale the damage down and round to the nearest integer.
+  return Math.round(originalDamage * damageFactor);
 };
 
 /**
@@ -710,13 +716,15 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   // non-positive damage has no multiplicative state bonus.
   if (baseDamage <= 0) return baseDamage;
 
-  // sum contributions from all four tag types.
+  // sum contributions from all six tag types.
   const debuffPct = this.calculatePerDebuffBonusPct(target);
   const specificPct = this.calculateBonusIfStatePct(target);
+  const thisSpecificPct = this.calculateThisBonusDamageIfStatePct(target);
+  const thisFlatPct = this.calculateThisBonusDamagePct();
   const typePresencePct = this.calculateBonusIfStateTypePct(target);
   const typeCountPct = this.calculatePerStateTypePct(target);
 
-  const combinedPct = debuffPct + specificPct + typePresencePct + typeCountPct;
+  const combinedPct = debuffPct + specificPct + thisSpecificPct + thisFlatPct + typePresencePct + typeCountPct;
 
   // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
@@ -780,6 +788,59 @@ Game_Action.prototype.calculateBonusIfStatePct = function(target)
   });
 
   return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from thisBonusDamageIfState tags on this action's skill.
+ * Reads from this.item() only — fires only when this specific skill is the action being resolved.
+ * Multiple tags for different state ids each fire independently and stack additively.
+ * @param {Game_Battler} target The target whose active states are checked.
+ * @returns {number} The total bonus percent from all matching state tags on this skill.
+ */
+Game_Action.prototype.calculateThisBonusDamageIfStatePct = function(target)
+{
+  // read all [STATE_ID, PCT] pairs from the executing skill's own note only.
+  // nullIfEmpty = false: getArraysFromNotesByRegex returns [] when the tag is absent.
+  const allPairs = RPGManager.getArraysFromNotesByRegex(
+    this.item(),
+    J.ABS.RegExp.ThisBonusDamageIfState);
+
+  // if no tags are present on this skill, there is no bonus.
+  if (!allPairs.length) return 0;
+
+  // accumulate the percent from each tag whose state is active on the target.
+  let totalPct = 0;
+  allPairs.forEach(([stateId, percent]) =>
+  {
+    // check if the target currently has this specific state.
+    if (target.isStateAffected(stateId))
+    {
+      totalPct += percent;
+    }
+  });
+
+  return totalPct;
+};
+
+/**
+ * Calculates the unconditional flat percent damage bonus from the thisBonusDamage tag on this
+ * action's skill. Fires whenever this skill is the action being resolved, with no state check.
+ * Reads from this.item() only — does not affect any other skill in the caster's kit.
+ * @returns {number} The bonus percent, or 0 if the tag is absent.
+ */
+Game_Action.prototype.calculateThisBonusDamagePct = function()
+{
+  // read the PCT value directly from the executing skill's own note.
+  // nullIfEmpty = true so we can distinguish tag-absent from tag-present-with-zero.
+  const pct = RPGManager.getNumberFromNoteByRegex(
+    this.item(),
+    J.ABS.RegExp.ThisBonusDamage,
+    true);
+
+  // if the tag is not present on this skill, there is no bonus.
+  if (pct === null) return 0;
+
+  return pct;
 };
 
 /**

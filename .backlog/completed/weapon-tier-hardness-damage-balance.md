@@ -1,7 +1,10 @@
 ---
-status: open
+status: completed
 area: feature
+resolution: superseded
 ---
+
+> **Resolved (2026-06-22):** The SDP redesign switched all panels from flat stat grants to %-based multipliers on base parameters. Weapon ATK/MAT is now the foundation the SDP scales off of, so a better weapon is always meaningfully better — the problem dissolved structurally. No separate tier/hardness/pierce system needed.
 
 # Weapon relevance vs SDP: tier throttling, hardness, and armor piercing
 
