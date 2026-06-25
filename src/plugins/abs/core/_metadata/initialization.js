@@ -107,30 +107,12 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 {
-  // validate that the parsed blob matches our expected root shape.
-  const validate = parsedConfig =>
-  {
-    // the root must be an object.
-    if (parsedConfig === null || typeof parsedConfig !== 'object')
-    {
-      throw new Error('config root must be an object.');
-    }
-
-    // teams must exist and be an array.
-    const { teams } = parsedConfig;
-    if (Array.isArray(teams) === false)
-    {
-      throw new Error('config root must contain a "teams" array.');
-    }
-  };
-
-  // load and validate the external config.
+  // load the external config; the JMZ editor guarantees the root shape.
   const parsedConfig = ExternalJsonConfigLoader.load(
     configPath,
     ExternalJsonConfigLoaderOptions.Builder()
       .pluginName('J-ABS')
       .configName('external configuration')
-      .validator(validate)
       .build()
   );
 

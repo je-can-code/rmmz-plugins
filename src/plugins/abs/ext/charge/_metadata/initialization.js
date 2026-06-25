@@ -45,7 +45,9 @@ J.ABS.EXT.CHARGE.Aliased = {
   JABS_Action: new Map(),
   JABS_Battler: new Map(),
   JABS_StandardController: new Map(),
+  Scene_Boot: new Map(),
   SoundManager: new Map(),
+  Sprite_Character: new Map(),
 };
 
 /**

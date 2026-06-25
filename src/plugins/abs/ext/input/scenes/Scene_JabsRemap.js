@@ -1039,7 +1039,7 @@ class Scene_JabsRemap
   assignWithConflictResolution(button, symbol)
   {
     // check if this is an external capture token.
-    if (typeof button === 'string' && button.indexOf('__ext__') === 0)
+    if (button.startsWith('__ext__'))
     {
       // extract the namespace and key from the token format: __ext__<ns>:<key>
       const without = button.substring('__ext__'.length);

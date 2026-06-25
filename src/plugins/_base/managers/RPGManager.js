@@ -615,22 +615,11 @@ class RPGManager
    */
   static #getEvalCacheContextSuffix(context)
   {
-    if (context === null || context === undefined)
-    {
-      return '';
-    }
+    // no context means no level-sensitive cache busting is needed.
+    if (!context) return '';
 
-    if (typeof context.getLevel === 'function')
-    {
-      return `::ctxLvl=${context.getLevel()}`;
-    }
-
-    if (typeof context.level === 'number')
-    {
-      return `::ctxLvl=${context.level}`;
-    }
-
-    return '';
+    // all battlers expose getLevel() via J-Level; append it to bust the cache per level.
+    return `::ctxLvl=${context.getLevel()}`;
   }
 
   /**
@@ -1155,7 +1144,7 @@ class RPGManager
    */
   static resolveHitTypeString(str)
   {
-    if (!str || typeof str !== 'string') return null;
+    if (!str) return null;
 
     switch (str.toLowerCase())
     {

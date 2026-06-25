@@ -1,13 +1,13 @@
 //region gapClose
 /**
- * Whether or not this skill is designed to gap close.
- * Gap-closing will pull the player to wherever the skill connected.
- * @type {boolean}
+ * The gap close key for this skill, or null if this skill does not gap close.
+ * A skill gap closes only when its key matches the target's gap close target key.
+ * @type {string|null}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsGapClose', {
   get: function()
   {
-    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapClose);
+    return RPGManager.getStringFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapClose, true);
   },
 });
 //endregion gapClose
@@ -39,3 +39,17 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsGapClosePosition', {
   },
 });
 //endregion gapClosePosition
+
+//region thisOnGapCloseEnd
+/**
+ * The skill IDs to force-execute when this skill's gap close lands, sourced only from this skill's note.
+ * Returns an empty array if the tag is absent.
+ * @type {number[]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsThisOnGapCloseEnd', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseEndThis, true) ?? [];
+  },
+});
+//endregion thisOnGapCloseEnd

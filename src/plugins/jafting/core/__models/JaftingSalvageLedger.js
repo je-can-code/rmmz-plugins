@@ -26,19 +26,8 @@ JaftingSalvageLedger.MaterialArmorTypeId = 5;
  */
 JaftingSalvageLedger.getMaterialArmorTypeId = function()
 {
-  if (typeof J !== 'undefined'
-    && J.JAFTING !== undefined
-    && J.JAFTING.Metadata !== undefined)
-  {
-    const v = J.JAFTING.Metadata.materialArmorTypeId;
-
-    if (typeof v === 'number' && !Number.isNaN(v))
-    {
-      return v;
-    }
-  }
-
-  return JaftingSalvageLedger.MaterialArmorTypeId;
+  // read the armor type id directly from the plugin metadata.
+  return J.JAFTING.Metadata.materialArmorTypeId;
 };
 
 /**
@@ -49,19 +38,8 @@ JaftingSalvageLedger.getMaterialArmorTypeId = function()
  */
 JaftingSalvageLedger.getMaterialWeaponTypeId = function()
 {
-  if (typeof J !== 'undefined'
-    && J.JAFTING !== undefined
-    && J.JAFTING.Metadata !== undefined)
-  {
-    const v = J.JAFTING.Metadata.materialWeaponTypeId;
-
-    if (typeof v === 'number' && !Number.isNaN(v))
-    {
-      return v;
-    }
-  }
-
-  return -1;
+  // read the weapon type id directly from the plugin metadata.
+  return J.JAFTING.Metadata.materialWeaponTypeId;
 };
 
 /**

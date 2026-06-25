@@ -89,6 +89,10 @@ describe('J-ABS-Pixelistics JABS_Battler extensions', () =>
       {
         return 45;
       },
+      isDirectionFixed()
+      {
+        return false;
+      },
     };
     sandbox.$gamePlayer = fakePlayer;
 
@@ -108,6 +112,10 @@ describe('J-ABS-Pixelistics JABS_Battler extensions', () =>
       direction()
       {
         return 8;
+      },
+      isDirectionFixed()
+      {
+        return false;
       },
     };
     sandbox.$gamePlayer = fakePlayer;

@@ -4086,28 +4086,15 @@ class JABS_Battler
    */
   canDirectionalDodgeStepPass(character, direction8)
   {
+    // diagonal directions require a decomposed passability check against both axes.
     if (character.isDiagonalDirection(direction8))
     {
-      if (typeof character.canPassDiagonalByDirection === 'function')
-      {
-        return character.canPassDiagonalByDirection(direction8);
-      }
-
-      if (typeof character.getDiagonalDirections === 'function'
-        && typeof character.canPassDiagonally === 'function')
-      {
-        const pair = character.getDiagonalDirections(direction8);
-
-        return character.canPassDiagonally(character._x, character._y, pair[0], pair[1]);
-      }
+      const [ horz, vert ] = character.getDiagonalDirections(direction8);
+      return character.canPassDiagonally(character._x, character._y, horz, vert);
     }
 
-    if (typeof character.canPassStraight === 'function')
-    {
-      return character.canPassStraight(direction8);
-    }
-
-    return true;
+    // cardinal directions use the standard passability check.
+    return character.canPass(character._x, character._y, direction8);
   };
 
   /**

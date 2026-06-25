@@ -160,7 +160,7 @@ describe('J-Base RPGManager (out/J-Base.js)', () =>
       sandbox.$gameVariables._data[5] = 7;
       const data = { note: '<f:a.level + v[5]>' };
       const re = /<f:([^>]+)>/;
-      const ctx = { level: 3 };
+      const ctx = { level: 3, getLevel() { return this.level; } };
 
       expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(10);
     });
@@ -169,7 +169,7 @@ describe('J-Base RPGManager (out/J-Base.js)', () =>
     {
       const data = { note: '<f:15 + (a.level * 4)>' };
       const re = /<f:([^>]+)>/;
-      const ctx = { level: 1 };
+      const ctx = { level: 1, getLevel() { return this.level; } };
 
       expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(19);
 

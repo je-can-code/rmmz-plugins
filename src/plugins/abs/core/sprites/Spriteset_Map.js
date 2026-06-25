@@ -1271,9 +1271,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
       }
 
       const casterJb = jabsAction.getCaster();
-      const targetJb = typeof target.getJabsBattler === 'function'
-        ? target.getJabsBattler()
-        : null;
+      const targetJb = target.getJabsBattler();
 
       if (!targetJb)
       {

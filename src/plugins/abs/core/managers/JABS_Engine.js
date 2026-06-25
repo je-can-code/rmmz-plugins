@@ -206,6 +206,9 @@ class JABS_Engine
   /**
    * Builds screen-space melee px offsets from plugin defaults plus facing-aware vertical trims.
    * Lateral offsets stay global; up/down cardinals (and blended diagonals) get extra Y so wedges track torso motion.
+   * Left/right facings (4 and 6) bypass the base Y offset entirely: for those directions the perpendicular
+   * axis of the line hitbox is Y, so any global oy would skew the vertical hit window off-center. Keeping
+   * oy = 0 for L/R pins the breadth band symmetrically to the character's visual center (th/2 lift only).
    * @param {number} facing Logical travel dir8 from the {@link JABS_Action} (2 down … 8 up).
    * @returns {{ ox:number, oy:number }}
    */
@@ -215,6 +218,16 @@ class JABS_Engine
     const baseY = J.ABS.Metadata.HitboxMeleeOriginOffsetPxY;
     const extraDown = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown;
     const extraUp = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp;
+
+    // for pure left/right facings, suppress the global Y offset so the perpendicular
+    // breadth band stays centered on the character's visual midpoint rather than drifting up.
+    if (facing === 4 || facing === 6)
+    {
+      return {
+        ox: baseX,
+        oy: 0,
+      };
+    }
 
     let addY = 0;
 
@@ -283,16 +296,12 @@ class JABS_Engine
       };
     }
 
+    // get the action's recorded facing direction to orient the origin offset.
     let facing = 2;
-
-    if (typeof actionEvent.getJabsAction === 'function')
+    const ja = actionEvent.getJabsAction();
+    if (ja)
     {
-      const ja = actionEvent.getJabsAction();
-
-      if (ja)
-      {
-        facing = ja.direction();
-      }
+      facing = ja.direction();
     }
 
     const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);

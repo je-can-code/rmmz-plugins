@@ -391,6 +391,42 @@ To avoid confusion between augmenting existing implementations and creating new 
           line, and closing with `*/`.
         * There are a number of special @ annotations and multi-line structures (see existing examples for reference).
 * do not needlessly/defensively attempt to validate/coerce state- it should be assumed that the state is valid.
+
+### `typeof` policy
+
+`typeof` is almost never correct inside plugin source. The one narrow exception is documented below.
+
+**Never use `typeof` for:**
+
+- Checking whether a method or property exists on an internal object (`typeof this.getUuid === 'function'`). If it is
+  part of this codebase, read the source and know what it returns. If it is missing, add it.
+- Guarding against null/undefined on any method whose `@returns` tag already excludes null. Trust the contract.
+- Probing whether an extension is loaded from core code (`typeof J.ABS !== 'undefined'`). Core never checks for
+  extensions; extensions alias/override core to inject behavior.
+- Save-migration guards (`if (!this._j || !this._j._abs || ...)`). The `||=` initialization in `initMembers`
+  guarantees all fields exist on any current save. New saves only.
+- Dispatching on input type when your own tooling (the JMZ data editor) always writes one specific type. If the
+  editor writes a number, there is no string branch.
+
+**The one valid use — `JsonMapper.js` only:**
+
+`typeof` is acceptable exactly once in this entire codebase: inside `JsonMapper.js`, which is the implementation
+of the RMMZ plugin-parameter parser. That file IS the boundary; it is allowed to inspect raw types because that
+is its entire job.
+
+**Why there are no other exceptions:**
+
+All JSON in this project is written by the JMZ data editor, never by hand. The editor guarantees the output shape.
+`JSON.parse` either succeeds and returns a correctly shaped value, or throws. There is no middle ground and no
+human-authored file that could arrive with an unexpected type.
+
+**The authority hierarchy:**
+
+1. JMZ data editor authors all config files — its output shape is the contract.
+2. `JSON.parse` parses the file → succeeds or throws. No partial results.
+3. Plugin reads the parsed value → trust the shape. Access properties directly.
+
+If the editor does not yet write a field, fix the editor — not the plugin.
 * When working with state, use this formula to determine the structure:
     * `this._j.SENSIBLE_PLUGIN_ABBREVATION.FUNCTION_CONTAINER_NAME.SOME_STATE_NAME = default state`.
         * for example, `this._j._abs._input._lastInput = null;`.

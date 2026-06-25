@@ -802,48 +802,17 @@ class OverlayManager
   //region extend note
   // TODO: make this configurable.
   /**
-   * The list of keys on notes that should never get merged/overridden, but instead appended.
-   * @type {string[]}
-   */
-  static _nonCombiningKeys = [ 'drop' ];
-
-  /**
-   * Gets the keys that should never be combined- they will effectively be treated as unsupported.
-   * @returns {string[]}
-   */
-  static getNonCombiningKeys()
-  {
-    return this._nonCombiningKeys;
-  }
-
-  /**
-   * Sets the global list of tag keys that should NOT be replaced when merging, but instead combined.
-   * This allows multi-instance tags like `drop` to append additional lines from the overlay note.
-   * @param {string[]} keys The array of keys that should be non-combining (case-insensitive).
-   */
-  static setNonCombiningKeys(keys)
-  {
-    // ensure we store a normalized list of lowercase keys for comparisons.
-    this._nonCombiningKeys = Array.isArray(keys)
-      ? keys.map(k => String(k)
-        .toLowerCase())
-      : [];
-  }
-
-  /**
    * Merges the overlay note into the base note with key-aware behavior.
-   * - For keys not in the exclusions set: replace base lines with overlay lines if overlay provides any.
-   * - For keys in the exclusions set: append unique overlay lines after base lines (multi-instance tags like "drop").
+   * - For keys not registered as non-combining: replace base lines with overlay lines if overlay provides any.
+   * - For keys registered as non-combining: append unique overlay lines after base lines.
    * - Unsupported lines (non-tag text) are preserved from both notes with deduplication; base lines keep priority.
-   *
+   * Non-combining keys are registered via {@link J.EXTEND.Metadata.registerNonCombiningKey}.
    * Keys are case-insensitive. Tags are those enclosed with angle brackets (e.g., `<key:value>` or `<key>`).
-   *
    * @param {string} baseNote The base note content.
    * @param {string} overlayNote The overlay note content.
-   * @param {string[]=} nonCombiningKeys Optional keys to merge instead of replace; defaults to configured static list.
    * @returns {string} The merged note text, joined with newlines.
    */
-  static overwriteNote(baseNote, overlayNote, nonCombiningKeys)
+  static overwriteNote(baseNote, overlayNote)
   {
     // normalize the incoming notes to empty strings if nullish.
     const oldNote = baseNote || String.empty;
@@ -851,8 +820,8 @@ class OverlayManager
     // normalize the overlay note to empty string if nullish.
     const newNote = overlayNote || String.empty;
 
-    // normalize the incoming non-combining keys; fall back to configured static if not provided.
-    const exclusions = this._normalizeExclusions(nonCombiningKeys);
+    // fetch the currently registered non-combining keys from the extend plugin metadata.
+    const exclusions = J.EXTEND.Metadata.getNonCombiningKeys();
 
     // tokenize both notes into tags and unsupported lines.
     const oldTokens = this._tokenizeNote(oldNote);
@@ -866,7 +835,7 @@ class OverlayManager
     // bucket the tags by key for new note.
     const newBuckets = this._toKeyBuckets(newTokens.tags);
 
-    // merge the buckets based on replace-or-merge rules and exclusions.
+    // merge the buckets based on replace-or-append rules per registered non-combining keys.
     const merged = this._mergeBuckets(oldBuckets, newBuckets, exclusions);
 
     // merge unsupported lines from old then new with deduplication.
@@ -877,23 +846,6 @@ class OverlayManager
 
     // return the final merged note string.
     return result;
-  }
-
-  /**
-   * Normalizes the incoming exclusions array, or falls back to the static configuration.
-   * @param {string[]|null|undefined} exclusions The caller-provided keys that should merge instead of replace.
-   * @returns {string[]} A lowercase array of keys to treat as non-replacing during merges.
-   */
-  static _normalizeExclusions(exclusions)
-  {
-    // determine the base keys list to use.
-    const provided = Array.isArray(exclusions)
-      ? exclusions
-      : this.getNonCombiningKeys();
-
-    // normalize all keys to lowercase for case-insensitive comparisons.
-    return provided.map(k => String(k)
-      .toLowerCase());
   }
 
   /**

@@ -118,14 +118,8 @@ Game_System.prototype.getJabsInputConfig = function(controllerKey)
  */
 Game_System.prototype.getInputBindingsSnapshot = function()
 {
-  // in case this save file was created ahead of the remap update, handle it.
-  if (!this._j || !this._j._abs || !this._j._abs._input || !this._j._abs._input._bindings)
-  {
-    return {};
-  }
-
-  // return the stored snapshot bag (may be empty object).
-  return this._j._abs._input._bindings || {};
+  // return the stored snapshot bag of input bindings.
+  return this._j._abs._input._bindings;
 };
 
 /**

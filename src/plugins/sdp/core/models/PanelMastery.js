@@ -125,7 +125,7 @@ class PanelMastery
   {
     const nested = parsedPanel.mastery;
 
-    if (nested && typeof nested === 'object')
+    if (nested)
     {
       return PanelMastery.fromFlat(
         nested.subgroupKey ?? String.empty,

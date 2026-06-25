@@ -116,11 +116,9 @@ Game_Event.prototype.refreshPixelAbsHitboxSizeData = function()
 Game_Event.prototype.canUsePixelAbsEnemyHitboxData = function()
 {
   // if this event is not a JABS battler, then this feature does not apply.
-  if (typeof this.isJabsBattler !== 'function') return false;
   if (this.isJabsBattler() === false) return false;
 
   // only enemy battlers with a valid enemy id should use this path.
-  if (typeof this.getBattlerId !== 'function') return false;
   if (this.getBattlerId() <= 0) return false;
 
   return true;
@@ -150,9 +148,6 @@ Game_Event.prototype.hasCustomPixelHitbox = function()
  */
 Game_Event.prototype.getPixelAbsHitboxSizeCommentOverride = function()
 {
-  // if the event cannot parse comments, then there can be no override.
-  if (typeof this.extractValueByRegex !== 'function') return null;
-
   // grab the raw comment payload and normalize it into the shared model.
   const rawHitboxSize = this.extractValueByRegex(J.PIXEL.EXT.ABS.RegExp.HitboxSize, null, false);
   return RPG_Enemy.hitboxSizeDataFromRaw(rawHitboxSize);
@@ -227,9 +222,6 @@ Game_Event.prototype.refreshPixelAbsHitboxRevealRange = function()
  */
 Game_Event.prototype.getPixelAbsHitboxRevealCommentOverride = function()
 {
-  // if the event cannot parse comments, then there can be no override.
-  if (typeof this.extractValueByRegex !== 'function') return null;
-
   // grab the reveal range directly from the event comments.
   return this.extractValueByRegex(J.PIXEL.EXT.ABS.RegExp.HitboxReveal, null, true);
 };

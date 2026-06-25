@@ -38,6 +38,7 @@ J.ABS.EXT.HITSTOP.Metadata = new JHitstop_PluginMetadata(__PLUGIN_NAME__, __PLUG
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.HITSTOP.Aliased = {};
+J.ABS.EXT.HITSTOP.Aliased.DataManager = new Map();
 J.ABS.EXT.HITSTOP.Aliased.Game_Character = new Map();
 J.ABS.EXT.HITSTOP.Aliased.JABS_Engine = new Map();
 J.ABS.EXT.HITSTOP.Aliased.JABS_Action = new Map();

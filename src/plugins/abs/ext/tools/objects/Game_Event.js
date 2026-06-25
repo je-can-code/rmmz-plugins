@@ -1,29 +1,32 @@
 //region Game_Event
 /**
- * Determines whether or not this event has any gap close target overrides.
- * @returns {boolean} True if this event has a gap close override, false otherwise.
+ * Gets the gap close target key from this event's comment commands, or null if not a gap close target.
+ * @returns {string|null} The gap close target key, or null if not present.
  */
-Game_Event.prototype.isGapClosable = function()
+Game_Event.prototype.gapCloseKey = function()
 {
-  // initialize the data.
-  let gapCloseTarget = false;
+  // initialize the found key.
+  let foundKey = null;
 
-  // check all the valid event commands to see if this target is gap closable.
+  // TODO: route through RPGManager once it supports event comment caching.
+  // check all valid comment commands for the gap close target tag.
   this.getValidCommentCommands()
     .forEach(command =>
     {
       // shorthand the comment into a variable.
       const [ comment, ] = command.parameters;
 
-      // check if it is a gap closable target.
-      if (J.ABS.EXT.TOOLS.RegExp.GapCloseTarget.test(comment))
-      {
-        // flag it as such.
-        gapCloseTarget = true;
-      }
+      // execute the regexp against this comment to capture the key.
+      const result = J.ABS.EXT.TOOLS.RegExp.GapCloseTarget.exec(comment);
+
+      // skip comments that don't match.
+      if (!result) return;
+
+      // extract and store the captured key.
+      [ , foundKey ] = result;
     });
 
-  // return what we found.
-  return gapCloseTarget;
+  // return the key found, or null if none matched.
+  return foundKey;
 };
 //endregion Game_Event

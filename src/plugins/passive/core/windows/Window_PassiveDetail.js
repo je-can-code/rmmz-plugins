@@ -366,7 +366,7 @@ class Window_PassiveDetail
       const a = actor;
       const b = actor;
       const result = new Function('a', 'b', `return (${formula})`)(a, b);
-      if (typeof result === 'number') return `${Math.round(result)}`;
+      if (Number.isFinite(result)) return `${Math.round(result)}`;
       return `${result}`;
     }
     catch

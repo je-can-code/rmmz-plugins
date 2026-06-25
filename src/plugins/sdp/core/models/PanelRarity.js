@@ -137,60 +137,16 @@ class PanelRarity
   }
 
   /**
-   * Coerces parsed JSON into {@link PanelRarity.RARITY_COMMON} .. {@link PanelRarity.RARITY_GODLIKE}.
+   * Coerces a numeric rarity value from config.sdp.json into {@link PanelRarity.RARITY_COMMON} .. {@link PanelRarity.RARITY_GODLIKE}.
+   * The editor always writes rarity as a number; string inputs are not a supported format.
    *
-   * @param {string|number} raw Labels, integers **0–5**, or alternate integer encodings accepted by the loader.
+   * @param {number} raw Integer from parsed JSON; 0–5 canonical or legacy window-color codes.
    * @returns {number}
    */
   static normalizeRarityFromJson(raw)
   {
-    if (typeof raw === "string")
-    {
-      const trimmed = raw.trim();
-
-      if (trimmed === "")
-      {
-        return PanelRarity.RARITY_COMMON;
-      }
-
-      switch (trimmed)
-      {
-        case PanelRarity.Common:
-          return PanelRarity.RARITY_COMMON;
-        case PanelRarity.Magical:
-          return PanelRarity.RARITY_MAGICAL;
-        case PanelRarity.Rare:
-          return PanelRarity.RARITY_RARE;
-        case PanelRarity.Epic:
-          return PanelRarity.RARITY_EPIC;
-        case PanelRarity.Legendary:
-          return PanelRarity.RARITY_LEGENDARY;
-        case PanelRarity.Godlike:
-          return PanelRarity.RARITY_GODLIKE;
-        default:
-          break;
-      }
-
-      const parsedFromString = parseInt(trimmed, 10);
-
-      if (!Number.isNaN(parsedFromString))
-      {
-        return PanelRarity.normalizeRarityFromJson(parsedFromString);
-      }
-
-      // Surface a non-fatal warning for operator triage.
-      console.warn(`PanelRarity.normalizeRarityFromJson: unrecognized string [ ${trimmed} ].`);
-      return PanelRarity.RARITY_COMMON;
-    }
-
-    const n = parseInt(raw, 10);
-
-    if (Number.isNaN(n))
-    {
-      return PanelRarity.RARITY_COMMON;
-    }
-
-    switch (n)
+    // legacy window-color codes that predate the 0–5 canonical range.
+    switch (raw)
     {
       case PanelRarity.WindowColorRare:
         return PanelRarity.RARITY_RARE;
@@ -204,13 +160,14 @@ class PanelRarity
         break;
     }
 
-    if (n >= PanelRarity.RARITY_COMMON && n <= PanelRarity.RARITY_MAX)
+    // canonical 0–5 range passes through directly.
+    if (raw >= PanelRarity.RARITY_COMMON && raw <= PanelRarity.RARITY_MAX)
     {
-      return n;
+      return raw;
     }
 
-    // Surface a non-fatal warning for operator triage.
-    console.warn(`PanelRarity.normalizeRarityFromJson: out-of-range rarity [ ${n} ]; clamped to Common.`);
+    // anything else is a misauthored config; surface it and fall back to Common.
+    console.warn(`PanelRarity.normalizeRarityFromJson: out-of-range rarity [ ${raw} ]; clamped to Common.`);
     return PanelRarity.RARITY_COMMON;
   }
 

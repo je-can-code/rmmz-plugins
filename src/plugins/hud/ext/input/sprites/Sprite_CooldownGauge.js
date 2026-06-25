@@ -99,7 +99,6 @@ class Sprite_CooldownGauge
   globalHudFrames()
   {
     if (!this._j._gcdMergeBattler || !this._j._gcdMergeSkillId) return 0;
-    if (typeof J.ABS === 'undefined' || typeof JABS_GlobalCooldown === 'undefined') return 0;
     const sk = $dataSkills[this._j._gcdMergeSkillId];
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(sk) === false) return 0;
     const globalCd = this._j._gcdMergeBattler.getCooldown(J.ABS.Globals.GlobalCooldownKey);

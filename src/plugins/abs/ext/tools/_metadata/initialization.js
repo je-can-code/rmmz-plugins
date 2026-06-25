@@ -52,10 +52,12 @@ J.ABS.EXT.TOOLS.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.ABS.EXT.TOOLS.RegExp = {
-  GapClose: /<gapClose>/i,
-  GapCloseTarget: /<gapCloseTarget>/i,
+  GapClose: /<gapClose:(\w+)>/i,
+  GapCloseTarget: /<gapCloseTarget:(\w+)>/i,
   GapCloseMode: /<gapCloseMode:(blink|jump|travel)>/i,
   GapClosePosition: /<gapClosePosition:(infront|behind|same)>/i,
+  GapCloseEndThis: /<thisOnGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
+  GapCloseEnd: /<onGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
   BlockGapClose: /<blockGapClose>/i,
 };
 

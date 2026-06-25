@@ -29,13 +29,12 @@ describe('J-SDP StatDistributionPanel math (__models only)', () =>
     expect(PanelRarity.rarityIndexToColorIndex(PanelRarity.RARITY_GODLIKE)).toBe(PanelRarity.WindowColorGodlike);
   });
 
-  it('normalizeRarityFromJson coerces labels and alternate integer encodings to 0–5', () =>
+  it('normalizeRarityFromJson coerces legacy window-color codes and out-of-range integers to 0–5', () =>
   {
     const { PanelRarity } = sandbox;
     expect(PanelRarity.normalizeRarityFromJson(PanelRarity.WindowColorRare)).toBe(PanelRarity.RARITY_RARE);
     expect(PanelRarity.normalizeRarityFromJson(PanelRarity.WindowColorEpic)).toBe(PanelRarity.RARITY_EPIC);
     expect(PanelRarity.normalizeRarityFromJson(6)).toBe(PanelRarity.RARITY_COMMON);
-    expect(PanelRarity.normalizeRarityFromJson('Rare')).toBe(PanelRarity.RARITY_RARE);
   });
 
   it('rankUpCost adds exponential growth (flat * mult^(rank+1)); max rank returns 0', () =>

@@ -66,7 +66,7 @@ class PanelProgression
   {
     const nested = parsedPanel.progression;
 
-    if (nested && typeof nested === 'object')
+    if (nested)
     {
       return new PanelProgression(
         PanelProgression.#parseIntField(nested.maxRank, 1),

@@ -130,7 +130,7 @@ class J_SdpPluginMetadata
       if (familyName.startsWith('__')) return;
 
       const subgroupKeys = Array.isArray(parsedFamily.subgroupKeys)
-        ? parsedFamily.subgroupKeys.filter(key => typeof key === 'string' && key !== String.empty)
+        ? parsedFamily.subgroupKeys.filter(key => key !== String.empty)
         : [];
 
       // construct family for the next step in this routine.

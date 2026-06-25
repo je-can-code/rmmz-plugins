@@ -20,6 +20,13 @@ JABS_Battler.prototype.initGeneralInfo = function()
    * @type {[number, number]}
    */
   this._gapCloseDestination = [ 0, 0 ];
+
+  /**
+   * The ID of the skill that initiated the current gap close.
+   * Used at landing to read <thisOnGapCloseEnd> from that skill.
+   * @type {number}
+   */
+  this._gapCloseSourceSkillId = 0;
 };
 
 /**
@@ -119,6 +126,7 @@ JABS_Battler.prototype.updateGapClosing = function()
       if (this.hasReachedGapCloseDestination())
       {
         this.clearGapCloseDestination();
+        this.onGapCloseFinished();
         this.endGapClosing();
       }
 
@@ -137,19 +145,20 @@ JABS_Battler.prototype.updateGapClosing = function()
 };
 
 /**
- * Determines whether or not this battler can be gap closed to.
- * @returns {boolean} True if the battler can be gap closed to, false otherwise.
+ * Gets the gap close target key for this battler, or null if it cannot be gap closed to.
+ * Checks the underlying battler's notes first, then the character's event comments if applicable.
+ * @returns {string|null} The gap close target key, or null if not present.
  */
 JABS_Battler.prototype.isGapClosable = function()
 {
   // grab the battler.
   const battler = this.getBattler();
 
-  // check the battler to see if they are gap closable.
-  const battlerGapClosable = battler.isGapClosable();
+  // check the battler's notes for a gap close target key.
+  const battlerKey = battler.gapCloseKey();
 
-  // by default characters are not gap closable.
-  let characterGapClosable = false;
+  // if the battler's notes carry a key, that is the answer.
+  if (battlerKey !== null) return battlerKey;
 
   // check if this battler is an event-based battler.
   if (this.isEvent())
@@ -157,15 +166,12 @@ JABS_Battler.prototype.isGapClosable = function()
     // grab the character.
     const character = this.getCharacter();
 
-    // check the character to see if they are gap closable.
-    characterGapClosable = character.isGapClosable();
+    // check the event's comment commands for a gap close target key.
+    return character.gapCloseKey();
   }
 
-  // if either the battler or character is gap closable, then we can gap close.
-  if (battlerGapClosable || characterGapClosable) return true;
-
-  // no gap closing :(
-  return false;
+  // no gap close target key found anywhere.
+  return null;
 };
 
 /**
@@ -181,8 +187,8 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   // begin the gap closing procedure.
   this.beginGapClosing();
 
-  // set the gap close destination to wherever the target is at this moment.
-  this.setGapCloseDestination([ target.getX(), target.getY() ]);
+  // store the initiating skill ID so the landing hook can read its <thisOnGapCloseEnd> tag.
+  this._gapCloseSourceSkillId = action.getBaseSkill().id;
 
   // extract the gap close details from the skill.
   let {
@@ -193,8 +199,11 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   // if the position is not identified, then default to "same".
   jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;
 
-  // determine the destination delta coordiantes.
+  // determine the destination delta coordinates based on the position mode.
   const [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+
+  // store the actual landing coordinates (not the raw target tile) so the arrival check resolves correctly.
+  this.setGapCloseDestination([ this.getX() + x, this.getY() + y ]);
 
   // if the mode is not identified, then default to "jump".
   jabsGapCloseMode ??= J.ABS.EXT.TOOLS.GapCloseModes.Jump;
@@ -220,33 +229,89 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
 };
 
 /**
- * Determines where the precise coordinates are that we're attempting to gap close to.
- * Note that this doesn't return the x:y of the target, it returns the delta so that
- * @param {JABS_Battler} target The target having the action applied against.
- * @param {J.ABS.EXT.TOOLS.GapCloseModes} position The position post-gap-closing.
- * @returns {[x: number, y: number]}
+ * Fires when this battler has arrived at its gap close destination.
+ * Executes all skills collected by {@link resolveGapCloseEndSkillIds} as forced map actions.
+ */
+JABS_Battler.prototype.onGapCloseFinished = function()
+{
+  // collect all skill IDs to fire on landing from both tag sources.
+  const skillIds = this.resolveGapCloseEndSkillIds();
+
+  // if nothing was registered, there is nothing to do.
+  if (skillIds.length === 0) return;
+
+  // force-execute each registered skill from this battler's position at no cost.
+  skillIds.forEach(id => $jabsEngine.forceMapAction(this, id));
+};
+
+/**
+ * Collects all skill IDs that should fire when this battler's gap close lands.
+ * Merges IDs from <thisOnGapCloseEnd> on the initiating skill with IDs from
+ * <onGapCloseEnd> across all of the caster's note sources.
+ * @returns {number[]} The merged list of skill IDs to execute on landing.
+ */
+JABS_Battler.prototype.resolveGapCloseEndSkillIds = function()
+{
+  // grab the skill that started the gap close.
+  const sourceSkill = $dataSkills[this._gapCloseSourceSkillId];
+
+  // collect IDs from <thisOnGapCloseEnd> on the initiating skill itself.
+  const thisIds = sourceSkill
+    ? sourceSkill.jabsThisOnGapCloseEnd
+    : [];
+
+  // collect IDs from <onGapCloseEnd> across all of the caster's note sources.
+  const battlerIds = this.getBattler().gapCloseEndSkillIds();
+
+  // merge both sources into a single flat list.
+  return [ ...thisIds, ...battlerIds ];
+};
+
+/**
+ * Determines the jump delta coordinates for the gap close based on the desired landing position.
+ * Returns a delta (not absolute coordinates) suitable for passing to {@link Game_Character.jump}.
+ * Axis convention: +X = right, -X = left, +Y = down, -Y = up.
+ * @param {JABS_Battler} target The target being gap closed to.
+ * @param {J.ABS.EXT.TOOLS.GapClosePositions} position The desired landing position relative to the target.
+ * @returns {[number, number]} The [dx, dy] delta to jump.
  */
 JABS_Battler.prototype.determineGapCloseCoordinates = function(target, position)
 {
+  // grab the target's underlying character for position access.
   const targetCharacter = target.getCharacter();
 
+  // grab the caster's current tile coordinates.
   const [ x, y ] = [ this.getX(), this.getY() ];
+
+  // compute the delta vector from caster to target (+X right, +Y down).
   const goalX = targetCharacter.deltaXFrom(x);
   const goalY = targetCharacter.deltaYFrom(y);
 
-  if (position === J.ABS.EXT.TOOLS.GapClosePositions.Behind)
-  {
-    // TODO: adjust goal x,y based on position w/ target.
-    return [ goalX, goalY ];
-  }
+  // compute the straight-line distance between caster and target.
+  const magnitude = Math.sqrt(goalX * goalX + goalY * goalY);
+
+  // derive the unit vector pointing from caster toward the target.
+  const unitX = magnitude > 0 ? goalX / magnitude : 0;
+  const unitY = magnitude > 0 ? goalY / magnitude : 0;
+
+  // compute how far to offset from the target's center: both hitbox radii plus a thin buffer.
+  // this places the caster's edge flush against the target's edge without overlapping.
+  const casterCharacter = this.getCharacter();
+  const edgeOffset = targetCharacter.getEffectiveRadius() + casterCharacter.getEffectiveRadius() + 0.05;
 
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Infront)
   {
-    // TODO: adjust goal x,y based on position w/ target.
-    return [ goalX, goalY ];
+    // land at the target's hitbox edge on the caster's side.
+    return [ goalX - unitX * edgeOffset, goalY - unitY * edgeOffset ];
   }
 
-  // position must be "same", so just return the target's coordinates.
+  if (position === J.ABS.EXT.TOOLS.GapClosePositions.Behind)
+  {
+    // land at the target's hitbox edge on the far side.
+    return [ goalX + unitX * edgeOffset, goalY + unitY * edgeOffset ];
+  }
+
+  // position is "same" — land directly on the target's tile.
   return [ goalX, goalY ];
 };
 

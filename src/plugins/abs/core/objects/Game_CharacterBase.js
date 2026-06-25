@@ -139,16 +139,13 @@ Game_CharacterBase.prototype.setDodgeModifier = function(dodgeMoveSpeed)
  */
 Game_CharacterBase.prototype.isDodging = function()
 {
-  if (typeof this.getJabsBattler === 'function')
-  {
-    const battler = this.getJabsBattler();
+  // get this character's linked JABS battler, if any.
+  const battler = this.getJabsBattler();
 
-    if (battler)
-    {
-      return battler.isDodging();
-    }
-  }
+  // if no battler is linked, this character is not dodging.
+  if (!battler) return false;
 
-  return false;
+  // delegate to the battler's current dodge state.
+  return battler.isDodging();
 };
 //endregion Game_CharacterBase

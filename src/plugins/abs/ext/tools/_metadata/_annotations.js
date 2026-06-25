@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 TOOLS] Enable new tool-like tags for use with skills.
+ * [v1.1.0 TOOLS] Enable new tool-like tags for use with skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,35 +47,38 @@
  * - States
  *
  * TAG FORMAT:
- *  <gapClose>
+ *  <gapClose:key>
  * This tag is required on skills that you want to be "gap closing skills".
+ * The key must match the key on the target for gap closing to occur.
  *
- *  <gapCloseTarget>
+ *  <gapCloseTarget:key>
  * This tag is required on the things you want to be "gap closable", such as
  * enemies or on events representing enemies. This tag can also be applied to
  * things that a battler can be affected by, such as equipment or states.
+ * The key must match the key on the skill for gap closing to occur.
  *
- * GAP CLOSE TARGET vs PLUGIN PARAMETER "Gap Close Default":
- * The <gapCloseTarget> tag is not required if you enable flip the plugin
- * parameter of "Gap Close Default" to true. Anything you hit while that is
- * true will result in gap closing if the skill permits.
+ * KEYS:
+ * Keys are arbitrary strings (word characters only). They act as a namespace
+ * so that different gap-close mechanics cannot accidentally cross-trigger.
+ * For example, a hookshot skill with <gapClose:hookshot> will never warp the
+ * player to an enemy bearing <gapCloseTarget:pierce>, and vice versa.
  *
  * EXAMPLE:
- *  <gapClose> on skill ID 25.
- *  <gapCloseTarget> on enemy ID 33.
- * Using skill 25 against enemy 33 will pull the player to the enemy.
+ *  <gapClose:hookshot> on skill ID 25.
+ *  <gapCloseTarget:hookshot> on an event representing a grapple anchor.
+ * Using skill 25 against that event will pull the player to it.
  *
- *  <gapClose> on skill ID 25.
- *  <gapCloseTarget> on state ID 4.
- * An enemy afflicts the player/battler with state 4.
- * If the enemy then used skill 25 against the player with the state, they
- * would be pulled to the player.
- *
- *  <gapClose> on skill ID 25.
- *  <gapCloseTarget> on some event that is an inanimate battler.
- * Using skill 25 against the event will pull the player to the event.
+ *  <gapClose:pierce> on skill ID 34 (spear pin).
+ *  <gapCloseTarget:pierce> on state ID 4 (pinned state).
+ * An enemy hit by skill 34 receives state 4.
+ * Using skill 34 again against that pinned enemy will pull the player to it.
+ * Hookshot anchors are unaffected because their key does not match.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Gap close tags now require a key: <gapClose:key> / <gapCloseTarget:key>.
+ *    Keys must match for gap closing to occur — no cross-mechanic bypass.
+ *    Removed canGapCloseByDefault plugin parameter.
  * - 1.0.3
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.2
@@ -85,12 +88,6 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
- * @param canGapCloseByDefault
- * @type boolean
- * @text Gap Close Default
- * @desc True if you can gap close to anything hittable, false if only specific targets.
- * @default false
- *
  * @param grabThrowConfigs
  * @text GRAB AND THROW DEFAULTS
  *

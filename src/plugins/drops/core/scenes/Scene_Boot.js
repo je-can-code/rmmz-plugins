@@ -13,5 +13,8 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
 
   // register owner stats with the parameter catalog.
   DropsParameterRegistration.registerAll();
+
+  // register the drops tag as non-combining so multiple <drops> lines stack across extensions.
+  J.EXTEND.Metadata.registerNonCombiningKey(J.DROPS.RegExp.ExtraDrop);
 };
 //endregion Scene_Boot

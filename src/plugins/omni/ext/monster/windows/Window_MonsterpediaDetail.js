@@ -940,19 +940,10 @@ class Window_MonsterpediaDetail
       parameterValueX += nameValueSpace;
     }
 
-    // mask or pad the value depending on whether we received a raw number or a preformatted string.
-    let displayValue = parameterValue;
-
-    if (typeof parameterValue === 'number')
-    {
-      displayValue = maskValue
-        ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
-        : parameterValue.padZero(padZeroCount);
-    }
-    else if (maskValue)
-    {
-      displayValue = J.BASE.Helpers.maskString(parameterValue);
-    }
+    // mask the value when the player hasn't yet learned this enemy's stats; otherwise pad to alignment width.
+    const displayValue = maskValue
+      ? J.BASE.Helpers.maskString(parameterValue.padZero(padZeroCount))
+      : parameterValue.padZero(padZeroCount);
 
     // determine the width of the value.
     //const parameterValueWidth = this.textWidth(possiblyMaskedValue);

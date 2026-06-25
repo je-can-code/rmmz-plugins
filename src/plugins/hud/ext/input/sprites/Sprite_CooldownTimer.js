@@ -62,12 +62,7 @@ class Sprite_CooldownTimer
   updateCooldownText()
   {
     this.bitmap.clear();
-    let baseCooldown = (this._j._cooldownData.frames / 60).toFixed(1);
-    if (typeof baseCooldown === 'undefined')
-    {
-      baseCooldown = 0;
-    }
-
+    const baseCooldown = (this._j._cooldownData.frames / 60).toFixed(1);
     const cooldownBaseText = baseCooldown > 0
       ? baseCooldown
       : String.empty;

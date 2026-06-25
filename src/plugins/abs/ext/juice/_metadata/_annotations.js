@@ -113,27 +113,42 @@
  * ============================================================================
  * SKILL TAGS (notes):
  * <jabsJuiceIcon:N>
- *   Forces weapon swing overlay icon index N on the IconSet sheet (-1 behavior
- *   falls back to inferred equip icon for actors: dual-wield offhand uses weapon slot 2; offhand + one weapon
- *   resolves orb/shield armor by matching skill ids on armor rows or equip slot 1 when it is armor (body armor is
- *   not blindly armors()[0]), unless the executing offhand skill currently belongs to the mainhand's
- *   provided offhand path, including any temporary state-driven transform on that path).
+ *   Forces weapon swing overlay icon index N on the IconSet sheet. When absent,
+ *   the icon is inferred from the actor's equipped gear: dual-wield offhand uses
+ *   weapon slot 2; a single offhand resolves the orb/shield armor icon by matching
+ *   skill ids on armor rows or the equip slot when it is armor.
  *
- * <juiceMotion:arc> | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
- *   Weapon overlay preset. Legacy swing-top-down / swing-bottom-up map to arc / arc-reverse.
- *   Legacy spin keys: spin-360 → spin; spin-720 → spin (see juiceSpinCount); spin-360-reverse → spin-reverse.
- *   present lifts the icon upward on screen (screen-stable "brandish" read; placement uses facing-up card).
- *   On healing skills, omitting juiceMotion keeps caster-only support squish; any juiceMotion tag opts into full strike juice.
+ * <noJuice>
+ *   Suppresses all juice motion on the caster when this skill executes.
+ *   Equivalent to <juiceMotion:none>.
+ *
+ * <juiceMotion:NAME>
+ *   Selects a preset weapon/caster motion. Valid values:
+ *   Weapon overlay:  arc | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
+ *   Caster-body:     squish | pulse | flip | flip-reverse
+ *   Suppress:        none  (equivalent to <noJuice>)
+ *   Legacy keys: swing-top-down → arc; swing-bottom-up → arc-reverse; spin-360 → spin;
+ *   spin-720 → spin; spin-360-reverse → spin-reverse.
+ *   present lifts the icon upward on screen (screen-stable "brandish"; uses facing-up card).
+ *   On healing skills, omitting juiceMotion keeps caster-only support squish; any juiceMotion
+ *   tag opts into full strike juice.
  *
  * <juiceSpan:N>
  *   Arc span in degrees for arc / arc-reverse (default 120; typical range 30–300).
  *
- * <juiceSpinCount:N>
- *   Full rotations for spin / spin-reverse (default 1; clamped 1–8). Legacy juiceMotion:spin-720 implies 2 when omitted.
+ * <juiceRepeatCount:N>
+ *   Number of times to repeat the motion within the juice duration (default 1).
+ *   For spin / spin-reverse: full rotations.
+ *   For arc-oscillate: number of arc sweeps, alternating direction.
+ *   For all other motions: full replays within the duration window.
+ *
+ * <juiceDuration:N>
+ *   Overrides the swing animation duration in frames. When omitted, the global
+ *   `weaponSwingFrames * 2` value from config.jabs.json is used.
  *
  * <juiceStabTipDegrees:N>
  *   Degrees from Pixi +x to bore/tip at rotation 0. Stab defaults to sword diagonal;
- *   bash / recoil default to barrel toward −x unless you override.
+ *   bash / recoil default to barrel toward −x unless overridden. Accepts negative values.
  *
  * <juiceProfileGun>
  *   Side-profile firearm icon: mirror east/west instead of ~180° rotation (keeps the grip
@@ -141,11 +156,12 @@
  *   pure side-view art cannot read as true top-down aim; use a separate sprite or tune degrees.
  *
  * <jabsJuiceWeaponStyle:key>
- *   Selects a multiplier row from the `profiles` map in `config.jabs.json` -> `juice`.
+ *   Selects a multiplier row from the `profiles` map in `config.jabs.json` → `juice`.
  *   Keys are arbitrary identifiers (letters, digits, underscore, dash) and must already
  *   exist in the `profiles` map.
- *   When omitted, inferred keys match the swing icon row: weapon rows use string weapon type ids; armor rows use
- *   a + armor type id (example type 4 → "a4") so armor buckets never collide with weapon type ids.
+ *   When omitted, inferred keys match the swing icon row: weapon rows use the string weapon
+ *   type id (e.g. wtypeId 1 → "1"); armor rows use "a" + armor type id (e.g. atypeId 4 → "a4")
+ *   so armor buckets never collide with weapon type ids.
  *
  * ============================================================================
  * CHANGELOG:

@@ -9,8 +9,8 @@
 J.PIXEL.EXT.ABS.Aliased.JABS_Engine.set('getBattlerAabbModel', JABS_Engine.getBattlerAabbModel);
 JABS_Engine.getBattlerAabbModel = function(character)
 {
-  // if the character exposes a custom battler hitbox model, then use it.
-  if (character && typeof character.getPixelAbsBattlerAabbModel === 'function')
+  // if a character was provided, check for a custom battler hitbox model.
+  if (character)
   {
     const customAabb = character.getPixelAbsBattlerAabbModel();
 

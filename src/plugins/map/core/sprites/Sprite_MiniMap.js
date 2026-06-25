@@ -1285,7 +1285,6 @@ class Sprite_MiniMap
    */
   toCss(hex)
   {
-    if (typeof hex !== 'string') return '#ff00ff';
     const clean = hex.replace(/\s+/g, String.empty);
     if (!clean.startsWith('#')) return '#ff00ff';
 

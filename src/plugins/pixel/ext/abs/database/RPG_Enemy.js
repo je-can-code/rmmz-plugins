@@ -13,7 +13,7 @@ RPG_Enemy.hitboxSizeDataFromRaw = function(rawHitboxSize)
   const parsedHitboxSize = JsonMapper.parseObject(rawHitboxSize);
 
   // if the shorthand number was provided, then it represents a square hitbox.
-  if (typeof parsedHitboxSize === 'number')
+  if (Number.isFinite(parsedHitboxSize))
   {
     // reject invalid sizes so callers can fall back cleanly.
     if (parsedHitboxSize <= 0) return null;

@@ -21,7 +21,7 @@ class StateAfflictionProvider
       return collection;
     }
 
-    if (!battler || typeof battler.getUuid !== 'function')
+    if (!battler)
     {
       return collection;
     }

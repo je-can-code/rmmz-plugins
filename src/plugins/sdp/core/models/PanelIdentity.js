@@ -65,7 +65,7 @@ class PanelIdentity
   {
     const nested = parsedPanel.identity;
 
-    if (nested && typeof nested === 'object')
+    if (nested)
     {
       return new PanelIdentity(
         nested.name ?? String.empty,

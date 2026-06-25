@@ -170,7 +170,7 @@ class PopupResourceDisplayColor
    */
   static parseCssColor(color)
   {
-    if (typeof color === 'string' && color.startsWith('#') && color.length >= 7)
+    if (color.startsWith('#') && color.length >= 7)
     {
       return {
         r: parseInt(color.slice(1, 3), 16),

@@ -882,10 +882,10 @@ JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
   const chr = this.getCharacter();
 
   // party leader: prefer the true bearing while vector movement is active.
-  if (chr === $gamePlayer && typeof chr.getVectorInputAngle === 'function')
+  if (chr === $gamePlayer)
   {
     // strafe locks facing via direction fix — vector aim would track movement and look like backward fire.
-    if (typeof chr.isDirectionFixed === 'function' && chr.isDirectionFixed())
+    if (chr.isDirectionFixed())
     {
       // perform original logic.
       return J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('getProjectileSpawnBaseDirection').call(this);
@@ -901,5 +901,25 @@ JABS_Battler.prototype.getProjectileSpawnBaseDirection = function()
 
   // perform original logic.
   return J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('getProjectileSpawnBaseDirection').call(this);
+};
+/**
+ * Extends {@link JABS_Battler#canDirectionalDodgeStepPass}.<br/>
+ * Uses Pixelistics passability probes instead of vanilla tile checks so dodge
+ * collision matches pixel-movement collision in all directions.
+ */
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set(
+  'canDirectionalDodgeStepPass',
+  JABS_Battler.prototype.canDirectionalDodgeStepPass,
+);
+JABS_Battler.prototype.canDirectionalDodgeStepPass = function(character, direction8)
+{
+  // diagonal directions use the pixel-aware single-call probe.
+  if (character.isDiagonalDirection(direction8))
+  {
+    return character.canPassDiagonalByDirection(direction8);
+  }
+
+  // straight directions use the pixel movement passability check.
+  return character.canPassStraight(direction8);
 };
 //endregion JABS_Battler

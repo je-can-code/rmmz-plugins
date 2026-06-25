@@ -106,8 +106,8 @@ Game_Character.prototype.canHandleRegionStates = function()
   // if this character is a vehicle, then they cannot handle region states.
   if (this.isVehicle()) return false;
 
-  // followers hidden from the party should not receive region states (or animations).
-  if (typeof this.isVisible === 'function' && this.isVisible() === false) return false;
+  // characters that are not visible should not receive region states.
+  if (!this.isVisible()) return false;
 
   // if this character has no battler, then they cannot handle region states.
   if (!this.hasJabsBattler()) return false;

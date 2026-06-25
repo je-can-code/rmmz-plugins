@@ -33,34 +33,6 @@ class JABS_HitstopData
   }
 
   /**
-   * JsonEx restores `_flurryWindows` as a plain object; `Map` is not JSON-native.
-   */
-  normalizeFlurryWindowsMap()
-  {
-    if (this._flurryWindows instanceof Map)
-    {
-      return;
-    }
-
-    const raw = this._flurryWindows;
-    const map = new Map();
-    if (raw !== undefined && raw !== null && typeof raw === 'object')
-    {
-      Object.keys(raw).forEach(k =>
-      {
-        const v = raw[k];
-        if (typeof v === 'number' && Number.isNaN(v) === false)
-        {
-          map.set(k, v);
-        }
-      });
-    }
-
-    // store  flurry windows on the instance for later reads.
-    this._flurryWindows = map;
-  }
-
-  /**
    * Sets hitstop frames.
    * @param {number} frames The frames to set.
    */
@@ -85,8 +57,6 @@ class JABS_HitstopData
    */
   tick()
   {
-    this.normalizeFlurryWindowsMap();
-
     // decrement the timer if applicable.
     if (this._frames > 0) this._frames--;
 
@@ -126,10 +96,21 @@ class JABS_HitstopData
    */
   flagFlurryWindow(actionUuid, windowFrames)
   {
-    this.normalizeFlurryWindowsMap();
-
     // set or replace the window with the provided amount.
     this._flurryWindows.set(actionUuid, Math.max(0, Math.floor(windowFrames)));
+  }
+
+  /**
+   * Restores {@link _flurryWindows} from a plain object after {@link JsonEx.makeDeepCopy}.
+   * JsonEx serializes Maps as plain objects; call this after deep-copy to convert back.
+   */
+  normalizeFlurryWindowsMap()
+  {
+    // already a Map — nothing to do.
+    if (this._flurryWindows instanceof Map) return;
+
+    // convert the plain object back into a Map.
+    this._flurryWindows = new Map(Object.entries(this._flurryWindows));
   }
 
   /**
@@ -139,8 +120,6 @@ class JABS_HitstopData
    */
   isInFlurryWindow(actionUuid)
   {
-    this.normalizeFlurryWindowsMap();
-
     // determine if the action is currently in the window.
     return this._flurryWindows.has(actionUuid);
   }

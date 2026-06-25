@@ -85,6 +85,12 @@ export function installNaturalEngineStubs(sandbox, pluginParameterStrings)
     return 0;
   };
 
+  // J-Level adds getLevel() in production; stubs must match the interface.
+  Game_Battler.prototype.getLevel = function()
+  {
+    return this.level ?? 1;
+  };
+
   // maintain the BattlerBase chain so J-Base prototype extensions remain accessible.
   Object.setPrototypeOf(Game_Battler.prototype, Game_BattlerBase.prototype);
 

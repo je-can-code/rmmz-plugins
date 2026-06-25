@@ -29,25 +29,29 @@ JABS_Engine.prototype.handleGapClose = function(action, target)
 
 /**
  * Determine whether or not the target can be gap closed to.
+ * Both the skill and the target must carry matching gap close keys for this to succeed.
  * @param {JABS_Action} action The JABS action containing the action data.
  * @param {JABS_Battler} target The target having the action applied against.
- * @returns {boolean} True if the target can be gap closed to, false otherwise.
+ * @returns {boolean} True if the skill and target keys match, false otherwise.
  */
 JABS_Engine.prototype.canGapClose = function(action, target)
 {
-  // grab the skill.
-  const skill = action.getBaseSkill();
+  // grab the skill's gap close key.
+  const skillKey = action.getBaseSkill().jabsGapClose;
 
-  // if the skill isn't a gap close skill, then we cannot gap close.
-  if (!skill.jabsGapClose) return false;
+  // if the skill has no key, it is not a gap close skill.
+  if (skillKey === null) return false;
 
-  // if it is a gap close skill and the default behavior is always gap close, then we can gap close.
-  if (J.ABS.EXT.TOOLS.Metadata.CanGapCloseByDefault) return true;
+  // grab the target's gap close key.
+  const targetKey = target.isGapClosable();
 
-  // if the target is not a gap-closable target, then we cannot gap close.
-  if (!target.isGapClosable(action, target)) return false;
+  // if the target has no key, it cannot be gap closed to.
+  if (targetKey === null) return false;
 
-  // we can gap close!
+  // keys must match — different gap close mechanics cannot cross-trigger.
+  if (skillKey !== targetKey) return false;
+
+  // both keys exist and match: gap close is permitted.
   return true;
 };
 //endregion JABS_Engine

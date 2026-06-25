@@ -438,9 +438,8 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
  * @param {number} amount The signed amount (positive => damage/loss, negative => heal/gain).
  * @param {"hp"|"mp"|"tp"} resource Which resource this packet targeted.
  * @param {number} skillId The skill id attributed to this packet (parent or child).
- * @param {number=} reduced Optional reduced magnitude (HP typically) when known.
  */
-Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, amount, resource, skillId, reduced)
+Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, amount, resource, skillId)
 {
   // if the logging plugin isn't present, skip logging.
   if (!J.LOG) return;
@@ -459,13 +458,6 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
     ? recipient.name()
     : "Unknown";
 
-  // format reduced amount if provided and non-zero (HP mitigation display).
-  let reducedAmount = String.empty;
-  if (typeof reduced === "number" && reduced !== 0)
-  {
-    reducedAmount = `(${Math.round(Math.abs(reduced))})`;
-  }
-
   // negative => heal/gain, positive => damage/loss.
   const isHeal = signed < 0;
 
@@ -475,7 +467,7 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
 
   // build and enqueue the action log entry using the standard execution line.
   const log = new ActionLogBuilder()
-    .setupExecution(targetName, casterName, skillId || 0, magnitude, reducedAmount, isHeal, wasCrit)
+    .setupExecution(targetName, casterName, skillId || 0, magnitude, String.empty, isHeal, wasCrit)
     .build();
 
   // submit the built log entry to the manager (assumed present when J.LOG is true).

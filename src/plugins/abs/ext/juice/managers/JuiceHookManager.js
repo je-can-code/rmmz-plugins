@@ -119,9 +119,7 @@ class JuiceHookManager
   {
     const skill = action.getBaseSkill();
     const cooldownKey = action.getCooldownType();
-    const dodgeKey = typeof JABS_Button !== 'undefined'
-      ? JABS_Button.Dodge
-      : 'Dodge';
+    const dodgeKey = JABS_Button.Dodge;
 
     if (cooldownKey === dodgeKey)
     {

@@ -439,7 +439,7 @@ Input.bootstrapAllKeyboardKeysForCapture = function()
       const sym = existingMap[code];
 
       // if mapped to a core-like word, add to the reserved set for safety.
-      if (typeof sym === 'string' && sym.length)
+      if (sym)
       {
         reserved.add(sym);
       }
@@ -731,7 +731,7 @@ Input._ensurePadStates = function(gamepad)
   const s = this._currentState;
 
   // resolve the per-pad state snapshot for this index.
-  const padState = this._gamepadStates && typeof gamepad.index === 'number'
+  const padState = this._gamepadStates
     ? this._gamepadStates[gamepad.index]
     : null;
 
@@ -963,12 +963,6 @@ Input.exportAllBindingsForSave = function()
  */
 Input.importAllBindingsFromSave = function(saved)
 {
-  // ignore invalid inputs.
-  if (!saved || typeof saved !== 'object')
-  {
-    return;
-  }
-
   // ensure the bindings bag exists.
   const b = Input._jRegistries.bindings;
 

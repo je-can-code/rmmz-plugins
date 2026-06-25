@@ -139,7 +139,7 @@ class JABS_HitboxPulseManager
     JABS_HitboxPulseManager._defaults.apply(opts);
 
     // allow cap override when provided using the setter.
-    if (typeof opts.maxConcurrentPulses === "number")
+    if (opts.maxConcurrentPulses !== undefined)
     {
       // set the cap accordingly.
       JABS_HitboxPulseManager.setCap(opts.maxConcurrentPulses);
