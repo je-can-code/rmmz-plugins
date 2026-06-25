@@ -101,19 +101,6 @@ class JABS_HitstopData
   }
 
   /**
-   * Restores {@link _flurryWindows} from a plain object after {@link JsonEx.makeDeepCopy}.
-   * JsonEx serializes Maps as plain objects; call this after deep-copy to convert back.
-   */
-  normalizeFlurryWindowsMap()
-  {
-    // already a Map — nothing to do.
-    if (this._flurryWindows instanceof Map) return;
-
-    // convert the plain object back into a Map.
-    this._flurryWindows = new Map(Object.entries(this._flurryWindows));
-  }
-
-  /**
    * Determines whether or not the provided action uuid is inside the flurry window.
    * @param {string} actionUuid The action uuid.
    * @returns {boolean} True if in the window, false otherwise.

@@ -59,6 +59,7 @@ import './objects/Game_Vehicle.js';
 import './scenes/Scene_Base.js';
 import './scenes/Scene_Boot.js';
 
+import './sprites/Sprite.js';
 import './sprites/Sprite_BaseText.js';
 import './sprites/Sprite_Character.js';
 import './sprites/Sprite_Face.js';

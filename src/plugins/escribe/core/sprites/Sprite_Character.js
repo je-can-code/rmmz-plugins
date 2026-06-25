@@ -249,9 +249,6 @@ Sprite_Character.prototype.needsEscribeAdding = function()
   // you cannot escribe non-events.
   if (!character.isEvent()) return false;
 
-  // if the character isn't an event, then there is no data.
-  if (!(character instanceof Game_Event)) return false;
-
   // return whether or not the character needs escription adding.
   return character.needsEscribeAdding();
 };

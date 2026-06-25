@@ -131,6 +131,39 @@ function tagHasProseAfterName(tagLine)
 }
 
 /**
+ * Extracts declared parameter names from a function AST node.
+ * Handles simple identifiers, default-value patterns, and rest elements.
+ * Destructured patterns (ObjectPattern, ArrayPattern) are skipped — they have no single name.
+ * @param {import('acorn').Function | null} fnNode The function node to inspect.
+ * @returns {string[]} The declared parameter names in declaration order.
+ */
+function extractFunctionParamNames(fnNode)
+{
+  if (!fnNode || !Array.isArray(fnNode.params)) return [];
+
+  /** @type {string[]} */
+  const names = [];
+
+  for (const param of fnNode.params)
+  {
+    if (param.type === 'Identifier')
+    {
+      names.push(param.name);
+    }
+    else if (param.type === 'AssignmentPattern' && param.left.type === 'Identifier')
+    {
+      names.push(param.left.name);
+    }
+    else if (param.type === 'RestElement' && param.argument.type === 'Identifier')
+    {
+      names.push(param.argument.name);
+    }
+  }
+
+  return names;
+}
+
+/**
  * Detects type-echo summaries that repeat the identifier without policy or intent.
  * @param {string} description Joined summary prose from {@link parseJsdocBlock}.
  * @returns {boolean} True when the summary is too short or obviously useless.
@@ -204,9 +237,10 @@ function isTopLevelAssignment(ancestors)
  * @param {string} jsdocRaw Reconstructed {@code /** … *\/} comment text.
  * @param {string} file Repository-relative file path for reporting.
  * @param {number} line 1-based line number of the documented node.
+ * @param {string[]} actualParamNames Declared parameter names from the function AST node.
  * @returns {DocViolation[]} JSDoc content violations (empty when clean).
  */
-function validateJsdocContent(jsdocRaw, file, line)
+function validateJsdocContent(jsdocRaw, file, line, actualParamNames = [])
 {
   /** @type {DocViolation[]} */
   const violations = [];
@@ -225,17 +259,39 @@ function validateJsdocContent(jsdocRaw, file, line)
   for (const tag of tags)
   {
     // @returns carries type only — intent lives in the summary and @param tags.
-    if (tag.startsWith('@param'))
+    if (tag.startsWith('@param') === false) continue;
+
+    if (tagHasProseAfterName(tag) === false)
     {
-      if (tagHasProseAfterName(tag) === false)
-      {
-        violations.push({
-          file,
-          line,
-          rule: 'jsdoc-tag-prose',
-          detail: `@tag must include prose after the type/name — not bare \`${tag}\`.`,
-        });
-      }
+      violations.push({
+        file,
+        line,
+        rule: 'jsdoc-tag-prose',
+        detail: `@tag must include prose after the type/name — not bare \`${tag}\`.`,
+      });
+    }
+
+    // skip when the function has no extractable params (destructured, anonymous, etc.).
+    if (actualParamNames.length === 0) continue;
+
+    // extract the name from `@param {type} name` or `@param {type} [name]`.
+    const nameMatch = tag.match(/^@param\s+\{[^}]+\}\s+\[?(\w+)\]?/);
+
+    if (!nameMatch) continue;
+
+    const [ , docName ] = nameMatch;
+
+    // skip dot-notation entries — these document object properties, not direct params.
+    if (tag.includes('.')) continue;
+
+    if (actualParamNames.includes(docName) === false)
+    {
+      violations.push({
+        file,
+        line,
+        rule: 'jsdoc-param-name',
+        detail: `@param name '${docName}' does not match any declared parameter [${actualParamNames.join(', ')}] — keep JSDoc in sync with the signature.`,
+      });
     }
   }
 
@@ -338,7 +394,8 @@ function verifyFile(filePath, source)
       return;
     }
 
-    violations.push(...validateJsdocContent(`/**${jsdoc.value}*/`, filePath, line));
+    const actualParamNames = extractFunctionParamNames(fnNode);
+    violations.push(...validateJsdocContent(`/**${jsdoc.value}*/`, filePath, line, actualParamNames));
 
     if (fnNode)
     {

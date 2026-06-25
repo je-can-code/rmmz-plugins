@@ -25,22 +25,6 @@ class JaftingSalvageLedgerRow
   }
 
   /**
-   * Normalizes save data or hand-built literals into a row instance.
-   *
-   * @param {JaftingSalvageLedgerRow|{ t: string, id: number, n: number, banned?: boolean }} row
-   * @returns {JaftingSalvageLedgerRow}
-   */
-  static coerce(row)
-  {
-    if (row instanceof JaftingSalvageLedgerRow)
-    {
-      return row;
-    }
-
-    return new JaftingSalvageLedgerRow(row.t, row.id, row.n, row.banned === true);
-  }
-
-  /**
    * Deep-copies this row so merges never share mutable references.
    *
    * @returns {JaftingSalvageLedgerRow}

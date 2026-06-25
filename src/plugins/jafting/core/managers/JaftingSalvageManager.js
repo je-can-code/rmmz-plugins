@@ -152,7 +152,7 @@ class JaftingSalvageManager
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
     const working = JaftingSalvagePartyLedgerBag.coerce(bag);
 
-    // `coerce` may mint a fresh bag instance—replace the map entry so later readers do not keep a stale plain object.
+    // coerce mints a fresh bag when the slot is absent—write it back so later reads see it.
     if (working !== bag)
     {
       $gameParty._j._jafting._salvageLedgers[key] = working;
@@ -183,11 +183,6 @@ class JaftingSalvageManager
     }
 
     bag = JaftingSalvagePartyLedgerBag.coerce(bag);
-
-    if (bag !== $gameParty._j._jafting._salvageLedgers[key])
-    {
-      $gameParty._j._jafting._salvageLedgers[key] = bag;
-    }
 
     let anyUnitRows = false;
 
@@ -228,13 +223,8 @@ class JaftingSalvageManager
     }
 
     // refinement allocates unique datastore indices—those ledgers ride on the RPG row itself.
-    if (datum._jaftingSalvageLedger && datum._jaftingSalvageLedger.rows)
+    if (datum._jaftingSalvageLedger)
     {
-      if ((datum._jaftingSalvageLedger instanceof JaftingSalvageLedgerSnapshot) === false)
-      {
-        datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(datum._jaftingSalvageLedger);
-      }
-
       return datum._jaftingSalvageLedger;
     }
 
@@ -386,7 +376,7 @@ class JaftingSalvageManager
         const datum = component.getItem();
 
         // clone per output row so multi-output recipes cannot accidentally share one mutable array reference.
-        const snapshot = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(shell);
+        const snapshot = JaftingSalvageLedgerSnapshot.cloneFromLedger(shell);
 
         JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshot, component.quantity());
       }
@@ -406,8 +396,8 @@ class JaftingSalvageManager
     if (datum.id >= JaftingSalvageManager.DynamicEquipIndexMin)
     {
       // dynamic refinement rows are unique instances—ledger travels with the RPG object in `$data*`.
-      const existingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(datum._jaftingSalvageLedger);
-      const incomingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(incomingLedger);
+      const existingRows = JaftingSalvageLedgerSnapshot.rowsFrom(datum._jaftingSalvageLedger);
+      const incomingRows = JaftingSalvageLedgerSnapshot.rowsFrom(incomingLedger);
 
       datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(
         JaftingSalvageLedger.mergeRowArrays(existingRows, incomingRows),
@@ -466,7 +456,7 @@ class JaftingSalvageManager
     // only the tail of the stack changed—older slots keep whatever stamp they already carried from prior crafts.
     for (let i = start; i < n; i++)
     {
-      bag.unitLedgers[i] = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(incomingLedger);
+      bag.unitLedgers[i] = JaftingSalvageLedgerSnapshot.cloneFromLedger(incomingLedger);
     }
 
     JaftingSalvageManager.recomputeMergedRowsFromPartyLedgerBag(bag);

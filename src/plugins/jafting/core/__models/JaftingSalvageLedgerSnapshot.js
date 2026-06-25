@@ -9,94 +9,41 @@ import JaftingSalvageLedgerRow from './JaftingSalvageLedgerRow.js';
 class JaftingSalvageLedgerSnapshot
 {
   /**
-   * @param {JaftingSalvageLedgerRow[]|JaftingSalvageLedgerSnapshot|{ rows?: JaftingSalvageLedgerRow[] }|null|
-   *   undefined} rowsSource
+   * @param {JaftingSalvageLedgerRow[]|null|undefined} rows
    */
-  constructor(rowsSource)
+  constructor(rows)
   {
-    // clone-from-snapshot, accept `{ rows }` literals from older saves/tests, or accept a bare row array.
-    if (rowsSource instanceof JaftingSalvageLedgerSnapshot)
-    {
-      this.rows = rowsSource.rows.map(r => JaftingSalvageLedgerRow.coerce(r).clone());
-
-      // exit early without a payload.
-      return;
-    }
-
-    if (rowsSource && Array.isArray(rowsSource.rows))
-    {
-      this.rows = JaftingSalvageLedgerSnapshot.coerceRows(rowsSource.rows);
-
-      // exit early without a payload.
-      return;
-    }
-
-    if (Array.isArray(rowsSource))
-    {
-      this.rows = JaftingSalvageLedgerSnapshot.coerceRows(rowsSource);
-
-      // exit early without a payload.
-      return;
-    }
-
-    // assign rows on this instance for callers.
-    this.rows = [];
+    // store rows or initialize empty for snapshots created before any ingredients are stamped.
+    this.rows = Array.isArray(rows) ? rows : [];
   }
 
   /**
-   * Normalizes every entry to {@link JaftingSalvageLedgerRow} (handles post-load plain objects).
+   * Returns `.rows` from a snapshot, or an empty array when the snapshot is absent.
    *
-   * @param {unknown[]} rows The rows driving this step.
+   * @param {JaftingSalvageLedgerSnapshot|null|undefined} ledger
    * @returns {JaftingSalvageLedgerRow[]}
    */
-  static coerceRows(rows)
+  static rowsFrom(ledger)
   {
-    if (Array.isArray(rows) === false)
+    // absent ledger means no lineage has been stamped yet.
+    if (!ledger)
     {
       return [];
     }
 
-    const out = [];
-
-    for (let i = 0; i < rows.length; i++)
-    {
-      out.push(JaftingSalvageLedgerRow.coerce(rows[i]));
-    }
-
-    return out;
-  }
-
-  /**
-   * Reads `.rows` from a snapshot instance or a duck-typed interim object.
-   *
-   * @param {JaftingSalvageLedgerSnapshot|{ rows?: unknown[] }|null|undefined} ledger
-   * @returns {JaftingSalvageLedgerRow[]}
-   */
-  static rowsFromUnknown(ledger)
-  {
-    if (!ledger || !ledger.rows)
-    {
-      return [];
-    }
-
-    return JaftingSalvageLedgerSnapshot.coerceRows(ledger.rows);
+    return ledger.rows;
   }
 
   /**
    * Clones every row into a fresh snapshot (used when stamping multiple outputs from the same recipe shell).
    *
-   * @param {JaftingSalvageLedgerSnapshot|{ rows?: JaftingSalvageLedgerRow[] }} ledger
+   * @param {JaftingSalvageLedgerSnapshot} ledger
    * @returns {JaftingSalvageLedgerSnapshot}
    */
-  static cloneFromLedgerLike(ledger)
+  static cloneFromLedger(ledger)
   {
-    const rows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(ledger);
-    const clones = [];
-
-    for (let i = 0; i < rows.length; i++)
-    {
-      clones.push(rows[i].clone());
-    }
+    // clone each row so the new snapshot does not share references with the source.
+    const clones = ledger.rows.map(r => r.clone());
 
     return new JaftingSalvageLedgerSnapshot(clones);
   }

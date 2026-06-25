@@ -12,7 +12,7 @@ class JuiceMapSpriteFinder
   static findSpriteCharacterFor(mapCharacter)
   {
     const scene = SceneManager._scene;
-    if (!(scene instanceof Scene_Map))
+    if (!scene.isMapScene())
     {
       return null;
     }

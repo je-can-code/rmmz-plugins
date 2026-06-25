@@ -136,4 +136,27 @@ Scene_Base.prototype.callScene = function()
   SceneManager.push(this);
 };
 
+/**
+ * Whether this scene is the map scene.
+ * All scenes return false; {@link Scene_Map} overrides to return true.
+ * @returns {boolean}
+ */
+Scene_Base.prototype.isMapScene = function()
+{
+  // scenes are not the map scene unless they say otherwise.
+  return false;
+};
+
 //endregion Scene_Base
+
+//region Scene_Map
+/**
+ * Identifies this scene as the map scene.
+ * @returns {boolean}
+ */
+Scene_Map.prototype.isMapScene = function()
+{
+  // this is the map scene.
+  return true;
+};
+//endregion Scene_Map

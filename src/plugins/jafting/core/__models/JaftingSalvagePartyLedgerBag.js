@@ -26,81 +26,20 @@ class JaftingSalvagePartyLedgerBag
   }
 
   /**
-   * Normalizes unit slots that survived save/load as plain `{ rows }` objects.
+   * Returns the bag as-is, or a fresh empty bag when the map slot is absent.
    *
-   * @param {JaftingSalvagePartyLedgerBag} bag The bag driving this step.
-   */
-  static coerceUnitLedgerSlots(bag)
-  {
-    for (let i = 0; i < bag.unitLedgers.length; i++)
-    {
-      const u = bag.unitLedgers[i];
-
-      if (u === null || u === undefined)
-      {
-        continue;
-      }
-
-      if ((u instanceof JaftingSalvageLedgerSnapshot) === false)
-      {
-        bag.unitLedgers[i] = new JaftingSalvageLedgerSnapshot(u.rows || []);
-      }
-      else
-      {
-        u.rows = JaftingSalvageLedgerSnapshot.coerceRows(u.rows);
-      }
-    }
-  }
-
-  /**
-   * Upgrades interim literals to class instances while preserving bag identity when already typed.
-   *
-   * @param {JaftingSalvagePartyLedgerBag|{ unitLedgers?: unknown[], rows?: unknown[] }|null|undefined} raw
+   * @param {JaftingSalvagePartyLedgerBag|null|undefined} raw
    * @returns {JaftingSalvagePartyLedgerBag}
    */
   static coerce(raw)
   {
-    // production path should already be class instances after JsonEx; tests may still hand us plain objects.
-    if (raw instanceof JaftingSalvagePartyLedgerBag)
-    {
-      raw.rows = JaftingSalvageLedgerSnapshot.coerceRows(raw.rows);
-      JaftingSalvagePartyLedgerBag.coerceUnitLedgerSlots(raw);
-
-      return raw;
-    }
-
-    // construct bag for the next step in this routine.
-    const bag = new JaftingSalvagePartyLedgerBag();
-
+    // absent entry means no crafts have been tracked for this template yet.
     if (!raw)
     {
-      return bag;
+      return new JaftingSalvagePartyLedgerBag();
     }
 
-    if (Array.isArray(raw.unitLedgers))
-    {
-      for (let i = 0; i < raw.unitLedgers.length; i++)
-      {
-        const u = raw.unitLedgers[i];
-
-        if (u === null || u === undefined)
-        {
-          bag.unitLedgers.push(null);
-        }
-        else if ((u instanceof JaftingSalvageLedgerSnapshot) === true)
-        {
-          bag.unitLedgers.push(new JaftingSalvageLedgerSnapshot(u));
-        }
-        else
-        {
-          bag.unitLedgers.push(new JaftingSalvageLedgerSnapshot(u.rows || []));
-        }
-      }
-    }
-
-    bag.rows = JaftingSalvageLedgerSnapshot.coerceRows(raw.rows || []);
-
-    return bag;
+    return raw;
   }
 }
 

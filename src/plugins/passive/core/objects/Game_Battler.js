@@ -106,7 +106,7 @@ Game_Battler.prototype.sourceHasAnyPassiveIds = function(source)
   if (source.uniquePassiveStateIds && source.uniquePassiveStateIds.length > 0) return true;
 
   // equip items expose separate equip-slot-specific passive id properties.
-  if (source instanceof RPG_EquipItem)
+  if (source.isEquipItem())
   {
     if (source.equippedPassiveStateIds && source.equippedPassiveStateIds.length > 0) return true;
     if (source.uniqueEquippedPassiveStateIds && source.uniqueEquippedPassiveStateIds.length > 0) return true;
@@ -335,7 +335,7 @@ Game_Battler.prototype.getAllUniquePassiveStateIds = function()
     const uniqueIds = baseItem.uniquePassiveStateIds;
 
     // check if we need to include passive state ids, too.
-    if (baseItem instanceof RPG_EquipItem)
+    if (baseItem.isEquipItem())
     {
       // add the equip-only passive state ids.
       uniqueIds.push(...baseItem.uniqueEquippedPassiveStateIds);
@@ -376,7 +376,7 @@ Game_Battler.prototype.getAllStackablePassiveStateIds = function()
     const stackableIds = baseItem.passiveStateIds;
 
     // check if we need to include passive state ids, too.
-    if (baseItem instanceof RPG_EquipItem)
+    if (baseItem.isEquipItem())
     {
       // add the equip-only passive state ids.
       stackableIds.push(...baseItem.equippedPassiveStateIds);

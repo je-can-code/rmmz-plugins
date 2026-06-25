@@ -1954,11 +1954,8 @@ Scene_Map.prototype.showJabsMenuWindow = function(window)
  */
 Scene_Map.prototype.hideJabsMenuWindow = function(window)
 {
-  // if its a selectable window, be sure to deselect it.
-  if (window instanceof Window_Selectable)
-  {
-    window.deselect();
-  }
+  // deselect before closing so no stale cursor state persists.
+  window.deselect();
 
   // negatively close it.
   window.close();

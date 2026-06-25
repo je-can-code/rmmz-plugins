@@ -67,7 +67,17 @@ class RPG_Base
     this.meta = baseItem.meta;
     this.name = baseItem.name;
     this.note = baseItem.note;
+
+    // allow plugins to copy extra properties from the source object without modifying this constructor.
+    this.initMembers(baseItem);
   }
+
+  /**
+   * Extension seam: called at the end of construction with the raw source object so plugins can copy extra
+   * properties that are not part of the base schema.
+   * @param {any} _baseItem The underlying database object.
+   */
+  initMembers(_baseItem) {}
 
   //endregion init
 
@@ -196,6 +206,16 @@ class RPG_Base
    * @returns {boolean}
    */
   isArmor()
+  {
+    return false;
+  }
+
+  /**
+   * Whether or not this database entry is an equip item (weapon or armor).
+   * {@link RPG_EquipItem} overrides this to return true.
+   * @returns {boolean}
+   */
+  isEquipItem()
   {
     return false;
   }

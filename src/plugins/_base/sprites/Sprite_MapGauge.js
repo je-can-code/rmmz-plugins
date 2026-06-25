@@ -250,6 +250,19 @@ class Sprite_MapGauge
   }
 
   /**
+   * Extends {@link Sprite#hide}.<br/>
+   * Also deactivates the gauge so it does not tick or render while hidden.
+   */
+  hide()
+  {
+    // perform original hide logic.
+    super.hide();
+
+    // deactivate the gauge while hidden.
+    this.deactivateGauge();
+  }
+
+  /**
    * Deactivates the gauge.
    */
   deactivateGauge()

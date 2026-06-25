@@ -272,6 +272,7 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
     'Game_Vehicle',
     'Scene_Base',
     'Scene_Boot',
+    'Scene_Map',
     'Scene_Menu',
     'Sprite',
     'Sprite_Character',
@@ -299,6 +300,7 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
   // Wire the standard RMMZ inheritance chain so J-Base prototype extensions on
   // Game_BattlerBase (e.g. setCachedTraitObjects) are reachable from Game_Battler,
   // Game_Actor, and Game_Enemy instances in all test VMs that use these placeholders.
+  Object.setPrototypeOf(sandbox.Scene_Map.prototype, sandbox.Scene_Base.prototype);
   Object.setPrototypeOf(sandbox.Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
   Object.setPrototypeOf(sandbox.Game_Actor.prototype, sandbox.Game_Battler.prototype);
   Object.setPrototypeOf(sandbox.Game_Enemy.prototype, sandbox.Game_Battler.prototype);

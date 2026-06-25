@@ -221,7 +221,7 @@ Sprite_Character.prototype.getBattler = function()
 Sprite_Character.prototype.isJabsBattler = function()
 {
   // if the character doesn't exist, or they are a vehicle, they aren't a battler.
-  if (!this.character() || this.character() instanceof Game_Vehicle) return false;
+  if (!this.character() || this.character().isVehicle()) return false;
 
   // return whether or not this has a battler attached to it.
   return !!this.character()

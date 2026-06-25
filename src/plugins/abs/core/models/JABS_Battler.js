@@ -1056,7 +1056,7 @@ class JABS_Battler
    */
   isActor()
   {
-    return (this.isPlayer() || this.getBattler() instanceof Game_Actor);
+    return (this.isPlayer() || this.getBattler().isActor());
   };
 
   /**
@@ -1075,7 +1075,7 @@ class JABS_Battler
    */
   isEnemy()
   {
-    return (this.getBattler() instanceof Game_Enemy);
+    return (this.getBattler().isEnemy());
   };
 
   /**
@@ -1286,7 +1286,7 @@ class JABS_Battler
   isEventReady()
   {
     const character = this.getCharacter();
-    if (character instanceof Game_Player)
+    if (character.isPlayer())
     {
       return false;
     }

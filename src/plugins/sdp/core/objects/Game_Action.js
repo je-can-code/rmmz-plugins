@@ -43,7 +43,7 @@ Game_Action.prototype.canUnlockSdp = function()
   if (!item) return false;
 
   // if it is a skill, then no unlocking panels.
-  if (item instanceof RPG_Skill) return false;
+  if (item.isSkill()) return false;
 
   // if this doesn't unlock a panel, then no unlocking panels.
   if (!item.sdpKey) return false;
@@ -109,7 +109,7 @@ Game_Action.prototype.isSdpPointMod = function(target)
   if (!item) return false;
 
   // if it is a skill, then no using skills to gain points.
-  if (item instanceof RPG_Skill) return false;
+  if (item.isSkill()) return false;
 
   // SDP points can only be applied to actors.
   if (target.isEnemy()) return false;

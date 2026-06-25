@@ -117,18 +117,11 @@ class Window_PartyFrame
    */
   hideSprites()
   {
-    // hide all the sprites.
+    // hide all the sprites; gauges self-deactivate via their hide() override.
     this._hudSprites.forEach((sprite, _) =>
     {
       // when refreshing, always hide all the sprites.
       sprite.hide();
-
-      // check if the sprite is a gauge.
-      if (sprite instanceof Sprite_MapGauge)
-      {
-        // deactivate the gauge.
-        sprite.deactivateGauge();
-      }
     });
   }
 
@@ -697,12 +690,8 @@ class Window_PartyFrame
    */
   canHandleSpriteInterference(sprite)
   {
-    // certain sprites can have self-managed opacity.
-    if (sprite instanceof Sprite_BaseText || sprite instanceof Sprite_Icon)
-    {
-      // if they have self-managed opacity, they shouldn't be handled.
-      if (sprite.hasSelfManagedOpacity() === true) return false;
-    }
+    // sprites that self-manage opacity should not be handled by the system.
+    if (sprite.hasSelfManagedOpacity() === true) return false;
 
     // let the system handle the opacity management.
     return true;

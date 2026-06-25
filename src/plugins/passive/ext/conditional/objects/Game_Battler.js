@@ -474,7 +474,7 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
     // build the unique id list for this source; concat avoids mutating the cached getter arrays.
     let uniqueSourceIds = source.uniquePassiveStateIds || [];
 
-    if (source instanceof RPG_EquipItem)
+    if (source.isEquipItem())
     {
       uniqueSourceIds = uniqueSourceIds.concat(source.uniqueEquippedPassiveStateIds || []);
     }
@@ -490,7 +490,7 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
     // build the stackable id list for this source in the same non-mutating way.
     let stackableSourceIds = source.passiveStateIds || [];
 
-    if (source instanceof RPG_EquipItem)
+    if (source.isEquipItem())
     {
       stackableSourceIds = stackableSourceIds.concat(source.equippedPassiveStateIds || []);
     }

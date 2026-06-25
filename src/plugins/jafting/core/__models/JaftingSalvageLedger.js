@@ -104,20 +104,13 @@ JaftingSalvageLedger.rowMergeKey = function(row)
 /**
  * Clones row objects for safe merging without sharing references.
  *
- * @param {JaftingSalvageLedgerRow[]|{ t: string, id: number, n: number, banned?: boolean }[]} rows
+ * @param {JaftingSalvageLedgerRow[]} rows The rows to clone.
  * @returns {JaftingSalvageLedgerRow[]}
  */
 JaftingSalvageLedger.cloneRows = function(rows)
 {
-  const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
-  const out = [];
-
-  for (let i = 0; i < list.length; i++)
-  {
-    out.push(list[i].clone());
-  }
-
-  return out;
+  // produce a new array of cloned rows so callers cannot mutate shared references.
+  return rows.map(r => r.clone());
 };
 
 /**
@@ -133,11 +126,10 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
 {
   // bucket keyed by component identity so two "horn" lines become one row with summed quantity.
   const bucket = {};
-  const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
 
-  for (let i = 0; i < list.length; i++)
+  for (let i = 0; i < rows.length; i++)
   {
-    const row = list[i];
+    const row = rows[i];
     const key = JaftingSalvageLedger.rowMergeKey(row);
 
     if (!bucket[key])

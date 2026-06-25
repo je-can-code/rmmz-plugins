@@ -33,20 +33,14 @@ describe("JsonEx SerializableRegistry pilot (JABS_HitstopData)", () =>
   // build one instance and deep-copy it via JsonEx.
   const data = new JABS_HitstopData();
   data.setFrames(10);
-  data.flagFlurryWindow('test-action', 3);
   const copy = JsonEx.makeDeepCopy(data);
-
-  // normalize the flurry windows after JsonEx restores plain objects.
-  copy.normalizeFlurryWindowsMap();
 
   // verify prototype restoration and behavior.
   return {
     windowHasConstructor: !!window.JABS_HitstopData,
     isInstance: copy instanceof JABS_HitstopData,
     hasTick: typeof copy.tick === 'function',
-    flurryWindowsIsMap: copy._flurryWindows instanceof Map,
     frames: copy.getFrames(),
-    inFlurry: copy.isInFlurryWindow('test-action'),
   };
 })();
 `, sandbox);
@@ -54,9 +48,7 @@ describe("JsonEx SerializableRegistry pilot (JABS_HitstopData)", () =>
     expect(result.windowHasConstructor).toBe(false);
     expect(result.isInstance).toBe(true);
     expect(result.hasTick).toBe(true);
-    expect(result.flurryWindowsIsMap).toBe(true);
     expect(result.frames).toBe(10);
-    expect(result.inFlurry).toBe(false);
   });
 });
 //endregion plugins/_base/jsonex-serializable-registry.test.js

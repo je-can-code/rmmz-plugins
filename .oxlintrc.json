@@ -25,7 +25,7 @@
     "no-empty-function": "off",
     "no-undef": "off",
     "no-unused-vars": [
-      "warn",
+      "error",
       {
         "varsIgnorePattern": "(?:(^[RPG|JABS|Window|Sprite|Scene|Game])|(Manager$|Builder$))",
         "argsIgnorePattern": "^(_$|_.+)$"
@@ -34,7 +34,7 @@
     "no-useless-call": "off",
     "no-prototype-builtins": "off",
     "eqeqeq": "error",
-    "complexity": ["warn", 20],
+    "complexity": ["error", 20],
     "no-eq-null": "error",
     "no-lone-blocks": "error",
     "no-multi-assign": "error",
@@ -42,7 +42,7 @@
     "no-nested-ternary": "error",
     "no-new": "error",
     "no-new-wrappers": "error",
-    "no-param-reassign": "warn",
+    "no-param-reassign": "error",
     "no-promise-executor-return": "error",
     "no-shadow": "error",
     "no-unexpected-multiline": "error",
@@ -50,7 +50,7 @@
     "prefer-arrow-callback": "error",
     "prefer-const": "error",
     "no-var": "error",
-    "prefer-destructuring": "warn",
+    "prefer-destructuring": "error",
     "no-eval": "error",
     "no-unused-expressions": "off"
   },
