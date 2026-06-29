@@ -715,7 +715,8 @@ class JABS_Action
   /**
    * Gets the `Game_Event` this JABS action is bound to.
    * The `Game_Event` represents the visual aspect of this action.
-   * @returns {Game_Event}
+   * Returns null for direct actions that were never spatialized (no coordinates provided).
+   * @returns {Game_Event|null}
    */
   getActionSprite()
   {
@@ -959,9 +960,16 @@ class JABS_Action
 
   /**
    * Counts down the pierce delay timer for this action.
+   * Skips the tick while the action sprite is hitstopped so that hitstop and
+   * pierce delay stay in sync — the projectile freezes, moves, then freezes
+   * again rather than expiring the delay mid-freeze and cascading unpredictably.
    */
   countdownPierceDelay()
   {
+    // direct actions without a sprite are never hitstopped; only check when a sprite exists.
+    const actionSprite = this.getActionSprite();
+    if (actionSprite !== null && actionSprite.isHitstopped()) return;
+
     this._pierceDelay.update();
   }
 

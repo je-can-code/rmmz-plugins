@@ -1114,17 +1114,60 @@ class JABS_Engine
    */
   stackJabsState(jabsState, newJabsState)
   {
-    // grab the added stacks from the state if applicable.
-    const addedStackAmount = newJabsState.battler.state(newJabsState.stateId).jabsStateStacksApplied;
+    // use the stack count from the incoming jabsState, which already reflects any skill-authored
+    // override; falling back to the database default only happens when no override was specified.
+    const addedStackAmount = newJabsState.stackCount;
 
     // increment the stack of the state.
     jabsState.incrementStacks(addedStackAmount);
+
+    // check if the updated stack count triggers a state conversion.
+    this.checkStackConversion(jabsState);
 
     // update the underlying base duration to the latest stack's duration.
     jabsState.setBaseDuration(newJabsState.duration);
 
     // refresh the state as well.
     this.refreshJabsState(jabsState, newJabsState);
+  }
+
+  /**
+   * Checks whether the current stack count on a state triggers a conversion to a new state.
+   * Fires when the stack count meets or exceeds the threshold defined by
+   * {@code <stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>} on the source state.
+   * If {@code <removeOnConvert>} is also present, the source state is removed after conversion.
+   * @param {JABS_State} jabsState The state whose stack count was just updated.
+   */
+  checkStackConversion(jabsState)
+  {
+    // get the caster's perceived version of the state to check for the caster-direction flag.
+    // the flag lives on the caster's extension passive, so only the caster's view will have it.
+    const casterPerceivedState = jabsState.source.state(jabsState.stateId);
+
+    // determine which battler's perceived version of the state to read conversion data from.
+    // if the caster's view carries <convertUsesCaster>, use theirs; otherwise fall back to the target's.
+    const conversionPerceivedState = casterPerceivedState.jabsConvertUsesCaster
+      ? casterPerceivedState
+      : jabsState.battler.state(jabsState.stateId);
+
+    // get the conversion data from the resolved state note.
+    const conversionData = conversionPerceivedState.jabsStacksConvertToState;
+
+    // if no conversion is defined on the resolved state, there is nothing to do.
+    if (!conversionData) return;
+
+    // if the stack count hasn't reached the required threshold yet, nothing to do.
+    if (jabsState.stackCount < conversionData.stacksRequired) return;
+
+    // apply the converted state to the battler; the battler is its own attacker for this self-transformation.
+    jabsState.battler.addState(conversionData.stateId, jabsState.battler);
+
+    // if the resolved state is configured to be removed on conversion, remove it now.
+    if (conversionPerceivedState.jabsRemoveOnConvert)
+    {
+      // remove the source state from the battler, fully expiring the tracked instance.
+      jabsState.removeFromBattler();
+    }
   }
 
   /**
@@ -1139,6 +1182,22 @@ class JABS_Engine
 
     // set the state anew.
     jabsStates.set(jabsState.stateId, jabsState);
+  }
+
+  /**
+   * Removes the tracker for a given state from a given battler's JABS state map.
+   * Called on forced removal so expired entries do not pollute the map and
+   * cause reapplication to go through the update path instead of the add path.
+   * @param {string} uuid The uuid of the battler.
+   * @param {number} stateId The id of the state to remove from the tracker.
+   */
+  removeJabsStateByUuid(uuid, stateId)
+  {
+    // get the states afflicted upon this battler.
+    const jabsStates = this.getJabsStatesByUuid(uuid);
+
+    // delete the entry entirely so hasJabsStateByUuid returns false on next application.
+    jabsStates.delete(stateId);
   }
 
   /**
@@ -1798,11 +1857,8 @@ class JABS_Engine
     // handle the possibility of "freecombo".
     this.handleActionCombo(caster, action);
 
-    // handle the cast animation for this action.
-    this.handleActionCastAnimation(caster, action);
-
-    // handle the one-off on-cast animation on the caster at execution time.
-    this.handleActionOnCastAnimation(caster, action);
+    // fire all on-execute actions.
+    this.onExecuteMapAction(caster, action);
 
     // handle the generation of the action on the map.
     this.handleActionGeneration(caster, action, targetX, targetY);
@@ -1821,6 +1877,23 @@ class JABS_Engine
       // trigger the free combo effect for this action.
       this.checkComboSequence(caster, action);
     }
+  }
+
+  /**
+   * Handles actions that happen as a side effect of executing an action.
+   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
+   */
+  onExecuteMapAction(caster, action)
+  {
+    // handle the cast animation for this action.
+    this.handleActionCastAnimation(caster, action);
+
+    // handle the one-off on-cast animation on the caster at execution time.
+    this.handleActionOnCastAnimation(caster, action);
+
+    // handle the on-cast effects like adding or removing a state.
+    this.handleOnCastStateEffects(caster, action);
   }
 
   /**
@@ -1853,6 +1926,27 @@ class JABS_Engine
       // play it once on the caster’s character.
       action.performOnCastAnimation(caster);
     }
+  }
+
+  /**
+   * Handles the on-cast state effects for a JABS action, firing once at press-time
+   * rather than once per target hit.
+   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} action The JABS action being executed.
+   */
+  handleOnCastStateEffects(caster, action)
+  {
+    // grab the underlying Game_Action to access its state-effect methods.
+    const gameAction = action.getAction();
+
+    // apply any on-cast self-states to the caster exactly once, at the moment of press.
+    gameAction.applyOnCastSelfStates();
+
+    // apply any conditional on-cast self-states that require the caster to have a specific state.
+    gameAction.applyOnCastSelfStatesIfAfflicted();
+
+    // remove any on-cast lose-states from the caster exactly once, at the moment of press.
+    gameAction.applyOnCastLoseStates();
   }
 
   /**
@@ -3953,6 +4047,9 @@ class JABS_Engine
     // emit one log entry per removed state.
     purged.forEach(state =>
     {
+      // if the state explicitly forbids logging, then do not log its removal.
+      if (state.jabsNoLogs === true) return;
+
       const log = new ActionLogBuilder()
         .setupStatePurged(targetName, state.id)
         .build();
@@ -3972,8 +4069,8 @@ class JABS_Engine
     if (!J.LOG) return;
 
     // gather shorthand variables for use.
-    const result = target.getBattler()
-      .result();
+    const targetBattler = target.getBattler();
+    const result = targetBattler.result();
     const caster = action.getCaster();
     const skill = action.getBaseSkill();
 
@@ -4061,8 +4158,7 @@ class JABS_Engine
       result.addedStates.forEach(stateId =>
       {
         // show a custom line when an enemy is defeated.
-        if (stateId === target.getBattler()
-          .deathStateId())
+        if (stateId === targetBattler.deathStateId())
         {
           const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
@@ -4070,6 +4166,12 @@ class JABS_Engine
           $actionLogManager.addLog(targetDefeatedLog);
           return;
         }
+
+        // grab the state itself.
+        const targetAfflictedState = targetBattler.state(stateId);
+
+        // if the state explicitly forbids logging, then do not log its addition.
+        if (targetAfflictedState.jabsNoLogs === true) return;
 
         // show all the rest of the non-death states.
         const stateAfflictedLog = new ActionLogBuilder()
@@ -4189,7 +4291,12 @@ class JABS_Engine
 
     // a few definitions used within collision processing.
     const actionSprite = jabsAction.getActionSprite();
-    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? jabsAction.getProximity() : null);
+
+    // direct skills without an explicit <radius> tag spawn ON the target tile;
+    // their proximity describes targeting reach, not collision size.
+    // falling back to proximity caused a 12-tile circle that hit every enemy on the map.
+    // a 1-tile footprint is the correct point-contact for a teleport landing.
+    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
     const shape = jabsAction.getShape();
 
     const targetsHit = [];

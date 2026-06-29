@@ -233,11 +233,11 @@ class JABS_SkillSlot
   /**
    * Updates the cooldown for this skill slot.
    */
-  updateCooldown()
+  updateCooldown(isCasting = false)
   {
     // update the cooldown.
     this.getCooldown()
-      .update();
+      .update(isCasting);
 
     // handle the need to clear the combo id from this slot.
     this.handleComboReadiness();

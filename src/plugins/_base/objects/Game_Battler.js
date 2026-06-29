@@ -383,6 +383,20 @@ Game_Battler.prototype.allStateIds = function()
 {
   return [...this._states];
 };
+
+/**
+ * Overwrites {@link Game_BattlerBase#isStateAffected}.<br/>
+ * Uses {@link #allStateIds} instead of the raw `_states` array so that passives injected
+ * by J.PASSIVE (and any other plugin that extends allStateIds) are included in the check.
+ * @param {number} stateId The state id to check.
+ * @returns {boolean}
+ */
+J.BASE.Aliased.Game_Battler.set('isStateAffected', Game_BattlerBase.prototype.isStateAffected);
+Game_Battler.prototype.isStateAffected = function(stateId)
+{
+  // delegate to allStateIds so passive-injected states are included in the check.
+  return this.allStateIds().includes(stateId);
+};
 //endregion state management
 
 /**

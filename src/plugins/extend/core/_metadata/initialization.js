@@ -189,6 +189,24 @@ J.EXTEND.RegExp.OnCastSelfState = /<onCastSelfState:[ ]?(\[\d+,[ ]?\d+])>/i;
 J.EXTEND.RegExp.OnCastLoseState = /<onCastLoseState:[ ]?(\[\d+,[ ]?\d+])>/i;
 
 /**
+ * The structure of a conditional on-cast self-state tag.
+ * Applies a state to oneself only if the caster already has a required state active.
+ *
+ * <pre>
+ * Structure:
+ *  <onCastSelfStateIfAfflicted:[STATE_TO_APPLY, CHANCE, STATE_REQUIREMENT]>
+ *
+ * Example:
+ *  <onCastSelfStateIfAfflicted:[42, 100, 19]>
+ *
+ * Translation:
+ *  On cast, if the caster has state id 19 active, apply state id 42 to oneself at 100% chance.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.OnCastSelfStateIfAfflicted = /<onCastSelfStateIfAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
+
+/**
  * The structure of an on-cast target-state stripping tag.
  *
  * <pre>

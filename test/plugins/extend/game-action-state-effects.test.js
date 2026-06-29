@@ -206,14 +206,14 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
     expect(target.__removedStates).toEqual([]);
   });
 
-  it('applies all on-cast state effect types through applyItemUserEffect', () =>
+  it('applies target-facing on-cast state effects through applyItemUserEffect', () =>
   {
     // emulate the presence of JABS so lose-state effects consume stacks.
     sandbox.J.ABS = {};
 
-    // define the skill and passive state contributions to the on-cast behavior.
-    const skill = buildSkill('<onCastSelfState:[11,100]>\n<onCastLoseState:[12,100]>\n<onCastStripState:[13,100]>\n<onCastRemoveState:[14,100]>');
-    const passiveState = buildState('<onCastSelfState:[15,100]>\n<onCastLoseState:[16,100]>\n<onCastStripState:[17,100]>\n<onCastRemoveState:[18,100]>');
+    // define the skill and passive state contributions; only strip/remove target the opponent.
+    const skill = buildSkill('<onCastStripState:[13,100]>\n<onCastRemoveState:[14,100]>');
+    const passiveState = buildState('<onCastStripState:[17,100]>\n<onCastRemoveState:[18,100]>');
 
     // build the action participants.
     const caster = buildBattler([ passiveState ]);
@@ -223,6 +223,35 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
     // execute the on-cast flow through the aliased user-effect entrypoint.
     action.applyItemUserEffect(target);
 
+    // caster is unaffected; only target-facing effects fire here.
+    expect(caster.__addedStates).toEqual([]);
+    expect(caster.__decrementedStates).toEqual([]);
+    expect(caster.__removedStates).toEqual([]);
+    expect(target.__decrementedStates).toEqual([
+      { stateId: 13, stacksRemoved: 1 },
+      { stateId: 17, stacksRemoved: 1 },
+    ]);
+    expect(target.__removedStates).toEqual([ 14, 18 ]);
+  });
+
+  it('applies caster-facing on-cast state effects through applyOnCastSelfStates and applyOnCastLoseStates', () =>
+  {
+    // emulate the presence of JABS so lose-state effects consume stacks.
+    sandbox.J.ABS = {};
+
+    // define the skill and passive state contributions; self/lose target the caster.
+    const skill = buildSkill('<onCastSelfState:[11,100]>\n<onCastLoseState:[12,100]>');
+    const passiveState = buildState('<onCastSelfState:[15,100]>\n<onCastLoseState:[16,100]>');
+
+    // build the action participants.
+    const caster = buildBattler([ passiveState ]);
+    const target = buildTarget(true);
+    const action = buildAction(caster, skill);
+
+    // these are now called at press-time by JABS_Engine.handleOnCastStateEffects, not per hit.
+    action.applyOnCastSelfStates();
+    action.applyOnCastLoseStates();
+
     // confirm both the skill and state sources contributed their effects.
     expect(caster.__addedStates).toEqual([ 11, 15 ]);
     expect(caster.__decrementedStates).toEqual([
@@ -230,11 +259,9 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
       { stateId: 16, stacksRemoved: 1 },
     ]);
     expect(caster.__removedStates).toEqual([]);
-    expect(target.__decrementedStates).toEqual([
-      { stateId: 13, stacksRemoved: 1 },
-      { stateId: 17, stacksRemoved: 1 },
-    ]);
-    expect(target.__removedStates).toEqual([ 14, 18 ]);
+    expect(target.__addedStates).toEqual([]);
+    expect(target.__decrementedStates).toEqual([]);
+    expect(target.__removedStates).toEqual([]);
   });
 
   it('respects zero-percent on-hit state effects across all effect types', () =>
@@ -297,9 +324,12 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
     const target = buildTarget(true);
     const action = buildAction(caster, skill);
 
-    // execute both lose-state paths.
+    // execute the on-hit path (onHitLoseState and onHitStripState).
     action.apply(target);
+    // execute the target-facing on-cast path (onCastStripState).
     action.applyItemUserEffect(target);
+    // execute the caster-facing on-cast path (onCastLoseState); now called at press-time by JABS_Engine.
+    action.applyOnCastLoseStates();
 
     // confirm the lose-state effects fell back to normal removal.
     expect(caster.__decrementedStates).toEqual([]);

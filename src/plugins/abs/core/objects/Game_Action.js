@@ -720,11 +720,13 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   const debuffPct = this.calculatePerDebuffBonusPct(target);
   const specificPct = this.calculateBonusIfStatePct(target);
   const thisSpecificPct = this.calculateThisBonusDamageIfStatePct(target);
+  const selfStatePct = this.calculateBonusIfSelfStatePct();
+  const thisSelfStatePct = this.calculateThisBonusDamageIfSelfStatePct();
   const thisFlatPct = this.calculateThisBonusDamagePct();
   const typePresencePct = this.calculateBonusIfStateTypePct(target);
   const typeCountPct = this.calculatePerStateTypePct(target);
 
-  const combinedPct = debuffPct + specificPct + thisSpecificPct + thisFlatPct + typePresencePct + typeCountPct;
+  const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct + thisFlatPct + typePresencePct + typeCountPct;
 
   // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
@@ -814,6 +816,66 @@ Game_Action.prototype.calculateThisBonusDamageIfStatePct = function(target)
   {
     // check if the target currently has this specific state.
     if (target.isStateAffected(stateId))
+    {
+      totalPct += percent;
+    }
+  });
+
+  return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamageIfSelfState tags on the caster's notes.
+ * Each tag contributes its PCT value if the CASTER currently has the specified state active.
+ * Multiple tags for different state ids each fire independently and stack additively.
+ * @returns {number} The total bonus percent from all matching self-state tags.
+ */
+Game_Action.prototype.calculateBonusIfSelfStatePct = function()
+{
+  // collect all [STATE_ID, PCT] pairs from every note source on the caster.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfSelfState));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // accumulate the percent from each tag whose state is active on the caster.
+  let totalPct = 0;
+  allPairs.forEach(([stateId, percent]) =>
+  {
+    // check if the caster currently has this specific state.
+    if (this.subject().isStateAffected(stateId))
+    {
+      totalPct += percent;
+    }
+  });
+
+  return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from thisBonusDamageIfSelfState tags on this action's skill.
+ * Reads from this.item() only — fires only when this specific skill is the action being resolved.
+ * Each tag contributes its PCT value if the CASTER currently has the specified state active.
+ * Multiple tags for different state ids each fire independently and stack additively.
+ * @returns {number} The total bonus percent from all matching self-state tags on this skill.
+ */
+Game_Action.prototype.calculateThisBonusDamageIfSelfStatePct = function()
+{
+  // read all [STATE_ID, PCT] pairs from the executing skill's own note only.
+  const allPairs = RPGManager.getArraysFromNotesByRegex(
+    this.item(),
+    J.ABS.RegExp.ThisBonusDamageIfSelfState);
+
+  // if no tags are present on this skill, there is no bonus.
+  if (!allPairs.length) return 0;
+
+  // accumulate the percent from each tag whose state is active on the caster.
+  let totalPct = 0;
+  allPairs.forEach(([stateId, percent]) =>
+  {
+    // check if the caster currently has this specific state.
+    if (this.subject().isStateAffected(stateId))
     {
       totalPct += percent;
     }

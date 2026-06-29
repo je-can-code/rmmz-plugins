@@ -149,13 +149,13 @@ class JABS_Cooldown
   /**
    * Manages the update cycle for this cooldown.
    */
-  update()
+  update(isCasting = false)
   {
     // check if we can update the cooldowns at all.
     if (!this.canUpdate()) return;
 
     // update the cooldowns.
-    this.updateCooldownData();
+    this.updateCooldownData(isCasting);
   }
 
   /**
@@ -174,13 +174,13 @@ class JABS_Cooldown
   /**
    * Updates the base and combo cooldowns.
    */
-  updateCooldownData()
+  updateCooldownData(isCasting = false)
   {
     // update the base cooldown.
     this.updateBaseCooldown();
 
-    // update the combo cooldown.
-    this.updateComboCooldown();
+    // update the combo cooldown, pausing the expiry window while the battler is casting.
+    this.updateComboCooldown(isCasting);
   }
 
   //region base cooldown
@@ -315,7 +315,7 @@ class JABS_Cooldown
   /**
    * Updates the combo data for this cooldown.
    */
-  updateComboCooldown()
+  updateComboCooldown(isCasting = false)
   {
     // tick the delay countdown only while the combo is not yet pressable.
     if (!this.comboReady)
@@ -332,7 +332,8 @@ class JABS_Cooldown
 
     // tick the expiry window only once the delay has elapsed and the follow-up is pressable.
     // the expire window represents time the player *can* press the button, not time since the skill fired.
-    if (this.comboReady)
+    // do not drain it while the battler is casting — that time is not available to the player.
+    if (this.comboReady && !isCasting)
     {
       this.updateComboExpire();
     }

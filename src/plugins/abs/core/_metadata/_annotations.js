@@ -2076,6 +2076,32 @@
  *  If present, all stacks are lost at once upon expiration rather
  *  than losing one stack and refreshing.
  *
+ *    <stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>
+ *  When this state's stack count reaches STACKS_REQUIRED (checked on every
+ *  stack application, using >= so overshooting is safe), the state identified
+ *  by NEW_STATE_ID is applied to the afflicted battler as a fresh application.
+ *  The converted state starts at 1 stack regardless of the source state's count.
+ *  If the converted state is already active on the battler, the re-application
+ *  is intentional — the converted state will be refreshed/stacked/extended
+ *  per its own reapplication type on each subsequent source stack application.
+ *  Only the first tag is read.
+ *
+ *    <removeOnConvert>
+ *  If present alongside <stacksConvertToState>, the source state is fully
+ *  removed from the battler when the conversion fires. Without this tag the
+ *  source state remains active (both states coexist), which is the intended
+ *  behavior for escalation patterns where the lesser effect persists alongside
+ *  the greater one (e.g. base poison stays while lethal dose is also applied).
+ *
+ *    <convertUsesCaster>
+ *  By default, conversion data (<stacksConvertToState> and <removeOnConvert>)
+ *  is read from the TARGET's perceived version of the state. Add this tag to
+ *  the base state to instead read conversion data from the CASTER's perceived
+ *  version of the state. This is required when the conversion tag is added via
+ *  a caster-side extension passive (e.g. a prof unlock that extends Tenderizing
+ *  with <stacksConvertToState:[EXPOSED_ID, 20]>) — without it, the enemy target
+ *  would not see the extension and the conversion would never fire.
+ *
  * ============================================================================
  * ACTOR/CLASS TAGS:
  * These tags are placed on actors or classes in the database.

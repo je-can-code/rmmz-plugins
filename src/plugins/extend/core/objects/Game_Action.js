@@ -255,7 +255,8 @@ Game_Action.prototype.applyOnHitApplyStates = function(target)
 
 /**
  * Extends {@link #applyItemUserEffect}.<br/>
- * Also applies on-cast states.
+ * Also applies on-cast target-affecting states (strip/remove).
+ * On-cast self states (self/lose) fire once at press-time via {@link JABS_Engine#handleOnCastStateEffects} instead.
  */
 J.EXTEND.Aliased.Game_Action.set('applyItemUserEffect', Game_Action.prototype.applyItemUserEffect);
 Game_Action.prototype.applyItemUserEffect = function(target)
@@ -263,12 +264,6 @@ Game_Action.prototype.applyItemUserEffect = function(target)
   // perform original logic.
   J.EXTEND.Aliased.Game_Action.get('applyItemUserEffect')
     .call(this, target);
-
-  // apply our on-cast self-states if we have any.
-  this.applyOnCastSelfStates();
-
-  // apply our on-cast lose-states if we have any.
-  this.applyOnCastLoseStates();
 
   // apply our on-cast strip-states if we have any.
   this.applyOnCastStripStates(target);
@@ -293,6 +288,40 @@ Game_Action.prototype.applyOnCastLoseStates = function()
 {
   // lose all self-removable states from oneself.
   this.loseStates(this.subject(), this.onCastLoseStates());
+};
+
+/**
+ * Applies conditional on-cast self-states that require the caster to already have a specific state.
+ * Reads from the skill note and the caster's active states.
+ * Each tag is [STATE_TO_APPLY, CHANCE, STATE_REQUIREMENT]; the state is applied only when the
+ * caster is currently afflicted with STATE_REQUIREMENT.
+ */
+Game_Action.prototype.applyOnCastSelfStatesIfAfflicted = function()
+{
+  // grab the caster for affliction checks and state application.
+  const caster = this.subject();
+
+  // gather all sources that could carry this tag: the skill itself and the caster's active states.
+  const sources = this.reactiveStateSources();
+
+  // collect every [stateToApply, chance, stateRequirement] triple across all sources.
+  const allArrays = sources.flatMap(source =>
+    RPGManager.getArraysFromNotesByRegex(source, J.EXTEND.RegExp.OnCastSelfStateIfAfflicted) ?? []
+  );
+
+  // nothing to do if no tags were found.
+  if (allArrays.length === 0) return;
+
+  // build a JABS_OnChanceEffect for each tag that passes the affliction gate, then apply them
+  // all through applyStates so the JABS engine registers the tracker (required for HUD display).
+  const effects = allArrays
+    .filter(([ , , stateRequirement ]) => caster.isStateAffected(stateRequirement))
+    .map(([ stateToApply, chance ]) =>
+      new JABS_OnChanceEffect(stateToApply, chance, J.EXTEND.RegExp.OnCastSelfStateIfAfflicted.toString())
+    );
+
+  // apply any qualifying effects through the JABS path so they appear in the HUD.
+  this.applyStates(caster, effects);
 };
 
 /**

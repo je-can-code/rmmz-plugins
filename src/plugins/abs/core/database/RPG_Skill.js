@@ -474,6 +474,9 @@ RPG_Skill.prototype.recursivelyFindAllComboSkillIds = function(skillId, list = A
     // grab the combo skill id.
     const { jabsComboSkillId } = skill;
 
+    // if the next combo target is already in the list, a cycle exists — stop here.
+    if (skillIdList.includes(jabsComboSkillId)) return skillIdList;
+
     // add it to the list.
     skillIdList.push(jabsComboSkillId);
 

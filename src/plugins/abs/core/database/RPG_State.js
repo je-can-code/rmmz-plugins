@@ -262,6 +262,65 @@ Object.defineProperty(RPG_State.prototype, 'jabsLoseAllStacksAtOnce', {
     ) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
   },
 });
+//region stacksConvertToState
+/**
+ * The state conversion data for this state.<br/>
+ * When the stack count reaches the required threshold, the specified state is applied
+ * to the afflicted battler as a fresh application.<br/>
+ * Returns null when no {@code <stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>} tag is present.
+ * Only the first tag is read.
+ * @type {{ stateId: number, stacksRequired: number }|null}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsStacksConvertToState', {
+  get: function()
+  {
+    // grab all matching bracket-pairs from the note.
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.StacksConvertToState, true);
+
+    // if nothing was found, there is no conversion defined.
+    if (!arrays || arrays.length === 0) return null;
+
+    // only the first tag is respected; destructure the pair.
+    const [ stateId, stacksRequired ] = arrays.at(0);
+
+    // wrap in a plain object so callers have typed access to each field.
+    return { stateId, stacksRequired };
+  },
+});
+//endregion stacksConvertToState
+
+//region removeOnConvert
+/**
+ * Whether the source state should be removed from the battler when a stack conversion fires.<br/>
+ * Without this tag, the source state remains active alongside the converted state.<br/>
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsRemoveOnConvert', {
+  get: function()
+  {
+    // check the note for the boolean remove-on-convert flag.
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.RemoveOnConvert);
+  },
+});
+//endregion removeOnConvert
+
+//region convertUsesCaster
+/**
+ * Whether this state's conversion data should be read from the caster's perceived version
+ * of the state rather than the target's.<br/>
+ * Use this when <stacksConvertToState> is added via a caster-side extension passive so that
+ * the enemy target's lack of the passive doesn't suppress the conversion.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsConvertUsesCaster', {
+  get: function()
+  {
+    // check the note for the boolean convert-uses-caster flag.
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ConvertUsesCaster);
+  },
+});
+//endregion convertUsesCaster
+
 //endregion reapplication type
 
 //region applyStateOnExpire
@@ -489,7 +548,20 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFormulaPerFive', {
 });
 //endregion slipTp
 
-//region jabsIndefiniteState
+//region noLogs
+/**
+ * Whether the logs for adding this state show up in the action logs.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsNoLogs', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.NoLogs);
+  },
+});
+//endregion noLogs
+
+//region indefiniteState
 /**
  * When true, this state never expires on the map (J-ABS duration {@code -1}).<br/>
  * Authors use {@code <indefiniteState>} instead of MZ {@code removeByWalking}, which
@@ -502,9 +574,9 @@ Object.defineProperty(RPG_State.prototype, 'jabsIndefiniteState', {
     return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.IndefiniteState, true);
   },
 });
-//endregion jabsIndefiniteState
+//endregion indefiniteState
 
-//region jabsStateHasMapTimer
+//region stateHasMapTimer
 /**
  * Whether J-ABS should run a finite map timer when this state is applied.<br/>
  * True when {@code <stateDuration>} or {@code <stateDurationSec>} is present with a
@@ -544,9 +616,9 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateHasMapTimer', {
     return false;
   },
 });
-//endregion jabsStateHasMapTimer
+//endregion stateHasMapTimer
 
-//region jabsStateDurationFrames
+//region stateDurationFrames
 /**
  * Effective map-state duration in frames for this database row.<br/>
  * Authors use {@code <stateDuration:FRAMES>} or {@code <stateDurationSec:SECONDS>}
@@ -583,5 +655,5 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateDurationFrames', {
     return this.stepsToRemove;
   },
 });
-//endregion jabsStateDurationFrames
+//endregion stateDurationFrames
 //endregion RPG_State effects

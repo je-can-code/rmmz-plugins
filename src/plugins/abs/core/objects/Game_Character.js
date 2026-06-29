@@ -428,8 +428,15 @@ Game_Character.prototype.isMovementSucceeded = function()
  */
 Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goalY)
 {
-  const deltaX2 = this.deltaXFrom(goalX);
-  const deltaY2 = this.deltaYFrom(goalY);
+  const rawDX = this.deltaXFrom(goalX);
+  const rawDY = this.deltaYFrom(goalY);
+
+  // snap sub-tile offsets to zero so pixel-movement floating-point noise doesn't
+  // force a diagonal when the target is essentially on the same axis as the actor.
+  const AXIS_SNAP = 0.3;
+  const deltaX2 = Math.abs(rawDX) < AXIS_SNAP ? 0 : rawDX;
+  const deltaY2 = Math.abs(rawDY) < AXIS_SNAP ? 0 : rawDY;
+
   if (deltaX2 === 0 && deltaY2 === 0)
   {
     return 0;

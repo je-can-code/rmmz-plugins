@@ -66,7 +66,6 @@ Game_BattlerBase.prototype.skillMpCost = function(skill)
 J.RESOURCES.Aliased.Game_BattlerBase.set('skillTpCost', Game_BattlerBase.prototype.skillTpCost);
 Game_BattlerBase.prototype.skillTpCost = function(skill)
 {
-  // get base cost.
   // perform original logic.
   const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost')
     .call(this, skill);
@@ -74,8 +73,8 @@ Game_BattlerBase.prototype.skillTpCost = function(skill)
   // add extended cost from tags via the manager.
   const extraCost = ResourceCostManager.extraTpCostBySkill(this, skill);
 
-  // calculate the final cost.
-  const cost = Math.max(0, (baseCost + extraCost));
+  // calculate the final cost, scaled by the battler's TP charge rate.
+  const cost = Math.max(0, (baseCost + extraCost) * this.tcr);
 
   // return the cost.
   return cost;

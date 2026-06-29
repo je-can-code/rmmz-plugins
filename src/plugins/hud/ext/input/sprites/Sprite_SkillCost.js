@@ -88,9 +88,9 @@ class Sprite_SkillCost
       case Sprite_SkillCost.Types.HP:
         return leader.skillHpCost(ability);
       case Sprite_SkillCost.Types.MP:
-        return ability.mpCost * leader.mcr;
+        return leader.skillMpCost(ability);
       case Sprite_SkillCost.Types.TP:
-        return ability.tpCost * leader.tcr;
+        return leader.skillTpCost(ability);
       case Sprite_SkillCost.Types.Item:
         return $gameParty.numItems(ability);
     }

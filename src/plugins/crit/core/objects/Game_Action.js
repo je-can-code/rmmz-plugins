@@ -260,14 +260,23 @@ Game_Action.prototype.itemCri = function(target)
   // if this action can't crit, then do not process it as a critical hit.
   if (!this.item().damage.critical) return 0;
 
-  // check if its a guaranteed crit- if so, return an unrealistically high number over 1.
+  // check if its an unconditional guaranteed crit.
   if (this.isGuaranteedCrit()) return 9999;
+
+  // check if the target's current states trigger a guaranteed crit.
+  if (this.isGuaranteedCritVsTarget(target)) return 9999;
 
   // grab the attacker's crit chance.
   let critChance = this.subject().cri;
 
   // add any bonus crit from the action.
   critChance += this.ownCriticalChanceBonus();
+
+  // add any conditional crit bonus from this skill's state-gated tags.
+  critChance += this.thisCritChanceIfStateBonus(target);
+
+  // add any conditional crit bonus from the attacker's global state-gated tags.
+  critChance += this.critChanceIfStateBonus(target);
 
   // calculate the crit chance against the target's crit evasion.
   critChance -= target.cev;
@@ -286,12 +295,48 @@ Game_Action.prototype.ownCriticalDamageMultiplier = function()
 };
 
 /**
- * Checks if this action is a guaranteed critical hit.
+ * Checks if this action is an unconditional guaranteed critical hit.
  * @returns {boolean}
  */
 Game_Action.prototype.isGuaranteedCrit = function()
 {
   return RPGManager.checkForBooleanFromNoteByRegex(this.item(), J.CRIT.RegExp.ThisCritsAlways);
+};
+
+/**
+ * Checks if the target's current states trigger a guaranteed critical hit for this action.
+ * Checks both the skill's own {@link thisCritsAlwaysIfState} tags and the attacker's global
+ * {@link critAlwaysIfState} tags across all note sources.
+ * @param {Game_Battler} target The target being struck.
+ * @returns {boolean} True if the target has any state that guarantees a crit, false otherwise.
+ */
+Game_Action.prototype.isGuaranteedCritVsTarget = function(target)
+{
+  // collect all state ids from this skill's own guaranteed-crit-if-state tags.
+  const skillStateIds = this.item().thisCritsAlwaysIfStates;
+
+  // if any of this skill's listed states are active on the target, the crit is guaranteed.
+  if (skillStateIds.some(stateId => target.isStateAffected(stateId))) return true;
+
+  // collect all state type classifiers from this skill's guaranteed-crit-if-state-type tags.
+  const skillStateTypes = this.item().thisCritsAlwaysIfStateTypes;
+
+  // if the target has any active state carrying one of this skill's listed type classifiers, the crit is guaranteed.
+  if (skillStateTypes.some(type => this.targetHasActiveStateType(target, type))) return true;
+
+  // collect all state ids from the attacker's global guaranteed-crit-if-state tags.
+  const globalStateIds = this.subject().getAllNotes()
+    .flatMap(noteSource => noteSource.critAlwaysIfStates);
+
+  // if any of the attacker's globally listed states are active on the target, the crit is guaranteed.
+  if (globalStateIds.some(stateId => target.isStateAffected(stateId))) return true;
+
+  // collect all state type classifiers from the attacker's global guaranteed-crit-if-state-type tags.
+  const globalStateTypes = this.subject().getAllNotes()
+    .flatMap(noteSource => noteSource.critAlwaysIfStateTypes);
+
+  // if the target has any active state carrying one of the attacker's globally listed type classifiers, the crit is guaranteed.
+  return globalStateTypes.some(type => this.targetHasActiveStateType(target, type));
 };
 
 /**
@@ -301,5 +346,92 @@ Game_Action.prototype.isGuaranteedCrit = function()
 Game_Action.prototype.ownCriticalChanceBonus = function()
 {
   return RPGManager.getSumFromAllNotesByRegex([ this.item() ], J.CRIT.RegExp.ThisCritDamageChance) / 100;
+};
+
+/**
+ * Calculates the conditional crit chance bonus from this skill's own state-gated tags.
+ * Reads all {@link thisCritChanceIfState} pairs on the executing skill and sums the bonus
+ * for each pair whose state the target currently has active.
+ * @param {Game_Battler} target The target being struck.
+ * @returns {number} The total conditional bonus as a 0–1 rate addend.
+ */
+Game_Action.prototype.thisCritChanceIfStateBonus = function(target)
+{
+  // get all [stateId, bonusChance] pairs defined on this skill.
+  const pairs = this.item().thisCritChanceIfStates;
+
+  // if there are no conditional crit pairs on this skill, short circuit.
+  if (!pairs.length) return 0;
+
+  // accumulate the bonus for each pair whose state the target currently has.
+  const stateIdBonus = pairs.reduce((total, [ stateId, bonusChance ]) =>
+  {
+    // only add the bonus if the target is afflicted with this state.
+    return total + (target.isStateAffected(stateId) ? bonusChance / 100 : 0);
+  }, 0);
+
+  // get all [type, bonusChance] pairs defined on this skill.
+  const typePairs = this.item().thisCritChanceIfStateTypes;
+
+  // accumulate the bonus for each pair whose state type the target currently has.
+  const stateTypeBonus = typePairs.reduce((total, [ type, bonusChance ]) =>
+  {
+    // only add the bonus if the target has any active state carrying this type classifier.
+    return total + (this.targetHasActiveStateType(target, type) ? bonusChance / 100 : 0);
+  }, 0);
+
+  return stateIdBonus + stateTypeBonus;
+};
+
+/**
+ * Calculates the conditional crit chance bonus from the attacker's global state-gated tags.
+ * Reads all {@link critChanceIfState} pairs from every note source on the attacker and sums
+ * the bonus for each pair whose state the target currently has active.
+ * @param {Game_Battler} target The target being struck.
+ * @returns {number} The total conditional bonus as a 0–1 rate addend.
+ */
+Game_Action.prototype.critChanceIfStateBonus = function(target)
+{
+  // collect critChanceIfStates arrays from every note source the attacker carries.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(noteSource => noteSource.critChanceIfStates);
+
+  // if none of the attacker's note sources carry any conditional crit pairs, short circuit.
+  if (!allPairs.length) return 0;
+
+  // accumulate the bonus for each pair whose state the target currently has.
+  const stateIdBonus = allPairs.reduce((total, [ stateId, bonusChance ]) =>
+  {
+    // only add the bonus if the target is afflicted with this state.
+    return total + (target.isStateAffected(stateId) ? bonusChance / 100 : 0);
+  }, 0);
+
+  // collect all [type, bonusChance] pairs from the attacker's global state-type-gated tags.
+  const allTypePairs = this.subject().getAllNotes()
+    .flatMap(noteSource => noteSource.critChanceIfStateTypes);
+
+  // accumulate the bonus for each pair whose state type the target currently has.
+  const stateTypeBonus = allTypePairs.reduce((total, [ type, bonusChance ]) =>
+  {
+    // only add the bonus if the target has any active state carrying this type classifier.
+    return total + (this.targetHasActiveStateType(target, type) ? bonusChance / 100 : 0);
+  }, 0);
+
+  return stateIdBonus + stateTypeBonus;
+};
+
+/**
+ * Checks whether the target has any active state carrying the specified type classifier.
+ * The comparison is case-insensitive.
+ * @param {Game_Battler} target The target whose active states are checked.
+ * @param {string} type The type classifier to look for.
+ * @returns {boolean} True if any active state on the target carries this type.
+ */
+Game_Action.prototype.targetHasActiveStateType = function(target, type)
+{
+  // check each of the target's active states for a case-insensitive type classifier match.
+  return target.states()
+    .some(state => state.stateTypes()
+      .some(stateType => stateType.toLowerCase() === type.toLowerCase()));
 };
 //endregion Game_Action

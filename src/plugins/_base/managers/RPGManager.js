@@ -87,7 +87,11 @@ class RPGManager
    */
   static invalidate(object)
   {
-    return this._cache.delete(object);
+    // resolve to the same cache key used by getOrCreateCacheForObject so the delete actually hits.
+    const cacheTarget = object instanceof RPG_Base
+      ? object._original()
+      : object;
+    return this._cache.delete(cacheTarget);
   }
 
   /**

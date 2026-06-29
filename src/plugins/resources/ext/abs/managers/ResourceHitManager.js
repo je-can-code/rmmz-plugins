@@ -2,7 +2,8 @@
 /**
  * Manages damage-linked resource mutations for J-Resources-ABS.
  *
- * On-attack effects read tags from the skill and apply gains to the caster.
+ * On-attack effects aggregate tags from both the executing skill and the caster's
+ * traited sources (actor/class/equip/states) and apply gains to the caster.
  * When-hit effects aggregate tags from the target's traited sources and apply
  * gains to the target. Negative net totals are clamped by the engine's own
  * gainHp/Mp/Tp calls.
@@ -12,6 +13,8 @@ class ResourceHitManager
   /**
    * Applies all on-attack resource gains to the caster.
    * Called after a successful hit has been confirmed.
+   * Tags are read from both the executing skill and the caster's traited sources
+   * (actor/class/equip/states), then summed before being applied.
    * @param {JABS_Action} action The action that landed.
    * @param {JABS_Battler} target The battler that was hit.
    */
@@ -64,14 +67,15 @@ class ResourceHitManager
 
   //region on-attack
   /**
-   * Calculates the HP gain for the caster from a skill's on-attack tags.
+   * Calculates the HP gain for the caster from on-attack tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
    * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
    * @param {RPG_Skill} skill The skill that landed the hit.
    * @returns {number}
    */
   static onAttackHpGain(caster, skill)
   {
-    return ResourceHitManager.#gainBySkill(
+    return ResourceHitManager.#gainBySkillAndSources(
       caster,
       skill,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFlat,
@@ -82,14 +86,15 @@ class ResourceHitManager
   }
 
   /**
-   * Calculates the MP gain for the caster from a skill's on-attack tags.
+   * Calculates the MP gain for the caster from on-attack tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
    * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
    * @param {RPG_Skill} skill The skill that landed the hit.
    * @returns {number}
    */
   static onAttackMpGain(caster, skill)
   {
-    return ResourceHitManager.#gainBySkill(
+    return ResourceHitManager.#gainBySkillAndSources(
       caster,
       skill,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFlat,
@@ -100,14 +105,15 @@ class ResourceHitManager
   }
 
   /**
-   * Calculates the TP gain for the caster from a skill's on-attack tags.
+   * Calculates the TP gain for the caster from on-attack tags.
+   * Aggregates from both the executing skill and the caster's traited sources.
    * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
    * @param {RPG_Skill} skill The skill that landed the hit.
    * @returns {number}
    */
   static onAttackTpGain(caster, skill)
   {
-    return ResourceHitManager.#gainBySkill(
+    return ResourceHitManager.#gainBySkillAndSources(
       caster,
       skill,
       J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFlat,
@@ -200,6 +206,31 @@ class ResourceHitManager
     if (total === 0) return 0;
 
     return total * caster.rec;
+  }
+
+  /**
+   * Calculates a resource gain for the on-attack path by combining the executing skill's
+   * own tags with tags on the caster's traited sources (actor/class/equip/states).
+   * REC is applied independently to each component before they are summed.
+   * @param {Game_Actor|Game_Enemy} caster The caster driving this step.
+   * @param {RPG_Skill} skill The skill driving this step.
+   * @param {RegExp} flatRegex The flat regex driving this step.
+   * @param {RegExp} percentRegex The percent regex driving this step.
+   * @param {RegExp} formulaRegex The formula regex driving this step.
+   * @param {number} maxStat The battler's maximum for the relevant resource (mhp/mmp/mtp).
+   * @returns {number}
+   */
+  static #gainBySkillAndSources(caster, skill, flatRegex, percentRegex, formulaRegex, maxStat)
+  {
+    // read tags from the executing skill itself (fires only for this skill).
+    const fromSkill = ResourceHitManager.#gainBySkill(caster, skill, flatRegex, percentRegex, formulaRegex, maxStat);
+
+    // read tags from the caster's traited sources: actor/class/equip/states (fires for all attacks).
+    // damage is not available at this point in the pipeline, so pass 0 as the formula's b binding.
+    const fromSources = ResourceHitManager.#gainBySources(caster, flatRegex, percentRegex, formulaRegex, maxStat, 0);
+
+    // return the combined total from both sources.
+    return fromSkill + fromSources;
   }
 
   /**

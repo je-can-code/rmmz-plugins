@@ -214,8 +214,8 @@ class JABS_SkillSlotManager
 
   /**
    * A filter function for whether or not a skill should be included in the skill slot manager for enemies.
-   * @param {Game_Enemy} enemy The enemy to check.
-   * @param {RPG_EnemyAction} action The action to check.
+   * @param {Game_Enemy} _enemy The enemy to check.
+   * @param {RPG_EnemyAction} _action The action to check.
    */
   filterActionSkills(_enemy, _action)
   {
@@ -403,16 +403,16 @@ class JABS_SkillSlotManager
   /**
    * Updates the cooldowns of all slots with a skill in them.
    */
-  updateCooldowns()
+  updateCooldowns(isCasting = false)
   {
     // this.getAllSlots() // use this if slots should update when there is no skill in them.
     this.getEquippedSlots()
-      .forEach(slot => slot.updateCooldown());
+      .forEach(slot => slot.updateCooldown(isCasting));
 
     // the GCD slot holds skillId 0 and is never "equipped", so it falls outside the loop above;
     // tick it explicitly so GCD stamps actually count down after a skill fires.
     const gcdSlot = this.getSkillSlotByKey(J.ABS.Globals.GlobalCooldownKey);
-    if (gcdSlot) gcdSlot.updateCooldown();
+    if (gcdSlot) gcdSlot.updateCooldown(isCasting);
   }
 
   /**

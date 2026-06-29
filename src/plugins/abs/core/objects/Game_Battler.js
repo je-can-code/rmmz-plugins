@@ -872,6 +872,23 @@ Game_Battler.prototype.states = function()
 };
 
 /**
+ * Gets the number of stacks of a given state currently applied to this battler.
+ * @param {number} stateId The id of the state to check.
+ * @returns {number} The number of stacks applied of the given state.
+ */
+Game_Battler.prototype.stackCount = function(stateId)
+{
+  // grab the state tracked by JABS.
+  const state = $jabsEngine.getJabsStateByUuidAndStateId(this.getUuid(), stateId);
+
+  // if there is no state,
+  if (state === undefined) return 0;
+
+  // return the stack count of the state.
+  return state.stackCount;
+};
+
+/**
  * Extends {@link #addState}.<br/>
  * Rewrites the handling for state application. The attacker is
  * now relevant to the state being applied.
@@ -946,8 +963,8 @@ Game_Battler.prototype.removeState = function(stateId)
   // check if we found anything.
   if (trackedState)
   {
-    // expire the found state if it is being removed.
-    trackedState.expired = true;
+    // delete the map entry so reapplication routes through the add path, not the update path.
+    $jabsEngine.removeJabsStateByUuid(this.getUuid(), stateId);
   }
 };
 
@@ -1122,18 +1139,10 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
   // build the state.
   const jabsState = builder.build();
 
-  // when overrides are present the skill author explicitly declared the parameters, so replace the
-  // tracker entry wholesale and skip reapplication rules entirely; otherwise follow normal rules.
-  if (overrides)
-  {
-    // force-replace the tracker entry so the authored values always win.
-    $jabsEngine.addJabsStateByUuid(this.getUuid(), jabsState);
-  }
-  else
-  {
-    // no overrides; follow the state's configured reapplication type (refresh/extend/stack).
-    $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
-  }
+  // always follow the state's configured reapplication type (refresh/extend/stack); override values
+  // for duration and stacks are already baked into the jabsState and will be used as the incoming
+  // parameters to the reapplication logic, not as a reason to bypass it.
+  $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
 };
 
 /**

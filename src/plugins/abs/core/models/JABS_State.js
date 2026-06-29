@@ -7,6 +7,7 @@ import JABS_StateBuilder from './JABS_StateBuilder.js';
  */
 class JABS_State
 {
+  //region properties
   /**
    * The list of rulesets available for how to handle reapplication of a state.
    */

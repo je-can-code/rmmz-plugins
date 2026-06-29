@@ -278,6 +278,194 @@
  * state id 20 to themselves.
  *
  * ============================================================================
+ * CONDITIONAL CRITICAL CHANCE BY TARGET STATE:
+ * Have you ever wanted a skill to crit more reliably — or guaranteed — when the
+ * target is already afflicted with a specific state? Well now you can! By
+ * applying the appropriate tags, you can add bonus crit chance that only applies
+ * when the target has a specific state active.
+ *
+ * Two families of tags are available, mirroring the "thisCrit"/"onCrit" split:
+ *
+ * "thisCritChanceIfState" lives on a specific skill or item and only contributes
+ * its bonus when THAT skill is the one being executed.
+ *
+ * "critChanceIfState" lives on any note source attached to the attacker (states,
+ * weapons, armors, class, actor, enemy) and contributes its bonus whenever ANY
+ * of their actions is executed against a matching target.
+ *
+ * NOTE:
+ * BONUS_CHANCE is a whole-number percent from 0 to 100 (or higher for guaranteed).
+ * A BONUS_CHANCE of 100 effectively guarantees a crit when the state is present,
+ * though the target's crit evasion (cev) still applies.
+ *
+ * NOTE:
+ * Multiple tags stack additively. If a skill carries two tags for different states,
+ * and the target has both states, both bonuses are added to the crit chance.
+ *
+ * TAG USAGE:
+ * "thisCritChanceIfState" tags:
+ * - Skills
+ * - Items
+ *
+ * "critChanceIfState" tags:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <thisCritChanceIfState:[STATE_ID, BONUS_CHANCE]>
+ *  <critChanceIfState:[STATE_ID, BONUS_CHANCE]>
+ * Where STATE_ID is the id of the state the target must have.
+ * Where BONUS_CHANCE is the percent crit chance bonus (0–100+) to add.
+ *
+ * TAG EXAMPLES:
+ *  <thisCritChanceIfState:[14, 100]>
+ * This skill has guaranteed crit chance against targets afflicted with state 14.
+ *
+ *  <thisCritChanceIfState:[14, 50]>
+ *  <thisCritChanceIfState:[7, 50]>
+ * This skill gains +50% crit chance if the target has state 14, another +50%
+ * if the target has state 7. If both are present, the bonus totals +100%.
+ *
+ *  <critChanceIfState:[14, 30]>
+ * While this note source is active on the attacker, all of their actions gain
+ * +30% crit chance against targets afflicted with state 14. Useful on passive
+ * mastery states to reward building into a specific debuff.
+ *
+ * ============================================================================
+ * CONDITIONAL CRITICAL CHANCE BY TARGET STATE TYPE:
+ * The same as the state-id variants above, but matching by type classifier
+ * (the <type:TYPE> tag on states) rather than a specific state id. This lets
+ * you say "any bleed" instead of "specifically state 15."
+ *
+ * NOTE:
+ * The type comparison is case-insensitive.
+ *
+ * TAG USAGE:
+ * "thisCritChanceIfStateType" tags:
+ * - Skills
+ * - Items
+ *
+ * "critChanceIfStateType" tags:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <thisCritChanceIfStateType:[TYPE, BONUS_CHANCE]>
+ *  <critChanceIfStateType:[TYPE, BONUS_CHANCE]>
+ * Where TYPE is the state type classifier string (case-insensitive).
+ * Where BONUS_CHANCE is the percent crit chance bonus (0–100+) to add.
+ *
+ * TAG EXAMPLES:
+ *  <thisCritChanceIfStateType:[bleed, 100]>
+ * This skill has guaranteed crit chance against targets with any state typed "bleed".
+ *
+ *  <critChanceIfStateType:[bleed, 50]>
+ * While this note source is active, all actions gain +50% crit chance against
+ * targets with any state typed "bleed".
+ *
+ * ============================================================================
+ * GUARANTEED CRITICAL HIT BY TARGET STATE:
+ * Have you ever wanted a skill to always crit against a target that has a
+ * specific state — without needing to route through the chance system? Well
+ * now you can! By applying the appropriate tags, you can guarantee a critical
+ * hit when the target has any one of the listed states active.
+ *
+ * Two families of tags are available, mirroring the "thisCrit"/"crit" split:
+ *
+ * "thisCritsAlwaysIfState" lives on a specific skill or item and only triggers
+ * for THAT skill's execution.
+ *
+ * "critAlwaysIfState" lives on any note source attached to the attacker and
+ * triggers for ALL of their actions.
+ *
+ * NOTE:
+ * Each tag accepts one or more state IDs. The crit is guaranteed if the target
+ * has ANY of the listed states active — you do not need all of them.
+ *
+ * NOTE:
+ * Multiple tags stack via OR — if any tag's state list contains a state the
+ * target has, the crit is guaranteed.
+ *
+ * NOTE:
+ * A guaranteed crit from these tags bypasses the target's crit evasion (cev),
+ * exactly like {@link thisCritsAlways}.
+ *
+ * TAG USAGE:
+ * "thisCritsAlwaysIfState" tags:
+ * - Skills
+ * - Items
+ *
+ * "critAlwaysIfState" tags:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <thisCritsAlwaysIfState:[STATE_ID, ...]>
+ *  <critAlwaysIfState:[STATE_ID, ...]>
+ * Where STATE_ID is one or more state ids (comma-separated) to check on the target.
+ *
+ * TAG EXAMPLES:
+ *  <thisCritsAlwaysIfState:[14]>
+ * This skill always crits against targets afflicted with state 14.
+ *
+ *  <thisCritsAlwaysIfState:[14, 7]>
+ * This skill always crits against targets afflicted with state 14 OR state 7.
+ *
+ *  <critAlwaysIfState:[14]>
+ * While this note source is active on the attacker, all of their actions always
+ * crit against targets afflicted with state 14.
+ *
+ * ============================================================================
+ * GUARANTEED CRITICAL HIT BY TARGET STATE TYPE:
+ * The same as the state-id guaranteed-crit variants above, but matching by
+ * type classifier rather than a specific state id.
+ *
+ * NOTE:
+ * The type comparison is case-insensitive.
+ *
+ * TAG USAGE:
+ * "thisCritsAlwaysIfStateType" tags:
+ * - Skills
+ * - Items
+ *
+ * "critAlwaysIfStateType" tags:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <thisCritsAlwaysIfStateType:TYPE>
+ *  <critAlwaysIfStateType:TYPE>
+ * Where TYPE is the state type classifier string (case-insensitive).
+ *
+ * TAG EXAMPLES:
+ *  <thisCritsAlwaysIfStateType:bleed>
+ * This skill always crits against targets with any state typed "bleed".
+ *
+ *  <critAlwaysIfStateType:bleed>
+ * While this note source is active, all actions always crit against targets
+ * with any state typed "bleed".
+ *
+ * ============================================================================
  * CHANGELOG:
  * - 1.1.0
  *    Added on-crit state application tags:

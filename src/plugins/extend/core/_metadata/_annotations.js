@@ -141,6 +141,7 @@
  *
  * TAG FORMAT:
  *  <onCastSelfState:[STATE_ID,CHANCE]>
+ *  <onCastSelfStateIfAfflicted:[STATE_TO_APPLY,CHANCE,STATE_REQUIREMENT]>
  *  <onHitSelfState:[STATE_ID,CHANCE]>
  *  <onCastLoseState:[STATE_ID,CHANCE]>
  *  <onHitLoseState:[STATE_ID,CHANCE]>

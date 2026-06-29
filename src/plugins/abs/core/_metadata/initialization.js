@@ -401,6 +401,7 @@ J.ABS.ProjectileFormations = {
    */
   Nova: 'nova',
 };
+//endregion plugin setup & configuration
 
 /**
  * A collection of helpful mappings for `notes` that are placed in
@@ -606,6 +607,7 @@ J.ABS.RegExp = {
   //region ON STATES
   // definition-related.
   Negative: /<negative>/gi,
+  NoLogs: /<noLogs>/i,
 
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
@@ -619,6 +621,9 @@ J.ABS.RegExp = {
   ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
   StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
   LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
+  StacksConvertToState: /<stacksConvertToState:(\[\d+,[ ]?\d+])>/gi,
+  RemoveOnConvert: /<removeOnConvert>/gi,
+  ConvertUsesCaster: /<convertUsesCaster>/gi,
   SkillTransform: /<skillTransform:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // jabs core ailment functionalities.
@@ -775,6 +780,46 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   ThisBonusDamageIfState: /<thisBonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the CASTER currently has a specific state active.
+   * Reads from the caster's getAllNotes() sources (actor, class, equips, states).
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfSelfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <bonusDamageIfSelfState:[29, 50]>
+   *
+   * Translation:
+   *  +50% damage if the caster currently has state 29 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfSelfState: /<bonusDamageIfSelfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the CASTER currently has a specific state active.
+   * Reads from this.item() only — fires only when THIS skill is the action being resolved.
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfSelfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfSelfState:[29, 50]>
+   *
+   * Translation:
+   *  +50% damage from this skill if the caster currently has state 29 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfSelfState: /<thisBonusDamageIfSelfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   /**
    * Unconditional flat percent damage bonus applied when THIS skill is the action being resolved.
@@ -1128,5 +1173,4 @@ J.ABS.Aliased = {
   Sprite_Character: new Map(),
   Sprite_Gauge: new Map(),
 };
-//endregion Plugin setup & configuration
 //endregion Metadata

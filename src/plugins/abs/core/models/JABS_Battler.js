@@ -2765,17 +2765,10 @@ class JABS_Battler
       }
     }
 
-    // otherwise, assume opponents (or everyone) and try to use our selected or last target.
-    // prioritize the explicitly selected target.
-    let opponentTarget = this.getTarget();
+    // for opponents (or everyone), run the full priority chain using the base skill.
+    const opponentTarget = this.resolveDirectOpponentTarget(primaryAction.getBaseSkill());
 
-    // fallback to the last battler hit if no explicit target exists.
-    if (!opponentTarget)
-    {
-      opponentTarget = this.getBattlerLastHit();
-    }
-
-    // if we have an opponent candidate, use their coordinates.
+    // if the chain found a candidate, use their coordinates.
     if (opponentTarget)
     {
       x = opponentTarget.getX();
@@ -2832,18 +2825,8 @@ class JABS_Battler
       return [ x, y ];
     }
 
-    // the proximity limit governs candidate range-gating and the fallback scan radius.
-    const proximityLimit = skill.jabsProximity ?? 0;
-
-    // read the optional state-anchor id for this skill.
-    const stateTargetId = skill.jabsDirectStateTarget;
-
-    // walk the four-tier priority chain: state-bearing target first, then
-    // non-inanimate known target, then proximity scan, then inanimate fallback.
-    const opponentTarget = this.resolveDirectTargetByState(stateTargetId, proximityLimit)
-      ?? this.resolveDirectTargetNonInanimate(proximityLimit)
-      ?? this.resolveDirectTargetViaScan(proximityLimit)
-      ?? this.resolveDirectTargetInanimateFallback(proximityLimit);
+    // for opponents (or everyone), run the full priority chain.
+    const opponentTarget = this.resolveDirectOpponentTarget(skill);
 
     // freeze whichever target won the priority contest.
     if (opponentTarget)
@@ -2857,30 +2840,61 @@ class JABS_Battler
   };
 
   /**
-   * Scans all battlers within proximity for the closest opponent currently afflicted
-   * with the given state. This is the highest-priority tier for direct skills that
-   * carry a <directStateTarget:N> tag, ensuring the skill snaps to the "pinned"
-   * target before considering anything else in the chain.
+   * Resolves the best opponent target for a direct skill using the five-tier priority chain.
+   * Performs a single spatial scan upfront; all scan-based tiers filter that shared list
+   * rather than re-querying the spatial index independently.
    *
-   * Proximity is always respected: a state-bearing target beyond the configured
-   * range is never eligible.
-   * @param {number|null} stateId The state ID to search for; null skips the scan entirely.
-   * @param {number} proximityLimit The max tile distance allowed.
+   * Priority order:
+   *   1. Closest state-bearing opponent (requires {@link jabsDirectStateTarget}).
+   *   2. Known non-inanimate target (getTarget / getBattlerLastHit, within range).
+   *   3. Closest non-inanimate opponent from the proximity scan.
+   *   4. Known inanimate target (getTarget / getBattlerLastHit, within range).
+   *   5. Closest inanimate opponent from the proximity scan (covers training dummies etc.).
+   *
+   * Returns null only when absolutely no candidate exists within range.
+   * @param {RPG_Skill} skill The direct skill being resolved.
+   * @returns {JABS_Battler|null} The winning target, or null if none found.
+   */
+  resolveDirectOpponentTarget(skill)
+  {
+    // the proximity limit gates all tiers of the chain.
+    const proximityLimit = skill.jabsProximity ?? 0;
+
+    // read the optional state-anchor id — null skips the state tier entirely.
+    const stateTargetId = skill.jabsDirectStateTarget;
+
+    // perform a single spatial scan; tiers 1, 3, and 5 all filter this shared list.
+    const candidates = proximityLimit > 0
+      ? JABS_AiManager.getBattlersWithinRange(this, proximityLimit)
+      : [];
+
+    // walk the five-tier priority chain.
+    return this.resolveDirectTargetByState(stateTargetId, candidates)
+      ?? this.resolveDirectTargetNonInanimate(proximityLimit)
+      ?? this.resolveDirectTargetViaScan(candidates)
+      ?? this.resolveDirectTargetInanimateFallback(proximityLimit)
+      ?? this.resolveDirectTargetInanimateScan(candidates);
+  };
+
+  /**
+   * Filters the pre-built candidate list for the closest opponent currently afflicted
+   * with the given state. This is the highest-priority tier for direct skills that
+   * carry a {@link jabsDirectStateTarget} tag, ensuring the skill snaps to the "pinned"
+   * target before considering anything else in the chain.
+   * @param {number|null} stateId The state ID to search for; null skips this tier entirely.
+   * @param {JABS_Battler[]} candidates The pre-scanned battlers within proximity.
    * @returns {JABS_Battler|null} The closest state-bearing opponent within range, or null.
    */
-  resolveDirectTargetByState(stateId, proximityLimit)
+  resolveDirectTargetByState(stateId, candidates)
   {
     // if no state id is configured, there is nothing to scan for.
     if (!stateId) return null;
-
-    // query the spatial index for all battlers within range.
-    const nearby = JABS_AiManager.getBattlersWithinRange(this, proximityLimit);
 
     // find the closest opponent carrying the target state.
     let closest = null;
     let closestDistance = Infinity;
 
-    for (const candidate of nearby)
+    for (const candidate of candidates)
     {
       // skip self and same-team battlers.
       if (candidate === this) continue;
@@ -2931,25 +2945,19 @@ class JABS_Battler
   };
 
   /**
-   * Scans all battlers within {@link proximityLimit} tiles for the closest non-inanimate
-   * opponent. Used when known targets are inanimate or out of range, so a direct skill
+   * Filters the pre-built candidate list for the closest non-inanimate opponent.
+   * Used when known targets are inanimate or out of range, so a direct skill
    * cannot accidentally lock onto a barrel while real enemies are nearby.
-   * @param {number} proximityLimit The scan radius in tiles; returns null immediately when 0.
-   * @returns {JABS_Battler|null} The closest qualifying opponent, or null.
+   * @param {JABS_Battler[]} candidates The pre-scanned battlers within proximity.
+   * @returns {JABS_Battler|null} The closest qualifying non-inanimate opponent, or null.
    */
-  resolveDirectTargetViaScan(proximityLimit)
+  resolveDirectTargetViaScan(candidates)
   {
-    // a limit of 0 means uncapped, which makes an exhaustive scan unsafe; skip it.
-    if (proximityLimit === 0) return null;
-
-    // query the spatial index for all battlers within range.
-    const nearby = JABS_AiManager.getBattlersWithinRange(this, proximityLimit);
-
     // find the closest non-inanimate opponent among the candidates.
     let closest = null;
     let closestDistance = Infinity;
 
-    for (const candidate of nearby)
+    for (const candidate of candidates)
     {
       // skip self, inanimate targets, and same-team battlers.
       if (candidate === this) continue;
@@ -2966,6 +2974,40 @@ class JABS_Battler
     }
 
     // return the closest found, or null if the area is clear.
+    return closest;
+  };
+
+  /**
+   * Filters the pre-built candidate list for the closest inanimate opponent.
+   * This is the last resort when all non-inanimate tiers have come up empty —
+   * covers training dummies, barrels, and other inanimate targets that are
+   * genuinely the only thing in range.
+   * @param {JABS_Battler[]} candidates The pre-scanned battlers within proximity.
+   * @returns {JABS_Battler|null} The closest inanimate opponent, or null.
+   */
+  resolveDirectTargetInanimateScan(candidates)
+  {
+    // find the closest inanimate opponent among the candidates.
+    let closest = null;
+    let closestDistance = Infinity;
+
+    for (const candidate of candidates)
+    {
+      // skip self and same-team battlers; inanimate is required this time.
+      if (candidate === this) continue;
+      if (!candidate.isInanimate()) continue;
+      if (candidate.isEnemy() === this.isEnemy()) continue;
+
+      // track the closest qualifying candidate.
+      const distance = this.distanceToDesignatedTarget(candidate);
+      if (distance < closestDistance)
+      {
+        closestDistance = distance;
+        closest = candidate;
+      }
+    }
+
+    // return the closest found, or null if no inanimate opponents are nearby.
     return closest;
   };
 
@@ -3000,7 +3042,7 @@ class JABS_Battler
   {
     this.getBattler()
       .getSkillSlotManager()
-      .updateCooldowns();
+      .updateCooldowns(this.isCasting());
   };
 
   /**

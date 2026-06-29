@@ -32,16 +32,16 @@ J.RESOURCES.EXT.ABS.Aliased.Scene_Boot = new Map();
 J.RESOURCES.EXT.ABS.RegExp = {};
 
 // on-attack tags (on the skill — fires for the caster on a successful hit).
-J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFlat    = /<on-attack-hp-gain:(\d+)>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainPercent = /<on-attack-hp-gain:(\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFlat    = /<on-attack-hp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainPercent = /<on-attack-hp-gain:(-?\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.OnAttackHpGainFormula = /<on-attack-hp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
-J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFlat    = /<on-attack-mp-gain:(\d+)>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainPercent = /<on-attack-mp-gain:(\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFlat    = /<on-attack-mp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainPercent = /<on-attack-mp-gain:(-?\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.OnAttackMpGainFormula = /<on-attack-mp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
-J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFlat    = /<on-attack-tp-gain:(\d+)>/gi;
-J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainPercent = /<on-attack-tp-gain:(\d+)%>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFlat    = /<on-attack-tp-gain:(-?\d+)>/gi;
+J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainPercent = /<on-attack-tp-gain:(-?\d+)%>/gi;
 J.RESOURCES.EXT.ABS.RegExp.OnAttackTpGainFormula = /<on-attack-tp-gain:\[([+\-*/ ().\w]+)]>/gi;
 
 // when-hit tags (on actor/class/equip/state — fires for the target when taking damage).
