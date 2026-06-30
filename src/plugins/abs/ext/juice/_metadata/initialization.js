@@ -65,7 +65,7 @@ J.ABS.EXT.JUICE.RegExp = {
 
   /**
    * Skill: `<juiceMotion:NAME>` — selects a preset weapon motion (kebab-case).
-   * Weapon overlay: arc | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
+   * Weapon overlay: arc | arc-reverse | arc-oscillate | bash | present | recoil | spin | spin-reverse | stab-forward
    * Caster-body: squish | pulse | flip | flip-reverse
    * Suppress: none (equivalent to <noJuice>)
    */
