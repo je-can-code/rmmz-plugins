@@ -3791,7 +3791,8 @@ class JABS_Engine
     if (!this.canAutoCounter(battler)) return;
 
     // check if RNG favors you.
-    const shouldAutoCounter = battler.getBattler().cnt > Math.random();
+    const autoCounterChance = battler.getBattler().cnt * 100;
+    const shouldAutoCounter = RPGManager.chanceIn100(autoCounterChance);
 
     // if RNG did actually favor you, then proceed.
     if (shouldAutoCounter)
