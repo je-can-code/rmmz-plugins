@@ -4,6 +4,7 @@ import DestinationData from './fulfillment/DestinationData.js';
 import FetchData from './fulfillment/FetchData.js';
 import SlayData from './fulfillment/SlayData.js';
 import QuestData from './fulfillment/QuestData.js';
+import OmniObjective from './OmniObjective.js';
 
 /**
  * A class representing the data shape of the fulfillment requirements for a single objective on a quest.
@@ -52,7 +53,7 @@ class OmniFulfillmentData
   {
     this.indiscriminate = indiscriminate ?? new IndiscriminateData();
     this.destination = destination ?? new DestinationData(-1, -1, -1, -1, -1);
-    this.fetch = fetch ?? new FetchData(OmniObjectiveFetchType.Unset, 0, 0);
+    this.fetch = fetch ?? new FetchData(OmniObjective.FetchTypes.Unset, 0, 0);
     // assign slay on this instance for callers.
     this.slay = slay ?? new SlayData(0, 0);
     this.quest = quest ?? new QuestData([]);

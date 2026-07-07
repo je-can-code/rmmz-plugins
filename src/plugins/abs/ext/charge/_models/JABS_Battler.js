@@ -160,7 +160,7 @@ JABS_Battler.prototype.getHighestChargedTier = function()
     .sort((chargeTierLeft, chargeTierRight) => chargeTierRight.tier - chargeTierLeft.tier);
 
   // if we have none left after sorting and filtering, then null it is.
-  if (!sortedFilteredTiers.length) return null;
+  if (!sortedFilteredtiers.length) return null;
 
   // grab the first, which should be highest, completed charge tier.
   const [ highestChargedTier, ] = sortedFilteredtiers;

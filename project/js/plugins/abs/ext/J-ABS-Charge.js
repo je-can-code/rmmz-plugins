@@ -562,7 +562,7 @@ JABS_Battler.prototype.getHighestChargedTier = function() {
 		return null;
 	}
 	const sortedFilteredtiers = tiers.filter((chargeTier) => chargeTier.completed).sort((chargeTierLeft, chargeTierRight) => chargeTierRight.tier - chargeTierLeft.tier);
-	if (!sortedFilteredTiers.length) return null;
+	if (!sortedFilteredtiers.length) return null;
 	const [highestChargedTier] = sortedFilteredtiers;
 	return highestChargedTier;
 };

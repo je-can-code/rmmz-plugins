@@ -26,7 +26,8 @@
   },
   "scripts": {
     "plugin:init": "node ./src/build-tools/init.js",
-    "lint": "oxlint src/plugins src/build-tools",
+    "lint": "node ./src/build-tools/generate-oxlint-globals.js && oxlint src/plugins src/build-tools",
+    "generate:oxlint-globals": "node ./src/build-tools/generate-oxlint-globals.js",
     "verify:docs": "node ./src/build-tools/verify-docs.js",
     "verify:no-typeof": "node ./src/build-tools/verify-no-typeof.js",
     "verify:no-instanceof": "node ./src/build-tools/verify-no-instanceof.js",
