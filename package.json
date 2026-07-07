@@ -99,6 +99,7 @@
     "build:jabs-shield": "vite build --config src/plugins/abs/ext/shield/vite.config.jabs-shield.js",
     "build:jabs-food": "vite build --config src/plugins/abs/ext/food/vite.config.jabs-food.js",
     "build:jabs-star": "vite build --config src/plugins/abs/ext/star/vite.config.jabs-star.js",
+    "build:jabs-targeting": "vite build --config src/plugins/abs/ext/targeting/vite.config.jabs-targeting.js",
     "build:level": "vite build --config src/plugins/level/core/vite.config.level-core.js",
     "build:level-flat": "vite build --config src/plugins/level/ext/flat/vite.config.level-ext.flat.js",
     "build:level-sync": "vite build --config src/plugins/level/ext/sync/vite.config.level-ext.sync.js",

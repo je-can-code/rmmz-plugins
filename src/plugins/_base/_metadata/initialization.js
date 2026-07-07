@@ -139,6 +139,11 @@ J.BASE.RegExp = {};
 J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
 
 /**
+ * Outgoing heal potency multiplier — the sender-side counterpart to REC (`<har:25>` = +25%).
+ */
+J.BASE.RegExp.HealAmplification = /<har:(-?\d+)>/gi;
+
+/**
  * The definition of what a parsable comment in an event looks like.
  * This enforces a structure that enables the following tags to be valid:
  *  <pre>
@@ -183,6 +188,7 @@ J.BASE.Aliased = {
   Bitmap: new Map(),
   DataManager: new Map(),
   JsonEx: new Map(),
+  Game_Action: new Map(),
   Game_BattlerBase: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),

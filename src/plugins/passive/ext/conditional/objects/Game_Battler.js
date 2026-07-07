@@ -1,8 +1,10 @@
 //region Game_Battler
 import AutoApplyStateManager from '../managers/AutoApplyStateManager.js';
 import AutoExecuteSkillManager from '../managers/AutoExecuteSkillManager.js';
+import AutoInflictStateManager from '../managers/AutoInflictStateManager.js';
 import PassiveGateEvaluator from '../managers/PassiveGateEvaluator.js';
 import PassiveStackCountEvaluator from '../managers/PassiveStackCountEvaluator.js';
+import PassiveRuleJabsAccess from '../helpers/PassiveRuleJabsAccess.js';
 
 /**
  * Extends {@link #initPassiveStatesMembers}.<br/>
@@ -359,6 +361,19 @@ Game_Battler.prototype.onHeal = function(resource, amount)
     AutoApplyStateManager.scheduleHealTriggers(this, 'onHealTp');
     AutoExecuteSkillManager.scheduleHealTriggers(this, 'onHealTp');
   }
+
+  // notify nearby allies that one of their own was healed- each ally's own onAllyHeal rules
+  // fire against themselves (self-dispatch), same mechanism as onHealHp/Mp/Tp above, just
+  // evaluated on every ally in proximity instead of on this battler.
+  PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(this).forEach(jabsAlly =>
+  {
+    const allyBattler = jabsAlly.getBattler();
+
+    if (!allyBattler) return;
+
+    AutoApplyStateManager.scheduleHealTriggers(allyBattler, 'onAllyHeal');
+    AutoExecuteSkillManager.scheduleHealTriggers(allyBattler, 'onAllyHeal');
+  });
 };
 
 /**
@@ -637,5 +652,24 @@ Game_Battler.prototype.onStateAdded = function(stateId)
 
   AutoApplyStateManager.scheduleStateAddedTriggers(this, stateId);
   AutoExecuteSkillManager.scheduleStateAddedTriggers(this, stateId);
+};
+
+/**
+ * Extends {@link #onJabsStateInflicted}.<br/>
+ * Fires autoInflictState rules on the inflicting battler, applying the configured payload state
+ * onto this battler (the one just afflicted)- not the inflictor, and not anything nearby.
+ */
+J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set(
+  'onJabsStateInflicted',
+  Game_Battler.prototype.onJabsStateInflicted
+);
+Game_Battler.prototype.onJabsStateInflicted = function(stateId, attacker)
+{
+  // perform original logic (a no-op today, but future extensions may alias further).
+  J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('onJabsStateInflicted')
+    .call(this, stateId, attacker);
+
+  // evaluate the inflicting battler's own autoInflictState rules against this newly-afflicted target.
+  AutoInflictStateManager.scheduleInflictedStateTriggers(attacker, this, stateId);
 };
 //endregion Game_Battler

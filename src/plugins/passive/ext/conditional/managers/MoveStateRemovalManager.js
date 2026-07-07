@@ -72,7 +72,7 @@ class MoveStateRemovalManager
   }
 
   /**
-   * Mirrors {@link JABS_State#handleStackLossFromDuration} stack peel amount for one state id.
+   * Mirrors {@link JABS_State#handleStackChangeFromDuration} stack peel amount for one state id.
    * @param {Game_Actor|Game_Enemy} battler The battler losing stacks.
    * @param {number} stateId The database state id to peel.
    * @returns {number} How many stacks to remove in one proc.

@@ -92,6 +92,9 @@ describe('J-ABS map state duration', () =>
     clearRpgManagerCacheInVm(sandbox);
     sandbox.$jabsEngine = {
       addOrUpdateStateByUuid: vi.fn(),
+      // JABS_State construction now resolves its own tick interval, which reads battler-wide
+      // tick speed modifiers via Game_Battler#getAllNotes() -> #states() -> this stub.
+      getJabsStatesByUuid: () => new Map(),
     };
   });
 

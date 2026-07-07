@@ -98,6 +98,28 @@ class VanillaParameterRegistration
   }
 
   /**
+   * Registers HAR — the sender-side counterpart to REC — with the catalog.
+   * Not a native engine param, so it needs its own custom builder rather than
+   * the registerBparam/Xparam/Sparam helpers, which wrap native param ids.
+   */
+  static registerHar()
+  {
+    ParameterRegistry.register(
+      ParameterDefinition.Builder()
+        .key('har')
+        .group(ParameterGroups.VITALITY)
+        .sortOrder(8)
+        .label(() => TextManager.har())
+        .description(() => TextManager.harDescription())
+        .iconIndex(() => IconManager.har())
+        .format(ParameterFormat.PERCENT_CENTERED)
+        .getValue(battler => battler.har)
+        .sdpBinding(SdpParameterBinding.byKey('har', () => 1))
+        .build()
+    );
+  }
+
+  /**
    * Registers all vanilla engine parameters with the catalog.
    */
   static registerAll()
@@ -132,6 +154,7 @@ class VanillaParameterRegistration
     VanillaParameterRegistration.registerXparam('trg', 9, ParameterGroups.VITALITY, 5, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerSparam('rec', 2, ParameterGroups.VITALITY, 6, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
     VanillaParameterRegistration.registerSparam('pha', 3, ParameterGroups.VITALITY, 7, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
+    VanillaParameterRegistration.registerHar();
 
     // combat
     VanillaParameterRegistration.registerBparam('atk', 2, ParameterGroups.COMBAT, 0);

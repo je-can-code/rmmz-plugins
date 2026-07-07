@@ -5973,24 +5973,9 @@ class JABS_Battler
 
   //region regeneration
   /**
-   * Frames between regeneration ticks at 60fps.
-   * 30 frames = 2 ticks/sec (was 15 = 4/sec); per-tick amounts are scaled so per-second totals match legacy behavior.
-   */
-  static REGEN_TICK_INTERVAL_FRAMES = 30;
-
-  /**
-   * Divisor converting per-five state slip tag totals into per-tick application at 2 ticks/sec.
-   * Legacy used 20 at 4 ticks/sec; halving tick rate requires halving the divisor to preserve DPS.
-   */
-  static STATE_SLIP_PER_TICK_DIVISOR = 10;
-
-  /**
-   * Natural HRG/MRG/TRG is applied each regen tick; doubling per tick compensates for half the tick rate.
-   */
-  static NATURAL_REGEN_TICK_SCALE = 2;
-
-  /**
-   * Updates all regenerations and ticks twice per second (60fps: every 30 frames).
+   * Updates all regenerations. Ticks at a dynamically-resolved interval instead of a fixed rate-
+   * natural HRG/MRG/TRG is typed as {@link J_AbsPluginMetadata.NaturalRegenTickType} so the same
+   * flat/percent tick speed modifiers that affect state slip ticking can reach it too.
    */
   updateRegen()
   {
@@ -5999,7 +5984,34 @@ class JABS_Battler
 
     //
     this.performRegeneration();
-    this.setRegenCounter(JABS_Battler.REGEN_TICK_INTERVAL_FRAMES);
+    this.setRegenCounter(this.getNaturalRegenTickInterval());
+  };
+
+  /**
+   * Resolves how many frames elapse between natural regeneration ticks for this battler.<br/>
+   * Uses the same base-plus-flat-then-percent formula as per-state slip ticking, evaluated
+   * against this battler itself (natural regen has no external "source" to speak of), and typed
+   * as the plugin-configured natural regen tick type so type-scoped modifiers can reach it.
+   * @returns {number}
+   */
+  getNaturalRegenTickInterval()
+  {
+    // shorthand the battler and the configured natural regen type.
+    const battler = this.getBattler();
+    const naturalRegenType = J.ABS.Metadata.NaturalRegenTickType;
+
+    // resolve the base interval and layer on this battler's own flat/percent modifiers.
+    const baseInterval = J.ABS.Metadata.DefaultStateTickInterval;
+    const flatModifier = battler.tickSpeedFlatModifier();
+    const percentModifier = battler.tickSpeedPercentModifier([ naturalRegenType ]);
+
+    // apply the flat modifier first, then the combined percent modifier.
+    const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));
+
+    // never let the interval drop below the tunable floor, and never below 1 frame regardless.
+    const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+
+    return Math.max(Math.round(modifiedInterval), tunableFloor);
   };
 
   /**
@@ -6064,9 +6076,9 @@ class JABS_Battler
   };
 
   /**
-   * Performs the full suite of possible regenerations handled by JABS.
-   *
-   * This includes both natural and tag/state-driven regenerations.
+   * Performs the natural regeneration handled by JABS, and prunes any orphaned states found
+   * along the way. State slip ticking no longer happens here- each {@link JABS_State} now
+   * ticks on its own dynamically-resolved cadence and calls {@link #processStateTick} directly.
    */
   performRegeneration()
   {
@@ -6078,15 +6090,12 @@ class JABS_Battler
     this.processNaturalRegens();
 
     // if we have no states, don't bother.
-    let states = battler.allStates();
+    const states = battler.allStates();
     if (!states.length) return;
 
-    // clean-up all the states that are somehow applied but not tracked.
-    states = states.filter(this.shouldProcessState, this);
-
-    // TODO: modify to interact with state stacks.
-    // handle all the tag-specific hp/mp/tp regenerations.
-    this.processStateRegens(states);
+    // clean-up all the states that are somehow applied but not tracked; the boolean result no
+    // longer feeds a regen filter, but the removal side-effect for orphaned states still matters.
+    states.forEach(this.shouldProcessState, this);
   };
 
   /**
@@ -6133,7 +6142,7 @@ class JABS_Battler
    */
   calculatedRegen(baseValue, isReduced = false)
   {
-    // calculate the amount applied each regen tick; tick rate is 2/sec (see REGEN_TICK_INTERVAL_FRAMES).
+    // calculate the amount applied each regen tick; tick rate is resolved dynamically (see getNaturalRegenTickInterval).
     let calculatedValue = (baseValue * 100) * 0.05;
     if (isReduced)
     {
@@ -6162,8 +6171,8 @@ class JABS_Battler
         rec
       } = battler;
 
-      // calculate the bonus (scale so per-second total matches legacy 4 ticks/sec rates).
-      const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+      // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
+      const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec;
 
       // execute the gain.
       battler.gainHp(naturalHp5);
@@ -6187,8 +6196,8 @@ class JABS_Battler
         rec
       } = battler;
 
-      // calculate the bonus (scale so per-second total matches legacy 4 ticks/sec rates).
-      const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+      // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
+      const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec;
 
       // execute the gain.
       battler.gainMp(naturalMp5);
@@ -6212,8 +6221,8 @@ class JABS_Battler
         rec
       } = battler;
 
-      // calculate the bonus (scale so per-second total matches legacy 4 ticks/sec rates).
-      const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+      // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
+      const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec;
 
       // execute the gain.
       battler.gainTp(naturalTp5);
@@ -6221,55 +6230,43 @@ class JABS_Battler
   };
 
   /**
-   * Processes all regenerations derived from state tags.
-   * Applies slip per state so hooks can attribute popup metadata (state id).
-   * Per-second slip totals match legacy aggregate math (divisor 10 at 2 ticks/sec vs 20 at 4 ticks/sec).
-   * @param {RPG_State[]} states The filtered list of states to parse.
+   * Applies a single slip/regen tick for one state. Called by the owning {@link JABS_State}
+   * whenever its own dynamically-resolved tick counter elapses- there is no longer a shared
+   * battler-wide divisor, so a state ticking faster than another deals/heals proportionally more
+   * over time. That's the intended power lever of a faster tick speed.
+   * @param {RPG_State} state The state whose slip tags should be applied for this tick.
    */
-  processStateRegens(states)
+  processStateTick(state)
   {
     // grab the battler we're working with.
     const battler = this.getBattler();
 
+    // a dead battler has nothing left to slip/regen.
+    if (!battler || battler.isDead()) return;
+
     // default the regenerations to the battler's innate regens.
     const { rec } = battler;
-    const slipDivisor = JABS_Battler.STATE_SLIP_PER_TICK_DIVISOR;
+    const perResource = [ this.stateSlipHp(state), this.stateSlipMp(state), this.stateSlipTp(state) ];
 
-    // process each state independently so popups can key by state id.
-    for (const state of states)
+    for (let index = 0; index < 3; index++)
     {
-      const hpRaw = this.stateSlipHp(state);
-      const mpRaw = this.stateSlipMp(state);
-      const tpRaw = this.stateSlipTp(state);
-      const perResource = [ hpRaw, mpRaw, tpRaw ];
+      let regen = perResource[index];
 
-      for (let index = 0; index < 3; index++)
+      if (!regen)
       {
-        let regen = perResource[index];
-
-        if (!regen)
-        {
-          continue;
-        }
-
-        if (regen > 0)
-        {
-          regen *= rec;
-        }
-
-        regen /= slipDivisor;
-
-        if (!regen)
-        {
-          continue;
-        }
-
-        this.applySlipEffect(regen, index);
-
-        const displayAmount = -regen;
-
-        this.onSlipRegenTick(displayAmount, index, state.id);
+        continue;
       }
+
+      if (regen > 0)
+      {
+        regen *= rec;
+      }
+
+      this.applySlipEffect(regen, index);
+
+      const displayAmount = -regen;
+
+      this.onSlipRegenTick(displayAmount, index, state.id);
     }
   };
 
@@ -6531,7 +6528,7 @@ class JABS_Battler
    * Hook after slip/regen math is applied; extensions may show pops or other feedback.
    * @param {number} displayAmount Amount passed to popup builders after sign normalization.
    * @param {0|1|2} type HP / MP / TP index.
-   * @param {number} [stateId] Database state id when this tick came from {@link #processStateRegens}.
+   * @param {number} [stateId] Database state id when this tick came from {@link #processStateTick}.
    */
   onSlipRegenTick(_displayAmount, _type, _stateId)
   {

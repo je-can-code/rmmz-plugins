@@ -46,6 +46,29 @@
   {
   };
 
+  globalThis.JABS_Engine = function JABS_Engine()
+  {
+  };
+
+  globalThis.JABS_Engine.prototype.handleDefeatedEnemy = function()
+  {
+  };
+
+  globalThis.JABS_Engine.prototype.checkKnockback = function()
+  {
+  };
+
+  globalThis.JABS_Engine.prototype.postExecuteSkillEffects = function()
+  {
+  };
+
+  globalThis.JABS_TeamRules = {
+    isOpposed(teamA, teamB)
+    {
+      return teamA !== teamB;
+    },
+  };
+
   // conditional aliases updatePixelStepping — seed a noop when J-Pixelistics is not in the test prelude.
   globalThis.Game_CharacterBase.prototype.updatePixelStepping = function()
   {

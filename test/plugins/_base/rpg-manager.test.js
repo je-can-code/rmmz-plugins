@@ -384,5 +384,83 @@ describe('J-Base RPGManager (out/J-Base.js)', () =>
       expect(sandbox.RPGManager.getStringsFromNoteByRegex(data, re)).toEqual([ '1', '2', '3' ]);
     });
   });
+
+  describe('weightedMapChoice', () =>
+  {
+    it('returns null when totalWeight is zero or negative', () =>
+    {
+      const map = new Map([ [ 'a', 1 ] ]);
+
+      expect(sandbox.RPGManager.weightedMapChoice(map, 0)).toBeNull();
+      expect(sandbox.RPGManager.weightedMapChoice(map, -5)).toBeNull();
+    });
+
+    it('picks the key whose weight bucket contains the rolled value', () =>
+    {
+      // buckets: 'a' covers [0, 10), 'b' covers [10, 30), 'c' covers [30, 60).
+      const map = new Map([ [ 'a', 10 ], [ 'b', 20 ], [ 'c', 30 ] ]);
+      const prevRandom = sandbox.Math.random;
+
+      // Math.random() * 60 === 5 -> falls in 'a' bucket.
+      sandbox.Math.random = () => 5 / 60;
+      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('a');
+
+      // Math.random() * 60 === 15 -> falls in 'b' bucket.
+      sandbox.Math.random = () => 15 / 60;
+      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('b');
+
+      // Math.random() * 60 === 45 -> falls in 'c' bucket.
+      sandbox.Math.random = () => 45 / 60;
+      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('c');
+
+      sandbox.Math.random = prevRandom;
+    });
+
+    it('skips entries with zero or negative weight', () =>
+    {
+      const map = new Map([ [ 'a', 0 ], [ 'b', -5 ], [ 'c', 10 ] ]);
+      const prevRandom = sandbox.Math.random;
+
+      // regardless of roll, only 'c' has any positive weight to land in.
+      sandbox.Math.random = () => 0.5;
+      expect(sandbox.RPGManager.weightedMapChoice(map, 10)).toBe('c');
+
+      sandbox.Math.random = prevRandom;
+    });
+
+    it('returns null if the roll overshoots every bucket', () =>
+    {
+      // totalWeight overstates the map's actual weight sum, leaving a gap the roll can land in.
+      const map = new Map([ [ 'a', 10 ] ]);
+      const prevRandom = sandbox.Math.random;
+
+      sandbox.Math.random = () => 0.99;
+      expect(sandbox.RPGManager.weightedMapChoice(map, 100)).toBeNull();
+
+      sandbox.Math.random = prevRandom;
+    });
+  });
+
+  describe('resolveHitTypeString', () =>
+  {
+    it('returns null for falsy input', () =>
+    {
+      expect(sandbox.RPGManager.resolveHitTypeString(undefined)).toBeNull();
+      expect(sandbox.RPGManager.resolveHitTypeString('')).toBeNull();
+    });
+
+    it('returns null for an unrecognized string', () =>
+    {
+      expect(sandbox.RPGManager.resolveHitTypeString('nonsense')).toBeNull();
+    });
+
+    it('maps known hit type strings case-insensitively to their Game_Action constants', () =>
+    {
+      expect(sandbox.RPGManager.resolveHitTypeString('physical')).toBe(sandbox.Game_Action.HITTYPE_PHYSICAL);
+      expect(sandbox.RPGManager.resolveHitTypeString('PHYSICAL')).toBe(sandbox.Game_Action.HITTYPE_PHYSICAL);
+      expect(sandbox.RPGManager.resolveHitTypeString('Magical')).toBe(sandbox.Game_Action.HITTYPE_MAGICAL);
+      expect(sandbox.RPGManager.resolveHitTypeString('certain')).toBe(sandbox.Game_Action.HITTYPE_CERTAIN);
+    });
+  });
 });
 //endregion plugins/_base/rpg-manager.test.js

@@ -77,7 +77,7 @@
  *     - Element rate
  *     - Physical/Magical damage rate (treats as the parent’s type)
  *     - Variance
- *     - REC (recovery) on the recipient
+ *     - REC (recovery) on the recipient, and HAR (healing rate) on the caster
  *
  * Visuals and logs:
  *   - Popups (J-POPUPS): shows resource-specific damage/heal popups
@@ -167,6 +167,9 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.0.4
+ *   Healing path now also applies HAR (healing rate) on the caster, alongside
+ *   the existing REC (recovery) on the recipient. Requires J-Base 3.5.0+.
  * - 1.0.2
  *   Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

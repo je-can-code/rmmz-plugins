@@ -170,6 +170,14 @@
  *  For every level gained by an actor afflicted with this state, they will
  *  gain their level's worth of attack permanently.
  *
+ * TAG:
+ *  <harBuffPlus:[20]>
+ * LOCATION:
+ *  A state.
+ * EFFECT:
+ *  While afflicted, the actor's outgoing healing gains a flat +20 bonus on
+ *  top of their base HAR. Lost as soon as the state wears off.
+ *
  * ==============================================================================
  * GLOSSARY:
  * There are a lot of shorthands available for use with this plugin to build your
@@ -215,6 +223,7 @@
  *
  * Custom Parameters:
  * - mtp (max tp)
+ * - har (healing rate, requires J-Base 3.5.0+)
  *
  * Rewards (plus only, no rate):
  * - exp
@@ -223,6 +232,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Added HAR (Healing Rate) growth and buff support — not a native param
+ *    array member, so it gets its own dedicated tag set like max tp:
+ *    <harGrowthPlus:[FORMULA]>, <harGrowthRate:[FORMULA]>,
+ *    <harBuffPlus:[FORMULA]>, <harBuffRate:[FORMULA]>. Growth applies via
+ *    the existing applyNaturalCustomGrowths hook (actors only); buffs apply
+ *    to both actors and enemies. Requires J-Base 3.5.0+.
  * - 2.1.2
  *    Fixed issue with broken regex structures for max TP.
  *    Consumed `RPGManager` updates.

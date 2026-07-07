@@ -102,6 +102,12 @@ class JABS_State
    */
   #spreadTickCounter = 0;
 
+  /**
+   * Frames until the next slip/regen tick for this tracked state.
+   * @type {number}
+   */
+  #tickCounter = 0;
+
   //endregion properties
 
   /**
@@ -128,6 +134,9 @@ class JABS_State
 
     // start the spread cadence so the first pulse fires after one full interval.
     this.#spreadTickCounter = this.getSpreadTickInterval();
+
+    // start the slip/regen cadence so the first tick fires after one full interval.
+    this.#tickCounter = this.getTickInterval();
 
     // set the state to be active.
     this.expired = false;
@@ -193,8 +202,8 @@ class JABS_State
     // handle all counters associated with the state.
     this.handleCounters();
 
-    // remove stacks on a duration-centric basis.
-    this.handleStackLossFromDuration();
+    // gain or lose stacks on a duration-centric basis.
+    this.handleStackChangeFromDuration();
 
     // handle the removal if applicable.
     this.handleExpiration();
@@ -217,6 +226,9 @@ class JABS_State
 
     // countdown the spread pulse timer (no-op at pulse time when the state row has no spread tag).
     this.decrementSpreadTickCounter();
+
+    // countdown the slip/regen tick timer for this state's own cadence.
+    this.decrementTickCounter();
   }
 
   /**
@@ -270,15 +282,33 @@ class JABS_State
   }
 
   /**
-   * Handles stack loss from duration.
+   * Handles stack changes from duration expiring: states normally lose a stack (or all stacks),
+   * but a state tagged {@code <stackOnExpire>} gains a stack instead and re-arms itself
+   * indefinitely, with no external reapplication required.
    */
-  handleStackLossFromDuration()
+  handleStackChangeFromDuration()
   {
-    // don't do anything if we should not decrement.
-    if (this.canLoseStackFromDuration() === false) return;
+    // don't do anything if duration hasn't actually run out for this state.
+    if (this.canChangeStackFromDuration() === false) return;
+
+    // grab the database row backing this tracked state.
+    const stateRow = this.source.state(this.stateId);
+
+    // self-accumulating states gain a stack on expiry instead of losing one.
+    if (stateRow.jabsStackOnExpire === true)
+    {
+      // gain a stack (and roll for stack-conversion, same as an externally-applied stack).
+      this.applyStackGain(1);
+
+      // incrementStacks() alone never touches duration the way decrementStacks() does- without
+      // this, duration stays pinned at zero and this branch would refire every single frame.
+      this.refreshDuration();
+
+      return;
+    }
 
     // grab whether or not to lose all stacks at once.
-    const loseAllStacksAtOnce = this.source.state(this.stateId).jabsLoseAllStacksAtOnce;
+    const loseAllStacksAtOnce = stateRow.jabsLoseAllStacksAtOnce;
 
     // if not being forced, then consider losing all stacks at once.
     const stacksLossCount = (loseAllStacksAtOnce === true)
@@ -290,10 +320,10 @@ class JABS_State
   }
 
   /**
-   * Determines whether or not this state can lose stacks from duration.
+   * Determines whether or not this state can gain or lose stacks from duration expiring.
    * @returns {boolean} True if it can, false otherwise.
    */
-  canLoseStackFromDuration()
+  canChangeStackFromDuration()
   {
     // must still have stacks left.
     if (this.stackCount <= 0) return false;
@@ -304,8 +334,23 @@ class JABS_State
     // cannot be a perpetual state.
     if (this.hasEternalDuration()) return false;
 
-    // this is a decrementable state.
+    // this state's stacks can change from duration expiring.
     return true;
+  }
+
+  /**
+   * Gains stacks on this tracked state, then rolls for stack-conversion. Shared by both
+   * externally-triggered stacking ({@link JABS_Engine#stackJabsState}) and self-accumulation
+   * ({@link #handleStackChangeFromDuration}) so both paths get conversion-at-threshold support.
+   * @param {number} amount The number of stacks to gain; defaults to 1.
+   */
+  applyStackGain(amount = 1)
+  {
+    // increment the stack counter, respecting the state's stack cap.
+    this.incrementStacks(amount);
+
+    // roll for stack-conversion now that the stack count has changed.
+    $jabsEngine.checkStackConversion(this);
   }
 
   /**
@@ -541,6 +586,95 @@ class JABS_State
 
     // fall back to the plugin default when the state row omits spreadTick.
     return J.ABS.Metadata.DefaultStateSpreadTickInterval;
+  }
+
+  /**
+   * Decrements this state's own slip/regen tick counter and fires a tick when it reaches zero.
+   * Unlike the legacy battler-wide regen counter, every tracked state resolves and counts down
+   * its own interval, so different states can tick at entirely different speeds.
+   */
+  decrementTickCounter()
+  {
+    // countdown toward the next tick.
+    if (this.#tickCounter > 0)
+    {
+      this.#tickCounter--;
+    }
+
+    // when the counter hits zero, start the next interval and apply this tick.
+    if (this.#tickCounter === 0)
+    {
+      this.resetTickCounter();
+      this.handleTick();
+    }
+  }
+
+  /**
+   * Resets the slip/regen tick counter to the freshly-resolved interval for this state.
+   * Resolving on every reset (rather than once at creation) means battler-wide or type-scoped
+   * tick speed modifiers gained/lost mid-affliction take effect at the next tick boundary.
+   */
+  resetTickCounter()
+  {
+    this.#tickCounter = this.getTickInterval();
+  }
+
+  /**
+   * Resolves how many frames elapse between slip/regen ticks for this tracked state.<br/>
+   * Base interval is this state's own {@code <thisTickSpeed:N>} override if present, otherwise
+   * the plugin's global default. That base is then adjusted by every flat and percent tick speed
+   * modifier currently affecting the state's source (the battler who applied it), where percent
+   * modifiers include both the battler-wide total and every type-scoped modifier matching one of
+   * this state's own {@code <type:CLASSIFIER>} tags. The result is floored at both a hardcoded
+   * absolute minimum and the plugin's tunable minimum.
+   * @returns {number}
+   */
+  getTickInterval()
+  {
+    // grab the database state row backing this tracked state.
+    const stateRow = this.source.state(this.stateId);
+
+    // per-state override wins over the global default when present.
+    const baseInterval = stateRow.jabsThisTickSpeed > 0
+      ? stateRow.jabsThisTickSpeed
+      : J.ABS.Metadata.DefaultStateTickInterval;
+
+    // tick speed modifiers are evaluated against the source, not the afflicted battler-
+    // Festering/Exsanguination-style passives speed up the ticks of states their owner inflicts.
+    const flatModifier = this.source.tickSpeedFlatModifier();
+    const percentModifier = this.source.tickSpeedPercentModifier(stateRow.stateTypes());
+
+    // apply the flat modifier first, then the combined percent modifier.
+    const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));
+
+    // never let the interval drop below the tunable floor, and never below 1 frame regardless.
+    const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+
+    return Math.max(Math.round(modifiedInterval), tunableFloor);
+  }
+
+  /**
+   * Applies a single slip/regen tick for this state. Delegates the actual math and resource
+   * application to the map battler wrapper, which owns the slip tag parsing and the
+   * {@link JABS_Battler#onSlipRegenTick} popup hook.
+   */
+  handleTick()
+  {
+    // expired trackers should not keep ticking.
+    if (this.expired === true) return;
+
+    // abs must be active and we need a carrier to resolve the map-battler wrapper.
+    if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+
+    if (!this.battler) return;
+
+    // resolve the afflicted battler's map wrapper, which owns slip application.
+    const carrier = JABS_AiManager.getBattlerByUuid(this.battler.getUuid());
+
+    if (!carrier) return;
+
+    // apply this tick's slip/regen using the live database state row.
+    carrier.processStateTick(this.source.state(this.stateId));
   }
 
   /**

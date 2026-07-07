@@ -49,6 +49,14 @@ class JPassiveConditional_PluginMetadata
      * @type {number}
      */
     this.autoExecuteSkillMaxDepth = Number.isNaN(depthParsed) ? 1 : depthParsed;
+
+    const inflictDepthParsed = parseInt(this.parsedPluginParameters['auto-inflict-state-max-depth'], 10);
+
+    /**
+     * Maximum nested {@link AutoInflictStateManager} dispatches per synchronous call stack.
+     * @type {number}
+     */
+    this.autoInflictStateMaxDepth = Number.isNaN(inflictDepthParsed) ? 1 : inflictDepthParsed;
   }
 }
 

@@ -89,6 +89,9 @@ function buildJabsBattler(gameBattler, distance)
     {
       return gameBattler;
     },
+    // slip/regen ticks now route through the map battler wrapper; spread tests don't assert
+    // on slip application, but the carrier must expose this so ticking doesn't throw.
+    processStateTick: vi.fn(),
     __distance: distance,
   };
 }
@@ -112,7 +115,12 @@ describe('J-ABS state spread (out/abs/J-ABS.js)', () =>
   {
     clearRpgManagerCacheInVm(sandbox);
     sandbox.$dataStates = [ null ];
-    sandbox.$jabsEngine = { absEnabled: true };
+    sandbox.$jabsEngine = {
+      absEnabled: true,
+      // JABS_State construction now resolves its own tick interval, which reads battler-wide
+      // tick speed modifiers via Game_Battler#getAllNotes() -> #states() -> this stub.
+      getJabsStatesByUuid: () => new Map(),
+    };
     sandbox.RPGManager.chanceIn100 = sandbox.RPGManager.chanceIn100.bind(sandbox.RPGManager);
     vi.restoreAllMocks();
   });
@@ -201,6 +209,7 @@ describe('J-ABS state spread (out/abs/J-ABS.js)', () =>
       const carrierGame = buildGameBattler(sandbox, 'carrier');
       const sourceGame = buildGameBattler(sandbox, 'source');
       const carrierJabs = {
+        processStateTick: vi.fn(),
         getBattler()
         {
           return carrierGame;
@@ -312,6 +321,7 @@ describe('J-ABS state spread (out/abs/J-ABS.js)', () =>
       const carrierGame = buildGameBattler(sandbox, 'carrier');
       const sourceGame = buildGameBattler(sandbox, 'source');
       const carrierJabs = {
+        processStateTick: vi.fn(),
         getBattler()
         {
           return carrierGame;
@@ -365,6 +375,7 @@ describe('J-ABS state spread (out/abs/J-ABS.js)', () =>
       const carrierGame = buildGameBattler(sandbox, 'carrier');
       const sourceGame = buildGameBattler(sandbox, 'source');
       const carrierJabs = {
+        processStateTick: vi.fn(),
         getBattler()
         {
           return carrierGame;
@@ -413,6 +424,7 @@ describe('J-ABS state spread (out/abs/J-ABS.js)', () =>
       const carrierGame = buildGameBattler(sandbox, 'carrier');
       const sourceGame = buildGameBattler(sandbox, 'source');
       const carrierJabs = {
+        processStateTick: vi.fn(),
         getBattler()
         {
           return carrierGame;

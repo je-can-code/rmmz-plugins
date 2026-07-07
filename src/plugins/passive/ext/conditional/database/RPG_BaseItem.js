@@ -102,4 +102,22 @@ Object.defineProperty(RPG_BaseItem.prototype, 'autoExecuteSkillRules', {
     );
   },
 });
+
+/**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState} tuples from this row.<br/>
+ * Each tuple schedules a real state application via {@link AutoInflictStateManager} onto whichever
+ * external battler this row's bearer just inflicted a state upon- not the bearer, and not nearby.
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_BaseItem.prototype, 'autoInflictStateRules', {
+  get()
+  {
+    // pull every auto-inflict scheduler tuple from notes on this row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState,
+      true
+    );
+  },
+});
 //endregion RPG_BaseItem

@@ -11,6 +11,27 @@ TextManager.maxTp = function()
 };
 
 /**
+ * Display label for HAR — the sender-side counterpart to REC.
+ * @returns {string}
+ */
+TextManager.har = function()
+{
+  return 'Healing Rate';
+};
+
+/**
+ * Help text explaining what HAR does.
+ * @returns {string[]}
+ */
+TextManager.harDescription = function()
+{
+  return [
+    'The percentage effectiveness of outgoing healing.',
+    'Higher amounts of this will make healing others need less effort.',
+  ];
+};
+
+/**
  * Gets the "current resource" name for a given parameter id.
  * This is the shorter, in-world name for the living resource itself
  * as opposed to the stat-cap name (e.g. "Life" vs "Max Life").
@@ -288,8 +309,8 @@ TextManager.sparamDescription = function(paramId)
     // REC (RECovery boost rate)
     case 2:
       return [
-        "The percentage effectiveness of healing applied to oneself.",
-        "Higher amounts of this will make healing need less effort."
+        "The percentage effectiveness of incoming healing.",
+        "Higher amounts of this will make healing you need less effort."
       ];
 
     // PHA (PHArmacology rate)
@@ -356,7 +377,7 @@ TextManager.sparam = function(sParamId)
     case 1:
       return "Parry";//J.Param.GRD_text;
     case 2:
-      return "Healing Rate"; //J.Param.REC_text;
+      return "Recovery Rate"; //J.Param.REC_text;
     case 3:
       return "Item Effects"; //J.Param.PHA_text;
     case 4:

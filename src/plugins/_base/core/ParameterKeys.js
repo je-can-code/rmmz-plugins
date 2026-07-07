@@ -103,6 +103,7 @@ class ParameterKeys
     43: 'hcr',
     44: 'cdr',
     45: 'per',
+    46: 'har',
   };
 
   /**

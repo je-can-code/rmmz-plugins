@@ -154,6 +154,30 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby = /<autoApplyStateOnNear
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^\]]+])>/gi;
 
 /**
+ * Captures {@code autoInflictState} bracket tuples from database notes.<br/>
+ * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
+ * Each match schedules a real JABS state application via {@link AutoInflictStateManager} onto
+ * whichever external battler was just affected by the rule bearer's event.
+ * <p>
+ * Unlike {@code autoApplyState} (applies to the rule bearer) and {@code autoApplyStateOnNearby}
+ * (applies to proximity), this tag fires from an event involving an external battler- the rule
+ * bearer doing something to someone else- and applies the payload state to that same someone else.
+ * </p>
+ * <p>
+ * Author shape: {@code <autoInflictState:[stateId, condition, cooldownFrames]>}.<br/>
+ * After parsing, tuples look like:
+ * </p>
+ * <ul>
+ *   <li>{@code [1071, 'negaStateInflicted', 0]} — every time this battler inflicts any negative state</li>
+ *   <li>{@code [1072, 'posiStateInflicted', 60]} — on inflicting a positive state, at most once per 60 frames</li>
+ *   <li>{@code [1073, 'anyStateInflicted', 0]} — every time this battler inflicts any state at all</li>
+ *   <li>{@code [1074, 'onKnockback', 0]} — every time this battler knocks an enemy back</li>
+ * </ul>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState = /<autoInflictState:[ ]?(\[[^\]]+])>/gi;
+
+/**
  * Captures {@code removeOnSkillExecution} bracket tuples from <strong>state</strong> notes only.<br/>
  * On skill execution, rolls chance and may peel stacks via {@link Game_Battler#decrementStateStacks}.
  * <p>

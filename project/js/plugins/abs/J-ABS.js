@@ -1910,6 +1910,30 @@
  *    <paralyzed>
  *
  * ----------------------------------------------------------------------------
+ * STATE-APPLICATION IMMUNITY & RESISTANCE:
+ * These tags are read from the TARGET's own notes (states, equips, class, etc.),
+ * not from the state being applied. Checked in Game_Battler#isStateAddable, in
+ * this priority order- each fully blocks application before any chance roll:
+ *   1. <immuneToAll>          — blocks everything, including the death state.
+ *   2. <immuneToStates>       — blocks everything EXCEPT the death state.
+ *   3. <immuneToNegatives>    — blocks any state carrying <negative>.
+ *   4. <stateTypeImmune:TYPE> — blocks any state carrying a matching <type:TYPE>.
+ * <stateTypeResist:[TYPE, PCT]> is different- it does not block anything outright,
+ * it reduces the chance a state carrying a matching <type:TYPE> tag lands, folded
+ * into the same application roll as vanilla's per-id state rate. Multiple tags for
+ * the same TYPE stack additively.
+ *
+ *    <stateTypeResist:[TYPE, PCT]>
+ *    <stateTypeImmune:TYPE>
+ *    <immuneToNegatives>
+ *    <immuneToStates>
+ *    <immuneToAll>
+ *
+ * Examples:
+ *    <stateTypeResist:[cc, 50]>
+ *    <stateTypeImmune:cc>
+ *
+ * ----------------------------------------------------------------------------
  * SKILL TRANSFORM:
  * Transforms one equipped skill into another at runtime without mutating
  * the slot's stored id. Valid on actors, enemies, classes, weapons, armors,
@@ -2544,6 +2568,11 @@
  * @text "STACK" CONFIG
  * @desc "Stack" means that a state will gain an additional instance and be "refreshed".
  *
+ * @param tickConfigs
+ * @parent stateConfigs
+ * @text "TICK" CONFIG
+ * @desc Governs how often states (and natural regen) tick for slip/regen purposes.
+ *
  * @param defaultStateRefreshDiminish
  * @parent refreshConfigs
  * @type number
@@ -2601,6 +2630,27 @@
  * @text Lose All Stacks
  * @desc If true, then all state "stacks" will be lost upon expiration. If false, then one will be lost and "refresh".
  * @default false
+ *
+ * @param defaultStateTickInterval
+ * @parent tickConfigs
+ * @type number
+ * @text Default Tick Interval
+ * @desc Frames between slip/regen ticks when a state omits <thisTickSpeed:N>. (60 frames = 1 second)
+ * @default 30
+ *
+ * @param minimumStateTickInterval
+ * @parent tickConfigs
+ * @type number
+ * @text Minimum Tick Interval
+ * @desc The tunable floor for tick intervals after all modifiers are applied; ticks can never resolve faster than this.
+ * @default 4
+ *
+ * @param naturalRegenTickType
+ * @parent tickConfigs
+ * @type string
+ * @text Natural Regen Tick Type
+ * @desc The <type:CLASSIFIER> string treated as natural HRG/MRG/TRG's own type, so type-scoped tick modifiers can reach it.
+ * @default regen
  *
  *
  * @param miscConfigs
@@ -3228,6 +3278,9 @@ var J_AbsPluginMetadata = class J_AbsPluginMetadata extends PluginMetadata {
 		this.DefaultStateRefreshDiminish = Number(this.parsedPluginParameters["defaultStateRefreshDiminish"]) || 120;
 		this.DefaultStateRefreshReset = Number(this.parsedPluginParameters["defaultStateRefreshReset"]) || 900;
 		this.DefaultStateSpreadTickInterval = Number(this.parsedPluginParameters["defaultStateSpreadTickInterval"]) || 30;
+		this.DefaultStateTickInterval = Number(this.parsedPluginParameters["defaultStateTickInterval"]) || 30;
+		this.MinimumStateTickInterval = Number(this.parsedPluginParameters["minimumStateTickInterval"]) || 4;
+		this.NaturalRegenTickType = this.parsedPluginParameters["naturalRegenTickType"] || "regen";
 		this.DefaultStateExtendAmount = Number(this.parsedPluginParameters["defaultStateExtendAmount"]) || 180;
 		this.DefaultStateExtendMax = Number(this.parsedPluginParameters["defaultStateExtendMax"]) || 216e3;
 		this.DefaultStateStackMax = Number(this.parsedPluginParameters["defaultStateStackMax"]) || 5;
@@ -3925,6 +3978,11 @@ J.ABS.RegExp = {
 	JabsTool: /<jabsTool>/i,
 	Negative: /<negative>/gi,
 	NoLogs: /<noLogs>/i,
+	StateTypeResist: /<stateTypeResist:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+	StateTypeImmune: /<stateTypeImmune:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi,
+	ImmuneToNegatives: /<immuneToNegatives>/gi,
+	ImmuneToStates: /<immuneToStates>/gi,
+	ImmuneToAll: /<immuneToAll>/gi,
 	ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
 	ReapplyRefreshDiminish: /<stateRefreshDiminish:[ ]?(-?\d+)>/gi,
 	ReapplyRefreshReset: /<stateRefreshReset:[ ]?(\d+)>/gi,
@@ -3933,6 +3991,7 @@ J.ABS.RegExp = {
 	ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
 	StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
 	LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
+	StackOnExpire: /<stackOnExpire>/gi,
 	StacksConvertToState: /<stacksConvertToState:(\[\d+,[ ]?\d+])>/gi,
 	RemoveOnConvert: /<removeOnConvert>/gi,
 	ConvertUsesCaster: /<convertUsesCaster>/gi,
@@ -3959,6 +4018,10 @@ J.ABS.RegExp = {
 	StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
 	StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
 	StateDurationFormulaPlus: /<stateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+	ThisTickSpeed: /<thisTickSpeed:[ ]?(\d+)>/gi,
+	TickSpeedFlat: /<tickSpeedFlat:[ ]?(-?\d+)>/gi,
+	TickSpeedPercent: /<tickSpeedPercent:[ ]?(-?\d+)%?>/gi,
+	TickSpeedTypePercent: /<tickSpeedTypePercent:(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?\d+])>/gi,
 	EnemyId: /<enemyId:[ ]?(\d+)>/i,
 	TeamId: /<teamId:[ ]?(\d+)>/g,
 	Sight: /<sight:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
@@ -4153,6 +4216,61 @@ J.ABS.RegExp = {
 	* @type {RegExp}
 	*/
 	BonusDamagePerStateType: /<bonusDamagePerStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+	/**
+	* Percent damage bonus per stack of one specific state currently active on the target.
+	* Unlike BonusDamagePerStateType (which counts distinct states of a type), this reads the
+	* stack count of one named state and multiplies accordingly. No stack cap is enforced here-
+	* whatever cap the state itself carries is the only ceiling. Reads from getAllNotes().
+	*
+	* <pre>
+	* Structure:
+	*  <bonusDamagePerStateStack:[STATE_ID, PCT]>
+	*
+	* Example:
+	*  <bonusDamagePerStateStack:[14, 2]>
+	*
+	* Translation:
+	*  +2% damage per stack of state 14 currently on the target.
+	* </pre>
+	* @type {RegExp}
+	*/
+	BonusDamagePerStateStack: /<bonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+	/**
+	* Flat percent damage bonus per distinct state currently on the target that this battler
+	* personally applied. Counts distinct authored states, not stack depth of any one state-
+	* distinct from BonusDamagePerStateStack above. Lives on a passive state; always active
+	* regardless of which skill is executing. Reads from getAllNotes().
+	*
+	* <pre>
+	* Structure:
+	*  <bonusDamageForMyStateCount:PCT>
+	*
+	* Example:
+	*  <bonusDamageForMyStateCount:5>
+	*
+	* Translation:
+	*  +5% damage per distinct state this battler has authored on the target.
+	* </pre>
+	* @type {RegExp}
+	*/
+	BonusDamageForMyStateCount: /<bonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+	/**
+	* Skill-scoped counterpart to BonusDamageForMyStateCount- applies only when this specific
+	* skill is the action being resolved. Reads from this.item() only.
+	*
+	* <pre>
+	* Structure:
+	*  <thisBonusDamageForMyStateCount:PCT>
+	*
+	* Example:
+	*  <thisBonusDamageForMyStateCount:5>
+	*
+	* Translation:
+	*  +5% damage per distinct state this battler has authored on the target, when this skill lands.
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisBonusDamageForMyStateCount: /<thisBonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 	/**
 	* Flat tile addition applied to radius, proximity, and thickness before the rate multiplier.
 	* Signed decimal; negative values shrink reach. Reads from getAllNotes().
@@ -13806,26 +13924,31 @@ var JABS_Battler = class JABS_Battler {
 		return true;
 	}
 	/**
-	* Frames between regeneration ticks at 60fps.
-	* 30 frames = 2 ticks/sec (was 15 = 4/sec); per-tick amounts are scaled so per-second totals match legacy behavior.
-	*/
-	static REGEN_TICK_INTERVAL_FRAMES = 30;
-	/**
-	* Divisor converting per-five state slip tag totals into per-tick application at 2 ticks/sec.
-	* Legacy used 20 at 4 ticks/sec; halving tick rate requires halving the divisor to preserve DPS.
-	*/
-	static STATE_SLIP_PER_TICK_DIVISOR = 10;
-	/**
-	* Natural HRG/MRG/TRG is applied each regen tick; doubling per tick compensates for half the tick rate.
-	*/
-	static NATURAL_REGEN_TICK_SCALE = 2;
-	/**
-	* Updates all regenerations and ticks twice per second (60fps: every 30 frames).
+	* Updates all regenerations. Ticks at a dynamically-resolved interval instead of a fixed rate-
+	* natural HRG/MRG/TRG is typed as {@link J_AbsPluginMetadata.NaturalRegenTickType} so the same
+	* flat/percent tick speed modifiers that affect state slip ticking can reach it too.
 	*/
 	updateRegen() {
 		if (!this.canUpdateRegen()) return;
 		this.performRegeneration();
-		this.setRegenCounter(JABS_Battler.REGEN_TICK_INTERVAL_FRAMES);
+		this.setRegenCounter(this.getNaturalRegenTickInterval());
+	}
+	/**
+	* Resolves how many frames elapse between natural regeneration ticks for this battler.<br/>
+	* Uses the same base-plus-flat-then-percent formula as per-state slip ticking, evaluated
+	* against this battler itself (natural regen has no external "source" to speak of), and typed
+	* as the plugin-configured natural regen tick type so type-scoped modifiers can reach it.
+	* @returns {number}
+	*/
+	getNaturalRegenTickInterval() {
+		const battler = this.getBattler();
+		const naturalRegenType = J.ABS.Metadata.NaturalRegenTickType;
+		const baseInterval = J.ABS.Metadata.DefaultStateTickInterval;
+		const flatModifier = battler.tickSpeedFlatModifier();
+		const percentModifier = battler.tickSpeedPercentModifier([naturalRegenType]);
+		const modifiedInterval = (baseInterval + flatModifier) / (1 + percentModifier / 100);
+		const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+		return Math.max(Math.round(modifiedInterval), tunableFloor);
 	}
 	/**
 	* Determines whether or not the regeneration can be updated.
@@ -13871,18 +13994,17 @@ var JABS_Battler = class JABS_Battler {
 		this._regenCounter = count;
 	}
 	/**
-	* Performs the full suite of possible regenerations handled by JABS.
-	*
-	* This includes both natural and tag/state-driven regenerations.
+	* Performs the natural regeneration handled by JABS, and prunes any orphaned states found
+	* along the way. State slip ticking no longer happens here- each {@link JABS_State} now
+	* ticks on its own dynamically-resolved cadence and calls {@link #processStateTick} directly.
 	*/
 	performRegeneration() {
 		const battler = this.getBattler();
 		if (!battler) return;
 		this.processNaturalRegens();
-		let states = battler.allStates();
+		const states = battler.allStates();
 		if (!states.length) return;
-		states = states.filter(this.shouldProcessState, this);
-		this.processStateRegens(states);
+		states.forEach(this.shouldProcessState, this);
 	}
 	/**
 	* Processes the natural regeneration of this battler.
@@ -13926,7 +14048,7 @@ var JABS_Battler = class JABS_Battler {
 		const battler = this.getBattler();
 		if (battler.hp < battler.mhp) {
 			const { hrg, rec } = battler;
-			const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+			const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec;
 			battler.gainHp(naturalHp5);
 		}
 	}
@@ -13937,7 +14059,7 @@ var JABS_Battler = class JABS_Battler {
 		const battler = this.getBattler();
 		if (battler.mp < battler.mmp) {
 			const { mrg, rec } = battler;
-			const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+			const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec;
 			battler.gainMp(naturalMp5);
 		}
 	}
@@ -13948,45 +14070,37 @@ var JABS_Battler = class JABS_Battler {
 		const battler = this.getBattler();
 		if (battler.tp < battler.maxTp()) {
 			const { trg, rec } = battler;
-			const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec * JABS_Battler.NATURAL_REGEN_TICK_SCALE;
+			const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec;
 			battler.gainTp(naturalTp5);
 		}
 	}
 	/**
-	* Processes all regenerations derived from state tags.
-	* Applies slip per state so hooks can attribute popup metadata (state id).
-	* Per-second slip totals match legacy aggregate math (divisor 10 at 2 ticks/sec vs 20 at 4 ticks/sec).
-	* @param {RPG_State[]} states The filtered list of states to parse.
+	* Applies a single slip/regen tick for one state. Called by the owning {@link JABS_State}
+	* whenever its own dynamically-resolved tick counter elapses- there is no longer a shared
+	* battler-wide divisor, so a state ticking faster than another deals/heals proportionally more
+	* over time. That's the intended power lever of a faster tick speed.
+	* @param {RPG_State} state The state whose slip tags should be applied for this tick.
 	*/
-	processStateRegens(states) {
+	processStateTick(state) {
 		const battler = this.getBattler();
+		if (!battler || battler.isDead()) return;
 		const { rec } = battler;
-		const slipDivisor = JABS_Battler.STATE_SLIP_PER_TICK_DIVISOR;
-		for (const state of states) {
-			const hpRaw = this.stateSlipHp(state);
-			const mpRaw = this.stateSlipMp(state);
-			const tpRaw = this.stateSlipTp(state);
-			const perResource = [
-				hpRaw,
-				mpRaw,
-				tpRaw
-			];
-			for (let index = 0; index < 3; index++) {
-				let regen = perResource[index];
-				if (!regen) {
-					continue;
-				}
-				if (regen > 0) {
-					regen *= rec;
-				}
-				regen /= slipDivisor;
-				if (!regen) {
-					continue;
-				}
-				this.applySlipEffect(regen, index);
-				const displayAmount = -regen;
-				this.onSlipRegenTick(displayAmount, index, state.id);
+		const perResource = [
+			this.stateSlipHp(state),
+			this.stateSlipMp(state),
+			this.stateSlipTp(state)
+		];
+		for (let index = 0; index < 3; index++) {
+			let regen = perResource[index];
+			if (!regen) {
+				continue;
 			}
+			if (regen > 0) {
+				regen *= rec;
+			}
+			this.applySlipEffect(regen, index);
+			const displayAmount = -regen;
+			this.onSlipRegenTick(displayAmount, index, state.id);
 		}
 	}
 	/**
@@ -14126,7 +14240,7 @@ var JABS_Battler = class JABS_Battler {
 	* Hook after slip/regen math is applied; extensions may show pops or other feedback.
 	* @param {number} displayAmount Amount passed to popup builders after sign normalization.
 	* @param {0|1|2} type HP / MP / TP index.
-	* @param {number} [stateId] Database state id when this tick came from {@link #processStateRegens}.
+	* @param {number} [stateId] Database state id when this tick came from {@link #processStateTick}.
 	*/
 	onSlipRegenTick(_displayAmount, _type, _stateId) {}
 	/**
@@ -14589,6 +14703,11 @@ var JABS_State = class {
 	*/
 	#spreadTickCounter = 0;
 	/**
+	* Frames until the next slip/regen tick for this tracked state.
+	* @type {number}
+	*/
+	#tickCounter = 0;
+	/**
 	* Constructor.
 	* @param {Game_Battler} battler The battler afflicted.
 	* @param {number} stateId The id of the state being applied to the battler.
@@ -14606,6 +14725,7 @@ var JABS_State = class {
 		this.source = source;
 		this.setBaseDuration(duration);
 		this.#spreadTickCounter = this.getSpreadTickInterval();
+		this.#tickCounter = this.getTickInterval();
 		this.expired = false;
 	}
 	/**
@@ -14651,7 +14771,7 @@ var JABS_State = class {
 	*/
 	update() {
 		this.handleCounters();
-		this.handleStackLossFromDuration();
+		this.handleStackChangeFromDuration();
 		this.handleExpiration();
 		this.handleDiminishedRefresh();
 	}
@@ -14663,6 +14783,7 @@ var JABS_State = class {
 		this.decrementRefreshResetCounter();
 		this.decrementDuration();
 		this.decrementSpreadTickCounter();
+		this.decrementTickCounter();
 	}
 	/**
 	* Decrements the refresh reset counter as-needed.
@@ -14694,23 +14815,41 @@ var JABS_State = class {
 		}
 	}
 	/**
-	* Handles stack loss from duration.
+	* Handles stack changes from duration expiring: states normally lose a stack (or all stacks),
+	* but a state tagged {@code <stackOnExpire>} gains a stack instead and re-arms itself
+	* indefinitely, with no external reapplication required.
 	*/
-	handleStackLossFromDuration() {
-		if (this.canLoseStackFromDuration() === false) return;
-		const loseAllStacksAtOnce = this.source.state(this.stateId).jabsLoseAllStacksAtOnce;
+	handleStackChangeFromDuration() {
+		if (this.canChangeStackFromDuration() === false) return;
+		const stateRow = this.source.state(this.stateId);
+		if (stateRow.jabsStackOnExpire === true) {
+			this.applyStackGain(1);
+			this.refreshDuration();
+			return;
+		}
+		const loseAllStacksAtOnce = stateRow.jabsLoseAllStacksAtOnce;
 		const stacksLossCount = loseAllStacksAtOnce === true ? this.stackCount : 1;
 		this.decrementStacks(stacksLossCount);
 	}
 	/**
-	* Determines whether or not this state can lose stacks from duration.
+	* Determines whether or not this state can gain or lose stacks from duration expiring.
 	* @returns {boolean} True if it can, false otherwise.
 	*/
-	canLoseStackFromDuration() {
+	canChangeStackFromDuration() {
 		if (this.stackCount <= 0) return false;
 		if (this.duration > 0) return false;
 		if (this.hasEternalDuration()) return false;
 		return true;
+	}
+	/**
+	* Gains stacks on this tracked state, then rolls for stack-conversion. Shared by both
+	* externally-triggered stacking ({@link JABS_Engine#stackJabsState}) and self-accumulation
+	* ({@link #handleStackChangeFromDuration}) so both paths get conversion-at-threshold support.
+	* @param {number} amount The number of stacks to gain; defaults to 1.
+	*/
+	applyStackGain(amount = 1) {
+		this.incrementStacks(amount);
+		$jabsEngine.checkStackConversion(this);
 	}
 	/**
 	* Refreshes the duration of the state based on its original duration.
@@ -14847,6 +14986,60 @@ var JABS_State = class {
 			return stateRow.jabsSpreadTickFrames;
 		}
 		return J.ABS.Metadata.DefaultStateSpreadTickInterval;
+	}
+	/**
+	* Decrements this state's own slip/regen tick counter and fires a tick when it reaches zero.
+	* Unlike the legacy battler-wide regen counter, every tracked state resolves and counts down
+	* its own interval, so different states can tick at entirely different speeds.
+	*/
+	decrementTickCounter() {
+		if (this.#tickCounter > 0) {
+			this.#tickCounter--;
+		}
+		if (this.#tickCounter === 0) {
+			this.resetTickCounter();
+			this.handleTick();
+		}
+	}
+	/**
+	* Resets the slip/regen tick counter to the freshly-resolved interval for this state.
+	* Resolving on every reset (rather than once at creation) means battler-wide or type-scoped
+	* tick speed modifiers gained/lost mid-affliction take effect at the next tick boundary.
+	*/
+	resetTickCounter() {
+		this.#tickCounter = this.getTickInterval();
+	}
+	/**
+	* Resolves how many frames elapse between slip/regen ticks for this tracked state.<br/>
+	* Base interval is this state's own {@code <thisTickSpeed:N>} override if present, otherwise
+	* the plugin's global default. That base is then adjusted by every flat and percent tick speed
+	* modifier currently affecting the state's source (the battler who applied it), where percent
+	* modifiers include both the battler-wide total and every type-scoped modifier matching one of
+	* this state's own {@code <type:CLASSIFIER>} tags. The result is floored at both a hardcoded
+	* absolute minimum and the plugin's tunable minimum.
+	* @returns {number}
+	*/
+	getTickInterval() {
+		const stateRow = this.source.state(this.stateId);
+		const baseInterval = stateRow.jabsThisTickSpeed > 0 ? stateRow.jabsThisTickSpeed : J.ABS.Metadata.DefaultStateTickInterval;
+		const flatModifier = this.source.tickSpeedFlatModifier();
+		const percentModifier = this.source.tickSpeedPercentModifier(stateRow.stateTypes());
+		const modifiedInterval = (baseInterval + flatModifier) / (1 + percentModifier / 100);
+		const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+		return Math.max(Math.round(modifiedInterval), tunableFloor);
+	}
+	/**
+	* Applies a single slip/regen tick for this state. Delegates the actual math and resource
+	* application to the map battler wrapper, which owns the slip tag parsing and the
+	* {@link JABS_Battler#onSlipRegenTick} popup hook.
+	*/
+	handleTick() {
+		if (this.expired === true) return;
+		if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+		if (!this.battler) return;
+		const carrier = JABS_AiManager.getBattlerByUuid(this.battler.getUuid());
+		if (!carrier) return;
+		carrier.processStateTick(this.source.state(this.stateId));
 	}
 	/**
 	* Attempts to spread this state to nearby battlers when the state row defines a spread rule.
@@ -16216,8 +16409,7 @@ var JABS_Engine = class JABS_Engine {
 	*/
 	stackJabsState(jabsState, newJabsState) {
 		const addedStackAmount = newJabsState.stackCount;
-		jabsState.incrementStacks(addedStackAmount);
-		this.checkStackConversion(jabsState);
+		jabsState.applyStackGain(addedStackAmount);
 		jabsState.setBaseDuration(newJabsState.duration);
 		this.refreshJabsState(jabsState, newJabsState);
 	}
@@ -22443,6 +22635,14 @@ Object.defineProperty(RPG_State.prototype, "jabsLoseAllStacksAtOnce", { get: fun
 	return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.LoseAllStacksAtOnce, true) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
 } });
 /**
+* When true, duration expiration gains a stack instead of losing one, indefinitely, with no
+* external reapplication required after the state is first planted on a target.
+* @type {boolean}
+*/
+Object.defineProperty(RPG_State.prototype, "jabsStackOnExpire", { get: function() {
+	return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.StackOnExpire);
+} });
+/**
 * The state conversion data for this state.<br/>
 * When the stack count reaches the required threshold, the specified state is applied
 * to the afflicted battler as a fresh application.<br/>
@@ -22610,6 +22810,14 @@ Object.defineProperty(RPG_State.prototype, "jabsSlipTpPercentPerFive", { get: fu
 */
 Object.defineProperty(RPG_State.prototype, "jabsSlipTpFormulaPerFive", { get: function() {
 	return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.SlipTpFormula);
+} });
+/**
+* The base tick interval (in frames) for this state's own slip/regen ticking, overriding the
+* global default before any flat/percent tick speed modifiers are applied.
+* @type {number}
+*/
+Object.defineProperty(RPG_State.prototype, "jabsThisTickSpeed", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisTickSpeed, true) || 0;
 } });
 /**
 * Whether the logs for adding this state show up in the action logs.
@@ -23304,6 +23512,7 @@ Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, u
 	}
 	if (this.shouldTargetApplyResistances()) {
 		applicationModifier *= target.stateRate(stateId);
+		applicationModifier *= target.stateTypeResistRate(stateId);
 	}
 	applicationModifier *= this.lukEffectRate(target);
 	const calculatedChance = baseChance * applicationModifier;
@@ -23335,8 +23544,9 @@ Game_Action.prototype.applyStateEffect = function(target, stateId) {
 /**
 * Applies damage multipliers derived from the current states of the target.
 * Combines perDebuffBuff (per-negative-state bonus), bonusDamageIfState (specific-state bonus),
-* bonusDamageIfStateType (type-classifier presence bonus), and bonusDamagePerStateType
-* (type-classifier count bonus).
+* bonusDamageIfStateType (type-classifier presence bonus), bonusDamagePerStateType
+* (type-classifier count bonus), bonusDamagePerStateStack (named-state stack-depth bonus), and
+* bonusDamageForMyStateCount (authored-distinct-state count bonus).
 * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
 * @param {number} baseDamage The damage value before state multipliers.
 * @param {Game_Battler} target The target whose states are evaluated.
@@ -23352,7 +23562,10 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
 	const thisFlatPct = this.calculateThisBonusDamagePct();
 	const typePresencePct = this.calculateBonusIfStateTypePct(target);
 	const typeCountPct = this.calculatePerStateTypePct(target);
-	const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct + thisFlatPct + typePresencePct + typeCountPct;
+	const stackDepthPct = this.calculatePerStateStackPct(target);
+	const myStateCountPct = this.calculateBonusForMyStateCountPct(target);
+	const thisMyStateCountPct = this.calculateThisBonusForMyStateCountPct(target);
+	const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct + thisFlatPct + typePresencePct + typeCountPct + stackDepthPct + myStateCountPct + thisMyStateCountPct;
 	if (combinedPct === 0) return baseDamage;
 	return Math.round(baseDamage * (1 + combinedPct / 100));
 };
@@ -23496,6 +23709,66 @@ Game_Action.prototype.calculatePerStateTypePct = function(target) {
 		totalPct += percent * matchingStateCount;
 	});
 	return totalPct;
+};
+/**
+* Calculates the total damage bonus percent from bonusDamagePerStateStack tags on the caster's
+* notes. Each tag's PCT is multiplied by the current stack count of the one named state on the
+* target, then summed across all tags. Reads the live tracker directly rather than target.states()
+* because that array duplicates entries per stack for visualization- reading it here would double-count.
+* @param {Game_Battler} target The target whose named-state stack count is read.
+* @returns {number} The total bonus percent from all matching named-state tags.
+*/
+Game_Action.prototype.calculatePerStateStackPct = function(target) {
+	const allPairs = this.subject().getAllNotes().flatMap((note) => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateStack));
+	if (!allPairs.length) return 0;
+	let totalPct = 0;
+	allPairs.forEach(([stateId, percent]) => {
+		if (!target.isStateAffected(stateId)) return;
+		const trackedState = $jabsEngine.getJabsStateByUuidAndStateId(target.getUuid(), stateId);
+		if (!trackedState) return;
+		totalPct += percent * trackedState.stackCount;
+	});
+	return totalPct;
+};
+/**
+* Counts the target's distinct currently-active states that this battler personally applied.
+* Reads the live tracker map directly (one entry per distinct state id) rather than
+* target.states(), which duplicates entries per stack for visualization.
+* @param {Game_Battler} target The target whose authored states are counted.
+* @returns {number} The count of distinct states on the target authored by this battler.
+*/
+Game_Action.prototype.countTargetStatesAuthoredByCaster = function(target) {
+	const casterUuid = this.subject().getUuid();
+	const trackedStates = $jabsEngine.getJabsStatesByUuid(target.getUuid());
+	let count = 0;
+	trackedStates.forEach((trackedState) => {
+		if (!target.isStateAffected(trackedState.stateId)) return;
+		if (trackedState.source.getUuid() !== casterUuid) return;
+		count++;
+	});
+	return count;
+};
+/**
+* Calculates the total damage bonus percent from bonusDamageForMyStateCount tags on the caster's
+* notes. Lives on a passive state, so it is always active regardless of which skill is executing.
+* @param {Game_Battler} target The target whose authored state count is read.
+* @returns {number} The total bonus percent from this tag type.
+*/
+Game_Action.prototype.calculateBonusForMyStateCountPct = function(target) {
+	const perStatePct = RPGManager.getSumFromAllNotesByRegex(this.subject().getAllNotes(), J.ABS.RegExp.BonusDamageForMyStateCount);
+	if (perStatePct === 0) return 0;
+	return perStatePct * this.countTargetStatesAuthoredByCaster(target);
+};
+/**
+* Calculates the total damage bonus percent from thisBonusDamageForMyStateCount on this action's
+* skill. Reads from this.item() only- fires only when this specific skill is the action resolving.
+* @param {Game_Battler} target The target whose authored state count is read.
+* @returns {number} The total bonus percent from this tag on this skill.
+*/
+Game_Action.prototype.calculateThisBonusForMyStateCountPct = function(target) {
+	const perStatePct = RPGManager.getNumberFromNoteByRegex(this.item(), J.ABS.RegExp.ThisBonusDamageForMyStateCount, true);
+	if (perStatePct === null) return 0;
+	return perStatePct * this.countTargetStatesAuthoredByCaster(target);
 };
 /**
 * Applies any skill history bonuses to the given base damage amount.
@@ -24805,6 +25078,34 @@ Game_Battler.prototype.getVisionModifier = function() {
 	return this.getCachedVisionModifier();
 };
 /**
+* The sum of all flat tick-speed modifiers ({@code <tickSpeedFlat:N>}) currently affecting
+* this battler. Positive values shorten the resolved tick interval; negative values lengthen it.
+* @returns {number}
+*/
+Game_Battler.prototype.tickSpeedFlatModifier = function() {
+	return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedFlat);
+};
+/**
+* The sum of all percent tick-speed modifiers currently affecting this battler: the
+* battler-wide {@code <tickSpeedPercent:N>} total, plus every
+* {@code <tickSpeedTypePercent:[TYPE, N]>} whose TYPE matches one of the provided classifiers.
+* Positive values make ticks fire more often; negative values make them fire less often.
+* @param {string[]} types The {@code <type:CLASSIFIER>} tags to match type-scoped modifiers against.
+* @returns {number}
+*/
+Game_Battler.prototype.tickSpeedPercentModifier = function(types = []) {
+	let total = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedPercent);
+	this.getAllNotes().forEach((note) => {
+		const tuples = RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.TickSpeedTypePercent, true);
+		tuples.forEach(([classifier, percent]) => {
+			if (types.includes(classifier)) {
+				total += Number(percent);
+			}
+		});
+	});
+	return total;
+};
+/**
 * All battlers have a default alerted pursuit boost.
 * @returns {number}
 */
@@ -25153,6 +25454,88 @@ Game_Battler.prototype.addState = function(stateId, attacker) {
 	this.handleAddingJabsState(stateId, attacker);
 };
 /**
+* Whether or not this battler is immune to absolutely all state application, including the death
+* state. This is a stronger guarantee than {@link #isImmuneToNonDeathStates}- it does not carve
+* out an exception for dying, because there is no dedicated "death" system to intercept; vanilla
+* kills a battler by adding the death state through this exact same pathway.
+* @returns {boolean}
+*/
+Game_Battler.prototype.isImmuneToAllStates = function() {
+	return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToAll) === true;
+};
+/**
+* Whether or not this battler is immune to all state application except the death state. Carves
+* out that one exception explicitly so that buff/debuff immunity never accidentally grants
+* immortality as a side effect.
+* @returns {boolean}
+*/
+Game_Battler.prototype.isImmuneToNonDeathStates = function() {
+	return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToStates) === true;
+};
+/**
+* Whether or not this battler is immune to any state carrying the {@code <negative>} (jabsNegative)
+* notetag.
+* @returns {boolean}
+*/
+Game_Battler.prototype.isImmuneToNegativeStates = function() {
+	return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToNegatives) === true;
+};
+/**
+* Collects every {@code <type:CLASSIFIER>} classifier this battler is fully immune to, from every
+* passive-capable note source.
+* @returns {string[]}
+*/
+Game_Battler.prototype.getImmuneStateTypes = function() {
+	return this.getAllNotes().flatMap((note) => RPGManager.getStringsFromNoteByRegex(note, J.ABS.RegExp.StateTypeImmune));
+};
+/**
+* Determines whether or not this battler is immune to the given state by type classifier.
+* @param {RPG_State} state The state row being checked for type-based immunity.
+* @returns {boolean}
+*/
+Game_Battler.prototype.isImmuneToStateByType = function(state) {
+	const immuneTypes = this.getImmuneStateTypes();
+	if (!immuneTypes.length) return false;
+	return state.stateTypes().some((stateType) => immuneTypes.some((immuneType) => immuneType.toLowerCase() === stateType.toLowerCase()));
+};
+/**
+* Sums this battler's {@code <stateTypeResist:[TYPE, PCT]>} tags whose TYPE matches one of the
+* given state's own type classifiers, and converts the total into a multiplicative rate- the same
+* shape as vanilla's per-id {@link Game_BattlerBase#stateRate}, but scoped by type instead of id.
+* @param {number} stateId The database id of the state being rolled for application.
+* @returns {number} A multiplier in the 0-1 range (clamped); 1 means no resistance.
+*/
+Game_Battler.prototype.stateTypeResistRate = function(stateId) {
+	const state = $dataStates[stateId];
+	if (!state || !state.stateTypes().length) return 1;
+	const allPairs = this.getAllNotes().flatMap((note) => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.StateTypeResist));
+	if (!allPairs.length) return 1;
+	const stateTypes = state.stateTypes();
+	let totalPercent = 0;
+	allPairs.forEach(([type, percent]) => {
+		if (stateTypes.some((stateType) => stateType.toLowerCase() === type.toLowerCase())) {
+			totalPercent += percent;
+		}
+	});
+	return Math.max(1 - totalPercent / 100, 0);
+};
+/**
+* Extends {@link #isStateAddable}.<br/>
+* Gates state application against the new immunity tag family before falling through to
+* whatever this battler's existing eligibility rules (vanilla, passive layer, etc.) decide.
+*/
+J.ABS.Aliased.Game_Battler.set("isStateAddable", Game_Battler.prototype.isStateAddable);
+Game_Battler.prototype.isStateAddable = function(stateId) {
+	if (this.isImmuneToAllStates()) return false;
+	if (stateId !== this.deathStateId() && this.isImmuneToNonDeathStates()) return false;
+	const state = $dataStates[stateId];
+	if (state) {
+		if (state.jabsNegative === true && this.isImmuneToNegativeStates()) return false;
+		if (this.isImmuneToStateByType(state)) return false;
+	}
+	return J.ABS.Aliased.Game_Battler.get("isStateAddable").call(this, stateId);
+};
+/**
 * Handles logic surrounding state application in regards to JABS.
 * @param {number} stateId The state being applied.
 * @param {Game_Actor|Game_Enemy|Game_Battler} attacker The assailant applying the state.
@@ -25167,8 +25550,19 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
 	}
 	this.resetStateCounts(stateId, attacker);
 	this.addJabsState(stateId, attacker, overrides);
+	this.onJabsStateInflicted(stateId, attacker);
 	this._result.pushAddedState(stateId);
 };
+/**
+* A no-op hook fired on the afflicted battler whenever an attacker successfully inflicts a state
+* on them, including reapplications. Unlike {@link #onStateAdded}, this fires every time, not just
+* on the first application, and carries the attacker directly rather than requiring a lookup into
+* the JABS state tracker (which is not yet populated for this application at {@link #onStateAdded}
+* time). Extensions may alias this to react to "I just inflicted a state on someone" scenarios.
+* @param {number} _stateId The state id that was just inflicted.
+* @param {Game_Battler} _attacker The battler who inflicted the state.
+*/
+Game_Battler.prototype.onJabsStateInflicted = function(_stateId, _attacker) {};
 /**
 * Extends `removeState()` to also expire the state in the JABS state tracker.
 * @param {number} stateId The state id driving this step.

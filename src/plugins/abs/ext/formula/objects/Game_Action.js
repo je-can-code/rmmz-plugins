@@ -355,17 +355,17 @@ Game_Action.prototype.pipeFormulaThroughBattleCalculations = function(target, ma
 };
 
 /**
- * Applies REC to a healing magnitude (already positive) across resources.
- * Mirrors native healing treatment (HP REC), generalized for MP/TP per project rules.
+ * Applies REC and HAR to a healing magnitude (already positive) across resources.
+ * Mirrors native healing treatment (HP REC/HAR), generalized for MP/TP per project rules.
  * @param {Game_Battler} target The recipient of healing.
  * @param {number} magnitude The base positive healing amount.
  * @param {"hp"|"mp"|"tp"} resource The resource being healed.
- * @returns {number} The REC-adjusted, rounded healing amount.
+ * @returns {number} The REC- and HAR-adjusted, rounded healing amount.
  */
 // eslint-disable-next-line no-unused-vars
 Game_Action.prototype.applyResourceHealingWithRecovery = function(target, magnitude, resource)
 {
-  let healed = magnitude * target.rec;
+  let healed = magnitude * target.rec * this.subject().har;
   healed = Math.round(healed);
   return healed;
 };

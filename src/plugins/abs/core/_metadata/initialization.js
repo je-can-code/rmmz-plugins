@@ -609,6 +609,13 @@ J.ABS.RegExp = {
   Negative: /<negative>/gi,
   NoLogs: /<noLogs>/i,
 
+  // state-application immunity/resistance, read from the target's own notes (not the applied state).
+  StateTypeResist: /<stateTypeResist:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+  StateTypeImmune: /<stateTypeImmune:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi,
+  ImmuneToNegatives: /<immuneToNegatives>/gi,
+  ImmuneToStates: /<immuneToStates>/gi,
+  ImmuneToAll: /<immuneToAll>/gi,
+
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
 
@@ -621,6 +628,7 @@ J.ABS.RegExp = {
   ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
   StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
   LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
+  StackOnExpire: /<stackOnExpire>/gi,
   StacksConvertToState: /<stacksConvertToState:(\[\d+,[ ]?\d+])>/gi,
   RemoveOnConvert: /<removeOnConvert>/gi,
   ConvertUsesCaster: /<convertUsesCaster>/gi,
@@ -655,6 +663,12 @@ J.ABS.RegExp = {
   StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
   StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
   StateDurationFormulaPlus: /<stateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+
+  // tick speed-related.
+  ThisTickSpeed: /<thisTickSpeed:[ ]?(\d+)>/gi,
+  TickSpeedFlat: /<tickSpeedFlat:[ ]?(-?\d+)>/gi,
+  TickSpeedPercent: /<tickSpeedPercent:[ ]?(-?\d+)%?>/gi,
+  TickSpeedTypePercent: /<tickSpeedTypePercent:(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?\d+])>/gi,
   //endregion ON STATES
 
   //region ON BATTLERS
@@ -879,6 +893,64 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusDamagePerStateType: /<bonusDamagePerStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Percent damage bonus per stack of one specific state currently active on the target.
+   * Unlike BonusDamagePerStateType (which counts distinct states of a type), this reads the
+   * stack count of one named state and multiplies accordingly. No stack cap is enforced here-
+   * whatever cap the state itself carries is the only ceiling. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamagePerStateStack:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <bonusDamagePerStateStack:[14, 2]>
+   *
+   * Translation:
+   *  +2% damage per stack of state 14 currently on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamagePerStateStack: /<bonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Flat percent damage bonus per distinct state currently on the target that this battler
+   * personally applied. Counts distinct authored states, not stack depth of any one state-
+   * distinct from BonusDamagePerStateStack above. Lives on a passive state; always active
+   * regardless of which skill is executing. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageForMyStateCount:PCT>
+   *
+   * Example:
+   *  <bonusDamageForMyStateCount:5>
+   *
+   * Translation:
+   *  +5% damage per distinct state this battler has authored on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageForMyStateCount: /<bonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Skill-scoped counterpart to BonusDamageForMyStateCount- applies only when this specific
+   * skill is the action being resolved. Reads from this.item() only.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageForMyStateCount:PCT>
+   *
+   * Example:
+   *  <thisBonusDamageForMyStateCount:5>
+   *
+   * Translation:
+   *  +5% damage per distinct state this battler has authored on the target, when this skill lands.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageForMyStateCount: /<thisBonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 
   /**
    * Flat tile addition applied to radius, proximity, and thickness before the rate multiplier.

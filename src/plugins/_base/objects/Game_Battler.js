@@ -155,6 +155,13 @@ Game_Battler.prototype.initMembers = function()
    * @type {number|null}
    */
   this._j._base._cachedMaxTpBonuses = null;
+
+  /**
+   * The cached result of {@link #baseHarFactor} for this battler.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._base._cachedHarFactor = null;
 };
 
 /**
@@ -261,6 +268,9 @@ Game_Battler.prototype.onBattlerDataChange = function()
 
   // invalidate the max-tp-bonuses cache so the next getBaseMaxTpBonuses() call recomputes.
   this.setCachedMaxTpBonuses(null);
+
+  // invalidate the HAR factor cache so the next baseHarFactor() call recomputes.
+  this.setCachedHarFactor(null);
 };
 
 //region state management
@@ -478,4 +488,72 @@ Game_Battler.prototype.gainTp = function(value)
   // notify heal listeners when a positive TP recovery is applied.
   if (value > 0) this.onHeal(J.BASE.Resource.TP, value);
 };
+
+//region HAR
+Object.defineProperties(Game_BattlerBase.prototype, {
+  /**
+   * Outgoing heal amplification (1.0 = baseline). The sender-side counterpart to REC.
+   */
+  har: {
+    get: function()
+    {
+      return 1.0;
+    },
+    configurable: true,
+  },
+});
+
+Object.defineProperty(Game_Battler.prototype, 'har', {
+  get: function()
+  {
+    let factor = this.baseHarFactor();
+
+    if (this.getSdpBonusForParameterKey)
+    {
+      factor += this.getSdpBonusForParameterKey('har', 1);
+    }
+
+    return factor;
+  },
+  configurable: true,
+});
+
+/**
+ * Sums `<har:X>` notetags into a multiplier factor.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
+ * @returns {number}
+ */
+Game_Battler.prototype.baseHarFactor = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedHarFactor() !== null)
+  {
+    return this.getCachedHarFactor();
+  }
+
+  // compute and cache the result.
+  const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.BASE.RegExp.HealAmplification);
+  this.setCachedHarFactor((100 + bonus) / 100);
+
+  return this.getCachedHarFactor();
+};
+
+/**
+ * Gets the cached HAR factor for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedHarFactor = function()
+{
+  return this._j._base._cachedHarFactor;
+};
+
+/**
+ * Sets the cached HAR factor for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedHarFactor = function(value)
+{
+  this._j._base._cachedHarFactor = value;
+};
+//endregion HAR
 //endregion Game_Battler

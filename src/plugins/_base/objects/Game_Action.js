@@ -96,4 +96,73 @@ Game_Action.prototype.getTriggerTpDamage = function()
 Game_Action.registerFormulaContext('d', action => action.getTriggerHpDamage());
 Game_Action.registerFormulaContext('m', action => action.getTriggerMpDamage());
 Game_Action.registerFormulaContext('t', action => action.getTriggerTpDamage());
+
+//region HAR
+/**
+ * Extends {@link #makeDamageValue}.<br/>
+ * Applies the caster's HAR to the Damage-tab "HP/MP Recover" result, mirroring
+ * vanilla's own `value *= target.rec` for the same negative-value (heal) branch.
+ * A negative return value here always means a heal; guard/variance/critical all
+ * preserve sign, so checking the final value is equivalent to checking baseValue.
+ */
+J.BASE.Aliased.Game_Action.set('makeDamageValue', Game_Action.prototype.makeDamageValue);
+Game_Action.prototype.makeDamageValue = function(target, critical)
+{
+  // perform original logic, which already applies target.rec for the heal branch.
+  let value = J.BASE.Aliased.Game_Action.get('makeDamageValue')
+    .call(this, target, critical);
+
+  // a negative value here is a heal; apply the caster's HAR alongside the recipient's REC.
+  if (value < 0)
+  {
+    value *= this.subject().har;
+  }
+
+  return value;
+};
+
+/**
+ * Overwrites {@link #itemEffectRecoverHp}.<br/>
+ * Identical to vanilla except for the added `this.subject().har` multiplier;
+ * the method mutates `target` directly rather than returning a value, so there's
+ * no return value to post-multiply the way {@link #makeDamageValue} allows.
+ */
+Game_Action.prototype.itemEffectRecoverHp = function(target, effect)
+{
+  let value = (target.mhp * effect.value1 + effect.value2) * target.rec * this.subject().har;
+  if (this.isItem())
+  {
+    value *= this.subject().pha;
+  }
+
+  value = Math.floor(value);
+  if (value !== 0)
+  {
+    target.gainHp(value);
+    this.makeSuccess(target);
+  }
+};
+
+/**
+ * Overwrites {@link #itemEffectRecoverMp}.<br/>
+ * Identical to vanilla except for the added `this.subject().har` multiplier;
+ * the method mutates `target` directly rather than returning a value, so there's
+ * no return value to post-multiply the way {@link #makeDamageValue} allows.
+ */
+Game_Action.prototype.itemEffectRecoverMp = function(target, effect)
+{
+  let value = (target.mmp * effect.value1 + effect.value2) * target.rec * this.subject().har;
+  if (this.isItem())
+  {
+    value *= this.subject().pha;
+  }
+
+  value = Math.floor(value);
+  if (value !== 0)
+  {
+    target.gainMp(value);
+    this.makeSuccess(target);
+  }
+};
+//endregion HAR
 //endregion Game_Action

@@ -166,6 +166,11 @@ class J_AbsPluginMetadata
     this.DefaultStateRefreshReset = Number(this.parsedPluginParameters['defaultStateRefreshReset']) || 900;
     this.DefaultStateSpreadTickInterval = Number(this.parsedPluginParameters['defaultStateSpreadTickInterval']) || 30;
 
+    // assign the default/minimum state tick interval and natural regen type on this instance for callers.
+    this.DefaultStateTickInterval = Number(this.parsedPluginParameters['defaultStateTickInterval']) || 30;
+    this.MinimumStateTickInterval = Number(this.parsedPluginParameters['minimumStateTickInterval']) || 4;
+    this.NaturalRegenTickType = this.parsedPluginParameters['naturalRegenTickType'] || 'regen';
+
     // assign default state extend amount on this instance for callers.
     this.DefaultStateExtendAmount = Number(this.parsedPluginParameters['defaultStateExtendAmount']) || 180;
     this.DefaultStateExtendMax = Number(this.parsedPluginParameters['defaultStateExtendMax']) || 216000;

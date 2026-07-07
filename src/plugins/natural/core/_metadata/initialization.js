@@ -181,6 +181,12 @@ J.NATURAL.RegExp = {
   MaxTechGrowthPlus: /<mtpGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
   MaxTechGrowthRate: /<mtpGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
 
+  // HAR — not a native param array member, so it gets its own dedicated tag set like maxTp.
+  HarBuffPlus: /<harBuffPlus:\[([+\-*/ ().\w]+)]>/gi,
+  HarBuffRate: /<harBuffRate:\[([+\-*/ ().\w]+)]>/gi,
+  HarGrowthPlus: /<harGrowthPlus:\[([+\-*/ ().\w]+)]>/gi,
+  HarGrowthRate: /<harGrowthRate:\[([+\-*/ ().\w]+)]>/gi,
+
   // battle result rewards.
   RewardExp: /<expPlus:\[([+\-*/ ().\w]+)]>/gi,
   RewardGold: /<goldPlus:\[([+\-*/ ().\w]+)]>/gi,

@@ -174,6 +174,38 @@ class AutoRuleManager
   }
 
   /**
+   * Fires {@code onKill} rules on the battler that just landed a kill.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that defeated an enemy.
+   */
+  static scheduleKillTriggers(battler)
+  {
+    // no ABS context means there is nothing to schedule.
+    if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+
+    // no battler means there is nobody whose rules could fire.
+    if (!battler) return;
+
+    // delegate to the main dispatch loop with the onKill condition kind.
+    this.tryDispatch(battler, 'onKill');
+  }
+
+  /**
+   * Fires {@code onDamageDealt} rules on the battler that just landed damage on an opponent.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that dealt the damage.
+   */
+  static scheduleDamageDealtTriggers(battler)
+  {
+    // no ABS context means there is nothing to schedule.
+    if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+
+    // no battler means there is nobody whose rules could fire.
+    if (!battler) return;
+
+    // delegate to the main dispatch loop with the onDamageDealt condition kind.
+    this.tryDispatch(battler, 'onDamageDealt');
+  }
+
+  /**
    * Credits one whole tile of travel toward {@code move} rules on this battler.
    *
    * Called from {@link Game_CharacterBase#updatePixelStepping} after a Pixelistics tile step completes.

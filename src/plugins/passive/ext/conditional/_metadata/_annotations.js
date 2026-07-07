@@ -26,6 +26,7 @@
  *  passiveStateCount  — stack contribution for one state id from this source
  *  autoApplyState     — applies a real combat state on a timer or combat event
  *  autoExecuteSkill   — executes a map skill on a timer or combat event
+ *  autoInflictState   — applies a real combat state onto whoever this battler just inflicted a state upon
  *
  * Map battlers re-check on a throttled timer; any passive refresh re-evaluates.
  * ============================================================================
@@ -68,6 +69,10 @@
  *  negaStateAdded  — when a <negative> (jabsNegative) state is added
  *  posiStateAdded  — when a non-negative state is added
  *  anyStateAdded   — when any combat state is added
+ *  onHealHp/Mp/Tp  — when this battler's own HP/MP/TP is restored (onSelfHeal)
+ *  onAllyHeal      — when a battler within proximity of THIS battler is healed (any resource)
+ *  onKill          — when this battler defeats an enemy (JABS_Engine#handleDefeatedEnemy)
+ *  onDamageDealt   — when this battler lands damage on an opposing battler (JABS_Engine#postExecuteSkillEffects)
  *  move            — PARAM = whole TILES per apply (Pixelistics updatePixelStepping; requires J-Pixelistics)
  *  stand           — PARAM = frames between applies while standing still on the map
  *
@@ -79,6 +84,9 @@
  *  <autoApplyState:[54, negaStateAdded, 180]>
  *  <autoApplyState:[55, posiStateAdded, 180]>
  *  <autoApplyState:[56, anyStateAdded, 60]>
+ *  <autoApplyState:[57, onKill, 0]>
+ *  <autoApplyState:[58, onDamageDealt, 0]>
+ *  <autoApplyState:[59, onAllyHeal, 0]>
  *  <autoApplyState:[MOMENTUM_ID, move, 2]>
  *  <autoApplyState:[BUFF_ID, stand, 120]>
  * ============================================================================
@@ -98,6 +106,29 @@
  *  <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
  *  <autoExecuteSkill:[1023, move, 1]>
  *  <autoExecuteSkill:[1024, stand, 120]>
+ * ============================================================================
+ * AUTO-INFLICT STATE TAG
+ *  <autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>
+ *
+ * Unlike autoApplyState (applies to the rule bearer) and its OnNearby sibling (applies to
+ * proximity), this fires from an event involving an external battler- the rule bearer doing
+ * something to someone else- and applies STATE_ID onto that same someone else. The bearer's own
+ * state tracking credits the bearer as the inflictor of STATE_ID, matching who really did it.
+ * COOLDOWN_FRAMES is the minimum frames between dispatches for this rule; 0 means every time.
+ * Depth-guarded (auto-inflict-state-max-depth) in case STATE_ID is itself negative-tagged and
+ * would otherwise re-trigger this same tag on application.
+ *
+ * CONDITIONS:
+ *  negaStateInflicted — this battler inflicts a <negative> (jabsNegative) state on someone
+ *  posiStateInflicted — this battler inflicts a non-negative state on someone
+ *  anyStateInflicted  — this battler inflicts any state on someone
+ *  onKnockback        — this battler knocks an enemy back (JABS_Engine#checkKnockback)
+ *
+ * EXAMPLES:
+ *  <autoInflictState:[70, negaStateInflicted, 0]>
+ *  <autoInflictState:[71, posiStateInflicted, 60]>
+ *  <autoInflictState:[72, anyStateInflicted, 0]>
+ *  <autoInflictState:[73, onKnockback, 0]>
  * ============================================================================
  * REMOVE ON SKILL EXECUTION (state note only)
  *  <removeOnSkillExecution:[STYPE_ID, CHANCE]>
@@ -168,6 +199,15 @@
  * @max 8
  * @text Auto-Execute Max Depth
  * @desc Max nested autoExecuteSkill firings per synchronous call stack.
+ * @default 1
+ *
+ * @param auto-inflict-state-max-depth
+ * @parent parentConfigPassiveConditional
+ * @type number
+ * @min 1
+ * @max 8
+ * @text Auto-Inflict Max Depth
+ * @desc Max nested autoInflictState firings per synchronous call stack.
  * @default 1
  */
 //endregion annotations

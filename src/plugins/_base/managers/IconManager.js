@@ -35,6 +35,15 @@ class IconManager
   }
 
   /**
+   * Gets the `iconIndex` for HAR (Healing Rate).
+   * @returns {number} The `iconIndex`.
+   */
+  static har()
+  {
+    return 7;
+  }
+
+  /**
    * Gets the iconIndex for a given reward parameter.<br>
    * Reward Param mapping:<br>
    * <pre>

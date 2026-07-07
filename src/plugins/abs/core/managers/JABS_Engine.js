@@ -1118,11 +1118,8 @@ class JABS_Engine
     // override; falling back to the database default only happens when no override was specified.
     const addedStackAmount = newJabsState.stackCount;
 
-    // increment the stack of the state.
-    jabsState.incrementStacks(addedStackAmount);
-
-    // check if the updated stack count triggers a state conversion.
-    this.checkStackConversion(jabsState);
+    // gain the stack(s) and roll for stack-conversion.
+    jabsState.applyStackGain(addedStackAmount);
 
     // update the underlying base duration to the latest stack's duration.
     jabsState.setBaseDuration(newJabsState.duration);

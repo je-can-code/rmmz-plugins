@@ -651,6 +651,9 @@ Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, u
   {
     // apply the target's own state resistance rates against the state.
     applicationModifier *= target.stateRate(stateId);
+
+    // apply the target's own type-scoped resistance rate against the state.
+    applicationModifier *= target.stateTypeResistRate(stateId);
   }
 
   // apply the action's luck modifier based on the two battlers.
@@ -704,8 +707,9 @@ Game_Action.prototype.applyStateEffect = function(target, stateId)
 /**
  * Applies damage multipliers derived from the current states of the target.
  * Combines perDebuffBuff (per-negative-state bonus), bonusDamageIfState (specific-state bonus),
- * bonusDamageIfStateType (type-classifier presence bonus), and bonusDamagePerStateType
- * (type-classifier count bonus).
+ * bonusDamageIfStateType (type-classifier presence bonus), bonusDamagePerStateType
+ * (type-classifier count bonus), bonusDamagePerStateStack (named-state stack-depth bonus), and
+ * bonusDamageForMyStateCount (authored-distinct-state count bonus).
  * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
  * @param {number} baseDamage The damage value before state multipliers.
  * @param {Game_Battler} target The target whose states are evaluated.
@@ -716,7 +720,7 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   // non-positive damage has no multiplicative state bonus.
   if (baseDamage <= 0) return baseDamage;
 
-  // sum contributions from all six tag types.
+  // sum contributions from all eight tag types.
   const debuffPct = this.calculatePerDebuffBonusPct(target);
   const specificPct = this.calculateBonusIfStatePct(target);
   const thisSpecificPct = this.calculateThisBonusDamageIfStatePct(target);
@@ -725,8 +729,12 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   const thisFlatPct = this.calculateThisBonusDamagePct();
   const typePresencePct = this.calculateBonusIfStateTypePct(target);
   const typeCountPct = this.calculatePerStateTypePct(target);
+  const stackDepthPct = this.calculatePerStateStackPct(target);
+  const myStateCountPct = this.calculateBonusForMyStateCountPct(target);
+  const thisMyStateCountPct = this.calculateThisBonusForMyStateCountPct(target);
 
-  const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct + thisFlatPct + typePresencePct + typeCountPct;
+  const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct
+    + thisFlatPct + typePresencePct + typeCountPct + stackDepthPct + myStateCountPct + thisMyStateCountPct;
 
   // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
@@ -982,6 +990,116 @@ Game_Action.prototype.calculatePerStateTypePct = function(target)
   });
 
   return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamagePerStateStack tags on the caster's
+ * notes. Each tag's PCT is multiplied by the current stack count of the one named state on the
+ * target, then summed across all tags. Reads the live tracker directly rather than target.states()
+ * because that array duplicates entries per stack for visualization- reading it here would double-count.
+ * @param {Game_Battler} target The target whose named-state stack count is read.
+ * @returns {number} The total bonus percent from all matching named-state tags.
+ */
+Game_Action.prototype.calculatePerStateStackPct = function(target)
+{
+  // collect all [STATE_ID, PCT] pairs from every note source on the caster.
+  const allPairs = this.subject().getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateStack));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // accumulate percent contributions, scaled by the named state's current stack count.
+  let totalPct = 0;
+  allPairs.forEach(([ stateId, percent ]) =>
+  {
+    // skip states that are not actually currently afflicting the target.
+    if (!target.isStateAffected(stateId)) return;
+
+    // pull the live tracker to read its current stack count.
+    const trackedState = $jabsEngine.getJabsStateByUuidAndStateId(target.getUuid(), stateId);
+
+    // an untracked-but-flagged-affected state has no stack count to read.
+    if (!trackedState) return;
+
+    // multiply this tag's rate by the state's current stack count.
+    totalPct += percent * trackedState.stackCount;
+  });
+
+  return totalPct;
+};
+
+/**
+ * Counts the target's distinct currently-active states that this battler personally applied.
+ * Reads the live tracker map directly (one entry per distinct state id) rather than
+ * target.states(), which duplicates entries per stack for visualization.
+ * @param {Game_Battler} target The target whose authored states are counted.
+ * @returns {number} The count of distinct states on the target authored by this battler.
+ */
+Game_Action.prototype.countTargetStatesAuthoredByCaster = function(target)
+{
+  // shorthand the caster's uuid for comparison against each tracked state's source.
+  const casterUuid = this.subject().getUuid();
+
+  // grab the live map of tracked states afflicting the target, keyed by state id.
+  const trackedStates = $jabsEngine.getJabsStatesByUuid(target.getUuid());
+
+  // accumulate the count of distinct states authored by the caster.
+  let count = 0;
+  trackedStates.forEach(trackedState =>
+  {
+    // skip trackers that are lingering post-expiration but not yet purged.
+    if (!target.isStateAffected(trackedState.stateId)) return;
+
+    // skip states this caster did not personally apply.
+    if (trackedState.source.getUuid() !== casterUuid) return;
+
+    count++;
+  });
+
+  return count;
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamageForMyStateCount tags on the caster's
+ * notes. Lives on a passive state, so it is always active regardless of which skill is executing.
+ * @param {Game_Battler} target The target whose authored state count is read.
+ * @returns {number} The total bonus percent from this tag type.
+ */
+Game_Action.prototype.calculateBonusForMyStateCountPct = function(target)
+{
+  // sum all bonusDamageForMyStateCount:N values from the caster's note sources.
+  const perStatePct = RPGManager.getSumFromAllNotesByRegex(
+    this.subject().getAllNotes(),
+    J.ABS.RegExp.BonusDamageForMyStateCount);
+
+  // if no tags exist on this caster, there is no bonus.
+  if (perStatePct === 0) return 0;
+
+  // multiply the per-state rate by the count of distinct states this caster authored.
+  return perStatePct * this.countTargetStatesAuthoredByCaster(target);
+};
+
+/**
+ * Calculates the total damage bonus percent from thisBonusDamageForMyStateCount on this action's
+ * skill. Reads from this.item() only- fires only when this specific skill is the action resolving.
+ * @param {Game_Battler} target The target whose authored state count is read.
+ * @returns {number} The total bonus percent from this tag on this skill.
+ */
+Game_Action.prototype.calculateThisBonusForMyStateCountPct = function(target)
+{
+  // read the PCT value directly from the executing skill's own note.
+  // nullIfEmpty = true so we can distinguish tag-absent from tag-present-with-zero.
+  const perStatePct = RPGManager.getNumberFromNoteByRegex(
+    this.item(),
+    J.ABS.RegExp.ThisBonusDamageForMyStateCount,
+    true);
+
+  // if the tag is not present on this skill, there is no bonus.
+  if (perStatePct === null) return 0;
+
+  // multiply the per-state rate by the count of distinct states this caster authored.
+  return perStatePct * this.countTargetStatesAuthoredByCaster(target);
 };
 //endregion state damage multipliers
 

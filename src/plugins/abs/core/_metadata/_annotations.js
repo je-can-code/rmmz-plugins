@@ -1910,6 +1910,30 @@
  *    <paralyzed>
  *
  * ----------------------------------------------------------------------------
+ * STATE-APPLICATION IMMUNITY & RESISTANCE:
+ * These tags are read from the TARGET's own notes (states, equips, class, etc.),
+ * not from the state being applied. Checked in Game_Battler#isStateAddable, in
+ * this priority order- each fully blocks application before any chance roll:
+ *   1. <immuneToAll>          — blocks everything, including the death state.
+ *   2. <immuneToStates>       — blocks everything EXCEPT the death state.
+ *   3. <immuneToNegatives>    — blocks any state carrying <negative>.
+ *   4. <stateTypeImmune:TYPE> — blocks any state carrying a matching <type:TYPE>.
+ * <stateTypeResist:[TYPE, PCT]> is different- it does not block anything outright,
+ * it reduces the chance a state carrying a matching <type:TYPE> tag lands, folded
+ * into the same application roll as vanilla's per-id state rate. Multiple tags for
+ * the same TYPE stack additively.
+ *
+ *    <stateTypeResist:[TYPE, PCT]>
+ *    <stateTypeImmune:TYPE>
+ *    <immuneToNegatives>
+ *    <immuneToStates>
+ *    <immuneToAll>
+ *
+ * Examples:
+ *    <stateTypeResist:[cc, 50]>
+ *    <stateTypeImmune:cc>
+ *
+ * ----------------------------------------------------------------------------
  * SKILL TRANSFORM:
  * Transforms one equipped skill into another at runtime without mutating
  * the slot's stored id. Valid on actors, enemies, classes, weapons, armors,
@@ -2544,6 +2568,11 @@
  * @text "STACK" CONFIG
  * @desc "Stack" means that a state will gain an additional instance and be "refreshed".
  *
+ * @param tickConfigs
+ * @parent stateConfigs
+ * @text "TICK" CONFIG
+ * @desc Governs how often states (and natural regen) tick for slip/regen purposes.
+ *
  * @param defaultStateRefreshDiminish
  * @parent refreshConfigs
  * @type number
@@ -2601,6 +2630,27 @@
  * @text Lose All Stacks
  * @desc If true, then all state "stacks" will be lost upon expiration. If false, then one will be lost and "refresh".
  * @default false
+ *
+ * @param defaultStateTickInterval
+ * @parent tickConfigs
+ * @type number
+ * @text Default Tick Interval
+ * @desc Frames between slip/regen ticks when a state omits <thisTickSpeed:N>. (60 frames = 1 second)
+ * @default 30
+ *
+ * @param minimumStateTickInterval
+ * @parent tickConfigs
+ * @type number
+ * @text Minimum Tick Interval
+ * @desc The tunable floor for tick intervals after all modifiers are applied; ticks can never resolve faster than this.
+ * @default 4
+ *
+ * @param naturalRegenTickType
+ * @parent tickConfigs
+ * @type string
+ * @text Natural Regen Tick Type
+ * @desc The <type:CLASSIFIER> string treated as natural HRG/MRG/TRG's own type, so type-scoped tick modifiers can reach it.
+ * @default regen
  *
  *
  * @param miscConfigs

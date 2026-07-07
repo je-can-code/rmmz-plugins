@@ -262,6 +262,18 @@ Object.defineProperty(RPG_State.prototype, 'jabsLoseAllStacksAtOnce', {
     ) ?? J.ABS.Metadata.DefaultStateLoseAllStacksAtOnce;
   },
 });
+
+/**
+ * When true, duration expiration gains a stack instead of losing one, indefinitely, with no
+ * external reapplication required after the state is first planted on a target.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsStackOnExpire', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.StackOnExpire);
+  },
+});
 //region stacksConvertToState
 /**
  * The state conversion data for this state.<br/>
@@ -547,6 +559,20 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFormulaPerFive', {
   },
 });
 //endregion slipTp
+
+//region tickSpeed
+/**
+ * The base tick interval (in frames) for this state's own slip/regen ticking, overriding the
+ * global default before any flat/percent tick speed modifiers are applied.
+ * @type {number}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsThisTickSpeed', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisTickSpeed, true) || 0;
+  },
+});
+//endregion tickSpeed
 
 //region noLogs
 /**

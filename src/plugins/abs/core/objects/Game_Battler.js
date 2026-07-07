@@ -345,6 +345,47 @@ Game_Battler.prototype.getVisionModifier = function()
 };
 
 /**
+ * The sum of all flat tick-speed modifiers ({@code <tickSpeedFlat:N>}) currently affecting
+ * this battler. Positive values shorten the resolved tick interval; negative values lengthen it.
+ * @returns {number}
+ */
+Game_Battler.prototype.tickSpeedFlatModifier = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedFlat);
+};
+
+/**
+ * The sum of all percent tick-speed modifiers currently affecting this battler: the
+ * battler-wide {@code <tickSpeedPercent:N>} total, plus every
+ * {@code <tickSpeedTypePercent:[TYPE, N]>} whose TYPE matches one of the provided classifiers.
+ * Positive values make ticks fire more often; negative values make them fire less often.
+ * @param {string[]} types The {@code <type:CLASSIFIER>} tags to match type-scoped modifiers against.
+ * @returns {number}
+ */
+Game_Battler.prototype.tickSpeedPercentModifier = function(types = [])
+{
+  // start with the battler-wide percent modifier, which applies regardless of type.
+  let total = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedPercent);
+
+  // layer on every type-scoped modifier whose classifier matches one of the given types.
+  this.getAllNotes()
+    .forEach(note =>
+    {
+      const tuples = RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.TickSpeedTypePercent, true);
+
+      tuples.forEach(([ classifier, percent ]) =>
+      {
+        if (types.includes(classifier))
+        {
+          total += Number(percent);
+        }
+      });
+    });
+
+  return total;
+};
+
+/**
  * All battlers have a default alerted pursuit boost.
  * @returns {number}
  */
@@ -913,6 +954,138 @@ Game_Battler.prototype.addState = function(stateId, attacker)
   this.handleAddingJabsState(stateId, attacker);
 };
 
+//region state-application immunity
+/**
+ * Whether or not this battler is immune to absolutely all state application, including the death
+ * state. This is a stronger guarantee than {@link #isImmuneToNonDeathStates}- it does not carve
+ * out an exception for dying, because there is no dedicated "death" system to intercept; vanilla
+ * kills a battler by adding the death state through this exact same pathway.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToAllStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToAll) === true;
+};
+
+/**
+ * Whether or not this battler is immune to all state application except the death state. Carves
+ * out that one exception explicitly so that buff/debuff immunity never accidentally grants
+ * immortality as a side effect.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToNonDeathStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToStates) === true;
+};
+
+/**
+ * Whether or not this battler is immune to any state carrying the {@code <negative>} (jabsNegative)
+ * notetag.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToNegativeStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToNegatives) === true;
+};
+
+/**
+ * Collects every {@code <type:CLASSIFIER>} classifier this battler is fully immune to, from every
+ * passive-capable note source.
+ * @returns {string[]}
+ */
+Game_Battler.prototype.getImmuneStateTypes = function()
+{
+  return this.getAllNotes()
+    .flatMap(note => RPGManager.getStringsFromNoteByRegex(note, J.ABS.RegExp.StateTypeImmune));
+};
+
+/**
+ * Determines whether or not this battler is immune to the given state by type classifier.
+ * @param {RPG_State} state The state row being checked for type-based immunity.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToStateByType = function(state)
+{
+  // grab every type classifier this battler is immune to.
+  const immuneTypes = this.getImmuneStateTypes();
+
+  // no immunities means nothing can possibly match.
+  if (!immuneTypes.length) return false;
+
+  // check whether any of the state's own classifiers match an immune type, case-insensitively.
+  return state.stateTypes()
+    .some(stateType => immuneTypes.some(immuneType => immuneType.toLowerCase() === stateType.toLowerCase()));
+};
+
+/**
+ * Sums this battler's {@code <stateTypeResist:[TYPE, PCT]>} tags whose TYPE matches one of the
+ * given state's own type classifiers, and converts the total into a multiplicative rate- the same
+ * shape as vanilla's per-id {@link Game_BattlerBase#stateRate}, but scoped by type instead of id.
+ * @param {number} stateId The database id of the state being rolled for application.
+ * @returns {number} A multiplier in the 0-1 range (clamped); 1 means no resistance.
+ */
+Game_Battler.prototype.stateTypeResistRate = function(stateId)
+{
+  // grab the state row to check its type classifiers.
+  const state = $dataStates[stateId];
+
+  // states with no classifiers cannot match any stateTypeResist tag.
+  if (!state || !state.stateTypes().length) return 1.0;
+
+  // collect all [TYPE, PCT] pairs from every note source on this battler.
+  const allPairs = this.getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.StateTypeResist));
+
+  // if no tags are present anywhere, there is no resistance to apply.
+  if (!allPairs.length) return 1.0;
+
+  // sum the resist percent for every tag whose type matches one of the state's own classifiers.
+  const stateTypes = state.stateTypes();
+  let totalPercent = 0;
+  allPairs.forEach(([ type, percent ]) =>
+  {
+    if (stateTypes.some(stateType => stateType.toLowerCase() === type.toLowerCase()))
+    {
+      totalPercent += percent;
+    }
+  });
+
+  // convert the summed percent into a multiplier, clamped so it can never go negative.
+  return Math.max(1 - (totalPercent / 100), 0);
+};
+
+/**
+ * Extends {@link #isStateAddable}.<br/>
+ * Gates state application against the new immunity tag family before falling through to
+ * whatever this battler's existing eligibility rules (vanilla, passive layer, etc.) decide.
+ */
+J.ABS.Aliased.Game_Battler.set('isStateAddable', Game_Battler.prototype.isStateAddable);
+Game_Battler.prototype.isStateAddable = function(stateId)
+{
+  // total immunity blocks everything, including the death state.
+  if (this.isImmuneToAllStates()) return false;
+
+  // near-total immunity blocks everything except the death state.
+  if (stateId !== this.deathStateId() && this.isImmuneToNonDeathStates()) return false;
+
+  // grab the state row to check its polarity and type classifiers.
+  const state = $dataStates[stateId];
+
+  if (state)
+  {
+    // negative-state immunity blocks any <negative>-tagged state.
+    if (state.jabsNegative === true && this.isImmuneToNegativeStates()) return false;
+
+    // type-scoped immunity blocks any state carrying a matching <type:CLASSIFIER> tag.
+    if (this.isImmuneToStateByType(state)) return false;
+  }
+
+  // perform original logic (vanilla/passive-layer eligibility checks).
+  return J.ABS.Aliased.Game_Battler.get('isStateAddable')
+    .call(this, stateId);
+};
+//endregion state-application immunity
+
 /**
  * Handles logic surrounding state application in regards to JABS.
  * @param {number} stateId The state being applied.
@@ -941,10 +1114,27 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
   // track the state in the JABS engine now that vanilla tracking is settled.
   this.addJabsState(stateId, attacker, overrides);
 
+  // notify hooks that this attacker just inflicted a state, now that tracking is fully settled.
+  // fires on every application, first or repeat- unlike onStateAdded, which only fires once.
+  this.onJabsStateInflicted(stateId, attacker);
+
   // add the new state to the action result on this battler.
   this._result.pushAddedState(stateId);
 };
 
+/**
+ * A no-op hook fired on the afflicted battler whenever an attacker successfully inflicts a state
+ * on them, including reapplications. Unlike {@link #onStateAdded}, this fires every time, not just
+ * on the first application, and carries the attacker directly rather than requiring a lookup into
+ * the JABS state tracker (which is not yet populated for this application at {@link #onStateAdded}
+ * time). Extensions may alias this to react to "I just inflicted a state on someone" scenarios.
+ * @param {number} _stateId The state id that was just inflicted.
+ * @param {Game_Battler} _attacker The battler who inflicted the state.
+ */
+// eslint-disable-next-line no-unused-vars
+Game_Battler.prototype.onJabsStateInflicted = function(_stateId, _attacker)
+{
+};
 
 /**
  * Extends `removeState()` to also expire the state in the JABS state tracker.
