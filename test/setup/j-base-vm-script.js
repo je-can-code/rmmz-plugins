@@ -7,20 +7,18 @@ import { repoRoot } from './repo-root.js';
 
 const J_BASE_FILENAME = 'J-Base.js';
 
-let jBaseVmScript = null;
-
 /**
- * Cached compiled {@link out/J-Base.js} for VM evaluation (parse once per Vitest/Node process).
+ * Compiles {@link out/J-Base.js} fresh for VM evaluation. Previously this was cached as a single
+ * module-level `vm.Script` reused across every test file in the process- reusing one Script instance
+ * across many separate vm contexts silently breaks vitest's v8 coverage attribution for anything J-Base
+ * touches (proven by comparison against feature-plugin VM helpers, which compile fresh per call and
+ * report real coverage). Recompiling per call costs a bit of CPU but matches what every other shipped
+ * plugin's VM helper already does.
  *
  * @returns {vm.Script}
  */
 export function getJBaseVmScript()
 {
-  if (jBaseVmScript !== null)
-  {
-    return jBaseVmScript;
-  }
-
   const absolutePath = path.join(repoRoot, 'out', J_BASE_FILENAME);
 
   if (fs.existsSync(absolutePath) === false)
@@ -30,13 +28,11 @@ export function getJBaseVmScript()
 
   const code = fs.readFileSync(absolutePath, 'utf8');
 
-  jBaseVmScript = new vm.Script(code, { filename: J_BASE_FILENAME });
-
-  return jBaseVmScript;
+  return new vm.Script(code, { filename: absolutePath });
 }
 
 /**
- * Evaluates J-Base in `sandbox` at most once (same VM global object as shipped plugins).
+ * Evaluates J-Base in `sandbox` at most once per sandbox (same VM global object as shipped plugins).
  *
  * @param {object} sandbox
  */

@@ -4,14 +4,19 @@ const noop = function()
 };
 
 /**
- * Globals required for {@link out/J-Base.js} to evaluate in a VM (discovered via host probe).
- * Game/Window/Sprite constructors are placeholders; tests should replace key classes (e.g. {@link Game_Battler})
- * before J-Base runs via {@link evaluateShippedPlugin}'s `afterHostGlobalsInstall` hook.
+ * Globals required for J-Base source to evaluate, whether that's {@link out/J-Base.js} running in a VM
+ * (discovered via host probe) or individual `src/plugins/_base/**` files imported directly into the real
+ * test realm. Game/Window/Sprite constructors are placeholders; tests should replace key classes
+ * (e.g. {@link Game_Battler}) before J-Base runs via {@link evaluateShippedPlugin}'s `afterHostGlobalsInstall`
+ * hook, or by mutating `globalThis` directly before a direct `import()` of the target file.
  *
- * @param {object} sandbox
+ * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
  * @param {Record<string, string>} jBasePluginParameterStrings Values as RMMZ would provide for `J-Base`.
  */
-export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
+export function installJBaseHostGlobals(
+  sandbox = globalThis,
+  jBasePluginParameterStrings = { actorBaseTp: '0', enemyBaseTp: '100' },
+)
 {
   if (sandbox.__jBaseHostGlobalsInstalled === true)
   {
@@ -126,6 +131,11 @@ export function installJBaseHostGlobals(sandbox, jBasePluginParameterStrings)
       return {};
     },
   };
+
+  // vite's `define` plugin substitutes these at build time, so they never appear in out/J-Base.js- but
+  // direct-import tests exercise raw src/plugins/_base source, where these are still bare identifiers.
+  sandbox.__PLUGIN_NAME__ ??= 'J-Base';
+  sandbox.__PLUGIN_VERSION__ ??= '0.0.0-test';
 
   sandbox.ColorManager = {
     textColor()
