@@ -26,7 +26,7 @@ JABS_Battler.prototype.getTargetFrameText = function()
   const hasAura = battler.elementRate(24) > 1;
 
   // a quick check to see if there even are any traits.
-  const hasNoTraits = !([ isArmed, isFlying, isShielded, hasAura ].every(trait => !!trait));
+  const hasNoTraits = ![ isArmed, isFlying, isShielded, hasAura ].some(trait => !!trait);
 
   // if we have no traits, no need to do anymore work.
   if (hasNoTraits) return String.empty;

@@ -34,7 +34,7 @@ class OmniQuestBuilder
   {
     this.#name = String.empty;
     this.#key = String.empty;
-    this.#categoryKey = Array.empty;
+    this.#categoryKey = String.empty;
     this.#tagKeys = Array.empty;
     this.#unknownHint = String.empty;
     this.#overview = String.empty;

@@ -132,8 +132,12 @@ Game_Actor.prototype.getAptitudeSkillAggregates = function()
     {
       // iterate each learning under this progress.
       Object.entries(progress.learnings())
-        .forEach(([ skillId, learning ]) =>
+        .forEach(([ skillIdKey, learning ]) =>
         {
+          // Object.entries() keys are always strings; coerce back to the numeric skillId that
+          // AptitudeSkillAggregate/AptitudeSkillSourceProgress both declare via their contracts.
+          const skillId = Number(skillIdKey);
+
           // create the aggregate if not present.
           if (!perSkill[skillId])
           {
@@ -234,8 +238,9 @@ Game_Actor.prototype.createAptitudeProgress = function(key, skillId, requiredAp,
   // we don't have one, so create a new progress.
   const newProgress = new AptitudeProgress(key);
 
-  // add the new learning to this progress with the initial AP.
-  newProgress.setLearning(skillId, requiredAp, initialAp);
+  // add the new learning to this progress with the initial AP. This is a fresh, empty progress, so
+  // it must be initializeLearning (which creates), not setLearning (which only updates an existing one).
+  newProgress.initializeLearning(skillId, requiredAp, initialAp);
 
   // return the built aptitude progress.
   return newProgress;

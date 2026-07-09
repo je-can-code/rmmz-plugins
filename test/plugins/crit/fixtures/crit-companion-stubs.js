@@ -38,5 +38,17 @@ export function installCritCompanionStubs(sandbox)
   {
     return [ '' ];
   };
+
+  // RPGManager.getOnChanceEffectsFromDatabaseObject(s) constructs one of these per matched tag- a
+  // real J-ABS class (JABS_OnChanceEffect.js), bare-global by ship time like everything else here.
+  function JABS_OnChanceEffect(skillId, chance, key, hitType = null)
+  {
+    this.skillId = skillId;
+    this.chance = chance;
+    this.key = key;
+    this.hitType = hitType;
+  }
+
+  sandbox.JABS_OnChanceEffect = JABS_OnChanceEffect;
 }
 //endregion crit-companion-stubs
