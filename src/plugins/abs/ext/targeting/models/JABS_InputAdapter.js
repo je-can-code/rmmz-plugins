@@ -15,7 +15,7 @@ JABS_InputAdapter.performMainhandAction = function(jabsBattler)
   if ($gameMap.hasInteractableEventInFront(jabsBattler)
     || !jabsBattler.canBattlerUseAttacks()
     || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Mainhand)
-    || jabsBattler.isCasting())
+    || jabsBattler.isCastingOrChanneling())
   {
     // perform original logic.
     J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performMainhandAction')
@@ -56,7 +56,7 @@ JABS_InputAdapter.performOffhandAction = function(jabsBattler)
     || $gameMap.hasInteractableEventInFront(jabsBattler)
     || !jabsBattler.canBattlerUseAttacks()
     || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Offhand)
-    || jabsBattler.isCasting())
+    || jabsBattler.isCastingOrChanneling())
   {
     // perform original logic.
     J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performOffhandAction')
@@ -95,7 +95,7 @@ JABS_InputAdapter.performCombatAction = function(slot, jabsBattler)
   if (!jabsBattler.canBattlerUseSkills()
     || jabsBattler.getBattler().getSkillSlot(slot).isEmpty()
     || !jabsBattler.isSkillTypeCooldownReady(slot)
-    || jabsBattler.isCasting())
+    || jabsBattler.isCastingOrChanneling())
   {
     // perform original logic.
     J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performCombatAction')

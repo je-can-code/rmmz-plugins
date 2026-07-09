@@ -1,6 +1,6 @@
 //region Game_Action
-import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
+
 /**
  * Overwrites {@link #subject}.<br/>
  * On the map there is no context of a $gameTroop. This means that an
@@ -158,7 +158,9 @@ Game_Action.prototype.executeJabsAction = function(target)
   if (this.item().damage.type > 0)
   {
     // a glancing blow cannot also be a critical hit; the two outcomes are mutually exclusive.
-    result.critical = result.glancing ? false : this.isHitCritical(target);
+    result.critical = result.glancing
+      ? false
+      : this.isHitCritical(target);
 
     // calculate the damage from the formula.
     let value = this.makeDamageValue(target, result.critical);
@@ -192,17 +194,20 @@ Game_Action.prototype.executeJabsAction = function(target)
  */
 Game_Action.prototype.isHitEvaded = function(target)
 {
-  // hit rate gets a bonus between 0-1.
-  const hitRate = Math.random() + this.itemHit();
+  // combine the attacker's hit rate and the target's evade rate into a single percent chance-
+  // both are already-summed fractional rates (0.05 = 5%), so this converts to a 0-100+ percent.
+  const hitChancePercent = (1 + this.itemHit() - this.itemEva(target)) * 100;
 
-  // grab the evade rate of the target based on the action.
-  const evadeRate = this.itemEva(target);
+  // the attacker wants this roll to succeed (their own luck plus this skill's own bonus);
+  // the target wants it to fail (their own curse resisting the hit).
+  const attackerPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
+  const targetNegativeRolls = target.getNegativeRolls();
 
-  // determine if the hit was evaded.
-  const evaded = (hitRate - evadeRate) <= 0;
+  // roll once for whether the hit actually connects.
+  const isHit = RPGManager.fateOf100(this.subject(), hitChancePercent, 1 + attackerPositiveRolls, targetNegativeRolls);
 
-  // return our outcome.
-  return evaded;
+  // evaded is simply the inverse of having landed the hit.
+  return isHit === false;
 };
 
 /**
@@ -212,7 +217,15 @@ Game_Action.prototype.isHitEvaded = function(target)
  */
 Game_Action.prototype.isHitCritical = function(target)
 {
-  return Math.random() < this.itemCri(target);
+  // itemCri() already yields the fully-combined, floored-at-0 crit rate (0.05 = 5%);
+  // convert to a percent and roll once for whether this hit qualifies as a critical.
+  const attackerPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
+  const targetNegativeRolls = target.getNegativeRolls();
+
+  const isCritical = RPGManager.fateOf100(
+    this.subject(), this.itemCri(target) * 100, 1 + attackerPositiveRolls, targetNegativeRolls);
+
+  return isCritical;
 };
 
 /**
@@ -609,6 +622,41 @@ Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
 };
 
 /**
+ * Overwrites {@link #itemEffectRemoveState}.<br/>
+ * Potentially removes the state, leveraging our {@link RPGManager.chanceIn100}.
+ * @param {Game_Battler} target The target having the state removed.
+ * @param {RPG_UsableEffect} effect The effect containing state data for removal.
+ */
+Game_Action.prototype.itemEffectRemoveState = function(target, effect)
+{
+  // extract the data points.
+  const {
+    value1: chance,
+    dataId: stateId
+  } = effect;
+
+  // convert the fractional value into a rounded base-100 roll.
+  const d100 = Math.round(chance * 100);
+
+  // the caster wants the removal to succeed; the target's own curse can still resist it, even
+  // when the effect is a beneficial cleanse- a cursed battler's good luck fails them too.
+  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
+  const targetNegativeRolls = target.getNegativeRolls();
+
+  // check if RNGesus blesses this battler.
+  const isRemoved = RPGManager.fateOf100(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
+
+  if (isRemoved === true)
+  {
+    // remove the given state.
+    target.removeState(stateId);
+
+    // flag the action as a success.
+    this.makeSuccess(target);
+  }
+};
+
+/**
  * Applies a state when the shouldApplyState roll passes for this action.
  * @param {Game_Battler} target The target.
  * @param {number} stateId The id of the state being applied.
@@ -617,23 +665,26 @@ Game_Action.prototype.itemEffectAddNormalState = function(target, effect)
  */
 Game_Action.prototype.handleApplyState = function(target, stateId, chance, useAttackerStateRate)
 {
-  // check if we applied the state.
-  if (this.shouldApplyState(target, stateId, chance, useAttackerStateRate))
+  // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+  const procCount = this.resolveApplyStateProcCount(target, stateId, chance, useAttackerStateRate);
+
+  // apply the state once per success.
+  for (let i = 0; i < procCount; i++)
   {
-    // apply the state.
     this.applyStateEffect(target, stateId);
   }
 };
 
 /**
- * Determines whether or not the state should be applied to the target.
+ * Calculates the fully-modified d100 chance of applying the given state to the target, shared
+ * by both {@link #shouldApplyState} and {@link #resolveApplyStateProcCount}.
  * @param {Game_Battler} target The battler being afflicted with the state.
  * @param {number} stateId The id of the state being applied.
  * @param {number} baseChance The decimal base chance of applying the state.
  * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
- * @returns {boolean} True if the state should be applied to the target, false otherwise.
+ * @returns {number} The rounded base-100 chance of application.
  */
-Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, useAttackerStateRate = false)
+Game_Action.prototype.calculateStateApplicationD100 = function(target, stateId, baseChance, useAttackerStateRate = false)
 {
   // initialize the application modifier to 100%.
   let applicationModifier = 1.00;
@@ -663,13 +714,47 @@ Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, u
   const calculatedChance = baseChance * applicationModifier;
 
   // convert the result into a rounded base-100 number.
-  const d100 = Math.round(calculatedChance * 100);
+  return Math.round(calculatedChance * 100);
+};
+
+/**
+ * Determines whether or not the state should be applied to the target.
+ * @param {Game_Battler} target The battler being afflicted with the state.
+ * @param {number} stateId The id of the state being applied.
+ * @param {number} baseChance The decimal base chance of applying the state.
+ * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
+ * @returns {boolean} True if the state should be applied to the target, false otherwise.
+ */
+Game_Action.prototype.shouldApplyState = function(target, stateId, baseChance, useAttackerStateRate = false)
+{
+  const d100 = this.calculateStateApplicationD100(target, stateId, baseChance, useAttackerStateRate);
+
+  // the caster wants the state to stick; the target's own curse can undermine that success.
+  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
+  const targetNegativeRolls = target.getNegativeRolls();
 
   // roll d100.
-  const shouldApplyState = RPGManager.chanceIn100(d100);
+  return RPGManager.fateOf100(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
+};
 
-  // return the result.
-  return shouldApplyState;
+/**
+ * Resolves how many times the state application should execute, folding in the caster's
+ * Accumulate Mode and Encore repeats.
+ * @param {Game_Battler} target The battler being afflicted with the state.
+ * @param {number} stateId The id of the state being applied.
+ * @param {number} baseChance The decimal base chance of applying the state.
+ * @param {boolean=} useAttackerStateRate Whether or not to apply the attacker's state rate.
+ * @returns {number} How many times the state application should execute; 0 means it did not proc.
+ */
+Game_Action.prototype.resolveApplyStateProcCount = function(target, stateId, baseChance, useAttackerStateRate = false)
+{
+  const d100 = this.calculateStateApplicationD100(target, stateId, baseChance, useAttackerStateRate);
+
+  // the caster wants the state to stick; the target's own curse can undermine that success.
+  const casterPositiveRolls = this.subject().getPositiveRollsForSkill(this.item());
+  const targetNegativeRolls = target.getNegativeRolls();
+
+  return RPGManager.resolveProcCount(this.subject(), d100, 1 + casterPositiveRolls, targetNegativeRolls);
 };
 
 /**
@@ -754,8 +839,10 @@ Game_Action.prototype.calculatePerDebuffBonusPct = function(target)
 {
   // sum all perDebuffBuff:N values from the caster's note sources.
   const totalN = RPGManager.getSumFromAllNotesByRegex(
-    this.subject().getAllNotes(),
-    J.ABS.RegExp.PerDebuffBuff) ?? 0;
+    this.subject()
+      .getAllNotes(),
+    J.ABS.RegExp.PerDebuffBuff
+  ) ?? 0;
 
   // if no tags exist on this caster, there is no bonus.
   if (totalN === 0) return 0;
@@ -780,7 +867,8 @@ Game_Action.prototype.calculateBonusIfStatePct = function(target)
 {
   // collect all [STATE_ID, PCT] pairs from every note source on the caster.
   // getArraysFromNotesByRegex with tryParse=true returns already-parsed [number, number] arrays.
-  const allPairs = this.subject().getAllNotes()
+  const allPairs = this.subject()
+    .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfState));
 
   // if no tags are present anywhere, there is nothing to sum.
@@ -788,7 +876,7 @@ Game_Action.prototype.calculateBonusIfStatePct = function(target)
 
   // accumulate the percent from each tag whose state is active on the target.
   let totalPct = 0;
-  allPairs.forEach(([stateId, percent]) =>
+  allPairs.forEach(([ stateId, percent ]) =>
   {
     // check if the target currently has this specific state.
     if (target.isStateAffected(stateId))
@@ -813,14 +901,15 @@ Game_Action.prototype.calculateThisBonusDamageIfStatePct = function(target)
   // nullIfEmpty = false: getArraysFromNotesByRegex returns [] when the tag is absent.
   const allPairs = RPGManager.getArraysFromNotesByRegex(
     this.item(),
-    J.ABS.RegExp.ThisBonusDamageIfState);
+    J.ABS.RegExp.ThisBonusDamageIfState
+  );
 
   // if no tags are present on this skill, there is no bonus.
   if (!allPairs.length) return 0;
 
   // accumulate the percent from each tag whose state is active on the target.
   let totalPct = 0;
-  allPairs.forEach(([stateId, percent]) =>
+  allPairs.forEach(([ stateId, percent ]) =>
   {
     // check if the target currently has this specific state.
     if (target.isStateAffected(stateId))
@@ -841,7 +930,8 @@ Game_Action.prototype.calculateThisBonusDamageIfStatePct = function(target)
 Game_Action.prototype.calculateBonusIfSelfStatePct = function()
 {
   // collect all [STATE_ID, PCT] pairs from every note source on the caster.
-  const allPairs = this.subject().getAllNotes()
+  const allPairs = this.subject()
+    .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfSelfState));
 
   // if no tags are present anywhere, there is nothing to sum.
@@ -849,10 +939,11 @@ Game_Action.prototype.calculateBonusIfSelfStatePct = function()
 
   // accumulate the percent from each tag whose state is active on the caster.
   let totalPct = 0;
-  allPairs.forEach(([stateId, percent]) =>
+  allPairs.forEach(([ stateId, percent ]) =>
   {
     // check if the caster currently has this specific state.
-    if (this.subject().isStateAffected(stateId))
+    if (this.subject()
+      .isStateAffected(stateId))
     {
       totalPct += percent;
     }
@@ -873,17 +964,19 @@ Game_Action.prototype.calculateThisBonusDamageIfSelfStatePct = function()
   // read all [STATE_ID, PCT] pairs from the executing skill's own note only.
   const allPairs = RPGManager.getArraysFromNotesByRegex(
     this.item(),
-    J.ABS.RegExp.ThisBonusDamageIfSelfState);
+    J.ABS.RegExp.ThisBonusDamageIfSelfState
+  );
 
   // if no tags are present on this skill, there is no bonus.
   if (!allPairs.length) return 0;
 
   // accumulate the percent from each tag whose state is active on the caster.
   let totalPct = 0;
-  allPairs.forEach(([stateId, percent]) =>
+  allPairs.forEach(([ stateId, percent ]) =>
   {
     // check if the caster currently has this specific state.
-    if (this.subject().isStateAffected(stateId))
+    if (this.subject()
+      .isStateAffected(stateId))
     {
       totalPct += percent;
     }
@@ -905,7 +998,8 @@ Game_Action.prototype.calculateThisBonusDamagePct = function()
   const pct = RPGManager.getNumberFromNoteByRegex(
     this.item(),
     J.ABS.RegExp.ThisBonusDamage,
-    true);
+    true
+  );
 
   // if the tag is not present on this skill, there is no bonus.
   if (pct === null) return 0;
@@ -924,7 +1018,8 @@ Game_Action.prototype.targetHasActiveStateType = function(target, type)
 {
   // check the target's active states for a case-insensitive type classifier match.
   return target.states()
-    .some(state => state.stateTypes().some(stateType => stateType.toLowerCase() === type.toLowerCase()));
+    .some(state => state.stateTypes()
+      .some(stateType => stateType.toLowerCase() === type.toLowerCase()));
 };
 
 /**
@@ -939,7 +1034,8 @@ Game_Action.prototype.calculateBonusIfStateTypePct = function(target)
 {
   // collect all [TYPE, PCT] pairs from every note source on the caster.
   // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
-  const allPairs = this.subject().getAllNotes()
+  const allPairs = this.subject()
+    .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfStateType));
 
   // if no tags are present anywhere, there is nothing to sum.
@@ -970,7 +1066,8 @@ Game_Action.prototype.calculatePerStateTypePct = function(target)
 {
   // collect all [TYPE, PCT] pairs from every note source on the caster.
   // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
-  const allPairs = this.subject().getAllNotes()
+  const allPairs = this.subject()
+    .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateType));
 
   // if no tags are present anywhere, there is nothing to sum.
@@ -982,7 +1079,8 @@ Game_Action.prototype.calculatePerStateTypePct = function(target)
   {
     // count the target's distinct active states that carry this type classifier.
     const matchingStateCount = target.states()
-      .filter(state => state.stateTypes().some(stateType => stateType.toLowerCase() === type.toLowerCase()))
+      .filter(state => state.stateTypes()
+        .some(stateType => stateType.toLowerCase() === type.toLowerCase()))
       .length;
 
     // multiply this tag's rate by the number of matching states on the target.
@@ -1003,7 +1101,8 @@ Game_Action.prototype.calculatePerStateTypePct = function(target)
 Game_Action.prototype.calculatePerStateStackPct = function(target)
 {
   // collect all [STATE_ID, PCT] pairs from every note source on the caster.
-  const allPairs = this.subject().getAllNotes()
+  const allPairs = this.subject()
+    .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateStack));
 
   // if no tags are present anywhere, there is nothing to sum.
@@ -1039,7 +1138,8 @@ Game_Action.prototype.calculatePerStateStackPct = function(target)
 Game_Action.prototype.countTargetStatesAuthoredByCaster = function(target)
 {
   // shorthand the caster's uuid for comparison against each tracked state's source.
-  const casterUuid = this.subject().getUuid();
+  const casterUuid = this.subject()
+    .getUuid();
 
   // grab the live map of tracked states afflicting the target, keyed by state id.
   const trackedStates = $jabsEngine.getJabsStatesByUuid(target.getUuid());
@@ -1070,8 +1170,10 @@ Game_Action.prototype.calculateBonusForMyStateCountPct = function(target)
 {
   // sum all bonusDamageForMyStateCount:N values from the caster's note sources.
   const perStatePct = RPGManager.getSumFromAllNotesByRegex(
-    this.subject().getAllNotes(),
-    J.ABS.RegExp.BonusDamageForMyStateCount);
+    this.subject()
+      .getAllNotes(),
+    J.ABS.RegExp.BonusDamageForMyStateCount
+  );
 
   // if no tags exist on this caster, there is no bonus.
   if (perStatePct === 0) return 0;
@@ -1093,7 +1195,8 @@ Game_Action.prototype.calculateThisBonusForMyStateCountPct = function(target)
   const perStatePct = RPGManager.getNumberFromNoteByRegex(
     this.item(),
     J.ABS.RegExp.ThisBonusDamageForMyStateCount,
-    true);
+    true
+  );
 
   // if the tag is not present on this skill, there is no bonus.
   if (perStatePct === null) return 0;
@@ -1156,7 +1259,8 @@ Game_Action.prototype.calculateThisSkillHistoryBonusPct = function(uuid)
   const rawTag = RPGManager.getStringFromNoteByRegex(
     item,
     J.ABS.RegExp.ThisSkillHistoryBonus,
-    true);
+    true
+  );
 
   // if the tag is not present on this skill, there is no bonus.
   if (!rawTag) return 0;
@@ -1167,7 +1271,11 @@ Game_Action.prototype.calculateThisSkillHistoryBonusPct = function(uuid)
   // if the bracket was malformed, skip this tag.
   if (!parsed) return 0;
 
-  const { window, pct, countMode } = parsed;
+  const {
+    window,
+    pct,
+    countMode
+  } = parsed;
 
   // query the history log: scope is this specific skill id only.
   const count = $jabsEngine.querySkillExecutionLog(uuid, item.id, 0, window, countMode);
@@ -1191,7 +1299,8 @@ Game_Action.prototype.calculateGeneralSkillHistoryBonusPct = function(uuid)
   const allCaptures = RPGManager.getAllCapturesFromAllNotesByRegex(
     this.subject()
       .getAllNotes(),
-    J.ABS.RegExp.SkillHistoryBonus);
+    J.ABS.RegExp.SkillHistoryBonus
+  );
 
   // if there are no tags anywhere, there is nothing to sum.
   if (!allCaptures.length) return 0;
@@ -1208,7 +1317,12 @@ Game_Action.prototype.calculateGeneralSkillHistoryBonusPct = function(uuid)
     // if the bracket was malformed, skip this tag.
     if (!parsed) return;
 
-    const { typeId, window, pct, countMode } = parsed;
+    const {
+      typeId,
+      window,
+      pct,
+      countMode
+    } = parsed;
 
     // query the history: scope is any skill id, filtered by type.
     const count = $jabsEngine.querySkillExecutionLog(uuid, 0, typeId, window, countMode);
@@ -1240,7 +1354,11 @@ Game_Action.prototype.parseSkillHistoryBracket = function(bracket)
   const pct = Number(parts[1]);
   const countMode = parts[2].toLowerCase();
 
-  return { window, pct, countMode };
+  return {
+    window,
+    pct,
+    countMode
+  };
 };
 
 /**
@@ -1265,7 +1383,12 @@ Game_Action.prototype.parseGeneralSkillHistoryBracket = function(bracket)
   const pct = Number(parts[2]);
   const countMode = parts[3].toLowerCase();
 
-  return { typeId, window, pct, countMode };
+  return {
+    typeId,
+    window,
+    pct,
+    countMode
+  };
 };
 //endregion skill history bonus
 
@@ -1341,7 +1464,7 @@ Game_Action.prototype.calculateThisCastTimeDamageBonusPctPerSec = function()
   const item = this.item();
 
   // sum every matching tag on this skill's note.
-  return RPGManager.getSumFromAllNotesByRegex([item], J.ABS.RegExp.ThisCastTimeDamageBonus) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex([ item ], J.ABS.RegExp.ThisCastTimeDamageBonus) ?? 0;
 };
 
 /**
@@ -1352,8 +1475,10 @@ Game_Action.prototype.calculateGeneralCastTimeDamageBonusPctPerSec = function()
 {
   // sum every matching tag across the caster's full note stack.
   return RPGManager.getSumFromAllNotesByRegex(
-    this.subject().getAllNotes(),
-    J.ABS.RegExp.CastTimeDamageBonus) ?? 0;
+    this.subject()
+      .getAllNotes(),
+    J.ABS.RegExp.CastTimeDamageBonus
+  ) ?? 0;
 };
 //endregion cast time damage bonus
 //endregion action application

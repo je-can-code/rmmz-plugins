@@ -356,7 +356,7 @@ class JABS_EnemyAI
     const randomSkillId = usableSkills.at(randomIndex);
 
     // 50% chance of just using the basic attack instead.
-    if (Math.randomInt(2) === 0)
+    if (RPGManager.chanceIn100(50))
     {
       return [ user.getEnemyBasicAttack() ];
     }

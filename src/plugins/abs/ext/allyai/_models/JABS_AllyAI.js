@@ -489,7 +489,7 @@ class JABS_AllyAI
     const nearbyAllies = user.getAllNearbyAllies();
     const anyInDanger = nearbyAllies.some(ally => ally.getBattler().currentHpPercent() < 0.6);
 
-    if (anyInDanger && Math.randomInt(2) === 0)
+    if (anyInDanger && RPGManager.chanceIn100(50))
     {
       const supportPick = this.decideSupportFirst(usableSkills, user, target);
       if (supportPick.length) return supportPick;
@@ -582,7 +582,7 @@ class JABS_AllyAI
     }
     else if (tempSkills.length === 1)
     {
-      chosenSkillId = Math.randomInt(2) === 0
+      chosenSkillId = RPGManager.chanceIn100(50)
         ? tempSkills[0]
         : usableSkills[Math.randomInt(usableSkills.length)];
     }

@@ -25,7 +25,7 @@ JABS_InputAdapter.canPerformMainhandActionCharging = function(jabsBattler)
   if (!jabsBattler.canBattlerUseAttacks()) return false;
 
   // if the player is casting, then do not charge.
-  if (jabsBattler.isCasting()) return false;
+  if (jabsBattler.isCastingOrChanneling()) return false;
 
   // perform!
   return true;
@@ -62,7 +62,7 @@ JABS_InputAdapter.canPerformOffhandActionCharging = function(jabsBattler)
   if (!jabsBattler.canBattlerUseAttacks()) return false;
 
   // if the player is casting, then do not charge.
-  if (jabsBattler.isCasting()) return false;
+  if (jabsBattler.isCastingOrChanneling()) return false;
 
   // perform!
   return true;
@@ -96,7 +96,7 @@ JABS_InputAdapter.canPerformCombatSkillCharging = function(jabsBattler)
   if (!jabsBattler.canBattlerUseSkills()) return false;
 
   // if the player is casting, then do not charge.
-  if (jabsBattler.isCasting()) return false;
+  if (jabsBattler.isCastingOrChanneling()) return false;
 
   // perform!
   return true;

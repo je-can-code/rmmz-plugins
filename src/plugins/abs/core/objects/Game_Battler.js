@@ -100,6 +100,28 @@ Game_Battler.prototype.initJabsMembers = function()
    * @type {number}
    */
   this._j._abs._per = 0;
+
+  /**
+   * The cached, unfloored battler-wide positive-reroll total from `<luckyRolls:[FORMULA]>`.
+   * Refreshed by {@link #refreshPositiveRolls} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._positiveRolls = 0;
+
+  /**
+   * The cached, unfloored battler-wide negative-reroll total from `<cursedRolls:[FORMULA]>`.
+   * Refreshed by {@link #refreshNegativeRolls} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._negativeRolls = 0;
+
+  /**
+   * The cached, unfloored bonus repeat count for this battler's repeatable-action procs from
+   * `<encoreRepeats:[FORMULA]>`.
+   * Refreshed by {@link #refreshEncoreRepeats} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._encoreRepeats = 0;
 };
 
 //region CDR
@@ -805,11 +827,20 @@ Game_Battler.prototype.processOnEvadeStateSelf = function()
   // iterate over each effect and apply it if the chance roll passes.
   selfEffects.forEach(stateEffect =>
   {
-    // check if this effect should trigger.
-    if (stateEffect.shouldTrigger() === false) return;
+    // this is a purely self-scoped proc- the evader is both the roller and the recipient, so
+    // both their own positive and negative rolls apply to their own single roll.
+    const skill = stateEffect.baseSkill(this);
+    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
+    const negativeRolls = this.getNegativeRollsForSkill(skill);
 
-    // apply the state to ourselves — the evader gets the benefit.
-    this.addState(stateEffect.skillId);
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+
+    // apply the state to ourselves once per success — the evader gets the benefit.
+    for (let i = 0; i < procCount; i++)
+    {
+      this.addState(stateEffect.skillId);
+    }
   });
 };
 
@@ -828,11 +859,20 @@ Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker)
   // iterate over each effect and apply it if the chance roll passes.
   attackerEffects.forEach(stateEffect =>
   {
-    // check if this effect should trigger.
-    if (stateEffect.shouldTrigger() === false) return;
+    // the evader is the one whose proc this is (positive rolls); the attacker is the one
+    // receiving the punishment state and can resist it with their own negative rolls.
+    const skill = stateEffect.baseSkill(this);
+    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
+    const negativeRolls = attacker.getNegativeRolls();
 
-    // apply the state to the attacker — they get punished for missing.
-    attacker.addState(stateEffect.skillId);
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+
+    // apply the state to the attacker once per success — they get punished for missing.
+    for (let i = 0; i < procCount; i++)
+    {
+      attacker.addState(stateEffect.skillId);
+    }
   });
 };
 
@@ -986,6 +1026,18 @@ Game_Battler.prototype.isImmuneToNonDeathStates = function()
 Game_Battler.prototype.isImmuneToNegativeStates = function()
 {
   return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToNegatives) === true;
+};
+
+/**
+ * Whether or not this battler is immune to being externally interrupted out of a cast/channel by
+ * an incoming `<interrupt:MAGNIFIER>` hit, from any of this battler's own note sources (states,
+ * equips, class, actor). This does not suppress self-interruption from choosing to move- that axis
+ * is controlled per-skill by {@link RPG_Skill#jabsCannotMoveToInterrupt} instead.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToInterrupt = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.CannotBeInterrupted) === true;
 };
 
 /**
@@ -1520,6 +1572,8 @@ Game_Battler.prototype.setBonusHitsSkill = function(value)
 
 /**
  * Sums scoped per-connection bonus hits from a collection of traited database rows.
+ * Includes both the flat-integer tags and their `[FORMULA]` counterparts, the latter
+ * evaluated with `a` bound to this battler.
  * @param {RPG_Traited[]|RPG_BaseBattler[]|RPG_Class[]} sources Rows that may carry scoped bonus-hit notes.
  * @returns {{ global: number, basic: number, skill: number }} Totals contributed by this collection.
  */
@@ -1542,9 +1596,188 @@ Game_Battler.prototype.getBonusHitsFromSources = function(sources)
 
   sources.forEach(collectFromSource);
 
+  // formula-based contributions are summed across the whole collection at once, since the
+  // eval context ("a" = this battler) is the same for every source in it.
+  totals.global += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeGlobalFormula, 0, this);
+  totals.basic += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeBasicFormula, 0, this);
+  totals.skill += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeSkillFormula, 0, this);
+
   return totals;
 };
 //endregion JABS bonus hits
+
+//region luck/curse rolls
+/**
+ * The cached, unfloored battler-wide positive-reroll total. Kept unfloored so callers combining
+ * this with a this-skill contribution can floor the true combined total once, rather than
+ * compounding two separate floors.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRawPositiveRolls = function()
+{
+  return this._j._abs._positiveRolls;
+};
+
+/**
+ * Sets the cached, unfloored battler-wide positive-reroll total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setPositiveRolls = function(value)
+{
+  this._j._abs._positiveRolls = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<luckyRolls:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshPositiveRolls = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.LuckyRolls, 0, this);
+  this.setPositiveRolls(newTotal);
+};
+
+/**
+ * The cached, unfloored battler-wide negative-reroll total.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRawNegativeRolls = function()
+{
+  return this._j._abs._negativeRolls;
+};
+
+/**
+ * Sets the cached, unfloored battler-wide negative-reroll total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setNegativeRolls = function(value)
+{
+  this._j._abs._negativeRolls = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<cursedRolls:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshNegativeRolls = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.CursedRolls, 0, this);
+  this.setNegativeRolls(newTotal);
+};
+
+/**
+ * The total extra positive rerolls this battler contributes whenever it is the party wanting a
+ * `chanceIn100` roll to succeed (e.g. the attacker landing a hit, applying a state, or scoring
+ * a critical). Floored once at the end.
+ * @returns {number}
+ */
+Game_Battler.prototype.getPositiveRolls = function()
+{
+  return Math.floor(this.getRawPositiveRolls());
+};
+
+/**
+ * The total extra negative rerolls this battler contributes whenever it is the party wanting a
+ * `chanceIn100` roll to fail (e.g. the defender evading a hit, resisting a crit, or resisting a
+ * state). Floored once at the end.
+ * @returns {number}
+ */
+Game_Battler.prototype.getNegativeRolls = function()
+{
+  return Math.floor(this.getRawNegativeRolls());
+};
+
+/**
+ * This battler's total positive rerolls while executing the given skill: its own battler-wide
+ * `luckyRolls` plus that skill's own `<thisLuckyRolls:[FORMULA]>` bonus, floored once combined-
+ * not floored separately and then summed, which would compound rounding error.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {number}
+ */
+Game_Battler.prototype.getPositiveRollsForSkill = function(skill)
+{
+  const battlerWide = this.getRawPositiveRolls();
+  const thisSkill = RPGManager.getResultFromNoteByRegex(skill, J.ABS.RegExp.ThisLuckyRolls, 0, this);
+  return Math.floor(battlerWide + thisSkill);
+};
+
+/**
+ * This battler's total negative rerolls while executing the given skill: its own battler-wide
+ * `cursedRolls` plus that skill's own `<thisCursedRolls:[FORMULA]>` bonus, floored once combined.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {number}
+ */
+Game_Battler.prototype.getNegativeRollsForSkill = function(skill)
+{
+  const battlerWide = this.getRawNegativeRolls();
+  const thisSkill = RPGManager.getResultFromNoteByRegex(skill, J.ABS.RegExp.ThisCursedRolls, 0, this);
+  return Math.floor(battlerWide + thisSkill);
+};
+
+/**
+ * Whether or not this battler's own on-chance rolls are guaranteed to succeed- a true bypass,
+ * not an absurd reroll count. Sourced from any of this battler's own note sources via
+ * `<veryLucky>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isVeryLucky = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VeryLucky) === true;
+};
+
+/**
+ * Whether or not this battler's own on-chance rolls are guaranteed to fail- a true bypass, not
+ * an absurd reroll count. Sourced from any of this battler's own note sources via `<veryCursed>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isVeryCursed = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VeryCursed) === true;
+};
+
+/**
+ * The cached, floored bonus repeat count for this battler's repeatable-action procs: each
+ * individual success executes `1 + getEncoreRepeats()` times instead of once.
+ * @returns {number}
+ */
+Game_Battler.prototype.getEncoreRepeats = function()
+{
+  return Math.floor(this._j._abs._encoreRepeats);
+};
+
+/**
+ * Sets the cached, unfloored bonus repeat count.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setEncoreRepeats = function(value)
+{
+  this._j._abs._encoreRepeats = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<encoreRepeats:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshEncoreRepeats = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.EncoreRepeats, 0, this);
+  this.setEncoreRepeats(newTotal);
+};
+
+/**
+ * Whether or not this battler's repeatable-action procs are in Accumulate Mode: every positive
+ * roll is counted instead of stopping at the first success. Sourced from any of this battler's
+ * own note sources via `<accumulate>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isAccumulating = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.Accumulate) === true;
+};
+//endregion luck/curse rolls
 
 //region range modifiers
 /**

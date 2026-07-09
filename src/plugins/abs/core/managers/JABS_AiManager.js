@@ -1226,14 +1226,8 @@ class JABS_AiManager
    */
   static shouldMoveIdly()
   {
-    // roll a d100.
-    const chance = (Math.randomInt(100) + 1);
-
-    // need a nat100 to move.
-    const shouldMove = (chance === 100);
-
-    // to move or not to move?
-    return shouldMove;
+    // a flat 1% chance to take an idle step this frame.
+    return RPGManager.chanceIn100(1);
   }
 
   //endregion Phase 0 - Idle Phase
@@ -1515,7 +1509,7 @@ class JABS_AiManager
   static needsRepositioning(battler)
   {
     // if the battler is casting, then they can't do repositioning things.
-    if (battler.isCasting()) return false;
+    if (battler.isCastingOrChanneling()) return false;
 
     // if we are already in position, then we don't need repositioning.
     if (battler.isInPosition()) return false;
@@ -1548,7 +1542,7 @@ class JABS_AiManager
     if (!battler.isInPosition()) return false;
 
     // check if the battler is still casting.
-    if (battler.isCasting()) return false;
+    if (battler.isCastingOrChanneling()) return false;
 
     // we need action!
     return true;
@@ -1589,7 +1583,7 @@ class JABS_AiManager
     }
 
     // if we are currently casting, then do not process further.
-    if (battler.isCasting()) return;
+    if (battler.isCastingOrChanneling()) return;
 
     // start the cast timer.
     battler.setCastCountdown(action.getCastTime());
@@ -2297,7 +2291,7 @@ class JABS_AiManager
       return false;
     }
 
-    if (battler.isCasting())
+    if (battler.isCastingOrChanneling())
     {
       return false;
     }

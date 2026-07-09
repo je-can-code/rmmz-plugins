@@ -193,23 +193,46 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   // extract the gap close details from the skill.
   let {
     jabsGapCloseMode,
-    jabsGapClosePosition
+    jabsGapClosePosition,
   } = action.getBaseSkill();
+  const { jabsRespectTerrain } = action.getBaseSkill();
 
   // if the position is not identified, then default to "same".
   jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;
 
   // determine the destination delta coordinates based on the position mode.
-  const [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+  let [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+
+  // grab the underlying character for access to movement.
+  const casterCharacter = this.getCharacter();
+
+  // gap close normally bypasses terrain entirely- <respectTerrain> opts into walking the same
+  // tile-by-tile clamped path every other forced-displacement mechanic uses, snapping the raw
+  // fractional edge-offset coordinates down to the nearest whole tile in the process.
+  if (jabsRespectTerrain)
+  {
+    const horizontalDominant = Math.abs(x) >= Math.abs(y);
+
+    let direction;
+    if (horizontalDominant)
+    {
+      direction = x >= 0 ? J.ABS.Directions.RIGHT : J.ABS.Directions.LEFT;
+    }
+    else
+    {
+      direction = y >= 0 ? J.ABS.Directions.DOWN : J.ABS.Directions.UP;
+    }
+
+    const rawDistance = Math.max(Math.abs(x), Math.abs(y));
+
+    [ x, y ] = casterCharacter.walkInDirectionClamped(direction, rawDistance);
+  }
 
   // store the actual landing coordinates (not the raw target tile) so the arrival check resolves correctly.
   this.setGapCloseDestination([ this.getX() + x, this.getY() + y ]);
 
   // if the mode is not identified, then default to "jump".
   jabsGapCloseMode ??= J.ABS.EXT.TOOLS.GapCloseModes.Jump;
-
-  // grab the underlying character for access to movement.
-  const casterCharacter = this.getCharacter();
 
   // pivot on the mode.
   switch (jabsGapCloseMode)
@@ -219,6 +242,8 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
       break;
     case J.ABS.EXT.TOOLS.GapCloseModes.Blink:
       // TODO: update player locate to be less visually jarring? (see: parallax background)
+      // note: <respectTerrain> has no effect on blink- it lands exactly on the target's own
+      // tile, which is already guaranteed passable since the target is standing there.
       casterCharacter.locate(target.getX(), target.getY());
       break;
     case J.ABS.EXT.TOOLS.GapCloseModes.Travel:
@@ -243,6 +268,105 @@ JABS_Battler.prototype.onGapCloseFinished = function()
   // force-execute each registered skill from this battler's position at no cost.
   skillIds.forEach(id => $jabsEngine.forceMapAction(this, id));
 };
+
+//region pullForward
+/**
+ * Pulls this battler toward the caster- the inverse of gap close (the caster travels to the
+ * target) and the inverse of knockback (the target is shoved away from the caster). Called on
+ * the afflicted target, not the caster, since this battler is the one being displaced.
+ * @param {JABS_Action} action The JABS action containing the action data.
+ * @param {JABS_Battler} caster The battler being pulled toward.
+ */
+JABS_Battler.prototype.pullToCaster = function(action, caster)
+{
+  // don't stack a pull on top of any other forced displacement already in progress.
+  if (this.getCharacter().isJumping()) return;
+
+  // grab the pull-forward magnitude from the skill; skills without the tag don't pull at all.
+  const pullMagnitude = action.getBaseSkill().jabsPullForward;
+  if (pullMagnitude === null) return;
+
+  // pull-forward is dampened by the exact same resistance stat that dampens push knockback-
+  // resistance to being forcibly displaced is one stat, regardless of which direction it goes.
+  const resist = RPGManager.getSumFromAllNotesByRegex(this.getBattler().getAllNotes(), J.ABS.RegExp.KnockbackResist);
+  if (resist >= 100) return;
+  const effectiveMagnitude = pullMagnitude * ((100 - resist) / 100);
+
+  // determine the raw vector and the maximum distance we could possibly travel without
+  // colliding with the caster's own hitbox.
+  const { unitX, unitY, maxPullDistance } = this.resolvePullVector(caster);
+
+  // clamp the resisted magnitude to whatever's actually available before reaching the caster-
+  // this is what stops <pullForward:50> from launching a nearby target past the caster entirely.
+  const distance = Math.min(effectiveMagnitude, maxPullDistance);
+  if (distance <= 0) return;
+
+  // project the clamped distance along the unit vector toward the caster.
+  const rawX = unitX * distance;
+  const rawY = unitY * distance;
+
+  // a skill tagged with <ignoreTerrain> sails straight to the computed destination, same as
+  // knockback's own bypass- otherwise walk tile-by-tile and stop at the last passable tile.
+  const targetCharacter = this.getCharacter();
+  let finalX = rawX;
+  let finalY = rawY;
+  if (!action.getBaseSkill().jabsIgnoreTerrain)
+  {
+    const horizontalDominant = Math.abs(rawX) >= Math.abs(rawY);
+
+    let direction;
+    if (horizontalDominant)
+    {
+      direction = rawX >= 0 ? J.ABS.Directions.RIGHT : J.ABS.Directions.LEFT;
+    }
+    else
+    {
+      direction = rawY >= 0 ? J.ABS.Directions.DOWN : J.ABS.Directions.UP;
+    }
+
+    const roundedDistance = Math.max(Math.abs(rawX), Math.abs(rawY));
+
+    [ finalX, finalY ] = targetCharacter.walkInDirectionClamped(direction, roundedDistance);
+  }
+
+  // execute the jump- this battler (the target) moves, not the caster.
+  targetCharacter.jump(finalX, finalY);
+};
+
+/**
+ * Resolves the unit vector and maximum safe travel distance for pulling this battler toward
+ * the caster. Mirrors the vector math in {@link determineGapCloseCoordinates}, but the roles
+ * are reversed- this battler is the mover, and the caster is the fixed goal point.
+ * @param {JABS_Battler} caster The battler being pulled toward.
+ * @returns {{unitX: number, unitY: number, maxPullDistance: number}}
+ */
+JABS_Battler.prototype.resolvePullVector = function(caster)
+{
+  // grab the caster's underlying character for position access.
+  const casterCharacter = caster.getCharacter();
+
+  // grab this battler's own current tile coordinates.
+  const [ x, y ] = [ this.getX(), this.getY() ];
+
+  // compute the delta vector from this battler toward the caster (+X right, +Y down).
+  const goalX = casterCharacter.deltaXFrom(x);
+  const goalY = casterCharacter.deltaYFrom(y);
+
+  // compute the straight-line distance between this battler and the caster.
+  const magnitude = Math.sqrt(goalX * goalX + goalY * goalY);
+
+  // derive the unit vector pointing from this battler toward the caster.
+  const unitX = magnitude > 0 ? goalX / magnitude : 0;
+  const unitY = magnitude > 0 ? goalY / magnitude : 0;
+
+  // compute how far short of the caster's center to stop: both hitbox radii plus a thin buffer,
+  // so the target lands flush against the caster's edge instead of overlapping or passing through.
+  const edgeOffset = casterCharacter.getEffectiveRadius() + this.getCharacter().getEffectiveRadius() + 0.05;
+  const maxPullDistance = Math.max(0, magnitude - edgeOffset);
+
+  return { unitX, unitY, maxPullDistance };
+};
+//endregion pullForward
 
 /**
  * Collects all skill IDs that should fire when this battler's gap close lands.

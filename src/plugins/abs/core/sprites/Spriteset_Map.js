@@ -687,8 +687,8 @@ Spriteset_Map.prototype.collectActiveCastPreviewItems = function ()
       // MVP: enemies only (exclude player/followers here).
       if (jabsBattler.isPlayer()) return; // skip player.
 
-      // require casting state + a decided action to preview.
-      if (!jabsBattler.isCasting()) return; // not casting.
+      // require casting/channeling state + a decided action to preview.
+      if (!jabsBattler.isCastingOrChanneling()) return; // not casting or channeling.
       const decided = jabsBattler.getDecidedAction();
       if (!decided || !decided.length) return; // no actions decided.
 
@@ -1237,6 +1237,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
     const shape = jabsAction.getShape();
     const range = jabsAction.getRange();
     const facing = jabsAction.direction();
+    const innerRadius = jabsAction.getInnerRadius();
 
     // mirror {@link JABS_Engine#getCollisionTargets}: direct + sprite uses the same wedge test as gameplay.
     if (jabsAction.isDirectAction())
@@ -1245,7 +1246,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
 
       if (actionSprite)
       {
-        const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionSprite, range, shape);
+        const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionSprite, range, shape, innerRadius);
 
         if (overlapped)
         {
@@ -1289,7 +1290,7 @@ Spriteset_Map.prototype.isBattlerCollidingWithAnyAction = function (item)
       continue;
     }
 
-    const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape);
+    const overlapped = $jabsEngine.isTargetWithinRange(facing, target, actionEvent, range, shape, innerRadius);
 
     if (overlapped)
     {
@@ -1398,6 +1399,7 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
     const range = jabsAction.getRange(); // the action's range.
     // logical travel dir8 on the action model (map event direction may be cardinal for `$` sheet rows).
     const facing = jabsAction.direction();
+    const innerRadius = jabsAction.getInnerRadius(); // universal dead zone, in tiles.
 
     // locate the sprite for this action.
     const sprite = this.getOrCreateActionHitboxSpriteFor(actionEvent); // ensure we have a sprite.
@@ -1409,7 +1411,7 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
 
     // redraw the shape into the sprite's internal graphics (around local 0,0).
     // pass the actionEvent so Arc can resolve <degrees:N> from notes via engine helper.
-    this.drawActionHitboxInto(sprite, shape, range, facing, tw, th, actionEvent); // draw shape for this frame.
+    this.drawActionHitboxInto(sprite, shape, range, facing, tw, th, actionEvent, innerRadius); // draw shape for this frame.
   });
 };
 
@@ -1558,6 +1560,7 @@ Spriteset_Map.prototype.drawOrientedHitboxQuadG = function (
  * @param {number} tw Tile width in pixels.
  * @param {number} th Tile height in pixels.
  * @param {Game_Event} actionEvent The action event for tag resolution.
+ * @param {number} [innerRadius=0] The universal dead zone in tiles; 0 disables it.
  */
 Spriteset_Map.prototype.drawActionHitboxInto = function (
   sprite,
@@ -1566,7 +1569,8 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
   facing,
   tw,
   th,
-  actionEvent
+  actionEvent,
+  innerRadius = 0
 )
 {
   // access the graphics used to draw.
@@ -1585,6 +1589,10 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
   const minPx = 0.5; // small positive thickness minimum to avoid degenerate shapes.
   const thicknessX = Math.max(minPx, thicknessTiles * tw);
   const thicknessY = Math.max(minPx, thicknessTiles * th);
+
+  // set by the Arc/default branch when it bakes the dead zone into its own polygon via
+  // drawSectorG's innerR parameter, so the generic hole-punch below doesn't double-apply.
+  let holeAlreadyBaked = false;
 
   // draw around local (0,0) since sprite is positioned at the action center.
   switch (shape)
@@ -1662,9 +1670,21 @@ Spriteset_Map.prototype.drawActionHitboxInto = function (
       // compute sweep in radians and draw.
       const sweepRad = (degrees * Math.PI) / 180;
       const r = range * tw; // radius in px
-      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad);
+      const innerRadiusPxArc = innerRadius * tw;
+      if (innerRadiusPxArc > 0) holeAlreadyBaked = true;
+      this.drawSectorG(g, 0, 0, r, centerRad, sweepRad, innerRadiusPxArc);
       break;
     }
+  }
+
+  // punch the universal dead zone out of every shape that didn't already bake it directly
+  // into its own polygon above (Arc, and any unrecognized shape sharing its fallback path).
+  if (innerRadius > 0 && holeAlreadyBaked === false)
+  {
+    const innerRadiusPx = innerRadius * tw;
+    g.beginHole();
+    g.drawCircle(0, 0, innerRadiusPx);
+    g.endHole();
   }
 
   // complete fill for this shape.
@@ -1699,6 +1719,9 @@ Spriteset_Map.prototype.drawRhombusG = function (
  * @param {number} r Radius in pixels.
  * @param {number} centerRad Center angle in radians. 0 = right, π/2 = down, π = left, -π/2 = up.
  * @param {number} sweepRad Total sweep in radians (0–2π].
+ * @param {number} [innerR=0] Inner dead-zone radius in pixels; bakes an annular sector (donut
+ * slice) instead of a pivot fan when positive. A hole punched at the pivot would break PIXI's
+ * triangulation since the fan's own path already touches that exact point.
  */
 Spriteset_Map.prototype.drawSectorG = function (
   g,
@@ -1706,23 +1729,53 @@ Spriteset_Map.prototype.drawSectorG = function (
   cy,
   r,
   centerRad,
-  sweepRad
+  sweepRad,
+  innerR = 0
 )
 {
   // normalize sweep to [0, 2π].
   const TAU = Math.PI * 2; // 2π constant.
   const sweep = Math.max(0, Math.min(TAU, sweepRad || 0)); // clamp.
 
-  // if the sweep is effectively a full circle, just draw a circle.
+  // if the sweep is effectively a full circle, a plain hole punch is safe- the ring never
+  // touches the pivot the way a wedge fan does.
   if (sweep >= TAU - 1e-6)
   {
     g.drawCircle(cx, cy, r);
+
+    if (innerR > 0)
+    {
+      g.beginHole();
+      g.drawCircle(cx, cy, innerR);
+      g.endHole();
+    }
+
     return;
   }
 
   // derive start/end angles about the center angle.
   const start = centerRad - (sweep / 2);
   const end = centerRad + (sweep / 2);
+
+  if (innerR > 0)
+  {
+    // bake the dead zone directly into the polygon as a true annular sector: out along the
+    // outer rim, then back along the inner rim, closing the donut slice.
+    const startInnerX = cx + (innerR * Math.cos(start));
+    const startInnerY = cy + (innerR * Math.sin(start));
+    const endInnerX = cx + (innerR * Math.cos(end));
+    const endInnerY = cy + (innerR * Math.sin(end));
+    const startOuterX = cx + (r * Math.cos(start));
+    const startOuterY = cy + (r * Math.sin(start));
+
+    g.moveTo(startInnerX, startInnerY);
+    g.lineTo(startOuterX, startOuterY);
+    g.arc(cx, cy, r, start, end); // clockwise along the outer rim.
+    g.lineTo(endInnerX, endInnerY);
+    g.arc(cx, cy, innerR, end, start, true); // counter-clockwise back along the inner rim.
+    g.closePath();
+    return;
+  }
 
   // compute the start point on the circumference.
   const sx = cx + (r * Math.cos(start));

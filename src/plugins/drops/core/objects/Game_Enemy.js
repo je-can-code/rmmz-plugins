@@ -38,9 +38,11 @@ Game_Enemy.prototype.getBaseGoldRate = function()
  * Overwrites {@link #makeDropItems}.<br/>
  * Modifies the drop chance algorithm to treat the number entered in the database as a percent chance instead of some
  * weird fractional shit. Also applies any applicable multipliers against the discovery rate of loot.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known; the
+ * killer contributes both their own positive and negative rolls to the drop-chance roll.
  * @returns {RPG_BaseItem[]} The array of loot successfully found.
  */
-Game_Enemy.prototype.makeDropItems = function()
+Game_Enemy.prototype.makeDropItems = function(killer = null)
 {
   // get all potential loot for this enemy.
   const dropList = this.getDropItems();
@@ -68,8 +70,8 @@ Game_Enemy.prototype.makeDropItems = function()
 
     // determine if the loot was found.
     const foundLoot = treasureHunterSkip
-      ? true                    // we were already a boss.
-      : this.didFindLoot(rate); // roll the dice!
+      ? true                          // we were already a boss.
+      : this.didFindLoot(rate, killer); // roll the dice!
 
     // if we didn't find the loot, then don't proceed.
     if (foundLoot === false) return;
@@ -124,9 +126,10 @@ Game_Enemy.prototype.canFindLoot = function(drop)
  * Determines whether or not loot was found based on the provided rate.
  * This is not deterministic, and the same (non-100) rate
  * @param {number} rate The 0-100 integer rate of which to find this loot.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
  * @returns {boolean} True if we found loot this time, false otherwise.
  */
-Game_Enemy.prototype.didFindLoot = function(rate)
+Game_Enemy.prototype.didFindLoot = function(rate, killer = null)
 {
   // locally assign the percent chance to find something.
   let chance = rate;
@@ -138,8 +141,16 @@ Game_Enemy.prototype.didFindLoot = function(rate)
     chance *= 2;
   }
 
-  // roll the dice and see if we won!
-  const found = RPGManager.chanceIn100(chance);
+  // this is a purely self-scoped proc from the killer's perspective- when known, the killer is
+  // both the roller and the recipient of the drop-chance roll.
+  const positiveRolls = killer ? 1 + killer.getPositiveRolls() : 1;
+  const negativeRolls = killer ? killer.getNegativeRolls() : 0;
+
+  // roll the dice and see if we won! when the killer is known, their fate-override flags
+  // (guaranteed find/guaranteed miss) can short-circuit the roll entirely.
+  const found = killer
+    ? RPGManager.fateOf100(killer, chance, positiveRolls, negativeRolls)
+    : RPGManager.chanceIn100(chance, positiveRolls, negativeRolls);
 
   // return the result.
   return found;

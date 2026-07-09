@@ -953,7 +953,7 @@ JABS_Engine.prototype.canUpdateInput = function() {
 */
 J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.set("performMainhandAction", JABS_InputAdapter.performMainhandAction);
 JABS_InputAdapter.performMainhandAction = function(jabsBattler) {
-	if ($gameMap.hasInteractableEventInFront(jabsBattler) || !jabsBattler.canBattlerUseAttacks() || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Mainhand) || jabsBattler.isCasting()) {
+	if ($gameMap.hasInteractableEventInFront(jabsBattler) || !jabsBattler.canBattlerUseAttacks() || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Mainhand) || jabsBattler.isCastingOrChanneling()) {
 		J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get("performMainhandAction").call(this, jabsBattler);
 		return;
 	}
@@ -975,7 +975,7 @@ JABS_InputAdapter.performMainhandAction = function(jabsBattler) {
 */
 J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.set("performOffhandAction", JABS_InputAdapter.performOffhandAction);
 JABS_InputAdapter.performOffhandAction = function(jabsBattler) {
-	if (jabsBattler.isGuardSkillByKey(JABS_Button.Offhand) || $gameMap.hasInteractableEventInFront(jabsBattler) || !jabsBattler.canBattlerUseAttacks() || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Offhand) || jabsBattler.isCasting()) {
+	if (jabsBattler.isGuardSkillByKey(JABS_Button.Offhand) || $gameMap.hasInteractableEventInFront(jabsBattler) || !jabsBattler.canBattlerUseAttacks() || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Offhand) || jabsBattler.isCastingOrChanneling()) {
 		J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get("performOffhandAction").call(this, jabsBattler);
 		return;
 	}
@@ -997,7 +997,7 @@ JABS_InputAdapter.performOffhandAction = function(jabsBattler) {
 */
 J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.set("performCombatAction", JABS_InputAdapter.performCombatAction);
 JABS_InputAdapter.performCombatAction = function(slot, jabsBattler) {
-	if (!jabsBattler.canBattlerUseSkills() || jabsBattler.getBattler().getSkillSlot(slot).isEmpty() || !jabsBattler.isSkillTypeCooldownReady(slot) || jabsBattler.isCasting()) {
+	if (!jabsBattler.canBattlerUseSkills() || jabsBattler.getBattler().getSkillSlot(slot).isEmpty() || !jabsBattler.isSkillTypeCooldownReady(slot) || jabsBattler.isCastingOrChanneling()) {
 		J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get("performCombatAction").call(this, slot, jabsBattler);
 		return;
 	}

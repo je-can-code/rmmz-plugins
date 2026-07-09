@@ -97,11 +97,39 @@ class JABS_OnChanceEffect
    * Dances with RNG to determine if this onChanceEffect was successful or not.
    * @param {number=} rollForPositive The number of times to try for success; defaults to 1.
    * @param {number=} rollForNegative The number of times to try and undo success; defaults to 0.
+   * @param {Game_Battler=} positiveRoller The battler whose success this roll is for; when
+   * provided, their `isVeryLucky()`/`isVeryCursed()` fate-override flags are checked first.
+   * Defaults to null, which skips the fate-override check and rolls normally.
    * @returns {boolean} True if this effect should proc, false otherwise.
    */
-  shouldTrigger(rollForPositive = 1, rollForNegative = 0)
+  shouldTrigger(rollForPositive = 1, rollForNegative = 0, positiveRoller = null)
   {
+    if (positiveRoller)
+    {
+      return RPGManager.fateOf100(positiveRoller, this.chance, rollForPositive, rollForNegative);
+    }
+
     return RPGManager.chanceIn100(this.chance, rollForPositive, rollForNegative);
+  }
+
+  /**
+   * Resolves how many times this effect's action should execute, folding in the positive-roller's
+   * Accumulate Mode and Encore repeats. Use this instead of {@link #shouldTrigger} at any call
+   * site whose action is repeatable (adding a state, force-executing a skill).
+   * @param {number=} rollForPositive The number of times to try for success; defaults to 1.
+   * @param {number=} rollForNegative The number of times to try and undo success; defaults to 0.
+   * @param {Game_Battler=} positiveRoller The battler whose success this roll is for; when absent,
+   * this falls back to a plain boolean roll with no Accumulate/Encore multiplication.
+   * @returns {number} How many times this effect's action should execute; 0 means it did not proc.
+   */
+  resolveProcCount(rollForPositive = 1, rollForNegative = 0, positiveRoller = null)
+  {
+    if (!positiveRoller)
+    {
+      return this.shouldTrigger(rollForPositive, rollForNegative) ? 1 : 0;
+    }
+
+    return RPGManager.resolveProcCount(positiveRoller, this.chance, rollForPositive, rollForNegative);
   }
 }
 

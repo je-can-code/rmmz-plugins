@@ -125,5 +125,14 @@ export function installExtendEngineStubs(sandbox)
     this.__addedStates = this.__addedStates || [];
     this.__addedStates.push(stateId);
   };
+
+  // this lightweight fixture doesn't load the real J-ABS Game_Battler roll-threading
+  // augmentations, so stub sentinel (no bonus) implementations directly.
+  sandbox.Game_Actor.prototype.getPositiveRollsForSkill = () => 0;
+  sandbox.Game_Actor.prototype.getNegativeRolls = () => 0;
+  sandbox.Game_Actor.prototype.getNegativeRollsForSkill = () => 0;
+  sandbox.Game_Enemy.prototype.getPositiveRollsForSkill = () => 0;
+  sandbox.Game_Enemy.prototype.getNegativeRolls = () => 0;
+  sandbox.Game_Enemy.prototype.getNegativeRollsForSkill = () => 0;
 }
 //endregion engine-stubs

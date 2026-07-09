@@ -427,6 +427,16 @@ J.ABS.RegExp = {
   CastTime: /<castTime:[ ]?(\d+)>/gi,
   CastAnimation: /<castAnimation:[ ]?(\d+)>/gi,
 
+  // channeling-related: repeatedly executes a child skill every tick for a total duration.
+  Channel: /<channel:[ ]?(\[(?:0|[1-9][0-9]*),[ ]?(?:0|[1-9][0-9]*)])>/gi,
+  ChannelTickSpeed: /<channelTickSpeed:[ ]?(\d+)>/gi,
+  OnChannelComplete: /<onChannelComplete:[ ]?(\[\d+(?:,[ ]?\d+)*])>/gi,
+
+  // casting/channeling interruption-related.
+  CannotMoveToInterrupt: /<cannotMoveToInterrupt>/i,
+  ThisCannotBeInterrupted: /<thisCannotBeInterrupted>/i,
+  Interrupt: /<interrupt:[ ]?(\d+)>/gi,
+
   // post-execution-related.
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
@@ -451,8 +461,10 @@ J.ABS.RegExp = {
   DirectLock: /<directLock>/i,
   DirectStateTarget: /<directStateTarget:[ ]?(\d+)>/gi,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+  InnerRadius: /<innerRadius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
+  IgnoreTerrain: /<ignoreTerrain>/i,
   DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)(?:,[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?))?])>/gi,
   Linger: /<linger:[ ]?(\d+)>/gi,
   OnDefeatedTarget: /<onDefeatedTarget>/gi,
@@ -502,6 +514,20 @@ J.ABS.RegExp = {
   BonusHitsSkillNote: /<bonus-hits:[ ]?(\d+)>/gi,
 
   /**
+   * Formula variant of {@link BonusHitsSkillNote}. Evaluated with `a` bound to the caster.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsSkillNoteFormula: /<bonus-hits:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
    * Bonus hits per connection from battler-side notes, applied to basic attacks only.
    *
    * <pre>
@@ -514,6 +540,20 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusHitsScopeBasic: /<bonus-hits-basic:[ ]?(\d+)>/gi,
+
+  /**
+   * Formula variant of {@link BonusHitsScopeBasic}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-basic:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-basic:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeBasicFormula: /<bonus-hits-basic:[ ]?\[([+\-*/ ().\w]+)]>/gi,
 
   /**
    * Bonus hits per connection from battler-side notes, applied to non-basic skills only.
@@ -530,6 +570,20 @@ J.ABS.RegExp = {
   BonusHitsScopeSkill: /<bonus-hits-skill:[ ]?(\d+)>/gi,
 
   /**
+   * Formula variant of {@link BonusHitsScopeSkill}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-skill:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-skill:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeSkillFormula: /<bonus-hits-skill:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
    * Bonus hits per connection from battler-side notes, applied to all JABS actions.
    *
    * <pre>
@@ -542,6 +596,90 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusHitsScopeGlobal: /<bonus-hits-global:[ ]?(\d+)>/gi,
+
+  /**
+   * Formula variant of {@link BonusHitsScopeGlobal}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-global:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-global:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeGlobalFormula: /<bonus-hits-global:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide bonus positive rerolls fed into chanceIn100 whenever this battler is the party
+   * wanting a roll to succeed (e.g. the attacker landing a hit/crit/state-apply). Evaluated with
+   * `a` bound to this battler, summed across every note source. No floor or cap.
+   * Structure: <luckyRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  LuckyRolls: /<luckyRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Same as {@link LuckyRolls}, but read from a specific skill's own note only- lets a skill
+   * grant its caster bonus positive rerolls specifically while using it.
+   * Structure: <thisLuckyRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  ThisLuckyRolls: /<thisLuckyRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide bonus negative rerolls fed into chanceIn100 whenever this battler is the party
+   * wanting a roll to fail (e.g. the defender evading a hit/crit/state-apply). Evaluated with
+   * `a` bound to this battler, summed across every note source. No floor or cap.
+   * Structure: <cursedRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  CursedRolls: /<cursedRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Same as {@link CursedRolls}, but read from a specific skill's own note only.
+   * Structure: <thisCursedRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  ThisCursedRolls: /<thisCursedRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide flag that short-circuits any `chanceIn100`/`shouldTrigger` roll this battler is
+   * the positive-roller for straight to guaranteed success- no roll occurs at all. True bypass,
+   * not an absurd reroll count.
+   * Structure: <veryLucky>
+   * @type {RegExp}
+   */
+  VeryLucky: /<veryLucky>/i,
+
+  /**
+   * Battler-wide flag that short-circuits any `chanceIn100`/`shouldTrigger` roll this battler is
+   * the positive-roller for straight to guaranteed failure- no roll occurs at all.
+   * Structure: <veryCursed>
+   * @type {RegExp}
+   */
+  VeryCursed: /<veryCursed>/i,
+
+  /**
+   * Battler-wide bonus repeat count: whenever this battler is the positive-roller for a
+   * repeatable-action proc (state application, forced skill execution), each individual success
+   * executes `1 + encoreRepeats` times instead of once. Evaluated with `a` bound to this battler,
+   * summed across every note source. No floor or cap.
+   * Structure: <encoreRepeats:[FORMULA]>
+   * @type {RegExp}
+   */
+  EncoreRepeats: /<encoreRepeats:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide flag that switches this battler's repeatable-action procs into Accumulate Mode:
+   * instead of stopping at the first successful positive roll, every one of the positive rolls is
+   * counted, and the proc's action executes once per success (subject to `<encoreRepeats>` on
+   * top of that).
+   * Structure: <accumulate>
+   * @type {RegExp}
+   */
+  Accumulate: /<accumulate>/i,
 
   PiercingData: /<pierce:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
@@ -591,6 +729,7 @@ J.ABS.RegExp = {
 
   // knockback-related.
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
+  ProximityKnockback: /<proximityKnockback:[ ]?(\[(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)])>/gi,
 
   // parry-related.
   IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
@@ -615,6 +754,9 @@ J.ABS.RegExp = {
   ImmuneToNegatives: /<immuneToNegatives>/gi,
   ImmuneToStates: /<immuneToStates>/gi,
   ImmuneToAll: /<immuneToAll>/gi,
+
+  // casting/channeling interruption immunity, read from all of a battler's own note sources.
+  CannotBeInterrupted: /<cannotBeInterrupted>/i,
 
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,

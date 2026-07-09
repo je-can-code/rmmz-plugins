@@ -33,6 +33,7 @@ class J_AbsPluginMetadata
     this.initializeElementalIconMetadata();
     this.initializeActionDecidedMetadata();
     this.initializeAggroMetadata();
+    this.initializeChannelMetadata();
     this.initializeStateMetadata();
     this.initializeMiscMovementMetadata();
     this.initializeHitboxMeleeOriginMetadata();
@@ -152,6 +153,16 @@ class J_AbsPluginMetadata
     // assign aggro parry user gain on this instance for callers.
     this.AggroParryUserGain = Number(this.parsedPluginParameters['aggroParryUserGain']);
     this.AggroPlayerReduction = Number(this.parsedPluginParameters['aggroPlayerReduction']);
+  }
+
+  /**
+   * Maps channeling defaults from plugin parameters.
+   */
+  initializeChannelMetadata()
+  {
+    // fallback tick speed for a `<channel:[SKILL_ID, DURATION]>` skill that omits its own
+    // `<channelTickSpeed:N>` override.
+    this.DefaultChannelTickSpeed = Number(this.parsedPluginParameters['defaultChannelTickSpeed']) || 30;
   }
 
   /**

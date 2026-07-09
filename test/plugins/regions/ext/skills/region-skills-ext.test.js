@@ -73,6 +73,17 @@ describe('J-Regions-Skills Game_Character executeRegionSkills', () =>
       {
         return 0;
       },
+      getBattler()
+      {
+        return {
+          getPositiveRollsForSkill: () => 0,
+          getNegativeRollsForSkill: () => 0,
+          isVeryLucky: () => false,
+          isVeryCursed: () => false,
+          isAccumulating: () => false,
+          getEncoreRepeats: () => 0,
+        };
+      },
     };
 
     const ch = new sandbox.Game_Character();

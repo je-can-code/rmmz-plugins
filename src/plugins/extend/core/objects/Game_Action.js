@@ -441,11 +441,19 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    // the caster wants the state to stick; the target's own curse can undermine that success.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = jabsOnChanceEffect.resolveProcCount(positiveRolls, negativeRolls, attacker);
+
+    // apply the given state once per success, with the caster as the attacker.
+    for (let i = 0; i < procCount; i++)
     {
-      // apply the given state to the caster, with the caster as the attacker.
-      target.addState(jabsOnChanceEffect.skillId, this.subject());
+      target.addState(jabsOnChanceEffect.skillId, attacker);
     }
   });
 };
@@ -464,8 +472,14 @@ Game_Action.prototype.loseStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the removal to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // lose the given state from the target.
       this.loseState(target, jabsOnChanceEffect.skillId);
@@ -487,8 +501,14 @@ Game_Action.prototype.stripStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the strip to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // strip the given state from the target.
       this.stripState(target, jabsOnChanceEffect.skillId);
@@ -548,8 +568,14 @@ Game_Action.prototype.removeStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the removal to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // apply the given state to the caster, with the caster as the attacker.
       target.removeState(jabsOnChanceEffect.skillId);

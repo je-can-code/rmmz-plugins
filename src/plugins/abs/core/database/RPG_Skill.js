@@ -29,6 +29,21 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsProximity', {
 });
 //endregion proximity
 
+//region innerRadius
+/**
+ * The universal dead zone for this skill's hitbox, in tiles. Targets within this many tiles
+ * of the action's origin are excluded from collision entirely, regardless of the outer shape's
+ * own math- lets a skill carve a hole out of the middle of any hitbox shape.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsInnerRadius', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.InnerRadius, true);
+  },
+});
+//endregion innerRadius
+
 //region actionId
 /**
  * A new property for retrieving the JABS actionId from this skill.
@@ -94,6 +109,20 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsKnockback', {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Knockback, true);
   },
 });
+
+/**
+ * Whether this skill's forced displacement (knockback or pull-forward) should bypass terrain
+ * passability entirely, sailing over any tile- pits, gaps, whatever- instead of stopping at the
+ * last passable tile. Absent by default, which preserves knockback's existing terrain-respecting
+ * behavior.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsIgnoreTerrain', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.IgnoreTerrain);
+  },
+});
 //endregion knockback
 
 //region casting
@@ -119,6 +148,73 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsCastTime', {
   },
 });
 //endregion casting
+
+//region channeling
+/**
+ * The `[SKILL_ID, TOTAL_DURATION]` pair parsed from this skill's `<channel:[...]>` tag.
+ * When present, this skill becomes a "vessel": it pays its own cost once, then repeatedly
+ * executes SKILL_ID every {@link RPG_Skill#jabsChannelTickSpeed} frames for TOTAL_DURATION
+ * frames- the vessel's own damage/effects are never invoked.
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsChannel', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.Channel, true, true) ?? [];
+  },
+});
+
+/**
+ * The number of frames between each repeated execution of a channel's child skill.
+ * Falls back to the plugin-configured default when this skill omits its own override.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsChannelTickSpeed', {
+  get: function()
+  {
+    const tickSpeed = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ChannelTickSpeed, true);
+    return tickSpeed ?? J.ABS.Metadata.DefaultChannelTickSpeed;
+  },
+});
+
+/**
+ * The skill id(s) to execute for free, once, immediately after a channel completes its full
+ * duration uninterrupted. Does not fire if the channel is cut short by {@link JABS_Battler#interrupt}.
+ * @type {number[]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsOnChannelComplete', {
+  get: function()
+  {
+    return RPGManager.getNumbersFromNoteByRegex(this, J.ABS.RegExp.OnChannelComplete);
+  },
+});
+//endregion channeling
+
+//region interruption
+/**
+ * Whether or not this specific casting/channeling skill can be self-interrupted by the caster
+ * choosing to move. Absent by default, which means moving cancels the cast/channel.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsCannotMoveToInterrupt', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.CannotMoveToInterrupt);
+  },
+});
+
+/**
+ * Whether or not this specific casting/channeling skill can be interrupted by an incoming
+ * `<interrupt:MAGNIFIER>` hit, regardless of the caster's own battler-wide immunity.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsThisCannotBeInterrupted', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ThisCannotBeInterrupted);
+  },
+});
+//endregion interruption
 
 //region direct targeting
 /**

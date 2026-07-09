@@ -85,6 +85,9 @@ J.CRIT.RegExp = {
   OnCritApply: /<onCritApply:[ ]?(\[\d+,[ ]?\d+])>/gi,
   OnCritSelf:  /<onCritSelf:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
+  // global (any note source on the attacker): on-crit state applications skip their own chance roll and always land.
+  ForceCritProcs: /<forceCritProcs>/i,
+
   // base functionality.
   CritDamageReductionBase: /<critReductionBase: ?(\d+)>/gi,
   CritDamageReduction: /<critReduction: ?(\d+)>/gi,

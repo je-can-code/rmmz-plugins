@@ -277,6 +277,11 @@ class JABS_Action
 
   /**
    * Sums battler-scoped and skill-note per-connection bonus hits for this action.
+   * Battler-scoped totals already include their own formula contributions (see
+   * {@link Game_Battler#getBonusHitsFromSources}); the skill-note formula is evaluated
+   * here instead, since only this call site has the caster available as eval context.
+   * The combined total is floored once at the end, after every flat and formula source
+   * has been summed, rather than flooring each contribution separately.
    * @returns {number}
    */
   makeHitsPerConnectionBonus()
@@ -287,8 +292,13 @@ class JABS_Action
     const hitsGlobal = gameBattler.getBonusHitsGlobal();
     const hitsBasicOrSkill = isBasicAttack ? gameBattler.getBonusHitsBasic() : gameBattler.getBonusHitsSkill();
     const hitsFromNote = this._baseSkill.jabsBonusHitsFromSkillNote;
+    const hitsFromNoteFormula = RPGManager.getResultFromNoteByRegex(
+      this._baseSkill,
+      J.ABS.RegExp.BonusHitsSkillNoteFormula,
+      0,
+      gameBattler);
 
-    const bonusHits = hitsGlobal + hitsBasicOrSkill + hitsFromNote;
+    const bonusHits = Math.floor(hitsGlobal + hitsBasicOrSkill + hitsFromNote + hitsFromNoteFormula);
 
     if (bonusHits < 0)
     {
@@ -1361,6 +1371,7 @@ class JABS_Action
       facing,
       degrees,
       thickness,
+      innerRadius: this.getInnerRadius(),
       duration,
       sustained: true,
       startAlpha: meta.startAlpha,
@@ -1574,6 +1585,15 @@ class JABS_Action
   getKnockback()
   {
     return this.getBaseSkill().jabsKnockback;
+  }
+
+  /**
+   * Gets the inner radius dead zone for this JABS action, in tiles.
+   * @returns {number} The inner radius; defaults to 0 (no dead zone) if not tagged.
+   */
+  getInnerRadius()
+  {
+    return this.getBaseSkill().jabsInnerRadius ?? 0;
   }
 
   /**

@@ -55,5 +55,17 @@ describe('J-CriticalFactors Game_Battler (out/crit/J-CriticalFactors.js)', () =>
     expect(typeof actor.criticalDamageMultiplier()).toBe('number');
     expect(typeof actor.criticalDamageReduction()).toBe('number');
   });
+
+  it('isForceCritProcs is true only when a note source carries <forceCritProcs>', () =>
+  {
+    const withTag = new sandbox.Game_Actor();
+    withTag.__testNoteSources = [ { note: '<forceCritProcs>' } ];
+
+    const withoutTag = new sandbox.Game_Actor();
+    withoutTag.__testNoteSources = [ { note: '<knockback:4>' } ];
+
+    expect(withTag.isForceCritProcs()).toBe(true);
+    expect(withoutTag.isForceCritProcs()).toBe(false);
+  });
 });
 //endregion plugins/crit/game-battler.test.js

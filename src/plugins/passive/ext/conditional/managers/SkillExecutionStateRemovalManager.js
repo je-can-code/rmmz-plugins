@@ -38,7 +38,12 @@ class SkillExecutionStateRemovalManager
         // stype 0 matches any executed skill type.
         if (stypeId !== 0 && stypeId !== executedStype) continue;
 
-        if (RPGManager.chanceIn100(chance) === false) continue;
+        // this is a purely self-scoped proc- the battler shedding the state is both the roller
+        // and the recipient, so both their own positive and negative rolls apply.
+        const positiveRolls = 1 + battler.getPositiveRollsForSkill(state);
+        const negativeRolls = battler.getNegativeRollsForSkill(state);
+
+        if (RPGManager.fateOf100(battler, chance, positiveRolls, negativeRolls) === false) continue;
 
         const stateId = state.id;
         const stacksLossCount = this.#resolveStacksLossCount(battler, stateId);

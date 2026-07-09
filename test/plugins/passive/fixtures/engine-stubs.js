@@ -77,6 +77,15 @@ export function installPassiveEngineStubs(sandbox)
     return sandbox.$dataStates.at(stateId);
   };
 
+  // this lightweight fixture doesn't load the real J-ABS Game_Battler roll-threading
+  // augmentations, so stub sentinel (no bonus) implementations directly.
+  Game_Battler.prototype.getPositiveRolls = function() { return 0; };
+  Game_Battler.prototype.getNegativeRolls = function() { return 0; };
+  Game_Battler.prototype.getPositiveRollsForSkill = function() { return 0; };
+  Game_Battler.prototype.getNegativeRollsForSkill = function() { return 0; };
+  Game_Battler.prototype.isVeryLucky = function() { return false; };
+  Game_Battler.prototype.isVeryCursed = function() { return false; };
+
   // maintain the BattlerBase chain so J-Base prototype extensions remain accessible.
   Object.setPrototypeOf(Game_Battler.prototype, sandbox.Game_BattlerBase.prototype);
 

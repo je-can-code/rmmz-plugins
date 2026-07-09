@@ -61,6 +61,7 @@ class Sprite_HitboxPulse
     this._range = 1;         // in tiles
     this._degrees = 180;     // for Arc shape
     this._thickness = 1;     // for Line/Wall width (tiles)
+    this._innerRadius = 0;   // universal dead zone punched out of any shape (tiles)
 
     // sustained pulses skip pooled expiry animation; manager refreshes them each frame.
     this._sustained = false;
@@ -103,6 +104,9 @@ class Sprite_HitboxPulse
     this._thickness = opts.thickness !== undefined
       ? Math.max(0, opts.thickness)
       : 1;
+    this._innerRadius = opts.innerRadius !== undefined
+      ? Math.max(0, opts.innerRadius)
+      : 0;
 
     // sustained overlays are ticked by JABS_HitboxPulseManager.sync, not the ephemeral pool update().
     this._sustained = opts.sustained === true;
@@ -136,6 +140,10 @@ class Sprite_HitboxPulse
     // apply outline and fill.
     g.lineStyle(this._lineWidth, this._lineColor, this._lineAlpha);
     g.beginFill(this._fillColor, this._fillAlpha);
+
+    // set by the Arc/default branch when it bakes the dead zone into its own polygon,
+    // so the generic hole-punch below doesn't double-apply on top of it.
+    let holeAlreadyBaked = false;
 
     // convert tiles→pixels for sizes using current map tile size.
     const tile = $gameMap.tileWidth();
@@ -183,27 +191,63 @@ class Sprite_HitboxPulse
         const startAngle = -rad / 2;  // symmetric about +X axis
         const endAngle = rad / 2;
 
-        // move to origin and arc outward with a polygonal fan for a crisp edge.
-        g.moveTo(0, 0);
-
         // sample the arc with a reasonable step for smoothness; ~1 sample per 8°.
         const steps = Math.max(2, Math.ceil(deg / 8));
-        for (let i = 0; i <= steps; i++)
-        {
-          // interpolate angle across the wedge.
-          const t = i / steps;
-          const a = startAngle + (endAngle - startAngle) * t;
+        const innerRadiusPx = this._innerRadius * tile;
 
-          // compute the rim point.
-          const px = Math.cos(a) * r;
-          const py = Math.sin(a) * r;
-          g.lineTo(px, py);
+        if (innerRadiusPx > 0)
+        {
+          // bake the dead zone directly into the polygon as a true annular sector (a
+          // donut slice), rather than holing a circle out of a fan that touches the
+          // origin- a hole centered exactly on a point the host path also visits breaks
+          // PIXI's triangulation and renders as two overlapping shapes instead of one cut wedge.
+          holeAlreadyBaked = true;
+
+          g.moveTo(Math.cos(startAngle) * innerRadiusPx, Math.sin(startAngle) * innerRadiusPx);
+
+          // trace the outer rim forward from startAngle to endAngle.
+          for (let i = 0; i <= steps; i++)
+          {
+            const t = i / steps;
+            const a = startAngle + (endAngle - startAngle) * t;
+            g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+          }
+
+          // walk the inner rim backward from endAngle to startAngle, closing the slice.
+          for (let i = steps; i >= 0; i--)
+          {
+            const t = i / steps;
+            const a = startAngle + (endAngle - startAngle) * t;
+            g.lineTo(Math.cos(a) * innerRadiusPx, Math.sin(a) * innerRadiusPx);
+          }
+        }
+        else
+        {
+          // no dead zone- original pivot-to-rim fan.
+          g.moveTo(0, 0);
+
+          for (let i = 0; i <= steps; i++)
+          {
+            const t = i / steps;
+            const a = startAngle + (endAngle - startAngle) * t;
+            g.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+          }
+
+          g.lineTo(0, 0);
         }
 
-        // close back to origin.
-        g.lineTo(0, 0);
         break;
       }
+    }
+
+    // punch the universal dead zone out of every shape that didn't already bake it directly
+    // into its own polygon above (Arc, and any unrecognized shape sharing its fallback path).
+    if (this._innerRadius > 0 && holeAlreadyBaked === false)
+    {
+      const innerRadiusPx = this._innerRadius * tile;
+      g.beginHole();
+      g.drawCircle(0, 0, innerRadiusPx);
+      g.endHole();
     }
 
     // finish fill.

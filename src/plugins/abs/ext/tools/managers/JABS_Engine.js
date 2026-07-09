@@ -11,6 +11,11 @@ JABS_Engine.prototype.processOnHitEffects = function(action, target)
   J.ABS.EXT.TOOLS.Aliased.JABS_Engine.get('processOnHitEffects')
     .call(this, action, target);
 
+  // handle pull-forward logic first- if a skill carries both tags, the target gets dragged
+  // toward the caster's original position before gap-close jumps the caster to wherever the
+  // target ends up, so the two meet partway instead of gap-close eating the entire distance.
+  this.handlePullForward(action, target);
+
   // handle gapclose logic.
   this.handleGapClose(action, target);
 };
@@ -25,6 +30,28 @@ JABS_Engine.prototype.handleGapClose = function(action, target)
 
   // gap close to the target.
   caster.gapCloseToTarget(action, target)
+};
+
+/**
+ * Handles pull-forward logic against the target- the inverse of gap close (the caster travels
+ * to the target). Universal like knockback rather than key-gated like gap close: any target
+ * without enough knockbackResist to fully negate it gets pulled.
+ * @param {JABS_Action} action The JABS action containing the action data.
+ * @param {JABS_Battler} target The target having the action applied against.
+ */
+JABS_Engine.prototype.handlePullForward = function(action, target)
+{
+  // if this target cannot be forcibly displaced right now, then do not.
+  if (!this.canBeKnockedBack(action, target)) return;
+
+  // if the skill doesn't carry a pull-forward tag, then do not.
+  if (action.getBaseSkill().jabsPullForward === null) return;
+
+  // grab the caster to serve as the pull's destination anchor.
+  const caster = action.getCaster();
+
+  // pull the target toward the caster.
+  target.pullToCaster(action, caster);
 };
 
 /**

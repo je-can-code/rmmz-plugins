@@ -395,4 +395,16 @@ Game_Battler.prototype.ctrNaturalGrowths = function()
   // calculate the result.
   return this.calculatePlusRate(baseCtr, growthPlus, growthRate);
 };
+
+/**
+ * Whether or not this battler's on-crit state applications should skip their own chance roll and
+ * always land. Scoped specifically to {@link Game_Action.rollAndApplyCritStates}- unlike
+ * `isVeryLucky()`, this does not bypass any other roll site (hit chance, regular state-apply,
+ * retaliation, etc). Sourced from any of this battler's own note sources via `<forceCritProcs>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isForceCritProcs = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.CRIT.RegExp.ForceCritProcs) === true;
+};
 //endregion Game_Battler

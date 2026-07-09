@@ -3540,6 +3540,83 @@ var RPGManager = class RPGManager {
 		return success;
 	}
 	/**
+	* Same as {@link #chanceIn100}, but first checks the positive-roller's own fate-override
+	* flags- `isVeryLucky()` short-circuits straight to guaranteed success, `isVeryCursed()`
+	* short-circuits straight to guaranteed failure, both bypassing the roll entirely rather than
+	* stacking an absurd reroll count. Only when neither flag is set does an actual roll occur.
+	* @param {Game_Battler} positiveRoller The battler whose success this roll is for- the one
+	* whose `positiveRolls`/fate-override flags apply.
+	* @param {number} percentOfSuccess The percent chance of success.
+	* @param {number=} rollForPositive The number of positive rolls to find success; defaults to 1.
+	* @param {number=} rollForNegative The number of negative rolls to follow success; defaults to 0.
+	* @returns {boolean} True if success, false otherwise.
+	*/
+	static fateOf100(positiveRoller, percentOfSuccess, rollForPositive = 1, rollForNegative = 0) {
+		if (positiveRoller.isVeryLucky()) return true;
+		if (positiveRoller.isVeryCursed()) return false;
+		return this.chanceIn100(percentOfSuccess, rollForPositive, rollForNegative);
+	}
+	/**
+	* Accumulate Mode's counting roll: instead of stopping at the first successful positive roll,
+	* rolls all `rollForPositive` attempts unconditionally and counts how many landed. Negative
+	* rerolls have no counting-mode equivalent (Accumulate Mode is scoped to positive rolls only)
+	* and are intentionally not accepted here.
+	* @param {number} percentOfSuccess The percent chance of success.
+	* @param {number=} rollForPositive The number of positive rolls to attempt; defaults to 1.
+	* @returns {number} How many of the attempted rolls succeeded.
+	*/
+	static countSuccessesIn100(percentOfSuccess, rollForPositive = 1) {
+		if (percentOfSuccess <= 0) return 0;
+		let successCount = 0;
+		let attemptsRemaining = rollForPositive;
+		while (attemptsRemaining) {
+			const chance = Math.randomInt(100) + 1;
+			if (chance <= percentOfSuccess) {
+				successCount++;
+			}
+			attemptsRemaining--;
+		}
+		return successCount;
+	}
+	/**
+	* Same as {@link #countSuccessesIn100}, but first checks the positive-roller's own
+	* fate-override flags- `isVeryLucky()` counts every attempt as a success, `isVeryCursed()`
+	* counts none, both bypassing the roll entirely.
+	* @param {Game_Battler} positiveRoller The battler whose success this roll is for.
+	* @param {number} percentOfSuccess The percent chance of success.
+	* @param {number=} rollForPositive The number of positive rolls to attempt; defaults to 1.
+	* @returns {number} How many of the attempted rolls succeeded.
+	*/
+	static countSuccessesFateOf100(positiveRoller, percentOfSuccess, rollForPositive = 1) {
+		if (positiveRoller.isVeryLucky()) return rollForPositive;
+		if (positiveRoller.isVeryCursed()) return 0;
+		return this.countSuccessesIn100(percentOfSuccess, rollForPositive);
+	}
+	/**
+	* Resolves how many times a repeatable-action proc's action should actually execute, folding
+	* in Accumulate Mode and Encore repeats from the positive-roller's own perspective. This is the
+	* one entry point sites with a repeatable action (add a state, force-execute a skill) should
+	* use instead of {@link #fateOf100}- sites whose success is consumed as a single boolean
+	* outcome (hit/evade, crit, parry) should keep using {@link #fateOf100} directly, since there is
+	* no repeatable action there for Accumulate/Encore to multiply.
+	* @param {Game_Battler} positiveRoller The battler whose success this roll is for.
+	* @param {number} percentOfSuccess The percent chance of success.
+	* @param {number=} rollForPositive The number of positive rolls to find success; defaults to 1.
+	* @param {number=} rollForNegative The number of negative rolls to follow success; defaults to 0.
+	* @returns {number} How many times the proc's action should execute; 0 means it did not proc.
+	*/
+	static resolveProcCount(positiveRoller, percentOfSuccess, rollForPositive = 1, rollForNegative = 0) {
+		let successCount;
+		if (positiveRoller.isAccumulating()) {
+			successCount = this.countSuccessesFateOf100(positiveRoller, percentOfSuccess, rollForPositive);
+		} else {
+			const singleSuccess = this.fateOf100(positiveRoller, percentOfSuccess, rollForPositive, rollForNegative);
+			successCount = singleSuccess ? 1 : 0;
+		}
+		const repeatsPerSuccess = 1 + positiveRoller.getEncoreRepeats();
+		return successCount * repeatsPerSuccess;
+	}
+	/**
 	* A quick and re-usable means of rolling for chance using a weighted model against a map of (key=id,val=weight).
 	* @param {Map<any,number>} map The map of key-value pairs to choose from.
 	* @param {number} totalWeight The total weight of all values in the map.

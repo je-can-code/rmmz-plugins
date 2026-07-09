@@ -94,6 +94,34 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
       {
         this.__removedStates.push(stateId);
       },
+      getPositiveRollsForSkill()
+      {
+        return 0;
+      },
+      getNegativeRolls()
+      {
+        return 0;
+      },
+      getNegativeRollsForSkill()
+      {
+        return 0;
+      },
+      isVeryLucky()
+      {
+        return false;
+      },
+      isVeryCursed()
+      {
+        return false;
+      },
+      isAccumulating()
+      {
+        return false;
+      },
+      getEncoreRepeats()
+      {
+        return 0;
+      },
     };
   }
 
@@ -131,6 +159,34 @@ describe('J-SkillExtend Game_Action state effects (out/extend/J-SkillExtend.js)'
       removeState(stateId)
       {
         this.__removedStates.push(stateId);
+      },
+      getPositiveRollsForSkill()
+      {
+        return 0;
+      },
+      getNegativeRolls()
+      {
+        return 0;
+      },
+      getNegativeRollsForSkill()
+      {
+        return 0;
+      },
+      isVeryLucky()
+      {
+        return false;
+      },
+      isVeryCursed()
+      {
+        return false;
+      },
+      isAccumulating()
+      {
+        return false;
+      },
+      getEncoreRepeats()
+      {
+        return 0;
       },
     };
   }

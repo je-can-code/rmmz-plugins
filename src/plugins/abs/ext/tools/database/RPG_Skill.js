@@ -53,3 +53,33 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsThisOnGapCloseEnd', {
   },
 });
 //endregion thisOnGapCloseEnd
+
+//region respectTerrain
+/**
+ * Whether this skill's gap close should respect terrain passability instead of its default
+ * unconditional bypass- when true, the caster stops at the last passable tile along the way
+ * instead of blinking/jumping straight through walls.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsRespectTerrain', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.RespectTerrain);
+  },
+});
+//endregion respectTerrain
+
+//region pullForward
+/**
+ * The number of tiles this skill pulls its target toward the caster, or null if this skill
+ * does not pull-forward. The inverse of knockback- the target is dragged toward the caster
+ * instead of shoved away, clamped so it can never travel past the caster's own position.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsPullForward', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.PullForward, true);
+  },
+});
+//endregion pullForward

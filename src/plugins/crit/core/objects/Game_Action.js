@@ -124,8 +124,29 @@ Game_Action.prototype.rollAndApplyCritStates = function(recipient, onChanceEffec
   // roll each effect individually — each has its own state id and chance.
   onChanceEffects.forEach(effect =>
   {
-    // only apply if the random roll beats the configured chance.
-    if (effect.shouldTrigger())
+    // the attacker wants the state to stick; the recipient's own curse can resist it. When this
+    // is a self-targeting effect, recipient === attacker, so both contributions naturally come
+    // from the same battler's own two stats- no special-casing needed.
+    const skill = effect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = recipient.getNegativeRolls();
+
+    // <forceCritProcs> forces this roll specifically to guarantee success, without touching the
+    // attacker's real isVeryLucky()/isVeryCursed() flags or any other roll site. Accumulate Mode
+    // and Encore still read straight off the real attacker, so they continue to stack normally.
+    const positiveRoller = attacker.isForceCritProcs()
+      ? {
+        isVeryLucky: () => true,
+        isVeryCursed: () => false,
+        isAccumulating: () => attacker.isAccumulating(),
+        getEncoreRepeats: () => attacker.getEncoreRepeats(),
+      }
+      : attacker;
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = effect.resolveProcCount(positiveRolls, negativeRolls, positiveRoller);
+
+    for (let i = 0; i < procCount; i++)
     {
       recipient.addState(effect.skillId, attacker);
     }

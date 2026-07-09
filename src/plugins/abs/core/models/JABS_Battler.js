@@ -361,6 +361,38 @@ class JABS_Battler
     this._casting = false;
 
     /**
+     * The skill id being repeatedly executed by an active channel; 0 when not channeling.
+     * @type {number}
+     */
+    this._channelSkillId = 0;
+
+    /**
+     * The number of frames remaining until the next channel tick fires.
+     * @type {number}
+     */
+    this._channelTickCountdown = 0;
+
+    /**
+     * The number of frames remaining in the active channel's total duration.
+     * @type {number}
+     */
+    this._channelDurationRemaining = 0;
+
+    /**
+     * Whether or not this battler is currently channeling a skill.
+     * @type {boolean}
+     */
+    this._channeling = false;
+
+    /**
+     * The decided vessel `JABS_Action` that originated the active channel- retained so its
+     * cooldown type/effective cooldown can be looked up whether the channel completes naturally
+     * or is cut short by {@link JABS_Battler#interrupt}.
+     * @type {JABS_Action|null}
+     */
+    this._channelSourceAction = null;
+
+    /**
      * Whether or not this battler is engaged in combat with a target.
      * @type {boolean}
      */
@@ -2633,6 +2665,36 @@ class JABS_Battler
     this.updateRegen();
     this.updateDodging();
     this.updateDeathHandling();
+    this.updateSelfInterruptOnMove();
+  };
+
+  /**
+   * Self-interrupts an in-flight cast/channel the instant the player expresses movement intent.
+   *
+   * Watches the same raw input signals any movement implementation itself reads (directional
+   * input, an active click-to-move destination) rather than hooking a specific movement method-
+   * this project's pixel-movement plugin fully overwrites `Game_Player.moveByInput` rather than
+   * aliasing it, so hooking that (or `executeMove`, which it never calls) would be fragile to
+   * plugin load order. Reading raw input also naturally excludes forced displacement (knockback,
+   * pull-forward, jumps) from ever counting as a self-interrupt, since none of those touch
+   * `Input`/`$gameTemp`'s destination state.
+   */
+  updateSelfInterruptOnMove()
+  {
+    // only the player expresses movement intent through input; AI battlers already refrain from
+    // moving while busy via their own explicit isCastingOrChanneling() gates.
+    if (!this.isPlayer()) return;
+
+    // nothing to interrupt if not busy, or if this specific cast/channel roots the player anyway.
+    if (!this.isCastingOrChanneling()) return;
+    if (this.hasUninterruptibleMovementLock()) return;
+
+    // check the same raw signals a movement implementation would consult to decide to move.
+    const wantsToMove = (Input.dir8 > 0) || $gameTemp.isDestinationValid();
+    if (!wantsToMove) return;
+
+    // cancel the in-flight cast/channel; full effective cooldown penalty applies.
+    this.interrupt(100, true);
   };
 
   /**
@@ -2649,55 +2711,74 @@ class JABS_Battler
     // grab the primary action for potential option lookups.
     const primaryAction = decidedActions.at(0);
 
-    // initialize target coordinates as null to preserve legacy behavior if not resolved.
-    let targetX = null;
-    let targetY = null;
+    // set the last skill used to be the skill we just used.
+    this.setLastUsedSkillId(primaryAction.getBaseSkill().id);
 
-    // if we have a primary action, attempt to use decision-time location or resolve live.
-    if (primaryAction)
+    // set the last slot used to be the slot of the skill we just used.
+    this.setLastUsedSlot(primaryAction.getCooldownType());
+
+    // vessel skills carrying a `<channel:[...]>` tag divert into the channel state machine
+    // instead of executing normally- the decided action is retained (not cleared) for the
+    // duration of the channel so busy-gates/gauges/label lookups keep working.
+    if (primaryAction.getBaseSkill().jabsChannel.length)
     {
-      // grab the action options for this action.
-      const options = primaryAction.getActionOptions();
-
-      // try to read a frozen target location from the options.
-      const loc = options
-        ? options.getTargetLocation()
-        : null;
-
-      // if a frozen location exists, extract coordinates from it.
-      if (loc)
-      {
-        // extract the frozen coordinates.
-        targetX = loc.getX();
-        targetY = loc.getY();
-      }
-
-      // if we still don’t have coordinates, perform live resolution (legacy behavior).
-      if (targetX === null || targetY === null)
-      {
-        // resolve the target coordinates for this action if applicable.
-        const [ x, y ] = this.resolveDirectActionTargetCoordinates(primaryAction);
-
-        // assign the resolved coordinates, if any.
-        targetX = x;
-        targetY = y;
-      }
+      this.beginChannel(primaryAction);
+      return;
     }
+
+    // resolve the coordinates to execute this action at.
+    const [ targetX, targetY ] = this.resolveActionTargetCoordinates(primaryAction);
 
     // execute the action.
     $jabsEngine.executeMapActions(this, decidedActions, targetX, targetY);
 
-    // determine the core action associated with the action collection.
-    const lastUsedSkill = decidedActions.at(0);
-
-    // set the last skill used to be the skill we just used.
-    this.setLastUsedSkillId(lastUsedSkill.getBaseSkill().id);
-
-    // set the last slot used to be the slot of the skill we just used.
-    this.setLastUsedSlot(lastUsedSkill.getCooldownType());
-
     // clear the queued action.
     this.clearDecidedAction();
+  };
+
+  /**
+   * Resolves the `[x, y]` coordinates to execute the given action at: a frozen decision-time
+   * location takes priority, falling back to live direct-action resolution otherwise.
+   * @param {JABS_Action} action The action to resolve target coordinates for.
+   * @returns {[number|null, number|null]} The resolved coordinates, or `[null, null]`.
+   */
+  resolveActionTargetCoordinates(action)
+  {
+    // initialize target coordinates as null to preserve legacy behavior if not resolved.
+    let targetX = null;
+    let targetY = null;
+
+    // without an action, there is nothing to resolve.
+    if (!action) return [ targetX, targetY ];
+
+    // grab the action options for this action.
+    const options = action.getActionOptions();
+
+    // try to read a frozen target location from the options.
+    const loc = options
+      ? options.getTargetLocation()
+      : null;
+
+    // if a frozen location exists, extract coordinates from it.
+    if (loc)
+    {
+      // extract the frozen coordinates.
+      targetX = loc.getX();
+      targetY = loc.getY();
+    }
+
+    // if we still don't have coordinates, perform live resolution (legacy behavior).
+    if (targetX === null || targetY === null)
+    {
+      // resolve the target coordinates for this action if applicable.
+      const [ x, y ] = this.resolveDirectActionTargetCoordinates(action);
+
+      // assign the resolved coordinates, if any.
+      targetX = x;
+      targetY = y;
+    }
+
+    return [ targetX, targetY ];
   };
 
   /**
@@ -2711,6 +2792,9 @@ class JABS_Battler
 
     // check if we're still casting actions.
     if (this.isCasting()) return false;
+
+    // an active channel resolves its own ticks on its own timer; nothing further to process here.
+    if (this.isChanneling()) return false;
 
     // validate that non-players are in-position.
     if (!this.isPlayer() && !this.isInPosition()) return false;
@@ -3042,7 +3126,7 @@ class JABS_Battler
   {
     this.getBattler()
       .getSkillSlotManager()
-      .updateCooldowns(this.isCasting());
+      .updateCooldowns(this.isCastingOrChanneling());
   };
 
   /**
@@ -3056,6 +3140,7 @@ class JABS_Battler
     this.processLastHitTimer();
     this.processCombatTimer();
     this.processCastingTimer();
+    this.processChannelingTimer();
     this.processEngagementTimer();
   };
 
@@ -3152,6 +3237,204 @@ class JABS_Battler
 
     // flag the action as having completed its cast time.
     decidedAction.completeCast();
+  };
+
+  /**
+   * Begins channeling a `<channel:[SKILL_ID, TOTAL_DURATION]>` vessel skill: pays its cost once,
+   * then repeatedly executes the child skill every tick until the full duration elapses or the
+   * channel is cut short by {@link JABS_Battler#interrupt}. The vessel's own damage/effects are
+   * never invoked- authoring a real effect onto a channel skill is a no-op by design.
+   * @param {JABS_Action} action The decided vessel action carrying the `<channel>` tag.
+   */
+  beginChannel(action)
+  {
+    const skill = action.getBaseSkill();
+    const [ channelSkillId, totalDuration ] = skill.jabsChannel;
+
+    // pay the vessel's cost once, upfront- every tick thereafter is free of cost.
+    $jabsEngine.paySkillCosts(this, action);
+
+    // record this execution in the caster's skill history for history-based bonuses,
+    // matching what a normal (non-channel) execution would log.
+    $jabsEngine.logSkillExecution(this.getUuid(), skill.id, skill.stypeId);
+
+    // retain the source action for cooldown lookups at completion/interrupt time.
+    this._channelSourceAction = action;
+    this._channelSkillId = channelSkillId;
+    this._channelDurationRemaining = totalDuration;
+    this._channelTickCountdown = skill.jabsChannelTickSpeed;
+    this._channeling = true;
+  };
+
+  /**
+   * Updates the timer for "channeling".
+   */
+  processChannelingTimer()
+  {
+    // if not channeling, there is nothing to update.
+    if (!this.isChanneling()) return;
+
+    // count down until the next repeated execution of the channel's child skill first- a tick
+    // due on the exact same frame the duration expires still fires (e.g. <channel:[25, 180]>
+    // with a tick speed of 30 fires all 6 ticks, including the one landing on frame 180).
+    this._channelTickCountdown--;
+    if (this._channelTickCountdown <= 0)
+    {
+      this.executeChannelTick();
+
+      // reset using the vessel's own tick speed (may itself be a plugin-param fallback).
+      this._channelTickCountdown = this._channelSourceAction.getBaseSkill().jabsChannelTickSpeed;
+    }
+
+    // count down the total channel duration; once it expires, the channel is over.
+    this._channelDurationRemaining--;
+    if (this._channelDurationRemaining <= 0)
+    {
+      this.onChannelComplete();
+      return;
+    }
+  };
+
+  /**
+   * Fires one repeated execution of the channel's child skill, resolving its target the same way
+   * the vessel skill itself would- a frozen target/location for `<targeted>` skills, or live
+   * resolution otherwise.
+   */
+  executeChannelTick()
+  {
+    const [ targetX, targetY ] = this.resolveActionTargetCoordinates(this._channelSourceAction);
+    $jabsEngine.forceMapAction(this, this._channelSkillId, false, targetX, targetY);
+  };
+
+  /**
+   * Hook triggered when a channel's total duration elapses uninterrupted. Fires the optional
+   * `<onChannelComplete:[SKILL_ID, ...]>` payoff skill(s), then applies the vessel skill's normal
+   * effective cooldown- exactly as if it had just executed normally.
+   */
+  onChannelComplete()
+  {
+    const sourceAction = this._channelSourceAction;
+
+    this.endChannel();
+
+    // fire each payoff skill for free, resolved the same way the channel's ticks were.
+    const [ targetX, targetY ] = this.resolveActionTargetCoordinates(sourceAction);
+    sourceAction.getBaseSkill().jabsOnChannelComplete
+      .forEach(skillId => $jabsEngine.forceMapAction(this, skillId, false, targetX, targetY));
+
+    // apply the vessel's own normal effective cooldown, same as any other skill finishing.
+    $jabsEngine.applyCooldownCounters(this, sourceAction);
+
+    // the channel is done occupying this battler; release the decided action slot.
+    this.clearDecidedAction();
+  };
+
+  /**
+   * Tears down channel state without applying any cooldown or firing any payoff- shared cleanup
+   * between natural completion and interruption.
+   */
+  endChannel()
+  {
+    this._channeling = false;
+    this._channelSkillId = 0;
+    this._channelTickCountdown = 0;
+    this._channelDurationRemaining = 0;
+  };
+
+  /**
+   * Gets whether or not this battler is currently channeling a skill.
+   * @returns {boolean}
+   */
+  isChanneling()
+  {
+    return this._channeling;
+  };
+
+  /**
+   * Gets the number of frames remaining in the active channel's total duration.
+   * @returns {number}
+   */
+  getChannelDurationRemaining()
+  {
+    return this._channelDurationRemaining;
+  };
+
+  /**
+   * Gets whether or not this battler is occupied by either a cast or a channel- the shared
+   * "busy" predicate consulted anywhere a new action/charge/parry decision needs to be blocked
+   * while committed to one of these two states.
+   * @returns {boolean}
+   */
+  isCastingOrChanneling()
+  {
+    return this.isCasting() || this.isChanneling();
+  };
+
+  /**
+   * Whether or not the currently in-flight cast/channel roots this battler in place, per its own
+   * `<cannotMoveToInterrupt>` tag. Always false when not casting/channeling at all.
+   * @returns {boolean}
+   */
+  hasUninterruptibleMovementLock()
+  {
+    // not casting or channeling means there is nothing to be rooted by.
+    if (!this.isCastingOrChanneling()) return false;
+
+    // consult the in-flight skill's own opt-in root tag.
+    const decidedActions = this.getDecidedAction();
+    const skill = decidedActions
+      ? decidedActions.at(0).getBaseSkill()
+      : null;
+    return skill
+      ? skill.jabsCannotMoveToInterrupt
+      : false;
+  };
+
+  /**
+   * Cancels an in-flight cast or channel prematurely.
+   *
+   * For a cast, the decided action is discarded before it ever executes- the skill simply never
+   * fires. For a channel, state is torn down immediately- ticks that already fired stand, but no
+   * further ticks and no `<onChannelComplete>` payoff occur.
+   *
+   * A cooldown penalty is always applied to the interrupted skill's own slot: the full effective
+   * cooldown for a self-interrupt (moving away), or that cooldown scaled by `magnifierPct` for an
+   * external interrupt (hit by an `<interrupt:MAGNIFIER>` skill).
+   * @param {number} magnifierPct The percent of the effective cooldown to apply; ignored (treated
+   * as 100) when `isSelfInterrupt` is true.
+   * @param {boolean} isSelfInterrupt Whether this interrupt was caused by the caster choosing to
+   * move, rather than by an external hit.
+   */
+  interrupt(magnifierPct = 100, isSelfInterrupt = false)
+  {
+    // determine which in-flight action is being interrupted, and tear down the relevant state.
+    let sourceAction = null;
+    if (this.isChanneling())
+    {
+      sourceAction = this._channelSourceAction;
+      this.endChannel();
+    }
+    else if (this.isCasting())
+    {
+      const decidedActions = this.getDecidedAction();
+      sourceAction = decidedActions ? decidedActions.at(0) : null;
+      this._casting = false;
+      this.setCastTimeCountdown(0);
+    }
+
+    // nothing was actually in-flight; there is nothing to penalize.
+    if (!sourceAction) return;
+
+    // self-interrupt always eats the full effective cooldown; external interrupt scales by the
+    // attacking skill's own magnifier.
+    const penaltyPct = isSelfInterrupt
+      ? 100
+      : magnifierPct;
+    const penalty = sourceAction.getCooldown() * (penaltyPct / 100);
+    $jabsEngine.applyCooldownValueForSkill(this, sourceAction, penalty);
+
+    // the interrupted skill never executes; release the decided action slot.
+    this.clearDecidedAction();
   };
 
   /**
@@ -5411,19 +5694,29 @@ class JABS_Battler
       // extract the skill id from the effect.
       const { skillId } = executeEffect;
 
-      // check if this effect should trigger based on its chance.
-      if (executeEffect.shouldTrigger() === false) return;
+      // this is a purely self-scoped proc- the evader is both the roller and the recipient.
+      const evaderBattler = this.getBattler();
+      const skill = executeEffect.baseSkill(evaderBattler);
+      const positiveRolls = 1 + evaderBattler.getPositiveRollsForSkill(skill);
+      const negativeRolls = evaderBattler.getNegativeRollsForSkill(skill);
 
-      // if we have an attacker, fire the skill toward their position as the seed target.
-      if (jabsAttacker)
+      // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+      const procCount = executeEffect.resolveProcCount(positiveRolls, negativeRolls, evaderBattler);
+
+      // fire the skill once per success.
+      for (let i = 0; i < procCount; i++)
       {
-        // use the attacker's map position as the seed; skill scope takes over from there.
-        $jabsEngine.forceMapAction(this, skillId, false, jabsAttacker.getX(), jabsAttacker.getY());
-      }
-      else
-      {
-        // no attacker reference available — fire from the evader with no seed target.
-        $jabsEngine.forceMapAction(this, skillId, false);
+        // if we have an attacker, fire the skill toward their position as the seed target.
+        if (jabsAttacker)
+        {
+          // use the attacker's map position as the seed; skill scope takes over from there.
+          $jabsEngine.forceMapAction(this, skillId, false, jabsAttacker.getX(), jabsAttacker.getY());
+        }
+        else
+        {
+          // no attacker reference available — fire from the evader with no seed target.
+          $jabsEngine.forceMapAction(this, skillId, false);
+        }
       }
     };
 

@@ -59,6 +59,8 @@ J.ABS.EXT.TOOLS.RegExp = {
   GapCloseEndThis: /<thisOnGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
   GapCloseEnd: /<onGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
   BlockGapClose: /<blockGapClose>/i,
+  RespectTerrain: /<respectTerrain>/i,
+  PullForward: /<pullForward:[ ]?(\d+)>/i,
 };
 
 /**

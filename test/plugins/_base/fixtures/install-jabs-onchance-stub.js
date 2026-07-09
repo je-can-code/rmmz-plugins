@@ -32,6 +32,41 @@ export function installJabsOnChanceEffectGlobalStub(sandbox)
     return sandbox.RPGManager.chanceIn100(this.chance, rollForPositive, rollForNegative);
   };
 
+  /**
+   * Resolves how many times this effect's action should execute, mirroring the real class's
+   * Accumulate Mode/Encore-aware signature.
+   * @param {number} [rollForPositive=1]
+   * @param {number} [rollForNegative=0]
+   * @param {object=} positiveRoller
+   * @returns {number}
+   */
+  JABS_OnChanceEffect.prototype.resolveProcCount = function(rollForPositive = 1, rollForNegative = 0, positiveRoller = null)
+  {
+    if (!positiveRoller)
+    {
+      return this.shouldTrigger(rollForPositive, rollForNegative) ? 1 : 0;
+    }
+
+    return sandbox.RPGManager.resolveProcCount(positiveRoller, this.chance, rollForPositive, rollForNegative);
+  };
+
+  /**
+   * Gets the underlying skill for this on-chance effect, mirroring the real class's signature
+   * closely enough for luck/curse roll-threading call sites that read `<thisLuckyRolls>`/
+   * `<thisCursedRolls>` off of it.
+   * @param {object=} battler The target perceiving the skill; defaults to none.
+   * @returns {object}
+   */
+  JABS_OnChanceEffect.prototype.baseSkill = function(battler = null)
+  {
+    if (battler && typeof battler.skill === 'function')
+    {
+      return battler.skill(this.skillId);
+    }
+
+    return sandbox.$dataSkills?.at(this.skillId);
+  };
+
   sandbox.JABS_OnChanceEffect = JABS_OnChanceEffect;
 }
 //endregion install-jabs-onchance-stub

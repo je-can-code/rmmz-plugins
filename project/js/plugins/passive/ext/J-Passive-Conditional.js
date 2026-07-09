@@ -1444,7 +1444,9 @@ var SkillExecutionStateRemovalManager = class {
 				const chance = Number(tuple[1]);
 				if (Number.isNaN(chance) || chance <= 0) continue;
 				if (stypeId !== 0 && stypeId !== executedStype) continue;
-				if (RPGManager.chanceIn100(chance) === false) continue;
+				const positiveRolls = 1 + battler.getPositiveRollsForSkill(state);
+				const negativeRolls = battler.getNegativeRollsForSkill(state);
+				if (RPGManager.fateOf100(battler, chance, positiveRolls, negativeRolls) === false) continue;
 				const stateId = state.id;
 				const stacksLossCount = this.#resolveStacksLossCount(battler, stateId);
 				battler.decrementStateStacks(stateId, stacksLossCount);
@@ -1498,7 +1500,9 @@ var SkillResolutionStateRemovalManager = class {
 				const chance = Number(tuple[1]);
 				if (Number.isNaN(chance) || chance <= 0) continue;
 				if (stypeId !== 0 && stypeId !== executedStype) continue;
-				if (RPGManager.chanceIn100(chance) === false) continue;
+				const positiveRolls = 1 + battler.getPositiveRollsForSkill(state);
+				const negativeRolls = battler.getNegativeRollsForSkill(state);
+				if (RPGManager.fateOf100(battler, chance, positiveRolls, negativeRolls) === false) continue;
 				const stateId = state.id;
 				const stacksLossCount = this.#resolveStacksLossCount(battler, stateId);
 				battler.decrementStateStacks(stateId, stacksLossCount);

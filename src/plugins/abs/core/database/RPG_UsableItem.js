@@ -49,6 +49,21 @@ Object.defineProperty(RPG_UsableItem.prototype, 'jabsGlobalCooldownOverride', {
 });
 //endregion cooldowns
 
+//region interruption
+/**
+ * The percent magnifier applied to a target's own effective cooldown when this skill lands a hit
+ * against a battler that is casting/channeling and interrupts it. Sentinel `0` means this skill
+ * carries no interrupt capability at all- it never disturbs a cast/channel it hits.
+ * @type {number}
+ */
+Object.defineProperty(RPG_UsableItem.prototype, 'jabsInterruptMagnifier', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Interrupt);
+  },
+});
+//endregion interruption
+
 //region usability
 /**
  * Whether or not the skill or item is hidden from the JABS quick menus.

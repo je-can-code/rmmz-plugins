@@ -22,6 +22,7 @@ class JABS_HitboxPulseOptions
     o.facing = 2;
     o.degrees = 180;
     o.thickness = 1;
+    o.innerRadius = 0;
 
     // visuals/lifetime.
     o.duration = 60;
@@ -88,6 +89,7 @@ class JABS_HitboxPulseOptions
       facing: this.facing,
       degrees: this.degrees,
       thickness: this.thickness,
+      innerRadius: this.innerRadius,
       duration: this.duration,
       sustained: this.sustained,
       startAlpha: this.startAlpha,
@@ -184,6 +186,20 @@ class JABS_HitboxPulseOptions
   {
     // assign the thickness.
     this.thickness = tiles;
+
+    // allow chaining.
+    return this;
+  }
+
+  /**
+   * Fluent: sets the inner radius dead zone in tiles, for shapes carrying <innerRadius:N>.
+   * @param {number} tiles The inner radius in tiles; 0 disables the dead zone visual.
+   * @returns {JABS_HitboxPulseOptions}
+   */
+  withInnerRadius(tiles)
+  {
+    // assign the inner radius.
+    this.innerRadius = tiles;
 
     // allow chaining.
     return this;

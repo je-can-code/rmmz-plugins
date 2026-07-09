@@ -112,7 +112,7 @@ JABS_AiManager.enforceFollowerThroughPolicy = function(allyBattler)
 JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 {
   // we do not idle while casting.
-  if (allyBattler.isCasting()) return false;
+  if (allyBattler.isCastingOrChanneling()) return false;
 
   // we do not idle while engaged in combat.
   if (allyBattler.isEngaged()) return false;

@@ -148,4 +148,68 @@ Game_CharacterBase.prototype.isDodging = function()
   // delegate to the battler's current dodge state.
   return battler.isDodging();
 };
+
+/**
+ * Walks this character up to `distance` tiles in a single compass direction, testing each
+ * tile's passability and stopping early the moment one blocks the way. Shared by every JABS
+ * mechanic that forcibly displaces a character- push knockback, pull-forward, and terrain-
+ * respecting gap-close all funnel through this one stepping routine so "stop at the last
+ * passable tile" behaves identically everywhere it's used.
+ * @param {number} direction The numpad compass direction to walk in (2/4/6/8).
+ * @param {number} distance The maximum number of tiles to travel.
+ * @returns {[number, number]} The actual [dx, dy] reached, in whole tiles.
+ */
+Game_CharacterBase.prototype.walkInDirectionClamped = function(direction, distance)
+{
+  // track the tentative landing tile as we step, starting from where we already are.
+  let realX = this.x;
+  let realY = this.y;
+
+  // whether the most recent step landed on a passable tile.
+  let canPass = true;
+
+  // how many whole tiles we've successfully stepped so far.
+  let stepsTaken = 0;
+
+  // the total number of tiles to attempt, rounded since distance may arrive as a float.
+  const stepsToWalk = Math.round(distance);
+
+  // step one tile at a time, same technique the original knockback loop pioneered- probe the
+  // next tile, and if it isn't passable, back off and stop instead of clipping through it.
+  while (canPass && stepsTaken < stepsToWalk)
+  {
+    switch (direction)
+    {
+      case J.ABS.Directions.UP:
+        realY--;
+        canPass = this.canPass(realX, realY, direction);
+        if (!canPass) realY++;
+        break;
+      case J.ABS.Directions.DOWN:
+        realY++;
+        canPass = this.canPass(realX, realY, direction);
+        if (!canPass) realY--;
+        break;
+      case J.ABS.Directions.LEFT:
+        realX--;
+        canPass = this.canPass(realX, realY, direction);
+        if (!canPass) realX++;
+        break;
+      case J.ABS.Directions.RIGHT:
+        realX++;
+        canPass = this.canPass(realX, realY, direction);
+        if (!canPass) realX--;
+        break;
+      default:
+        canPass = false;
+        break;
+    }
+
+    // only count the step if it actually landed somewhere new.
+    if (canPass) stepsTaken++;
+  }
+
+  // report how far we actually got, relative to our starting tile.
+  return [ realX - this.x, realY - this.y ];
+};
 //endregion Game_CharacterBase

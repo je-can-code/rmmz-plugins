@@ -85,7 +85,7 @@ class Sprite_MapCastGauge
 
   /**
    * Whether the gauge should be considered valid for fill-rate.
-   * Valid only while this bound JABS battler is actively casting with time left,
+   * Valid only while this bound JABS battler is actively casting or channeling with time left,
    * the battler identity matches the UUID we were bound to, AND the battler
    * remains bound to this sprite’s expected character.
    * @returns {boolean}
@@ -106,61 +106,69 @@ class Sprite_MapCastGauge
     // host guard by character reference (prevents cross-sprite leakage on swaps).
     if (expectedCharacter && jabsBattler.getCharacter() !== expectedCharacter) return false;
 
-    // must be actively casting.
-    if (!jabsBattler.isCasting()) return false;
-
-    // must have a decided action and time remaining.
+    // must be actively casting or channeling, with a decided action to read progress from.
+    if (!jabsBattler.isCastingOrChanneling()) return false;
     const decided = jabsBattler.getDecidedAction();
     if (!decided || decided.length === 0) return false;
-    if (jabsBattler.getCastTimeCountdown() <= 0) return false;
+
+    // whichever of the two states is active, it must still have time left.
+    if (jabsBattler.isCasting() && jabsBattler.getCastTimeCountdown() <= 0) return false;
+    if (jabsBattler.isChanneling() && jabsBattler.getChannelDurationRemaining() <= 0) return false;
 
     // valid under these conditions.
     return true;
   }
 
   /**
-   * The current (elapsed) value of the cast bar.
+   * The current value of the cast/channel bar. A cast fills up (elapsed time); a channel
+   * depletes from full instead, so the two states read as visually distinct at a glance.
    * @returns {number}
    */
   currentValue()
   {
-    // if we lack a JABS battler, we cannot provide values.
+    // if this frame isn't valid, there is nothing to draw.
+    if (!this.isValid()) return NaN;
+
     const jabsBattler = this.getJabsBattler();
-    if (!jabsBattler) return NaN;
+    const [ action ] = jabsBattler.getDecidedAction();
 
-    // only provide values while actively casting with a decided action and time remaining.
-    if (!jabsBattler.isCasting()) return NaN;
-    const decided = jabsBattler.getDecidedAction();
-    if (!decided || decided.length === 0) return NaN;
-    if (jabsBattler.getCastTimeCountdown() <= 0) return NaN;
+    // channeling depletes from full instead of filling up, so it reads differently than a cast.
+    if (jabsBattler.isChanneling())
+    {
+      const [ , totalDuration ] = action.getBaseSkill().jabsChannel;
+      if (!totalDuration) return NaN; // zero-duration means do not draw.
 
-    // compute elapsed from countdown vs total.
-    const [ action ] = decided;
+      return Math.max(0, jabsBattler.getChannelDurationRemaining());
+    }
+
+    // compute elapsed from countdown vs total for a normal cast.
     const max = action.getCastTime();
     if (!max) return NaN; // zero-cast means do not draw.
 
     const remaining = jabsBattler.getCastTimeCountdown();
-    const elapsed = Math.max(0, max - remaining);
-    return elapsed;
+    return Math.max(0, max - remaining);
   }
 
   /**
-   * The max value for the cast bar: the action's cast time at decision.
+   * The max value for the cast/channel bar: the action's cast time, or the channel's total
+   * duration, at decision.
    * @returns {number}
    */
   currentMaxValue()
   {
-    // if we lack a JABS battler, we cannot provide values.
+    // if this frame isn't valid, there is nothing to draw.
+    if (!this.isValid()) return NaN;
+
     const jabsBattler = this.getJabsBattler();
-    if (!jabsBattler) return NaN;
+    const [ action ] = jabsBattler.getDecidedAction();
 
-    // only provide max while actively casting with a decided action and time remaining.
-    if (!jabsBattler.isCasting()) return NaN;
-    const decided = jabsBattler.getDecidedAction();
-    if (!decided || decided.length === 0) return NaN;
-    if (jabsBattler.getCastTimeCountdown() <= 0) return NaN;
+    // channeling's max is its own total duration instead of a cast time.
+    if (jabsBattler.isChanneling())
+    {
+      const [ , totalDuration ] = action.getBaseSkill().jabsChannel;
+      return totalDuration || NaN;
+    }
 
-    const [ action ] = decided;
     const max = action.getCastTime();
     return max || NaN;
   }

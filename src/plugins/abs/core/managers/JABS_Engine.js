@@ -2577,8 +2577,31 @@ class JABS_Engine
    */
   applyPlayerCooldowns(caster, action)
   {
+    const skill = action.getBaseSkill();
+
+    // stamp the skill's own normal effective cooldown onto whichever slot(s) it occupies.
+    this.applyCooldownValueForSkill(caster, action, action.getCooldown());
+
+    if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
+    {
+      const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
+      const reducedFrames = JABS_GlobalCooldown.reducedFramesForCaster(caster, gcdFrames);
+      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, reducedFrames);
+    }
+  }
+
+  /**
+   * Stamps a specific cooldown value onto whichever slot(s) the given action's skill occupies.
+   * Shared between normal post-execution cooldown application (using the skill's own effective
+   * cooldown) and interrupt cooldown penalties (using a scaled value)- both need the identical
+   * unique-vs-shared-cooldown slot resolution, just with a different value to apply.
+   * @param {JABS_Battler} caster The battler whose cooldown(s) to stamp.
+   * @param {JABS_Action} action The JABS action whose skill/cooldown-type is being stamped.
+   * @param {number} cooldownValue The cooldown duration, in frames, to apply.
+   */
+  applyCooldownValueForSkill(caster, action, cooldownValue)
+  {
     const cooldownType = action.getCooldownType();
-    const cooldownValue = action.getCooldown();
     const skill = action.getBaseSkill();
 
     // if the skill has a unique cooldown functionality,
@@ -2609,13 +2632,6 @@ class JABS_Engine
           this.applyComboModeForSkill(caster, skillSlot.key, skill);
         }
       });
-    }
-
-    if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
-    {
-      const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
-      const reducedFrames = JABS_GlobalCooldown.reducedFramesForCaster(caster, gcdFrames);
-      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, reducedFrames);
     }
   }
 
@@ -3219,6 +3235,7 @@ class JABS_Engine
     }
 
     this.checkKnockback(action, target);
+    this.checkInterrupt(action, target);
     this.triggerAlert(caster, target);
 
     // if the attacker and the target are the same team, then don't set that as "last hit".
@@ -3271,6 +3288,14 @@ class JABS_Engine
     // multiply the knockback by the remaining effectiveness (100 - resistance).
     knockback *= ((100 - targetKnockbackResist) / 100);
 
+    // amplify by however many nearby enemies the caster's own proximity tags detect.
+    const caster = action.getCaster();
+    const proximityBonusPct = this.getProximityKnockbackBonusPct(caster);
+    if (proximityBonusPct !== 0)
+    {
+      knockback *= (1 + (proximityBonusPct / 100));
+    }
+
     const targetSprite = target.getCharacter();
 
     // check if the knockback is 0, or the action is direct.
@@ -3304,45 +3329,52 @@ class JABS_Engine
         break;
     }
 
-    const maxX = targetSprite.x + xPlus;
-    const maxY = targetSprite.y + yPlus;
-    let realX = targetSprite.x;
-    let realY = targetSprite.y;
-    let canPass = true;
-
-    // dynamically test each square to ensure you don't cross any unpassable tiles.
-    while (canPass && (realX !== maxX || realY !== maxY))
+    // a skill tagged with <ignoreTerrain> sails straight to the computed destination,
+    // crossing pits/gaps/whatever else would normally halt the tile-by-tile walk below.
+    if (action.getBaseSkill().jabsIgnoreTerrain)
     {
-      switch (knockbackDirection)
-      {
-        case J.ABS.Directions.UP:
-          realY--;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realY++;
-          break;
-        case J.ABS.Directions.DOWN:
-          realY++;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realY--;
-          break;
-        case J.ABS.Directions.LEFT:
-          realX--;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realX++;
-          break;
-        case J.ABS.Directions.RIGHT:
-          realX++;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realX--;
-          break;
-        default:
-          canPass = false;
-          break;
-      }
+      targetSprite.jump(xPlus, yPlus);
+      return;
     }
 
+    // otherwise, walk tile-by-tile toward the destination, stopping at the last passable tile-
+    // shared with pull-forward and terrain-respecting gap-close so this behavior is consistent
+    // everywhere forced displacement happens.
+    const knockbackDistance = Math.max(Math.abs(xPlus), Math.abs(yPlus));
+    const [ dx, dy ] = targetSprite.walkInDirectionClamped(knockbackDirection, knockbackDistance);
+
     // execute the jump to the new destination.
-    targetSprite.jump(realX - targetSprite.x, realY - targetSprite.y);
+    targetSprite.jump(dx, dy);
+  }
+
+  /**
+   * Checks whether this landed hit should interrupt the target's in-flight cast/channel.
+   * Requires the attacking skill to carry `<interrupt:MAGNIFIER>`, and the target to be neither
+   * skill-specifically immune (`<thisCannotBeInterrupted>` on its own in-flight skill) nor
+   * battler-wide immune (`<cannotBeInterrupted>` from any of its own note sources).
+   * @param {JABS_Action} action The action that just landed a hit.
+   * @param {JABS_Battler} target The map battler that was hit.
+   */
+  checkInterrupt(action, target)
+  {
+    // only a target currently casting/channeling has anything to interrupt.
+    if (!target.isCastingOrChanneling()) return;
+
+    // the attacking skill must actually carry interrupt capability.
+    const magnifier = action.getBaseSkill().jabsInterruptMagnifier;
+    if (!magnifier) return;
+
+    // a skill-specific immunity on the interrupted skill itself takes priority.
+    const decidedActions = target.getDecidedAction();
+    const interruptedSkill = decidedActions
+      ? decidedActions.at(0).getBaseSkill()
+      : null;
+    if (interruptedSkill && interruptedSkill.jabsThisCannotBeInterrupted) return;
+
+    // battler-wide immunity, sourced from any of the target's own note sources.
+    if (target.getBattler().isImmuneToInterrupt()) return;
+
+    target.interrupt(magnifier, false);
   }
 
   canBeKnockedBack(action, target)
@@ -3363,6 +3395,36 @@ class JABS_Engine
 
     // being knocked back is possible.
     return true;
+  }
+
+  /**
+   * Computes the total knockback percent bonus from every `<proximityKnockback:[RADIUS, PCT]>`
+   * tag on the caster's own notes, each scaled by however many opposing battlers are currently
+   * within that specific tag's radius. Multiple tags (different sources, different radii) all
+   * contribute independently and sum together.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @returns {number} The total percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getProximityKnockbackBonusPct(caster)
+  {
+    // collect every [RADIUS, PCT] pair from all of the caster's note sources.
+    const allPairs = caster.getBattler()
+      .getAllNotes()
+      .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.ProximityKnockback));
+
+    // no tags anywhere means no bonus to apply.
+    if (!allPairs.length) return 0;
+
+    // sum each tag's contribution: its own percent, times however many opposing battlers
+    // are within that tag's own radius right now.
+    let totalPct = 0;
+    allPairs.forEach(([ radius, percent ]) =>
+    {
+      const nearbyEnemyCount = JABS_AiManager.getOpposingBattlersWithinRange(caster, radius).length;
+      totalPct += percent * nearbyEnemyCount;
+    });
+
+    return totalPct;
   }
 
   /**
@@ -3473,7 +3535,7 @@ class JABS_Engine
 
   /**
    * Whether implicit (facing + GRD vs HIT) parry may roll for this target.
-   * While guarding, only explicit timed parry applies; casting and dashing
+   * While guarding, only explicit timed parry applies; casting/channeling and dashing
    * suppress implicit parry only.
    * @param {JABS_Battler} target The defender.
    * @returns {boolean} True if implicit parry is allowed this frame.
@@ -3482,7 +3544,7 @@ class JABS_Engine
   {
     if (target.guarding()) return false;
 
-    if (target.isCasting()) return false;
+    if (target.isCastingOrChanneling()) return false;
 
     const character = target.getCharacter();
     if (character && character.isDashing()) return false;
@@ -3517,18 +3579,15 @@ class JABS_Engine
     const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
     const parryChancePercent = Math.round(rawChance * scaleFactor);
 
-    if (parryChancePercent >= 100)
-    {
-      return true;
-    }
+    // roles are reversed from an offensive roll: the defender wants this to succeed (they're
+    // the one parrying), while the attacker's own curse works against them getting parried.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
 
-    if (parryChancePercent <= 0)
-    {
-      return false;
-    }
-
-    const rng = Math.randomInt(100) + 1;
-    return rng <= parryChancePercent;
+    // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds
+    // (every 1-100 roll qualifies), so no separate edge-case branches are needed here.
+    return RPGManager.fateOf100(defenderBattler, parryChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
   }
 
   /**
@@ -3551,18 +3610,13 @@ class JABS_Engine
     const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
     const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
 
-    if (glancingChancePercent >= 100)
-    {
-      return true;
-    }
+    // same role reversal as checkImplicitFullParry: the defender wants this to succeed.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
 
-    if (glancingChancePercent <= 0)
-    {
-      return false;
-    }
-
-    const rng = Math.randomInt(100) + 1;
-    return rng <= glancingChancePercent;
+    // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds.
+    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
   }
 
   /**
@@ -3787,9 +3841,14 @@ class JABS_Engine
     // stop processing if we cannot autocounter.
     if (!this.canAutoCounter(battler)) return;
 
+    // this is a purely self-scoped proc- the counter-user is both the roller and the recipient.
+    const counterBattler = battler.getBattler();
+    const positiveRolls = 1 + counterBattler.getPositiveRolls();
+    const negativeRolls = counterBattler.getNegativeRolls();
+
     // check if RNG favors you.
-    const autoCounterChance = battler.getBattler().cnt * 100;
-    const shouldAutoCounter = RPGManager.chanceIn100(autoCounterChance);
+    const autoCounterChance = counterBattler.cnt * 100;
+    const shouldAutoCounter = RPGManager.fateOf100(counterBattler, autoCounterChance, positiveRolls, negativeRolls);
 
     // if RNG did actually favor you, then proceed.
     if (shouldAutoCounter)
@@ -3915,54 +3974,67 @@ class JABS_Engine
       // skip if the hit type filter doesn't match.
       if (!skillChance.matchesHitType(incomingHitType)) return;
 
-      // skip if the chance roll fails.
-      if (!skillChance.shouldTrigger()) return;
+      // this is a purely self-scoped proc- the retaliator is both the roller and the recipient
+      // of "do I retaliate"; the retaliation attack itself gets its own hit/crit/state rolls.
+      const retaliatorBattler = retaliator.getBattler();
+      const skill = skillChance.baseSkill(retaliatorBattler);
+      const positiveRolls = 1 + retaliatorBattler.getPositiveRollsForSkill(skill);
+      const negativeRolls = retaliatorBattler.getNegativeRollsForSkill(skill);
 
-      // build the outgoing retaliation actions.
-      const retaliationActions = retaliator.createJabsActionFromSkill(
-        skillChance.skillId,
-        JABS_ActionOptions.Builder().setIsRetaliation(true).build()
-      );
+      // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+      const procCount = skillChance.resolveProcCount(positiveRolls, negativeRolls, retaliatorBattler);
 
-      // stamp the triggering damage onto each action so formulas can use d/m/t.
-      retaliationActions.forEach(retaliationAction =>
-        retaliationAction.getAction().setTriggerDamage(hpDamage, mpDamage, tpDamage));
-
-      // for direct retaliations, enforce proximity before firing — the normal skill-use gate
-      // is bypassed by retaliations, so without this check a direct skill hits at any range.
-      const attackerBattler = triggeringAction.getCaster();
-      const attackerDistance = retaliator.distanceToDesignatedTarget(attackerBattler);
-      const directRetaliationActions = retaliationActions.filter(a => a.isDirectAction());
-      const blockedByProximity = directRetaliationActions.some(
-        a => attackerDistance > a.getProximity()
-      );
-      if (blockedByProximity) return;
-
-      // for direct actions, freeze the target location on the action options so
-      // syncDirectActionSpriteToCaster leaves the sprite at the attacker's tile
-      // instead of body-anchoring it to the retaliator every frame.
-      const isAnyDirect = retaliationActions.some(a => a.isDirectAction());
-      if (isAnyDirect)
+      // fire the whole retaliation once per success- each iteration builds fresh actions, since
+      // a JABS_Action is single-use once executed.
+      for (let i = 0; i < procCount; i++)
       {
-        const attackerX = triggeringAction.getCaster().getX();
-        const attackerY = triggeringAction.getCaster().getY();
-        const frozenLocation = JABS_Location.Builder().setX(attackerX).setY(attackerY).build();
-        const frozenOptions = JABS_ActionOptions.Builder()
-          .setIsRetaliation(true)
-          .setLocation(frozenLocation)
-          .setRetaliationTarget(triggeringAction.getCaster())
-          .build();
-        retaliationActions.forEach(a => a.setActionOptions(frozenOptions));
-      }
+        // build the outgoing retaliation actions.
+        const retaliationActions = retaliator.createJabsActionFromSkill(
+          skillChance.skillId,
+          JABS_ActionOptions.Builder().setIsRetaliation(true).build()
+        );
 
-      const targetX = isAnyDirect ? triggeringAction.getCaster().getX() : null;
-      const targetY = isAnyDirect ? triggeringAction.getCaster().getY() : null;
-
-      // fire each action if executable.
-      if (this.canExecuteMapActions(retaliator, retaliationActions))
-      {
+        // stamp the triggering damage onto each action so formulas can use d/m/t.
         retaliationActions.forEach(retaliationAction =>
-          this.executeMapAction(retaliator, retaliationAction, targetX, targetY));
+          retaliationAction.getAction().setTriggerDamage(hpDamage, mpDamage, tpDamage));
+
+        // for direct retaliations, enforce proximity before firing — the normal skill-use gate
+        // is bypassed by retaliations, so without this check a direct skill hits at any range.
+        const attackerBattler = triggeringAction.getCaster();
+        const attackerDistance = retaliator.distanceToDesignatedTarget(attackerBattler);
+        const directRetaliationActions = retaliationActions.filter(a => a.isDirectAction());
+        const blockedByProximity = directRetaliationActions.some(
+          a => attackerDistance > a.getProximity()
+        );
+
+        if (blockedByProximity) continue;
+
+        // for direct actions, freeze the target location on the action options so
+        // syncDirectActionSpriteToCaster leaves the sprite at the attacker's tile
+        // instead of body-anchoring it to the retaliator every frame.
+        const isAnyDirect = retaliationActions.some(a => a.isDirectAction());
+        if (isAnyDirect)
+        {
+          const attackerX = triggeringAction.getCaster().getX();
+          const attackerY = triggeringAction.getCaster().getY();
+          const frozenLocation = JABS_Location.Builder().setX(attackerX).setY(attackerY).build();
+          const frozenOptions = JABS_ActionOptions.Builder()
+            .setIsRetaliation(true)
+            .setLocation(frozenLocation)
+            .setRetaliationTarget(triggeringAction.getCaster())
+            .build();
+          retaliationActions.forEach(a => a.setActionOptions(frozenOptions));
+        }
+
+        const targetX = isAnyDirect ? triggeringAction.getCaster().getX() : null;
+        const targetY = isAnyDirect ? triggeringAction.getCaster().getY() : null;
+
+        // fire each action if executable.
+        if (this.canExecuteMapActions(retaliator, retaliationActions))
+        {
+          retaliationActions.forEach(retaliationAction =>
+            this.executeMapAction(retaliator, retaliationAction, targetX, targetY));
+        }
       }
     });
   }
@@ -4297,6 +4369,9 @@ class JABS_Engine
     const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
     const shape = jabsAction.getShape();
 
+    // the universal dead zone- 0 when untagged, meaning no exclusion ever triggers below.
+    const innerRadius = jabsAction.getInnerRadius();
+
     const targetsHit = [];
     let hitOne = false;
 
@@ -4379,7 +4454,7 @@ class JABS_Engine
           const sprite = battler.getCharacter();
           const actionDirection = actionSprite.getJabsAction()
             .direction();
-          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape, innerRadius);
           if (result)
           {
             // add this battler to the list of targets hit.
@@ -4420,7 +4495,7 @@ class JABS_Engine
       const sprite = battler.getCharacter();
       const actionDirection = actionSprite.getJabsAction()
         .direction();
-      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape, innerRadius);
       if (result)
       {
         // add this battler to the list of targets hit.
@@ -4447,9 +4522,32 @@ class JABS_Engine
    * @param {Game_Event} actionEvent The action sprite against the target.
    * @param {number} range How big the collision shape is.
    * @param {string} shape The collision formula based on shape.
+   * @param {number} [innerRadius=0] The universal dead zone in tiles; 0 disables it.
    */
-  isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape)
+  isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape, innerRadius = 0)
   {
+    // the inner radius is a dead zone applied uniformly ahead of every shape below- a target
+    // centered within it is excluded outright, regardless of what the shape's own math would say.
+    if (innerRadius > 0)
+    {
+      // same pixel conversion collisionCircle already uses, so both radii share one scale.
+      const innerRadiusPx = innerRadius * $gameMap.tileWidth();
+
+      // the same unified origin and AABB model every other shape check below relies on.
+      const { x: originCx, y: originCy } = JABS_Engine.getActionOriginPixels(actionEvent);
+      const targetRect = JABS_Engine.getBattlerAabbModel(targetCharacter);
+
+      // keyed off the target's center point, not full-hitbox overlap- every other shape check
+      // below (collisionSector's outer range/angle gates, etc.) is lenient and counts a hit the
+      // moment any corner of the target's AABB qualifies. Excluding on any-overlap here would be
+      // the opposite philosophy: a target's near corner would clip the dead zone long before its
+      // center cleared it, shrinking a deliberately thin ring (e.g. innerRadius close to range)
+      // down to a sliver nothing could actually stand in.
+      const dx = targetRect.cx - originCx;
+      const dy = targetRect.cy - originCy;
+      if ((dx * dx) + (dy * dy) <= (innerRadiusPx * innerRadiusPx)) return false;
+    }
+
     // determine collision based on the selected shape.
     switch (shape)
     {
@@ -5283,15 +5381,14 @@ class JABS_Engine
    * @param {JABS_Battler} target The enemy dropping the loot.
    * @param {JABS_Battler} caster The ally that defeated the enemy.
    */
-  // eslint-disable-next-line no-unused-vars
   createLootDrops(target, caster)
   {
     // actors don't drop loot.
     if (target.isActor()) return;
 
-    // if we have no drops, don't bother.
+    // if we have no drops, don't bother. the killer contributes their own luck/curse to the roll.
     const items = target.getBattler()
-      .makeDropItems();
+      .makeDropItems(caster.getBattler());
     if (items.length === 0) return;
 
     items.forEach(item => this.addLootDropToMap(target.getX(), target.getY(), item));

@@ -994,19 +994,20 @@ Sprite_Character.prototype.canUpdateCastGauge = function()
   // if we don't have a cast gauge sprite, we can't update it.
   if (!this._j._abs._gauges._castGauge) return false;
 
-  // use the current JABS battler's live casting state as the gate.
+  // use the current JABS battler's live casting/channeling state as the gate.
   const jabs = this._character.getJabsBattler();
   if (!jabs) return false; // no battler
 
-  // must be actively casting.
-  if (!jabs.isCasting()) return false;
+  // must be actively casting or channeling.
+  if (!jabs.isCastingOrChanneling()) return false;
 
   // must have a decided action.
   const decided = jabs.getDecidedAction();
   if (!decided || decided.length === 0) return false;
 
-  // must have time remaining.
-  if (jabs.getCastTimeCountdown() <= 0) return false;
+  // must have time remaining- whichever of the two states is actually active.
+  if (jabs.isCasting() && jabs.getCastTimeCountdown() <= 0) return false;
+  if (jabs.isChanneling() && jabs.getChannelDurationRemaining() <= 0) return false;
 
   // ready to update this frame.
   return true;

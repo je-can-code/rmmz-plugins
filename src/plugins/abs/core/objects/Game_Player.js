@@ -39,11 +39,18 @@ Game_Player.prototype.canMove = function()
   // check if something related to JABS is causing the player to stop moving.
   const isMenuRequested = $jabsEngine.requestAbsMenu;
   const isAbsPaused = $jabsEngine.absPause;
-  const isPlayerCasting = $jabsEngine.getPlayer1()
-    .isCasting();
+
+  // casting/channeling only roots the player outright when the in-flight skill opts into
+  // <cannotMoveToInterrupt>; otherwise movement is allowed, and JABS_Battler's own
+  // updateSelfInterruptOnMove() is what cancels the cast/channel as a consequence of that
+  // movement- watching input signals directly there is movement-plugin-agnostic, since this
+  // project's pixel-movement plugin fully overwrites moveByInput/executeMove rather than
+  // aliasing them.
+  const isPlayerRooted = $jabsEngine.getPlayer1()
+    .hasUninterruptibleMovementLock();
 
   // any of these will prevent the player from moving.
-  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerCasting);
+  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerRooted);
 
   // check if JABS is denying movement.
   if (jabsDeniesMovement)

@@ -76,6 +76,30 @@ describe('J-Regions-States Game_Character applyRegionStates', () =>
       {
         reset.push({ stateId, attacker });
       },
+      getPositiveRollsForSkill()
+      {
+        return 0;
+      },
+      getNegativeRollsForSkill()
+      {
+        return 0;
+      },
+      isVeryLucky()
+      {
+        return false;
+      },
+      isVeryCursed()
+      {
+        return false;
+      },
+      isAccumulating()
+      {
+        return false;
+      },
+      getEncoreRepeats()
+      {
+        return 0;
+      },
     };
 
     const jabsBattler = {
@@ -154,6 +178,30 @@ describe('J-Regions-States Game_Character applyRegionStates', () =>
       resetStateCounts(stateId, attacker)
       {
         reset.push({ stateId, attacker });
+      },
+      getPositiveRollsForSkill()
+      {
+        return 0;
+      },
+      getNegativeRollsForSkill()
+      {
+        return 0;
+      },
+      isVeryLucky()
+      {
+        return false;
+      },
+      isVeryCursed()
+      {
+        return false;
+      },
+      isAccumulating()
+      {
+        return false;
+      },
+      getEncoreRepeats()
+      {
+        return 0;
       },
     };
 

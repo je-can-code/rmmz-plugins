@@ -942,6 +942,26 @@
  * NOTE: This tag only affects LINE and WALL hitboxes.
  *
  * ----------------------------------------------------------------------------
+ * INNER RADIUS:
+ * Excludes targets within VAL tiles of the action's origin from colliding at
+ * all, regardless of hitbox shape -- a universal dead zone carved out of the
+ * middle of whatever shape the skill uses (a donut CIRCLE, an ARC with a bite
+ * taken out of its own pivot, etc). Applies uniformly to every hitbox type.
+ *    <innerRadius:VAL>
+ *  Where VAL is the dead zone radius, in tiles. Supports decimals.
+ *
+ * The exclusion is measured from the target's center point, not its full
+ * hitbox -- a target is excluded only once its center crosses inside VAL
+ * tiles of the origin, matching how the outer shape checks already treat
+ * a target as "in range" the moment any part of it qualifies.
+ *
+ * NOTE ABOUT RING WIDTH: keep (RADIUS - VAL) at least 0.5 tiles. This engine's
+ * targeting precision bottoms out around half a tile elsewhere (see PROXIMITY
+ * and DIRECT skill targeting); a thinner ring than that asks the player to
+ * land inside a band too narrow to reliably hit in real-time play, even
+ * though the collision math itself is correct at any width.
+ *
+ * ----------------------------------------------------------------------------
  * CAST TIME:
  * The number of frames the battler must wait before the skill fires.
  * While casting, the "cast animation" will loop if one is defined.
@@ -972,6 +992,70 @@
  * up tension, and the on-cast animation is the visible "release".
  *
  * ----------------------------------------------------------------------------
+ * CHANNEL:
+ * Turns this skill into a "vessel": instead of executing its own effects, it pays its own
+ * cost once, then repeatedly executes a child skill every so many frames for a total duration.
+ *    <channel:[SKILL_ID, TOTAL_DURATION]>
+ *  Where SKILL_ID is the skill id to repeatedly execute.
+ *  Where TOTAL_DURATION is the number of frames the channel lasts.
+ *
+ * A vessel skill's own damage/effects are never invoked- author it with no real effects of its
+ * own. The first execution of SKILL_ID happens after the first tick interval elapses, not
+ * immediately when the channel begins.
+ *
+ *    <channelTickSpeed:VAL>
+ *  Optional. VAL is the number of frames between each repeated execution of SKILL_ID. Falls
+ *  back to the plugin's configured default channel tick speed when omitted.
+ *
+ *    <onChannelComplete:[SKILL_ID, ...]>
+ *  Optional. One or more skill ids to execute for free, once, immediately after the channel
+ * completes its full duration uninterrupted. Resolved the same way the channel's own ticks are-
+ * does NOT fire if the channel is cut short by an interrupt.
+ *
+ * Example:
+ *    <channel:[25, 180]>
+ *    <channelTickSpeed:30>
+ *    <onChannelComplete:[36]>
+ *  Fires skill 25 every 30 frames for 180 frames (6 executions), then fires skill 36 once, for
+ *  free, the instant the channel completes- but only if nothing interrupted it first.
+ *
+ * ----------------------------------------------------------------------------
+ * CASTING / CHANNELING INTERRUPTION:
+ * By default, ALL casting and channeling can be interrupted two ways: the caster chooses to
+ * move (self-interrupt), or an enemy lands a hit with an `<interrupt:MAGNIFIER>` skill
+ * (external interrupt). Either way, the skill in-flight never fires (or, for a channel, no
+ * further ticks/on-complete payoff occur), and a cooldown penalty is stamped onto the
+ * interrupted skill's own slot: its full effective cooldown for a self-interrupt, or that
+ * cooldown scaled by MAGNIFIER percent for an external interrupt.
+ *
+ *    <cannotMoveToInterrupt>
+ *  Placed on the casting/channeling skill itself. Roots the caster in place entirely for the
+ *  duration (today's original cast-time behavior)- movement is simply not possible, so it can
+ *  never trigger a self-interrupt.
+ *
+ *    <interrupt:MAGNIFIER>
+ *  Placed on an attacking skill. On landing a hit against a casting/channeling target, cancels
+ *  that cast/channel and stamps (target's effective cooldown for the interrupted skill) *
+ *  (MAGNIFIER / 100) onto its slot. A skill with no `<interrupt>` tag never disturbs a cast or
+ *  channel it hits, no matter how hard it hits.
+ *
+ * Example: a skill has a cooldown of 100 frames, reduced by CDR/fastCooldown to an effective
+ * 75 frames. It gets hit by an `<interrupt:200>` skill mid-cast: the slot goes on cooldown for
+ * 75 * (200 / 100) = 150 frames.
+ *
+ *    <thisCannotBeInterrupted>
+ *  Placed on the casting/channeling skill itself. That specific cast/channel cannot be
+ *  externally interrupted, regardless of the caster's own battler-wide immunity (or lack
+ *  thereof). Does not affect self-interruption via movement- that is `<cannotMoveToInterrupt>`'s
+ *  job.
+ *
+ *    <cannotBeInterrupted>
+ *  A battler-wide immunity tag, read from ANY of a battler's own note sources (states, equips,
+ *  class, actor)- not the skill being cast/channeled. Suppresses external interrupts entirely
+ *  for this battler, no matter what is casting/channeling. Does not affect self-interruption via
+ *  movement.
+ *
+ * ----------------------------------------------------------------------------
  * PIERCING:
  * Defines how many collision "steps" (connections) the map action may
  * complete before it ends, and the delay between those steps.
@@ -995,6 +1079,17 @@
  * for that step (stacking with battler-side tags).
  *    <bonus-hits:VAL>
  *  Where VAL is a non-negative integer added to the per-connection bonus.
+ *
+ * FORMULA VARIANT:
+ * VAL can also be a bracketed formula instead of a flat integer, evaluated
+ * with `a` bound to the caster at the moment the action is created.
+ *    <bonus-hits:[FORMULA]>
+ *  Where FORMULA is a JS-style expression (e.g. <bonus-hits:[a.luk / 10]>).
+ *
+ * NOTE: The final combined total across every bonus-hits source (flat and
+ * formula, skill-note and battler-side) is floored once at the very end.
+ * Formulas do not need to wrap themselves in floor() -- the engine handles
+ * discretization so a clean `a.luk / 10` is fine as-is.
  *
  * PARRY VS GUARD:
  * If a parry triggers on a target during the first application of a bundle,
@@ -1680,6 +1775,23 @@
  *  Where VAL is the number of knockback tiles to cancel.
  *
  * ----------------------------------------------------------------------------
+ * PROXIMITY KNOCKBACK:
+ * Amplifies this battler's outgoing knockback based on how many opposing
+ * battlers are currently near them. Evaluated fresh against the live
+ * battlefield every time this battler lands a knockback hit.
+ *    <proximityKnockback:[RADIUS, PCT]>
+ *  Where RADIUS is the tile radius (from this battler) to scan for enemies.
+ *  Where PCT is the percent bonus applied per enemy found within RADIUS.
+ *
+ * Example: Orbiter's "Offended by Proximity" (+25% knockback per nearby
+ * enemy within 4 tiles):
+ *    <proximityKnockback:[4, 25]>
+ *
+ * NOTE: Only opposing battlers count -- allies within RADIUS are ignored.
+ * NOTE: Multiple tags (different sources, different radii) all contribute
+ * independently and sum together.
+ *
+ * ----------------------------------------------------------------------------
  * PER-CONNECTION BONUS HITS (ACTOR / CLASS / EQUIPMENT / STATES):
  * These stack with <bonus-hits:VAL> on the executing skill. Place them on
  * actor, class, weapons, armors, states, or enemy data as appropriate.
@@ -1690,6 +1802,17 @@
  * actors, or the enemy's designated basic attack skill).
  *    <bonus-hits-skill:VAL>
  * Adds VAL only for non-basic skills.
+ *
+ * FORMULA VARIANT:
+ * All three of the above accept a bracketed formula instead of a flat
+ * integer, evaluated with `a` bound to the battler carrying the tag:
+ *    <bonus-hits-global:[FORMULA]>
+ *    <bonus-hits-basic:[FORMULA]>
+ *    <bonus-hits-skill:[FORMULA]>
+ *  Where FORMULA is a JS-style expression (e.g. <bonus-hits-basic:[a.luk / 10]>).
+ *
+ * NOTE: As with the skill-note version above, the final combined total is
+ * floored once at the end -- formulas do not need their own floor() wrapper.
  *
  * HIDING ITEMS/SKILLS FROM ASSIGNMENT:
  * To prevent certain items or skills from appearing in the assignment
@@ -2536,6 +2659,17 @@
  * @desc The player can attack much faster than AI, so reducing their aggro output by default is sensible.
  * @decimals 2
  * @default 0.50
+ *
+ * @param channelConfigs
+ * @text CHANNELING DEFAULTS
+ *
+ * @param defaultChannelTickSpeed
+ * @parent channelConfigs
+ * @type number
+ * @min 1
+ * @text Default Channel Tick Speed
+ * @desc The number of frames between each repeated execution of a `<channel:[SKILL_ID, DURATION]>` skill's child skill, when the skill omits its own `<channelTickSpeed:N>` override.
+ * @default 30
  *
  * @param stateConfigs
  * @text STATE DEFAULTS

@@ -96,6 +96,13 @@ Game_Actor.prototype.onBattlerDataChange = function()
   // recompute cached PER from note sources.
   this.refreshPer();
 
+  // recompute cached luck/curse roll totals from note sources.
+  this.refreshPositiveRolls();
+  this.refreshNegativeRolls();
+
+  // recompute cached bonus repeat count from note sources.
+  this.refreshEncoreRepeats();
+
   // update JABS-related things.
   this.jabsRefresh();
 };

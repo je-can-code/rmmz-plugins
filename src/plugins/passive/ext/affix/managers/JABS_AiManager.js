@@ -81,9 +81,9 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   const suffixChance = character.getResolvedPassiveAffixSuffixChance(enemyData);
 
   const canApplyPrefix = JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData) === false &&
-    Math.random() * 100 < prefixChance;
+    RPGManager.chanceIn100(prefixChance);
   const canApplySuffix = JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData) === false &&
-    Math.random() * 100 < suffixChance;
+    RPGManager.chanceIn100(suffixChance);
 
   // validate we can apply a prefix.
   if (canApplyPrefix)

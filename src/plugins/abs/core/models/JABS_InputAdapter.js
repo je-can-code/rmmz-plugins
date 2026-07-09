@@ -109,7 +109,7 @@ class JABS_InputAdapter
     }
 
     // if the player is casting, then do not perform.
-    if (jabsBattler.isCasting()) return false;
+    if (jabsBattler.isCastingOrChanneling()) return false;
 
     // perform!
     return true;
@@ -171,7 +171,7 @@ class JABS_InputAdapter
     }
 
     // if the player is casting, then do not perform.
-    if (jabsBattler.isCasting()) return false;
+    if (jabsBattler.isCastingOrChanneling()) return false;
 
     // perform!
     return true;
@@ -329,7 +329,7 @@ class JABS_InputAdapter
     if (!jabsBattler.isSkillTypeCooldownReady(slot)) return false;
 
     // if the battler is already casting, then do not perform.
-    if (jabsBattler.isCasting()) return false;
+    if (jabsBattler.isCastingOrChanneling()) return false;
 
     // if there is no action data for the skill, then do not perform.
     const combatActions = jabsBattler.getAttackData(slot);

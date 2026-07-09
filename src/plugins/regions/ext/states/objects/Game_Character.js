@@ -144,17 +144,29 @@ Game_Character.prototype.applyRegionStates = function()
     // get the calculated rate for the state being applied.
     const calculatedChance = battler.stateRate(stateId) * chance;
 
-    // roll the dice and see if we should even apply it.
-    if (!RPGManager.chanceIn100(calculatedChance)) return;
+    // this is a purely self-scoped proc- the one stepping on the region is both the roller and
+    // the recipient of the region-state application roll.
+    const state = $dataStates.at(stateId);
+    const positiveRolls = 1 + battler.getPositiveRollsForSkill(state);
+    const negativeRolls = battler.getNegativeRollsForSkill(state);
 
-    // same entry point as j-skill-extend applyStates; resetStateCounts on reapply still routes to addJabsState.
-    if (battler.isStateAffected(stateId))
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = RPGManager.resolveProcCount(battler, calculatedChance, positiveRolls, negativeRolls);
+    if (procCount === 0) return;
+
+    // same entry point as j-skill-extend applyStates; resetStateCounts on reapply still routes to
+    // addJabsState- apply once per success, re-checking affected status each time so a second
+    // success within the same proc stacks deeper instead of re-adding fresh.
+    for (let i = 0; i < procCount; i++)
     {
-      battler.resetStateCounts(stateId, battler);
-    }
-    else
-    {
-      battler.addState(stateId, battler);
+      if (battler.isStateAffected(stateId))
+      {
+        battler.resetStateCounts(stateId, battler);
+      }
+      else
+      {
+        battler.addState(stateId, battler);
+      }
     }
 
     // check if there is a valid animation to play.
