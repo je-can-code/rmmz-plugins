@@ -88,6 +88,13 @@ Game_Battler.prototype.initJabsMembers = function()
   this._j._abs._cachedVisionModifier = null;
 
   /**
+   * The cached result of {@link #getProjectileDurationModifier}.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._abs._cachedProjectileDurationModifier = null;
+
+  /**
    * The cached sum of all CDR (global cooldown reduction) percent-points from note sources.
    * Refreshed by {@link #refreshCdr} on {@link #onBattlerDataChange}.
    * @type {number}
@@ -364,6 +371,56 @@ Game_Battler.prototype.getVisionModifier = function()
   this.setCachedVisionModifier(constrainedVisionMultiplier);
 
   return this.getCachedVisionModifier();
+};
+
+/**
+ * Gets the cached projectile duration modifier for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedProjectileDurationModifier = function()
+{
+  return this._j._abs._cachedProjectileDurationModifier;
+};
+
+/**
+ * Sets the cached projectile duration modifier for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedProjectileDurationModifier = function(value)
+{
+  this._j._abs._cachedProjectileDurationModifier = value;
+};
+
+/**
+ * A multiplier against how long this battler's map actions (projectiles, hitboxes, etc.)
+ * persist on the map, sourced from `<projectileDuration:PERCENT_POINTS>` across all active
+ * note sources (equips, states, class, actor).
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getProjectileDurationModifier = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedProjectileDurationModifier() !== null)
+  {
+    return this.getCachedProjectileDurationModifier();
+  }
+
+  // define the base duration rate for this battler.
+  const baseDurationRate = 100;
+
+  // get the duration percent-points from anything this battler has available.
+  const durationMultiplier = RPGManager.getSumFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.ABS.RegExp.ProjectileDurationMultiplier);
+
+  // constrain the multiplier to never go below 0.
+  const constrainedDurationMultiplier = Math.max(((baseDurationRate + durationMultiplier) / 100), 0);
+
+  // cache and return the result.
+  this.setCachedProjectileDurationModifier(constrainedDurationMultiplier);
+
+  return this.getCachedProjectileDurationModifier();
 };
 
 /**

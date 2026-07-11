@@ -64,6 +64,9 @@ Game_Enemy.prototype.onBattlerDataChange = function()
   // recompute cached bonus repeat count from note sources.
   this.refreshEncoreRepeats();
 
+  // invalidate the projectile duration modifier cache — recomputed lazily on next access.
+  this.setCachedProjectileDurationModifier(null);
+
   // update JABS-related things.
   this.jabsRefresh();
 };

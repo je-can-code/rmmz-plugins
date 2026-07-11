@@ -86,6 +86,9 @@ Game_Actor.prototype.onBattlerDataChange = function()
   // invalidate the vision modifier cache — enemies use this to scale pursuit radius against the actor.
   this.setCachedVisionModifier(null);
 
+  // invalidate the projectile duration modifier cache — recomputed lazily on next access.
+  this.setCachedProjectileDurationModifier(null);
+
   // bonus hits are derived from getAllNotes() which changes whenever battler data changes
   // (equips, states, passives, etc.) — recompute the cache to stay current.
   this.refreshBonusHits();

@@ -672,12 +672,23 @@ class JABS_Action
 
   /**
    * Gets the max duration in frames that this action will exist on the map.
+   * The skill's own base duration is scaled by the caster's projectile duration modifier
+   * (from `<projectileDuration:PERCENT_POINTS>` sources) before the minimum is enforced.
    * If the duration was unset, or is set but less than the minimum, it will be the minimum.
    * @returns {number} The max duration in frames (min 8).
    */
   getMaxDuration()
   {
-    return Math.max(this.getBaseSkill().jabsDuration, JABS_Action.getMinimumDuration());
+    // the skill's own unscaled duration in frames.
+    const baseDuration = this.getBaseSkill().jabsDuration;
+
+    // the caster's battler-wide multiplier against projectile duration.
+    const durationModifier = this.getCaster()
+      .getBattler()
+      .getProjectileDurationModifier();
+
+    // scale the base duration by the modifier, then enforce the floor.
+    return Math.max(Math.round(baseDuration * durationModifier), JABS_Action.getMinimumDuration());
   }
 
   /**

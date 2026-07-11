@@ -19,6 +19,10 @@
  *                            supplied by the caller; no semantic method can cover arbitrary classes.
  *   ParameterRegistry.js   — `instanceof ParameterDefinition` at the public API entry point;
  *                            legitimate input validation at a real external boundary.
+ *   JsonEx.js              — `instanceof Map`/`instanceof Set` inside `_encode` itself, the real
+ *                            data-conversion boundary; native Map/Set have no semantic predicate
+ *                            and cannot be registered with SerializableRegistry, same root cause
+ *                            as the JABS_StandardController.js entry above.
  *
  * Usage:
  *   node src/build-tools/verify-no-instanceof.js
@@ -41,6 +45,7 @@ const ALLOWLIST = [
   path.normalize('src/plugins/abs/ext/input/_models/JABS_StandardController.js'),
   path.normalize('src/plugins/time/core/scenes/Scene_Base.js'),
   path.normalize('src/plugins/_base/core/ParameterRegistry.js'),
+  path.normalize('src/plugins/_base/core/JsonEx.js'),
 ];
 
 /**

@@ -825,6 +825,7 @@ J.ABS.RegExp = {
 
   // bonus concepts.
   VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
+  ProjectileDurationMultiplier: /<projectileDuration:[ ]?(-?\d+)>/i,
 
   // alert-related.
   AlertDuration: /<alertDuration:[ ]?(\d+)>/i,

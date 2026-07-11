@@ -63,6 +63,36 @@
  *      A variableId whose value is added to all enemy's levels.
  *      Only really applies to scaling since enemies usually lack levels.
  *      Defaults to variableId 142.
+ *  - Single Level Across Classes:
+ *      Whether all classes share one actor-wide level/exp instead of each
+ *      class leveling independently (vanilla RMMZ behavior).
+ *      Defaults to true.
+ *  - Canonical Curve (Basis/Extra/Acceleration A/B):
+ *      The four inputs to the class-independent exp curve used when Single
+ *      Level is on. Ignored if another plugin (e.g. J-Level-Flat) overrides
+ *      expForLevel; only matters as the honest default when nothing else does.
+ * ============================================================================
+ * SINGLE LEVEL ACROSS CLASSES:
+ * By default, RPG Maker MZ tracks experience per-class (Game_Actor._exp is
+ * keyed by classId), so switching to a class you haven't played resets you to
+ * level 1 even if your other classes are deep into the double digits. With
+ * this setting enabled, every class always agrees on the same level and exp
+ * for a given actor- _exp remains an object keyed by classId (for
+ * compatibility with anything that expects that shape), but every key is kept
+ * in sync with every write, so there is effectively only one level per actor.
+ *
+ * Switching classes no longer resets or re-derives level from a per-class
+ * exp bucket. It also retroactively grants every learning on the destination
+ * class at or below your current level (mirroring how a fresh actor learns
+ * everything up to their initial level), so jumping into a brand new class at
+ * level 40 doesn't skip past its first 40 levels of learnings.
+ *
+ * This is intentionally orthogonal to per-class stat growth (see J-NATURAL):
+ * J-NATURAL banks permanent stat growth once per level-up, sourced from
+ * whichever class is active in that exact moment. With levels shared, playing
+ * many classes no longer punishes you with a level-1 reset, but the stat
+ * growth you bank is still shaped entirely by which classes you actually
+ * spent those levels playing.
  * ============================================================================
  * LEVEL TAGS:
  * Have you ever wanted to scale damage/experience/gold by level, but realized
@@ -296,6 +326,11 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added Single Level Across Classes: actors can now share one level/exp
+ *    across all classes instead of leveling each class independently, with
+ *    a class-independent canonical exp curve and retroactive learning
+ *    backfill on class change.
  * - 1.3.1
  *    Updated battler name rendering support for compatibility.
  * - 1.3.0
@@ -395,6 +430,46 @@
  * @text Enemy Balancer
  * @desc The variable id to act as a constant level modifier in favor of enemies.
  * @default 142
+ *
+ * @param parentConfigActorLevels
+ * @text ACTOR LEVELS
+ *
+ * @param useSharedActorLevel
+ * @parent parentConfigActorLevels
+ * @type boolean
+ * @text Single Level Across Classes
+ * @desc Whether all classes track one shared actor level/exp instead of leveling independently per-class.
+ * @on Shared
+ * @off Independent (vanilla)
+ * @default true
+ *
+ * @param canonicalExpBasis
+ * @parent parentConfigActorLevels
+ * @type number
+ * @text Canonical Curve: Basis
+ * @desc Used only when Single Level is on and no other plugin (e.g. J-Level-Flat) overrides expForLevel.
+ * @default 30
+ *
+ * @param canonicalExpExtra
+ * @parent parentConfigActorLevels
+ * @type number
+ * @text Canonical Curve: Extra
+ * @desc See Canonical Curve: Basis.
+ * @default 20
+ *
+ * @param canonicalExpAccA
+ * @parent parentConfigActorLevels
+ * @type number
+ * @text Canonical Curve: Acceleration A
+ * @desc See Canonical Curve: Basis.
+ * @default 30
+ *
+ * @param canonicalExpAccB
+ * @parent parentConfigActorLevels
+ * @type number
+ * @text Canonical Curve: Acceleration B
+ * @desc See Canonical Curve: Basis.
+ * @default 30
  *
  * @param parentConfigMaxLevel
  * @text MAX LEVEL

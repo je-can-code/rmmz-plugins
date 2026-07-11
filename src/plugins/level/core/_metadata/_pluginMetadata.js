@@ -111,6 +111,36 @@ class J_LevelPluginMetadata
      * @type {number}
      */
     this.trueMaxLevel = Number(this.parsedPluginParameters['trueMaxLevel']);
+
+    /**
+     * Whether all classes share one actor-wide level/exp instead of each class leveling independently.
+     * @type {boolean}
+     */
+    this.useSharedActorLevel = this.parsedPluginParameters['useSharedActorLevel'] === "true";
+
+    /**
+     * The "basis" input to the canonical, class-independent exp curve used when {@link useSharedActorLevel} is on.
+     * @type {number}
+     */
+    this.canonicalExpBasis = Number(this.parsedPluginParameters['canonicalExpBasis']);
+
+    /**
+     * The "extra" input to the canonical exp curve.
+     * @type {number}
+     */
+    this.canonicalExpExtra = Number(this.parsedPluginParameters['canonicalExpExtra']);
+
+    /**
+     * The "acceleration A" input to the canonical exp curve.
+     * @type {number}
+     */
+    this.canonicalExpAccA = Number(this.parsedPluginParameters['canonicalExpAccA']);
+
+    /**
+     * The "acceleration B" input to the canonical exp curve.
+     * @type {number}
+     */
+    this.canonicalExpAccB = Number(this.parsedPluginParameters['canonicalExpAccB']);
   }
 }
 
