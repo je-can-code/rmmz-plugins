@@ -1,26 +1,26 @@
-//region plugins/time/time-game-time-logic.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+//region plugins/time/game-time-logic-direct.test.js
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadTimePluginVm, makeGameTime } from './time-vm.js';
+import { installTimeHostGlobals } from './fixtures/install-time-host-globals.js';
 
-describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
+describe('J-TIME Game_Time logic (direct src import)', () =>
 {
-  let sandbox;
+  let Game_Time;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadTimePluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installTimeHostGlobals();
+
+    await import('../../../src/plugins/time/core/_metadata/initialization.js');
+
+    ({ default: Game_Time } = await import('../../../src/plugins/time/core/_models/Game_Time.js'));
   });
 
   it('setTickSpeed clamps flow multiplier and updates tick frames', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     t.setTickSpeed(100);
     expect(t.getTickSpeed()).toBe(Math.ceil(60 / 10));
     t.setTickSpeed(0.01);
@@ -29,7 +29,7 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('addSeconds rolls into minutes using metadata increments', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     t.setTime(0, 0, 0, 1, 1, 2020);
     t.addSeconds(59);
     expect(t._seconds).toBe(59);
@@ -40,7 +40,7 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('timeOfDay and seasonOfYear map hours and months', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     expect(t.timeOfDay(0)).toBe(0);
     expect(t.timeOfDay(5)).toBe(1);
     expect(t.timeOfDay(12)).toBe(3);
@@ -50,7 +50,7 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('determineArtificialTime snapshot carries ids and names', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     t.setTime(5, 4, 14, 10, 6, 2024);
     const snap = t.determineArtificialTime();
     expect(snap.seconds).toBe(5);
@@ -61,7 +61,7 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('jumpToTimeOfDay advances hours toward the next matching bucket', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     t.setTime(0, 0, 10, 1, 1, 2020);
     t.jumpToTimeOfDay(3);
     expect(t._hours).toBe(12);
@@ -71,7 +71,7 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('toneBetweenTones interpolates rgb channels', () =>
   {
-    const t = makeGameTime(sandbox);
+    const t = new Game_Time();
     const a = [ 0, 0, 0, 0 ];
     const b = [ 10, 20, 30, 40 ];
     const mid = t.toneBetweenTones(a, b, 0.5);
@@ -83,11 +83,11 @@ describe('J-TIME Game_Time logic (out/J-TIME.js)', () =>
 
   it('canUpdateTime respects Graphics.frameCount and tick speed', () =>
   {
-    const t = makeGameTime(sandbox);
-    sandbox.Graphics.frameCount = 59;
+    const t = new Game_Time();
+    globalThis.Graphics.frameCount = 59;
     expect(t.canUpdateTime()).toBe(false);
-    sandbox.Graphics.frameCount = 60;
+    globalThis.Graphics.frameCount = 60;
     expect(t.canUpdateTime()).toBe(true);
   });
 });
-//endregion plugins/time/time-game-time-logic.test.js
+//endregion plugins/time/game-time-logic-direct.test.js
