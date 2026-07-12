@@ -31,46 +31,44 @@
  * - J-NATURAL; handles level-based max hp/mp/tp growths.
  *
  * ============================================================================
- * PLUGIN PARAMETERS BREAKDOWN:
- *  - Start Enabled:
- *      The scaling functionality will be enabled when a newgame is started.
- *      Defaults to true.
- *  - Minimum Multiplier (Combat):
- *      Clamp floor for damage and other combat uses of level scaling.
- *      Defaults to 0.1x.
- *  - Maximum Multiplier (Combat):
- *      Clamp ceiling for combat scaling.
- *      Defaults to 2.0x.
- *  - Minimum / Maximum Multiplier (Rewards):
- *      Separate clamps for EXP and gold from level scaling. When blank, combat values are used.
- *      Defaults to match combat.
- *  - Growth Multiplier:
+ * PLUGIN CONFIGURATION:
+ * All tuning for this plugin (scaling multipliers, invariance ranges, actor/
+ * enemy level balancer variable ids, single-level-across-classes toggle, the
+ * canonical exp curve inputs, and the max level settings) lives in an external
+ * JSON file rather than PluginManager parameters:
+ *   data/config.level.json
+ * This file is required- a missing or invalid file will crash boot, exactly
+ * like this author's other config-file-driven plugins (J-ABS, J-SDP,
+ * J-JAFTING-Creation, Omni-Quest, J-Diff, J-Prof). Author/maintain it via
+ * jmz-data-editor's Level board rather than hand-editing JSON.
+ *
+ * Fields and their meaning:
+ *  - useScaling (boolean):
+ *      Whether or not this scaling functionality is enabled by default.
+ *  - minMultiplier / maxMultiplier (number):
+ *      Clamp floor/ceiling for damage and other combat uses of level scaling.
+ *  - rewardMinMultiplier / rewardMaxMultiplier (number, nullable):
+ *      Separate clamps for EXP and gold from level scaling. When null/absent,
+ *      the combat min/max above is used instead.
+ *  - growthMultiplier (number):
  *      The amount the multiplier changes per level of difference.
- *      Defaults to 0.1x per level of difference.
- *  - Upper Invariance:
- *      The amount above 0 levels of difference before scaling is applied.
- *      See the SAMPLE CALCULATIONS below for examples.
- *      Defaults to 1 level.
- *  - Lower Invariance:
- *      The amount below 0 levels of difference before scaling is applied.
- *      See the SAMPLE CALCULATIONS below for examples.
- *      Defaults to 1 level.
- *  - Actor Balancer:
- *      A variableId whose value is added to all actor's levels.
- *      This DOES impact how their levels are perceived by RMMZ.
- *      Defaults to variableId 141.
- *  - Enemy Balancer:
- *      A variableId whose value is added to all enemy's levels.
- *      Only really applies to scaling since enemies usually lack levels.
- *      Defaults to variableId 142.
- *  - Single Level Across Classes:
+ *  - invariantUpperRange / invariantLowerRange (number):
+ *      The amount above/below 0 levels of difference before scaling is
+ *      applied. See the SAMPLE CALCULATIONS below for examples.
+ *  - variableActorBalancer / variableEnemyBalancer (number):
+ *      A variableId whose value is added to all actors'/enemies' levels.
+ *  - useSharedActorLevel (boolean):
  *      Whether all classes share one actor-wide level/exp instead of each
  *      class leveling independently (vanilla RMMZ behavior).
- *      Defaults to true.
- *  - Canonical Curve (Basis/Extra/Acceleration A/B):
- *      The four inputs to the class-independent exp curve used when Single
- *      Level is on. Ignored if another plugin (e.g. J-Level-Flat) overrides
- *      expForLevel; only matters as the honest default when nothing else does.
+ *  - canonicalExpBasis / canonicalExpExtra / canonicalExpAccA / canonicalExpAccB (number):
+ *      The four inputs to the class-independent exp curve used when
+ *      useSharedActorLevel is on. Ignored if another plugin (e.g.
+ *      J-Level-Flat) overrides expForLevel; only matters as the honest
+ *      default when nothing else does.
+ *  - defaultBeyondMaxLevel (number):
+ *      The default max level beyond the database's 99 cap.
+ *  - trueMaxLevel (number):
+ *      The absolute max level your level can be, including all boosts.
  * ============================================================================
  * SINGLE LEVEL ACROSS CLASSES:
  * By default, RPG Maker MZ tracks experience per-class (Game_Actor._exp is
@@ -351,148 +349,6 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
- * @param parentConfigScaling
- * @text SCALING
- *
- * @param useScaling
- * @parent parentConfigScaling
- * @type boolean
- * @text Start Enabled
- * @desc Whether or not this scaling functionality is enabled by default.
- * @on Enabled By Default
- * @off Disabled By Default
- * @default true
- *
- * @param minMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Minimum Multiplier (Combat)
- * @desc Min for damage and parry. EXP/gold use reward params when set.
- * @default 0.10
- *
- * @param maxMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Maximum Multiplier (Combat)
- * @desc Clamp ceiling for combat scaling.
- * @default 2.00
- *
- * @param rewardMinMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Minimum Multiplier (Rewards)
- * @desc Min for scaled EXP/gold. Missing param uses combat minimum.
- * @default 0.10
- *
- * @param rewardMaxMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Maximum Multiplier (Rewards)
- * @desc Max for scaled EXP/gold. Missing param uses combat maximum.
- * @default 2.00
- *
- * @param growthMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Growth Multiplier
- * @desc The amount of growth per level of difference.
- * @default 0.10
- *
- * @param invariantUpperRange
- * @parent parentConfigScaling
- * @type number
- * @text Upper Invariance
- * @desc The amount of level difference over 0 before scaling takes effect.
- * @default 1
- *
- * @param invariantLowerRange
- * @parent parentConfigScaling
- * @type number
- * @text Lower Invariance
- * @desc The amount of level difference under 0 before scaling takes effect.
- * @default 1
- *
- * @param variableActorBalancer
- * @parent parentConfigScaling
- * @type variable
- * @text Actor Balancer
- * @desc The variable id to act as a constant level modifier in favor of actors.
- * @default 141
- *
- * @param variableEnemyBalancer
- * @parent parentConfigScaling
- * @type variable
- * @text Enemy Balancer
- * @desc The variable id to act as a constant level modifier in favor of enemies.
- * @default 142
- *
- * @param parentConfigActorLevels
- * @text ACTOR LEVELS
- *
- * @param useSharedActorLevel
- * @parent parentConfigActorLevels
- * @type boolean
- * @text Single Level Across Classes
- * @desc Whether all classes track one shared actor level/exp instead of leveling independently per-class.
- * @on Shared
- * @off Independent (vanilla)
- * @default true
- *
- * @param canonicalExpBasis
- * @parent parentConfigActorLevels
- * @type number
- * @text Canonical Curve: Basis
- * @desc Used only when Single Level is on and no other plugin (e.g. J-Level-Flat) overrides expForLevel.
- * @default 30
- *
- * @param canonicalExpExtra
- * @parent parentConfigActorLevels
- * @type number
- * @text Canonical Curve: Extra
- * @desc See Canonical Curve: Basis.
- * @default 20
- *
- * @param canonicalExpAccA
- * @parent parentConfigActorLevels
- * @type number
- * @text Canonical Curve: Acceleration A
- * @desc See Canonical Curve: Basis.
- * @default 30
- *
- * @param canonicalExpAccB
- * @parent parentConfigActorLevels
- * @type number
- * @text Canonical Curve: Acceleration B
- * @desc See Canonical Curve: Basis.
- * @default 30
- *
- * @param parentConfigMaxLevel
- * @text MAX LEVEL
- *
- * @param defaultBeyondMaxLevel
- * @parent parentConfigMaxLevel
- * @type number
- * @min 100
- * @max 1000
- * @text Default Beyond Max Level
- * @desc The default for what the max level is if beyond the cap. Requires max level for actors to be set to 99.
- * @default 255
- *
- * @param trueMaxLevel
- * @parent parentConfigMaxLevel
- * @type number
- * @min 1
- * @max 1000
- * @text Max Boosted Level
- * @desc The max level your level can be. While this is intended to always be beyond the max, it can be lower.
- * @default 1000
- *
- *
  * @command enableScaling
  * @text Enable Scaling
  * @desc Enables the scaling functionality for damage/rewards.

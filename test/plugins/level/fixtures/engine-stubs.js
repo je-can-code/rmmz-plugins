@@ -5,26 +5,45 @@ const noop = function()
 {
 };
 
-export const DEFAULT_LEVEL_PLUGIN_PARAMS = {
-  useScaling: 'true',
-  minMultiplier: '0.10',
-  maxMultiplier: '2.00',
-  growthMultiplier: '0.10',
-  invariantUpperRange: '1',
-  invariantLowerRange: '1',
-  variableActorBalancer: '141',
-  variableEnemyBalancer: '142',
-  defaultBeyondMaxLevel: '255',
-  trueMaxLevel: '1000',
+/**
+ * Mirrors {@code data/config.level.json}'s shape post-migration off PluginManager parameters. Real numbers/booleans
+ * now, not stringified plugin-param values, since this is read via {@link StorageManager.fsReadFile} + JSON.parse
+ * (see {@link ExternalJsonConfigLoader}) rather than {@link PluginManager.parameters}.
+ */
+export const DEFAULT_LEVEL_CONFIG = {
+  useScaling: true,
+  minMultiplier: 0.10,
+  maxMultiplier: 2.00,
+  rewardMinMultiplier: null,
+  rewardMaxMultiplier: null,
+  growthMultiplier: 0.10,
+  invariantUpperRange: 1,
+  invariantLowerRange: 1,
+  variableActorBalancer: 141,
+  variableEnemyBalancer: 142,
+  defaultBeyondMaxLevel: 255,
+  trueMaxLevel: 1000,
+  useSharedActorLevel: true,
+  canonicalExpBasis: 30,
+  canonicalExpExtra: 20,
+  canonicalExpAccA: 30,
+  canonicalExpAccB: 30,
 };
+
+export const DEFAULT_LEVEL_CONFIG_JSON = JSON.stringify(DEFAULT_LEVEL_CONFIG);
 
 /**
  * Globals required for {@link out/J-LevelMaster.js} after host install, before {@link out/J-Base.js}.
  *
  * @param {object} sandbox
+ * @param {object} [options]
+ * @param {string} [options.levelConfigJson] Full JSON text for {@link StorageManager.fsReadFile}, i.e. the contents
+ * of {@code data/config.level.json}. Defaults to {@link DEFAULT_LEVEL_CONFIG_JSON}.
  */
-export function installLevelEngineStubs(sandbox)
+export function installLevelEngineStubs(sandbox, options = {})
 {
+  const { levelConfigJson = DEFAULT_LEVEL_CONFIG_JSON } = options;
+
   vm.runInContext(`if (typeof Number.prototype.padZero !== 'function')
 {
   Number.prototype.padZero = function(length)
@@ -38,16 +57,16 @@ export function installLevelEngineStubs(sandbox)
   sandbox.PluginManager = {
     parameters(name)
     {
-      if (name === 'J-LevelMaster')
-      {
-        return DEFAULT_LEVEL_PLUGIN_PARAMS;
-      }
-
       return prevPm.parameters(name);
     },
     registerCommand()
     {
     },
+  };
+
+  sandbox.StorageManager.fsReadFile = function()
+  {
+    return levelConfigJson;
   };
 
   sandbox.$gameVariables._data = [];
